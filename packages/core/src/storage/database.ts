@@ -1,0 +1,136 @@
+import { existsSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
+import Database from 'better-sqlite3'
+import { fileSize, getSeoCliPaths } from '../paths.js'
+import type { CacheStats } from '../types.js'
+
+const CREATE_SQL = `
+CREATE TABLE IF NOT EXISTS sites (
+  site_url TEXT PRIMARY KEY,
+  display_name TEXT,
+  permission TEXT,
+  added_at INTEGER,
+  is_default INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS gsc_cache (
+  site_url TEXT,
+  query_hash TEXT,
+  request_json TEXT,
+  response_json TEXT,
+  row_count INTEGER,
+  fetched_at INTEGER,
+  expires_at INTEGER,
+  PRIMARY KEY(site_url, query_hash)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_gsc_expires ON gsc_cache(expires_at);
+
+CREATE TABLE IF NOT EXISTS semrush_cache (
+  endpoint TEXT,
+  query_hash TEXT,
+  request_json TEXT,
+  response_json TEXT,
+  credits_used INTEGER,
+  fetched_at INTEGER,
+  expires_at INTEGER,
+  PRIMARY KEY(endpoint, query_hash)
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS http_cache (
+  url_hash TEXT PRIMARY KEY,
+  url TEXT,
+  status INTEGER,
+  headers_json TEXT,
+  body_blob BLOB,
+  etag TEXT,
+  fetched_at INTEGER,
+  expires_at INTEGER
+);
+`
+
+let db: Database.Database | undefined
+
+function initDb(database: Database.Database): void {
+  database.pragma('journal_mode = WAL')
+  database.pragma('synchronous = NORMAL')
+  database.pragma('foreign_keys = ON')
+  database.pragma('temp_store = MEMORY')
+  database.pragma('mmap_size = 268435456')
+  database.pragma('busy_timeout = 5000')
+  database.exec(CREATE_SQL)
+}
+
+export function getDb(): Database.Database {
+  if (db) {
+    return db
+  }
+
+  const path = getSeoCliPaths().cacheDbFile
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  db = new Database(path)
+  initDb(db)
+  return db
+}
+
+export function hashKey(parts: unknown[]): string {
+  const json = JSON.stringify(parts)
+  return Buffer.from(json).toString('base64url')
+}
+
+export function getCacheStats(): CacheStats {
+  const database = getDb()
+  const dbPath = getSeoCliPaths().cacheDbFile
+  const counts = {
+    sites: database.prepare('SELECT COUNT(*) AS count FROM sites').get() as {
+      count: number
+    },
+    gsc_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM gsc_cache')
+      .get() as { count: number },
+    semrush_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM semrush_cache')
+      .get() as { count: number },
+    http_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM http_cache')
+      .get() as { count: number },
+  }
+
+  return {
+    dbPath,
+    sizeBytes: existsSync(dbPath) ? fileSize(dbPath) : 0,
+    counts: Object.fromEntries(
+      Object.entries(counts).map(([key, value]) => [key, value.count]),
+    ),
+  }
+}
+
+export function clearCache(
+  provider?: 'gsc' | 'semrush' | 'http',
+  olderThanMs?: number,
+): number {
+  const database = getDb()
+  const cutoff = olderThanMs ? Date.now() - olderThanMs : undefined
+
+  const tables =
+    provider === 'gsc'
+      ? ['gsc_cache']
+      : provider === 'semrush'
+        ? ['semrush_cache']
+        : provider === 'http'
+          ? ['http_cache']
+          : ['gsc_cache', 'semrush_cache', 'http_cache']
+
+  let removed = 0
+
+  for (const table of tables) {
+    const sql = cutoff
+      ? `DELETE FROM ${table} WHERE fetched_at < ?`
+      : `DELETE FROM ${table}`
+    const info = cutoff
+      ? database.prepare(sql).run(cutoff)
+      : database.prepare(sql).run()
+    removed += info.changes
+  }
+
+  return removed
+}

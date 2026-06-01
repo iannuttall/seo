@@ -1,0 +1,34 @@
+{
+  "name": "seo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.1.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "auth:inject-shared-client": "node scripts/inject-shared-oauth-client.mjs",
+    "build": "turbo run build",
+    "clean": "turbo run clean",
+    "dev": "turbo run dev --parallel",
+    "lint": "biome check . && node scripts/check-emdashes.mjs && turbo run lint",
+    "lint:fix": "biome check . --write",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.5",
+    "@biomejs/biome": "^2.4.16",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
+    "turbo": "^2.5.5",
+    "typescript": "^5.9.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  }
+}

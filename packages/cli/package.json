@@ -1,0 +1,32 @@
+{
+  "name": "@seo/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "seo": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "clean": "rm -rf dist",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/**/*.test.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "@seo/core": "workspace:*",
+    "@seo/mcp": "workspace:*",
+    "citty": "^0.1.6",
+    "cli-table3": "^0.6.5",
+    "jsonc-parser": "^3.3.1",
+    "picocolors": "^1.1.1",
+    "update-notifier": "^7.3.1",
+    "zod": "^4.1.5"
+  }
+}

@@ -50,6 +50,13 @@ import {
   uninstallMcpConfig,
 } from './commands/mcp-config.js'
 import {
+  diagnoseCommand,
+  doctorCommand,
+  ga4PropertiesCommand,
+  segmentImpactCommand,
+  strikingDistanceCommand,
+} from './commands/product.js'
+import {
   formatBytes,
   maybeCheckForUpdates,
   maybeExitCancelled,
@@ -497,6 +504,8 @@ const main = defineCommand({
     }),
     auth: authCommand,
     mcp: mcpCommand,
+    doctor: doctorCommand,
+    'ga4-properties': ga4PropertiesCommand,
     privacy: defineCommand({
       run: async () => {
         const snapshot = getPrivacySnapshot()
@@ -541,6 +550,9 @@ const main = defineCommand({
       },
     }),
     cache: cacheCommand,
+    diagnose: diagnoseCommand,
+    'segment-impact': segmentImpactCommand,
+    'striking-distance': strikingDistanceCommand,
     sites: defineCommand({
       args: {
         json: { type: 'boolean', default: false },

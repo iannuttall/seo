@@ -4,6 +4,10 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 
 ## When to call which tool
 
+- Use `seo_doctor` first when setup/auth might be broken.
+- Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
+- Use `seo_segment_impact` to explain which pages, queries, devices, or countries drove movement.
+- Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
 - Use `seo_audit_page` for one URL.
 - Use `seo_second_page` when the user wants opportunities with evidence.
 - Use `seo_quick_wins` for high-impression pages already ranking 4–10.
@@ -17,6 +21,7 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `gsc_query` only when the user explicitly wants raw Search Console rows.
 - Use `gsc_url_inspect` when the user asks what Google sees for one URL.
 - Use `ga4_run_report` for GA4 landing-page/session/event reports.
+- Use `ga4_properties` to discover the signed-in user's GA4 property IDs.
 - Use `search_updates` for official Google Search Status updates.
 - Use `semrush_call` only when the user explicitly wants direct provider enrichment.
 

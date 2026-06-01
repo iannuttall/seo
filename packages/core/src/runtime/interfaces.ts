@@ -38,10 +38,12 @@ export class LocalCredentialsProvider implements CredentialsProvider {
     const config = readConfig()
     const clientId =
       process.env.SEO_GOOGLE_CLIENT_ID ??
+      process.env.GSC_CLIENT_ID ??
       SHARED_OAUTH_CLIENT.clientId ??
       config.auth.sharedClientId
     const clientSecret =
       process.env.SEO_GOOGLE_CLIENT_SECRET ??
+      process.env.GSC_CLIENT_SECRET ??
       SHARED_OAUTH_CLIENT.clientSecret ??
       config.auth.sharedClientSecret
     if (!clientId || !clientSecret) {

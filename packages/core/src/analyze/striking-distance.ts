@@ -1,0 +1,74 @@
+import { querySearchAnalytics } from '../gsc/client.js'
+import { defaultDateRange } from './shared.js'
+
+export type StrikingDistanceItem = {
+  query: string
+  url: string
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+  opportunityScore: number
+  action: string
+}
+
+export async function strikingDistance(input: {
+  site: string
+  days?: number
+  minImpressions?: number
+  maxCtr?: number
+  limit?: number
+  refresh?: boolean
+}): Promise<{
+  site: string
+  generatedAt: string
+  range: { startDate: string; endDate: string }
+  items: StrikingDistanceItem[]
+}> {
+  const range = defaultDateRange(input.days ?? 28)
+  const minImpressions = input.minImpressions ?? 100
+  const maxCtr = input.maxCtr ?? 0.03
+  const result = await querySearchAnalytics(
+    input.site,
+    {
+      ...range,
+      dimensions: ['query', 'page'],
+      type: 'web',
+      dataState: 'final',
+    },
+    { refresh: input.refresh },
+  )
+
+  const items = result.rows
+    .filter(
+      (row) =>
+        row.position >= 11 &&
+        row.position <= 20 &&
+        row.impressions >= minImpressions &&
+        row.ctr <= maxCtr,
+    )
+    .map((row) => {
+      const score =
+        row.impressions * (21 - row.position) * (maxCtr - row.ctr + 0.005)
+      return {
+        query: row.keys[0] ?? '',
+        url: row.keys[1] ?? '',
+        clicks: Number(row.clicks.toFixed(3)),
+        impressions: Number(row.impressions.toFixed(3)),
+        ctr: Number(row.ctr.toFixed(4)),
+        position: Number(row.position.toFixed(2)),
+        opportunityScore: Number(score.toFixed(2)),
+        action:
+          'Improve query-page alignment and SERP framing before expanding scope.',
+      }
+    })
+    .sort((a, b) => b.opportunityScore - a.opportunityScore)
+    .slice(0, input.limit ?? 25)
+
+  return {
+    site: input.site,
+    generatedAt: new Date().toISOString(),
+    range,
+    items,
+  }
+}

@@ -5,18 +5,24 @@ import {
   cannibalReport,
   ctrUnderperformersReport,
   decayingReport,
+  diagnoseProperty,
+  ga4PropertyIdFromName,
   ga4RowsToObjects,
   getCacheStats,
   getKeywordProvider,
   inspectUrl,
   internalLinksReport,
+  listGa4AccountSummaries,
   listSearchUpdates,
   listSites,
   queryClusterReport,
   querySearchAnalytics,
   quickWinsReport,
+  runDoctor,
   runGa4Report,
   secondPage,
+  segmentImpact,
+  strikingDistance,
   trafficAnomaly,
   updateCorrelation,
 } from '@seo/core'
@@ -147,6 +153,150 @@ function registerResources(server: McpServer): void {
 }
 
 function registerTools(server: McpServer): void {
+  server.registerTool(
+    'seo_doctor',
+    {
+      description: 'Check local auth, scopes, config, and defaults',
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        const result = await runDoctor()
+        return toolSuccess(
+          result.ok
+            ? 'Local seo setup is ready.'
+            : 'Local seo setup needs attention.',
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'ga4_properties',
+    {
+      description: 'List GA4 accounts and properties available to Google OAuth',
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        const accountSummaries = await listGa4AccountSummaries()
+        const properties = accountSummaries.flatMap((account) =>
+          account.propertySummaries.map((property) => ({
+            account: account.displayName ?? account.account,
+            property: ga4PropertyIdFromName(property.property),
+            displayName: property.displayName ?? property.property,
+          })),
+        )
+        return toolSuccess(`${properties.length} GA4 properties found.`, {
+          accountSummaries,
+          properties,
+        })
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_diagnose_property',
+    {
+      description:
+        'Run end-to-end property diagnosis across anomaly, update, segment, decay, cannibalisation, and opportunity signals',
+      inputSchema: {
+        site: z.string(),
+        days: z.number().optional(),
+        recentDays: z.number().optional(),
+        limit: z.number().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({ site, days, recentDays, limit, refresh }) => {
+      try {
+        const result = await diagnoseProperty({
+          site,
+          days,
+          recentDays,
+          limit,
+          refresh,
+        })
+        return toolSuccess(
+          `Diagnosis complete. Classification: ${result.summary.classification}.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_segment_impact',
+    {
+      description:
+        'Compare GSC movement by page, query, device, or country across two adjacent periods',
+      inputSchema: {
+        site: z.string(),
+        dimension: z.enum(['page', 'query', 'country', 'device']).optional(),
+        days: z.number().optional(),
+        compareDays: z.number().optional(),
+        limit: z.number().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({ site, dimension, days, compareDays, limit, refresh }) => {
+      try {
+        const result = await segmentImpact({
+          site,
+          dimension,
+          days,
+          compareDays,
+          limit,
+          refresh,
+        })
+        return toolSuccess(
+          `${result.items.length} ${result.dimension} segments compared.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_striking_distance',
+    {
+      description: 'Find position 11-20 query/page opportunities from GSC',
+      inputSchema: {
+        site: z.string(),
+        days: z.number().optional(),
+        minImpressions: z.number().optional(),
+        limit: z.number().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({ site, days, minImpressions, limit, refresh }) => {
+      try {
+        const result = await strikingDistance({
+          site,
+          days,
+          minImpressions,
+          limit,
+          refresh,
+        })
+        return toolSuccess(
+          `${result.items.length} striking-distance opportunities found.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
   server.registerTool(
     'seo_audit_page',
     {

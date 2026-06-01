@@ -13,6 +13,20 @@ export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 export const configSchema = z.object({
   defaultSite: z.string().optional(),
   sites: z.array(siteSchema).default([]),
+  google: z
+    .object({
+      defaultGa4PropertyId: z.string().optional(),
+      propertyMappings: z
+        .array(
+          z.object({
+            siteUrl: z.string(),
+            ga4PropertyId: z.string(),
+            addedAt: z.number().int().optional(),
+          }),
+        )
+        .default([]),
+    })
+    .default({ propertyMappings: [] }),
   providers: z
     .object({
       semrushApiKey: z.string().optional(),

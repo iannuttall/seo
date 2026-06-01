@@ -51,10 +51,12 @@ export function getAuthModeStatus(): {
   const config = readConfig()
   const sharedClientId =
     process.env.SEO_GOOGLE_CLIENT_ID ??
+    process.env.GSC_CLIENT_ID ??
     SHARED_OAUTH_CLIENT.clientId ??
     config.auth.sharedClientId
   const sharedClientSecret =
     process.env.SEO_GOOGLE_CLIENT_SECRET ??
+    process.env.GSC_CLIENT_SECRET ??
     SHARED_OAUTH_CLIENT.clientSecret ??
     config.auth.sharedClientSecret
 
@@ -77,10 +79,12 @@ function getClientConfig(): OAuthClientConfig | undefined {
   const config = readConfig()
   const clientId =
     process.env.SEO_GOOGLE_CLIENT_ID ??
+    process.env.GSC_CLIENT_ID ??
     SHARED_OAUTH_CLIENT.clientId ??
     config.auth.sharedClientId
   const clientSecret =
     process.env.SEO_GOOGLE_CLIENT_SECRET ??
+    process.env.GSC_CLIENT_SECRET ??
     SHARED_OAUTH_CLIENT.clientSecret ??
     config.auth.sharedClientSecret
   if (!clientId || !clientSecret) {
@@ -117,7 +121,7 @@ export async function loginWithLoopback(
       )
     }
     throw new Error(
-      'This build does not have the shared seo Google app configured. Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID / SEO_GOOGLE_CLIENT_SECRET for local testing.',
+      'This build does not have the shared seo Google app configured. Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID / SEO_GOOGLE_CLIENT_SECRET for local testing. Legacy GSC_CLIENT_ID / GSC_CLIENT_SECRET also work.',
     )
   }
 

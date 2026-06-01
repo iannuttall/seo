@@ -25,6 +25,19 @@ export interface Ga4RunReportResult {
   propertyQuota?: unknown
 }
 
+export interface Ga4PropertySummary {
+  property: string
+  displayName?: string
+  propertyType?: string
+  parent?: string
+}
+
+export interface Ga4AccountSummary {
+  account: string
+  displayName?: string
+  propertySummaries: Ga4PropertySummary[]
+}
+
 async function authedFetch(
   client: OAuth2Client,
   url: string,
@@ -71,6 +84,32 @@ export async function runGa4Report(
   }
 
   return (await response.json()) as Ga4RunReportResult
+}
+
+export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
+  const { client } = await createAuthorizedClient()
+  const response = await authedFetch(
+    client,
+    'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
+  )
+
+  if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error(
+        'GA4 account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
+      )
+    }
+    throw new Error(`GA4 account summary fetch failed with ${response.status}.`)
+  }
+
+  const json = (await response.json()) as {
+    accountSummaries?: Ga4AccountSummary[]
+  }
+  return json.accountSummaries ?? []
+}
+
+export function ga4PropertyIdFromName(name: string): string {
+  return name.replace(/^properties\//, '')
 }
 
 export function ga4RowsToObjects(

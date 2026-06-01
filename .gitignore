@@ -3,5 +3,4 @@ node_modules
 .wrangler
 dist
 coverage
-pnpm-lock.yaml
 *.tsbuildinfo

@@ -46,6 +46,29 @@ CREATE TABLE IF NOT EXISTS http_cache (
   fetched_at INTEGER,
   expires_at INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS content_groups (
+  id TEXT PRIMARY KEY,
+  site_url TEXT NOT NULL,
+  name TEXT NOT NULL,
+  dimension TEXT NOT NULL,
+  match_type TEXT NOT NULL,
+  pattern TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_content_groups_site ON content_groups(site_url);
+
+CREATE TABLE IF NOT EXISTS seo_changes (
+  id TEXT PRIMARY KEY,
+  site_url TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  target TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  changed_at TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_seo_changes_site ON seo_changes(site_url, changed_at);
 `
 
 let db: Database.Database | undefined

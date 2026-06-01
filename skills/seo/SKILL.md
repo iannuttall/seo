@@ -8,6 +8,9 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
 - Use `seo_segment_impact` to explain which pages, queries, devices, or countries drove movement.
 - Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
+- Use `seo_content_groups` to create reusable page/query sets for tests and reports.
+- Use `seo_change_log` to record annotations for site, page, query, or group changes.
+- Use `seo_measure_change` to measure before/after impact of a saved or ad hoc change.
 - Use `seo_audit_page` for one URL.
 - Use `seo_second_page` when the user wants opportunities with evidence.
 - Use `seo_quick_wins` for high-impression pages already ranking 4–10.

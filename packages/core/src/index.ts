@@ -1,6 +1,7 @@
 export * from './analyze/audit-page.js'
 export * from './analyze/ctr-underperformers.js'
 export * from './analyze/diagnose-property.js'
+export * from './analyze/experiments.js'
 export * from './analyze/internal-links.js'
 export * from './analyze/query-cluster.js'
 export * from './analyze/second-page.js'

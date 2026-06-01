@@ -45,6 +45,10 @@ import {
 } from '@seo/core'
 import { defineCommand, runMain } from 'citty'
 import {
+  changeLogCommand,
+  contentGroupsCommand,
+} from './commands/experiments.js'
+import {
   detectMcpClients,
   installMcpConfig,
   uninstallMcpConfig,
@@ -549,6 +553,8 @@ const main = defineCommand({
       },
     }),
     cache: cacheCommand,
+    'change-log': changeLogCommand,
+    'content-groups': contentGroupsCommand,
     diagnose: diagnoseCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,

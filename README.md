@@ -103,6 +103,8 @@ pnpm auth:inject-shared-client
 - `seo diagnose`
 - `seo segment-impact`
 - `seo striking-distance`
+- `seo content-groups list|add|delete`
+- `seo change-log list|add|measure`
 - `seo privacy`
 - `seo reset`
 - `seo cache stats|clear`
@@ -122,6 +124,7 @@ Every command has inline help:
 seo diagnose --help
 seo segment-impact --help
 seo striking-distance --help
+seo change-log measure --help
 ```
 
 Defaults are optional. In an interactive terminal, commands that need a GSC

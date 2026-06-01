@@ -69,6 +69,51 @@ CREATE TABLE IF NOT EXISTS seo_changes (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_seo_changes_site ON seo_changes(site_url, changed_at);
+
+CREATE TABLE IF NOT EXISTS crawl_runs (
+  id TEXT PRIMARY KEY,
+  site_url TEXT NOT NULL,
+  start_url TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  limit_count INTEGER NOT NULL,
+  url_count INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_crawl_runs_site ON crawl_runs(site_url, start_url, created_at);
+
+CREATE TABLE IF NOT EXISTS crawl_pages (
+  run_id TEXT NOT NULL,
+  url TEXT NOT NULL,
+  final_url TEXT NOT NULL,
+  status INTEGER NOT NULL,
+  title TEXT,
+  meta_description TEXT,
+  canonical TEXT,
+  meta_robots TEXT,
+  x_robots_tag TEXT,
+  h1 TEXT,
+  indexable INTEGER NOT NULL,
+  word_count INTEGER NOT NULL,
+  content_hash TEXT NOT NULL,
+  outgoing_internal_count INTEGER NOT NULL,
+  PRIMARY KEY(run_id, url),
+  FOREIGN KEY(run_id) REFERENCES crawl_runs(id) ON DELETE CASCADE
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS index_watch_snapshots (
+  id TEXT PRIMARY KEY,
+  site_url TEXT NOT NULL,
+  url TEXT NOT NULL,
+  verdict TEXT,
+  coverage_state TEXT,
+  indexing_state TEXT,
+  robots_txt_state TEXT,
+  page_fetch_state TEXT,
+  google_canonical TEXT,
+  user_canonical TEXT,
+  last_crawl_time TEXT,
+  inspected_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_index_watch_url ON index_watch_snapshots(site_url, url, inspected_at);
 `
 
 let db: Database.Database | undefined

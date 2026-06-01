@@ -53,6 +53,7 @@ import {
   installMcpConfig,
   uninstallMcpConfig,
 } from './commands/mcp-config.js'
+import { crawlDiffCommand, indexWatchCommand } from './commands/monitoring.js'
 import {
   diagnoseCommand,
   doctorCommand,
@@ -555,7 +556,9 @@ const main = defineCommand({
     cache: cacheCommand,
     'change-log': changeLogCommand,
     'content-groups': contentGroupsCommand,
+    'crawl-diff': crawlDiffCommand,
     diagnose: diagnoseCommand,
+    'index-watch': indexWatchCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
     sites: defineCommand({

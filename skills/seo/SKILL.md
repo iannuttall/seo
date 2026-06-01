@@ -11,6 +11,8 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `seo_content_groups` to create reusable page/query sets for tests and reports.
 - Use `seo_change_log` to record annotations for site, page, query, or group changes.
 - Use `seo_measure_change` to measure before/after impact of a saved or ad hoc change.
+- Use `seo_crawl_diff` to detect changed titles/meta/canonicals/status/indexability between crawls.
+- Use `seo_index_watch` to monitor URL Inspection coverage/indexing state changes.
 - Use `seo_audit_page` for one URL.
 - Use `seo_second_page` when the user wants opportunities with evidence.
 - Use `seo_quick_wins` for high-impression pages already ranking 4–10.

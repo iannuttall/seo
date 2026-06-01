@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   auditPage,
   cannibalReport,
+  crawlDiff,
   createContentGroup,
   ctrUnderperformersReport,
   decayingReport,
@@ -13,6 +14,7 @@ import {
   ga4RowsToObjects,
   getCacheStats,
   getKeywordProvider,
+  indexWatch,
   inspectUrl,
   internalLinksReport,
   listChanges,
@@ -458,6 +460,62 @@ function registerTools(server: McpServer): void {
         })
         return toolSuccess(
           `Measurement complete. Verdict: ${result.verdict}.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_crawl_diff',
+    {
+      description:
+        'Crawl a bounded same-origin URL set and compare technical/page changes with the previous run',
+      inputSchema: {
+        startUrl: z.string().url(),
+        site: z.string().optional(),
+        limit: z.number().optional(),
+        refresh: z.boolean().optional(),
+        js: z.boolean().optional(),
+      },
+    },
+    async ({ startUrl, site, limit, refresh, js }) => {
+      try {
+        const result = await crawlDiff({
+          startUrl,
+          site,
+          limit,
+          refresh,
+          js: js ? true : 'auto',
+        })
+        return toolSuccess(
+          `Crawled ${result.summary.crawled} URLs. ${result.summary.changed} changed vs previous run.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_index_watch',
+    {
+      description:
+        'Inspect URLs with GSC URL Inspection and alert on index status changes',
+      inputSchema: {
+        site: z.string(),
+        urls: z.array(z.string().url()),
+        languageCode: z.string().optional(),
+      },
+    },
+    async ({ site, urls, languageCode }) => {
+      try {
+        const result = await indexWatch({ site, urls, languageCode })
+        return toolSuccess(
+          `Inspected ${result.summary.inspected} URLs. ${result.summary.alerts} alerts.`,
           result,
         )
       } catch (error) {

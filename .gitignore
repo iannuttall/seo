@@ -1,5 +1,6 @@
 node_modules
 .turbo
+.wrangler
 dist
 coverage
 pnpm-lock.yaml

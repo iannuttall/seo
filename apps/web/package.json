@@ -1,0 +1,22 @@
+{
+  "name": "@seo/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && mkdir -p dist && touch dist/.keep",
+    "clean": "rm -rf dist .wrangler",
+    "dev": "wrangler dev --local --port 8787",
+    "deploy": "wrangler deploy",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/**/*.test.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.10.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251126.0",
+    "wrangler": "^4.53.0"
+  }
+}

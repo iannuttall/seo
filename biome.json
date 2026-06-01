@@ -6,6 +6,7 @@
       "!!**/node_modules",
       "!!**/dist",
       "!!**/.turbo",
+      "!!**/.wrangler",
       "!!**/pnpm-lock.yaml",
       "!!**/tsconfig*.json",
       "!!**/*.config.ts",

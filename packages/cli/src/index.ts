@@ -62,6 +62,13 @@ import {
   monthlyReportCommand,
   reportNarrativeCommand,
 } from './commands/reports.js'
+import { scheduleCommand } from './commands/schedule.js'
+import {
+  diagnosePropertyWorkflowCommand,
+  refreshPrioritiesCommand,
+  technicalWatchCommand,
+  updatePostmortemCommand,
+} from './commands/workflows.js'
 import { resolveGa4Property, resolveSite } from './selection.js'
 import {
   formatBytes,
@@ -511,11 +518,16 @@ const main = defineCommand({
     'content-groups': contentGroupsCommand,
     'crawl-diff': crawlDiffCommand,
     diagnose: diagnoseCommand,
+    'diagnose-property': diagnosePropertyWorkflowCommand,
     'index-watch': indexWatchCommand,
     'monthly-report': monthlyReportCommand,
     'report-narrative': reportNarrativeCommand,
+    'refresh-priorities': refreshPrioritiesCommand,
+    schedule: scheduleCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
+    'technical-watch': technicalWatchCommand,
+    'update-postmortem': updatePostmortemCommand,
     sites: defineCommand({
       args: {
         json: { type: 'boolean', default: false },

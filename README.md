@@ -15,6 +15,8 @@ This repo is now a runnable v1 foundation:
 - statistical traffic anomaly and update-correlation reports
 - end-to-end property diagnosis with segment impact and striking-distance opportunities
 - narrative and monthly reports that combine diagnosis, change logs, and monitoring history
+- agent workflow commands for diagnosis, update postmortems, technical monitoring, and priority refreshes
+- cron helper for local recurring workflow runs
 - Semrush and DataForSEO provider adapters
 - CLI commands for `init`, `auth`, `privacy`, `reset`, `cache`, and the first diagnostic workflows
 - MCP stdio server exposing the same analysis functions
@@ -52,6 +54,8 @@ node packages/cli/dist/index.js traffic-anomaly --site sc-domain:example.com
 node packages/cli/dist/index.js diagnose --site sc-domain:example.com
 node packages/cli/dist/index.js report-narrative --site sc-domain:example.com
 node packages/cli/dist/index.js monthly-report --site sc-domain:example.com --month 2026-05
+node packages/cli/dist/index.js technical-watch --site sc-domain:example.com --url https://example.com
+node packages/cli/dist/index.js refresh-priorities --site sc-domain:example.com
 node packages/cli/dist/index.js segment-impact --site sc-domain:example.com --dimension page
 node packages/cli/dist/index.js striking-distance --site sc-domain:example.com
 node packages/cli/dist/index.js audit-page --url https://example.com
@@ -104,8 +108,13 @@ pnpm auth:inject-shared-client
 - `seo traffic-anomaly`
 - `seo update-correlate`
 - `seo diagnose`
+- `seo diagnose-property`
+- `seo update-postmortem`
 - `seo report-narrative`
 - `seo monthly-report`
+- `seo technical-watch`
+- `seo refresh-priorities`
+- `seo schedule cron`
 - `seo segment-impact`
 - `seo striking-distance`
 - `seo content-groups list|add|delete`
@@ -135,6 +144,9 @@ seo change-log measure --help
 seo crawl-diff --help
 seo report-narrative --help
 seo monthly-report --help
+seo technical-watch --help
+seo refresh-priorities --help
+seo schedule cron --help
 ```
 
 Defaults are optional. In an interactive terminal, commands that need a GSC

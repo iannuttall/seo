@@ -38,6 +38,7 @@ import {
   updateCorrelation,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { registerWorkflowTools } from './workflow-tools.js'
 
 type ToolResult = {
   content: Array<{ type: 'text'; text: string }>
@@ -979,6 +980,8 @@ function registerTools(server: McpServer): void {
       }
     },
   )
+
+  registerWorkflowTools(server)
 }
 
 export function createServer(): McpServer {

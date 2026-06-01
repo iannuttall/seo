@@ -8,6 +8,11 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
 - Use `seo_report_narrative` when the user wants a client-ready "what changed, why, what next" writeup.
 - Use `seo_monthly_report` when the user wants a monthly client or stakeholder report.
+- Use `seo_workflow_diagnose_property` when the user wants the whole diagnosis process run end-to-end.
+- Use `seo_workflow_monthly_report` when the user wants monthly reporting plus explicit next actions.
+- Use `seo_workflow_update_postmortem` after a suspected or confirmed Google update.
+- Use `seo_workflow_technical_watch` for scheduled crawl/index monitoring.
+- Use `seo_workflow_refresh_priorities` to turn all opportunity signals into a ranked work queue.
 - Use `seo_segment_impact` to explain which pages, queries, devices, or countries drove movement.
 - Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
 - Use `seo_content_groups` to create reusable page/query sets for tests and reports.

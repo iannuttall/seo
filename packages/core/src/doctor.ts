@@ -96,24 +96,20 @@ export async function runDoctor(): Promise<{
 
   checks.push({
     id: 'default-site',
-    label: 'Default GSC property',
-    status: config.defaultSite ? 'pass' : 'warn',
-    detail: config.defaultSite ?? 'No default property configured.',
-    fix: config.defaultSite
-      ? undefined
-      : 'Run `seo init` or pass --site to commands.',
+    label: 'Saved GSC property',
+    status: 'pass',
+    detail:
+      config.defaultSite ??
+      'No saved default. Human CLI commands will prompt; agents can pass --site.',
   })
 
   checks.push({
     id: 'default-ga4',
-    label: 'Default GA4 property',
-    status: config.google.defaultGa4PropertyId ? 'pass' : 'warn',
+    label: 'Saved GA4 property',
+    status: 'pass',
     detail:
       config.google.defaultGa4PropertyId ??
-      'No default GA4 property configured.',
-    fix: config.google.defaultGa4PropertyId
-      ? undefined
-      : 'Run `seo ga4-properties` and save a mapping during init.',
+      'No saved default. Human CLI commands will prompt; agents can pass --property.',
   })
 
   const ok = checks.every((check) => check.status !== 'fail')

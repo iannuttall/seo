@@ -124,6 +124,15 @@ seo segment-impact --help
 seo striking-distance --help
 ```
 
+Defaults are optional. In an interactive terminal, commands that need a GSC
+site or GA4 property will open a searchable picker when one is not passed.
+For agents, scripts, and `--json`, pass explicit IDs so commands never block:
+
+```bash
+seo diagnose --site sc-domain:example.com --json
+seo ga4-report --property 123456789 --json
+```
+
 ## Core boundaries
 
 - `CredentialsProvider`: keeps OAuth clients and Google tokens behind one interface. The CLI uses local files/keychain; a hosted API can swap in tenant storage later.

@@ -56,6 +56,7 @@ import {
   segmentImpactCommand,
   strikingDistanceCommand,
 } from './commands/product.js'
+import { resolveGa4Property, resolveSite } from './selection.js'
 import {
   formatBytes,
   maybeCheckForUpdates,
@@ -70,13 +71,11 @@ const pkg = {
   version: '0.1.0',
 }
 
-function defaultSiteOrThrow(site?: string): string {
-  const config = readConfig()
-  const chosen = site ?? config.defaultSite
-  if (!chosen) {
-    throw new Error('No site selected. Pass --site or run `seo init` first.')
-  }
-  return chosen
+async function defaultSiteOrThrow(
+  site?: string,
+  options: { json?: boolean; refresh?: boolean } = {},
+): Promise<string> {
+  return resolveSite({ site, options })
 }
 
 function normalizeJsonFlag(args: Record<string, unknown>): boolean {
@@ -597,14 +596,16 @@ const main = defineCommand({
             rowLimit: numberArg(args.limit),
             dataState: 'final',
           } as Record<string, unknown>)
-        const site = defaultSiteOrThrow(
+        const json = normalizeJsonFlag(args)
+        const site = await defaultSiteOrThrow(
           stringArg(args.site) ?? stringArg(body.siteUrl),
+          { json, refresh: booleanArg(args.refresh) },
         )
         delete body.siteUrl
         const result = await querySearchAnalytics(site, body as never, {
           refresh: booleanArg(args.refresh),
         })
-        if (normalizeJsonFlag(args)) {
+        if (json) {
           printJson({ site, request: body, ...result })
           return
         }
@@ -635,7 +636,8 @@ const main = defineCommand({
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
-        const siteUrl = defaultSiteOrThrow(stringArg(args.site))
+        const json = normalizeJsonFlag(args)
+        const siteUrl = await defaultSiteOrThrow(stringArg(args.site), { json })
         const inspectionUrl = stringArg(args.url)
         if (!inspectionUrl) throw new Error('Pass --url.')
         const result = await inspectUrl({
@@ -643,7 +645,7 @@ const main = defineCommand({
           inspectionUrl,
           languageCode: stringArg(args.language),
         })
-        if (normalizeJsonFlag(args)) {
+        if (json) {
           printJson(result)
           return
         }
@@ -661,7 +663,10 @@ const main = defineCommand({
     }),
     'ga4-report': defineCommand({
       args: {
-        property: { type: 'string', required: true },
+        property: {
+          type: 'string',
+          description: 'GA4 property ID. If omitted in a terminal, choose one.',
+        },
         'start-date': { type: 'string', default: '28daysAgo' },
         'end-date': { type: 'string', default: 'yesterday' },
         dimensions: { type: 'string', default: 'landingPage' },
@@ -672,6 +677,11 @@ const main = defineCommand({
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        const property = await resolveGa4Property({
+          property: stringArg(args.property),
+          options: { json },
+        })
         const body =
           (await jsonBodyArg(args.body, args['body-file'])) ??
           ({
@@ -687,17 +697,14 @@ const main = defineCommand({
             metrics: (csvArg(args.metrics) ?? []).map((name) => ({ name })),
             limit: stringArg(args.limit),
           } as Record<string, unknown>)
-        const result = await runGa4Report(
-          stringArg(args.property) ?? '',
-          body as never,
-        )
-        if (normalizeJsonFlag(args)) {
+        const result = await runGa4Report(property, body as never)
+        if (json) {
           printJson(result)
           return
         }
         const rows = ga4RowsToObjects(result)
         printKeyValue([
-          ['Property', stringArg(args.property) ?? ''],
+          ['Property', property],
           ['Rows', String(result.rowCount ?? rows.length)],
         ])
         if (rows.length) {
@@ -747,13 +754,17 @@ const main = defineCommand({
         refresh: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
         const report = await trafficAnomaly({
-          site: defaultSiteOrThrow(stringArg(args.site)),
+          site: await defaultSiteOrThrow(stringArg(args.site), {
+            json,
+            refresh: booleanArg(args.refresh),
+          }),
           days: numberArg(args.days),
           recentDays: numberArg(args.recent),
           refresh: booleanArg(args.refresh),
         })
-        if (normalizeJsonFlag(args)) {
+        if (json) {
           printJson(report)
           return
         }
@@ -779,13 +790,17 @@ const main = defineCommand({
         refresh: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
         const report = await updateCorrelation({
-          site: defaultSiteOrThrow(stringArg(args.site)),
+          site: await defaultSiteOrThrow(stringArg(args.site), {
+            json,
+            refresh: booleanArg(args.refresh),
+          }),
           days: numberArg(args.days),
           recentDays: numberArg(args.recent),
           refresh: booleanArg(args.refresh),
         })
-        if (normalizeJsonFlag(args)) {
+        if (json) {
           printJson(report)
           return
         }
@@ -864,12 +879,16 @@ const main = defineCommand({
         refresh: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
         const report = await secondPage({
-          site: defaultSiteOrThrow(stringArg(args.site)),
+          site: await defaultSiteOrThrow(stringArg(args.site), {
+            json,
+            refresh: booleanArg(args.refresh),
+          }),
           limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
           refresh: booleanArg(args.refresh),
         })
-        if (normalizeJsonFlag(args)) {
+        if (json) {
           printJson(report)
           return
         }
@@ -892,39 +911,45 @@ const main = defineCommand({
         site: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await cannibalReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
     decaying: defineCommand({
       args: {
         site: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await decayingReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
     'quick-wins': defineCommand({
       args: {
         site: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await quickWinsReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
     'internal-links': defineCommand({
       args: {
@@ -932,27 +957,31 @@ const main = defineCommand({
         url: { type: 'string', required: true },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await internalLinksReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
             targetUrl: stringArg(args.url) ?? '',
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
     'ctr-underperformers': defineCommand({
       args: {
         site: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await ctrUnderperformersReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
     'query-cluster': defineCommand({
       args: {
@@ -960,14 +989,16 @@ const main = defineCommand({
         scope: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
-      run: async ({ args }) =>
-        output(
+      run: async ({ args }) => {
+        const json = normalizeJsonFlag(args)
+        await output(
           await queryClusterReport({
-            site: defaultSiteOrThrow(stringArg(args.site)),
+            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
             scope: stringArg(args.scope),
           }),
-          normalizeJsonFlag(args),
-        ),
+          json,
+        )
+      },
     }),
   },
   run: async () => {

@@ -10,6 +10,7 @@ import {
   writeConfig,
 } from '@seo/core'
 import { defineCommand } from 'citty'
+import { resolveSite } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 
 const stringArg = (value: unknown): string | undefined =>
@@ -26,14 +27,6 @@ const numberArg = (value: unknown): number | undefined => {
 }
 
 const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
-
-const defaultSiteOrThrow = (site?: string): string => {
-  const chosen = site ?? readConfig().defaultSite
-  if (!chosen) {
-    throw new Error('No site selected. Pass --site or run `seo init` first.')
-  }
-  return chosen
-}
 
 const segmentDimension = (value: unknown): SegmentDimension => {
   const dimension = stringArg(value) ?? 'page'
@@ -169,15 +162,19 @@ export const segmentImpactCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const json = jsonFlag(args)
     const report = await segmentImpact({
-      site: defaultSiteOrThrow(stringArg(args.site)),
+      site: await resolveSite({
+        site: stringArg(args.site),
+        options: { json, refresh: booleanArg(args.refresh) },
+      }),
       dimension: segmentDimension(args.dimension),
       days: numberArg(args.days),
       compareDays: numberArg(args.compare),
       limit: numberArg(args.limit),
       refresh: booleanArg(args.refresh),
     })
-    if (jsonFlag(args)) {
+    if (json) {
       printJson(report)
       return
     }
@@ -235,14 +232,18 @@ export const strikingDistanceCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const json = jsonFlag(args)
     const report = await strikingDistance({
-      site: defaultSiteOrThrow(stringArg(args.site)),
+      site: await resolveSite({
+        site: stringArg(args.site),
+        options: { json, refresh: booleanArg(args.refresh) },
+      }),
       days: numberArg(args.days),
       minImpressions: numberArg(args['min-impressions']),
       limit: numberArg(args.limit),
       refresh: booleanArg(args.refresh),
     })
-    if (jsonFlag(args)) {
+    if (json) {
       printJson(report)
       return
     }
@@ -294,14 +295,18 @@ export const diagnoseCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const json = jsonFlag(args)
     const report = await diagnoseProperty({
-      site: defaultSiteOrThrow(stringArg(args.site)),
+      site: await resolveSite({
+        site: stringArg(args.site),
+        options: { json, refresh: booleanArg(args.refresh) },
+      }),
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
       refresh: booleanArg(args.refresh),
     })
-    if (jsonFlag(args)) {
+    if (json) {
       printJson(report)
       return
     }

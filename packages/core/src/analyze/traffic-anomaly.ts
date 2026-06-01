@@ -51,6 +51,8 @@ export async function trafficAnomaly(input: {
   site: string
   days?: number
   recentDays?: number
+  startDate?: string
+  endDate?: string
   refresh?: boolean
 }): Promise<{
   site: string
@@ -60,7 +62,16 @@ export async function trafficAnomaly(input: {
 }> {
   const days = input.days ?? 90
   const recentDays = input.recentDays ?? 7
-  const range = defaultDateRange(days)
+  if (
+    (input.startDate && !input.endDate) ||
+    (!input.startDate && input.endDate)
+  ) {
+    throw new Error('Pass both startDate and endDate, or neither.')
+  }
+  const range =
+    input.startDate && input.endDate
+      ? { startDate: input.startDate, endDate: input.endDate }
+      : defaultDateRange(days)
   const result = await querySearchAnalytics(
     input.site,
     {
@@ -120,6 +131,8 @@ export async function updateCorrelation(input: {
   site: string
   days?: number
   recentDays?: number
+  startDate?: string
+  endDate?: string
   paddingDays?: number
   refresh?: boolean
 }): Promise<UpdateCorrelationReport> {

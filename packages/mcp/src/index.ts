@@ -23,10 +23,12 @@ import {
   listSearchUpdates,
   listSites,
   measureChange,
+  monthlyReport,
   queryClusterReport,
   querySearchAnalytics,
   quickWinsReport,
   recordChange,
+  reportNarrative,
   runDoctor,
   runGa4Report,
   secondPage,
@@ -516,6 +518,79 @@ function registerTools(server: McpServer): void {
         const result = await indexWatch({ site, urls, languageCode })
         return toolSuccess(
           `Inspected ${result.summary.inspected} URLs. ${result.summary.alerts} alerts.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_report_narrative',
+    {
+      description:
+        'Generate a client-ready SEO narrative across diagnosis, changes, and monitoring',
+      inputSchema: {
+        site: z.string(),
+        days: z.number().optional(),
+        recentDays: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().optional(),
+        changeLimit: z.number().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      site,
+      days,
+      recentDays,
+      startDate,
+      endDate,
+      limit,
+      changeLimit,
+      refresh,
+    }) => {
+      try {
+        const result = await reportNarrative({
+          site,
+          days,
+          recentDays,
+          startDate,
+          endDate,
+          limit,
+          changeLimit,
+          refresh,
+        })
+        return toolSuccess(result.headline, result)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_monthly_report',
+    {
+      description: 'Generate a monthly SEO report narrative',
+      inputSchema: {
+        site: z.string(),
+        month: z.string().optional(),
+        limit: z.number().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({ site, month, limit, refresh }) => {
+      try {
+        const result = await monthlyReport({
+          site,
+          month,
+          limit,
+          refresh,
+        })
+        return toolSuccess(
+          `Monthly report generated for ${result.month}. ${result.headline}`,
           result,
         )
       } catch (error) {

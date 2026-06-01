@@ -6,6 +6,8 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 
 - Use `seo_doctor` first when setup/auth might be broken.
 - Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
+- Use `seo_report_narrative` when the user wants a client-ready "what changed, why, what next" writeup.
+- Use `seo_monthly_report` when the user wants a monthly client or stakeholder report.
 - Use `seo_segment_impact` to explain which pages, queries, devices, or countries drove movement.
 - Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
 - Use `seo_content_groups` to create reusable page/query sets for tests and reports.

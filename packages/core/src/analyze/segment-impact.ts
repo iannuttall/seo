@@ -59,6 +59,12 @@ function fixed(value: number): number {
   return Number(value.toFixed(3))
 }
 
+function rangeDays(range: { startDate: string; endDate: string }): number {
+  const start = Date.parse(`${range.startDate}T00:00:00Z`)
+  const end = Date.parse(`${range.endDate}T00:00:00Z`)
+  return Math.floor((end - start) / 86_400_000) + 1
+}
+
 export function compareSegmentRows(input: {
   site: string
   dimension: SegmentDimension
@@ -109,12 +115,23 @@ export async function segmentImpact(input: {
   dimension?: SegmentDimension
   days?: number
   compareDays?: number
+  startDate?: string
+  endDate?: string
   limit?: number
   refresh?: boolean
 }): Promise<SegmentImpactReport> {
+  if (
+    (input.startDate && !input.endDate) ||
+    (!input.startDate && input.endDate)
+  ) {
+    throw new Error('Pass both startDate and endDate, or neither.')
+  }
   const days = input.days ?? 28
-  const compareDays = input.compareDays ?? days
-  const after = defaultDateRange(days)
+  const after =
+    input.startDate && input.endDate
+      ? { startDate: input.startDate, endDate: input.endDate }
+      : defaultDateRange(days)
+  const compareDays = input.compareDays ?? rangeDays(after)
   const beforeEnd = new Date(`${after.startDate}T00:00:00Z`)
   beforeEnd.setUTCDate(beforeEnd.getUTCDate() - 1)
   const beforeStart = new Date(beforeEnd)

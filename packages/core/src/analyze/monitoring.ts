@@ -116,6 +116,17 @@ type IndexWatchRow = {
   robots_txt_state?: string | null
 }
 
+type LatestCrawlSummaryRow = {
+  id: string
+  site_url: string
+  start_url: string
+  created_at: number
+  limit_count: number
+  url_count: number
+  status_errors: number
+  non_indexable: number
+}
+
 function toRun(row: CrawlRunRow): CrawlRun {
   return {
     id: row.id,
@@ -409,6 +420,37 @@ export async function crawlDiff(input: {
   }
 }
 
+export function latestCrawlSummaries(
+  site: string,
+  limit = 5,
+): Array<
+  CrawlRun & {
+    statusErrors: number
+    nonIndexable: number
+  }
+> {
+  const rows = getDb()
+    .prepare(
+      `SELECT
+        crawl_runs.*,
+        COALESCE(SUM(CASE WHEN crawl_pages.status >= 400 THEN 1 ELSE 0 END), 0) AS status_errors,
+        COALESCE(SUM(CASE WHEN crawl_pages.indexable = 0 THEN 1 ELSE 0 END), 0) AS non_indexable
+      FROM crawl_runs
+      LEFT JOIN crawl_pages ON crawl_pages.run_id = crawl_runs.id
+      WHERE crawl_runs.site_url = ?
+      GROUP BY crawl_runs.id
+      ORDER BY crawl_runs.created_at DESC
+      LIMIT ?`,
+    )
+    .all(site, limit) as LatestCrawlSummaryRow[]
+
+  return rows.map((row) => ({
+    ...toRun(row),
+    statusErrors: row.status_errors,
+    nonIndexable: row.non_indexable,
+  }))
+}
+
 function statusFromInspection(result: UrlInspectionResult): IndexWatchItem {
   const status = result.inspectionResult?.indexStatusResult
   return {
@@ -512,5 +554,52 @@ export async function indexWatch(input: {
       alerts: items.filter((item) => item.alert).length,
     },
     items,
+  }
+}
+
+export function latestIndexWatchSummary(site: string): {
+  inspectedUrls: number
+  latestInspectedAt?: string
+  nonPass: number
+  blocked: number
+} {
+  const row = getDb()
+    .prepare(
+      `WITH latest AS (
+        SELECT snapshot.*
+        FROM index_watch_snapshots snapshot
+        INNER JOIN (
+          SELECT url, MAX(inspected_at) AS inspected_at
+          FROM index_watch_snapshots
+          WHERE site_url = ?
+          GROUP BY url
+        ) latest_snapshot
+          ON latest_snapshot.url = snapshot.url
+          AND latest_snapshot.inspected_at = snapshot.inspected_at
+        WHERE snapshot.site_url = ?
+      )
+      SELECT
+        COUNT(*) AS inspected_urls,
+        MAX(inspected_at) AS latest_inspected_at,
+        COALESCE(SUM(CASE WHEN verdict IS NOT NULL AND verdict != 'PASS' THEN 1 ELSE 0 END), 0) AS non_pass,
+        COALESCE(SUM(CASE WHEN lower(COALESCE(coverage_state, '') || ' ' || COALESCE(robots_txt_state, '')) LIKE '%blocked%' THEN 1 ELSE 0 END), 0) AS blocked
+      FROM latest`,
+    )
+    .get(site, site) as
+    | {
+        inspected_urls: number
+        latest_inspected_at?: number
+        non_pass: number
+        blocked: number
+      }
+    | undefined
+
+  return {
+    inspectedUrls: row?.inspected_urls ?? 0,
+    latestInspectedAt: row?.latest_inspected_at
+      ? new Date(row.latest_inspected_at).toISOString()
+      : undefined,
+    nonPass: row?.non_pass ?? 0,
+    blocked: row?.blocked ?? 0,
   }
 }

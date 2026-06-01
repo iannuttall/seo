@@ -14,6 +14,7 @@ This repo is now a runnable v1 foundation:
 - official Google Search Status update feed integration
 - statistical traffic anomaly and update-correlation reports
 - end-to-end property diagnosis with segment impact and striking-distance opportunities
+- narrative and monthly reports that combine diagnosis, change logs, and monitoring history
 - Semrush and DataForSEO provider adapters
 - CLI commands for `init`, `auth`, `privacy`, `reset`, `cache`, and the first diagnostic workflows
 - MCP stdio server exposing the same analysis functions
@@ -49,6 +50,8 @@ node packages/cli/dist/index.js updates
 node packages/cli/dist/index.js doctor
 node packages/cli/dist/index.js traffic-anomaly --site sc-domain:example.com
 node packages/cli/dist/index.js diagnose --site sc-domain:example.com
+node packages/cli/dist/index.js report-narrative --site sc-domain:example.com
+node packages/cli/dist/index.js monthly-report --site sc-domain:example.com --month 2026-05
 node packages/cli/dist/index.js segment-impact --site sc-domain:example.com --dimension page
 node packages/cli/dist/index.js striking-distance --site sc-domain:example.com
 node packages/cli/dist/index.js audit-page --url https://example.com
@@ -101,6 +104,8 @@ pnpm auth:inject-shared-client
 - `seo traffic-anomaly`
 - `seo update-correlate`
 - `seo diagnose`
+- `seo report-narrative`
+- `seo monthly-report`
 - `seo segment-impact`
 - `seo striking-distance`
 - `seo content-groups list|add|delete`
@@ -128,6 +133,8 @@ seo segment-impact --help
 seo striking-distance --help
 seo change-log measure --help
 seo crawl-diff --help
+seo report-narrative --help
+seo monthly-report --help
 ```
 
 Defaults are optional. In an interactive terminal, commands that need a GSC
@@ -149,8 +156,8 @@ seo ga4-report --property 123456789 --json
 
 - release-time shared OAuth client injection
 - richer GSC filtering and more acceptance-test coverage
-- change-log and before/after significance testing
-- crawl-diff persistence
+- hosted/remote MCP auth surface
+- scheduled agent workflows over reports and monitoring
 - MCP install support beyond the first three desktop clients
 - persistence for recent audit resources
 - stronger Semrush/DataForSEO endpoint coverage and more provider-aware routing

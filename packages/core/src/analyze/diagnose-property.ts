@@ -118,6 +118,8 @@ export async function diagnoseProperty(input: {
   site: string
   days?: number
   recentDays?: number
+  startDate?: string
+  endDate?: string
   limit?: number
   refresh?: boolean
 }): Promise<DiagnosePropertyReport> {

@@ -86,6 +86,12 @@ export function templateOpportunityLine(
   return `${template.count} quick wins sit in the ${template.label} template, so fix the reusable template before editing pages one by one.`
 }
 
+export function decayClusterLine(report: DiagnosePropertyReport): string {
+  const group = report.decay.groups[0]
+  if (!group) return 'No material decay cluster stood out.'
+  return `${group.count} decay findings sit in ${group.label}, with ${group.totalClickLoss.toFixed(0)} lost clicks versus the previous window.`
+}
+
 export function cannibalSuppressionLine(
   report: DiagnosePropertyReport,
 ): string {

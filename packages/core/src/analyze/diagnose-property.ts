@@ -83,11 +83,15 @@ function buildPriorities(input: {
   }
 
   if (input.decay.items.length) {
+    const topGroup = input.decay.groups[0]
     priorities.push({
       label: 'Refresh decaying content',
-      reason: `${input.decay.items.length} decaying query/page rows found.`,
-      action:
-        'Prioritize sustained declines that are not explained by update timing.',
+      reason: topGroup
+        ? `${input.decay.items.length} decaying query/page rows found; ${topGroup.label} lost ${topGroup.totalClickLoss.toFixed(0)} clicks.`
+        : `${input.decay.items.length} decaying query/page rows found.`,
+      action: topGroup
+        ? topGroup.recommendation
+        : 'Prioritize sustained declines that are not explained by update timing.',
       confidence: 'medium',
     })
   }

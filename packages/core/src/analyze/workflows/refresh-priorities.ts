@@ -129,14 +129,24 @@ export async function refreshPrioritiesWorkflow(input: {
   }
 
   for (const item of diagnosis.decay.items) {
-    const clickLoss = Math.max(0, item.previous.clicks - item.current.clicks)
+    const templateItems = templateCount({
+      templates: diagnosis.decay.templates,
+      id: item.template.id,
+    })
+    const landingValue = landingValueForUrl(analytics.values, item.url)
     drafts.push({
       source: 'decay',
       title: item.query,
-      target: item.query,
-      impact: Number(clickLoss.toFixed(2)),
+      target: item.url,
+      impact: item.clickLoss,
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
+      template: {
+        id: item.template.id,
+        label: item.template.label,
+        count: templateItems ?? 1,
+      },
+      analytics: landingValue,
       action: item.recommendation.action,
       evidence: item.recommendation.evidenceRef,
     })

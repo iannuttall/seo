@@ -33,6 +33,10 @@ export interface CannibalItem {
 
 export interface DecayItem {
   query: string
+  url: string
+  template: PageTemplate
+  clickLoss: number
+  dropPct: number
   current: {
     clicks: number
     impressions: number
@@ -45,8 +49,26 @@ export interface DecayItem {
     ctr: number
     position: number
   }
-  diagnosis: 'lost_position' | 'lost_ctr' | 'lost_impressions'
+  diagnosis:
+    | 'lost_visibility'
+    | 'lost_position'
+    | 'lost_ctr'
+    | 'lost_impressions'
   recommendation: Recommendation
+}
+
+export interface DecayGroup {
+  id: string
+  label: string
+  diagnosis: DecayItem['diagnosis']
+  template: PageTemplate
+  count: number
+  totalClickLoss: number
+  totalPreviousClicks: number
+  averageDropPct: number
+  sampleQueries: string[]
+  sampleUrls: string[]
+  recommendation: string
 }
 
 export interface QuickWinItem {

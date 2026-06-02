@@ -11,6 +11,7 @@ import { renderMarkdown } from './markdown.js'
 import {
   cannibalSuppressionLine,
   changeLine,
+  decayClusterLine,
   gapCountLine,
   monitoringBullets,
   movementLine,
@@ -102,6 +103,7 @@ export async function reportNarrative(input: {
         title: 'Content Opportunities',
         bullets: [
           `${diagnosis.summary.decayItems} decaying rows need review.`,
+          decayClusterLine(diagnosis),
           `${diagnosis.summary.cannibalItems} cannibalisation clusters need a primary URL decision.`,
           cannibalSuppressionLine(diagnosis),
           `${diagnosis.summary.strikingDistanceItems} position 11-20 opportunities are available.`,

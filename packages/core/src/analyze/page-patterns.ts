@@ -86,6 +86,14 @@ export function detectPageTemplate(url: string): PageTemplate {
     }
   }
 
+  if (path.includes('/last-names/')) {
+    return {
+      id: 'example-site-last-name-list',
+      label: 'ExampleSite last-name list page',
+      confidence: 'high',
+    }
+  }
+
   if (
     path.includes('/first-names/') &&
     path.endsWith('-meaning-and-history/')
@@ -93,6 +101,14 @@ export function detectPageTemplate(url: string): PageTemplate {
     return {
       id: 'example-site-first-name',
       label: 'ExampleSite first-name page',
+      confidence: 'high',
+    }
+  }
+
+  if (path.includes('/first-names/')) {
+    return {
+      id: 'example-site-first-name-list',
+      label: 'ExampleSite first-name list page',
       confidence: 'high',
     }
   }

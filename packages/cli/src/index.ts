@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noExcessiveLinesPerFile: legacy command registry is being split incrementally.
 import { rmSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import {
@@ -71,7 +72,11 @@ import {
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows.js'
-import { resolveClient, resolveGa4Property, resolveSite } from './selection.js'
+import {
+  resolveClient,
+  resolveClientSelection,
+  resolveGa4Property,
+} from './selection.js'
 import {
   formatBytes,
   maybeCheckForUpdates,
@@ -86,11 +91,20 @@ const pkg = {
   version: '0.1.0',
 }
 
-async function defaultSiteOrThrow(
-  site?: string,
+async function selectedSiteOrThrow(
+  input: {
+    client?: string
+    site?: string
+  },
   options: { json?: boolean; refresh?: boolean } = {},
 ): Promise<string> {
-  return resolveSite({ site, options })
+  return (
+    await resolveClientSelection({
+      client: input.client,
+      site: input.site,
+      options,
+    })
+  ).site
 }
 
 function normalizeJsonFlag(args: Record<string, unknown>): boolean {
@@ -555,6 +569,7 @@ const main = defineCommand({
     'gsc-query': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         'start-date': { type: 'string' },
         'end-date': { type: 'string' },
         dimensions: { type: 'string' },
@@ -577,26 +592,38 @@ const main = defineCommand({
             dataState: 'final',
           } as Record<string, unknown>)
         const json = normalizeJsonFlag(args)
-        const site = await defaultSiteOrThrow(
-          stringArg(args.site) ?? stringArg(body.siteUrl),
+        const site = await selectedSiteOrThrow(
+          {
+            client: stringArg(args.client),
+            site: stringArg(args.site) ?? stringArg(body.siteUrl),
+          },
           { json, refresh: booleanArg(args.refresh) },
         )
         delete body.siteUrl
         const result = await querySearchAnalytics(site, body as never, {
           refresh: booleanArg(args.refresh),
         })
+        const limit = numberArg(args.limit)
+        const rows = limit ? result.rows.slice(0, limit) : result.rows
         if (json) {
-          printJson({ site, request: body, ...result })
+          printJson({
+            site,
+            request: body,
+            ...result,
+            rows,
+            rowsReturned: rows.length,
+          })
           return
         }
         printKeyValue([
           ['Property', site],
-          ['Rows', String(result.rows.length)],
+          ['Rows returned', String(rows.length)],
+          ['Rows fetched', String(result.rowsFetched)],
           ['API calls', String(result.calls)],
         ])
         printTable(
           ['Keys', 'Clicks', 'Impr', 'CTR', 'Pos'],
-          result.rows
+          rows
             .slice(0, 25)
             .map((row) => [
               row.keys.join(' | '),
@@ -611,13 +638,17 @@ const main = defineCommand({
     'url-inspect': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         url: { type: 'string' },
         language: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
-        const siteUrl = await defaultSiteOrThrow(stringArg(args.site), { json })
+        const siteUrl = await selectedSiteOrThrow(
+          { client: stringArg(args.client), site: stringArg(args.site) },
+          { json },
+        )
         const inspectionUrl = stringArg(args.url)
         if (!inspectionUrl) throw new Error('Pass --url.')
         const result = await inspectUrl({
@@ -740,6 +771,7 @@ const main = defineCommand({
     'traffic-anomaly': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         days: { type: 'string' },
         recent: { type: 'string' },
         json: { type: 'boolean', default: false },
@@ -748,10 +780,13 @@ const main = defineCommand({
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         const report = await trafficAnomaly({
-          site: await defaultSiteOrThrow(stringArg(args.site), {
-            json,
-            refresh: booleanArg(args.refresh),
-          }),
+          site: await selectedSiteOrThrow(
+            { client: stringArg(args.client), site: stringArg(args.site) },
+            {
+              json,
+              refresh: booleanArg(args.refresh),
+            },
+          ),
           days: numberArg(args.days),
           recentDays: numberArg(args.recent),
           refresh: booleanArg(args.refresh),
@@ -776,6 +811,7 @@ const main = defineCommand({
     'update-correlate': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         days: { type: 'string' },
         recent: { type: 'string' },
         json: { type: 'boolean', default: false },
@@ -784,10 +820,13 @@ const main = defineCommand({
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         const report = await updateCorrelation({
-          site: await defaultSiteOrThrow(stringArg(args.site), {
-            json,
-            refresh: booleanArg(args.refresh),
-          }),
+          site: await selectedSiteOrThrow(
+            { client: stringArg(args.client), site: stringArg(args.site) },
+            {
+              json,
+              refresh: booleanArg(args.refresh),
+            },
+          ),
           days: numberArg(args.days),
           recentDays: numberArg(args.recent),
           refresh: booleanArg(args.refresh),
@@ -827,6 +866,7 @@ const main = defineCommand({
       args: {
         url: { type: 'string', required: true },
         site: { type: 'string' },
+        client: { type: 'string' },
         json: { type: 'boolean', default: false },
         js: { type: 'boolean', default: false },
         refresh: { type: 'boolean', default: false },
@@ -834,7 +874,13 @@ const main = defineCommand({
       run: async ({ args }) => {
         const report = await auditPage({
           url: stringArg(args.url) ?? '',
-          site: stringArg(args.site) ?? readConfig().defaultSite,
+          site: await selectedSiteOrThrow(
+            { client: stringArg(args.client), site: stringArg(args.site) },
+            {
+              json: normalizeJsonFlag(args),
+              refresh: booleanArg(args.refresh),
+            },
+          ),
           js: booleanArg(args.js) ? true : 'auto',
           refresh: booleanArg(args.refresh),
         })
@@ -866,6 +912,7 @@ const main = defineCommand({
     'second-page': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         limit: { type: 'string' },
         json: { type: 'boolean', default: false },
         refresh: { type: 'boolean', default: false },
@@ -873,10 +920,13 @@ const main = defineCommand({
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         const report = await secondPage({
-          site: await defaultSiteOrThrow(stringArg(args.site), {
-            json,
-            refresh: booleanArg(args.refresh),
-          }),
+          site: await selectedSiteOrThrow(
+            { client: stringArg(args.client), site: stringArg(args.site) },
+            {
+              json,
+              refresh: booleanArg(args.refresh),
+            },
+          ),
           limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
           refresh: booleanArg(args.refresh),
         })
@@ -901,13 +951,17 @@ const main = defineCommand({
     cannibal: defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         await output(
           await cannibalReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
           }),
           json,
         )
@@ -916,13 +970,17 @@ const main = defineCommand({
     decaying: defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         await output(
           await decayingReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
           }),
           json,
         )
@@ -931,13 +989,17 @@ const main = defineCommand({
     'quick-wins': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         await output(
           await quickWinsReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
           }),
           json,
         )
@@ -946,6 +1008,7 @@ const main = defineCommand({
     'internal-links': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         url: { type: 'string', required: true },
         json: { type: 'boolean', default: false },
       },
@@ -953,7 +1016,10 @@ const main = defineCommand({
         const json = normalizeJsonFlag(args)
         await output(
           await internalLinksReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
             targetUrl: stringArg(args.url) ?? '',
           }),
           json,
@@ -963,13 +1029,17 @@ const main = defineCommand({
     'ctr-underperformers': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
         await output(
           await ctrUnderperformersReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
           }),
           json,
         )
@@ -978,6 +1048,7 @@ const main = defineCommand({
     'query-cluster': defineCommand({
       args: {
         site: { type: 'string' },
+        client: { type: 'string' },
         scope: { type: 'string' },
         json: { type: 'boolean', default: false },
       },
@@ -985,7 +1056,10 @@ const main = defineCommand({
         const json = normalizeJsonFlag(args)
         await output(
           await queryClusterReport({
-            site: await defaultSiteOrThrow(stringArg(args.site), { json }),
+            site: await selectedSiteOrThrow(
+              { client: stringArg(args.client), site: stringArg(args.site) },
+              { json },
+            ),
             scope: stringArg(args.scope),
           }),
           json,

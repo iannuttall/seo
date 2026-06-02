@@ -10,7 +10,7 @@ import {
   writeConfig,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { resolveSite } from '../selection.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 
 const stringArg = (value: unknown): string | undefined =>
@@ -132,6 +132,10 @@ export const segmentImpactCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     dimension: {
       type: 'string',
       default: 'page',
@@ -163,11 +167,13 @@ export const segmentImpactCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await segmentImpact({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       dimension: segmentDimension(args.dimension),
       days: numberArg(args.days),
       compareDays: numberArg(args.compare),
@@ -207,6 +213,10 @@ export const strikingDistanceCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     days: {
       type: 'string',
       description: 'Recent window length in days. Defaults to 28.',
@@ -233,11 +243,13 @@ export const strikingDistanceCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await strikingDistance({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       minImpressions: numberArg(args['min-impressions']),
       limit: numberArg(args.limit),
@@ -271,6 +283,10 @@ export const diagnoseCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     days: {
       type: 'string',
       description: 'Baseline window length in days. Defaults to 90.',
@@ -296,11 +312,13 @@ export const diagnoseCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await diagnoseProperty({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),

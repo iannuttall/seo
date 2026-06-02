@@ -15,55 +15,27 @@ import {
   printActionDetails,
   printLimitedTable,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const secondPageCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 28.',
-    },
-    'min-impressions': {
-      type: 'string',
-      description: 'Minimum query impressions. Defaults to 50.',
-    },
-    limit: { type: 'string' },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in opportunity reports.',
-    },
-    'verify-content': {
-      type: 'boolean',
-      default: false,
-      description:
-        'Verify top opportunities against page title, meta, and content.',
-    },
-    'verify-limit': {
-      type: 'string',
-      description: 'Maximum opportunity URLs to verify. Defaults to 5.',
-    },
-    js: {
-      type: 'boolean',
-      default: false,
-      description: 'Force JavaScript rendering for verified pages.',
-    },
-    'fetch-concurrency': {
-      type: 'string',
-      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
-    },
-    'fetch-interval-cap': {
-      type: 'string',
-      description: 'Maximum page fetches per interval per host. Defaults to 4.',
-    },
-    'fetch-interval-ms': {
-      type: 'string',
-      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
-    },
+    ...cliReportArgs([
+      'range',
+      'minImpressions',
+      'limit',
+      'includeBrand',
+      'verifyContent',
+      'verifyLimit',
+      'js',
+      'fetchConcurrency',
+      'fetchIntervalCap',
+      'fetchIntervalMs',
+      'refresh',
+    ]),
     json: { type: 'boolean', default: false },
-    refresh: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)

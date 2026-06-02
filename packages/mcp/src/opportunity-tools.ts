@@ -10,7 +10,21 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
+import { mcpReportInputSchema } from './report-options.js'
 import { summarize, toolError, toolSuccess } from './tool-result.js'
+
+type QuickWinsToolInput = {
+  site: string
+  minImpressions?: number
+  verifyContent?: boolean
+  verifyLimit?: number
+  includeBrand?: boolean
+  js?: boolean
+  fetchConcurrency?: number
+  fetchIntervalCap?: number
+  fetchIntervalMs?: number
+  refresh?: boolean
+}
 
 export function registerOpportunityTools(server: McpServer): void {
   server.registerTool(
@@ -82,16 +96,18 @@ export function registerOpportunityTools(server: McpServer): void {
     {
       description: 'Find quick-win CTR/position opportunities',
       inputSchema: {
-        site: z.string(),
-        minImpressions: z.number().optional(),
-        verifyContent: z.boolean().optional(),
-        verifyLimit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        js: z.boolean().optional(),
-        fetchConcurrency: z.number().optional(),
-        fetchIntervalCap: z.number().optional(),
-        fetchIntervalMs: z.number().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'minImpressions',
+          'verifyContent',
+          'verifyLimit',
+          'includeBrand',
+          'js',
+          'fetchConcurrency',
+          'fetchIntervalCap',
+          'fetchIntervalMs',
+          'refresh',
+        ]),
       },
     },
     async ({
@@ -105,7 +121,7 @@ export function registerOpportunityTools(server: McpServer): void {
       fetchIntervalCap,
       fetchIntervalMs,
       refresh,
-    }) => {
+    }: QuickWinsToolInput) => {
       try {
         const result = await quickWinsReport({
           site,

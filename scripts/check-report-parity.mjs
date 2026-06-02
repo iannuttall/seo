@@ -40,6 +40,19 @@ function assertIncludes(failures, input) {
   }
 }
 
+function assertOptionIncludes(failures, input) {
+  if (
+    input.source.includes(input.marker) ||
+    input.source.includes(`'${input.option}'`) ||
+    input.source.includes(`"${input.option}"`)
+  ) {
+    return
+  }
+  failures.push(
+    `${input.id}: missing ${input.area} marker ${input.marker} or shared option ${input.option}`,
+  )
+}
+
 const coreSource = readTree(join(root, 'packages/core/src'))
 const cliRegistrationSource = source('packages/cli/src/index.ts')
 const failures = []
@@ -65,7 +78,7 @@ for (const surface of reportSurfaces) {
   })
 
   for (const option of surface.options ?? []) {
-    assertIncludes(failures, {
+    assertOptionIncludes(failures, {
       id: surface.id,
       area: `cli option ${option.name}`,
       source: sourceList([
@@ -73,8 +86,9 @@ for (const surface of reportSurfaces) {
         ...(surface.cli.sharedFiles ?? []),
       ]),
       marker: option.cli,
+      option: option.name,
     })
-    assertIncludes(failures, {
+    assertOptionIncludes(failures, {
       id: surface.id,
       area: `mcp option ${option.name}`,
       source: sourceList([
@@ -82,6 +96,7 @@ for (const surface of reportSurfaces) {
         ...(surface.mcp.sharedFiles ?? []),
       ]),
       marker: option.mcp,
+      option: option.name,
     })
     if (option.core !== false) {
       assertIncludes(failures, {

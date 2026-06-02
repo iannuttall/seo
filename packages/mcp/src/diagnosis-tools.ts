@@ -9,7 +9,23 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
+import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
+
+type StrikingDistanceToolInput = {
+  site: string
+  days?: number
+  minImpressions?: number
+  limit?: number
+  verifyContent?: boolean
+  verifyLimit?: number
+  includeBrand?: boolean
+  js?: boolean
+  fetchConcurrency?: number
+  fetchIntervalCap?: number
+  fetchIntervalMs?: number
+  refresh?: boolean
+}
 
 export function registerDiagnosisTools(server: McpServer): void {
   server.registerTool(
@@ -106,18 +122,20 @@ export function registerDiagnosisTools(server: McpServer): void {
     {
       description: 'Find position 11-20 query/page opportunities from GSC',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        minImpressions: z.number().optional(),
-        limit: z.number().optional(),
-        verifyContent: z.boolean().optional(),
-        verifyLimit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        js: z.boolean().optional(),
-        fetchConcurrency: z.number().optional(),
-        fetchIntervalCap: z.number().optional(),
-        fetchIntervalMs: z.number().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'minImpressions',
+          'limit',
+          'verifyContent',
+          'verifyLimit',
+          'includeBrand',
+          'js',
+          'fetchConcurrency',
+          'fetchIntervalCap',
+          'fetchIntervalMs',
+          'refresh',
+        ]),
       },
     },
     async ({
@@ -133,7 +151,7 @@ export function registerDiagnosisTools(server: McpServer): void {
       fetchIntervalCap,
       fetchIntervalMs,
       refresh,
-    }) => {
+    }: StrikingDistanceToolInput) => {
       try {
         const result = await strikingDistance({
           site,

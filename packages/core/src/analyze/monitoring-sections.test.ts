@@ -30,6 +30,8 @@ test('monitoringBullets includes saved link recovery summary', () => {
         topIssue: 'final-4xx',
         topUrl: 'https://example.com/old/',
         topAction: 'Add a 301 redirect.',
+        repeatedUrls: 1,
+        repeatedTopUrl: 'https://example.com/old/',
       },
     },
   })
@@ -42,6 +44,10 @@ test('monitoringBullets includes saved link recovery summary', () => {
   )
   assert.equal(
     bullets.some((line) => line.includes('Top recovery target')),
+    true,
+  )
+  assert.equal(
+    bullets.some((line) => line.includes('appeared in multiple recent')),
     true,
   )
 })

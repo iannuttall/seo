@@ -6,6 +6,7 @@ import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
+  formatPosition,
   printLimitedTable,
   truncate,
 } from '../output.js'
@@ -31,13 +32,64 @@ function formatCrawl(input: {
   samples: unknown[]
   blockedOrFailed: number
   medianWordCount?: number
+  weakQueryCoverage?: number
 }): string {
   if (!input.samples.length) return '-'
   const words =
     input.medianWordCount === undefined
       ? 'words ?'
       : `${formatCount(input.medianWordCount)} words`
-  return `${words}; ${input.blockedOrFailed}/${input.samples.length} blocked/failed`
+  const weak = input.weakQueryCoverage
+    ? `; ${input.weakQueryCoverage} weak coverage`
+    : ''
+  return `${words}; ${input.blockedOrFailed}/${input.samples.length} blocked/failed${weak}`
+}
+
+function printTemplateDetails(
+  templates: Awaited<ReturnType<typeof pseoAuditReport>>['templates'],
+): void {
+  for (const template of templates.slice(0, 5)) {
+    process.stdout.write(`\n${template.signature}\n`)
+    if (template.evidence.length) {
+      process.stdout.write(`  Evidence: ${template.evidence.join('; ')}.\n`)
+    }
+    const patterns = template.metrics.queryPatterns
+      .slice(0, 3)
+      .map(
+        (pattern) =>
+          `${pattern.label} (${formatCount(pattern.impressions)} impr: ${pattern.examples
+            .slice(0, 2)
+            .join('; ')})`,
+      )
+    if (patterns.length) {
+      process.stdout.write(`  Demand: ${patterns.join(' | ')}\n`)
+    }
+    const topQueries = template.metrics.topQueries.slice(0, 3)
+    if (topQueries.length) {
+      process.stdout.write('  Top queries:\n')
+      for (const query of topQueries) {
+        process.stdout.write(
+          `    - ${truncate(query.query, 72)} (${formatCount(query.impressions)} impr, pos ${formatPosition(query.position)})\n`,
+        )
+      }
+    }
+    const coverage = template.crawl.samples
+      .map((sample) => sample.queryCoverage)
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .slice(0, 3)
+    if (coverage.length) {
+      process.stdout.write('  Sample coverage:\n')
+      for (const item of coverage) {
+        const missing = item.missingTerms.length
+          ? ` missing ${item.missingTerms.slice(0, 4).join(', ')}`
+          : ''
+        process.stdout.write(
+          `    - ${item.classification}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
+        )
+      }
+    }
+    process.stdout.write(`  Action: ${template.recommendation}\n`)
+  }
 }
 
 export const pseoAuditCommand = defineCommand({
@@ -153,6 +205,8 @@ export const pseoAuditCommand = defineCommand({
         truncate(template.recommendation, 72),
       ]),
     )
+
+    printTemplateDetails(report.templates)
 
     if (report.warnings.length) {
       process.stdout.write(`Warnings: ${report.warnings.join('; ')}\n`)

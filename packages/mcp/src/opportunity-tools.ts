@@ -26,7 +26,7 @@ export function registerOpportunityTools(server: McpServer): void {
       try {
         const result = await cannibalReport({ site, minImpressions })
         return toolSuccess(
-          `${result.items.length} cannibalisation clusters found.`,
+          `${result.items.length} cannibalisation clusters found; ${result.suppressed.length} likely false positives suppressed.`,
           result,
         )
       } catch (error) {
@@ -95,7 +95,10 @@ export function registerOpportunityTools(server: McpServer): void {
             fetchIntervalMs,
           }),
         })
-        return toolSuccess(`${result.items.length} quick wins found.`, result)
+        return toolSuccess(
+          `${result.items.length} quick wins found across ${result.templates.length} template group(s).`,
+          result,
+        )
       } catch (error) {
         return toolError(error)
       }

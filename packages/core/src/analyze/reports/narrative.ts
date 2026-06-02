@@ -9,10 +9,12 @@ import { latestCrawlSummaries, latestIndexWatchSummary } from '../monitoring.js'
 import { rangeDays } from './dates.js'
 import { renderMarkdown } from './markdown.js'
 import {
+  cannibalSuppressionLine,
   changeLine,
   gapCountLine,
   monitoringBullets,
   movementLine,
+  templateOpportunityLine,
   topSegmentLine,
   verificationFetchLine,
 } from './sections.js'
@@ -101,7 +103,9 @@ export async function reportNarrative(input: {
         bullets: [
           `${diagnosis.summary.decayItems} decaying rows need review.`,
           `${diagnosis.summary.cannibalItems} cannibalisation clusters need a primary URL decision.`,
+          cannibalSuppressionLine(diagnosis),
           `${diagnosis.summary.strikingDistanceItems} position 11-20 opportunities are available.`,
+          templateOpportunityLine(diagnosis),
           ...(diagnosis.quickWins.verification.requested
             ? [
                 `Verified content for ${diagnosis.quickWins.verification.verified} of ${diagnosis.quickWins.items.length} quick-win candidates; ${gapCountLine(diagnosis)}`,

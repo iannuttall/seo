@@ -106,16 +106,27 @@ export const strikingDistanceCommand = defineCommand({
       return
     }
     printTable(
-      ['Query', 'URL', 'Impr', 'CTR', 'Pos', 'Score', 'Fetch', 'Gap'],
+      [
+        'Query',
+        'Template',
+        'URL',
+        'Impr',
+        'CTR',
+        'Pos',
+        'Score',
+        'Fetch',
+        'Check',
+      ],
       report.items.map((item) => [
         item.query,
+        item.template.label,
         item.url,
         item.impressions,
         item.ctr,
         item.position,
         item.opportunityScore,
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
-        item.contentVerification?.contentGapScore ?? '-',
+        item.contentVerification?.classification ?? '-',
       ]),
     )
   },

@@ -1,7 +1,64 @@
 import { shouldExcludeBrandQuery } from '../../brand.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
+import type { GscRow } from '../../types.js'
+import {
+  detectPageTemplate,
+  dominantTemplate,
+  dominantTemplateFamily,
+  isLikelyGenericTemplateQuery,
+  isLikelyLocalOrEntityIntent,
+  isQuotedQuery,
+  summarizeTemplates,
+} from '../page-patterns.js'
 import { defaultDateRange } from '../shared.js'
-import type { CannibalItem } from './types.js'
+import type {
+  CannibalItem,
+  CannibalSuppression,
+  CannibalSuppressionReason,
+} from './types.js'
+
+function ownerScore(row: {
+  clicks: number
+  impressions: number
+  position: number
+}) {
+  return (
+    row.clicks * 10 + row.impressions * 0.02 + Math.max(0, 20 - row.position)
+  )
+}
+
+function suppressionReason(input: {
+  query: string
+  rows: GscRow[]
+}): CannibalSuppressionReason | undefined {
+  if (isQuotedQuery(input.query)) return 'quoted_boilerplate'
+  const family = dominantTemplateFamily(input.rows)
+  const sameFamily = family.share >= 0.8 && family.id !== 'other'
+  if (sameFamily && isLikelyLocalOrEntityIntent(input.query)) {
+    return 'local_or_entity_intent'
+  }
+  if (sameFamily && isLikelyGenericTemplateQuery(input.query)) {
+    return 'template_overlap'
+  }
+  return undefined
+}
+
+function suppressionEvidence(input: {
+  query: string
+  reason: CannibalSuppressionReason
+  urlCount: number
+}): string {
+  if (input.reason === 'quoted_boilerplate') {
+    return `Query "${input.query}" looks like a quoted text fragment, which usually points to shared boilerplate rather than URL cannibalisation.`
+  }
+  if (input.reason === 'local_or_entity_intent') {
+    return `Query "${input.query}" is local/entity intent across ${input.urlCount} template URLs; choosing one owner would likely be wrong.`
+  }
+  if (input.reason === 'template_overlap') {
+    return `Query "${input.query}" appears across ${input.urlCount} pages in the same template family; review the template before consolidating pages.`
+  }
+  return `Query "${input.query}" was excluded as branded.`
+}
 
 export async function cannibalReport(input: {
   site: string
@@ -32,7 +89,15 @@ export async function cannibalReport(input: {
   }
 
   const items: CannibalItem[] = []
+  const suppressed: CannibalSuppression[] = []
   for (const [query, queryRows] of byQuery.entries()) {
+    const eligible = queryRows.filter(
+      (row) => row.impressions >= minImpressions,
+    )
+    if (eligible.length < 2) {
+      continue
+    }
+
     if (
       shouldExcludeBrandQuery({
         query,
@@ -41,13 +106,33 @@ export async function cannibalReport(input: {
         includeBrand: input.includeBrand,
       })
     ) {
+      suppressed.push({
+        query,
+        reason: 'brand_query',
+        urlCount: queryRows.length,
+        evidenceRef: suppressionEvidence({
+          query,
+          reason: 'brand_query',
+          urlCount: queryRows.length,
+        }),
+      })
       continue
     }
 
-    const eligible = queryRows.filter(
-      (row) => row.impressions >= minImpressions,
-    )
-    if (eligible.length < 2) {
+    const reason = suppressionReason({ query, rows: eligible })
+    if (reason) {
+      const template = dominantTemplateFamily(eligible).template
+      suppressed.push({
+        query,
+        reason,
+        urlCount: eligible.length,
+        template,
+        evidenceRef: suppressionEvidence({
+          query,
+          reason,
+          urlCount: eligible.length,
+        }),
+      })
       continue
     }
 
@@ -64,27 +149,48 @@ export async function cannibalReport(input: {
       continue
     }
 
-    const owner = [...eligible].sort((a, b) => a.position - b.position)[0]
+    const owner = [...eligible].sort((a, b) => ownerScore(b) - ownerScore(a))[0]
     if (!owner) {
       continue
     }
+    const template = dominantTemplate(eligible)
     items.push({
       query,
       pages: eligible.map((row) => ({
         url: row.keys[1] ?? '',
+        clicks: row.clicks,
         impressions: row.impressions,
         position: row.position,
+        template: detectPageTemplate(row.keys[1] ?? ''),
       })),
       hhi,
+      ownerUrl: owner.keys[1] ?? '',
+      template: template.share >= 0.8 ? template.template : undefined,
       recommendation: {
         principle: 'C.6',
         evidenceRef: `Query "${query}" splits across ${eligible.length} URLs with HHI ${hhi.toFixed(2)}.`,
-        action: `Choose ${owner.keys[1]} as the owner URL and consolidate internal links and on-page targeting around it.`,
+        action:
+          template.share >= 0.8 && template.template.id !== 'other'
+            ? `Review ${template.template.label} targeting first, then make ${owner.keys[1]} the canonical/internal-link focus only if the pages serve the same intent.`
+            : `Make ${owner.keys[1]} the primary URL if intent matches, then consolidate internal links and on-page targeting around it.`,
         effort: 'M',
         confidence: 'medium',
       },
     })
   }
 
-  return { site: input.site, generatedAt: new Date().toISOString(), items }
+  return {
+    site: input.site,
+    generatedAt: new Date().toISOString(),
+    templates: summarizeTemplates(items.flatMap((item) => item.pages)),
+    suppressed,
+    suppressionSummary: suppressed.reduce<Record<string, number>>(
+      (summary, item) => {
+        summary[item.reason] = (summary[item.reason] ?? 0) + 1
+        return summary
+      },
+      {},
+    ),
+    items,
+  }
 }

@@ -1,3 +1,4 @@
+import type { PageTemplate } from '../analyze/page-patterns.js'
 import type {
   ExtractedPage,
   PageFetchDiagnostics,
@@ -39,6 +40,7 @@ export interface AuditPageReport {
 export interface SecondPageItem {
   url: string
   primaryQuery: string
+  template: PageTemplate
   position: number
   impressions: number
   ctr: number

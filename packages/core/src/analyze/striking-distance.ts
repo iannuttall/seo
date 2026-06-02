@@ -1,13 +1,19 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
-import type { QueryContentCoverage } from './content-coverage.js'
-import { verifyQueryContent } from './content-coverage.js'
+import {
+  contentCoverageRecommendation,
+  type QueryContentCoverage,
+  verifyQueryContent,
+} from './content-coverage.js'
+import type { PageTemplate } from './page-patterns.js'
+import { detectPageTemplate, summarizeTemplates } from './page-patterns.js'
 import { defaultDateRange } from './shared.js'
 
 export type StrikingDistanceItem = {
   query: string
   url: string
+  template: PageTemplate
   clicks: number
   impressions: number
   ctr: number
@@ -38,6 +44,7 @@ export async function strikingDistance(input: {
     | { requested: false; verified: 0; failed: 0 }
     | { requested: true; limit: number; verified: number; failed: number }
   items: StrikingDistanceItem[]
+  templates: ReturnType<typeof summarizeTemplates>
 }> {
   const range = defaultDateRange(input.days ?? 28)
   const minImpressions = input.minImpressions ?? 100
@@ -75,6 +82,7 @@ export async function strikingDistance(input: {
       return {
         query: row.keys[0] ?? '',
         url: row.keys[1] ?? '',
+        template: detectPageTemplate(row.keys[1] ?? ''),
         clicks: Number(row.clicks.toFixed(3)),
         impressions: Number(row.impressions.toFixed(3)),
         ctr: Number(row.ctr.toFixed(4)),
@@ -100,10 +108,9 @@ export async function strikingDistance(input: {
       item.contentVerification = contentVerification
       if (
         contentVerification.status === 'verified' &&
-        contentVerification.contentGapScore >= 5
+        contentVerification.classification !== 'covered'
       ) {
-        item.action =
-          'Add clearer query coverage to the title, meta description, or main content before broader rewrites.'
+        item.action = contentCoverageRecommendation(contentVerification)
       }
     }
   }
@@ -123,5 +130,6 @@ export async function strikingDistance(input: {
         }
       : { requested: false, verified: 0, failed: 0 },
     items,
+    templates: summarizeTemplates(items),
   }
 }

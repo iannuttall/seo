@@ -147,7 +147,7 @@ export function registerDiagnosisTools(server: McpServer): void {
           refresh,
         })
         return toolSuccess(
-          `${result.items.length} striking-distance opportunities found.`,
+          `${result.items.length} striking-distance opportunities found across ${result.templates.length} template group(s).`,
           result,
         )
       } catch (error) {

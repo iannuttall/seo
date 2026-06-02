@@ -87,16 +87,28 @@ export const quickWinsCommand = defineCommand({
       ['Verification', verificationSummary(report)],
     ])
     printLimitedTable(
-      ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Lift', 'Fetch', 'Gap', 'Action'],
+      [
+        'Query',
+        'Template',
+        'URL',
+        'Pos',
+        'Impr',
+        'CTR',
+        'Lift',
+        'Fetch',
+        'Check',
+        'Action',
+      ],
       report.items.map((item) => [
         truncate(item.query, 36),
+        truncate(item.template.label, 24),
         truncate(item.url, 48),
         formatPosition(item.position),
         formatCount(item.impressions),
         formatPercent(item.ctr),
         formatCount(item.estimatedClickLift),
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
-        item.contentVerification?.contentGapScore ?? '-',
+        item.contentVerification?.classification ?? '-',
         truncate(item.recommendation.action, 64),
       ]),
     )

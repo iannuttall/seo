@@ -50,6 +50,21 @@ export interface CoverageField {
   termCoverage: number
 }
 
+export type QueryContentClassification =
+  | 'covered'
+  | 'serp-framing'
+  | 'content-gap'
+  | 'technical-check'
+  | 'fetch-failed'
+
+export type QueryContentSignal =
+  | 'redirected'
+  | 'exact-phrase-missing'
+  | 'title-gap'
+  | 'h1-gap'
+  | 'body-gap'
+  | 'blocked'
+
 export interface QueryContentCoverage {
   verifiedAt: string
   url: string
@@ -62,9 +77,13 @@ export interface QueryContentCoverage {
   queryTerms: string[]
   fields: {
     title: CoverageField
+    h1: CoverageField
     metaDescription: CoverageField
     mainContent: CoverageField
   }
+  classification: QueryContentClassification
+  signals: QueryContentSignal[]
+  recommendation: string
   summary: string
 }
 

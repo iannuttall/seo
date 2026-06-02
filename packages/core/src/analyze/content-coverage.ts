@@ -4,7 +4,9 @@ import type {
   CoverageField,
   ExtractedPage,
   PageFetchDiagnostics,
+  QueryContentClassification,
   QueryContentCoverage,
+  QueryContentSignal,
 } from '../types.js'
 
 export type { CoverageField, QueryContentCoverage } from '../types.js'
@@ -85,11 +87,13 @@ export function measureCoverage(query: string, text = ''): CoverageField {
 
 function gapScore(input: {
   title: CoverageField
+  h1: CoverageField
   metaDescription: CoverageField
   mainContent: CoverageField
 }): number {
   let score = 0
   if (input.title.phraseCount === 0) score += 3
+  if (input.h1.phraseCount === 0) score += 1
   if (input.metaDescription.phraseCount === 0) score += 1
   if (input.mainContent.phraseCount === 0) score += 2
   if (input.mainContent.termCoverage < 0.8) score += 3
@@ -97,16 +101,89 @@ function gapScore(input: {
   return score
 }
 
+function sameUrlIgnoringSlash(left?: string, right?: string): boolean {
+  if (!left || !right) return true
+  return left.replace(/\/$/, '') === right.replace(/\/$/, '')
+}
+
+function classification(input: {
+  url: string
+  finalUrl?: string
+  diagnostics?: PageFetchDiagnostics
+  fields: QueryContentCoverage['fields']
+}): {
+  classification: QueryContentClassification
+  signals: QueryContentSignal[]
+} {
+  const signals: QueryContentSignal[] = []
+  if (!sameUrlIgnoringSlash(input.url, input.finalUrl))
+    signals.push('redirected')
+  if (input.diagnostics?.blocked) signals.push('blocked')
+  if (input.fields.title.phraseCount === 0) {
+    signals.push('exact-phrase-missing')
+  }
+  if (input.fields.title.termCoverage < 0.8) signals.push('title-gap')
+  if (input.fields.h1.termCoverage < 0.8) signals.push('h1-gap')
+  if (input.fields.mainContent.termCoverage < 0.8) signals.push('body-gap')
+
+  if (signals.includes('redirected') || signals.includes('blocked')) {
+    return { classification: 'technical-check', signals }
+  }
+  if (signals.includes('body-gap')) {
+    return { classification: 'content-gap', signals }
+  }
+  if (
+    signals.includes('title-gap') ||
+    signals.includes('h1-gap') ||
+    signals.includes('exact-phrase-missing')
+  ) {
+    return { classification: 'serp-framing', signals }
+  }
+  return { classification: 'covered', signals }
+}
+
+export function contentCoverageRecommendation(
+  coverage: QueryContentCoverage,
+): string {
+  if (coverage.status === 'failed') {
+    return 'Verification failed; inspect fetch diagnostics before making content calls.'
+  }
+  if (coverage.classification === 'technical-check') {
+    return 'Check the final URL, canonical, and indexable target before changing page copy.'
+  }
+  if (coverage.classification === 'content-gap') {
+    const missing = coverage.fields.mainContent.missingTerms.slice(0, 4)
+    return missing.length
+      ? `Add specific coverage for missing terms: ${missing.join(', ')}.`
+      : 'Add specific coverage for the missing query angle in the main content.'
+  }
+  if (coverage.classification === 'serp-framing') {
+    return 'The page broadly covers the query; test title, H1, meta, and snippet wording before rewriting content.'
+  }
+  return 'The page already covers the query; look at CTR, internal links, and SERP fit before content edits.'
+}
+
 function coverageSummary(coverage: QueryContentCoverage): string {
   if (coverage.status === 'failed') {
     return 'Content verification failed.'
   }
+  if (coverage.classification === 'technical-check') {
+    return coverage.signals.includes('redirected') && coverage.finalUrl
+      ? `GSC URL resolves to ${coverage.finalUrl}; verify the canonical target first.`
+      : 'Fetch diagnostics show a technical check is needed before judging content.'
+  }
+  if (coverage.classification === 'covered') {
+    return 'The page covers the query across the main on-page signals.'
+  }
   const title = coverage.fields.title.phraseCount > 0
+  const h1 = coverage.fields.h1.phraseCount > 0
   const body = coverage.fields.mainContent.phraseCount > 0
   const bodyTerms = Math.round(coverage.fields.mainContent.termCoverage * 100)
-  if (title && body) return 'Exact query appears in title and main content.'
+  if (title && h1 && body) {
+    return 'Exact query appears in title, H1, and main content.'
+  }
   if (bodyTerms >= 100) {
-    return 'Exact query is missing, but all meaningful terms appear in main content.'
+    return 'Main content covers all meaningful query terms, but SERP wording may be weak.'
   }
   return `Main content covers ${bodyTerms}% of meaningful query terms.`
 }
@@ -119,9 +196,22 @@ export function queryContentCoverageFromPage(input: {
 }): QueryContentCoverage {
   const fields = {
     title: measureCoverage(input.query, input.page.title),
+    h1: measureCoverage(
+      input.query,
+      input.page.headings
+        .filter((heading) => heading.level === 1)
+        .map((heading) => heading.text)
+        .join(' '),
+    ),
     metaDescription: measureCoverage(input.query, input.page.metaDescription),
     mainContent: measureCoverage(input.query, input.page.contentText),
   }
+  const classified = classification({
+    url: input.url,
+    finalUrl: input.page.finalUrl,
+    diagnostics: input.fetchDiagnostics,
+    fields,
+  })
   const coverage: QueryContentCoverage = {
     verifiedAt: new Date().toISOString(),
     url: input.url,
@@ -132,9 +222,16 @@ export function queryContentCoverageFromPage(input: {
     contentGapScore: gapScore(fields),
     queryTerms: queryTerms(input.query),
     fields,
+    classification: classified.classification,
+    signals: classified.signals,
+    recommendation: '',
     summary: '',
   }
-  return { ...coverage, summary: coverageSummary(coverage) }
+  return {
+    ...coverage,
+    recommendation: contentCoverageRecommendation(coverage),
+    summary: coverageSummary(coverage),
+  }
 }
 
 export async function verifyQueryContent(input: {
@@ -168,9 +265,14 @@ export async function verifyQueryContent(input: {
       queryTerms: queryTerms(input.query),
       fields: {
         title: measureCoverage(input.query),
+        h1: measureCoverage(input.query),
         metaDescription: measureCoverage(input.query),
         mainContent: measureCoverage(input.query),
       },
+      classification: 'fetch-failed',
+      signals: [],
+      recommendation:
+        'Verification failed; inspect fetch diagnostics before making content calls.',
       summary: 'Content verification failed.',
     }
   }

@@ -2,11 +2,28 @@ import { shouldExcludeBrandQuery } from '../../brand.js'
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import {
+  contentCoverageRecommendation,
   type QueryContentCoverage,
   verifyQueryContent,
 } from '../content-coverage.js'
+import { detectPageTemplate, summarizeTemplates } from '../page-patterns.js'
 import { CTR_BASELINE, defaultDateRange } from '../shared.js'
 import type { QuickWinItem } from './types.js'
+
+function verifiedQuickWinAction(coverage: QueryContentCoverage): {
+  action: string
+  confidence: 'high' | 'medium' | 'low'
+} {
+  const action = contentCoverageRecommendation(coverage)
+  if (coverage.status === 'failed') return { action, confidence: 'low' }
+  if (coverage.classification === 'content-gap') {
+    return { action, confidence: 'high' }
+  }
+  if (coverage.classification === 'technical-check') {
+    return { action, confidence: 'medium' }
+  }
+  return { action, confidence: 'medium' }
+}
 
 export async function quickWinsReport(input: {
   site: string
@@ -57,6 +74,7 @@ export async function quickWinsReport(input: {
       return {
         query: row.keys[0] ?? '',
         url: row.keys[1] ?? '',
+        template: detectPageTemplate(row.keys[1] ?? ''),
         position: row.position,
         impressions: row.impressions,
         ctr: row.ctr,
@@ -92,16 +110,12 @@ export async function quickWinsReport(input: {
         }))
       coverageByKey.set(key, contentVerification)
       item.contentVerification = contentVerification
-      if (
-        contentVerification.status === 'verified' &&
-        contentVerification.contentGapScore >= 5
-      ) {
-        item.recommendation = {
-          ...item.recommendation,
-          action:
-            'Add clearer query coverage to the title, meta description, or main content before broader rewrites.',
-          evidenceRef: `${item.recommendation.evidenceRef} ${contentVerification.summary}`,
-        }
+      const verified = verifiedQuickWinAction(contentVerification)
+      item.recommendation = {
+        ...item.recommendation,
+        action: verified.action,
+        confidence: verified.confidence,
+        evidenceRef: `${item.recommendation.evidenceRef} ${contentVerification.summary}`,
       }
     }
   }
@@ -119,6 +133,7 @@ export async function quickWinsReport(input: {
           ).length,
         }
       : { requested: false, verified: 0, failed: 0 },
+    templates: summarizeTemplates(items),
     items,
   }
 }

@@ -27,8 +27,11 @@ export function registerSecondPageTool(server: McpServer): void {
           limit,
           ...reportFetchOptions(fetchInput),
         })
+        const templateCount = new Set(
+          result.items.map((item) => item.template.id),
+        ).size
         return toolSuccess(
-          `${result.items.length} page-two opportunities found.`,
+          `${result.items.length} page-two opportunities found across ${templateCount} template group(s).`,
           result,
         )
       } catch (error) {

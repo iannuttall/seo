@@ -75,15 +75,26 @@ export const secondPageCommand = defineCommand({
       return
     }
     printLimitedTable(
-      ['Query', 'Pos', 'Impr', 'CTR', 'Coverage', 'Fetch', 'Gap', 'Action'],
+      [
+        'Query',
+        'Template',
+        'Pos',
+        'Impr',
+        'CTR',
+        'Coverage',
+        'Fetch',
+        'Check',
+        'Action',
+      ],
       report.items.map((item) => [
         item.primaryQuery,
+        item.template.label,
         item.position.toFixed(1),
         Math.round(item.impressions),
         item.ctr.toFixed(3),
         `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
         formatFetchDiagnostics(item.fetchDiagnostics),
-        item.contentVerification?.contentGapScore ?? '-',
+        item.contentVerification?.classification ?? '-',
         item.recommendations[0]?.action ?? 'No recommendation',
       ]),
     )

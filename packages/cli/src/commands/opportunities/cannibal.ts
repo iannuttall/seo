@@ -35,25 +35,22 @@ export const cannibalCommand = defineCommand({
     printKeyValue([
       ['Site', report.site],
       ['Clusters', formatCount(report.items.length)],
+      ['Suppressed', formatCount(report.suppressed.length)],
       [
         'Brand queries',
         booleanArg(args['include-brand']) ? 'included' : 'excluded',
       ],
     ])
     printLimitedTable(
-      ['Query', 'URLs', 'HHI', 'Top URL', 'Action'],
-      report.items.map((item) => {
-        const topPage = [...item.pages].sort(
-          (a, b) => a.position - b.position,
-        )[0]
-        return [
-          truncate(item.query, 42),
-          item.pages.length,
-          item.hhi.toFixed(2),
-          truncate(topPage?.url ?? '', 56),
-          truncate(item.recommendation.action, 72),
-        ]
-      }),
+      ['Query', 'URLs', 'Template', 'HHI', 'Owner', 'Action'],
+      report.items.map((item) => [
+        truncate(item.query, 42),
+        item.pages.length,
+        truncate(item.template?.label ?? 'mixed', 24),
+        item.hhi.toFixed(2),
+        truncate(item.ownerUrl, 56),
+        truncate(item.recommendation.action, 72),
+      ]),
     )
   },
 })

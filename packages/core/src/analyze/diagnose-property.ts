@@ -97,7 +97,9 @@ function buildPriorities(input: {
       label: 'Resolve cannibalisation',
       reason: `${input.cannibal.items.length} split-query clusters found.`,
       action:
-        'Pick a primary URL per query, then merge, redirect, or de-optimize competing URLs.',
+        input.cannibal.suppressed.length > input.cannibal.items.length
+          ? 'Review the remaining mixed-intent clusters manually; most template/local false positives were filtered out.'
+          : 'Pick a primary URL per query, then merge, redirect, or de-optimize competing URLs.',
       confidence: 'medium',
     })
   }
@@ -159,6 +161,7 @@ export async function diagnoseProperty(input: {
       site: input.site,
       brandTerms: input.brandTerms,
       includeBrand: input.includeBrand,
+      refresh: input.refresh,
     }),
     strikingDistance({ ...input, limit }),
     quickWinsReport({

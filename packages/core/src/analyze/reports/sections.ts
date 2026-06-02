@@ -7,7 +7,7 @@ export function movementLine(report: DiagnosePropertyReport): string {
   if (!anomaly) {
     return 'No statistically significant traffic anomaly was detected.'
   }
-  return `${anomaly.metric} ${anomaly.direction} from ${anomaly.baselineMean} to ${anomaly.comparisonMean}.`
+  return `${anomaly.metric} ${anomaly.direction} from ${anomaly.baselineMean.toFixed(1)} to ${anomaly.comparisonMean.toFixed(1)}.`
 }
 
 export function topSegmentLine(report: DiagnosePropertyReport): string {
@@ -68,7 +68,32 @@ export function verificationFetchLine(
 
 export function gapCountLine(report: DiagnosePropertyReport): string {
   const gaps = report.quickWins.items.filter(
-    (item) => (item.contentVerification?.contentGapScore ?? 0) >= 5,
+    (item) => item.contentVerification?.classification === 'content-gap',
   ).length
-  return `${gaps} ${gaps === 1 ? 'shows' : 'show'} likely on-page query coverage gaps.`
+  const framing = report.quickWins.items.filter(
+    (item) => item.contentVerification?.classification === 'serp-framing',
+  ).length
+  return `${gaps} ${gaps === 1 ? 'shows' : 'show'} true content gaps; ${framing} look more like SERP/title/H1 framing gaps.`
+}
+
+export function templateOpportunityLine(
+  report: DiagnosePropertyReport,
+): string {
+  const template = report.quickWins.templates[0]
+  if (!template || template.count < 2) {
+    return 'No dominant opportunity template stood out.'
+  }
+  return `${template.count} quick wins sit in the ${template.label} template, so fix the reusable template before editing pages one by one.`
+}
+
+export function cannibalSuppressionLine(
+  report: DiagnosePropertyReport,
+): string {
+  const suppressed = report.cannibalization.suppressed.length
+  if (!suppressed)
+    return 'No likely false-positive cannibal clusters were suppressed.'
+  const reasons = Object.entries(report.cannibalization.suppressionSummary)
+    .map(([reason, count]) => `${count} ${reason.replace(/_/g, ' ')}`)
+    .join(', ')
+  return `${suppressed} likely false-positive cannibal clusters were suppressed (${reasons}).`
 }

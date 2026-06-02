@@ -4,7 +4,11 @@ import { querySearchAnalytics } from '../gsc/client.js'
 import { getKeywordProvider } from '../providers/router.js'
 import { SessionLedger } from '../storage/ledger.js'
 import type { SecondPageItem, SecondPageReport } from '../types.js'
-import { queryContentCoverageFromPage } from './content-coverage.js'
+import {
+  contentCoverageRecommendation,
+  queryContentCoverageFromPage,
+} from './content-coverage.js'
+import { detectPageTemplate } from './page-patterns.js'
 import {
   groupCandidatesByPage,
   secondPageCandidates,
@@ -91,6 +95,7 @@ export async function secondPage(input: {
     const item: SecondPageItem = {
       url,
       primaryQuery: primary.keys[0] ?? '',
+      template: detectPageTemplate(url),
       position: primary.position,
       impressions: primary.impressions,
       ctr: primary.ctr,
@@ -116,13 +121,12 @@ export async function secondPage(input: {
     )
     if (
       item.contentVerification?.status === 'verified' &&
-      item.contentVerification.contentGapScore >= 5
+      item.contentVerification.classification !== 'covered'
     ) {
       item.recommendations.unshift({
         principle: 'C.3',
         evidenceRef: item.contentVerification.summary,
-        action:
-          'Add clearer query coverage to the title, meta description, or main content before broader rewrites.',
+        action: contentCoverageRecommendation(item.contentVerification),
         effort: 'S',
         confidence: 'medium',
       })

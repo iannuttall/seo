@@ -20,6 +20,7 @@ test('deriveBrandTerms includes domain and compact client names', () => {
 test('brand query matching is token-aware for short brands', () => {
   assert.equal(isBrandQuery('keep md', ['keep']), true)
   assert.equal(isBrandQuery('best keeping apps', ['keep']), false)
+  assert.equal(isBrandQuery('example site.com', ['example-site']), true)
 })
 
 test('shouldExcludeBrandQuery can include brand when requested', () => {

@@ -46,14 +46,18 @@ export function isBrandQuery(query: string, brandTerms: string[]): boolean {
   if (!normalized || !brandTerms.length) return false
 
   const queryTokens = new Set(normalized.split(' '))
+  const compactQuery = normalized.replace(/\s+/g, '')
   return brandTerms.some((term) => {
     const normalizedTerm = normalizeBrandText(term)
     if (!normalizedTerm) return false
+    const compactTerm = normalizedTerm.replace(/\s+/g, '')
+    const compactMatches =
+      compactTerm.length >= 6 && compactQuery.includes(compactTerm)
     const termTokens = normalizedTerm.split(' ')
     if (termTokens.length === 1) {
-      return queryTokens.has(normalizedTerm)
+      return queryTokens.has(normalizedTerm) || compactMatches
     }
-    return normalized.includes(normalizedTerm)
+    return normalized.includes(normalizedTerm) || compactMatches
   })
 }
 

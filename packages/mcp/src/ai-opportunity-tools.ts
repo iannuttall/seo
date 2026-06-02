@@ -6,6 +6,7 @@ import {
   seoToAiQueryReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerAiOpportunityTools(server: McpServer): void {
@@ -44,14 +45,16 @@ export function registerAiOpportunityTools(server: McpServer): void {
       description:
         'Find first-party traffic growth opportunities for one URL from GSC and page content',
       inputSchema: {
-        site: z.string(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'includeBrand',
+          'verifyContent',
+          'refresh',
+          'js',
+        ]),
         url: z.string().url(),
-        days: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        verifyContent: z.boolean().optional(),
-        refresh: z.boolean().optional(),
-        js: z.boolean().optional(),
       },
     },
     async ({
@@ -91,12 +94,14 @@ export function registerAiOpportunityTools(server: McpServer): void {
       description:
         'Convert GSC search queries into natural-language AI monitoring prompts',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        limit: z.number().optional(),
-        minImpressions: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'minImpressions',
+          'includeBrand',
+          'refresh',
+        ]),
       },
     },
     async ({ site, days, limit, minImpressions, includeBrand, refresh }) => {
@@ -125,12 +130,14 @@ export function registerAiOpportunityTools(server: McpServer): void {
       description:
         'Find GSC queries with forum, review, comparison, and lived-experience intent',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        limit: z.number().optional(),
-        minImpressions: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'minImpressions',
+          'includeBrand',
+          'refresh',
+        ]),
       },
     },
     async ({ site, days, limit, minImpressions, includeBrand, refresh }) => {

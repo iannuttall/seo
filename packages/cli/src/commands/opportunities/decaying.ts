@@ -11,6 +11,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 function formatMaybePosition(value: number): string {
   return value > 0 ? formatPosition(value) : 'n/a'
@@ -20,11 +21,7 @@ export const decayingCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in opportunity reports.',
-    },
+    ...cliReportArgs(['includeBrand']),
     'min-drop-pct': {
       type: 'string',
       description: 'Minimum click drop percentage. Defaults to 20.',

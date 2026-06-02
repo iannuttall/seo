@@ -9,20 +9,17 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const cannibalCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in opportunity reports.',
-    },
-    'min-impressions': {
-      type: 'string',
-      description: 'Minimum query impressions. Defaults to 50.',
-    },
+    ...cliReportArgs(['includeBrand', 'minImpressions'], {
+      minImpressions: {
+        description: 'Minimum query impressions. Defaults to 50.',
+      },
+    }),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {

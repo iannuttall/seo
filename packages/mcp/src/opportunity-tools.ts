@@ -32,9 +32,7 @@ export function registerOpportunityTools(server: McpServer): void {
     {
       description: 'Detect keyword cannibalisation',
       inputSchema: {
-        site: z.string(),
-        minImpressions: z.number().optional(),
-        includeBrand: z.boolean().optional(),
+        ...mcpReportInputSchema(['site', 'minImpressions', 'includeBrand']),
       },
     },
     async ({ site, minImpressions, includeBrand }) => {
@@ -59,11 +57,10 @@ export function registerOpportunityTools(server: McpServer): void {
     {
       description: 'Detect decaying query performance',
       inputSchema: {
-        site: z.string(),
+        ...mcpReportInputSchema(['site', 'includeBrand']),
         minDropPct: z.number().optional(),
         minPreviousClicks: z.number().optional(),
         minClickLoss: z.number().optional(),
-        includeBrand: z.boolean().optional(),
       },
     },
     async ({
@@ -176,9 +173,7 @@ export function registerOpportunityTools(server: McpServer): void {
       description:
         'Find high-impression queries underperforming CTR expectations',
       inputSchema: {
-        site: z.string(),
-        minImpressions: z.number().optional(),
-        includeBrand: z.boolean().optional(),
+        ...mcpReportInputSchema(['site', 'minImpressions', 'includeBrand']),
       },
     },
     async ({ site, minImpressions, includeBrand }) => {

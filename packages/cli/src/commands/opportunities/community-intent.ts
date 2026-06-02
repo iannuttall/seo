@@ -9,6 +9,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const communityIntentCommand = defineCommand({
   meta: {
@@ -18,28 +19,21 @@ export const communityIntentCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 28.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum intent queries to print. Defaults to 25.',
-    },
-    'min-impressions': {
-      type: 'string',
-      description: 'Minimum query impressions. Defaults to 20.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in community-intent reports.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GSC cache.',
-    },
+    ...cliReportArgs(
+      ['days', 'limit', 'minImpressions', 'includeBrand', 'refresh'],
+      {
+        limit: {
+          description: 'Maximum intent queries to print. Defaults to 25.',
+        },
+        minImpressions: {
+          description: 'Minimum query impressions. Defaults to 20.',
+        },
+        includeBrand: {
+          description: 'Include branded queries in community-intent reports.',
+        },
+        refresh: { description: 'Bypass local GSC cache.' },
+      },
+    ),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {

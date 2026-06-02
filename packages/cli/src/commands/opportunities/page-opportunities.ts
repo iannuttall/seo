@@ -10,6 +10,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 import { formatFetchDiagnostics } from '../shared.js'
 
 export const pageOpportunitiesCommand = defineCommand({
@@ -21,33 +22,24 @@ export const pageOpportunitiesCommand = defineCommand({
     site: { type: 'string' },
     client: { type: 'string' },
     url: { type: 'string', required: true },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 28.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum page queries to inspect. Defaults to 25.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in page opportunity reports.',
-    },
+    ...cliReportArgs(['days', 'limit', 'includeBrand', 'js', 'refresh'], {
+      limit: {
+        description: 'Maximum page queries to inspect. Defaults to 25.',
+      },
+      includeBrand: {
+        description: 'Include branded queries in page opportunity reports.',
+      },
+      js: {
+        description: 'Force JavaScript rendering for page extraction.',
+      },
+      refresh: {
+        description: 'Bypass local GSC and HTTP cache.',
+      },
+    }),
     'no-verify-content': {
       type: 'boolean',
       default: false,
       description: 'Skip fetching the page for title/H1/body checks.',
-    },
-    js: {
-      type: 'boolean',
-      default: false,
-      description: 'Force JavaScript rendering for page extraction.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GSC and HTTP cache.',
     },
     json: { type: 'boolean', default: false },
   },

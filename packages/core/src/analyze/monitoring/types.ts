@@ -159,4 +159,10 @@ export type IndexWatchRow = {
 export type LatestCrawlSummaryRow = CrawlRunRow & {
   status_errors: number
   non_indexable: number
+  recommendation_count: number
+  high_recommendation_count: number
+  top_recommendation_url?: string | null
+  top_recommendation_title?: string | null
+  top_recommendation_action?: string | null
+  top_recommendation_severity?: string | null
 }

@@ -33,8 +33,13 @@ export function monitoringBullets(
   const recovery = report.monitoring.linkRecover
   if (crawl) {
     bullets.push(
-      `Latest crawl checked ${crawl.urlCount} URLs with ${crawl.statusErrors} status errors and ${crawl.nonIndexable} non-indexable pages.`,
+      `Latest crawl checked ${crawl.urlCount} URLs with ${crawl.statusErrors} status errors, ${crawl.nonIndexable} non-indexable pages, and ${crawl.highPriorityRecommendations} high-priority crawl action(s).`,
     )
+    if (crawl.topRecommendation) {
+      bullets.push(
+        `Top crawl action: ${crawl.topRecommendation.url}. ${crawl.topRecommendation.action}`,
+      )
+    }
     if ((crawl.statusErrors || crawl.nonIndexable) && !recovery) {
       bullets.push(
         'Run link-recover before content work if those URLs have GSC search value; recoverable 4xx, noindex, and canonical issues can look like content decay.',

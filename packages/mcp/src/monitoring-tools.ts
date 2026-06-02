@@ -1,5 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { crawlDiff, indexWatch } from '@seo/core'
+import {
+  crawlDiff,
+  indexCoveragePlan,
+  indexMonitor,
+  indexWatch,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -52,6 +57,91 @@ export function registerMonitoringTools(server: McpServer): void {
         const result = await indexWatch({ site, urls, languageCode })
         return toolSuccess(
           `Inspected ${result.summary.inspected} URLs. ${result.summary.alerts} alerts.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_index_coverage_plan',
+    {
+      description:
+        'Plan sitemap URL allocation across GSC properties and suggest URL-prefix properties for better URL Inspection coverage',
+      inputSchema: {
+        site: z.string(),
+        sitemaps: z.array(z.string().url()),
+        properties: z.array(z.string()).optional(),
+        dailyLimit: z.number().optional(),
+        targetCycleDays: z.number().optional(),
+        maxUrls: z.number().optional(),
+      },
+    },
+    async ({
+      site,
+      sitemaps,
+      properties,
+      dailyLimit,
+      targetCycleDays,
+      maxUrls,
+    }) => {
+      try {
+        const result = await indexCoveragePlan({
+          site,
+          sitemaps,
+          properties,
+          dailyLimit,
+          targetCycleDays,
+          maxUrls,
+        })
+        return toolSuccess(
+          `Planned ${result.summary.urlCount} sitemap URLs across ${result.summary.properties} properties. ${result.summary.suggestedProperties} suggested properties.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_index_monitor',
+    {
+      description:
+        'Run quota-aware URL Inspection monitoring from XML sitemaps and store index snapshots',
+      inputSchema: {
+        site: z.string(),
+        sitemaps: z.array(z.string().url()),
+        properties: z.array(z.string()).optional(),
+        dailyLimit: z.number().optional(),
+        inspectLimit: z.number().optional(),
+        maxUrls: z.number().optional(),
+        languageCode: z.string().optional(),
+      },
+    },
+    async ({
+      site,
+      sitemaps,
+      properties,
+      dailyLimit,
+      inspectLimit,
+      maxUrls,
+      languageCode,
+    }) => {
+      try {
+        const result = await indexMonitor({
+          site,
+          sitemaps,
+          properties,
+          dailyLimit,
+          inspectLimit,
+          maxUrls,
+          languageCode,
+        })
+        return toolSuccess(
+          `Inspected ${result.summary.inspected} of ${result.summary.inventoryUrls} sitemap URLs. ${result.summary.alerts} alerts.`,
           result,
         )
       } catch (error) {

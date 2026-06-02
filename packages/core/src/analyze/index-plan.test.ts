@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { selectDueIndexUrls } from './monitoring/index-monitor.js'
 import { planIndexCoverageFromUrls } from './monitoring/index-plan.js'
 
 function urls(prefix: string, count: number): string[] {
@@ -50,5 +51,34 @@ test('planIndexCoverageFromUrls maps URLs to existing URL-prefix properties', ()
       (suggestion) => suggestion.property === 'https://example.com/cities/',
     ),
     false,
+  )
+})
+
+test('selectDueIndexUrls gives each matching property a fair slice', () => {
+  const selected = selectDueIndexUrls({
+    site: 'sc-domain:example-select.test',
+    urls: [
+      ...urls('https://example-select.test/cities/city-', 5),
+      ...urls('https://example-select.test/blog/post-', 5),
+    ],
+    accountProperties: [
+      'sc-domain:example-select.test',
+      'https://example-select.test/cities/',
+    ],
+    dailyLimit: 3,
+    inspectLimit: 4,
+  })
+
+  assert.equal(selected.length, 4)
+  assert.equal(
+    selected.filter(
+      (item) => item.property === 'https://example-select.test/cities/',
+    ).length,
+    2,
+  )
+  assert.equal(
+    selected.filter((item) => item.property === 'sc-domain:example-select.test')
+      .length,
+    2,
   )
 })

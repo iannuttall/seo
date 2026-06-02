@@ -1,0 +1,80 @@
+import { communityIntentReport } from '@seo/core'
+import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printKeyValue } from '../../utils.js'
+import { formatCount, printLimitedTable, truncate } from '../output.js'
+
+export const communityIntentCommand = defineCommand({
+  meta: {
+    name: 'community-intent',
+    description: 'Find GSC queries with forum, review, and comparison intent',
+  },
+  args: {
+    site: { type: 'string' },
+    client: { type: 'string' },
+    days: {
+      type: 'string',
+      description: 'GSC lookback window. Defaults to 28.',
+    },
+    limit: {
+      type: 'string',
+      description: 'Maximum intent queries to print. Defaults to 25.',
+    },
+    'min-impressions': {
+      type: 'string',
+      description: 'Minimum query impressions. Defaults to 20.',
+    },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in community-intent reports.',
+    },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass local GSC cache.',
+    },
+    json: { type: 'boolean', default: false },
+  },
+  run: async ({ args }) => {
+    const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
+    const report = await communityIntentReport({
+      site: selection.site,
+      days: numberArg(args.days),
+      limit: numberArg(args.limit),
+      minImpressions: numberArg(args['min-impressions']),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
+      refresh: booleanArg(args.refresh),
+    })
+
+    if (json) {
+      printJson(report)
+      return
+    }
+
+    printKeyValue([
+      ['Property', report.site],
+      ['Intent queries', formatCount(report.summary.items)],
+      ['Impressions', formatCount(report.summary.totalImpressions)],
+      ['Clicks', formatCount(report.summary.totalClicks)],
+    ])
+
+    printLimitedTable(
+      ['Intent', 'Query', 'Impr', 'Clicks', 'Action'],
+      report.items.map((item) => [
+        item.intent,
+        truncate(item.query, 42),
+        formatCount(item.impressions),
+        formatCount(item.clicks),
+        truncate(item.action, 76),
+      ]),
+    )
+  },
+})

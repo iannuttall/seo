@@ -25,13 +25,17 @@ import {
   redirectTraceCommand,
 } from './commands/monitoring.js'
 import {
+  aiReferralsCommand,
   cannibalCommand,
+  communityIntentCommand,
   ctrUnderperformersCommand,
   decayingCommand,
   internalLinksCommand,
+  pageOpportunitiesCommand,
   queryClusterCommand,
   quickWinsCommand,
   secondPageCommand,
+  seoToAiQueryCommand,
 } from './commands/opportunities/index.js'
 import { auditPageCommand } from './commands/page-audit.js'
 import {
@@ -107,14 +111,18 @@ const main = defineCommand({
     updates: updatesCommand,
     'traffic-anomaly': trafficAnomalyCommand,
     'update-correlate': updateCorrelateCommand,
+    'ai-referrals': aiReferralsCommand,
     'audit-page': auditPageCommand,
     'second-page': secondPageCommand,
     cannibal: cannibalCommand,
+    'community-intent': communityIntentCommand,
     decaying: decayingCommand,
     'quick-wins': quickWinsCommand,
+    'page-opportunities': pageOpportunitiesCommand,
     'internal-links': internalLinksCommand,
     'ctr-underperformers': ctrUnderperformersCommand,
     'query-cluster': queryClusterCommand,
+    'seo-to-ai-query': seoToAiQueryCommand,
   },
   run: async () => {
     if (process.argv.slice(2).length === 0) {

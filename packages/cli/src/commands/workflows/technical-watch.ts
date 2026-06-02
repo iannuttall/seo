@@ -8,10 +8,9 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printTable } from '../../utils.js'
-import { formatCount, truncate } from '../output.js'
+import { printJson } from '../../utils.js'
+import { printMonitoringRun } from '../monitoring/output.js'
 import { startUrlForSite } from '../shared.js'
-import { printWorkflow } from './output.js'
 
 export const technicalWatchCommand = defineCommand({
   meta: {
@@ -36,9 +35,33 @@ export const technicalWatchCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated URLs to inspect with URL Inspection.',
     },
+    sitemaps: {
+      type: 'string',
+      description:
+        'Comma-separated XML sitemap URLs for quota-aware index monitoring.',
+    },
+    properties: {
+      type: 'string',
+      description:
+        'Comma-separated GSC properties for sitemap index monitoring.',
+    },
     limit: {
       type: 'string',
       description: 'Maximum pages to crawl. Defaults to 50.',
+    },
+    'daily-limit': {
+      type: 'string',
+      description: 'URL Inspection daily limit per property. Defaults to 2000.',
+    },
+    'inspect-limit': {
+      type: 'string',
+      description:
+        'Maximum sitemap URLs to inspect in this run. Defaults to 100.',
+    },
+    'max-urls': {
+      type: 'string',
+      description:
+        'Maximum sitemap URLs to load for monitoring. Defaults to 50000.',
     },
     language: {
       type: 'string',
@@ -93,6 +116,7 @@ export const technicalWatchCommand = defineCommand({
       options: { json, refresh: booleanArg(args.refresh) },
     })
     const watchUrls = listArg(args.urls)
+    const sitemaps = listArg(args.sitemaps)
     const startUrl =
       stringArg(args.url) ??
       selection.client?.startUrl ??
@@ -101,8 +125,15 @@ export const technicalWatchCommand = defineCommand({
       site: selection.site,
       startUrl,
       urls: watchUrls.length ? watchUrls : selection.client?.watchUrls,
+      sitemaps: sitemaps.length ? sitemaps : undefined,
+      properties: listArg(args.properties).length
+        ? listArg(args.properties)
+        : undefined,
       limit: numberArg(args.limit),
       languageCode: stringArg(args.language),
+      dailyLimit: numberArg(args['daily-limit']),
+      inspectLimit: numberArg(args['inspect-limit']),
+      maxUrls: numberArg(args['max-urls']),
       refresh: booleanArg(args.refresh),
       js: booleanArg(args.js) ? true : 'auto',
       recoverLinks: booleanArg(args['recover-links']),
@@ -115,22 +146,6 @@ export const technicalWatchCommand = defineCommand({
       printJson(report)
       return
     }
-    printWorkflow(report)
-    if (report.output.recovery?.items.length) {
-      process.stdout.write('\nRecoverable URLs\n')
-      printTable(
-        ['Severity', 'Issue', 'Clicks', 'Impr', 'URL', 'Action'],
-        report.output.recovery.items
-          .slice(0, 10)
-          .map((item) => [
-            item.severity,
-            item.issue,
-            formatCount(item.clicks),
-            formatCount(item.impressions),
-            truncate(item.url, 56),
-            truncate(item.recommendation.action, 72),
-          ]),
-      )
-    }
+    printMonitoringRun(report)
   },
 })

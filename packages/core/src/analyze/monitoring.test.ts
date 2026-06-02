@@ -3,6 +3,8 @@ import test from 'node:test'
 import {
   type CrawlPageSnapshot,
   compareCrawlPages,
+  insertCrawlRun,
+  latestCrawlSummaries,
   recommendCrawlDiffItem,
 } from './monitoring.js'
 
@@ -69,4 +71,36 @@ test('compareCrawlPages detects added, removed, and changed URLs', () => {
       ['removed', 'https://example.com/removed', ['url_removed']],
     ],
   )
+})
+
+test('latestCrawlSummaries includes saved crawl recommendations', () => {
+  const site = `sc-domain:crawl-${Date.now()}.example`
+  const url = `https://${site.slice('sc-domain:'.length)}/broken/`
+  insertCrawlRun(
+    {
+      id: `run-${Date.now()}`,
+      site,
+      startUrl: url,
+      createdAt: new Date().toISOString(),
+      limit: 1,
+      urlCount: 1,
+    },
+    [page({ url, status: 404, indexable: false })],
+    [
+      {
+        url,
+        severity: 'high',
+        category: 'status',
+        title: 'Search-visible URL now returns an error',
+        action: 'Restore the page or add a direct 301.',
+        confidence: 'high',
+      },
+    ],
+  )
+
+  const latest = latestCrawlSummaries(site, 1)[0]
+  assert.equal(latest?.statusErrors, 1)
+  assert.equal(latest?.highPriorityRecommendations, 1)
+  assert.equal(latest?.topRecommendation?.url, url)
+  assert.match(latest?.topRecommendation?.action ?? '', /301/)
 })

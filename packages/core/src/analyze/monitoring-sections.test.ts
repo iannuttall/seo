@@ -51,3 +51,45 @@ test('monitoringBullets includes saved link recovery summary', () => {
     true,
   )
 })
+
+test('monitoringBullets includes saved crawl recommendations', () => {
+  const bullets = monitoringBullets({
+    monitoring: {
+      crawlRuns: [
+        {
+          id: 'crawl-1',
+          site: 'sc-domain:example.com',
+          startUrl: 'https://example.com/',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          limit: 10,
+          urlCount: 10,
+          statusErrors: 1,
+          nonIndexable: 1,
+          recommendations: 1,
+          highPriorityRecommendations: 1,
+          topRecommendation: {
+            url: 'https://example.com/broken/',
+            title: 'Search-visible URL now returns an error',
+            action: 'Restore the page or add a direct 301.',
+            severity: 'high',
+          },
+        },
+      ],
+      indexWatch: {
+        inspectedUrls: 0,
+        nonPass: 0,
+        blocked: 0,
+      },
+      linkRecover: undefined,
+    },
+  })
+
+  assert.equal(
+    bullets.some((line) => line.includes('high-priority crawl action')),
+    true,
+  )
+  assert.equal(
+    bullets.some((line) => line.includes('Top crawl action')),
+    true,
+  )
+})

@@ -1,5 +1,6 @@
 import { getDb } from '../../storage/database.js'
 import type {
+  CrawlDiffRecommendation,
   CrawlPageRow,
   CrawlPageSnapshot,
   CrawlRun,
@@ -63,6 +64,7 @@ export function getRunPages(runId: string): Map<string, CrawlPageSnapshot> {
 export function insertCrawlRun(
   run: CrawlRun,
   pages: CrawlPageSnapshot[],
+  recommendations: Array<CrawlDiffRecommendation & { url: string }> = [],
 ): void {
   const db = getDb()
   db.prepare(
@@ -85,6 +87,12 @@ export function insertCrawlRun(
      outgoing_internal_count)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
+  const insertRecommendation = db.prepare(
+    `INSERT INTO crawl_recommendations
+    (run_id, site_url, url, severity, category, title, action, confidence, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+  const createdAt = Date.parse(run.createdAt)
 
   const transaction = db.transaction(() => {
     for (const page of pages) {
@@ -105,6 +113,19 @@ export function insertCrawlRun(
         page.outgoingInternalCount,
       )
     }
+    for (const recommendation of recommendations) {
+      insertRecommendation.run(
+        run.id,
+        run.site,
+        recommendation.url,
+        recommendation.severity,
+        recommendation.category,
+        recommendation.title,
+        recommendation.action,
+        recommendation.confidence,
+        createdAt,
+      )
+    }
   })
   transaction()
 }
@@ -116,16 +137,59 @@ export function latestCrawlSummaries(
   CrawlRun & {
     statusErrors: number
     nonIndexable: number
+    recommendations: number
+    highPriorityRecommendations: number
+    topRecommendation?: {
+      url: string
+      title: string
+      action: string
+      severity: string
+    }
   }
 > {
   const rows = getDb()
     .prepare(
-      `SELECT
+      `WITH page_counts AS (
+        SELECT
+          run_id,
+          COALESCE(SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END), 0) AS status_errors,
+          COALESCE(SUM(CASE WHEN indexable = 0 THEN 1 ELSE 0 END), 0) AS non_indexable
+        FROM crawl_pages
+        GROUP BY run_id
+      ),
+      recommendation_counts AS (
+        SELECT
+          run_id,
+          COUNT(*) AS recommendation_count,
+          COALESCE(SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END), 0) AS high_recommendation_count
+        FROM crawl_recommendations
+        GROUP BY run_id
+      ),
+      recommendation_rank AS (
+        SELECT
+          crawl_recommendations.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY run_id
+            ORDER BY
+              CASE severity WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC,
+              created_at DESC
+          ) AS rank
+        FROM crawl_recommendations
+      )
+      SELECT
         crawl_runs.*,
-        COALESCE(SUM(CASE WHEN crawl_pages.status >= 400 THEN 1 ELSE 0 END), 0) AS status_errors,
-        COALESCE(SUM(CASE WHEN crawl_pages.indexable = 0 THEN 1 ELSE 0 END), 0) AS non_indexable
+        COALESCE(page_counts.status_errors, 0) AS status_errors,
+        COALESCE(page_counts.non_indexable, 0) AS non_indexable,
+        COALESCE(recommendation_counts.recommendation_count, 0) AS recommendation_count,
+        COALESCE(recommendation_counts.high_recommendation_count, 0) AS high_recommendation_count,
+        top.url AS top_recommendation_url,
+        top.title AS top_recommendation_title,
+        top.action AS top_recommendation_action,
+        top.severity AS top_recommendation_severity
       FROM crawl_runs
-      LEFT JOIN crawl_pages ON crawl_pages.run_id = crawl_runs.id
+      LEFT JOIN page_counts ON page_counts.run_id = crawl_runs.id
+      LEFT JOIN recommendation_counts ON recommendation_counts.run_id = crawl_runs.id
+      LEFT JOIN recommendation_rank top ON top.run_id = crawl_runs.id AND top.rank = 1
       WHERE crawl_runs.site_url = ?
       GROUP BY crawl_runs.id
       ORDER BY crawl_runs.created_at DESC
@@ -137,5 +201,15 @@ export function latestCrawlSummaries(
     ...toRun(row),
     statusErrors: row.status_errors,
     nonIndexable: row.non_indexable,
+    recommendations: row.recommendation_count,
+    highPriorityRecommendations: row.high_recommendation_count,
+    topRecommendation: row.top_recommendation_url
+      ? {
+          url: row.top_recommendation_url,
+          title: row.top_recommendation_title ?? '',
+          action: row.top_recommendation_action ?? '',
+          severity: row.top_recommendation_severity ?? 'medium',
+        }
+      : undefined,
   }))
 }

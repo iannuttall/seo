@@ -97,8 +97,6 @@ export async function crawlDiff(input: {
     limit,
     urlCount: pages.length,
   }
-  insertCrawlRun(run, pages)
-
   const previousRun = getPreviousRun({ site, startUrl, currentRunId: run.id })
   const previousPages = previousRun
     ? [...getRunPages(previousRun.id).values()]
@@ -109,6 +107,7 @@ export async function crawlDiff(input: {
       )
     : []
   const recommendations = topCrawlRecommendations(items)
+  insertCrawlRun(run, pages, recommendations)
 
   return {
     run,

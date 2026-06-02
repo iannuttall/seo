@@ -99,6 +99,21 @@ CREATE TABLE IF NOT EXISTS crawl_pages (
   FOREIGN KEY(run_id) REFERENCES crawl_runs(id) ON DELETE CASCADE
 ) WITHOUT ROWID;
 
+CREATE TABLE IF NOT EXISTS crawl_recommendations (
+  run_id TEXT NOT NULL,
+  site_url TEXT NOT NULL,
+  url TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  action TEXT NOT NULL,
+  confidence TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY(run_id, url, category),
+  FOREIGN KEY(run_id) REFERENCES crawl_runs(id) ON DELETE CASCADE
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_crawl_recommendations_run ON crawl_recommendations(run_id, severity);
+
 CREATE TABLE IF NOT EXISTS index_watch_snapshots (
   id TEXT PRIMARY KEY,
   site_url TEXT NOT NULL,

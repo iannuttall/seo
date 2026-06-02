@@ -114,6 +114,26 @@ CREATE TABLE IF NOT EXISTS index_watch_snapshots (
   inspected_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_index_watch_url ON index_watch_snapshots(site_url, url, inspected_at);
+
+CREATE TABLE IF NOT EXISTS link_recover_runs (
+  id TEXT PRIMARY KEY,
+  site_url TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  start_date TEXT NOT NULL,
+  end_date TEXT NOT NULL,
+  days INTEGER NOT NULL,
+  checked INTEGER NOT NULL,
+  recoverable INTEGER NOT NULL,
+  high INTEGER NOT NULL,
+  medium INTEGER NOT NULL,
+  low INTEGER NOT NULL,
+  clicks_at_risk REAL NOT NULL,
+  impressions_at_risk REAL NOT NULL,
+  top_issue TEXT,
+  top_url TEXT,
+  top_action TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_link_recover_runs_site ON link_recover_runs(site_url, created_at);
 `
 
 let db: Database.Database | undefined

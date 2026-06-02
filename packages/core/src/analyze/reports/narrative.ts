@@ -5,7 +5,11 @@ import {
   listChanges,
   measureChange,
 } from '../experiments.js'
-import { latestCrawlSummaries, latestIndexWatchSummary } from '../monitoring.js'
+import {
+  latestCrawlSummaries,
+  latestIndexWatchSummary,
+  latestLinkRecoverSummary,
+} from '../monitoring.js'
 import { rangeDays } from './dates.js'
 import { renderMarkdown } from './markdown.js'
 import {
@@ -79,6 +83,7 @@ export async function reportNarrative(input: {
   const monitoring = {
     crawlRuns: latestCrawlSummaries(input.site),
     indexWatch: latestIndexWatchSummary(input.site),
+    linkRecover: latestLinkRecoverSummary(input.site),
   }
 
   const report: ReportNarrative = {

@@ -82,11 +82,21 @@ export const refreshPrioritiesCommand = defineCommand({
     }
     printWorkflow(report)
     printTable(
-      ['Source', 'Category', 'Score', 'Template', 'GA4', 'Target', 'Action'],
+      [
+        'Source',
+        'Category',
+        'Score',
+        'Findings',
+        'Template',
+        'GA4',
+        'Target',
+        'Action',
+      ],
       report.output.queue.map((item) => [
         item.source,
         item.category,
         item.score,
+        item.grouped?.count ?? 1,
         item.template?.label ?? '-',
         item.analytics?.sessions ?? '-',
         item.target,

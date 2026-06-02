@@ -34,6 +34,11 @@ export function monitoringBullets(
     bullets.push(
       `Latest crawl checked ${crawl.urlCount} URLs with ${crawl.statusErrors} status errors and ${crawl.nonIndexable} non-indexable pages.`,
     )
+    if (crawl.statusErrors || crawl.nonIndexable) {
+      bullets.push(
+        'Run link-recover before content work if those URLs have GSC search value; recoverable 4xx, noindex, and canonical issues can look like content decay.',
+      )
+    }
   } else {
     bullets.push('No crawl-diff run is saved yet.')
   }
@@ -43,6 +48,11 @@ export function monitoringBullets(
     bullets.push(
       `Index watch tracks ${watch.inspectedUrls} URLs; ${watch.nonPass} currently have a non-PASS verdict.`,
     )
+    if (watch.nonPass || watch.blocked) {
+      bullets.push(
+        `Index watch currently has ${watch.blocked} blocked URL(s); inspect redirect, robots, canonical, and final-page state before changing copy.`,
+      )
+    }
   } else {
     bullets.push('No index-watch snapshot is saved yet.')
   }

@@ -130,9 +130,27 @@ export function registerWorkflowTools(server: McpServer): void {
         refresh: z.boolean().optional(),
         js: z.boolean().optional(),
         languageCode: z.string().optional(),
+        recoverLinks: z.boolean().optional(),
+        recoverDays: z.number().optional(),
+        recoverLimit: z.number().optional(),
+        recoverMinClicks: z.number().optional(),
+        recoverMinImpressions: z.number().optional(),
       },
     },
-    async ({ site, startUrl, urls, limit, refresh, js, languageCode }) => {
+    async ({
+      site,
+      startUrl,
+      urls,
+      limit,
+      refresh,
+      js,
+      languageCode,
+      recoverLinks,
+      recoverDays,
+      recoverLimit,
+      recoverMinClicks,
+      recoverMinImpressions,
+    }) => {
       try {
         const result = await technicalWatchWorkflow({
           site,
@@ -142,6 +160,11 @@ export function registerWorkflowTools(server: McpServer): void {
           refresh,
           js: js ? true : 'auto',
           languageCode,
+          recoverLinks,
+          recoverDays,
+          recoverLimit,
+          recoverMinClicks,
+          recoverMinImpressions,
         })
         return toolSuccess(result.summary, result)
       } catch (error) {

@@ -134,6 +134,24 @@ CREATE TABLE IF NOT EXISTS link_recover_runs (
   top_action TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_link_recover_runs_site ON link_recover_runs(site_url, created_at);
+
+CREATE TABLE IF NOT EXISTS link_recover_items (
+  run_id TEXT NOT NULL,
+  site_url TEXT NOT NULL,
+  url TEXT NOT NULL,
+  final_url TEXT NOT NULL,
+  issue TEXT NOT NULL,
+  issues_json TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  clicks REAL NOT NULL,
+  impressions REAL NOT NULL,
+  position REAL NOT NULL,
+  action TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY(run_id, url),
+  FOREIGN KEY(run_id) REFERENCES link_recover_runs(id) ON DELETE CASCADE
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_link_recover_items_url ON link_recover_items(site_url, url, created_at);
 `
 
 let db: Database.Database | undefined

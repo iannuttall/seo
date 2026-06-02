@@ -67,6 +67,11 @@ export function monitoringBullets(
         `Top recovery target: ${recovery.topUrl}. ${recovery.topAction}`,
       )
     }
+    if (recovery.repeatedUrls) {
+      bullets.push(
+        `${recovery.repeatedUrls} recoverable URL(s) appeared in multiple recent link-recover runs${recovery.repeatedTopUrl ? `; first repeat: ${recovery.repeatedTopUrl}` : ''}.`,
+      )
+    }
   } else {
     bullets.push('No link-recover run is saved yet.')
   }

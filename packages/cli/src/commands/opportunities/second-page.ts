@@ -21,6 +21,14 @@ export const secondPageCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
+    days: {
+      type: 'string',
+      description: 'GSC lookback window. Defaults to 28.',
+    },
+    'min-impressions': {
+      type: 'string',
+      description: 'Minimum query impressions. Defaults to 50.',
+    },
     limit: { type: 'string' },
     'include-brand': {
       type: 'boolean',
@@ -69,6 +77,8 @@ export const secondPageCommand = defineCommand({
     })
     const report = await secondPage({
       site: selection.site,
+      range: numberArg(args.days),
+      minImpressions: numberArg(args['min-impressions']),
       limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),

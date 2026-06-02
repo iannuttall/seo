@@ -1,0 +1,724 @@
+const opt = (name, cli, mcp, core = name) => ({ name, cli, mcp, core })
+
+const common = {
+  site: opt('site', 'site:', 'site: z.string()'),
+  days: opt('days', 'days:', 'days: z.number().optional()'),
+  recentDays: opt('recentDays', 'recent:', 'recentDays: z.number().optional()'),
+  limit: opt('limit', 'limit:', 'limit: z.number().optional()'),
+  includeBrand: opt(
+    'includeBrand',
+    "'include-brand':",
+    'includeBrand: z.boolean().optional()',
+  ),
+  refresh: opt('refresh', 'refresh:', 'refresh: z.boolean().optional()'),
+  js: opt('js', 'js:', 'js: z.boolean().optional()'),
+  verifyContent: opt(
+    'verifyContent',
+    "'verify-content':",
+    'verifyContent: z.boolean().optional()',
+  ),
+  verifyLimit: opt(
+    'verifyLimit',
+    "'verify-limit':",
+    'verifyLimit: z.number().optional()',
+  ),
+  minImpressions: opt(
+    'minImpressions',
+    "'min-impressions':",
+    'minImpressions: z.number().optional()',
+  ),
+  fetchConcurrency: opt(
+    'fetchConcurrency',
+    "'fetch-concurrency':",
+    'fetchConcurrency: z.number().optional()',
+    false,
+  ),
+  fetchIntervalCap: opt(
+    'fetchIntervalCap',
+    "'fetch-interval-cap':",
+    'fetchIntervalCap: z.number().optional()',
+    false,
+  ),
+  fetchIntervalMs: opt(
+    'fetchIntervalMs',
+    "'fetch-interval-ms':",
+    'fetchIntervalMs: z.number().optional()',
+    false,
+  ),
+  sitemaps: opt('sitemaps', 'sitemaps:', 'sitemaps: z.array(z.string().url())'),
+  properties: opt(
+    'properties',
+    'properties:',
+    'properties: z.array(z.string())',
+  ),
+  dailyLimit: opt(
+    'dailyLimit',
+    "'daily-limit':",
+    'dailyLimit: z.number().optional()',
+  ),
+  inspectLimit: opt(
+    'inspectLimit',
+    "'inspect-limit':",
+    'inspectLimit: z.number().optional()',
+  ),
+  maxUrls: opt('maxUrls', "'max-urls':", 'maxUrls: z.number().optional()'),
+  languageCode: opt(
+    'languageCode',
+    'language:',
+    'languageCode: z.string().optional()',
+  ),
+}
+
+const fetchOptions = [
+  common.verifyContent,
+  common.verifyLimit,
+  common.includeBrand,
+  common.js,
+  common.fetchConcurrency,
+  common.fetchIntervalCap,
+  common.fetchIntervalMs,
+  common.refresh,
+]
+
+export const reportSurfaces = [
+  {
+    id: 'ai-referrals',
+    core: 'aiReferralsReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/ai-referrals.ts',
+      marker: "'ai-referrals': aiReferralsCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/ai-opportunity-tools.ts',
+      marker: "'seo_ai_referrals'",
+    },
+    options: [
+      opt('property', 'property:', 'property: z.string()'),
+      opt('startDate', "'start-date':", 'startDate: z.string().optional()'),
+      opt('endDate', "'end-date':", 'endDate: z.string().optional()'),
+      common.limit,
+    ],
+  },
+  {
+    id: 'audit-page',
+    core: 'auditPage',
+    cli: {
+      file: 'packages/cli/src/commands/page-audit.ts',
+      marker: "'audit-page': auditPageCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/report-tools/audit-page.ts',
+      marker: "'seo_audit_page'",
+    },
+    options: [
+      opt('url', 'url:', 'url: z.string().url()'),
+      common.site,
+      common.js,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'cannibal',
+    core: 'cannibalReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/cannibal.ts',
+      marker: 'cannibal: cannibalCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_cannibal'",
+    },
+    options: [common.site, common.includeBrand, common.minImpressions],
+  },
+  {
+    id: 'community-intent',
+    core: 'communityIntentReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/community-intent.ts',
+      marker: "'community-intent': communityIntentCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/ai-opportunity-tools.ts',
+      marker: "'seo_community_intent'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.limit,
+      common.minImpressions,
+      common.includeBrand,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'crawl-diff',
+    core: 'crawlDiff',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/crawl-diff.ts',
+      marker: "'crawl-diff': crawlDiffCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_crawl_diff'",
+    },
+    options: [
+      opt('startUrl', 'url:', 'startUrl: z.string().url()'),
+      common.site,
+      common.limit,
+      common.refresh,
+      common.js,
+    ],
+  },
+  {
+    id: 'ctr-underperformers',
+    core: 'ctrUnderperformersReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/ctr.ts',
+      marker: "'ctr-underperformers': ctrUnderperformersCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_ctr_underperformers'",
+    },
+    options: [common.site, common.minImpressions, common.includeBrand],
+  },
+  {
+    id: 'decaying',
+    core: 'decayingReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/decaying.ts',
+      marker: 'decaying: decayingCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_decaying'",
+    },
+    options: [
+      common.site,
+      opt('minDropPct', "'min-drop-pct':", 'minDropPct: z.number().optional()'),
+      opt(
+        'minPreviousClicks',
+        "'min-previous-clicks':",
+        'minPreviousClicks: z.number().optional()',
+      ),
+      opt(
+        'minClickLoss',
+        "'min-click-loss':",
+        'minClickLoss: z.number().optional()',
+      ),
+      common.includeBrand,
+    ],
+  },
+  {
+    id: 'diagnose',
+    core: 'diagnoseProperty',
+    cli: {
+      file: 'packages/cli/src/commands/product/diagnose.ts',
+      marker: 'diagnose: diagnoseCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/diagnosis-tools.ts',
+      marker: "'seo_diagnose_property'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      common.limit,
+      common.includeBrand,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'diagnose-property',
+    core: 'diagnosePropertyWorkflow',
+    cli: {
+      file: 'packages/cli/src/commands/workflows/diagnose-property.ts',
+      marker: "'diagnose-property': diagnosePropertyWorkflowCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/workflow-tools.ts',
+      marker: "'seo_workflow_diagnose_property'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      common.limit,
+      common.includeBrand,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'index-coverage-plan',
+    core: 'indexCoveragePlan',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
+      marker: "'index-watch': indexWatchCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_index_coverage_plan'",
+    },
+    options: [
+      common.site,
+      common.sitemaps,
+      common.properties,
+      common.dailyLimit,
+      opt(
+        'targetCycleDays',
+        "'target-days':",
+        'targetCycleDays: z.number().optional()',
+      ),
+      common.maxUrls,
+    ],
+  },
+  {
+    id: 'index-monitor',
+    core: 'indexMonitor',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
+      marker: "'index-watch': indexWatchCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_index_monitor'",
+    },
+    options: [
+      common.site,
+      common.sitemaps,
+      common.properties,
+      common.dailyLimit,
+      common.inspectLimit,
+      common.maxUrls,
+      common.languageCode,
+    ],
+  },
+  {
+    id: 'index-watch',
+    core: 'indexWatch',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
+      marker: "'index-watch': indexWatchCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_index_watch'",
+    },
+    options: [
+      common.site,
+      opt('urls', 'urls:', 'urls: z.array(z.string().url())'),
+      common.languageCode,
+    ],
+  },
+  {
+    id: 'internal-links',
+    core: 'internalLinksReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/internal-links.ts',
+      marker: "'internal-links': internalLinksCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_internal_links'",
+    },
+    options: [
+      common.site,
+      opt('targetUrl', 'url:', 'targetUrl: z.string().url()'),
+      common.limit,
+    ],
+  },
+  {
+    id: 'link-recover',
+    core: 'linkRecover',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/link-recover.ts',
+      marker: "'link-recover': linkRecoverCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_link_recover'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.limit,
+      opt('minClicks', "'min-clicks':", 'minClicks: z.number().optional()'),
+      common.minImpressions,
+      common.refresh,
+      common.js,
+    ],
+  },
+  {
+    id: 'monthly-report',
+    core: 'monthlyReport',
+    cli: {
+      file: 'packages/cli/src/commands/reports/monthly.ts',
+      sharedFiles: ['packages/cli/src/commands/reports/args.ts'],
+      marker: "'monthly-report': monthlyReportCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/report-tools/monthly.ts',
+      sharedFiles: ['packages/mcp/src/report-tools/input.ts'],
+      marker: "'seo_monthly_report'",
+    },
+    options: [
+      common.site,
+      opt('month', 'month:', 'month: z.string().optional()'),
+      common.limit,
+      common.includeBrand,
+      common.verifyContent,
+      common.verifyLimit,
+      common.js,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'page-opportunities',
+    core: 'pageOpportunitiesReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/page-opportunities.ts',
+      marker: "'page-opportunities': pageOpportunitiesCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/ai-opportunity-tools.ts',
+      marker: "'seo_page_opportunities'",
+    },
+    options: [
+      common.site,
+      opt('url', 'url:', 'url: z.string().url()'),
+      common.days,
+      common.limit,
+      common.includeBrand,
+      common.refresh,
+      common.js,
+    ],
+  },
+  {
+    id: 'pseo-audit',
+    core: 'pseoAuditReport',
+    cli: {
+      file: 'packages/cli/src/commands/pseo/audit.ts',
+      marker: 'pseoCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/pseo-tools.ts',
+      marker: "'seo_pseo_audit'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.sitemaps,
+      opt('templateLimit', 'limit:', 'templateLimit: z.number().optional()'),
+      opt(
+        'crawlSamples',
+        "'crawl-samples':",
+        'crawlSamples: z.number().optional()',
+      ),
+      opt(
+        'inspectSamples',
+        "'inspect-samples':",
+        'inspectSamples: z.number().optional()',
+      ),
+      common.includeBrand,
+      common.refresh,
+      common.js,
+    ],
+  },
+  {
+    id: 'query-cluster',
+    core: 'queryClusterReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/query-cluster.ts',
+      marker: "'query-cluster': queryClusterCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_query_cluster'",
+    },
+    options: [
+      common.site,
+      opt('scope', 'scope:', 'scope: z.string().optional()'),
+    ],
+  },
+  {
+    id: 'quick-wins',
+    core: 'quickWinsReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/quick-wins.ts',
+      marker: "'quick-wins': quickWinsCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/opportunity-tools.ts',
+      marker: "'seo_quick_wins'",
+    },
+    options: [common.site, common.minImpressions, ...fetchOptions],
+  },
+  {
+    id: 'redirect-trace',
+    core: 'redirectTrace',
+    cli: {
+      file: 'packages/cli/src/commands/monitoring/redirect-trace.ts',
+      marker: "'redirect-trace': redirectTraceCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/monitoring-tools.ts',
+      marker: "'seo_redirect_trace'",
+    },
+    options: [
+      opt('url', 'url:', 'url: z.string().url()'),
+      opt('maxHops', "'max-hops':", 'maxHops: z.number().optional()'),
+      common.refresh,
+      common.js,
+    ],
+  },
+  {
+    id: 'refresh-priorities',
+    core: 'refreshPrioritiesWorkflow',
+    cli: {
+      file: 'packages/cli/src/commands/workflows/refresh-priorities.ts',
+      marker: "'refresh-priorities': refreshPrioritiesCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/workflow-tools.ts',
+      marker: "'seo_workflow_refresh_priorities'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      common.limit,
+      common.includeBrand,
+      opt(
+        'ga4PropertyId',
+        "'ga4-property':",
+        'ga4PropertyId: z.string().optional()',
+      ),
+      common.verifyContent,
+      common.verifyLimit,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'report-narrative',
+    core: 'reportNarrative',
+    cli: {
+      file: 'packages/cli/src/commands/reports/narrative.ts',
+      sharedFiles: ['packages/cli/src/commands/reports/args.ts'],
+      marker: "'report-narrative': reportNarrativeCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/report-tools/narrative.ts',
+      sharedFiles: ['packages/mcp/src/report-tools/input.ts'],
+      marker: "'seo_report_narrative'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      opt('startDate', "'start-date':", 'startDate: z.string().optional()'),
+      opt('endDate', "'end-date':", 'endDate: z.string().optional()'),
+      common.limit,
+      opt(
+        'changeLimit',
+        "'change-limit':",
+        'changeLimit: z.number().optional()',
+      ),
+      common.includeBrand,
+      common.verifyContent,
+      common.verifyLimit,
+      common.js,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'second-page',
+    core: 'secondPage',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/second-page.ts',
+      marker: "'second-page': secondPageCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/report-tools/second-page.ts',
+      sharedFiles: ['packages/mcp/src/report-tools/input.ts'],
+      marker: "'seo_second_page'",
+    },
+    options: [
+      common.site,
+      opt('range', 'days:', 'range: z.number().optional()'),
+      common.minImpressions,
+      common.limit,
+      ...fetchOptions,
+    ],
+  },
+  {
+    id: 'segment-impact',
+    core: 'segmentImpact',
+    cli: {
+      file: 'packages/cli/src/commands/product/segment-impact.ts',
+      marker: "'segment-impact': segmentImpactCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/diagnosis-tools.ts',
+      marker: "'seo_segment_impact'",
+    },
+    options: [
+      common.site,
+      opt(
+        'dimension',
+        'dimension:',
+        "dimension: z.enum(['page', 'query', 'country', 'device']).optional()",
+      ),
+      common.days,
+      opt('compareDays', 'compare:', 'compareDays: z.number().optional()'),
+      common.limit,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'seo-to-ai-query',
+    core: 'seoToAiQueryReport',
+    cli: {
+      file: 'packages/cli/src/commands/opportunities/seo-to-ai-query.ts',
+      marker: "'seo-to-ai-query': seoToAiQueryCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/ai-opportunity-tools.ts',
+      marker: "'seo_to_ai_query'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.limit,
+      common.minImpressions,
+      common.includeBrand,
+      common.refresh,
+    ],
+  },
+  {
+    id: 'striking-distance',
+    core: 'strikingDistance',
+    cli: {
+      file: 'packages/cli/src/commands/product/striking-distance.ts',
+      marker: "'striking-distance': strikingDistanceCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/diagnosis-tools.ts',
+      marker: "'seo_striking_distance'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.minImpressions,
+      common.limit,
+      ...fetchOptions,
+    ],
+  },
+  {
+    id: 'technical-watch',
+    core: 'technicalWatchWorkflow',
+    cli: {
+      file: 'packages/cli/src/commands/workflows/technical-watch.ts',
+      marker: "'technical-watch': technicalWatchCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/workflow-tools.ts',
+      marker: "'seo_workflow_technical_watch'",
+    },
+    options: [
+      common.site,
+      opt('startUrl', 'url:', 'startUrl: z.string().url().optional()'),
+      opt('urls', 'urls:', 'urls: z.array(z.string().url()).optional()'),
+      common.sitemaps,
+      common.properties,
+      common.limit,
+      common.refresh,
+      common.js,
+      common.languageCode,
+      common.dailyLimit,
+      common.inspectLimit,
+      common.maxUrls,
+      opt(
+        'recoverLinks',
+        "'recover-links':",
+        'recoverLinks: z.boolean().optional()',
+      ),
+      opt(
+        'recoverDays',
+        "'recover-days':",
+        'recoverDays: z.number().optional()',
+      ),
+      opt(
+        'recoverLimit',
+        "'recover-limit':",
+        'recoverLimit: z.number().optional()',
+      ),
+      opt(
+        'recoverMinClicks',
+        "'recover-min-clicks':",
+        'recoverMinClicks: z.number().optional()',
+      ),
+      opt(
+        'recoverMinImpressions',
+        "'recover-min-impressions':",
+        'recoverMinImpressions: z.number().optional()',
+      ),
+    ],
+  },
+  {
+    id: 'traffic-anomaly',
+    core: 'trafficAnomaly',
+    cli: {
+      file: 'packages/cli/src/commands/diagnosis-reports.ts',
+      marker: "'traffic-anomaly': trafficAnomalyCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/diagnosis-tools.ts',
+      marker: "'seo_traffic_anomaly'",
+    },
+    options: [common.site, common.days, common.recentDays, common.refresh],
+  },
+  {
+    id: 'update-correlate',
+    core: 'updateCorrelation',
+    cli: {
+      file: 'packages/cli/src/commands/diagnosis-reports.ts',
+      marker: "'update-correlate': updateCorrelateCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/diagnosis-tools.ts',
+      marker: "'seo_update_correlate'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      opt(
+        'paddingDays',
+        "'padding-days':",
+        'paddingDays: z.number().optional()',
+      ),
+      common.refresh,
+    ],
+  },
+  {
+    id: 'update-postmortem',
+    core: 'updatePostmortemWorkflow',
+    cli: {
+      file: 'packages/cli/src/commands/workflows/update-postmortem.ts',
+      marker: "'update-postmortem': updatePostmortemCommand",
+    },
+    mcp: {
+      file: 'packages/mcp/src/workflow-tools.ts',
+      marker: "'seo_workflow_update_postmortem'",
+    },
+    options: [
+      common.site,
+      common.days,
+      common.recentDays,
+      common.limit,
+      common.includeBrand,
+      common.refresh,
+    ],
+  },
+]

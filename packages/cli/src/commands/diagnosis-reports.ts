@@ -52,6 +52,7 @@ export const updateCorrelateCommand = defineCommand({
     client: { type: 'string' },
     days: { type: 'string' },
     recent: { type: 'string' },
+    'padding-days': { type: 'string' },
     json: { type: 'boolean', default: false },
     refresh: { type: 'boolean', default: false },
   },
@@ -67,6 +68,7 @@ export const updateCorrelateCommand = defineCommand({
       ),
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
+      paddingDays: numberArg(args['padding-days']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {

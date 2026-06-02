@@ -1,6 +1,6 @@
 import { cannibalReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -19,6 +19,10 @@ export const cannibalCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'min-impressions': {
+      type: 'string',
+      description: 'Minimum query impressions. Defaults to 50.',
+    },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -30,6 +34,7 @@ export const cannibalCommand = defineCommand({
     })
     const report = await cannibalReport({
       site: selection.site,
+      minImpressions: numberArg(args['min-impressions']),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
     })

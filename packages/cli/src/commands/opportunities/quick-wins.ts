@@ -29,6 +29,10 @@ export const quickWinsCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'min-impressions': {
+      type: 'string',
+      description: 'Minimum query impressions. Defaults to 200.',
+    },
     'verify-content': {
       type: 'boolean',
       default: false,
@@ -57,6 +61,11 @@ export const quickWinsCommand = defineCommand({
       description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
     },
     json: { type: 'boolean', default: false },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass local cache and fetch fresh GSC data.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
@@ -70,12 +79,14 @@ export const quickWinsCommand = defineCommand({
     })
     const report = await quickWinsReport({
       site: selection.site,
+      minImpressions: numberArg(args['min-impressions']),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       verifyContent,
       verifyLimit,
       js: booleanArg(args.js) ? true : undefined,
       rate: fetchRateArg(args),
+      refresh: booleanArg(args.refresh),
     })
     if (json) {
       printJson(report)

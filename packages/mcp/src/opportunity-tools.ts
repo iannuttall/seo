@@ -91,6 +91,7 @@ export function registerOpportunityTools(server: McpServer): void {
         fetchConcurrency: z.number().optional(),
         fetchIntervalCap: z.number().optional(),
         fetchIntervalMs: z.number().optional(),
+        refresh: z.boolean().optional(),
       },
     },
     async ({
@@ -103,6 +104,7 @@ export function registerOpportunityTools(server: McpServer): void {
       fetchConcurrency,
       fetchIntervalCap,
       fetchIntervalMs,
+      refresh,
     }) => {
       try {
         const result = await quickWinsReport({
@@ -117,6 +119,7 @@ export function registerOpportunityTools(server: McpServer): void {
             fetchIntervalCap,
             fetchIntervalMs,
           }),
+          refresh,
         })
         return toolSuccess(
           `${result.items.length} quick wins found across ${result.groups.length} repeated query/template cluster(s).`,

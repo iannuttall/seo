@@ -20,11 +20,16 @@ export function registerOpportunityTools(server: McpServer): void {
       inputSchema: {
         site: z.string(),
         minImpressions: z.number().optional(),
+        includeBrand: z.boolean().optional(),
       },
     },
-    async ({ site, minImpressions }) => {
+    async ({ site, minImpressions, includeBrand }) => {
       try {
-        const result = await cannibalReport({ site, minImpressions })
+        const result = await cannibalReport({
+          site,
+          minImpressions,
+          includeBrand,
+        })
         return toolSuccess(
           `${result.items.length} cannibalisation clusters found; ${result.suppressed.length} likely false positives suppressed.`,
           result,
@@ -44,15 +49,23 @@ export function registerOpportunityTools(server: McpServer): void {
         minDropPct: z.number().optional(),
         minPreviousClicks: z.number().optional(),
         minClickLoss: z.number().optional(),
+        includeBrand: z.boolean().optional(),
       },
     },
-    async ({ site, minDropPct, minPreviousClicks, minClickLoss }) => {
+    async ({
+      site,
+      minDropPct,
+      minPreviousClicks,
+      minClickLoss,
+      includeBrand,
+    }) => {
       try {
         const result = await decayingReport({
           site,
           minDropPct,
           minPreviousClicks,
           minClickLoss,
+          includeBrand,
         })
         return toolSuccess(
           `${result.items.length} decaying query/page rows found across ${result.groups.length} cluster(s).`,
@@ -73,6 +86,7 @@ export function registerOpportunityTools(server: McpServer): void {
         minImpressions: z.number().optional(),
         verifyContent: z.boolean().optional(),
         verifyLimit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         js: z.boolean().optional(),
         fetchConcurrency: z.number().optional(),
         fetchIntervalCap: z.number().optional(),
@@ -84,6 +98,7 @@ export function registerOpportunityTools(server: McpServer): void {
       minImpressions,
       verifyContent,
       verifyLimit,
+      includeBrand,
       js,
       fetchConcurrency,
       fetchIntervalCap,
@@ -95,6 +110,7 @@ export function registerOpportunityTools(server: McpServer): void {
           minImpressions,
           verifyContent,
           verifyLimit,
+          includeBrand,
           js: js ? true : undefined,
           rate: fetchRateInput({
             fetchConcurrency,
@@ -143,11 +159,16 @@ export function registerOpportunityTools(server: McpServer): void {
       inputSchema: {
         site: z.string(),
         minImpressions: z.number().optional(),
+        includeBrand: z.boolean().optional(),
       },
     },
-    async ({ site, minImpressions }) => {
+    async ({ site, minImpressions, includeBrand }) => {
       try {
-        const result = await ctrUnderperformersReport({ site, minImpressions })
+        const result = await ctrUnderperformersReport({
+          site,
+          minImpressions,
+          includeBrand,
+        })
         return toolSuccess(
           `${result.items.length} CTR underperformers found.`,
           result,

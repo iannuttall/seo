@@ -254,7 +254,7 @@ export async function refreshPrioritiesWorkflow(input: {
     drafts.push({
       source: 'template',
       title: `${template.label} opportunity template`,
-      target: template.sampleUrls[0] ?? input.site,
+      target: `${template.label} template (${template.count} URLs)`,
       impact,
       confidence: 'high',
       effort: 'M',

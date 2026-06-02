@@ -12,6 +12,14 @@ import {
   truncate,
 } from '../output.js'
 
+function clickGap(item: {
+  expectedCtr: number
+  actualCtr: number
+  impressions: number
+}): number {
+  return Math.max(0, (item.expectedCtr - item.actualCtr) * item.impressions)
+}
+
 export const ctrUnderperformersCommand = defineCommand({
   args: {
     site: { type: 'string' },
@@ -48,7 +56,7 @@ export const ctrUnderperformersCommand = defineCommand({
       ],
     ])
     printLimitedTable(
-      ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Expected', 'Action'],
+      ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Expected', 'Gap', 'Action'],
       report.items.map((item) => [
         truncate(item.query, 36),
         truncate(item.url, 48),
@@ -56,6 +64,7 @@ export const ctrUnderperformersCommand = defineCommand({
         formatCount(item.impressions),
         formatPercent(item.actualCtr),
         formatPercent(item.expectedCtr),
+        formatCount(clickGap(item)),
         truncate(item.recommendation.action, 72),
       ]),
     )
@@ -63,7 +72,7 @@ export const ctrUnderperformersCommand = defineCommand({
       'Top CTR actions',
       report.items.map((item) => ({
         label: item.query,
-        context: `${formatCount(item.impressions)} impressions, ${formatPercent(item.actualCtr)} CTR`,
+        context: `${formatCount(clickGap(item))} click gap, ${formatPercent(item.actualCtr)} CTR`,
         action: item.recommendation.action,
       })),
     )

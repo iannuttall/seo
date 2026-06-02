@@ -1,5 +1,6 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import { isLowActionabilityQuery } from './query-quality.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
 
 export async function ctrUnderperformersReport(input: {
@@ -29,6 +30,7 @@ export async function ctrUnderperformersReport(input: {
         row.position >= 1 &&
         row.position <= 10 &&
         row.impressions >= minImpressions &&
+        !isLowActionabilityQuery(query) &&
         !shouldExcludeBrandQuery({
           query,
           siteUrl: input.site,
@@ -40,6 +42,8 @@ export async function ctrUnderperformersReport(input: {
     .map((row) => {
       const rounded = Math.max(1, Math.min(10, Math.round(row.position)))
       const expected = CTR_BASELINE[rounded] ?? 0.01
+      const expectedClicks = expected * row.impressions
+      const clickShortfall = Math.max(0, expectedClicks - row.clicks)
       return {
         query: row.keys[0] ?? '',
         url: row.keys[1] ?? '',
@@ -47,9 +51,12 @@ export async function ctrUnderperformersReport(input: {
         impressions: row.impressions,
         actualCtr: row.ctr,
         expectedCtr: expected,
+        clicks: row.clicks,
+        expectedClicks,
+        clickShortfall,
         recommendation: {
           principle: 'C.3',
-          evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${expected.toFixed(3)} at position ${rounded}.`,
+          evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${expected.toFixed(3)} at position ${rounded}, leaving about ${clickShortfall.toFixed(0)} clicks on the table.`,
           action: `This page ranks on page one for "${row.keys[0]}" but gets fewer clicks than expected. Rewrite the title and meta description to match the main search intent; do not rewrite the page body unless rankings also drop.`,
           effort: 'S' as const,
           confidence: 'medium' as const,
@@ -57,7 +64,7 @@ export async function ctrUnderperformersReport(input: {
       }
     })
     .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
-    .sort((a, b) => b.impressions - a.impressions)
+    .sort((a, b) => b.clickShortfall - a.clickShortfall)
 
   return {
     site: input.site,

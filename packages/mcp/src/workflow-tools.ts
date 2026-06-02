@@ -43,16 +43,18 @@ export function registerWorkflowTools(server: McpServer): void {
         days: z.number().optional(),
         recentDays: z.number().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, days, recentDays, limit, refresh }) => {
+    async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
       try {
         const result = await diagnosePropertyWorkflow({
           site,
           days,
           recentDays,
           limit,
+          includeBrand,
           refresh,
         })
         return toolSuccess(result.summary, result)
@@ -70,15 +72,17 @@ export function registerWorkflowTools(server: McpServer): void {
         site: z.string(),
         month: z.string().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, month, limit, refresh }) => {
+    async ({ site, month, limit, includeBrand, refresh }) => {
       try {
         const result = await monthlyReportWorkflow({
           site,
           month,
           limit,
+          includeBrand,
           refresh,
         })
         return toolSuccess(result.summary, result)
@@ -98,16 +102,18 @@ export function registerWorkflowTools(server: McpServer): void {
         days: z.number().optional(),
         recentDays: z.number().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, days, recentDays, limit, refresh }) => {
+    async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
       try {
         const result = await updatePostmortemWorkflow({
           site,
           days,
           recentDays,
           limit,
+          includeBrand,
           refresh,
         })
         return toolSuccess(result.summary, result)
@@ -198,6 +204,7 @@ export function registerWorkflowTools(server: McpServer): void {
         days: z.number().optional(),
         recentDays: z.number().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         ga4PropertyId: z.string().optional(),
         verifyContent: z.boolean().optional(),
         verifyLimit: z.number().optional(),
@@ -209,6 +216,7 @@ export function registerWorkflowTools(server: McpServer): void {
       days,
       recentDays,
       limit,
+      includeBrand,
       ga4PropertyId,
       verifyContent,
       verifyLimit,
@@ -220,6 +228,7 @@ export function registerWorkflowTools(server: McpServer): void {
           days,
           recentDays,
           limit,
+          includeBrand,
           ga4PropertyId,
           verifyContent,
           verifyLimit,

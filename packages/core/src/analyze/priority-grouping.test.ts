@@ -61,6 +61,33 @@ test('groupPriorityQueue groups same query and category with different action te
   assert.equal(grouped[0]?.grouped?.count, 2)
 })
 
+test('groupPriorityQueue groups repeated actions for the same target first', () => {
+  const grouped = groupPriorityQueue([
+    item({
+      title: 'best plumber salary',
+      target: 'https://example.com/a/',
+      score: 100,
+      impact: 100,
+    }),
+    item({
+      title: 'plumber salary in london',
+      target: 'https://example.com/a/',
+      score: 90,
+      impact: 80,
+    }),
+    item({
+      title: 'electrician salary',
+      target: 'https://example.com/b/',
+      score: 80,
+      impact: 70,
+    }),
+  ])
+
+  assert.equal(grouped.length, 2)
+  assert.equal(grouped[0]?.grouped?.count, 2)
+  assert.match(grouped[0]?.action ?? '', /2 findings point at this URL/)
+})
+
 test('groupPriorityQueue keeps different categories separate', () => {
   const grouped = groupPriorityQueue([
     item({ target: 'https://example.com/a/', category: 'serp' }),

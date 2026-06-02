@@ -15,16 +15,25 @@ export function registerSecondPageTool(server: McpServer): void {
         range: z.number().optional(),
         minImpressions: z.number().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         ...reportFetchInputSchema,
       },
     },
-    async ({ site, range, minImpressions, limit, ...fetchInput }) => {
+    async ({
+      site,
+      range,
+      minImpressions,
+      limit,
+      includeBrand,
+      ...fetchInput
+    }) => {
       try {
         const result = await secondPage({
           site,
           range,
           minImpressions,
           limit,
+          includeBrand,
           ...reportFetchOptions(fetchInput),
         })
         const templateCount = new Set(

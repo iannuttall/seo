@@ -18,6 +18,7 @@ export function registerNarrativeReportTool(server: McpServer): void {
         endDate: z.string().optional(),
         limit: z.number().optional(),
         changeLimit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         ...reportFetchInputSchema,
       },
     },
@@ -29,6 +30,7 @@ export function registerNarrativeReportTool(server: McpServer): void {
       endDate,
       limit,
       changeLimit,
+      includeBrand,
       ...fetchInput
     }) => {
       try {
@@ -40,6 +42,7 @@ export function registerNarrativeReportTool(server: McpServer): void {
           endDate,
           limit,
           changeLimit,
+          includeBrand,
           ...reportFetchOptions(fetchInput),
         })
         return toolSuccess(result.headline, result)

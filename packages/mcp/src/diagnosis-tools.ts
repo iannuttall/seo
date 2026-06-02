@@ -43,16 +43,18 @@ export function registerDiagnosisTools(server: McpServer): void {
         days: z.number().optional(),
         recentDays: z.number().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, days, recentDays, limit, refresh }) => {
+    async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
       try {
         const result = await diagnoseProperty({
           site,
           days,
           recentDays,
           limit,
+          includeBrand,
           refresh,
         })
         return toolSuccess(
@@ -110,6 +112,7 @@ export function registerDiagnosisTools(server: McpServer): void {
         limit: z.number().optional(),
         verifyContent: z.boolean().optional(),
         verifyLimit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         js: z.boolean().optional(),
         fetchConcurrency: z.number().optional(),
         fetchIntervalCap: z.number().optional(),
@@ -124,6 +127,7 @@ export function registerDiagnosisTools(server: McpServer): void {
       limit,
       verifyContent,
       verifyLimit,
+      includeBrand,
       js,
       fetchConcurrency,
       fetchIntervalCap,
@@ -138,6 +142,7 @@ export function registerDiagnosisTools(server: McpServer): void {
           limit,
           verifyContent,
           verifyLimit,
+          includeBrand,
           js: js ? true : undefined,
           rate: fetchRateInput({
             fetchConcurrency,

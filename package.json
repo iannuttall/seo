@@ -12,7 +12,7 @@
     "build": "turbo run build",
     "clean": "turbo run clean",
     "dev": "turbo run dev --parallel",
-    "lint": "biome check . && node scripts/check-emdashes.mjs && turbo run lint",
+    "lint": "biome check . && node scripts/check-emdashes.mjs && node scripts/check-report-parity.mjs && turbo run lint",
     "lint:fix": "biome check . --write",
     "loc:audit": "node scripts/loc-audit.mjs",
     "test": "turbo run test",

@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { crawlOne } from './crawl-page.js'
+import {
+  attachCrawlRecommendations,
+  topCrawlRecommendations,
+} from './crawl-recommendations.js'
 import { getPreviousRun, getRunPages, insertCrawlRun } from './crawl-store.js'
 import type {
   CrawlDiffItem,
@@ -100,8 +104,11 @@ export async function crawlDiff(input: {
     ? [...getRunPages(previousRun.id).values()]
     : []
   const items = previousRun
-    ? compareCrawlPages({ current: pages, previous: previousPages })
+    ? attachCrawlRecommendations(
+        compareCrawlPages({ current: pages, previous: previousPages }),
+      )
     : []
+  const recommendations = topCrawlRecommendations(items)
 
   return {
     run,
@@ -120,7 +127,11 @@ export async function crawlDiff(input: {
       indexabilityFlips: items.filter((item) =>
         item.changes.includes('indexability'),
       ).length,
+      highPriorityRecommendations: recommendations.filter(
+        (item) => item.severity === 'high',
+      ).length,
     },
+    recommendations,
     items,
     warnings,
   }

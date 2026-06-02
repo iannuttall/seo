@@ -2,6 +2,7 @@ import { crawlDiff } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { truncate } from '../output.js'
 
 export const crawlDiffCommand = defineCommand({
   meta: {
@@ -61,13 +62,37 @@ export const crawlDiffCommand = defineCommand({
       ['Changed', String(report.summary.changed)],
       ['New errors', String(report.summary.newErrors)],
       ['Indexability flips', String(report.summary.indexabilityFlips)],
+      [
+        'High-priority actions',
+        String(report.summary.highPriorityRecommendations),
+      ],
     ])
-    if (report.items.length) {
+    if (report.recommendations.length) {
+      process.stdout.write('\nRecommended actions\n')
       printTable(
-        ['Kind', 'URL', 'Changes'],
+        ['Severity', 'Category', 'URL', 'Action'],
+        report.recommendations
+          .slice(0, 10)
+          .map((item) => [
+            item.severity,
+            item.category,
+            truncate(item.url, 56),
+            truncate(item.action, 72),
+          ]),
+      )
+    }
+    if (report.items.length) {
+      process.stdout.write('\nChanged URLs\n')
+      printTable(
+        ['Kind', 'URL', 'Changes', 'Recommendation'],
         report.items
           .slice(0, 50)
-          .map((item) => [item.kind, item.url, item.changes.join(', ')]),
+          .map((item) => [
+            item.kind,
+            truncate(item.url, 56),
+            item.changes.join(', '),
+            item.recommendation?.title ?? '-',
+          ]),
       )
     }
     if (report.warnings.length) {

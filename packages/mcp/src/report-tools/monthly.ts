@@ -13,15 +13,17 @@ export function registerMonthlyReportTool(server: McpServer): void {
         site: z.string(),
         month: z.string().optional(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
         ...reportFetchInputSchema,
       },
     },
-    async ({ site, month, limit, ...fetchInput }) => {
+    async ({ site, month, limit, includeBrand, ...fetchInput }) => {
       try {
         const result = await monthlyReport({
           site,
           month,
           limit,
+          includeBrand,
           ...reportFetchOptions(fetchInput),
         })
         return toolSuccess(

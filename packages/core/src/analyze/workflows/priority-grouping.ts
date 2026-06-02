@@ -26,11 +26,26 @@ function groupKey(item: PriorityQueueItem): string | undefined {
   ].join('|')
 }
 
+function targetGroupKey(item: PriorityQueueItem): string | undefined {
+  if (!GROUPABLE_SOURCES.has(item.source)) return undefined
+  if (item.grouped) return undefined
+  const templateId = queueTemplateFamilyId(item.template)
+  return [
+    item.source,
+    item.category,
+    templateId,
+    normalizeText(item.target),
+  ].join('|')
+}
+
 function groupedAction(items: PriorityQueueItem[]): string {
   const first = items[0]
   if (!first) return ''
   const targetCount = new Set(items.map((item) => item.target)).size
-  if (targetCount <= 1) return first.action
+  if (targetCount <= 1 && items.length <= 1) return first.action
+  if (targetCount <= 1) {
+    return `${items.length} findings point at this URL. Start with the highest-impact issue first: ${first.action}`
+  }
   return `${targetCount} URLs have the same issue. Apply this action across the affected pages: ${first.action}`
 }
 
@@ -90,14 +105,15 @@ function groupedItem(items: PriorityQueueItem[]): PriorityQueueItem {
   }
 }
 
-export function groupPriorityQueue(
+function groupBy(
   items: PriorityQueueItem[],
+  keyFor: (item: PriorityQueueItem) => string | undefined,
 ): PriorityQueueItem[] {
   const grouped = new Map<string, PriorityQueueItem[]>()
   const passthrough: PriorityQueueItem[] = []
 
   for (const item of items) {
-    const key = groupKey(item)
+    const key = keyFor(item)
     if (!key) {
       passthrough.push(item)
       continue
@@ -107,9 +123,18 @@ export function groupPriorityQueue(
     grouped.set(key, group)
   }
 
-  const collapsed = [...grouped.values()].flatMap((items) =>
-    items.length > 1 ? [groupedItem(items)] : items,
-  )
+  return [
+    ...passthrough,
+    ...[...grouped.values()].flatMap((items) =>
+      items.length > 1 ? [groupedItem(items)] : items,
+    ),
+  ]
+}
 
-  return [...passthrough, ...collapsed].sort((a, b) => b.score - a.score)
+export function groupPriorityQueue(
+  items: PriorityQueueItem[],
+): PriorityQueueItem[] {
+  const targetGrouped = groupBy(items, targetGroupKey)
+  const queryGrouped = groupBy(targetGrouped, groupKey)
+  return queryGrouped.sort((a, b) => b.score - a.score)
 }

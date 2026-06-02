@@ -45,6 +45,33 @@ function formatCrawl(input: {
   return `${words}; ${input.blockedOrFailed}/${input.samples.length} blocked/failed${weak}`
 }
 
+function formatTemplateShape(
+  shape: Awaited<
+    ReturnType<typeof pseoAuditReport>
+  >['templates'][number]['shape'],
+): string {
+  const staticPath = shape.staticSegments
+    .map((segment) => `/${segment.value}`)
+    .join('')
+  const variables = shape.variableSegments.slice(0, 3).map((segment) => {
+    const examples = segment.examples.slice(0, 3).join(', ')
+    return `${segment.placeholder}@${segment.index + 1}${examples ? ` (${examples})` : ''}`
+  })
+  return [
+    staticPath ? `static ${staticPath}` : 'no fixed path prefix',
+    variables.length ? `variables ${variables.join('; ')}` : 'no variables',
+  ].join('; ')
+}
+
+function formatEntityFit(
+  fit: Awaited<
+    ReturnType<typeof pseoAuditReport>
+  >['templates'][number]['metrics']['entityFit'],
+): string | undefined {
+  if (!fit.checkedQueries) return undefined
+  return `${Math.round(fit.impressionShare * 100)}% impression fit across ${fit.checkedQueries} checked query/page row(s)`
+}
+
 function printTemplateDetails(
   templates: Awaited<ReturnType<typeof pseoAuditReport>>['templates'],
 ): void {
@@ -52,6 +79,11 @@ function printTemplateDetails(
     process.stdout.write(`\n${template.signature}\n`)
     if (template.evidence.length) {
       process.stdout.write(`  Evidence: ${template.evidence.join('; ')}.\n`)
+    }
+    process.stdout.write(`  Shape: ${formatTemplateShape(template.shape)}\n`)
+    const entityFit = formatEntityFit(template.metrics.entityFit)
+    if (entityFit) {
+      process.stdout.write(`  Entity fit: ${entityFit}\n`)
     }
     const patterns = template.metrics.queryPatterns
       .slice(0, 3)
@@ -85,6 +117,20 @@ function printTemplateDetails(
           : ''
         process.stdout.write(
           `    - ${item.classification}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
+        )
+      }
+    }
+    const weakEntityExamples = template.metrics.entityFit.weakExamples.slice(
+      0,
+      2,
+    )
+    if (weakEntityExamples.length) {
+      process.stdout.write('  Weak entity-fit examples:\n')
+      for (const item of weakEntityExamples) {
+        process.stdout.write(
+          `    - ${truncate(item.query, 64)} -> expected path term(s): ${item.pathTerms
+            .slice(0, 4)
+            .join(', ')}\n`,
         )
       }
     }

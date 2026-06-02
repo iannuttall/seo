@@ -24,3 +24,7 @@ test('isLowActionabilityQuery drops currency and operator dumps', () => {
     true,
   )
 })
+
+test('isLowActionabilityQuery drops leaked ranking snippets', () => {
+  assert.equal(isLowActionabilityQuery('"ranking/303" "moved up" "$"'), true)
+})

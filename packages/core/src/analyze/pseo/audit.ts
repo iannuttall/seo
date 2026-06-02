@@ -8,8 +8,17 @@ import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { isLowActionabilityQuery } from '../query-quality.js'
 import { fetchSiteQueryPageRows } from '../shared.js'
 import {
+  canonicalPseoTerm,
+  normalizePseoText,
+  type PseoQueryPattern,
+  pseoQueryPatterns,
+  pseoQueryTerms,
+  pseoQueryThemeTerms,
+} from './query-insights.js'
+import {
   clusterPseoTemplates,
   type PseoTemplateCluster,
+  parsePseoPath,
   templateForUrl,
 } from './templates.js'
 
@@ -23,6 +32,7 @@ type PseoTemplateMetrics = {
   queryCount: number
   pageCountWithGsc: number
   zeroClickImpressions: number
+  entityFit: PseoEntityFit
   queryPatterns: PseoQueryPattern[]
   topQueries: Array<{
     query: string
@@ -45,12 +55,16 @@ type PseoCrawlSample = {
   warning?: string
 }
 
-type PseoQueryPattern = {
-  label: string
-  queryCount: number
-  clicks: number
-  impressions: number
-  examples: string[]
+type PseoEntityFit = {
+  checkedQueries: number
+  matchedQueries: number
+  impressionShare: number
+  weakExamples: Array<{
+    url: string
+    query: string
+    pathTerms: string[]
+    impressions: number
+  }>
 }
 
 type PseoQueryCoverage = {
@@ -131,62 +145,6 @@ function weightedPosition(
   )
 }
 
-const QUERY_STOPWORDS = new Set([
-  'a',
-  'an',
-  'and',
-  'are',
-  'best',
-  'for',
-  'first',
-  'from',
-  'how',
-  'in',
-  'is',
-  'last',
-  'letter',
-  'letters',
-  'name',
-  'names',
-  'of',
-  'on',
-  'or',
-  'start',
-  'starts',
-  'starting',
-  'that',
-  'the',
-  'to',
-  'vs',
-  'with',
-])
-
-function normalizeText(value: string): string {
-  return value
-    .normalize('NFKD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/([a-z0-9])[’']([a-z0-9])/gi, '$1$2')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function queryTerms(query: string): string[] {
-  const terms = normalizeText(query)
-    .split(' ')
-    .filter((term) => term.length > 2 && !QUERY_STOPWORDS.has(term))
-  return [...new Set(terms)]
-}
-
-function canonicalTerm(term: string): string {
-  if (['surname', 'surnames'].includes(term)) return 'name'
-  if (['beginning', 'begins', 'started'].includes(term)) return 'start'
-  if (term.length > 4 && term.endsWith('s')) return term.slice(0, -1)
-  return term
-}
-
 function termCoverage(
   query: string,
   text?: string,
@@ -194,14 +152,15 @@ function termCoverage(
   coverage: number
   missingTerms: string[]
 } {
-  const terms = queryTerms(query)
+  const terms = pseoQueryTerms(query)
   if (!terms.length) return { coverage: 1, missingTerms: [] }
-  const normalizedText = normalizeText(text ?? '')
-  const textTerms = normalizedText.split(' ').map(canonicalTerm)
+  const normalizedText = normalizePseoText(text ?? '')
+  const textTerms = normalizedText.split(' ').map(canonicalPseoTerm)
   const matched = terms.filter((term) =>
     textTerms.some(
       (token) =>
-        token === canonicalTerm(term) || token.startsWith(canonicalTerm(term)),
+        token === canonicalPseoTerm(term) ||
+        token.startsWith(canonicalPseoTerm(term)),
     ),
   )
   return {
@@ -236,76 +195,6 @@ function classifyQueryCoverage(input: {
   }
 }
 
-function queryPatternLabel(query: string): string {
-  const normalized = normalizeText(query)
-  if (/\b(vs|versus|compare|comparison)\b/.test(normalized)) {
-    return 'comparison'
-  }
-  if (/\balternative|alternatives\b/.test(normalized)) return 'alternatives'
-  if (/\bwithout (account|login|signing|sign in)\b/.test(normalized)) {
-    return 'no-login modifier'
-  }
-  if (/\b(export|download|save|convert)\b/.test(normalized)) {
-    return 'workflow/action'
-  }
-  if (/\bmeaning|origin|history\b/.test(normalized)) return 'meaning/origin'
-  if (/\brare|rarity|popular|popularity\b/.test(normalized)) {
-    return 'rarity/popularity'
-  }
-  if (/\bhow many|number of|people with|people have\b/.test(normalized)) {
-    return 'count/statistic'
-  }
-  if (
-    /\b(starting with|starts with|start with|beginning with|letter)\b/.test(
-      normalized,
-    )
-  ) {
-    return 'list/facet'
-  }
-  if (/\b(price|pricing|cost|fee)\b/.test(normalized)) return 'pricing'
-  if (/\breview|reviews|reddit|forum|community\b/.test(normalized)) {
-    return 'reviews/community'
-  }
-  if (/\bguide|docs|documentation|api\b/.test(normalized)) {
-    return 'docs/how-to'
-  }
-  return 'general'
-}
-
-function queryPatterns(
-  rows: Array<{
-    query: string
-    clicks: number
-    impressions: number
-  }>,
-): PseoQueryPattern[] {
-  const patterns = new Map<string, PseoQueryPattern>()
-  for (const row of rows) {
-    const label = queryPatternLabel(row.query)
-    const existing = patterns.get(label) ?? {
-      label,
-      queryCount: 0,
-      clicks: 0,
-      impressions: 0,
-      examples: [],
-    }
-    existing.queryCount += 1
-    existing.clicks += row.clicks
-    existing.impressions += row.impressions
-    if (
-      existing.examples.length < 3 &&
-      !existing.examples.includes(row.query)
-    ) {
-      existing.examples.push(row.query)
-    }
-    patterns.set(label, existing)
-  }
-
-  return [...patterns.values()]
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 5)
-}
-
 function primaryActionPattern(
   patterns: PseoQueryPattern[],
 ): PseoQueryPattern | undefined {
@@ -320,6 +209,70 @@ function primaryActionPattern(
   return specific ?? top
 }
 
+function pathVariableTerms(
+  url: string,
+  cluster: PseoTemplateCluster,
+): string[] {
+  const parts = parsePseoPath(url)
+  const terms = cluster.shape.variableSegments.flatMap((segment) => {
+    const value = parts[segment.index]
+    return value ? pseoQueryThemeTerms(value) : []
+  })
+  return [...new Set(terms.map(canonicalPseoTerm))]
+}
+
+function queryMatchesPathTerms(query: string, pathTerms: string[]): boolean {
+  if (!pathTerms.length) return false
+  const queryTermSet = new Set(pseoQueryTerms(query).map(canonicalPseoTerm))
+  return pathTerms.some((term) => queryTermSet.has(term))
+}
+
+function entityFitForRows(
+  rows: Array<{
+    query: string
+    page: string
+    impressions: number
+  }>,
+  cluster: PseoTemplateCluster,
+): PseoEntityFit {
+  let checkedQueries = 0
+  let matchedQueries = 0
+  let checkedImpressions = 0
+  let matchedImpressions = 0
+  const weakExamples: PseoEntityFit['weakExamples'] = []
+
+  for (const row of rows) {
+    const pathTerms = pathVariableTerms(row.page, cluster)
+    if (!pathTerms.length) continue
+
+    checkedQueries += 1
+    checkedImpressions += row.impressions
+    if (queryMatchesPathTerms(row.query, pathTerms)) {
+      matchedQueries += 1
+      matchedImpressions += row.impressions
+      continue
+    }
+
+    weakExamples.push({
+      url: row.page,
+      query: row.query,
+      pathTerms: pathTerms.slice(0, 6),
+      impressions: row.impressions,
+    })
+  }
+
+  return {
+    checkedQueries,
+    matchedQueries,
+    impressionShare: checkedImpressions
+      ? matchedImpressions / checkedImpressions
+      : 0,
+    weakExamples: weakExamples
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 5),
+  }
+}
+
 function metricsForRows(
   rows: Array<{
     query: string
@@ -329,7 +282,7 @@ function metricsForRows(
     ctr: number
     position: number
   }>,
-  urlCount: number,
+  cluster: PseoTemplateCluster,
 ): PseoTemplateMetrics {
   const clicks = rows.reduce((sum, row) => sum + row.clicks, 0)
   const impressions = rows.reduce((sum, row) => sum + row.impressions, 0)
@@ -357,14 +310,15 @@ function metricsForRows(
     impressions,
     ctr: impressions ? clicks / impressions : 0,
     position: weightedPosition(rows),
-    impressionsPerUrl: urlCount ? impressions / urlCount : 0,
-    clicksPerUrl: urlCount ? clicks / urlCount : 0,
+    impressionsPerUrl: cluster.urlCount ? impressions / cluster.urlCount : 0,
+    clicksPerUrl: cluster.urlCount ? clicks / cluster.urlCount : 0,
     queryCount: byQuery.size,
     pageCountWithGsc: new Set(rows.map((row) => row.page)).size,
     zeroClickImpressions: rows
       .filter((row) => row.clicks === 0)
       .reduce((sum, row) => sum + row.impressions, 0),
-    queryPatterns: queryPatterns(rows),
+    entityFit: entityFitForRows(rows, cluster),
+    queryPatterns: pseoQueryPatterns(rows),
     topQueries: [...byQuery.values()]
       .sort((a, b) => b.impressions - a.impressions)
       .slice(0, 5),
@@ -519,6 +473,13 @@ function buildRecommendation(input: {
   }
   if (template.verdict === 'opportunity') {
     const examples = topPattern?.examples.slice(0, 2).join('; ')
+    if (
+      template.metrics.entityFit.checkedQueries >= 5 &&
+      template.metrics.entityFit.impressionShare < 0.5
+    ) {
+      const weak = template.metrics.entityFit.weakExamples[0]
+      return `Tighten ${template.signature} entity targeting: only ${Math.round(template.metrics.entityFit.impressionShare * 100)}% of checked query impressions matched path variable terms${weak ? `; inspect "${weak.query}" against ${weak.pathTerms.join(', ')}` : ''}.`
+    }
     return `Grow ${template.signature} around ${patternLabel}${examples ? ` (${examples})` : ''}: test title/H1/meta phrasing, add internal links, and fill missing query angles.`
   }
   if (!input.crawlSamplesRequested || !input.inspectionSamplesRequested) {
@@ -548,6 +509,11 @@ function buildEvidence(input: {
   if (topPattern) {
     evidence.push(
       `top demand pattern: ${topPattern.label} (${Math.round(topPattern.impressions).toLocaleString('en-GB')} impressions)`,
+    )
+  }
+  if (input.metrics.entityFit.checkedQueries >= 3) {
+    evidence.push(
+      `${Math.round(input.metrics.entityFit.impressionShare * 100)}% of checked query impressions matched path variable terms`,
     )
   }
   const inspected = input.inspectionSamples.filter((sample) => !sample.warning)
@@ -627,6 +593,13 @@ function classifyTemplate(input: {
   if (
     input.metrics.impressions > 0 &&
     (input.metrics.position > 8 || input.metrics.ctr < 0.01)
+  ) {
+    return { verdict: 'opportunity', confidence: 'medium' }
+  }
+  if (
+    input.metrics.entityFit.checkedQueries >= 10 &&
+    input.metrics.entityFit.impressionShare < 0.35 &&
+    input.metrics.impressions > 100
   ) {
     return { verdict: 'opportunity', confidence: 'medium' }
   }
@@ -713,7 +686,7 @@ export async function pseoAuditReport(input: {
     const broadRows = directRows.length
       ? directRows
       : gscRows.filter((row) => cluster.sampleUrls.includes(row.page))
-    const metrics = metricsForRows(broadRows, cluster.urlCount)
+    const metrics = metricsForRows(broadRows, cluster)
     const crawled =
       input.crawlSamples && input.crawlSamples > 0
         ? await crawlSamples({

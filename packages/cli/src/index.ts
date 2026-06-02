@@ -8,6 +8,10 @@ import {
   urlInspectCommand,
 } from './commands/data.js'
 import {
+  trafficAnomalyCommand,
+  updateCorrelateCommand,
+} from './commands/diagnosis-reports.js'
+import {
   changeLogCommand,
   contentGroupsCommand,
 } from './commands/experiments.js'
@@ -15,7 +19,6 @@ import { initCommand } from './commands/init.js'
 import { mcpCommand } from './commands/mcp.js'
 import { crawlDiffCommand, indexWatchCommand } from './commands/monitoring.js'
 import {
-  auditPageCommand,
   cannibalCommand,
   ctrUnderperformersCommand,
   decayingCommand,
@@ -23,9 +26,8 @@ import {
   queryClusterCommand,
   quickWinsCommand,
   secondPageCommand,
-  trafficAnomalyCommand,
-  updateCorrelateCommand,
-} from './commands/primitives.js'
+} from './commands/opportunities.js'
+import { auditPageCommand } from './commands/page-audit.js'
 import {
   diagnoseCommand,
   doctorCommand,

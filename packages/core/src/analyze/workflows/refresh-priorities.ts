@@ -6,6 +6,7 @@ import {
 } from './analytics-value.js'
 import { priorityCategory, scorePriority } from './priority-scoring.js'
 import { workflowReport } from './report.js'
+import { templateOpportunityRecommendation } from './template-recommendations.js'
 import type { PriorityQueueItem, WorkflowReport } from './types.js'
 
 type QueueDraft = Omit<
@@ -180,9 +181,18 @@ export async function refreshPrioritiesWorkflow(input: {
   for (const template of diagnosis.quickWins.templates.filter(
     (item) => item.id !== 'other' && item.count >= 3,
   )) {
-    const impact = diagnosis.quickWins.items
-      .filter((item) => item.template.id === template.id)
-      .reduce((sum, item) => sum + item.estimatedClickLift, 0)
+    const templateItems = diagnosis.quickWins.items.filter(
+      (item) => item.template.id === template.id,
+    )
+    const impact = templateItems.reduce(
+      (sum, item) => sum + item.estimatedClickLift,
+      0,
+    )
+    const recommendation = templateOpportunityRecommendation({
+      templateId: template.id,
+      templateLabel: template.label,
+      items: templateItems,
+    })
     drafts.push({
       source: 'template',
       title: `${template.label} opportunity template`,
@@ -195,9 +205,8 @@ export async function refreshPrioritiesWorkflow(input: {
         label: template.label,
         count: template.count,
       },
-      action:
-        'Update the reusable template pattern before working through individual pages.',
-      evidence: `${template.count} quick-win opportunities share this template.`,
+      action: recommendation.action,
+      evidence: recommendation.evidence,
     })
   }
 

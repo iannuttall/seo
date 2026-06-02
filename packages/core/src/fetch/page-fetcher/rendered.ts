@@ -1,5 +1,11 @@
 import type { PageFetchResult } from '../../types.js'
 import { BROWSER_USER_AGENT } from '../http-client.js'
+import {
+  rateLimitDiagnostics,
+  recordHostFetch,
+  retryAfterMs,
+  waitForHostBackpressure,
+} from './rate-controls.js'
 import type { NormalizedFetchRateControls } from './types.js'
 
 export function looksLikeSpa(html: string): boolean {
@@ -17,6 +23,8 @@ export async function fetchWithPlaywright(
   rate: NormalizedFetchRateControls,
 ): Promise<PageFetchResult> {
   const startedAt = Date.now()
+  const host = new URL(url).host
+  const beforeFetch = await waitForHostBackpressure(host, rate)
   const playwright = await import('playwright').catch(() => undefined)
   if (!playwright?.chromium) {
     throw new Error(
@@ -29,10 +37,19 @@ export async function fetchWithPlaywright(
     const page = await browser.newPage({ userAgent: BROWSER_USER_AGENT })
     const response = await page.goto(url, { waitUntil: 'networkidle' })
     const html = await page.content()
+    const status = response?.status() ?? 200
+    const durationMs = Date.now() - startedAt
+    const backpressure = recordHostFetch({
+      host,
+      status,
+      durationMs,
+      retryAfterMs: retryAfterMs(response?.headers()['retry-after']),
+      rate,
+    })
     return {
       url,
       finalUrl: page.url(),
-      status: response?.status() ?? 200,
+      status,
       headers: {},
       html,
       usedJs: true,
@@ -41,13 +58,16 @@ export async function fetchWithPlaywright(
         cache: 'bypass',
         fetched: true,
         rendered: true,
-        blocked: [401, 403, 429].includes(response?.status() ?? 200),
-        durationMs: Date.now() - startedAt,
+        blocked: [401, 403, 429].includes(status),
+        durationMs,
         retries: 0,
         rateLimit: {
-          host: new URL(url).host,
-          ...rate,
+          ...rateLimitDiagnostics(host, rate),
         },
+        backpressure:
+          backpressure.status === 'ok' && beforeFetch.status !== 'ok'
+            ? beforeFetch
+            : backpressure,
       },
       warnings: [],
     }

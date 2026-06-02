@@ -36,6 +36,17 @@ export interface PageFetchDiagnostics {
     intervalCap: number
     intervalMs: number
   }
+  backpressure?: {
+    host: string
+    status: 'ok' | 'slowed' | 'stopped'
+    reason?: string
+    delayMs: number
+    cooldownUntil?: string
+    consecutiveSlow: number
+    consecutiveBlocked: number
+    consecutiveErrors: number
+    recentP95Ms?: number
+  }
   robotsTxt?: {
     url: string
     cache: 'hit' | 'miss' | 'bypass'

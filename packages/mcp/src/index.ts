@@ -8,6 +8,7 @@ import { registerExperimentTools } from './experiment-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerPrompts } from './prompts.js'
+import { registerPseoTools } from './pseo-tools.js'
 import { registerReportTools } from './report-tools.js'
 import { registerResources } from './resources.js'
 import { registerWorkflowTools } from './workflow-tools.js'
@@ -27,6 +28,7 @@ export function createServer(): McpServer {
   registerMonitoringTools(server)
   registerReportTools(server)
   registerExperimentTools(server)
+  registerPseoTools(server)
   registerDataTools(server)
   registerClientTools(server)
   registerWorkflowTools(server)

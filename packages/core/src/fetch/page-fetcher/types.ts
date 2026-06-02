@@ -2,6 +2,17 @@ export interface FetchRateControls {
   concurrency?: number
   intervalCap?: number
   intervalMs?: number
+  backpressure?: FetchBackpressureControls
+}
+
+export interface FetchBackpressureControls {
+  slowMs?: number
+  verySlowMs?: number
+  maxConsecutiveSlow?: number
+  maxConsecutiveBlocked?: number
+  maxConsecutiveErrors?: number
+  cooldownMs?: number
+  retryAfterCapMs?: number
 }
 
 export interface FetchPageOptions {
@@ -15,6 +26,7 @@ export type NormalizedFetchRateControls = {
   concurrency: number
   intervalCap: number
   intervalMs: number
+  backpressure: Required<FetchBackpressureControls>
 }
 
 export type RobotsResult = {

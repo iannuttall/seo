@@ -1,6 +1,8 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { Recommendation } from '../types.js'
+import type { QueryContentCoverage } from './content-coverage.js'
+import { verifyQueryContent } from './content-coverage.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
 
 interface CannibalItem {
@@ -36,6 +38,7 @@ interface QuickWinItem {
   ctr: number
   expectedCtrAt3: number
   estimatedClickLift: number
+  contentVerification?: QueryContentCoverage
   recommendation: Recommendation
 }
 
@@ -249,6 +252,9 @@ export async function quickWinsReport(input: {
   minImpressions?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  js?: boolean | 'auto'
   refresh?: boolean
 }) {
   const minImpressions = input.minImpressions ?? 200
@@ -307,5 +313,49 @@ export async function quickWinsReport(input: {
     })
     .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)
 
-  return { site: input.site, generatedAt: new Date().toISOString(), items }
+  if (input.verifyContent) {
+    const verifyLimit = input.verifyLimit ?? 5
+    const coverageByKey = new Map<string, QueryContentCoverage>()
+    for (const item of items.slice(0, verifyLimit)) {
+      const key = `${item.query}\n${item.url}`
+      const existing = coverageByKey.get(key)
+      const contentVerification =
+        existing ??
+        (await verifyQueryContent({
+          query: item.query,
+          url: item.url,
+          js: input.js,
+          refresh: input.refresh,
+        }))
+      coverageByKey.set(key, contentVerification)
+      item.contentVerification = contentVerification
+      if (
+        contentVerification.status === 'verified' &&
+        contentVerification.contentGapScore >= 5
+      ) {
+        item.recommendation = {
+          ...item.recommendation,
+          action:
+            'Add clearer query coverage to the title, meta description, or main content before broader rewrites.',
+          evidenceRef: `${item.recommendation.evidenceRef} ${contentVerification.summary}`,
+        }
+      }
+    }
+  }
+
+  return {
+    site: input.site,
+    generatedAt: new Date().toISOString(),
+    verification: input.verifyContent
+      ? {
+          requested: true,
+          limit: input.verifyLimit ?? 5,
+          verified: items.filter((item) => item.contentVerification).length,
+          failed: items.filter(
+            (item) => item.contentVerification?.status === 'failed',
+          ).length,
+        }
+      : { requested: false, verified: 0, failed: 0 },
+    items,
+  }
 }

@@ -148,6 +148,9 @@ export async function reportNarrative(input: {
   changeLimit?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  js?: boolean | 'auto'
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string }> {
   const periodDays = input.days ?? 90
@@ -170,6 +173,9 @@ export async function reportNarrative(input: {
     limit: input.limit,
     brandTerms: input.brandTerms,
     includeBrand: input.includeBrand,
+    verifyContent: input.verifyContent,
+    verifyLimit: input.verifyLimit,
+    js: input.js,
     refresh: input.refresh,
   })
   const changes = listChanges({
@@ -214,6 +220,11 @@ export async function reportNarrative(input: {
           `${diagnosis.summary.decayItems} decaying rows need review.`,
           `${diagnosis.summary.cannibalItems} cannibalisation clusters need a primary URL decision.`,
           `${diagnosis.summary.strikingDistanceItems} position 11-20 opportunities are available.`,
+          ...(diagnosis.quickWins.verification.requested
+            ? [
+                `Verified content for ${diagnosis.quickWins.verification.verified} of ${diagnosis.quickWins.items.length} quick-win candidates; ${diagnosis.quickWins.items.filter((item) => (item.contentVerification?.contentGapScore ?? 0) >= 5).length} show likely on-page query coverage gaps.`,
+              ]
+            : []),
         ],
       },
       {
@@ -246,6 +257,9 @@ export async function monthlyReport(input: {
   limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  js?: boolean | 'auto'
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string; month: string }> {
   const month = input.month ?? finalGscDate().slice(0, 7)
@@ -258,6 +272,9 @@ export async function monthlyReport(input: {
     limit: input.limit,
     brandTerms: input.brandTerms,
     includeBrand: input.includeBrand,
+    verifyContent: input.verifyContent,
+    verifyLimit: input.verifyLimit,
+    js: input.js,
     refresh: input.refresh,
   })
   return {

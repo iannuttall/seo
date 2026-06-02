@@ -61,6 +61,21 @@ export const reportNarrativeCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'verify-content': {
+      type: 'boolean',
+      default: false,
+      description:
+        'Verify top quick wins against page title, meta, and content.',
+    },
+    'verify-limit': {
+      type: 'string',
+      description: 'Maximum quick-win URLs to verify. Defaults to 3.',
+    },
+    js: {
+      type: 'boolean',
+      default: false,
+      description: 'Force JavaScript rendering for verified pages.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -89,6 +104,9 @@ export const reportNarrativeCommand = defineCommand({
       changeLimit: numberArg(args['change-limit']),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      verifyContent: booleanArg(args['verify-content']),
+      verifyLimit: numberArg(args['verify-limit']) ?? 3,
+      js: booleanArg(args.js) ? true : undefined,
       refresh: booleanArg(args.refresh),
     })
 
@@ -128,6 +146,21 @@ export const monthlyReportCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'verify-content': {
+      type: 'boolean',
+      default: false,
+      description:
+        'Verify top quick wins against page title, meta, and content.',
+    },
+    'verify-limit': {
+      type: 'string',
+      description: 'Maximum quick-win URLs to verify. Defaults to 3.',
+    },
+    js: {
+      type: 'boolean',
+      default: false,
+      description: 'Force JavaScript rendering for verified pages.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -152,6 +185,9 @@ export const monthlyReportCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      verifyContent: booleanArg(args['verify-content']),
+      verifyLimit: numberArg(args['verify-limit']) ?? 3,
+      js: booleanArg(args.js) ? true : undefined,
       refresh: booleanArg(args.refresh),
     })
 

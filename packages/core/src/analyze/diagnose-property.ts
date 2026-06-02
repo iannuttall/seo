@@ -123,6 +123,9 @@ export async function diagnoseProperty(input: {
   limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  js?: boolean | 'auto'
   refresh?: boolean
 }): Promise<DiagnosePropertyReport> {
   const limit = input.limit ?? 10
@@ -160,6 +163,10 @@ export async function diagnoseProperty(input: {
       site: input.site,
       brandTerms: input.brandTerms,
       includeBrand: input.includeBrand,
+      verifyContent: input.verifyContent,
+      verifyLimit: input.verifyLimit,
+      js: input.js,
+      refresh: input.refresh,
     }),
   ])
 

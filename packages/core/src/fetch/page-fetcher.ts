@@ -1,12 +1,11 @@
 import PQueue from 'p-queue'
 import pRetry, { AbortError } from 'p-retry'
 import robotsParserModule from 'robots-parser'
-import { fetch, Headers } from 'undici'
 import { getDb, hashKey } from '../storage/database.js'
 import type { PageFetchResult } from '../types.js'
+import { BROWSER_USER_AGENT, publicHttpFetch } from './http-client.js'
 
 const HOST_QUEUES = new Map<string, PQueue>()
-const USER_AGENT = 'seo/0.1 (+https://github.com/your-org/seo)'
 
 export interface FetchPageOptions {
   js?: boolean | 'auto'
@@ -61,12 +60,12 @@ async function fetchRobots(
         isAllowed(url: string, ua?: string): boolean | undefined
       }
     )(robotsUrl, text)
-    return { allowed: parsed.isAllowed(origin, USER_AGENT) ?? true }
+    return { allowed: parsed.isAllowed(origin, BROWSER_USER_AGENT) ?? true }
   }
 
   try {
-    const response = await fetch(robotsUrl, {
-      headers: { 'user-agent': USER_AGENT },
+    const response = await publicHttpFetch(robotsUrl, {
+      profile: 'bot',
     })
     const text = await response.text()
     const parsed = (
@@ -78,7 +77,9 @@ async function fetchRobots(
         getMatchingLineNumber(url: string, ua?: string): number
       }
     )(robotsUrl, text)
-    const result = { allowed: parsed.isAllowed(origin, USER_AGENT) ?? true }
+    const result = {
+      allowed: parsed.isAllowed(origin, BROWSER_USER_AGENT) ?? true,
+    }
     db.prepare(
       `INSERT OR REPLACE INTO http_cache
       (url_hash, url, status, headers_json, body_blob, etag, fetched_at, expires_at)
@@ -132,16 +133,14 @@ async function fetchPlain(
   }
 
   const robots = await fetchRobots(new URL(url).origin, refresh)
-  const headers = new Headers({ 'user-agent': USER_AGENT })
 
   const response = await pRetry(
     async () => {
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), timeoutMs)
       try {
-        const res = await fetch(url, {
+        const res = await publicHttpFetch(url, {
           redirect: 'follow',
-          headers,
           signal: controller.signal,
         })
         if (res.status === 429) {
@@ -204,7 +203,7 @@ async function fetchWithPlaywright(url: string): Promise<PageFetchResult> {
 
   const browser = await playwright.chromium.launch({ headless: true })
   try {
-    const page = await browser.newPage({ userAgent: USER_AGENT })
+    const page = await browser.newPage({ userAgent: BROWSER_USER_AGENT })
     const response = await page.goto(url, { waitUntil: 'networkidle' })
     const html = await page.content()
     return {

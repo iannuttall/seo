@@ -1019,6 +1019,21 @@ const main = defineCommand({
           default: false,
           description: 'Include branded queries in opportunity reports.',
         },
+        'verify-content': {
+          type: 'boolean',
+          default: false,
+          description:
+            'Verify top quick wins against page title, meta, and content.',
+        },
+        'verify-limit': {
+          type: 'string',
+          description: 'Maximum quick-win URLs to verify. Defaults to 5.',
+        },
+        js: {
+          type: 'boolean',
+          default: false,
+          description: 'Force JavaScript rendering for verified pages.',
+        },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
@@ -1033,6 +1048,9 @@ const main = defineCommand({
             site: selection.site,
             brandTerms: selection.client?.brandTerms,
             includeBrand: booleanArg(args['include-brand']),
+            verifyContent: booleanArg(args['verify-content']),
+            verifyLimit: numberArg(args['verify-limit']),
+            js: booleanArg(args.js) ? true : undefined,
           }),
           json,
         )

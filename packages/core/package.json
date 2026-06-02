@@ -29,7 +29,7 @@
     "cheerio": "^1.1.2",
     "consola": "^3.4.2",
     "debug": "^4.4.1",
-    "defuddle": "^0.6.4",
+    "defuddle": "^0.18.1",
     "env-paths": "^3.0.0",
     "google-auth-library": "^10.3.0",
     "jsonc-parser": "^3.3.1",
@@ -43,6 +43,7 @@
     "robots-parser": "^3.0.1",
     "schema-dts": "^1.1.5",
     "undici": "^7.16.0",
+    "user-agents": "2.1.79",
     "zod": "^4.1.5"
   }
 }

@@ -1,28 +1,12 @@
 import { ensureSeoCliDirs } from '@seo/core'
 import { defineCommand } from 'citty'
+import { jsonFlag, numberArg, stringArg } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue } from '../utils.js'
-
-const stringArg = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-const numberArg = (value: unknown): number | undefined => {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
+import { startUrlForSite } from './shared.js'
 
 function quote(value: string): string {
   return JSON.stringify(value)
-}
-
-function siteStartUrl(site: string): string | undefined {
-  if (site.startsWith('http://') || site.startsWith('https://')) return site
-  if (site.startsWith('sc-domain:')) return `https://${site.slice(10)}/`
-  return undefined
 }
 
 export const scheduleCommand = defineCommand({
@@ -91,7 +75,7 @@ export const scheduleCommand = defineCommand({
         const startUrl =
           stringArg(args.url) ??
           selection.client?.startUrl ??
-          siteStartUrl(selection.site)
+          startUrlForSite(selection.site)
         const hour = numberArg(args.hour) ?? 9
         const minute = numberArg(args.minute) ?? 0
         const weekday =

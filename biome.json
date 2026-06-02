@@ -5,13 +5,33 @@
       "**",
       "!!**/node_modules",
       "!!**/dist",
+      "!!**/dist-firefox",
+      "!!**/public/assets",
       "!!**/.turbo",
       "!!**/.wrangler",
       "!!**/pnpm-lock.yaml",
+      "!!**/package-lock.json",
+      "!!**/yarn.lock",
+      "!!**/bun.lock",
+      "!!**/bun.lockb",
+      "!!**/biome.json",
       "!!**/tsconfig*.json",
       "!!**/*.config.ts",
+      "!!**/*.config.cts",
       "!!**/*.config.mts",
-      "!!**/*.config.js"
+      "!!**/*.config.js",
+      "!!**/*.config.cjs",
+      "!!**/*.config.mjs",
+      "!!**/*.config.json",
+      "!!**/wrangler.toml",
+      "!!**/.submit",
+      "!!**/.context",
+      "!!**/.vscode",
+      "!!**/tmp",
+      "!!**/worker-configuration.d.ts",
+      "!!**/routeTree.gen.ts",
+      "!!**/routeTree.gen.tsx",
+      "!!**/styles.css"
     ]
   },
   "linter": {
@@ -33,6 +53,18 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
+  },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "tailwindDirectives": true
+    },
+    "linter": {
+      "enabled": false
+    },
+    "formatter": {
+      "enabled": false
+    }
   },
   "javascript": {
     "formatter": {

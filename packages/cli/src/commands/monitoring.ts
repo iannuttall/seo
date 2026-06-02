@@ -1,31 +1,8 @@
 import { crawlDiff, indexWatch } from '@seo/core'
 import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, listArg, numberArg, stringArg } from '../args.js'
 import { resolveSite } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-
-const stringArg = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-const booleanArg = (value: unknown): boolean | undefined =>
-  typeof value === 'boolean' ? value : undefined
-
-const numberArg = (value: unknown): number | undefined => {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
-
-function urlList(value: unknown): string[] {
-  const raw = stringArg(value)
-  if (!raw) return []
-  return raw
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
 
 export const crawlDiffCommand = defineCommand({
   meta: {
@@ -130,7 +107,7 @@ export const indexWatchCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const urls = urlList(args.urls)
+    const urls = listArg(args.urls)
     if (!urls.length) {
       throw new Error('Pass at least one URL with --urls.')
     }

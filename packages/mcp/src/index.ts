@@ -12,7 +12,6 @@ import {
   diagnoseProperty,
   ga4PropertyIdFromName,
   ga4RowsToObjects,
-  getCacheStats,
   getKeywordProvider,
   indexWatch,
   inspectUrl,
@@ -21,7 +20,6 @@ import {
   listContentGroups,
   listGa4AccountSummaries,
   listSearchUpdates,
-  listSites,
   measureChange,
   monthlyReport,
   queryClusterReport,
@@ -39,131 +37,10 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { registerClientTools } from './client-tools.js'
+import { registerPrompts } from './prompts.js'
+import { registerResources } from './resources.js'
+import { summarize, toolError, toolSuccess } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
-
-type ToolResult = {
-  content: Array<{ type: 'text'; text: string }>
-  structuredContent?: Record<string, unknown>
-  isError?: boolean
-}
-
-function summarize(data: unknown): string {
-  return JSON.stringify(data, null, 2)
-}
-
-function toolError(error: unknown): ToolResult {
-  const message = error instanceof Error ? error.message : String(error)
-  return {
-    content: [{ type: 'text', text: `Error: ${message}` }],
-    isError: true,
-  }
-}
-
-function toolSuccess(
-  summaryText: string,
-  structuredContent: unknown,
-): ToolResult {
-  return {
-    content: [{ type: 'text', text: summaryText }],
-    structuredContent: structuredContent as Record<string, unknown>,
-  }
-}
-
-function registerPrompts(server: McpServer): void {
-  server.registerPrompt(
-    'seo-second-page',
-    {
-      description: 'Run second-page opportunity analysis',
-      argsSchema: {
-        site: z.string(),
-        range: z.string().optional(),
-        limit: z.string().optional(),
-      },
-    },
-    async ({ site, range, limit }) => ({
-      messages: [
-        {
-          role: 'user',
-          content: {
-            type: 'text',
-            text: `Run the seo_second_page tool with site=${site}, range=${range ?? '28'}, limit=${limit ?? '5'}. Use only tool output. Quote the evidenceRef. Do not invent data.`,
-          },
-        },
-      ],
-    }),
-  )
-
-  server.registerPrompt(
-    'seo-audit-page',
-    {
-      description: 'Run a page audit and explain issues without inventing data',
-      argsSchema: {
-        url: z.string(),
-      },
-    },
-    async ({ url }) => ({
-      messages: [
-        {
-          role: 'user',
-          content: {
-            type: 'text',
-            text: `Run seo_audit_page for ${url}. Explain findings using the returned principle and evidenceRef values only.`,
-          },
-        },
-      ],
-    }),
-  )
-}
-
-function registerResources(server: McpServer): void {
-  server.registerResource(
-    'gsc-sites',
-    'gsc://sites',
-    {
-      mimeType: 'application/json',
-      description: 'Configured Search Console properties',
-    },
-    async () => {
-      const sites = await listSites().catch(() => [])
-      return {
-        contents: [
-          {
-            uri: 'gsc://sites',
-            text: JSON.stringify(sites, null, 2),
-          },
-        ],
-      }
-    },
-  )
-
-  server.registerResource(
-    'cache-stats',
-    'cache://stats',
-    { mimeType: 'application/json', description: 'Local cache stats' },
-    async () => ({
-      contents: [
-        {
-          uri: 'cache://stats',
-          text: JSON.stringify(getCacheStats(), null, 2),
-        },
-      ],
-    }),
-  )
-
-  server.registerResource(
-    'last-audit',
-    'gsc://report/last-audit',
-    { mimeType: 'text/plain', description: 'Placeholder last audit resource' },
-    async () => ({
-      contents: [
-        {
-          uri: 'gsc://report/last-audit',
-          text: 'Last audit persistence is not wired yet. Use seo_audit_page directly.',
-        },
-      ],
-    }),
-  )
-}
 
 function registerTools(server: McpServer): void {
   server.registerTool(

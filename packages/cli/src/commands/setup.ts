@@ -20,9 +20,11 @@ import {
   writeOauthClient,
 } from '@seo/core'
 import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, listArg, numberArg, stringArg } from '../args.js'
 import { resolveSite } from '../selection.js'
 import { maybeExitCancelled, printJson, printKeyValue } from '../utils.js'
 import { detectMcpClients, installMcpConfig } from './mcp-config.js'
+import { slugId, startUrlForSite, suggestedClientName } from './shared.js'
 
 type SetupResult = {
   client: ClientProfile
@@ -31,52 +33,8 @@ type SetupResult = {
   next: string[]
 }
 
-const stringArg = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-const booleanArg = (value: unknown): boolean | undefined =>
-  typeof value === 'boolean' ? value : undefined
-
-const numberArg = (value: unknown): number | undefined => {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
-
 function canPrompt(): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY && !process.env.CI)
-}
-
-function slug(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/^sc-domain:/, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
-}
-
-function urlList(value: unknown): string[] {
-  const raw = stringArg(value)
-  if (!raw) return []
-  return raw
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
-
-function startUrlForSite(site: string): string {
-  if (site.startsWith('http://') || site.startsWith('https://')) return site
-  if (site.startsWith('sc-domain:')) return `https://${site.slice(10)}/`
-  return ''
-}
-
-function suggestedName(site: string): string {
-  return site.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '')
 }
 
 async function maybeConnectAuth(
@@ -214,7 +172,7 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
     site: stringArg(args.site),
     options: { json, refresh: booleanArg(args.refresh) },
   })
-  const defaultName = suggestedName(site)
+  const defaultName = suggestedClientName(site)
 
   const name =
     stringArg(args.name) ??
@@ -233,12 +191,12 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
       ? maybeExitCancelled(
           await text({
             message: 'Client id',
-            placeholder: slug(name),
-            defaultValue: slug(name),
+            placeholder: slugId(name),
+            defaultValue: slugId(name),
           }),
         )
-      : slug(name))
-  const defaultStartUrl = startUrlForSite(site)
+      : slugId(name))
+  const defaultStartUrl = startUrlForSite(site) ?? ''
   const startUrl =
     stringArg(args.url) ??
     (canPrompt()
@@ -251,10 +209,10 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
         )
       : defaultStartUrl || undefined)
   const watchUrls =
-    urlList(args.urls).length > 0
-      ? urlList(args.urls)
+    listArg(args.urls).length > 0
+      ? listArg(args.urls)
       : canPrompt()
-        ? urlList(
+        ? listArg(
             maybeExitCancelled(
               await text({
                 message: 'URLs to watch with URL Inspection',
@@ -266,10 +224,10 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
   const ga4PropertyId = await chooseGa4Property(stringArg(args.ga4))
   const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
-    urlList(args.brand).length > 0
-      ? urlList(args.brand)
+    listArg(args.brand).length > 0
+      ? listArg(args.brand)
       : canPrompt()
-        ? urlList(
+        ? listArg(
             maybeExitCancelled(
               await text({
                 message:

@@ -1,0 +1,46 @@
+import { resolveClientSelection } from '../selection.js'
+import { printJson } from '../utils.js'
+
+export async function selectedSiteOrThrow(
+  input: {
+    client?: string
+    site?: string
+  },
+  options: { json?: boolean; refresh?: boolean } = {},
+): Promise<string> {
+  return (
+    await resolveClientSelection({
+      client: input.client,
+      site: input.site,
+      options,
+    })
+  ).site
+}
+
+export async function outputResult(data: unknown, json = false): Promise<void> {
+  if (json) {
+    printJson(data)
+  } else {
+    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
+  }
+}
+
+export function startUrlForSite(site: string): string | undefined {
+  if (site.startsWith('http://') || site.startsWith('https://')) return site
+  if (site.startsWith('sc-domain:')) return `https://${site.slice(10)}/`
+  return undefined
+}
+
+export function suggestedClientName(site: string): string {
+  return site.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '')
+}
+
+export function slugId(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^sc-domain:/, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}

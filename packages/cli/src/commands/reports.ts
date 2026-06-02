@@ -1,22 +1,8 @@
 import { monthlyReport, reportNarrative } from '@seo/core'
 import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson } from '../utils.js'
-
-const stringArg = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-const booleanArg = (value: unknown): boolean | undefined =>
-  typeof value === 'boolean' ? value : undefined
-
-const numberArg = (value: unknown): number | undefined => {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
 
 export const reportNarrativeCommand = defineCommand({
   meta: {

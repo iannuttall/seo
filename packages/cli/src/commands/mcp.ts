@@ -1,14 +1,12 @@
 import { multiselect } from '@clack/prompts'
 import { defineCommand } from 'citty'
+import { booleanArg } from '../args.js'
 import { maybeExitCancelled } from '../utils.js'
 import {
   detectMcpClients,
   installMcpConfig,
   uninstallMcpConfig,
 } from './mcp-config.js'
-
-const booleanArg = (value: unknown): boolean | undefined =>
-  typeof value === 'boolean' ? value : undefined
 
 export const mcpCommand = defineCommand({
   meta: { name: 'mcp', description: 'MCP server helpers' },

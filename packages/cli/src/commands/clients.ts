@@ -7,33 +7,10 @@ import {
   setDefaultClient,
 } from '@seo/core'
 import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, listArg, numberArg, stringArg } from '../args.js'
 import { resolveSite } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { clientSetupCommand } from './setup.js'
-
-const stringArg = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined
-
-const booleanArg = (value: unknown): boolean | undefined =>
-  typeof value === 'boolean' ? value : undefined
-
-const numberArg = (value: unknown): number | undefined => {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
-}
-
-const jsonFlag = (args: Record<string, unknown>): boolean => args.json === true
-
-function urlList(value: unknown): string[] {
-  const raw = stringArg(value)
-  if (!raw) return []
-  return raw
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
 
 export const clientCommand = defineCommand({
   meta: {
@@ -258,8 +235,8 @@ export const clientCommand = defineCommand({
             options: { json },
           }),
           startUrl: stringArg(args.url),
-          watchUrls: urlList(args.urls),
-          brandTerms: urlList(args.brand),
+          watchUrls: listArg(args.urls),
+          brandTerms: listArg(args.brand),
           ga4PropertyId: stringArg(args.ga4),
           reportDay: numberArg(args['report-day']),
           technicalWeekday: numberArg(args.weekday),

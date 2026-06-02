@@ -4,6 +4,7 @@ import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import { formatCount, printLimitedTable, truncate } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const seoToAiQueryCommand = defineCommand({
   meta: {
@@ -13,28 +14,21 @@ export const seoToAiQueryCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 28.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum source queries to convert. Defaults to 25.',
-    },
-    'min-impressions': {
-      type: 'string',
-      description: 'Minimum query impressions. Defaults to 20.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in prompt generation.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GSC cache.',
-    },
+    ...cliReportArgs(
+      ['days', 'limit', 'minImpressions', 'includeBrand', 'refresh'],
+      {
+        limit: {
+          description: 'Maximum source queries to convert. Defaults to 25.',
+        },
+        minImpressions: {
+          description: 'Minimum query impressions. Defaults to 20.',
+        },
+        includeBrand: {
+          description: 'Include branded queries in prompt generation.',
+        },
+        refresh: { description: 'Bypass local GSC cache.' },
+      },
+    ),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {

@@ -5,6 +5,7 @@ import {
   compareCrawlPages,
   insertCrawlRun,
   latestCrawlSummaries,
+  monitoringStatus,
   recommendCrawlDiffItem,
 } from './monitoring.js'
 
@@ -103,4 +104,36 @@ test('latestCrawlSummaries includes saved crawl recommendations', () => {
   assert.equal(latest?.highPriorityRecommendations, 1)
   assert.equal(latest?.topRecommendation?.url, url)
   assert.match(latest?.topRecommendation?.action ?? '', /301/)
+})
+
+test('monitoringStatus flags saved crawl recommendations', () => {
+  const site = `sc-domain:status-${Date.now()}.example`
+  const url = `https://${site.slice('sc-domain:'.length)}/broken/`
+  insertCrawlRun(
+    {
+      id: `run-${Date.now()}`,
+      site,
+      startUrl: url,
+      createdAt: new Date().toISOString(),
+      limit: 1,
+      urlCount: 1,
+    },
+    [page({ url, status: 404, indexable: false })],
+    [
+      {
+        url,
+        severity: 'high',
+        category: 'status',
+        title: 'Search-visible URL now returns an error',
+        action: 'Restore the page or add a direct 301.',
+        confidence: 'high',
+      },
+    ],
+  )
+
+  const status = monitoringStatus({ site })
+  const crawl = status.checks.find((check) => check.name === 'crawl')
+  assert.equal(status.health, 'attention')
+  assert.equal(crawl?.status, 'attention')
+  assert.match(crawl?.action ?? '', /301/)
 })

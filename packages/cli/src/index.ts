@@ -21,6 +21,7 @@ import {
   crawlDiffCommand,
   indexWatchCommand,
   linkRecoverCommand,
+  monitoringCommand,
   redirectTraceCommand,
 } from './commands/monitoring.js'
 import {
@@ -89,6 +90,7 @@ const main = defineCommand({
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
     'monthly-report': monthlyReportCommand,
+    monitoring: monitoringCommand,
     'report-narrative': reportNarrativeCommand,
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,

@@ -1,15 +1,39 @@
-import { crawlDiff, indexWatch, linkRecover } from '../monitoring.js'
+import {
+  crawlDiff,
+  indexMonitor,
+  indexWatch,
+  linkRecover,
+} from '../monitoring.js'
 import { workflowReport } from './report.js'
 import type { WorkflowReport } from './types.js'
+
+type TechnicalWatchIndexOutput =
+  | Awaited<ReturnType<typeof indexWatch>>
+  | Awaited<ReturnType<typeof indexMonitor>>
+
+function indexSummary(index?: TechnicalWatchIndexOutput): {
+  inspected: number
+  alerts: number
+} {
+  return {
+    inspected: index?.summary.inspected ?? 0,
+    alerts: index?.summary.alerts ?? 0,
+  }
+}
 
 export async function technicalWatchWorkflow(input: {
   site: string
   startUrl?: string
   urls?: string[]
+  sitemaps?: string[]
+  properties?: string[]
   limit?: number
   refresh?: boolean
   js?: boolean | 'auto'
   languageCode?: string
+  dailyLimit?: number
+  inspectLimit?: number
+  maxUrls?: number
   recoverLinks?: boolean
   recoverDays?: number
   recoverLimit?: number
@@ -18,14 +42,15 @@ export async function technicalWatchWorkflow(input: {
 }): Promise<
   WorkflowReport<{
     crawl?: Awaited<ReturnType<typeof crawlDiff>>
-    index?: Awaited<ReturnType<typeof indexWatch>>
+    index?: TechnicalWatchIndexOutput
     recovery?: Awaited<ReturnType<typeof linkRecover>>
   }>
 > {
   const recoverLinks = input.recoverLinks ?? true
-  if (!input.startUrl && !input.urls?.length && !recoverLinks) {
+  const hasIndexInput = Boolean(input.urls?.length || input.sitemaps?.length)
+  if (!input.startUrl && !hasIndexInput && !recoverLinks) {
     throw new Error(
-      'Pass startUrl, urls, or enable link recovery for technical-watch.',
+      'Pass startUrl, urls, sitemaps, or enable link recovery for technical-watch.',
     )
   }
 
@@ -39,13 +64,24 @@ export async function technicalWatchWorkflow(input: {
           js: input.js,
         })
       : undefined,
-    input.urls?.length
-      ? indexWatch({
+    input.sitemaps?.length
+      ? indexMonitor({
           site: input.site,
-          urls: input.urls,
+          sitemaps: input.sitemaps,
+          properties: input.properties,
+          dailyLimit: input.dailyLimit,
+          inspectLimit: input.inspectLimit,
+          maxUrls: input.maxUrls,
           languageCode: input.languageCode,
+          refresh: input.refresh,
         })
-      : undefined,
+      : input.urls?.length
+        ? indexWatch({
+            site: input.site,
+            urls: input.urls,
+            languageCode: input.languageCode,
+          })
+        : undefined,
     recoverLinks
       ? linkRecover({
           site: input.site,
@@ -58,10 +94,11 @@ export async function technicalWatchWorkflow(input: {
         })
       : undefined,
   ])
+  const indexCounts = indexSummary(index)
 
   const alertCount =
     (crawl?.summary.highPriorityRecommendations ?? 0) +
-    (index?.summary.alerts ?? 0) +
+    indexCounts.alerts +
     (recovery?.summary.high ?? 0) +
     (recovery?.summary.medium ?? 0)
   const actions =
@@ -105,11 +142,11 @@ export async function technicalWatchWorkflow(input: {
           : 'No start URL passed.',
       },
       {
-        tool: 'seo_index_watch',
+        tool: input.sitemaps?.length ? 'seo_index_monitor' : 'seo_index_watch',
         status: index ? 'completed' : 'skipped',
         summary: index
-          ? `Inspected ${index.summary.inspected} URLs; ${index.summary.alerts} alerts.`
-          : 'No inspection URLs passed.',
+          ? `Inspected ${indexCounts.inspected} URLs; ${indexCounts.alerts} alerts.`
+          : 'No inspection URLs or sitemaps passed.',
       },
       {
         tool: 'seo_link_recover',

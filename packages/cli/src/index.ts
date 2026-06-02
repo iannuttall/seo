@@ -44,6 +44,7 @@ import {
   writeOauthClient,
 } from '@seo/core'
 import { defineCommand, runMain } from 'citty'
+import { clientCommand } from './commands/clients.js'
 import {
   changeLogCommand,
   contentGroupsCommand,
@@ -69,7 +70,7 @@ import {
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows.js'
-import { resolveGa4Property, resolveSite } from './selection.js'
+import { resolveClient, resolveGa4Property, resolveSite } from './selection.js'
 import {
   formatBytes,
   maybeCheckForUpdates,
@@ -514,6 +515,7 @@ const main = defineCommand({
       },
     }),
     cache: cacheCommand,
+    client: clientCommand,
     'change-log': changeLogCommand,
     'content-groups': contentGroupsCommand,
     'crawl-diff': crawlDiffCommand,
@@ -638,10 +640,18 @@ const main = defineCommand({
       },
     }),
     'ga4-report': defineCommand({
+      meta: {
+        name: 'ga4-report',
+        description: 'Run a GA4 Data API report',
+      },
       args: {
         property: {
           type: 'string',
           description: 'GA4 property ID. If omitted in a terminal, choose one.',
+        },
+        client: {
+          type: 'string',
+          description: 'Saved client id or name with an optional GA4 property.',
         },
         'start-date': { type: 'string', default: '28daysAgo' },
         'end-date': { type: 'string', default: 'yesterday' },
@@ -654,8 +664,12 @@ const main = defineCommand({
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const client = await resolveClient({
+          client: stringArg(args.client),
+          options: { json },
+        })
         const property = await resolveGa4Property({
-          property: stringArg(args.property),
+          property: stringArg(args.property) ?? client?.ga4PropertyId,
           options: { json },
         })
         const body =

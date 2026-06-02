@@ -10,9 +10,24 @@ export const siteSchema = z.object({
 
 export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
+export const clientProfileSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  siteUrl: z.string(),
+  startUrl: z.string().optional(),
+  watchUrls: z.array(z.string()).default([]),
+  ga4PropertyId: z.string().optional(),
+  reportDay: z.number().int().min(1).max(31).optional(),
+  technicalWeekday: z.number().int().min(0).max(7).optional(),
+  isDefault: z.boolean().optional(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+})
+
 export const configSchema = z.object({
   defaultSite: z.string().optional(),
   sites: z.array(siteSchema).default([]),
+  clients: z.array(clientProfileSchema).default([]),
   google: z
     .object({
       defaultGa4PropertyId: z.string().optional(),
@@ -49,6 +64,7 @@ export const configSchema = z.object({
 })
 
 export type AppConfig = z.infer<typeof configSchema>
+export type ClientProfile = z.infer<typeof clientProfileSchema>
 
 export const tokenSchema = z.object({
   provider: z.literal('google'),

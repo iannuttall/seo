@@ -1,6 +1,6 @@
 import { monthlyReport, reportNarrative } from '@seo/core'
 import { defineCommand } from 'citty'
-import { resolveSite } from '../selection.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson } from '../utils.js'
 
 const stringArg = (value: unknown): string | undefined =>
@@ -27,6 +27,10 @@ export const reportNarrativeCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
+    },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
     },
     days: {
       type: 'string',
@@ -65,11 +69,13 @@ export const reportNarrativeCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await reportNarrative({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       startDate: stringArg(args['start-date']),
@@ -97,6 +103,10 @@ export const monthlyReportCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     month: {
       type: 'string',
       description:
@@ -119,11 +129,13 @@ export const monthlyReportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await monthlyReport({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       month: stringArg(args.month),
       limit: numberArg(args.limit),
       refresh: booleanArg(args.refresh),

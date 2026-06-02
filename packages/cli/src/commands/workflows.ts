@@ -5,7 +5,7 @@ import {
   updatePostmortemWorkflow,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { resolveSite } from '../selection.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 
 const stringArg = (value: unknown): string | undefined =>
@@ -76,6 +76,10 @@ export const diagnosePropertyWorkflowCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     days: {
       type: 'string',
       description: 'Diagnosis window length in days. Defaults to 90.',
@@ -101,11 +105,13 @@ export const diagnosePropertyWorkflowCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await diagnosePropertyWorkflow({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
@@ -129,6 +135,10 @@ export const updatePostmortemCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
+    },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
     },
     days: {
       type: 'string',
@@ -155,11 +165,13 @@ export const updatePostmortemCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await updatePostmortemWorkflow({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
@@ -198,6 +210,10 @@ export const technicalWatchCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
+    },
     url: {
       type: 'string',
       description:
@@ -233,15 +249,20 @@ export const technicalWatchCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const site = await resolveSite({
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })
-    const startUrl = stringArg(args.url) ?? startUrlForSite(site)
+    const watchUrls = urlList(args.urls)
+    const startUrl =
+      stringArg(args.url) ??
+      selection.client?.startUrl ??
+      startUrlForSite(selection.site)
     const report = await technicalWatchWorkflow({
-      site,
+      site: selection.site,
       startUrl,
-      urls: urlList(args.urls),
+      urls: watchUrls.length ? watchUrls : selection.client?.watchUrls,
       limit: numberArg(args.limit),
       languageCode: stringArg(args.language),
       refresh: booleanArg(args.refresh),
@@ -264,6 +285,10 @@ export const refreshPrioritiesCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
+    },
+    client: {
+      type: 'string',
+      description: 'Saved client id or name.',
     },
     days: {
       type: 'string',
@@ -290,11 +315,13 @@ export const refreshPrioritiesCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json, refresh: booleanArg(args.refresh) },
+    })
     const report = await refreshPrioritiesWorkflow({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      }),
+      site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),

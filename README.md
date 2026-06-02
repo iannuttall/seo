@@ -16,6 +16,7 @@ This repo is now a runnable v1 foundation:
 - end-to-end property diagnosis with segment impact and striking-distance opportunities
 - narrative and monthly reports that combine diagnosis, change logs, and monitoring history
 - agent workflow commands for diagnosis, update postmortems, technical monitoring, and priority refreshes
+- saved client profiles for GSC property, crawl URL, watched URLs, GA4 property, and cadence
 - cron helper for local recurring workflow runs
 - Semrush and DataForSEO provider adapters
 - CLI commands for `init`, `auth`, `privacy`, `reset`, `cache`, and the first diagnostic workflows
@@ -52,8 +53,10 @@ node packages/cli/dist/index.js updates
 node packages/cli/dist/index.js doctor
 node packages/cli/dist/index.js traffic-anomaly --site sc-domain:example.com
 node packages/cli/dist/index.js diagnose --site sc-domain:example.com
+node packages/cli/dist/index.js client add --id example --site sc-domain:example.com --url https://example.com --default
 node packages/cli/dist/index.js report-narrative --site sc-domain:example.com
 node packages/cli/dist/index.js monthly-report --site sc-domain:example.com --month 2026-05
+node packages/cli/dist/index.js monthly-report --client example
 node packages/cli/dist/index.js technical-watch --site sc-domain:example.com --url https://example.com
 node packages/cli/dist/index.js refresh-priorities --site sc-domain:example.com
 node packages/cli/dist/index.js segment-impact --site sc-domain:example.com --dimension page
@@ -99,6 +102,7 @@ pnpm auth:inject-shared-client
 - `seo init`
 - `seo auth login|logout|whoami|status|refresh|setup-client`
 - `seo doctor`
+- `seo client list|add|show|default|delete`
 - `seo sites`
 - `seo ga4-properties`
 - `seo gsc-query`
@@ -144,6 +148,7 @@ seo change-log measure --help
 seo crawl-diff --help
 seo report-narrative --help
 seo monthly-report --help
+seo client add --help
 seo technical-watch --help
 seo refresh-priorities --help
 seo schedule cron --help

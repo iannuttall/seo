@@ -1,6 +1,6 @@
 import { ensureSeoCliDirs } from '@seo/core'
 import { defineCommand } from 'citty'
-import { resolveSite } from '../selection.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue } from '../utils.js'
 
 const stringArg = (value: unknown): string | undefined =>
@@ -41,6 +41,10 @@ export const scheduleCommand = defineCommand({
           type: 'string',
           description: 'GSC property URL, for example sc-domain:example.com.',
         },
+        client: {
+          type: 'string',
+          description: 'Saved client id or name.',
+        },
         url: {
           type: 'string',
           description:
@@ -62,13 +66,13 @@ export const scheduleCommand = defineCommand({
         },
         weekday: {
           type: 'string',
-          default: '1',
-          description: 'Weekly technical-watch day. 1 is Monday.',
+          description:
+            'Weekly technical-watch day. Defaults to client setting, then Monday.',
         },
         day: {
           type: 'string',
-          default: '1',
-          description: 'Monthly report day. Defaults to 1.',
+          description:
+            'Monthly report day. Defaults to client setting, then 1.',
         },
         json: {
           type: 'boolean',
@@ -78,15 +82,26 @@ export const scheduleCommand = defineCommand({
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)
-        const site = await resolveSite({
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
           site: stringArg(args.site),
           options: { json },
         })
-        const startUrl = stringArg(args.url) ?? siteStartUrl(site)
+        const site = selection.site
+        const startUrl =
+          stringArg(args.url) ??
+          selection.client?.startUrl ??
+          siteStartUrl(selection.site)
         const hour = numberArg(args.hour) ?? 9
         const minute = numberArg(args.minute) ?? 0
-        const weekday = numberArg(args.weekday) ?? 1
-        const day = numberArg(args.day) ?? 1
+        const weekday =
+          numberArg(args.weekday) ?? selection.client?.technicalWeekday ?? 1
+        const day = numberArg(args.day) ?? selection.client?.reportDay ?? 1
+        const identityArg = selection.client
+          ? `--client ${quote(selection.client.id)}`
+          : `--site ${quote(site)}`
+        const watchUrls =
+          stringArg(args.urls) ?? selection.client?.watchUrls.join(',')
 
         const lines = [
           {
@@ -94,11 +109,9 @@ export const scheduleCommand = defineCommand({
             cron: `${minute} ${hour} * * ${weekday}`,
             command: [
               'seo technical-watch',
-              `--site ${quote(site)}`,
+              identityArg,
               startUrl ? `--url ${quote(startUrl)}` : undefined,
-              stringArg(args.urls)
-                ? `--urls ${quote(stringArg(args.urls) ?? '')}`
-                : undefined,
+              watchUrls ? `--urls ${quote(watchUrls)}` : undefined,
               '--json',
             ]
               .filter(Boolean)
@@ -107,11 +120,7 @@ export const scheduleCommand = defineCommand({
           {
             name: 'monthly-report',
             cron: `${minute} ${hour} ${day} * *`,
-            command: [
-              'seo monthly-report',
-              `--site ${quote(site)}`,
-              '--json',
-            ].join(' '),
+            command: ['seo monthly-report', identityArg, '--json'].join(' '),
           },
         ]
 

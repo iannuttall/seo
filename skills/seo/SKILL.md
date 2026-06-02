@@ -5,6 +5,8 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 ## When to call which tool
 
 - Use `seo_doctor` first when setup/auth might be broken.
+- Use `seo_clients` to discover saved client profiles before asking for a raw GSC property.
+- Use `seo_client` to show, save, default, or delete a client profile.
 - Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
 - Use `seo_report_narrative` when the user wants a client-ready "what changed, why, what next" writeup.
 - Use `seo_monthly_report` when the user wants a monthly client or stakeholder report.

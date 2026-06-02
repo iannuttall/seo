@@ -1,6 +1,9 @@
 import { type Option, select, text } from '@clack/prompts'
 import {
+  type ClientProfile,
   ga4PropertyIdFromName,
+  getClient,
+  listClients,
   listGa4AccountSummaries,
   listSites,
   readConfig,
@@ -21,6 +24,11 @@ type Ga4Choice = {
   property: string
   displayName: string
   account: string
+}
+
+export type ClientSelection = {
+  client?: ClientProfile
+  site: string
 }
 
 function canPrompt(): boolean {
@@ -109,6 +117,55 @@ export async function resolveSite(input: {
   })
 
   return choice.siteUrl
+}
+
+export async function resolveClientSelection(input: {
+  client?: string
+  site?: string
+  options?: ResolveOptions
+}): Promise<ClientSelection> {
+  if (input.client) {
+    const client = getClient(input.client)
+    if (!client) throw new Error(`Client not found: ${input.client}`)
+    return { client, site: client.siteUrl }
+  }
+
+  const defaultClient = getClient()
+  if (!input.site && defaultClient) {
+    return { client: defaultClient, site: defaultClient.siteUrl }
+  }
+
+  return {
+    site: await resolveSite({ site: input.site, options: input.options }),
+  }
+}
+
+export async function resolveClient(input: {
+  client?: string
+  options?: ResolveOptions
+}): Promise<ClientProfile | undefined> {
+  if (input.client) {
+    const client = getClient(input.client)
+    if (!client) throw new Error(`Client not found: ${input.client}`)
+    return client
+  }
+
+  const clients = listClients()
+  if (!clients.length) return undefined
+  const defaultClient = getClient()
+  if (defaultClient) return defaultClient
+
+  if (input.options?.json || !canPrompt()) return undefined
+
+  return chooseFromSearch<ClientProfile>({
+    message: 'Choose a client',
+    searchMessage: 'Search clients',
+    emptyMessage: 'No clients matched that search.',
+    choices: clients,
+    label: (client) => client.name,
+    hint: (client) => client.siteUrl,
+    searchValues: (client) => [client.id, client.name, client.siteUrl],
+  })
 }
 
 export async function resolveGa4Property(input: {

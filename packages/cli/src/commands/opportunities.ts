@@ -1,7 +1,0 @@
-export { cannibalCommand } from './opportunity-cannibal.js'
-export { ctrUnderperformersCommand } from './opportunity-ctr.js'
-export { decayingCommand } from './opportunity-decaying.js'
-export { internalLinksCommand } from './opportunity-internal-links.js'
-export { queryClusterCommand } from './opportunity-query-cluster.js'
-export { quickWinsCommand } from './opportunity-quick-wins.js'
-export { secondPageCommand } from './opportunity-second-page.js'

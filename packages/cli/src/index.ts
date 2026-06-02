@@ -1,7 +1,7 @@
 import { defineCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
-import { clientCommand } from './commands/clients.js'
+import { clientCommand } from './commands/clients/index.js'
 import {
   ga4ReportCommand,
   gscQueryCommand,
@@ -14,7 +14,7 @@ import {
 import {
   changeLogCommand,
   contentGroupsCommand,
-} from './commands/experiments.js'
+} from './commands/experiments/index.js'
 import { initCommand } from './commands/init.js'
 import { mcpCommand } from './commands/mcp.js'
 import { crawlDiffCommand, indexWatchCommand } from './commands/monitoring.js'
@@ -26,7 +26,7 @@ import {
   queryClusterCommand,
   quickWinsCommand,
   secondPageCommand,
-} from './commands/opportunities.js'
+} from './commands/opportunities/index.js'
 import { auditPageCommand } from './commands/page-audit.js'
 import {
   diagnoseCommand,
@@ -34,13 +34,13 @@ import {
   ga4PropertiesCommand,
   segmentImpactCommand,
   strikingDistanceCommand,
-} from './commands/product.js'
+} from './commands/product/index.js'
 import {
   monthlyReportCommand,
   reportNarrativeCommand,
 } from './commands/reports.js'
 import { scheduleCommand } from './commands/schedule.js'
-import { setupCommand } from './commands/setup.js'
+import { setupCommand } from './commands/setup/index.js'
 import {
   privacyCommand,
   resetCommand,
@@ -52,7 +52,7 @@ import {
   refreshPrioritiesCommand,
   technicalWatchCommand,
   updatePostmortemCommand,
-} from './commands/workflows.js'
+} from './commands/workflows/index.js'
 import { maybeCheckForUpdates } from './utils.js'
 
 const pkg = {

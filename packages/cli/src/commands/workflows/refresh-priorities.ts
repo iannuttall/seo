@@ -1,13 +1,14 @@
-import { diagnoseProperty } from '@seo/core'
+import { refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printTable } from '../../utils.js'
+import { printWorkflow } from './output.js'
 
-export const diagnoseCommand = defineCommand({
+export const refreshPrioritiesCommand = defineCommand({
   meta: {
-    name: 'diagnose',
-    description: 'Run end-to-end property diagnosis across GSC signals',
+    name: 'refresh-priorities',
+    description: 'Agent workflow for a ranked SEO action queue',
   },
   args: {
     site: {
@@ -20,7 +21,7 @@ export const diagnoseCommand = defineCommand({
     },
     days: {
       type: 'string',
-      description: 'Baseline window length in days. Defaults to 90.',
+      description: 'Diagnosis window length in days. Defaults to 90.',
     },
     recent: {
       type: 'string',
@@ -28,7 +29,7 @@ export const diagnoseCommand = defineCommand({
     },
     limit: {
       type: 'string',
-      description: 'Maximum rows per diagnostic section. Defaults to 10.',
+      description: 'Maximum queue items to print. Defaults to 25.',
     },
     'include-brand': {
       type: 'boolean',
@@ -43,7 +44,7 @@ export const diagnoseCommand = defineCommand({
     refresh: {
       type: 'boolean',
       default: false,
-      description: 'Bypass local cache and fetch fresh GSC data.',
+      description: 'Bypass local cache and fetch fresh data.',
     },
   },
   run: async ({ args }) => {
@@ -53,7 +54,7 @@ export const diagnoseCommand = defineCommand({
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })
-    const report = await diagnoseProperty({
+    const report = await refreshPrioritiesWorkflow({
       site: selection.site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
@@ -66,22 +67,14 @@ export const diagnoseCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Property', report.site],
-      ['Classification', report.summary.classification],
-      ['Significant anomalies', String(report.summary.significantAnomalies)],
-      ['Update matches', String(report.summary.updateMatches)],
-      ['Decay items', String(report.summary.decayItems)],
-      ['Cannibal items', String(report.summary.cannibalItems)],
-      ['Striking distance', String(report.summary.strikingDistanceItems)],
-    ])
+    printWorkflow(report)
     printTable(
-      ['Priority', 'Confidence', 'Reason', 'Action'],
-      report.priorities.map((priority) => [
-        priority.label,
-        priority.confidence,
-        priority.reason,
-        priority.action,
+      ['Source', 'Score', 'Target', 'Action'],
+      report.output.queue.map((item) => [
+        item.source,
+        item.score,
+        item.target,
+        item.action,
       ]),
     )
   },

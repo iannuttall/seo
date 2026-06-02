@@ -1,8 +1,8 @@
 import { type SegmentDimension, segmentImpact } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printKeyValue, printTable } from '../../utils.js'
 
 const segmentDimension = (value: unknown): SegmentDimension => {
   const dimension = stringArg(value) ?? 'page'

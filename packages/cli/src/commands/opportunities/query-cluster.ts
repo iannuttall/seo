@@ -1,9 +1,9 @@
 import { queryClusterReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue } from '../utils.js'
-import { formatCount, printLimitedTable, truncate } from './output.js'
+import { jsonFlag, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printKeyValue } from '../../utils.js'
+import { formatCount, printLimitedTable, truncate } from '../output.js'
 
 export const queryClusterCommand = defineCommand({
   args: {

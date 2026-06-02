@@ -1,7 +1,7 @@
 import { runDoctor } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { jsonFlag } from '../../args.js'
+import { printJson, printKeyValue, printTable } from '../../utils.js'
 
 export const doctorCommand = defineCommand({
   meta: {

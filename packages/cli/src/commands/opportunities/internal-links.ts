@@ -1,9 +1,9 @@
 import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../args.js'
-import { printJson, printKeyValue } from '../utils.js'
-import { formatCount, printLimitedTable, truncate } from './output.js'
-import { selectedSiteOrThrow } from './shared.js'
+import { jsonFlag, stringArg } from '../../args.js'
+import { printJson, printKeyValue } from '../../utils.js'
+import { formatCount, printLimitedTable, truncate } from '../output.js'
+import { selectedSiteOrThrow } from '../shared.js'
 
 export const internalLinksCommand = defineCommand({
   args: {

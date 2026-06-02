@@ -5,8 +5,8 @@ import {
   writeConfig,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../args.js'
-import { printJson, printTable } from '../utils.js'
+import { jsonFlag, stringArg } from '../../args.js'
+import { printJson, printTable } from '../../utils.js'
 
 export const ga4PropertiesCommand = defineCommand({
   meta: {

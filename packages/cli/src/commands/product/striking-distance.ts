@@ -6,10 +6,10 @@ import {
   jsonFlag,
   numberArg,
   stringArg,
-} from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson, printTable } from '../utils.js'
-import { formatFetchDiagnostics } from './shared.js'
+} from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printTable } from '../../utils.js'
+import { formatFetchDiagnostics } from '../shared.js'
 
 export const strikingDistanceCommand = defineCommand({
   meta: {

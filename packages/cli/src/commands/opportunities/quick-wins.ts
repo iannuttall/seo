@@ -1,4 +1,4 @@
-import { secondPage } from '@seo/core'
+import { quickWinsReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -6,17 +6,23 @@ import {
   jsonFlag,
   numberArg,
   stringArg,
-} from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson } from '../utils.js'
-import { printLimitedTable } from './output.js'
-import { formatFetchDiagnostics } from './shared.js'
+} from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printKeyValue } from '../../utils.js'
+import {
+  formatCount,
+  formatPercent,
+  formatPosition,
+  printLimitedTable,
+  truncate,
+  verificationSummary,
+} from '../output.js'
+import { formatFetchDiagnostics } from '../shared.js'
 
-export const secondPageCommand = defineCommand({
+export const quickWinsCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    limit: { type: 'string' },
     'include-brand': {
       type: 'boolean',
       default: false,
@@ -26,11 +32,11 @@ export const secondPageCommand = defineCommand({
       type: 'boolean',
       default: false,
       description:
-        'Verify top opportunities against page title, meta, and content.',
+        'Verify top quick wins against page title, meta, and content.',
     },
     'verify-limit': {
       type: 'string',
-      description: 'Maximum opportunity URLs to verify. Defaults to 5.',
+      description: 'Maximum quick-win URLs to verify. Defaults to 5.',
     },
     js: {
       type: 'boolean',
@@ -50,43 +56,49 @@ export const secondPageCommand = defineCommand({
       description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
     },
     json: { type: 'boolean', default: false },
-    refresh: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
       client: stringArg(args.client),
       site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
+      options: { json },
     })
-    const report = await secondPage({
+    const report = await quickWinsReport({
       site: selection.site,
-      limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       js: booleanArg(args.js) ? true : undefined,
       rate: fetchRateArg(args),
-      refresh: booleanArg(args.refresh),
     })
     if (json) {
       printJson(report)
       return
     }
+    printKeyValue([
+      ['Site', report.site],
+      ['Quick wins', formatCount(report.items.length)],
+      [
+        'Brand queries',
+        booleanArg(args['include-brand']) ? 'included' : 'excluded',
+      ],
+      ['Verification', verificationSummary(report)],
+    ])
     printLimitedTable(
-      ['Query', 'Pos', 'Impr', 'CTR', 'Coverage', 'Fetch', 'Gap', 'Action'],
+      ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Lift', 'Fetch', 'Gap', 'Action'],
       report.items.map((item) => [
-        item.primaryQuery,
-        item.position.toFixed(1),
-        Math.round(item.impressions),
-        item.ctr.toFixed(3),
-        `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
-        formatFetchDiagnostics(item.fetchDiagnostics),
+        truncate(item.query, 36),
+        truncate(item.url, 48),
+        formatPosition(item.position),
+        formatCount(item.impressions),
+        formatPercent(item.ctr),
+        formatCount(item.estimatedClickLift),
+        formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
         item.contentVerification?.contentGapScore ?? '-',
-        item.recommendations[0]?.action ?? 'No recommendation',
+        truncate(item.recommendation.action, 64),
       ]),
     )
-    process.stdout.write(`${report.ledgerSummary}\n`)
   },
 })

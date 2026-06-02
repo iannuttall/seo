@@ -1,15 +1,15 @@
 import { decayingReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../args.js'
-import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue } from '../utils.js'
+import { booleanArg, jsonFlag, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
+import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
   formatPosition,
   printLimitedTable,
   truncate,
-} from './output.js'
+} from '../output.js'
 
 export const decayingCommand = defineCommand({
   args: {

@@ -1,0 +1,7 @@
+export { cannibalCommand } from './cannibal.js'
+export { ctrUnderperformersCommand } from './ctr.js'
+export { decayingCommand } from './decaying.js'
+export { internalLinksCommand } from './internal-links.js'
+export { queryClusterCommand } from './query-cluster.js'
+export { quickWinsCommand } from './quick-wins.js'
+export { secondPageCommand } from './second-page.js'

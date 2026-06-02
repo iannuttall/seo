@@ -77,6 +77,34 @@ export type IndexWatchReport = {
   items: IndexWatchItem[]
 }
 
+export type IndexMonitorPropertyRun = {
+  property: string
+  inventoryUrls: number
+  selectedUrls: number
+  inspected: number
+  changed: number
+  alerts: number
+  sampleUrls: string[]
+}
+
+export type IndexMonitorReport = {
+  site: string
+  generatedAt: string
+  summary: {
+    inventoryUrls: number
+    properties: number
+    dailyCapacity: number
+    selected: number
+    inspected: number
+    changed: number
+    alerts: number
+    skipped: number
+  }
+  properties: IndexMonitorPropertyRun[]
+  items: IndexWatchItem[]
+  warnings: string[]
+}
+
 export type CrawlRunRow = {
   id: string
   site_url: string
@@ -108,6 +136,7 @@ export type IndexWatchRow = {
   coverage_state?: string | null
   indexing_state?: string | null
   robots_txt_state?: string | null
+  inspected_at?: number | null
 }
 
 export type LatestCrawlSummaryRow = CrawlRunRow & {

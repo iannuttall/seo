@@ -1,4 +1,9 @@
-import { crawlDiff, indexCoveragePlan, indexWatch } from '@seo/core'
+import {
+  crawlDiff,
+  indexCoveragePlan,
+  indexMonitor,
+  indexWatch,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, listArg, numberArg, stringArg } from '../args.js'
 import { resolveSite } from '../selection.js'
@@ -124,6 +129,11 @@ export const indexWatchCommand = defineCommand({
       description:
         'Maximum sitemap URLs to load for planning. Defaults to 50000.',
     },
+    'inspect-limit': {
+      type: 'string',
+      description:
+        'Maximum URLs to inspect in this run from sitemap mode. Defaults to 100.',
+    },
     language: {
       type: 'string',
       description: 'Optional URL Inspection language code.',
@@ -142,8 +152,9 @@ export const indexWatchCommand = defineCommand({
       options: { json },
     })
 
+    const sitemaps = listArg(args.sitemaps)
+
     if (booleanArg(args.plan)) {
-      const sitemaps = listArg(args.sitemaps)
       if (!sitemaps.length) {
         throw new Error('Pass at least one sitemap with --sitemaps.')
       }
@@ -191,6 +202,70 @@ export const indexWatchCommand = defineCommand({
             suggestion.currentProperty,
             `${suggestion.estimatedCycleDays} day(s)`,
             suggestion.reason,
+          ]),
+        )
+      }
+      if (report.warnings.length) {
+        process.stdout.write('\nWarnings\n')
+        for (const warning of report.warnings.slice(0, 10)) {
+          process.stdout.write(`- ${warning}\n`)
+        }
+      }
+      return
+    }
+
+    if (sitemaps.length) {
+      const report = await indexMonitor({
+        site,
+        sitemaps,
+        properties: listArg(args.properties).length
+          ? listArg(args.properties)
+          : undefined,
+        dailyLimit: numberArg(args['daily-limit']),
+        inspectLimit: numberArg(args['inspect-limit']),
+        maxUrls: numberArg(args['max-urls']),
+        languageCode: stringArg(args.language),
+      })
+      if (json) {
+        printJson(report)
+        return
+      }
+      printKeyValue([
+        ['Property', report.site],
+        ['Inventory URLs', String(report.summary.inventoryUrls)],
+        ['Properties used', String(report.summary.properties)],
+        ['Daily capacity', String(report.summary.dailyCapacity)],
+        ['Selected this run', String(report.summary.selected)],
+        ['Inspected', String(report.summary.inspected)],
+        ['Changed', String(report.summary.changed)],
+        ['Alerts', String(report.summary.alerts)],
+        ['Skipped', String(report.summary.skipped)],
+      ])
+      if (report.properties.length) {
+        printTable(
+          ['Property', 'Inventory', 'Selected', 'Inspected', 'Alerts'],
+          report.properties.map((property) => [
+            property.property,
+            property.inventoryUrls,
+            property.selectedUrls,
+            property.inspected,
+            property.alerts,
+          ]),
+        )
+      }
+      const issueItems = report.items
+        .filter((item) => item.alert || item.changed || item.verdict !== 'PASS')
+        .slice(0, 50)
+      if (issueItems.length) {
+        process.stdout.write('\nIndex issues and changes\n')
+        printTable(
+          ['Alert', 'Changed', 'Verdict', 'Coverage', 'URL'],
+          issueItems.map((item) => [
+            item.alert ? 'yes' : 'no',
+            item.changed ? 'yes' : 'no',
+            item.verdict ?? 'unknown',
+            item.coverageState ?? 'unknown',
+            item.url,
           ]),
         )
       }

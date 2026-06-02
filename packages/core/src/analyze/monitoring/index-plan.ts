@@ -35,6 +35,11 @@ export type IndexCoveragePlan = {
   warnings: string[]
 }
 
+export type IndexPropertyUrlAllocation = {
+  property: string
+  urls: string[]
+}
+
 export type IndexCoveragePlanInput = {
   site: string
   urls: string[]
@@ -79,6 +84,47 @@ function mostSpecificProperty(url: string, properties: string[]): string {
     .filter((property) => propertyMatchesUrl(property, url))
     .sort((a, b) => b.length - a.length)
   return matching[0] ?? properties[0] ?? ''
+}
+
+function relevantPropertiesForSite(
+  site: string,
+  accountProperties: string[],
+): string[] {
+  const domain = domainFromSite(site)
+  const relevantProperties = accountProperties.filter((property) =>
+    property.startsWith('sc-domain:')
+      ? property.slice('sc-domain:'.length) === domain
+      : property.includes(domain),
+  )
+  return relevantProperties.length
+    ? relevantProperties
+    : [site, ...accountProperties]
+}
+
+export function allocateIndexUrlsToProperties(input: {
+  site: string
+  urls: string[]
+  accountProperties: string[]
+}): IndexPropertyUrlAllocation[] {
+  const urls = [...new Set(input.urls)]
+  const properties = relevantPropertiesForSite(
+    input.site,
+    input.accountProperties,
+  )
+  const urlsByProperty = new Map<string, string[]>()
+  for (const url of urls) {
+    const property = mostSpecificProperty(url, properties)
+    const existing = urlsByProperty.get(property) ?? []
+    existing.push(url)
+    urlsByProperty.set(property, existing)
+  }
+
+  return [...urlsByProperty.entries()]
+    .map(([property, propertyUrls]) => ({
+      property,
+      urls: propertyUrls,
+    }))
+    .sort((a, b) => b.urls.length - a.urls.length)
 }
 
 function cycleDays(urlCount: number, dailyLimit: number): number {
@@ -196,31 +242,22 @@ export function planIndexCoverageFromUrls(
   const dailyLimit = input.dailyLimit ?? 2_000
   const targetCycleDays = input.targetCycleDays ?? 1
   const urls = [...new Set(input.urls)]
-  const domain = domainFromSite(input.site)
-  const relevantProperties = input.accountProperties.filter((property) =>
-    property.startsWith('sc-domain:')
-      ? property.slice('sc-domain:'.length) === domain
-      : property.includes(domain),
+  const allocations = allocateIndexUrlsToProperties({
+    site: input.site,
+    urls,
+    accountProperties: input.accountProperties,
+  })
+  const urlsByProperty = new Map(
+    allocations.map((allocation) => [allocation.property, allocation.urls]),
   )
-  const properties = relevantProperties.length
-    ? relevantProperties
-    : [input.site, ...input.accountProperties]
 
-  const urlsByProperty = new Map<string, string[]>()
-  for (const url of urls) {
-    const property = mostSpecificProperty(url, properties)
-    const existing = urlsByProperty.get(property) ?? []
-    existing.push(url)
-    urlsByProperty.set(property, existing)
-  }
-
-  const propertyPlans = [...urlsByProperty.entries()]
-    .map(([property, propertyUrls]) => ({
-      property,
-      urlCount: propertyUrls.length,
+  const propertyPlans = allocations
+    .map((allocation) => ({
+      property: allocation.property,
+      urlCount: allocation.urls.length,
       dailyLimit,
-      cycleDays: cycleDays(propertyUrls.length, dailyLimit),
-      sampleUrls: propertyUrls.slice(0, 3),
+      cycleDays: cycleDays(allocation.urls.length, dailyLimit),
+      sampleUrls: allocation.urls.slice(0, 3),
     }))
     .sort((a, b) => b.urlCount - a.urlCount)
 

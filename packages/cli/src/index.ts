@@ -64,6 +64,7 @@ import {
   reportNarrativeCommand,
 } from './commands/reports.js'
 import { scheduleCommand } from './commands/schedule.js'
+import { setupCommand } from './commands/setup.js'
 import {
   diagnosePropertyWorkflowCommand,
   refreshPrioritiesCommand,
@@ -526,6 +527,7 @@ const main = defineCommand({
     'report-narrative': reportNarrativeCommand,
     'refresh-priorities': refreshPrioritiesCommand,
     schedule: scheduleCommand,
+    setup: setupCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
     'technical-watch': technicalWatchCommand,

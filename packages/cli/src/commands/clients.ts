@@ -8,6 +8,7 @@ import {
 import { defineCommand } from 'citty'
 import { resolveSite } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
+import { clientSetupCommand } from './setup.js'
 
 const stringArg = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
@@ -39,6 +40,7 @@ export const clientCommand = defineCommand({
     description: 'Manage saved SEO client profiles',
   },
   subCommands: {
+    setup: clientSetupCommand,
     list: defineCommand({
       meta: {
         name: 'list',

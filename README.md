@@ -17,6 +17,7 @@ This repo is now a runnable v1 foundation:
 - narrative and monthly reports that combine diagnosis, change logs, and monitoring history
 - agent workflow commands for diagnosis, update postmortems, technical monitoring, and priority refreshes
 - saved client profiles for GSC property, crawl URL, watched URLs, GA4 property, and cadence
+- guided setup command that creates the first client and prints next commands
 - cron helper for local recurring workflow runs
 - Semrush and DataForSEO provider adapters
 - CLI commands for `init`, `auth`, `privacy`, `reset`, `cache`, and the first diagnostic workflows
@@ -46,6 +47,7 @@ npm run install
 
 ```bash
 node packages/cli/dist/index.js init --dry-run
+node packages/cli/dist/index.js setup
 node packages/cli/dist/index.js sites
 node packages/cli/dist/index.js gsc-query --site sc-domain:example.com --start-date 2026-05-01 --end-date 2026-05-28 --dimensions query,page
 node packages/cli/dist/index.js ga4-report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
@@ -54,6 +56,7 @@ node packages/cli/dist/index.js doctor
 node packages/cli/dist/index.js traffic-anomaly --site sc-domain:example.com
 node packages/cli/dist/index.js diagnose --site sc-domain:example.com
 node packages/cli/dist/index.js client add --id example --site sc-domain:example.com --url https://example.com --default
+node packages/cli/dist/index.js setup --site sc-domain:example.com --id example --url https://example.com
 node packages/cli/dist/index.js report-narrative --site sc-domain:example.com
 node packages/cli/dist/index.js monthly-report --site sc-domain:example.com --month 2026-05
 node packages/cli/dist/index.js monthly-report --client example
@@ -100,9 +103,10 @@ pnpm auth:inject-shared-client
 ## Shipped CLI commands
 
 - `seo init`
+- `seo setup`
 - `seo auth login|logout|whoami|status|refresh|setup-client`
 - `seo doctor`
-- `seo client list|add|show|default|delete`
+- `seo client setup|list|add|show|default|delete`
 - `seo sites`
 - `seo ga4-properties`
 - `seo gsc-query`
@@ -141,6 +145,7 @@ pnpm auth:inject-shared-client
 Every command has inline help:
 
 ```bash
+seo setup --help
 seo diagnose --help
 seo segment-impact --help
 seo striking-distance --help
@@ -148,6 +153,7 @@ seo change-log measure --help
 seo crawl-diff --help
 seo report-narrative --help
 seo monthly-report --help
+seo client setup --help
 seo client add --help
 seo technical-watch --help
 seo refresh-priorities --help

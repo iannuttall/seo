@@ -5,6 +5,7 @@ import * as z from 'zod/v4'
 const REPORT_OPTIONS = {
   site: { mcp: 'site', schema: z.string() },
   days: { mcp: 'days', schema: z.number().optional() },
+  recentDays: { mcp: 'recentDays', schema: z.number().optional() },
   range: { mcp: 'range', schema: z.number().optional() },
   limit: { mcp: 'limit', schema: z.number().optional() },
   minImpressions: { mcp: 'minImpressions', schema: z.number().optional() },

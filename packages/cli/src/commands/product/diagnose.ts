@@ -4,6 +4,7 @@ import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
 import { printActionDetails } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const diagnoseCommand = defineCommand({
   meta: {
@@ -19,32 +20,21 @@ export const diagnoseCommand = defineCommand({
       type: 'string',
       description: 'Saved client id or name.',
     },
-    days: {
-      type: 'string',
-      description: 'Baseline window length in days. Defaults to 90.',
-    },
-    recent: {
-      type: 'string',
-      description: 'Recent anomaly window in days. Defaults to 14.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum rows per diagnostic section. Defaults to 10.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in opportunity reports.',
-    },
+    ...cliReportArgs(
+      ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
+      {
+        days: {
+          description: 'Baseline window length in days. Defaults to 90.',
+        },
+        limit: {
+          description: 'Maximum rows per diagnostic section. Defaults to 10.',
+        },
+      },
+    ),
     json: {
       type: 'boolean',
       default: false,
       description: 'Print machine-readable JSON.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local cache and fetch fresh GSC data.',
     },
   },
   run: async ({ args }) => {

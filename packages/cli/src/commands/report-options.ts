@@ -15,6 +15,13 @@ const REPORT_OPTIONS = {
       description: 'GSC lookback window. Defaults to 28.',
     },
   },
+  recentDays: {
+    cli: 'recent',
+    arg: {
+      type: 'string',
+      description: 'Recent anomaly window in days. Defaults to 14.',
+    },
+  },
   range: {
     cli: 'days',
     arg: {
@@ -103,11 +110,12 @@ type ReportOptionKey = keyof typeof REPORT_OPTIONS
 
 export function cliReportArgs<const T extends readonly ReportOptionKey[]>(
   keys: T,
+  overrides: Partial<Record<ReportOptionKey, Partial<ArgDef>>> = {},
 ): Record<(typeof REPORT_OPTIONS)[T[number]]['cli'], ArgDef> {
   return Object.fromEntries(
     keys.map((key) => {
       const option = REPORT_OPTIONS[key]
-      return [option.cli, option.arg]
+      return [option.cli, { ...option.arg, ...overrides[key] }]
     }),
   ) as Record<(typeof REPORT_OPTIONS)[T[number]]['cli'], ArgDef>
 }

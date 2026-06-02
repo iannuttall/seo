@@ -1,3 +1,4 @@
+import { isBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { GscRow } from '../types.js'
 
@@ -57,8 +58,7 @@ export function looksLikeBrand(
   query: string,
   brandTerms: string[] = [],
 ): boolean {
-  const normalized = normalizeText(query)
-  return brandTerms.some((term) => normalized.includes(normalizeText(term)))
+  return isBrandQuery(query, brandTerms)
 }
 
 export async function fetchSiteQueryPageRows(

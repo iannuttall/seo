@@ -121,6 +121,8 @@ export async function diagnoseProperty(input: {
   startDate?: string
   endDate?: string
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<DiagnosePropertyReport> {
   const limit = input.limit ?? 10
@@ -142,10 +144,23 @@ export async function diagnoseProperty(input: {
     segmentImpact({ ...input, dimension: 'query', limit }),
     segmentImpact({ ...input, dimension: 'device', limit }),
     segmentImpact({ ...input, dimension: 'country', limit }),
-    decayingReport({ site: input.site, refresh: input.refresh }),
-    cannibalReport({ site: input.site }),
+    decayingReport({
+      site: input.site,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
+      refresh: input.refresh,
+    }),
+    cannibalReport({
+      site: input.site,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
+    }),
     strikingDistance({ ...input, limit }),
-    quickWinsReport({ site: input.site }),
+    quickWinsReport({
+      site: input.site,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
+    }),
   ])
 
   const priorities = buildPriorities({

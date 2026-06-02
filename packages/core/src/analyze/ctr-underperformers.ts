@@ -1,9 +1,12 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
 
 export async function ctrUnderperformersReport(input: {
   site: string
   minImpressions?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }) {
   const minImpressions = input.minImpressions ?? 200
@@ -20,12 +23,20 @@ export async function ctrUnderperformersReport(input: {
   )
 
   const items = rows
-    .filter(
-      (row) =>
+    .filter((row) => {
+      const query = row.keys[0] ?? ''
+      return (
         row.position >= 1 &&
         row.position <= 10 &&
-        row.impressions >= minImpressions,
-    )
+        row.impressions >= minImpressions &&
+        !shouldExcludeBrandQuery({
+          query,
+          siteUrl: input.site,
+          brandTerms: input.brandTerms,
+          includeBrand: input.includeBrand,
+        })
+      )
+    })
     .map((row) => {
       const rounded = Math.max(1, Math.min(10, Math.round(row.position)))
       const expected = CTR_BASELINE[rounded] ?? 0.01

@@ -56,6 +56,11 @@ export const reportNarrativeCommand = defineCommand({
       type: 'string',
       description: 'Maximum saved changes to measure. Defaults to 5.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -82,6 +87,8 @@ export const reportNarrativeCommand = defineCommand({
       endDate: stringArg(args['end-date']),
       limit: numberArg(args.limit),
       changeLimit: numberArg(args['change-limit']),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
 
@@ -116,6 +123,11 @@ export const monthlyReportCommand = defineCommand({
       type: 'string',
       description: 'Maximum rows per diagnostic section. Defaults to 10.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -138,6 +150,8 @@ export const monthlyReportCommand = defineCommand({
       site: selection.site,
       month: stringArg(args.month),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
 

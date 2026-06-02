@@ -1,3 +1,4 @@
+import { deriveBrandTerms } from './brand.js'
 import { readConfig, writeConfig } from './storage/config.js'
 import type { ClientProfile } from './types.js'
 
@@ -7,6 +8,7 @@ export type ClientProfileInput = {
   siteUrl: string
   startUrl?: string
   watchUrls?: string[]
+  brandTerms?: string[]
   ga4PropertyId?: string
   reportDay?: number
   technicalWeekday?: number
@@ -60,6 +62,15 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
     siteUrl: input.siteUrl,
     startUrl: input.startUrl ?? existing?.startUrl,
     watchUrls: uniqueStrings(input.watchUrls ?? existing?.watchUrls),
+    brandTerms: uniqueStrings(
+      input.brandTerms ??
+        existing?.brandTerms ??
+        deriveBrandTerms({
+          id,
+          name: input.name ?? existing?.name,
+          siteUrl: input.siteUrl,
+        }),
+    ),
     ga4PropertyId: input.ga4PropertyId ?? existing?.ga4PropertyId,
     reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,

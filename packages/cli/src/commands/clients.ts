@@ -60,7 +60,15 @@ export const clientCommand = defineCommand({
           return
         }
         printTable(
-          ['Default', 'ID', 'Name', 'GSC property', 'Crawl URL', 'Watch URLs'],
+          [
+            'Default',
+            'ID',
+            'Name',
+            'GSC property',
+            'Crawl URL',
+            'Watch URLs',
+            'Brand terms',
+          ],
           clients.map((client) => [
             client.isDefault ? 'yes' : '',
             client.id,
@@ -68,6 +76,7 @@ export const clientCommand = defineCommand({
             client.siteUrl,
             client.startUrl ?? '',
             client.watchUrls.length,
+            client.brandTerms.join(', '),
           ]),
         )
       },
@@ -102,6 +111,11 @@ export const clientCommand = defineCommand({
           type: 'string',
           description: 'Optional GA4 property ID for this client.',
         },
+        brand: {
+          type: 'string',
+          description:
+            'Comma-separated branded query terms to exclude by default.',
+        },
         'report-day': {
           type: 'string',
           description: 'Preferred monthly report day, 1-31.',
@@ -131,6 +145,7 @@ export const clientCommand = defineCommand({
           }),
           startUrl: stringArg(args.url),
           watchUrls: urlList(args.urls),
+          brandTerms: urlList(args.brand),
           ga4PropertyId: stringArg(args.ga4),
           reportDay: numberArg(args['report-day']),
           technicalWeekday: numberArg(args.weekday),
@@ -146,6 +161,7 @@ export const clientCommand = defineCommand({
           ['GSC property', client.siteUrl],
           ['Crawl URL', client.startUrl ?? 'not set'],
           ['Watch URLs', String(client.watchUrls.length)],
+          ['Brand terms', client.brandTerms.join(', ') || 'not set'],
           ['GA4 property', client.ga4PropertyId ?? 'not set'],
           ['Default', client.isDefault ? 'yes' : 'no'],
         ])
@@ -180,6 +196,7 @@ export const clientCommand = defineCommand({
           ['GSC property', client.siteUrl],
           ['Crawl URL', client.startUrl ?? 'not set'],
           ['Watch URLs', client.watchUrls.join(', ') || 'not set'],
+          ['Brand terms', client.brandTerms.join(', ') || 'not set'],
           ['GA4 property', client.ga4PropertyId ?? 'not set'],
           [
             'Report day',

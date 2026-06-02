@@ -81,6 +81,8 @@ export async function diagnosePropertyWorkflow(input: {
   days?: number
   recentDays?: number
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<
   WorkflowReport<{
@@ -113,6 +115,8 @@ export async function monthlyReportWorkflow(input: {
   site: string
   month?: string
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<
   WorkflowReport<{
@@ -141,6 +145,8 @@ export async function updatePostmortemWorkflow(input: {
   days?: number
   recentDays?: number
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<
   WorkflowReport<{
@@ -287,6 +293,8 @@ export async function refreshPrioritiesWorkflow(input: {
   days?: number
   recentDays?: number
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<
   WorkflowReport<{

@@ -16,6 +16,7 @@ export const clientProfileSchema = z.object({
   siteUrl: z.string(),
   startUrl: z.string().optional(),
   watchUrls: z.array(z.string()).default([]),
+  brandTerms: z.array(z.string()).default([]),
   ga4PropertyId: z.string().optional(),
   reportDay: z.number().int().min(1).max(31).optional(),
   technicalWeekday: z.number().int().min(0).max(7).optional(),

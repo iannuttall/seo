@@ -1,3 +1,4 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { Recommendation } from '../types.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
@@ -41,6 +42,8 @@ interface QuickWinItem {
 export async function cannibalReport(input: {
   site: string
   minImpressions?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }) {
   const minImpressions = input.minImpressions ?? 50
@@ -66,6 +69,17 @@ export async function cannibalReport(input: {
 
   const items: CannibalItem[] = []
   for (const [query, queryRows] of byQuery.entries()) {
+    if (
+      shouldExcludeBrandQuery({
+        query,
+        siteUrl: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      })
+    ) {
+      continue
+    }
+
     const eligible = queryRows.filter(
       (row) => row.impressions >= minImpressions,
     )
@@ -115,6 +129,8 @@ export async function decayingReport(input: {
   site: string
   windowCompare?: '28v28' | 'YoY'
   minDropPct?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }) {
   const minDropPct = input.minDropPct ?? 20
@@ -155,6 +171,17 @@ export async function decayingReport(input: {
 
   for (const row of current.rows) {
     const query = row.keys[0] ?? ''
+    if (
+      shouldExcludeBrandQuery({
+        query,
+        siteUrl: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      })
+    ) {
+      continue
+    }
+
     const prev = previousByQuery.get(query)
     if (!prev || prev.clicks === 0) {
       continue
@@ -220,6 +247,8 @@ export async function decayingReport(input: {
 export async function quickWinsReport(input: {
   site: string
   minImpressions?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }) {
   const minImpressions = input.minImpressions ?? 200
@@ -236,12 +265,20 @@ export async function quickWinsReport(input: {
   )
 
   const items: QuickWinItem[] = rows
-    .filter(
-      (row) =>
+    .filter((row) => {
+      const query = row.keys[0] ?? ''
+      return (
         row.position >= 4 &&
         row.position <= 10 &&
-        row.impressions >= minImpressions,
-    )
+        row.impressions >= minImpressions &&
+        !shouldExcludeBrandQuery({
+          query,
+          siteUrl: input.site,
+          brandTerms: input.brandTerms,
+          includeBrand: input.includeBrand,
+        })
+      )
+    })
     .map((row) => {
       const rounded = Math.max(1, Math.min(10, Math.round(row.position)))
       const expectedCtrAt3 = CTR_BASELINE[3] ?? 0.1

@@ -146,6 +146,8 @@ export async function reportNarrative(input: {
   endDate?: string
   limit?: number
   changeLimit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string }> {
   const periodDays = input.days ?? 90
@@ -166,6 +168,8 @@ export async function reportNarrative(input: {
     startDate: period?.startDate,
     endDate: period?.endDate,
     limit: input.limit,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
     refresh: input.refresh,
   })
   const changes = listChanges({
@@ -240,6 +244,8 @@ export async function monthlyReport(input: {
   site: string
   month?: string
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string; month: string }> {
   const month = input.month ?? finalGscDate().slice(0, 7)
@@ -250,6 +256,8 @@ export async function monthlyReport(input: {
     endDate: period.endDate,
     recentDays: Math.min(14, Math.max(3, rangeDays(period))),
     limit: input.limit,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
     refresh: input.refresh,
   })
   return {

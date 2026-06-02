@@ -1,3 +1,4 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { defaultDateRange } from './shared.js'
 
@@ -18,6 +19,8 @@ export async function strikingDistance(input: {
   minImpressions?: number
   maxCtr?: number
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<{
   site: string
@@ -40,13 +43,21 @@ export async function strikingDistance(input: {
   )
 
   const items = result.rows
-    .filter(
-      (row) =>
+    .filter((row) => {
+      const query = row.keys[0] ?? ''
+      return (
         row.position >= 11 &&
         row.position <= 20 &&
         row.impressions >= minImpressions &&
-        row.ctr <= maxCtr,
-    )
+        row.ctr <= maxCtr &&
+        !shouldExcludeBrandQuery({
+          query,
+          siteUrl: input.site,
+          brandTerms: input.brandTerms,
+          includeBrand: input.includeBrand,
+        })
+      )
+    })
     .map((row) => {
       const score =
         row.impressions * (21 - row.position) * (maxCtr - row.ctr + 0.005)

@@ -1,3 +1,4 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { extractPage } from '../extract/page-extractor.js'
 import { fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
@@ -8,12 +9,7 @@ import type {
   SecondPageItem,
   SecondPageReport,
 } from '../types.js'
-import {
-  defaultDateRange,
-  looksLikeBrand,
-  normalizeText,
-  tokenize,
-} from './shared.js'
+import { defaultDateRange, normalizeText, tokenize } from './shared.js'
 
 function scoreCoverage(
   query: string,
@@ -91,6 +87,7 @@ export async function secondPage(input: {
   js?: boolean | 'auto'
   refresh?: boolean
   brandTerms?: string[]
+  includeBrand?: boolean
   prefer?: 'cheap' | 'authoritative'
 }): Promise<SecondPageReport> {
   const range = input.range ?? 28
@@ -116,7 +113,12 @@ export async function secondPage(input: {
       row.position <= 20 &&
       row.impressions >= minImpressions &&
       tokenize(query).length <= 8 &&
-      !looksLikeBrand(query, input.brandTerms)
+      !shouldExcludeBrandQuery({
+        query,
+        siteUrl: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      })
     )
   })
 

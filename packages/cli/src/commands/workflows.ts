@@ -92,6 +92,11 @@ export const diagnosePropertyWorkflowCommand = defineCommand({
       type: 'string',
       description: 'Maximum rows per section. Defaults to 10.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -115,6 +120,8 @@ export const diagnosePropertyWorkflowCommand = defineCommand({
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -302,6 +309,11 @@ export const refreshPrioritiesCommand = defineCommand({
       type: 'string',
       description: 'Maximum queue items to print. Defaults to 25.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -325,6 +337,8 @@ export const refreshPrioritiesCommand = defineCommand({
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {

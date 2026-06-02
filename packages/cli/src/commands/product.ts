@@ -230,6 +230,11 @@ export const strikingDistanceCommand = defineCommand({
       type: 'string',
       description: 'Maximum opportunities to print. Defaults to 25.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -253,6 +258,8 @@ export const strikingDistanceCommand = defineCommand({
       days: numberArg(args.days),
       minImpressions: numberArg(args['min-impressions']),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -299,6 +306,11 @@ export const diagnoseCommand = defineCommand({
       type: 'string',
       description: 'Maximum rows per diagnostic section. Defaults to 10.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -322,6 +334,8 @@ export const diagnoseCommand = defineCommand({
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {

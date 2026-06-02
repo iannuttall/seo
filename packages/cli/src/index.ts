@@ -914,20 +914,26 @@ const main = defineCommand({
         site: { type: 'string' },
         client: { type: 'string' },
         limit: { type: 'string' },
+        'include-brand': {
+          type: 'boolean',
+          default: false,
+          description: 'Include branded queries in opportunity reports.',
+        },
         json: { type: 'boolean', default: false },
         refresh: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json, refresh: booleanArg(args.refresh) },
+        })
         const report = await secondPage({
-          site: await selectedSiteOrThrow(
-            { client: stringArg(args.client), site: stringArg(args.site) },
-            {
-              json,
-              refresh: booleanArg(args.refresh),
-            },
-          ),
+          site: selection.site,
           limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
+          brandTerms: selection.client?.brandTerms,
+          includeBrand: booleanArg(args['include-brand']),
           refresh: booleanArg(args.refresh),
         })
         if (json) {
@@ -952,16 +958,25 @@ const main = defineCommand({
       args: {
         site: { type: 'string' },
         client: { type: 'string' },
+        'include-brand': {
+          type: 'boolean',
+          default: false,
+          description: 'Include branded queries in opportunity reports.',
+        },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json },
+        })
         await output(
           await cannibalReport({
-            site: await selectedSiteOrThrow(
-              { client: stringArg(args.client), site: stringArg(args.site) },
-              { json },
-            ),
+            site: selection.site,
+            brandTerms: selection.client?.brandTerms,
+            includeBrand: booleanArg(args['include-brand']),
           }),
           json,
         )
@@ -971,16 +986,25 @@ const main = defineCommand({
       args: {
         site: { type: 'string' },
         client: { type: 'string' },
+        'include-brand': {
+          type: 'boolean',
+          default: false,
+          description: 'Include branded queries in opportunity reports.',
+        },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json },
+        })
         await output(
           await decayingReport({
-            site: await selectedSiteOrThrow(
-              { client: stringArg(args.client), site: stringArg(args.site) },
-              { json },
-            ),
+            site: selection.site,
+            brandTerms: selection.client?.brandTerms,
+            includeBrand: booleanArg(args['include-brand']),
           }),
           json,
         )
@@ -990,16 +1014,25 @@ const main = defineCommand({
       args: {
         site: { type: 'string' },
         client: { type: 'string' },
+        'include-brand': {
+          type: 'boolean',
+          default: false,
+          description: 'Include branded queries in opportunity reports.',
+        },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json },
+        })
         await output(
           await quickWinsReport({
-            site: await selectedSiteOrThrow(
-              { client: stringArg(args.client), site: stringArg(args.site) },
-              { json },
-            ),
+            site: selection.site,
+            brandTerms: selection.client?.brandTerms,
+            includeBrand: booleanArg(args['include-brand']),
           }),
           json,
         )
@@ -1030,16 +1063,25 @@ const main = defineCommand({
       args: {
         site: { type: 'string' },
         client: { type: 'string' },
+        'include-brand': {
+          type: 'boolean',
+          default: false,
+          description: 'Include branded queries in opportunity reports.',
+        },
         json: { type: 'boolean', default: false },
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json },
+        })
         await output(
           await ctrUnderperformersReport({
-            site: await selectedSiteOrThrow(
-              { client: stringArg(args.client), site: stringArg(args.site) },
-              { json },
-            ),
+            site: selection.site,
+            brandTerms: selection.client?.brandTerms,
+            includeBrand: booleanArg(args['include-brand']),
           }),
           json,
         )
@@ -1054,13 +1096,16 @@ const main = defineCommand({
       },
       run: async ({ args }) => {
         const json = normalizeJsonFlag(args)
+        const selection = await resolveClientSelection({
+          client: stringArg(args.client),
+          site: stringArg(args.site),
+          options: { json },
+        })
         await output(
           await queryClusterReport({
-            site: await selectedSiteOrThrow(
-              { client: stringArg(args.client), site: stringArg(args.site) },
-              { json },
-            ),
+            site: selection.site,
             scope: stringArg(args.scope),
+            brand: selection.client?.brandTerms?.[0],
           }),
           json,
         )

@@ -11,6 +11,7 @@ import {
 import {
   authStatus,
   type ClientProfile,
+  deriveBrandTerms,
   ensureSeoCliDirs,
   ga4PropertyIdFromName,
   listGa4AccountSummaries,
@@ -263,6 +264,22 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
           )
         : []
   const ga4PropertyId = await chooseGa4Property(stringArg(args.ga4))
+  const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
+  const brandTerms =
+    urlList(args.brand).length > 0
+      ? urlList(args.brand)
+      : canPrompt()
+        ? urlList(
+            maybeExitCancelled(
+              await text({
+                message:
+                  'Brand query terms to exclude from opportunity reports',
+                placeholder: derivedBrandTerms.join(', '),
+                defaultValue: derivedBrandTerms.join(', '),
+              }),
+            ),
+          )
+        : derivedBrandTerms
   const reportDay = numberArg(args['report-day']) ?? 1
   const technicalWeekday = numberArg(args.weekday) ?? 1
   const isDefault =
@@ -282,6 +299,7 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
     siteUrl: site,
     startUrl,
     watchUrls,
+    brandTerms,
     ga4PropertyId,
     reportDay,
     technicalWeekday,
@@ -306,6 +324,7 @@ async function runGuidedSetup(args: Record<string, unknown>): Promise<void> {
     ['GSC property', client.siteUrl],
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', String(client.watchUrls.length)],
+    ['Brand terms', client.brandTerms.join(', ') || 'not set'],
     ['GA4 property', client.ga4PropertyId ?? 'not set'],
     ['Auth', auth],
     ['MCP installs', String(mcp.length)],
@@ -332,6 +351,10 @@ export const setupCommand = defineCommand({
       description: 'Comma-separated URLs to watch with URL Inspection.',
     },
     ga4: { type: 'string', description: 'Optional GA4 property ID.' },
+    brand: {
+      type: 'string',
+      description: 'Comma-separated branded query terms to exclude by default.',
+    },
     'report-day': {
       type: 'string',
       description: 'Preferred monthly report day. Defaults to 1.',

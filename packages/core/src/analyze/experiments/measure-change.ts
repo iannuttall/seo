@@ -2,144 +2,18 @@ import {
   querySearchAnalytics,
   type SearchAnalyticsRequest,
 } from '../../gsc/client.js'
-import type { GscRow } from '../../types.js'
 import { getChange } from './change-log.js'
 import { getContentGroup } from './content-groups.js'
+import { classify } from './measurement/classify.js'
+import { dateShift, latestGscDate } from './measurement/dates.js'
+import { filterForChange } from './measurement/filters.js'
+import { fixed, pct, summarizeRows } from './measurement/math.js'
 import type {
   ChangeMeasurement,
   ChangeScope,
-  ContentGroup,
-  ContentGroupMatchType,
   SeoChange,
   TestMetrics,
 } from './types.js'
-
-function dateShift(date: string, days: number): string {
-  const value = new Date(`${date}T00:00:00.000Z`)
-  value.setUTCDate(value.getUTCDate() + days)
-  return value.toISOString().slice(0, 10)
-}
-
-function latestGscDate(): string {
-  const end = new Date()
-  end.setUTCDate(end.getUTCDate() - 4)
-  return end.toISOString().slice(0, 10)
-}
-
-function pct(after: number, before: number): number | null {
-  if (before === 0) return after === 0 ? 0 : null
-  return Number((((after - before) / before) * 100).toFixed(2))
-}
-
-function fixed(value: number, digits = 3): number {
-  return Number(value.toFixed(digits))
-}
-
-function summarizeRows(rows: GscRow[]): TestMetrics {
-  const clicks = rows.reduce((sum, row) => sum + row.clicks, 0)
-  const impressions = rows.reduce((sum, row) => sum + row.impressions, 0)
-  const ctr = impressions > 0 ? clicks / impressions : 0
-  const position =
-    impressions > 0
-      ? rows.reduce((sum, row) => sum + row.position * row.impressions, 0) /
-        impressions
-      : 0
-
-  return {
-    clicks: fixed(clicks),
-    impressions: fixed(impressions),
-    ctr: fixed(ctr, 4),
-    position: fixed(position),
-  }
-}
-
-function groupOperator(matchType: ContentGroupMatchType) {
-  return matchType === 'regex'
-    ? 'includingRegex'
-    : matchType === 'contains'
-      ? 'contains'
-      : 'equals'
-}
-
-function filterForChange(
-  change: SeoChange,
-  group?: ContentGroup,
-): SearchAnalyticsRequest['dimensionFilterGroups'] {
-  if (change.scope === 'site') return undefined
-
-  const dimension = change.scope === 'group' ? group?.dimension : change.scope
-  const expression = change.scope === 'group' ? group?.pattern : change.target
-  if (!dimension || !expression) return undefined
-
-  const operator =
-    change.scope === 'group' && group
-      ? groupOperator(group.matchType)
-      : 'equals'
-
-  return [
-    {
-      groupType: 'and',
-      filters: [{ dimension, operator, expression }],
-    },
-  ]
-}
-
-function classify(input: {
-  before: TestMetrics
-  after: TestMetrics
-  clickPct: number | null
-  clickDelta: number
-  positionDelta: number
-}): Pick<ChangeMeasurement, 'verdict' | 'confidence' | 'note'> {
-  const totalImpressions = input.before.impressions + input.after.impressions
-  if (totalImpressions < 100) {
-    return {
-      verdict: 'not-enough-data',
-      confidence: 'low',
-      note: 'The comparison windows have fewer than 100 impressions total.',
-    }
-  }
-
-  const pctValue = input.clickPct ?? 0
-  const betterPosition = input.positionDelta < -0.5
-  const worsePosition = input.positionDelta > 0.5
-  const positive = input.clickDelta > 0 && (pctValue >= 10 || betterPosition)
-  const negative = input.clickDelta < 0 && (pctValue <= -10 || worsePosition)
-
-  const confidence =
-    Math.abs(input.clickDelta) >= 50 && Math.abs(pctValue) >= 30
-      ? 'high'
-      : Math.abs(input.clickDelta) >= 10 && Math.abs(pctValue) >= 10
-        ? 'medium'
-        : 'low'
-
-  if (positive) {
-    return {
-      verdict: 'positive',
-      confidence,
-      note: 'Clicks improved after the change. Confirm with segment breakdown before rolling out widely.',
-    }
-  }
-  if (negative) {
-    return {
-      verdict: 'negative',
-      confidence,
-      note: 'Clicks declined after the change. Check query mix, ranking movement, and indexability before reverting.',
-    }
-  }
-  if (betterPosition || worsePosition) {
-    return {
-      verdict: 'mixed',
-      confidence,
-      note: 'Ranking movement and click movement disagree. Inspect SERP layout, CTR, and query demand.',
-    }
-  }
-  return {
-    verdict: 'flat',
-    confidence,
-    note: 'No material movement detected in this window.',
-  }
-}
 
 async function queryMetrics(input: {
   site: string

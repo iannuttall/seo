@@ -55,12 +55,14 @@ export function registerDiagnosisTools(server: McpServer): void {
       description:
         'Run end-to-end property diagnosis across anomaly, update, segment, decay, cannibalisation, and opportunity signals',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'recentDays',
+          'limit',
+          'includeBrand',
+          'refresh',
+        ]),
       },
     },
     async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
@@ -185,10 +187,7 @@ export function registerDiagnosisTools(server: McpServer): void {
       description:
         'Detect statistically significant recent GSC traffic movement',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema(['site', 'days', 'recentDays', 'refresh']),
       },
     },
     async ({ site, days, recentDays, refresh }) => {
@@ -210,11 +209,8 @@ export function registerDiagnosisTools(server: McpServer): void {
       description:
         'Overlay recent traffic anomalies against official Google ranking update windows',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
+        ...mcpReportInputSchema(['site', 'days', 'recentDays', 'refresh']),
         paddingDays: z.number().optional(),
-        refresh: z.boolean().optional(),
       },
     },
     async ({ site, days, recentDays, paddingDays, refresh }) => {

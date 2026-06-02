@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
+import { cliReportArgs } from '../report-options.js'
 import { printWorkflow } from './output.js'
 
 export const diagnosePropertyWorkflowCommand = defineCommand({
@@ -19,32 +20,21 @@ export const diagnosePropertyWorkflowCommand = defineCommand({
       type: 'string',
       description: 'Saved client id or name.',
     },
-    days: {
-      type: 'string',
-      description: 'Diagnosis window length in days. Defaults to 90.',
-    },
-    recent: {
-      type: 'string',
-      description: 'Recent anomaly window in days. Defaults to 14.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum rows per section. Defaults to 10.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in opportunity reports.',
-    },
+    ...cliReportArgs(
+      ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
+      {
+        days: {
+          description: 'Diagnosis window length in days. Defaults to 90.',
+        },
+        limit: {
+          description: 'Maximum rows per section. Defaults to 10.',
+        },
+      },
+    ),
     json: {
       type: 'boolean',
       default: false,
       description: 'Print machine-readable JSON.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local cache and fetch fresh data.',
     },
   },
   run: async ({ args }) => {

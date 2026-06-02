@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
+import { cliReportArgs } from '../report-options.js'
 import {
   reportFetchArgs,
   reportFetchOptions,
@@ -22,10 +23,11 @@ export const monthlyReportCommand = defineCommand({
       description:
         'Report month as YYYY-MM. Defaults to the latest month with final GSC data.',
     },
-    limit: {
-      type: 'string',
-      description: 'Maximum rows per diagnostic section. Defaults to 10.',
-    },
+    ...cliReportArgs(['limit'], {
+      limit: {
+        description: 'Maximum rows per diagnostic section. Defaults to 10.',
+      },
+    }),
     ...reportFetchArgs,
   },
   run: async ({ args }) => {

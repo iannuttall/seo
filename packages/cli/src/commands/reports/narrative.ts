@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
+import { cliReportArgs } from '../report-options.js'
 import {
   reportFetchArgs,
   reportFetchOptions,
@@ -17,14 +18,9 @@ export const reportNarrativeCommand = defineCommand({
   },
   args: {
     ...reportSelectionArgs,
-    days: {
-      type: 'string',
-      description: 'Diagnosis window length in days. Defaults to 90.',
-    },
-    recent: {
-      type: 'string',
-      description: 'Recent anomaly window in days. Defaults to 14.',
-    },
+    ...cliReportArgs(['days', 'recentDays'], {
+      days: { description: 'Diagnosis window length in days. Defaults to 90.' },
+    }),
     'start-date': {
       type: 'string',
       description: 'Optional report start date as YYYY-MM-DD.',
@@ -33,10 +29,11 @@ export const reportNarrativeCommand = defineCommand({
       type: 'string',
       description: 'Optional report end date as YYYY-MM-DD.',
     },
-    limit: {
-      type: 'string',
-      description: 'Maximum rows per diagnostic section. Defaults to 10.',
-    },
+    ...cliReportArgs(['limit'], {
+      limit: {
+        description: 'Maximum rows per diagnostic section. Defaults to 10.',
+      },
+    }),
     'change-limit': {
       type: 'string',
       description: 'Maximum saved changes to measure. Defaults to 5.',

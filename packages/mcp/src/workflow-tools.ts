@@ -7,6 +7,7 @@ import {
   updatePostmortemWorkflow,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { mcpReportInputSchema } from './report-options.js'
 
 type ToolResult = {
   content: Array<{ type: 'text'; text: string }>
@@ -39,12 +40,14 @@ export function registerWorkflowTools(server: McpServer): void {
       description:
         'Run the full agent workflow for property diagnosis and next actions',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'recentDays',
+          'limit',
+          'includeBrand',
+          'refresh',
+        ]),
       },
     },
     async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
@@ -69,11 +72,8 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       description: 'Run the monthly reporting workflow with next actions',
       inputSchema: {
-        site: z.string(),
+        ...mcpReportInputSchema(['site', 'limit', 'includeBrand', 'refresh']),
         month: z.string().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
       },
     },
     async ({ site, month, limit, includeBrand, refresh }) => {
@@ -98,12 +98,14 @@ export function registerWorkflowTools(server: McpServer): void {
       description:
         'Run winner/loser postmortem analysis for recent Google update exposure',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'recentDays',
+          'limit',
+          'includeBrand',
+          'refresh',
+        ]),
       },
     },
     async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
@@ -200,15 +202,17 @@ export function registerWorkflowTools(server: McpServer): void {
       description:
         'Rank decay, striking-distance, quick-win, cannibalisation, and diagnosis signals into an action queue',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'recentDays',
+          'limit',
+          'includeBrand',
+          'verifyContent',
+          'verifyLimit',
+          'refresh',
+        ]),
         ga4PropertyId: z.string().optional(),
-        verifyContent: z.boolean().optional(),
-        verifyLimit: z.number().optional(),
-        refresh: z.boolean().optional(),
       },
     },
     async ({

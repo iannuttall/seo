@@ -92,7 +92,7 @@ export function linkRecoverRecommendation(input: {
       principle: 'Search-value URLs should not resolve to dead pages.',
       evidenceRef: input.url,
       action:
-        'Restore the URL if the content should exist, or add a 301 redirect to the closest live replacement.',
+        'This search-visible URL now lands on a dead page. Restore the page if it should exist, or add one direct 301 redirect to the closest live replacement.',
       effort: 'S',
       confidence: 'high',
       impactEstimate,
@@ -104,7 +104,7 @@ export function linkRecoverRecommendation(input: {
       principle: 'Server errors on search-visible URLs waste existing demand.',
       evidenceRef: input.url,
       action:
-        'Fix the server response first, then re-run URL Inspection once the page returns a stable 200 or intentional 301.',
+        'This search-visible URL ends in a server error. Fix the server response first, then rerun URL Inspection once it returns a stable 200 or an intentional 301.',
       effort: 'S',
       confidence: 'high',
       impactEstimate,
@@ -120,7 +120,7 @@ export function linkRecoverRecommendation(input: {
       principle: 'Redirect chains must resolve cleanly to a crawlable target.',
       evidenceRef: input.url,
       action:
-        'Replace the broken chain with one direct 301 from the old URL to the intended live destination.',
+        'The redirect path is broken. Replace the chain with one direct 301 from the old URL to the intended live destination.',
       effort: 'M',
       confidence: 'high',
       impactEstimate,
@@ -132,7 +132,7 @@ export function linkRecoverRecommendation(input: {
       principle: 'Recovered search-value URLs need an indexable final target.',
       evidenceRef: input.finalUrl,
       action:
-        'Remove accidental noindex or robots blocking on the final target, or redirect to an indexable equivalent.',
+        'The final destination is not indexable. Remove accidental noindex/robots blocking, or redirect the old URL to an indexable equivalent.',
       effort: 'S',
       confidence: 'high',
       impactEstimate,
@@ -144,7 +144,7 @@ export function linkRecoverRecommendation(input: {
       'Canonicals should reinforce the final URL selected by redirects.',
     evidenceRef: input.finalUrl,
     action:
-      'Align the canonical with the final destination, or redirect the original URL to the canonical target directly.',
+      'The redirect target and canonical target disagree. Make the canonical match the final destination, or redirect the original URL directly to the canonical page.',
     effort: 'S',
     confidence: 'medium',
     impactEstimate,

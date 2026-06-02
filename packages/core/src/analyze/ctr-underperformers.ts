@@ -50,8 +50,7 @@ export async function ctrUnderperformersReport(input: {
         recommendation: {
           principle: 'C.3',
           evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${expected.toFixed(3)} at position ${rounded}.`,
-          action:
-            'Adjust title and meta framing to match the dominant SERP intent. Do not rewrite copy here; just tighten the angle.',
+          action: `This page ranks on page one for "${row.keys[0]}" but gets fewer clicks than expected. Rewrite the title and meta description to match the main search intent; do not rewrite the page body unless rankings also drop.`,
           effort: 'S' as const,
           confidence: 'medium' as const,
         },

@@ -10,6 +10,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { formatContentCheck } from '../shared.js'
 
 function csv(value?: string): string[] | undefined {
   return value
@@ -116,7 +117,7 @@ function printTemplateDetails(
           ? ` missing ${item.missingTerms.slice(0, 4).join(', ')}`
           : ''
         process.stdout.write(
-          `    - ${item.classification}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
+          `    - ${formatContentCheck(item.classification)}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
         )
       }
     }

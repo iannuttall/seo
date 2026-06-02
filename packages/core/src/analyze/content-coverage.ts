@@ -164,25 +164,25 @@ export function contentCoverageRecommendation(
 ): string {
   const focus = displayQuery(coverage)
   if (coverage.status === 'failed') {
-    return 'Verification failed; inspect fetch diagnostics before making content calls.'
+    return 'I could not fetch or read the page, so do not change the content yet. Check the fetch error, blocking, or rendering issue first, then rerun this report.'
   }
   if (coverage.classification === 'technical-check') {
     return coverage.finalUrl
-      ? `Check why GSC URL resolves to ${coverage.finalUrl}; confirm canonical/indexable target before changing copy for "${focus}".`
-      : `Check canonical, indexability, and fetch status before changing copy for "${focus}".`
+      ? `This GSC URL resolves to ${coverage.finalUrl}. Confirm that this is the page Google should rank for "${focus}" before editing titles or copy.`
+      : `Check whether this URL is indexable, canonical, and fetchable before editing copy for "${focus}". If the page has a technical issue, fix that first.`
   }
   if (coverage.classification === 'content-gap') {
     const missing = coverage.fields.mainContent.missingTerms.slice(0, 4)
     return missing.length
-      ? `Add a focused section or intro sentence for "${focus}" covering missing terms: ${missing.join(', ')}.`
-      : `Add a focused section or intro sentence for the missing "${focus}" angle.`
+      ? `The page ranks for "${focus}" but the main content does not clearly cover: ${missing.join(', ')}. Add a short, useful section or intro sentence that answers that angle directly.`
+      : `The page ranks for "${focus}" but the main content does not clearly answer that angle. Add a short section that covers it directly.`
   }
   if (coverage.classification === 'serp-framing') {
     const fields = missingFieldNames(coverage)
     const targetFields = fields.length ? fields.join(', ') : 'title and meta'
-    return `Main content already supports "${focus}"; test ${targetFields} wording to include that phrasing naturally before rewriting body copy.`
+    return `The page content already supports "${focus}", but the ${targetFields} does not make that clear enough. Test clearer wording there before rewriting the body.`
   }
-  return `The page already covers "${focus}"; prioritise CTR tests, internal links, and SERP fit over content edits.`
+  return `The page already covers "${focus}". Do not add more copy for this query; test the title/meta, improve internal links, or check whether the SERP format is limiting clicks.`
 }
 
 function coverageSummary(coverage: QueryContentCoverage): string {

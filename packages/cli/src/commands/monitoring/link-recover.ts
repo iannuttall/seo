@@ -2,7 +2,12 @@ import { linkRecover } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printActionDetails,
+  printLimitedTable,
+  truncate,
+} from '../output.js'
 import { selectedSiteOrThrow } from '../shared.js'
 
 export const linkRecoverCommand = defineCommand({
@@ -85,6 +90,14 @@ export const linkRecoverCommand = defineCommand({
           truncate(item.url, 56),
           truncate(item.recommendation.action, 72),
         ]),
+      )
+      printActionDetails(
+        'Top recovery actions',
+        report.items.map((item) => ({
+          label: truncate(item.url, 96),
+          context: `${item.severity}, ${formatCount(item.clicks)} clicks at risk`,
+          action: item.recommendation.action,
+        })),
       )
     }
     if (report.warnings.length) {

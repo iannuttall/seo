@@ -41,5 +41,6 @@ test('groupQuickWins groups repeated query/template wins', () => {
   assert.equal(groups.length, 1)
   assert.equal(groups[0]?.count, 2)
   assert.equal(groups[0]?.totalEstimatedClickLift, 180)
-  assert.match(groups[0]?.recommendation ?? '', /salary SERP-framing/)
+  assert.match(groups[0]?.recommendation ?? '', /salary pages/)
+  assert.match(groups[0]?.recommendation ?? '', /title, H1, meta/)
 })

@@ -7,6 +7,7 @@ import {
   formatCount,
   formatPercent,
   formatPosition,
+  printActionDetails,
   printLimitedTable,
   truncate,
 } from '../output.js'
@@ -57,6 +58,14 @@ export const ctrUnderperformersCommand = defineCommand({
         formatPercent(item.expectedCtr),
         truncate(item.recommendation.action, 72),
       ]),
+    )
+    printActionDetails(
+      'Top CTR actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${formatCount(item.impressions)} impressions, ${formatPercent(item.actualCtr)} CTR`,
+        action: item.recommendation.action,
+      })),
     )
   },
 })

@@ -63,7 +63,7 @@ function buildPriorities(input: {
       label: 'Review update exposure',
       reason: `${input.update.overlappingUpdates.length} official update window(s) overlap recent movement.`,
       action:
-        'Segment winners and losers by template before making page-level edits.',
+        'Do not edit individual pages yet. First compare winning and losing templates so you know which page type was affected by the update.',
       confidence:
         input.update.classification === 'likely-update-related'
           ? 'medium'
@@ -77,7 +77,7 @@ function buildPriorities(input: {
       label: 'Investigate largest page movement',
       reason: topDelta(input.page),
       action:
-        'Inspect the page, query mix, canonical/indexability, and recent content changes.',
+        'Open the page and check the queries that moved, whether the URL is still canonical/indexable, and whether the title, H1, or body changed recently.',
       confidence: Math.abs(largestPage.clickDelta) > 50 ? 'high' : 'medium',
     })
   }
@@ -91,7 +91,7 @@ function buildPriorities(input: {
         : `${input.decay.items.length} decaying query/page rows found.`,
       action: topGroup
         ? topGroup.recommendation
-        : 'Prioritize sustained declines that are not explained by update timing.',
+        : 'Start with declines that continued outside the update window. Check indexability first, then ranking and CTR causes.',
       confidence: 'medium',
     })
   }
@@ -102,8 +102,8 @@ function buildPriorities(input: {
       reason: `${input.cannibal.items.length} split-query clusters found.`,
       action:
         input.cannibal.suppressed.length > input.cannibal.items.length
-          ? 'Review the remaining mixed-intent clusters manually; most template/local false positives were filtered out.'
-          : 'Pick a primary URL per query, then merge, redirect, or de-optimize competing URLs.',
+          ? 'Review the remaining split-query clusters manually. Many template/local false positives were filtered out, so these are the cases most likely to need a decision.'
+          : 'For each split query, decide whether the URLs answer the same intent. If yes, pick one main URL and consolidate links/canonicals. If no, make each page target clearer.',
       confidence: 'medium',
     })
   }
@@ -113,7 +113,7 @@ function buildPriorities(input: {
       label: 'Exploit striking-distance wins',
       reason: `${input.striking.items.length} position 11-20 opportunities found.`,
       action:
-        'Improve title/H1/query coverage and internal links for high-impression near misses.',
+        'These queries are close to page one. Improve the matching page title/H1/body coverage and add internal links from related pages before creating new content.',
       confidence: 'high',
     })
   }

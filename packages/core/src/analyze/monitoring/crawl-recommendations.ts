@@ -46,7 +46,7 @@ export function recommendCrawlDiffItem(
       category: 'status',
       title: 'Search-visible URL now returns an error',
       action:
-        'Restore the page or add a direct 301 to the closest equivalent URL before content work.',
+        'This URL used to be crawlable and now returns an error. Restore it if the page should still exist, or add one direct 301 to the closest live replacement before doing any content work.',
       confidence: 'high',
     }
   }
@@ -57,7 +57,7 @@ export function recommendCrawlDiffItem(
       category: 'inventory',
       title: 'Previously crawled URL disappeared',
       action:
-        'Confirm whether this URL was intentionally removed; if it had search value, redirect it or restore internal links.',
+        'This URL was in the previous crawl but is missing now. Confirm whether removal was intentional; if it had search traffic or links, restore it or redirect it to the best replacement.',
       confidence: 'medium',
     }
   }
@@ -70,8 +70,8 @@ export function recommendCrawlDiffItem(
       category: 'indexability',
       title: 'URL became non-indexable',
       action: noindex
-        ? 'Remove accidental noindex directives or confirm this URL is intentionally excluded.'
-        : 'Inspect robots, canonical, status, and rendered page state to find why this URL is no longer indexable.',
+        ? 'This URL now has a noindex signal. Remove it if accidental, or mark this as intentional so it does not keep appearing as a risk.'
+        : 'This URL used to be indexable and now is not. Check robots, canonical, status, and rendered HTML to find what changed.',
       confidence: noindex ? 'high' : 'medium',
     }
   }
@@ -82,7 +82,7 @@ export function recommendCrawlDiffItem(
       category: 'canonical',
       title: 'Canonical changed away from the final URL',
       action:
-        'Confirm the canonical target is intentional; if not, restore self-canonical or redirect directly to the preferred URL.',
+        'Google may treat a different URL as the preferred page now. If that is not intentional, restore the self-canonical or redirect directly to the preferred URL.',
       confidence: 'high',
     }
   }
@@ -93,7 +93,7 @@ export function recommendCrawlDiffItem(
       category: 'metadata',
       title: 'Primary SERP/on-page targeting changed',
       action:
-        'Review the title and H1 changes against top GSC queries before assuming traffic movement is content decay.',
+        'The title or H1 changed. Compare the old and new wording against the top GSC queries for this URL before blaming traffic movement on content decay.',
       confidence: 'medium',
     }
   }
@@ -104,7 +104,7 @@ export function recommendCrawlDiffItem(
       category: 'metadata',
       title: 'Meta description changed',
       action:
-        'Check CTR movement for this URL before spending time on copy edits.',
+        'The meta description changed. Check CTR for this URL before spending time on more copy edits.',
       confidence: 'medium',
     }
   }
@@ -115,7 +115,7 @@ export function recommendCrawlDiffItem(
       category: 'content',
       title: 'Main content changed',
       action:
-        'Compare the changed content with ranking query intent if traffic moved after this crawl.',
+        'Main content changed. If traffic moved after this crawl, compare the changed section against the queries this URL ranks for.',
       confidence: 'medium',
     }
   }
@@ -126,7 +126,7 @@ export function recommendCrawlDiffItem(
       category: 'status',
       title: 'URL recovered from an error status',
       action:
-        'Keep monitoring this URL and run URL Inspection if it was previously deindexed.',
+        'The URL is no longer returning an error. Keep monitoring it and run URL Inspection if it was previously deindexed.',
       confidence: 'medium',
     }
   }

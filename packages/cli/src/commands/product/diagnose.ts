@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { printActionDetails } from '../output.js'
 
 export const diagnoseCommand = defineCommand({
   meta: {
@@ -83,6 +84,14 @@ export const diagnoseCommand = defineCommand({
         priority.reason,
         priority.action,
       ]),
+    )
+    printActionDetails(
+      'Priority action details',
+      report.priorities.map((priority) => ({
+        label: priority.label,
+        context: priority.confidence,
+        action: priority.action,
+      })),
     )
   },
 })

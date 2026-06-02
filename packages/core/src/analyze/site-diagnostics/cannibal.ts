@@ -171,8 +171,8 @@ export async function cannibalReport(input: {
         evidenceRef: `Query "${query}" splits across ${eligible.length} URLs with HHI ${hhi.toFixed(2)}.`,
         action:
           template.share >= 0.8 && template.template.id !== 'other'
-            ? `Review ${template.template.label} targeting first, then make ${owner.keys[1]} the canonical/internal-link focus only if the pages serve the same intent.`
-            : `Make ${owner.keys[1]} the primary URL if intent matches, then consolidate internal links and on-page targeting around it.`,
+            ? `Several ${template.template.label} URLs rank for "${query}". First check whether they are genuinely different entities. If they are, do not merge them; make the template clarify each page's unique target. If they serve the same intent, make ${owner.keys[1]} the main page and point internal links there.`
+            : `Multiple URLs rank for "${query}". If they answer the same intent, make ${owner.keys[1]} the main page and consolidate internal links, canonicals, and on-page wording around it. If they answer different intents, keep them separate and make that difference clearer.`,
         effort: 'M',
         confidence: 'medium',
       },

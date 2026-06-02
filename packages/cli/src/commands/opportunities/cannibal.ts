@@ -3,7 +3,12 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printActionDetails,
+  printLimitedTable,
+  truncate,
+} from '../output.js'
 
 export const cannibalCommand = defineCommand({
   args: {
@@ -51,6 +56,14 @@ export const cannibalCommand = defineCommand({
         truncate(item.ownerUrl, 56),
         truncate(item.recommendation.action, 72),
       ]),
+    )
+    printActionDetails(
+      'Top cannibalisation actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.pages.length} URLs, owner ${truncate(item.ownerUrl, 64)}`,
+        action: item.recommendation.action,
+      })),
     )
   },
 })

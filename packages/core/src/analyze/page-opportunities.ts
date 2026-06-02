@@ -77,13 +77,13 @@ function recommendationFor(input: {
   coverage?: QueryContentCoverage
 }): string {
   if (input.type === 'ranking') {
-    return `This query ranks outside easy-win range; strengthen the on-page answer and label stack for "${input.query}", then add internal links using that wording.`
+    return `"${input.query}" is ranking too low for a simple CTR tweak. Make the page answer this query more directly, then add internal links from related pages using this wording.`
   }
   if (input.coverage) return contentCoverageRecommendation(input.coverage)
   if (input.type === 'ctr') {
-    return `Test title/meta wording for "${input.query}" before rewriting body copy.`
+    return `"${input.query}" already ranks on page one but gets weak CTR. Test a clearer title and meta description for this angle before rewriting the page body.`
   }
-  return `Keep "${input.query}" covered; look for CTR, internal-link, or SERP-format improvements.`
+  return `"${input.query}" is already covered. Do not add more copy just for this query; look for title/meta tests, internal links, or SERP features that explain the click gap.`
 }
 
 export async function pageOpportunitiesReport(input: {

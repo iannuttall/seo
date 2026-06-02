@@ -2,7 +2,7 @@ import { crawlDiff } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { truncate } from '../output.js'
+import { printActionDetails, truncate } from '../output.js'
 
 export const crawlDiffCommand = defineCommand({
   meta: {
@@ -79,6 +79,14 @@ export const crawlDiffCommand = defineCommand({
             truncate(item.url, 56),
             truncate(item.action, 72),
           ]),
+      )
+      printActionDetails(
+        'Top crawl actions',
+        report.recommendations.map((item) => ({
+          label: item.category,
+          context: `${item.severity}, ${truncate(item.url, 96)}`,
+          action: item.action,
+        })),
       )
     }
     if (report.items.length) {

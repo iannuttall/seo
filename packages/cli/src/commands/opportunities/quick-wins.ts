@@ -13,11 +13,12 @@ import {
   formatCount,
   formatPercent,
   formatPosition,
+  printActionDetails,
   printLimitedTable,
   truncate,
   verificationSummary,
 } from '../output.js'
-import { formatFetchDiagnostics } from '../shared.js'
+import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const quickWinsCommand = defineCommand({
   args: {
@@ -108,6 +109,14 @@ export const quickWinsCommand = defineCommand({
           truncate(group.recommendation, 72),
         ]),
       )
+      printActionDetails(
+        'Top cluster actions',
+        report.groups.map((group) => ({
+          label: group.label,
+          context: `${formatCount(group.count)} rows, ${formatCount(group.totalEstimatedClickLift)} estimated click lift`,
+          action: group.recommendation,
+        })),
+      )
     }
 
     printLimitedTable(
@@ -132,9 +141,17 @@ export const quickWinsCommand = defineCommand({
         formatPercent(item.ctr),
         formatCount(item.estimatedClickLift),
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
-        item.contentVerification?.classification ?? '-',
+        formatContentCheck(item.contentVerification?.classification),
         truncate(item.recommendation.action, 64),
       ]),
+    )
+    printActionDetails(
+      'Top opportunity actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.template.label}, pos ${formatPosition(item.position)}, ${formatCount(item.impressions)} impressions`,
+        action: item.recommendation.action,
+      })),
     )
   },
 })

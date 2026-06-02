@@ -31,7 +31,7 @@ function groupedAction(items: PriorityQueueItem[]): string {
   if (!first) return ''
   const targetCount = new Set(items.map((item) => item.target)).size
   if (targetCount <= 1) return first.action
-  return `Apply the same fix across ${targetCount} affected URLs: ${first.action}`
+  return `${targetCount} URLs have the same issue. Apply this action across the affected pages: ${first.action}`
 }
 
 function groupedEvidence(items: PriorityQueueItem[]): string {

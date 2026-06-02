@@ -1,6 +1,6 @@
 import type { MonitoringStatusReport, technicalWatchWorkflow } from '@seo/core'
 import { printKeyValue, printTable } from '../../utils.js'
-import { formatCount, truncate } from '../output.js'
+import { formatCount, printActionDetails, truncate } from '../output.js'
 import { printWorkflow } from '../workflows/output.js'
 
 type TechnicalWatchReport = Awaited<ReturnType<typeof technicalWatchWorkflow>>
@@ -19,6 +19,14 @@ export function printMonitoringRun(report: TechnicalWatchReport): void {
           truncate(item.url, 56),
           truncate(item.action, 72),
         ]),
+    )
+    printActionDetails(
+      'Top crawl actions',
+      report.output.crawl.recommendations.map((item) => ({
+        label: item.severity,
+        context: truncate(item.url, 96),
+        action: item.action,
+      })),
     )
   }
 
@@ -56,6 +64,14 @@ export function printMonitoringRun(report: TechnicalWatchReport): void {
           truncate(item.recommendation.action, 72),
         ]),
     )
+    printActionDetails(
+      'Top recovery actions',
+      report.output.recovery.items.map((item) => ({
+        label: truncate(item.url, 96),
+        context: `${item.severity}, ${formatCount(item.clicks)} clicks at risk`,
+        action: item.recommendation.action,
+      })),
+    )
   }
 }
 
@@ -84,6 +100,13 @@ export function printMonitoringStatus(report: MonitoringStatusReport): void {
     printTable(
       ['Check', 'Action'],
       actions.map((check) => [check.name, truncate(check.action ?? '', 96)]),
+    )
+    printActionDetails(
+      'Next action details',
+      actions.map((check) => ({
+        label: check.name,
+        action: check.action ?? '',
+      })),
     )
   }
 }

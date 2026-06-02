@@ -6,6 +6,7 @@ import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
+  printActionDetails,
   printLimitedTable,
   truncate,
 } from '../output.js'
@@ -101,6 +102,14 @@ export const pageOpportunitiesCommand = defineCommand({
         formatCount(item.estimatedClickLift),
         truncate(item.recommendation, 72),
       ]),
+    )
+    printActionDetails(
+      'Top page actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.opportunityType}, ${formatCount(item.impressions)} impressions`,
+        action: item.recommendation,
+      })),
     )
   },
 })

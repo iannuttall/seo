@@ -91,7 +91,7 @@ export async function strikingDistance(input: {
         position: Number(row.position.toFixed(2)),
         opportunityScore: Number(score.toFixed(2)),
         action:
-          'Improve query-page alignment and SERP framing before expanding scope.',
+          'This query is close to page one. Make the page clearly answer the query, put the query angle in the title/H1 where natural, and add internal links from related pages before creating new content.',
       }
     })
     .sort((a, b) => b.opportunityScore - a.opportunityScore)

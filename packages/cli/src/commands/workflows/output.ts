@@ -1,4 +1,5 @@
 import { printKeyValue, printTable } from '../../utils.js'
+import { printActionDetails } from '../output.js'
 
 export function printWorkflow(report: {
   workflow: string
@@ -24,6 +25,14 @@ export function printWorkflow(report: {
         action.confidence,
         action.action,
       ]),
+    )
+    printActionDetails(
+      'Priority action details',
+      report.actions.map((action) => ({
+        label: action.title,
+        context: action.confidence,
+        action: action.action,
+      })),
     )
   }
 }

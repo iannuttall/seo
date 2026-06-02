@@ -79,8 +79,7 @@ export async function internalLinksReport(input: {
       recommendation: {
         principle: 'C.6',
         evidenceRef: `${url} overlaps with the target URL on ${data.queries.length} queries and does not currently link to it.`,
-        action:
-          'Add one contextual internal link from this page to the target URL using the shared query language already present on the page.',
+        action: `This page ranks for similar queries but does not link to the target URL. Add one natural in-content link to ${input.targetUrl} using wording from the shared queries: ${data.queries.slice(0, 3).join('; ')}.`,
         effort: 'S',
         confidence: 'medium',
       },

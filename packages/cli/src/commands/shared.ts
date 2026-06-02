@@ -1,6 +1,5 @@
 import type { PageFetchDiagnostics } from '@seo/core'
 import { resolveClientSelection } from '../selection.js'
-import { printJson } from '../utils.js'
 
 export async function selectedSiteOrThrow(
   input: {
@@ -16,14 +15,6 @@ export async function selectedSiteOrThrow(
       options,
     })
   ).site
-}
-
-export async function outputResult(data: unknown, json = false): Promise<void> {
-  if (json) {
-    printJson(data)
-  } else {
-    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
-  }
 }
 
 export function startUrlForSite(site: string): string | undefined {

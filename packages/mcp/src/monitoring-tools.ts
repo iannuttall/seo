@@ -4,6 +4,8 @@ import {
   indexCoveragePlan,
   indexMonitor,
   indexWatch,
+  linkRecover,
+  redirectTrace,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -142,6 +144,72 @@ export function registerMonitoringTools(server: McpServer): void {
         })
         return toolSuccess(
           `Inspected ${result.summary.inspected} of ${result.summary.inventoryUrls} sitemap URLs. ${result.summary.alerts} alerts.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_redirect_trace',
+    {
+      description:
+        'Trace redirects and report final indexability/canonical issues for a URL',
+      inputSchema: {
+        url: z.string().url(),
+        maxHops: z.number().optional(),
+        refresh: z.boolean().optional(),
+        js: z.boolean().optional(),
+      },
+    },
+    async ({ url, maxHops, refresh, js }) => {
+      try {
+        const result = await redirectTrace({
+          url,
+          maxHops,
+          refresh,
+          js: js ? true : 'auto',
+        })
+        return toolSuccess(
+          `Traced ${result.summary.hops} hops. Final status ${result.summary.finalStatus}. ${result.summary.issues.length} issues.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_link_recover',
+    {
+      description:
+        'Find GSC search-value URLs that are now broken, blocked, or poorly redirected',
+      inputSchema: {
+        site: z.string(),
+        days: z.number().optional(),
+        limit: z.number().optional(),
+        minClicks: z.number().optional(),
+        minImpressions: z.number().optional(),
+        refresh: z.boolean().optional(),
+        js: z.boolean().optional(),
+      },
+    },
+    async ({ site, days, limit, minClicks, minImpressions, refresh, js }) => {
+      try {
+        const result = await linkRecover({
+          site,
+          days,
+          limit,
+          minClicks,
+          minImpressions,
+          refresh,
+          js: js ? true : 'auto',
+        })
+        return toolSuccess(
+          `Checked ${result.summary.checked} search-value URLs. ${result.summary.recoverable} recoverable issues.`,
           result,
         )
       } catch (error) {

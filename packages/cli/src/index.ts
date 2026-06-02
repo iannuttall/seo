@@ -17,7 +17,12 @@ import {
 } from './commands/experiments/index.js'
 import { initCommand } from './commands/init.js'
 import { mcpCommand } from './commands/mcp.js'
-import { crawlDiffCommand, indexWatchCommand } from './commands/monitoring.js'
+import {
+  crawlDiffCommand,
+  indexWatchCommand,
+  linkRecoverCommand,
+  redirectTraceCommand,
+} from './commands/monitoring.js'
 import {
   cannibalCommand,
   ctrUnderperformersCommand,
@@ -82,9 +87,11 @@ const main = defineCommand({
     diagnose: diagnoseCommand,
     'diagnose-property': diagnosePropertyWorkflowCommand,
     'index-watch': indexWatchCommand,
+    'link-recover': linkRecoverCommand,
     'monthly-report': monthlyReportCommand,
     'report-narrative': reportNarrativeCommand,
     'refresh-priorities': refreshPrioritiesCommand,
+    'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,
     setup: setupCommand,
     'segment-impact': segmentImpactCommand,

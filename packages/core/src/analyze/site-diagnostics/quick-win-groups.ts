@@ -11,18 +11,18 @@ function groupLabel(item: QuickWinItem): string {
 
 function groupAction(group: QuickWinGroup): string {
   if (group.template.id.startsWith('example-site-')) {
-    return `Apply the same salary SERP-framing fix across ${group.count} pages for "${group.query}": title/H1/meta should expose job, location, currency, and monthly/hourly salary variants.`
+    return `${group.count} salary pages have the same quick-win pattern for "${group.query}". Update the shared template so job, location, currency, and monthly/hourly pay are clear in the title, H1, meta, and opening summary.`
   }
   if (group.template.id === 'example-site-location') {
-    return `Apply the same tide SERP-framing fix across ${group.count} locations for "${group.query}": title/H1/meta should cover tide times, high/low tide, tide chart, year, and local place wording.`
+    return `${group.count} location pages have the same quick-win pattern for "${group.query}". Update the shared template so tide times, high/low tide, tide chart, year, and local place wording are clear before adding more copy.`
   }
   if (group.template.id === 'example-site-surname') {
-    return `Apply the same surname SERP-framing fix across ${group.count} pages for "${group.query}": title/H1/meta should make origin, meaning, rarity, geography, or people-count intent explicit.`
+    return `${group.count} surname pages have the same quick-win pattern for "${group.query}". Update the shared template so origin, meaning, rarity, geography, or people-count intent is obvious in the title, H1, meta, and intro.`
   }
   if (group.template.id.includes('name-list')) {
-    return `Apply the same name-list SERP-framing fix across ${group.count} pages for "${group.query}": title/H1/meta should match the list facet exactly.`
+    return `${group.count} name-list pages have the same quick-win pattern for "${group.query}". Make the title, H1, meta, and intro match the exact list facet instead of using generic list wording.`
   }
-  return `Apply the same SERP-framing fix across ${group.count} affected URLs for "${group.query}".`
+  return `${group.count} URLs have the same quick-win pattern for "${group.query}". Fix the shared title/H1/meta wording first, then check whether any page still needs unique body copy.`
 }
 
 export function groupQuickWins(items: QuickWinItem[]): QuickWinGroup[] {

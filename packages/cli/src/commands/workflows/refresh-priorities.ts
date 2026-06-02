@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
+import { printActionDetails } from '../output.js'
 import { printWorkflow } from './output.js'
 
 export const refreshPrioritiesCommand = defineCommand({
@@ -102,6 +103,14 @@ export const refreshPrioritiesCommand = defineCommand({
         item.target,
         item.action,
       ]),
+    )
+    printActionDetails(
+      'Queue action details',
+      report.output.queue.map((item) => ({
+        label: item.target,
+        context: `${item.category}, score ${item.score}`,
+        action: item.action,
+      })),
     )
   },
 })

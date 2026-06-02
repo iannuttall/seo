@@ -8,8 +8,16 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printTable } from '../../utils.js'
-import { formatFetchDiagnostics } from '../shared.js'
+import { printJson } from '../../utils.js'
+import {
+  formatCount,
+  formatPercent,
+  formatPosition,
+  printActionDetails,
+  printLimitedTable,
+  truncate,
+} from '../output.js'
+import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const strikingDistanceCommand = defineCommand({
   meta: {
@@ -108,7 +116,7 @@ export const strikingDistanceCommand = defineCommand({
       printJson(report)
       return
     }
-    printTable(
+    printLimitedTable(
       [
         'Query',
         'Template',
@@ -119,18 +127,28 @@ export const strikingDistanceCommand = defineCommand({
         'Score',
         'Fetch',
         'Check',
+        'Action',
       ],
       report.items.map((item) => [
-        item.query,
-        item.template.label,
-        item.url,
-        item.impressions,
-        item.ctr,
-        item.position,
+        truncate(item.query, 36),
+        truncate(item.template.label, 24),
+        truncate(item.url, 48),
+        formatCount(item.impressions),
+        formatPercent(item.ctr),
+        formatPosition(item.position),
         item.opportunityScore,
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
-        item.contentVerification?.classification ?? '-',
+        formatContentCheck(item.contentVerification?.classification),
+        truncate(item.action, 72),
       ]),
+    )
+    printActionDetails(
+      'Top striking-distance actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.template.label}, pos ${formatPosition(item.position)}, ${formatCount(item.impressions)} impressions`,
+        action: item.action,
+      })),
     )
   },
 })

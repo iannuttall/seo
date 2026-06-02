@@ -7,6 +7,7 @@ import {
   formatCount,
   formatPercent,
   formatPosition,
+  printActionDetails,
   printLimitedTable,
   truncate,
 } from '../output.js'
@@ -87,6 +88,14 @@ export const decayingCommand = defineCommand({
           truncate(group.recommendation, 72),
         ]),
       )
+      printActionDetails(
+        'Top decay cluster actions',
+        report.groups.map((group) => ({
+          label: group.label,
+          context: `${formatCount(group.count)} rows, ${formatCount(group.totalClickLoss)} lost clicks`,
+          action: group.recommendation,
+        })),
+      )
     }
 
     printLimitedTable(
@@ -114,6 +123,14 @@ export const decayingCommand = defineCommand({
         `${formatMaybePosition(item.previous.position)} -> ${formatMaybePosition(item.current.position)}`,
         truncate(item.recommendation.action, 64),
       ]),
+    )
+    printActionDetails(
+      'Top decay actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.template.label}, ${formatCount(item.clickLoss)} lost clicks`,
+        action: item.recommendation.action,
+      })),
     )
   },
 })

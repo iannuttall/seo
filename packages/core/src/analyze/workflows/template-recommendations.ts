@@ -33,7 +33,7 @@ function examplesLine(queries: string[]): string {
 
 function defaultRecommendation(input: TemplateRecommendationInput): string {
   const queries = topQueries(input.items, 3)
-  return `Update the ${input.templateLabel} title, H1, meta description, and intro copy to match recurring query phrasing across the template.${examplesLine(queries)}`
+  return `This template has repeated quick-win queries. Update the shared title, H1, meta description, and intro copy so the recurring query wording is clear on every affected page.${examplesLine(queries)}`
 }
 
 export function templateOpportunityRecommendation(
@@ -51,7 +51,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update the surname template to expose origin, rarity, country-specific popularity, and "how many people have this last name" phrasing in the title/H1/meta and above-the-fold summary.',
+        'Surname pages are ranking for origin, rarity, country popularity, and people-count queries. Make those angles obvious in the title, H1, meta description, and above-the-fold summary.',
     }
   }
 
@@ -59,7 +59,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update last-name list pages so title/H1/meta and intro copy match the facet: letter, length, ethnicity, rarity, gender, or language-specific surname wording.',
+        'Last-name list pages are ranking for specific facets. Make the title, H1, meta description, and intro match the exact facet, such as letter, length, ethnicity, rarity, gender, or language.',
     }
   }
 
@@ -67,7 +67,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update the first-name template to make meaning, origin, history, popularity, and gender intent explicit in title/H1/meta and the opening summary.',
+        'First-name pages are ranking for meaning, origin, history, popularity, and gender queries. Make those angles explicit in the title, H1, meta description, and opening summary.',
     }
   }
 
@@ -75,7 +75,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update first-name list pages so title/H1/meta and intro copy match the facet: gender, origin, language, popularity, meaning, or starting-letter wording.',
+        'First-name list pages are ranking for specific facets. Make the title, H1, meta description, and intro match the exact facet, such as gender, origin, language, popularity, meaning, or starting letter.',
     }
   }
 
@@ -83,7 +83,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update the location tide template so title/H1/meta and the first content block explicitly cover high tide today, low tide today, tide chart, and tide times for the location.',
+        'Location tide pages are ranking for tide-time variants. Make the title, H1, meta description, and first content block clearly cover high tide today, low tide today, tide chart, and tide times for the exact location.',
     }
   }
 
@@ -91,7 +91,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update the salary template to cover average salary, monthly salary, hourly pay, currency, job title, and location variants in the title/H1/meta and summary table.',
+        'Salary pages are ranking for pay-format variants. Make average salary, monthly salary, hourly pay, currency, job title, and location clear in the title, H1, meta description, and summary table.',
     }
   }
 
@@ -99,7 +99,7 @@ export function templateOpportunityRecommendation(
     return {
       evidence,
       action:
-        'Update the tool-page template so the exact tool name, main verb, and common “without login/account” modifiers are reflected in title/H1/meta and the first paragraph.',
+        'Tool pages are ranking for exact tool/action queries. Make the tool name, main action verb, and common “without login/account” modifiers clear in the title, H1, meta description, and first paragraph.',
     }
   }
 

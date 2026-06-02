@@ -86,8 +86,7 @@ export async function quickWinsReport(input: {
         recommendation: {
           principle: 'C.3',
           evidenceRef: `Query "${row.keys[0]}" sits at position ${rounded} with ${row.impressions} impressions and CTR ${row.ctr.toFixed(3)}.`,
-          action:
-            'Tighten title relevance, meta intent, and visible SERP framing before deeper content changes.',
+          action: `This page already ranks well for "${row.keys[0]}". Improve the title, meta description, and visible heading so searchers can immediately see that the page answers this query before adding more body copy.`,
           effort: 'S' as const,
           confidence: 'medium' as const,
           impactEstimate: `~+${Math.round(estimatedClickLift)} clicks if it reaches position 3.`,

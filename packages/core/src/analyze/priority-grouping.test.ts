@@ -44,7 +44,7 @@ test('groupPriorityQueue collapses repeated opportunity findings', () => {
   assert.equal(grouped.length, 1)
   assert.equal(grouped[0]?.grouped?.count, 2)
   assert.equal(grouped[0]?.grouped?.findings.length, 2)
-  assert.match(grouped[0]?.action ?? '', /2 affected URLs/)
+  assert.match(grouped[0]?.action ?? '', /2 URLs/)
   assert.match(grouped[0]?.evidence ?? '', /Grouped 2 matching findings/)
 })
 

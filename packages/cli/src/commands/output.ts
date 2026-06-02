@@ -2,6 +2,11 @@ import { printTable } from '../utils.js'
 
 const HUMAN_ROW_LIMIT = 25
 type TableRow = Array<string | number>
+type ActionDetail = {
+  label: string
+  action: string
+  context?: string
+}
 
 export function formatCount(value: number): string {
   return Math.round(value).toLocaleString('en-GB')
@@ -32,6 +37,30 @@ export function printLimitedTable(head: string[], rows: TableRow[]): void {
   if (rows.length > HUMAN_ROW_LIMIT) {
     process.stdout.write(
       `Showing ${HUMAN_ROW_LIMIT} of ${rows.length}. Use --json for full data.\n`,
+    )
+  }
+}
+
+export function printActionDetails(
+  title: string,
+  actions: ActionDetail[],
+  limit = 5,
+): void {
+  const visible = actions
+    .filter((item) => item.action.trim().length > 0)
+    .slice(0, limit)
+  if (!visible.length) return
+
+  process.stdout.write(`\n${title}\n`)
+  for (const [index, item] of visible.entries()) {
+    const context = item.context ? ` (${item.context})` : ''
+    process.stdout.write(
+      `${index + 1}. ${item.label}${context}: ${item.action}\n`,
+    )
+  }
+  if (actions.length > visible.length) {
+    process.stdout.write(
+      `Showing ${visible.length} of ${actions.length}. Use --json for full data.\n`,
     )
   }
 }

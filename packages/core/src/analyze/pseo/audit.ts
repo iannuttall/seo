@@ -460,16 +460,16 @@ function buildRecommendation(input: {
     ? `${topPattern.label} demand`
     : 'known query demand'
   if (template.verdict === 'index-risk') {
-    return `Prioritise indexability for ${template.signature}: inspect canonicals, robots/noindex, soft 404 states, and sitemap quality before rewriting content.`
+    return `${template.signature} has indexing risk. Check URL Inspection, canonicals, robots/noindex, redirects, and sitemap inclusion before rewriting any generated copy.`
   }
   if (template.verdict === 'crawl-risk') {
-    return `Fix fetch reliability for ${template.signature}: blocked/slow/failed samples make content conclusions unreliable.`
+    return `${template.signature} was blocked, slow, or failed during sampling. Fix fetch/render reliability first; content recommendations are not trustworthy until these pages can be crawled.`
   }
   if (template.verdict === 'content-risk') {
     const weakCoverage = template.crawl.weakQueryCoverage
       ? `${template.crawl.weakQueryCoverage} sampled URL(s) weakly cover their top query`
       : `median content is ${template.crawl.medianWordCount ?? '?'} words`
-    return `Improve ${template.signature} around ${patternLabel}: ${weakCoverage}. Add record-specific facts, query-matched headings, and unique title/meta logic.`
+    return `${template.signature} looks thin or weak for the queries it ranks for. ${weakCoverage}. Add page-specific facts, make the heading match the real query angle, and ensure title/meta are generated uniquely per URL.`
   }
   if (template.verdict === 'opportunity') {
     const examples = topPattern?.examples.slice(0, 2).join('; ')
@@ -478,14 +478,14 @@ function buildRecommendation(input: {
       template.metrics.entityFit.impressionShare < 0.5
     ) {
       const weak = template.metrics.entityFit.weakExamples[0]
-      return `Tighten ${template.signature} entity targeting: only ${Math.round(template.metrics.entityFit.impressionShare * 100)}% of checked query impressions matched path variable terms${weak ? `; inspect "${weak.query}" against ${weak.pathTerms.join(', ')}` : ''}.`
+      return `Many impressions for ${template.signature} come from broad queries that do not name the page's specific entity or location. Make titles, H1s, intros, and internal links clearer about the exact page target${weak ? `; start by checking "${weak.query}" against path terms ${weak.pathTerms.join(', ')}` : ''}. If the broad query should rank, build or strengthen a better hub page for it.`
     }
-    return `Grow ${template.signature} around ${patternLabel}${examples ? ` (${examples})` : ''}: test title/H1/meta phrasing, add internal links, and fill missing query angles.`
+    return `${template.signature} already has search demand around ${patternLabel}${examples ? ` (${examples})` : ''}. Improve the template by testing clearer title/H1/meta wording, adding internal links from related pages, and filling any repeated query angles that the page body does not answer.`
   }
   if (!input.crawlSamplesRequested || !input.inspectionSamplesRequested) {
-    return `Looks stable from GSC. Add --crawl-samples and --inspect-samples for stronger template-level confidence.`
+    return `GSC does not show a clear issue for this template. Run again with --crawl-samples and --inspect-samples before deciding it is healthy.`
   }
-  return `Keep monitoring this template; current first-party evidence does not show a material issue.`
+  return `No material issue found for this template. Keep monitoring it and spend time on higher-impact templates first.`
 }
 
 function buildEvidence(input: {

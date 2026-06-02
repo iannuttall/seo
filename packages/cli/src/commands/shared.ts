@@ -1,4 +1,7 @@
-import type { PageFetchDiagnostics } from '@seo/core'
+import type {
+  PageFetchDiagnostics,
+  QueryContentClassification,
+} from '@seo/core'
 import { resolveClientSelection } from '../selection.js'
 
 export async function selectedSiteOrThrow(
@@ -52,4 +55,14 @@ export function formatFetchDiagnostics(
   if (diagnostics.cache === 'hit') return 'cached'
   if (diagnostics.fetched) return 'fetched'
   return diagnostics.source
+}
+
+export function formatContentCheck(
+  classification?: QueryContentClassification,
+): string {
+  if (!classification) return '-'
+  if (classification === 'serp-framing') return 'wording gap'
+  if (classification === 'content-gap') return 'content gap'
+  if (classification === 'technical-check') return 'technical check'
+  return 'covered'
 }

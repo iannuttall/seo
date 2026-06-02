@@ -2,7 +2,12 @@ import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../../args.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printActionDetails,
+  printLimitedTable,
+  truncate,
+} from '../output.js'
 import { selectedSiteOrThrow } from '../shared.js'
 
 export const internalLinksCommand = defineCommand({
@@ -38,6 +43,14 @@ export const internalLinksCommand = defineCommand({
         truncate(item.sharedQueries.join(', '), 56),
         truncate(item.recommendation.action, 72),
       ]),
+    )
+    printActionDetails(
+      'Top internal link actions',
+      report.items.map((item) => ({
+        label: truncate(item.sourceUrl, 96),
+        context: `${formatCount(item.sourceImpressions)} impressions`,
+        action: item.recommendation.action,
+      })),
     )
   },
 })

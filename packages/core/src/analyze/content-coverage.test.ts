@@ -56,7 +56,7 @@ function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
   }
 }
 
-test('contentCoverageRecommendation suggests field-specific SERP framing', () => {
+test('contentCoverageRecommendation explains field-specific wording gaps', () => {
   const coverage = queryContentCoverageFromPage({
     query: 'origin of the last name laroya',
     url: 'https://example.com/page/',

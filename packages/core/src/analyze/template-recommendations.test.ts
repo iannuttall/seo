@@ -76,7 +76,7 @@ test('templateOpportunityRecommendation gives surname-specific action', () => {
   })
 
   assert.match(result.action, /origin/)
-  assert.match(result.action, /how many people/)
+  assert.match(result.action, /people-count/)
   assert.match(result.evidence, /origin of the last name laroya/)
 })
 

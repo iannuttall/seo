@@ -3,7 +3,12 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printActionDetails,
+  printLimitedTable,
+  truncate,
+} from '../output.js'
 
 export const communityIntentCommand = defineCommand({
   meta: {
@@ -75,6 +80,14 @@ export const communityIntentCommand = defineCommand({
         formatCount(item.clicks),
         truncate(item.action, 76),
       ]),
+    )
+    printActionDetails(
+      'Top community-intent actions',
+      report.items.map((item) => ({
+        label: item.query,
+        context: `${item.intent}, ${formatCount(item.impressions)} impressions`,
+        action: item.action,
+      })),
     )
   },
 })

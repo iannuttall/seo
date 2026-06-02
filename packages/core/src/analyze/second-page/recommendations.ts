@@ -25,8 +25,7 @@ export function buildSecondPageRecommendations(
     recommendations.push({
       principle: 'C.2',
       evidenceRef: `Query "${query}" is missing from ${!item.coverage.inTitleExact ? 'title' : 'H1'}.`,
-      action:
-        'Align the page label stack so the primary query appears in the title and H1 naturally.',
+      action: `The page is near page one, but the title/H1 does not clearly target "${query}". Rewrite the title and H1 so this query angle is obvious and still reads naturally.`,
       effort: 'S',
       confidence: 'high',
       impactEstimate: `CTR gap to top 10 is ${Math.max(0, estimateExpectedCtr(10) - item.ctr).toFixed(2)}`,
@@ -37,8 +36,7 @@ export function buildSecondPageRecommendations(
     recommendations.push({
       principle: 'C.5',
       evidenceRef: `Page has ${page.wordCount} extracted words and misses related questions: ${relatedQuestions.slice(0, 3).join(', ')}.`,
-      action:
-        'Add missing subtopic sections that answer the related questions already attached to this query cluster.',
+      action: `The page is light and misses related questions searchers ask. Add short sections answering: ${relatedQuestions.slice(0, 3).join('; ')}.`,
       effort: 'M',
       confidence: 'medium',
       impactEstimate: `If the page moves into the top 10, expected CTR improves from ${item.ctr.toFixed(3)}.`,

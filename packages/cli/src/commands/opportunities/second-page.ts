@@ -9,8 +9,13 @@ import {
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
-import { printLimitedTable } from '../output.js'
-import { formatFetchDiagnostics } from '../shared.js'
+import {
+  formatCount,
+  formatPosition,
+  printActionDetails,
+  printLimitedTable,
+} from '../output.js'
+import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const secondPageCommand = defineCommand({
   args: {
@@ -97,9 +102,17 @@ export const secondPageCommand = defineCommand({
         item.ctr.toFixed(3),
         `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
         formatFetchDiagnostics(item.fetchDiagnostics),
-        item.contentVerification?.classification ?? '-',
+        formatContentCheck(item.contentVerification?.classification),
         item.recommendations[0]?.action ?? 'No recommendation',
       ]),
+    )
+    printActionDetails(
+      'Top second-page actions',
+      report.items.map((item) => ({
+        label: item.primaryQuery,
+        context: `${item.template.label}, pos ${formatPosition(item.position)}, ${formatCount(item.impressions)} impressions`,
+        action: item.recommendations[0]?.action ?? '',
+      })),
     )
     process.stdout.write(`${report.ledgerSummary}\n`)
   },

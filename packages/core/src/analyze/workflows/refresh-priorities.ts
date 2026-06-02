@@ -4,6 +4,7 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from './analytics-value.js'
+import { groupPriorityQueue } from './priority-grouping.js'
 import { priorityCategory, scorePriority } from './priority-scoring.js'
 import { workflowReport } from './report.js'
 import { templateOpportunityRecommendation } from './template-recommendations.js'
@@ -74,6 +75,7 @@ export async function refreshPrioritiesWorkflow(input: {
   })
   const warnings = analytics.warning ? [`GA4: ${analytics.warning}`] : []
   const drafts: QueueDraft[] = []
+  const opportunityCandidateLimit = Math.max(input.limit ?? 25, 25)
 
   for (const item of diagnosis.strikingDistance.items) {
     const templateItems = templateCount({
@@ -98,7 +100,10 @@ export async function refreshPrioritiesWorkflow(input: {
     })
   }
 
-  for (const item of diagnosis.quickWins.items.slice(0, input.limit ?? 25)) {
+  for (const item of diagnosis.quickWins.items.slice(
+    0,
+    opportunityCandidateLimit,
+  )) {
     const templateItems = templateCount({
       templates: diagnosis.quickWins.templates,
       id: item.template.id,
@@ -210,11 +215,12 @@ export async function refreshPrioritiesWorkflow(input: {
     })
   }
 
-  const ranked = drafts
-    .map(priorityFromDraft)
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, input.limit ?? 25)
+  const ranked = groupPriorityQueue(
+    drafts
+      .map(priorityFromDraft)
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score),
+  ).slice(0, input.limit ?? 25)
 
   return workflowReport({
     workflow: 'refresh-priorities',

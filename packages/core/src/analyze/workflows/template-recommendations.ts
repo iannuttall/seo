@@ -7,12 +7,16 @@ type TemplateRecommendationInput = {
 }
 
 function topQueries(items: QuickWinItem[], limit = 5): string[] {
-  return items
+  const queries: string[] = []
+  for (const item of items
     .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)
-    .slice(0, limit)
-    .map((item) =>
-      item.query.length > 90 ? `${item.query.slice(0, 87)}...` : item.query,
-    )
+    .slice(0, limit * 3)) {
+    const query =
+      item.query.length > 90 ? `${item.query.slice(0, 87)}...` : item.query
+    if (!queries.includes(query)) queries.push(query)
+    if (queries.length >= limit) break
+  }
+  return queries
 }
 
 function classCounts(items: QuickWinItem[]): Record<string, number> {

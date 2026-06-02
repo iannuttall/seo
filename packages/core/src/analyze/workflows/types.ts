@@ -43,6 +43,24 @@ export type PriorityQueueItem = {
     sessions: number
     totalUsers: number
   }
+  grouped?: {
+    count: number
+    totalImpact: number
+    totalScore: number
+    findings: Array<{
+      source: PriorityQueueItem['source']
+      title: string
+      target: string
+      category: PriorityQueueItem['category']
+      score: number
+      impact: number
+      confidence: PriorityQueueItem['confidence']
+      template?: PriorityQueueItem['template']
+      analytics?: PriorityQueueItem['analytics']
+      action: string
+      evidence: string
+    }>
+  }
   scoreBreakdown: {
     impact: number
     source: number

@@ -1,4 +1,4 @@
-import { crawlDiff, indexWatch } from '@seo/core'
+import { crawlDiff, indexCoveragePlan, indexWatch } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, listArg, numberArg, stringArg } from '../args.js'
 import { resolveSite } from '../selection.js'
@@ -92,8 +92,37 @@ export const indexWatchCommand = defineCommand({
     },
     urls: {
       type: 'string',
-      required: true,
       description: 'Comma-separated URLs to inspect.',
+    },
+    sitemaps: {
+      type: 'string',
+      description:
+        'Comma-separated XML sitemap URLs to plan quota-aware monitoring.',
+    },
+    plan: {
+      type: 'boolean',
+      default: false,
+      description:
+        'Plan sitemap URL allocation across GSC properties without inspecting URLs.',
+    },
+    properties: {
+      type: 'string',
+      description:
+        'Comma-separated GSC properties to use for planning. Defaults to account properties.',
+    },
+    'daily-limit': {
+      type: 'string',
+      description: 'URL Inspection daily limit per property. Defaults to 2000.',
+    },
+    'target-days': {
+      type: 'string',
+      description:
+        'Target number of days to inspect all monitored URLs. Defaults to 1.',
+    },
+    'max-urls': {
+      type: 'string',
+      description:
+        'Maximum sitemap URLs to load for planning. Defaults to 50000.',
     },
     language: {
       type: 'string',
@@ -108,14 +137,76 @@ export const indexWatchCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const urls = listArg(args.urls)
-    if (!urls.length) {
-      throw new Error('Pass at least one URL with --urls.')
+    const site = await resolveSite({
+      site: stringArg(args.site),
+      options: { json },
+    })
+
+    if (booleanArg(args.plan)) {
+      const sitemaps = listArg(args.sitemaps)
+      if (!sitemaps.length) {
+        throw new Error('Pass at least one sitemap with --sitemaps.')
+      }
+      const report = await indexCoveragePlan({
+        site,
+        sitemaps,
+        properties: listArg(args.properties).length
+          ? listArg(args.properties)
+          : undefined,
+        dailyLimit: numberArg(args['daily-limit']),
+        targetCycleDays: numberArg(args['target-days']),
+        maxUrls: numberArg(args['max-urls']),
+      })
+      if (json) {
+        printJson(report)
+        return
+      }
+      printKeyValue([
+        ['Property', report.site],
+        ['Sitemap URLs', String(report.summary.urlCount)],
+        ['Properties used', String(report.summary.properties)],
+        ['Daily capacity', String(report.summary.dailyCapacity)],
+        ['Estimated cycle', `${report.summary.estimatedCycleDays} day(s)`],
+        ['Target cycle', `${report.summary.targetCycleDays} day(s)`],
+        ['Suggested properties', String(report.summary.suggestedProperties)],
+      ])
+      if (report.properties.length) {
+        printTable(
+          ['Property', 'URLs', 'Cycle', 'Sample URL'],
+          report.properties.map((property) => [
+            property.property,
+            property.urlCount,
+            `${property.cycleDays} day(s)`,
+            property.sampleUrls[0] ?? '-',
+          ]),
+        )
+      }
+      if (report.suggestions.length) {
+        process.stdout.write('\nSuggested URL-prefix properties\n')
+        printTable(
+          ['Property', 'URLs', 'Current property', 'Cycle', 'Reason'],
+          report.suggestions.map((suggestion) => [
+            suggestion.property,
+            suggestion.urlCount,
+            suggestion.currentProperty,
+            `${suggestion.estimatedCycleDays} day(s)`,
+            suggestion.reason,
+          ]),
+        )
+      }
+      if (report.warnings.length) {
+        process.stdout.write('\nWarnings\n')
+        for (const warning of report.warnings.slice(0, 10)) {
+          process.stdout.write(`- ${warning}\n`)
+        }
+      }
+      return
     }
+
+    if (!urls.length) throw new Error('Pass at least one URL with --urls.')
+
     const report = await indexWatch({
-      site: await resolveSite({
-        site: stringArg(args.site),
-        options: { json },
-      }),
+      site,
       urls,
       languageCode: stringArg(args.language),
     })

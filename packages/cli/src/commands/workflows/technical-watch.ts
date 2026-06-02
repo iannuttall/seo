@@ -8,7 +8,8 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson } from '../../utils.js'
+import { printJson, printTable } from '../../utils.js'
+import { formatCount, truncate } from '../output.js'
 import { startUrlForSite } from '../shared.js'
 import { printWorkflow } from './output.js'
 
@@ -42,6 +43,31 @@ export const technicalWatchCommand = defineCommand({
     language: {
       type: 'string',
       description: 'Optional URL Inspection language code.',
+    },
+    'recover-links': {
+      type: 'boolean',
+      default: true,
+      description:
+        'Check search-value GSC pages for broken, blocked, or poorly redirected URLs. Defaults to true.',
+    },
+    'recover-days': {
+      type: 'string',
+      description: 'GSC lookback window for link recovery. Defaults to 90.',
+    },
+    'recover-limit': {
+      type: 'string',
+      description:
+        'Maximum search-value pages to check for link recovery. Defaults to 10.',
+    },
+    'recover-min-clicks': {
+      type: 'string',
+      description:
+        'Minimum clicks for link recovery candidates. Defaults to 1.',
+    },
+    'recover-min-impressions': {
+      type: 'string',
+      description:
+        'Minimum impressions for link recovery candidates. Defaults to 100.',
     },
     json: {
       type: 'boolean',
@@ -79,11 +105,32 @@ export const technicalWatchCommand = defineCommand({
       languageCode: stringArg(args.language),
       refresh: booleanArg(args.refresh),
       js: booleanArg(args.js) ? true : 'auto',
+      recoverLinks: booleanArg(args['recover-links']),
+      recoverDays: numberArg(args['recover-days']),
+      recoverLimit: numberArg(args['recover-limit']),
+      recoverMinClicks: numberArg(args['recover-min-clicks']),
+      recoverMinImpressions: numberArg(args['recover-min-impressions']),
     })
     if (json) {
       printJson(report)
       return
     }
     printWorkflow(report)
+    if (report.output.recovery?.items.length) {
+      process.stdout.write('\nRecoverable URLs\n')
+      printTable(
+        ['Severity', 'Issue', 'Clicks', 'Impr', 'URL', 'Action'],
+        report.output.recovery.items
+          .slice(0, 10)
+          .map((item) => [
+            item.severity,
+            item.issue,
+            formatCount(item.clicks),
+            formatCount(item.impressions),
+            truncate(item.url, 56),
+            truncate(item.recommendation.action, 72),
+          ]),
+      )
+    }
   },
 })

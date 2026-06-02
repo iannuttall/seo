@@ -3,6 +3,7 @@ import type { ChangeMeasurement } from '../experiments.js'
 import type {
   latestCrawlSummaries,
   latestIndexWatchSummary,
+  latestLinkRecoverSummary,
 } from '../monitoring.js'
 
 export type NarrativeSection = {
@@ -30,5 +31,6 @@ export type ReportNarrative = {
   monitoring: {
     crawlRuns: ReturnType<typeof latestCrawlSummaries>
     indexWatch: ReturnType<typeof latestIndexWatchSummary>
+    linkRecover: ReturnType<typeof latestLinkRecoverSummary>
   }
 }

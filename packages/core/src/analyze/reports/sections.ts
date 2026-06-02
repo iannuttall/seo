@@ -30,11 +30,12 @@ export function monitoringBullets(
 ): string[] {
   const bullets: string[] = []
   const crawl = report.monitoring.crawlRuns[0]
+  const recovery = report.monitoring.linkRecover
   if (crawl) {
     bullets.push(
       `Latest crawl checked ${crawl.urlCount} URLs with ${crawl.statusErrors} status errors and ${crawl.nonIndexable} non-indexable pages.`,
     )
-    if (crawl.statusErrors || crawl.nonIndexable) {
+    if ((crawl.statusErrors || crawl.nonIndexable) && !recovery) {
       bullets.push(
         'Run link-recover before content work if those URLs have GSC search value; recoverable 4xx, noindex, and canonical issues can look like content decay.',
       )
@@ -55,6 +56,19 @@ export function monitoringBullets(
     }
   } else {
     bullets.push('No index-watch snapshot is saved yet.')
+  }
+
+  if (recovery) {
+    bullets.push(
+      `Latest link-recover checked ${recovery.checked} search-value URLs; ${recovery.recoverable} recoverable issue(s), ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
+    )
+    if (recovery.topUrl && recovery.topAction) {
+      bullets.push(
+        `Top recovery target: ${recovery.topUrl}. ${recovery.topAction}`,
+      )
+    }
+  } else {
+    bullets.push('No link-recover run is saved yet.')
   }
   return bullets
 }

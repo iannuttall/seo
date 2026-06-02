@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { type CrawlPageSnapshot, compareCrawlPages } from './monitoring.js'
+import {
+  type CrawlPageSnapshot,
+  compareCrawlPages,
+  recommendCrawlDiffItem,
+} from './monitoring.js'
 
 const page = (input: Partial<CrawlPageSnapshot>): CrawlPageSnapshot => ({
   url: 'https://example.com/',
@@ -15,6 +19,34 @@ const page = (input: Partial<CrawlPageSnapshot>): CrawlPageSnapshot => ({
   contentHash: 'a',
   outgoingInternalCount: 2,
   ...input,
+})
+
+test('recommendCrawlDiffItem prioritizes new error statuses', () => {
+  const recommendation = recommendCrawlDiffItem({
+    kind: 'changed',
+    url: 'https://example.com/broken',
+    changes: ['status'],
+    before: page({ status: 200 }),
+    after: page({ status: 404 }),
+  })
+
+  assert.equal(recommendation?.severity, 'high')
+  assert.equal(recommendation?.category, 'status')
+  assert.match(recommendation?.action ?? '', /301/)
+})
+
+test('recommendCrawlDiffItem explains lost indexability', () => {
+  const recommendation = recommendCrawlDiffItem({
+    kind: 'changed',
+    url: 'https://example.com/noindex',
+    changes: ['indexability'],
+    before: page({ indexable: true }),
+    after: page({ indexable: false, metaRobots: 'noindex' }),
+  })
+
+  assert.equal(recommendation?.severity, 'high')
+  assert.equal(recommendation?.category, 'indexability')
+  assert.match(recommendation?.action ?? '', /noindex/)
 })
 
 test('compareCrawlPages detects added, removed, and changed URLs', () => {

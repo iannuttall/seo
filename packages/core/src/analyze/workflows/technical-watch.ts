@@ -60,8 +60,7 @@ export async function technicalWatchWorkflow(input: {
   ])
 
   const alertCount =
-    (crawl?.summary.newErrors ?? 0) +
-    (crawl?.summary.indexabilityFlips ?? 0) +
+    (crawl?.summary.highPriorityRecommendations ?? 0) +
     (index?.summary.alerts ?? 0) +
     (recovery?.summary.high ?? 0) +
     (recovery?.summary.medium ?? 0)
@@ -102,7 +101,7 @@ export async function technicalWatchWorkflow(input: {
         tool: 'seo_crawl_diff',
         status: crawl ? 'completed' : 'skipped',
         summary: crawl
-          ? `Crawled ${crawl.summary.crawled} URLs; ${crawl.summary.changed} changed.`
+          ? `Crawled ${crawl.summary.crawled} URLs; ${crawl.summary.changed} changed, ${crawl.summary.highPriorityRecommendations} high-priority crawl action(s).`
           : 'No start URL passed.',
       },
       {

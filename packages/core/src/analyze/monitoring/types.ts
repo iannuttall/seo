@@ -29,6 +29,21 @@ export type CrawlDiffItem = {
   changes: string[]
   before?: Partial<CrawlPageSnapshot>
   after?: Partial<CrawlPageSnapshot>
+  recommendation?: CrawlDiffRecommendation
+}
+
+export type CrawlDiffRecommendation = {
+  severity: 'high' | 'medium' | 'low'
+  category:
+    | 'status'
+    | 'indexability'
+    | 'canonical'
+    | 'metadata'
+    | 'content'
+    | 'inventory'
+  title: string
+  action: string
+  confidence: 'high' | 'medium' | 'low'
 }
 
 export type CrawlDiffReport = {
@@ -41,7 +56,9 @@ export type CrawlDiffReport = {
     changed: number
     newErrors: number
     indexabilityFlips: number
+    highPriorityRecommendations: number
   }
+  recommendations: Array<CrawlDiffRecommendation & { url: string }>
   items: CrawlDiffItem[]
   warnings: string[]
 }

@@ -1,0 +1,34 @@
+import type { DiagnosePropertyReport } from '../diagnose-property.js'
+import type { ChangeMeasurement } from '../experiments.js'
+import type {
+  latestCrawlSummaries,
+  latestIndexWatchSummary,
+} from '../monitoring.js'
+
+export type NarrativeSection = {
+  title: string
+  bullets: string[]
+}
+
+export type ReportNarrative = {
+  site: string
+  generatedAt: string
+  periodDays: number
+  period: {
+    startDate: string
+    endDate: string
+  }
+  headline: string
+  sections: NarrativeSection[]
+  priorities: Array<{
+    title: string
+    confidence: 'high' | 'medium' | 'low'
+    action: string
+  }>
+  diagnosis: DiagnosePropertyReport
+  changeMeasurements: ChangeMeasurement[]
+  monitoring: {
+    crawlRuns: ReturnType<typeof latestCrawlSummaries>
+    indexWatch: ReturnType<typeof latestIndexWatchSummary>
+  }
+}

@@ -67,7 +67,20 @@ test('analyzeDecay filters brand and low-actionability queries by default', () =
 test('analyzeDecay groups repeatable template losses', () => {
   const result = analyzeDecay({
     site: 'sc-domain:example.org',
-    currentRows: [],
+    currentRows: [
+      row({
+        query: 'teacher salary in nepal',
+        page: 'https://example.org/average-teacher-salary-in-nepal/',
+        clicks: 2,
+        impressions: 40,
+      }),
+      row({
+        query: 'nurse salary in nepal',
+        page: 'https://example.org/average-nurse-salary-in-nepal/',
+        clicks: 1,
+        impressions: 40,
+      }),
+    ],
     previousRows: [
       row({
         query: 'teacher salary in nepal',
@@ -85,5 +98,35 @@ test('analyzeDecay groups repeatable template losses', () => {
   assert.equal(result.items.length, 2)
   assert.equal(result.groups[0]?.template.id, 'example-site-country-salary')
   assert.equal(result.groups[0]?.count, 2)
-  assert.equal(result.groups[0]?.totalClickLoss, 14)
+  assert.equal(result.groups[0]?.totalClickLoss, 11)
+  assert.match(result.groups[0]?.recommendation ?? '', /salary-data freshness/)
+  assert.match(result.items[0]?.recommendation.action ?? '', /salary data/)
+})
+
+test('analyzeDecay gives name-list decay template advice', () => {
+  const result = analyzeDecay({
+    site: 'sc-domain:example.com',
+    currentRows: [
+      row({
+        query: 'seven letter last names',
+        page: 'https://example.com/last-names/7-letter-last-names/',
+        clicks: 2,
+        impressions: 100,
+        ctr: 0.02,
+      }),
+    ],
+    previousRows: [
+      row({
+        query: 'seven letter last names',
+        page: 'https://example.com/last-names/7-letter-last-names/',
+        clicks: 8,
+        impressions: 100,
+        ctr: 0.08,
+      }),
+    ],
+  })
+
+  assert.equal(result.items[0]?.template.id, 'example-site-last-name-list')
+  assert.equal(result.items[0]?.diagnosis, 'lost_ctr')
+  assert.match(result.items[0]?.recommendation.action ?? '', /list intent/)
 })

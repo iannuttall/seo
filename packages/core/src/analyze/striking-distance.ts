@@ -8,6 +8,7 @@ import {
 } from './content-coverage.js'
 import type { PageTemplate } from './page-patterns.js'
 import { detectPageTemplate, summarizeTemplates } from './page-patterns.js'
+import { isLowActionabilityQuery } from './query-quality.js'
 import { defaultDateRange } from './shared.js'
 
 export type StrikingDistanceItem = {
@@ -68,6 +69,7 @@ export async function strikingDistance(input: {
         row.position <= 20 &&
         row.impressions >= minImpressions &&
         row.ctr <= maxCtr &&
+        !isLowActionabilityQuery(query) &&
         !shouldExcludeBrandQuery({
           query,
           siteUrl: input.site,
@@ -106,10 +108,7 @@ export async function strikingDistance(input: {
         rate: input.rate,
       })
       item.contentVerification = contentVerification
-      if (
-        contentVerification.status === 'verified' &&
-        contentVerification.classification !== 'covered'
-      ) {
+      if (contentVerification.status === 'verified') {
         item.action = contentCoverageRecommendation(contentVerification)
       }
     }

@@ -1,5 +1,13 @@
 import { extractPage } from '../extract/page-extractor.js'
-import { fetchPage } from '../fetch/page-fetcher.js'
+import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
+import type {
+  CoverageField,
+  ExtractedPage,
+  PageFetchDiagnostics,
+  QueryContentCoverage,
+} from '../types.js'
+
+export type { CoverageField, QueryContentCoverage } from '../types.js'
 
 const STOPWORDS = new Set([
   'a',
@@ -22,30 +30,6 @@ const STOPWORDS = new Set([
   'to',
   'with',
 ])
-
-export type CoverageField = {
-  phraseCount: number
-  matchedTerms: string[]
-  missingTerms: string[]
-  termCoverage: number
-}
-
-export type QueryContentCoverage = {
-  verifiedAt: string
-  url: string
-  finalUrl?: string
-  status: 'verified' | 'failed'
-  error?: string
-  wordCount?: number
-  contentGapScore: number
-  queryTerms: string[]
-  fields: {
-    title: CoverageField
-    metaDescription: CoverageField
-    mainContent: CoverageField
-  }
-  summary: string
-}
 
 export function normalizeForCoverage(value: string): string {
   return value
@@ -127,35 +111,52 @@ function coverageSummary(coverage: QueryContentCoverage): string {
   return `Main content covers ${bodyTerms}% of meaningful query terms.`
 }
 
+export function queryContentCoverageFromPage(input: {
+  query: string
+  url: string
+  page: ExtractedPage
+  fetchDiagnostics?: PageFetchDiagnostics
+}): QueryContentCoverage {
+  const fields = {
+    title: measureCoverage(input.query, input.page.title),
+    metaDescription: measureCoverage(input.query, input.page.metaDescription),
+    mainContent: measureCoverage(input.query, input.page.contentText),
+  }
+  const coverage: QueryContentCoverage = {
+    verifiedAt: new Date().toISOString(),
+    url: input.url,
+    finalUrl: input.page.finalUrl,
+    status: 'verified',
+    wordCount: input.page.wordCount,
+    fetchDiagnostics: input.fetchDiagnostics,
+    contentGapScore: gapScore(fields),
+    queryTerms: queryTerms(input.query),
+    fields,
+    summary: '',
+  }
+  return { ...coverage, summary: coverageSummary(coverage) }
+}
+
 export async function verifyQueryContent(input: {
   query: string
   url: string
   js?: boolean | 'auto'
   refresh?: boolean
+  rate?: FetchRateControls
 }): Promise<QueryContentCoverage> {
   try {
     const fetched = await fetchPage(input.url, {
       js: input.js ?? 'auto',
       refresh: input.refresh,
+      rate: input.rate,
     })
     const page = await extractPage(fetched, 'defuddle')
-    const fields = {
-      title: measureCoverage(input.query, page.title),
-      metaDescription: measureCoverage(input.query, page.metaDescription),
-      mainContent: measureCoverage(input.query, page.contentText),
-    }
-    const coverage: QueryContentCoverage = {
-      verifiedAt: new Date().toISOString(),
+    return queryContentCoverageFromPage({
+      query: input.query,
       url: input.url,
-      finalUrl: page.finalUrl,
-      status: 'verified',
-      wordCount: page.wordCount,
-      contentGapScore: gapScore(fields),
-      queryTerms: queryTerms(input.query),
-      fields,
-      summary: '',
-    }
-    return { ...coverage, summary: coverageSummary(coverage) }
+      page,
+      fetchDiagnostics: fetched.diagnostics,
+    })
   } catch (error) {
     return {
       verifiedAt: new Date().toISOString(),

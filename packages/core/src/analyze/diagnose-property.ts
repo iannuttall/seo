@@ -1,3 +1,4 @@
+import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import {
   cannibalReport,
@@ -126,6 +127,7 @@ export async function diagnoseProperty(input: {
   verifyContent?: boolean
   verifyLimit?: number
   js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
 }): Promise<DiagnosePropertyReport> {
   const limit = input.limit ?? 10
@@ -166,6 +168,7 @@ export async function diagnoseProperty(input: {
       verifyContent: input.verifyContent,
       verifyLimit: input.verifyLimit,
       js: input.js,
+      rate: input.rate,
       refresh: input.refresh,
     }),
   ])

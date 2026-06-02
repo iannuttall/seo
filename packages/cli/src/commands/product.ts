@@ -10,9 +10,16 @@ import {
   writeConfig,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  fetchRateArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+} from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
+import { formatFetchDiagnostics } from './shared.js'
 
 const segmentDimension = (value: unknown): SegmentDimension => {
   const dimension = stringArg(value) ?? 'page'
@@ -221,6 +228,33 @@ export const strikingDistanceCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'verify-content': {
+      type: 'boolean',
+      default: false,
+      description:
+        'Verify top opportunities against page title, meta, and content.',
+    },
+    'verify-limit': {
+      type: 'string',
+      description: 'Maximum opportunity URLs to verify. Defaults to 5.',
+    },
+    js: {
+      type: 'boolean',
+      default: false,
+      description: 'Force JavaScript rendering for verified pages.',
+    },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -246,6 +280,10 @@ export const strikingDistanceCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      verifyContent: booleanArg(args['verify-content']),
+      verifyLimit: numberArg(args['verify-limit']),
+      js: booleanArg(args.js) ? true : undefined,
+      rate: fetchRateArg(args),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -253,7 +291,7 @@ export const strikingDistanceCommand = defineCommand({
       return
     }
     printTable(
-      ['Query', 'URL', 'Impr', 'CTR', 'Pos', 'Score'],
+      ['Query', 'URL', 'Impr', 'CTR', 'Pos', 'Score', 'Fetch', 'Gap'],
       report.items.map((item) => [
         item.query,
         item.url,
@@ -261,6 +299,8 @@ export const strikingDistanceCommand = defineCommand({
         item.ctr,
         item.position,
         item.opportunityScore,
+        formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
+        item.contentVerification?.contentGapScore ?? '-',
       ]),
     )
   },

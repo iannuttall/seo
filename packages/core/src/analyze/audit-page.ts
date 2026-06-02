@@ -122,6 +122,7 @@ export async function auditPage(input: {
     url: input.url,
     fetchedAt: new Date().toISOString(),
     page,
+    fetchDiagnostics: fetched.diagnostics,
     metrics,
     issues,
     recommendations: [],

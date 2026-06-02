@@ -1,6 +1,12 @@
 import { monthlyReport, reportNarrative } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  fetchRateArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+} from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson } from '../utils.js'
 
@@ -62,6 +68,18 @@ export const reportNarrativeCommand = defineCommand({
       default: false,
       description: 'Force JavaScript rendering for verified pages.',
     },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -93,6 +111,7 @@ export const reportNarrativeCommand = defineCommand({
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']) ?? 3,
       js: booleanArg(args.js) ? true : undefined,
+      rate: fetchRateArg(args),
       refresh: booleanArg(args.refresh),
     })
 
@@ -147,6 +166,18 @@ export const monthlyReportCommand = defineCommand({
       default: false,
       description: 'Force JavaScript rendering for verified pages.',
     },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -174,6 +205,7 @@ export const monthlyReportCommand = defineCommand({
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']) ?? 3,
       js: booleanArg(args.js) ? true : undefined,
+      rate: fetchRateArg(args),
       refresh: booleanArg(args.refresh),
     })
 

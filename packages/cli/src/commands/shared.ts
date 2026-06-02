@@ -1,3 +1,4 @@
+import type { PageFetchDiagnostics } from '@seo/core'
 import { resolveClientSelection } from '../selection.js'
 import { printJson } from '../utils.js'
 
@@ -43,4 +44,15 @@ export function slugId(value: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
+}
+
+export function formatFetchDiagnostics(
+  diagnostics?: PageFetchDiagnostics,
+): string {
+  if (!diagnostics) return '-'
+  if (diagnostics.blocked) return 'blocked'
+  if (diagnostics.rendered) return 'rendered'
+  if (diagnostics.cache === 'hit') return 'cached'
+  if (diagnostics.fetched) return 'fetched'
+  return diagnostics.source
 }

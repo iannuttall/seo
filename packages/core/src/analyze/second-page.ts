@@ -1,6 +1,6 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import { extractPage } from '../extract/page-extractor.js'
-import { fetchPage } from '../fetch/page-fetcher.js'
+import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { getKeywordProvider } from '../providers/router.js'
 import { SessionLedger } from '../storage/ledger.js'
@@ -9,6 +9,7 @@ import type {
   SecondPageItem,
   SecondPageReport,
 } from '../types.js'
+import { queryContentCoverageFromPage } from './content-coverage.js'
 import { defaultDateRange, normalizeText, tokenize } from './shared.js'
 
 function scoreCoverage(
@@ -86,6 +87,9 @@ export async function secondPage(input: {
   limit?: number
   js?: boolean | 'auto'
   refresh?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  rate?: FetchRateControls
   brandTerms?: string[]
   includeBrand?: boolean
   prefer?: 'cheap' | 'authoritative'
@@ -148,6 +152,7 @@ export async function secondPage(input: {
     const fetched = await fetchPage(url, {
       js: input.js ?? 'auto',
       refresh: input.refresh,
+      rate: input.rate,
     })
     const extracted = await extractPage(fetched)
     const coverage = scoreCoverage(primary.keys[0] ?? '', extracted)
@@ -172,7 +177,17 @@ export async function secondPage(input: {
       impressions: primary.impressions,
       ctr: primary.ctr,
       coverage,
+      fetchDiagnostics: fetched.diagnostics,
       recommendations: [],
+    }
+
+    if (input.verifyContent && items.length < (input.verifyLimit ?? 5)) {
+      item.contentVerification = queryContentCoverageFromPage({
+        query: item.primaryQuery,
+        url,
+        page: extracted,
+        fetchDiagnostics: fetched.diagnostics,
+      })
     }
 
     item.recommendations = buildSecondPageRecommendations(
@@ -181,6 +196,19 @@ export async function secondPage(input: {
       extracted,
       relatedQuestions,
     )
+    if (
+      item.contentVerification?.status === 'verified' &&
+      item.contentVerification.contentGapScore >= 5
+    ) {
+      item.recommendations.unshift({
+        principle: 'C.3',
+        evidenceRef: item.contentVerification.summary,
+        action:
+          'Add clearer query coverage to the title, meta description, or main content before broader rewrites.',
+        effort: 'S',
+        confidence: 'medium',
+      })
+    }
     items.push(item)
   }
 
@@ -188,6 +216,16 @@ export async function secondPage(input: {
     site: input.site,
     range,
     generatedAt: new Date().toISOString(),
+    verification: input.verifyContent
+      ? {
+          requested: true,
+          limit: input.verifyLimit ?? 5,
+          verified: items.filter((item) => item.contentVerification).length,
+          failed: items.filter(
+            (item) => item.contentVerification?.status === 'failed',
+          ).length,
+        }
+      : { requested: false, verified: 0, failed: 0 },
     items,
     ledgerSummary: ledger.summary(),
     warnings,

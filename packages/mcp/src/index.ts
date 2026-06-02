@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
-  auditPage,
   cannibalReport,
   crawlDiff,
   createContentGroup,
@@ -21,15 +20,12 @@ import {
   listGa4AccountSummaries,
   listSearchUpdates,
   measureChange,
-  monthlyReport,
   queryClusterReport,
   querySearchAnalytics,
   quickWinsReport,
   recordChange,
-  reportNarrative,
   runDoctor,
   runGa4Report,
-  secondPage,
   segmentImpact,
   strikingDistance,
   trafficAnomaly,
@@ -37,7 +33,9 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { registerClientTools } from './client-tools.js'
+import { fetchRateInput } from './fetch-rate.js'
 import { registerPrompts } from './prompts.js'
+import { registerReportTools } from './report-tools.js'
 import { registerResources } from './resources.js'
 import { summarize, toolError, toolSuccess } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
@@ -165,16 +163,42 @@ function registerTools(server: McpServer): void {
         days: z.number().optional(),
         minImpressions: z.number().optional(),
         limit: z.number().optional(),
+        verifyContent: z.boolean().optional(),
+        verifyLimit: z.number().optional(),
+        js: z.boolean().optional(),
+        fetchConcurrency: z.number().optional(),
+        fetchIntervalCap: z.number().optional(),
+        fetchIntervalMs: z.number().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, days, minImpressions, limit, refresh }) => {
+    async ({
+      site,
+      days,
+      minImpressions,
+      limit,
+      verifyContent,
+      verifyLimit,
+      js,
+      fetchConcurrency,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
       try {
         const result = await strikingDistance({
           site,
           days,
           minImpressions,
           limit,
+          verifyContent,
+          verifyLimit,
+          js: js ? true : undefined,
+          rate: fetchRateInput({
+            fetchConcurrency,
+            fetchIntervalCap,
+            fetchIntervalMs,
+          }),
           refresh,
         })
         return toolSuccess(
@@ -406,140 +430,6 @@ function registerTools(server: McpServer): void {
   )
 
   server.registerTool(
-    'seo_report_narrative',
-    {
-      description:
-        'Generate a client-ready SEO narrative across diagnosis, changes, and monitoring',
-      inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        limit: z.number().optional(),
-        changeLimit: z.number().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({
-      site,
-      days,
-      recentDays,
-      startDate,
-      endDate,
-      limit,
-      changeLimit,
-      refresh,
-    }) => {
-      try {
-        const result = await reportNarrative({
-          site,
-          days,
-          recentDays,
-          startDate,
-          endDate,
-          limit,
-          changeLimit,
-          refresh,
-        })
-        return toolSuccess(result.headline, result)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_monthly_report',
-    {
-      description: 'Generate a monthly SEO report narrative',
-      inputSchema: {
-        site: z.string(),
-        month: z.string().optional(),
-        limit: z.number().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({ site, month, limit, refresh }) => {
-      try {
-        const result = await monthlyReport({
-          site,
-          month,
-          limit,
-          refresh,
-        })
-        return toolSuccess(
-          `Monthly report generated for ${result.month}. ${result.headline}`,
-          result,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_audit_page',
-    {
-      description: 'Run a single-page technical and content audit',
-      inputSchema: {
-        url: z.string().url(),
-        site: z.string().optional(),
-        js: z.boolean().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({ url, site, js, refresh }) => {
-      try {
-        const result = await auditPage({
-          url,
-          site,
-          js: js ? true : 'auto',
-          refresh,
-        })
-        return toolSuccess(
-          `Audit complete for ${url}. Found ${result.issues.length} issues.`,
-          result,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_second_page',
-    {
-      description:
-        'Find page-two opportunities with evidence-grounded recommendations',
-      inputSchema: {
-        site: z.string(),
-        range: z.number().optional(),
-        minImpressions: z.number().optional(),
-        limit: z.number().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({ site, range, minImpressions, limit, refresh }) => {
-      try {
-        const result = await secondPage({
-          site,
-          range,
-          minImpressions,
-          limit,
-          refresh,
-        })
-        return toolSuccess(
-          `${result.items.length} page-two opportunities found.`,
-          result,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
     'seo_cannibal',
     {
       description: 'Detect keyword cannibalisation',
@@ -590,11 +480,37 @@ function registerTools(server: McpServer): void {
       inputSchema: {
         site: z.string(),
         minImpressions: z.number().optional(),
+        verifyContent: z.boolean().optional(),
+        verifyLimit: z.number().optional(),
+        js: z.boolean().optional(),
+        fetchConcurrency: z.number().optional(),
+        fetchIntervalCap: z.number().optional(),
+        fetchIntervalMs: z.number().optional(),
       },
     },
-    async ({ site, minImpressions }) => {
+    async ({
+      site,
+      minImpressions,
+      verifyContent,
+      verifyLimit,
+      js,
+      fetchConcurrency,
+      fetchIntervalCap,
+      fetchIntervalMs,
+    }) => {
       try {
-        const result = await quickWinsReport({ site, minImpressions })
+        const result = await quickWinsReport({
+          site,
+          minImpressions,
+          verifyContent,
+          verifyLimit,
+          js: js ? true : undefined,
+          rate: fetchRateInput({
+            fetchConcurrency,
+            fetchIntervalCap,
+            fetchIntervalMs,
+          }),
+        })
         return toolSuccess(`${result.items.length} quick wins found.`, result)
       } catch (error) {
         return toolError(error)
@@ -873,6 +789,7 @@ export function createServer(): McpServer {
   )
 
   registerTools(server)
+  registerReportTools(server)
   registerResources(server)
   registerPrompts(server)
   return server

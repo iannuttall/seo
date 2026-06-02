@@ -195,12 +195,59 @@ export interface PageFetchResult {
   headers: Record<string, string>
   html: string
   usedJs: boolean
+  diagnostics: PageFetchDiagnostics
   warnings: string[]
   robotsTxt?: {
     url: string
     allowed: boolean
     matchedLine?: string
   }
+}
+
+export interface PageFetchDiagnostics {
+  source: 'cache' | 'network' | 'rendered'
+  cache: 'hit' | 'miss' | 'bypass'
+  fetched: boolean
+  rendered: boolean
+  blocked: boolean
+  durationMs: number
+  retries: number
+  rateLimit: {
+    host: string
+    concurrency: number
+    intervalCap: number
+    intervalMs: number
+  }
+  robotsTxt?: {
+    url: string
+    cache: 'hit' | 'miss' | 'bypass'
+    allowed: boolean
+  }
+}
+
+export interface CoverageField {
+  phraseCount: number
+  matchedTerms: string[]
+  missingTerms: string[]
+  termCoverage: number
+}
+
+export interface QueryContentCoverage {
+  verifiedAt: string
+  url: string
+  finalUrl?: string
+  status: 'verified' | 'failed'
+  error?: string
+  wordCount?: number
+  fetchDiagnostics?: PageFetchDiagnostics
+  contentGapScore: number
+  queryTerms: string[]
+  fields: {
+    title: CoverageField
+    metaDescription: CoverageField
+    mainContent: CoverageField
+  }
+  summary: string
 }
 
 export interface ExtractedPage {
@@ -236,6 +283,7 @@ export interface AuditPageReport {
   url: string
   fetchedAt: string
   page: ExtractedPage
+  fetchDiagnostics: PageFetchDiagnostics
   metrics?: {
     clicks: number
     impressions: number
@@ -268,6 +316,8 @@ export interface SecondPageItem {
     inSlug: boolean
     bodyCount: number
   }
+  fetchDiagnostics?: PageFetchDiagnostics
+  contentVerification?: QueryContentCoverage
   recommendations: Recommendation[]
 }
 
@@ -275,6 +325,9 @@ export interface SecondPageReport {
   site: string
   range: number
   generatedAt: string
+  verification:
+    | { requested: false; verified: 0; failed: 0 }
+    | { requested: true; limit: number; verified: number; failed: number }
   items: SecondPageItem[]
   ledgerSummary: string
   warnings: string[]

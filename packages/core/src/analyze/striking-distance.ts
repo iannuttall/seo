@@ -1,5 +1,8 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
+import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import type { QueryContentCoverage } from './content-coverage.js'
+import { verifyQueryContent } from './content-coverage.js'
 import { defaultDateRange } from './shared.js'
 
 export type StrikingDistanceItem = {
@@ -10,6 +13,7 @@ export type StrikingDistanceItem = {
   ctr: number
   position: number
   opportunityScore: number
+  contentVerification?: QueryContentCoverage
   action: string
 }
 
@@ -21,11 +25,18 @@ export async function strikingDistance(input: {
   limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
 }): Promise<{
   site: string
   generatedAt: string
   range: { startDate: string; endDate: string }
+  verification:
+    | { requested: false; verified: 0; failed: 0 }
+    | { requested: true; limit: number; verified: number; failed: number }
   items: StrikingDistanceItem[]
 }> {
   const range = defaultDateRange(input.days ?? 28)
@@ -42,7 +53,7 @@ export async function strikingDistance(input: {
     { refresh: input.refresh },
   )
 
-  const items = result.rows
+  const items: StrikingDistanceItem[] = result.rows
     .filter((row) => {
       const query = row.keys[0] ?? ''
       return (
@@ -76,10 +87,41 @@ export async function strikingDistance(input: {
     .sort((a, b) => b.opportunityScore - a.opportunityScore)
     .slice(0, input.limit ?? 25)
 
+  if (input.verifyContent) {
+    const verifyLimit = input.verifyLimit ?? 5
+    for (const item of items.slice(0, verifyLimit)) {
+      const contentVerification = await verifyQueryContent({
+        query: item.query,
+        url: item.url,
+        js: input.js,
+        refresh: input.refresh,
+        rate: input.rate,
+      })
+      item.contentVerification = contentVerification
+      if (
+        contentVerification.status === 'verified' &&
+        contentVerification.contentGapScore >= 5
+      ) {
+        item.action =
+          'Add clearer query coverage to the title, meta description, or main content before broader rewrites.'
+      }
+    }
+  }
+
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
     range,
+    verification: input.verifyContent
+      ? {
+          requested: true,
+          limit: input.verifyLimit ?? 5,
+          verified: items.filter((item) => item.contentVerification).length,
+          failed: items.filter(
+            (item) => item.contentVerification?.status === 'failed',
+          ).length,
+        }
+      : { requested: false, verified: 0, failed: 0 },
     items,
   }
 }

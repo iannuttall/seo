@@ -1,3 +1,4 @@
+import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import {
   type DiagnosePropertyReport,
   diagnoseProperty,
@@ -118,6 +119,28 @@ function monitoringBullets(
   return bullets
 }
 
+function verificationFetchLine(report: DiagnosePropertyReport): string | null {
+  const verified = report.quickWins.items
+    .map((item) => item.contentVerification?.fetchDiagnostics)
+    .filter((item) => item !== undefined)
+  if (!verified.length) return null
+
+  const blocked = verified.filter((item) => item.blocked).length
+  const rendered = verified.filter((item) => item.rendered).length
+  const cached = verified.filter((item) => item.cache === 'hit').length
+  const fetched = verified.filter(
+    (item) => item.fetched && item.cache !== 'hit' && !item.rendered,
+  ).length
+  return `Verified-page fetch status: ${cached} cached, ${fetched} fetched, ${rendered} rendered, ${blocked} blocked.`
+}
+
+function gapCountLine(report: DiagnosePropertyReport): string {
+  const gaps = report.quickWins.items.filter(
+    (item) => (item.contentVerification?.contentGapScore ?? 0) >= 5,
+  ).length
+  return `${gaps} ${gaps === 1 ? 'shows' : 'show'} likely on-page query coverage gaps.`
+}
+
 function renderMarkdown(report: ReportNarrative): string {
   const lines = [`# SEO report: ${report.site}`, '', report.headline, '']
   lines.push(`Period: ${report.period.startDate} to ${report.period.endDate}`)
@@ -151,6 +174,7 @@ export async function reportNarrative(input: {
   verifyContent?: boolean
   verifyLimit?: number
   js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string }> {
   const periodDays = input.days ?? 90
@@ -176,6 +200,7 @@ export async function reportNarrative(input: {
     verifyContent: input.verifyContent,
     verifyLimit: input.verifyLimit,
     js: input.js,
+    rate: input.rate,
     refresh: input.refresh,
   })
   const changes = listChanges({
@@ -222,8 +247,9 @@ export async function reportNarrative(input: {
           `${diagnosis.summary.strikingDistanceItems} position 11-20 opportunities are available.`,
           ...(diagnosis.quickWins.verification.requested
             ? [
-                `Verified content for ${diagnosis.quickWins.verification.verified} of ${diagnosis.quickWins.items.length} quick-win candidates; ${diagnosis.quickWins.items.filter((item) => (item.contentVerification?.contentGapScore ?? 0) >= 5).length} show likely on-page query coverage gaps.`,
-              ]
+                `Verified content for ${diagnosis.quickWins.verification.verified} of ${diagnosis.quickWins.items.length} quick-win candidates; ${gapCountLine(diagnosis)}`,
+                verificationFetchLine(diagnosis),
+              ].filter((line): line is string => Boolean(line))
             : []),
         ],
       },
@@ -260,6 +286,7 @@ export async function monthlyReport(input: {
   verifyContent?: boolean
   verifyLimit?: number
   js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
 }): Promise<ReportNarrative & { markdown: string; month: string }> {
   const month = input.month ?? finalGscDate().slice(0, 7)
@@ -275,6 +302,7 @@ export async function monthlyReport(input: {
     verifyContent: input.verifyContent,
     verifyLimit: input.verifyLimit,
     js: input.js,
+    rate: input.rate,
     refresh: input.refresh,
   })
   return {

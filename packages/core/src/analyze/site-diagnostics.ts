@@ -1,4 +1,5 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
+import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { Recommendation } from '../types.js'
 import type { QueryContentCoverage } from './content-coverage.js'
@@ -255,6 +256,7 @@ export async function quickWinsReport(input: {
   verifyContent?: boolean
   verifyLimit?: number
   js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
 }) {
   const minImpressions = input.minImpressions ?? 200
@@ -326,6 +328,7 @@ export async function quickWinsReport(input: {
           url: item.url,
           js: input.js,
           refresh: input.refresh,
+          rate: input.rate,
         }))
       coverageByKey.set(key, contentVerification)
       item.contentVerification = contentVerification

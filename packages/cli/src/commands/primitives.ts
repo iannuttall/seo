@@ -11,10 +11,20 @@ import {
   updateCorrelation,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  fetchRateArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+} from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-import { outputResult, selectedSiteOrThrow } from './shared.js'
+import {
+  formatFetchDiagnostics,
+  outputResult,
+  selectedSiteOrThrow,
+} from './shared.js'
 
 export const trafficAnomalyCommand = defineCommand({
   args: {
@@ -144,6 +154,7 @@ export const auditPageCommand = defineCommand({
       ['Title', report.page.title ?? 'missing'],
       ['Meta description', report.page.metaDescription ?? 'missing'],
       ['Word count', String(report.page.wordCount)],
+      ['Fetch', formatFetchDiagnostics(report.fetchDiagnostics)],
     ])
     if (report.issues.length) {
       process.stdout.write('\nIssues\n')
@@ -170,6 +181,33 @@ export const secondPageCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'verify-content': {
+      type: 'boolean',
+      default: false,
+      description:
+        'Verify top opportunities against page title, meta, and content.',
+    },
+    'verify-limit': {
+      type: 'string',
+      description: 'Maximum opportunity URLs to verify. Defaults to 5.',
+    },
+    js: {
+      type: 'boolean',
+      default: false,
+      description: 'Force JavaScript rendering for verified pages.',
+    },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: { type: 'boolean', default: false },
     refresh: { type: 'boolean', default: false },
   },
@@ -185,6 +223,10 @@ export const secondPageCommand = defineCommand({
       limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      verifyContent: booleanArg(args['verify-content']),
+      verifyLimit: numberArg(args['verify-limit']),
+      js: booleanArg(args.js) ? true : undefined,
+      rate: fetchRateArg(args),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -192,13 +234,15 @@ export const secondPageCommand = defineCommand({
       return
     }
     printTable(
-      ['Query', 'Pos', 'Impr', 'CTR', 'Coverage', 'Action'],
+      ['Query', 'Pos', 'Impr', 'CTR', 'Coverage', 'Fetch', 'Gap', 'Action'],
       report.items.map((item) => [
         item.primaryQuery,
         item.position.toFixed(1),
         Math.round(item.impressions),
         item.ctr.toFixed(3),
         `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
+        formatFetchDiagnostics(item.fetchDiagnostics),
+        item.contentVerification?.contentGapScore ?? '-',
         item.recommendations[0]?.action ?? 'No recommendation',
       ]),
     )
@@ -288,6 +332,18 @@ export const quickWinsCommand = defineCommand({
       default: false,
       description: 'Force JavaScript rendering for verified pages.',
     },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -305,6 +361,7 @@ export const quickWinsCommand = defineCommand({
         verifyContent: booleanArg(args['verify-content']),
         verifyLimit: numberArg(args['verify-limit']),
         js: booleanArg(args.js) ? true : undefined,
+        rate: fetchRateArg(args),
       }),
       json,
     )

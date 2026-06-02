@@ -28,6 +28,23 @@ export function listArg(value: unknown): string[] {
   return csvArg(value) ?? []
 }
 
+export function fetchRateArg(args: Record<string, unknown>):
+  | {
+      concurrency?: number
+      intervalCap?: number
+      intervalMs?: number
+    }
+  | undefined {
+  const rate = {
+    concurrency: numberArg(args['fetch-concurrency']),
+    intervalCap: numberArg(args['fetch-interval-cap']),
+    intervalMs: numberArg(args['fetch-interval-ms']),
+  }
+  return Object.values(rate).some((value) => value !== undefined)
+    ? rate
+    : undefined
+}
+
 export function jsonFlag(args: Record<string, unknown>): boolean {
   return args.json === true
 }

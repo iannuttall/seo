@@ -31,6 +31,11 @@ export const updatePostmortemCommand = defineCommand({
       type: 'string',
       description: 'Maximum winners/losers per segment. Defaults to 20.',
     },
+    'include-brand': {
+      type: 'boolean',
+      default: false,
+      description: 'Include branded queries in opportunity reports.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -54,6 +59,8 @@ export const updatePostmortemCommand = defineCommand({
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {

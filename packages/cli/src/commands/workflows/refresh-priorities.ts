@@ -37,6 +37,11 @@ export const refreshPrioritiesCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'ga4-property': {
+      type: 'string',
+      description:
+        'GA4 property ID to use for analytics value. Defaults from the selected client.',
+    },
     'verify-content': {
       type: 'boolean',
       default: true,
@@ -72,7 +77,8 @@ export const refreshPrioritiesCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      ga4PropertyId: selection.client?.ga4PropertyId,
+      ga4PropertyId:
+        stringArg(args['ga4-property']) ?? selection.client?.ga4PropertyId,
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

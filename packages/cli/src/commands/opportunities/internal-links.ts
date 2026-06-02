@@ -1,6 +1,6 @@
 import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../../args.js'
+import { jsonFlag, numberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
@@ -15,6 +15,7 @@ export const internalLinksCommand = defineCommand({
     site: { type: 'string' },
     client: { type: 'string' },
     url: { type: 'string', required: true },
+    limit: { type: 'string' },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -25,6 +26,7 @@ export const internalLinksCommand = defineCommand({
         { json },
       ),
       targetUrl: stringArg(args.url) ?? '',
+      limit: numberArg(args.limit),
     })
     if (json) {
       printJson(report)

@@ -160,16 +160,31 @@ export function registerWorkflowTools(server: McpServer): void {
         days: z.number().optional(),
         recentDays: z.number().optional(),
         limit: z.number().optional(),
+        ga4PropertyId: z.string().optional(),
+        verifyContent: z.boolean().optional(),
+        verifyLimit: z.number().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ site, days, recentDays, limit, refresh }) => {
+    async ({
+      site,
+      days,
+      recentDays,
+      limit,
+      ga4PropertyId,
+      verifyContent,
+      verifyLimit,
+      refresh,
+    }) => {
       try {
         const result = await refreshPrioritiesWorkflow({
           site,
           days,
           recentDays,
           limit,
+          ga4PropertyId,
+          verifyContent,
+          verifyLimit,
           refresh,
         })
         return toolSuccess(result.summary, result)

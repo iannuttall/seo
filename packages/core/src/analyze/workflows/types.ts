@@ -27,10 +27,32 @@ export type PriorityQueueItem = {
     | 'quick-win'
     | 'cannibalization'
     | 'diagnosis'
+    | 'template'
   title: string
   target: string
+  category: 'technical' | 'content' | 'serp' | 'authority' | 'strategy'
   score: number
+  impact: number
   confidence: 'high' | 'medium' | 'low'
+  template?: {
+    id: string
+    label: string
+    count: number
+  }
+  analytics?: {
+    sessions: number
+    totalUsers: number
+  }
+  scoreBreakdown: {
+    impact: number
+    source: number
+    confidence: number
+    effort: number
+    verification: number
+    template: number
+    analytics: number
+    final: number
+  }
   action: string
   evidence: string
 }

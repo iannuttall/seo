@@ -1,6 +1,46 @@
 import { diagnoseProperty } from '../diagnose-property.js'
+import { defaultDateRange } from '../shared.js'
+import {
+  fetchLandingPageValues,
+  landingValueForUrl,
+} from './analytics-value.js'
+import { priorityCategory, scorePriority } from './priority-scoring.js'
 import { workflowReport } from './report.js'
 import type { PriorityQueueItem, WorkflowReport } from './types.js'
+
+type QueueDraft = Omit<
+  PriorityQueueItem,
+  'category' | 'score' | 'impact' | 'scoreBreakdown'
+> & {
+  impact: number
+  effort?: 'S' | 'M' | 'L'
+  verification?: Parameters<typeof priorityCategory>[1]
+}
+
+function templateCount(input: {
+  templates?: Array<{ id: string; count: number }>
+  id?: string
+}): number | undefined {
+  return input.templates?.find((template) => template.id === input.id)?.count
+}
+
+function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
+  const breakdown = scorePriority({
+    source: draft.source,
+    impact: draft.impact,
+    confidence: draft.confidence,
+    effort: draft.effort,
+    verification: draft.verification,
+    templateCount: draft.template?.count,
+    analyticsSessions: draft.analytics?.sessions,
+  })
+  return {
+    ...draft,
+    category: priorityCategory(draft.source, draft.verification),
+    score: breakdown.final,
+    scoreBreakdown: breakdown,
+  }
+}
 
 export async function refreshPrioritiesWorkflow(input: {
   site: string
@@ -9,35 +49,74 @@ export async function refreshPrioritiesWorkflow(input: {
   limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  ga4PropertyId?: string
+  verifyContent?: boolean
+  verifyLimit?: number
   refresh?: boolean
 }): Promise<
   WorkflowReport<{
     queue: PriorityQueueItem[]
+    warnings: string[]
     diagnosis: Awaited<ReturnType<typeof diagnoseProperty>>
   }>
 > {
-  const diagnosis = await diagnoseProperty(input)
-  const queue: PriorityQueueItem[] = []
+  const diagnosis = await diagnoseProperty({
+    ...input,
+    verifyContent: input.verifyContent ?? true,
+    verifyLimit: input.verifyLimit ?? Math.min(input.limit ?? 5, 5),
+  })
+  const range = defaultDateRange(input.days ?? 28)
+  const analytics = await fetchLandingPageValues({
+    propertyId: input.ga4PropertyId,
+    startDate: range.startDate,
+    endDate: range.endDate,
+  })
+  const warnings = analytics.warning ? [`GA4: ${analytics.warning}`] : []
+  const drafts: QueueDraft[] = []
 
   for (const item of diagnosis.strikingDistance.items) {
-    queue.push({
+    const templateItems = templateCount({
+      templates: diagnosis.strikingDistance.templates,
+      id: item.template.id,
+    })
+    const landingValue = landingValueForUrl(analytics.values, item.url)
+    drafts.push({
       source: 'striking-distance',
       title: item.query,
       target: item.url,
-      score: item.opportunityScore,
+      impact: item.opportunityScore,
       confidence: 'high',
+      template: {
+        id: item.template.id,
+        label: item.template.label,
+        count: templateItems ?? 1,
+      },
+      analytics: landingValue,
       action: item.action,
       evidence: `${item.impressions} impressions at position ${item.position}.`,
     })
   }
 
   for (const item of diagnosis.quickWins.items.slice(0, input.limit ?? 25)) {
-    queue.push({
+    const templateItems = templateCount({
+      templates: diagnosis.quickWins.templates,
+      id: item.template.id,
+    })
+    const landingValue = landingValueForUrl(analytics.values, item.url)
+    drafts.push({
       source: 'quick-win',
       title: item.query,
       target: item.url,
-      score: Number(item.estimatedClickLift.toFixed(2)),
+      impact: Number(item.estimatedClickLift.toFixed(2)),
       confidence: item.recommendation.confidence,
+      effort: item.recommendation.effort,
+      verification: item.contentVerification?.classification,
+      template: {
+        id: item.template.id,
+        label: item.template.label,
+        count: templateItems ?? 1,
+      },
+      analytics: landingValue,
       action: item.recommendation.action,
       evidence: item.recommendation.evidenceRef,
     })
@@ -45,39 +124,52 @@ export async function refreshPrioritiesWorkflow(input: {
 
   for (const item of diagnosis.decay.items) {
     const clickLoss = Math.max(0, item.previous.clicks - item.current.clicks)
-    queue.push({
+    drafts.push({
       source: 'decay',
       title: item.query,
       target: item.query,
-      score: Number((clickLoss * 10).toFixed(2)),
+      impact: Number(clickLoss.toFixed(2)),
       confidence: item.recommendation.confidence,
+      effort: item.recommendation.effort,
       action: item.recommendation.action,
       evidence: item.recommendation.evidenceRef,
     })
   }
 
   for (const item of diagnosis.cannibalization.items) {
-    queue.push({
+    const impressions = item.pages.reduce(
+      (sum, page) => sum + page.impressions,
+      0,
+    )
+    drafts.push({
       source: 'cannibalization',
       title: item.query,
-      target: item.pages[0]?.url ?? item.query,
-      score: Number((item.pages.length * 50 * (1 - item.hhi)).toFixed(2)),
+      target: item.ownerUrl,
+      impact: Number((impressions * (1 - item.hhi)).toFixed(2)),
       confidence: item.recommendation.confidence,
+      effort: item.recommendation.effort,
+      template: item.template
+        ? {
+            id: item.template.id,
+            label: item.template.label,
+            count: item.pages.length,
+          }
+        : undefined,
       action: item.recommendation.action,
       evidence: item.recommendation.evidenceRef,
     })
   }
 
   for (const item of diagnosis.priorities) {
-    queue.push({
+    drafts.push({
       source: 'diagnosis',
       title: item.label,
       target: input.site,
-      score:
+      impact:
         item.confidence === 'high'
-          ? 250
+          ? 150
           : item.confidence === 'medium'
-            ? 100
+            ? 75
             : 25,
       confidence: item.confidence,
       action: item.action,
@@ -85,7 +177,32 @@ export async function refreshPrioritiesWorkflow(input: {
     })
   }
 
-  const ranked = queue
+  for (const template of diagnosis.quickWins.templates.filter(
+    (item) => item.id !== 'other' && item.count >= 3,
+  )) {
+    const impact = diagnosis.quickWins.items
+      .filter((item) => item.template.id === template.id)
+      .reduce((sum, item) => sum + item.estimatedClickLift, 0)
+    drafts.push({
+      source: 'template',
+      title: `${template.label} opportunity template`,
+      target: template.sampleUrls[0] ?? input.site,
+      impact,
+      confidence: 'high',
+      effort: 'M',
+      template: {
+        id: template.id,
+        label: template.label,
+        count: template.count,
+      },
+      action:
+        'Update the reusable template pattern before working through individual pages.',
+      evidence: `${template.count} quick-win opportunities share this template.`,
+    })
+  }
+
+  const ranked = drafts
+    .map(priorityFromDraft)
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, input.limit ?? 25)
@@ -107,6 +224,6 @@ export async function refreshPrioritiesWorkflow(input: {
       action: item.action,
       confidence: item.confidence,
     })),
-    output: { queue: ranked, diagnosis },
+    output: { queue: ranked, warnings, diagnosis },
   })
 }

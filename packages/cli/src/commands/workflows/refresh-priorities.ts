@@ -36,6 +36,16 @@ export const refreshPrioritiesCommand = defineCommand({
       default: false,
       description: 'Include branded queries in opportunity reports.',
     },
+    'verify-content': {
+      type: 'boolean',
+      default: true,
+      description:
+        'Verify top opportunities against page title, meta, and content. Defaults to true.',
+    },
+    'verify-limit': {
+      type: 'string',
+      description: 'Maximum opportunity URLs to verify. Defaults to 5.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -61,6 +71,9 @@ export const refreshPrioritiesCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      ga4PropertyId: selection.client?.ga4PropertyId,
+      verifyContent: booleanArg(args['verify-content']),
+      verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -69,10 +82,13 @@ export const refreshPrioritiesCommand = defineCommand({
     }
     printWorkflow(report)
     printTable(
-      ['Source', 'Score', 'Target', 'Action'],
+      ['Source', 'Category', 'Score', 'Template', 'GA4', 'Target', 'Action'],
       report.output.queue.map((item) => [
         item.source,
+        item.category,
         item.score,
+        item.template?.label ?? '-',
+        item.analytics?.sessions ?? '-',
         item.target,
         item.action,
       ]),

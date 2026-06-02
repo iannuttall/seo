@@ -44,6 +44,42 @@ function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
   }
 }
 
+export function decayClusterDrafts(input: {
+  groups: Array<{
+    label: string
+    diagnosis:
+      | 'lost_visibility'
+      | 'lost_position'
+      | 'lost_ctr'
+      | 'lost_impressions'
+    count: number
+    totalClickLoss: number
+    template: { id: string; label: string }
+    sampleUrls: string[]
+    sampleQueries: string[]
+    recommendation: string
+  }>
+  site: string
+}): QueueDraft[] {
+  return input.groups
+    .filter((item) => item.count >= 3 || item.totalClickLoss >= 10)
+    .map((group) => ({
+      source: 'decay',
+      title: `${group.label} cluster`,
+      target: group.sampleUrls[0] ?? input.site,
+      impact: group.totalClickLoss,
+      confidence: group.diagnosis === 'lost_visibility' ? 'high' : 'medium',
+      effort: group.diagnosis === 'lost_ctr' ? 'S' : 'M',
+      template: {
+        id: group.template.id,
+        label: group.template.label,
+        count: group.count,
+      },
+      action: group.recommendation,
+      evidence: `${group.count} matching decay findings lost ${group.totalClickLoss.toFixed(0)} clicks versus the previous window. Examples: ${group.sampleQueries.slice(0, 3).join('; ')}.`,
+    }))
+}
+
 export async function refreshPrioritiesWorkflow(input: {
   site: string
   days?: number
@@ -151,6 +187,13 @@ export async function refreshPrioritiesWorkflow(input: {
       evidence: item.recommendation.evidenceRef,
     })
   }
+
+  drafts.push(
+    ...decayClusterDrafts({
+      groups: diagnosis.decay.groups,
+      site: input.site,
+    }),
+  )
 
   for (const item of diagnosis.cannibalization.items) {
     const impressions = item.pages.reduce(

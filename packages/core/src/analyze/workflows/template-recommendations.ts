@@ -55,11 +55,27 @@ export function templateOpportunityRecommendation(
     }
   }
 
+  if (input.templateId === 'example-site-last-name-list') {
+    return {
+      evidence,
+      action:
+        'Update last-name list pages so title/H1/meta and intro copy match the facet: letter, length, ethnicity, rarity, gender, or language-specific surname wording.',
+    }
+  }
+
   if (input.templateId === 'example-site-first-name') {
     return {
       evidence,
       action:
         'Update the first-name template to make meaning, origin, history, popularity, and gender intent explicit in title/H1/meta and the opening summary.',
+    }
+  }
+
+  if (input.templateId === 'example-site-first-name-list') {
+    return {
+      evidence,
+      action:
+        'Update first-name list pages so title/H1/meta and intro copy match the facet: gender, origin, language, popularity, meaning, or starting-letter wording.',
     }
   }
 

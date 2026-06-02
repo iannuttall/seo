@@ -80,6 +80,21 @@ test('templateOpportunityRecommendation gives surname-specific action', () => {
   assert.match(result.evidence, /origin of the last name laroya/)
 })
 
+test('templateOpportunityRecommendation gives last-name-list action', () => {
+  const result = templateOpportunityRecommendation({
+    templateId: 'example-site-last-name-list',
+    templateLabel: 'ExampleSite last-name list page',
+    items: [
+      item('mexican last names that start with m'),
+      item('black girl last names'),
+    ],
+  })
+
+  assert.match(result.action, /letter/)
+  assert.match(result.action, /ethnicity/)
+  assert.match(result.evidence, /mexican last names/)
+})
+
 test('templateOpportunityRecommendation gives tide-specific action', () => {
   const result = templateOpportunityRecommendation({
     templateId: 'example-site-location',

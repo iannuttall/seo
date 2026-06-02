@@ -2,6 +2,13 @@ import pRetry, { AbortError } from 'p-retry'
 import { getDb, hashKey } from '../../storage/database.js'
 import type { PageFetchResult } from '../../types.js'
 import { publicHttpFetch } from '../http-client.js'
+import {
+  hostBackpressureSnapshot,
+  rateLimitDiagnostics,
+  recordHostFetch,
+  retryAfterMs,
+  waitForHostBackpressure,
+} from './rate-controls.js'
 import { fetchRobots } from './robots.js'
 import type { NormalizedFetchRateControls } from './types.js'
 
@@ -45,15 +52,16 @@ export async function fetchPlain(
         durationMs: Date.now() - startedAt,
         retries: 0,
         rateLimit: {
-          host,
-          ...rate,
+          ...rateLimitDiagnostics(host, rate),
         },
+        backpressure: hostBackpressureSnapshot(host),
       },
       warnings: [],
     }
   }
 
   const robots = await fetchRobots(new URL(url).origin, refresh)
+  const beforeFetch = await waitForHostBackpressure(host, rate)
   let attempts = 0
 
   const response = await pRetry(
@@ -66,9 +74,6 @@ export async function fetchPlain(
           redirect: 'follow',
           signal: controller.signal,
         })
-        if (res.status === 429) {
-          throw new Error('Received 429 from origin')
-        }
         return res
       } catch (error) {
         if (error instanceof Error && /4\d\d/.test(error.message)) {
@@ -84,6 +89,14 @@ export async function fetchPlain(
 
   const html = await response.text()
   const headerMap = Object.fromEntries(response.headers.entries())
+  const durationMs = Date.now() - startedAt
+  const backpressure = recordHostFetch({
+    host,
+    status: response.status,
+    durationMs,
+    retryAfterMs: retryAfterMs(response.headers.get('retry-after')),
+    rate,
+  })
 
   db.prepare(
     `INSERT OR REPLACE INTO http_cache
@@ -113,12 +126,15 @@ export async function fetchPlain(
       fetched: true,
       rendered: false,
       blocked: !robots.allowed || [401, 403, 429].includes(response.status),
-      durationMs: Date.now() - startedAt,
+      durationMs,
       retries: Math.max(0, attempts - 1),
       rateLimit: {
-        host,
-        ...rate,
+        ...rateLimitDiagnostics(host, rate),
       },
+      backpressure:
+        backpressure.status === 'ok' && beforeFetch.status !== 'ok'
+          ? beforeFetch
+          : backpressure,
       robotsTxt: {
         url: robots.url,
         cache: robots.cache,

@@ -45,6 +45,7 @@ import {
   segmentImpactCommand,
   strikingDistanceCommand,
 } from './commands/product/index.js'
+import { pseoCommand } from './commands/pseo/index.js'
 import {
   monthlyReportCommand,
   reportNarrativeCommand,
@@ -123,6 +124,7 @@ const main = defineCommand({
     'ctr-underperformers': ctrUnderperformersCommand,
     'query-cluster': queryClusterCommand,
     'seo-to-ai-query': seoToAiQueryCommand,
+    pseo: pseoCommand,
   },
   run: async () => {
     if (process.argv.slice(2).length === 0) {

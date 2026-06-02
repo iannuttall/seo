@@ -41,6 +41,12 @@ export function formatFetchDiagnostics(
   diagnostics?: PageFetchDiagnostics,
 ): string {
   if (!diagnostics) return '-'
+  if (diagnostics.backpressure?.status === 'stopped') {
+    return `stopped: ${diagnostics.backpressure.reason ?? 'origin cooldown'}`
+  }
+  if (diagnostics.backpressure?.status === 'slowed') {
+    return `slowed ${diagnostics.backpressure.delayMs}ms`
+  }
   if (diagnostics.blocked) return 'blocked'
   if (diagnostics.rendered) return 'rendered'
   if (diagnostics.cache === 'hit') return 'cached'

@@ -1,0 +1,56 @@
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { pseoAuditReport } from '@seo/core'
+import * as z from 'zod/v4'
+import { toolError, toolSuccess } from './tool-result.js'
+
+export function registerPseoTools(server: McpServer): void {
+  server.registerTool(
+    'seo_pseo_audit',
+    {
+      description:
+        'Audit pSEO templates with first-party GSC, optional crawl, and optional URL Inspection evidence',
+      inputSchema: {
+        site: z.string(),
+        days: z.number().optional(),
+        sitemaps: z.array(z.string().url()).optional(),
+        templateLimit: z.number().optional(),
+        crawlSamples: z.number().optional(),
+        inspectSamples: z.number().optional(),
+        includeBrand: z.boolean().optional(),
+        refresh: z.boolean().optional(),
+        js: z.boolean().optional(),
+      },
+    },
+    async ({
+      site,
+      days,
+      sitemaps,
+      templateLimit,
+      crawlSamples,
+      inspectSamples,
+      includeBrand,
+      refresh,
+      js,
+    }) => {
+      try {
+        const result = await pseoAuditReport({
+          site,
+          days,
+          sitemaps,
+          templateLimit,
+          crawlSamples,
+          inspectSamples,
+          includeBrand,
+          refresh,
+          js: js ? true : 'auto',
+        })
+        return toolSuccess(
+          `${result.summary.templates} pSEO template(s) audited from ${result.summary.gscPages} GSC page(s).`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+}

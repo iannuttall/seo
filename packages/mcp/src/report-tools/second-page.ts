@@ -1,8 +1,20 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { secondPage } from '@seo/core'
-import * as z from 'zod/v4'
+import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
-import { reportFetchInputSchema, reportFetchOptions } from './input.js'
+import {
+  type ReportFetchToolInput,
+  reportFetchInputSchema,
+  reportFetchOptions,
+} from './input.js'
+
+type SecondPageToolInput = ReportFetchToolInput & {
+  site: string
+  range?: number
+  minImpressions?: number
+  limit?: number
+  includeBrand?: boolean
+}
 
 export function registerSecondPageTool(server: McpServer): void {
   server.registerTool(
@@ -11,11 +23,13 @@ export function registerSecondPageTool(server: McpServer): void {
       description:
         'Find page-two opportunities with evidence-grounded recommendations',
       inputSchema: {
-        site: z.string(),
-        range: z.number().optional(),
-        minImpressions: z.number().optional(),
-        limit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'range',
+          'minImpressions',
+          'limit',
+          'includeBrand',
+        ]),
         ...reportFetchInputSchema,
       },
     },
@@ -26,7 +40,7 @@ export function registerSecondPageTool(server: McpServer): void {
       limit,
       includeBrand,
       ...fetchInput
-    }) => {
+    }: SecondPageToolInput) => {
       try {
         const result = await secondPage({
           site,

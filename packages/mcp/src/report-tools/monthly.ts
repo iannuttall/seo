@@ -2,7 +2,18 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { monthlyReport } from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from '../tool-result.js'
-import { reportFetchInputSchema, reportFetchOptions } from './input.js'
+import {
+  type ReportFetchToolInput,
+  reportFetchInputSchema,
+  reportFetchOptions,
+} from './input.js'
+
+type MonthlyReportToolInput = ReportFetchToolInput & {
+  site: string
+  month?: string
+  limit?: number
+  includeBrand?: boolean
+}
 
 export function registerMonthlyReportTool(server: McpServer): void {
   server.registerTool(
@@ -17,7 +28,13 @@ export function registerMonthlyReportTool(server: McpServer): void {
         ...reportFetchInputSchema,
       },
     },
-    async ({ site, month, limit, includeBrand, ...fetchInput }) => {
+    async ({
+      site,
+      month,
+      limit,
+      includeBrand,
+      ...fetchInput
+    }: MonthlyReportToolInput) => {
       try {
         const result = await monthlyReport({
           site,

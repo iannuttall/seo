@@ -2,7 +2,22 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { reportNarrative } from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from '../tool-result.js'
-import { reportFetchInputSchema, reportFetchOptions } from './input.js'
+import {
+  type ReportFetchToolInput,
+  reportFetchInputSchema,
+  reportFetchOptions,
+} from './input.js'
+
+type NarrativeReportToolInput = ReportFetchToolInput & {
+  site: string
+  days?: number
+  recentDays?: number
+  startDate?: string
+  endDate?: string
+  limit?: number
+  changeLimit?: number
+  includeBrand?: boolean
+}
 
 export function registerNarrativeReportTool(server: McpServer): void {
   server.registerTool(
@@ -32,7 +47,7 @@ export function registerNarrativeReportTool(server: McpServer): void {
       changeLimit,
       includeBrand,
       ...fetchInput
-    }) => {
+    }: NarrativeReportToolInput) => {
       try {
         const result = await reportNarrative({
           site,

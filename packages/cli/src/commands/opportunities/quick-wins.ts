@@ -83,12 +83,33 @@ export const quickWinsCommand = defineCommand({
     printKeyValue([
       ['Site', report.site],
       ['Quick wins', formatCount(report.items.length)],
+      ['Quick-win clusters', formatCount(report.groups.length)],
       [
         'Brand queries',
         booleanArg(args['include-brand']) ? 'included' : 'excluded',
       ],
       ['Verification', verificationSummary(report)],
     ])
+
+    if (!report.items.length) {
+      process.stdout.write('No quick wins matched these filters.\n')
+      return
+    }
+
+    if (report.groups.length) {
+      printLimitedTable(
+        ['Cluster', 'Rows', 'Lift', 'Impr', 'Sample URL', 'Action'],
+        report.groups.map((group) => [
+          truncate(group.label, 44),
+          formatCount(group.count),
+          formatCount(group.totalEstimatedClickLift),
+          formatCount(group.totalImpressions),
+          truncate(group.sampleUrls[0] ?? '-', 46),
+          truncate(group.recommendation, 72),
+        ]),
+      )
+    }
+
     printLimitedTable(
       [
         'Query',

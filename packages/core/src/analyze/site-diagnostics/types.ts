@@ -84,6 +84,18 @@ export interface QuickWinItem {
   recommendation: Recommendation
 }
 
+export interface QuickWinGroup {
+  id: string
+  label: string
+  query: string
+  template: PageTemplate
+  count: number
+  totalEstimatedClickLift: number
+  totalImpressions: number
+  sampleUrls: string[]
+  recommendation: string
+}
+
 export interface TemplateAwareReport {
   templates: TemplateSummary[]
 }

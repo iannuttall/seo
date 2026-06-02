@@ -9,6 +9,7 @@ import {
 import { detectPageTemplate, summarizeTemplates } from '../page-patterns.js'
 import { isLowActionabilityQuery } from '../query-quality.js'
 import { CTR_BASELINE, defaultDateRange } from '../shared.js'
+import { groupQuickWins } from './quick-win-groups.js'
 import type { QuickWinItem } from './types.js'
 
 function verifiedQuickWinAction(coverage: QueryContentCoverage): {
@@ -136,6 +137,7 @@ export async function quickWinsReport(input: {
         }
       : { requested: false, verified: 0, failed: 0 },
     templates: summarizeTemplates(items),
+    groups: groupQuickWins(items),
     items,
   }
 }

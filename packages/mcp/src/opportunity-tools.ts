@@ -103,7 +103,7 @@ export function registerOpportunityTools(server: McpServer): void {
           }),
         })
         return toolSuccess(
-          `${result.items.length} quick wins found across ${result.templates.length} template group(s).`,
+          `${result.items.length} quick wins found across ${result.groups.length} repeated query/template cluster(s).`,
           result,
         )
       } catch (error) {

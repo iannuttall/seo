@@ -10,13 +10,16 @@ function hasDigit(value: string): boolean {
 
 function looksLikeSearchOperatorDump(query: string): boolean {
   const lower = query.toLowerCase()
+  const operatorCount = (lower.match(/(?:^|\s)-?(?:site|filetype):/g) ?? [])
+    .length
   return (
     query.length > 120 &&
     (lower.includes('x_keyword_search') ||
       lower.includes('min_faves') ||
       lower.includes('filter:') ||
       lower.includes(' since:') ||
-      lower.includes(' until:'))
+      lower.includes(' until:') ||
+      operatorCount >= 3)
   )
 }
 

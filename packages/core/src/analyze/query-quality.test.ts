@@ -17,4 +17,10 @@ test('isLowActionabilityQuery drops currency and operator dumps', () => {
     ),
     true,
   )
+  assert.equal(
+    isLowActionabilityQuery(
+      'cost comparison between free and premium versions of flipboard for desktop users -filetype:txt -filetype:pdf -filetype:epub -site:youtube.com -site:reddit.com -site:amazon.com',
+    ),
+    true,
+  )
 })

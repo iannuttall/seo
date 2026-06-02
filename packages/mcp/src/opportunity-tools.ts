@@ -42,13 +42,20 @@ export function registerOpportunityTools(server: McpServer): void {
       inputSchema: {
         site: z.string(),
         minDropPct: z.number().optional(),
+        minPreviousClicks: z.number().optional(),
+        minClickLoss: z.number().optional(),
       },
     },
-    async ({ site, minDropPct }) => {
+    async ({ site, minDropPct, minPreviousClicks, minClickLoss }) => {
       try {
-        const result = await decayingReport({ site, minDropPct })
+        const result = await decayingReport({
+          site,
+          minDropPct,
+          minPreviousClicks,
+          minClickLoss,
+        })
         return toolSuccess(
-          `${result.items.length} decaying queries found.`,
+          `${result.items.length} decaying query/page rows found across ${result.groups.length} cluster(s).`,
           result,
         )
       } catch (error) {

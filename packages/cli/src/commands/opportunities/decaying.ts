@@ -1,6 +1,6 @@
 import { decayingReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -11,6 +11,10 @@ import {
   truncate,
 } from '../output.js'
 
+function formatMaybePosition(value: number): string {
+  return value > 0 ? formatPosition(value) : 'n/a'
+}
+
 export const decayingCommand = defineCommand({
   args: {
     site: { type: 'string' },
@@ -19,6 +23,19 @@ export const decayingCommand = defineCommand({
       type: 'boolean',
       default: false,
       description: 'Include branded queries in opportunity reports.',
+    },
+    'min-drop-pct': {
+      type: 'string',
+      description: 'Minimum click drop percentage. Defaults to 20.',
+    },
+    'min-previous-clicks': {
+      type: 'string',
+      description:
+        'Minimum previous-window clicks for a query/page row. Defaults to 2.',
+    },
+    'min-click-loss': {
+      type: 'string',
+      description: 'Minimum absolute click loss. Defaults to 1.',
     },
     json: { type: 'boolean', default: false },
   },
@@ -33,6 +50,9 @@ export const decayingCommand = defineCommand({
       site: selection.site,
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      minDropPct: numberArg(args['min-drop-pct']),
+      minPreviousClicks: numberArg(args['min-previous-clicks']),
+      minClickLoss: numberArg(args['min-click-loss']),
     })
     if (json) {
       printJson(report)
@@ -40,22 +60,59 @@ export const decayingCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Decaying queries', formatCount(report.items.length)],
+      ['Decaying query/page rows', formatCount(report.items.length)],
+      ['Decay clusters', formatCount(report.groups.length)],
       [
         'Brand queries',
         booleanArg(args['include-brand']) ? 'included' : 'excluded',
       ],
+      ['Min drop', `${report.filters.minDropPct}%`],
+      ['Min previous clicks', formatCount(report.filters.minPreviousClicks)],
     ])
+
+    if (!report.items.length) {
+      process.stdout.write('No material decay matched these filters.\n')
+      return
+    }
+
+    if (report.groups.length) {
+      printLimitedTable(
+        ['Cluster', 'Rows', 'Lost clicks', 'Drop', 'Sample query', 'Action'],
+        report.groups.map((group) => [
+          truncate(group.label, 42),
+          formatCount(group.count),
+          formatCount(group.totalClickLoss),
+          `${group.averageDropPct.toFixed(1)}%`,
+          truncate(group.sampleQueries[0] ?? '-', 40),
+          truncate(group.recommendation, 72),
+        ]),
+      )
+    }
+
     printLimitedTable(
-      ['Query', 'Cause', 'Clicks', 'Impr', 'CTR', 'Pos', 'Action'],
+      [
+        'Query',
+        'Template',
+        'URL',
+        'Cause',
+        'Lost',
+        'Clicks',
+        'Impr',
+        'CTR',
+        'Pos',
+        'Action',
+      ],
       report.items.map((item) => [
-        truncate(item.query, 42),
+        truncate(item.query, 32),
+        truncate(item.template.label, 26),
+        truncate(item.url, 44),
         item.diagnosis.replaceAll('_', ' '),
+        formatCount(item.clickLoss),
         `${formatCount(item.previous.clicks)} -> ${formatCount(item.current.clicks)}`,
         `${formatCount(item.previous.impressions)} -> ${formatCount(item.current.impressions)}`,
         `${formatPercent(item.previous.ctr)} -> ${formatPercent(item.current.ctr)}`,
-        `${formatPosition(item.previous.position)} -> ${formatPosition(item.current.position)}`,
-        truncate(item.recommendation.action, 72),
+        `${formatMaybePosition(item.previous.position)} -> ${formatMaybePosition(item.current.position)}`,
+        truncate(item.recommendation.action, 64),
       ]),
     )
   },

@@ -7,6 +7,7 @@ import {
   verifyQueryContent,
 } from '../content-coverage.js'
 import { detectPageTemplate, summarizeTemplates } from '../page-patterns.js'
+import { isLowActionabilityQuery } from '../query-quality.js'
 import { CTR_BASELINE, defaultDateRange } from '../shared.js'
 import type { QuickWinItem } from './types.js'
 
@@ -56,6 +57,7 @@ export async function quickWinsReport(input: {
         row.position >= 4 &&
         row.position <= 10 &&
         row.impressions >= minImpressions &&
+        !isLowActionabilityQuery(query) &&
         !shouldExcludeBrandQuery({
           query,
           siteUrl: input.site,

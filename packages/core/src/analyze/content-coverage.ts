@@ -85,6 +85,23 @@ export function measureCoverage(query: string, text = ''): CoverageField {
   }
 }
 
+function displayQuery(coverage: QueryContentCoverage): string {
+  const query = coverage.query.trim()
+  if (query.length <= 80) return query
+  const focus = coverage.queryTerms.slice(0, 7).join(' ')
+  return focus || `${query.slice(0, 77)}...`
+}
+
+function missingFieldNames(coverage: QueryContentCoverage): string[] {
+  const fields: string[] = []
+  if (coverage.fields.title.phraseCount === 0) fields.push('title')
+  if (coverage.fields.h1.phraseCount === 0) fields.push('H1')
+  if (coverage.fields.metaDescription.phraseCount === 0) {
+    fields.push('meta description')
+  }
+  return fields
+}
+
 function gapScore(input: {
   title: CoverageField
   h1: CoverageField
@@ -145,22 +162,27 @@ function classification(input: {
 export function contentCoverageRecommendation(
   coverage: QueryContentCoverage,
 ): string {
+  const focus = displayQuery(coverage)
   if (coverage.status === 'failed') {
     return 'Verification failed; inspect fetch diagnostics before making content calls.'
   }
   if (coverage.classification === 'technical-check') {
-    return 'Check the final URL, canonical, and indexable target before changing page copy.'
+    return coverage.finalUrl
+      ? `Check why GSC URL resolves to ${coverage.finalUrl}; confirm canonical/indexable target before changing copy for "${focus}".`
+      : `Check canonical, indexability, and fetch status before changing copy for "${focus}".`
   }
   if (coverage.classification === 'content-gap') {
     const missing = coverage.fields.mainContent.missingTerms.slice(0, 4)
     return missing.length
-      ? `Add specific coverage for missing terms: ${missing.join(', ')}.`
-      : 'Add specific coverage for the missing query angle in the main content.'
+      ? `Add a focused section or intro sentence for "${focus}" covering missing terms: ${missing.join(', ')}.`
+      : `Add a focused section or intro sentence for the missing "${focus}" angle.`
   }
   if (coverage.classification === 'serp-framing') {
-    return 'The page broadly covers the query; test title, H1, meta, and snippet wording before rewriting content.'
+    const fields = missingFieldNames(coverage)
+    const targetFields = fields.length ? fields.join(', ') : 'title and meta'
+    return `Main content already supports "${focus}"; test ${targetFields} wording to include that phrasing naturally before rewriting body copy.`
   }
-  return 'The page already covers the query; look at CTR, internal links, and SERP fit before content edits.'
+  return `The page already covers "${focus}"; prioritise CTR tests, internal links, and SERP fit over content edits.`
 }
 
 function coverageSummary(coverage: QueryContentCoverage): string {
@@ -214,6 +236,7 @@ export function queryContentCoverageFromPage(input: {
   })
   const coverage: QueryContentCoverage = {
     verifiedAt: new Date().toISOString(),
+    query: input.query,
     url: input.url,
     finalUrl: input.page.finalUrl,
     status: 'verified',
@@ -257,6 +280,7 @@ export async function verifyQueryContent(input: {
   } catch (error) {
     return {
       verifiedAt: new Date().toISOString(),
+      query: input.query,
       url: input.url,
       status: 'failed',
       error: error instanceof Error ? error.message : String(error),

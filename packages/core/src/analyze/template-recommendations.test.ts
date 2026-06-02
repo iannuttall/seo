@@ -19,6 +19,7 @@ function item(query: string): QuickWinItem {
     estimatedClickLift: 80,
     contentVerification: {
       verifiedAt: '2026-01-01T00:00:00.000Z',
+      query,
       url: 'https://example.com/page/',
       status: 'verified',
       contentGapScore: 4,

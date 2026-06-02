@@ -67,6 +67,7 @@ export type QueryContentSignal =
 
 export interface QueryContentCoverage {
   verifiedAt: string
+  query: string
   url: string
   finalUrl?: string
   status: 'verified' | 'failed'

@@ -72,13 +72,16 @@ function recommendation(input: {
   templateLabel: string
 }) {
   const evidenceRef = `${input.query} on ${input.url}: ${input.previousClicks.toFixed(1)} -> ${input.currentClicks.toFixed(1)} clicks (${input.dropPct.toFixed(1)}% drop). ${input.reason}`
+  const action = itemDecayAction({
+    diagnosis: input.diagnosis,
+    templateLabel: input.templateLabel,
+  })
 
   if (input.diagnosis === 'lost_visibility') {
     return {
       principle: 'C.8',
       evidenceRef,
-      action:
-        'Check indexability, canonical, redirects, robots, and whether this URL/template still serves the query before rewriting content.',
+      action,
       effort: 'M' as const,
       confidence: 'high' as const,
     }
@@ -88,10 +91,7 @@ function recommendation(input: {
     return {
       principle: 'C.9',
       evidenceRef,
-      action:
-        input.templateLabel === 'Other page'
-          ? 'Refresh the page sections that used to support the query and tighten internal links to the page.'
-          : `Refresh the reusable ${input.templateLabel} sections that support this query, then strengthen internal links to affected URLs.`,
+      action,
       effort: 'M' as const,
       confidence: 'medium' as const,
     }
@@ -101,8 +101,7 @@ function recommendation(input: {
     return {
       principle: 'C.3',
       evidenceRef,
-      action:
-        'Review title, meta description, and SERP intent fit before changing content depth.',
+      action,
       effort: 'S' as const,
       confidence: 'medium' as const,
     }
@@ -111,11 +110,89 @@ function recommendation(input: {
   return {
     principle: 'C.10',
     evidenceRef,
-    action:
-      'Validate whether the query is shrinking, seasonal, or displaced by SERP features before rewriting the page.',
+    action,
     effort: 'S' as const,
     confidence: 'medium' as const,
   }
+}
+
+function templateFamily(templateLabel: string): string {
+  if (templateLabel.startsWith('ExampleSite')) return 'salary'
+  if (templateLabel.startsWith('ExampleSite')) return 'tide'
+  if (templateLabel.includes('last-name list')) return 'name-list'
+  if (templateLabel.includes('first-name list')) return 'name-list'
+  if (templateLabel.includes('surname')) return 'surname'
+  if (templateLabel.includes('first-name')) return 'first-name'
+  return 'default'
+}
+
+function itemDecayAction(input: {
+  diagnosis: DecayDiagnosis
+  templateLabel: string
+}): string {
+  const family = templateFamily(input.templateLabel)
+
+  if (input.diagnosis === 'lost_visibility') {
+    return 'Check indexability, canonical, redirects, robots, and whether this URL/template still serves the query before rewriting content.'
+  }
+
+  if (family === 'salary') {
+    if (input.diagnosis === 'lost_ctr') {
+      return 'Review title/meta against the live SERP for salary phrasing, monthly pay, currency, and location modifiers before editing the salary data.'
+    }
+    if (input.diagnosis === 'lost_position') {
+      return 'Refresh salary data freshness, job/location entity coverage, monthly/hourly variants, and internal links into the affected salary page.'
+    }
+    return 'Check whether salary demand shifted by job/location, then verify salary data freshness, currency/monthly variants, and template crawlability.'
+  }
+
+  if (family === 'tide') {
+    if (input.diagnosis === 'lost_ctr') {
+      return 'Review title/meta for tide times, tide chart, high tide, low tide, year, and local-language location phrasing.'
+    }
+    if (input.diagnosis === 'lost_position') {
+      return 'Refresh the location tide page around current-year tide tables, local aliases, and internal links from nearby locations.'
+    }
+    return 'Check tide-data freshness, current-year coverage, local-language aliases, and whether SERP demand moved to newer calendar terms.'
+  }
+
+  if (family === 'name-list') {
+    if (input.diagnosis === 'lost_ctr') {
+      return 'Test list-page title/meta around exact list intent: length, starting letter, ethnicity, rarity, and “last names” wording.'
+    }
+    if (input.diagnosis === 'lost_position') {
+      return 'Refresh the list intro, examples, filters, and internal links so the page better satisfies the exact name-list facet.'
+    }
+    return 'Check whether the affected name-list facet lost demand, then refresh examples, intro copy, and internal links for that facet.'
+  }
+
+  if (family === 'surname') {
+    if (input.diagnosis === 'lost_ctr') {
+      return 'Review title/meta for origin, meaning, caste, rarity, and “how many people have this last name” variants.'
+    }
+    if (input.diagnosis === 'lost_position') {
+      return 'Refresh surname origin, meaning, geography, rarity, and internal-link sections for the affected surname query.'
+    }
+    return 'Check whether surname demand shifted, then refresh origin, meaning, caste/geography, and rarity sections where relevant.'
+  }
+
+  if (family === 'first-name') {
+    if (input.diagnosis === 'lost_ctr') {
+      return 'Review title/meta for meaning, origin, gender, popularity, and history phrasing.'
+    }
+    if (input.diagnosis === 'lost_position') {
+      return 'Refresh first-name meaning, origin, popularity, gender, and history sections for the affected query.'
+    }
+    return 'Check whether first-name demand shifted, then refresh meaning, origin, popularity, gender, and history sections.'
+  }
+
+  if (input.diagnosis === 'lost_position') {
+    return 'Refresh the page sections that used to support the query and tighten internal links to the page.'
+  }
+  if (input.diagnosis === 'lost_ctr') {
+    return 'Review title, meta description, and SERP intent fit before changing content depth.'
+  }
+  return 'Validate whether the query is shrinking, seasonal, or displaced by SERP features before rewriting the page.'
 }
 
 function groupRecommendation(group: {
@@ -126,10 +203,52 @@ function groupRecommendation(group: {
   const pluralLabel = group.templateLabel.endsWith(' page')
     ? `${group.templateLabel.slice(0, -5)} pages`
     : group.templateLabel
+  const family = templateFamily(group.templateLabel)
 
   if (group.diagnosis === 'lost_visibility') {
     return `Audit indexability/canonical/redirect changes across this ${group.templateLabel} cluster before page-level edits.`
   }
+
+  if (family === 'salary') {
+    if (group.diagnosis === 'lost_ctr') {
+      return `Review salary title/meta templates for monthly pay, currency, job title, and location wording across ${pluralLabel}.`
+    }
+    if (group.diagnosis === 'lost_position') {
+      return `Refresh salary data freshness, job/location coverage, and internal links across ${group.count} affected ${pluralLabel}.`
+    }
+    return `Check salary-data freshness, country/city coverage, and SERP demand shifts across this ${group.templateLabel} cluster.`
+  }
+
+  if (family === 'tide') {
+    if (group.diagnosis === 'lost_ctr') {
+      return `Review tide title/meta templates for tide times, charts, high/low tide, year, and local-language location wording.`
+    }
+    if (group.diagnosis === 'lost_position') {
+      return `Refresh current-year tide tables, local aliases, nearby-location links, and template copy across ${pluralLabel}.`
+    }
+    return `Check tide-data freshness, 2026/calendar coverage, local-language aliases, and SERP demand shifts across this location cluster.`
+  }
+
+  if (family === 'name-list') {
+    if (group.diagnosis === 'lost_ctr') {
+      return `Test name-list title/meta templates around length, starting-letter, ethnicity, rarity, and exact "last names" phrasing.`
+    }
+    if (group.diagnosis === 'lost_position') {
+      return `Refresh list intros, examples, filters, and internal links across ${group.count} affected name-list pages.`
+    }
+    return `Check demand and refresh examples, intro copy, filters, and internal links across this name-list cluster.`
+  }
+
+  if (family === 'surname') {
+    if (group.diagnosis === 'lost_ctr') {
+      return `Review surname title/meta templates for origin, meaning, caste, rarity, and people-count query variants.`
+    }
+    if (group.diagnosis === 'lost_position') {
+      return `Refresh origin, meaning, geography, rarity, and internal links across ${group.count} affected surname pages.`
+    }
+    return `Check surname demand shifts, then refresh origin, meaning, caste/geography, and rarity sections across this cluster.`
+  }
+
   if (group.diagnosis === 'lost_position') {
     return `Treat this as a template/content refresh: ${group.count} affected ${pluralLabel} lost ranking position.`
   }

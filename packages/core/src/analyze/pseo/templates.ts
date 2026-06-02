@@ -1,16 +1,32 @@
 export type PseoTemplateCluster = {
   id: string
   signature: string
+  shape: PseoTemplateShape
   urlCount: number
   share: number
   sampleUrls: string[]
+}
+
+export type PseoTemplateShape = {
+  depth: number
+  staticSegments: Array<{
+    index: number
+    value: string
+  }>
+  variableSegments: Array<{
+    index: number
+    placeholder: string
+    distinctValues: number
+    examples: string[]
+    tokenExamples: string[]
+  }>
 }
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
-function parsePath(url: string): string[] {
+export function parsePseoPath(url: string): string[] {
   try {
     return new URL(url).pathname.split('/').filter(Boolean)
   } catch {
@@ -28,7 +44,7 @@ function placeholder(segment: string): string | undefined {
 }
 
 export function inferPseoTemplate(url: string): string {
-  const parts = parsePath(url)
+  const parts = parsePseoPath(url)
   if (!parts.length) return '/'
 
   const normalized = parts.map((part, index) => {
@@ -44,7 +60,7 @@ export function inferPseoTemplate(url: string): string {
 }
 
 function broadTemplate(url: string): string {
-  const parts = parsePath(url)
+  const parts = parsePseoPath(url)
   if (!parts.length) return '/'
   const [first, ...rest] = parts
   if (!first) return '/'
@@ -52,6 +68,65 @@ function broadTemplate(url: string): string {
   return `/${first.toLowerCase()}/${rest
     .map((part) => placeholder(part) ?? ':value')
     .join('/')}`
+}
+
+function valueTokens(values: string[]): string[] {
+  const counts = new Map<string, number>()
+  for (const value of values) {
+    for (const token of value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .split(/\s+/)
+      .filter((item) => item.length > 2 && !/^\d+$/.test(item))) {
+      counts.set(token, (counts.get(token) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8)
+    .map(([token]) => token)
+}
+
+function templateShape(signature: string, urls: string[]): PseoTemplateShape {
+  const signatureParts = signature.split('/').filter(Boolean)
+  const pathRows = urls.map(parsePseoPath)
+  const depth = Math.max(
+    signatureParts.length,
+    ...pathRows.map((row) => row.length),
+  )
+  const staticSegments: PseoTemplateShape['staticSegments'] = []
+  const variableSegments: PseoTemplateShape['variableSegments'] = []
+
+  for (let index = 0; index < depth; index += 1) {
+    const signaturePart = signatureParts[index] ?? ':missing'
+    const values = pathRows
+      .map((row) => row[index]?.toLowerCase())
+      .filter((value): value is string => Boolean(value))
+    const distinctValues = [...new Set(values)]
+    const isVariable =
+      signaturePart.startsWith(':') || distinctValues.length > 1
+
+    if (isVariable) {
+      variableSegments.push({
+        index,
+        placeholder: signaturePart.startsWith(':') ? signaturePart : ':value',
+        distinctValues: distinctValues.length,
+        examples: distinctValues.slice(0, 5),
+        tokenExamples: valueTokens(distinctValues),
+      })
+    } else if (signaturePart) {
+      staticSegments.push({
+        index,
+        value: signaturePart,
+      })
+    }
+  }
+
+  return {
+    depth,
+    staticSegments,
+    variableSegments,
+  }
 }
 
 export function templateForUrl(
@@ -113,6 +188,7 @@ export function clusterPseoTemplates(
     .map(([signature, clusterUrls]) => ({
       id: signature,
       signature,
+      shape: templateShape(signature, clusterUrls),
       urlCount: clusterUrls.length,
       share: uniqueUrls.length ? clusterUrls.length / uniqueUrls.length : 0,
       sampleUrls: clusterUrls.slice(0, 5),

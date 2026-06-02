@@ -23,6 +23,11 @@ function looksLikeSearchOperatorDump(query: string): boolean {
   )
 }
 
+function looksLikeInternalSnippet(query: string): boolean {
+  const lower = query.toLowerCase()
+  return lower.includes('ranking/') || /\bmoved up\b/.test(lower)
+}
+
 function looksLikeDomainQuery(query: string): boolean {
   return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(query.trim())
 }
@@ -31,6 +36,7 @@ export function isLowActionabilityQuery(query: string): boolean {
   const tokens = tokenize(query)
   if (!tokens.length || !hasLetter(query)) return true
   if (looksLikeSearchOperatorDump(query)) return true
+  if (looksLikeInternalSnippet(query)) return true
   if (looksLikeDomainQuery(query)) return true
 
   const letterTokens = tokens.filter(hasLetter)

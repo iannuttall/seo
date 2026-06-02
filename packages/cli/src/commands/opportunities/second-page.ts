@@ -54,6 +54,9 @@ export const secondPageCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const verifyLimit = numberArg(args['verify-limit'])
+    const verifyContent =
+      booleanArg(args['verify-content']) === true || verifyLimit !== undefined
     const selection = await resolveClientSelection({
       client: stringArg(args.client),
       site: stringArg(args.site),
@@ -64,8 +67,8 @@ export const secondPageCommand = defineCommand({
       limit: stringArg(args.limit) ? Number(stringArg(args.limit)) : 10,
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      verifyContent: booleanArg(args['verify-content']),
-      verifyLimit: numberArg(args['verify-limit']),
+      verifyContent,
+      verifyLimit,
       js: booleanArg(args.js) ? true : undefined,
       rate: fetchRateArg(args),
       refresh: booleanArg(args.refresh),

@@ -10,6 +10,7 @@ test('isLowActionabilityQuery keeps normal SEO queries', () => {
 
 test('isLowActionabilityQuery drops currency and operator dumps', () => {
   assert.equal(isLowActionabilityQuery('7555bdt'), true)
+  assert.equal(isLowActionabilityQuery('7555bdt.com'), true)
   assert.equal(
     isLowActionabilityQuery(
       'kilo code x_keyword_search tool for advanced search with post content: keywords or exact phrase from: to: since: until: min_faves: filter:media example',

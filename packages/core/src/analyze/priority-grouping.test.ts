@@ -110,16 +110,16 @@ test('groupPriorityQueue groups salary city and country template families', () =
     item({
       target: 'https://example.com/average-plumber-salary-in-quito/ecuador/',
       template: {
-        id: 'example-site-city-salary',
-        label: 'ExampleSite city salary page',
+        id: 'city-salary',
+        label: 'City salary page',
         count: 10,
       },
     }),
     item({
       target: 'https://example.com/average-plumber-salary-in-ecuador/',
       template: {
-        id: 'example-site-country-salary',
-        label: 'ExampleSite country salary page',
+        id: 'country-salary',
+        label: 'Country salary page',
         count: 10,
       },
     }),

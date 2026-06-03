@@ -10,7 +10,7 @@ function queueTemplateFamilyId(
   template?: PriorityQueueItem['template'],
 ): string {
   if (!template) return 'no-template'
-  if (template.id.startsWith('example-site-')) return 'example-site-salary'
+  if (template.id.endsWith('-salary')) return 'salary-page'
   return template.id
 }
 

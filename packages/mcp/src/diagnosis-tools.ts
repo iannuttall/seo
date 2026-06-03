@@ -168,10 +168,7 @@ export function registerDiagnosisTools(server: McpServer): void {
           }),
           refresh,
         })
-        return toolSuccess(
-          `${result.items.length} striking-distance opportunities found across ${result.templates.length} template group(s).`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

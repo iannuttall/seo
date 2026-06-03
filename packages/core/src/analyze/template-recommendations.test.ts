@@ -8,8 +8,8 @@ function item(query: string): QuickWinItem {
     query,
     url: 'https://example.com/page/',
     template: {
-      id: 'example-site-surname',
-      label: 'ExampleSite surname page',
+      id: 'surname-entity',
+      label: 'Surname entity page',
       confidence: 'high',
     },
     position: 6,
@@ -67,8 +67,8 @@ function item(query: string): QuickWinItem {
 
 test('templateOpportunityRecommendation gives surname-specific action', () => {
   const result = templateOpportunityRecommendation({
-    templateId: 'example-site-surname',
-    templateLabel: 'ExampleSite surname page',
+    templateId: 'surname-entity',
+    templateLabel: 'Surname entity page',
     items: [
       item('origin of the last name laroya'),
       item('how many people with last name keller in usa'),
@@ -82,8 +82,8 @@ test('templateOpportunityRecommendation gives surname-specific action', () => {
 
 test('templateOpportunityRecommendation gives last-name-list action', () => {
   const result = templateOpportunityRecommendation({
-    templateId: 'example-site-last-name-list',
-    templateLabel: 'ExampleSite last-name list page',
+    templateId: 'last-name-list',
+    templateLabel: 'Last-name list page',
     items: [
       item('mexican last names that start with m'),
       item('black girl last names'),
@@ -95,13 +95,13 @@ test('templateOpportunityRecommendation gives last-name-list action', () => {
   assert.match(result.evidence, /mexican last names/)
 })
 
-test('templateOpportunityRecommendation gives tide-specific action', () => {
+test('templateOpportunityRecommendation gives location schedule action', () => {
   const result = templateOpportunityRecommendation({
-    templateId: 'example-site-location',
-    templateLabel: 'ExampleSite location page',
+    templateId: 'location-schedule',
+    templateLabel: 'Location schedule page',
     items: [item('high tide today'), item('low tide today')],
   })
 
-  assert.match(result.action, /high tide today/)
-  assert.match(result.action, /low tide today/)
+  assert.match(result.action, /date\/time/)
+  assert.match(result.action, /local aliases/)
 })

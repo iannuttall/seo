@@ -8,8 +8,8 @@ function item(input: Partial<QuickWinItem> = {}): QuickWinItem {
     query: input.query ?? 'salary for plumber',
     url: input.url ?? 'https://example.com/a/',
     template: input.template ?? {
-      id: 'example-site-city-salary',
-      label: 'ExampleSite city salary page',
+      id: 'city-salary',
+      label: 'City salary page',
       confidence: 'high',
     },
     position: input.position ?? 7,

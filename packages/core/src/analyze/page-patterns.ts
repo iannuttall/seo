@@ -80,16 +80,16 @@ export function detectPageTemplate(url: string): PageTemplate {
 
   if (path.includes('/last-names/') && path.endsWith('-surname-popularity/')) {
     return {
-      id: 'example-site-surname',
-      label: 'ExampleSite surname page',
+      id: 'surname-entity',
+      label: 'Surname entity page',
       confidence: 'high',
     }
   }
 
   if (path.includes('/last-names/')) {
     return {
-      id: 'example-site-last-name-list',
-      label: 'ExampleSite last-name list page',
+      id: 'last-name-list',
+      label: 'Last-name list page',
       confidence: 'high',
     }
   }
@@ -99,16 +99,16 @@ export function detectPageTemplate(url: string): PageTemplate {
     path.endsWith('-meaning-and-history/')
   ) {
     return {
-      id: 'example-site-first-name',
-      label: 'ExampleSite first-name page',
+      id: 'first-name-entity',
+      label: 'First-name entity page',
       confidence: 'high',
     }
   }
 
   if (path.includes('/first-names/')) {
     return {
-      id: 'example-site-first-name-list',
-      label: 'ExampleSite first-name list page',
+      id: 'first-name-list',
+      label: 'First-name list page',
       confidence: 'high',
     }
   }
@@ -116,33 +116,47 @@ export function detectPageTemplate(url: string): PageTemplate {
   if (/\/average-[a-z0-9-]+-salary-in-[a-z0-9-]+\//.test(path)) {
     const locationDepth = parts.length >= 2 ? 'city' : 'country'
     return {
-      id: `example-site-${locationDepth}-salary`,
-      label: `ExampleSite ${locationDepth} salary page`,
+      id: `${locationDepth}-salary`,
+      label: `${locationDepth === 'city' ? 'City' : 'Country'} salary page`,
       confidence: 'high',
     }
   }
 
   if (path.includes('/salary-calculator/')) {
     return {
-      id: 'example-site-calculator',
-      label: 'ExampleSite salary calculator',
+      id: 'salary-calculator',
+      label: 'Salary calculator page',
       confidence: 'high',
     }
   }
 
-  if (parts.length >= 3 && !parts[0]?.includes('.')) {
-    const host = parseUrl(url)?.hostname ?? ''
-    if (host.includes('example.org')) {
-      return {
-        id: 'example-site-location',
-        label: 'ExampleSite location page',
-        confidence: 'high',
-      }
+  if (
+    parts.length >= 3 &&
+    /\b(tide|tides|harbour|harbor|marina|beach)\b/.test(normalizeText(path))
+  ) {
+    return {
+      id: 'location-schedule',
+      label: 'Location schedule page',
+      confidence: 'medium',
     }
   }
 
   if (path.startsWith('/tools/')) {
     return { id: 'tool-page', label: 'Tool page', confidence: 'medium' }
+  }
+  if (path.startsWith('/alternatives/')) {
+    return {
+      id: 'alternative-page',
+      label: 'Alternative page',
+      confidence: 'medium',
+    }
+  }
+  if (path.startsWith('/compare/')) {
+    return {
+      id: 'comparison-page',
+      label: 'Comparison page',
+      confidence: 'medium',
+    }
   }
 
   return { id: 'other', label: 'Other page', confidence: 'low' }
@@ -205,14 +219,13 @@ export function dominantTemplate(rows: GscRow[]): {
 }
 
 export function templateFamilyId(template: PageTemplate): string {
-  if (template.id.startsWith('example-site-')) return 'example-site-salary'
-  if (template.id.startsWith('example-site-')) return template.id
+  if (template.id.endsWith('-salary')) return 'salary-page'
   return template.id
 }
 
 function templateFamilyLabel(template: PageTemplate): string {
-  if (template.id.startsWith('example-site-')) {
-    return 'ExampleSite salary page'
+  if (template.id.endsWith('-salary')) {
+    return 'Salary page'
   }
   return template.label
 }

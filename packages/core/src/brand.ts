@@ -24,6 +24,32 @@ function unique(values: string[]): string[] {
   return [...new Set(values.map(normalizeBrandText).filter(Boolean))]
 }
 
+function tokenStem(token: string): string {
+  return token.length > 3 && token.endsWith('s') ? token.slice(0, -1) : token
+}
+
+function tokensMatch(a: string, b: string): boolean {
+  return a === b || tokenStem(a) === tokenStem(b)
+}
+
+function includesTokenSequence(queryTokens: string[], termTokens: string[]) {
+  if (!termTokens.length || termTokens.length > queryTokens.length) return false
+  for (
+    let index = 0;
+    index <= queryTokens.length - termTokens.length;
+    index++
+  ) {
+    if (
+      termTokens.every((termToken, offset) =>
+        tokensMatch(queryTokens[index + offset] ?? '', termToken),
+      )
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
 export function deriveBrandTerms(input: {
   id?: string
   name?: string
@@ -45,7 +71,7 @@ export function isBrandQuery(query: string, brandTerms: string[]): boolean {
   const normalized = normalizeBrandText(query)
   if (!normalized || !brandTerms.length) return false
 
-  const queryTokens = new Set(normalized.split(' '))
+  const queryTokens = normalized.split(' ')
   const compactQuery = normalized.replace(/\s+/g, '')
   return brandTerms.some((term) => {
     const normalizedTerm = normalizeBrandText(term)
@@ -55,9 +81,13 @@ export function isBrandQuery(query: string, brandTerms: string[]): boolean {
       compactTerm.length >= 6 && compactQuery.includes(compactTerm)
     const termTokens = normalizedTerm.split(' ')
     if (termTokens.length === 1) {
-      return queryTokens.has(normalizedTerm) || compactMatches
+      return (
+        queryTokens.some((queryToken) =>
+          tokensMatch(queryToken, normalizedTerm),
+        ) || compactMatches
+      )
     }
-    return normalized.includes(normalizedTerm) || compactMatches
+    return includesTokenSequence(queryTokens, termTokens) || compactMatches
   })
 }
 

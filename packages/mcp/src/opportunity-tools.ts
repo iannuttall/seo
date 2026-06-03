@@ -78,10 +78,7 @@ export function registerOpportunityTools(server: McpServer): void {
           minClickLoss,
           includeBrand,
         })
-        return toolSuccess(
-          `${result.items.length} decaying query/page rows found across ${result.groups.length} cluster(s).`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

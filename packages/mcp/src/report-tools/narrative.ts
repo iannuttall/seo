@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { reportNarrative } from '@seo/core'
 import * as z from 'zod/v4'
+import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
 import {
   type ReportFetchToolInput,
@@ -26,14 +27,16 @@ export function registerNarrativeReportTool(server: McpServer): void {
       description:
         'Generate a client-ready SEO narrative across diagnosis, changes, and monitoring',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        recentDays: z.number().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'recentDays',
+          'limit',
+          'includeBrand',
+        ]),
         startDate: z.string().optional(),
         endDate: z.string().optional(),
-        limit: z.number().optional(),
         changeLimit: z.number().optional(),
-        includeBrand: z.boolean().optional(),
         ...reportFetchInputSchema,
       },
     },

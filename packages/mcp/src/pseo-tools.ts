@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { pseoAuditReport } from '@seo/core'
 import * as z from 'zod/v4'
+import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerPseoTools(server: McpServer): void {
@@ -10,15 +11,17 @@ export function registerPseoTools(server: McpServer): void {
       description:
         'Audit pSEO templates with first-party GSC, optional crawl, and optional URL Inspection evidence',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'includeBrand',
+          'refresh',
+          'js',
+        ]),
         sitemaps: z.array(z.string().url()).optional(),
         templateLimit: z.number().optional(),
         crawlSamples: z.number().optional(),
         inspectSamples: z.number().optional(),
-        includeBrand: z.boolean().optional(),
-        refresh: z.boolean().optional(),
-        js: z.boolean().optional(),
       },
     },
     async ({

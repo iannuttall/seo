@@ -8,6 +8,7 @@ import {
   redirectTrace,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerMonitoringTools(server: McpServer): void {
@@ -188,13 +189,15 @@ export function registerMonitoringTools(server: McpServer): void {
       description:
         'Find GSC search-value URLs that are now broken, blocked, or poorly redirected',
       inputSchema: {
-        site: z.string(),
-        days: z.number().optional(),
-        limit: z.number().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'minImpressions',
+          'refresh',
+          'js',
+        ]),
         minClicks: z.number().optional(),
-        minImpressions: z.number().optional(),
-        refresh: z.boolean().optional(),
-        js: z.boolean().optional(),
       },
     },
     async ({ site, days, limit, minClicks, minImpressions, refresh, js }) => {

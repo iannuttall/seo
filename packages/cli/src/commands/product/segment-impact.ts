@@ -3,6 +3,7 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { cliReportArgs } from '../report-options.js'
 
 const segmentDimension = (value: unknown): SegmentDimension => {
   const dimension = stringArg(value) ?? 'page'
@@ -36,28 +37,26 @@ export const segmentImpactCommand = defineCommand({
       default: 'page',
       description: 'Segment by page, query, country, or device.',
     },
-    days: {
-      type: 'string',
-      description: 'Recent window length in days. Defaults to 28.',
-    },
+    ...cliReportArgs(['days', 'limit', 'refresh'], {
+      days: {
+        description: 'Recent window length in days. Defaults to 28.',
+      },
+      limit: {
+        description: 'Maximum segment rows to print. Defaults to 25.',
+      },
+      refresh: {
+        description: 'Bypass local cache and fetch fresh GSC data.',
+      },
+    }),
     compare: {
       type: 'string',
       description:
         'Previous comparison window length in days. Defaults to days.',
     },
-    limit: {
-      type: 'string',
-      description: 'Maximum segment rows to print. Defaults to 25.',
-    },
     json: {
       type: 'boolean',
       default: false,
       description: 'Print machine-readable JSON.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local cache and fetch fresh GSC data.',
     },
   },
   run: async ({ args }) => {

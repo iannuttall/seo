@@ -8,6 +8,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 import { selectedSiteOrThrow } from '../shared.js'
 
 export const linkRecoverCommand = defineCommand({
@@ -19,31 +20,26 @@ export const linkRecoverCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 90.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum GSC pages to check. Defaults to 50.',
-    },
+    ...cliReportArgs(['days', 'limit', 'minImpressions', 'refresh', 'js'], {
+      days: {
+        description: 'GSC lookback window. Defaults to 90.',
+      },
+      limit: {
+        description: 'Maximum GSC pages to check. Defaults to 50.',
+      },
+      minImpressions: {
+        description: 'Minimum impressions to check a page. Defaults to 100.',
+      },
+      refresh: {
+        description: 'Bypass local GSC and HTTP caches.',
+      },
+      js: {
+        description: 'Force JavaScript rendering for final page extraction.',
+      },
+    }),
     'min-clicks': {
       type: 'string',
       description: 'Minimum clicks to check a page. Defaults to 1.',
-    },
-    'min-impressions': {
-      type: 'string',
-      description: 'Minimum impressions to check a page. Defaults to 100.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GSC and HTTP caches.',
-    },
-    js: {
-      type: 'boolean',
-      default: false,
-      description: 'Force JavaScript rendering for final page extraction.',
     },
     json: {
       type: 'boolean',

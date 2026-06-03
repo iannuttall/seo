@@ -10,6 +10,7 @@ import {
   printLimitedTable,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck } from '../shared.js'
 
 function csv(value?: string): string[] | undefined {
@@ -147,18 +148,24 @@ export const pseoAuditCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: {
-      type: 'string',
-      description: 'GSC lookback window. Defaults to 28.',
-    },
+    ...cliReportArgs(['days', 'limit', 'includeBrand', 'js', 'refresh'], {
+      limit: {
+        description: 'Maximum templates to show. Defaults to 25.',
+      },
+      includeBrand: {
+        description: 'Include branded queries in template metrics.',
+      },
+      js: {
+        description: 'Force JavaScript rendering for crawl samples.',
+      },
+      refresh: {
+        description: 'Bypass local GSC and HTTP cache.',
+      },
+    }),
     sitemap: {
       type: 'string',
       description:
         'Comma-separated sitemap URLs to include in template counts.',
-    },
-    limit: {
-      type: 'string',
-      description: 'Maximum templates to show. Defaults to 25.',
     },
     'crawl-samples': {
       type: 'string',
@@ -167,21 +174,6 @@ export const pseoAuditCommand = defineCommand({
     'inspect-samples': {
       type: 'string',
       description: 'URLs to check per template with URL Inspection.',
-    },
-    'include-brand': {
-      type: 'boolean',
-      default: false,
-      description: 'Include branded queries in template metrics.',
-    },
-    js: {
-      type: 'boolean',
-      default: false,
-      description: 'Force JavaScript rendering for crawl samples.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GSC and HTTP cache.',
     },
     json: { type: 'boolean', default: false },
   },

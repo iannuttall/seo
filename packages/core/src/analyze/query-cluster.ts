@@ -1,6 +1,7 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { QueryCluster } from '../types.js'
+import { clusterPseoTemplates } from './pseo/templates.js'
 import { isLowActionabilityQuery } from './query-quality.js'
 import {
   CTR_BASELINE,
@@ -20,6 +21,13 @@ export type QueryClusterRow = {
   clicks: number
   position: number
   tokens: string[]
+  pages: QueryClusterPage[]
+}
+
+type QueryClusterPage = {
+  url: string
+  impressions: number
+  clicks: number
 }
 
 type QueryClusterReport = {
@@ -112,15 +120,38 @@ function clusterRecommendation(input: {
   impressions: number
   clicks: number
   position: number
+  topPage?: QueryClusterPage
+  template?: QueryCluster['template']
 }): string {
+  if (
+    input.template &&
+    input.template.urlCount >= 3 &&
+    input.template.share >= 0.6
+  ) {
+    const pageText =
+      input.topPage && input.template.urlCount > 1
+        ? ` Start with ${input.topPage.url}.`
+        : ''
+    const action =
+      input.template.urlCount > 1
+        ? `This is template-level demand, not a one-off page edit. Tighten the shared title/H1/intro/schema/internal-link rules so each page makes the entity and query angle clear. If "${input.label}" is broader than one entity, route it to a better hub/list page instead of letting several template URLs compete.`
+        : 'Improve the shared title, H1, intro, schema, and internal-link pattern, then spot-check the highest-impression URL.'
+    return `"${input.label}" maps mostly to ${input.template.signature} (${input.template.urlCount} URLs). ${action}${pageText}`
+  }
   if (input.queries === 1) {
-    return 'This is a single-query cluster. Use it as supporting detail, not as a content hub or template decision by itself.'
+    return input.topPage
+      ? `This is a single-query cluster. Inspect ${input.topPage.url} before making a template or hub decision.`
+      : 'This is a single-query cluster. Use it as supporting detail, not as a content hub or template decision by itself.'
   }
   if (input.impressions >= 500 && input.clicks === 0) {
-    return `This "${input.label}" cluster has search demand but no clicks. Check whether the ranking page actually answers the cluster intent, then improve the section/title or create a stronger dedicated page if intent is distinct.`
+    return input.topPage
+      ? `This "${input.label}" cluster has search demand but no clicks. Check ${input.topPage.url}; if it is the right target, make the exact intent obvious in the title, H1, intro, and internal links.`
+      : `This "${input.label}" cluster has search demand but no clicks. Check whether the ranking page actually answers the cluster intent, then improve the section/title or create a stronger dedicated page if intent is distinct.`
   }
   if (input.position > 10) {
-    return `This "${input.label}" cluster is mostly outside page one. Tighten the page section around the shared intent and add internal links from related pages before treating this as a CTR problem.`
+    return input.topPage
+      ? `This "${input.label}" cluster is mostly outside page one. Strengthen ${input.topPage.url} around this exact intent and add internal links from related pages before treating it as a CTR problem.`
+      : `This "${input.label}" cluster is mostly outside page one. Tighten the page section around the shared intent and add internal links from related pages before treating this as a CTR problem.`
   }
   if (input.clicks / Math.max(1, input.impressions) < 0.01) {
     return `This "${input.label}" cluster ranks with weak CTR. Rewrite SERP framing around the dominant intent (${input.intent}) before expanding content.`
@@ -151,6 +182,7 @@ function aggregateRows(
     clicks: number
     position: number
     tokens: string[]
+    page: string
   }>,
 ): QueryClusterRow[] {
   const byQuery = new Map<
@@ -161,6 +193,7 @@ function aggregateRows(
       clicks: number
       weightedPosition: number
       tokens: Set<string>
+      pages: Map<string, QueryClusterPage>
     }
   >()
   for (const row of rows) {
@@ -170,11 +203,20 @@ function aggregateRows(
       clicks: 0,
       weightedPosition: 0,
       tokens: new Set<string>(),
+      pages: new Map<string, QueryClusterPage>(),
     }
     current.impressions += row.impressions
     current.clicks += row.clicks
     current.weightedPosition += row.position * row.impressions
     for (const token of row.tokens) current.tokens.add(token)
+    const page = current.pages.get(row.page) ?? {
+      url: row.page,
+      impressions: 0,
+      clicks: 0,
+    }
+    page.impressions += row.impressions
+    page.clicks += row.clicks
+    if (page.url) current.pages.set(page.url, page)
     byQuery.set(row.query, current)
   }
   return [...byQuery.values()].map((row) => ({
@@ -183,7 +225,44 @@ function aggregateRows(
     clicks: row.clicks,
     position: row.impressions ? row.weightedPosition / row.impressions : 0,
     tokens: [...row.tokens],
+    pages: [...row.pages.values()].sort(
+      (a, b) => b.impressions - a.impressions,
+    ),
   }))
+}
+
+function clusterPages(rows: QueryClusterRow[]): QueryClusterPage[] {
+  const byPage = new Map<string, QueryClusterPage>()
+  for (const row of rows) {
+    for (const page of row.pages) {
+      const current = byPage.get(page.url) ?? {
+        url: page.url,
+        impressions: 0,
+        clicks: 0,
+      }
+      current.impressions += page.impressions
+      current.clicks += page.clicks
+      byPage.set(page.url, current)
+    }
+  }
+  return [...byPage.values()].sort((a, b) => b.impressions - a.impressions)
+}
+
+function clusterTemplate(pages: QueryClusterPage[]): QueryCluster['template'] {
+  const urls = pages.map((page) => page.url)
+  const [template] = clusterPseoTemplates(urls, {
+    minUrls: 3,
+    minShare: 0.6,
+    limit: 1,
+  })
+  return template
+    ? {
+        signature: template.signature,
+        urlCount: template.urlCount,
+        share: template.share,
+        sampleUrls: template.sampleUrls,
+      }
+    : undefined
 }
 
 export function clusterQueryRows(rows: QueryClusterRow[]): QueryClusterRow[][] {
@@ -295,6 +374,7 @@ export async function queryClusterReport(input: {
         clicks: row.clicks,
         position: row.position,
         tokens: tokenize(row.keys[0] ?? ''),
+        page: row.keys[1] ?? '',
       }))
       .filter(
         (row) =>
@@ -319,6 +399,9 @@ export async function queryClusterReport(input: {
     const [intent] = intents
 
     const totals = clusterTotals({ queries: clusterRows })
+    const pages = clusterPages(clusterRows)
+    const topPages = pages.slice(0, 5)
+    const template = clusterTemplate(pages)
     clusters.push({
       label,
       intent: intents.size === 1 && intent ? intent : 'mixed',
@@ -328,6 +411,8 @@ export async function queryClusterReport(input: {
         clicks: row.clicks,
         position: row.position,
       })),
+      topPages,
+      template,
       totals,
       opportunityScore: opportunityScore({
         queries: clusterRows.length,
@@ -350,6 +435,8 @@ export async function queryClusterReport(input: {
         impressions: totals.impressions,
         clicks: totals.clicks,
         position: totals.averagePosition,
+        topPage: topPages[0],
+        template,
       }),
     })
   }

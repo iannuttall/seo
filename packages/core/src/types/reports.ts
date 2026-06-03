@@ -83,6 +83,17 @@ export interface QueryCluster {
     clicks: number
     position: number
   }>
+  topPages?: Array<{
+    url: string
+    impressions: number
+    clicks: number
+  }>
+  template?: {
+    signature: string
+    urlCount: number
+    share: number
+    sampleUrls: string[]
+  }
   totals?: {
     impressions: number
     clicks: number

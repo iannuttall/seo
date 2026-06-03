@@ -8,17 +8,22 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson } from '../../utils.js'
+import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
   formatPosition,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
+
+function rowCountLabel(count: number): string {
+  return `${formatCount(count)} ${count === 1 ? 'row' : 'rows'}`
+}
 
 export const strikingDistanceCommand = defineCommand({
   meta: {
@@ -80,6 +85,51 @@ export const strikingDistanceCommand = defineCommand({
       printJson(report)
       return
     }
+    printKeyValue([
+      ['Site', report.site],
+      ['Opportunities', formatCount(report.summary.opportunities)],
+      ['Template groups', formatCount(report.summary.groups)],
+      ['Impressions', formatCount(report.summary.totalImpressions)],
+      ['Brand queries', report.summary.brandFiltering],
+      ['Verification', report.verification.requested ? 'requested' : 'off'],
+      ['Verdict', report.summary.verdict],
+    ])
+    printNotes('Why this matters', [
+      'These rows already rank in positions 11-20, so small relevance and internal-link improvements can move them onto page one.',
+      'Grouped actions show whether the work is a one-page edit or a shared template/internal-link fix.',
+    ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
+
+    if (report.groups.length) {
+      printLimitedTable(
+        ['Group', 'Rows', 'Impr', 'Best pos', 'Avg pos', 'Action'],
+        report.groups.map((group) => [
+          truncate(group.label, 36),
+          formatCount(group.count),
+          formatCount(group.totalImpressions),
+          formatPosition(group.bestPosition),
+          formatPosition(group.averagePosition),
+          truncate(group.recommendation, 72),
+        ]),
+      )
+      printActionDetails(
+        'Top striking-distance group actions',
+        report.groups.map((group) => ({
+          label: group.label,
+          context: `${rowCountLabel(group.count)}, ${formatCount(group.totalImpressions)} impressions`,
+          action: group.recommendation,
+        })),
+      )
+    }
+
+    if (!report.items.length) {
+      process.stdout.write(
+        'No striking-distance opportunities matched these filters.\n',
+      )
+      return
+    }
+
     printLimitedTable(
       [
         'Query',

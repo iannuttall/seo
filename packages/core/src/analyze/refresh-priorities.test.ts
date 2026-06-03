@@ -12,8 +12,8 @@ test('decayClusterDrafts promotes material decay clusters', () => {
         count: 8,
         totalClickLoss: 42,
         template: {
-          id: 'example-site-country-salary',
-          label: 'ExampleSite country salary page',
+          id: 'country-salary',
+          label: 'Country salary page',
         },
         sampleUrls: ['https://example.com/a/'],
         sampleQueries: ['teacher salary', 'nurse salary'],

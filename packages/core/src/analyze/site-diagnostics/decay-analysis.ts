@@ -117,12 +117,13 @@ function recommendation(input: {
 }
 
 function templateFamily(templateLabel: string): string {
-  if (templateLabel.startsWith('ExampleSite')) return 'salary'
-  if (templateLabel.startsWith('ExampleSite')) return 'tide'
-  if (templateLabel.includes('last-name list')) return 'name-list'
-  if (templateLabel.includes('first-name list')) return 'name-list'
-  if (templateLabel.includes('surname')) return 'surname'
-  if (templateLabel.includes('first-name')) return 'first-name'
+  const normalized = templateLabel.toLowerCase()
+  if (normalized.includes('salary')) return 'salary'
+  if (normalized.includes('location schedule')) return 'schedule'
+  if (normalized.includes('last-name list')) return 'name-list'
+  if (normalized.includes('first-name list')) return 'name-list'
+  if (normalized.includes('surname')) return 'surname'
+  if (normalized.includes('first-name')) return 'first-name'
   return 'default'
 }
 
@@ -146,14 +147,14 @@ function itemDecayAction(input: {
     return 'Impressions fell. Check whether demand shifted by job or location, then verify salary data freshness, currency/monthly variants, and crawlability.'
   }
 
-  if (family === 'tide') {
+  if (family === 'schedule') {
     if (input.diagnosis === 'lost_ctr') {
-      return 'Rankings mostly held but clicks fell. Rewrite title/meta so tide times, tide chart, high tide, low tide, year, and local place wording are obvious.'
+      return 'Rankings mostly held but clicks fell. Rewrite title/meta so the exact place, date/time, chart/table, current year, and local wording are obvious.'
     }
     if (input.diagnosis === 'lost_position') {
-      return 'The page lost ranking position. Refresh current-year tide tables, add local aliases, and link from nearby location pages.'
+      return 'The page lost ranking position. Refresh current-year data tables, add local aliases, and link from nearby location pages.'
     }
-    return 'Impressions fell. Check tide-data freshness, current-year coverage, local aliases, and whether search demand moved to newer calendar terms.'
+    return 'Impressions fell. Check data freshness, current-year coverage, local aliases, and whether search demand moved to newer calendar terms.'
   }
 
   if (family === 'name-list') {
@@ -219,14 +220,14 @@ function groupRecommendation(group: {
     return `Impressions fell across this ${group.templateLabel} cluster. Check salary-data freshness, country/city coverage, and whether SERP demand shifted.`
   }
 
-  if (family === 'tide') {
+  if (family === 'schedule') {
     if (group.diagnosis === 'lost_ctr') {
-      return `Clicks fell while rankings mostly held. Rewrite the tide title/meta template so tide times, charts, high/low tide, year, and local place wording are clearer.`
+      return `Clicks fell while rankings mostly held. Rewrite the title/meta template so exact place, date/time, chart/table, current year, and local wording are clearer.`
     }
     if (group.diagnosis === 'lost_position') {
-      return `${pluralLabel} lost ranking position. Refresh current-year tide tables, local aliases, nearby-location links, and template copy.`
+      return `${pluralLabel} lost ranking position. Refresh current-year data tables, local aliases, nearby-location links, and template copy.`
     }
-    return `Impressions fell across this location cluster. Check tide-data freshness, current-year coverage, local aliases, and SERP demand shifts.`
+    return `Impressions fell across this location cluster. Check data freshness, current-year coverage, local aliases, and SERP demand shifts.`
   }
 
   if (family === 'name-list') {

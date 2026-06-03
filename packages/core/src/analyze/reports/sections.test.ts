@@ -76,6 +76,16 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       verification: { requested: false, verified: 0, failed: 0 },
       items: [],
       templates: [],
+      groups: [],
+      summary: {
+        opportunities: 0,
+        groups: 0,
+        totalImpressions: 0,
+        brandFiltering: 'excluded',
+        verdict: 'No position 11-20 opportunities matched these filters.',
+      },
+      caveats: [],
+      recommendations: [],
     },
     quickWins: {
       site: 'sc-domain:example.com',

@@ -47,7 +47,7 @@ export function templateOpportunityRecommendation(
     .map(([label, count]) => `${count} ${label}`)
     .join(', ')}.${examplesLine(queries.slice(0, 3))}`
 
-  if (input.templateId === 'example-site-surname') {
+  if (input.templateId === 'surname-entity') {
     return {
       evidence,
       action:
@@ -55,7 +55,7 @@ export function templateOpportunityRecommendation(
     }
   }
 
-  if (input.templateId === 'example-site-last-name-list') {
+  if (input.templateId === 'last-name-list') {
     return {
       evidence,
       action:
@@ -63,7 +63,7 @@ export function templateOpportunityRecommendation(
     }
   }
 
-  if (input.templateId === 'example-site-first-name') {
+  if (input.templateId === 'first-name-entity') {
     return {
       evidence,
       action:
@@ -71,7 +71,7 @@ export function templateOpportunityRecommendation(
     }
   }
 
-  if (input.templateId === 'example-site-first-name-list') {
+  if (input.templateId === 'first-name-list') {
     return {
       evidence,
       action:
@@ -79,19 +79,30 @@ export function templateOpportunityRecommendation(
     }
   }
 
-  if (input.templateId === 'example-site-location') {
+  if (input.templateId === 'location-schedule') {
     return {
       evidence,
       action:
-        'Location tide pages are ranking for tide-time variants. Make the title, H1, meta description, and first content block clearly cover high tide today, low tide today, tide chart, and tide times for the exact location.',
+        'Location schedule pages are ranking for time/date variants. Make the title, H1, meta description, and first content block clearly cover the exact place, date/time, chart/table, and local aliases.',
     }
   }
 
-  if (input.templateId.startsWith('example-site-')) {
+  if (input.templateId.endsWith('-salary')) {
     return {
       evidence,
       action:
         'Salary pages are ranking for pay-format variants. Make average salary, monthly salary, hourly pay, currency, job title, and location clear in the title, H1, meta description, and summary table.',
+    }
+  }
+
+  if (
+    input.templateId === 'alternative-page' ||
+    input.templateId === 'comparison-page'
+  ) {
+    return {
+      evidence,
+      action:
+        'Comparison pages are ranking for alternatives and versus queries. Make the winner, comparison criteria, pricing/features, alternatives, and recommended next step clear in the title, H1, meta description, and opening section.',
     }
   }
 

@@ -14,15 +14,12 @@ import {
 import { rangeDays } from './dates.js'
 import { renderMarkdown } from './markdown.js'
 import {
-  cannibalSuppressionLine,
   changeLine,
-  decayClusterLine,
-  gapCountLine,
+  contentOpportunityBullets,
+  headlineLine,
   monitoringBullets,
   movementLine,
-  templateOpportunityLine,
   topSegmentLine,
-  verificationFetchLine,
 } from './sections.js'
 import type { ReportNarrative } from './types.js'
 
@@ -100,7 +97,7 @@ export async function reportNarrative(input: {
       startDate: diagnosis.anomaly.anomalies[0]?.baselineStart ?? '',
       endDate: diagnosis.anomaly.anomalies[0]?.comparisonEnd ?? '',
     },
-    headline: `${diagnosis.summary.classification}; ${diagnosis.summary.significantAnomalies} significant anomaly signal(s), ${diagnosis.summary.decayItems} decay item(s), ${diagnosis.summary.strikingDistanceItems} striking-distance opportunity item(s).`,
+    headline: headlineLine(diagnosis),
     sections: [
       {
         title: 'Performance',
@@ -112,20 +109,7 @@ export async function reportNarrative(input: {
       },
       {
         title: 'Content Opportunities',
-        bullets: [
-          `${diagnosis.summary.decayItems} decaying rows need review.`,
-          decayClusterLine(diagnosis),
-          `${diagnosis.summary.cannibalItems} cannibalisation clusters need a primary URL decision.`,
-          cannibalSuppressionLine(diagnosis),
-          `${diagnosis.summary.strikingDistanceItems} position 11-20 opportunities are available.`,
-          templateOpportunityLine(diagnosis),
-          ...(diagnosis.quickWins.verification.requested
-            ? [
-                `Verified content for ${diagnosis.quickWins.verification.verified} of ${diagnosis.quickWins.items.length} quick-win candidates; ${gapCountLine(diagnosis)}`,
-                verificationFetchLine(diagnosis),
-              ].filter((line): line is string => Boolean(line))
-            : []),
-        ],
+        bullets: contentOpportunityBullets(diagnosis),
       },
       {
         title: 'Change Measurements',

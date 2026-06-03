@@ -16,6 +16,36 @@ export function movementLine(report: DiagnosePropertyReport): string {
   return `Average daily ${anomaly.metric} ${direction} from ${anomaly.baselineMean.toFixed(1)} to ${anomaly.comparisonMean.toFixed(1)}.`
 }
 
+function countPhrase(
+  count: number,
+  singular: string,
+  pluralLabel = `${singular}s`,
+) {
+  if (count === 0) return `no ${pluralLabel}`
+  return `${count} ${plural(count, singular, pluralLabel)}`
+}
+
+export function headlineLine(report: DiagnosePropertyReport): string {
+  const parts = [
+    countPhrase(
+      report.summary.significantAnomalies,
+      'significant anomaly signal',
+    ),
+    countPhrase(report.summary.decayItems, 'decay item'),
+    countPhrase(
+      report.summary.strikingDistanceItems,
+      'striking-distance opportunity',
+      'striking-distance opportunities',
+    ),
+  ]
+  if (report.summary.cannibalItems) {
+    parts.push(
+      countPhrase(report.summary.cannibalItems, 'cannibalisation cluster'),
+    )
+  }
+  return `${report.summary.classification}; ${parts.join('; ')}.`
+}
+
 export function topSegmentLine(report: DiagnosePropertyReport): string {
   const page = report.segments.page.items[0]
   if (!page) return 'No page-level movement stood out.'
@@ -126,11 +156,24 @@ export function templateOpportunityLine(
   return `${template.count} quick wins sit in the ${template.label} template, so fix the reusable template before editing pages one by one.`
 }
 
+function decayDiagnosisLabel(diagnosis: string): string {
+  if (diagnosis === 'lost_ctr') return 'CTR dropped while rankings held'
+  if (diagnosis === 'lost_position') return 'rankings dropped'
+  if (diagnosis === 'lost_visibility') return 'lost visibility'
+  if (diagnosis === 'lost_impressions') return 'impressions dropped'
+  return diagnosis.replaceAll('_', ' ')
+}
+
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return count === 1 ? singular : pluralLabel
+}
+
 export function decayClusterLine(report: DiagnosePropertyReport): string {
   const group = report.decay.groups[0]
   if (!group) return 'No material decay cluster stood out.'
-  const diagnosis = group.diagnosis.replaceAll('_', ' ')
-  return `${group.count} decay findings sit in the ${group.template.label} template (${diagnosis}), with ${group.totalClickLoss.toFixed(0)} lost clicks versus the previous window.`
+  const diagnosis = decayDiagnosisLabel(group.diagnosis)
+  const samples = group.sampleQueries.slice(0, 2).join('; ')
+  return `Top decay cluster: ${group.count} ${plural(group.count, 'finding')} in the ${group.template.label} template (${diagnosis}), ${group.totalClickLoss.toFixed(0)} lost clicks. Action: ${group.recommendation}${samples ? ` Example queries: ${samples}.` : ''}`
 }
 
 export function cannibalSuppressionLine(
@@ -143,4 +186,63 @@ export function cannibalSuppressionLine(
     .map(([reason, count]) => `${count} ${reason.replace(/_/g, ' ')}`)
     .join(', ')
   return `${suppressed} likely false-positive cannibal clusters were suppressed (${reasons}).`
+}
+
+export function contentOpportunityBullets(
+  report: DiagnosePropertyReport,
+): string[] {
+  const bullets: string[] = []
+
+  if (report.summary.decayItems) {
+    const top = report.decay.items[0]
+    bullets.push(
+      top
+        ? `${report.summary.decayItems} decaying query/page ${plural(report.summary.decayItems, 'row')} need review. Start with "${top.query}" on ${top.url}; it lost ${top.clickLoss.toFixed(0)} clicks.`
+        : `${report.summary.decayItems} decaying query/page ${plural(report.summary.decayItems, 'row')} need review.`,
+    )
+    bullets.push(decayClusterLine(report))
+  }
+
+  if (report.summary.cannibalItems) {
+    const top = report.cannibalization.items[0]
+    bullets.push(
+      top
+        ? `${report.summary.cannibalItems} cannibalisation ${plural(report.summary.cannibalItems, 'cluster')} need a primary URL decision. Start with "${top.query}" and decide whether ${top.pages.length} ranking URLs answer the same intent.`
+        : `${report.summary.cannibalItems} cannibalisation ${plural(report.summary.cannibalItems, 'cluster')} need a primary URL decision.`,
+    )
+  }
+
+  if (report.cannibalization.suppressed.length) {
+    bullets.push(cannibalSuppressionLine(report))
+  }
+
+  if (report.summary.strikingDistanceItems) {
+    const top = report.strikingDistance.items[0]
+    bullets.push(
+      top
+        ? `${report.summary.strikingDistanceItems} position 11-20 ${plural(report.summary.strikingDistanceItems, 'opportunity', 'opportunities')} are available. Start with "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
+        : `${report.summary.strikingDistanceItems} position 11-20 ${plural(report.summary.strikingDistanceItems, 'opportunity', 'opportunities')} are available.`,
+    )
+  }
+
+  const templateLine = templateOpportunityLine(report)
+  if (!templateLine.startsWith('No dominant')) {
+    bullets.push(templateLine)
+  }
+
+  if (report.quickWins.verification.requested) {
+    bullets.push(
+      `Verified content for ${report.quickWins.verification.verified} of ${report.quickWins.items.length} quick-win candidates; ${gapCountLine(report)}`,
+    )
+    const fetchLine = verificationFetchLine(report)
+    if (fetchLine) bullets.push(fetchLine)
+  }
+
+  if (!bullets.length) {
+    bullets.push(
+      'No material content opportunity stood out in this window. Keep monitoring, but do not force content edits from this report alone.',
+    )
+  }
+
+  return bullets
 }

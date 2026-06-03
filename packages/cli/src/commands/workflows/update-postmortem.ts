@@ -170,6 +170,6 @@ export const updatePostmortemCommand = defineCommand({
     const target = selection.client
       ? `--client ${JSON.stringify(selection.client.id)}`
       : `--site ${JSON.stringify(selection.site)}`
-    printNextCommand(`seo export monthly ${target}`)
+    printNextCommand(`seo export update-postmortem ${target}`)
   },
 })

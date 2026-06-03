@@ -39,6 +39,39 @@ function printSegmentTable(label: string, split: SegmentSplit): void {
   )
 }
 
+type TemplateMovement = Awaited<
+  ReturnType<typeof updatePostmortemWorkflow>
+>['output']['templateMovement'][number]
+
+function printTemplateMovement(items: TemplateMovement[]): void {
+  if (!items.length) return
+  process.stdout.write('\nTemplate movement\n')
+  printTable(
+    [
+      'Direction',
+      'Template',
+      'Confidence',
+      'URLs',
+      'Clicks',
+      'Share',
+      'Common terms',
+    ],
+    items.map((item) => [
+      item.direction,
+      item.signature,
+      item.confidence,
+      item.urlCount,
+      formatNumber(item.clickDelta),
+      `${Math.round(item.movementShare * 100)}%`,
+      item.commonTerms.join(', ') || '-',
+    ]),
+  )
+  printNotes(
+    'Template actions',
+    items.map((item) => item.summary),
+  )
+}
+
 export const updatePostmortemCommand = defineCommand({
   meta: {
     name: 'update-postmortem',
@@ -122,6 +155,7 @@ export const updatePostmortemCommand = defineCommand({
       'Postmortem findings',
       report.output.insights.map((insight) => insight.summary),
     )
+    printTemplateMovement(report.output.templateMovement)
     printNotes('Update evidence', report.output.update.evidence)
     printSegmentTable('Page winners and losers', report.output.segments.page)
     printSegmentTable('Query winners and losers', report.output.segments.query)

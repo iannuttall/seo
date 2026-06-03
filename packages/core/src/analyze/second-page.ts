@@ -17,6 +17,51 @@ import { scoreCoverage } from './second-page/coverage.js'
 import { buildSecondPageRecommendations } from './second-page/recommendations.js'
 import { defaultDateRange } from './shared.js'
 
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return count === 1 ? singular : pluralLabel
+}
+
+function secondPageVerdict(input: {
+  opportunities: number
+  impressions: number
+  contentIssues: number
+  top?: SecondPageItem
+}): string {
+  if (!input.opportunities) {
+    return 'No position 11-20 opportunities matched this report threshold.'
+  }
+  if (input.contentIssues > 0) {
+    const verb = input.contentIssues === 1 ? 'has' : 'have'
+    return `${input.opportunities} second-page ${plural(input.opportunities, 'opportunity', 'opportunities')} found. ${input.contentIssues} ${verb} verified coverage or wording issues, so start with relevance before link changes.`
+  }
+  return `${input.opportunities} second-page ${plural(input.opportunities, 'opportunity', 'opportunities')} found across about ${input.impressions.toFixed(0)} impressions. Start with "${input.top?.primaryQuery ?? 'the highest-impression query'}" and improve the ranking URL before creating new pages.`
+}
+
+function secondPageRecommendations(items: SecondPageItem[]): string[] {
+  const top = items[0]
+  if (!top) {
+    return [
+      'No second-page action is recommended from this report. Lower --min-impressions or widen --days if you want to inspect smaller opportunities.',
+    ]
+  }
+  const verifiedGap = items.find(
+    (item) =>
+      item.contentVerification?.status === 'verified' &&
+      item.contentVerification.classification !== 'covered',
+  )
+  const rankingAction =
+    top.recommendations[0]?.action ??
+    `Improve ${top.url} for "${top.primaryQuery}" before creating a new page.`
+
+  return [
+    verifiedGap
+      ? `Fix verified coverage or wording issues first. Start with "${verifiedGap.primaryQuery}" on ${verifiedGap.url}; the page is ranking but does not make the query angle clear enough.`
+      : rankingAction,
+    'Add internal links from closely related pages after the target page clearly answers the query.',
+    'Do not create a duplicate page unless the query has a clearly different intent from the current ranking URL.',
+  ]
+}
+
 export async function secondPage(input: {
   site: string
   range?: number
@@ -123,6 +168,15 @@ export async function secondPage(input: {
       (recommendation) =>
         !(hasVerifiedCoverage && recommendation.principle === 'C.2'),
     )
+    if (!item.recommendations.length) {
+      item.recommendations.push({
+        principle: 'C.6',
+        evidenceRef: `The page already covers "${item.primaryQuery}" in verified content checks but averages position ${item.position.toFixed(1)}.`,
+        action: `The page already appears relevant for "${item.primaryQuery}". Add internal links from closely related pages, improve the intro/example section around the query, and avoid creating a duplicate URL for the same intent.`,
+        effort: 'S',
+        confidence: 'medium',
+      })
+    }
     if (
       item.contentVerification?.status === 'verified' &&
       item.contentVerification.classification !== 'covered'
@@ -138,21 +192,59 @@ export async function secondPage(input: {
     items.push(item)
   }
 
+  const templateCount = new Set(items.map((item) => item.template.id)).size
+  const totalImpressions = items.reduce(
+    (sum, item) => sum + item.impressions,
+    0,
+  )
+  const contentIssues = items.filter(
+    (item) =>
+      item.contentVerification?.status === 'verified' &&
+      item.contentVerification.classification !== 'covered',
+  ).length
+  const verification = input.verifyContent
+    ? {
+        requested: true as const,
+        limit: input.verifyLimit ?? 5,
+        verified: items.filter((item) => item.contentVerification).length,
+        failed: items.filter(
+          (item) => item.contentVerification?.status === 'failed',
+        ).length,
+      }
+    : { requested: false as const, verified: 0 as const, failed: 0 as const }
+
   return {
     site: input.site,
     range,
+    dateRange: rangeDates,
     generatedAt: new Date().toISOString(),
-    verification: input.verifyContent
-      ? {
-          requested: true,
-          limit: input.verifyLimit ?? 5,
-          verified: items.filter((item) => item.contentVerification).length,
-          failed: items.filter(
-            (item) => item.contentVerification?.status === 'failed',
-          ).length,
-        }
-      : { requested: false, verified: 0, failed: 0 },
+    summary: {
+      opportunities: items.length,
+      templates: templateCount,
+      impressions: totalImpressions,
+      contentIssues,
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
+      verdict: secondPageVerdict({
+        opportunities: items.length,
+        impressions: totalImpressions,
+        contentIssues,
+        top: items[0],
+      }),
+    },
+    verification,
     items,
+    caveats: [
+      `Date window: ${rangeDates.startDate} to ${rangeDates.endDate} (${range} ${plural(range, 'day')}), using final GSC data where available.`,
+      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
+      `Minimum impressions: ${minImpressions}. Limit: ${input.limit ?? 10} page groups.`,
+      input.verifyContent
+        ? `Content verification: requested for up to ${input.verifyLimit ?? 5} result(s).`
+        : 'Content verification: not run. Use --verify-content for stronger on-page recommendations.',
+      warnings.length
+        ? `${warnings.length} provider warning(s) were recorded, so related-question evidence may be incomplete.`
+        : '',
+    ].filter((item) => item.length > 0),
+    recommendations: secondPageRecommendations(items),
     ledgerSummary: ledger.summary(),
     warnings,
   }

@@ -174,10 +174,7 @@ export function registerOpportunityTools(server: McpServer): void {
           minImpressions,
           includeBrand,
         })
-        return toolSuccess(
-          `${result.items.length} CTR underperformers found.`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

@@ -4,6 +4,8 @@ import {
   listSearchUpdates,
   type SearchUpdate,
 } from '../updates/search-status.js'
+import { listChanges } from './experiments/change-log.js'
+import type { ChangeScope, SeoChange } from './experiments/types.js'
 import { defaultDateRange } from './shared.js'
 
 export interface TrafficAnomaly {
@@ -32,7 +34,13 @@ export interface UpdateCorrelationReport {
     | 'likely-update-related'
     | 'possibly-update-related'
     | 'not-enough-evidence'
-  confidence: 'medium' | 'low'
+  attribution:
+    | 'very-likely-update-related'
+    | 'update-adjacent'
+    | 'confounded'
+    | 'weak-or-no-overlap'
+  confidence: 'high' | 'medium' | 'low'
+  confounders: UpdateConfounder[]
   summary: string
   evidence: string[]
   caveats: string[]
@@ -42,6 +50,15 @@ export interface UpdateCorrelationReport {
     url: string
     product: string
   }
+}
+
+export type UpdateConfounder = {
+  source: 'change-log' | 'manual'
+  title: string
+  date?: string
+  scope?: ChangeScope
+  target?: string
+  description?: string
 }
 
 function mean(values: number[]): number {
@@ -98,64 +115,169 @@ function strongestSignal(
   )[0]
 }
 
-function buildUpdateCorrelationInterpretation(input: {
+function dateMs(value: string): number {
+  return new Date(value).getTime()
+}
+
+function changesInWindow(input: {
+  changes: SeoChange[]
+  startDate?: string
+  endDate?: string
+  paddingDays: number
+}): SeoChange[] {
+  if (!input.startDate || !input.endDate) return []
+  const paddingMs = input.paddingDays * 86_400_000
+  const start = dateMs(input.startDate) - paddingMs
+  const end = dateMs(input.endDate) + paddingMs
+  return input.changes.filter((change) => {
+    const changedAt = dateMs(change.changedAt)
+    return changedAt >= start && changedAt <= end
+  })
+}
+
+function movementIsLarge(anomalies: TrafficAnomaly[]): boolean {
+  const significant = anomalies.filter((anomaly) => anomaly.significant)
+  if (significant.length < 2) return false
+  const directions = new Set(significant.map((anomaly) => anomaly.direction))
+  if (directions.size !== 1 || directions.has('normal')) return false
+  const clicks = significant.find((anomaly) => anomaly.metric === 'clicks')
+  const impressions = significant.find(
+    (anomaly) => anomaly.metric === 'impressions',
+  )
+  if (!clicks || !impressions) return false
+  const clickChange = Math.abs(clicks.percentChange)
+  const impressionChange = Math.abs(impressions.percentChange)
+  const strongestZ = Math.max(
+    ...significant.map((item) => Math.abs(item.zScore)),
+  )
+  return (
+    strongestZ >= 3 &&
+    Math.min(clickChange, impressionChange) >= 45 &&
+    Math.max(clickChange, impressionChange) >= 60
+  )
+}
+
+function confounderTitle(confounder: UpdateConfounder): string {
+  const date = confounder.date ? `${confounder.date}: ` : ''
+  const scope = confounder.scope ? `${confounder.scope} ` : ''
+  return `${date}${scope}${confounder.title}`
+}
+
+export function interpretUpdateCorrelation(input: {
   site: string
   anomalies: TrafficAnomaly[]
   overlappingUpdates: SearchUpdate[]
   classification: UpdateCorrelationReport['classification']
+  confounders?: UpdateConfounder[]
   days: number
   recentDays: number
   paddingDays: number
   refresh?: boolean
 }): Pick<
   UpdateCorrelationReport,
-  'confidence' | 'summary' | 'evidence' | 'caveats' | 'actions' | 'source'
+  | 'attribution'
+  | 'confidence'
+  | 'confounders'
+  | 'summary'
+  | 'evidence'
+  | 'caveats'
+  | 'actions'
+  | 'source'
 > {
   const significant = input.anomalies.filter((anomaly) => anomaly.significant)
   const strongest = strongestSignal(input.anomalies)
   const updateNames = input.overlappingUpdates.map((update) => update.name)
   const hasUpdate = input.overlappingUpdates.length > 0
+  const confounders = input.confounders ?? []
+  const hasConfounders = confounders.length > 0
+  const largeMovement = movementIsLarge(input.anomalies)
   const direction = strongest?.direction ?? 'normal'
   const movement =
     direction === 'drop'
-      ? 'dropped'
+      ? largeMovement
+        ? 'collapsed'
+        : 'dropped'
       : direction === 'spike'
-        ? 'grew'
+        ? largeMovement
+          ? 'surged'
+          : 'grew'
         : 'did not move enough to call an anomaly'
+  const attribution: UpdateCorrelationReport['attribution'] =
+    significant.length && hasUpdate && hasConfounders
+      ? 'confounded'
+      : significant.length && hasUpdate && largeMovement
+        ? 'very-likely-update-related'
+        : significant.length && hasUpdate
+          ? 'update-adjacent'
+          : 'weak-or-no-overlap'
   const confidence: UpdateCorrelationReport['confidence'] =
-    significant.length && hasUpdate ? 'medium' : 'low'
+    attribution === 'very-likely-update-related'
+      ? 'high'
+      : attribution === 'update-adjacent'
+        ? 'medium'
+        : 'low'
+  const knownChangePhrase =
+    confounders.length === 1
+      ? '1 known site change also overlaps'
+      : `${confounders.length} known site changes also overlap`
   const summary =
-    significant.length && hasUpdate
-      ? `${input.site} ${movement} during a period that overlaps ${updateNames.join(', ')}. Treat this as update-adjacent, not proof the update caused it.`
-      : hasUpdate
-        ? `${input.site} overlaps ${updateNames.join(', ')}, but GSC movement was not statistically significant in this window.`
-        : `${input.site} had no official Google Ranking update overlap in the recent comparison window.`
+    attribution === 'confounded'
+      ? `${input.site} ${movement} during a period that overlaps ${updateNames.join(', ')}, but ${knownChangePhrase} this window. Treat update attribution as confounded until you segment the movement.`
+      : attribution === 'very-likely-update-related'
+        ? `${input.site} ${movement} during a period that overlaps ${updateNames.join(', ')}. With no known overlapping site changes, this is very likely update-related at site level.`
+        : attribution === 'update-adjacent'
+          ? `${input.site} ${movement} during a period that overlaps ${updateNames.join(', ')}. Treat this as update-adjacent, not proof the update caused it.`
+          : hasUpdate
+            ? `${input.site} overlaps ${updateNames.join(', ')}, but GSC movement was not statistically significant in this window.`
+            : `${input.site} had no official Google Ranking update overlap in the recent comparison window.`
 
   const actions =
-    significant.length && hasUpdate
+    attribution === 'confounded'
       ? [
-          'Run segment-impact for page and query to separate affected templates, countries, and intents before editing pages.',
-          'Check your own deployment, pruning, blocking, redirect, and tracking changes inside the same date window before blaming the Google update.',
-          direction === 'drop'
-            ? 'For drops, start with pages that lost both clicks and impressions; if impressions fell harder than CTR, this is more likely ranking/index coverage than snippet copy.'
-            : 'For spikes, identify winning templates and queries so you can reinforce internal links and avoid changing pages that just improved.',
+          'Start with the overlapping site changes. Confirm whether pruning, blocking, redirects, deploys, or tracking changes explain the movement before calling this a Google update hit.',
+          'Run segment-impact for page and query and compare affected sections against the saved change targets.',
+          'If unchanged sections moved the same way as changed sections, update attribution becomes more plausible.',
         ]
-      : hasUpdate
+      : attribution === 'very-likely-update-related'
         ? [
-            'Do not call this an update hit yet. Expand the recent window or run segment-impact if you suspect delayed movement.',
+            'Run update-postmortem and segment-impact next to find the winning or losing templates, queries, countries, and devices.',
+            direction === 'drop'
+              ? 'For a collapse, avoid broad rewrites first. Identify the templates that lost impressions, then check indexability, intent fit, and SERP changes.'
+              : 'For a surge, document the winning templates and reinforce them with internal links before changing pages that improved.',
+            'Add any missed deploy, pruning, blocking, or content changes to change-log so future runs can downgrade attribution if needed.',
           ]
-        : [
-            'If traffic moved, investigate site changes, seasonality, indexing, and segment-level movement before looking for update causes.',
-          ]
+        : significant.length && hasUpdate
+          ? [
+              'Run segment-impact for page and query to separate affected templates, countries, and intents before editing pages.',
+              'Check your own deployment, pruning, blocking, redirect, and tracking changes inside the same date window before blaming the Google update.',
+              direction === 'drop'
+                ? 'For drops, start with pages that lost both clicks and impressions; if impressions fell harder than CTR, this is more likely ranking/index coverage than snippet copy.'
+                : 'For spikes, identify winning templates and queries so you can reinforce internal links and avoid changing pages that just improved.',
+            ]
+          : hasUpdate
+            ? [
+                'Do not call this an update hit yet. Expand the recent window or run segment-impact if you suspect delayed movement.',
+              ]
+            : [
+                'If traffic moved, investigate site changes, seasonality, indexing, and segment-level movement before looking for update causes.',
+              ]
 
   return {
+    attribution,
     confidence,
+    confounders,
     summary,
     evidence: [
       ...input.anomalies.map(anomalyEvidence),
       hasUpdate
         ? `${input.overlappingUpdates.length} official Google Ranking update ${plural(input.overlappingUpdates.length, 'window')} overlapped the comparison period: ${updateNames.join(', ')}.`
         : 'No official Google Ranking update windows overlapped the comparison period.',
+      largeMovement
+        ? 'Both clicks and impressions moved sharply in the same direction.'
+        : 'Movement was not large enough across both clicks and impressions to call this a very likely update hit on timing alone.',
+      hasConfounders
+        ? `Known overlapping site changes: ${confounders.map(confounderTitle).join('; ')}.`
+        : 'No saved or manually supplied overlapping site changes were found.',
     ],
     caveats: [
       `GSC window: ${input.days} days; recent comparison window: ${input.recentDays} days.`,
@@ -165,6 +287,7 @@ function buildUpdateCorrelationInterpretation(input: {
         : 'Data freshness: local GSC cache may have been used.',
       'Source: official Google Search Status Dashboard Ranking incidents only; third-party volatility and unconfirmed chatter are not included.',
       'Correlation is not causation. Site changes during the same window can fully explain the movement.',
+      'High confidence is still site-level timing confidence. Use segment-impact/update-postmortem to prove which templates or intents moved.',
     ],
     actions,
     source: {
@@ -270,6 +393,8 @@ export async function updateCorrelation(input: {
   startDate?: string
   endDate?: string
   paddingDays?: number
+  knownConfounders?: string[]
+  includeChangeLog?: boolean
   refresh?: boolean
 }): Promise<UpdateCorrelationReport> {
   const days = input.days ?? 90
@@ -291,6 +416,31 @@ export async function updateCorrelation(input: {
           paddingDays,
         })
       : []
+  const savedConfounders =
+    input.includeChangeLog === false
+      ? []
+      : changesInWindow({
+          changes: listChanges({ site: input.site, limit: 100 }),
+          startDate: comparisonStart,
+          endDate: comparisonEnd,
+          paddingDays,
+        }).map(
+          (change): UpdateConfounder => ({
+            source: 'change-log',
+            title: change.title,
+            date: change.changedAt,
+            scope: change.scope,
+            target: change.target,
+            description: change.description,
+          }),
+        )
+  const manualConfounders = (input.knownConfounders ?? []).map(
+    (title): UpdateConfounder => ({
+      source: 'manual',
+      title,
+    }),
+  )
+  const confounders = [...savedConfounders, ...manualConfounders]
 
   const classification =
     significant.length > 0 && overlappingUpdates.length > 0
@@ -305,11 +455,12 @@ export async function updateCorrelation(input: {
     anomalies: anomalyReport.anomalies,
     overlappingUpdates,
     classification,
-    ...buildUpdateCorrelationInterpretation({
+    ...interpretUpdateCorrelation({
       site: input.site,
       anomalies: anomalyReport.anomalies,
       overlappingUpdates,
       classification,
+      confounders,
       days,
       recentDays,
       paddingDays,

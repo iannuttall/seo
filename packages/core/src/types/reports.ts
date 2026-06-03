@@ -60,11 +60,25 @@ export interface SecondPageItem {
 export interface SecondPageReport {
   site: string
   range: number
+  dateRange: {
+    startDate: string
+    endDate: string
+  }
   generatedAt: string
+  summary: {
+    opportunities: number
+    templates: number
+    impressions: number
+    contentIssues: number
+    brandFiltering: 'included' | 'excluded'
+    verdict: string
+  }
   verification:
     | { requested: false; verified: 0; failed: 0 }
     | { requested: true; limit: number; verified: number; failed: number }
   items: SecondPageItem[]
+  caveats: string[]
+  recommendations: string[]
   ledgerSummary: string
   warnings: string[]
 }

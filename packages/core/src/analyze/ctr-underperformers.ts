@@ -3,6 +3,10 @@ import { querySearchAnalytics } from '../gsc/client.js'
 import { isLowActionabilityQuery } from './query-quality.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
 
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return count === 1 ? singular : pluralLabel
+}
+
 export async function ctrUnderperformersReport(input: {
   site: string
   minImpressions?: number
@@ -66,9 +70,40 @@ export async function ctrUnderperformersReport(input: {
     .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
     .sort((a, b) => b.clickShortfall - a.clickShortfall)
 
+  const totalClickShortfall = items.reduce(
+    (sum, item) => sum + item.clickShortfall,
+    0,
+  )
+  const top = items[0]
+
   return {
     site: input.site,
+    range,
     generatedAt: new Date().toISOString(),
+    summary: {
+      underperformers: items.length,
+      estimatedClickShortfall: totalClickShortfall,
+      minImpressions,
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
+      verdict: top
+        ? `${items.length} CTR ${plural(items.length, 'underperformer')} found, with about ${totalClickShortfall.toFixed(0)} estimated clicks available. Start with "${top.query}" because it has the largest click gap.`
+        : 'No high-impression page-one queries are materially underperforming the expected CTR curve.',
+    },
     items,
+    caveats: [
+      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
+      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
+      `Only queries ranking position 1-10 with at least ${minImpressions} impressions were checked.`,
+      'Expected CTR is a directional baseline by rounded ranking position, not a promise of available clicks.',
+    ],
+    recommendations: top
+      ? [
+          `Rewrite the title and meta description for "${top.query}" first. Keep the page body mostly stable unless rankings or content coverage are also weak.`,
+          'Prioritise rows with high impressions, low actual CTR, and clear search intent. Avoid testing tiny queries where noise will hide the result.',
+          'After changing SERP copy, annotate the change and compare the next full 28-day period before making more edits.',
+        ]
+      : [
+          'No CTR-only action is recommended from this report. Use striking-distance or page-opportunities if you want more growth ideas.',
+        ],
   }
 }

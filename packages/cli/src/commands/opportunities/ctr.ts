@@ -14,14 +14,6 @@ import {
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 
-function clickGap(item: {
-  expectedCtr: number
-  actualCtr: number
-  impressions: number
-}): number {
-  return Math.max(0, (item.expectedCtr - item.actualCtr) * item.impressions)
-}
-
 export const ctrUnderperformersCommand = defineCommand({
   args: {
     site: { type: 'string' },
@@ -52,16 +44,20 @@ export const ctrUnderperformersCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Underperformers', formatCount(report.items.length)],
+      ['Underperformers', formatCount(report.summary.underperformers)],
       [
-        'Brand queries',
-        booleanArg(args['include-brand']) ? 'included' : 'excluded',
+        'Estimated click gap',
+        formatCount(report.summary.estimatedClickShortfall),
       ],
+      ['Brand queries', report.summary.brandFiltering],
+      ['Verdict', report.summary.verdict],
     ])
     printNotes('Why this matters', [
       'These queries already have visibility; the fastest win is usually better SERP framing, not new content.',
       'Start with high-impression rows where actual CTR is far below the expected CTR for that ranking position.',
     ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
     printLimitedTable(
       ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Expected', 'Gap', 'Action'],
       report.items.map((item) => [
@@ -71,7 +67,7 @@ export const ctrUnderperformersCommand = defineCommand({
         formatCount(item.impressions),
         formatPercent(item.actualCtr),
         formatPercent(item.expectedCtr),
-        formatCount(clickGap(item)),
+        formatCount(item.clickShortfall),
         truncate(item.recommendation.action, 72),
       ]),
     )
@@ -79,7 +75,7 @@ export const ctrUnderperformersCommand = defineCommand({
       'Top CTR actions',
       report.items.map((item) => ({
         label: item.query,
-        context: `${formatCount(clickGap(item))} click gap, ${formatPercent(item.actualCtr)} CTR`,
+        context: `${formatCount(item.clickShortfall)} click gap, ${formatPercent(item.actualCtr)} CTR`,
         action: item.recommendation.action,
       })),
     )

@@ -44,5 +44,16 @@ export function buildSecondPageRecommendations(
     })
   }
 
+  if (!recommendations.length) {
+    recommendations.push({
+      principle: 'C.6',
+      evidenceRef: `The page already covers "${query}" in key on-page areas but averages position ${item.position.toFixed(1)}.`,
+      action: `The page already appears relevant for "${query}". Add internal links from closely related pages, improve the intro/example section around the query, and avoid creating a duplicate URL for the same intent.`,
+      effort: 'S',
+      confidence: 'medium',
+      impactEstimate: `Moving from position ${item.position.toFixed(1)} into the top 10 should expose the page to materially higher CTR.`,
+    })
+  }
+
   return recommendations
 }

@@ -8,12 +8,14 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson } from '../../utils.js'
+import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
   formatPosition,
   printActionDetails,
   printLimitedTable,
+  printNotes,
+  verificationSummary,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
@@ -64,6 +66,25 @@ export const secondPageCommand = defineCommand({
       printJson(report)
       return
     }
+    printKeyValue([
+      ['Site', report.site],
+      ['Opportunities', formatCount(report.summary.opportunities)],
+      ['Templates', formatCount(report.summary.templates)],
+      ['Impressions', formatCount(report.summary.impressions)],
+      ['Content issues', formatCount(report.summary.contentIssues)],
+      ['Brand queries', report.summary.brandFiltering],
+      ['Verification', verificationSummary(report)],
+      ['Verdict', report.summary.verdict],
+    ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
+    if (!report.items.length) {
+      process.stdout.write(
+        'No second-page opportunities matched this report.\n',
+      )
+      process.stdout.write(`${report.ledgerSummary}\n`)
+      return
+    }
     printLimitedTable(
       [
         'Query',
@@ -85,7 +106,8 @@ export const secondPageCommand = defineCommand({
         `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
         formatFetchDiagnostics(item.fetchDiagnostics),
         formatContentCheck(item.contentVerification?.classification),
-        item.recommendations[0]?.action ?? 'No recommendation',
+        item.recommendations[0]?.action ??
+          'Review the ranking URL before creating a new page.',
       ]),
     )
     printActionDetails(

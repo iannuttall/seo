@@ -9,6 +9,7 @@ import {
   formatPosition,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -18,6 +19,10 @@ function formatMaybePosition(value: number): string {
 }
 
 export const decayingCommand = defineCommand({
+  meta: {
+    name: 'decaying',
+    description: 'Find query/page rows losing clicks between two GSC windows',
+  },
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
@@ -58,18 +63,22 @@ export const decayingCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Decaying query/page rows', formatCount(report.items.length)],
-      ['Decay clusters', formatCount(report.groups.length)],
-      [
-        'Brand queries',
-        booleanArg(args['include-brand']) ? 'included' : 'excluded',
-      ],
+      ['Decaying query/page rows', formatCount(report.summary.rows)],
+      ['Decay clusters', formatCount(report.summary.groups)],
+      ['Lost clicks', formatCount(report.summary.totalClickLoss)],
+      ['Brand queries', report.summary.brandFiltering],
       ['Min drop', `${report.filters.minDropPct}%`],
       ['Min previous clicks', formatCount(report.filters.minPreviousClicks)],
+      ['Verdict', report.summary.verdict],
     ])
+    printNotes('Why this matters', [
+      'Decay shows query/page rows that have already worked but are losing clicks, so recovery is usually faster than creating new content.',
+      'The cause column separates CTR loss, ranking loss, visibility loss, and demand/impression loss so the action is not one-size-fits-all.',
+    ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
 
     if (!report.items.length) {
-      process.stdout.write('No material decay matched these filters.\n')
       return
     }
 

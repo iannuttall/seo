@@ -21,6 +21,7 @@ test('brand query matching is token-aware for short brands', () => {
   assert.equal(isBrandQuery('acme docs', ['acme']), true)
   assert.equal(isBrandQuery('best academic apps', ['acme']), false)
   assert.equal(isBrandQuery('example brand.com', ['examplebrand']), true)
+  assert.equal(isBrandQuery('examples brand', ['example brand']), true)
 })
 
 test('shouldExcludeBrandQuery can include brand when requested', () => {

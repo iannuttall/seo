@@ -71,12 +71,25 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
     decay: {
       site: 'sc-domain:example.com',
       generatedAt: '',
+      ranges: {
+        current: { startDate: '2026-05-01', endDate: '2026-05-28' },
+        previous: { startDate: '2026-04-03', endDate: '2026-04-30' },
+      },
       filters: {
         minDropPct: 20,
         minPreviousClicks: 2,
         minClickLoss: 1,
         brand: 'excluded',
       },
+      summary: {
+        rows: 0,
+        groups: 0,
+        totalClickLoss: 0,
+        brandFiltering: 'excluded',
+        verdict: 'No material decay matched these filters.',
+      },
+      caveats: [],
+      recommendations: [],
       items: [],
       groups: [],
       templates: [],

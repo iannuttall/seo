@@ -294,7 +294,9 @@ function templateMovementForDirection(input: {
     )
 }
 
-function inferTemplateMovement(pageSegment: SplitSegment): TemplateMovement[] {
+export function inferTemplateMovement(
+  pageSegment: SplitSegment,
+): TemplateMovement[] {
   const movedPages = [...pageSegment.winners, ...pageSegment.losers]
     .filter((item) => item.key.startsWith('http'))
     .filter((item) => Math.abs(item.clickDelta) > 0)

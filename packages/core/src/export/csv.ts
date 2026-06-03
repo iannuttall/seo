@@ -1,5 +1,10 @@
 import type { DiagnosePropertyReport } from '../analyze/diagnose-property.js'
 import type { PseoAuditReport } from '../analyze/pseo/audit.js'
+import type { ReportNarrative } from '../analyze/reports/types.js'
+import type {
+  PriorityQueueItem,
+  WorkflowReport,
+} from '../analyze/workflows/types.js'
 
 export type CsvValue = string | number | boolean | null | undefined
 export type CsvRow = Record<string, CsvValue>
@@ -176,6 +181,226 @@ export function diagnoseCsvFiles(report: DiagnosePropertyReport): CsvFile[] {
         action: item.recommendation,
       })),
     },
+  ]
+}
+
+function prefixCsvFiles(prefix: string, files: CsvFile[]): CsvFile[] {
+  return files.map((file) => ({
+    ...file,
+    filename: `${prefix}-${file.filename}`,
+  }))
+}
+
+export function narrativeCsvFiles(report: ReportNarrative): CsvFile[] {
+  const recovery = report.monitoring.linkRecover
+  return [
+    {
+      filename: 'report-summary.csv',
+      rows: [
+        {
+          site: report.site,
+          generated_at: report.generatedAt,
+          period_start: report.period.startDate,
+          period_end: report.period.endDate,
+          period_days: report.periodDays,
+          headline: report.headline,
+        },
+      ],
+    },
+    {
+      filename: 'report-sections.csv',
+      rows: report.sections.flatMap((section) =>
+        section.bullets.map((bullet, index) => ({
+          section: section.title,
+          rank: index + 1,
+          bullet,
+        })),
+      ),
+    },
+    {
+      filename: 'report-priorities.csv',
+      rows: report.priorities.map((priority, index) => ({
+        rank: index + 1,
+        title: priority.title,
+        confidence: priority.confidence,
+        action: priority.action,
+      })),
+    },
+    {
+      filename: 'change-measurements.csv',
+      rows: report.changeMeasurements.map((measurement) => ({
+        change_id: measurement.change.id,
+        title: measurement.change.title,
+        scope: measurement.change.scope,
+        target: measurement.change.target,
+        changed_at: measurement.change.changedAt,
+        verdict: measurement.verdict,
+        confidence: measurement.confidence,
+        before_start: measurement.before.startDate,
+        before_end: measurement.before.endDate,
+        after_start: measurement.after.startDate,
+        after_end: measurement.after.endDate,
+        before_clicks: measurement.before.metrics.clicks,
+        after_clicks: measurement.after.metrics.clicks,
+        click_delta: measurement.delta.clicks,
+        click_pct: measurement.delta.clickPct,
+        impression_delta: measurement.delta.impressions,
+        ctr_delta: measurement.delta.ctr,
+        position_delta: measurement.delta.position,
+        note: measurement.note,
+      })),
+    },
+    {
+      filename: 'monitoring-crawls.csv',
+      rows: report.monitoring.crawlRuns.map((crawl) => ({
+        id: crawl.id,
+        site: crawl.site,
+        start_url: crawl.startUrl,
+        created_at: crawl.createdAt,
+        limit: crawl.limit,
+        url_count: crawl.urlCount,
+        status_errors: crawl.statusErrors,
+        non_indexable: crawl.nonIndexable,
+        recommendations: crawl.recommendations,
+        high_priority_recommendations: crawl.highPriorityRecommendations,
+        top_recommendation_url: crawl.topRecommendation?.url,
+        top_recommendation_severity: crawl.topRecommendation?.severity,
+        top_recommendation_title: crawl.topRecommendation?.title,
+        top_recommendation_action: crawl.topRecommendation?.action,
+      })),
+    },
+    {
+      filename: 'monitoring-index-watch.csv',
+      rows: [
+        {
+          inspected_urls: report.monitoring.indexWatch.inspectedUrls,
+          latest_inspected_at: report.monitoring.indexWatch.latestInspectedAt,
+          non_pass: report.monitoring.indexWatch.nonPass,
+          blocked: report.monitoring.indexWatch.blocked,
+        },
+      ],
+    },
+    {
+      filename: 'monitoring-link-recover.csv',
+      rows: recovery
+        ? [
+            {
+              id: recovery.id,
+              site: recovery.site,
+              created_at: recovery.createdAt,
+              start_date: recovery.range.startDate,
+              end_date: recovery.range.endDate,
+              days: recovery.range.days,
+              checked: recovery.checked,
+              recoverable: recovery.recoverable,
+              high: recovery.high,
+              medium: recovery.medium,
+              low: recovery.low,
+              clicks_at_risk: recovery.clicksAtRisk,
+              impressions_at_risk: recovery.impressionsAtRisk,
+              top_issue: recovery.topIssue,
+              top_url: recovery.topUrl,
+              top_action: recovery.topAction,
+              repeated_urls: recovery.repeatedUrls,
+              repeated_top_url: recovery.repeatedTopUrl,
+            },
+          ]
+        : [],
+    },
+    ...prefixCsvFiles('diagnosis', diagnoseCsvFiles(report.diagnosis)),
+  ]
+}
+
+export function refreshPrioritiesCsvFiles(
+  report: WorkflowReport<{
+    queue: PriorityQueueItem[]
+    warnings: string[]
+    diagnosis: DiagnosePropertyReport
+  }>,
+): CsvFile[] {
+  return [
+    {
+      filename: 'priority-queue.csv',
+      rows: report.output.queue.map((item, index) => ({
+        rank: index + 1,
+        source: item.source,
+        category: item.category,
+        score: item.score,
+        impact: item.impact,
+        confidence: item.confidence,
+        findings: item.grouped?.count ?? 1,
+        title: item.title,
+        target: item.target,
+        template: item.template?.label,
+        template_count: item.template?.count,
+        ga4_sessions: item.analytics?.sessions,
+        ga4_total_users: item.analytics?.totalUsers,
+        evidence: item.evidence,
+        action: item.action,
+      })),
+    },
+    {
+      filename: 'priority-score-breakdown.csv',
+      rows: report.output.queue.map((item, index) => ({
+        rank: index + 1,
+        target: item.target,
+        source: item.source,
+        score: item.scoreBreakdown.final,
+        impact_score: item.scoreBreakdown.impact,
+        source_weight: item.scoreBreakdown.source,
+        confidence_weight: item.scoreBreakdown.confidence,
+        effort_weight: item.scoreBreakdown.effort,
+        verification_weight: item.scoreBreakdown.verification,
+        template_weight: item.scoreBreakdown.template,
+        analytics_weight: item.scoreBreakdown.analytics,
+      })),
+    },
+    {
+      filename: 'priority-grouped-findings.csv',
+      rows: report.output.queue.flatMap((item, rank) =>
+        (item.grouped?.findings ?? []).map((finding, index) => ({
+          queue_rank: rank + 1,
+          finding_rank: index + 1,
+          source: finding.source,
+          category: finding.category,
+          score: finding.score,
+          impact: finding.impact,
+          confidence: finding.confidence,
+          title: finding.title,
+          target: finding.target,
+          template: finding.template?.label,
+          ga4_sessions: finding.analytics?.sessions,
+          evidence: finding.evidence,
+          action: finding.action,
+        })),
+      ),
+    },
+    {
+      filename: 'workflow-steps.csv',
+      rows: report.steps.map((step, index) => ({
+        rank: index + 1,
+        tool: step.tool,
+        status: step.status,
+        summary: step.summary,
+      })),
+    },
+    {
+      filename: 'workflow-actions.csv',
+      rows: report.actions.map((action, index) => ({
+        rank: index + 1,
+        title: action.title,
+        confidence: action.confidence,
+        action: action.action,
+      })),
+    },
+    {
+      filename: 'warnings.csv',
+      rows: report.output.warnings.map((warning, index) => ({
+        rank: index + 1,
+        warning,
+      })),
+    },
+    ...prefixCsvFiles('diagnosis', diagnoseCsvFiles(report.output.diagnosis)),
   ]
 }
 

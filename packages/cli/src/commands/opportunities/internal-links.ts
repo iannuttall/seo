@@ -1,6 +1,7 @@
 import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, stringArg } from '../../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
@@ -9,7 +10,7 @@ import {
   printNotes,
   truncate,
 } from '../output.js'
-import { selectedSiteOrThrow } from '../shared.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const internalLinksCommand = defineCommand({
   args: {
@@ -17,17 +18,26 @@ export const internalLinksCommand = defineCommand({
     client: { type: 'string' },
     url: { type: 'string', required: true },
     limit: { type: 'string' },
+    ...cliReportArgs(['includeBrand'], {
+      includeBrand: {
+        description: 'Include branded queries when matching internal links.',
+      },
+    }),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const selection = await resolveClientSelection({
+      client: stringArg(args.client),
+      site: stringArg(args.site),
+      options: { json },
+    })
     const report = await internalLinksReport({
-      site: await selectedSiteOrThrow(
-        { client: stringArg(args.client), site: stringArg(args.site) },
-        { json },
-      ),
+      site: selection.site,
       targetUrl: stringArg(args.url) ?? '',
       limit: numberArg(args.limit),
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
     })
     if (json) {
       printJson(report)
@@ -41,6 +51,7 @@ export const internalLinksCommand = defineCommand({
       ['Checked sources', formatCount(report.summary.checkedSources)],
       ['Opportunities', formatCount(report.summary.opportunities)],
       ['Skipped sources', formatCount(report.summary.skippedSources)],
+      ['Brand queries', report.summary.brandFiltering],
       ['Verdict', report.summary.verdict],
     ])
     printNotes('Why this matters', [

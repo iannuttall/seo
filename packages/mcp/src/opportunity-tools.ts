@@ -146,11 +146,17 @@ export function registerOpportunityTools(server: McpServer): void {
         site: z.string(),
         targetUrl: z.string().url(),
         limit: z.number().optional(),
+        includeBrand: z.boolean().optional(),
       },
     },
-    async ({ site, targetUrl, limit }) => {
+    async ({ site, targetUrl, limit, includeBrand }) => {
       try {
-        const result = await internalLinksReport({ site, targetUrl, limit })
+        const result = await internalLinksReport({
+          site,
+          targetUrl,
+          limit,
+          includeBrand,
+        })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

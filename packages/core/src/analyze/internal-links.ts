@@ -1,13 +1,34 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { extractPage } from '../extract/page-extractor.js'
 import { fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { isLowActionabilityQuery } from './query-quality.js'
 import { defaultDateRange, jaccard, tokenize } from './shared.js'
 
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return count === 1 ? singular : pluralLabel
+}
+
+function internalLinksVerdict(input: {
+  opportunities: number
+  targetQueries: number
+}): string {
+  if (input.opportunities > 0) {
+    const verb = input.opportunities === 1 ? 'ranks' : 'rank'
+    return `${input.opportunities} source ${plural(input.opportunities, 'page')} ${verb} for related demand and do not link to the target.`
+  }
+  if (input.targetQueries === 0) {
+    return 'No non-brand target queries were found for this URL in the selected GSC window.'
+  }
+  return 'No source pages with related query demand were found missing a link to the target.'
+}
+
 export async function internalLinksReport(input: {
   site: string
   targetUrl: string
   limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }) {
   const range = defaultDateRange(28)
@@ -26,7 +47,13 @@ export async function internalLinksReport(input: {
     .filter(
       (row) =>
         (row.keys[1] ?? '') === input.targetUrl &&
-        !isLowActionabilityQuery(row.keys[0] ?? ''),
+        !isLowActionabilityQuery(row.keys[0] ?? '') &&
+        !shouldExcludeBrandQuery({
+          query: row.keys[0] ?? '',
+          siteUrl: input.site,
+          brandTerms: input.brandTerms,
+          includeBrand: input.includeBrand,
+        }),
     )
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 20)
@@ -45,6 +72,12 @@ export async function internalLinksReport(input: {
     .filter(
       (row) =>
         !isLowActionabilityQuery(row.query) &&
+        !shouldExcludeBrandQuery({
+          query: row.query,
+          siteUrl: input.site,
+          brandTerms: input.brandTerms,
+          includeBrand: input.includeBrand,
+        }) &&
         (row.overlap >= 0.6 ||
           targetQueries.some((target) => target.keys[0] === row.query)),
     )
@@ -120,14 +153,17 @@ export async function internalLinksReport(input: {
       checkedSources,
       opportunities: items.length,
       skippedSources: warnings.length,
-      verdict: items.length
-        ? `${items.length} source page(s) rank for related demand and do not link to the target.`
-        : 'No source pages with related query demand were found missing a link to the target.',
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
+      verdict: internalLinksVerdict({
+        opportunities: items.length,
+        targetQueries: targetQueries.length,
+      }),
     },
     items,
     warnings,
     caveats: [
-      'Date window: last 28 day(s), using final GSC data where available.',
+      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
+      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
       'Only source pages with overlapping GSC query demand were checked.',
       warnings.length
         ? `${warnings.length} source page(s) could not be fetched or extracted, so some opportunities may be missing.`

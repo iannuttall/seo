@@ -15,7 +15,7 @@ import {
   changeLogCommand,
   contentGroupsCommand,
 } from './commands/experiments/index.js'
-import { exportCommand } from './commands/export.js'
+import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
 import { mcpCommand } from './commands/mcp.js'
 import {

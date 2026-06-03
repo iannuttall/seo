@@ -23,6 +23,33 @@ import {
 } from './sections.js'
 import type { ReportNarrative } from './types.js'
 
+function reportCaveats(input: {
+  period: { startDate: string; endDate: string }
+  brandTerms?: string[]
+  includeBrand?: boolean
+  refresh?: boolean
+  verifyContent?: boolean
+  verifyLimit?: number
+  verified: number
+  quickWinCount: number
+}): string[] {
+  return [
+    `Date window: ${input.period.startDate} to ${input.period.endDate}.`,
+    `Brand queries: ${
+      input.includeBrand
+        ? 'included'
+        : input.brandTerms?.length
+          ? 'excluded where saved brand terms matched'
+          : 'no saved brand terms, so no brand filter was applied'
+    }.`,
+    `Data freshness: ${input.refresh ? 'fresh fetch requested; local cache bypassed where supported' : 'local cache allowed; rerun with --refresh to bypass cached GSC/HTTP data'}.`,
+    'GA4: not included in this narrative; use refresh-priorities when GA4 value should influence prioritisation.',
+    input.verifyContent
+      ? `Content verification: checked ${input.verified} of ${input.quickWinCount} quick-win candidate(s), limit ${input.verifyLimit ?? 3}.`
+      : 'Content verification: not run; recommendations are based on GSC/query data unless stated otherwise.',
+  ]
+}
+
 export async function reportNarrative(input: {
   site: string
   days?: number
@@ -98,6 +125,19 @@ export async function reportNarrative(input: {
       endDate: diagnosis.anomaly.anomalies[0]?.comparisonEnd ?? '',
     },
     headline: headlineLine(diagnosis),
+    caveats: reportCaveats({
+      period: period ?? {
+        startDate: diagnosis.anomaly.anomalies[0]?.baselineStart ?? '',
+        endDate: diagnosis.anomaly.anomalies[0]?.comparisonEnd ?? '',
+      },
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
+      refresh: input.refresh,
+      verifyContent: input.verifyContent,
+      verifyLimit: input.verifyLimit,
+      verified: diagnosis.quickWins.verification.verified,
+      quickWinCount: diagnosis.quickWins.items.length,
+    }),
     sections: [
       {
         title: 'Performance',

@@ -9,6 +9,8 @@ import {
   formatPercent,
   formatPosition,
   printLimitedTable,
+  printNextCommand,
+  printNotes,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -75,6 +77,14 @@ function formatEntityFit(
   return `${Math.round(fit.impressionShare * 100)}% impression fit across ${fit.checkedQueries} checked query/page row(s)`
 }
 
+function formatDemandLabel(label: string): string {
+  if (label.startsWith('theme: ')) {
+    return `${label.slice('theme: '.length)}-related`
+  }
+  if (label === 'general') return 'broad'
+  return label
+}
+
 function printTemplateDetails(
   templates: Awaited<ReturnType<typeof pseoAuditReport>>['templates'],
 ): void {
@@ -92,7 +102,7 @@ function printTemplateDetails(
       .slice(0, 3)
       .map(
         (pattern) =>
-          `${pattern.label} (${formatCount(pattern.impressions)} impr: ${pattern.examples
+          `${formatDemandLabel(pattern.label)} (${formatCount(pattern.impressions)} impr: ${pattern.examples
             .slice(0, 2)
             .join('; ')})`,
       )
@@ -217,6 +227,7 @@ export const pseoAuditCommand = defineCommand({
       ['Crawled URLs', formatCount(report.summary.crawledUrls)],
       ['Inspected URLs', formatCount(report.summary.inspectedUrls)],
     ])
+    printNotes('Report caveats', report.caveats)
 
     if (!report.templates.length) {
       process.stdout.write('No pSEO templates found from GSC/sitemap data.\n')
@@ -255,5 +266,9 @@ export const pseoAuditCommand = defineCommand({
     if (report.warnings.length) {
       process.stdout.write(`Warnings: ${report.warnings.join('; ')}\n`)
     }
+    const target = selection.client
+      ? `--client ${JSON.stringify(selection.client.id)}`
+      : `--site ${JSON.stringify(selection.site)}`
+    printNextCommand(`seo export pseo ${target}`)
   },
 })

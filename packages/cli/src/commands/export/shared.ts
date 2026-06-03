@@ -49,7 +49,7 @@ export async function writeCsvFiles(outDir: string, files: CsvFile[]) {
   const written: string[] = []
   for (const file of files) {
     const path = resolve(outDir, file.filename)
-    await writeFile(path, renderCsv(file.rows), 'utf8')
+    await writeFile(path, renderCsv(file.rows, file.headers), 'utf8')
     written.push(path)
   }
   return written

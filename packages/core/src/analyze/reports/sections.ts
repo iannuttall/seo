@@ -153,6 +153,9 @@ export function templateOpportunityLine(
   if (!template || template.count < 2) {
     return 'No dominant opportunity template stood out.'
   }
+  if (template.id === 'other') {
+    return `${template.count} quick wins sit outside a recognised reusable template. Triage the top URLs individually, then create a content group if they share the same page pattern.`
+  }
   return `${template.count} quick wins sit in the ${template.label} template, so fix the reusable template before editing pages one by one.`
 }
 

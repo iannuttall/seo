@@ -6,6 +6,7 @@ import {
   formatCount,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
 } from '../output.js'
 import { selectedSiteOrThrow } from '../shared.js'
@@ -37,6 +38,16 @@ export const internalLinksCommand = defineCommand({
       ['Target', report.targetUrl],
       ['Opportunities', formatCount(report.items.length)],
     ])
+    printNotes('Why this matters', [
+      'These source pages already rank for related queries, so their internal links can pass relevance into the target without creating new pages.',
+      'Use the shared-query column to choose natural anchor text and avoid forced exact-match links.',
+    ])
+    if (!report.items.length) {
+      process.stdout.write(
+        'No internal link opportunities matched this target URL.\n',
+      )
+      return
+    }
     printLimitedTable(
       ['Source URL', 'Impr', 'Shared queries', 'Action'],
       report.items.map((item) => [

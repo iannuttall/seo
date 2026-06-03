@@ -131,6 +131,7 @@ export type PseoAuditReport = {
     inspectedUrls: number
     crawledUrls: number
   }
+  caveats: string[]
   templates: PseoAuditTemplate[]
   warnings: string[]
 }
@@ -208,6 +209,14 @@ function primaryActionPattern(
       pattern.impressions >= top.impressions * 0.45,
   )
   return specific ?? top
+}
+
+function readablePatternLabel(label: string): string {
+  if (label.startsWith('theme: ')) {
+    return `${label.slice('theme: '.length)}-related demand`
+  }
+  if (label === 'general') return 'broad demand'
+  return `${label} demand`
 }
 
 function pathVariableTerms(
@@ -458,7 +467,7 @@ function buildRecommendation(input: {
   const template = input.template
   const topPattern = primaryActionPattern(template.metrics.queryPatterns)
   const patternLabel = topPattern
-    ? `${topPattern.label} demand`
+    ? readablePatternLabel(topPattern.label)
     : 'known query demand'
   if (template.verdict === 'index-risk') {
     return `${template.signature} has indexing risk. Check URL Inspection, canonicals, robots/noindex, redirects, and sitemap inclusion before rewriting any generated copy.`
@@ -481,7 +490,7 @@ function buildRecommendation(input: {
       const weak = template.metrics.entityFit.weakExamples[0]
       return `Many impressions for ${template.signature} come from broad queries that do not name the page's specific entity or location. Make titles, H1s, intros, and internal links clearer about the exact page target${weak ? `; start by checking "${weak.query}" against path terms ${weak.pathTerms.join(', ')}` : ''}. If the broad query should rank, build or strengthen a better hub page for it.`
     }
-    return `${template.signature} already has search demand around ${patternLabel}${examples ? ` (${examples})` : ''}. Improve the template by testing clearer title/H1/meta wording, adding internal links from related pages, and filling any repeated query angles that the page body does not answer.`
+    return `${template.signature} already has ${patternLabel}${examples ? ` (${examples})` : ''}. Improve the template by testing clearer title/H1/meta wording, adding internal links from related pages, and filling any repeated query angles that the page body does not answer.`
   }
   if (!input.crawlSamplesRequested || !input.inspectionSamplesRequested) {
     return `GSC does not show a clear issue for this template. Run again with --crawl-samples and --inspect-samples before deciding it is healthy.`
@@ -509,7 +518,7 @@ function buildEvidence(input: {
   const topPattern = primaryActionPattern(input.metrics.queryPatterns)
   if (topPattern) {
     evidence.push(
-      `top demand pattern: ${topPattern.label} (${Math.round(topPattern.impressions).toLocaleString('en-GB')} impressions)`,
+      `top demand pattern: ${readablePatternLabel(topPattern.label)} (${Math.round(topPattern.impressions).toLocaleString('en-GB')} impressions)`,
     )
   }
   if (input.metrics.entityFit.checkedQueries >= 3) {
@@ -816,6 +825,22 @@ export async function pseoAuditReport(input: {
         0,
       ),
     },
+    caveats: [
+      `GSC window: last ${days} day(s).`,
+      `Brand queries: ${
+        input.includeBrand
+          ? 'included'
+          : input.brandTerms?.length
+            ? 'excluded where saved brand terms matched'
+            : 'no saved brand terms, so no brand filter was applied'
+      }.`,
+      `Data freshness: ${input.refresh ? 'fresh fetch requested; local cache bypassed where supported' : 'local cache allowed; rerun with --refresh to bypass cached GSC/HTTP data'}.`,
+      `Crawl samples: ${input.crawlSamples ?? 0} URL(s) per detected template.`,
+      `URL Inspection samples: ${input.inspectSamples ?? 0} URL(s) per detected template.`,
+      input.sitemaps?.length
+        ? `Sitemaps: ${input.sitemaps.length} sitemap URL(s) provided.`
+        : 'Sitemaps: none provided; template discovery used GSC page rows only.',
+    ],
     templates,
     warnings,
   }

@@ -4,6 +4,13 @@ export function renderMarkdown(report: ReportNarrative): string {
   const lines = [`# SEO report: ${report.site}`, '', report.headline, '']
   lines.push(`Period: ${report.period.startDate} to ${report.period.endDate}`)
   lines.push('')
+  if (report.caveats.length) {
+    lines.push('## Report Caveats')
+    for (const caveat of report.caveats) {
+      lines.push(`- ${caveat}`)
+    }
+    lines.push('')
+  }
   for (const section of report.sections) {
     lines.push(`## ${section.title}`)
     for (const bullet of section.bullets) {

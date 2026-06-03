@@ -9,6 +9,7 @@ import {
   formatPosition,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -56,6 +57,10 @@ export const ctrUnderperformersCommand = defineCommand({
         'Brand queries',
         booleanArg(args['include-brand']) ? 'included' : 'excluded',
       ],
+    ])
+    printNotes('Why this matters', [
+      'These queries already have visibility; the fastest win is usually better SERP framing, not new content.',
+      'Start with high-impression rows where actual CTR is far below the expected CTR for that ranking position.',
     ])
     printLimitedTable(
       ['Query', 'URL', 'Pos', 'Impr', 'CTR', 'Expected', 'Gap', 'Action'],

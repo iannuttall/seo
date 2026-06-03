@@ -20,6 +20,7 @@ export type ReportNarrative = {
     endDate: string
   }
   headline: string
+  caveats: string[]
   sections: NarrativeSection[]
   priorities: Array<{
     title: string

@@ -2,9 +2,20 @@ import { trafficAnomaly, updateCorrelation } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printLimitedTable } from './output.js'
+import { printLimitedTable, printNextCommand, printNotes } from './output.js'
 import { cliReportArgs } from './report-options.js'
 import { selectedSiteOrThrow } from './shared.js'
+
+function formatNumber(value: number): string {
+  return value.toLocaleString('en-GB', {
+    maximumFractionDigits: value >= 100 ? 0 : 1,
+  })
+}
+
+function formatChange(value: number): string {
+  const rounded = Math.abs(value) >= 10 ? value.toFixed(0) : value.toFixed(1)
+  return `${value > 0 ? '+' : ''}${rounded}%`
+}
 
 export const trafficAnomalyCommand = defineCommand({
   args: {
@@ -44,12 +55,21 @@ export const trafficAnomalyCommand = defineCommand({
       return
     }
     printLimitedTable(
-      ['Metric', 'Direction', 'Baseline', 'Recent', 'z', 'Significant'],
+      [
+        'Metric',
+        'Direction',
+        'Baseline/day',
+        'Recent/day',
+        'Change',
+        'z',
+        'Significant',
+      ],
       report.anomalies.map((anomaly) => [
         anomaly.metric,
         anomaly.direction,
-        anomaly.baselineMean,
-        anomaly.comparisonMean,
+        formatNumber(anomaly.baselineMean),
+        formatNumber(anomaly.comparisonMean),
+        formatChange(anomaly.percentChange),
         anomaly.zScore,
         anomaly.significant ? 'yes' : 'no',
       ]),
@@ -82,14 +102,16 @@ export const updateCorrelateCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const client = stringArg(args.client)
+    const site = await selectedSiteOrThrow(
+      { client, site: stringArg(args.site) },
+      {
+        json,
+        refresh: booleanArg(args.refresh),
+      },
+    )
     const report = await updateCorrelation({
-      site: await selectedSiteOrThrow(
-        { client: stringArg(args.client), site: stringArg(args.site) },
-        {
-          json,
-          refresh: booleanArg(args.refresh),
-        },
-      ),
+      site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       paddingDays: numberArg(args['padding-days']),
@@ -101,15 +123,23 @@ export const updateCorrelateCommand = defineCommand({
     }
     printKeyValue([
       ['Classification', report.classification],
+      ['Confidence', report.confidence],
       ['Updates matched', String(report.overlappingUpdates.length)],
+      ['Source', report.source.name],
     ])
+    process.stdout.write(`\n${report.summary}\n`)
+    printNotes('Evidence', report.evidence)
+    printNotes('Report caveats', report.caveats)
+    printNotes('Recommended next checks', report.actions)
     printLimitedTable(
-      ['Metric', 'Direction', 'z', 'Recent'],
+      ['Metric', 'Direction', 'Baseline/day', 'Recent/day', 'Change', 'z'],
       report.anomalies.map((anomaly) => [
         anomaly.metric,
         anomaly.direction,
+        formatNumber(anomaly.baselineMean),
+        formatNumber(anomaly.comparisonMean),
+        formatChange(anomaly.percentChange),
         anomaly.zScore,
-        `${anomaly.comparisonStart} to ${anomaly.comparisonEnd}`,
       ]),
     )
     if (report.overlappingUpdates.length) {
@@ -124,5 +154,9 @@ export const updateCorrelateCommand = defineCommand({
         ]),
       )
     }
+    const target = client
+      ? `--client ${JSON.stringify(client)}`
+      : `--site ${JSON.stringify(site)}`
+    printNextCommand(`seo segment-impact ${target} --dimension page`)
   },
 })

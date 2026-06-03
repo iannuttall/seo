@@ -49,6 +49,16 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       anomalies: [],
       overlappingUpdates: [],
       classification: 'not-enough-evidence',
+      confidence: 'low',
+      summary: 'No official update overlap.',
+      evidence: [],
+      caveats: [],
+      actions: [],
+      source: {
+        name: 'Google Search Status Dashboard incidents feed',
+        url: 'https://status.search.google.com/incidents.json',
+        product: 'Ranking',
+      },
     },
     segments: {
       page: segment('page'),

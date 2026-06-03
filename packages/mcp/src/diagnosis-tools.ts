@@ -91,12 +91,9 @@ export function registerDiagnosisTools(server: McpServer): void {
       description:
         'Compare GSC movement by page, query, device, or country across two adjacent periods',
       inputSchema: {
-        site: z.string(),
+        ...mcpReportInputSchema(['site', 'days', 'limit', 'refresh']),
         dimension: z.enum(['page', 'query', 'country', 'device']).optional(),
-        days: z.number().optional(),
         compareDays: z.number().optional(),
-        limit: z.number().optional(),
-        refresh: z.boolean().optional(),
       },
     },
     async ({ site, dimension, days, compareDays, limit, refresh }) => {

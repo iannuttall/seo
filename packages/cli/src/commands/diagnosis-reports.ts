@@ -3,16 +3,27 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printLimitedTable } from './output.js'
+import { cliReportArgs } from './report-options.js'
 import { selectedSiteOrThrow } from './shared.js'
 
 export const trafficAnomalyCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: { type: 'string' },
-    recent: { type: 'string' },
-    json: { type: 'boolean', default: false },
-    refresh: { type: 'boolean', default: false },
+    ...cliReportArgs(['days', 'recentDays', 'refresh'], {
+      days: { description: 'Baseline window length in days. Defaults to 90.' },
+      recentDays: {
+        description: 'Recent anomaly window in days. Defaults to 7.',
+      },
+      refresh: {
+        description: 'Bypass local cache and fetch fresh GSC data.',
+      },
+    }),
+    json: {
+      type: 'boolean',
+      default: false,
+      description: 'Print machine-readable JSON.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
@@ -50,11 +61,24 @@ export const updateCorrelateCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
-    days: { type: 'string' },
-    recent: { type: 'string' },
-    'padding-days': { type: 'string' },
-    json: { type: 'boolean', default: false },
-    refresh: { type: 'boolean', default: false },
+    ...cliReportArgs(['days', 'recentDays', 'refresh'], {
+      days: { description: 'Baseline window length in days. Defaults to 90.' },
+      recentDays: {
+        description: 'Recent anomaly window in days. Defaults to 7.',
+      },
+      refresh: {
+        description: 'Bypass local cache and fetch fresh GSC data.',
+      },
+    }),
+    'padding-days': {
+      type: 'string',
+      description: 'Days around update windows to count as overlap.',
+    },
+    json: {
+      type: 'boolean',
+      default: false,
+      description: 'Print machine-readable JSON.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)

@@ -131,10 +131,7 @@ export function registerOpportunityTools(server: McpServer): void {
           }),
           refresh,
         })
-        return toolSuccess(
-          `${result.items.length} quick wins found across ${result.groups.length} repeated query/template cluster(s).`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

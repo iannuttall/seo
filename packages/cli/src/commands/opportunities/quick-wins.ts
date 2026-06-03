@@ -15,6 +15,7 @@ import {
   formatPosition,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
   verificationSummary,
 } from '../output.js'
@@ -22,6 +23,10 @@ import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const quickWinsCommand = defineCommand({
+  meta: {
+    name: 'quick-wins',
+    description: 'Find high-ranking low-CTR query/page opportunities',
+  },
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
@@ -65,18 +70,47 @@ export const quickWinsCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Quick wins', formatCount(report.items.length)],
-      ['Quick-win clusters', formatCount(report.groups.length)],
+      ['Quick wins', formatCount(report.summary.rows)],
       [
-        'Brand queries',
-        booleanArg(args['include-brand']) ? 'included' : 'excluded',
+        'Repeated-query clusters',
+        formatCount(report.summary.repeatedQueryGroups),
       ],
+      ['Template patterns', formatCount(report.summary.templatePatterns)],
+      ['Estimated lift', formatCount(report.summary.totalEstimatedClickLift)],
+      ['Brand queries', report.summary.brandFiltering],
       ['Verification', verificationSummary(report)],
+      ['Verdict', report.summary.verdict],
     ])
+    printNotes('Why this matters', [
+      'Quick wins already rank on page one, so better SERP framing and clearer on-page intent can recover clicks without creating new pages.',
+      'Template patterns show when the same fix can be applied across many similar pages.',
+    ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
 
     if (!report.items.length) {
-      process.stdout.write('No quick wins matched these filters.\n')
       return
+    }
+
+    if (report.templateRecommendations.length) {
+      printLimitedTable(
+        ['Template', 'Rows', 'Lift', 'Impr', 'Action'],
+        report.templateRecommendations.map((template) => [
+          truncate(template.templateLabel, 34),
+          formatCount(template.count),
+          formatCount(template.totalEstimatedClickLift),
+          formatCount(template.totalImpressions),
+          truncate(template.action, 72),
+        ]),
+      )
+      printActionDetails(
+        'Top template actions',
+        report.templateRecommendations.map((template) => ({
+          label: template.templateLabel,
+          context: `${formatCount(template.count)} rows, ${formatCount(template.totalEstimatedClickLift)} estimated click lift`,
+          action: `${template.action} ${template.evidence}`,
+        })),
+      )
     }
 
     if (report.groups.length) {

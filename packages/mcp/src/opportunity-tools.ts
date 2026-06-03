@@ -195,13 +195,13 @@ export function registerOpportunityTools(server: McpServer): void {
     {
       description: 'Cluster queries by token overlap',
       inputSchema: {
-        site: z.string(),
+        ...mcpReportInputSchema(['site', 'includeBrand']),
         scope: z.string().optional(),
       },
     },
-    async ({ site, scope }) => {
+    async ({ site, scope, includeBrand }) => {
       try {
-        const result = await queryClusterReport({ site, scope })
+        const result = await queryClusterReport({ site, scope, includeBrand })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

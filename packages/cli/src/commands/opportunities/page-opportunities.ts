@@ -8,6 +8,7 @@ import {
   formatPercent,
   printActionDetails,
   printLimitedTable,
+  printNotes,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -22,20 +23,26 @@ export const pageOpportunitiesCommand = defineCommand({
     site: { type: 'string' },
     client: { type: 'string' },
     url: { type: 'string', required: true },
-    ...cliReportArgs(['days', 'limit', 'includeBrand', 'js', 'refresh'], {
-      limit: {
-        description: 'Maximum page queries to inspect. Defaults to 25.',
+    ...cliReportArgs(
+      ['days', 'limit', 'minImpressions', 'includeBrand', 'js', 'refresh'],
+      {
+        limit: {
+          description: 'Maximum page queries to inspect. Defaults to 25.',
+        },
+        minImpressions: {
+          description: 'Minimum query impressions. Defaults to 10.',
+        },
+        includeBrand: {
+          description: 'Include branded queries in page opportunity reports.',
+        },
+        js: {
+          description: 'Force JavaScript rendering for page extraction.',
+        },
+        refresh: {
+          description: 'Bypass local GSC and HTTP cache.',
+        },
       },
-      includeBrand: {
-        description: 'Include branded queries in page opportunity reports.',
-      },
-      js: {
-        description: 'Force JavaScript rendering for page extraction.',
-      },
-      refresh: {
-        description: 'Bypass local GSC and HTTP cache.',
-      },
-    }),
+    ),
     'no-verify-content': {
       type: 'boolean',
       default: false,
@@ -55,6 +62,7 @@ export const pageOpportunitiesCommand = defineCommand({
       url: stringArg(args.url) ?? '',
       days: numberArg(args.days),
       limit: numberArg(args.limit),
+      minImpressions: numberArg(args['min-impressions']),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       verifyContent: booleanArg(args['no-verify-content']) !== true,
@@ -76,7 +84,15 @@ export const pageOpportunitiesCommand = defineCommand({
       ['Impressions', formatCount(report.summary.impressions)],
       ['Opportunities', formatCount(report.summary.opportunities)],
       ['Estimated lift', formatCount(report.summary.estimatedClickLift)],
+      ['Focus', report.summary.focus],
+      ['Verdict', report.summary.verdict],
     ])
+    printNotes('Why this matters', [
+      'This report starts from queries where this exact URL already has impressions, so recommendations stay tied to first-party demand.',
+      'Content verification separates body gaps from title/meta framing issues, which helps avoid adding copy when the page already covers the query.',
+    ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
 
     if (!report.items.length) {
       process.stdout.write('No GSC query rows found for this exact URL.\n')

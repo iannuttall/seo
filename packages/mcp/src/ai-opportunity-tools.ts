@@ -49,6 +49,7 @@ export function registerAiOpportunityTools(server: McpServer): void {
           'site',
           'days',
           'limit',
+          'minImpressions',
           'includeBrand',
           'verifyContent',
           'refresh',
@@ -62,6 +63,7 @@ export function registerAiOpportunityTools(server: McpServer): void {
       url,
       days,
       limit,
+      minImpressions,
       includeBrand,
       verifyContent,
       refresh,
@@ -73,15 +75,13 @@ export function registerAiOpportunityTools(server: McpServer): void {
           url,
           days,
           limit,
+          minImpressions,
           includeBrand,
           verifyContent,
           refresh,
           js: js ? true : 'auto',
         })
-        return toolSuccess(
-          `${result.summary.opportunities} opportunity item(s) found from ${result.summary.queries} page query row(s).`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

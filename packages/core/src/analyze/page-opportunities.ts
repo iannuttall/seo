@@ -7,6 +7,7 @@ import {
   contentCoverageRecommendation,
   queryContentCoverageFromPage,
 } from './content-coverage.js'
+import { isLowActionabilityQuery } from './query-quality.js'
 import { CTR_BASELINE, defaultDateRange } from './shared.js'
 
 export type PageOpportunityReport = {
@@ -27,6 +28,14 @@ export type PageOpportunityReport = {
     impressions: number
     opportunities: number
     estimatedClickLift: number
+    verdict: string
+    focus:
+      | 'content-gap'
+      | 'serp-framing'
+      | 'ranking'
+      | 'ctr'
+      | 'covered'
+      | 'no-data'
   }
   items: Array<{
     query: string
@@ -46,6 +55,8 @@ export type PageOpportunityReport = {
     coverage?: QueryContentCoverage
   }>
   warnings: string[]
+  caveats: string[]
+  recommendations: string[]
 }
 
 function expectedCtr(position: number): number {
@@ -86,11 +97,121 @@ function recommendationFor(input: {
   return `"${input.query}" is already covered. Do not add more copy just for this query; look for title/meta tests, internal links, or SERP features that explain the click gap.`
 }
 
+function primaryFocus(
+  items: PageOpportunityReport['items'],
+): PageOpportunityReport['summary']['focus'] {
+  if (!items.length) return 'no-data'
+  const actionable = items.filter((item) => item.opportunityType !== 'covered')
+  if (!actionable.length) return 'covered'
+  const counts = new Map<PageOpportunityReport['summary']['focus'], number>()
+  for (const item of actionable) {
+    counts.set(
+      item.opportunityType,
+      (counts.get(item.opportunityType) ?? 0) + 1,
+    )
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'covered'
+}
+
+function pageVerdict(input: {
+  focus: PageOpportunityReport['summary']['focus']
+  opportunities: number
+  estimatedClickLift: number
+}): string {
+  if (input.focus === 'no-data') {
+    return 'No GSC query rows were found for this exact URL in the selected window.'
+  }
+  if (input.focus === 'covered') {
+    return 'The sampled queries are mostly covered. Treat this as a SERP/title/internal-link review, not a content expansion brief.'
+  }
+  if (input.focus === 'content-gap') {
+    return `${input.opportunities} query opportunity(s) found. The main issue is content coverage, so add targeted answers before spending time on title tests.`
+  }
+  if (input.focus === 'serp-framing') {
+    return `${input.opportunities} query opportunity(s) found. The page appears to cover the topic, but the title/H1/meta do not make the search angle clear enough.`
+  }
+  if (input.focus === 'ranking') {
+    return `${input.opportunities} query opportunity(s) found. Most upside needs stronger relevance and internal links, not only CTR copy changes.`
+  }
+  return `${input.opportunities} query opportunity(s) found, with about ${input.estimatedClickLift.toFixed(0)} estimated clicks available from better SERP framing.`
+}
+
+function pageRecommendations(items: PageOpportunityReport['items']): string[] {
+  const actionable = items
+    .filter((item) => item.opportunityType !== 'covered')
+    .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)
+  const top = actionable[0]
+  if (!top) {
+    return items.length
+      ? [
+          'Do not add more copy just because the page has query impressions. Review title/meta wording, internal links, and SERP features first.',
+        ]
+      : [
+          'No page-level action is recommended from this report. Lower --min-impressions for long-tail inspection, or use query-cluster to find broader demand.',
+        ]
+  }
+  const recommendations = [
+    `Start with "${top.query}" because it has the clearest upside in this URL-level report. ${top.recommendation}`,
+  ]
+  const contentGaps = actionable.filter(
+    (item) => item.opportunityType === 'content-gap',
+  ).length
+  const serpFraming = actionable.filter(
+    (item) =>
+      item.opportunityType === 'serp-framing' || item.opportunityType === 'ctr',
+  ).length
+  const ranking = actionable.filter(
+    (item) => item.opportunityType === 'ranking',
+  ).length
+  if (contentGaps >= 3) {
+    recommendations.push(
+      `${contentGaps} queries look like content gaps. Group them into one useful section instead of adding thin one-query paragraphs.`,
+    )
+  }
+  if (serpFraming >= 3) {
+    recommendations.push(
+      `${serpFraming} queries look like title/meta/SERP-framing issues. Test wording before rewriting the body.`,
+    )
+  }
+  if (ranking >= 3) {
+    recommendations.push(
+      `${ranking} queries rank outside page one. Add internal links and make the relevant answer easier to find on the page before expecting CTR wins.`,
+    )
+  }
+  return recommendations
+}
+
+function pageCaveats(input: {
+  days: number
+  minImpressions: number
+  includeBrand?: boolean
+  verifyContent?: boolean
+  fetched?: boolean
+  warnings: string[]
+}): string[] {
+  return [
+    `Date window: last ${input.days} day(s), using final GSC data where available.`,
+    `Minimum query impressions: ${input.minImpressions}.`,
+    `Brand filtering: ${input.includeBrand ? 'brand queries included' : 'brand queries excluded when detected/configured'}.`,
+    `Content verification: ${
+      input.verifyContent
+        ? input.fetched
+          ? 'ran against the fetched page'
+          : 'requested but did not complete'
+        : 'not run'
+    }.`,
+    input.warnings.length
+      ? `${input.warnings.length} fetch/extraction warning(s) affected this report.`
+      : '',
+  ].filter((item) => item.length > 0)
+}
+
 export async function pageOpportunitiesReport(input: {
   site: string
   url: string
   days?: number
   limit?: number
+  minImpressions?: number
   brandTerms?: string[]
   includeBrand?: boolean
   verifyContent?: boolean
@@ -98,6 +219,7 @@ export async function pageOpportunitiesReport(input: {
   js?: boolean | 'auto'
 }): Promise<PageOpportunityReport> {
   const days = input.days ?? 28
+  const minImpressions = input.minImpressions ?? 10
   const range = defaultDateRange(days)
   const { rows } = await querySearchAnalytics(
     input.site,
@@ -128,7 +250,8 @@ export async function pageOpportunitiesReport(input: {
     .filter(
       (row) =>
         row.query &&
-        row.impressions > 0 &&
+        row.impressions >= minImpressions &&
+        !isLowActionabilityQuery(row.query) &&
         !shouldExcludeBrandQuery({
           query: row.query,
           siteUrl: input.site,
@@ -194,6 +317,15 @@ export async function pageOpportunitiesReport(input: {
     }
   })
 
+  const focus = primaryFocus(items)
+  const estimatedClickLift = items.reduce(
+    (sum, item) => sum + item.estimatedClickLift,
+    0,
+  )
+  const opportunities = items.filter(
+    (item) => item.opportunityType !== 'covered',
+  ).length
+
   return {
     site: input.site,
     url: input.url,
@@ -212,14 +344,21 @@ export async function pageOpportunitiesReport(input: {
       queries: candidates.length,
       clicks: candidates.reduce((sum, item) => sum + item.clicks, 0),
       impressions: candidates.reduce((sum, item) => sum + item.impressions, 0),
-      opportunities: items.filter((item) => item.opportunityType !== 'covered')
-        .length,
-      estimatedClickLift: items.reduce(
-        (sum, item) => sum + item.estimatedClickLift,
-        0,
-      ),
+      opportunities,
+      estimatedClickLift,
+      verdict: pageVerdict({ focus, opportunities, estimatedClickLift }),
+      focus,
     },
     items,
     warnings,
+    caveats: pageCaveats({
+      days,
+      minImpressions,
+      includeBrand: input.includeBrand,
+      verifyContent: input.verifyContent ?? true,
+      fetched: Boolean(fetched),
+      warnings,
+    }),
+    recommendations: pageRecommendations(items),
   }
 }

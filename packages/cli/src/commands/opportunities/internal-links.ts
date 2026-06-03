@@ -36,12 +36,19 @@ export const internalLinksCommand = defineCommand({
     printKeyValue([
       ['Site', report.site],
       ['Target', report.targetUrl],
-      ['Opportunities', formatCount(report.items.length)],
+      ['Target queries', formatCount(report.summary.targetQueries)],
+      ['Candidate sources', formatCount(report.summary.candidateSources)],
+      ['Checked sources', formatCount(report.summary.checkedSources)],
+      ['Opportunities', formatCount(report.summary.opportunities)],
+      ['Skipped sources', formatCount(report.summary.skippedSources)],
+      ['Verdict', report.summary.verdict],
     ])
     printNotes('Why this matters', [
       'These source pages already rank for related queries, so their internal links can pass relevance into the target without creating new pages.',
       'Use the shared-query column to choose natural anchor text and avoid forced exact-match links.',
     ])
+    printNotes('Recommended actions', report.recommendations)
+    printNotes('Report caveats', report.caveats)
     if (!report.items.length) {
       process.stdout.write(
         'No internal link opportunities matched this target URL.\n',

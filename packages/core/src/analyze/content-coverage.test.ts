@@ -66,6 +66,8 @@ test('contentCoverageRecommendation explains field-specific wording gaps', () =>
   assert.equal(coverage.classification, 'serp-framing')
   assert.match(contentCoverageRecommendation(coverage), /title/)
   assert.match(contentCoverageRecommendation(coverage), /H1/)
+  assert.match(contentCoverageRecommendation(coverage), /important terms/)
+  assert.match(contentCoverageRecommendation(coverage), /do not make/)
   assert.match(
     contentCoverageRecommendation(coverage),
     /origin of the last name laroya/,

@@ -22,10 +22,11 @@ export function buildSecondPageRecommendations(
 ): Recommendation[] {
   const recommendations: Recommendation[] = []
   if (!item.coverage.inTitleExact || !item.coverage.inH1) {
+    const missingField = !item.coverage.inTitleExact ? 'title' : 'H1'
     recommendations.push({
       principle: 'C.2',
-      evidenceRef: `Query "${query}" is missing from ${!item.coverage.inTitleExact ? 'title' : 'H1'}.`,
-      action: `The page is near page one, but the title/H1 does not clearly target "${query}". Rewrite the title and H1 so this query angle is obvious and still reads naturally.`,
+      evidenceRef: `Exact query phrase "${query}" is missing from ${missingField}.`,
+      action: `The page is near page one, but the title/H1 does not make the exact "${query}" angle obvious. Test clearer title/H1 wording that still reads naturally.`,
       effort: 'S',
       confidence: 'high',
       impactEstimate: `CTR gap to top 10 is ${Math.max(0, estimateExpectedCtr(10) - item.ctr).toFixed(2)}`,

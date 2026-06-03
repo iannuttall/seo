@@ -14,6 +14,7 @@ export type PageOpportunityReport = {
   site: string
   url: string
   generatedAt: string
+  range: { startDate: string; endDate: string }
   rangeDays: number
   page?: {
     finalUrl: string
@@ -57,6 +58,10 @@ export type PageOpportunityReport = {
   warnings: string[]
   caveats: string[]
   recommendations: string[]
+}
+
+function plural(count: number, singular: string, pluralLabel: string): string {
+  return count === 1 ? singular : pluralLabel
 }
 
 function expectedCtr(position: number): number {
@@ -125,15 +130,15 @@ function pageVerdict(input: {
     return 'The sampled queries are mostly covered. Treat this as a SERP/title/internal-link review, not a content expansion brief.'
   }
   if (input.focus === 'content-gap') {
-    return `${input.opportunities} query opportunity(s) found. The main issue is content coverage, so add targeted answers before spending time on title tests.`
+    return `${input.opportunities} ${plural(input.opportunities, 'query opportunity', 'query opportunities')} found. The main issue is content coverage, so add targeted answers before spending time on title tests.`
   }
   if (input.focus === 'serp-framing') {
-    return `${input.opportunities} query opportunity(s) found. The page appears to cover the topic, but the title/H1/meta do not make the search angle clear enough.`
+    return `${input.opportunities} ${plural(input.opportunities, 'query opportunity', 'query opportunities')} found. The page appears to cover the topic, but the title/H1/meta do not make the search angle clear enough.`
   }
   if (input.focus === 'ranking') {
-    return `${input.opportunities} query opportunity(s) found. Most upside needs stronger relevance and internal links, not only CTR copy changes.`
+    return `${input.opportunities} ${plural(input.opportunities, 'query opportunity', 'query opportunities')} found. Most upside needs stronger relevance and internal links, not only CTR copy changes.`
   }
-  return `${input.opportunities} query opportunity(s) found, with about ${input.estimatedClickLift.toFixed(0)} estimated clicks available from better SERP framing.`
+  return `${input.opportunities} ${plural(input.opportunities, 'query opportunity', 'query opportunities')} found, with about ${input.estimatedClickLift.toFixed(0)} estimated clicks available from better SERP framing.`
 }
 
 function pageRecommendations(items: PageOpportunityReport['items']): string[] {
@@ -183,6 +188,7 @@ function pageRecommendations(items: PageOpportunityReport['items']): string[] {
 
 function pageCaveats(input: {
   days: number
+  range: { startDate: string; endDate: string }
   minImpressions: number
   includeBrand?: boolean
   verifyContent?: boolean
@@ -190,7 +196,7 @@ function pageCaveats(input: {
   warnings: string[]
 }): string[] {
   return [
-    `Date window: last ${input.days} day(s), using final GSC data where available.`,
+    `Date window: ${input.range.startDate} to ${input.range.endDate} (${input.days} ${plural(input.days, 'day', 'days')}), using final GSC data where available.`,
     `Minimum query impressions: ${input.minImpressions}.`,
     `Brand filtering: ${input.includeBrand ? 'brand queries included' : 'brand queries excluded when detected/configured'}.`,
     `Content verification: ${
@@ -330,6 +336,7 @@ export async function pageOpportunitiesReport(input: {
     site: input.site,
     url: input.url,
     generatedAt: new Date().toISOString(),
+    range,
     rangeDays: days,
     page: page
       ? {
@@ -353,6 +360,7 @@ export async function pageOpportunitiesReport(input: {
     warnings,
     caveats: pageCaveats({
       days,
+      range,
       minImpressions,
       includeBrand: input.includeBrand,
       verifyContent: input.verifyContent ?? true,

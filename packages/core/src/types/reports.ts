@@ -83,6 +83,15 @@ export interface QueryCluster {
     clicks: number
     position: number
   }>
+  totals?: {
+    impressions: number
+    clicks: number
+    averagePosition: number
+    ctr: number
+  }
+  opportunityScore?: number
+  summary?: string
+  recommendation?: string
 }
 
 export interface CacheStats {

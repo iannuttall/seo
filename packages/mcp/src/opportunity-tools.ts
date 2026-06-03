@@ -157,10 +157,7 @@ export function registerOpportunityTools(server: McpServer): void {
     async ({ site, targetUrl, limit }) => {
       try {
         const result = await internalLinksReport({ site, targetUrl, limit })
-        return toolSuccess(
-          `${result.items.length} internal link opportunities found.`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }
@@ -205,10 +202,7 @@ export function registerOpportunityTools(server: McpServer): void {
     async ({ site, scope }) => {
       try {
         const result = await queryClusterReport({ site, scope })
-        return toolSuccess(
-          `${result.clusters.length} clusters generated.`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

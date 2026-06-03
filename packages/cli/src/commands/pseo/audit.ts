@@ -143,7 +143,8 @@ function printTemplateDetails(
 export const pseoAuditCommand = defineCommand({
   meta: {
     name: 'audit',
-    description: 'Audit pSEO templates with GSC, crawl, and index evidence',
+    description:
+      'Group GSC/sitemap URLs into pSEO templates, then sample pages for crawl and index evidence',
   },
   args: {
     site: { type: 'string' },
@@ -169,11 +170,13 @@ export const pseoAuditCommand = defineCommand({
     },
     'crawl-samples': {
       type: 'string',
-      description: 'Pages to fetch per template for content/fetch checks.',
+      description:
+        'Sample URLs to fetch per detected template. This is not crawl depth.',
     },
     'inspect-samples': {
       type: 'string',
-      description: 'URLs to check per template with URL Inspection.',
+      description:
+        'Sample URLs to check per detected template with URL Inspection.',
     },
     json: { type: 'boolean', default: false },
   },

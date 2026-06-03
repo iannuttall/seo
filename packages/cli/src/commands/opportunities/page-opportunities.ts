@@ -12,7 +12,7 @@ import {
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
-import { formatFetchDiagnostics } from '../shared.js'
+import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const pageOpportunitiesCommand = defineCommand({
   meta: {
@@ -100,10 +100,11 @@ export const pageOpportunitiesCommand = defineCommand({
     }
 
     printLimitedTable(
-      ['Type', 'Query', 'Pos', 'CTR', 'Impr', 'Lift', 'Action'],
+      ['Type', 'Query', 'Check', 'Pos', 'CTR', 'Impr', 'Lift', 'Action'],
       report.items.map((item) => [
         item.opportunityType,
         truncate(item.query, 38),
+        formatContentCheck(item.coverage?.classification),
         item.position.toFixed(1),
         formatPercent(item.ctr),
         formatCount(item.impressions),

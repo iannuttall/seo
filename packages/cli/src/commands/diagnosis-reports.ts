@@ -94,6 +94,16 @@ export const updateCorrelateCommand = defineCommand({
       type: 'string',
       description: 'Days around update windows to count as overlap.',
     },
+    'known-change': {
+      type: 'string',
+      description:
+        'Manual site-side change to treat as a confounder, for example pruning pages or blocking traffic.',
+    },
+    'ignore-change-log': {
+      type: 'boolean',
+      default: false,
+      description: 'Do not use saved change-log entries as confounders.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -115,6 +125,10 @@ export const updateCorrelateCommand = defineCommand({
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       paddingDays: numberArg(args['padding-days']),
+      knownConfounders: stringArg(args['known-change'])
+        ? [stringArg(args['known-change']) ?? '']
+        : undefined,
+      includeChangeLog: !booleanArg(args['ignore-change-log']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -123,8 +137,10 @@ export const updateCorrelateCommand = defineCommand({
     }
     printKeyValue([
       ['Classification', report.classification],
+      ['Attribution', report.attribution],
       ['Confidence', report.confidence],
       ['Updates matched', String(report.overlappingUpdates.length)],
+      ['Known confounders', String(report.confounders.length)],
       ['Source', report.source.name],
     ])
     process.stdout.write(`\n${report.summary}\n`)

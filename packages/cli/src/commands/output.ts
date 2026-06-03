@@ -64,3 +64,16 @@ export function printActionDetails(
     )
   }
 }
+
+export function printNextCommand(command: string): void {
+  process.stdout.write(`\nNext: ${command}\n`)
+}
+
+export function printNotes(title: string, notes: string[]): void {
+  const visible = notes.filter((note) => note.trim().length > 0)
+  if (!visible.length) return
+  process.stdout.write(`\n${title}\n`)
+  for (const note of visible) {
+    process.stdout.write(`- ${note}\n`)
+  }
+}

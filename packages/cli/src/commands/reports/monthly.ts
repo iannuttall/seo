@@ -4,6 +4,7 @@ import { jsonFlag, numberArg, stringArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
+import { printNextCommand } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 import {
   reportFetchArgs,
@@ -53,5 +54,13 @@ export const monthlyReportCommand = defineCommand({
       return
     }
     process.stdout.write(`${report.markdown}\n`)
+    const target = selection.client
+      ? `--client ${JSON.stringify(selection.client.id)}`
+      : `--site ${JSON.stringify(selection.site)}`
+    const month = stringArg(args.month)
+    process.stdout.write('\n')
+    printNextCommand(
+      `seo export monthly ${target}${month ? ` --month ${JSON.stringify(month)}` : ''}`,
+    )
   },
 })

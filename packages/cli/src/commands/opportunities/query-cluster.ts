@@ -3,7 +3,12 @@ import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printLimitedTable,
+  printNotes,
+  truncate,
+} from '../output.js'
 
 export const queryClusterCommand = defineCommand({
   args: {
@@ -32,6 +37,10 @@ export const queryClusterCommand = defineCommand({
       ['Site', report.site],
       ['Scope', report.scope ?? 'all pages'],
       ['Clusters', formatCount(report.clusters.length)],
+    ])
+    printNotes('Why this matters', [
+      'Clusters show repeated demand themes, so they are better inputs for page sections, hubs, and templates than one-off query exports.',
+      'Prioritise clusters with high impressions and low clicks; they usually reveal unclear intent coverage or weak SERP framing.',
     ])
     printLimitedTable(
       ['Cluster', 'Intent', 'Queries', 'Impr', 'Clicks', 'Top query'],

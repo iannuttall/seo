@@ -1,6 +1,7 @@
 import { diagnoseProperty } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
 import { printActionDetails } from '../output.js'
@@ -52,6 +53,7 @@ export const diagnoseCommand = defineCommand({
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
+      progress: createProgressReporter(!json),
     })
     if (json) {
       printJson(report)

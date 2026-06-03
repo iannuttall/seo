@@ -1,6 +1,7 @@
 import { pseoAuditReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -198,6 +199,7 @@ export const pseoAuditCommand = defineCommand({
       includeBrand: booleanArg(args['include-brand']),
       js: booleanArg(args.js) ? true : 'auto',
       refresh: booleanArg(args.refresh),
+      progress: createProgressReporter(!json),
     })
 
     if (json) {

@@ -1,4 +1,5 @@
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
+import type { ProgressReporter } from '../progress.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import {
   cannibalReport,
@@ -135,8 +136,20 @@ export async function diagnoseProperty(input: {
   js?: boolean | 'auto'
   rate?: FetchRateControls
   refresh?: boolean
+  progress?: ProgressReporter
 }): Promise<DiagnosePropertyReport> {
   const limit = input.limit ?? 10
+  const track = async <T>(label: string, run: () => Promise<T>): Promise<T> => {
+    input.progress?.(`Running ${label}`)
+    try {
+      const result = await run()
+      input.progress?.(`Finished ${label}`)
+      return result
+    } catch (error) {
+      input.progress?.(`Failed ${label}`)
+      throw error
+    }
+  }
   const [
     anomaly,
     update,
@@ -149,36 +162,53 @@ export async function diagnoseProperty(input: {
     striking,
     quickWins,
   ] = await Promise.all([
-    trafficAnomaly(input),
-    updateCorrelation(input),
-    segmentImpact({ ...input, dimension: 'page', limit }),
-    segmentImpact({ ...input, dimension: 'query', limit }),
-    segmentImpact({ ...input, dimension: 'device', limit }),
-    segmentImpact({ ...input, dimension: 'country', limit }),
-    decayingReport({
-      site: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-      refresh: input.refresh,
-    }),
-    cannibalReport({
-      site: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-      refresh: input.refresh,
-    }),
-    strikingDistance({ ...input, limit }),
-    quickWinsReport({
-      site: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-      verifyContent: input.verifyContent,
-      verifyLimit: input.verifyLimit,
-      js: input.js,
-      rate: input.rate,
-      refresh: input.refresh,
-    }),
+    track('traffic anomaly', () => trafficAnomaly(input)),
+    track('update correlation', () => updateCorrelation(input)),
+    track('page movement segments', () =>
+      segmentImpact({ ...input, dimension: 'page', limit }),
+    ),
+    track('query movement segments', () =>
+      segmentImpact({ ...input, dimension: 'query', limit }),
+    ),
+    track('device movement segments', () =>
+      segmentImpact({ ...input, dimension: 'device', limit }),
+    ),
+    track('country movement segments', () =>
+      segmentImpact({ ...input, dimension: 'country', limit }),
+    ),
+    track('decay analysis', () =>
+      decayingReport({
+        site: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+        refresh: input.refresh,
+      }),
+    ),
+    track('cannibalisation analysis', () =>
+      cannibalReport({
+        site: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+        refresh: input.refresh,
+      }),
+    ),
+    track('striking-distance opportunities', () =>
+      strikingDistance({ ...input, limit }),
+    ),
+    track('quick-win opportunities', () =>
+      quickWinsReport({
+        site: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+        verifyContent: input.verifyContent,
+        verifyLimit: input.verifyLimit,
+        js: input.js,
+        rate: input.rate,
+        refresh: input.refresh,
+      }),
+    ),
   ])
+  input.progress?.('Building priority list')
 
   const priorities = buildPriorities({
     update,

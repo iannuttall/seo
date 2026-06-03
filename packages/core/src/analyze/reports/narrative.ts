@@ -1,4 +1,5 @@
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
+import type { ProgressReporter } from '../../progress.js'
 import { diagnoseProperty } from '../diagnose-property.js'
 import {
   type ChangeMeasurement,
@@ -40,6 +41,7 @@ export async function reportNarrative(input: {
   js?: boolean | 'auto'
   rate?: FetchRateControls
   refresh?: boolean
+  progress?: ProgressReporter
 }): Promise<ReportNarrative & { markdown: string }> {
   const periodDays = input.days ?? 90
   if (
@@ -52,6 +54,7 @@ export async function reportNarrative(input: {
     input.startDate && input.endDate
       ? { startDate: input.startDate, endDate: input.endDate }
       : undefined
+  input.progress?.('Running diagnosis primitives')
   const diagnosis = await diagnoseProperty({
     site: input.site,
     days: period ? rangeDays(period) : periodDays,
@@ -66,7 +69,9 @@ export async function reportNarrative(input: {
     js: input.js,
     rate: input.rate,
     refresh: input.refresh,
+    progress: input.progress,
   })
+  input.progress?.('Measuring saved changes')
   const changes = listChanges({
     site: input.site,
     limit: input.changeLimit ?? 5,
@@ -85,6 +90,7 @@ export async function reportNarrative(input: {
     indexWatch: latestIndexWatchSummary(input.site),
     linkRecover: latestLinkRecoverSummary(input.site),
   }
+  input.progress?.('Rendering narrative')
 
   const report: ReportNarrative = {
     site: input.site,

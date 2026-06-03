@@ -1,4 +1,5 @@
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
+import type { ProgressReporter } from '../../progress.js'
 import { finalGscDate, monthRange, rangeDays } from './dates.js'
 import { reportNarrative } from './narrative.js'
 import type { ReportNarrative } from './types.js'
@@ -14,9 +15,11 @@ export async function monthlyReport(input: {
   js?: boolean | 'auto'
   rate?: FetchRateControls
   refresh?: boolean
+  progress?: ProgressReporter
 }): Promise<ReportNarrative & { markdown: string; month: string }> {
   const month = input.month ?? finalGscDate().slice(0, 7)
   const period = monthRange(month)
+  input.progress?.(`Preparing monthly period ${month}`)
   const report = await reportNarrative({
     site: input.site,
     startDate: period.startDate,
@@ -30,6 +33,7 @@ export async function monthlyReport(input: {
     js: input.js,
     rate: input.rate,
     refresh: input.refresh,
+    progress: input.progress,
   })
   return {
     ...report,

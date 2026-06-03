@@ -106,9 +106,20 @@ export function registerWorkflowTools(server: McpServer): void {
           'includeBrand',
           'refresh',
         ]),
+        knownConfounders: z.array(z.string()).optional(),
+        includeChangeLog: z.boolean().optional(),
       },
     },
-    async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
+    async ({
+      site,
+      days,
+      recentDays,
+      limit,
+      includeBrand,
+      knownConfounders,
+      includeChangeLog,
+      refresh,
+    }) => {
       try {
         const result = await updatePostmortemWorkflow({
           site,
@@ -116,6 +127,8 @@ export function registerWorkflowTools(server: McpServer): void {
           recentDays,
           limit,
           includeBrand,
+          knownConfounders,
+          includeChangeLog,
           refresh,
         })
         return toolSuccess(result.summary, result)

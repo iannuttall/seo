@@ -1,3 +1,4 @@
+import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import type { QueryCluster } from '../types.js'
 import { isLowActionabilityQuery } from './query-quality.js'
@@ -31,6 +32,7 @@ type QueryClusterReport = {
     impressions: number
     clicks: number
     highOpportunityClusters: number
+    brandFiltering: 'included' | 'excluded'
     verdict: string
   }
   clusters: QueryCluster[]
@@ -254,6 +256,8 @@ export async function queryClusterReport(input: {
   site: string
   scope?: string
   brand?: string
+  brandTerms?: string[]
+  includeBrand?: boolean
   refresh?: boolean
 }): Promise<QueryClusterReport> {
   const range = defaultDateRange(28)
@@ -292,7 +296,18 @@ export async function queryClusterReport(input: {
         position: row.position,
         tokens: tokenize(row.keys[0] ?? ''),
       }))
-      .filter((row) => row.query && !isLowActionabilityQuery(row.query)),
+      .filter(
+        (row) =>
+          row.query &&
+          !isLowActionabilityQuery(row.query) &&
+          !shouldExcludeBrandQuery({
+            query: row.query,
+            siteUrl: input.site,
+            brandTerms:
+              input.brandTerms ?? (input.brand ? [input.brand] : undefined),
+            includeBrand: input.includeBrand,
+          }),
+      ),
   )
   const clusters: QueryCluster[] = []
 
@@ -378,6 +393,7 @@ export async function queryClusterReport(input: {
       impressions: totals.impressions,
       clicks: totals.clicks,
       highOpportunityClusters,
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
       verdict: reportVerdict({
         clusters: sortedClusters,
         highOpportunityClusters,
@@ -390,7 +406,7 @@ export async function queryClusterReport(input: {
         ? `Scope: only pages containing "${input.scope}" were included.`
         : 'Scope: all pages in the selected GSC property were included.',
       input.brand
-        ? `Intent classification treats "${input.brand}" as navigational brand demand.`
+        ? `Brand filtering: ${input.includeBrand ? 'brand queries included' : `brand queries excluded using ${input.brandTerms?.length ? input.brandTerms.join(', ') : input.brand}`}.`
         : 'Brand intent detection used only query language because no brand term was supplied.',
       'Clusters are token-overlap groups. Review the top queries before creating, merging, or deleting pages.',
     ],

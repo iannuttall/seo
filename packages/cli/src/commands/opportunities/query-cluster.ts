@@ -1,6 +1,6 @@
 import { queryClusterReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../../args.js'
+import { booleanArg, jsonFlag, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -11,12 +11,18 @@ import {
   printNotes,
   truncate,
 } from '../output.js'
+import { cliReportArgs } from '../report-options.js'
 
 export const queryClusterCommand = defineCommand({
   args: {
     site: { type: 'string' },
     client: { type: 'string' },
     scope: { type: 'string' },
+    ...cliReportArgs(['includeBrand'], {
+      includeBrand: {
+        description: 'Include branded queries in query clustering.',
+      },
+    }),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -30,6 +36,8 @@ export const queryClusterCommand = defineCommand({
       site: selection.site,
       scope: stringArg(args.scope),
       brand: selection.client?.brandTerms?.[0],
+      brandTerms: selection.client?.brandTerms,
+      includeBrand: booleanArg(args['include-brand']),
     })
     if (json) {
       printJson(report)
@@ -42,6 +50,7 @@ export const queryClusterCommand = defineCommand({
       ['Queries', formatCount(report.summary.queries)],
       ['Impressions', formatCount(report.summary.impressions)],
       ['Clicks', formatCount(report.summary.clicks)],
+      ['Brand queries', report.summary.brandFiltering],
       [
         'High-opportunity clusters',
         formatCount(report.summary.highOpportunityClusters),

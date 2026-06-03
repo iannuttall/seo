@@ -113,11 +113,15 @@ export async function secondPage(input: {
       })
     }
 
+    const hasVerifiedCoverage = item.contentVerification?.status === 'verified'
     item.recommendations = buildSecondPageRecommendations(
       item.primaryQuery,
       item,
       extracted,
       relatedQuestions,
+    ).filter(
+      (recommendation) =>
+        !(hasVerifiedCoverage && recommendation.principle === 'C.2'),
     )
     if (
       item.contentVerification?.status === 'verified' &&

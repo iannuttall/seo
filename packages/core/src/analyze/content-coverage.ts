@@ -102,6 +102,10 @@ function missingFieldNames(coverage: QueryContentCoverage): string[] {
   return fields
 }
 
+function subjectVerb(count: number): string {
+  return count === 1 ? 'does' : 'do'
+}
+
 function gapScore(input: {
   title: CoverageField
   h1: CoverageField
@@ -180,7 +184,7 @@ export function contentCoverageRecommendation(
   if (coverage.classification === 'serp-framing') {
     const fields = missingFieldNames(coverage)
     const targetFields = fields.length ? fields.join(', ') : 'title and meta'
-    return `The page content already supports "${focus}", but the ${targetFields} does not make that clear enough. Test clearer wording there before rewriting the body.`
+    return `The main content covers the important terms for "${focus}", but the ${targetFields} ${subjectVerb(fields.length)} not make that exact search angle clear enough. Test clearer wording there before rewriting the body.`
   }
   return `The page already covers "${focus}". Do not add more copy for this query; test the title/meta, improve internal links, or check whether the SERP format is limiting clicks.`
 }
@@ -205,7 +209,7 @@ function coverageSummary(coverage: QueryContentCoverage): string {
     return 'Exact query appears in title, H1, and main content.'
   }
   if (bodyTerms >= 100) {
-    return 'Main content covers all meaningful query terms, but SERP wording may be weak.'
+    return 'Main content covers every meaningful query term, but exact SERP wording may be weak.'
   }
   return `Main content covers ${bodyTerms}% of meaningful query terms.`
 }

@@ -7,7 +7,13 @@ export function movementLine(report: DiagnosePropertyReport): string {
   if (!anomaly) {
     return 'No statistically significant traffic anomaly was detected.'
   }
-  return `${anomaly.metric} ${anomaly.direction} from ${anomaly.baselineMean.toFixed(1)} to ${anomaly.comparisonMean.toFixed(1)}.`
+  const direction =
+    anomaly.direction === 'spike'
+      ? 'spiked'
+      : anomaly.direction === 'drop'
+        ? 'dropped'
+        : anomaly.direction
+  return `Average daily ${anomaly.metric} ${direction} from ${anomaly.baselineMean.toFixed(1)} to ${anomaly.comparisonMean.toFixed(1)}.`
 }
 
 export function topSegmentLine(report: DiagnosePropertyReport): string {
@@ -123,7 +129,8 @@ export function templateOpportunityLine(
 export function decayClusterLine(report: DiagnosePropertyReport): string {
   const group = report.decay.groups[0]
   if (!group) return 'No material decay cluster stood out.'
-  return `${group.count} decay findings sit in ${group.label}, with ${group.totalClickLoss.toFixed(0)} lost clicks versus the previous window.`
+  const diagnosis = group.diagnosis.replaceAll('_', ' ')
+  return `${group.count} decay findings sit in the ${group.template.label} template (${diagnosis}), with ${group.totalClickLoss.toFixed(0)} lost clicks versus the previous window.`
 }
 
 export function cannibalSuppressionLine(

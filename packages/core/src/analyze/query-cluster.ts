@@ -33,6 +33,7 @@ type QueryClusterPage = {
 type QueryClusterReport = {
   site: string
   scope?: string
+  range: { startDate: string; endDate: string }
   generatedAt: string
   summary: {
     clusters: number
@@ -46,6 +47,14 @@ type QueryClusterReport = {
   clusters: QueryCluster[]
   caveats: string[]
   recommendations: string[]
+}
+
+function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
+  return count === 1 ? singular : pluralLabel
+}
+
+function quotedLabel(label: string): string {
+  return label.includes('"') ? `'${label}'` : `"${label}"`
 }
 
 function classifyIntent(query: string, brand?: string): QueryCluster['intent'] {
@@ -123,6 +132,7 @@ function clusterRecommendation(input: {
   topPage?: QueryClusterPage
   template?: QueryCluster['template']
 }): string {
+  const clusterName = quotedLabel(input.label)
   if (
     input.template &&
     input.template.urlCount >= 3 &&
@@ -134,9 +144,9 @@ function clusterRecommendation(input: {
         : ''
     const action =
       input.template.urlCount > 1
-        ? `This is template-level demand, not a one-off page edit. Tighten the shared title/H1/intro/schema/internal-link rules so each page makes the entity and query angle clear. If "${input.label}" is broader than one entity, route it to a better hub/list page instead of letting several template URLs compete.`
+        ? `This is template-level demand, not a one-off page edit. Tighten the shared title/H1/intro/schema/internal-link rules so each page makes the entity and query angle clear. If ${clusterName} is broader than one entity, route it to a better hub/list page instead of letting several template URLs compete.`
         : 'Improve the shared title, H1, intro, schema, and internal-link pattern, then spot-check the highest-impression URL.'
-    return `"${input.label}" maps mostly to ${input.template.signature} (${input.template.urlCount} URLs). ${action}${pageText}`
+    return `${clusterName} maps mostly to ${input.template.signature} (${input.template.urlCount} URLs). ${action}${pageText}`
   }
   if (input.queries === 1) {
     return input.topPage
@@ -145,18 +155,18 @@ function clusterRecommendation(input: {
   }
   if (input.impressions >= 500 && input.clicks === 0) {
     return input.topPage
-      ? `This "${input.label}" cluster has search demand but no clicks. Check ${input.topPage.url}; if it is the right target, make the exact intent obvious in the title, H1, intro, and internal links.`
-      : `This "${input.label}" cluster has search demand but no clicks. Check whether the ranking page actually answers the cluster intent, then improve the section/title or create a stronger dedicated page if intent is distinct.`
+      ? `This ${clusterName} cluster has search demand but no clicks. Check ${input.topPage.url}; if it is the right target, make the exact intent obvious in the title, H1, intro, and internal links.`
+      : `This ${clusterName} cluster has search demand but no clicks. Check whether the ranking page actually answers the cluster intent, then improve the section/title or create a stronger dedicated page if intent is distinct.`
   }
   if (input.position > 10) {
     return input.topPage
-      ? `This "${input.label}" cluster is mostly outside page one. Strengthen ${input.topPage.url} around this exact intent and add internal links from related pages before treating it as a CTR problem.`
-      : `This "${input.label}" cluster is mostly outside page one. Tighten the page section around the shared intent and add internal links from related pages before treating this as a CTR problem.`
+      ? `This ${clusterName} cluster is mostly outside page one. Strengthen ${input.topPage.url} around this exact intent and add internal links from related pages before treating it as a CTR problem.`
+      : `This ${clusterName} cluster is mostly outside page one. Tighten the page section around the shared intent and add internal links from related pages before treating this as a CTR problem.`
   }
   if (input.clicks / Math.max(1, input.impressions) < 0.01) {
-    return `This "${input.label}" cluster ranks with weak CTR. Rewrite SERP framing around the dominant intent (${input.intent}) before expanding content.`
+    return `This ${clusterName} cluster ranks with weak CTR. Rewrite SERP framing around the dominant intent (${input.intent}) before expanding content.`
   }
-  return `This "${input.label}" cluster already gets clicks. Use it to refine page structure, FAQs, and internal anchors rather than creating duplicate pages.`
+  return `This ${clusterName} cluster already gets clicks. Use it to refine page structure, FAQs, and internal anchors rather than creating duplicate pages.`
 }
 
 function clusterSummary(input: {
@@ -326,7 +336,8 @@ function reportVerdict(input: {
     return 'No query clusters were generated for this scope.'
   }
   if (input.highOpportunityClusters > 0) {
-    return `${input.highOpportunityClusters} cluster(s) have enough demand and weak enough performance to review first.`
+    const verb = input.highOpportunityClusters === 1 ? 'has' : 'have'
+    return `${input.highOpportunityClusters} ${plural(input.highOpportunityClusters, 'cluster')} ${verb} enough demand and weak enough performance to review first.`
   }
   return 'No obvious high-opportunity clusters were found. Use this report for content structure and intent mapping rather than urgent fixes.'
 }
@@ -473,6 +484,7 @@ export async function queryClusterReport(input: {
   return {
     site: input.site,
     scope: input.scope,
+    range,
     generatedAt: new Date().toISOString(),
     summary: {
       clusters: sortedClusters.length,
@@ -488,7 +500,7 @@ export async function queryClusterReport(input: {
     },
     clusters: sortedClusters,
     caveats: [
-      'Date window: last 28 day(s), using final GSC data where available.',
+      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
       input.scope
         ? `Scope: only pages containing "${input.scope}" were included.`
         : 'Scope: all pages in the selected GSC property were included.',

@@ -15,6 +15,7 @@ import {
   changeLogCommand,
   contentGroupsCommand,
 } from './commands/experiments/index.js'
+import { exportCommand } from './commands/export.js'
 import { initCommand } from './commands/init.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -92,6 +93,7 @@ const main = defineCommand({
     'crawl-diff': crawlDiffCommand,
     diagnose: diagnoseCommand,
     'diagnose-property': diagnosePropertyWorkflowCommand,
+    export: exportCommand,
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
     'monthly-report': monthlyReportCommand,

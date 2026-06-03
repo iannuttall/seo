@@ -49,5 +49,12 @@ function row(query: string): QueryClusterRow {
     clicks: 0,
     position: 10,
     tokens: tokenize(query),
+    pages: [
+      {
+        url: `https://example.com/${query.replace(/[^a-z0-9]+/gi, '-')}`,
+        impressions: 100,
+        clicks: 0,
+      },
+    ],
   }
 }

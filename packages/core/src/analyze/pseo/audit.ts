@@ -3,6 +3,7 @@ import { extractPage } from '../../extract/page-extractor.js'
 import { type FetchRateControls, fetchPage } from '../../fetch/page-fetcher.js'
 import { inspectUrl } from '../../gsc/client/inspection.js'
 import type { UrlInspectionResult } from '../../gsc/client/types.js'
+import type { ProgressReporter } from '../../progress.js'
 import type { PageFetchDiagnostics } from '../../types.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { isLowActionabilityQuery } from '../query-quality.js'
@@ -625,9 +626,11 @@ export async function pseoAuditReport(input: {
   refresh?: boolean
   js?: boolean | 'auto'
   rate?: FetchRateControls
+  progress?: ProgressReporter
 }): Promise<PseoAuditReport> {
   const days = input.days ?? 28
   const warnings: string[] = []
+  input.progress?.('Fetching sitemap URLs')
   const sitemapUrls = (
     await Promise.all(
       (input.sitemaps ?? []).map((sitemapUrl) =>
@@ -642,6 +645,7 @@ export async function pseoAuditReport(input: {
     return result.urls
   })
 
+  input.progress?.(`Fetching ${days} days of GSC query/page rows`)
   const { rows } = await fetchSiteQueryPageRows(input.site, days, input.refresh)
   const gscRows = rows
     .map((row) => ({
@@ -669,9 +673,11 @@ export async function pseoAuditReport(input: {
   const allUrls = [
     ...new Set([...sitemapUrls, ...gscRows.map((row) => row.page)]),
   ]
+  input.progress?.(`Clustering ${allUrls.length} URLs into pSEO templates`)
   const clusters = clusterPseoTemplates(allUrls, {
     limit: input.templateLimit ?? 25,
   })
+  input.progress?.(`Found ${clusters.length} template group(s)`)
   const rowsByTemplate = new Map<string, typeof gscRows>()
   for (const row of gscRows) {
     const signature = templateForUrl(row.page, clusters)
@@ -681,7 +687,10 @@ export async function pseoAuditReport(input: {
   }
 
   const templates: PseoAuditTemplate[] = []
-  for (const cluster of clusters) {
+  for (const [index, cluster] of clusters.entries()) {
+    input.progress?.(
+      `Auditing template ${index + 1}/${clusters.length}: ${cluster.signature}`,
+    )
     const directRows = rowsByTemplate.get(cluster.signature) ?? []
     const broadRows = directRows.length
       ? directRows
@@ -698,6 +707,11 @@ export async function pseoAuditReport(input: {
             rate: input.rate,
           })
         : []
+    if (crawled.length) {
+      input.progress?.(
+        `Fetched ${crawled.length} sample URL(s) for ${cluster.signature}`,
+      )
+    }
     const inspected =
       input.inspectSamples && input.inspectSamples > 0
         ? await inspectSamples({
@@ -706,6 +720,11 @@ export async function pseoAuditReport(input: {
             limit: input.inspectSamples,
           })
         : []
+    if (inspected.length) {
+      input.progress?.(
+        `Inspected ${inspected.length} sample URL(s) for ${cluster.signature}`,
+      )
+    }
     const classified = classifyTemplate({
       cluster,
       metrics,
@@ -776,6 +795,7 @@ export async function pseoAuditReport(input: {
       b.metrics.impressions - a.metrics.impressions ||
       b.urlCount - a.urlCount,
   )
+  input.progress?.('Scoring pSEO templates')
 
   return {
     site: input.site,

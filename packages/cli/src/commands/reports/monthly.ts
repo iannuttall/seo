@@ -1,6 +1,7 @@
 import { monthlyReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, numberArg, stringArg } from '../../args.js'
+import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import { cliReportArgs } from '../report-options.js'
@@ -44,6 +45,7 @@ export const monthlyReportCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       ...reportFetchOptions(args),
+      progress: createProgressReporter(!json),
     })
 
     if (json) {

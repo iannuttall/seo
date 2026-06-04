@@ -1,3 +1,4 @@
+import { countLabel } from '../../phrasing.js'
 import {
   crawlDiff,
   indexMonitor,
@@ -132,13 +133,13 @@ export async function technicalWatchWorkflow(input: {
   return workflowReport({
     workflow: 'technical-watch',
     site: input.site,
-    summary: `${alertCount} material technical alert(s) found.`,
+    summary: `${countLabel(alertCount, 'material technical alert')} found.`,
     steps: [
       {
         tool: 'seo_crawl_diff',
         status: crawl ? 'completed' : 'skipped',
         summary: crawl
-          ? `Crawled ${crawl.summary.crawled} URLs; ${crawl.summary.changed} changed, ${crawl.summary.highPriorityRecommendations} high-priority crawl action(s).`
+          ? `Crawled ${countLabel(crawl.summary.crawled, 'URL')}; ${crawl.summary.changed} changed, ${countLabel(crawl.summary.highPriorityRecommendations, 'high-priority crawl action')}.`
           : 'No start URL passed.',
       },
       {
@@ -152,7 +153,7 @@ export async function technicalWatchWorkflow(input: {
         tool: 'seo_link_recover',
         status: recovery ? 'completed' : 'skipped',
         summary: recovery
-          ? `Checked ${recovery.summary.checked} search-value URLs; ${recovery.summary.recoverable} recoverable issue(s), ${recovery.summary.high} high severity.`
+          ? `Checked ${countLabel(recovery.summary.checked, 'search-value URL')}; ${countLabel(recovery.summary.recoverable, 'recoverable issue')}, ${recovery.summary.high} high severity.`
           : 'Link recovery disabled.',
       },
     ],

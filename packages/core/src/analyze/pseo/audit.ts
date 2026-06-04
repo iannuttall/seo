@@ -3,6 +3,7 @@ import { extractPage } from '../../extract/page-extractor.js'
 import { type FetchRateControls, fetchPage } from '../../fetch/page-fetcher.js'
 import { inspectUrl } from '../../gsc/client/inspection.js'
 import type { UrlInspectionResult } from '../../gsc/client/types.js'
+import { countLabel } from '../../phrasing.js'
 import type { ProgressReporter } from '../../progress.js'
 import type { PageFetchDiagnostics } from '../../types.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
@@ -477,7 +478,7 @@ function buildRecommendation(input: {
   }
   if (template.verdict === 'content-risk') {
     const weakCoverage = template.crawl.weakQueryCoverage
-      ? `${template.crawl.weakQueryCoverage} sampled URL(s) weakly cover their top query`
+      ? `${countLabel(template.crawl.weakQueryCoverage, 'sampled URL')} weakly cover their top query`
       : `median content is ${template.crawl.medianWordCount ?? '?'} words`
     return `${template.signature} looks thin or weak for the queries it ranks for. ${weakCoverage}. Add page-specific facts, make the heading match the real query angle, and ensure title/meta are generated uniquely per URL.`
   }
@@ -507,7 +508,7 @@ function buildEvidence(input: {
   const evidence: string[] = []
   if (input.metrics.impressions > 0) {
     evidence.push(
-      `${Math.round(input.metrics.impressions).toLocaleString('en-GB')} impressions across ${input.metrics.pageCountWithGsc.toLocaleString('en-GB')} GSC page(s)`,
+      `${Math.round(input.metrics.impressions).toLocaleString('en-GB')} impressions across ${countLabel(input.metrics.pageCountWithGsc, 'GSC page')}`,
     )
   }
   if (input.metrics.zeroClickImpressions > 0) {
@@ -531,19 +532,25 @@ function buildEvidence(input: {
     const indexed = inspected.filter((sample) =>
       /pass|indexed/i.test(`${sample.verdict} ${sample.coverageState}`),
     ).length
-    evidence.push(`${indexed}/${inspected.length} inspected URL(s) indexed`)
+    evidence.push(
+      `${indexed}/${inspected.length} inspected ${inspected.length === 1 ? 'URL is' : 'URLs are'} indexed`,
+    )
   }
   const weakCoverage = input.crawlSamples.filter(
     (sample) => sample.queryCoverage?.classification === 'content-gap',
   ).length
   if (weakCoverage) {
-    evidence.push(`${weakCoverage} sampled URL(s) weakly cover top query`)
+    evidence.push(
+      `${countLabel(weakCoverage, 'sampled URL')} weakly cover top query`,
+    )
   }
   const failedCrawls = input.crawlSamples.filter(
     (sample) => sample.warning || sample.fetchDiagnostics?.blocked,
   ).length
   if (failedCrawls) {
-    evidence.push(`${failedCrawls} sampled URL(s) blocked or failed to fetch`)
+    evidence.push(
+      `${countLabel(failedCrawls, 'sampled URL')} blocked or failed to fetch`,
+    )
   }
   return evidence
 }
@@ -686,7 +693,7 @@ export async function pseoAuditReport(input: {
   const clusters = clusterPseoTemplates(allUrls, {
     limit: input.templateLimit ?? 25,
   })
-  input.progress?.(`Found ${clusters.length} template group(s)`)
+  input.progress?.(`Found ${countLabel(clusters.length, 'template group')}`)
   const rowsByTemplate = new Map<string, typeof gscRows>()
   for (const row of gscRows) {
     const signature = templateForUrl(row.page, clusters)
@@ -718,7 +725,7 @@ export async function pseoAuditReport(input: {
         : []
     if (crawled.length) {
       input.progress?.(
-        `Fetched ${crawled.length} sample URL(s) for ${cluster.signature}`,
+        `Fetched ${countLabel(crawled.length, 'sample URL')} for ${cluster.signature}`,
       )
     }
     const inspected =
@@ -731,7 +738,7 @@ export async function pseoAuditReport(input: {
         : []
     if (inspected.length) {
       input.progress?.(
-        `Inspected ${inspected.length} sample URL(s) for ${cluster.signature}`,
+        `Inspected ${countLabel(inspected.length, 'sample URL')} for ${cluster.signature}`,
       )
     }
     const classified = classifyTemplate({
@@ -826,7 +833,7 @@ export async function pseoAuditReport(input: {
       ),
     },
     caveats: [
-      `GSC window: last ${days} day(s).`,
+      `GSC window: last ${countLabel(days, 'day')}.`,
       `Brand queries: ${
         input.includeBrand
           ? 'included'
@@ -835,10 +842,10 @@ export async function pseoAuditReport(input: {
             : 'no saved brand terms, so no brand filter was applied'
       }.`,
       `Data freshness: ${input.refresh ? 'fresh fetch requested; local cache bypassed where supported' : 'local cache allowed; rerun with --refresh to bypass cached GSC/HTTP data'}.`,
-      `Crawl samples: ${input.crawlSamples ?? 0} URL(s) per detected template.`,
-      `URL Inspection samples: ${input.inspectSamples ?? 0} URL(s) per detected template.`,
+      `Crawl samples: ${countLabel(input.crawlSamples ?? 0, 'URL')} per detected template.`,
+      `URL Inspection samples: ${countLabel(input.inspectSamples ?? 0, 'URL')} per detected template.`,
       input.sitemaps?.length
-        ? `Sitemaps: ${input.sitemaps.length} sitemap URL(s) provided.`
+        ? `Sitemaps: ${countLabel(input.sitemaps.length, 'sitemap URL')} provided.`
         : 'Sitemaps: none provided; template discovery used GSC page rows only.',
     ],
     templates,

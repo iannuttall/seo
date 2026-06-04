@@ -166,7 +166,7 @@ export async function internalLinksReport(input: {
       `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
       'Only source pages with overlapping GSC query demand were checked.',
       warnings.length
-        ? `${warnings.length} source page(s) could not be fetched or extracted, so some opportunities may be missing.`
+        ? `${warnings.length} source ${plural(warnings.length, 'page')} could not be fetched or extracted, so some opportunities may be missing.`
         : '',
     ].filter((item) => item.length > 0),
     recommendations: items.length

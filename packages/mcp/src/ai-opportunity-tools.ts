@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   aiReferralsReport,
   communityIntentReport,
+  countLabel,
   pageOpportunitiesReport,
   seoToAiQueryReport,
 } from '@seo/core'
@@ -30,7 +31,7 @@ export function registerAiOpportunityTools(server: McpServer): void {
           limit,
         })
         return toolSuccess(
-          `${result.summary.sessions} AI referral session(s) detected across ${result.summary.sources} source(s).`,
+          `${countLabel(result.summary.sessions, 'AI referral session')} detected across ${countLabel(result.summary.sources, 'source')}.`,
           result,
         )
       } catch (error) {
@@ -115,7 +116,7 @@ export function registerAiOpportunityTools(server: McpServer): void {
           refresh,
         })
         return toolSuccess(
-          `${result.summary.prompts} AI-style prompt(s) generated from ${result.summary.sourceQueries} GSC queries.`,
+          `${countLabel(result.summary.prompts, 'AI-style prompt')} generated from ${countLabel(result.summary.sourceQueries, 'GSC query')}.`,
           result,
         )
       } catch (error) {

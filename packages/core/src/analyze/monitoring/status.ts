@@ -1,3 +1,4 @@
+import { countLabel } from '../../phrasing.js'
 import { latestCrawlSummaries } from './crawl-store.js'
 import { latestIndexWatchSummary } from './index-watch.js'
 import { latestLinkRecoverSummary } from './link-recover-store.js'
@@ -66,7 +67,7 @@ export function monitoringStatus(input: {
           ? 'stale'
           : 'clear',
       lastRunAt: crawl.createdAt,
-      summary: `${crawl.urlCount} URL(s), ${crawl.statusErrors} status error(s), ${crawl.nonIndexable} non-indexable, ${crawl.highPriorityRecommendations} high-priority action(s).`,
+      summary: `${countLabel(crawl.urlCount, 'URL')}, ${countLabel(crawl.statusErrors, 'status error')}, ${crawl.nonIndexable} non-indexable, ${countLabel(crawl.highPriorityRecommendations, 'high-priority action')}.`,
       action: attention
         ? (crawl.topRecommendation?.action ??
           'Review the saved crawl recommendations.')
@@ -92,7 +93,7 @@ export function monitoringStatus(input: {
           ? 'stale'
           : 'clear',
       lastRunAt: index.latestInspectedAt,
-      summary: `${index.inspectedUrls} URL(s) tracked, ${index.nonPass} non-PASS verdict(s), ${index.blocked} blocked signal(s).`,
+      summary: `${countLabel(index.inspectedUrls, 'URL')} tracked, ${countLabel(index.nonPass, 'non-PASS verdict')}, ${countLabel(index.blocked, 'blocked signal')}.`,
       action: attention
         ? 'Review non-PASS and blocked URL Inspection results before content changes.'
         : undefined,
@@ -117,7 +118,7 @@ export function monitoringStatus(input: {
           ? 'stale'
           : 'clear',
       lastRunAt: recovery.createdAt,
-      summary: `${recovery.checked} URL(s) checked, ${recovery.recoverable} recoverable, ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
+      summary: `${countLabel(recovery.checked, 'URL')} checked, ${recovery.recoverable} recoverable, ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
       action: attention
         ? (recovery.topAction ?? 'Fix recoverable search-value URL issues.')
         : undefined,

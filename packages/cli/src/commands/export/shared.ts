@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { type CsvFile, renderCsv } from '@seo/core'
+import { type CsvFile, countLabel, renderCsv } from '@seo/core'
 import { reportFetchArgs } from '../reports/args.js'
 
 const { json: _json, ...reportFetchArgsWithoutJson } = reportFetchArgs
@@ -56,7 +56,9 @@ export async function writeCsvFiles(outDir: string, files: CsvFile[]) {
 }
 
 export function printWritten(outDir: string, files: string[]) {
-  process.stdout.write(`Wrote ${files.length} CSV file(s) to ${outDir}\n`)
+  process.stdout.write(
+    `Wrote ${countLabel(files.length, 'CSV file')} to ${outDir}\n`,
+  )
   for (const file of files) {
     process.stdout.write(`- ${file}\n`)
   }

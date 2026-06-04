@@ -238,10 +238,10 @@ export async function secondPage(input: {
       `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
       `Minimum impressions: ${minImpressions}. Limit: ${input.limit ?? 10} page groups.`,
       input.verifyContent
-        ? `Content verification: requested for up to ${input.verifyLimit ?? 5} result(s).`
+        ? `Content verification: requested for up to ${input.verifyLimit ?? 5} ${plural(input.verifyLimit ?? 5, 'result')}.`
         : 'Content verification: not run. Use --verify-content for stronger on-page recommendations.',
       warnings.length
-        ? `${warnings.length} provider warning(s) were recorded, so related-question evidence may be incomplete.`
+        ? `${warnings.length} provider ${plural(warnings.length, 'warning')} ${warnings.length === 1 ? 'was' : 'were'} recorded, so related-question evidence may be incomplete.`
         : '',
     ].filter((item) => item.length > 0),
     recommendations: secondPageRecommendations(items),

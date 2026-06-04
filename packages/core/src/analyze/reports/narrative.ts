@@ -1,4 +1,5 @@
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
+import { countLabel } from '../../phrasing.js'
 import type { ProgressReporter } from '../../progress.js'
 import { diagnoseProperty } from '../diagnose-property.js'
 import {
@@ -45,7 +46,7 @@ function reportCaveats(input: {
     `Data freshness: ${input.refresh ? 'fresh fetch requested; local cache bypassed where supported' : 'local cache allowed; rerun with --refresh to bypass cached GSC/HTTP data'}.`,
     'GA4: not included in this narrative; use refresh-priorities when GA4 value should influence prioritisation.',
     input.verifyContent
-      ? `Content verification: checked ${input.verified} of ${input.quickWinCount} quick-win candidate(s), limit ${input.verifyLimit ?? 3}.`
+      ? `Content verification: checked ${input.verified} of ${countLabel(input.quickWinCount, 'quick-win candidate')}, limit ${input.verifyLimit ?? 3}.`
       : 'Content verification: not run; recommendations are based on GSC/query data unless stated otherwise.',
   ]
 }
@@ -144,7 +145,7 @@ export async function reportNarrative(input: {
         bullets: [
           movementLine(diagnosis),
           topSegmentLine(diagnosis),
-          `${diagnosis.summary.updateMatches} official Google update window(s) overlapped recent movement.`,
+          `${countLabel(diagnosis.summary.updateMatches, 'official Google update window')} overlapped recent movement.`,
         ],
       },
       {

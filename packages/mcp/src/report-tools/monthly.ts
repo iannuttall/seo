@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { monthlyReport } from '@seo/core'
+import { monthlyReport, reportPresentation } from '@seo/core'
 import * as z from 'zod/v4'
 import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
@@ -44,7 +44,8 @@ export function registerMonthlyReportTool(server: McpServer): void {
         })
         return toolSuccess(
           `Monthly report generated for ${result.month}. ${result.headline}`,
-          result,
+          { ...result, presentation: reportPresentation(result) },
+          { markdown: result.markdown },
         )
       } catch (error) {
         return toolError(error)

@@ -1,35 +1,11 @@
+import type {
+  Presentation,
+  PresentationChart,
+  PresentationTable,
+} from '../../presentation.js'
 import type { PriorityQueueItem, WorkflowReport } from './types.js'
 
-type Scalar = boolean | number | string | null
-type Row = Record<string, Scalar>
 type RecordValue = Record<string, unknown>
-
-export type WorkflowTableColumn = {
-  key: string
-  label: string
-  type?: 'number' | 'string' | 'url'
-}
-
-export type WorkflowTable = {
-  id: string
-  title: string
-  columns: WorkflowTableColumn[]
-  rows: Row[]
-}
-
-export type WorkflowChart = {
-  id: string
-  title: string
-  type: 'bar'
-  tableId: string
-  xKey: string
-  yKey: string
-}
-
-export type WorkflowPresentation = {
-  tables: WorkflowTable[]
-  charts: WorkflowChart[]
-}
 
 function isRecord(value: unknown): value is RecordValue {
   return typeof value === 'object' && value !== null
@@ -44,7 +20,7 @@ function priorityQueue(output: unknown): PriorityQueueItem[] {
 
 function stepsTable(
   report: WorkflowReport<unknown>,
-): WorkflowTable | undefined {
+): PresentationTable | undefined {
   if (!report.steps.length) return undefined
   return {
     id: 'steps',
@@ -64,7 +40,7 @@ function stepsTable(
 
 function actionsTable(
   report: WorkflowReport<unknown>,
-): WorkflowTable | undefined {
+): PresentationTable | undefined {
   if (!report.actions.length) return undefined
   return {
     id: 'recommended_actions',
@@ -87,7 +63,7 @@ function actionsTable(
 function queueTable(
   queue: PriorityQueueItem[],
   limit: number,
-): WorkflowTable | undefined {
+): PresentationTable | undefined {
   if (!queue.length) return undefined
   return {
     id: 'priority_queue',
@@ -116,14 +92,14 @@ function queueTable(
 export function workflowPresentation(
   report: WorkflowReport<unknown>,
   options: { queueLimit?: number } = {},
-): WorkflowPresentation {
+): Presentation {
   const queue = priorityQueue(report.output)
   const tables = [
     stepsTable(report),
     actionsTable(report),
     queueTable(queue, options.queueLimit ?? 10),
-  ].filter((table): table is WorkflowTable => Boolean(table))
-  const charts: WorkflowChart[] = queue.length
+  ].filter((table): table is PresentationTable => Boolean(table))
+  const charts: PresentationChart[] = queue.length
     ? [
         {
           id: 'priority_scores',

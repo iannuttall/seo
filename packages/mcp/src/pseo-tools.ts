@@ -1,5 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { countLabel, pseoAuditReport } from '@seo/core'
+import {
+  countLabel,
+  pseoAuditReport,
+  pseoPresentation,
+  renderPseoMarkdown,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -49,7 +54,8 @@ export function registerPseoTools(server: McpServer): void {
         })
         return toolSuccess(
           `${countLabel(result.summary.templates, 'pSEO template')} audited from ${countLabel(result.summary.gscPages, 'GSC page')}.`,
-          result,
+          { ...result, presentation: pseoPresentation(result) },
+          { markdown: renderPseoMarkdown(result) },
         )
       } catch (error) {
         return toolError(error)

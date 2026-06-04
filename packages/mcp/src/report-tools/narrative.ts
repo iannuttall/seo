@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { reportNarrative } from '@seo/core'
+import { reportNarrative, reportPresentation } from '@seo/core'
 import * as z from 'zod/v4'
 import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
@@ -63,7 +63,11 @@ export function registerNarrativeReportTool(server: McpServer): void {
           includeBrand,
           ...reportFetchOptions(fetchInput),
         })
-        return toolSuccess(result.headline, result)
+        return toolSuccess(
+          result.headline,
+          { ...result, presentation: reportPresentation(result) },
+          { markdown: result.markdown },
+        )
       } catch (error) {
         return toolError(error)
       }

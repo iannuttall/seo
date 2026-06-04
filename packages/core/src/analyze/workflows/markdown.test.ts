@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderWorkflowMarkdown } from './markdown.js'
+import { workflowPresentation } from './presentation.js'
 import type { PriorityQueueItem, WorkflowReport } from './types.js'
 
 test('renderWorkflowMarkdown renders actions and priority queue tables', () => {
@@ -59,4 +60,21 @@ test('renderWorkflowMarkdown renders actions and priority queue tables', () => {
   assert.match(markdown, /Improve title \\\| snippet/)
   assert.match(markdown, /## Priority Queue/)
   assert.match(markdown, /\| 1 \| quick-win \| content \| 88\.3 \| high /)
+
+  const presentation = workflowPresentation(report)
+  assert.deepEqual(
+    presentation.tables.map((table) => table.id),
+    ['steps', 'recommended_actions', 'priority_queue'],
+  )
+  assert.equal(presentation.tables[2]?.rows[0]?.score, 88.3)
+  assert.deepEqual(presentation.charts, [
+    {
+      id: 'priority_scores',
+      title: 'Priority Scores',
+      type: 'bar',
+      tableId: 'priority_queue',
+      xKey: 'rank',
+      yKey: 'score',
+    },
+  ])
 })

@@ -146,7 +146,7 @@ export async function technicalWatchWorkflow(input: {
         tool: input.sitemaps?.length ? 'seo_index_monitor' : 'seo_index_watch',
         status: index ? 'completed' : 'skipped',
         summary: index
-          ? `Inspected ${indexCounts.inspected} URLs; ${indexCounts.alerts} alerts.`
+          ? `Inspected ${countLabel(indexCounts.inspected, 'URL')}; ${countLabel(indexCounts.alerts, 'alert')}.`
           : 'No inspection URLs or sitemaps passed.',
       },
       {

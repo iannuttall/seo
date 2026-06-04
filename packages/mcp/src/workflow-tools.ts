@@ -7,15 +7,23 @@ import {
   technicalWatchWorkflow,
   updatePostmortemWorkflow,
   type WorkflowReport,
+  workflowPresentation,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 function workflowSuccess(result: WorkflowReport<unknown>) {
-  return toolSuccess(result.summary, result, {
-    markdown: renderWorkflowMarkdown(result),
-  })
+  return toolSuccess(
+    result.summary,
+    {
+      ...result,
+      presentation: workflowPresentation(result),
+    },
+    {
+      markdown: renderWorkflowMarkdown(result),
+    },
+  )
 }
 
 export function registerWorkflowTools(server: McpServer): void {

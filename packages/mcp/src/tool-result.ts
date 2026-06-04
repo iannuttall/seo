@@ -19,9 +19,10 @@ export function toolError(error: unknown): ToolResult {
 export function toolSuccess(
   summaryText: string,
   structuredContent: unknown,
+  options: { markdown?: string } = {},
 ): ToolResult {
   return {
-    content: [{ type: 'text', text: summaryText }],
+    content: [{ type: 'text', text: options.markdown ?? summaryText }],
     structuredContent: structuredContent as Record<string, unknown>,
   }
 }

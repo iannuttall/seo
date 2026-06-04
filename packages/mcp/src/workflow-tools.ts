@@ -3,34 +3,19 @@ import {
   diagnosePropertyWorkflow,
   monthlyReportWorkflow,
   refreshPrioritiesWorkflow,
+  renderWorkflowMarkdown,
   technicalWatchWorkflow,
   updatePostmortemWorkflow,
+  type WorkflowReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { mcpReportInputSchema } from './report-options.js'
+import { toolError, toolSuccess } from './tool-result.js'
 
-type ToolResult = {
-  content: Array<{ type: 'text'; text: string }>
-  structuredContent?: Record<string, unknown>
-  isError?: boolean
-}
-
-function toolError(error: unknown): ToolResult {
-  const message = error instanceof Error ? error.message : String(error)
-  return {
-    content: [{ type: 'text', text: `Error: ${message}` }],
-    isError: true,
-  }
-}
-
-function toolSuccess(
-  summaryText: string,
-  structuredContent: unknown,
-): ToolResult {
-  return {
-    content: [{ type: 'text', text: summaryText }],
-    structuredContent: structuredContent as Record<string, unknown>,
-  }
+function workflowSuccess(result: WorkflowReport<unknown>) {
+  return toolSuccess(result.summary, result, {
+    markdown: renderWorkflowMarkdown(result),
+  })
 }
 
 export function registerWorkflowTools(server: McpServer): void {
@@ -60,7 +45,7 @@ export function registerWorkflowTools(server: McpServer): void {
           includeBrand,
           refresh,
         })
-        return toolSuccess(result.summary, result)
+        return workflowSuccess(result)
       } catch (error) {
         return toolError(error)
       }
@@ -85,7 +70,7 @@ export function registerWorkflowTools(server: McpServer): void {
           includeBrand,
           refresh,
         })
-        return toolSuccess(result.summary, result)
+        return workflowSuccess(result)
       } catch (error) {
         return toolError(error)
       }
@@ -131,7 +116,7 @@ export function registerWorkflowTools(server: McpServer): void {
           includeChangeLog,
           refresh,
         })
-        return toolSuccess(result.summary, result)
+        return workflowSuccess(result)
       } catch (error) {
         return toolError(error)
       }
@@ -202,7 +187,7 @@ export function registerWorkflowTools(server: McpServer): void {
           recoverMinClicks,
           recoverMinImpressions,
         })
-        return toolSuccess(result.summary, result)
+        return workflowSuccess(result)
       } catch (error) {
         return toolError(error)
       }
@@ -251,7 +236,7 @@ export function registerWorkflowTools(server: McpServer): void {
           verifyLimit,
           refresh,
         })
-        return toolSuccess(result.summary, result)
+        return workflowSuccess(result)
       } catch (error) {
         return toolError(error)
       }

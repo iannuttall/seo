@@ -1,4 +1,5 @@
 export * from './workflows/diagnose-property.js'
+export * from './workflows/markdown.js'
 export * from './workflows/monthly-report.js'
 export * from './workflows/refresh-priorities.js'
 export * from './workflows/technical-watch.js'

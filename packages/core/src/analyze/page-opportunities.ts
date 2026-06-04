@@ -207,7 +207,7 @@ function pageCaveats(input: {
         : 'not run'
     }.`,
     input.warnings.length
-      ? `${input.warnings.length} fetch/extraction warning(s) affected this report.`
+      ? `${input.warnings.length} fetch/extraction ${plural(input.warnings.length, 'warning', 'warnings')} affected this report.`
       : '',
   ].filter((item) => item.length > 0)
 }

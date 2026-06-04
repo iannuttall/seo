@@ -1,6 +1,7 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import { countLabel } from '../phrasing.js'
 import {
   contentCoverageRecommendation,
   type QueryContentCoverage,
@@ -359,7 +360,7 @@ export async function strikingDistance(input: {
       `Date window: ${range.startDate} to ${range.endDate}.`,
       `Filters: position 11-20, at least ${minImpressions} impressions, CTR at or below ${(maxCtr * 100).toFixed(1)}%.`,
       `Brand filtering: ${input.includeBrand ? 'brand queries included' : 'brand queries excluded when detected/configured'}.`,
-      `Content verification: ${input.verifyContent ? `requested for top ${input.verifyLimit ?? 5} row(s)` : 'not run'}.`,
+      `Content verification: ${input.verifyContent ? `requested for top ${countLabel(input.verifyLimit ?? 5, 'row')}` : 'not run'}.`,
     ],
     recommendations: groups.length
       ? groups.slice(0, 5).map((group) => group.recommendation)

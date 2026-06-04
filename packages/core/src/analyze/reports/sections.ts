@@ -1,3 +1,4 @@
+import { countLabel } from '../../phrasing.js'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
 import type { ChangeMeasurement } from '../experiments.js'
 import type { ReportNarrative } from './types.js'
@@ -69,7 +70,7 @@ export function monitoringBullets(
   const recovery = report.monitoring.linkRecover
   if (crawl) {
     bullets.push(
-      `Latest crawl checked ${crawl.urlCount} URLs with ${crawl.statusErrors} status errors, ${crawl.nonIndexable} non-indexable pages, and ${crawl.highPriorityRecommendations} high-priority crawl action(s).`,
+      `Latest crawl checked ${countLabel(crawl.urlCount, 'URL')} with ${countLabel(crawl.statusErrors, 'status error')}, ${countLabel(crawl.nonIndexable, 'non-indexable page')}, and ${countLabel(crawl.highPriorityRecommendations, 'high-priority crawl action')}.`,
     )
     if (crawl.topRecommendation) {
       bullets.push(
@@ -87,12 +88,16 @@ export function monitoringBullets(
 
   const watch = report.monitoring.indexWatch
   if (watch.inspectedUrls) {
+    const nonPassText =
+      watch.nonPass === 0
+        ? 'no URLs currently have'
+        : `${countLabel(watch.nonPass, 'URL')} currently ${watch.nonPass === 1 ? 'has' : 'have'}`
     bullets.push(
-      `Index watch tracks ${watch.inspectedUrls} URLs; ${watch.nonPass} currently have a non-PASS verdict.`,
+      `Index watch tracks ${countLabel(watch.inspectedUrls, 'URL')}; ${nonPassText} a non-PASS verdict.`,
     )
     if (watch.nonPass || watch.blocked) {
       bullets.push(
-        `Index watch currently has ${watch.blocked} blocked URL(s); inspect redirect, robots, canonical, and final-page state before changing copy.`,
+        `Index watch currently has ${countLabel(watch.blocked, 'blocked URL')}; inspect redirect, robots, canonical, and final-page state before changing copy.`,
       )
     }
   } else {
@@ -101,7 +106,7 @@ export function monitoringBullets(
 
   if (recovery) {
     bullets.push(
-      `Latest link-recover checked ${recovery.checked} search-value URLs; ${recovery.recoverable} recoverable issue(s), ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
+      `Latest link-recover checked ${countLabel(recovery.checked, 'search-value URL')}; ${countLabel(recovery.recoverable, 'recoverable issue')}, ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
     )
     if (recovery.topUrl && recovery.topAction) {
       bullets.push(
@@ -110,7 +115,7 @@ export function monitoringBullets(
     }
     if (recovery.repeatedUrls) {
       bullets.push(
-        `${recovery.repeatedUrls} recoverable URL(s) appeared in multiple recent link-recover runs${recovery.repeatedTopUrl ? `; first repeat: ${recovery.repeatedTopUrl}` : ''}.`,
+        `${countLabel(recovery.repeatedUrls, 'recoverable URL')} appeared in multiple recent link-recover runs${recovery.repeatedTopUrl ? `; first repeat: ${recovery.repeatedTopUrl}` : ''}.`,
       )
     }
   } else {

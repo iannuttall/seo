@@ -1,4 +1,5 @@
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
+import { countLabel } from '../phrasing.js'
 import type { ProgressReporter } from '../progress.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import {
@@ -62,7 +63,7 @@ function buildPriorities(input: {
   if (input.update.classification !== 'not-enough-evidence') {
     priorities.push({
       label: 'Review update exposure',
-      reason: `${input.update.overlappingUpdates.length} official update window(s) overlap recent movement.`,
+      reason: `${countLabel(input.update.overlappingUpdates.length, 'official update window')} ${input.update.overlappingUpdates.length === 1 ? 'overlaps' : 'overlap'} recent movement.`,
       action:
         'Do not edit individual pages yet. First compare winning and losing templates so you know which page type was affected by the update.',
       confidence:

@@ -281,7 +281,7 @@ export function interpretUpdateCorrelation(input: {
     ],
     caveats: [
       `GSC window: ${input.days} days; recent comparison window: ${input.recentDays} days.`,
-      `Update overlap padding: ${input.paddingDays} day(s) either side of the comparison window.`,
+      `Update overlap padding: ${input.paddingDays} ${plural(input.paddingDays, 'day')} either side of the comparison window.`,
       input.refresh
         ? 'Data freshness: cache bypassed for GSC data.'
         : 'Data freshness: local GSC cache may have been used.',

@@ -1,6 +1,7 @@
 import { shouldExcludeBrandQuery } from '../../brand.js'
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
+import { countLabel } from '../../phrasing.js'
 import {
   contentCoverageRecommendation,
   type QueryContentCoverage,
@@ -231,7 +232,7 @@ export async function quickWinsReport(input: {
       `Date window: ${range.startDate} to ${range.endDate}.`,
       `Filters: positions 4-10, at least ${minImpressions} impressions, and brand queries ${input.includeBrand ? 'included' : 'excluded when detected/configured'}.`,
       `Estimated lift assumes movement toward position 3 using the built-in CTR baseline; treat it as prioritisation, not a traffic forecast.`,
-      `Content verification: ${input.verifyContent ? `requested for top ${input.verifyLimit ?? 5} row(s)` : 'not run'}.`,
+      `Content verification: ${input.verifyContent ? `requested for top ${countLabel(input.verifyLimit ?? 5, 'row')}` : 'not run'}.`,
     ],
     recommendations: recommendations.length
       ? recommendations

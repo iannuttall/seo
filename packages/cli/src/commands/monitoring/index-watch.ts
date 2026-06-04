@@ -1,4 +1,9 @@
-import { indexCoveragePlan, indexMonitor, indexWatch } from '@seo/core'
+import {
+  countLabel,
+  indexCoveragePlan,
+  indexMonitor,
+  indexWatch,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -102,8 +107,11 @@ export const indexWatchCommand = defineCommand({
         ['Sitemap URLs', String(report.summary.urlCount)],
         ['Properties used', String(report.summary.properties)],
         ['Daily capacity', String(report.summary.dailyCapacity)],
-        ['Estimated cycle', `${report.summary.estimatedCycleDays} day(s)`],
-        ['Target cycle', `${report.summary.targetCycleDays} day(s)`],
+        [
+          'Estimated cycle',
+          countLabel(report.summary.estimatedCycleDays, 'day'),
+        ],
+        ['Target cycle', countLabel(report.summary.targetCycleDays, 'day')],
         ['Suggested properties', String(report.summary.suggestedProperties)],
       ])
       if (report.properties.length) {
@@ -112,7 +120,7 @@ export const indexWatchCommand = defineCommand({
           report.properties.map((property) => [
             property.property,
             property.urlCount,
-            `${property.cycleDays} day(s)`,
+            countLabel(property.cycleDays, 'day'),
             property.sampleUrls[0] ?? '-',
           ]),
         )
@@ -125,7 +133,7 @@ export const indexWatchCommand = defineCommand({
             suggestion.property,
             suggestion.urlCount,
             suggestion.currentProperty,
-            `${suggestion.estimatedCycleDays} day(s)`,
+            countLabel(suggestion.estimatedCycleDays, 'day'),
             suggestion.reason,
           ]),
         )

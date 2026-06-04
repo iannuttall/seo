@@ -1,4 +1,4 @@
-import { pseoAuditReport } from '@seo/core'
+import { countLabel, pseoAuditReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
@@ -74,7 +74,7 @@ function formatEntityFit(
   >['templates'][number]['metrics']['entityFit'],
 ): string | undefined {
   if (!fit.checkedQueries) return undefined
-  return `${Math.round(fit.impressionShare * 100)}% impression fit across ${fit.checkedQueries} checked query/page row(s)`
+  return `${Math.round(fit.impressionShare * 100)}% impression fit across ${countLabel(fit.checkedQueries, 'checked query/page row')}`
 }
 
 function formatDemandLabel(label: string): string {
@@ -140,10 +140,9 @@ function printTemplateDetails(
     if (weakEntityExamples.length) {
       process.stdout.write('  Weak entity-fit examples:\n')
       for (const item of weakEntityExamples) {
+        const terms = item.pathTerms.slice(0, 4)
         process.stdout.write(
-          `    - ${truncate(item.query, 64)} -> expected path term(s): ${item.pathTerms
-            .slice(0, 4)
-            .join(', ')}\n`,
+          `    - ${truncate(item.query, 64)} -> expected ${countLabel(terms.length, 'path term')}: ${terms.join(', ')}\n`,
         )
       }
     }

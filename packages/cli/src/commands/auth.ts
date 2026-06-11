@@ -37,6 +37,10 @@ export const authCommand = defineCommand({
       },
     }),
     whoami: defineCommand({
+      meta: {
+        name: 'whoami',
+        description: 'Show the signed-in Google account',
+      },
       run: async () => {
         const tokens = await readTokens()
         if (!tokens) {
@@ -49,6 +53,10 @@ export const authCommand = defineCommand({
       },
     }),
     status: defineCommand({
+      meta: {
+        name: 'status',
+        description: 'Show local Google auth status',
+      },
       run: async () => {
         const status = await authStatus()
         if (!status.tokens) {
@@ -84,6 +92,10 @@ export const authCommand = defineCommand({
       },
     }),
     refresh: defineCommand({
+      meta: {
+        name: 'refresh',
+        description: 'Refresh the Google OAuth token',
+      },
       run: async () => {
         const tokens = await refreshAuthToken()
         process.stdout.write(
@@ -92,6 +104,10 @@ export const authCommand = defineCommand({
       },
     }),
     'setup-client': defineCommand({
+      meta: {
+        name: 'setup-client',
+        description: 'Save your own Google Desktop OAuth client',
+      },
       run: async () => {
         intro('seo BYO OAuth client')
         note(

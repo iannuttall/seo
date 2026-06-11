@@ -7,7 +7,7 @@ import { printClientList } from './output.js'
 export const clientListCommand = defineCommand({
   meta: {
     name: 'list',
-    description: 'List saved clients',
+    description: 'List saved project profiles',
   },
   args: {
     json: {

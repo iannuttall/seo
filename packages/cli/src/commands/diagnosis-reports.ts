@@ -1,6 +1,12 @@
 import { trafficAnomaly, updateCorrelation } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printLimitedTable, printNextCommand, printNotes } from './output.js'
 import { cliReportArgs } from './report-options.js'
@@ -18,9 +24,14 @@ function formatChange(value: number): string {
 }
 
 export const trafficAnomalyCommand = defineCommand({
+  meta: {
+    name: 'traffic-anomaly',
+    description: 'Detect statistically unusual recent GSC traffic movement',
+  },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'recentDays', 'refresh'], {
       days: { description: 'Baseline window length in days. Defaults to 90.' },
       recentDays: {
@@ -40,7 +51,7 @@ export const trafficAnomalyCommand = defineCommand({
     const json = jsonFlag(args)
     const report = await trafficAnomaly({
       site: await selectedSiteOrThrow(
-        { client: stringArg(args.client), site: stringArg(args.site) },
+        { client: projectArg(args), site: stringArg(args.site) },
         {
           json,
           refresh: booleanArg(args.refresh),
@@ -78,9 +89,14 @@ export const trafficAnomalyCommand = defineCommand({
 })
 
 export const updateCorrelateCommand = defineCommand({
+  meta: {
+    name: 'update-correlate',
+    description: 'Compare traffic movement with official Google update windows',
+  },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'recentDays', 'refresh'], {
       days: { description: 'Baseline window length in days. Defaults to 90.' },
       recentDays: {
@@ -112,7 +128,7 @@ export const updateCorrelateCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const client = stringArg(args.client)
+    const client = projectArg(args)
     const site = await selectedSiteOrThrow(
       { client, site: stringArg(args.site) },
       {
@@ -171,7 +187,7 @@ export const updateCorrelateCommand = defineCommand({
       )
     }
     const target = client
-      ? `--client ${JSON.stringify(client)}`
+      ? `--project ${JSON.stringify(client)}`
       : `--site ${JSON.stringify(site)}`
     printNextCommand(`seo segment-impact ${target} --dimension page`)
   },

@@ -4,11 +4,12 @@ import { runGuidedSetup } from './flow.js'
 export const setupCommand = defineCommand({
   meta: {
     name: 'setup',
-    description: 'Guided setup for auth, one client, MCP, and next commands',
+    description:
+      'Guided setup for auth, one project profile, MCP, and next commands',
   },
   args: {
-    id: { type: 'string', description: 'Short stable client id.' },
-    name: { type: 'string', description: 'Human client name.' },
+    id: { type: 'string', description: 'Short stable project id.' },
+    name: { type: 'string', description: 'Human project name.' },
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
@@ -33,7 +34,12 @@ export const setupCommand = defineCommand({
     },
     default: {
       type: 'boolean',
-      description: 'Make this the default client.',
+      description: 'Make this the default project.',
+    },
+    'skip-profile': {
+      type: 'boolean',
+      default: false,
+      description: 'Do not save a project profile during setup.',
     },
     'skip-auth': {
       type: 'boolean',
@@ -64,10 +70,19 @@ export const setupCommand = defineCommand({
   run: async ({ args }) => runGuidedSetup(args),
 })
 
+export const startCommand = defineCommand({
+  ...setupCommand,
+  meta: {
+    name: 'start',
+    description:
+      'Start here: connect Google, save a profile, and get the first report commands',
+  },
+})
+
 export const clientSetupCommand = defineCommand({
   ...setupCommand,
   meta: {
     name: 'setup',
-    description: 'Guided setup for one saved SEO client',
+    description: 'Guided setup for one saved project profile',
   },
 })

@@ -7,6 +7,7 @@ import { resolveClientSelection } from '../selection.js'
 export async function selectedSiteOrThrow(
   input: {
     client?: string
+    project?: string
     site?: string
   },
   options: { json?: boolean; refresh?: boolean } = {},
@@ -14,6 +15,7 @@ export async function selectedSiteOrThrow(
   return (
     await resolveClientSelection({
       client: input.client,
+      project: input.project,
       site: input.site,
       options,
     })

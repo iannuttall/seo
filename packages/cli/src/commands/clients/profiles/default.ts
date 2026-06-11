@@ -6,13 +6,13 @@ import { printJson } from '../../../utils.js'
 export const clientDefaultCommand = defineCommand({
   meta: {
     name: 'default',
-    description: 'Set the default client',
+    description: 'Set the default project',
   },
   args: {
     id: {
       type: 'string',
       required: true,
-      description: 'Client id or name.',
+      description: 'Project id or name.',
     },
     json: {
       type: 'boolean',
@@ -26,6 +26,6 @@ export const clientDefaultCommand = defineCommand({
       printJson(client)
       return
     }
-    process.stdout.write(`Default client set to ${client.id}.\n`)
+    process.stdout.write(`Default project set to ${client.id}.\n`)
   },
 })

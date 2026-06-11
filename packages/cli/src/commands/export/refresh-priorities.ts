@@ -1,6 +1,6 @@
 import { refreshPrioritiesCsvFiles, refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, numberArg, stringArg } from '../../args.js'
+import { booleanArg, numberArg, stringArg, projectArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { cliReportArgs } from '../report-options.js'
 import {
@@ -34,7 +34,7 @@ export const exportRefreshPrioritiesCommand = defineCommand({
     'ga4-property': {
       type: 'string',
       description:
-        'GA4 property ID to use for analytics value. Defaults from the selected client.',
+        'GA4 property ID to use for analytics value. Defaults from the selected project.',
     },
     'verify-content': {
       type: 'boolean',
@@ -49,7 +49,7 @@ export const exportRefreshPrioritiesCommand = defineCommand({
   },
   run: async ({ args }) => {
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { refresh: booleanArg(args.refresh) },
     })

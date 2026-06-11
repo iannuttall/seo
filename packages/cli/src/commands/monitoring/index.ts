@@ -6,6 +6,7 @@ import {
   listArg,
   numberArg,
   stringArg,
+  projectArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -42,7 +43,7 @@ export const monitoringCommand = defineCommand({
       run: async ({ args }) => {
         const json = jsonFlag(args)
         const selection = await resolveClientSelection({
-          client: stringArg(args.client),
+          client: projectArg(args),
           site: stringArg(args.site),
           options: { json, refresh: booleanArg(args.refresh) },
         })
@@ -90,7 +91,7 @@ export const monitoringCommand = defineCommand({
       run: async ({ args }) => {
         const json = jsonFlag(args)
         const selection = await resolveClientSelection({
-          client: stringArg(args.client),
+          client: projectArg(args),
           site: stringArg(args.site),
           options: { json, refresh: booleanArg(args.refresh) },
         })
@@ -131,7 +132,7 @@ export const monitoringCommand = defineCommand({
       run: async ({ args }) => {
         const json = jsonFlag(args)
         const selection = await resolveClientSelection({
-          client: stringArg(args.client),
+          client: projectArg(args),
           site: stringArg(args.site),
           options: { json, refresh: booleanArg(args.refresh) },
         })
@@ -140,7 +141,7 @@ export const monitoringCommand = defineCommand({
         const weekday =
           numberArg(args.weekday) ?? selection.client?.technicalWeekday ?? 1
         const identityArg = selection.client
-          ? `--client ${JSON.stringify(selection.client.id)}`
+          ? `--project ${JSON.stringify(selection.client.id)}`
           : `--site ${JSON.stringify(selection.site)}`
         const command = [
           'seo monitoring run',

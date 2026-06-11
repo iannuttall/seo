@@ -116,29 +116,37 @@ export async function reportNarrative(input: {
     linkRecover: latestLinkRecoverSummary(input.site),
   }
   input.progress?.('Rendering narrative')
+  const diagnosisPeriod = period ?? {
+    startDate:
+      diagnosis.anomaly.anomalies[0]?.baselineStart ??
+      diagnosis.quickWins.range.startDate,
+    endDate:
+      diagnosis.anomaly.anomalies[0]?.comparisonEnd ??
+      diagnosis.quickWins.range.endDate,
+  }
 
   const report: ReportNarrative = {
     site: input.site,
     generatedAt: new Date().toISOString(),
     periodDays: period ? rangeDays(period) : periodDays,
-    period: period ?? {
-      startDate: diagnosis.anomaly.anomalies[0]?.baselineStart ?? '',
-      endDate: diagnosis.anomaly.anomalies[0]?.comparisonEnd ?? '',
-    },
+    period: diagnosisPeriod,
     headline: headlineLine(diagnosis),
-    caveats: reportCaveats({
-      period: period ?? {
-        startDate: diagnosis.anomaly.anomalies[0]?.baselineStart ?? '',
-        endDate: diagnosis.anomaly.anomalies[0]?.comparisonEnd ?? '',
-      },
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-      refresh: input.refresh,
-      verifyContent: input.verifyContent,
-      verifyLimit: input.verifyLimit,
-      verified: diagnosis.quickWins.verification.verified,
-      quickWinCount: diagnosis.quickWins.items.length,
-    }),
+    caveats: [
+      ...reportCaveats({
+        period: diagnosisPeriod,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+        refresh: input.refresh,
+        verifyContent: input.verifyContent,
+        verifyLimit: input.verifyLimit,
+        verified: diagnosis.quickWins.verification.verified,
+        quickWinCount: diagnosis.quickWins.items.length,
+      }),
+      ...(diagnosis.skippedSections ?? []).map(
+        (section) =>
+          `Skipped ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
+      ),
+    ],
     sections: [
       {
         title: 'Performance',

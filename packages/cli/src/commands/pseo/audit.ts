@@ -1,6 +1,12 @@
 import { countLabel, pseoAuditReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -158,7 +164,8 @@ export const pseoAuditCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'limit', 'includeBrand', 'js', 'refresh'], {
       limit: {
         description: 'Maximum templates to show. Defaults to 25.',
@@ -193,7 +200,7 @@ export const pseoAuditCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })
@@ -266,7 +273,7 @@ export const pseoAuditCommand = defineCommand({
       process.stdout.write(`Warnings: ${report.warnings.join('; ')}\n`)
     }
     const target = selection.client
-      ? `--client ${JSON.stringify(selection.client.id)}`
+      ? `--project ${JSON.stringify(selection.client.id)}`
       : `--site ${JSON.stringify(selection.site)}`
     printNextCommand(`seo export pseo ${target}`)
   },

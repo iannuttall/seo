@@ -6,6 +6,7 @@ import {
   fetchRateArg,
   numberArg,
   stringArg,
+  projectArg,
 } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
@@ -78,7 +79,7 @@ export const exportPseoCommand = defineCommand({
   },
   run: async ({ args }) => {
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
     })
     const report = await pseoAuditReport({

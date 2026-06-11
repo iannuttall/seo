@@ -69,7 +69,7 @@ export const reportNarrativeCommand = defineCommand({
     }
     process.stdout.write(`${report.markdown}\n`)
     const target = selection.client
-      ? `--client ${JSON.stringify(selection.client.id)}`
+      ? `--project ${JSON.stringify(selection.client.id)}`
       : `--site ${JSON.stringify(selection.site)}`
     process.stdout.write('\n')
     printNextCommand(`seo export narrative ${target}`)

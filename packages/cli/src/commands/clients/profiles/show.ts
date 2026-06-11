@@ -7,12 +7,12 @@ import { printClientProfile } from './output.js'
 export const clientShowCommand = defineCommand({
   meta: {
     name: 'show',
-    description: 'Show one client profile',
+    description: 'Show one project profile',
   },
   args: {
     id: {
       type: 'string',
-      description: 'Client id or name. Defaults to the default client.',
+      description: 'Project id or name. Defaults to the default project.',
     },
     json: {
       type: 'boolean',
@@ -22,7 +22,7 @@ export const clientShowCommand = defineCommand({
   },
   run: async ({ args }) => {
     const client = getClient(stringArg(args.id))
-    if (!client) throw new Error('Client not found.')
+    if (!client) throw new Error('Project not found.')
     if (jsonFlag(args)) {
       printJson(client)
       return

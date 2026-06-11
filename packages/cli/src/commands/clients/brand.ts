@@ -1,13 +1,19 @@
 import { detectBrandTerms, getClient, saveClient } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { resolveSite } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
 
 export const clientBrandCommand = defineCommand({
   meta: {
     name: 'brand',
-    description: 'Detect and manage client brand query terms',
+    description: 'Detect and manage project brand query terms',
   },
   subCommands: {
     detect: defineCommand({
@@ -19,7 +25,11 @@ export const clientBrandCommand = defineCommand({
       args: {
         client: {
           type: 'string',
-          description: 'Saved client id or name. Defaults to default.',
+          description: 'Legacy alias for --project.',
+        },
+        project: {
+          type: 'string',
+          description: 'Saved project id or name. Defaults to default.',
         },
         site: {
           type: 'string',
@@ -40,7 +50,7 @@ export const clientBrandCommand = defineCommand({
         save: {
           type: 'boolean',
           default: false,
-          description: 'Save suggested terms to the selected client.',
+          description: 'Save suggested terms to the selected project.',
         },
         json: {
           type: 'boolean',
@@ -55,7 +65,7 @@ export const clientBrandCommand = defineCommand({
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)
-        const client = getClient(stringArg(args.client))
+        const client = getClient(projectArg(args))
         const siteUrl = await resolveSite({
           site: stringArg(args.site) ?? client?.siteUrl,
           options: { json, refresh: booleanArg(args.refresh) },
@@ -86,7 +96,7 @@ export const clientBrandCommand = defineCommand({
             : undefined
 
         if (booleanArg(args.save) && !client) {
-          throw new Error('Pass --client to save detected brand terms.')
+          throw new Error('Pass --project to save detected brand terms.')
         }
         if (json) {
           printJson({ ...detection, saved })

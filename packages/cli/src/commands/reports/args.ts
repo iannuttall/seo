@@ -1,4 +1,10 @@
-import { booleanArg, fetchRateArg, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  fetchRateArg,
+  numberArg,
+  projectArg,
+  stringArg,
+} from '../../args.js'
 import { cliReportArgs } from '../report-options.js'
 
 export const reportSelectionArgs = {
@@ -8,7 +14,11 @@ export const reportSelectionArgs = {
   },
   client: {
     type: 'string',
-    description: 'Saved client id or name.',
+    description: 'Legacy alias for --project.',
+  },
+  project: {
+    type: 'string',
+    description: 'Saved project id or name.',
   },
 } as const
 
@@ -43,7 +53,7 @@ export function reportFetchOptions(args: Record<string, unknown>) {
 
 export function reportSelectionInput(args: Record<string, unknown>) {
   return {
-    client: stringArg(args.client),
+    client: projectArg(args),
     site: stringArg(args.site),
     refresh: booleanArg(args.refresh),
   }

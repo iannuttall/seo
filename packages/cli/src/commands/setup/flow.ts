@@ -25,10 +25,18 @@ import {
 } from './prompts.js'
 
 type SetupResult = {
-  client: ClientProfile
+  client?: ClientProfile
+  site: string
   auth: SetupAuthStatus
   mcp: SetupMcpInstall[]
   next: string[]
+}
+
+function shellArg(value: string): string {
+  if (/^[A-Za-z0-9_./:@-]+$/.test(value)) {
+    return value
+  }
+  return `'${value.replaceAll("'", "'\\''")}'`
 }
 
 export async function runGuidedSetup(
@@ -36,14 +44,16 @@ export async function runGuidedSetup(
 ): Promise<void> {
   ensureSeoCliDirs()
   const json = jsonFlag(args)
-  if (!json) intro('seo setup')
+  if (!json) intro(process.argv[2] === 'start' ? 'seo start' : 'seo setup')
 
   if (args['dry-run']) {
     const next = [
       'seo auth login',
-      'seo client add --id acme --site sc-domain:example.com --url https://example.com --default',
-      'seo diagnose-property --client acme',
-      'seo schedule cron --client acme',
+      'seo start',
+      'seo report --project acme',
+      'seo refresh-priorities --project acme --verify-content',
+      'seo technical-watch --project acme',
+      'seo schedule cron --project acme',
     ]
     if (json) {
       printJson({ dryRun: true, next })
@@ -60,36 +70,74 @@ export async function runGuidedSetup(
     options: { json, refresh: booleanArg(args.refresh) },
   })
   const defaultName = suggestedClientName(site)
+  const shouldSaveProfile =
+    booleanArg(args['skip-profile']) === true
+      ? false
+      : canPrompt()
+        ? maybeExitCancelled(
+            await confirm({
+              message: 'Save this site as a project profile?',
+              initialValue: true,
+            }),
+          )
+        : true
+
+  if (!shouldSaveProfile) {
+    const mcp = await maybeInstallMcp(args)
+    const siteArg = `--site ${shellArg(site)}`
+    const next = [
+      `seo report ${siteArg}`,
+      `seo refresh-priorities ${siteArg} --verify-content`,
+      `seo technical-watch ${siteArg}`,
+    ]
+    const result: SetupResult = { site, auth, mcp, next }
+
+    if (json) {
+      printJson(result)
+      return
+    }
+
+    printKeyValue([
+      ['Project profile', 'not saved'],
+      ['GSC property', site],
+      ['Auth', auth],
+      ['MCP installs', String(mcp.length)],
+    ])
+    note(next.join('\n'), 'Try next')
+    outro('Setup complete.')
+    return
+  }
+
+  if (!json && canPrompt()) {
+    note(
+      [
+        'A project profile stores the defaults humans hate retyping:',
+        'GSC property, crawl URL, brand terms, GA4 property, and watch URLs.',
+        'You can still run every command with --site/--url instead.',
+      ].join('\n'),
+      'Project profile',
+    )
+  }
 
   const name =
     stringArg(args.name) ??
     (canPrompt()
       ? maybeExitCancelled(
           await text({
-            message: 'Client name',
+            message: 'Project name',
             placeholder: defaultName,
             defaultValue: defaultName,
           }),
         )
       : defaultName)
-  const id =
-    stringArg(args.id) ??
-    (canPrompt()
-      ? maybeExitCancelled(
-          await text({
-            message: 'Client id',
-            placeholder: slugId(name),
-            defaultValue: slugId(name),
-          }),
-        )
-      : slugId(name))
+  const id = stringArg(args.id) ?? slugId(name)
   const defaultStartUrl = startUrlForSite(site) ?? ''
   const startUrl =
     stringArg(args.url) ??
     (canPrompt()
       ? maybeExitCancelled(
           await text({
-            message: 'Default crawl start URL',
+            message: 'Website URL to crawl',
             placeholder: defaultStartUrl || 'https://example.com',
             defaultValue: defaultStartUrl,
           }),
@@ -102,7 +150,7 @@ export async function runGuidedSetup(
         ? listArg(
             maybeExitCancelled(
               await text({
-                message: 'URLs to watch with URL Inspection',
+                message: 'Important URLs to monitor',
                 placeholder: startUrl ? `${startUrl}` : 'comma-separated URLs',
               }),
             ),
@@ -117,8 +165,7 @@ export async function runGuidedSetup(
         ? listArg(
             maybeExitCancelled(
               await text({
-                message:
-                  'Brand query terms to exclude from opportunity reports',
+                message: 'Brand terms to exclude from opportunity reports',
                 placeholder: derivedBrandTerms.join(', '),
                 defaultValue: derivedBrandTerms.join(', '),
               }),
@@ -132,7 +179,7 @@ export async function runGuidedSetup(
     (canPrompt()
       ? maybeExitCancelled(
           await confirm({
-            message: 'Make this the default client?',
+            message: 'Use this project by default?',
             initialValue: true,
           }),
         )
@@ -152,12 +199,12 @@ export async function runGuidedSetup(
   })
   const mcp = await maybeInstallMcp(args)
   const next = [
-    `seo diagnose-property --client ${client.id}`,
-    `seo monthly-report --client ${client.id}`,
-    `seo technical-watch --client ${client.id}`,
-    `seo schedule cron --client ${client.id}`,
+    `seo report --project ${client.id}`,
+    `seo refresh-priorities --project ${client.id} --verify-content`,
+    `seo technical-watch --project ${client.id}`,
+    `seo schedule cron --project ${client.id}`,
   ]
-  const result: SetupResult = { client, auth, mcp, next }
+  const result: SetupResult = { client, site, auth, mcp, next }
 
   if (json) {
     printJson(result)
@@ -165,7 +212,7 @@ export async function runGuidedSetup(
   }
 
   printKeyValue([
-    ['Client', `${client.name} (${client.id})`],
+    ['Project profile', `${client.name} (${client.id})`],
     ['GSC property', client.siteUrl],
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', String(client.watchUrls.length)],

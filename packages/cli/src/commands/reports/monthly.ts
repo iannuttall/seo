@@ -55,7 +55,7 @@ export const monthlyReportCommand = defineCommand({
     }
     process.stdout.write(`${report.markdown}\n`)
     const target = selection.client
-      ? `--client ${JSON.stringify(selection.client.id)}`
+      ? `--project ${JSON.stringify(selection.client.id)}`
       : `--site ${JSON.stringify(selection.site)}`
     const month = stringArg(args.month)
     process.stdout.write('\n')

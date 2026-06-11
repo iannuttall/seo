@@ -33,6 +33,10 @@ export const contentGroupsCommand = defineCommand({
   },
   subCommands: {
     list: defineCommand({
+      meta: {
+        name: 'list',
+        description: 'List saved content groups',
+      },
       args: {
         site: { type: 'string' },
         json: { type: 'boolean', default: false },
@@ -57,6 +61,10 @@ export const contentGroupsCommand = defineCommand({
       },
     }),
     add: defineCommand({
+      meta: {
+        name: 'add',
+        description: 'Create a reusable page or query group',
+      },
       args: {
         site: { type: 'string' },
         name: { type: 'string', required: true },
@@ -90,6 +98,10 @@ export const contentGroupsCommand = defineCommand({
       },
     }),
     delete: defineCommand({
+      meta: {
+        name: 'delete',
+        description: 'Delete a content group',
+      },
       args: {
         id: { type: 'string', required: true },
         json: { type: 'boolean', default: false },

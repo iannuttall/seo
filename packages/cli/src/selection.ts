@@ -121,12 +121,17 @@ export async function resolveSite(input: {
 
 export async function resolveClientSelection(input: {
   client?: string
+  project?: string
   site?: string
   options?: ResolveOptions
 }): Promise<ClientSelection> {
-  if (input.client) {
-    const client = getClient(input.client)
-    if (!client) throw new Error(`Client not found: ${input.client}`)
+  if (input.client && input.project && input.client !== input.project) {
+    throw new Error('Use either --project or --client, not both.')
+  }
+  const project = input.project ?? input.client
+  if (project) {
+    const client = getClient(project)
+    if (!client) throw new Error(`Project not found: ${project}`)
     return { client, site: client.siteUrl }
   }
 
@@ -142,11 +147,16 @@ export async function resolveClientSelection(input: {
 
 export async function resolveClient(input: {
   client?: string
+  project?: string
   options?: ResolveOptions
 }): Promise<ClientProfile | undefined> {
-  if (input.client) {
-    const client = getClient(input.client)
-    if (!client) throw new Error(`Client not found: ${input.client}`)
+  if (input.client && input.project && input.client !== input.project) {
+    throw new Error('Use either --project or --client, not both.')
+  }
+  const project = input.project ?? input.client
+  if (project) {
+    const client = getClient(project)
+    if (!client) throw new Error(`Project not found: ${project}`)
     return client
   }
 
@@ -158,9 +168,9 @@ export async function resolveClient(input: {
   if (input.options?.json || !canPrompt()) return undefined
 
   return chooseFromSearch<ClientProfile>({
-    message: 'Choose a client',
-    searchMessage: 'Search clients',
-    emptyMessage: 'No clients matched that search.',
+    message: 'Choose a project',
+    searchMessage: 'Search projects',
+    emptyMessage: 'No projects matched that search.',
     choices: clients,
     label: (client) => client.name,
     hint: (client) => client.siteUrl,

@@ -1,7 +1,7 @@
 import { defineCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
-import { clientCommand } from './commands/clients/index.js'
+import { clientCommand, projectCommand } from './commands/clients/index.js'
 import {
   ga4ReportCommand,
   gscQueryCommand,
@@ -52,7 +52,7 @@ import {
   reportNarrativeCommand,
 } from './commands/reports.js'
 import { scheduleCommand } from './commands/schedule.js'
-import { setupCommand } from './commands/setup/index.js'
+import { setupCommand, startCommand } from './commands/setup/index.js'
 import {
   privacyCommand,
   resetCommand,
@@ -61,6 +61,7 @@ import {
 } from './commands/system.js'
 import {
   diagnosePropertyWorkflowCommand,
+  mainReportCommand,
   refreshPrioritiesCommand,
   technicalWatchCommand,
   updatePostmortemCommand,
@@ -70,6 +71,119 @@ import { maybeCheckForUpdates } from './utils.js'
 const pkg = {
   name: '@seo/cli',
   version: '0.1.0',
+}
+
+type HelpSection = {
+  title: string
+  commands: Array<[command: string, description: string]>
+}
+
+const helpSections: HelpSection[] = [
+  {
+    title: 'Start here',
+    commands: [
+      ['seo start', 'Connect Google and save a project profile'],
+      ['seo report', 'Run the main SEO report for the default project'],
+      ['seo report --site sc-domain:example.com', 'Run without a profile'],
+    ],
+  },
+  {
+    title: 'Projects',
+    commands: [
+      ['seo projects list', 'List saved project profiles'],
+      ['seo projects add', 'Create or update a project profile'],
+      ['seo sites', 'List Search Console properties'],
+      ['seo doctor', 'Check local auth and config'],
+    ],
+  },
+  {
+    title: 'Act on a report',
+    commands: [
+      ['seo refresh-priorities', 'Rank the next best SEO actions'],
+      ['seo quick-wins', 'Find ranking 4-10 low-CTR wins'],
+      ['seo second-page', 'Find position 11-20 opportunities'],
+      ['seo technical-watch', 'Crawl and index-monitor a site'],
+    ],
+  },
+  {
+    title: 'Agent and power tools',
+    commands: [
+      ['seo diagnose-property --json', 'Full diagnosis for agents'],
+      ['seo export diagnose', 'Export report data to CSV'],
+      ['seo mcp install', 'Install SEO tools into MCP clients'],
+    ],
+  },
+]
+
+const allHelpSections: HelpSection[] = [
+  ...helpSections,
+  {
+    title: 'Deeper analysis',
+    commands: [
+      ['seo diagnose', 'Run raw end-to-end diagnosis'],
+      ['seo decaying', 'Find pages and queries losing clicks'],
+      ['seo cannibal', 'Find competing URLs for the same query'],
+      ['seo ctr-underperformers', 'Find weak CTR by ranking position'],
+      ['seo query-cluster', 'Cluster repeated demand themes'],
+      ['seo page-opportunities', 'Analyze one URL for growth ideas'],
+      ['seo internal-links', 'Find internal link opportunities'],
+      ['seo community-intent', 'Find forum, review, and comparison intent'],
+      ['seo ai-referrals', 'Find AI referral traffic in GA4'],
+      ['seo seo-to-ai-query', 'Convert searches into AI-monitor prompts'],
+    ],
+  },
+  {
+    title: 'Technical and data',
+    commands: [
+      ['seo audit-page', 'Audit one page'],
+      ['seo crawl-diff', 'Compare crawl changes'],
+      ['seo index-watch', 'Check URL Inspection status'],
+      ['seo link-recover', 'Find broken search-value URLs'],
+      ['seo redirect-trace', 'Trace redirects'],
+      ['seo gsc-query', 'Run a raw GSC query'],
+      ['seo url-inspect', 'Run URL Inspection'],
+      ['seo ga4-report', 'Run a GA4 report'],
+      ['seo updates', 'List official Google ranking updates'],
+    ],
+  },
+  {
+    title: 'Reports and ops',
+    commands: [
+      ['seo monthly-report', 'Generate a monthly narrative'],
+      ['seo report-narrative', 'Generate a client-ready narrative'],
+      ['seo update-postmortem', 'Analyze update winners and losers'],
+      ['seo schedule cron', 'Print cron entries'],
+      ['seo monitoring', 'Run and review monitoring'],
+      ['seo change-log', 'Track SEO changes'],
+      ['seo content-groups', 'Manage reusable page/query groups'],
+      ['seo pseo', 'Audit programmatic SEO templates'],
+      ['seo auth', 'Manage Google auth'],
+      ['seo cache', 'Manage local cache'],
+      ['seo privacy', 'Show local storage paths'],
+      ['seo reset', 'Delete local SEO data'],
+    ],
+  },
+]
+
+function printHelpSections(sections: HelpSection[]): void {
+  process.stdout.write(`seo v${pkg.version}\n\n`)
+  process.stdout.write(
+    'Human-friendly SEO reports first, power tools when you need them.\n\n',
+  )
+  for (const section of sections) {
+    process.stdout.write(`${section.title}\n`)
+    const width = Math.max(
+      ...section.commands.map(([command]) => command.length),
+    )
+    for (const [command, description] of section.commands) {
+      process.stdout.write(`  ${command.padEnd(width)}  ${description}\n`)
+    }
+    process.stdout.write('\n')
+  }
+  process.stdout.write(
+    'Use `seo help <command>` or `seo <command> --help` for command help.\n',
+  )
+  process.stdout.write('Use `seo help all` for the longer command list.\n')
 }
 
 const main = defineCommand({
@@ -88,6 +202,8 @@ const main = defineCommand({
     reset: resetCommand,
     cache: cacheCommand,
     client: clientCommand,
+    project: projectCommand,
+    projects: projectCommand,
     'change-log': changeLogCommand,
     'content-groups': contentGroupsCommand,
     'crawl-diff': crawlDiffCommand,
@@ -102,7 +218,9 @@ const main = defineCommand({
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,
+    start: startCommand,
     setup: setupCommand,
+    report: mainReportCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
     'technical-watch': technicalWatchCommand,
@@ -130,10 +248,33 @@ const main = defineCommand({
   },
   run: async () => {
     if (process.argv.slice(2).length === 0) {
-      process.stdout.write('Use `seo init` to get started.\n')
+      process.stdout.write(
+        'Use `seo start` to set up, then `seo report` for the main report.\n',
+      )
     }
   },
 })
 
 maybeCheckForUpdates(pkg)
+
+const argv = process.argv.slice(2)
+if (
+  argv.length === 0 ||
+  (argv.length === 1 && ['help', '--help', '-h'].includes(argv[0] ?? ''))
+) {
+  printHelpSections(helpSections)
+  process.exit(0)
+}
+if (argv[0] === 'help' && argv[1] === 'all') {
+  printHelpSections(allHelpSections)
+  process.exit(0)
+}
+if (argv[0] === 'help' && argv.length > 1) {
+  process.argv = [
+    process.argv[0] ?? 'node',
+    process.argv[1] ?? 'seo',
+    ...argv.slice(1),
+    '--help',
+  ]
+}
 await runMain(main)

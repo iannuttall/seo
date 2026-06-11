@@ -6,6 +6,10 @@ export const cacheCommand = defineCommand({
   meta: { name: 'cache', description: 'Cache helpers' },
   subCommands: {
     stats: defineCommand({
+      meta: {
+        name: 'stats',
+        description: 'Show local cache size and row counts',
+      },
       run: async () => {
         const stats = getCacheStats()
         printKeyValue([
@@ -19,8 +23,15 @@ export const cacheCommand = defineCommand({
       },
     }),
     clear: defineCommand({
+      meta: {
+        name: 'clear',
+        description: 'Clear cached API and HTTP data',
+      },
       args: {
-        provider: { type: 'string' },
+        provider: {
+          type: 'string',
+          description: 'Optional cache provider: gsc, semrush, or http',
+        },
       },
       run: async ({ args }) => {
         const removed = clearCache(

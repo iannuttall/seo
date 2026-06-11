@@ -23,6 +23,11 @@ import { maybeExitCancelled } from '../utils.js'
 import { detectMcpClients, installMcpConfig } from './mcp-config.js'
 
 export const initCommand = defineCommand({
+  meta: {
+    name: 'init',
+    description:
+      'Initialise local seo config and connect Google Search Console',
+  },
   args: {
     yes: { type: 'boolean', default: false },
     'dry-run': { type: 'boolean', default: false },

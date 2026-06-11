@@ -1,6 +1,12 @@
 import { refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { printActionDetails } from '../output.js'
@@ -19,7 +25,11 @@ export const refreshPrioritiesCommand = defineCommand({
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     ...cliReportArgs(
       ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
@@ -35,7 +45,7 @@ export const refreshPrioritiesCommand = defineCommand({
     'ga4-property': {
       type: 'string',
       description:
-        'GA4 property ID to use for analytics value. Defaults from the selected client.',
+        'GA4 property ID to use for analytics value. Defaults from the selected project.',
     },
     'verify-content': {
       type: 'boolean',
@@ -56,7 +66,7 @@ export const refreshPrioritiesCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })

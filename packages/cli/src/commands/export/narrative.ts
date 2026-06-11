@@ -1,6 +1,6 @@
 import { narrativeCsvFiles, reportNarrative } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, numberArg, stringArg } from '../../args.js'
+import { booleanArg, numberArg, stringArg, projectArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { cliReportArgs } from '../report-options.js'
@@ -49,7 +49,7 @@ export const exportNarrativeCommand = defineCommand({
   },
   run: async ({ args }) => {
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { refresh: booleanArg(args.refresh) },
     })

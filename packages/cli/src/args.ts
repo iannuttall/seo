@@ -4,6 +4,15 @@ export function stringArg(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
+export function projectArg(args: Record<string, unknown>): string | undefined {
+  const project = stringArg(args.project)
+  const client = stringArg(args.client)
+  if (project && client && project !== client) {
+    throw new Error('Use either --project or --client, not both.')
+  }
+  return project ?? client
+}
+
 export function booleanArg(value: unknown): boolean | undefined {
   return typeof value === 'boolean' ? value : undefined
 }

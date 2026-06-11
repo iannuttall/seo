@@ -1,6 +1,6 @@
 import { aiReferralsReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, stringArg } from '../../args.js'
+import { jsonFlag, numberArg, stringArg, projectArg } from '../../args.js'
 import { resolveClient, resolveGa4Property } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -22,7 +22,11 @@ export const aiReferralsCommand = defineCommand({
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name with an optional GA4 property.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name with an optional GA4 property.',
     },
     'start-date': { type: 'string', default: '28daysAgo' },
     'end-date': { type: 'string', default: 'yesterday' },
@@ -35,7 +39,7 @@ export const aiReferralsCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const client = await resolveClient({
-      client: stringArg(args.client),
+      client: projectArg(args),
       options: { json },
     })
     const property = await resolveGa4Property({

@@ -6,12 +6,16 @@ export function monitoringRunArgs() {
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     url: {
       type: 'string',
       description:
-        'Start URL to crawl. Defaults from the client or GSC property.',
+        'Start URL to crawl. Defaults from the project or GSC property.',
     },
     urls: {
       type: 'string',
@@ -100,7 +104,11 @@ export function monitoringStatusArgs() {
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     'stale-days': {
       type: 'string',

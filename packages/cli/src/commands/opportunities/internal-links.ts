@@ -1,6 +1,12 @@
 import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -13,9 +19,14 @@ import {
 import { cliReportArgs } from '../report-options.js'
 
 export const internalLinksCommand = defineCommand({
+  meta: {
+    name: 'internal-links',
+    description: 'Find internal link opportunities for one target URL',
+  },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     url: { type: 'string', required: true },
     limit: { type: 'string' },
     ...cliReportArgs(['includeBrand'], {
@@ -28,7 +39,7 @@ export const internalLinksCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json },
     })

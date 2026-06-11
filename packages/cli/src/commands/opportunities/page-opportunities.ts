@@ -1,6 +1,12 @@
 import { pageOpportunitiesReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -21,7 +27,8 @@ export const pageOpportunitiesCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     url: { type: 'string', required: true },
     ...cliReportArgs(
       ['days', 'limit', 'minImpressions', 'includeBrand', 'js', 'refresh'],
@@ -53,7 +60,7 @@ export const pageOpportunitiesCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })

@@ -10,18 +10,23 @@ export const exportReportFetchArgs = reportFetchArgsWithoutJson
 export const exportSelectionArgs = {
   client: {
     type: 'string',
-    description: 'Saved client id. Defaults to the configured default.',
+    description: 'Legacy alias for --project.',
+  },
+  project: {
+    type: 'string',
+    description:
+      'Saved project id or name. Defaults to the configured default.',
   },
   site: {
     type: 'string',
-    description: 'GSC property URL/id when not using a saved client.',
+    description: 'GSC property URL/id when not using a saved project.',
   },
 } as const
 
 export function outArg(report: string) {
   return {
     type: 'string',
-    description: `Output folder. Defaults to ./seo-export/<client>-${report}-YYYY-MM-DD.`,
+    description: `Output folder. Defaults to ./seo-export/<project>-${report}-YYYY-MM-DD.`,
   } as const
 }
 

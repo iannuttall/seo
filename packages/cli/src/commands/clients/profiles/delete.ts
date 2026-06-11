@@ -6,13 +6,13 @@ import { printJson } from '../../../utils.js'
 export const clientDeleteCommand = defineCommand({
   meta: {
     name: 'delete',
-    description: 'Delete a client profile',
+    description: 'Delete a project profile',
   },
   args: {
     id: {
       type: 'string',
       required: true,
-      description: 'Client id or name.',
+      description: 'Project id or name.',
     },
     json: {
       type: 'boolean',

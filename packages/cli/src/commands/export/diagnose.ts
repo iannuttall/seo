@@ -1,6 +1,12 @@
 import { diagnoseCsvFiles, diagnoseProperty } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, fetchRateArg, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  fetchRateArg,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import {
@@ -72,7 +78,7 @@ export const exportDiagnoseCommand = defineCommand({
   },
   run: async ({ args }) => {
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
     })
     const report = await diagnoseProperty({

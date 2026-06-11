@@ -1,6 +1,12 @@
 import { diagnoseProperty } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
@@ -19,7 +25,11 @@ export const diagnoseCommand = defineCommand({
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     ...cliReportArgs(
       ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
@@ -41,7 +51,7 @@ export const diagnoseCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })
@@ -77,6 +87,15 @@ export const diagnoseCommand = defineCommand({
         priority.action,
       ]),
     )
+    if (report.skippedSections?.length) {
+      printTable(
+        ['Skipped section', 'Reason'],
+        report.skippedSections.map((section) => [
+          section.section,
+          section.reason,
+        ]),
+      )
+    }
     printActionDetails(
       'Priority action details',
       report.priorities.map((priority) => ({

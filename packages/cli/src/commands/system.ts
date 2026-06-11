@@ -18,6 +18,10 @@ import {
 } from '../utils.js'
 
 export const privacyCommand = defineCommand({
+  meta: {
+    name: 'privacy',
+    description: 'Show local config, token, cache, and log storage paths',
+  },
   run: async () => {
     const snapshot = getPrivacySnapshot()
     const stats = getCacheStats()
@@ -35,6 +39,10 @@ export const privacyCommand = defineCommand({
 })
 
 export const resetCommand = defineCommand({
+  meta: {
+    name: 'reset',
+    description: 'Delete local seo config, tokens, cache, and logs',
+  },
   args: {
     yes: { type: 'boolean', default: false },
   },
@@ -60,6 +68,11 @@ export const resetCommand = defineCommand({
 })
 
 export const sitesCommand = defineCommand({
+  meta: {
+    name: 'sites',
+    description:
+      'List Search Console properties available to this Google login',
+  },
   args: {
     json: { type: 'boolean', default: false },
     refresh: { type: 'boolean', default: false },
@@ -78,6 +91,10 @@ export const sitesCommand = defineCommand({
 })
 
 export const updatesCommand = defineCommand({
+  meta: {
+    name: 'updates',
+    description: 'List official Google Search Status ranking updates',
+  },
   args: {
     product: { type: 'string', default: 'Ranking' },
     limit: { type: 'string', default: '10' },

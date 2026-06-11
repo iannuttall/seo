@@ -6,6 +6,7 @@ import {
   jsonFlag,
   numberArg,
   stringArg,
+  projectArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -37,7 +38,11 @@ export const strikingDistanceCommand = defineCommand({
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     ...cliReportArgs([
       'days',
@@ -64,7 +69,7 @@ export const strikingDistanceCommand = defineCommand({
     const verifyContent =
       booleanArg(args['verify-content']) === true || verifyLimit !== undefined
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })

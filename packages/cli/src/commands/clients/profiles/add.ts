@@ -14,16 +14,16 @@ import { printClientProfile } from './output.js'
 export const clientAddCommand = defineCommand({
   meta: {
     name: 'add',
-    description: 'Create or update a client profile',
+    description: 'Create or update a project profile',
   },
   args: {
     id: {
       type: 'string',
-      description: 'Short stable client id, for example acme.',
+      description: 'Short stable project id, for example acme.',
     },
     name: {
       type: 'string',
-      description: 'Human client name.',
+      description: 'Human project name.',
     },
     site: {
       type: 'string',
@@ -39,7 +39,7 @@ export const clientAddCommand = defineCommand({
     },
     ga4: {
       type: 'string',
-      description: 'Optional GA4 property ID for this client.',
+      description: 'Optional GA4 property ID for this project.',
     },
     brand: {
       type: 'string',
@@ -55,7 +55,7 @@ export const clientAddCommand = defineCommand({
     },
     default: {
       type: 'boolean',
-      description: 'Make this the default client.',
+      description: 'Make this the default project.',
     },
     json: {
       type: 'boolean',

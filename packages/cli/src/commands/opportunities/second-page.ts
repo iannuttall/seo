@@ -6,6 +6,7 @@ import {
   jsonFlag,
   numberArg,
   stringArg,
+  projectArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -21,9 +22,15 @@ import { cliReportArgs } from '../report-options.js'
 import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 
 export const secondPageCommand = defineCommand({
+  meta: {
+    name: 'second-page',
+    description:
+      'Find position 11-20 URLs and check whether pages cover the query',
+  },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs([
       'range',
       'minImpressions',
@@ -45,7 +52,7 @@ export const secondPageCommand = defineCommand({
     const verifyContent =
       booleanArg(args['verify-content']) === true || verifyLimit !== undefined
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })

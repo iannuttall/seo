@@ -1,6 +1,12 @@
 import { type SegmentDimension, segmentImpact } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
 import { cliReportArgs } from '../report-options.js'
@@ -30,7 +36,11 @@ export const segmentImpactCommand = defineCommand({
     },
     client: {
       type: 'string',
-      description: 'Saved client id or name.',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     dimension: {
       type: 'string',
@@ -62,7 +72,7 @@ export const segmentImpactCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json, refresh: booleanArg(args.refresh) },
     })

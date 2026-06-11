@@ -1,6 +1,12 @@
 import { linkRecover } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  stringArg,
+  projectArg,
+} from '../../args.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
@@ -19,7 +25,8 @@ export const linkRecoverCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'limit', 'minImpressions', 'refresh', 'js'], {
       days: {
         description: 'GSC lookback window. Defaults to 90.',
@@ -51,7 +58,7 @@ export const linkRecoverCommand = defineCommand({
     const json = jsonFlag(args)
     const report = await linkRecover({
       site: await selectedSiteOrThrow(
-        { client: stringArg(args.client), site: stringArg(args.site) },
+        { client: projectArg(args), site: stringArg(args.site) },
         { json },
       ),
       days: numberArg(args.days),

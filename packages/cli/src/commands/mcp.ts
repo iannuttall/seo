@@ -12,8 +12,16 @@ export const mcpCommand = defineCommand({
   meta: { name: 'mcp', description: 'MCP server helpers' },
   subCommands: {
     serve: defineCommand({
+      meta: {
+        name: 'serve',
+        description: 'Run the SEO MCP server',
+      },
       args: {
-        test: { type: 'boolean', default: false },
+        test: {
+          type: 'boolean',
+          default: false,
+          description: 'Start in test mode',
+        },
       },
       run: async ({ args }) => {
         const { startMcpServer } = await import('@seo/mcp')
@@ -21,8 +29,16 @@ export const mcpCommand = defineCommand({
       },
     }),
     install: defineCommand({
+      meta: {
+        name: 'install',
+        description: 'Install or remove SEO MCP config for local clients',
+      },
       args: {
-        uninstall: { type: 'boolean', default: false },
+        uninstall: {
+          type: 'boolean',
+          default: false,
+          description: 'Remove the SEO MCP config instead of adding it',
+        },
       },
       run: async ({ args }) => {
         const detected = detectMcpClients()

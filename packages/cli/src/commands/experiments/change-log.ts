@@ -34,6 +34,10 @@ export const changeLogCommand = defineCommand({
   },
   subCommands: {
     list: defineCommand({
+      meta: {
+        name: 'list',
+        description: 'List recorded SEO changes',
+      },
       args: {
         site: { type: 'string' },
         limit: { type: 'string' },
@@ -62,6 +66,10 @@ export const changeLogCommand = defineCommand({
       },
     }),
     add: defineCommand({
+      meta: {
+        name: 'add',
+        description: 'Record an SEO change',
+      },
       args: {
         site: { type: 'string' },
         scope: { type: 'string', default: 'page' },
@@ -99,6 +107,10 @@ export const changeLogCommand = defineCommand({
       },
     }),
     delete: defineCommand({
+      meta: {
+        name: 'delete',
+        description: 'Delete a recorded SEO change',
+      },
       args: {
         id: { type: 'string', required: true },
         json: { type: 'boolean', default: false },
@@ -114,6 +126,10 @@ export const changeLogCommand = defineCommand({
       },
     }),
     measure: defineCommand({
+      meta: {
+        name: 'measure',
+        description: 'Measure before/after impact for a change',
+      },
       args: {
         id: { type: 'string' },
         site: { type: 'string' },

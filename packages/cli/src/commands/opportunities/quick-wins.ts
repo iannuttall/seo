@@ -6,6 +6,7 @@ import {
   jsonFlag,
   numberArg,
   stringArg,
+  projectArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -29,7 +30,8 @@ export const quickWinsCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    client: { type: 'string' },
+    project: { type: 'string', description: 'Saved project id or name.' },
+    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs([
       'includeBrand',
       'minImpressions',
@@ -49,7 +51,7 @@ export const quickWinsCommand = defineCommand({
     const verifyContent =
       booleanArg(args['verify-content']) === true || verifyLimit !== undefined
     const selection = await resolveClientSelection({
-      client: stringArg(args.client),
+      client: projectArg(args),
       site: stringArg(args.site),
       options: { json },
     })

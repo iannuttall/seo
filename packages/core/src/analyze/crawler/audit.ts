@@ -26,6 +26,10 @@ function sameUrl(a?: string, b?: string): boolean {
 const SLOW_RESPONSE_MS = 2_000
 const DEEP_PAGE_DEPTH = 4
 const WEAK_VALUABLE_INLINKS = 1
+const TITLE_MIN_CHARS = 30
+const TITLE_MAX_PIXELS = 580
+const META_DESCRIPTION_MIN_CHARS = 70
+const META_DESCRIPTION_MAX_CHARS = 160
 
 function issue(
   ruleId: RuleId,
@@ -63,11 +67,46 @@ function isValuablePage(page: CrawlPageSnapshot): boolean {
   )
 }
 
+function metadataLength(value?: string): number {
+  return Array.from(value?.trim() ?? '').length
+}
+
+function normalizedMetadata(value?: string): string | undefined {
+  const normalized = value?.trim().replace(/\s+/g, ' ').toLowerCase()
+  return normalized || undefined
+}
+
+function metadataDuplicates(
+  pages: CrawlPageSnapshot[],
+  read: (page: CrawlPageSnapshot) => string | undefined,
+): Map<string, { count: number; sampleUrls: string[]; value: string }> {
+  const counts = new Map<
+    string,
+    { count: number; sampleUrls: string[]; value: string }
+  >()
+  for (const page of pages) {
+    if (page.status < 200 || page.status >= 300) continue
+    const raw = read(page)?.trim()
+    const key = normalizedMetadata(raw)
+    if (!key || !raw) continue
+    const existing = counts.get(key) ?? { count: 0, sampleUrls: [], value: raw }
+    existing.count += 1
+    if (existing.sampleUrls.length < 10) existing.sampleUrls.push(page.url)
+    counts.set(key, existing)
+  }
+  return new Map([...counts].filter(([, value]) => value.count > 1))
+}
+
 export function auditCrawlPages(
   pages: CrawlPageSnapshot[],
   opts: { startUrl?: string } = {},
 ): CrawlIssue[] {
   const issues: CrawlIssue[] = []
+  const duplicateTitles = metadataDuplicates(pages, (page) => page.title)
+  const duplicateDescriptions = metadataDuplicates(
+    pages,
+    (page) => page.metaDescription,
+  )
 
   for (const page of pages) {
     if (page.status === 0) {
@@ -200,19 +239,81 @@ export function auditCrawlPages(
       )
     }
 
-    if (!page.title) {
+    const title = page.title?.trim()
+    const titleLength = metadataLength(title)
+    const titleWidth = titlePixelWidth(title)
+    const duplicateTitle = duplicateTitles.get(normalizedMetadata(title) ?? '')
+    if (!title) {
       issues.push(issue('missing_title', page))
-    } else if (titlePixelWidth(page.title) > 580) {
+    } else if (titleLength < TITLE_MIN_CHARS) {
       issues.push(
-        issue('title_too_wide', page, `${titlePixelWidth(page.title)}px`, {
-          title: page.title,
-          estimatedPixels: titlePixelWidth(page.title),
+        issue('title_too_short', page, `${titleLength} chars`, {
+          title,
+          length: titleLength,
+          minLength: TITLE_MIN_CHARS,
+        }),
+      )
+    } else if (titleWidth > TITLE_MAX_PIXELS) {
+      issues.push(
+        issue('title_too_wide', page, `${titleWidth}px`, {
+          title,
+          estimatedPixels: titleWidth,
+          maxPixels: TITLE_MAX_PIXELS,
+        }),
+      )
+    }
+    if (title && duplicateTitle) {
+      issues.push(
+        issue('title_duplicate', page, duplicateTitle.value, {
+          title,
+          duplicateCount: duplicateTitle.count,
+          sampleUrls: duplicateTitle.sampleUrls,
         }),
       )
     }
 
-    if (!page.metaDescription) {
+    const metaDescription = page.metaDescription?.trim()
+    const metaDescriptionLength = metadataLength(metaDescription)
+    const duplicateDescription = duplicateDescriptions.get(
+      normalizedMetadata(metaDescription) ?? '',
+    )
+    if (!metaDescription) {
       issues.push(issue('missing_meta_description', page))
+    } else if (metaDescriptionLength < META_DESCRIPTION_MIN_CHARS) {
+      issues.push(
+        issue(
+          'meta_description_too_short',
+          page,
+          `${metaDescriptionLength} chars`,
+          {
+            metaDescription,
+            length: metaDescriptionLength,
+            minLength: META_DESCRIPTION_MIN_CHARS,
+          },
+        ),
+      )
+    } else if (metaDescriptionLength > META_DESCRIPTION_MAX_CHARS) {
+      issues.push(
+        issue(
+          'meta_description_too_long',
+          page,
+          `${metaDescriptionLength} chars`,
+          {
+            metaDescription,
+            length: metaDescriptionLength,
+            maxLength: META_DESCRIPTION_MAX_CHARS,
+          },
+        ),
+      )
+    }
+    if (metaDescription && duplicateDescription) {
+      issues.push(
+        issue('meta_description_duplicate', page, duplicateDescription.value, {
+          metaDescription,
+          duplicateCount: duplicateDescription.count,
+          sampleUrls: duplicateDescription.sampleUrls,
+        }),
+      )
     }
 
     if ((page.h1Count ?? (page.h1 ? 1 : 0)) !== 1) {

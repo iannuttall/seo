@@ -1,10 +1,13 @@
 import {
   type CrawlReport,
   type CrawlReportMeta,
+  crawlSite,
   deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
   loadCrawlReport,
+  saveCrawlReport,
+  topFixes,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
@@ -111,6 +114,10 @@ export const crawlReportsCommand = defineCommand({
       type: 'string',
       description: 'Delete a saved crawl report by id.',
     },
+    rerun: {
+      type: 'string',
+      description: 'Rerun a saved crawl report by id, or pass latest.',
+    },
     limit: {
       type: 'string',
       description: 'Maximum reports to list. Defaults to 20.',
@@ -125,6 +132,7 @@ export const crawlReportsCommand = defineCommand({
     const json = jsonFlag(args)
     const site = await reportSiteFilter(args, json)
     const deleteId = stringArg(args.delete)
+    const rerunId = stringArg(args.rerun)
     const id = stringArg(args.id)
 
     if (deleteId) {
@@ -138,6 +146,39 @@ export const crawlReportsCommand = defineCommand({
           ? `Deleted crawl report ${deleteId}.\n`
           : `No saved crawl report found for ${deleteId}.\n`,
       )
+      return
+    }
+
+    if (rerunId) {
+      const previous =
+        rerunId === 'latest'
+          ? latestCrawlReport(site)
+          : loadCrawlReport(rerunId)
+      if (!previous) {
+        throw new Error(
+          rerunId === 'latest'
+            ? 'No saved crawl reports found.'
+            : `No saved crawl report found for ${rerunId}.`,
+        )
+      }
+      const report = await crawlSite({
+        ...previous.config,
+        projectId: previous.projectId,
+        site: previous.site,
+        ga4PropertyId: previous.ga4PropertyId,
+      })
+      const saved = saveCrawlReport(report)
+      if (json) {
+        printJson({
+          ...report,
+          rerunOf: previous.id,
+          saved,
+          topFixes: topFixes(report),
+        })
+        return
+      }
+      process.stdout.write(`Reran crawl report ${previous.id}.\n\n`)
+      printReport(report)
       return
     }
 

@@ -128,8 +128,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add `seo_top_fixes`.
 - [ ] Add `seo_affected_urls`.
 - [ ] Add `seo_geo_gaps`.
-- [ ] Add `seo_get_crawl_report`.
-- [ ] Add `seo_list_crawl_reports`.
+- [x] Add `seo_get_crawl_report`.
+- [x] Add `seo_list_crawl_reports`.
 - [ ] Keep MCP crawl results compact by default.
 - [ ] Make full pages/issues opt-in.
 - [ ] Return pre-digested slices so agents do not need to aggregate huge payloads.

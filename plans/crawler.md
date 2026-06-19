@@ -127,7 +127,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add `seo_list_rules`.
 - [x] Add `seo_top_fixes`.
 - [x] Add `seo_affected_urls`.
-- [ ] Add `seo_geo_gaps`.
+- [x] Add `seo_geo_gaps`.
 - [x] Add `seo_get_crawl_report`.
 - [x] Add `seo_list_crawl_reports`.
 - [x] Keep MCP crawl results compact by default.

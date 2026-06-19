@@ -1,6 +1,7 @@
 export * from './crawler/affected-urls.js'
 export * from './crawler/audit.js'
 export * from './crawler/export.js'
+export * from './crawler/geo-gaps.js'
 export * from './crawler/report.js'
 export * from './crawler/report-store.js'
 export * from './crawler/site-crawl.js'

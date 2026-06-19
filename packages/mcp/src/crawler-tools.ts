@@ -3,6 +3,7 @@ import {
   affectedUrls,
   crawlSite,
   explainRule,
+  geoGaps,
   latestCrawlReport,
   listCrawlReports,
   listRules,
@@ -230,6 +231,46 @@ export function registerCrawlerTools(server: McpServer): void {
             url: report.config.url,
             reportId: report.id,
             affectedUrls: urls,
+          },
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_geo_gaps',
+    {
+      description:
+        'Return GEO/readiness gaps for pages, including structured-data, author, date, semantic HTML, and answer-ready signals.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        limit: z.number().int().positive().optional(),
+      },
+    },
+    async ({ url, reportId, site, maxPages, limit }) => {
+      try {
+        const report = url
+          ? await crawlSite({ url, site, maxPages })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const gaps = geoGaps(report, { limit })
+        return toolSuccess(
+          `Found ${gaps.length} GEO gap pages for ${report.config.url}.`,
+          {
+            url: report.config.url,
+            reportId: report.id,
+            geoGaps: gaps,
           },
         )
       } catch (error) {

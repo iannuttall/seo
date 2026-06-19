@@ -5,6 +5,7 @@ import {
   crawlSite,
   renderCrawlCsv,
   renderCrawlHtml,
+  renderCrawlMarkdownTickets,
   renderCrawlPretty,
   saveCrawlReport,
   topFixes,
@@ -125,7 +126,7 @@ export const crawlCommand = defineCommand({
     },
     format: {
       type: 'string',
-      description: 'Output format: pretty, json, csv, or html.',
+      description: 'Output format: pretty, json, csv, html, or markdown.',
     },
     output: {
       type: 'string',
@@ -224,6 +225,15 @@ export const crawlCommand = defineCommand({
       return
     }
 
+    if (format === 'markdown') {
+      await writeOrPrint(
+        output,
+        renderCrawlMarkdownTickets(report, rankedFixes),
+      )
+      if (failedThreshold) process.exitCode = 1
+      return
+    }
+
     if (output) {
       await writeOrPrint(output, renderCrawlPretty(report, rankedFixes))
       if (failedThreshold) process.exitCode = 1
@@ -314,10 +324,10 @@ function crawlFormatArg(value: unknown, json: boolean): CrawlOutputFormat {
     throw new Error('Use either --json or --format, not both.')
   }
   if (!format) return json ? 'json' : 'pretty'
-  if (['pretty', 'json', 'csv', 'html'].includes(format)) {
+  if (['pretty', 'json', 'csv', 'html', 'markdown'].includes(format)) {
     return format as CrawlOutputFormat
   }
-  throw new Error('Format must be one of: pretty, json, csv, html.')
+  throw new Error('Format must be one of: pretty, json, csv, html, markdown.')
 }
 
 async function urlListArgs(args: Record<string, unknown>): Promise<string[]> {

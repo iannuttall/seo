@@ -143,7 +143,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add "how to verify" commands after top fixes.
 - [x] Add shareable HTML export for crawl reports.
 - [ ] Add CSV export for issues and pages.
-- [ ] Add markdown export for agent-created implementation tickets.
+- [x] Add markdown export for agent-created implementation tickets.
 - [ ] Keep sparse data graceful: no auth should still produce a technical crawl; no crawl URL should skip the section clearly.
 
 ## Phase 11: Agent Workflow Improvements

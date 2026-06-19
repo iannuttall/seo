@@ -55,6 +55,7 @@ export function renderCrawlPretty(
       )
       if (fix.sampleUrls[0]) lines.push(`  First URL: ${fix.sampleUrls[0]}`)
       lines.push(`  Verify: ${fix.howToVerify}`)
+      lines.push(`  Command: ${fix.verification.command}`)
     }
   }
 
@@ -82,7 +83,7 @@ export function renderCrawlHtml(
     .slice(0, 10)
     .map(
       (fix) =>
-        `<li><strong>${escapeHtml(fix.title)}</strong><br>${escapeHtml(fix.howToFix)}<br><span>Verify: ${escapeHtml(fix.howToVerify)}</span></li>`,
+        `<li><strong>${escapeHtml(fix.title)}</strong><br>${escapeHtml(fix.howToFix)}<br><span>Verify: ${escapeHtml(fix.howToVerify)}</span><br><code>${escapeHtml(fix.verification.command)}</code></li>`,
     )
     .join('\n')
 
@@ -149,6 +150,7 @@ export function renderCrawlMarkdownTickets(
       `- Why this ranks: ${fix.whyThisRanks}`,
       `- Plain-English fix: ${fix.howToFix}`,
       `- Verify: ${fix.howToVerify}`,
+      `- Command: ${fix.verification.command}`,
       '',
       `Affected URLs:`,
       ...fix.sampleUrls.slice(0, 10).map((url) => `- ${url}`),

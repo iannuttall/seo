@@ -35,12 +35,15 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   const pretty = renderCrawlPretty(report)
   assert.match(pretty, /Crawl report for https:\/\/example.com\//)
   assert.match(pretty, /Verify:/)
+  assert.match(pretty, /Command: seo crawl https:\/\/example.com\//)
 
   const html = renderCrawlHtml(report)
   assert.match(html, /<!doctype html>/)
   assert.match(html, /Missing title/)
+  assert.match(html, /seo crawl https:\/\/example.com\//)
 
   const markdown = renderCrawlMarkdownTickets(report)
   assert.match(markdown, /# Crawl Implementation Tickets/)
   assert.match(markdown, /- \[ \] Fix 1 affected URL/)
+  assert.match(markdown, /- Command: seo crawl https:\/\/example.com\//)
 })

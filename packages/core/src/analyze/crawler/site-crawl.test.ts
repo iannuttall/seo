@@ -527,6 +527,80 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
   )
 })
 
+test('crawlSite skips auth data providers when no site or GA4 property is selected', async () => {
+  const calls = {
+    searchMetrics: 0,
+    topQueries: 0,
+    analytics: 0,
+  }
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 2,
+    },
+    {
+      fetch: async () =>
+        new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async (url) => ({
+        urls: [],
+        page: {
+          url,
+          finalUrl: url,
+          status: 200,
+          contentType: 'text/html',
+          responseTimeMs: 10,
+          title: 'No auth page',
+          metaDescription: 'No auth page description.',
+          h1: 'No auth page',
+          h1Count: 1,
+          h2Count: 0,
+          h3Count: 0,
+          indexable: true,
+          wordCount: 140,
+          contentHash: 'no-auth-hash',
+          outgoingInternalCount: 0,
+          outgoingExternalCount: 0,
+          geo: {
+            semanticHtml: true,
+            structuredData: true,
+            hasAuthor: true,
+            hasDate: true,
+            questionHeadings: 1,
+            structuredBlocks: 1,
+            answerable: true,
+          },
+        },
+      }),
+      queryPageMetrics: async () => {
+        calls.searchMetrics += 1
+        throw new Error('GSC should not be called without a site.')
+      },
+      queryPageTopQuery: async () => {
+        calls.topQueries += 1
+        throw new Error('GSC top query should not be called without a site.')
+      },
+      fetchLandingPageValues: async () => {
+        calls.analytics += 1
+        throw new Error('GA4 should not be called without a property.')
+      },
+    },
+  )
+
+  assert.equal(report.status, 'completed')
+  assert.equal(calls.searchMetrics, 0)
+  assert.equal(calls.topQueries, 0)
+  assert.equal(calls.analytics, 0)
+  assert.equal(report.pages[0]?.searchMetrics, undefined)
+  assert.equal(report.pages[0]?.topQuery, undefined)
+  assert.equal(report.pages[0]?.analytics, undefined)
+})
+
 test('crawlSite returns a partial report when cancelled before work starts', async () => {
   const controller = new AbortController()
   controller.abort()

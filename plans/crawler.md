@@ -90,7 +90,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Join GA4 landing-page sessions/conversions when a property is available.
 - [x] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
 - [x] Add a "technical fixes with search value" section to `seo report`.
-- [ ] Add link recovery and redirect recommendations directly into crawl results where evidence exists.
+- [x] Add link recovery and redirect recommendations directly into crawl results where evidence exists.
 - [x] Keep crawl commands usable without Google auth.
 
 ## Phase 7: Local Report Store

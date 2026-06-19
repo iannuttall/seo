@@ -49,6 +49,19 @@ test('auditCrawlPages flags response errors first', () => {
   )
 })
 
+test('auditCrawlPages flags redirected URLs with final target evidence', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/old',
+      finalUrl: 'https://example.com/new',
+      canonical: 'https://example.com/new',
+    }),
+  ])
+
+  assert.equal(issues[0]?.ruleId, 'redirected_url')
+  assert.equal(issues[0]?.evidence?.finalUrl, 'https://example.com/new')
+})
+
 test('auditCrawlPages flags high-value on-page issues', () => {
   const issues = auditCrawlPages([
     page({

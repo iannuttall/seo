@@ -118,3 +118,38 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
     await fixture.close()
   }
 })
+
+test('crawlSite reports redirected URLs with final target evidence', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/old') {
+      res.statusCode = 301
+      res.setHeader('location', '/new')
+      res.end()
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end('<title>New</title><h1>New</h1>')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/old`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+      concurrency: 1,
+    })
+
+    const issue = report.issues.find((item) => item.ruleId === 'redirected_url')
+
+    assert.equal(report.pages[0]?.finalUrl, `${fixture.baseUrl}/new`)
+    assert.equal(issue?.evidence?.finalUrl, `${fixture.baseUrl}/new`)
+  } finally {
+    await fixture.close()
+  }
+})

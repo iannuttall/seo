@@ -90,6 +90,11 @@ export function renderCrawlPretty(
     '',
     `Status: ${report.status}`,
     `Pages: ${report.summary.totalPages}`,
+    `Discovered: ${report.summary.discoveredUrls}`,
+    `Queued: ${report.summary.queuedUrls}`,
+    `Skipped: ${report.summary.skippedUrls}`,
+    `Failed fetches: ${report.summary.failedUrls}`,
+    `Verified links: ${report.summary.verifiedLinks}`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
     `Indexable pages: ${report.summary.indexablePages}`,
     `Technical health score: ${report.summary.healthScore}`,
@@ -161,6 +166,11 @@ export function renderCrawlHtml(
   <section class="summary">
     <div class="metric"><span>Status</span><strong>${escapeHtml(report.status)}</strong></div>
     <div class="metric"><span>Pages</span><strong>${report.summary.totalPages}</strong></div>
+    <div class="metric"><span>Discovered</span><strong>${report.summary.discoveredUrls}</strong></div>
+    <div class="metric"><span>Queued</span><strong>${report.summary.queuedUrls}</strong></div>
+    <div class="metric"><span>Skipped</span><strong>${report.summary.skippedUrls}</strong></div>
+    <div class="metric"><span>Failed fetches</span><strong>${report.summary.failedUrls}</strong></div>
+    <div class="metric"><span>Verified links</span><strong>${report.summary.verifiedLinks}</strong></div>
     <div class="metric"><span>Issues</span><strong>${report.issues.length}</strong></div>
     <div class="metric"><span>High</span><strong>${report.summary.highIssues}</strong></div>
   </section>

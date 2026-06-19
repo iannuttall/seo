@@ -55,6 +55,12 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     })
 
     assert.equal(report.summary.totalPages, 2)
+    assert.equal(report.summary.discoveredUrls, 2)
+    assert.equal(report.summary.queuedUrls, 2)
+    assert.equal(report.summary.crawledUrls, 2)
+    assert.equal(report.summary.skippedUrls, 0)
+    assert.equal(report.summary.failedUrls, 0)
+    assert.equal(report.summary.verifiedLinks, 2)
     assert.deepEqual(
       report.pages.map((page) => new URL(page.url).pathname),
       ['/', '/a'],
@@ -97,6 +103,11 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
       report.pages.map((page) => new URL(page.url).pathname),
       ['/sitemap-only'],
     )
+    assert.equal(report.summary.discoveredUrls, 2)
+    assert.equal(report.summary.queuedUrls, 2)
+    assert.equal(report.summary.crawledUrls, 1)
+    assert.equal(report.summary.skippedUrls, 1)
+    assert.equal(report.summary.failedUrls, 0)
     assert.equal(report.status, 'partial')
     assert.match(report.warnings.join('\n'), /robots\.txt/)
   } finally {

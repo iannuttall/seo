@@ -49,11 +49,26 @@ export type CrawlIssueGroup = {
   sampleUrls: string[]
 }
 
+export type CrawlRunStats = {
+  discoveredUrls: number
+  queuedUrls: number
+  crawledUrls: number
+  skippedUrls: number
+  failedUrls: number
+  verifiedLinks: number
+}
+
 export type CrawlReportSummary = {
   totalPages: number
   indexablePages: number
   nonIndexablePages: number
   statusErrors: number
+  discoveredUrls: number
+  queuedUrls: number
+  crawledUrls: number
+  skippedUrls: number
+  failedUrls: number
+  verifiedLinks: number
   healthScore: number
   geoReadinessScore: number
   highIssues: number
@@ -159,6 +174,7 @@ export function groupCrawlIssues(issues: CrawlIssue[]): CrawlIssueGroup[] {
 export function summarizeCrawlReport(input: {
   pages: CrawlPageSnapshot[]
   issues: CrawlIssue[]
+  stats?: Partial<CrawlRunStats>
 }): CrawlReportSummary {
   const byStatus: Record<string, number> = {}
   const byCategory: Record<string, number> = {}
@@ -181,6 +197,7 @@ export function summarizeCrawlReport(input: {
     indexablePages: input.pages.filter((page) => page.indexable).length,
     nonIndexablePages: input.pages.filter((page) => !page.indexable).length,
     statusErrors: input.pages.filter((page) => page.status >= 400).length,
+    ...crawlRunStats(input.pages, input.stats),
     healthScore: averageScore(input.pages.map((page) => page.seoScore)),
     geoReadinessScore: averageScore(input.pages.map((page) => page.geoScore)),
     highIssues: input.issues.filter((issue) => issue.severity === 'high')
@@ -193,6 +210,30 @@ export function summarizeCrawlReport(input: {
       : undefined,
     byStatus,
     byCategory,
+  }
+}
+
+function crawlRunStats(
+  pages: CrawlPageSnapshot[],
+  stats: Partial<CrawlRunStats> = {},
+): CrawlRunStats {
+  const discovered = new Set<string>()
+  let verifiedLinks = 0
+  for (const page of pages) {
+    discovered.add(page.url)
+    for (const url of page.sampleInternalLinks ?? []) discovered.add(url)
+    for (const url of page.sampleExternalLinks ?? []) discovered.add(url)
+    verifiedLinks +=
+      page.outgoingInternalCount + (page.outgoingExternalCount ?? 0)
+  }
+  return {
+    discoveredUrls: stats.discoveredUrls ?? discovered.size,
+    queuedUrls: stats.queuedUrls ?? pages.length,
+    crawledUrls: stats.crawledUrls ?? pages.length,
+    skippedUrls: stats.skippedUrls ?? 0,
+    failedUrls:
+      stats.failedUrls ?? pages.filter((page) => page.status >= 400).length,
+    verifiedLinks: stats.verifiedLinks ?? verifiedLinks,
   }
 }
 
@@ -262,6 +303,7 @@ export function createCrawlReport(input: {
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
+  stats?: Partial<CrawlRunStats>
   generatedAt?: string
 }): CrawlReport {
   const config = normalizeCrawlConfig(input.config)
@@ -280,7 +322,7 @@ export function createCrawlReport(input: {
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),
     config,
-    summary: summarizeCrawlReport({ pages, issues }),
+    summary: summarizeCrawlReport({ pages, issues, stats: input.stats }),
     pages,
     issues,
     issueGroups: groupCrawlIssues(issues),
@@ -294,7 +336,7 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
   const pages = scorePages(report.pages ?? [], issues)
   return {
     ...report,
-    summary: summarizeCrawlReport({ pages, issues }),
+    summary: summarizeCrawlReport({ pages, issues, stats: report.summary }),
     pages,
     issues,
     issueGroups: groupCrawlIssues(issues),

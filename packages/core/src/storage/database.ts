@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS crawl_pages (
   word_count INTEGER NOT NULL,
   content_hash TEXT NOT NULL,
   outgoing_internal_count INTEGER NOT NULL,
+  snapshot_json TEXT,
   PRIMARY KEY(run_id, url),
   FOREIGN KEY(run_id) REFERENCES crawl_runs(id) ON DELETE CASCADE
 ) WITHOUT ROWID;
@@ -171,6 +172,21 @@ CREATE INDEX IF NOT EXISTS idx_link_recover_items_url ON link_recover_items(site
 
 let db: Database.Database | undefined
 
+function ensureColumn(
+  database: Database.Database,
+  table: string,
+  column: string,
+  definition: string,
+): void {
+  const columns = database
+    .prepare(`PRAGMA table_info(${table})`)
+    .all() as Array<{
+    name: string
+  }>
+  if (columns.some((item) => item.name === column)) return
+  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+}
+
 function initDb(database: Database.Database): void {
   database.pragma('journal_mode = WAL')
   database.pragma('synchronous = NORMAL')
@@ -179,6 +195,7 @@ function initDb(database: Database.Database): void {
   database.pragma('mmap_size = 268435456')
   database.pragma('busy_timeout = 5000')
   database.exec(CREATE_SQL)
+  ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
 }
 
 export function getDb(): Database.Database {

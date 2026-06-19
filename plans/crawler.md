@@ -192,7 +192,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## First Implementation Slice
 
 - [x] Add shared rule registry and rule coverage tests.
-- [ ] Expand `crawlOne` into richer page snapshots.
+- [x] Expand `crawlOne` into richer page snapshots.
 - [ ] Add a new crawl report type in core.
 - [ ] Add site crawl with sitemap/robots/depth/page limits.
 - [ ] Implement the first 20 high-value rules.

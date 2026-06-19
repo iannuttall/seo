@@ -33,6 +33,43 @@ function normalizeJsonLdBlocks(blocks: string[]): unknown[] {
   return out
 }
 
+function schemaTypesFrom(value: unknown): string[] {
+  const types = new Set<string>()
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item)
+      return
+    }
+    if (!node || typeof node !== 'object') return
+    const record = node as Record<string, unknown>
+    const type = record['@type']
+    if (typeof type === 'string') {
+      types.add(type)
+    } else if (Array.isArray(type)) {
+      for (const item of type) {
+        if (typeof item === 'string') types.add(item)
+      }
+    }
+    for (const value of Object.values(record)) {
+      visit(value)
+    }
+  }
+
+  visit(value)
+  return [...types]
+}
+
+function hasSchemaKey(value: unknown, keys: string[]): boolean {
+  if (Array.isArray(value))
+    return value.some((item) => hasSchemaKey(item, keys))
+  if (!value || typeof value !== 'object') return false
+  const record = value as Record<string, unknown>
+  return Object.entries(record).some(
+    ([key, item]) =>
+      keys.includes(key.toLowerCase()) || hasSchemaKey(item, keys),
+  )
+}
+
 async function extractMainContent(
   fetchResult: PageFetchResult,
   extractor: 'defuddle' | 'readability' = 'defuddle',
@@ -139,6 +176,36 @@ export async function extractPage(
       .toArray()
       .map((element) => $(element).html() ?? ''),
   )
+  const schemaTypes = schemaTypesFrom(jsonLd)
+  const lowerSchemaKeys = ['datepublished', 'datemodified']
+  const hasDate =
+    hasSchemaKey(jsonLd, lowerSchemaKeys) ||
+    Boolean($('meta[property="article:published_time"]').attr('content')) ||
+    Boolean($('meta[property="article:modified_time"]').attr('content')) ||
+    $('time[datetime]').length > 0
+  const author = safeText($('meta[name="author"]').attr('content'))
+  const hasAuthor =
+    Boolean(author) ||
+    hasSchemaKey(jsonLd, ['author']) ||
+    $('[rel~=author], .author, .byline').length > 0
+  const semanticHtml = $('main, article').length > 0
+  const questionHeadings = headings.filter((heading) =>
+    heading.text.trimEnd().endsWith('?'),
+  ).length
+  const structuredBlocks = $('ul, ol, table').length
+  const answerable = $('main p, article p, p')
+    .toArray()
+    .slice(0, 3)
+    .some(
+      (element) =>
+        $(element)
+          .text()
+          .replace(/\s+/g, ' ')
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean).length >= 25,
+    )
+  const imageElements = $('img').toArray()
 
   return {
     url: fetchResult.url,
@@ -148,12 +215,26 @@ export async function extractPage(
     metaRobots: safeText($('meta[name="robots"]').attr('content')),
     xRobotsTag: safeText(fetchResult.headers['x-robots-tag']),
     canonical: safeText($('link[rel="canonical"]').attr('href')),
+    lang: safeText($('html').attr('lang')),
+    hasViewport: Boolean($('meta[name="viewport"]').attr('content')),
     headings,
     links,
     jsonLd,
+    schemaTypes,
     openGraph,
     twitter,
-    author: safeText($('meta[name="author"]').attr('content')),
+    author,
+    hasAuthor,
+    hasDate,
+    imagesTotal: imageElements.length,
+    imagesMissingAlt: imageElements.filter((element) => {
+      const alt = $(element).attr('alt')
+      return alt === undefined || alt.trim() === ''
+    }).length,
+    semanticHtml,
+    questionHeadings,
+    structuredBlocks,
+    answerable,
     contentText: text.replace(/\s+/g, ' ').trim(),
     excerpt,
     wordCount: text.trim().split(/\s+/).filter(Boolean).length,

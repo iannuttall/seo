@@ -19,8 +19,18 @@ function toRun(row: CrawlRunRow): CrawlRun {
   }
 }
 
+function parseSnapshot(value?: string | null): Partial<CrawlPageSnapshot> {
+  if (!value) return {}
+  try {
+    const parsed = JSON.parse(value) as Partial<CrawlPageSnapshot>
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
 function toPage(row: CrawlPageRow): CrawlPageSnapshot {
-  return {
+  const legacy: CrawlPageSnapshot = {
     url: row.url,
     finalUrl: row.final_url,
     status: row.status,
@@ -32,6 +42,16 @@ function toPage(row: CrawlPageRow): CrawlPageSnapshot {
     h1: row.h1 ?? undefined,
     indexable: row.indexable === 1,
     wordCount: row.word_count,
+    contentHash: row.content_hash,
+    outgoingInternalCount: row.outgoing_internal_count,
+  }
+  return {
+    ...legacy,
+    ...parseSnapshot(row.snapshot_json),
+    url: row.url,
+    finalUrl: row.final_url,
+    status: row.status,
+    indexable: row.indexable === 1,
     contentHash: row.content_hash,
     outgoingInternalCount: row.outgoing_internal_count,
   }
@@ -84,8 +104,8 @@ export function insertCrawlRun(
     `INSERT INTO crawl_pages
     (run_id, url, final_url, status, title, meta_description, canonical,
      meta_robots, x_robots_tag, h1, indexable, word_count, content_hash,
-     outgoing_internal_count)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     outgoing_internal_count, snapshot_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
   const insertRecommendation = db.prepare(
     `INSERT INTO crawl_recommendations
@@ -111,6 +131,7 @@ export function insertCrawlRun(
         page.wordCount,
         page.contentHash,
         page.outgoingInternalCount,
+        JSON.stringify(page),
       )
     }
     for (const recommendation of recommendations) {

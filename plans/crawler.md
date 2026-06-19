@@ -137,7 +137,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 10: Human Reports
 
-- [ ] Add crawl caveats to terminal, JSON, and narrative output.
+- [x] Add crawl caveats to terminal, JSON, and narrative output.
 - [x] Add a compact technical section to `seo report`.
 - [x] Add plain-English issue groups with top affected URLs.
 - [x] Add "how to verify" commands after top fixes.

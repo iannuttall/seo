@@ -140,6 +140,12 @@ export function renderCrawlHtml(
         `<li><strong>${escapeHtml(fix.title)}</strong><br>${escapeHtml(fix.howToFix)}<br><span>Verify: ${escapeHtml(fix.howToVerify)}</span><br><code>${escapeHtml(fix.verification.command)}</code></li>`,
     )
     .join('\n')
+  const caveatItems = report.caveats
+    .map((caveat) => `<li>${escapeHtml(caveat)}</li>`)
+    .join('\n')
+  const warningItems = report.warnings
+    .map((warning) => `<li>${escapeHtml(warning)}</li>`)
+    .join('\n')
 
   return `<!doctype html>
 <html lang="en">
@@ -176,6 +182,18 @@ export function renderCrawlHtml(
   </section>
   <h2>Top fixes</h2>
   <ol>${fixItems}</ol>
+  ${
+    report.caveats.length
+      ? `<h2>Caveats</h2>
+  <ul>${caveatItems}</ul>`
+      : ''
+  }
+  ${
+    report.warnings.length
+      ? `<h2>Warnings</h2>
+  <ul>${warningItems}</ul>`
+      : ''
+  }
   <h2>Issue groups</h2>
   <table>
     <thead><tr><th>Severity</th><th>Issue</th><th>URLs</th><th>Fix</th><th>Sample URL</th></tr></thead>
@@ -198,6 +216,24 @@ export function renderCrawlMarkdownTickets(
     `Status: ${report.status}`,
     '',
   ]
+
+  if (report.caveats.length) {
+    lines.push(
+      '## Caveats',
+      '',
+      ...report.caveats.map((item) => `- ${item}`),
+      '',
+    )
+  }
+
+  if (report.warnings.length) {
+    lines.push(
+      '## Warnings',
+      '',
+      ...report.warnings.map((item) => `- ${item}`),
+      '',
+    )
+  }
 
   for (const [index, fix] of fixes.entries()) {
     lines.push(

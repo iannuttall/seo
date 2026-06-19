@@ -19,7 +19,7 @@ import {
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-import { truncate } from './output.js'
+import { printNotes, truncate } from './output.js'
 
 async function reportSiteFilter(args: Record<string, unknown>, json: boolean) {
   const project = projectArg(args)
@@ -86,6 +86,9 @@ function printReport(report: CrawlReport): void {
         ]),
     )
   }
+
+  printNotes('Warnings', report.warnings.slice(0, 10))
+  printNotes('Caveats', report.caveats)
 }
 
 export const crawlReportsCommand = defineCommand({

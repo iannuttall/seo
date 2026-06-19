@@ -97,6 +97,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const visited = new Set<string>()
   const queued = new Set<string>()
   const discovered = new Set<string>()
+  const linkGraph: Record<string, string[]> = {}
   const pages: CrawlReport['pages'] = []
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
@@ -214,6 +215,8 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     }
 
     pages.push(result.page)
+    linkGraph[result.page.url] = result.urls
+    linkGraph[result.page.finalUrl] = result.urls
     verifiedLinks += result.urls.length
 
     if (followLinks && task.depth < config.maxDepth) {
@@ -253,6 +256,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     ga4PropertyId: input.ga4PropertyId,
     pages,
     issues: auditCrawlPages(pages),
+    linkGraph,
     status: partial ? 'partial' : 'completed',
     warnings,
     caveats:

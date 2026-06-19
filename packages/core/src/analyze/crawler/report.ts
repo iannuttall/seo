@@ -58,6 +58,8 @@ export type CrawlRunStats = {
   verifiedLinks: number
 }
 
+export type CrawlLinkGraph = Record<string, string[]>
+
 export type CrawlReportSummary = {
   totalPages: number
   indexablePages: number
@@ -293,10 +295,79 @@ function scorePages(
   })
 }
 
+function normalizeLinkUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value)
+    url.hash = ''
+    return url.toString()
+  } catch {
+    return undefined
+  }
+}
+
+function deriveInternalLinkAuthority(
+  pages: CrawlPageSnapshot[],
+  linkGraph?: CrawlLinkGraph,
+): CrawlPageSnapshot[] {
+  const hasLinkGraph = linkGraph && Object.keys(linkGraph).length > 0
+  const hasStoredScores = pages.some(
+    (page) =>
+      page.internalInlinkCount !== undefined ||
+      page.internalLinkAuthorityScore !== undefined,
+  )
+  if (!hasLinkGraph && hasStoredScores) {
+    return pages.map((page) => ({
+      ...page,
+      internalInlinkCount: page.internalInlinkCount ?? 0,
+      internalLinkAuthorityScore: page.internalLinkAuthorityScore ?? 0,
+    }))
+  }
+
+  const pageByUrl = new Map<string, string>()
+  for (const page of pages) {
+    for (const value of [page.url, page.finalUrl]) {
+      const normalized = normalizeLinkUrl(value)
+      if (normalized) pageByUrl.set(normalized, page.url)
+    }
+  }
+
+  const inlinks = new Map<string, number>()
+  for (const page of pages) inlinks.set(page.url, 0)
+
+  for (const page of pages) {
+    const targets = hasLinkGraph
+      ? (linkGraph?.[page.url] ?? linkGraph?.[page.finalUrl] ?? [])
+      : (page.sampleInternalLinks ?? [])
+    const linkedPages = new Set<string>()
+    for (const target of targets) {
+      const normalized = normalizeLinkUrl(target)
+      const linkedPage = normalized ? pageByUrl.get(normalized) : undefined
+      if (!linkedPage || linkedPage === page.url) continue
+      linkedPages.add(linkedPage)
+    }
+    for (const linkedPage of linkedPages) {
+      inlinks.set(linkedPage, (inlinks.get(linkedPage) ?? 0) + 1)
+    }
+  }
+
+  const maxInlinks = Math.max(0, ...inlinks.values())
+  return pages.map((page) => {
+    const internalInlinkCount = inlinks.get(page.url) ?? 0
+    return {
+      ...page,
+      internalInlinkCount,
+      internalLinkAuthorityScore: maxInlinks
+        ? Math.round((internalInlinkCount / maxInlinks) * 100)
+        : 0,
+    }
+  })
+}
+
 export function createCrawlReport(input: {
   config: CrawlConfigInput
   pages?: CrawlPageSnapshot[]
   issues?: CrawlIssue[]
+  linkGraph?: CrawlLinkGraph
   projectId?: string
   site?: string
   ga4PropertyId?: string
@@ -308,7 +379,10 @@ export function createCrawlReport(input: {
 }): CrawlReport {
   const config = normalizeCrawlConfig(input.config)
   const issues = input.issues ?? []
-  const pages = scorePages(input.pages ?? [], issues)
+  const pages = scorePages(
+    deriveInternalLinkAuthority(input.pages ?? [], input.linkGraph),
+    issues,
+  )
   return {
     id: crawlReportId({
       config,
@@ -333,7 +407,10 @@ export function createCrawlReport(input: {
 
 export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
   const issues = report.issues ?? []
-  const pages = scorePages(report.pages ?? [], issues)
+  const pages = scorePages(
+    deriveInternalLinkAuthority(report.pages ?? []),
+    issues,
+  )
   return {
     ...report,
     summary: summarizeCrawlReport({ pages, issues, stats: report.summary }),

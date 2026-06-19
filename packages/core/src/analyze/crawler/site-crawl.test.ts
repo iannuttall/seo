@@ -65,6 +65,10 @@ test('crawlSite follows same-origin links within depth and page limits', async (
       report.pages.map((page) => new URL(page.url).pathname),
       ['/', '/a'],
     )
+    assert.equal(report.pages[0]?.internalInlinkCount, 0)
+    assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
+    assert.equal(report.pages[1]?.internalInlinkCount, 1)
+    assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
     assert.equal(report.status, 'completed')
   } finally {
     await fixture.close()

@@ -100,6 +100,7 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
         wordCount: 100,
         contentHash: 'a',
         outgoingInternalCount: 1,
+        sampleInternalLinks: ['https://example.com/b'],
         responseTimeMs: 100,
       },
       {
@@ -132,6 +133,10 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.summary.mediumIssues, 1)
   assert.equal(report.summary.avgResponseMs, 200)
   assert.deepEqual(report.summary.byStatus, { '200': 1, '404': 1 })
+  assert.equal(report.pages[0]?.internalInlinkCount, 0)
+  assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
+  assert.equal(report.pages[1]?.internalInlinkCount, 1)
+  assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
   assert.equal(report.pages[0]?.seoScore, 70)
   assert.equal(report.pages[1]?.seoScore, 10)
   assert.equal(report.issueGroups[0]?.ruleId, 'missing_title')

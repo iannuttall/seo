@@ -189,6 +189,76 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm responseTimeMs is under the slow-response threshold.',
   },
   {
+    id: 'broken_internal_link',
+    title: 'Broken internal link',
+    category: 'links',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'Internal links that land on broken URLs waste crawl paths, frustrate users, and leak authority inside the site.',
+    howToFix:
+      'Update every internal link to the working destination, restore the missing page, or add one direct 301 to the best replacement.',
+    impactIfIgnored:
+      'Users hit dead ends and search engines keep discovering broken URLs from your own pages.',
+    howToVerify:
+      'Re-run the crawl and confirm the linked URL no longer returns a broken status.',
+  },
+  {
+    id: 'broken_external_link',
+    title: 'Broken external link',
+    category: 'links',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'External links are part of the page experience and source trail. Broken references make content feel stale and less trustworthy.',
+    howToFix:
+      'Replace the link with a working source, update the URL, or remove the reference if it no longer supports the page.',
+    impactIfIgnored:
+      'Readers and agents following citations hit dead ends, which weakens trust in the content.',
+    howToVerify:
+      'Re-run the crawl with external checks enabled and confirm the external link no longer appears in externalLinkChecks as broken.',
+  },
+  {
+    id: 'orphan_page',
+    title: 'Orphan page',
+    category: 'links',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'A page with no internal links is hard for users and crawlers to discover, even if it appears in a sitemap.',
+    howToFix:
+      'Add relevant internal links from hubs, navigation, related pages, or templates that naturally point to this page.',
+    impactIfIgnored:
+      'The page can stay isolated, receive less authority, and be crawled less consistently.',
+    howToVerify:
+      'Re-run the crawl and confirm internalInlinkCount is greater than zero.',
+  },
+  {
+    id: 'deep_page',
+    title: 'Deep page',
+    category: 'links',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Important pages buried many clicks deep are harder for users and crawlers to reach.',
+    howToFix:
+      'Link the page from a closer hub, category page, related content block, or navigation path.',
+    impactIfIgnored:
+      'The page may receive weaker internal authority and be discovered later during crawls.',
+    howToVerify:
+      'Re-run the crawl and confirm crawlDepth is closer to the homepage.',
+  },
+  {
+    id: 'weak_internal_links_to_valuable_page',
+    title: 'Valuable page has weak internal links',
+    category: 'links',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Pages already earning search or analytics value should be easy to reach and strongly linked from relevant parts of the site.',
+    howToFix:
+      'Add contextual internal links from high-level pages, related templates, and pages that share the same intent.',
+    impactIfIgnored:
+      'Useful pages may keep underperforming because the site does not pass enough internal authority to them.',
+    howToVerify:
+      'Re-run the crawl and confirm internalInlinkCount or internalLinkAuthorityScore improved for the page.',
+  },
+  {
     id: 'missing_meta_description',
     title: 'Meta description missing',
     category: 'metadata',

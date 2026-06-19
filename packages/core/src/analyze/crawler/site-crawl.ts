@@ -6,7 +6,6 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from '../workflows/analytics-value.js'
-import { auditCrawlPages } from './audit.js'
 import type { CrawlConfigInput, CrawlReport } from './report.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 
@@ -26,6 +25,12 @@ type LlmsTxtSignal = {
   url: string
   exists: boolean
   status?: number
+}
+
+type ExternalLinkCheck = {
+  url: string
+  status?: number
+  error?: string
 }
 
 function normalizeUrl(value: string, base?: string): string | undefined {
@@ -127,6 +132,62 @@ async function checkLlmsTxt(input: {
     return { url: llmsUrl, exists: false }
   } finally {
     clearTimeout(timer)
+  }
+}
+
+async function checkExternalLink(
+  url: string,
+  timeoutMs: number,
+): Promise<ExternalLinkCheck> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 5_000))
+
+  try {
+    const response = await publicHttpFetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    await response.body?.cancel().catch(() => undefined)
+    return { url, status: response.status }
+  } catch (error) {
+    return {
+      url,
+      status: 0,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function verifyExternalLinks(input: {
+  pages: CrawlReport['pages']
+  timeoutMs: number
+}): Promise<void> {
+  const urls = [
+    ...new Set(
+      input.pages
+        .flatMap((page) => page.sampleExternalLinks ?? [])
+        .slice(0, 200),
+    ),
+  ]
+  if (!urls.length) return
+
+  const checks = new Map<string, ExternalLinkCheck>()
+  for (let index = 0; index < urls.length; index += 8) {
+    const batch = urls.slice(index, index + 8)
+    const results = await Promise.all(
+      batch.map((url) => checkExternalLink(url, input.timeoutMs)),
+    )
+    for (const result of results) checks.set(result.url, result)
+  }
+
+  for (const page of input.pages) {
+    const pageChecks = (page.sampleExternalLinks ?? [])
+      .map((url) => checks.get(url))
+      .filter((value): value is ExternalLinkCheck => Boolean(value))
+    if (pageChecks.length) page.externalLinkChecks = pageChecks
   }
 }
 
@@ -299,6 +360,9 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       limit: input.analyticsLimit ?? 5000,
     })
   }
+  if (config.checkExternal) {
+    await verifyExternalLinks({ pages, timeoutMs: config.timeoutMs })
+  }
 
   for (const page of pages) {
     if (!page.geo) continue
@@ -316,7 +380,6 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     site,
     ga4PropertyId: input.ga4PropertyId,
     pages,
-    issues: auditCrawlPages(pages),
     linkGraph,
     status: partial ? 'partial' : 'completed',
     warnings,

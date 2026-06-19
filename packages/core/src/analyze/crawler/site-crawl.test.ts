@@ -59,6 +59,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
       maxDepth: 1,
       maxPages: 10,
       concurrency: 1,
+      checkExternal: false,
     })
 
     assert.equal(report.summary.totalPages, 2)
@@ -242,11 +243,58 @@ test('crawlSite captures content types and reports broken internal links', async
       true,
     )
     assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'broken_internal_link'),
+      true,
+    )
+    assert.equal(
       report.pages.some((page) => new URL(page.url).pathname === '/asset.pdf'),
       false,
     )
   } finally {
     await fixture.close()
+  }
+})
+
+test('crawlSite checks broken external links when enabled', async () => {
+  const external = await withServer((req, res) => {
+    if (req.url === '/gone') {
+      res.statusCode = 404
+      res.end()
+      return
+    }
+    res.end('ok')
+  })
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(
+      `<title>External</title><h1>External</h1><a href="${external.baseUrl}/gone">Broken external</a>`,
+    )
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      useSitemap: false,
+      maxPages: 1,
+      concurrency: 1,
+      checkExternal: true,
+    })
+
+    assert.deepEqual(report.pages[0]?.externalLinkChecks, [
+      { url: `${external.baseUrl}/gone`, status: 404 },
+    ])
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'broken_external_link'),
+      true,
+    )
+  } finally {
+    await fixture.close()
+    await external.close()
   }
 })
 

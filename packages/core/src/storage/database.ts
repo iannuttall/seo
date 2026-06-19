@@ -80,6 +80,20 @@ CREATE TABLE IF NOT EXISTS crawl_runs (
 );
 CREATE INDEX IF NOT EXISTS idx_crawl_runs_site ON crawl_runs(site_url, start_url, created_at);
 
+CREATE TABLE IF NOT EXISTS crawl_reports (
+  id TEXT PRIMARY KEY,
+  config_hash TEXT NOT NULL,
+  site_url TEXT,
+  url TEXT NOT NULL,
+  status TEXT NOT NULL,
+  total_pages INTEGER NOT NULL,
+  issue_count INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  report_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_crawl_reports_latest ON crawl_reports(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_crawl_reports_site ON crawl_reports(site_url, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS crawl_pages (
   run_id TEXT NOT NULL,
   url TEXT NOT NULL,

@@ -1,4 +1,4 @@
-import { crawlSite } from '@seo/core'
+import { crawlSite, saveCrawlReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -90,6 +90,11 @@ export const crawlCommand = defineCommand({
       default: false,
       description: 'Print machine-readable JSON.',
     },
+    save: {
+      type: 'boolean',
+      default: false,
+      description: 'Save the crawl report locally.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
@@ -117,9 +122,10 @@ export const crawlCommand = defineCommand({
       checkExternal: !booleanArg(args['no-external']),
       js: booleanArg(args.js) ? true : false,
     })
+    const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
 
     if (json) {
-      printJson(report)
+      printJson(saved ? { ...report, saved } : report)
       return
     }
 
@@ -136,6 +142,7 @@ export const crawlCommand = defineCommand({
       ['High', String(report.summary.highIssues)],
       ['Medium', String(report.summary.mediumIssues)],
       ['Low', String(report.summary.lowIssues)],
+      ['Saved report', saved?.id ?? 'no'],
     ])
 
     if (report.issueGroups.length) {

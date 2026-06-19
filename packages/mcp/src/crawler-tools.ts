@@ -1,5 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { crawlSite, explainRule, groupCrawlIssues } from '@seo/core'
+import {
+  crawlSite,
+  explainRule,
+  groupCrawlIssues,
+  latestCrawlReport,
+  loadCrawlReport,
+  saveCrawlReport,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -41,6 +48,7 @@ export function registerCrawlerTools(server: McpServer): void {
         js: z.boolean().optional(),
         includePages: z.boolean().optional(),
         includeIssues: z.boolean().optional(),
+        saveReport: z.boolean().optional(),
       },
     },
     async ({
@@ -56,6 +64,7 @@ export function registerCrawlerTools(server: McpServer): void {
       js,
       includePages,
       includeIssues,
+      saveReport,
     }) => {
       try {
         const report = await crawlSite({
@@ -70,9 +79,13 @@ export function registerCrawlerTools(server: McpServer): void {
           respectRobots,
           js: js ? true : false,
         })
+        const saved = saveReport ? saveCrawlReport(report) : undefined
         return toolSuccess(
           `Crawl complete for ${url}. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
-          compactCrawlResult(report, { includePages, includeIssues }),
+          {
+            ...compactCrawlResult(report, { includePages, includeIssues }),
+            ...(saved ? { saved } : {}),
+          },
         )
       } catch (error) {
         return toolError(error)
@@ -86,7 +99,8 @@ export function registerCrawlerTools(server: McpServer): void {
       description:
         'Return top technical SEO/GEO fixes for a URL by running a compact crawl.',
       inputSchema: {
-        url: z.string().url(),
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
         site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
@@ -94,18 +108,28 @@ export function registerCrawlerTools(server: McpServer): void {
         limit: z.number().int().positive().optional(),
       },
     },
-    async ({ url, site, maxPages, maxDepth, category, limit }) => {
+    async ({ url, reportId, site, maxPages, maxDepth, category, limit }) => {
       try {
-        const report = await crawlSite({ url, site, maxPages, maxDepth })
+        const report = url
+          ? await crawlSite({ url, site, maxPages, maxDepth })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
         const groups = groupCrawlIssues(
           category
             ? report.issues.filter((issue) => issue.category === category)
             : report.issues,
         ).slice(0, limit ?? 10)
         return toolSuccess(
-          `Found ${groups.length} top fix groups for ${url}.`,
+          `Found ${groups.length} top fix groups for ${report.config.url}.`,
           {
-            url,
+            url: report.config.url,
+            reportId: report.id,
             summary: report.summary,
             topFixes: groups,
             warnings: report.warnings,

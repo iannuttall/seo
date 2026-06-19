@@ -51,7 +51,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Capture images total, missing alt count, social tags, JSON-LD schema types, hreflang, lang, viewport, mixed content, HSTS, compression, and HTTPS.
 - [ ] Capture GEO signals: semantic HTML, structured data, author, date, question headings, answer-ready blocks, tables/lists, FAQ/QAPage schema, `llms.txt`.
 - [x] Capture indexability as a derived field with reason.
-- [ ] Capture per-page SEO score and per-page GEO score.
+- [x] Capture per-page SEO score and per-page GEO score.
 - [x] Preserve enough raw evidence for agents to propose exact fixes without re-fetching.
 
 ## Phase 4: Audit Rules
@@ -72,10 +72,10 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 5: Scoring And Prioritisation
 
-- [ ] Add site health score for technical SEO.
-- [ ] Add site GEO readiness score.
-- [ ] Add per-page SEO score.
-- [ ] Add per-page GEO score.
+- [x] Add site health score for technical SEO.
+- [x] Add site GEO readiness score.
+- [x] Add per-page SEO score.
+- [x] Add per-page GEO score.
 - [ ] Add internal link authority score.
 - [x] Rank top fixes by severity, affected count, page importance, GSC clicks/impressions, GA4 sessions when available, and effort.
 - [x] Do not let generic notices outrank search-visible errors.

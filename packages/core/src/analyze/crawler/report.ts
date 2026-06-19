@@ -54,6 +54,8 @@ export type CrawlReportSummary = {
   indexablePages: number
   nonIndexablePages: number
   statusErrors: number
+  healthScore: number
+  geoReadinessScore: number
   highIssues: number
   mediumIssues: number
   lowIssues: number
@@ -179,6 +181,8 @@ export function summarizeCrawlReport(input: {
     indexablePages: input.pages.filter((page) => page.indexable).length,
     nonIndexablePages: input.pages.filter((page) => !page.indexable).length,
     statusErrors: input.pages.filter((page) => page.status >= 400).length,
+    healthScore: averageScore(input.pages.map((page) => page.seoScore)),
+    geoReadinessScore: averageScore(input.pages.map((page) => page.geoScore)),
     highIssues: input.issues.filter((issue) => issue.severity === 'high')
       .length,
     mediumIssues: input.issues.filter((issue) => issue.severity === 'medium')
@@ -190,6 +194,62 @@ export function summarizeCrawlReport(input: {
     byStatus,
     byCategory,
   }
+}
+
+function averageScore(values: Array<number | undefined>): number {
+  const scores = values.filter((value): value is number => value !== undefined)
+  if (!scores.length) return 0
+  return Math.round(
+    scores.reduce((sum, value) => sum + value, 0) / scores.length,
+  )
+}
+
+function severityPenalty(issue: CrawlIssue): number {
+  if (issue.severity === 'high') return 30
+  if (issue.severity === 'medium') return 15
+  return 5
+}
+
+function pageSeoScore(page: CrawlPageSnapshot, issues: CrawlIssue[]): number {
+  if (page.status >= 500) return 0
+  if (page.status >= 400) return 10
+  const penalty = issues
+    .filter((issue) => issue.category !== 'geo')
+    .reduce((sum, issue) => sum + severityPenalty(issue), 0)
+  return Math.max(0, Math.min(100, 100 - penalty))
+}
+
+function pageGeoScore(page: CrawlPageSnapshot, issues: CrawlIssue[]): number {
+  const geo = page.geo
+  let score = 100
+  if (!geo?.semanticHtml) score -= 15
+  if (!geo?.structuredData) score -= 25
+  if (!geo?.hasAuthor) score -= 15
+  if (!geo?.hasDate) score -= 5
+  if (!geo?.answerable) score -= 20
+  if ((geo?.questionHeadings ?? 0) === 0) score -= 5
+  score -= issues
+    .filter((issue) => issue.category === 'geo')
+    .reduce((sum, issue) => sum + severityPenalty(issue), 0)
+  return Math.max(0, Math.min(100, score))
+}
+
+function scorePages(
+  pages: CrawlPageSnapshot[],
+  issues: CrawlIssue[],
+): CrawlPageSnapshot[] {
+  const issuesByUrl = new Map<string, CrawlIssue[]>()
+  for (const issue of issues) {
+    issuesByUrl.set(issue.url, [...(issuesByUrl.get(issue.url) ?? []), issue])
+  }
+  return pages.map((page) => {
+    const pageIssues = issuesByUrl.get(page.url) ?? []
+    return {
+      ...page,
+      seoScore: pageSeoScore(page, pageIssues),
+      geoScore: pageGeoScore(page, pageIssues),
+    }
+  })
 }
 
 export function createCrawlReport(input: {
@@ -205,8 +265,8 @@ export function createCrawlReport(input: {
   generatedAt?: string
 }): CrawlReport {
   const config = normalizeCrawlConfig(input.config)
-  const pages = input.pages ?? []
   const issues = input.issues ?? []
+  const pages = scorePages(input.pages ?? [], issues)
   return {
     id: crawlReportId({
       config,

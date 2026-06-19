@@ -1,4 +1,5 @@
 import type { PageTemplate } from '../analyze/page-patterns.js'
+import type { RuleId } from '../rules.js'
 import type {
   ExtractedPage,
   PageFetchDiagnostics,
@@ -26,7 +27,7 @@ export interface AuditPageReport {
     position: number
   }
   issues: Array<{
-    code: string
+    code: RuleId
     title: string
     detail: string
     principle: string

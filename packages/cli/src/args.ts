@@ -17,6 +17,32 @@ export function booleanArg(value: unknown): boolean | undefined {
   return typeof value === 'boolean' ? value : undefined
 }
 
+export function negatedBooleanArg(
+  args: Record<string, unknown>,
+  name: string,
+): boolean | undefined {
+  const positive = booleanArg(args[name])
+  if (positive === false) return true
+  if (positive === true) return false
+  const camelPositive = booleanArg(args[toCamelCase(name)])
+  if (camelPositive === false) return true
+  if (camelPositive === true) return false
+  const explicitNo = booleanArg(args[`no-${name}`])
+  if (explicitNo === true) return true
+  const camelNo = booleanArg(args[`no${toPascalCase(name)}`])
+  if (camelNo === true) return true
+  return undefined
+}
+
+function toCamelCase(value: string): string {
+  return value.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())
+}
+
+function toPascalCase(value: string): string {
+  const camel = toCamelCase(value)
+  return camel ? `${camel[0]?.toUpperCase()}${camel.slice(1)}` : ''
+}
+
 export function numberArg(value: unknown): number | undefined {
   if (typeof value === 'number') return value
   if (typeof value !== 'string' || !value.trim()) return undefined

@@ -28,6 +28,7 @@ export type PriorityQueueItem = {
     | 'cannibalization'
     | 'diagnosis'
     | 'template'
+    | 'crawl'
   title: string
   target: string
   category: 'technical' | 'content' | 'serp' | 'authority' | 'strategy'

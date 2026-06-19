@@ -149,7 +149,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 11: Agent Workflow Improvements
 
-- [ ] Add a workflow that runs crawl, joins GSC/GA4 when available, ranks fixes, and returns an implementation queue.
+- [x] Add a workflow that runs crawl, joins GSC/GA4 when available, ranks fixes, and returns an implementation queue.
 - [x] Add issue-specific affected URL slicing.
 - [x] Add command follow-ups for every top fix.
 - [x] Add verification recipes for common fixes.

@@ -16,6 +16,7 @@ import {
   booleanArg,
   csvArg,
   jsonFlag,
+  negatedBooleanArg,
   numberArg,
   projectArg,
   stringArg,
@@ -192,9 +193,9 @@ export const crawlCommand = defineCommand({
       exclude: csvArg(args.exclude),
       ga4PropertyId:
         stringArg(args['ga4-property']) ?? selection?.client?.ga4PropertyId,
-      useSitemap: !booleanArg(args['no-sitemap']),
-      respectRobots: !booleanArg(args['no-robots']),
-      checkExternal: !booleanArg(args['no-external']),
+      useSitemap: !negatedBooleanArg(args, 'sitemap'),
+      respectRobots: !negatedBooleanArg(args, 'robots'),
+      checkExternal: !negatedBooleanArg(args, 'external'),
       js: Boolean(booleanArg(args.js)),
     })
     const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined

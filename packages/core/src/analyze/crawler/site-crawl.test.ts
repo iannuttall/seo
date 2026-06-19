@@ -488,3 +488,128 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
     true,
   )
 })
+
+test('crawlSite returns a partial report when cancelled before work starts', async () => {
+  const controller = new AbortController()
+  controller.abort()
+  let fetchPageCalls = 0
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      maxPages: 10,
+      useSitemap: true,
+      checkExternal: true,
+      signal: controller.signal,
+    },
+    {
+      fetchPage: async () => {
+        fetchPageCalls += 1
+        return { urls: [] }
+      },
+      fetchSitemapUrls: async (input) => ({
+        sitemapUrl: input.sitemapUrl,
+        urls: ['https://example.com/queued'],
+        nestedSitemaps: [],
+        warnings: [],
+      }),
+    },
+  )
+
+  assert.equal(fetchPageCalls, 0)
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.totalPages, 0)
+  assert.match(report.warnings.join('\n'), /cancelled/)
+  assert.match(report.caveats.join('\n'), /cancelled/)
+})
+
+test('crawlSite returns completed pages and skips joins after cancellation', async () => {
+  const controller = new AbortController()
+  const calls = {
+    fetchPages: [] as string[],
+    externalChecks: 0,
+    searchMetrics: 0,
+    analytics: 0,
+  }
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      site: 'sc-domain:example.com',
+      ga4PropertyId: 'properties/123',
+      useSitemap: false,
+      checkExternal: true,
+      maxPages: 10,
+      signal: controller.signal,
+    },
+    {
+      fetch: async (url) => {
+        calls.externalChecks += url.includes('external.example') ? 1 : 0
+        return new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        })
+      },
+      fetchPage: async (url, options = {}) => {
+        calls.fetchPages.push(url)
+        assert.equal(options.signal, controller.signal)
+        if (url.endsWith('/next')) {
+          controller.abort()
+          return new Promise(() => undefined)
+        }
+        return {
+          urls: ['https://example.com/next'],
+          page: {
+            url,
+            finalUrl: url,
+            status: 200,
+            contentType: 'text/html',
+            responseTimeMs: 10,
+            title: 'Cancelled page',
+            metaDescription: 'Cancelled page description.',
+            h1: 'Cancelled page',
+            h1Count: 1,
+            h2Count: 0,
+            h3Count: 0,
+            indexable: true,
+            wordCount: 140,
+            contentHash: 'cancelled-hash',
+            outgoingInternalCount: 1,
+            outgoingExternalCount: 1,
+            sampleInternalLinks: ['https://example.com/next'],
+            sampleExternalLinks: ['https://external.example/gone'],
+            geo: {
+              semanticHtml: true,
+              structuredData: true,
+              hasAuthor: true,
+              hasDate: true,
+              questionHeadings: 1,
+              structuredBlocks: 1,
+              answerable: true,
+            },
+          },
+        }
+      },
+      queryPageMetrics: async () => {
+        calls.searchMetrics += 1
+        return undefined
+      },
+      fetchLandingPageValues: async () => {
+        calls.analytics += 1
+        return { values: new Map() }
+      },
+    },
+  )
+
+  assert.deepEqual(calls.fetchPages, [
+    'https://example.com/',
+    'https://example.com/next',
+  ])
+  assert.equal(calls.externalChecks, 0)
+  assert.equal(calls.searchMetrics, 0)
+  assert.equal(calls.analytics, 0)
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.totalPages, 1)
+  assert.match(report.warnings.join('\n'), /cancelled/)
+  assert.match(report.caveats.join('\n'), /cancelled/)
+})

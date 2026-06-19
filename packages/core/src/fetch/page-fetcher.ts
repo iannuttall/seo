@@ -19,14 +19,20 @@ export async function fetchPage(
   const rate = normalizeRateControls(opts.rate)
   const queue = queueForHost(new URL(url).host, rate)
   return (await queue.add<PageFetchResult>(async () => {
-    const first = await fetchPlain(url, opts.refresh, opts.timeoutMs, rate)
+    const first = await fetchPlain(
+      url,
+      opts.refresh,
+      opts.timeoutMs,
+      rate,
+      opts.signal,
+    )
     const warnings = [...first.warnings]
     const lowWordCount = first.html.split(/\s+/).length < 150
     const shouldRetryJs =
       opts.js === true ||
       (opts.js === 'auto' && (lowWordCount || looksLikeSpa(first.html)))
 
-    if (!shouldRetryJs) {
+    if (!shouldRetryJs || opts.signal?.aborted) {
       if (opts.js === 'auto' && (lowWordCount || looksLikeSpa(first.html))) {
         warnings.push('Page looks like SPA - re-run with --js to render.')
       }

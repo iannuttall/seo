@@ -21,6 +21,8 @@ type CrawlTask = QueueItem & {
   }>
 }
 
+const CRAWL_CANCELLED = Symbol('crawl-cancelled')
+
 type LlmsTxtSignal = {
   url: string
   exists: boolean
@@ -58,6 +60,38 @@ function resolveCrawlSiteDependencies(
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
     now: dependencies.now ?? (() => new Date()),
   }
+}
+
+function abortController(input: { timeoutMs: number; signal?: AbortSignal }): {
+  signal: AbortSignal
+  cleanup: () => void
+} {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  const timer = setTimeout(abort, Math.min(input.timeoutMs, 5_000))
+  if (input.signal?.aborted) {
+    controller.abort()
+  } else {
+    input.signal?.addEventListener('abort', abort, { once: true })
+  }
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timer)
+      input.signal?.removeEventListener('abort', abort)
+    },
+  }
+}
+
+function cancellationRace(
+  signal: AbortSignal,
+): Promise<typeof CRAWL_CANCELLED> {
+  if (signal.aborted) return Promise.resolve(CRAWL_CANCELLED)
+  return new Promise((resolve) => {
+    signal.addEventListener('abort', () => resolve(CRAWL_CANCELLED), {
+      once: true,
+    })
+  })
 }
 
 function normalizeUrl(value: string, base?: string): string | undefined {
@@ -132,13 +166,13 @@ async function checkLlmsTxt(input: {
   url: string
   timeoutMs: number
   fetch: typeof publicHttpFetch
+  signal?: AbortSignal
 }): Promise<LlmsTxtSignal> {
   const llmsUrl = new URL('/llms.txt', input.url).toString()
-  const controller = new AbortController()
-  const timer = setTimeout(
-    () => controller.abort(),
-    Math.min(input.timeoutMs, 5_000),
-  )
+  const controller = abortController({
+    timeoutMs: input.timeoutMs,
+    signal: input.signal,
+  })
 
   try {
     const response = await input.fetch(llmsUrl, {
@@ -160,7 +194,7 @@ async function checkLlmsTxt(input: {
   } catch {
     return { url: llmsUrl, exists: false }
   } finally {
-    clearTimeout(timer)
+    controller.cleanup()
   }
 }
 
@@ -168,9 +202,9 @@ async function checkExternalLink(
   url: string,
   timeoutMs: number,
   fetch: typeof publicHttpFetch,
+  signal?: AbortSignal,
 ): Promise<ExternalLinkCheck> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 5_000))
+  const controller = abortController({ timeoutMs, signal })
 
   try {
     const response = await fetch(url, {
@@ -187,7 +221,7 @@ async function checkExternalLink(
       error: error instanceof Error ? error.message : String(error),
     }
   } finally {
-    clearTimeout(timer)
+    controller.cleanup()
   }
 }
 
@@ -195,7 +229,9 @@ async function verifyExternalLinks(input: {
   pages: CrawlReport['pages']
   timeoutMs: number
   fetch: typeof publicHttpFetch
+  signal?: AbortSignal
 }): Promise<void> {
+  if (input.signal?.aborted) return
   const urls = [
     ...new Set(
       input.pages
@@ -207,9 +243,12 @@ async function verifyExternalLinks(input: {
 
   const checks = new Map<string, ExternalLinkCheck>()
   for (let index = 0; index < urls.length; index += 8) {
+    if (input.signal?.aborted) break
     const batch = urls.slice(index, index + 8)
     const results = await Promise.all(
-      batch.map((url) => checkExternalLink(url, input.timeoutMs, input.fetch)),
+      batch.map((url) =>
+        checkExternalLink(url, input.timeoutMs, input.fetch, input.signal),
+      ),
     )
     for (const result of results) checks.set(result.url, result)
   }
@@ -228,6 +267,9 @@ export async function crawlSite(
 ): Promise<CrawlReport> {
   const deps = resolveCrawlSiteDependencies(dependencies)
   const config = normalizeCrawlConfig(input)
+  const signal = input.signal
+  let cancelled = Boolean(signal?.aborted)
+  const isCancelled = (): boolean => cancelled || Boolean(signal?.aborted)
   const site = input.site
   const origin = new URL(config.url).origin
   const warnings: string[] = []
@@ -239,11 +281,18 @@ export async function crawlSite(
   const pages: CrawlReport['pages'] = []
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
-  const llmsTxt = await checkLlmsTxt({
-    url: config.url,
-    timeoutMs: config.timeoutMs,
-    fetch: deps.fetch,
-  })
+  const llmsTxt = isCancelled()
+    ? ({
+        url: new URL('/llms.txt', config.url).toString(),
+        exists: false,
+      } satisfies LlmsTxtSignal)
+    : await checkLlmsTxt({
+        url: config.url,
+        timeoutMs: config.timeoutMs,
+        fetch: deps.fetch,
+        signal,
+      })
+  cancelled = isCancelled()
   let queuedUrls = 0
   let skippedUrls = 0
   let failedUrls = 0
@@ -286,6 +335,7 @@ export async function crawlSite(
   }
 
   if (
+    !isCancelled() &&
     config.useSitemap &&
     (config.mode === 'site' || config.mode === 'sitemap')
   ) {
@@ -321,17 +371,30 @@ export async function crawlSite(
           js: config.js,
           timeoutMs: config.timeoutMs,
           rate: { concurrency: config.concurrency },
+          signal,
         })
         .then((result) => ({
           task,
           result,
+        }))
+        .catch((error) => ({
+          task,
+          result: {
+            urls: [],
+            warning: `${item.url}: ${error instanceof Error ? error.message : String(error)}`,
+          },
         })),
     }
     inFlight.add(task)
   }
 
-  while ((queue.length || inFlight.size) && pages.length < config.maxPages) {
+  while (
+    !isCancelled() &&
+    (queue.length || inFlight.size) &&
+    pages.length < config.maxPages
+  ) {
     while (
+      !isCancelled() &&
       inFlight.size < config.concurrency &&
       pages.length + inFlight.size < config.maxPages
     ) {
@@ -342,9 +405,16 @@ export async function crawlSite(
 
     if (!inFlight.size) break
 
-    const { task, result } = await Promise.race(
-      [...inFlight].map((item) => item.promise),
-    )
+    const next = await Promise.race([
+      ...[...inFlight].map((item) => item.promise),
+      ...(signal ? [cancellationRace(signal)] : []),
+    ])
+    if (next === CRAWL_CANCELLED) {
+      cancelled = true
+      break
+    }
+
+    const { task, result } = next
     inFlight.delete(task)
 
     if (result.warning) {
@@ -377,13 +447,19 @@ export async function crawlSite(
     }
   }
 
+  cancelled = isCancelled()
+  if (cancelled) {
+    warnings.push('Crawl cancelled; returning a partial report.')
+  }
+
   const partial =
+    cancelled ||
     pages.length >= config.maxPages ||
     queue.length > 0 ||
     inFlight.size > 0 ||
     warnings.length > 0
 
-  if (site) {
+  if (!cancelled && site) {
     await joinSearchMetrics({
       site,
       pages,
@@ -392,7 +468,7 @@ export async function crawlSite(
       queryPageMetrics: deps.queryPageMetrics,
     })
   }
-  if (input.ga4PropertyId) {
+  if (!cancelled && input.ga4PropertyId) {
     await joinAnalytics({
       propertyId: input.ga4PropertyId,
       pages,
@@ -403,11 +479,12 @@ export async function crawlSite(
       now: deps.now,
     })
   }
-  if (config.checkExternal) {
+  if (!cancelled && config.checkExternal) {
     await verifyExternalLinks({
       pages,
       timeoutMs: config.timeoutMs,
       fetch: deps.fetch,
+      signal,
     })
   }
 
@@ -430,8 +507,9 @@ export async function crawlSite(
     linkGraph,
     status: partial ? 'partial' : 'completed',
     warnings,
-    caveats:
-      pages.length >= config.maxPages
+    caveats: cancelled
+      ? ['Crawl cancelled before all queued URLs finished.']
+      : pages.length >= config.maxPages
         ? [`Stopped after reaching maxPages (${config.maxPages}).`]
         : [],
     stats: {

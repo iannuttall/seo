@@ -20,6 +20,7 @@ export interface FetchPageOptions {
   refresh?: boolean
   timeoutMs?: number
   rate?: FetchRateControls
+  signal?: AbortSignal
 }
 
 export type NormalizedFetchRateControls = {

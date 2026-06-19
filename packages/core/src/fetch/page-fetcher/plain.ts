@@ -55,6 +55,7 @@ export async function fetchPlain(
   refresh = false,
   timeoutMs = 20_000,
   rate: NormalizedFetchRateControls,
+  signal?: AbortSignal,
 ): Promise<PageFetchResult> {
   const startedAt = Date.now()
   const db = getDb()
@@ -106,7 +107,13 @@ export async function fetchPlain(
     async () => {
       attempts += 1
       const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), timeoutMs)
+      const abort = () => controller.abort()
+      const timer = setTimeout(abort, timeoutMs)
+      if (signal?.aborted) {
+        controller.abort()
+      } else {
+        signal?.addEventListener('abort', abort, { once: true })
+      }
       try {
         return await fetchWithRedirectChain(url, controller.signal)
       } catch (error) {
@@ -116,6 +123,7 @@ export async function fetchPlain(
         throw error
       } finally {
         clearTimeout(timer)
+        signal?.removeEventListener('abort', abort)
       }
     },
     { retries: 2 },

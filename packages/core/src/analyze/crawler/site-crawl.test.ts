@@ -7,6 +7,7 @@ import {
 } from 'node:http'
 import { test } from 'node:test'
 import { Response } from 'undici'
+import type { CrawlStatusEvent } from './report.js'
 import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
 
 async function withServer(
@@ -97,6 +98,70 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
     assert.equal(report.pages[1]?.crawlDepth, 1)
     assert.equal(report.status, 'completed')
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite emits queue-friendly status events', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/llms.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('# Test site\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    if (req.url === '/') {
+      res.end(
+        '<title>Home</title><h1>Home</h1><a href="/a">A</a><a href="/asset.pdf">PDF</a><a href="https://example.org/offsite">Offsite</a>',
+      )
+      return
+    }
+    res.end('<title>A</title><h1>A</h1>')
+  })
+
+  try {
+    const events: CrawlStatusEvent[] = []
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      useSitemap: false,
+      checkExternal: false,
+      concurrency: 1,
+      onStatus: async (event) => {
+        events.push(event)
+      },
+    })
+
+    assert.equal(report.status, 'completed')
+    assert.equal('onStatus' in report.config, false)
+    assert.deepEqual(
+      events.map((event) => event.phase),
+      [
+        'started',
+        'url_queued',
+        'page_started',
+        'page_completed',
+        'url_queued',
+        'url_skipped',
+        'page_started',
+        'page_completed',
+        'completed',
+      ],
+    )
+    assert.equal(events.at(-1)?.reportId, report.id)
+    assert.equal(events.at(-1)?.reportStatus, report.status)
+    assert.equal(events.at(-1)?.crawledUrls, report.summary.crawledUrls)
+    assert.equal(events.at(-1)?.queuedUrls, report.summary.queuedUrls)
+    assert.equal(events.at(-1)?.skippedUrls, report.summary.skippedUrls)
+    assert.equal(
+      events.find((event) => event.reason === 'asset_url')?.url,
+      `${fixture.baseUrl}/asset.pdf`,
+    )
   } finally {
     await fixture.close()
   }

@@ -6,7 +6,12 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from '../workflows/analytics-value.js'
-import type { CrawlConfigInput, CrawlReport } from './report.js'
+import type {
+  CrawlConfigInput,
+  CrawlReport,
+  CrawlStatusEvent,
+  CrawlStatusPhase,
+} from './report.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 
 type QueueItem = {
@@ -283,6 +288,44 @@ export async function crawlSite(
   const pages: CrawlReport['pages'] = []
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
+  let queuedUrls = 0
+  let skippedUrls = 0
+  let failedUrls = 0
+  let verifiedLinks = 0
+  let statusEventChain = Promise.resolve()
+  const emitStatus = (
+    phase: CrawlStatusPhase,
+    event: Partial<CrawlStatusEvent> = {},
+  ): void => {
+    if (!input.onStatus) return
+    const statusEvent: CrawlStatusEvent = {
+      type: 'crawl_status',
+      phase,
+      generatedAt: deps.now().toISOString(),
+      discoveredUrls: discovered.size,
+      queuedUrls,
+      pendingUrls: queue.length,
+      inFlightUrls: inFlight.size,
+      crawledUrls: pages.length,
+      skippedUrls,
+      failedUrls,
+      verifiedLinks,
+      maxPages: config.maxPages,
+      ...event,
+    }
+    statusEventChain = statusEventChain
+      .then(() => input.onStatus?.(statusEvent))
+      .catch(() => undefined)
+  }
+  const flushStatusEvents = async (): Promise<void> => {
+    await statusEventChain
+  }
+
+  emitStatus('started', {
+    url: config.url,
+    message: `Started crawl for ${config.url}.`,
+  })
+
   const llmsTxt = isCancelled()
     ? ({
         url: new URL('/llms.txt', config.url).toString(),
@@ -295,38 +338,60 @@ export async function crawlSite(
         signal,
       })
   cancelled = isCancelled()
-  let queuedUrls = 0
-  let skippedUrls = 0
-  let failedUrls = 0
-  let verifiedLinks = 0
 
   const enqueue = (value: string, depth: number): void => {
     const normalized = normalizeUrl(value, config.url)
     if (!normalized) {
       skippedUrls += 1
+      emitStatus('url_skipped', {
+        url: value,
+        depth,
+        reason: 'invalid_url',
+      })
       return
     }
     discovered.add(normalized)
     if (queued.has(normalized) || visited.has(normalized)) return
     if (!sameOrigin(normalized, origin)) {
       skippedUrls += 1
+      emitStatus('url_skipped', {
+        url: normalized,
+        depth,
+        reason: 'off_origin',
+      })
       return
     }
     if (isLikelyAsset(normalized)) {
       skippedUrls += 1
+      emitStatus('url_skipped', {
+        url: normalized,
+        depth,
+        reason: 'asset_url',
+      })
       return
     }
     if (!passesFilters(normalized, config.include, config.exclude)) {
       skippedUrls += 1
+      emitStatus('url_skipped', {
+        url: normalized,
+        depth,
+        reason: 'filtered_url',
+      })
       return
     }
     if (queue.length + visited.size + inFlight.size >= config.maxPages * 5) {
       skippedUrls += 1
+      emitStatus('url_skipped', {
+        url: normalized,
+        depth,
+        reason: 'queue_safety_limit',
+      })
       return
     }
     queued.add(normalized)
     queuedUrls += 1
     queue.push({ url: normalized, depth })
+    emitStatus('url_queued', { url: normalized, depth })
   }
 
   if (config.mode !== 'sitemap') {
@@ -389,6 +454,7 @@ export async function crawlSite(
         })),
     }
     inFlight.add(task)
+    emitStatus('page_started', { url: item.url, depth: item.depth })
   }
 
   while (
@@ -423,10 +489,20 @@ export async function crawlSite(
     if (result.warning) {
       warnings.push(result.warning)
       failedUrls += 1
+      emitStatus('page_failed', {
+        url: task.url,
+        depth: task.depth,
+        reason: result.warning,
+      })
       continue
     }
     if (!result.page) {
       failedUrls += 1
+      emitStatus('page_failed', {
+        url: task.url,
+        depth: task.depth,
+        reason: 'missing_page_snapshot',
+      })
       continue
     }
     if (config.respectRobots && result.page.robotsTxt?.allowed === false) {
@@ -441,6 +517,12 @@ export async function crawlSite(
         `${result.page.url}: skipped because robots.txt disallows it`,
       )
       skippedUrls += 1
+      emitStatus('page_skipped', {
+        url: result.page.url,
+        depth: task.depth,
+        statusCode: result.page.status,
+        reason: 'robots_txt_disallowed',
+      })
       continue
     }
 
@@ -449,6 +531,11 @@ export async function crawlSite(
     linkGraph[result.page.url] = result.urls
     linkGraph[result.page.finalUrl] = result.urls
     verifiedLinks += result.urls.length
+    emitStatus('page_completed', {
+      url: result.page.url,
+      depth: task.depth,
+      statusCode: result.page.status,
+    })
 
     if (followLinks && task.depth < config.maxDepth) {
       for (const url of result.urls) {
@@ -460,6 +547,10 @@ export async function crawlSite(
   cancelled = isCancelled()
   if (cancelled) {
     warnings.push('Crawl cancelled; returning a partial report.')
+    emitStatus('cancelled', {
+      url: config.url,
+      message: 'Crawl cancelled; returning a partial report.',
+    })
   }
 
   const partial =
@@ -491,11 +582,19 @@ export async function crawlSite(
     })
   }
   if (!cancelled && config.checkExternal) {
+    emitStatus('external_links_started', {
+      url: config.url,
+      message: 'Started external link checks.',
+    })
     await verifyExternalLinks({
       pages,
       timeoutMs: config.timeoutMs,
       fetch: deps.fetch,
       signal,
+    })
+    emitStatus('external_links_completed', {
+      url: config.url,
+      message: 'Finished external link checks.',
     })
   }
 
@@ -509,7 +608,7 @@ export async function crawlSite(
     }
   }
 
-  return createCrawlReport({
+  const report = createCrawlReport({
     config,
     projectId: input.projectId,
     site,
@@ -532,6 +631,14 @@ export async function crawlSite(
       verifiedLinks,
     },
   })
+  emitStatus('completed', {
+    url: config.url,
+    reportId: report.id,
+    reportStatus: report.status,
+    message: `Crawl ${report.status} with ${report.summary.totalPages} crawled pages.`,
+  })
+  await flushStatusEvents()
+  return report
 }
 
 async function joinAnalytics(input: {

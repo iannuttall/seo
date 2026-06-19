@@ -748,8 +748,22 @@ export function auditCrawlPages(
     if (!page.schemaTypes?.length) {
       issues.push(issue('structured_data_missing', page))
     }
+    if ((page.invalidJsonLdCount ?? 0) > 0) {
+      issues.push(
+        issue('jsonld_invalid', page, `${page.invalidJsonLdCount} invalid`, {
+          invalidJsonLdCount: page.invalidJsonLdCount,
+          invalidJsonLdSamples: page.invalidJsonLdSamples,
+        }),
+      )
+    }
     if (!page.openGraphTitle) {
       issues.push(issue('og_title_missing', page))
+    }
+    if (!page.openGraphDescription) {
+      issues.push(issue('og_description_missing', page))
+    }
+    if (!page.openGraphImage) {
+      issues.push(issue('og_image_missing', page))
     }
     if (!page.twitterCard) {
       issues.push(issue('twitter_card_missing', page))

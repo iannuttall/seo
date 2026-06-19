@@ -9,28 +9,37 @@ function safeText(value?: string | null): string | undefined {
   return trimmed ? trimmed : undefined
 }
 
-function normalizeJsonLdBlocks(blocks: string[]): unknown[] {
-  const out: unknown[] = []
+function parseJsonLdBlocks(blocks: string[]): {
+  jsonLd: unknown[]
+  invalidJsonLdSamples: Array<{ snippet: string; error: string }>
+} {
+  const jsonLd: unknown[] = []
+  const invalidJsonLdSamples: Array<{ snippet: string; error: string }> = []
 
   for (const block of blocks) {
     try {
       const parsed = JSON.parse(block)
       if (Array.isArray(parsed)) {
-        out.push(...parsed)
+        jsonLd.push(...parsed)
       } else if (
         parsed &&
         typeof parsed === 'object' &&
         '@graph' in parsed &&
         Array.isArray(parsed['@graph'])
       ) {
-        out.push(...parsed['@graph'])
+        jsonLd.push(...parsed['@graph'])
       } else {
-        out.push(parsed)
+        jsonLd.push(parsed)
       }
-    } catch {}
+    } catch (error) {
+      invalidJsonLdSamples.push({
+        snippet: block.replace(/\s+/g, ' ').trim().slice(0, 200),
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
-  return out
+  return { jsonLd, invalidJsonLdSamples }
 }
 
 function schemaTypesFrom(value: unknown): string[] {
@@ -221,7 +230,7 @@ export async function extractPage(
       .filter(([key, value]) => key && value),
   )
 
-  const jsonLd = normalizeJsonLdBlocks(
+  const { jsonLd, invalidJsonLdSamples } = parseJsonLdBlocks(
     $('script[type="application/ld+json"]')
       .toArray()
       .map((element) => $(element).html() ?? ''),
@@ -341,6 +350,8 @@ export async function extractPage(
     links,
     hreflang,
     jsonLd,
+    invalidJsonLdCount: invalidJsonLdSamples.length,
+    invalidJsonLdSamples: invalidJsonLdSamples.slice(0, 10),
     schemaTypes,
     openGraph,
     twitter,

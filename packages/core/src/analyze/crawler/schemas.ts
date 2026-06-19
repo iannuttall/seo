@@ -200,7 +200,12 @@ export const crawlPageSnapshotSchema = z.object({
     )
     .optional(),
   schemaTypes: z.array(z.string()).optional(),
+  invalidJsonLdCount: z.number().int().optional(),
+  invalidJsonLdSamples: z
+    .array(z.object({ snippet: z.string(), error: z.string() }))
+    .optional(),
   openGraphTitle: z.string().optional(),
+  openGraphDescription: z.string().optional(),
   openGraphImage: z.string().optional(),
   twitterCard: z.string().optional(),
   author: z.string().optional(),

@@ -48,6 +48,8 @@ function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
     links: [],
     hreflang: [],
     jsonLd: [],
+    invalidJsonLdCount: 0,
+    invalidJsonLdSamples: [],
     schemaTypes: [],
     openGraph: {},
     twitter: {},

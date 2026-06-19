@@ -118,6 +118,8 @@ export interface ExtractedPage {
   links: Array<{ href: string; text: string; rel: string[]; internal: boolean }>
   hreflang: Array<{ hreflang: string; href: string }>
   jsonLd: unknown[]
+  invalidJsonLdCount: number
+  invalidJsonLdSamples: Array<{ snippet: string; error: string }>
   schemaTypes: string[]
   openGraph: Record<string, string>
   twitter: Record<string, string>

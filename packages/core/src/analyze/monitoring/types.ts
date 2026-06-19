@@ -63,7 +63,10 @@ export type CrawlPageSnapshot = {
   externalAnchorSamples?: Array<{ href: string; text: string }>
   externalLinkChecks?: Array<{ url: string; status?: number; error?: string }>
   schemaTypes?: string[]
+  invalidJsonLdCount?: number
+  invalidJsonLdSamples?: Array<{ snippet: string; error: string }>
   openGraphTitle?: string
+  openGraphDescription?: string
   openGraphImage?: string
   twitterCard?: string
   author?: string

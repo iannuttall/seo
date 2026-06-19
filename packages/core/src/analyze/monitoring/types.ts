@@ -63,8 +63,15 @@ export type CrawlPageSnapshot = {
     hasAuthor: boolean
     hasDate: boolean
     questionHeadings: number
+    listCount?: number
+    tableCount?: number
     structuredBlocks: number
     answerable: boolean
+    hasFaqSchema?: boolean
+    hasQapageSchema?: boolean
+    hasLlmsTxt?: boolean
+    llmsTxtUrl?: string
+    llmsTxtStatus?: number
   }
   searchMetrics?: {
     clicks: number

@@ -129,6 +129,8 @@ export interface ExtractedPage {
   mixedContentUrls: string[]
   semanticHtml: boolean
   questionHeadings: number
+  listCount: number
+  tableCount: number
   structuredBlocks: number
   answerable: boolean
   contentText: string

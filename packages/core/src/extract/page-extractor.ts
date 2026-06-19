@@ -212,7 +212,9 @@ export async function extractPage(
   const questionHeadings = headings.filter((heading) =>
     heading.text.trimEnd().endsWith('?'),
   ).length
-  const structuredBlocks = $('ul, ol, table').length
+  const listCount = $('ul, ol').length
+  const tableCount = $('table').length
+  const structuredBlocks = listCount + tableCount
   const answerable = $('main p, article p, p')
     .toArray()
     .slice(0, 3)
@@ -277,6 +279,8 @@ export async function extractPage(
     mixedContentUrls,
     semanticHtml,
     questionHeadings,
+    listCount,
+    tableCount,
     structuredBlocks,
     answerable,
     contentText: text.replace(/\s+/g, ' ').trim(),

@@ -60,8 +60,15 @@ const geoSignalsSchema = z.object({
   hasAuthor: z.boolean(),
   hasDate: z.boolean(),
   questionHeadings: z.number().int(),
+  listCount: z.number().int().optional(),
+  tableCount: z.number().int().optional(),
   structuredBlocks: z.number().int(),
   answerable: z.boolean(),
+  hasFaqSchema: z.boolean().optional(),
+  hasQapageSchema: z.boolean().optional(),
+  hasLlmsTxt: z.boolean().optional(),
+  llmsTxtUrl: z.string().url().optional(),
+  llmsTxtStatus: z.number().int().optional(),
 })
 
 export const crawlPageSnapshotSchema = z.object({

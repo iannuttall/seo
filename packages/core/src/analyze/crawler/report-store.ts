@@ -98,6 +98,13 @@ export function loadCrawlReport(id: string): CrawlReport | undefined {
   return JSON.parse(row.report_json) as CrawlReport
 }
 
+export function deleteCrawlReport(id: string): boolean {
+  const result = getDb()
+    .prepare('DELETE FROM crawl_reports WHERE id = ?')
+    .run(id)
+  return result.changes > 0
+}
+
 export function latestCrawlReport(site?: string): CrawlReport | undefined {
   const row = site
     ? (getDb()

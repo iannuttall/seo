@@ -97,7 +97,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [ ] Add saved crawl reports to local storage.
 - [ ] Store report metadata separately from full report payload.
-- [ ] Support `list`, `show`, `delete`, and `latest`.
+- [x] Support `list`, `show`, `delete`, and `latest`.
 - [ ] Store config hash for idempotent reruns.
 - [ ] Add report ids that are stable enough for agents but do not leak secrets.
 - [ ] Add report status: completed, partial, failed.

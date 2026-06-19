@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
 import { createCrawlReport } from './report.js'
 import {
+  deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
   loadCrawlReport,
@@ -31,5 +32,12 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
   assert.deepEqual(
     listCrawlReports({ site, limit: 2 }).map((item) => item.id),
     [second.id, first.id],
+  )
+  assert.equal(deleteCrawlReport(first.id), true)
+  assert.equal(loadCrawlReport(first.id), undefined)
+  assert.equal(deleteCrawlReport(first.id), false)
+  assert.deepEqual(
+    listCrawlReports({ site, limit: 2 }).map((item) => item.id),
+    [second.id],
   )
 })

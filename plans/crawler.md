@@ -89,7 +89,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Mark issues on URLs with recent clicks, impressions, position, and CTR.
 - [x] Join GA4 landing-page sessions/conversions when a property is available.
 - [x] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
-- [ ] Add a "technical fixes with search value" section to `seo report`.
+- [x] Add a "technical fixes with search value" section to `seo report`.
 - [ ] Add link recovery and redirect recommendations directly into crawl results where evidence exists.
 - [ ] Keep crawl commands usable without Google auth.
 
@@ -138,7 +138,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 10: Human Reports
 
 - [ ] Add crawl caveats to terminal, JSON, and narrative output.
-- [ ] Add a compact technical section to `seo report`.
+- [x] Add a compact technical section to `seo report`.
 - [ ] Add plain-English issue groups with top affected URLs.
 - [ ] Add "how to verify" commands after top fixes.
 - [ ] Add shareable HTML export for crawl reports.

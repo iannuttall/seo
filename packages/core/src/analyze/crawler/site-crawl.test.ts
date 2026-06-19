@@ -6,7 +6,8 @@ import {
   type ServerResponse,
 } from 'node:http'
 import { test } from 'node:test'
-import { crawlSite } from './site-crawl.js'
+import { Response } from 'undici'
+import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
 
 async function withServer(
   handler: (req: IncomingMessage, res: ServerResponse) => void,
@@ -325,4 +326,165 @@ test('crawlSite passes rate controls through the shared fetch layer', async () =
   } finally {
     await fixture.close()
   }
+})
+
+test('crawlSite accepts hosted-safe provider dependencies', async () => {
+  const calls = {
+    fetchUrls: [] as string[],
+    sitemap: 0,
+    searchMetrics: [] as Array<{ site: string; pageUrl: string }>,
+    analytics: [] as Array<{
+      propertyId?: string
+      startDate: string
+      endDate: string
+      limit?: number
+    }>,
+  }
+  const analyticsValues = new Map([
+    [
+      '/',
+      {
+        sessions: 42,
+        totalUsers: 30,
+        conversions: 3,
+      },
+    ],
+  ])
+  const dependencies: CrawlSiteDependencies = {
+    fetchSitemapUrls: async (input) => {
+      calls.sitemap += 1
+      return {
+        sitemapUrl: input.sitemapUrl,
+        urls: [],
+        nestedSitemaps: [],
+        warnings: [],
+      }
+    },
+    fetch: async (url) => {
+      calls.fetchUrls.push(url)
+      if (url.endsWith('/llms.txt')) {
+        return new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        })
+      }
+      return new Response('', { status: 404 })
+    },
+    fetchPage: async (url, options = {}) => ({
+      urls: [],
+      page: {
+        url,
+        finalUrl: url,
+        status: 200,
+        contentType: 'text/html',
+        responseTimeMs: 123,
+        fetchDiagnostics: {
+          source: 'network',
+          cache: 'miss',
+          fetched: true,
+          rendered: false,
+          blocked: false,
+          durationMs: 123,
+          retries: 0,
+          rateLimit: {
+            host: new URL(url).host,
+            concurrency: options.rate?.concurrency ?? 1,
+            intervalCap: 1,
+            intervalMs: 0,
+          },
+        },
+        title: 'Adapter page',
+        metaDescription: 'Adapter meta description.',
+        h1: 'Adapter page',
+        h1Count: 1,
+        h2Count: 0,
+        h3Count: 0,
+        indexable: true,
+        wordCount: 120,
+        contentHash: 'adapter-hash',
+        outgoingInternalCount: 0,
+        outgoingExternalCount: 1,
+        sampleExternalLinks: ['https://external.example/gone'],
+        schemaTypes: ['Article'],
+        geo: {
+          semanticHtml: true,
+          structuredData: true,
+          hasAuthor: true,
+          hasDate: true,
+          questionHeadings: 1,
+          structuredBlocks: 2,
+          answerable: true,
+        },
+      },
+    }),
+    queryPageMetrics: async (site, pageUrl) => {
+      calls.searchMetrics.push({ site, pageUrl })
+      return {
+        clicks: 5,
+        impressions: 100,
+        ctr: 0.05,
+        position: 3.2,
+      }
+    },
+    fetchLandingPageValues: async (input) => {
+      calls.analytics.push(input)
+      return { values: analyticsValues }
+    },
+    landingValueForUrl: (values, url) =>
+      values.get(new URL(url).pathname.replace(/\/$/, '') || '/'),
+    now: () => new Date('2026-06-19T00:00:00.000Z'),
+  }
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      site: 'sc-domain:example.com',
+      ga4PropertyId: 'properties/123',
+      useSitemap: true,
+      checkExternal: true,
+      maxPages: 1,
+      concurrency: 2,
+    },
+    dependencies,
+  )
+
+  assert.equal(report.status, 'partial')
+  assert.equal(calls.sitemap, 1)
+  assert.deepEqual(calls.fetchUrls, [
+    'https://example.com/llms.txt',
+    'https://external.example/gone',
+  ])
+  assert.deepEqual(calls.searchMetrics, [
+    {
+      site: 'sc-domain:example.com',
+      pageUrl: 'https://example.com/',
+    },
+  ])
+  assert.deepEqual(calls.analytics, [
+    {
+      propertyId: 'properties/123',
+      startDate: '2026-05-19',
+      endDate: '2026-06-15',
+      limit: 5000,
+    },
+  ])
+  assert.deepEqual(report.pages[0]?.searchMetrics, {
+    clicks: 5,
+    impressions: 100,
+    ctr: 0.05,
+    position: 3.2,
+  })
+  assert.deepEqual(report.pages[0]?.analytics, {
+    sessions: 42,
+    totalUsers: 30,
+    conversions: 3,
+  })
+  assert.equal(report.pages[0]?.geo?.hasLlmsTxt, true)
+  assert.deepEqual(report.pages[0]?.externalLinkChecks, [
+    { url: 'https://external.example/gone', status: 404 },
+  ])
+  assert.equal(
+    report.issues.some((issue) => issue.ruleId === 'broken_external_link'),
+    true,
+  )
 })

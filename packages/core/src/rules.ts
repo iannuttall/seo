@@ -790,6 +790,59 @@ const RULE_DEFINITIONS = [
     howToVerify: 'Re-run the crawl and confirm the lang field is populated.',
   },
   {
+    id: 'hreflang_invalid',
+    title: 'Invalid hreflang values',
+    category: 'international',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Invalid hreflang codes can be ignored by search engines, which weakens language and region targeting.',
+    howToFix:
+      'Use valid language or language-region codes such as en, en-gb, fr-ca, or x-default.',
+    impactIfIgnored:
+      'Search engines may ignore the annotation and show the wrong regional page.',
+    howToVerify: 'Re-run the crawl and confirm every hreflang value is valid.',
+    agentHints: {
+      evidenceFields: ['page.hreflang', 'issue.evidence.invalid'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'hreflang_duplicate',
+    title: 'Duplicate hreflang values',
+    category: 'international',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Duplicate hreflang declarations create conflicting signals when one language code points to more than one URL.',
+    howToFix:
+      'Keep one URL per hreflang value on each page and remove duplicated alternates.',
+    impactIfIgnored:
+      'Search engines may ignore the duplicate annotations or pick the wrong regional URL.',
+    howToVerify:
+      'Re-run the crawl and confirm each hreflang code appears only once per page.',
+    agentHints: {
+      evidenceFields: ['page.hreflang', 'issue.evidence.duplicateCodes'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'hreflang_incomplete',
+    title: 'Hreflang missing self reference',
+    category: 'international',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Hreflang clusters should include the current page language or x-default so engines can trust the set.',
+    howToFix:
+      'Add a self-referencing hreflang entry, or include x-default when the page is part of an international cluster.',
+    impactIfIgnored:
+      'Search engines may treat the hreflang set as incomplete and show less relevant language variants.',
+    howToVerify:
+      'Re-run the crawl and confirm hreflang includes the page language or x-default.',
+    agentHints: {
+      evidenceFields: ['page.lang', 'page.hreflang'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'structured_data_missing',
     title: 'Structured data missing',
     category: 'structured-data',

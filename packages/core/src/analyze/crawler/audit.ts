@@ -95,6 +95,19 @@ function isHtmlPage(page: CrawlPageSnapshot): boolean {
   return /\bhtml\b/i.test(page.contentType ?? '')
 }
 
+function hreflangPrimary(value?: string): string | undefined {
+  if (!value) return undefined
+  return value.trim().toLowerCase().split('-')[0] || undefined
+}
+
+function validHreflang(value: string): boolean {
+  const normalized = value.trim().toLowerCase()
+  return (
+    normalized === 'x-default' ||
+    /^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/.test(normalized)
+  )
+}
+
 function isValuablePage(page: CrawlPageSnapshot): boolean {
   return (
     (page.searchMetrics?.clicks ?? 0) > 0 ||
@@ -693,6 +706,44 @@ export function auditCrawlPages(
     }
     if (!page.lang) {
       issues.push(issue('lang_missing', page))
+    }
+    const hreflang = page.hreflang ?? []
+    if (hreflang.length) {
+      const invalid = hreflang.filter((item) => !validHreflang(item.hreflang))
+      if (invalid.length) {
+        issues.push(
+          issue('hreflang_invalid', page, `${invalid.length} invalid`, {
+            invalid,
+          }),
+        )
+      }
+      const duplicateCodes = [
+        ...new Set(
+          hreflang
+            .map((item) => item.hreflang.trim().toLowerCase())
+            .filter((code, index, values) => values.indexOf(code) !== index),
+        ),
+      ]
+      if (duplicateCodes.length) {
+        issues.push(
+          issue('hreflang_duplicate', page, duplicateCodes.join(', '), {
+            duplicateCodes,
+          }),
+        )
+      }
+      const pageLang = hreflangPrimary(page.lang)
+      const hasSelfOrDefault = hreflang.some((item) => {
+        const code = item.hreflang.trim().toLowerCase()
+        return code === 'x-default' || hreflangPrimary(code) === pageLang
+      })
+      if (pageLang && !hasSelfOrDefault) {
+        issues.push(
+          issue('hreflang_incomplete', page, page.lang, {
+            lang: page.lang,
+            hreflang,
+          }),
+        )
+      }
     }
     if (!page.schemaTypes?.length) {
       issues.push(issue('structured_data_missing', page))

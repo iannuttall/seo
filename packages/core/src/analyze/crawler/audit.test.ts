@@ -283,6 +283,51 @@ test('auditCrawlPages flags high-value on-page issues', () => {
   )
 })
 
+test('auditCrawlPages flags mobile and international issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/mobile',
+      hasViewport: false,
+      lang: undefined,
+    }),
+    page({
+      url: 'https://example.com/uk',
+      lang: 'en',
+      hreflang: [
+        { hreflang: 'fr-ca', href: 'https://example.com/ca-fr' },
+        { hreflang: 'fr-ca', href: 'https://example.com/ca-fr-copy' },
+        { hreflang: 'english-uk', href: 'https://example.com/uk' },
+      ],
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter(
+        (issue) =>
+          issue.category === 'mobile' || issue.category === 'international',
+      )
+      .map((issue) => issue.ruleId),
+    [
+      'viewport_missing',
+      'lang_missing',
+      'hreflang_invalid',
+      'hreflang_duplicate',
+      'hreflang_incomplete',
+    ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'hreflang_invalid')?.evidence
+      ?.invalid,
+    [{ hreflang: 'english-uk', href: 'https://example.com/uk' }],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'hreflang_duplicate')?.evidence
+      ?.duplicateCodes,
+    ['fr-ca'],
+  )
+})
+
 test('auditCrawlPages flags heading issues', () => {
   const issues = auditCrawlPages([
     page({

@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --sourcemap --clean",
+    "build": "tsup --config tsup.config.ts",
     "clean": "rm -rf dist",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "node --test dist/**/*.test.js",

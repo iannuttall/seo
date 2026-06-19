@@ -4,6 +4,7 @@ import {
   explainRule,
   groupCrawlIssues,
   latestCrawlReport,
+  listCrawlReports,
   loadCrawlReport,
   saveCrawlReport,
 } from '@seo/core'
@@ -157,6 +158,62 @@ export function registerCrawlerTools(server: McpServer): void {
         return toolError(`Unknown rule: ${ruleId}`)
       }
       return toolSuccess(`Rule guidance for ${ruleId}.`, rule)
+    },
+  )
+
+  server.registerTool(
+    'seo_get_crawl_report',
+    {
+      description:
+        'Return a saved crawl report by id, or the latest saved report for an optional site. Compact by default.',
+      inputSchema: {
+        id: z.string().optional(),
+        site: z.string().optional(),
+        includePages: z.boolean().optional(),
+        includeIssues: z.boolean().optional(),
+      },
+    },
+    async ({ id, site, includePages, includeIssues }) => {
+      try {
+        const report = id ? loadCrawlReport(id) : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            id
+              ? `No saved crawl report found for ${id}.`
+              : 'No saved crawl reports found.',
+          )
+        }
+        return toolSuccess(`Saved crawl report ${report.id}.`, {
+          ...compactCrawlResult(report, { includePages, includeIssues }),
+          url: report.config.url,
+          site: report.site,
+          generatedAt: report.generatedAt,
+        })
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_list_crawl_reports',
+    {
+      description:
+        'List saved crawl report metadata, optionally filtered by GSC site/property.',
+      inputSchema: {
+        site: z.string().optional(),
+        limit: z.number().int().positive().optional(),
+      },
+    },
+    async ({ site, limit }) => {
+      try {
+        const reports = listCrawlReports({ site, limit })
+        return toolSuccess(`Found ${reports.length} saved crawl reports.`, {
+          reports,
+        })
+      } catch (error) {
+        return toolError(error)
+      }
     },
   )
 }

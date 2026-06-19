@@ -31,6 +31,8 @@ const pageHeaders = [
   'images_total',
   'images_missing_alt',
   'schema_types',
+  'seo_score',
+  'geo_score',
   'clicks',
   'impressions',
   'sessions',
@@ -69,6 +71,8 @@ export function renderCrawlPagesCsv(report: CrawlReport): string {
       images_total: page.imagesTotal,
       images_missing_alt: page.imagesMissingAlt,
       schema_types: page.schemaTypes?.join('|'),
+      seo_score: page.seoScore,
+      geo_score: page.geoScore,
       clicks: page.searchMetrics?.clicks,
       impressions: page.searchMetrics?.impressions,
       sessions: page.analytics?.sessions,
@@ -88,6 +92,8 @@ export function renderCrawlPretty(
     `Pages: ${report.summary.totalPages}`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
     `Indexable pages: ${report.summary.indexablePages}`,
+    `Technical health score: ${report.summary.healthScore}`,
+    `GEO readiness score: ${report.summary.geoReadinessScore}`,
   ]
 
   if (fixes.length) {

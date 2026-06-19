@@ -255,6 +255,8 @@ export const crawlCommand = defineCommand({
       ['Pages', String(report.summary.totalPages)],
       ['Indexable', String(report.summary.indexablePages)],
       ['Issues', String(report.issues.length)],
+      ['Health score', String(report.summary.healthScore)],
+      ['GEO score', String(report.summary.geoReadinessScore)],
       [
         'GSC pages',
         String(report.pages.filter((page) => page.searchMetrics).length),

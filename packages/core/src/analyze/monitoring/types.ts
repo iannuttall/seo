@@ -57,6 +57,8 @@ export type CrawlPageSnapshot = {
     ctr: number
     position: number
   }
+  seoScore?: number
+  geoScore?: number
   analytics?: {
     sessions: number
     totalUsers: number

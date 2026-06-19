@@ -65,7 +65,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Implement content rules: thin content, duplicate content, low text ratio, missing query coverage when GSC data exists.
 - [x] Implement image rules: missing alt text and oversized image candidates when detectable.
 - [x] Implement performance/security rules: large HTML, no compression, HTTP, mixed content, missing HSTS.
-- [ ] Implement mobile/international rules: missing viewport, missing lang, hreflang issues.
+- [x] Implement mobile/international rules: missing viewport, missing lang, hreflang issues.
 - [ ] Implement social/schema rules: missing Open Graph, missing Twitter card, missing structured data, invalid JSON-LD parse.
 - [ ] Implement GEO rules: no machine-readable structure, weak semantic HTML, missing author/date, not answer-ready, too thin to cite, missing `llms.txt`.
 - [x] Keep every issue tied to a rule id and concrete evidence.

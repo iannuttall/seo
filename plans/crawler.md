@@ -13,7 +13,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Make crawler operations idempotent: same input config should produce reusable report ids, deterministic cache keys, and safe repeat runs.
 - [x] Keep CLI and MCP thin; put crawler logic, rules, scoring, and persistence in `packages/core`.
 - [x] Treat crawl data as durable evidence that other reports can reuse, not disposable command output.
-- [ ] Keep local-only assumptions out of core types where practical, so hosted API support is an adapter later.
+- [x] Keep local-only assumptions out of core types where practical, so hosted API support is an adapter later.
 
 ## Phase 1: Shared Rule System
 

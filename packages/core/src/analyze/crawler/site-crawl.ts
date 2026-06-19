@@ -33,6 +33,33 @@ type ExternalLinkCheck = {
   error?: string
 }
 
+type ResolvedCrawlSiteDependencies = {
+  fetchPage: typeof crawlOne
+  fetchSitemapUrls: typeof fetchSitemapUrls
+  fetch: typeof publicHttpFetch
+  queryPageMetrics: typeof queryPageMetrics
+  fetchLandingPageValues: typeof fetchLandingPageValues
+  landingValueForUrl: typeof landingValueForUrl
+  now: () => Date
+}
+
+export type CrawlSiteDependencies = Partial<ResolvedCrawlSiteDependencies>
+
+function resolveCrawlSiteDependencies(
+  dependencies: CrawlSiteDependencies = {},
+): ResolvedCrawlSiteDependencies {
+  return {
+    fetchPage: dependencies.fetchPage ?? crawlOne,
+    fetchSitemapUrls: dependencies.fetchSitemapUrls ?? fetchSitemapUrls,
+    fetch: dependencies.fetch ?? publicHttpFetch,
+    queryPageMetrics: dependencies.queryPageMetrics ?? queryPageMetrics,
+    fetchLandingPageValues:
+      dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
+    landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
+    now: dependencies.now ?? (() => new Date()),
+  }
+}
+
 function normalizeUrl(value: string, base?: string): string | undefined {
   try {
     const url = base ? new URL(value, base) : new URL(value)
@@ -90,9 +117,10 @@ async function sitemapSeeds(input: {
   url: string
   maxPages: number
   warnings: string[]
+  fetchSitemapUrls: typeof fetchSitemapUrls
 }): Promise<string[]> {
   const sitemapUrl = new URL('/sitemap.xml', input.url).toString()
-  const sitemap = await fetchSitemapUrls({
+  const sitemap = await input.fetchSitemapUrls({
     sitemapUrl,
     limit: input.maxPages,
   })
@@ -103,6 +131,7 @@ async function sitemapSeeds(input: {
 async function checkLlmsTxt(input: {
   url: string
   timeoutMs: number
+  fetch: typeof publicHttpFetch
 }): Promise<LlmsTxtSignal> {
   const llmsUrl = new URL('/llms.txt', input.url).toString()
   const controller = new AbortController()
@@ -112,7 +141,7 @@ async function checkLlmsTxt(input: {
   )
 
   try {
-    const response = await publicHttpFetch(llmsUrl, {
+    const response = await input.fetch(llmsUrl, {
       profile: 'bot',
       redirect: 'follow',
       signal: controller.signal,
@@ -138,12 +167,13 @@ async function checkLlmsTxt(input: {
 async function checkExternalLink(
   url: string,
   timeoutMs: number,
+  fetch: typeof publicHttpFetch,
 ): Promise<ExternalLinkCheck> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 5_000))
 
   try {
-    const response = await publicHttpFetch(url, {
+    const response = await fetch(url, {
       method: 'HEAD',
       redirect: 'follow',
       signal: controller.signal,
@@ -164,6 +194,7 @@ async function checkExternalLink(
 async function verifyExternalLinks(input: {
   pages: CrawlReport['pages']
   timeoutMs: number
+  fetch: typeof publicHttpFetch
 }): Promise<void> {
   const urls = [
     ...new Set(
@@ -178,7 +209,7 @@ async function verifyExternalLinks(input: {
   for (let index = 0; index < urls.length; index += 8) {
     const batch = urls.slice(index, index + 8)
     const results = await Promise.all(
-      batch.map((url) => checkExternalLink(url, input.timeoutMs)),
+      batch.map((url) => checkExternalLink(url, input.timeoutMs, input.fetch)),
     )
     for (const result of results) checks.set(result.url, result)
   }
@@ -191,7 +222,11 @@ async function verifyExternalLinks(input: {
   }
 }
 
-export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
+export async function crawlSite(
+  input: CrawlConfigInput,
+  dependencies?: CrawlSiteDependencies,
+): Promise<CrawlReport> {
+  const deps = resolveCrawlSiteDependencies(dependencies)
   const config = normalizeCrawlConfig(input)
   const site = input.site
   const origin = new URL(config.url).origin
@@ -207,6 +242,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const llmsTxt = await checkLlmsTxt({
     url: config.url,
     timeoutMs: config.timeoutMs,
+    fetch: deps.fetch,
   })
   let queuedUrls = 0
   let skippedUrls = 0
@@ -257,6 +293,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       url: config.url,
       maxPages: config.maxPages,
       warnings,
+      fetchSitemapUrls: deps.fetchSitemapUrls,
     })) {
       enqueue(url, 0)
     }
@@ -279,14 +316,16 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     let task: CrawlTask
     task = {
       ...item,
-      promise: crawlOne(item.url, {
-        js: config.js,
-        timeoutMs: config.timeoutMs,
-        rate: { concurrency: config.concurrency },
-      }).then((result) => ({
-        task,
-        result,
-      })),
+      promise: deps
+        .fetchPage(item.url, {
+          js: config.js,
+          timeoutMs: config.timeoutMs,
+          rate: { concurrency: config.concurrency },
+        })
+        .then((result) => ({
+          task,
+          result,
+        })),
     }
     inFlight.add(task)
   }
@@ -350,6 +389,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       pages,
       warnings,
       limit: input.searchMetricsLimit ?? 25,
+      queryPageMetrics: deps.queryPageMetrics,
     })
   }
   if (input.ga4PropertyId) {
@@ -358,10 +398,17 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       pages,
       warnings,
       limit: input.analyticsLimit ?? 5000,
+      fetchLandingPageValues: deps.fetchLandingPageValues,
+      landingValueForUrl: deps.landingValueForUrl,
+      now: deps.now,
     })
   }
   if (config.checkExternal) {
-    await verifyExternalLinks({ pages, timeoutMs: config.timeoutMs })
+    await verifyExternalLinks({
+      pages,
+      timeoutMs: config.timeoutMs,
+      fetch: deps.fetch,
+    })
   }
 
   for (const page of pages) {
@@ -403,13 +450,16 @@ async function joinAnalytics(input: {
   pages: CrawlReport['pages']
   warnings: string[]
   limit: number
+  fetchLandingPageValues: typeof fetchLandingPageValues
+  landingValueForUrl: typeof landingValueForUrl
+  now: () => Date
 }): Promise<void> {
-  const endDate = new Date()
+  const endDate = input.now()
   endDate.setUTCDate(endDate.getUTCDate() - 4)
   const startDate = new Date(endDate)
   startDate.setUTCDate(startDate.getUTCDate() - 27)
 
-  const analytics = await fetchLandingPageValues({
+  const analytics = await input.fetchLandingPageValues({
     propertyId: input.propertyId,
     startDate: startDate.toISOString().slice(0, 10),
     endDate: endDate.toISOString().slice(0, 10),
@@ -422,7 +472,7 @@ async function joinAnalytics(input: {
 
   let joined = 0
   for (const page of input.pages) {
-    const value = landingValueForUrl(analytics.values, page.finalUrl)
+    const value = input.landingValueForUrl(analytics.values, page.finalUrl)
     if (!value) continue
     page.analytics = value
     joined += 1
@@ -437,11 +487,12 @@ async function joinSearchMetrics(input: {
   pages: CrawlReport['pages']
   warnings: string[]
   limit: number
+  queryPageMetrics: typeof queryPageMetrics
 }): Promise<void> {
   const pages = input.pages.slice(0, input.limit)
   for (const page of pages) {
     try {
-      const metrics = await queryPageMetrics(input.site, page.finalUrl)
+      const metrics = await input.queryPageMetrics(input.site, page.finalUrl)
       if (metrics) page.searchMetrics = metrics
     } catch (error) {
       input.warnings.push(

@@ -121,19 +121,19 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 9: MCP Surface
 
-- [ ] Add `seo_crawl_site`.
+- [x] Add `seo_crawl_site`.
 - [ ] Add `seo_audit_urls`.
-- [ ] Add `seo_explain_issue`.
+- [x] Add `seo_explain_issue`.
 - [x] Add `seo_list_rules`.
-- [ ] Add `seo_top_fixes`.
+- [x] Add `seo_top_fixes`.
 - [ ] Add `seo_affected_urls`.
 - [ ] Add `seo_geo_gaps`.
 - [x] Add `seo_get_crawl_report`.
 - [x] Add `seo_list_crawl_reports`.
-- [ ] Keep MCP crawl results compact by default.
-- [ ] Make full pages/issues opt-in.
-- [ ] Return pre-digested slices so agents do not need to aggregate huge payloads.
-- [ ] Make saved report tools operate without re-crawling.
+- [x] Keep MCP crawl results compact by default.
+- [x] Make full pages/issues opt-in.
+- [x] Return pre-digested slices so agents do not need to aggregate huge payloads.
+- [x] Make saved report tools operate without re-crawling.
 
 ## Phase 10: Human Reports
 

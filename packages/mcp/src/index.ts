@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerClientTools } from './client-tools.js'
+import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDataTools } from './data-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
@@ -25,6 +26,7 @@ export function createServer(): McpServer {
   registerDiagnosisTools(server)
   registerOpportunityTools(server)
   registerAiOpportunityTools(server)
+  registerCrawlerTools(server)
   registerMonitoringTools(server)
   registerReportTools(server)
   registerExperimentTools(server)

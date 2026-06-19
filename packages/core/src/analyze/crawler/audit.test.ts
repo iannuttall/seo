@@ -25,7 +25,12 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
     imagesMissingAlt: 0,
     outgoingInternalCount: 1,
     schemaTypes: ['Article'],
+    invalidJsonLdCount: 0,
+    invalidJsonLdSamples: [],
     openGraphTitle: 'A useful page title for search teams',
+    openGraphDescription:
+      'A useful page description that explains the page value for sharing.',
+    openGraphImage: 'https://example.com/share.jpg',
     twitterCard: 'summary',
     geo: {
       semanticHtml: true,
@@ -601,7 +606,16 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
     page({
       internalInlinkCount: 1,
       schemaTypes: [],
+      invalidJsonLdCount: 1,
+      invalidJsonLdSamples: [
+        {
+          snippet: '{"@context":"https://schema.org"',
+          error: 'Unexpected end',
+        },
+      ],
       openGraphTitle: undefined,
+      openGraphDescription: undefined,
+      openGraphImage: undefined,
       twitterCard: undefined,
       geo: {
         semanticHtml: false,
@@ -619,13 +633,21 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
     issues.map((issue) => issue.ruleId),
     [
       'structured_data_missing',
+      'jsonld_invalid',
       'og_title_missing',
+      'og_description_missing',
+      'og_image_missing',
       'twitter_card_missing',
       'geo_no_structured_data',
       'geo_not_answerable',
       'geo_no_author',
       'geo_no_semantic_html',
     ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'jsonld_invalid')?.evidence
+      ?.invalidJsonLdSamples,
+    [{ snippet: '{"@context":"https://schema.org"', error: 'Unexpected end' }],
   )
 })
 

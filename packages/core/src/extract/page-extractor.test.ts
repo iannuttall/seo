@@ -43,6 +43,8 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <meta name="author" content="Jane Editor">
           <meta property="og:title" content="Widget Guide OG">
+          <meta property="og:description" content="Widget Guide OG description">
+          <meta property="og:image" content="https://example.com/share.jpg">
           <meta property="article:published_time" content="2026-06-18T12:00:00Z">
           <meta name="twitter:card" content="summary_large_image">
           <link rel="canonical" href="/articles/widget-guide">
@@ -60,6 +62,7 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
               }
             }
           </script>
+          <script type="application/ld+json">{ "@context": "https://schema.org"</script>
         </head>
         <body>
           <main>
@@ -123,7 +126,11 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
     'http://cdn.example/insecure.js',
   ])
   assert.deepEqual(page.schemaTypes.sort(), ['Article', 'FAQPage', 'Person'])
+  assert.equal(page.invalidJsonLdCount, 1)
+  assert.match(page.invalidJsonLdSamples[0]?.snippet ?? '', /@context/)
   assert.equal(page.openGraph['og:title'], 'Widget Guide OG')
+  assert.equal(page.openGraph['og:description'], 'Widget Guide OG description')
+  assert.equal(page.openGraph['og:image'], 'https://example.com/share.jpg')
   assert.equal(page.twitter['twitter:card'], 'summary_large_image')
   assert.equal(page.author, 'Jane Editor')
   assert.equal(page.hasAuthor, true)

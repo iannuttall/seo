@@ -857,6 +857,27 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm schemaTypes includes the expected schema.',
   },
   {
+    id: 'jsonld_invalid',
+    title: 'Invalid JSON-LD',
+    category: 'structured-data',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Broken JSON-LD can make structured data unreadable even when the right schema was intended.',
+    howToFix:
+      'Fix the JSON syntax in each application/ld+json script. Validate quotes, commas, braces, and any server-rendered values inserted into the block.',
+    impactIfIgnored:
+      'Search and AI systems may ignore the structured data, which weakens rich-result and citation context.',
+    howToVerify:
+      'Re-run the crawl and confirm invalidJsonLdCount is zero, then validate the page with a structured data tester.',
+    agentHints: {
+      evidenceFields: [
+        'page.invalidJsonLdSamples',
+        'issue.evidence.invalidJsonLdSamples',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'og_title_missing',
     title: 'Open Graph title missing',
     category: 'social',
@@ -868,6 +889,33 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'Shared links can look generic, reducing clicks from social and messaging apps.',
     howToVerify: 'Re-run the crawl and confirm openGraphTitle is present.',
+  },
+  {
+    id: 'og_description_missing',
+    title: 'Open Graph description missing',
+    category: 'social',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'The Open Graph description is often the short pitch shown when a page is shared in chat, Slack, social feeds, and link previews.',
+    howToFix:
+      'Add an og:description that briefly explains why the page is worth opening.',
+    impactIfIgnored:
+      'Shared links can appear vague or empty, which reduces clicks from discovery surfaces.',
+    howToVerify:
+      'Re-run the crawl and confirm openGraphDescription is present.',
+  },
+  {
+    id: 'og_image_missing',
+    title: 'Open Graph image missing',
+    category: 'social',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'An Open Graph image helps shared links stand out and makes previews feel trustworthy and complete.',
+    howToFix:
+      'Add an og:image URL with a representative image that crawlers can fetch over HTTPS.',
+    impactIfIgnored:
+      'Shared links may render without a visual preview, reducing click appeal.',
+    howToVerify: 'Re-run the crawl and confirm openGraphImage is present.',
   },
   {
     id: 'twitter_card_missing',

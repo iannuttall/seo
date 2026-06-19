@@ -21,8 +21,7 @@ import {
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printKeyValue, printTable } from '../utils.js'
-import { printNotes, truncate } from './output.js'
+import { printKeyValue } from '../utils.js'
 import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'
@@ -249,58 +248,14 @@ export const crawlCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['URL', report.config.url],
-      ['Status', report.status],
-      ['Pages', String(report.summary.totalPages)],
-      ['Discovered', String(report.summary.discoveredUrls)],
-      ['Queued', String(report.summary.queuedUrls)],
-      ['Skipped', String(report.summary.skippedUrls)],
-      ['Failed fetches', String(report.summary.failedUrls)],
-      ['Verified links', String(report.summary.verifiedLinks)],
-      ['Indexable', String(report.summary.indexablePages)],
-      ['Issues', String(report.issues.length)],
-      ['Health score', String(report.summary.healthScore)],
-      ['GEO score', String(report.summary.geoReadinessScore)],
-      [
-        'GSC pages',
-        String(report.pages.filter((page) => page.searchMetrics).length),
-      ],
-      [
-        'GA4 pages',
-        String(report.pages.filter((page) => page.analytics).length),
-      ],
-      ['High', String(report.summary.highIssues)],
-      ['Medium', String(report.summary.mediumIssues)],
-      ['Low', String(report.summary.lowIssues)],
-      ['Saved report', saved?.id ?? 'no'],
-      ['Fail threshold', failOn ?? 'off'],
-    ])
-
-    if (rankedFixes.length) {
-      process.stdout.write('\nTop fixes\n')
-      printTable(
-        ['Score', 'Severity', 'Rule', 'Count', 'Search', 'Sample URL'],
-        rankedFixes.map((fix) => [
-          fix.score,
-          fix.severity,
-          fix.ruleId,
-          fix.count,
-          `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.impressions} impr.`,
-          truncate(fix.sampleUrls[0] ?? '', 64),
-        ]),
-      )
-
-      process.stdout.write('\nPlain English fixes\n')
-      for (const fix of rankedFixes.slice(0, 3)) {
-        process.stdout.write(
-          `- ${fix.title}: ${fix.howToFix}\n  Affected: ${fix.sampleUrls.slice(0, 3).join(', ')}\n  Verify: ${fix.howToVerify}\n  Command: ${fix.verification.command}\n`,
-        )
-      }
+    process.stdout.write(renderCrawlPretty(report, rankedFixes))
+    if (saved || failOn) {
+      process.stdout.write('\nRun metadata\n')
+      printKeyValue([
+        ['Saved report', saved?.id ?? 'no'],
+        ['Fail threshold', failOn ?? 'off'],
+      ])
     }
-
-    printNotes('Warnings', report.warnings.slice(0, 10))
-    printNotes('Caveats', report.caveats)
     if (failedThreshold) {
       process.exitCode = 1
     }

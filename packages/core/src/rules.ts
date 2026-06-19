@@ -194,6 +194,46 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'canonical_non_absolute',
+    title: 'Canonical is not absolute',
+    category: 'canonical',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Search engines can usually resolve relative canonicals, but absolute canonical URLs are clearer and less fragile across mirrors, previews, and rendered variants.',
+    howToFix:
+      'Use a full https URL in the canonical tag, including protocol, host, and path.',
+    impactIfIgnored:
+      'Canonical signals are easier to misread when pages are copied, proxied, or rendered from alternate origins.',
+    howToVerify:
+      'Re-run the crawl and confirm canonicalRaw starts with http:// or https://.',
+    agentHints: {
+      evidenceFields: ['page.canonicalRaw', 'page.canonical'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'canonical_chain',
+    title: 'Canonical chain',
+    category: 'canonical',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'A canonical that points to another URL which then canonicalizes again creates an indirect consolidation path.',
+    howToFix:
+      'Point the first page directly at the final preferred URL, or make the intermediate canonical target self-referencing.',
+    impactIfIgnored:
+      'Search engines may ignore or reinterpret the canonical path, especially at scale.',
+    howToVerify:
+      'Re-run the crawl and confirm the canonical target is self-referencing.',
+    agentHints: {
+      evidenceFields: [
+        'page.canonical',
+        'issue.evidence.nextCanonical',
+        'issue.evidence.chain',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'connection_error',
     title: 'Connection error',
     category: 'response',

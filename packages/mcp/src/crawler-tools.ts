@@ -5,6 +5,7 @@ import {
   groupCrawlIssues,
   latestCrawlReport,
   listCrawlReports,
+  listRules,
   loadCrawlReport,
   saveCrawlReport,
 } from '@seo/core'
@@ -158,6 +159,25 @@ export function registerCrawlerTools(server: McpServer): void {
         return toolError(`Unknown rule: ${ruleId}`)
       }
       return toolSuccess(`Rule guidance for ${ruleId}.`, rule)
+    },
+  )
+
+  server.registerTool(
+    'seo_list_rules',
+    {
+      description:
+        'List crawler rule ids and guidance metadata. Use this before seo_explain_issue when you need valid rule ids.',
+      inputSchema: {
+        category: z.string().optional(),
+      },
+    },
+    async ({ category }) => {
+      const rules = listRules().filter((rule) =>
+        category ? rule.category === category : true,
+      )
+      return toolSuccess(`Found ${rules.length} crawler rules.`, {
+        rules,
+      })
     },
   )
 

@@ -139,8 +139,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [ ] Add crawl caveats to terminal, JSON, and narrative output.
 - [x] Add a compact technical section to `seo report`.
-- [ ] Add plain-English issue groups with top affected URLs.
-- [ ] Add "how to verify" commands after top fixes.
+- [x] Add plain-English issue groups with top affected URLs.
+- [x] Add "how to verify" commands after top fixes.
 - [x] Add shareable HTML export for crawl reports.
 - [ ] Add CSV export for issues and pages.
 - [ ] Add markdown export for agent-created implementation tickets.

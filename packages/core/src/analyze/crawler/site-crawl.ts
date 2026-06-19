@@ -1,5 +1,6 @@
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
+import { auditCrawlPages } from './audit.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 import type { CrawlConfigInput, CrawlReport } from './report.js'
 
@@ -189,6 +190,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   return createCrawlReport({
     config,
     pages,
+    issues: auditCrawlPages(pages),
     status: partial ? 'partial' : 'completed',
     warnings,
     caveats:

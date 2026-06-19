@@ -106,3 +106,35 @@ test('crawl report store recomputes derived fields on load', () => {
   assert.equal(loaded?.pages[0]?.geoScore, 15)
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
 })
+
+test('crawl report loading stays idempotent after derived normalization', () => {
+  const site = `sc-domain:idempotent-${randomUUID()}.example`
+  const report = createCrawlReport({
+    site,
+    generatedAt: '2026-06-19T00:04:00.000Z',
+    config: { url: `https://${site.slice('sc-domain:'.length)}/` },
+    pages: [
+      {
+        url: `https://${site.slice('sc-domain:'.length)}/`,
+        finalUrl: `https://${site.slice('sc-domain:'.length)}/`,
+        status: 200,
+        indexable: true,
+        wordCount: 500,
+        contentHash: 'idempotent',
+        outgoingInternalCount: 0,
+      },
+    ],
+  })
+
+  saveCrawlReport(report)
+
+  const firstLoad = loadCrawlReport(report.id)
+  const secondLoad = loadCrawlReport(report.id)
+
+  assert.equal(firstLoad?.id, report.id)
+  assert.equal(secondLoad?.id, report.id)
+  assert.equal(firstLoad?.configHash, report.configHash)
+  assert.equal(secondLoad?.configHash, report.configHash)
+  assert.deepEqual(firstLoad?.summary, secondLoad?.summary)
+  assert.deepEqual(firstLoad?.pages, secondLoad?.pages)
+})

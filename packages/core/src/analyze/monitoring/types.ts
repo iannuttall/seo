@@ -52,6 +52,7 @@ export type CrawlPageSnapshot = {
   sampleExternalLinks?: string[]
   internalAnchorSamples?: Array<{ href: string; text: string }>
   externalAnchorSamples?: Array<{ href: string; text: string }>
+  externalLinkChecks?: Array<{ url: string; status?: number; error?: string }>
   schemaTypes?: string[]
   openGraphTitle?: string
   openGraphImage?: string

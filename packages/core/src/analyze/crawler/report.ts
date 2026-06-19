@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import { auditCrawlPages } from './audit.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 
@@ -378,11 +379,13 @@ export function createCrawlReport(input: {
   generatedAt?: string
 }): CrawlReport {
   const config = normalizeCrawlConfig(input.config)
-  const issues = input.issues ?? []
-  const pages = scorePages(
-    deriveInternalLinkAuthority(input.pages ?? [], input.linkGraph),
-    issues,
+  const pagesWithLinks = deriveInternalLinkAuthority(
+    input.pages ?? [],
+    input.linkGraph,
   )
+  const issues =
+    input.issues ?? auditCrawlPages(pagesWithLinks, { startUrl: config.url })
+  const pages = scorePages(pagesWithLinks, issues)
   return {
     id: crawlReportId({
       config,

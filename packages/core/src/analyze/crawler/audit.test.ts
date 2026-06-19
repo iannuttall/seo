@@ -112,6 +112,58 @@ test('auditCrawlPages flags redirect chains and slow responses', () => {
   assert.equal(issues[2]?.evidence?.thresholdMs, 2000)
 })
 
+test('auditCrawlPages flags link issues', () => {
+  const issues = auditCrawlPages(
+    [
+      page({
+        url: 'https://example.com/missing',
+        finalUrl: 'https://example.com/missing',
+        status: 404,
+        internalInlinkCount: 2,
+      }),
+      page({
+        url: 'https://example.com/source',
+        externalLinkChecks: [
+          { url: 'https://external.example/missing', status: 404 },
+        ],
+      }),
+      page({
+        url: 'https://example.com/orphan',
+        internalInlinkCount: 0,
+      }),
+      page({
+        url: 'https://example.com/deep',
+        internalInlinkCount: 2,
+        crawlDepth: 5,
+      }),
+      page({
+        url: 'https://example.com/money',
+        internalInlinkCount: 1,
+        searchMetrics: {
+          clicks: 5,
+          impressions: 200,
+          ctr: 0.025,
+          position: 6,
+        },
+      }),
+    ],
+    { startUrl: 'https://example.com/source' },
+  )
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'links')
+      .map((issue) => issue.ruleId),
+    [
+      'broken_internal_link',
+      'broken_external_link',
+      'orphan_page',
+      'deep_page',
+      'weak_internal_links_to_valuable_page',
+    ],
+  )
+})
+
 test('auditCrawlPages flags high-value on-page issues', () => {
   const issues = auditCrawlPages([
     page({
@@ -150,6 +202,7 @@ test('auditCrawlPages flags high-value on-page issues', () => {
 test('auditCrawlPages flags social, schema, and GEO gaps', () => {
   const issues = auditCrawlPages([
     page({
+      internalInlinkCount: 1,
       schemaTypes: [],
       openGraphTitle: undefined,
       twitterCard: undefined,

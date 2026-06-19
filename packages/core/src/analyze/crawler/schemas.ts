@@ -176,6 +176,15 @@ export const crawlPageSnapshotSchema = z.object({
   externalAnchorSamples: z
     .array(z.object({ href: z.string().url(), text: z.string() }))
     .optional(),
+  externalLinkChecks: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        status: z.number().int().optional(),
+        error: z.string().optional(),
+      }),
+    )
+    .optional(),
   schemaTypes: z.array(z.string()).optional(),
   openGraphTitle: z.string().optional(),
   openGraphImage: z.string().optional(),

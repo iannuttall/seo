@@ -24,6 +24,8 @@ function sameUrl(a?: string, b?: string): boolean {
 }
 
 const SLOW_RESPONSE_MS = 2_000
+const DEEP_PAGE_DEPTH = 4
+const WEAK_VALUABLE_INLINKS = 1
 
 function issue(
   ruleId: RuleId,
@@ -47,7 +49,24 @@ function issue(
   }
 }
 
-export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
+function isBrokenLinkStatus(status?: number): boolean {
+  return (
+    status === 0 || status === 404 || status === 410 || (status ?? 0) >= 500
+  )
+}
+
+function isValuablePage(page: CrawlPageSnapshot): boolean {
+  return (
+    (page.searchMetrics?.clicks ?? 0) > 0 ||
+    (page.searchMetrics?.impressions ?? 0) >= 100 ||
+    (page.analytics?.sessions ?? 0) >= 25
+  )
+}
+
+export function auditCrawlPages(
+  pages: CrawlPageSnapshot[],
+  opts: { startUrl?: string } = {},
+): CrawlIssue[] {
   const issues: CrawlIssue[] = []
 
   for (const page of pages) {
@@ -66,6 +85,14 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
           status: page.status,
         }),
       )
+      if ((page.internalInlinkCount ?? 0) > 0) {
+        issues.push(
+          issue('broken_internal_link', page, String(page.status), {
+            status: page.status,
+            internalInlinkCount: page.internalInlinkCount,
+          }),
+        )
+      }
       continue
     }
     if (page.status >= 400) {
@@ -74,6 +101,17 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
           status: page.status,
         }),
       )
+      if (
+        isBrokenLinkStatus(page.status) &&
+        (page.internalInlinkCount ?? 0) > 0
+      ) {
+        issues.push(
+          issue('broken_internal_link', page, String(page.status), {
+            status: page.status,
+            internalInlinkCount: page.internalInlinkCount,
+          }),
+        )
+      }
       continue
     }
     if (page.status >= 300) {
@@ -112,6 +150,53 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
           responseTimeMs: page.responseTimeMs,
           thresholdMs: SLOW_RESPONSE_MS,
         }),
+      )
+    }
+    for (const link of page.externalLinkChecks ?? []) {
+      if (!isBrokenLinkStatus(link.status)) continue
+      issues.push(
+        issue('broken_external_link', page, link.url, {
+          url: link.url,
+          status: link.status,
+          error: link.error,
+        }),
+      )
+    }
+    if (
+      page.indexable &&
+      (page.internalInlinkCount ?? 0) === 0 &&
+      !sameUrl(page.url, opts.startUrl)
+    ) {
+      issues.push(
+        issue('orphan_page', page, 'No internal inlinks', {
+          internalInlinkCount: page.internalInlinkCount ?? 0,
+        }),
+      )
+    }
+    if ((page.crawlDepth ?? 0) > DEEP_PAGE_DEPTH) {
+      issues.push(
+        issue('deep_page', page, `Depth ${page.crawlDepth}`, {
+          crawlDepth: page.crawlDepth,
+          threshold: DEEP_PAGE_DEPTH,
+        }),
+      )
+    }
+    if (
+      page.indexable &&
+      isValuablePage(page) &&
+      (page.internalInlinkCount ?? 0) <= WEAK_VALUABLE_INLINKS
+    ) {
+      issues.push(
+        issue(
+          'weak_internal_links_to_valuable_page',
+          page,
+          `${page.internalInlinkCount ?? 0} internal inlinks`,
+          {
+            internalInlinkCount: page.internalInlinkCount ?? 0,
+            searchMetrics: page.searchMetrics,
+            analytics: page.analytics,
+          },
+        ),
       )
     }
 

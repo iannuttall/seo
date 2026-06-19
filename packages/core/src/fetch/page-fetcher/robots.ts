@@ -17,6 +17,7 @@ function parseRobots(robotsUrl: string, text: string) {
 
 export async function fetchRobots(
   origin: string,
+  targetUrl = origin,
   refresh = false,
 ): Promise<RobotsResult> {
   const db = getDb()
@@ -35,7 +36,7 @@ export async function fetchRobots(
     const text = cached.body_blob.toString('utf8')
     const parsed = parseRobots(robotsUrl, text)
     return {
-      allowed: parsed.isAllowed(origin, BROWSER_USER_AGENT) ?? true,
+      allowed: parsed.isAllowed(targetUrl, BROWSER_USER_AGENT) ?? true,
       cache: 'hit',
       url: robotsUrl,
     }
@@ -48,7 +49,7 @@ export async function fetchRobots(
     const text = await response.text()
     const parsed = parseRobots(robotsUrl, text)
     const result = {
-      allowed: parsed.isAllowed(origin, BROWSER_USER_AGENT) ?? true,
+      allowed: parsed.isAllowed(targetUrl, BROWSER_USER_AGENT) ?? true,
       cache: refresh ? ('bypass' as const) : ('miss' as const),
       url: robotsUrl,
     }

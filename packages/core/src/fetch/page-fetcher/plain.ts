@@ -60,7 +60,7 @@ export async function fetchPlain(
     }
   }
 
-  const robots = await fetchRobots(new URL(url).origin, refresh)
+  const robots = await fetchRobots(new URL(url).origin, url, refresh)
   const beforeFetch = await waitForHostBackpressure(host, rate)
   let attempts = 0
 

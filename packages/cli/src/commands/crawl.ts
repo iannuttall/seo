@@ -1,6 +1,14 @@
 import { crawlSite } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  csvArg,
+  jsonFlag,
+  numberArg,
+  projectArg,
+  stringArg,
+} from '../args.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printNotes, truncate } from './output.js'
 
@@ -14,6 +22,18 @@ export const crawlCommand = defineCommand({
       type: 'string',
       required: true,
       description: 'Start URL to crawl.',
+    },
+    site: {
+      type: 'string',
+      description: 'GSC property URL for joining page metrics.',
+    },
+    client: {
+      type: 'string',
+      description: 'Legacy alias for --project.',
+    },
+    project: {
+      type: 'string',
+      description: 'Saved project id or name.',
     },
     mode: {
       type: 'string',
@@ -72,8 +92,19 @@ export const crawlCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const json = jsonFlag(args)
+    const project = projectArg(args)
+    const selection =
+      stringArg(args.site) || project
+        ? await resolveClientSelection({
+            client: project,
+            site: stringArg(args.site),
+            options: { json },
+          })
+        : undefined
     const report = await crawlSite({
       url: stringArg(args.url) ?? '',
+      site: selection?.site,
       mode: crawlModeArg(args.mode),
       urls: csvArg(args.urls),
       maxPages: numberArg(args['max-pages']),
@@ -87,7 +118,7 @@ export const crawlCommand = defineCommand({
       js: booleanArg(args.js) ? true : false,
     })
 
-    if (jsonFlag(args)) {
+    if (json) {
       printJson(report)
       return
     }
@@ -98,6 +129,10 @@ export const crawlCommand = defineCommand({
       ['Pages', String(report.summary.totalPages)],
       ['Indexable', String(report.summary.indexablePages)],
       ['Issues', String(report.issues.length)],
+      [
+        'GSC pages',
+        String(report.pages.filter((page) => page.searchMetrics).length),
+      ],
       ['High', String(report.summary.highIssues)],
       ['Medium', String(report.summary.mediumIssues)],
       ['Low', String(report.summary.lowIssues)],

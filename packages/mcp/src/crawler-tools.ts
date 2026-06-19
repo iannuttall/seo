@@ -30,6 +30,7 @@ export function registerCrawlerTools(server: McpServer): void {
         'Crawl a site and run technical SEO/GEO checks. Compact by default; set includePages/includeIssues for raw data.',
       inputSchema: {
         url: z.string().url(),
+        site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
         concurrency: z.number().int().positive().optional(),
@@ -44,6 +45,7 @@ export function registerCrawlerTools(server: McpServer): void {
     },
     async ({
       url,
+      site,
       maxPages,
       maxDepth,
       concurrency,
@@ -58,6 +60,7 @@ export function registerCrawlerTools(server: McpServer): void {
       try {
         const report = await crawlSite({
           url,
+          site,
           maxPages,
           maxDepth,
           concurrency,
@@ -84,15 +87,16 @@ export function registerCrawlerTools(server: McpServer): void {
         'Return top technical SEO/GEO fixes for a URL by running a compact crawl.',
       inputSchema: {
         url: z.string().url(),
+        site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
         category: z.string().optional(),
         limit: z.number().int().positive().optional(),
       },
     },
-    async ({ url, maxPages, maxDepth, category, limit }) => {
+    async ({ url, site, maxPages, maxDepth, category, limit }) => {
       try {
-        const report = await crawlSite({ url, maxPages, maxDepth })
+        const report = await crawlSite({ url, site, maxPages, maxDepth })
         const groups = groupCrawlIssues(
           category
             ? report.issues.filter((issue) => issue.category === category)

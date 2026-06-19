@@ -1,3 +1,4 @@
+import { queryPageMetrics } from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { auditCrawlPages } from './audit.js'
@@ -85,6 +86,7 @@ async function sitemapSeeds(input: {
 
 export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const config = normalizeCrawlConfig(input)
+  const site = input.site
   const origin = new URL(config.url).origin
   const warnings: string[] = []
   const queue: QueueItem[] = []
@@ -187,8 +189,18 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     inFlight.size > 0 ||
     warnings.length > 0
 
+  if (site) {
+    await joinSearchMetrics({
+      site,
+      pages,
+      warnings,
+      limit: input.searchMetricsLimit ?? 25,
+    })
+  }
+
   return createCrawlReport({
     config,
+    site,
     pages,
     issues: auditCrawlPages(pages),
     status: partial ? 'partial' : 'completed',
@@ -198,4 +210,29 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
         ? [`Stopped after reaching maxPages (${config.maxPages}).`]
         : [],
   })
+}
+
+async function joinSearchMetrics(input: {
+  site: string
+  pages: CrawlReport['pages']
+  warnings: string[]
+  limit: number
+}): Promise<void> {
+  const pages = input.pages.slice(0, input.limit)
+  for (const page of pages) {
+    try {
+      const metrics = await queryPageMetrics(input.site, page.finalUrl)
+      if (metrics) page.searchMetrics = metrics
+    } catch (error) {
+      input.warnings.push(
+        `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return
+    }
+  }
+  if (input.pages.length > pages.length) {
+    input.warnings.push(
+      `GSC metrics joined for ${pages.length} of ${input.pages.length} pages.`,
+    )
+  }
 }

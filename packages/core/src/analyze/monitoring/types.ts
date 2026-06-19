@@ -1,3 +1,5 @@
+import type { PageFetchDiagnostics } from '../../types.js'
+
 export type CrawlPageSnapshot = {
   url: string
   finalUrl: string
@@ -8,6 +10,7 @@ export type CrawlPageSnapshot = {
   usedJs?: boolean
   fetchSource?: 'cache' | 'network' | 'rendered'
   cacheState?: 'hit' | 'miss' | 'bypass'
+  fetchDiagnostics?: PageFetchDiagnostics
   blocked?: boolean
   robotsTxt?: {
     url: string

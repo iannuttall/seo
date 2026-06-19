@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { extractPage } from '../../extract/page-extractor.js'
-import { fetchPage } from '../../fetch/page-fetcher.js'
+import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
 import type { CrawlPageSnapshot } from './types.js'
 
 function sameOriginUrl(href: string, base: URL): string | undefined {
@@ -48,10 +48,10 @@ function indexabilityReason(page: CrawlPageSnapshot): string | undefined {
 
 export async function crawlOne(
   url: string,
-  opts: { refresh?: boolean; js?: boolean | 'auto' },
+  opts: FetchPageOptions = {},
 ): Promise<{ page?: CrawlPageSnapshot; urls: string[]; warning?: string }> {
   try {
-    const fetched = await fetchPage(url, { refresh: opts.refresh, js: opts.js })
+    const fetched = await fetchPage(url, opts)
     const extracted = await extractPage(fetched)
     const base = new URL(extracted.finalUrl)
     const internalLinks = extracted.links
@@ -74,6 +74,7 @@ export async function crawlOne(
       usedJs: fetched.usedJs,
       fetchSource: fetched.diagnostics.source,
       cacheState: fetched.diagnostics.cache,
+      fetchDiagnostics: fetched.diagnostics,
       blocked: fetched.diagnostics.blocked,
       robotsTxt: fetched.robotsTxt,
       title: extracted.title,

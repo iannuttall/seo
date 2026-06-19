@@ -39,7 +39,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Avoid crawling common non-page assets as pages.
 - [x] Track discovered, queued, crawled, skipped, failed, and verified-link counts.
 - [ ] Make cancellation safe and return partial reports with clear status.
-- [ ] Reuse existing fetch/cache/rate-control code where possible.
+- [x] Reuse existing fetch/cache/rate-control code where possible.
 - [x] Keep JS rendering optional and bounded because it is expensive.
 
 ## Phase 3: Page Snapshot Model

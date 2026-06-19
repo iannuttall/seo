@@ -35,6 +35,11 @@ export const crawlCommand = defineCommand({
       type: 'string',
       description: 'Saved project id or name.',
     },
+    'ga4-property': {
+      type: 'string',
+      description:
+        'GA4 property ID for landing-page sessions. Defaults from --project when saved.',
+    },
     mode: {
       type: 'string',
       description:
@@ -117,6 +122,8 @@ export const crawlCommand = defineCommand({
       concurrency: numberArg(args.concurrency),
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
+      ga4PropertyId:
+        stringArg(args['ga4-property']) ?? selection?.client?.ga4PropertyId,
       useSitemap: !booleanArg(args['no-sitemap']),
       respectRobots: !booleanArg(args['no-robots']),
       checkExternal: !booleanArg(args['no-external']),
@@ -143,6 +150,10 @@ export const crawlCommand = defineCommand({
       [
         'GSC pages',
         String(report.pages.filter((page) => page.searchMetrics).length),
+      ],
+      [
+        'GA4 pages',
+        String(report.pages.filter((page) => page.analytics).length),
       ],
       ['High', String(report.summary.highIssues)],
       ['Medium', String(report.summary.mediumIssues)],

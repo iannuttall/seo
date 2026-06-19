@@ -24,6 +24,8 @@ export type CrawlConfigInput = Partial<CrawlConfig> & {
   url: string
   site?: string
   searchMetricsLimit?: number
+  ga4PropertyId?: string
+  analyticsLimit?: number
 }
 
 export type CrawlIssue = {
@@ -63,6 +65,7 @@ export type CrawlReport = {
   id: string
   projectId?: string
   site?: string
+  ga4PropertyId?: string
   generatedAt: string
   status: 'completed' | 'partial' | 'failed'
   configHash: string
@@ -108,10 +111,12 @@ export function crawlConfigHash(config: CrawlConfigInput): string {
 export function crawlReportId(input: {
   config: CrawlConfigInput
   site?: string
+  ga4PropertyId?: string
 }): string {
   const normalized = {
     config: normalizeCrawlConfig(input.config),
     site: input.site ?? null,
+    ga4PropertyId: input.ga4PropertyId ?? null,
   }
   const hash = createHash('sha256')
     .update(JSON.stringify(normalized))
@@ -192,6 +197,7 @@ export function createCrawlReport(input: {
   issues?: CrawlIssue[]
   projectId?: string
   site?: string
+  ga4PropertyId?: string
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -201,9 +207,14 @@ export function createCrawlReport(input: {
   const pages = input.pages ?? []
   const issues = input.issues ?? []
   return {
-    id: crawlReportId({ config, site: input.site }),
+    id: crawlReportId({
+      config,
+      site: input.site,
+      ga4PropertyId: input.ga4PropertyId,
+    }),
     projectId: input.projectId,
     site: input.site,
+    ga4PropertyId: input.ga4PropertyId,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),

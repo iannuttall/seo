@@ -40,6 +40,7 @@ export function registerCrawlerTools(server: McpServer): void {
       inputSchema: {
         url: z.string().url(),
         site: z.string().optional(),
+        ga4PropertyId: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
         concurrency: z.number().int().positive().optional(),
@@ -56,6 +57,7 @@ export function registerCrawlerTools(server: McpServer): void {
     async ({
       url,
       site,
+      ga4PropertyId,
       maxPages,
       maxDepth,
       concurrency,
@@ -72,6 +74,7 @@ export function registerCrawlerTools(server: McpServer): void {
         const report = await crawlSite({
           url,
           site,
+          ga4PropertyId,
           maxPages,
           maxDepth,
           concurrency,

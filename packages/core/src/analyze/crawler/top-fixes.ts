@@ -21,6 +21,8 @@ export type TopFix = CrawlIssueGroup & {
     searchVisibleUrls: number
     clicks: number
     impressions: number
+    sessions: number
+    totalUsers: number
     avgPosition?: number
     effort: 'low' | 'medium' | 'high'
     effortScore: number
@@ -113,6 +115,14 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
   const clicks = metrics.reduce((sum, item) => sum + item.clicks, 0)
   const impressions = metrics.reduce((sum, item) => sum + item.impressions, 0)
+  const sessions = pages.reduce(
+    (sum, page) => sum + (page.analytics?.sessions ?? 0),
+    0,
+  )
+  const totalUsers = pages.reduce(
+    (sum, page) => sum + (page.analytics?.totalUsers ?? 0),
+    0,
+  )
   const avgPosition = metrics.length
     ? metrics.reduce((sum, item) => sum + item.position, 0) / metrics.length
     : undefined
@@ -120,6 +130,8 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
     searchVisibleUrls: metrics.length,
     clicks,
     impressions,
+    sessions,
+    totalUsers,
     avgPosition,
   }
 }
@@ -128,7 +140,10 @@ function whyThisRanks(input: TopFix['scoreFactors']): string {
   const visibility = input.searchVisibleUrls
     ? `${input.searchVisibleUrls} affected URLs have GSC visibility (${input.clicks} clicks, ${input.impressions} impressions).`
     : 'No affected URL has joined GSC visibility yet.'
-  return `${visibility} Severity contributes ${input.severity}; affected URL count contributes ${input.affectedUrls}; effort is ${input.effort}.`
+  const analytics = input.sessions
+    ? ` GA4 adds ${input.sessions} sessions from affected landing pages.`
+    : ''
+  return `${visibility}${analytics} Severity contributes ${input.severity}; affected URL count contributes ${input.affectedUrls}; effort is ${input.effort}.`
 }
 
 export function topFixes(
@@ -145,6 +160,8 @@ export function topFixes(
       searchVisibleUrls: search.searchVisibleUrls,
       clicks: search.clicks,
       impressions: search.impressions,
+      sessions: search.sessions,
+      totalUsers: search.totalUsers,
       avgPosition: search.avgPosition,
       effort,
       effortScore: EFFORT_SCORE[effort],
@@ -155,6 +172,7 @@ export function topFixes(
       scoreFactors.searchVisibleUrls * 100 +
       scoreFactors.clicks * 20 +
       Math.min(scoreFactors.impressions, 10_000) / 25 +
+      scoreFactors.sessions * 2 +
       scoreFactors.effortScore
     const rule = explainRule(group.ruleId)
     return {

@@ -51,9 +51,15 @@ test('crawlReportId is stable for equivalent configs and scoped by site', () => 
     config: { url: 'https://example.com/', include: ['/a', '/b'] },
     site: 'sc-domain:other.example',
   })
+  const d = crawlReportId({
+    config: { url: 'https://example.com/', include: ['/a', '/b'] },
+    site: 'sc-domain:example.com',
+    ga4PropertyId: '123',
+  })
 
   assert.equal(a, b)
   assert.notEqual(a, c)
+  assert.notEqual(a, d)
   assert.match(a, /^crawl_[a-f0-9]{20}$/)
 })
 

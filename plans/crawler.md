@@ -77,7 +77,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add per-page SEO score.
 - [ ] Add per-page GEO score.
 - [ ] Add internal link authority score.
-- [ ] Rank top fixes by severity, affected count, page importance, GSC clicks/impressions, GA4 sessions when available, and effort.
+- [x] Rank top fixes by severity, affected count, page importance, GSC clicks/impressions, GA4 sessions when available, and effort.
 - [x] Do not let generic notices outrank search-visible errors.
 - [x] Add `topFixes(report, filters)` as a core function.
 - [x] Add category filters, severity filters, URL filters, and project filters.

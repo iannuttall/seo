@@ -57,6 +57,10 @@ export type CrawlPageSnapshot = {
     ctr: number
     position: number
   }
+  analytics?: {
+    sessions: number
+    totalUsers: number
+  }
 }
 
 export type CrawlRun = {

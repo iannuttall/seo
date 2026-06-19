@@ -1,6 +1,10 @@
 import { queryPageMetrics } from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
+import {
+  fetchLandingPageValues,
+  landingValueForUrl,
+} from '../workflows/analytics-value.js'
 import { auditCrawlPages } from './audit.js'
 import type { CrawlConfigInput, CrawlReport } from './report.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
@@ -197,10 +201,19 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       limit: input.searchMetricsLimit ?? 25,
     })
   }
+  if (input.ga4PropertyId) {
+    await joinAnalytics({
+      propertyId: input.ga4PropertyId,
+      pages,
+      warnings,
+      limit: input.analyticsLimit ?? 5000,
+    })
+  }
 
   return createCrawlReport({
     config,
     site,
+    ga4PropertyId: input.ga4PropertyId,
     pages,
     issues: auditCrawlPages(pages),
     status: partial ? 'partial' : 'completed',
@@ -210,6 +223,40 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
         ? [`Stopped after reaching maxPages (${config.maxPages}).`]
         : [],
   })
+}
+
+async function joinAnalytics(input: {
+  propertyId: string
+  pages: CrawlReport['pages']
+  warnings: string[]
+  limit: number
+}): Promise<void> {
+  const endDate = new Date()
+  endDate.setUTCDate(endDate.getUTCDate() - 4)
+  const startDate = new Date(endDate)
+  startDate.setUTCDate(startDate.getUTCDate() - 27)
+
+  const analytics = await fetchLandingPageValues({
+    propertyId: input.propertyId,
+    startDate: startDate.toISOString().slice(0, 10),
+    endDate: endDate.toISOString().slice(0, 10),
+    limit: input.limit,
+  })
+  if (analytics.warning) {
+    input.warnings.push(`GA4 metrics skipped: ${analytics.warning}`)
+    return
+  }
+
+  let joined = 0
+  for (const page of input.pages) {
+    const value = landingValueForUrl(analytics.values, page.finalUrl)
+    if (!value) continue
+    page.analytics = value
+    joined += 1
+  }
+  if (input.pages.length && joined === 0) {
+    input.warnings.push('GA4 metrics joined for 0 crawled pages.')
+  }
 }
 
 async function joinSearchMetrics(input: {

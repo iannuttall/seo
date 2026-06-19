@@ -37,7 +37,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Capture robots-blocked URLs as skipped evidence, not fatal errors.
 - [x] Normalize URLs consistently: remove fragments, handle trailing slash policy, handle `www` only where intended.
 - [x] Avoid crawling common non-page assets as pages.
-- [ ] Track discovered, queued, crawled, skipped, failed, and verified-link counts.
+- [x] Track discovered, queued, crawled, skipped, failed, and verified-link counts.
 - [ ] Make cancellation safe and return partial reports with clear status.
 - [ ] Reuse existing fetch/cache/rate-control code where possible.
 - [x] Keep JS rendering optional and bounded because it is expensive.

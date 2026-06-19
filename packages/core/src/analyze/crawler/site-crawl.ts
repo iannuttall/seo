@@ -95,15 +95,49 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const warnings: string[] = []
   const queue: QueueItem[] = []
   const visited = new Set<string>()
+  const queued = new Set<string>()
+  const discovered = new Set<string>()
   const pages: CrawlReport['pages'] = []
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
+  let queuedUrls = 0
+  let skippedUrls = 0
+  let failedUrls = 0
+  let verifiedLinks = 0
+
+  const enqueue = (value: string, depth: number): void => {
+    const normalized = normalizeUrl(value, config.url)
+    if (!normalized) {
+      skippedUrls += 1
+      return
+    }
+    discovered.add(normalized)
+    if (queued.has(normalized) || visited.has(normalized)) return
+    if (!sameOrigin(normalized, origin)) {
+      skippedUrls += 1
+      return
+    }
+    if (isLikelyAsset(normalized)) {
+      skippedUrls += 1
+      return
+    }
+    if (!passesFilters(normalized, config.include, config.exclude)) {
+      skippedUrls += 1
+      return
+    }
+    if (queue.length + visited.size + inFlight.size >= config.maxPages * 5) {
+      skippedUrls += 1
+      return
+    }
+    queued.add(normalized)
+    queuedUrls += 1
+    queue.push({ url: normalized, depth })
+  }
 
   if (config.mode !== 'sitemap') {
     const seeds = config.mode === 'list' ? config.urls : [config.url]
     for (const seed of seeds) {
-      const normalized = normalizeUrl(seed, config.url)
-      if (normalized) queue.push({ url: normalized, depth: 0 })
+      enqueue(seed, 0)
     }
   }
 
@@ -116,7 +150,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       maxPages: config.maxPages,
       warnings,
     })) {
-      queue.push({ url, depth: 0 })
+      enqueue(url, 0)
     }
   }
 
@@ -127,9 +161,6 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       const normalized = normalizeUrl(item.url, config.url)
       if (!normalized) continue
       if (visited.has(normalized)) continue
-      if (!sameOrigin(normalized, origin)) continue
-      if (isLikelyAsset(normalized)) continue
-      if (!passesFilters(normalized, config.include, config.exclude)) continue
       visited.add(normalized)
       return { url: normalized, depth: item.depth }
     }
@@ -167,22 +198,27 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
 
     if (result.warning) {
       warnings.push(result.warning)
+      failedUrls += 1
       continue
     }
-    if (!result.page) continue
+    if (!result.page) {
+      failedUrls += 1
+      continue
+    }
     if (config.respectRobots && result.page.robotsTxt?.allowed === false) {
       warnings.push(
         `${result.page.url}: skipped because robots.txt disallows it`,
       )
+      skippedUrls += 1
       continue
     }
 
     pages.push(result.page)
+    verifiedLinks += result.urls.length
 
     if (followLinks && task.depth < config.maxDepth) {
       for (const url of result.urls) {
-        if (queue.length + visited.size >= config.maxPages * 5) break
-        queue.push({ url, depth: task.depth + 1 })
+        enqueue(url, task.depth + 1)
       }
     }
   }
@@ -223,6 +259,14 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       pages.length >= config.maxPages
         ? [`Stopped after reaching maxPages (${config.maxPages}).`]
         : [],
+    stats: {
+      discoveredUrls: discovered.size,
+      queuedUrls,
+      crawledUrls: pages.length,
+      skippedUrls,
+      failedUrls,
+      verifiedLinks,
+    },
   })
 }
 

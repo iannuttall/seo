@@ -186,7 +186,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add audit rule tests for every rule family.
   Added a registry-driven crawler audit coverage test that asserts every rule category has issue-producing audit fixture coverage, so new rule families cannot land without tests.
 - [x] Add crawler tests with local HTTP fixtures for redirects, robots, sitemap, broken links, and content types.
-- [ ] Add JSON schema snapshot tests for CLI and MCP outputs.
+- [x] Add JSON schema snapshot tests for CLI and MCP outputs.
+  Added CLI crawl JSON key-schema snapshots against a local fixture and MCP crawler structured-output snapshots through the registered tool surface; MCP tests now build and run with the package test suite.
 - [x] Add help sweep tests for new commands.
 - [x] Add idempotency tests for config hashing and report loading.
 - [ ] Add large-site safety tests for limits, concurrency, cancellation, and skipped URLs.

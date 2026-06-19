@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  type CrawlIssue,
   crawlConfigHash,
+  crawlReportId,
   createCrawlReport,
   groupCrawlIssues,
   normalizeCrawlConfig,
-  type CrawlIssue,
 } from './report.js'
 
 test('normalizeCrawlConfig applies stable defaults', () => {
@@ -35,6 +36,25 @@ test('crawlConfigHash is stable for equivalent configs', () => {
   })
 
   assert.equal(a, b)
+})
+
+test('crawlReportId is stable for equivalent configs and scoped by site', () => {
+  const a = crawlReportId({
+    config: { url: 'https://example.com', include: ['/b', '/a'] },
+    site: 'sc-domain:example.com',
+  })
+  const b = crawlReportId({
+    config: { url: 'https://example.com/', include: ['/a', '/b'] },
+    site: 'sc-domain:example.com',
+  })
+  const c = crawlReportId({
+    config: { url: 'https://example.com/', include: ['/a', '/b'] },
+    site: 'sc-domain:other.example',
+  })
+
+  assert.equal(a, b)
+  assert.notEqual(a, c)
+  assert.match(a, /^crawl_[a-f0-9]{20}$/)
 })
 
 test('createCrawlReport summarizes pages and grouped issues', () => {
@@ -91,6 +111,7 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   })
 
   assert.equal(report.generatedAt, '2026-06-19T00:00:00.000Z')
+  assert.match(report.id, /^crawl_[a-f0-9]{20}$/)
   assert.equal(report.summary.totalPages, 2)
   assert.equal(report.summary.statusErrors, 1)
   assert.equal(report.summary.highIssues, 2)

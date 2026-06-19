@@ -79,7 +79,7 @@ export function registerCrawlerTools(server: McpServer): void {
           exclude,
           useSitemap,
           respectRobots,
-          js: js ? true : false,
+          js: Boolean(js),
         })
         const saved = saveReport ? saveCrawlReport(report) : undefined
         return toolSuccess(

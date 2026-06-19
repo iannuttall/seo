@@ -1,6 +1,6 @@
 import { ensureSeoCliDirs } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, stringArg, projectArg } from '../args.js'
+import { jsonFlag, numberArg, projectArg, stringArg } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue } from '../utils.js'
 import { startUrlForSite } from './shared.js'

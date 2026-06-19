@@ -1,6 +1,6 @@
 import { queryClusterReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg, projectArg } from '../../args.js'
+import { booleanArg, jsonFlag, projectArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {

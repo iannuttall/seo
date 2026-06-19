@@ -10,7 +10,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add a dedicated crawler surface without making root help noisy.
 - [ ] Use plain English for humans: what happened, why it matters, what to do, how to verify.
 - [ ] Use stable structured data for agents: ids, rule codes, evidence, affected URLs, severity, impact, confidence, and fix hints.
-- [ ] Make crawler operations idempotent: same input config should produce reusable report ids, deterministic cache keys, and safe repeat runs.
+- [x] Make crawler operations idempotent: same input config should produce reusable report ids, deterministic cache keys, and safe repeat runs.
 - [ ] Keep CLI and MCP thin; put crawler logic, rules, scoring, and persistence in `packages/core`.
 - [ ] Treat crawl data as durable evidence that other reports can reuse, not disposable command output.
 - [ ] Keep local-only assumptions out of core types where practical, so hosted API support is an adapter later.
@@ -98,8 +98,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add saved crawl reports to local storage.
 - [ ] Store report metadata separately from full report payload.
 - [x] Support `list`, `show`, `delete`, and `latest`.
-- [ ] Store config hash for idempotent reruns.
-- [ ] Add report ids that are stable enough for agents but do not leak secrets.
+- [x] Store config hash for idempotent reruns.
+- [x] Add report ids that are stable enough for agents but do not leak secrets.
 - [ ] Add report status: completed, partial, failed.
 - [ ] Recompute derived scores on load so older reports can self-heal after scoring changes.
 - [ ] Keep storage shape adaptable for future hosted persistence.

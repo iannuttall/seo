@@ -3,13 +3,13 @@ import { countLabel } from '../phrasing.js'
 import type { ProgressReporter } from '../progress.js'
 import type { TemplateSummary } from './page-patterns.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
+import { defaultDateRange } from './shared.js'
 import {
   cannibalReport,
   decayingReport,
   quickWinsReport,
 } from './site-diagnostics.js'
 import { strikingDistance } from './striking-distance.js'
-import { defaultDateRange } from './shared.js'
 import {
   trafficAnomaly,
   type UpdateCorrelationReport,

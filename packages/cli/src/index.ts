@@ -1,9 +1,9 @@
 import { defineCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
+import { clientCommand, projectCommand } from './commands/clients/index.js'
 import { crawlCommand } from './commands/crawl.js'
 import { crawlReportsCommand } from './commands/crawl-reports.js'
-import { clientCommand, projectCommand } from './commands/clients/index.js'
 import {
   ga4ReportCommand,
   gscQueryCommand,

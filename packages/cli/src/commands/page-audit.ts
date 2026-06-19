@@ -1,6 +1,6 @@
 import { auditPage } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg, projectArg } from '../args.js'
+import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { formatFetchDiagnostics, selectedSiteOrThrow } from './shared.js'
 

@@ -5,8 +5,8 @@ import {
   jsonFlag,
   listArg,
   numberArg,
-  stringArg,
   projectArg,
+  stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'

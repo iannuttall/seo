@@ -11,8 +11,8 @@ import {
   jsonBodyArg,
   jsonFlag,
   numberArg,
-  stringArg,
   projectArg,
+  stringArg,
 } from '../args.js'
 import { resolveClient, resolveGa4Property } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'

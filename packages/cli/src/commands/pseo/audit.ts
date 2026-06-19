@@ -4,8 +4,8 @@ import {
   booleanArg,
   jsonFlag,
   numberArg,
-  stringArg,
   projectArg,
+  stringArg,
 } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'

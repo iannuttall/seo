@@ -120,7 +120,7 @@ export const crawlCommand = defineCommand({
       useSitemap: !booleanArg(args['no-sitemap']),
       respectRobots: !booleanArg(args['no-robots']),
       checkExternal: !booleanArg(args['no-external']),
-      js: booleanArg(args.js) ? true : false,
+      js: Boolean(booleanArg(args.js)),
     })
     const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
 

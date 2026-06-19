@@ -8,8 +8,9 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
     url: 'https://example.com/page',
     finalUrl: 'https://example.com/page',
     status: 200,
-    title: 'A useful page title',
-    metaDescription: 'A useful page description.',
+    title: 'A useful page title for search teams',
+    metaDescription:
+      'A useful page description that explains the page value for search teams.',
     canonical: 'https://example.com/page',
     h1: 'Useful page',
     h1Count: 1,
@@ -22,7 +23,7 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
     imagesMissingAlt: 0,
     outgoingInternalCount: 1,
     schemaTypes: ['Article'],
-    openGraphTitle: 'A useful page title',
+    openGraphTitle: 'A useful page title for search teams',
     twitterCard: 'summary',
     geo: {
       semanticHtml: true,
@@ -196,6 +197,66 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       'viewport_missing',
       'lang_missing',
     ],
+  )
+})
+
+test('auditCrawlPages flags metadata length and duplicate issues', () => {
+  const duplicateTitle = 'Evergreen Product Guide for Search Teams'
+  const duplicateDescription =
+    'A clear product guide for search teams that explains the exact page value and why someone should read it today.'
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/short',
+      title: 'Short',
+      metaDescription: 'Too short.',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/long',
+      title:
+        'This is a very long page title that keeps going until it will almost certainly truncate in search results',
+      metaDescription:
+        'This description is intentionally long so the crawler can flag it as too long for a search snippet because it keeps adding details, caveats, context, and filler beyond the useful limit.',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/duplicate-a',
+      title: duplicateTitle,
+      metaDescription: duplicateDescription,
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/duplicate-b',
+      title: duplicateTitle.toLowerCase(),
+      metaDescription: duplicateDescription.replace(/\s+/g, '  '),
+      internalInlinkCount: 1,
+    }),
+  ])
+  const metadataIssues = issues.filter((issue) => issue.category === 'metadata')
+
+  assert.deepEqual(
+    metadataIssues.map((issue) => issue.ruleId),
+    [
+      'title_too_short',
+      'meta_description_too_short',
+      'title_too_wide',
+      'meta_description_too_long',
+      'title_duplicate',
+      'meta_description_duplicate',
+      'title_duplicate',
+      'meta_description_duplicate',
+    ],
+  )
+  assert.equal(
+    metadataIssues.find((issue) => issue.ruleId === 'title_duplicate')?.evidence
+      ?.duplicateCount,
+    2,
+  )
+  assert.deepEqual(
+    metadataIssues.find(
+      (issue) => issue.ruleId === 'meta_description_duplicate',
+    )?.evidence?.sampleUrls,
+    ['https://example.com/duplicate-a', 'https://example.com/duplicate-b'],
   )
 })
 

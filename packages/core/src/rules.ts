@@ -65,6 +65,46 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'title_too_short',
+    title: 'Title too short',
+    category: 'metadata',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Very short titles waste the search-result headline and usually omit the useful words people scan for.',
+    howToFix:
+      'Expand the title so it clearly names the page topic, entity, product, or location. Aim for a useful human headline, not keyword stuffing.',
+    impactIfIgnored:
+      'The page may look generic in search and send weaker topical signals than competing pages.',
+    howToVerify:
+      'Re-run the crawl and confirm the title length is at least 30 characters.',
+    agentHints: {
+      evidenceFields: ['page.title', 'issue.evidence.length'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'title_duplicate',
+    title: 'Duplicate title',
+    category: 'metadata',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'When multiple pages share the same title, search engines and users get a weaker signal about which page is the right result.',
+    howToFix:
+      'Rewrite each title so it reflects the specific page, including the unique entity, intent, location, product, or angle.',
+    impactIfIgnored:
+      'Search engines may pick the wrong page to rank, and users may see repetitive snippets that do not explain the difference.',
+    howToVerify:
+      'Re-run the crawl and confirm this title appears on only one indexable URL.',
+    agentHints: {
+      evidenceFields: [
+        'page.title',
+        'issue.evidence.duplicateCount',
+        'issue.evidence.sampleUrls',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'h1_count',
     title: 'H1 structure issue',
     category: 'headings',
@@ -271,6 +311,64 @@ const RULE_DEFINITIONS = [
       'Search snippets may be generic or less persuasive, especially on pages that already rank.',
     howToVerify:
       'Re-run the crawl and confirm the page has a meta description.',
+  },
+  {
+    id: 'meta_description_too_short',
+    title: 'Meta description too short',
+    category: 'metadata',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Very short descriptions under-use the snippet space and rarely give searchers enough reason to click.',
+    howToFix:
+      'Write a clear one- or two-sentence description that summarizes the page value and matches the likely search intent.',
+    impactIfIgnored:
+      'Search engines may replace the snippet or show copy that does not sell the page well.',
+    howToVerify:
+      'Re-run the crawl and confirm the description is at least 70 characters.',
+    agentHints: {
+      evidenceFields: ['page.metaDescription', 'issue.evidence.length'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'meta_description_too_long',
+    title: 'Meta description too long',
+    category: 'metadata',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Over-long descriptions are likely to be truncated or rewritten, which can hide the most useful click promise.',
+    howToFix:
+      'Tighten the description to the clearest value proposition and put the most important words near the front.',
+    impactIfIgnored:
+      'The visible snippet may cut off the strongest part of the message or get replaced by generated text.',
+    howToVerify:
+      'Re-run the crawl and confirm the description is no longer over 160 characters.',
+    agentHints: {
+      evidenceFields: ['page.metaDescription', 'issue.evidence.length'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'meta_description_duplicate',
+    title: 'Duplicate meta description',
+    category: 'metadata',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Repeated descriptions make different pages look interchangeable and can weaken snippet quality across a section.',
+    howToFix:
+      'Write a distinct description for each page that explains what is unique about that URL.',
+    impactIfIgnored:
+      'Search snippets stay generic, and search engines may rewrite them or struggle to distinguish similar pages.',
+    howToVerify:
+      'Re-run the crawl and confirm this description appears on only one URL.',
+    agentHints: {
+      evidenceFields: [
+        'page.metaDescription',
+        'issue.evidence.duplicateCount',
+        'issue.evidence.sampleUrls',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
   },
   {
     id: 'canonical_missing',

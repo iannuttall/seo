@@ -20,14 +20,23 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
   const second = createCrawlReport({
     site,
     generatedAt: '2026-06-19T00:01:00.000Z',
-    config: { url: `https://${site.slice('sc-domain:'.length)}/` },
+    config: { url: `https://${site.slice('sc-domain:'.length)}/blog/` },
+  })
+  const rerun = createCrawlReport({
+    site,
+    generatedAt: '2026-06-19T00:02:00.000Z',
+    config: { url: `https://${site.slice('sc-domain:'.length)}/blog/` },
+    status: 'partial',
   })
 
   saveCrawlReport(first)
   const saved = saveCrawlReport(second)
+  const updated = saveCrawlReport(rerun)
 
   assert.equal(saved.id, second.id)
+  assert.equal(updated.id, second.id)
   assert.equal(loadCrawlReport(first.id)?.id, first.id)
+  assert.equal(loadCrawlReport(second.id)?.status, 'partial')
   assert.equal(latestCrawlReport(site)?.id, second.id)
   assert.deepEqual(
     listCrawlReports({ site, limit: 2 }).map((item) => item.id),

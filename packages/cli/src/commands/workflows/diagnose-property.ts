@@ -8,8 +8,8 @@ import {
   booleanArg,
   jsonFlag,
   numberArg,
-  stringArg,
   projectArg,
+  stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'

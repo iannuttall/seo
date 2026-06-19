@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 
@@ -104,6 +104,21 @@ export function crawlConfigHash(config: CrawlConfigInput): string {
     .slice(0, 16)
 }
 
+export function crawlReportId(input: {
+  config: CrawlConfigInput
+  site?: string
+}): string {
+  const normalized = {
+    config: normalizeCrawlConfig(input.config),
+    site: input.site ?? null,
+  }
+  const hash = createHash('sha256')
+    .update(JSON.stringify(normalized))
+    .digest('hex')
+    .slice(0, 20)
+  return `crawl_${hash}`
+}
+
 export function groupCrawlIssues(issues: CrawlIssue[]): CrawlIssueGroup[] {
   const groups = new Map<string, CrawlIssueGroup>()
   for (const issue of issues) {
@@ -185,7 +200,7 @@ export function createCrawlReport(input: {
   const pages = input.pages ?? []
   const issues = input.issues ?? []
   return {
-    id: randomUUID(),
+    id: crawlReportId({ config, site: input.site }),
     projectId: input.projectId,
     site: input.site,
     generatedAt: input.generatedAt ?? new Date().toISOString(),

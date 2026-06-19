@@ -4,8 +4,8 @@ import {
   booleanArg,
   jsonFlag,
   numberArg,
-  stringArg,
   projectArg,
+  stringArg,
 } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printLimitedTable, printNextCommand, printNotes } from './output.js'

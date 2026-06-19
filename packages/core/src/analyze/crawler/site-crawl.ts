@@ -2,8 +2,8 @@ import { queryPageMetrics } from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { auditCrawlPages } from './audit.js'
-import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 import type { CrawlConfigInput, CrawlReport } from './report.js'
+import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 
 type QueueItem = {
   url: string

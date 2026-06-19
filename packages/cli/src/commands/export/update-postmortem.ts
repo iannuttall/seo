@@ -1,6 +1,6 @@
 import { updatePostmortemCsvFiles, updatePostmortemWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, numberArg, stringArg, projectArg } from '../../args.js'
+import { booleanArg, numberArg, projectArg, stringArg } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { cliReportArgs } from '../report-options.js'
 import {

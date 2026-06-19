@@ -1,10 +1,10 @@
 import {
+  type CrawlReport,
+  type CrawlReportMeta,
   deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
   loadCrawlReport,
-  type CrawlReport,
-  type CrawlReportMeta,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import {

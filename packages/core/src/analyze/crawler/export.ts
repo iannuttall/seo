@@ -3,7 +3,7 @@ import { explainRule } from '../../rules.js'
 import type { CrawlReport } from './report.js'
 import { type TopFix, topFixes } from './top-fixes.js'
 
-export type CrawlOutputFormat = 'pretty' | 'json' | 'csv' | 'html'
+export type CrawlOutputFormat = 'pretty' | 'json' | 'csv' | 'html' | 'markdown'
 
 const issueHeaders = [
   'rule_id',
@@ -124,6 +124,43 @@ export function renderCrawlHtml(
 </body>
 </html>
 `
+}
+
+export function renderCrawlMarkdownTickets(
+  report: CrawlReport,
+  fixes: TopFix[] = topFixes(report),
+): string {
+  const lines = [
+    `# Crawl Implementation Tickets`,
+    '',
+    `Source: ${report.config.url}`,
+    `Report: ${report.id}`,
+    `Status: ${report.status}`,
+    '',
+  ]
+
+  for (const [index, fix] of fixes.entries()) {
+    lines.push(
+      `## ${index + 1}. ${fix.title}`,
+      '',
+      `- [ ] Fix ${fix.count} affected URL${fix.count === 1 ? '' : 's'}`,
+      `- Severity: ${fix.severity}`,
+      `- Rule: ${fix.ruleId}`,
+      `- Why this ranks: ${fix.whyThisRanks}`,
+      `- Plain-English fix: ${fix.howToFix}`,
+      `- Verify: ${fix.howToVerify}`,
+      '',
+      `Affected URLs:`,
+      ...fix.sampleUrls.slice(0, 10).map((url) => `- ${url}`),
+      '',
+    )
+  }
+
+  if (!fixes.length) {
+    lines.push('No implementation tickets were generated.')
+  }
+
+  return `${lines.join('\n')}\n`
 }
 
 function escapeHtml(value: string): string {

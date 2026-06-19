@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { renderCrawlCsv, renderCrawlHtml, renderCrawlPretty } from './export.js'
+import {
+  renderCrawlCsv,
+  renderCrawlHtml,
+  renderCrawlMarkdownTickets,
+  renderCrawlPretty,
+} from './export.js'
 import { createCrawlReport } from './report.js'
 
 test('crawl exporters render CSV, HTML, and plain text reports', () => {
@@ -34,4 +39,8 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   const html = renderCrawlHtml(report)
   assert.match(html, /<!doctype html>/)
   assert.match(html, /Missing title/)
+
+  const markdown = renderCrawlMarkdownTickets(report)
+  assert.match(markdown, /# Crawl Implementation Tickets/)
+  assert.match(markdown, /- \[ \] Fix 1 affected URL/)
 })

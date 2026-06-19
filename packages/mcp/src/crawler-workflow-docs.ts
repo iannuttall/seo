@@ -47,6 +47,12 @@ Partial reports are the current local contract. A crawl can return \`status: "pa
 
 Do not invent resume tokens or hosted job state yet. Re-run the saved report config when fresh data is needed, and only add resumable crawl state once a local CLI/MCP workflow needs it.
 
+## Local-first scope
+
+Keep the crawler excellent locally before adding hosted-only behavior. CLI and MCP workflows should prefer local crawls, local saved reports, explicit rerun configs, compact outputs, and plain-English fix guidance.
+
+Hosted API concepts such as paid schedules, tenant billing, remote job queues, API keys, and hosted-only JavaScript render quotas stay design boundaries until the local crawler quality gates are complete.
+
 ## Idempotency rules
 
 - Prefer saved report ids for follow-up tools.
@@ -156,5 +162,10 @@ export const crawlerToolGuide = {
     resumableState:
       'Deferred until a local CLI/MCP workflow needs resume tokens or persisted crawl frontier state.',
   },
+  localFirstGuardrails: [
+    'Prefer local CLI and MCP crawls before hosted/API-only workflows.',
+    'Keep saved reports, rerun configs, and compact slicing tools useful without remote services.',
+    'Defer paid schedules, tenant billing, remote job queues, API keys, and hosted-only JS quotas until crawler quality gates are complete.',
+  ],
   limits: CRAWLER_LIMIT_PROFILES,
 } as const

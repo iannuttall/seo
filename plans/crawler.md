@@ -177,7 +177,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Added opt-in typed crawl status events for started, queued/skipped URLs, page lifecycle, external link checks, cancellation, and completion; the callback is execution-only so saved config hashes stay idempotent.
 - [x] Add resumable or partial crawl concepts only when local implementation needs them.
   Kept the local boundary intentionally simple: partial reports are first-class through report status, warnings, and caveats; resumable job/frontier state is documented as deferred until a local CLI/MCP workflow needs it.
-- [ ] Avoid hosted-only complexity until the local crawler is excellent.
+- [x] Avoid hosted-only complexity until the local crawler is excellent.
+  Added explicit local-first guardrails for crawler workflows: local CLI/MCP, saved reports, rerun configs, compact slicing, and plain-English guidance come first; paid schedules, tenant billing, remote queues, API keys, and hosted-only JS quotas stay deferred until the quality gates are complete.
 
 ## Phase 13: Quality Gates
 

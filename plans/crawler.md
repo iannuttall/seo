@@ -91,16 +91,16 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
 - [x] Add a "technical fixes with search value" section to `seo report`.
 - [ ] Add link recovery and redirect recommendations directly into crawl results where evidence exists.
-- [ ] Keep crawl commands usable without Google auth.
+- [x] Keep crawl commands usable without Google auth.
 
 ## Phase 7: Local Report Store
 
-- [ ] Add saved crawl reports to local storage.
-- [ ] Store report metadata separately from full report payload.
+- [x] Add saved crawl reports to local storage.
+- [x] Store report metadata separately from full report payload.
 - [x] Support `list`, `show`, `delete`, and `latest`.
 - [x] Store config hash for idempotent reruns.
 - [x] Add report ids that are stable enough for agents but do not leak secrets.
-- [ ] Add report status: completed, partial, failed.
+- [x] Add report status: completed, partial, failed.
 - [ ] Recompute derived scores on load so older reports can self-heal after scoring changes.
 - [ ] Keep storage shape adaptable for future hosted persistence.
 
@@ -111,11 +111,11 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add URL-list mode from arguments and/or file input.
 - [x] Add `--format pretty|json|csv|html`.
 - [x] Add `--output <path>`.
-- [ ] Add `--save`.
+- [x] Add `--save`.
 - [x] Add `--fail-on high|medium|low`.
 - [x] Add `--severity high|medium|low`.
 - [x] Add `--project` support when a saved project has a crawl URL.
-- [ ] Make progress print to stderr so JSON stdout stays clean.
+- [x] Make progress print to stderr so JSON stdout stays clean.
 - [ ] Keep default human output short: summary, top fixes, next commands.
 - [x] Add `seo rules` and `seo explain <rule>` or equivalent.
 
@@ -144,7 +144,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add shareable HTML export for crawl reports.
 - [ ] Add CSV export for issues and pages.
 - [x] Add markdown export for agent-created implementation tickets.
-- [ ] Keep sparse data graceful: no auth should still produce a technical crawl; no crawl URL should skip the section clearly.
+- [x] Keep sparse data graceful: no auth should still produce a technical crawl; no crawl URL should skip the section clearly.
 
 ## Phase 11: Agent Workflow Improvements
 

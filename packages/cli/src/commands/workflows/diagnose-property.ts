@@ -1,4 +1,8 @@
-import { diagnosePropertyWorkflow } from '@seo/core'
+import {
+  diagnosePropertyWorkflow,
+  latestCrawlReport,
+  latestCrawlSummaries,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -10,6 +14,7 @@ import {
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { cliReportArgs } from '../report-options.js'
+import { startUrlForSite } from '../shared.js'
 import { printWorkflow } from './output.js'
 
 type DiagnoseWorkflowReport = Awaited<
@@ -34,7 +39,16 @@ function addFollowup(
   commands.push({ command, why })
 }
 
-function reportFollowups(report: DiagnoseWorkflowReport) {
+function hasTechnicalBaseline(site: string): boolean {
+  return Boolean(
+    latestCrawlReport(site) || latestCrawlSummaries(site, 1).length,
+  )
+}
+
+function reportFollowups(
+  report: DiagnoseWorkflowReport,
+  input: { crawlStartUrl?: string } = {},
+) {
   const site = `--site ${shellArg(report.site)}`
   const diagnosis = report.output.narrative.diagnosis
   const commands: Array<{ command: string; why: string }> = []
@@ -107,6 +121,14 @@ function reportFollowups(report: DiagnoseWorkflowReport) {
     )
   }
 
+  if (input.crawlStartUrl && !hasTechnicalBaseline(report.site)) {
+    addFollowup(
+      commands,
+      `seo crawl --url ${shellArg(input.crawlStartUrl)} ${site} --save`,
+      'Create the first technical crawler baseline with plain-English fixes and JSON-ready issue data.',
+    )
+  }
+
   addFollowup(
     commands,
     `seo technical-watch ${site} --limit 50`,
@@ -116,8 +138,11 @@ function reportFollowups(report: DiagnoseWorkflowReport) {
   return commands.slice(0, 6)
 }
 
-function printReportFollowups(report: DiagnoseWorkflowReport): void {
-  const commands = reportFollowups(report)
+function printReportFollowups(
+  report: DiagnoseWorkflowReport,
+  input: { crawlStartUrl?: string } = {},
+): void {
+  const commands = reportFollowups(report, input)
   if (!commands.length) {
     return
   }
@@ -192,7 +217,10 @@ function workflowCommandMeta(input: {
       process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
       printWorkflow(outputReport)
       if (input.printFollowups) {
-        printReportFollowups(outputReport)
+        printReportFollowups(outputReport, {
+          crawlStartUrl:
+            selection.client?.startUrl ?? startUrlForSite(selection.site),
+        })
       }
     },
   })

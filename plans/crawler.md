@@ -175,7 +175,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add audit rule tests for every rule family.
 - [ ] Add crawler tests with local HTTP fixtures for redirects, robots, sitemap, broken links, and content types.
 - [ ] Add JSON schema snapshot tests for CLI and MCP outputs.
-- [ ] Add help sweep tests for new commands.
+- [x] Add help sweep tests for new commands.
 - [ ] Add idempotency tests for config hashing and report loading.
 - [ ] Add large-site safety tests for limits, concurrency, cancellation, and skipped URLs.
 - [ ] Add regression tests for sparse/missing GSC and GA4 joins.

@@ -5,6 +5,7 @@ export type CrawlPageSnapshot = {
   finalUrl: string
   status: number
   contentType?: string
+  responseHeaders?: Record<string, string>
   responseTimeMs?: number
   sizeBytes?: number
   usedJs?: boolean

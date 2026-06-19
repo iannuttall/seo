@@ -12,6 +12,44 @@ import {
 import { fetchRobots } from './robots.js'
 import type { NormalizedFetchRateControls } from './types.js'
 
+type RedirectHop = NonNullable<
+  PageFetchResult['diagnostics']['redirectChain']
+>[number]
+
+async function fetchWithRedirectChain(
+  url: string,
+  signal: AbortSignal,
+): Promise<{
+  response: Awaited<ReturnType<typeof publicHttpFetch>>
+  redirectChain: RedirectHop[]
+}> {
+  const redirectChain: RedirectHop[] = []
+  let currentUrl = url
+
+  for (let redirectCount = 0; redirectCount <= 10; redirectCount += 1) {
+    const response = await publicHttpFetch(currentUrl, {
+      redirect: 'manual',
+      signal,
+    })
+    const location = response.headers.get('location')
+
+    if (response.status < 300 || response.status >= 400 || !location) {
+      return { response, redirectChain }
+    }
+
+    const nextUrl = new URL(location, currentUrl).toString()
+    redirectChain.push({
+      url: currentUrl,
+      status: response.status,
+      location: nextUrl,
+    })
+    await response.body?.cancel().catch(() => undefined)
+    currentUrl = nextUrl
+  }
+
+  throw new Error(`Too many redirects for ${url}`)
+}
+
 export async function fetchPlain(
   url: string,
   refresh = false,
@@ -70,11 +108,7 @@ export async function fetchPlain(
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), timeoutMs)
       try {
-        const res = await publicHttpFetch(url, {
-          redirect: 'follow',
-          signal: controller.signal,
-        })
-        return res
+        return await fetchWithRedirectChain(url, controller.signal)
       } catch (error) {
         if (error instanceof Error && /4\d\d/.test(error.message)) {
           throw new AbortError(error)
@@ -87,14 +121,14 @@ export async function fetchPlain(
     { retries: 2 },
   )
 
-  const html = await response.text()
-  const headerMap = Object.fromEntries(response.headers.entries())
+  const html = await response.response.text()
+  const headerMap = Object.fromEntries(response.response.headers.entries())
   const durationMs = Date.now() - startedAt
   const backpressure = recordHostFetch({
     host,
-    status: response.status,
+    status: response.response.status,
     durationMs,
-    retryAfterMs: retryAfterMs(response.headers.get('retry-after')),
+    retryAfterMs: retryAfterMs(response.response.headers.get('retry-after')),
     rate,
   })
 
@@ -105,18 +139,18 @@ export async function fetchPlain(
   ).run(
     key,
     url,
-    response.status,
+    response.response.status,
     JSON.stringify(headerMap),
     Buffer.from(html),
-    response.headers.get('etag'),
+    response.response.headers.get('etag'),
     Date.now(),
     Date.now() + 3_600_000,
   )
 
   return {
     url,
-    finalUrl: response.url,
-    status: response.status,
+    finalUrl: response.response.url,
+    status: response.response.status,
     headers: headerMap,
     html,
     usedJs: false,
@@ -125,7 +159,8 @@ export async function fetchPlain(
       cache: refresh ? 'bypass' : 'miss',
       fetched: true,
       rendered: false,
-      blocked: !robots.allowed || [401, 403, 429].includes(response.status),
+      blocked:
+        !robots.allowed || [401, 403, 429].includes(response.response.status),
       durationMs,
       retries: Math.max(0, attempts - 1),
       rateLimit: {
@@ -140,10 +175,11 @@ export async function fetchPlain(
         cache: robots.cache,
         allowed: robots.allowed,
       },
+      redirectChain: response.redirectChain,
     },
     warnings: [],
     robotsTxt: {
-      url: new URL('/robots.txt', response.url).toString(),
+      url: new URL('/robots.txt', response.response.url).toString(),
       allowed: robots.allowed,
       matchedLine: robots.matchedLine,
     },

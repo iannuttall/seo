@@ -45,7 +45,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 3: Page Snapshot Model
 
 - [x] Expand page snapshots beyond current crawl-diff fields.
-- [ ] Capture request URL, final URL, status, redirect chain, content type, response time, size, headers, and cache diagnostics.
+- [x] Capture request URL, final URL, status, redirect chain, content type, response time, size, headers, and cache diagnostics.
 - [x] Capture title, meta description, canonical, meta robots, X-Robots-Tag, H1/H2/H3, word count, main content hash, and extracted text summary.
 - [ ] Capture internal links, external links, inlink count, outgoing link count, anchor text samples, and crawl depth.
 - [ ] Capture images total, missing alt count, social tags, JSON-LD schema types, hreflang, lang, viewport, mixed content, HSTS, compression, and HTTPS.

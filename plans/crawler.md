@@ -122,7 +122,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 9: MCP Surface
 
 - [x] Add `seo_crawl_site`.
-- [ ] Add `seo_audit_urls`.
+- [x] Add `seo_audit_urls`.
 - [x] Add `seo_explain_issue`.
 - [x] Add `seo_list_rules`.
 - [x] Add `seo_top_fixes`.

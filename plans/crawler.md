@@ -61,7 +61,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Implement metadata rules: missing/short/long/duplicate titles and meta descriptions.
 - [x] Implement heading rules: missing H1, multiple H1s, weak heading structure.
 - [x] Implement indexability rules: noindex, nofollow, X-Robots noindex, robots blocked, canonicalized pages.
-- [ ] Implement canonical rules: missing canonical, canonical mismatch, non-absolute canonical, canonical chain.
+- [x] Implement canonical rules: missing canonical, canonical mismatch, non-absolute canonical, canonical chain.
 - [ ] Implement content rules: thin content, duplicate content, low text ratio, missing query coverage when GSC data exists.
 - [ ] Implement image rules: missing alt text and oversized image candidates when detectable.
 - [ ] Implement performance/security rules: large HTML, no compression, HTTP, mixed content, missing HSTS.

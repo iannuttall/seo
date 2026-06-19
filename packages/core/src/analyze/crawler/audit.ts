@@ -27,6 +27,26 @@ function sameUrl(a?: string, b?: string): boolean {
   }
 }
 
+function absoluteHttpUrl(value?: string): boolean {
+  try {
+    const url = new URL(value ?? '')
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function urlKey(value?: string): string | undefined {
+  if (!value) return undefined
+  try {
+    const url = new URL(value)
+    url.hash = ''
+    return url.toString()
+  } catch {
+    return undefined
+  }
+}
+
 const SLOW_RESPONSE_MS = 2_000
 const DEEP_PAGE_DEPTH = 4
 const WEAK_VALUABLE_INLINKS = 1
@@ -112,6 +132,13 @@ export function auditCrawlPages(
     pages,
     (page) => page.metaDescription,
   )
+  const pageByUrl = new Map<string, CrawlPageSnapshot>()
+  for (const page of pages) {
+    for (const value of [page.url, page.finalUrl]) {
+      const key = urlKey(value)
+      if (key) pageByUrl.set(key, page)
+    }
+  }
 
   for (const page of pages) {
     if (page.status === 0) {
@@ -357,7 +384,30 @@ export function auditCrawlPages(
 
     if (!page.canonical) {
       issues.push(issue('canonical_missing', page))
-    } else if (!sameUrl(page.canonical, page.finalUrl)) {
+    } else {
+      if (page.canonicalRaw && !absoluteHttpUrl(page.canonicalRaw)) {
+        issues.push(
+          issue('canonical_non_absolute', page, page.canonicalRaw, {
+            canonicalRaw: page.canonicalRaw,
+            canonical: page.canonical,
+          }),
+        )
+      }
+      const canonicalTarget = pageByUrl.get(urlKey(page.canonical) ?? '')
+      if (
+        canonicalTarget?.canonical &&
+        !sameUrl(canonicalTarget.canonical, page.canonical)
+      ) {
+        issues.push(
+          issue('canonical_chain', page, page.canonical, {
+            canonical: page.canonical,
+            nextCanonical: canonicalTarget.canonical,
+            chain: [page.finalUrl, page.canonical, canonicalTarget.canonical],
+          }),
+        )
+      }
+    }
+    if (page.canonical && !sameUrl(page.canonical, page.finalUrl)) {
       issues.push(
         issue('canonical_mismatch', page, page.canonical, {
           canonical: page.canonical,

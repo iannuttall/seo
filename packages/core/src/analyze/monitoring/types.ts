@@ -23,6 +23,7 @@ export type CrawlPageSnapshot = {
   title?: string
   metaDescription?: string
   canonical?: string
+  canonicalRaw?: string
   metaRobots?: string
   xRobotsTag?: string
   h1?: string

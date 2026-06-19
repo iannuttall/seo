@@ -303,6 +303,58 @@ test('auditCrawlPages flags indexability issues', () => {
   )
 })
 
+test('auditCrawlPages flags canonical issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/missing-canonical',
+      canonical: undefined,
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/relative-canonical',
+      finalUrl: 'https://example.com/relative-canonical',
+      canonical: 'https://example.com/relative-canonical',
+      canonicalRaw: '/relative-canonical',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/chain-a',
+      finalUrl: 'https://example.com/chain-a',
+      canonical: 'https://example.com/chain-b',
+      canonicalRaw: 'https://example.com/chain-b',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/chain-b',
+      finalUrl: 'https://example.com/chain-b',
+      canonical: 'https://example.com/final',
+      canonicalRaw: 'https://example.com/final',
+      internalInlinkCount: 1,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'canonical')
+      .map((issue) => issue.ruleId),
+    [
+      'canonical_missing',
+      'canonical_non_absolute',
+      'canonical_chain',
+      'canonical_mismatch',
+      'canonical_mismatch',
+    ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'canonical_chain')?.evidence?.chain,
+    [
+      'https://example.com/chain-a',
+      'https://example.com/chain-b',
+      'https://example.com/final',
+    ],
+  )
+})
+
 test('auditCrawlPages flags metadata length and duplicate issues', () => {
   const duplicateTitle = 'Evergreen Product Guide for Search Teams'
   const duplicateDescription =

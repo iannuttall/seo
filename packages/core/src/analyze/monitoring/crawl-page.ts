@@ -117,6 +117,7 @@ export async function crawlOne(
       canonical: extracted.canonical
         ? new URL(extracted.canonical, extracted.finalUrl).toString()
         : undefined,
+      canonicalRaw: extracted.canonical,
       metaRobots: extracted.metaRobots,
       xRobotsTag: extracted.xRobotsTag,
       h1,

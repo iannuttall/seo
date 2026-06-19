@@ -141,6 +141,7 @@ export const crawlPageSnapshotSchema = z.object({
   title: z.string().optional(),
   metaDescription: z.string().optional(),
   canonical: z.string().url().optional(),
+  canonicalRaw: z.string().optional(),
   metaRobots: z.string().optional(),
   xRobotsTag: z.string().optional(),
   h1: z.string().optional(),

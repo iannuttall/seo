@@ -170,7 +170,7 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     res.setHeader('x-test-header', 'visible')
     res.setHeader('content-type', 'text/html')
     res.end(
-      `<title>New</title><link rel="alternate" hreflang="en" href="/new"><h1>New</h1>`,
+      `<title>New</title><link rel="canonical" href="/new"><link rel="alternate" hreflang="en" href="/new"><h1>New</h1>`,
     )
   })
 
@@ -186,6 +186,7 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     const issue = report.issues.find((item) => item.ruleId === 'redirected_url')
 
     assert.equal(report.pages[0]?.finalUrl, `${fixture.baseUrl}/new`)
+    assert.equal(report.pages[0]?.canonicalRaw, '/new')
     assert.deepEqual(report.pages[0]?.fetchDiagnostics?.redirectChain, [
       {
         url: `${fixture.baseUrl}/old`,

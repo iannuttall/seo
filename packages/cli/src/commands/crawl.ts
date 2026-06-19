@@ -12,6 +12,14 @@ import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printNotes, truncate } from './output.js'
 
+type Severity = 'low' | 'medium' | 'high'
+
+const severityRank: Record<Severity, number> = {
+  high: 3,
+  medium: 2,
+  low: 1,
+}
+
 export const crawlCommand = defineCommand({
   meta: {
     name: 'crawl',
@@ -100,9 +108,19 @@ export const crawlCommand = defineCommand({
       default: false,
       description: 'Save the crawl report locally.',
     },
+    severity: {
+      type: 'string',
+      description: 'Only show top fixes at this severity.',
+    },
+    'fail-on': {
+      type: 'string',
+      description: 'Exit non-zero when issues exist at this severity or above.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const severity = severityArg(args.severity)
+    const failOn = severityArg(args['fail-on'])
     const project = projectArg(args)
     const selection =
       stringArg(args.site) || project
@@ -130,14 +148,21 @@ export const crawlCommand = defineCommand({
       js: Boolean(booleanArg(args.js)),
     })
     const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
-    const rankedFixes = topFixes(report)
+    const rankedFixes = topFixes(report, { severity })
+    const failedThreshold = failOn
+      ? report.issues.some(
+          (issue) => severityRank[issue.severity] >= severityRank[failOn],
+        )
+      : false
 
     if (json) {
       printJson({
         ...report,
         topFixes: rankedFixes,
+        ...(failOn ? { failOn, failedThreshold } : {}),
         ...(saved ? { saved } : {}),
       })
+      if (failedThreshold) process.exitCode = 1
       return
     }
 
@@ -159,6 +184,7 @@ export const crawlCommand = defineCommand({
       ['Medium', String(report.summary.mediumIssues)],
       ['Low', String(report.summary.lowIssues)],
       ['Saved report', saved?.id ?? 'no'],
+      ['Fail threshold', failOn ?? 'off'],
     ])
 
     if (rankedFixes.length) {
@@ -178,6 +204,9 @@ export const crawlCommand = defineCommand({
 
     printNotes('Warnings', report.warnings.slice(0, 10))
     printNotes('Caveats', report.caveats)
+    if (failedThreshold) {
+      process.exitCode = 1
+    }
   },
 })
 
@@ -188,4 +217,13 @@ function crawlModeArg(value: unknown) {
     return mode as 'site' | 'page' | 'list' | 'sitemap'
   }
   throw new Error('Mode must be one of: site, page, list, sitemap.')
+}
+
+function severityArg(value: unknown): Severity | undefined {
+  const severity = stringArg(value)
+  if (!severity) return undefined
+  if (['low', 'medium', 'high'].includes(severity)) {
+    return severity as Severity
+  }
+  throw new Error('Severity must be one of: low, medium, high.')
 }

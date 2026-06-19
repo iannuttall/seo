@@ -112,8 +112,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add `--format pretty|json|csv|html`.
 - [ ] Add `--output <path>`.
 - [ ] Add `--save`.
-- [ ] Add `--fail-on high|medium|low`.
-- [ ] Add `--severity high|medium|low`.
+- [x] Add `--fail-on high|medium|low`.
+- [x] Add `--severity high|medium|low`.
 - [ ] Add `--project` support when a saved project has a crawl URL.
 - [ ] Make progress print to stderr so JSON stdout stays clean.
 - [ ] Keep default human output short: summary, top fixes, next commands.

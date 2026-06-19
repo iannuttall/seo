@@ -67,6 +67,16 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
     }
     if (page.status < 200 || page.status >= 300) continue
 
+    if (!sameUrl(page.url, page.finalUrl)) {
+      issues.push(
+        issue('redirected_url', page, `Final URL: ${page.finalUrl}`, {
+          requestedUrl: page.url,
+          finalUrl: page.finalUrl,
+          status: page.status,
+        }),
+      )
+    }
+
     if (!page.title) {
       issues.push(issue('missing_title', page))
     } else if (titlePixelWidth(page.title) > 580) {

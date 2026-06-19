@@ -129,6 +129,24 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm the affected URL no longer returns a 5xx status.',
   },
   {
+    id: 'redirected_url',
+    title: 'URL redirects',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Redirects are sometimes intentional, but unnecessary redirects slow users, dilute crawl clarity, and can hide broken migration paths.',
+    howToFix:
+      'Update internal links, canonicals, and sitemap entries to the final URL. Keep one direct 301 only when the old URL must remain supported.',
+    impactIfIgnored:
+      'Search engines and users keep passing through an avoidable hop, and future redirects can become chains or loops.',
+    howToVerify:
+      'Re-run the crawl and confirm the requested URL is the same as the final URL, or that the redirect is intentional.',
+    agentHints: {
+      evidenceFields: ['page.url', 'page.finalUrl', 'page.status'],
+      suggestedCommands: ['seo redirect-trace --url <url> --json'],
+    },
+  },
+  {
     id: 'missing_meta_description',
     title: 'Meta description missing',
     category: 'metadata',

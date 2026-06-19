@@ -175,7 +175,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Added structured local/free/starter/pro/enterprise crawler limit profiles in core and exposed them through MCP workflow guidance without enforcing hosted-only limits in local mode.
 - [x] Add queue-friendly crawl status events.
   Added opt-in typed crawl status events for started, queued/skipped URLs, page lifecycle, external link checks, cancellation, and completion; the callback is execution-only so saved config hashes stay idempotent.
-- [ ] Add resumable or partial crawl concepts only when local implementation needs them.
+- [x] Add resumable or partial crawl concepts only when local implementation needs them.
+  Kept the local boundary intentionally simple: partial reports are first-class through report status, warnings, and caveats; resumable job/frontier state is documented as deferred until a local CLI/MCP workflow needs it.
 - [ ] Avoid hosted-only complexity until the local crawler is excellent.
 
 ## Phase 13: Quality Gates

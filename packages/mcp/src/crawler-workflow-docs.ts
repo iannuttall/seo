@@ -41,6 +41,12 @@ Future hosted/API tiers should enforce explicit limits for max pages, JavaScript
 
 Core crawls can emit typed status events for queue workers: started, URL queued/skipped, page started/completed/failed/skipped, external link checks, cancelled, and completed. These events are execution-only and are not part of saved report config or config hashing.
 
+## Partial and resumable crawls
+
+Partial reports are the current local contract. A crawl can return \`status: "partial"\` with warnings and caveats when it is cancelled, capped by \`maxPages\`, or otherwise incomplete.
+
+Do not invent resume tokens or hosted job state yet. Re-run the saved report config when fresh data is needed, and only add resumable crawl state once a local CLI/MCP workflow needs it.
+
 ## Idempotency rules
 
 - Prefer saved report ids for follow-up tools.
@@ -143,6 +149,12 @@ export const crawlerToolGuide = {
       'sampleUrls',
       'verification.command',
     ],
+  },
+  executionBoundary: {
+    partialReports:
+      'Supported through report status, warnings, and caveats for cancelled, capped, or incomplete crawls.',
+    resumableState:
+      'Deferred until a local CLI/MCP workflow needs resume tokens or persisted crawl frontier state.',
   },
   limits: CRAWLER_LIMIT_PROFILES,
 } as const

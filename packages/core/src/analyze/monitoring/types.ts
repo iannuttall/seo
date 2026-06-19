@@ -13,6 +13,7 @@ export type CrawlPageSnapshot = {
   cacheState?: 'hit' | 'miss' | 'bypass'
   fetchDiagnostics?: PageFetchDiagnostics
   blocked?: boolean
+  crawlDepth?: number
   robotsTxt?: {
     url: string
     allowed: boolean
@@ -42,6 +43,8 @@ export type CrawlPageSnapshot = {
   internalLinkAuthorityScore?: number
   sampleInternalLinks?: string[]
   sampleExternalLinks?: string[]
+  internalAnchorSamples?: Array<{ href: string; text: string }>
+  externalAnchorSamples?: Array<{ href: string; text: string }>
   schemaTypes?: string[]
   openGraphTitle?: string
   openGraphImage?: string

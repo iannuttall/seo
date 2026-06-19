@@ -50,6 +50,25 @@ function truncate(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value
 }
 
+function anchorSamples(
+  links: Array<{ href: string; text: string; internal: boolean }>,
+  internal: boolean,
+): Array<{ href: string; text: string }> {
+  const seen = new Set<string>()
+  const samples: Array<{ href: string; text: string }> = []
+  for (const link of links) {
+    if (link.internal !== internal) continue
+    const text = truncate(link.text.replace(/\s+/g, ' ').trim(), 120)
+    if (!text) continue
+    const key = `${link.href}\n${text}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    samples.push({ href: link.href, text })
+    if (samples.length >= 25) break
+  }
+  return samples
+}
+
 function hasNoIndex(value?: string): boolean {
   return /\bnoindex\b/i.test(value ?? '')
 }
@@ -127,6 +146,8 @@ export async function crawlOne(
       outgoingExternalCount: uniqueExternalLinks.length,
       sampleInternalLinks: uniqueInternalLinks.slice(0, 25),
       sampleExternalLinks: uniqueExternalLinks.slice(0, 25),
+      internalAnchorSamples: anchorSamples(extracted.links, true),
+      externalAnchorSamples: anchorSamples(extracted.links, false),
       schemaTypes: extracted.schemaTypes,
       openGraphTitle: extracted.openGraph['og:title'],
       openGraphImage: extracted.openGraph['og:image'],

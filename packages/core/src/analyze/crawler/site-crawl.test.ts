@@ -35,7 +35,9 @@ test('crawlSite follows same-origin links within depth and page limits', async (
       return
     }
     if (req.url === '/') {
-      res.end('<title>Home</title><h1>Home</h1><a href="/a">A</a>')
+      res.end(
+        '<title>Home</title><h1>Home</h1><a href="/a">About A</a><a href="https://example.org/ref">External ref</a>',
+      )
       return
     }
     if (req.url === '/a') {
@@ -67,8 +69,17 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     )
     assert.equal(report.pages[0]?.internalInlinkCount, 0)
     assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
+    assert.equal(report.pages[0]?.crawlDepth, 0)
+    assert.equal(report.pages[0]?.outgoingExternalCount, 1)
+    assert.deepEqual(report.pages[0]?.internalAnchorSamples, [
+      { href: `${fixture.baseUrl}/a`, text: 'About A' },
+    ])
+    assert.deepEqual(report.pages[0]?.externalAnchorSamples, [
+      { href: 'https://example.org/ref', text: 'External ref' },
+    ])
     assert.equal(report.pages[1]?.internalInlinkCount, 1)
     assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
+    assert.equal(report.pages[1]?.crawlDepth, 1)
     assert.equal(report.status, 'completed')
   } finally {
     await fixture.close()

@@ -218,6 +218,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       continue
     }
 
+    result.page.crawlDepth = task.depth
     pages.push(result.page)
     linkGraph[result.page.url] = result.urls
     linkGraph[result.page.finalUrl] = result.urls

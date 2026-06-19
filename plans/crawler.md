@@ -200,4 +200,4 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add MCP `seo_crawl_site`, `seo_top_fixes`, and `seo_explain_issue`.
 - [x] Join GSC page metrics when `--site` or `--project` is provided.
 - [x] Add saved local reports with `latest`.
-- [ ] Wire `seo report` to recommend the crawler when no technical baseline exists.
+- [x] Wire `seo report` to recommend the crawler when no technical baseline exists.

@@ -101,6 +101,57 @@ export function registerCrawlerTools(server: McpServer): void {
   )
 
   server.registerTool(
+    'seo_audit_urls',
+    {
+      description:
+        'Audit an explicit list of URLs with technical SEO/GEO checks. Compact by default; set includePages/includeIssues for raw data.',
+      inputSchema: {
+        urls: z.array(z.string().url()).min(1),
+        site: z.string().optional(),
+        ga4PropertyId: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        concurrency: z.number().int().positive().optional(),
+        includePages: z.boolean().optional(),
+        includeIssues: z.boolean().optional(),
+        saveReport: z.boolean().optional(),
+      },
+    },
+    async ({
+      urls,
+      site,
+      ga4PropertyId,
+      maxPages,
+      concurrency,
+      includePages,
+      includeIssues,
+      saveReport,
+    }) => {
+      try {
+        const report = await crawlSite({
+          url: urls[0] ?? '',
+          urls,
+          mode: 'list',
+          site,
+          ga4PropertyId,
+          maxPages: maxPages ?? urls.length,
+          concurrency,
+          useSitemap: false,
+        })
+        const saved = saveReport ? saveCrawlReport(report) : undefined
+        return toolSuccess(
+          `URL audit complete. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
+          {
+            ...compactCrawlResult(report, { includePages, includeIssues }),
+            ...(saved ? { saved } : {}),
+          },
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
     'seo_top_fixes',
     {
       description:

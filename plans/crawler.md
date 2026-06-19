@@ -109,8 +109,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add `seo crawl <url>` or `seo technical-audit <url>` after deciding the name.
 - [ ] Add `seo audit-url <url>` only if it is clearer than extending `seo audit-page`.
 - [x] Add URL-list mode from arguments and/or file input.
-- [ ] Add `--format pretty|json|csv|html`.
-- [ ] Add `--output <path>`.
+- [x] Add `--format pretty|json|csv|html`.
+- [x] Add `--output <path>`.
 - [ ] Add `--save`.
 - [x] Add `--fail-on high|medium|low`.
 - [x] Add `--severity high|medium|low`.
@@ -141,7 +141,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add a compact technical section to `seo report`.
 - [ ] Add plain-English issue groups with top affected URLs.
 - [ ] Add "how to verify" commands after top fixes.
-- [ ] Add shareable HTML export for crawl reports.
+- [x] Add shareable HTML export for crawl reports.
 - [ ] Add CSV export for issues and pages.
 - [ ] Add markdown export for agent-created implementation tickets.
 - [ ] Keep sparse data graceful: no auth should still produce a technical crawl; no crawl URL should skip the section clearly.

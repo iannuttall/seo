@@ -163,7 +163,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [x] Keep crawl execution behind a core service function that accepts config and dependencies.
   Confirmed: `crawlSite(input, dependencies?)` in `packages/core` owns crawl execution, CLI/MCP/workflows call that core service, and hosted-safe dependency injection is covered by crawler tests.
-- [ ] Keep storage behind an adapter interface.
+- [x] Keep storage behind an adapter interface.
+  Added `CrawlReportStoreAdapter`; SQLite remains the default local store, and public report-store helpers accept an injected adapter for future hosted/API storage.
 - [ ] Keep fetch/cache/rate controls injectable.
 - [ ] Keep auth/data joins optional and provider-based.
 - [ ] Make report payloads tenant-safe: no local paths, no tokens, no raw secrets.

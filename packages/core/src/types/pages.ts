@@ -52,6 +52,11 @@ export interface PageFetchDiagnostics {
     cache: 'hit' | 'miss' | 'bypass'
     allowed: boolean
   }
+  redirectChain?: Array<{
+    url: string
+    status: number
+    location?: string
+  }>
 }
 
 export interface CoverageField {

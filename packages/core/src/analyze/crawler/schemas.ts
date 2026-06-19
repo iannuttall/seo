@@ -69,6 +69,7 @@ export const crawlPageSnapshotSchema = z.object({
   finalUrl: z.string().url(),
   status: z.number().int(),
   contentType: z.string().optional(),
+  responseHeaders: z.record(z.string(), z.string()).optional(),
   responseTimeMs: z.number().optional(),
   sizeBytes: z.number().int().optional(),
   usedJs: z.boolean().optional(),
@@ -108,6 +109,15 @@ export const crawlPageSnapshotSchema = z.object({
           cache: z.enum(['hit', 'miss', 'bypass']),
           allowed: z.boolean(),
         })
+        .optional(),
+      redirectChain: z
+        .array(
+          z.object({
+            url: z.string().url(),
+            status: z.number().int(),
+            location: z.string().url().optional(),
+          }),
+        )
         .optional(),
     })
     .optional(),

@@ -31,6 +31,21 @@ function headerValue(
   )
 }
 
+function safeResponseHeaders(
+  headers: Record<string, string>,
+): Record<string, string> {
+  const blocked = new Set([
+    'authorization',
+    'cookie',
+    'proxy-authorization',
+    'set-cookie',
+    'www-authenticate',
+  ])
+  return Object.fromEntries(
+    Object.entries(headers).filter(([key]) => !blocked.has(key.toLowerCase())),
+  )
+}
+
 function truncate(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value
 }
@@ -69,6 +84,7 @@ export async function crawlOne(
       finalUrl: extracted.finalUrl,
       status: fetched.status,
       contentType: headerValue(fetched.headers, 'content-type'),
+      responseHeaders: safeResponseHeaders(fetched.headers),
       responseTimeMs: fetched.diagnostics.durationMs,
       sizeBytes: Buffer.byteLength(fetched.html),
       usedJs: fetched.usedJs,

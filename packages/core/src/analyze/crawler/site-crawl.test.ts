@@ -129,9 +129,11 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     if (req.url === '/old') {
       res.statusCode = 301
       res.setHeader('location', '/new')
+      res.setHeader('set-cookie', 'session=secret')
       res.end()
       return
     }
+    res.setHeader('x-test-header', 'visible')
     res.setHeader('content-type', 'text/html')
     res.end('<title>New</title><h1>New</h1>')
   })
@@ -148,6 +150,15 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     const issue = report.issues.find((item) => item.ruleId === 'redirected_url')
 
     assert.equal(report.pages[0]?.finalUrl, `${fixture.baseUrl}/new`)
+    assert.deepEqual(report.pages[0]?.fetchDiagnostics?.redirectChain, [
+      {
+        url: `${fixture.baseUrl}/old`,
+        status: 301,
+        location: `${fixture.baseUrl}/new`,
+      },
+    ])
+    assert.equal(report.pages[0]?.responseHeaders?.['x-test-header'], 'visible')
+    assert.equal(report.pages[0]?.responseHeaders?.['set-cookie'], undefined)
     assert.equal(issue?.evidence?.finalUrl, `${fixture.baseUrl}/new`)
   } finally {
     await fixture.close()

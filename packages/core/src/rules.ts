@@ -99,8 +99,8 @@ const RULE_DEFINITIONS = [
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']
 export type RuleInfo = (typeof RULE_DEFINITIONS)[number]
-export type RuleCategory = RuleInfo['category']
-export type RuleSeverity = RuleInfo['defaultSeverity']
+export type RuleCategory = RuleDefinition['category']
+export type RuleSeverity = RuleDefinition['defaultSeverity']
 
 const RULES_BY_ID = new Map<string, RuleInfo>(
   RULE_DEFINITIONS.map((rule) => [rule.id, rule]),

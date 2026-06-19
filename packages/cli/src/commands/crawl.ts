@@ -264,6 +264,13 @@ export const crawlCommand = defineCommand({
           truncate(fix.sampleUrls[0] ?? '', 64),
         ]),
       )
+
+      process.stdout.write('\nPlain English fixes\n')
+      for (const fix of rankedFixes.slice(0, 3)) {
+        process.stdout.write(
+          `- ${fix.title}: ${fix.howToFix}\n  Affected: ${fix.sampleUrls.slice(0, 3).join(', ')}\n  Verify: ${fix.howToVerify}\n  Command: ${verificationCommand(report.config.url)}\n`,
+        )
+      }
     }
 
     printNotes('Warnings', report.warnings.slice(0, 10))
@@ -337,4 +344,8 @@ async function writeOrPrint(path: string | undefined, content: string) {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, content)
   process.stdout.write(`Wrote ${path}\n`)
+}
+
+function verificationCommand(url: string): string {
+  return `seo crawl ${url} --max-pages 25`
 }

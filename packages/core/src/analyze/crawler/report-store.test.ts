@@ -6,6 +6,7 @@ import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { createCrawlReport } from './report.js'
 import {
   CRAWL_REPORT_STORAGE_VERSION,
+  type CrawlReportStoreAdapter,
   deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
@@ -150,4 +151,60 @@ test('crawl report loading stays idempotent after derived normalization', () => 
   assert.equal(secondLoad?.configHash, report.configHash)
   assert.deepEqual(firstLoad?.summary, secondLoad?.summary)
   assert.deepEqual(firstLoad?.pages, secondLoad?.pages)
+})
+
+test('crawl report store functions accept an adapter boundary', () => {
+  const report = createCrawlReport({
+    generatedAt: '2026-06-19T00:05:00.000Z',
+    config: { url: 'https://adapter-store.example/' },
+  })
+  const calls: string[] = []
+  const adapter: CrawlReportStoreAdapter = {
+    save: (value) => {
+      calls.push(`save:${value.id}`)
+      return {
+        id: value.id,
+        configHash: value.configHash,
+        site: value.site,
+        url: value.config.url,
+        status: value.status,
+        totalPages: value.summary.totalPages,
+        issueCount: value.issues.length,
+        createdAt: value.generatedAt,
+        storageVersion: CRAWL_REPORT_STORAGE_VERSION,
+      }
+    },
+    list: (input = {}) => {
+      calls.push(`list:${input.site ?? 'all'}:${input.limit ?? 'default'}`)
+      return []
+    },
+    load: (id) => {
+      calls.push(`load:${id}`)
+      return report
+    },
+    delete: (id) => {
+      calls.push(`delete:${id}`)
+      return true
+    },
+    latest: (site) => {
+      calls.push(`latest:${site ?? 'all'}`)
+      return report
+    },
+  }
+
+  assert.equal(saveCrawlReport(report, adapter).id, report.id)
+  assert.deepEqual(
+    listCrawlReports({ site: 'sc-domain:example.com' }, adapter),
+    [],
+  )
+  assert.equal(loadCrawlReport(report.id, adapter)?.id, report.id)
+  assert.equal(deleteCrawlReport(report.id, adapter), true)
+  assert.equal(latestCrawlReport(undefined, adapter)?.id, report.id)
+  assert.deepEqual(calls, [
+    `save:${report.id}`,
+    'list:sc-domain:example.com:default',
+    `load:${report.id}`,
+    `delete:${report.id}`,
+    'latest:all',
+  ])
 })

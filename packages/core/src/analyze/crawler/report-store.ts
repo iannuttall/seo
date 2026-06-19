@@ -26,6 +26,14 @@ export type CrawlReportStorageEnvelope = {
   report: CrawlReport
 }
 
+export type CrawlReportStoreAdapter = {
+  save: (report: CrawlReport) => CrawlReportMeta
+  list: (input?: { site?: string; limit?: number }) => CrawlReportMeta[]
+  load: (id: string) => CrawlReport | undefined
+  delete: (id: string) => boolean
+  latest: (site?: string) => CrawlReport | undefined
+}
+
 type CrawlReportRow = {
   id: string
   config_hash: string
@@ -94,7 +102,7 @@ function reportFromJson(value: string): CrawlReport {
   return normalizeLoadedCrawlReport(parsed as CrawlReport)
 }
 
-export function saveCrawlReport(report: CrawlReport): CrawlReportMeta {
+function saveCrawlReportToSqlite(report: CrawlReport): CrawlReportMeta {
   getDb()
     .prepare(
       `INSERT OR REPLACE INTO crawl_reports
@@ -125,7 +133,7 @@ export function saveCrawlReport(report: CrawlReport): CrawlReportMeta {
   }
 }
 
-export function listCrawlReports(
+function listCrawlReportsFromSqlite(
   input: { site?: string; limit?: number } = {},
 ): CrawlReportMeta[] {
   const limit = input.limit ?? 20
@@ -148,7 +156,7 @@ export function listCrawlReports(
   return rows.map(toMeta)
 }
 
-export function loadCrawlReport(id: string): CrawlReport | undefined {
+function loadCrawlReportFromSqlite(id: string): CrawlReport | undefined {
   const row = getDb()
     .prepare('SELECT report_json FROM crawl_reports WHERE id = ?')
     .get(id) as { report_json: string } | undefined
@@ -156,14 +164,14 @@ export function loadCrawlReport(id: string): CrawlReport | undefined {
   return reportFromJson(row.report_json)
 }
 
-export function deleteCrawlReport(id: string): boolean {
+function deleteCrawlReportFromSqlite(id: string): boolean {
   const result = getDb()
     .prepare('DELETE FROM crawl_reports WHERE id = ?')
     .run(id)
   return result.changes > 0
 }
 
-export function latestCrawlReport(site?: string): CrawlReport | undefined {
+function latestCrawlReportFromSqlite(site?: string): CrawlReport | undefined {
   const row = site
     ? (getDb()
         .prepare(
@@ -182,4 +190,49 @@ export function latestCrawlReport(site?: string): CrawlReport | undefined {
         .get() as { report_json: string } | undefined)
   if (!row) return undefined
   return reportFromJson(row.report_json)
+}
+
+export const sqliteCrawlReportStore: CrawlReportStoreAdapter = {
+  save: saveCrawlReportToSqlite,
+  list: listCrawlReportsFromSqlite,
+  load: loadCrawlReportFromSqlite,
+  delete: deleteCrawlReportFromSqlite,
+  latest: latestCrawlReportFromSqlite,
+}
+
+export const crawlReportStore: CrawlReportStoreAdapter = sqliteCrawlReportStore
+
+export function saveCrawlReport(
+  report: CrawlReport,
+  store: CrawlReportStoreAdapter = crawlReportStore,
+): CrawlReportMeta {
+  return store.save(report)
+}
+
+export function listCrawlReports(
+  input: { site?: string; limit?: number } = {},
+  store: CrawlReportStoreAdapter = crawlReportStore,
+): CrawlReportMeta[] {
+  return store.list(input)
+}
+
+export function loadCrawlReport(
+  id: string,
+  store: CrawlReportStoreAdapter = crawlReportStore,
+): CrawlReport | undefined {
+  return store.load(id)
+}
+
+export function deleteCrawlReport(
+  id: string,
+  store: CrawlReportStoreAdapter = crawlReportStore,
+): boolean {
+  return store.delete(id)
+}
+
+export function latestCrawlReport(
+  site?: string,
+  store: CrawlReportStoreAdapter = crawlReportStore,
+): CrawlReport | undefined {
+  return store.latest(site)
 }

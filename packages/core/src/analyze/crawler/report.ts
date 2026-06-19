@@ -22,6 +22,7 @@ export type CrawlConfig = {
 
 export type CrawlConfigInput = Partial<CrawlConfig> & {
   url: string
+  projectId?: string
   site?: string
   searchMetricsLimit?: number
   ga4PropertyId?: string

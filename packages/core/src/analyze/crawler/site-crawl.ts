@@ -212,6 +212,7 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
 
   return createCrawlReport({
     config,
+    projectId: input.projectId,
     site,
     ga4PropertyId: input.ga4PropertyId,
     pages,

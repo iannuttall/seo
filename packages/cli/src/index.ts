@@ -1,6 +1,7 @@
 import { defineCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
+import { crawlCommand } from './commands/crawl.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
 import {
   ga4ReportCommand,
@@ -136,6 +137,7 @@ const allHelpSections: HelpSection[] = [
     title: 'Technical and data',
     commands: [
       ['seo audit-page', 'Audit one page'],
+      ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
       ['seo crawl-diff', 'Compare crawl changes'],
       ['seo index-watch', 'Check URL Inspection status'],
       ['seo link-recover', 'Find broken search-value URLs'],
@@ -201,6 +203,7 @@ const main = defineCommand({
     privacy: privacyCommand,
     reset: resetCommand,
     cache: cacheCommand,
+    crawl: crawlCommand,
     client: clientCommand,
     project: projectCommand,
     projects: projectCommand,

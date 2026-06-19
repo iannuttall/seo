@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  affectedUrls,
   crawlSite,
   explainRule,
   latestCrawlReport,
@@ -177,6 +178,63 @@ export function registerCrawlerTools(server: McpServer): void {
       return toolSuccess(`Found ${rules.length} crawler rules.`, {
         rules,
       })
+    },
+  )
+
+  server.registerTool(
+    'seo_affected_urls',
+    {
+      description:
+        'Return affected URLs for a saved or freshly crawled report, filtered by rule, category, or severity.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        ruleId: z.string().optional(),
+        category: z.string().optional(),
+        severity: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        limit: z.number().int().positive().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      ruleId,
+      category,
+      severity,
+      maxPages,
+      limit,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({ url, site, maxPages })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const urls = affectedUrls(report, {
+          ruleId,
+          category,
+          severity,
+          limit,
+        })
+        return toolSuccess(
+          `Found ${urls.length} affected URLs for ${report.config.url}.`,
+          {
+            url: report.config.url,
+            reportId: report.id,
+            affectedUrls: urls,
+          },
+        )
+      } catch (error) {
+        return toolError(error)
+      }
     },
   )
 

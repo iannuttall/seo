@@ -126,7 +126,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add `seo_explain_issue`.
 - [x] Add `seo_list_rules`.
 - [x] Add `seo_top_fixes`.
-- [ ] Add `seo_affected_urls`.
+- [x] Add `seo_affected_urls`.
 - [ ] Add `seo_geo_gaps`.
 - [x] Add `seo_get_crawl_report`.
 - [x] Add `seo_list_crawl_reports`.
@@ -149,7 +149,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 11: Agent Workflow Improvements
 
 - [ ] Add a workflow that runs crawl, joins GSC/GA4 when available, ranks fixes, and returns an implementation queue.
-- [ ] Add issue-specific affected URL slicing.
+- [x] Add issue-specific affected URL slicing.
 - [ ] Add command follow-ups for every top fix.
 - [ ] Add verification recipes for common fixes.
 - [ ] Add "rerun same report config" support.

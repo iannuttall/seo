@@ -1,3 +1,4 @@
+export * from './crawler/affected-urls.js'
 export * from './crawler/audit.js'
 export * from './crawler/export.js'
 export * from './crawler/report.js'

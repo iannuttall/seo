@@ -34,6 +34,7 @@ export type CrawlIssue = {
   url: string
   detail?: string
   evidence?: Record<string, unknown>
+  searchMetrics?: CrawlPageSnapshot['searchMetrics']
 }
 
 export type CrawlIssueGroup = {

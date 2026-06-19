@@ -41,6 +41,7 @@ function issue(
     url: page.url,
     detail,
     evidence,
+    searchMetrics: page.searchMetrics,
   }
 }
 

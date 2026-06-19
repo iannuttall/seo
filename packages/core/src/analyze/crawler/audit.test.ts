@@ -115,3 +115,24 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
     ],
   )
 })
+
+test('auditCrawlPages copies search metrics onto issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      metaDescription: undefined,
+      searchMetrics: {
+        clicks: 12,
+        impressions: 400,
+        ctr: 0.03,
+        position: 8.5,
+      },
+    }),
+  ])
+
+  assert.deepEqual(issues[0]?.searchMetrics, {
+    clicks: 12,
+    impressions: 400,
+    ctr: 0.03,
+    position: 8.5,
+  })
+})

@@ -85,8 +85,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 6: Search Data Join
 
-- [ ] Join crawl issues to GSC page metrics when a site/property is available.
-- [ ] Mark issues on URLs with recent clicks, impressions, position, and CTR.
+- [x] Join crawl issues to GSC page metrics when a site/property is available.
+- [x] Mark issues on URLs with recent clicks, impressions, position, and CTR.
 - [ ] Join GA4 landing-page sessions/conversions when a property is available.
 - [x] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
 - [ ] Add a "technical fixes with search value" section to `seo report`.

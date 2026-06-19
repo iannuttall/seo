@@ -2,16 +2,55 @@ export type CrawlPageSnapshot = {
   url: string
   finalUrl: string
   status: number
+  contentType?: string
+  responseTimeMs?: number
+  sizeBytes?: number
+  usedJs?: boolean
+  fetchSource?: 'cache' | 'network' | 'rendered'
+  cacheState?: 'hit' | 'miss' | 'bypass'
+  blocked?: boolean
+  robotsTxt?: {
+    url: string
+    allowed: boolean
+    matchedLine?: string
+  }
   title?: string
   metaDescription?: string
   canonical?: string
   metaRobots?: string
   xRobotsTag?: string
   h1?: string
+  h1Count?: number
+  h2Count?: number
+  h3Count?: number
   indexable: boolean
+  indexability?: string
   wordCount: number
   contentHash: string
+  contentSample?: string
+  lang?: string
+  hasViewport?: boolean
+  imagesTotal?: number
+  imagesMissingAlt?: number
   outgoingInternalCount: number
+  outgoingExternalCount?: number
+  sampleInternalLinks?: string[]
+  sampleExternalLinks?: string[]
+  schemaTypes?: string[]
+  openGraphTitle?: string
+  openGraphImage?: string
+  twitterCard?: string
+  author?: string
+  hasDate?: boolean
+  geo?: {
+    semanticHtml: boolean
+    structuredData: boolean
+    hasAuthor: boolean
+    hasDate: boolean
+    questionHeadings: number
+    structuredBlocks: number
+    answerable: boolean
+  }
 }
 
 export type CrawlRun = {
@@ -146,6 +185,7 @@ export type CrawlPageRow = {
   word_count: number
   content_hash: string
   outgoing_internal_count: number
+  snapshot_json?: string | null
 }
 
 export type IndexWatchRow = {

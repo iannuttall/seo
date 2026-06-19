@@ -19,17 +19,31 @@ function hashText(value: string): string {
   return createHash('sha256').update(value).digest('hex')
 }
 
+function headerValue(
+  headers: Record<string, string>,
+  name: string,
+): string | undefined {
+  const lower = name.toLowerCase()
+  return (
+    headers[name] ??
+    headers[lower] ??
+    Object.entries(headers).find(([key]) => key.toLowerCase() === lower)?.[1]
+  )
+}
+
+function truncate(value: string, max: number): string {
+  return value.length > max ? value.slice(0, max).trimEnd() : value
+}
+
 function hasNoIndex(value?: string): boolean {
   return /\bnoindex\b/i.test(value ?? '')
 }
 
-function pageIndexable(page: CrawlPageSnapshot): boolean {
-  return (
-    page.status >= 200 &&
-    page.status < 300 &&
-    !hasNoIndex(page.metaRobots) &&
-    !hasNoIndex(page.xRobotsTag)
-  )
+function indexabilityReason(page: CrawlPageSnapshot): string | undefined {
+  if (page.status < 200 || page.status >= 300) return `Status ${page.status}`
+  if (hasNoIndex(page.metaRobots)) return 'Meta robots noindex'
+  if (hasNoIndex(page.xRobotsTag)) return 'X-Robots-Tag noindex'
+  return undefined
 }
 
 export async function crawlOne(
@@ -43,11 +57,25 @@ export async function crawlOne(
     const internalLinks = extracted.links
       .map((link) => sameOriginUrl(link.href, base))
       .filter((value): value is string => Boolean(value))
+    const externalLinks = extracted.links
+      .filter((link) => !link.internal)
+      .map((link) => link.href)
+      .filter((href) => /^https?:\/\//.test(href))
     const h1 = extracted.headings.find((heading) => heading.level === 1)?.text
+    const uniqueInternalLinks = [...new Set(internalLinks)]
+    const uniqueExternalLinks = [...new Set(externalLinks)]
     const page: CrawlPageSnapshot = {
       url,
       finalUrl: extracted.finalUrl,
       status: fetched.status,
+      contentType: headerValue(fetched.headers, 'content-type'),
+      responseTimeMs: fetched.diagnostics.durationMs,
+      sizeBytes: Buffer.byteLength(fetched.html),
+      usedJs: fetched.usedJs,
+      fetchSource: fetched.diagnostics.source,
+      cacheState: fetched.diagnostics.cache,
+      blocked: fetched.diagnostics.blocked,
+      robotsTxt: fetched.robotsTxt,
       title: extracted.title,
       metaDescription: extracted.metaDescription,
       canonical: extracted.canonical
@@ -56,6 +84,12 @@ export async function crawlOne(
       metaRobots: extracted.metaRobots,
       xRobotsTag: extracted.xRobotsTag,
       h1,
+      h1Count: extracted.headings.filter((heading) => heading.level === 1)
+        .length,
+      h2Count: extracted.headings.filter((heading) => heading.level === 2)
+        .length,
+      h3Count: extracted.headings.filter((heading) => heading.level === 3)
+        .length,
       indexable: false,
       wordCount: extracted.wordCount,
       contentHash: hashText(
@@ -67,10 +101,34 @@ export async function crawlOne(
           extracted.contentText,
         ].join('\n'),
       ),
-      outgoingInternalCount: new Set(internalLinks).size,
+      contentSample: truncate(extracted.contentText, 300),
+      lang: extracted.lang,
+      hasViewport: extracted.hasViewport,
+      imagesTotal: extracted.imagesTotal,
+      imagesMissingAlt: extracted.imagesMissingAlt,
+      outgoingInternalCount: uniqueInternalLinks.length,
+      outgoingExternalCount: uniqueExternalLinks.length,
+      sampleInternalLinks: uniqueInternalLinks.slice(0, 25),
+      sampleExternalLinks: uniqueExternalLinks.slice(0, 25),
+      schemaTypes: extracted.schemaTypes,
+      openGraphTitle: extracted.openGraph['og:title'],
+      openGraphImage: extracted.openGraph['og:image'],
+      twitterCard: extracted.twitter['twitter:card'],
+      author: extracted.author,
+      hasDate: extracted.hasDate,
+      geo: {
+        semanticHtml: extracted.semanticHtml,
+        structuredData: extracted.schemaTypes.length > 0,
+        hasAuthor: extracted.hasAuthor,
+        hasDate: extracted.hasDate,
+        questionHeadings: extracted.questionHeadings,
+        structuredBlocks: extracted.structuredBlocks,
+        answerable: extracted.answerable,
+      },
     }
-    page.indexable = pageIndexable(page)
-    return { page, urls: [...new Set(internalLinks)] }
+    page.indexability = indexabilityReason(page)
+    page.indexable = !page.indexability
+    return { page, urls: uniqueInternalLinks }
   } catch (error) {
     return {
       urls: [],

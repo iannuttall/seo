@@ -107,12 +107,23 @@ export interface ExtractedPage {
   metaRobots?: string
   xRobotsTag?: string
   canonical?: string
+  lang?: string
+  hasViewport: boolean
   headings: Array<{ level: number; text: string }>
   links: Array<{ href: string; text: string; rel: string[]; internal: boolean }>
   jsonLd: unknown[]
+  schemaTypes: string[]
   openGraph: Record<string, string>
   twitter: Record<string, string>
   author?: string
+  hasAuthor: boolean
+  hasDate: boolean
+  imagesTotal: number
+  imagesMissingAlt: number
+  semanticHtml: boolean
+  questionHeadings: number
+  structuredBlocks: number
+  answerable: boolean
   contentText: string
   excerpt?: string
   wordCount: number

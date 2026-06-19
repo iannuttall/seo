@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import test from 'node:test'
 import {
   type CrawlPageSnapshot,
   compareCrawlPages,
+  getRunPages,
   insertCrawlRun,
   latestCrawlSummaries,
   monitoringStatus,
@@ -75,11 +77,11 @@ test('compareCrawlPages detects added, removed, and changed URLs', () => {
 })
 
 test('latestCrawlSummaries includes saved crawl recommendations', () => {
-  const site = `sc-domain:crawl-${Date.now()}.example`
+  const site = `sc-domain:crawl-${randomUUID()}.example`
   const url = `https://${site.slice('sc-domain:'.length)}/broken/`
   insertCrawlRun(
     {
-      id: `run-${Date.now()}`,
+      id: `run-${randomUUID()}`,
       site,
       startUrl: url,
       createdAt: new Date().toISOString(),
@@ -106,12 +108,59 @@ test('latestCrawlSummaries includes saved crawl recommendations', () => {
   assert.match(latest?.topRecommendation?.action ?? '', /301/)
 })
 
+test('crawl store preserves rich page snapshots', () => {
+  const site = `sc-domain:snapshot-${randomUUID()}.example`
+  const url = `https://${site.slice('sc-domain:'.length)}/`
+  const runId = `run-${randomUUID()}`
+  insertCrawlRun(
+    {
+      id: runId,
+      site,
+      startUrl: url,
+      createdAt: new Date().toISOString(),
+      limit: 1,
+      urlCount: 1,
+    },
+    [
+      page({
+        url,
+        contentType: 'text/html',
+        responseTimeMs: 123,
+        h1Count: 1,
+        h2Count: 3,
+        imagesTotal: 4,
+        imagesMissingAlt: 1,
+        outgoingExternalCount: 2,
+        sampleExternalLinks: ['https://example.org/resource'],
+        schemaTypes: ['Article'],
+        geo: {
+          semanticHtml: true,
+          structuredData: true,
+          hasAuthor: true,
+          hasDate: true,
+          questionHeadings: 2,
+          structuredBlocks: 1,
+          answerable: true,
+        },
+      }),
+    ],
+  )
+
+  const saved = getRunPages(runId).get(url)
+  assert.equal(saved?.contentType, 'text/html')
+  assert.equal(saved?.responseTimeMs, 123)
+  assert.equal(saved?.h2Count, 3)
+  assert.equal(saved?.imagesMissingAlt, 1)
+  assert.deepEqual(saved?.schemaTypes, ['Article'])
+  assert.equal(saved?.geo?.structuredData, true)
+})
+
 test('monitoringStatus flags saved crawl recommendations', () => {
-  const site = `sc-domain:status-${Date.now()}.example`
+  const site = `sc-domain:status-${randomUUID()}.example`
   const url = `https://${site.slice('sc-domain:'.length)}/broken/`
   insertCrawlRun(
     {
-      id: `run-${Date.now()}`,
+      id: `run-${randomUUID()}`,
       site,
       startUrl: url,
       createdAt: new Date().toISOString(),

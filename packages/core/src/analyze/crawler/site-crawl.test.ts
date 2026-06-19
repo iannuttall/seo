@@ -7,6 +7,7 @@ import {
 } from 'node:http'
 import { test } from 'node:test'
 import { Response } from 'undici'
+import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type { CrawlStatusEvent } from './report.js'
 import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
 
@@ -26,6 +27,40 @@ async function withServer(
           else resolve()
         })
       }),
+  }
+}
+
+function crawlPageSnapshot(
+  url: string,
+  input: Partial<CrawlPageSnapshot> = {},
+): CrawlPageSnapshot {
+  return {
+    url,
+    finalUrl: url,
+    status: 200,
+    contentType: 'text/html',
+    responseTimeMs: 20,
+    title: 'Large site fixture page',
+    metaDescription: 'Large site fixture page description.',
+    h1: 'Large site fixture page',
+    h1Count: 1,
+    h2Count: 1,
+    h3Count: 0,
+    indexable: true,
+    wordCount: 180,
+    contentHash: `hash-${url}`,
+    outgoingInternalCount: 0,
+    outgoingExternalCount: 0,
+    geo: {
+      semanticHtml: true,
+      structuredData: true,
+      hasAuthor: true,
+      hasDate: true,
+      questionHeadings: 1,
+      structuredBlocks: 1,
+      answerable: true,
+    },
+    ...input,
   }
 }
 
@@ -405,6 +440,155 @@ test('crawlSite passes cache and rate controls through the shared fetch layer', 
   } finally {
     await fixture.close()
   }
+})
+
+test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async () => {
+  const calls: string[] = []
+  let activeFetches = 0
+  let maxActiveFetches = 0
+  const rootLinks = [
+    ...Array.from(
+      { length: 40 },
+      (_, index) => `https://example.com/page-${index}`,
+    ),
+    ...Array.from(
+      { length: 10 },
+      (_, index) => `https://example.com/asset-${index}.pdf`,
+    ),
+    'https://external.example/offsite-a',
+    'https://external.example/offsite-b',
+  ]
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 3,
+      maxDepth: 5,
+      concurrency: 2,
+    },
+    {
+      fetch: async () =>
+        new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async (url) => {
+        calls.push(url)
+        activeFetches += 1
+        maxActiveFetches = Math.max(maxActiveFetches, activeFetches)
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        activeFetches -= 1
+        const urls = url.endsWith('/') ? rootLinks : []
+        return {
+          urls,
+          page: crawlPageSnapshot(url, {
+            outgoingInternalCount: urls.length,
+            sampleInternalLinks: urls.slice(0, 25),
+          }),
+        }
+      },
+    },
+  )
+
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.totalPages, 3)
+  assert.equal(report.summary.crawledUrls, 3)
+  assert.equal(report.summary.queuedUrls, 15)
+  assert.equal(report.summary.skippedUrls, 38)
+  assert.equal(report.summary.failedUrls, 0)
+  assert.equal(maxActiveFetches, 2)
+  assert.equal(calls.length, 3)
+  assert.match(report.caveats.join('\n'), /maxPages \(3\)/)
+})
+
+test('crawlSite keeps large-site cancellation bounded', async () => {
+  const controller = new AbortController()
+  const calls = {
+    fetchPages: [] as string[],
+    externalChecks: 0,
+    searchMetrics: 0,
+    analytics: 0,
+  }
+  let childStarts = 0
+  let activeFetches = 0
+  let maxActiveFetches = 0
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      site: 'sc-domain:example.com',
+      ga4PropertyId: 'properties/123',
+      useSitemap: false,
+      checkExternal: true,
+      maxPages: 50,
+      maxDepth: 2,
+      concurrency: 4,
+      signal: controller.signal,
+    },
+    {
+      fetch: async (url) => {
+        if (url.includes('external.example')) calls.externalChecks += 1
+        return new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        })
+      },
+      fetchPage: async (url) => {
+        calls.fetchPages.push(url)
+        activeFetches += 1
+        maxActiveFetches = Math.max(maxActiveFetches, activeFetches)
+        if (url !== 'https://example.com/') {
+          childStarts += 1
+          if (childStarts === 2) {
+            controller.abort()
+            return new Promise(() => undefined)
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        activeFetches -= 1
+        const urls = url.endsWith('/')
+          ? Array.from(
+              { length: 100 },
+              (_, index) => `https://example.com/queued-${index}`,
+            )
+          : ['https://external.example/gone']
+        return {
+          urls,
+          page: crawlPageSnapshot(url, {
+            outgoingInternalCount: urls.length,
+            sampleInternalLinks: urls.slice(0, 25),
+            sampleExternalLinks: ['https://external.example/gone'],
+          }),
+        }
+      },
+      queryPageMetrics: async () => {
+        calls.searchMetrics += 1
+        return undefined
+      },
+      fetchLandingPageValues: async () => {
+        calls.analytics += 1
+        return { values: new Map() }
+      },
+    },
+  )
+
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.totalPages, 1)
+  assert.equal(report.summary.queuedUrls, 101)
+  assert.equal(report.summary.skippedUrls, 0)
+  assert.equal(maxActiveFetches <= 4, true)
+  assert.deepEqual(calls.fetchPages, [
+    'https://example.com/',
+    'https://example.com/queued-0',
+    'https://example.com/queued-1',
+  ])
+  assert.equal(calls.externalChecks, 0)
+  assert.equal(calls.searchMetrics, 0)
+  assert.equal(calls.analytics, 0)
+  assert.match(report.warnings.join('\n'), /cancelled/)
+  assert.match(report.caveats.join('\n'), /cancelled/)
 })
 
 test('crawlSite accepts hosted-safe provider dependencies', async () => {

@@ -107,7 +107,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 8: CLI Surface
 
 - [x] Add `seo crawl <url>` or `seo technical-audit <url>` after deciding the name.
-- [ ] Add `seo audit-url <url>` only if it is clearer than extending `seo audit-page`.
+- [x] Add `seo audit-url <url>` only if it is clearer than extending `seo audit-page`.
+  Decision: do not add it for now. Use `seo audit-page --url <url>` for the narrow page audit and `seo crawl <url> --mode page` for crawler-model output.
 - [x] Add URL-list mode from arguments and/or file input.
 - [x] Add `--format pretty|json|csv|html`.
 - [x] Add `--output <path>`.

@@ -17,6 +17,25 @@ const issueHeaders = [
   'position',
 ]
 
+const pageHeaders = [
+  'url',
+  'final_url',
+  'status',
+  'indexable',
+  'title',
+  'meta_description',
+  'canonical',
+  'word_count',
+  'internal_links',
+  'external_links',
+  'images_total',
+  'images_missing_alt',
+  'schema_types',
+  'clicks',
+  'impressions',
+  'sessions',
+]
+
 export function renderCrawlCsv(report: CrawlReport): string {
   return renderCsv(
     report.issues.map((issue) => ({
@@ -31,6 +50,30 @@ export function renderCrawlCsv(report: CrawlReport): string {
       position: issue.searchMetrics?.position,
     })),
     issueHeaders,
+  )
+}
+
+export function renderCrawlPagesCsv(report: CrawlReport): string {
+  return renderCsv(
+    report.pages.map((page) => ({
+      url: page.url,
+      final_url: page.finalUrl,
+      status: page.status,
+      indexable: page.indexable,
+      title: page.title,
+      meta_description: page.metaDescription,
+      canonical: page.canonical,
+      word_count: page.wordCount,
+      internal_links: page.outgoingInternalCount,
+      external_links: page.outgoingExternalCount,
+      images_total: page.imagesTotal,
+      images_missing_alt: page.imagesMissingAlt,
+      schema_types: page.schemaTypes?.join('|'),
+      clicks: page.searchMetrics?.clicks,
+      impressions: page.searchMetrics?.impressions,
+      sessions: page.analytics?.sessions,
+    })),
+    pageHeaders,
   )
 }
 

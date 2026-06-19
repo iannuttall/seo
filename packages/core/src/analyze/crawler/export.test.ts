@@ -4,6 +4,7 @@ import {
   renderCrawlCsv,
   renderCrawlHtml,
   renderCrawlMarkdownTickets,
+  renderCrawlPagesCsv,
   renderCrawlPretty,
 } from './export.js'
 import { createCrawlReport } from './report.js'
@@ -11,6 +12,27 @@ import { createCrawlReport } from './report.js'
 test('crawl exporters render CSV, HTML, and plain text reports', () => {
   const report = createCrawlReport({
     config: { url: 'https://example.com/' },
+    pages: [
+      {
+        url: 'https://example.com/',
+        finalUrl: 'https://example.com/',
+        status: 200,
+        indexable: true,
+        wordCount: 100,
+        contentHash: 'hash',
+        outgoingInternalCount: 1,
+        outgoingExternalCount: 2,
+        imagesTotal: 3,
+        imagesMissingAlt: 1,
+        schemaTypes: ['Article'],
+        searchMetrics: {
+          clicks: 12,
+          impressions: 100,
+          ctr: 0.12,
+          position: 4.2,
+        },
+      },
+    ],
     issues: [
       {
         ruleId: 'missing_title',
@@ -31,6 +53,13 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   const csv = renderCrawlCsv(report)
   assert.match(csv, /^rule_id,title,category,severity,url/)
   assert.match(csv, /missing_title,Missing title,metadata,high/)
+
+  const pagesCsv = renderCrawlPagesCsv(report)
+  assert.match(pagesCsv, /^url,final_url,status,indexable,title/)
+  assert.match(
+    pagesCsv,
+    /https:\/\/example.com\/,https:\/\/example.com\/,200,true/,
+  )
 
   const pretty = renderCrawlPretty(report)
   assert.match(pretty, /Crawl report for https:\/\/example.com\//)

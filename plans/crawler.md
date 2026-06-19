@@ -106,7 +106,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 8: CLI Surface
 
-- [ ] Add `seo crawl <url>` or `seo technical-audit <url>` after deciding the name.
+- [x] Add `seo crawl <url>` or `seo technical-audit <url>` after deciding the name.
 - [ ] Add `seo audit-url <url>` only if it is clearer than extending `seo audit-page`.
 - [ ] Add URL-list mode from arguments and/or file input.
 - [ ] Add `--format pretty|json|csv|html`.
@@ -114,7 +114,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add `--save`.
 - [x] Add `--fail-on high|medium|low`.
 - [x] Add `--severity high|medium|low`.
-- [ ] Add `--project` support when a saved project has a crawl URL.
+- [x] Add `--project` support when a saved project has a crawl URL.
 - [ ] Make progress print to stderr so JSON stdout stays clean.
 - [ ] Keep default human output short: summary, top fixes, next commands.
 - [x] Add `seo rules` and `seo explain <rule>` or equivalent.

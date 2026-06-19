@@ -11,6 +11,7 @@ import {
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { printNotes, truncate } from './output.js'
+import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'
 
@@ -26,10 +27,15 @@ export const crawlCommand = defineCommand({
     description: 'Crawl a site and run technical SEO/GEO checks',
   },
   args: {
+    crawlUrl: {
+      type: 'positional',
+      required: false,
+      description: 'Start URL to crawl.',
+    },
     url: {
       type: 'string',
-      required: true,
-      description: 'Start URL to crawl.',
+      description:
+        'Start URL to crawl. Optional when --project has a saved crawl URL.',
     },
     site: {
       type: 'string',
@@ -122,16 +128,28 @@ export const crawlCommand = defineCommand({
     const severity = severityArg(args.severity)
     const failOn = severityArg(args['fail-on'])
     const project = projectArg(args)
+    const explicitUrl = crawlUrlArg(args)
     const selection =
-      stringArg(args.site) || project
+      stringArg(args.site) || project || !explicitUrl
         ? await resolveClientSelection({
             client: project,
             site: stringArg(args.site),
             options: { json },
           })
         : undefined
+    const crawlUrl =
+      explicitUrl ??
+      selection?.client?.startUrl ??
+      (selection?.site ? startUrlForSite(selection.site) : undefined)
+    if (!crawlUrl) {
+      throw new Error(
+        'No crawl URL selected. Pass a URL, --url, or use --project with a saved crawl URL.',
+      )
+    }
+
     const report = await crawlSite({
-      url: stringArg(args.url) ?? '',
+      url: crawlUrl,
+      projectId: selection?.client?.id,
       site: selection?.site,
       mode: crawlModeArg(args.mode),
       urls: csvArg(args.urls),
@@ -226,4 +244,13 @@ function severityArg(value: unknown): Severity | undefined {
     return severity as Severity
   }
   throw new Error('Severity must be one of: low, medium, high.')
+}
+
+function crawlUrlArg(args: Record<string, unknown>): string | undefined {
+  const positional = stringArg(args.crawlUrl)
+  const flag = stringArg(args.url)
+  if (positional && flag && positional !== flag) {
+    throw new Error('Use either a URL argument or --url, not both.')
+  }
+  return positional ?? flag
 }

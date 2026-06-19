@@ -67,7 +67,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Implement performance/security rules: large HTML, no compression, HTTP, mixed content, missing HSTS.
 - [x] Implement mobile/international rules: missing viewport, missing lang, hreflang issues.
 - [x] Implement social/schema rules: missing Open Graph, missing Twitter card, missing structured data, invalid JSON-LD parse.
-- [ ] Implement GEO rules: no machine-readable structure, weak semantic HTML, missing author/date, not answer-ready, too thin to cite, missing `llms.txt`.
+- [x] Implement GEO rules: no machine-readable structure, weak semantic HTML, missing author/date, not answer-ready, too thin to cite, missing `llms.txt`.
 - [x] Keep every issue tied to a rule id and concrete evidence.
 
 ## Phase 5: Scoring And Prioritisation

@@ -769,7 +769,7 @@ export function auditCrawlPages(
       issues.push(issue('twitter_card_missing', page))
     }
 
-    if (page.wordCount > 50) {
+    if (page.geo && page.wordCount > 50) {
       if (!page.geo?.structuredData) {
         issues.push(issue('geo_no_structured_data', page))
       }
@@ -779,9 +779,31 @@ export function auditCrawlPages(
       if (!page.geo?.hasAuthor) {
         issues.push(issue('geo_no_author', page))
       }
+      if (!page.geo?.hasDate) {
+        issues.push(issue('geo_no_date', page))
+      }
       if (!page.geo?.semanticHtml) {
         issues.push(issue('geo_no_semantic_html', page))
       }
+      if (page.wordCount < THIN_CONTENT_WORDS) {
+        issues.push(
+          issue('geo_thin_to_cite', page, `${page.wordCount} words`, {
+            wordCount: page.wordCount,
+            threshold: THIN_CONTENT_WORDS,
+          }),
+        )
+      }
+    }
+    if (
+      page.geo?.hasLlmsTxt === false &&
+      (!opts.startUrl || sameUrl(page.url, opts.startUrl))
+    ) {
+      issues.push(
+        issue('geo_no_llms_txt', page, undefined, {
+          llmsTxtUrl: page.geo.llmsTxtUrl,
+          llmsTxtStatus: page.geo.llmsTxtStatus,
+        }),
+      )
     }
   }
 

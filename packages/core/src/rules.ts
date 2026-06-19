@@ -1,3 +1,5 @@
+// biome-ignore-all lint/nursery/noExcessiveLinesPerFile: central rule guidance registry for CLI and MCP parity.
+
 type RuleDefinition = {
   id: string
   title: string
@@ -970,6 +972,19 @@ const RULE_DEFINITIONS = [
     howToVerify: 'Re-run the crawl and confirm geo.hasAuthor is true.',
   },
   {
+    id: 'geo_no_date',
+    title: 'GEO: date missing',
+    category: 'geo',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Dates help AI systems and users judge freshness, especially for topics where advice, pricing, or rules change.',
+    howToFix:
+      'Add a visible published or updated date, and mirror it in Article or WebPage structured data where appropriate.',
+    impactIfIgnored:
+      'The page may look stale or harder to trust when an answer engine chooses sources.',
+    howToVerify: 'Re-run the crawl and confirm geo.hasDate is true.',
+  },
+  {
     id: 'geo_no_semantic_html',
     title: 'GEO: weak semantic HTML',
     category: 'geo',
@@ -981,6 +996,46 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'AI systems may extract the wrong content or miss the main answer.',
     howToVerify: 'Re-run the crawl and confirm geo.semanticHtml is true.',
+  },
+  {
+    id: 'geo_thin_to_cite',
+    title: 'GEO: too thin to cite',
+    category: 'geo',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'AI answer engines need self-contained passages with enough context to quote or summarize confidently.',
+    howToFix:
+      'Add substantive definitions, specifics, examples, data, caveats, and direct answers that can stand alone outside the page.',
+    impactIfIgnored:
+      'There may not be enough useful material for an AI system to cite, even if the page is technically crawlable.',
+    howToVerify:
+      'Re-run the crawl and confirm wordCount is above the citation-depth threshold for important pages.',
+    agentHints: {
+      evidenceFields: ['page.wordCount', 'issue.evidence.threshold'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'geo_no_llms_txt',
+    title: 'GEO: llms.txt missing',
+    category: 'geo',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'An llms.txt file gives AI agents a concise map of the site, the most useful pages, and how to use the content.',
+    howToFix:
+      'Add /llms.txt at the site root with a short Markdown overview and links to the pages agents should read first.',
+    impactIfIgnored:
+      'Agents have to infer the important pages from normal navigation, which can lead to weaker discovery and citations.',
+    howToVerify:
+      'Re-run the crawl and confirm geo.hasLlmsTxt is true on the seed page.',
+    agentHints: {
+      evidenceFields: [
+        'page.geo.llmsTxtUrl',
+        'page.geo.llmsTxtStatus',
+        'issue.evidence.llmsTxtStatus',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
   },
 ] as const satisfies readonly RuleDefinition[]
 

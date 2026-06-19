@@ -256,6 +256,7 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       ],
       hasViewport: false,
       lang: undefined,
+      geo: undefined,
     }),
   ])
 
@@ -641,6 +642,7 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
       'geo_no_structured_data',
       'geo_not_answerable',
       'geo_no_author',
+      'geo_no_date',
       'geo_no_semantic_html',
     ],
   )
@@ -648,6 +650,61 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
     issues.find((issue) => issue.ruleId === 'jsonld_invalid')?.evidence
       ?.invalidJsonLdSamples,
     [{ snippet: '{"@context":"https://schema.org"', error: 'Unexpected end' }],
+  )
+})
+
+test('auditCrawlPages flags thin GEO pages and missing llms.txt once', () => {
+  const issues = auditCrawlPages(
+    [
+      page({
+        url: 'https://example.com/',
+        wordCount: 180,
+        geo: {
+          semanticHtml: true,
+          structuredData: true,
+          hasAuthor: true,
+          hasDate: true,
+          questionHeadings: 1,
+          structuredBlocks: 1,
+          answerable: true,
+          hasLlmsTxt: false,
+          llmsTxtUrl: 'https://example.com/llms.txt',
+          llmsTxtStatus: 404,
+        },
+      }),
+      page({
+        url: 'https://example.com/child',
+        wordCount: 180,
+        geo: {
+          semanticHtml: true,
+          structuredData: true,
+          hasAuthor: true,
+          hasDate: true,
+          questionHeadings: 1,
+          structuredBlocks: 1,
+          answerable: true,
+          hasLlmsTxt: false,
+          llmsTxtUrl: 'https://example.com/llms.txt',
+          llmsTxtStatus: 404,
+        },
+      }),
+    ],
+    { startUrl: 'https://example.com/' },
+  )
+  const geoIssues = issues.filter((issue) => issue.category === 'geo')
+
+  assert.deepEqual(
+    geoIssues.map((issue) => issue.ruleId),
+    ['geo_thin_to_cite', 'geo_no_llms_txt', 'geo_thin_to_cite'],
+  )
+  assert.equal(
+    geoIssues.find((issue) => issue.ruleId === 'geo_no_llms_txt')?.url,
+    'https://example.com/',
+  )
+  assert.equal(
+    geoIssues.find((issue) => issue.ruleId === 'geo_thin_to_cite')?.evidence
+      ?.threshold,
+    300,
   )
 })
 

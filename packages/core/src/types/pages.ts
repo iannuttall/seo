@@ -126,6 +126,12 @@ export interface ExtractedPage {
   hasDate: boolean
   imagesTotal: number
   imagesMissingAlt: number
+  oversizedImageCandidates: Array<{
+    src: string
+    width?: number
+    height?: number
+    detectedFrom: string
+  }>
   mixedContentUrls: string[]
   semanticHtml: boolean
   questionHeadings: number

@@ -59,6 +59,7 @@ const THIN_CONTENT_WORDS = 300
 const LOW_TEXT_RATIO = 0.08
 const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
 const QUERY_COVERAGE_MIN = 0.6
+const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
 
 function issue(
   ruleId: RuleId,
@@ -609,6 +610,19 @@ export function auditCrawlPages(
           {
             imagesTotal: page.imagesTotal,
             imagesMissingAlt: page.imagesMissingAlt,
+          },
+        ),
+      )
+    }
+    if (page.oversizedImageCandidates?.length) {
+      issues.push(
+        issue(
+          'image_oversized_candidate',
+          page,
+          `${page.oversizedImageCandidates.length} image candidate${page.oversizedImageCandidates.length === 1 ? '' : 's'}`,
+          {
+            thresholdPx: OVERSIZED_IMAGE_CANDIDATE_LIMIT,
+            candidates: page.oversizedImageCandidates.slice(0, 10),
           },
         ),
       )

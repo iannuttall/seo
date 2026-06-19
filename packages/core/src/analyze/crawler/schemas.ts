@@ -167,6 +167,16 @@ export const crawlPageSnapshotSchema = z.object({
   mixedContentSamples: z.array(z.string().url()).optional(),
   imagesTotal: z.number().int().optional(),
   imagesMissingAlt: z.number().int().optional(),
+  oversizedImageCandidates: z
+    .array(
+      z.object({
+        src: z.string().url(),
+        width: z.number().int().optional(),
+        height: z.number().int().optional(),
+        detectedFrom: z.string(),
+      }),
+    )
+    .optional(),
   outgoingInternalCount: z.number().int(),
   outgoingExternalCount: z.number().int().optional(),
   internalInlinkCount: z.number().int().optional(),

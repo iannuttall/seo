@@ -82,6 +82,36 @@ function absoluteUrl(
   }
 }
 
+function numericAttribute(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const match = value.trim().match(/^\d+/)
+  if (!match) return undefined
+  const number = Number(match[0])
+  return Number.isFinite(number) && number > 0 ? number : undefined
+}
+
+function largestSrcsetWidth(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const widths = value
+    .split(',')
+    .map((candidate) => candidate.trim().match(/\s(\d+)w(?:\s|$)/)?.[1])
+    .filter((width): width is string => Boolean(width))
+    .map(Number)
+    .filter((width) => Number.isFinite(width) && width > 0)
+  return widths.length ? Math.max(...widths) : undefined
+}
+
+function imageDimensionsFromUrl(
+  src: string,
+): { width: number; height: number } | undefined {
+  const match = src.match(/(?:^|[^\d])(\d{3,5})[xX](\d{3,5})(?:[^\d]|$)/)
+  if (!match) return undefined
+  const width = Number(match[1])
+  const height = Number(match[2])
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return undefined
+  return { width, height }
+}
+
 async function extractMainContent(
   fetchResult: PageFetchResult,
   extractor: 'defuddle' | 'readability' = 'defuddle',
@@ -228,6 +258,52 @@ export async function extractPage(
           .filter(Boolean).length >= 25,
     )
   const imageElements = $('img').toArray()
+  const oversizedImageCandidates = imageElements
+    .map((element) => {
+      const src = absoluteUrl($(element).attr('src'), fetchResult.finalUrl)
+      if (!src) return undefined
+      const width = numericAttribute($(element).attr('width'))
+      const height = numericAttribute($(element).attr('height'))
+      const srcsetWidth = largestSrcsetWidth($(element).attr('srcset'))
+      const filenameDimensions = imageDimensionsFromUrl(src)
+      const maxDetected = Math.max(
+        width ?? 0,
+        height ?? 0,
+        srcsetWidth ?? 0,
+        filenameDimensions?.width ?? 0,
+        filenameDimensions?.height ?? 0,
+      )
+      if (maxDetected < 2000) return undefined
+      const detectedFrom = [
+        width && width >= 2000 ? 'width' : undefined,
+        height && height >= 2000 ? 'height' : undefined,
+        srcsetWidth && srcsetWidth >= 2000 ? 'srcset' : undefined,
+        filenameDimensions &&
+        (filenameDimensions.width >= 2000 || filenameDimensions.height >= 2000)
+          ? 'filename'
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(',')
+      const candidateWidth = Math.max(
+        width ?? 0,
+        srcsetWidth ?? 0,
+        filenameDimensions?.width ?? 0,
+      )
+      const candidateHeight = Math.max(
+        height ?? 0,
+        filenameDimensions?.height ?? 0,
+      )
+      return {
+        src,
+        detectedFrom,
+        ...(candidateWidth > 0 ? { width: candidateWidth } : {}),
+        ...(candidateHeight > 0 ? { height: candidateHeight } : {}),
+      }
+    })
+    .filter((candidate): candidate is NonNullable<typeof candidate> =>
+      Boolean(candidate),
+    )
   const mixedContentUrls =
     url.protocol === 'https:'
       ? [
@@ -276,6 +352,7 @@ export async function extractPage(
       const alt = $(element).attr('alt')
       return alt === undefined || alt.trim() === ''
     }).length,
+    oversizedImageCandidates: oversizedImageCandidates.slice(0, 25),
     mixedContentUrls,
     semanticHtml,
     questionHeadings,

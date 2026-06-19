@@ -56,6 +56,7 @@ function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
     hasDate: false,
     imagesTotal: 0,
     imagesMissingAlt: 0,
+    oversizedImageCandidates: [],
     mixedContentUrls: [],
     semanticHtml: true,
     questionHeadings: 0,

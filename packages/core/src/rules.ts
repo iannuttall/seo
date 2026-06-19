@@ -654,6 +654,28 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm imagesMissingAlt is zero or only decorative images are empty.',
   },
   {
+    id: 'image_oversized_candidate',
+    title: 'Oversized image candidates',
+    category: 'images',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Very large images can slow pages down, especially when the browser only needs a small rendered size.',
+    howToFix:
+      'Resize the source image, add responsive srcset sizes, and serve modern compressed formats such as WebP or AVIF where supported.',
+    impactIfIgnored:
+      'Users may download more image data than needed, which hurts load speed and wastes bandwidth.',
+    howToVerify:
+      'Re-run the crawl and confirm oversizedImageCandidates is empty, then spot-check the page in a browser performance trace if the image is important.',
+    agentHints: {
+      evidenceFields: [
+        'page.oversizedImageCandidates',
+        'issue.evidence.thresholdPx',
+        'issue.evidence.candidates',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 10 --json'],
+    },
+  },
+  {
     id: 'viewport_missing',
     title: 'Viewport missing',
     category: 'mobile',

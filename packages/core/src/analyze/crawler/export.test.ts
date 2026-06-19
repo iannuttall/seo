@@ -48,6 +48,8 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
         },
       },
     ],
+    warnings: ['External link checks were skipped.'],
+    caveats: ['Stopped after reaching maxPages (1).'],
   })
 
   const csv = renderCrawlCsv(report)
@@ -72,10 +74,14 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   assert.match(html, /<!doctype html>/)
   assert.match(html, /Missing title/)
   assert.match(html, /Verified links/)
+  assert.match(html, /Stopped after reaching maxPages/)
+  assert.match(html, /External link checks were skipped/)
   assert.match(html, /seo crawl https:\/\/example.com\//)
 
   const markdown = renderCrawlMarkdownTickets(report)
   assert.match(markdown, /# Crawl Implementation Tickets/)
+  assert.match(markdown, /## Caveats/)
+  assert.match(markdown, /Stopped after reaching maxPages/)
   assert.match(markdown, /- \[ \] Fix 1 affected URL/)
   assert.match(markdown, /- Command: seo crawl https:\/\/example.com\//)
 })

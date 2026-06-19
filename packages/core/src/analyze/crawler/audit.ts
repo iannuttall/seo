@@ -23,6 +23,8 @@ function sameUrl(a?: string, b?: string): boolean {
   }
 }
 
+const SLOW_RESPONSE_MS = 2_000
+
 function issue(
   ruleId: RuleId,
   page: CrawlPageSnapshot,
@@ -49,6 +51,15 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
   const issues: CrawlIssue[] = []
 
   for (const page of pages) {
+    if (page.status === 0) {
+      issues.push(
+        issue('connection_error', page, page.error, {
+          status: page.status,
+          error: page.error,
+        }),
+      )
+      continue
+    }
     if (page.status >= 500) {
       issues.push(
         issue('server_error', page, String(page.status), {
@@ -65,7 +76,17 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
       )
       continue
     }
-    if (page.status < 200 || page.status >= 300) continue
+    if (page.status >= 300) {
+      issues.push(
+        issue('redirected_url', page, `Status ${page.status}`, {
+          requestedUrl: page.url,
+          finalUrl: page.finalUrl,
+          status: page.status,
+        }),
+      )
+      continue
+    }
+    if (page.status < 200) continue
 
     if (!sameUrl(page.url, page.finalUrl)) {
       issues.push(
@@ -73,6 +94,23 @@ export function auditCrawlPages(pages: CrawlPageSnapshot[]): CrawlIssue[] {
           requestedUrl: page.url,
           finalUrl: page.finalUrl,
           status: page.status,
+        }),
+      )
+    }
+    const redirectChain = page.fetchDiagnostics?.redirectChain ?? []
+    if (redirectChain.length > 1) {
+      issues.push(
+        issue('redirect_chain', page, `${redirectChain.length} hops`, {
+          redirectChain,
+          hops: redirectChain.length,
+        }),
+      )
+    }
+    if ((page.responseTimeMs ?? 0) > SLOW_RESPONSE_MS) {
+      issues.push(
+        issue('slow_response', page, `${page.responseTimeMs}ms`, {
+          responseTimeMs: page.responseTimeMs,
+          thresholdMs: SLOW_RESPONSE_MS,
         }),
       )
     }

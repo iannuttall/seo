@@ -101,6 +101,20 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'connection_error',
+    title: 'Connection error',
+    category: 'response',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'A URL that cannot be fetched is invisible to users, search crawlers, and AI agents. It may be a DNS, TLS, timeout, firewall, or server availability problem.',
+    howToFix:
+      'Check DNS, TLS certificates, firewall/CDN rules, server logs, and timeout behavior. Make the URL return a stable 2xx response or one direct redirect to the replacement.',
+    impactIfIgnored:
+      'The page cannot be crawled, ranked, or cited while the connection failure remains.',
+    howToVerify:
+      'Re-run the crawl and confirm the URL returns a normal HTTP status instead of status 0.',
+  },
+  {
     id: 'client_error',
     title: 'Client error',
     category: 'response',
@@ -145,6 +159,34 @@ const RULE_DEFINITIONS = [
       evidenceFields: ['page.url', 'page.finalUrl', 'page.status'],
       suggestedCommands: ['seo redirect-trace --url <url> --json'],
     },
+  },
+  {
+    id: 'redirect_chain',
+    title: 'Redirect chain',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Multiple redirect hops slow users and crawlers, and each hop is another place a migration can break.',
+    howToFix:
+      'Point internal links, canonicals, and sitemap URLs directly at the final destination. Keep only one necessary 301 from old URLs.',
+    impactIfIgnored:
+      'Pages load slower, crawl paths are less clear, and future redirects can turn into loops or dead ends.',
+    howToVerify:
+      'Re-run the crawl and confirm fetchDiagnostics.redirectChain has zero or one hop.',
+  },
+  {
+    id: 'slow_response',
+    title: 'Slow response',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Slow HTML responses delay every user and crawler before rendering or assets even begin.',
+    howToFix:
+      'Check server timing, cache headers, database queries, CDN caching, and origin health. Aim for fast, cacheable HTML for public pages.',
+    impactIfIgnored:
+      'Users wait longer, crawlers spend more time per URL, and important pages may feel unreliable.',
+    howToVerify:
+      'Re-run the crawl and confirm responseTimeMs is under the slow-response threshold.',
   },
   {
     id: 'missing_meta_description',

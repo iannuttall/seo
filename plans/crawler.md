@@ -56,7 +56,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Phase 4: Audit Rules
 
-- [ ] Implement response rules: connection errors, 4xx, 5xx, redirects, redirect chains, slow responses.
+- [x] Implement response rules: connection errors, 4xx, 5xx, redirects, redirect chains, slow responses.
 - [ ] Implement link rules: broken internal links, broken external links, orphan pages, deep pages, weak internal links to valuable pages.
 - [ ] Implement metadata rules: missing/short/long/duplicate titles and meta descriptions.
 - [ ] Implement heading rules: missing H1, multiple H1s, weak heading structure.

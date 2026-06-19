@@ -1,5 +1,14 @@
-import { readFile } from 'node:fs/promises'
-import { crawlSite, saveCrawlReport, topFixes } from '@seo/core'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import {
+  type CrawlOutputFormat,
+  crawlSite,
+  renderCrawlCsv,
+  renderCrawlHtml,
+  renderCrawlPretty,
+  saveCrawlReport,
+  topFixes,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -10,7 +19,7 @@ import {
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { printKeyValue, printTable } from '../utils.js'
 import { printNotes, truncate } from './output.js'
 import { startUrlForSite } from './shared.js'
 
@@ -112,7 +121,15 @@ export const crawlCommand = defineCommand({
     json: {
       type: 'boolean',
       default: false,
-      description: 'Print machine-readable JSON.',
+      description: 'Print machine-readable JSON. Alias for --format json.',
+    },
+    format: {
+      type: 'string',
+      description: 'Output format: pretty, json, csv, or html.',
+    },
+    output: {
+      type: 'string',
+      description: 'Write output to this path instead of stdout.',
     },
     save: {
       type: 'boolean',
@@ -130,6 +147,8 @@ export const crawlCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const format = crawlFormatArg(args.format, json)
+    const output = stringArg(args.output)
     const severity = severityArg(args.severity)
     const failOn = severityArg(args['fail-on'])
     const project = projectArg(args)
@@ -180,13 +199,33 @@ export const crawlCommand = defineCommand({
         )
       : false
 
-    if (json) {
-      printJson({
-        ...report,
-        topFixes: rankedFixes,
-        ...(failOn ? { failOn, failedThreshold } : {}),
-        ...(saved ? { saved } : {}),
-      })
+    const payload = {
+      ...report,
+      topFixes: rankedFixes,
+      ...(failOn ? { failOn, failedThreshold } : {}),
+      ...(saved ? { saved } : {}),
+    }
+
+    if (format === 'json') {
+      await writeOrPrint(output, `${JSON.stringify(payload, null, 2)}\n`)
+      if (failedThreshold) process.exitCode = 1
+      return
+    }
+
+    if (format === 'csv') {
+      await writeOrPrint(output, renderCrawlCsv(report))
+      if (failedThreshold) process.exitCode = 1
+      return
+    }
+
+    if (format === 'html') {
+      await writeOrPrint(output, renderCrawlHtml(report, rankedFixes))
+      if (failedThreshold) process.exitCode = 1
+      return
+    }
+
+    if (output) {
+      await writeOrPrint(output, renderCrawlPretty(report, rankedFixes))
       if (failedThreshold) process.exitCode = 1
       return
     }
@@ -262,6 +301,18 @@ function crawlUrlArg(args: Record<string, unknown>): string | undefined {
   return positional ?? flag
 }
 
+function crawlFormatArg(value: unknown, json: boolean): CrawlOutputFormat {
+  const format = stringArg(value)
+  if (json && format && format !== 'json') {
+    throw new Error('Use either --json or --format, not both.')
+  }
+  if (!format) return json ? 'json' : 'pretty'
+  if (['pretty', 'json', 'csv', 'html'].includes(format)) {
+    return format as CrawlOutputFormat
+  }
+  throw new Error('Format must be one of: pretty, json, csv, html.')
+}
+
 async function urlListArgs(args: Record<string, unknown>): Promise<string[]> {
   const urls = csvArg(args.urls) ?? []
   const file = stringArg(args['urls-file'])
@@ -276,4 +327,14 @@ function parseUrlList(value: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter((item) => item && !item.startsWith('#'))
+}
+
+async function writeOrPrint(path: string | undefined, content: string) {
+  if (!path) {
+    process.stdout.write(content)
+    return
+  }
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, content)
+  process.stdout.write(`Wrote ${path}\n`)
 }

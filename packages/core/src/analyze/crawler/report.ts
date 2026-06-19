@@ -28,6 +28,7 @@ export type CrawlConfigInput = Partial<CrawlConfig> & {
   searchMetricsLimit?: number
   ga4PropertyId?: string
   analyticsLimit?: number
+  signal?: AbortSignal
 }
 
 export type CrawlIssue = {

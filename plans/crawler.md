@@ -38,7 +38,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Normalize URLs consistently: remove fragments, handle trailing slash policy, handle `www` only where intended.
 - [x] Avoid crawling common non-page assets as pages.
 - [x] Track discovered, queued, crawled, skipped, failed, and verified-link counts.
-- [ ] Make cancellation safe and return partial reports with clear status.
+- [x] Make cancellation safe and return partial reports with clear status.
 - [x] Reuse existing fetch/cache/rate-control code where possible.
 - [x] Keep JS rendering optional and bounded because it is expensive.
 

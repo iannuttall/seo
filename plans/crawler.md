@@ -156,7 +156,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add "rerun same report config" support.
 - [x] Add deterministic JSON schemas for crawl report, issue group, top fix, rule info, and page snapshot.
 - [x] Add MCP prompt/resource docs for crawler workflows.
-- [ ] Add a bundled skill/plugin later once the local API is stable.
+- [x] Add a bundled skill/plugin later once the local API is stable.
+  Decision: defer the bundled skill/plugin until the crawler API and hosted-ready boundaries below are stable. For now, MCP prompts/resources provide the workflow guidance without freezing a plugin contract too early.
 
 ## Phase 12: Hosted-Ready Boundaries
 

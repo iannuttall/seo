@@ -2,6 +2,7 @@ import {
   diagnosePropertyWorkflow,
   latestCrawlReport,
   latestCrawlSummaries,
+  topFixes,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
@@ -13,6 +14,7 @@ import {
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
+import { truncate } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 import { startUrlForSite } from '../shared.js'
 import { printWorkflow } from './output.js'
@@ -42,6 +44,35 @@ function addFollowup(
 function hasTechnicalBaseline(site: string): boolean {
   return Boolean(
     latestCrawlReport(site) || latestCrawlSummaries(site, 1).length,
+  )
+}
+
+function savedTechnicalSection(site: string) {
+  const report = latestCrawlReport(site)
+  if (!report) return undefined
+  return {
+    reportId: report.id,
+    generatedAt: report.generatedAt,
+    status: report.status,
+    summary: report.summary,
+    topFixes: topFixes(report, { limit: 5 }),
+  }
+}
+
+function printTechnicalSection(
+  section: ReturnType<typeof savedTechnicalSection>,
+): void {
+  if (!section?.topFixes.length) return
+  process.stdout.write('\nTechnical fixes with search value\n')
+  printTable(
+    ['Score', 'Rule', 'Severity', 'Search value', 'Verify'],
+    section.topFixes.map((fix) => [
+      fix.score,
+      fix.ruleId,
+      fix.severity,
+      `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.sessions} sessions / ${fix.scoreFactors.conversions} conv.`,
+      truncate(fix.howToVerify, 72),
+    ]),
   )
 }
 
@@ -210,12 +241,18 @@ function workflowCommandMeta(input: {
       const outputReport = input.workflowName
         ? { ...report, workflow: input.workflowName }
         : report
+      const technicalCrawl = input.printFollowups
+        ? savedTechnicalSection(selection.site)
+        : undefined
       if (json) {
-        printJson(outputReport)
+        printJson(
+          technicalCrawl ? { ...outputReport, technicalCrawl } : outputReport,
+        )
         return
       }
       process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
       printWorkflow(outputReport)
+      printTechnicalSection(technicalCrawl)
       if (input.printFollowups) {
         printReportFollowups(outputReport, {
           crawlStartUrl:

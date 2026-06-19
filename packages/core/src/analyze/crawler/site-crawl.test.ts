@@ -153,3 +153,55 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     await fixture.close()
   }
 })
+
+test('crawlSite captures content types and reports broken internal links', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/') {
+      res.setHeader('content-type', 'text/html; charset=utf-8')
+      res.end(
+        '<title>Home</title><h1>Home</h1><a href="/missing">Missing</a><a href="/asset.pdf">Asset</a>',
+      )
+      return
+    }
+    if (req.url === '/asset.pdf') {
+      res.setHeader('content-type', 'application/pdf')
+      res.end('not really a pdf')
+      return
+    }
+    res.statusCode = 404
+    res.setHeader('content-type', 'text/html')
+    res.end('<title>Missing</title><h1>Missing</h1>')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      useSitemap: false,
+      maxDepth: 1,
+      maxPages: 10,
+      concurrency: 1,
+    })
+
+    assert.deepEqual(
+      report.pages.map((page) => new URL(page.url).pathname),
+      ['/', '/missing'],
+    )
+    assert.equal(report.pages[0]?.contentType, 'text/html; charset=utf-8')
+    assert.equal(report.pages[1]?.contentType, 'text/html')
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'client_error'),
+      true,
+    )
+    assert.equal(
+      report.pages.some((page) => new URL(page.url).pathname === '/asset.pdf'),
+      false,
+    )
+  } finally {
+    await fixture.close()
+  }
+})

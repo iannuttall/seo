@@ -30,6 +30,7 @@ const TITLE_MIN_CHARS = 30
 const TITLE_MAX_PIXELS = 580
 const META_DESCRIPTION_MIN_CHARS = 70
 const META_DESCRIPTION_MAX_CHARS = 160
+const HEADING_STRUCTURE_MIN_WORDS = 300
 
 function issue(
   ruleId: RuleId,
@@ -316,11 +317,37 @@ export function auditCrawlPages(
       )
     }
 
-    if ((page.h1Count ?? (page.h1 ? 1 : 0)) !== 1) {
+    const h1Count = page.h1Count ?? (page.h1 ? 1 : 0)
+    if (h1Count === 0) {
       issues.push(
-        issue('h1_count', page, `Found ${page.h1Count ?? 0} H1 elements`, {
-          h1Count: page.h1Count ?? 0,
+        issue('h1_missing', page, 'No H1 found', {
+          h1Count,
         }),
+      )
+    } else if (h1Count > 1) {
+      issues.push(
+        issue('multiple_h1', page, `Found ${h1Count} H1 elements`, {
+          h1Count,
+        }),
+      )
+    }
+    if (
+      page.indexable &&
+      page.wordCount >= HEADING_STRUCTURE_MIN_WORDS &&
+      (page.h2Count ?? 0) + (page.h3Count ?? 0) === 0
+    ) {
+      issues.push(
+        issue(
+          'heading_structure_weak',
+          page,
+          'No supporting H2 or H3 headings',
+          {
+            h2Count: page.h2Count ?? 0,
+            h3Count: page.h3Count ?? 0,
+            wordCount: page.wordCount,
+            minWords: HEADING_STRUCTURE_MIN_WORDS,
+          },
+        ),
       )
     }
 

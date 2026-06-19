@@ -59,7 +59,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Implement response rules: connection errors, 4xx, 5xx, redirects, redirect chains, slow responses.
 - [x] Implement link rules: broken internal links, broken external links, orphan pages, deep pages, weak internal links to valuable pages.
 - [x] Implement metadata rules: missing/short/long/duplicate titles and meta descriptions.
-- [ ] Implement heading rules: missing H1, multiple H1s, weak heading structure.
+- [x] Implement heading rules: missing H1, multiple H1s, weak heading structure.
 - [ ] Implement indexability rules: noindex, nofollow, X-Robots noindex, robots blocked, canonicalized pages.
 - [ ] Implement canonical rules: missing canonical, canonical mismatch, non-absolute canonical, canonical chain.
 - [ ] Implement content rules: thin content, duplicate content, low text ratio, missing query coverage when GSC data exists.

@@ -34,6 +34,8 @@ export type CrawlPageSnapshot = {
   imagesMissingAlt?: number
   outgoingInternalCount: number
   outgoingExternalCount?: number
+  internalInlinkCount?: number
+  internalLinkAuthorityScore?: number
   sampleInternalLinks?: string[]
   sampleExternalLinks?: string[]
   schemaTypes?: string[]

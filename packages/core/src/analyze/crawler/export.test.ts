@@ -58,6 +58,7 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
 
   const pagesCsv = renderCrawlPagesCsv(report)
   assert.match(pagesCsv, /^url,final_url,status,indexable,title/)
+  assert.match(pagesCsv, /internal_inlinks,internal_authority_score/)
   assert.match(pagesCsv, /seo_score,geo_score/)
   assert.match(
     pagesCsv,

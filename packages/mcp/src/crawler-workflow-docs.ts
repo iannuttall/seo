@@ -1,3 +1,5 @@
+import { CRAWLER_LIMIT_PROFILES } from '@seo/core'
+
 export const crawlerWorkflowMarkdown = `# SEO crawler MCP workflows
 
 Use these workflows when an agent needs technical SEO and GEO crawl data without dumping raw JSON on a human.
@@ -28,6 +30,12 @@ Use these workflows when an agent needs technical SEO and GEO crawl data without
 ## Focused URL audit
 
 Use \`seo_audit_urls\` for a small set of explicit URLs. This is faster than a full crawl and is useful for launch gates, templates, and post-fix verification.
+
+## Hosted-ready limits
+
+Local mode is not a paid tier. It should only honor explicit crawl caps such as \`maxPages\`, \`js\`, and \`checkExternal\`.
+
+Future hosted/API tiers should enforce explicit limits for max pages, JavaScript-rendered pages, schedules, saved report history, and external link checks. Agents can read \`seo://crawler/tools\` for the structured limit profile list.
 
 ## Idempotency rules
 
@@ -132,4 +140,5 @@ export const crawlerToolGuide = {
       'verification.command',
     ],
   },
+  limits: CRAWLER_LIMIT_PROFILES,
 } as const

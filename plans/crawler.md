@@ -197,7 +197,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Open Decisions
 
-- [ ] Choose command name: `seo crawl`, `seo technical-audit`, or both with one alias.
+- [x] Choose command name: `seo crawl`, `seo technical-audit`, or both with one alias.
+  Decision: use `seo crawl` as the canonical human and agent command. Do not add `seo technical-audit` yet; `crawl` matches Crawlie's clear naming, keeps root/help output shorter, and leaves `seo report` as the broader human diagnosis command.
 - [ ] Decide whether to merge `audit-page` into the crawler model or keep it as a narrow page-level command.
 - [ ] Decide initial severity names: existing `low|medium|high` vs crawler-style `notice|warning|error`.
 - [ ] Decide local report storage format: SQLite rows, JSON blobs, or hybrid.

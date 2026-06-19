@@ -25,6 +25,7 @@ const SOURCE_WEIGHT: Record<PriorityQueueItem['source'], number> = {
   cannibalization: 0.9,
   diagnosis: 0.75,
   template: 1.35,
+  crawl: 1.3,
 }
 
 const CONFIDENCE_WEIGHT = {
@@ -74,6 +75,7 @@ export function priorityCategory(
   if (source === 'cannibalization') return 'authority'
   if (source === 'template') return 'strategy'
   if (source === 'diagnosis') return 'strategy'
+  if (source === 'crawl') return 'technical'
   return source === 'decay' ? 'content' : 'serp'
 }
 

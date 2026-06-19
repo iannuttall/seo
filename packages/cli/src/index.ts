@@ -63,6 +63,7 @@ import {
   updatesCommand,
 } from './commands/system.js'
 import {
+  crawlQueueCommand,
   diagnosePropertyWorkflowCommand,
   mainReportCommand,
   refreshPrioritiesCommand,
@@ -140,6 +141,7 @@ const allHelpSections: HelpSection[] = [
     commands: [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
+      ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
       ['seo rules', 'List crawler rule ids'],
       ['seo explain --rule missing_title', 'Explain a crawler rule'],
@@ -209,6 +211,7 @@ const main = defineCommand({
     reset: resetCommand,
     cache: cacheCommand,
     crawl: crawlCommand,
+    'crawl-queue': crawlQueueCommand,
     'crawl-reports': crawlReportsCommand,
     client: clientCommand,
     project: projectCommand,

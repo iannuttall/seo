@@ -1,3 +1,4 @@
+export { crawlQueueCommand } from './crawl-queue.js'
 export {
   diagnosePropertyWorkflowCommand,
   mainReportCommand,

@@ -687,12 +687,14 @@ async function joinSearchMetrics(input: {
   queryPageTopQuery: typeof queryPageTopQuery
 }): Promise<void> {
   const pages = input.pages.slice(0, input.limit)
+  let joined = 0
   for (const page of pages) {
     try {
       const metrics = await input.queryPageMetrics(input.site, page.finalUrl)
       if (metrics) page.searchMetrics = metrics
       const topQuery = await input.queryPageTopQuery(input.site, page.finalUrl)
       if (topQuery) page.topQuery = topQuery
+      if (metrics || topQuery) joined += 1
     } catch (error) {
       input.warnings.push(
         `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,
@@ -700,9 +702,11 @@ async function joinSearchMetrics(input: {
       return
     }
   }
-  if (input.pages.length > pages.length) {
+  if (input.pages.length && joined === 0) {
+    input.warnings.push('GSC metrics joined for 0 crawled pages.')
+  } else if (joined < input.pages.length) {
     input.warnings.push(
-      `GSC metrics joined for ${pages.length} of ${input.pages.length} pages.`,
+      `GSC metrics joined for ${joined} of ${input.pages.length} pages.`,
     )
   }
 }

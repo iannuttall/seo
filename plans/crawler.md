@@ -192,7 +192,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add idempotency tests for config hashing and report loading.
 - [x] Add large-site safety tests for limits, concurrency, cancellation, and skipped URLs.
   Added core stress tests for high-link pages that assert max-page caps, queue safety, skipped URL accounting, concurrency bounds, and cancellation returning bounded partial reports without follow-up joins/checks.
-- [ ] Add regression tests for sparse/missing GSC and GA4 joins.
+- [x] Add regression tests for sparse/missing GSC and GA4 joins.
+  Added sparse-data join regressions and tightened GSC join warnings so reports say when only some or zero crawled pages receive GSC data; GA4 zero-match warnings are covered too.
 
 ## Open Decisions
 

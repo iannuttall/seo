@@ -22,6 +22,8 @@ export type CrawlConfig = {
 
 export type CrawlConfigInput = Partial<CrawlConfig> & {
   url: string
+  site?: string
+  searchMetricsLimit?: number
 }
 
 export type CrawlIssue = {

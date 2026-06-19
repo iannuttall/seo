@@ -51,6 +51,12 @@ export type CrawlPageSnapshot = {
     structuredBlocks: number
     answerable: boolean
   }
+  searchMetrics?: {
+    clicks: number
+    impressions: number
+    ctr: number
+    position: number
+  }
 }
 
 export type CrawlRun = {

@@ -155,6 +155,7 @@ export async function crawlOne(
       mixedContentSamples: extracted.mixedContentUrls.slice(0, 25),
       imagesTotal: extracted.imagesTotal,
       imagesMissingAlt: extracted.imagesMissingAlt,
+      oversizedImageCandidates: extracted.oversizedImageCandidates,
       outgoingInternalCount: uniqueInternalLinks.length,
       outgoingExternalCount: uniqueExternalLinks.length,
       sampleInternalLinks: uniqueInternalLinks.slice(0, 25),

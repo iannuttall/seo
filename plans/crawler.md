@@ -63,7 +63,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Implement indexability rules: noindex, nofollow, X-Robots noindex, robots blocked, canonicalized pages.
 - [x] Implement canonical rules: missing canonical, canonical mismatch, non-absolute canonical, canonical chain.
 - [x] Implement content rules: thin content, duplicate content, low text ratio, missing query coverage when GSC data exists.
-- [ ] Implement image rules: missing alt text and oversized image candidates when detectable.
+- [x] Implement image rules: missing alt text and oversized image candidates when detectable.
 - [ ] Implement performance/security rules: large HTML, no compression, HTTP, mixed content, missing HSTS.
 - [ ] Implement mobile/international rules: missing viewport, missing lang, hreflang issues.
 - [ ] Implement social/schema rules: missing Open Graph, missing Twitter card, missing structured data, invalid JSON-LD parse.

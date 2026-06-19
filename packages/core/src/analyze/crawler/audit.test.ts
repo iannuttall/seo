@@ -181,6 +181,14 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       wordCount: 80,
       imagesTotal: 2,
       imagesMissingAlt: 1,
+      oversizedImageCandidates: [
+        {
+          src: 'https://example.com/hero-2400x1200.jpg',
+          width: 2400,
+          height: 1200,
+          detectedFrom: 'width,filename',
+        },
+      ],
       hasViewport: false,
       lang: undefined,
     }),
@@ -196,8 +204,21 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       'noindex',
       'thin_content',
       'image_missing_alt',
+      'image_oversized_candidate',
       'viewport_missing',
       'lang_missing',
+    ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'image_oversized_candidate')
+      ?.evidence?.candidates,
+    [
+      {
+        src: 'https://example.com/hero-2400x1200.jpg',
+        width: 2400,
+        height: 1200,
+        detectedFrom: 'width,filename',
+      },
     ],
   )
 })

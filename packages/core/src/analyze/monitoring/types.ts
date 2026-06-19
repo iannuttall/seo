@@ -47,6 +47,12 @@ export type CrawlPageSnapshot = {
   mixedContentSamples?: string[]
   imagesTotal?: number
   imagesMissingAlt?: number
+  oversizedImageCandidates?: Array<{
+    src: string
+    width?: number
+    height?: number
+    detectedFrom: string
+  }>
   outgoingInternalCount: number
   outgoingExternalCount?: number
   internalInlinkCount?: number

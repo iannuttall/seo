@@ -183,7 +183,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 ## Phase 13: Quality Gates
 
 - [x] Add parser fixture tests for HTML extraction.
-- [ ] Add audit rule tests for every rule family.
+- [x] Add audit rule tests for every rule family.
+  Added a registry-driven crawler audit coverage test that asserts every rule category has issue-producing audit fixture coverage, so new rule families cannot land without tests.
 - [x] Add crawler tests with local HTTP fixtures for redirects, robots, sitemap, broken links, and content types.
 - [ ] Add JSON schema snapshot tests for CLI and MCP outputs.
 - [x] Add help sweep tests for new commands.

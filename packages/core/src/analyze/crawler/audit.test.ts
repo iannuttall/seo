@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { listRules } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { auditCrawlPages } from './audit.js'
 
@@ -44,6 +45,69 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
     ...input,
   }
 }
+
+test('auditCrawlPages has issue-producing coverage for every rule family', () => {
+  const registryFamilies = [
+    ...new Set(listRules().map((rule) => rule.category)),
+  ].sort()
+  const issues = auditCrawlPages(
+    [
+      page({
+        url: 'https://example.com/broken',
+        finalUrl: 'https://example.com/broken',
+        status: 404,
+        internalInlinkCount: 1,
+      }),
+      page({
+        url: 'http://example.com/bad-template',
+        finalUrl: 'http://example.com/bad-template',
+        contentType: 'text/html',
+        sizeBytes: 20_000,
+        compression: undefined,
+        isHttps: false,
+        title: undefined,
+        metaDescription: undefined,
+        canonical: undefined,
+        h1: undefined,
+        h1Count: 0,
+        metaRobots: 'noindex',
+        indexable: false,
+        indexability: 'Meta robots noindex',
+        wordCount: 80,
+        textRatio: 0.03,
+        imagesTotal: 1,
+        imagesMissingAlt: 1,
+        hasViewport: false,
+        lang: undefined,
+        schemaTypes: [],
+        invalidJsonLdCount: 1,
+        invalidJsonLdSamples: [{ snippet: '{', error: 'Unexpected end' }],
+        openGraphTitle: undefined,
+        openGraphDescription: undefined,
+        openGraphImage: undefined,
+        twitterCard: undefined,
+        geo: {
+          semanticHtml: false,
+          structuredData: false,
+          hasAuthor: false,
+          hasDate: false,
+          questionHeadings: 0,
+          structuredBlocks: 0,
+          answerable: false,
+          hasLlmsTxt: false,
+          llmsTxtUrl: 'https://example.com/llms.txt',
+          llmsTxtStatus: 404,
+        },
+      }),
+    ],
+    { startUrl: 'http://example.com/bad-template' },
+  )
+  const coveredFamilies = [
+    ...new Set(issues.map((issue) => issue.category)),
+  ].sort()
+
+  assert.deepEqual(coveredFamilies, registryFamilies)
+})
 
 test('auditCrawlPages flags response errors first', () => {
   const issues = auditCrawlPages([

@@ -132,13 +132,19 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
 
     assert.deepEqual(
       report.pages.map((page) => new URL(page.url).pathname),
-      ['/sitemap-only'],
+      ['/sitemap-only', '/blocked'],
     )
     assert.equal(report.summary.discoveredUrls, 2)
     assert.equal(report.summary.queuedUrls, 2)
-    assert.equal(report.summary.crawledUrls, 1)
+    assert.equal(report.summary.crawledUrls, 2)
     assert.equal(report.summary.skippedUrls, 1)
     assert.equal(report.summary.failedUrls, 0)
+    assert.equal(report.pages[1]?.blocked, true)
+    assert.equal(report.pages[1]?.indexability, 'Robots.txt disallowed')
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
+      true,
+    )
     assert.equal(report.status, 'partial')
     assert.match(report.warnings.join('\n'), /robots\.txt/)
   } finally {

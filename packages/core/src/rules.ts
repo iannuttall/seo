@@ -452,6 +452,78 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl or URL Inspection and confirm no meta robots or X-Robots-Tag noindex remains.',
   },
   {
+    id: 'nofollow',
+    title: 'Nofollow found',
+    category: 'indexability',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Nofollow asks crawlers not to follow links from the page. On important pages, that can block discovery and weaken internal authority flow.',
+    howToFix:
+      'Remove nofollow from meta robots or X-Robots-Tag unless the page is intentionally isolated from link discovery.',
+    impactIfIgnored:
+      'Internal links on the page may pass weaker discovery and authority signals.',
+    howToVerify:
+      'Re-run the crawl and confirm metaRobots and xRobotsTag no longer contain nofollow.',
+    agentHints: {
+      evidenceFields: ['page.metaRobots', 'page.xRobotsTag'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'x_robots_noindex',
+    title: 'X-Robots-Tag noindex',
+    category: 'indexability',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'An X-Robots-Tag noindex header can remove a page from search even when the HTML looks indexable.',
+    howToFix:
+      'Remove the noindex directive from server, CDN, or framework response headers if the page should rank.',
+    impactIfIgnored:
+      'The page remains excluded from search results while the header is present.',
+    howToVerify:
+      'Re-run the crawl and confirm xRobotsTag no longer contains noindex.',
+    agentHints: {
+      evidenceFields: ['page.xRobotsTag', 'page.responseHeaders'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'robots_blocked',
+    title: 'Blocked by robots.txt',
+    category: 'indexability',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Robots.txt blocking prevents crawlers from fetching the URL. If accidental, search engines and AI systems cannot evaluate the page content.',
+    howToFix:
+      'Update robots.txt so important public pages are allowed, or leave the block in place only for intentionally private or low-value paths.',
+    impactIfIgnored:
+      'The page may stay uncrawled, stale, or missing from search and AI retrieval systems.',
+    howToVerify:
+      'Re-run the crawl and confirm robotsTxt.allowed is true for the URL.',
+    agentHints: {
+      evidenceFields: ['page.robotsTxt'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'canonicalized_page',
+    title: 'Canonicalized page',
+    category: 'indexability',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'A canonicalized page tells search engines another URL should receive the ranking signals. That is fine when intentional and risky when accidental.',
+    howToFix:
+      'If this URL should rank, make the canonical self-referencing. If another URL is preferred, make internal links and sitemap entries point to that preferred URL.',
+    impactIfIgnored:
+      'The page may be excluded from search in favor of the canonical target.',
+    howToVerify:
+      'Re-run the crawl and confirm the canonical target matches the intended indexable URL.',
+    agentHints: {
+      evidenceFields: ['page.canonical', 'page.finalUrl', 'page.indexability'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'thin_content',
     title: 'Thin content',
     category: 'content',

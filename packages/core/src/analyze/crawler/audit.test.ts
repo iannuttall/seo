@@ -234,10 +234,72 @@ test('auditCrawlPages flags heading issues', () => {
       .map((issue) => issue.ruleId),
     ['h1_missing', 'multiple_h1', 'heading_structure_weak'],
   )
-  assert.equal(
+  assert.deepEqual(
     issues.find((issue) => issue.ruleId === 'heading_structure_weak')?.evidence
       ?.minWords,
     300,
+  )
+})
+
+test('auditCrawlPages flags indexability issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/meta-noindex',
+      metaRobots: 'noindex, nofollow',
+      indexable: false,
+      indexability: 'Meta robots noindex',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/header-noindex',
+      xRobotsTag: 'noindex',
+      indexable: false,
+      indexability: 'X-Robots-Tag noindex',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/blocked',
+      robotsTxt: {
+        url: 'https://example.com/robots.txt',
+        allowed: false,
+        matchedLine: 'Disallow: /blocked',
+      },
+      indexable: false,
+      indexability: 'Robots.txt disallowed',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/canonicalized',
+      finalUrl: 'https://example.com/canonicalized',
+      canonical: 'https://example.com/preferred',
+      indexable: false,
+      indexability: 'Canonicalized',
+      internalInlinkCount: 1,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'indexability')
+      .map((issue) => issue.ruleId),
+    [
+      'noindex',
+      'nofollow',
+      'x_robots_noindex',
+      'robots_blocked',
+      'canonicalized_page',
+    ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'robots_blocked')?.evidence
+      ?.robotsTxt,
+    page({
+      robotsTxt: {
+        url: 'https://example.com/robots.txt',
+        allowed: false,
+        matchedLine: 'Disallow: /blocked',
+      },
+    }).robotsTxt,
   )
 })
 

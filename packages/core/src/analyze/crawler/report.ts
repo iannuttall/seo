@@ -288,3 +288,17 @@ export function createCrawlReport(input: {
     caveats: input.caveats ?? [],
   }
 }
+
+export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
+  const issues = report.issues ?? []
+  const pages = scorePages(report.pages ?? [], issues)
+  return {
+    ...report,
+    summary: summarizeCrawlReport({ pages, issues }),
+    pages,
+    issues,
+    issueGroups: groupCrawlIssues(issues),
+    warnings: report.warnings ?? [],
+    caveats: report.caveats ?? [],
+  }
+}

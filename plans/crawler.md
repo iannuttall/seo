@@ -117,7 +117,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add `--project` support when a saved project has a crawl URL.
 - [ ] Make progress print to stderr so JSON stdout stays clean.
 - [ ] Keep default human output short: summary, top fixes, next commands.
-- [ ] Add `seo rules` and `seo explain <rule>` or equivalent.
+- [x] Add `seo rules` and `seo explain <rule>` or equivalent.
 
 ## Phase 9: MCP Surface
 

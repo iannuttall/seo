@@ -1,5 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { getCacheStats, listSites } from '@seo/core'
+import {
+  crawlerToolGuide,
+  crawlerWorkflowMarkdown,
+} from './crawler-workflow-docs.js'
 
 export function registerResources(server: McpServer): void {
   server.registerResource(
@@ -45,6 +49,42 @@ export function registerResources(server: McpServer): void {
         {
           uri: 'gsc://report/last-audit',
           text: 'Last audit persistence is not wired yet. Use seo_audit_page directly.',
+        },
+      ],
+    }),
+  )
+
+  server.registerResource(
+    'crawler-workflows',
+    'seo://crawler/workflows',
+    {
+      mimeType: 'text/markdown',
+      description:
+        'MCP workflow guide for crawler audits, implementation queues, GEO readiness, and focused URL audits.',
+    },
+    async () => ({
+      contents: [
+        {
+          uri: 'seo://crawler/workflows',
+          text: crawlerWorkflowMarkdown,
+        },
+      ],
+    }),
+  )
+
+  server.registerResource(
+    'crawler-tool-guide',
+    'seo://crawler/tools',
+    {
+      mimeType: 'application/json',
+      description:
+        'Structured guide mapping crawler MCP tools to workflows and response shapes.',
+    },
+    async () => ({
+      contents: [
+        {
+          uri: 'seo://crawler/tools',
+          text: JSON.stringify(crawlerToolGuide, null, 2),
         },
       ],
     }),

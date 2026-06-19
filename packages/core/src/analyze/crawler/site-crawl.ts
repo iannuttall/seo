@@ -172,7 +172,11 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
     let task: CrawlTask
     task = {
       ...item,
-      promise: crawlOne(item.url, { js: config.js }).then((result) => ({
+      promise: crawlOne(item.url, {
+        js: config.js,
+        timeoutMs: config.timeoutMs,
+        rate: { concurrency: config.concurrency },
+      }).then((result) => ({
         task,
         result,
       })),

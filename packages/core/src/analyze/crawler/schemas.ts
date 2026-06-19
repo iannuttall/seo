@@ -74,6 +74,43 @@ export const crawlPageSnapshotSchema = z.object({
   usedJs: z.boolean().optional(),
   fetchSource: z.enum(['cache', 'network', 'rendered']).optional(),
   cacheState: z.enum(['hit', 'miss', 'bypass']).optional(),
+  fetchDiagnostics: z
+    .object({
+      source: z.enum(['cache', 'network', 'rendered']),
+      cache: z.enum(['hit', 'miss', 'bypass']),
+      fetched: z.boolean(),
+      rendered: z.boolean(),
+      blocked: z.boolean(),
+      durationMs: z.number(),
+      retries: z.number().int(),
+      rateLimit: z.object({
+        host: z.string(),
+        concurrency: z.number().int(),
+        intervalCap: z.number().int(),
+        intervalMs: z.number().int(),
+      }),
+      backpressure: z
+        .object({
+          host: z.string(),
+          status: z.enum(['ok', 'slowed', 'stopped']),
+          reason: z.string().optional(),
+          delayMs: z.number(),
+          cooldownUntil: z.string().optional(),
+          consecutiveSlow: z.number().int(),
+          consecutiveBlocked: z.number().int(),
+          consecutiveErrors: z.number().int(),
+          recentP95Ms: z.number().optional(),
+        })
+        .optional(),
+      robotsTxt: z
+        .object({
+          url: z.string().url(),
+          cache: z.enum(['hit', 'miss', 'bypass']),
+          allowed: z.boolean(),
+        })
+        .optional(),
+    })
+    .optional(),
   blocked: z.boolean().optional(),
   robotsTxt: z
     .object({

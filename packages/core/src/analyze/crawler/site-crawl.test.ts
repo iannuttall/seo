@@ -205,3 +205,32 @@ test('crawlSite captures content types and reports broken internal links', async
     await fixture.close()
   }
 })
+
+test('crawlSite passes rate controls through the shared fetch layer', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end('<title>Rate</title><h1>Rate</h1>')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/rate-control`,
+      useSitemap: false,
+      maxPages: 10,
+      concurrency: 3,
+      timeoutMs: 5_000,
+    })
+
+    assert.equal(report.status, 'completed')
+    assert.equal(report.summary.totalPages, 1)
+    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.concurrency, 3)
+    assert.equal(report.pages[0]?.fetchDiagnostics?.cache, 'miss')
+  } finally {
+    await fixture.close()
+  }
+})

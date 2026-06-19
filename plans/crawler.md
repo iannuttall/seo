@@ -196,7 +196,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add a new crawl report type in core.
 - [x] Add site crawl with sitemap/robots/depth/page limits.
 - [x] Implement the first 20 high-value rules.
-- [ ] Add compact CLI output and JSON output.
+- [x] Add compact CLI output and JSON output.
 - [ ] Add MCP `seo_crawl_site`, `seo_top_fixes`, and `seo_explain_issue`.
 - [ ] Join GSC page metrics when `--site` or `--project` is provided.
 - [ ] Add saved local reports with `latest`.

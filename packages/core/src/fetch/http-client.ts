@@ -12,6 +12,7 @@ export function requestHeaders(profile: HttpProfile): Headers {
     return new Headers({
       accept: 'text/plain,*/*;q=0.8',
       'accept-language': 'en-US,en;q=0.9',
+      connection: 'close',
       'user-agent': BROWSER_USER_AGENT,
     })
   }
@@ -19,6 +20,7 @@ export function requestHeaders(profile: HttpProfile): Headers {
   return new Headers({
     accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'accept-language': 'en-US,en;q=0.9',
+    connection: 'close',
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"macOS"',
     'upgrade-insecure-requests': '1',

@@ -122,6 +122,7 @@ export const crawlPageSnapshotSchema = z.object({
     })
     .optional(),
   blocked: z.boolean().optional(),
+  crawlDepth: z.number().int().optional(),
   robotsTxt: z
     .object({
       url: z.string().url(),
@@ -153,6 +154,12 @@ export const crawlPageSnapshotSchema = z.object({
   internalLinkAuthorityScore: z.number().int().min(0).max(100).optional(),
   sampleInternalLinks: z.array(z.string().url()).optional(),
   sampleExternalLinks: z.array(z.string().url()).optional(),
+  internalAnchorSamples: z
+    .array(z.object({ href: z.string().url(), text: z.string() }))
+    .optional(),
+  externalAnchorSamples: z
+    .array(z.object({ href: z.string().url(), text: z.string() }))
+    .optional(),
   schemaTypes: z.array(z.string()).optional(),
   openGraphTitle: z.string().optional(),
   openGraphImage: z.string().optional(),

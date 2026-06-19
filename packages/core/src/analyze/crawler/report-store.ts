@@ -1,6 +1,8 @@
 import { getDb } from '../../storage/database.js'
 import { type CrawlReport, normalizeLoadedCrawlReport } from './report.js'
 
+export const CRAWL_REPORT_STORAGE_VERSION = 1
+
 export type CrawlReportMeta = {
   id: string
   configHash: string
@@ -10,6 +12,18 @@ export type CrawlReportMeta = {
   totalPages: number
   issueCount: number
   createdAt: string
+  storageVersion: number
+}
+
+export type CrawlReportStorageEnvelope = {
+  kind: 'seo.crawl_report'
+  version: typeof CRAWL_REPORT_STORAGE_VERSION
+  savedAt: string
+  tenant?: {
+    projectId?: string
+    site?: string
+  }
+  report: CrawlReport
 }
 
 type CrawlReportRow = {
@@ -34,7 +48,50 @@ function toMeta(row: CrawlReportRow): CrawlReportMeta {
     totalPages: row.total_pages,
     issueCount: row.issue_count,
     createdAt: new Date(row.created_at).toISOString(),
+    storageVersion: storageVersionFromJson(row.report_json),
   }
+}
+
+function storageEnvelope(report: CrawlReport): CrawlReportStorageEnvelope {
+  const tenant: CrawlReportStorageEnvelope['tenant'] = {}
+  if (report.projectId) tenant.projectId = report.projectId
+  if (report.site) tenant.site = report.site
+
+  return {
+    kind: 'seo.crawl_report',
+    version: CRAWL_REPORT_STORAGE_VERSION,
+    savedAt: new Date().toISOString(),
+    ...(tenant.projectId || tenant.site ? { tenant } : {}),
+    report,
+  }
+}
+
+function storageVersionFromJson(value: string): number {
+  try {
+    const parsed = JSON.parse(value) as Partial<CrawlReportStorageEnvelope>
+    return parsed.kind === 'seo.crawl_report' &&
+      typeof parsed.version === 'number'
+      ? parsed.version
+      : 0
+  } catch {
+    return 0
+  }
+}
+
+function reportFromJson(value: string): CrawlReport {
+  const parsed = JSON.parse(value) as
+    | CrawlReport
+    | Partial<CrawlReportStorageEnvelope>
+  if (
+    parsed &&
+    typeof parsed === 'object' &&
+    'kind' in parsed &&
+    parsed.kind === 'seo.crawl_report' &&
+    'report' in parsed
+  ) {
+    return normalizeLoadedCrawlReport(parsed.report as CrawlReport)
+  }
+  return normalizeLoadedCrawlReport(parsed as CrawlReport)
 }
 
 export function saveCrawlReport(report: CrawlReport): CrawlReportMeta {
@@ -53,7 +110,7 @@ export function saveCrawlReport(report: CrawlReport): CrawlReportMeta {
       report.summary.totalPages,
       report.issues.length,
       Date.parse(report.generatedAt),
-      JSON.stringify(report),
+      JSON.stringify(storageEnvelope(report)),
     )
   return {
     id: report.id,
@@ -64,6 +121,7 @@ export function saveCrawlReport(report: CrawlReport): CrawlReportMeta {
     totalPages: report.summary.totalPages,
     issueCount: report.issues.length,
     createdAt: report.generatedAt,
+    storageVersion: CRAWL_REPORT_STORAGE_VERSION,
   }
 }
 
@@ -95,7 +153,7 @@ export function loadCrawlReport(id: string): CrawlReport | undefined {
     .prepare('SELECT report_json FROM crawl_reports WHERE id = ?')
     .get(id) as { report_json: string } | undefined
   if (!row) return undefined
-  return normalizeLoadedCrawlReport(JSON.parse(row.report_json) as CrawlReport)
+  return reportFromJson(row.report_json)
 }
 
 export function deleteCrawlReport(id: string): boolean {
@@ -123,5 +181,5 @@ export function latestCrawlReport(site?: string): CrawlReport | undefined {
         )
         .get() as { report_json: string } | undefined)
   if (!row) return undefined
-  return normalizeLoadedCrawlReport(JSON.parse(row.report_json) as CrawlReport)
+  return reportFromJson(row.report_json)
 }

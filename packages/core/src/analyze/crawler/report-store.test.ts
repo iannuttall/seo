@@ -5,6 +5,7 @@ import { getDb } from '../../storage/database.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { createCrawlReport } from './report.js'
 import {
+  CRAWL_REPORT_STORAGE_VERSION,
   deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
@@ -36,6 +37,7 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
   const updated = saveCrawlReport(rerun)
 
   assert.equal(saved.id, second.id)
+  assert.equal(saved.storageVersion, CRAWL_REPORT_STORAGE_VERSION)
   assert.equal(updated.id, second.id)
   assert.equal(loadCrawlReport(first.id)?.id, first.id)
   assert.equal(loadCrawlReport(second.id)?.status, 'partial')
@@ -44,6 +46,17 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
     listCrawlReports({ site, limit: 2 }).map((item) => item.id),
     [second.id, first.id],
   )
+  assert.deepEqual(
+    listCrawlReports({ site, limit: 1 }).map((item) => item.storageVersion),
+    [CRAWL_REPORT_STORAGE_VERSION],
+  )
+  const stored = getDb()
+    .prepare('SELECT report_json FROM crawl_reports WHERE id = ?')
+    .get(second.id) as { report_json: string }
+  const envelope = JSON.parse(stored.report_json) as Record<string, unknown>
+  assert.equal(envelope.kind, 'seo.crawl_report')
+  assert.equal(envelope.version, CRAWL_REPORT_STORAGE_VERSION)
+  assert.equal((envelope.report as { id?: string }).id, second.id)
   assert.equal(deleteCrawlReport(first.id), true)
   assert.equal(loadCrawlReport(first.id), undefined)
   assert.equal(deleteCrawlReport(first.id), false)

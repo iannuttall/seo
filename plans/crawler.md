@@ -102,7 +102,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add report ids that are stable enough for agents but do not leak secrets.
 - [x] Add report status: completed, partial, failed.
 - [x] Recompute derived scores on load so older reports can self-heal after scoring changes.
-- [ ] Keep storage shape adaptable for future hosted persistence.
+- [x] Keep storage shape adaptable for future hosted persistence.
 
 ## Phase 8: CLI Surface
 

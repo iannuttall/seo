@@ -32,7 +32,7 @@ export async function querySearchAnalytics(
   while (true) {
     const requestBody = {
       ...body,
-      rowLimit: 25_000,
+      rowLimit: body.rowLimit ?? 25_000,
       startRow,
       dataState: body.dataState ?? 'final',
       dimensions: body.dimensions ?? ['query', 'page'],
@@ -116,6 +116,52 @@ export async function queryPageMetrics(
         impressions: result.rows[0].impressions,
         ctr: result.rows[0].ctr,
         position: result.rows[0].position,
+      }
+    : undefined
+}
+
+export async function queryPageTopQuery(
+  site: string,
+  pageUrl: string,
+  days = 28,
+): Promise<
+  | {
+      query: string
+      clicks: number
+      impressions: number
+      ctr: number
+      position: number
+    }
+  | undefined
+> {
+  const endDate = new Date()
+  endDate.setUTCDate(endDate.getUTCDate() - 4)
+  const startDate = new Date(endDate)
+  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
+
+  const result = await querySearchAnalytics(site, {
+    startDate: startDate.toISOString().slice(0, 10),
+    endDate: endDate.toISOString().slice(0, 10),
+    dimensions: ['query'],
+    dimensionFilterGroups: [
+      {
+        groupType: 'and',
+        filters: [
+          { dimension: 'page', operator: 'equals', expression: pageUrl },
+        ],
+      },
+    ],
+    rowLimit: 10,
+  })
+  const row = result.rows[0]
+  const query = row?.keys[0]
+  return row && query
+    ? {
+        query,
+        clicks: row.clicks,
+        impressions: row.impressions,
+        ctr: row.ctr,
+        position: row.position,
       }
     : undefined
 }

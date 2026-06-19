@@ -340,6 +340,7 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
     fetchUrls: [] as string[],
     sitemap: 0,
     searchMetrics: [] as Array<{ site: string; pageUrl: string }>,
+    topQueries: [] as Array<{ site: string; pageUrl: string }>,
     analytics: [] as Array<{
       propertyId?: string
       startDate: string
@@ -433,6 +434,16 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
         position: 3.2,
       }
     },
+    queryPageTopQuery: async (site, pageUrl) => {
+      calls.topQueries.push({ site, pageUrl })
+      return {
+        query: 'adapter page',
+        clicks: 2,
+        impressions: 80,
+        ctr: 0.025,
+        position: 4,
+      }
+    },
     fetchLandingPageValues: async (input) => {
       calls.analytics.push(input)
       return { values: analyticsValues }
@@ -467,6 +478,12 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
       pageUrl: 'https://example.com/',
     },
   ])
+  assert.deepEqual(calls.topQueries, [
+    {
+      site: 'sc-domain:example.com',
+      pageUrl: 'https://example.com/',
+    },
+  ])
   assert.deepEqual(calls.analytics, [
     {
       propertyId: 'properties/123',
@@ -480,6 +497,13 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
     impressions: 100,
     ctr: 0.05,
     position: 3.2,
+  })
+  assert.deepEqual(report.pages[0]?.topQuery, {
+    query: 'adapter page',
+    clicks: 2,
+    impressions: 80,
+    ctr: 0.025,
+    position: 4,
   })
   assert.deepEqual(report.pages[0]?.analytics, {
     sessions: 42,

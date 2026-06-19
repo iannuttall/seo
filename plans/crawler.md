@@ -108,7 +108,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [x] Add `seo crawl <url>` or `seo technical-audit <url>` after deciding the name.
 - [ ] Add `seo audit-url <url>` only if it is clearer than extending `seo audit-page`.
-- [ ] Add URL-list mode from arguments and/or file input.
+- [x] Add URL-list mode from arguments and/or file input.
 - [ ] Add `--format pretty|json|csv|html`.
 - [ ] Add `--output <path>`.
 - [ ] Add `--save`.

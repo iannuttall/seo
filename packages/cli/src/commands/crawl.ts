@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { crawlSite, saveCrawlReport, topFixes } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
@@ -62,6 +63,10 @@ export const crawlCommand = defineCommand({
     urls: {
       type: 'string',
       description: 'Comma-separated URLs for list mode.',
+    },
+    'urls-file': {
+      type: 'string',
+      description: 'File with one URL per line for list mode.',
     },
     'max-pages': {
       type: 'string',
@@ -128,9 +133,10 @@ export const crawlCommand = defineCommand({
     const severity = severityArg(args.severity)
     const failOn = severityArg(args['fail-on'])
     const project = projectArg(args)
+    const urls = await urlListArgs(args)
     const explicitUrl = crawlUrlArg(args)
     const selection =
-      stringArg(args.site) || project || !explicitUrl
+      stringArg(args.site) || project || (!explicitUrl && !urls.length)
         ? await resolveClientSelection({
             client: project,
             site: stringArg(args.site),
@@ -140,7 +146,8 @@ export const crawlCommand = defineCommand({
     const crawlUrl =
       explicitUrl ??
       selection?.client?.startUrl ??
-      (selection?.site ? startUrlForSite(selection.site) : undefined)
+      (selection?.site ? startUrlForSite(selection.site) : undefined) ??
+      urls[0]
     if (!crawlUrl) {
       throw new Error(
         'No crawl URL selected. Pass a URL, --url, or use --project with a saved crawl URL.',
@@ -151,8 +158,8 @@ export const crawlCommand = defineCommand({
       url: crawlUrl,
       projectId: selection?.client?.id,
       site: selection?.site,
-      mode: crawlModeArg(args.mode),
-      urls: csvArg(args.urls),
+      mode: crawlModeArg(args.mode) ?? (urls.length ? 'list' : undefined),
+      urls,
       maxPages: numberArg(args['max-pages']),
       maxDepth: numberArg(args['max-depth']),
       concurrency: numberArg(args.concurrency),
@@ -253,4 +260,20 @@ function crawlUrlArg(args: Record<string, unknown>): string | undefined {
     throw new Error('Use either a URL argument or --url, not both.')
   }
   return positional ?? flag
+}
+
+async function urlListArgs(args: Record<string, unknown>): Promise<string[]> {
+  const urls = csvArg(args.urls) ?? []
+  const file = stringArg(args['urls-file'])
+  if (file) {
+    urls.push(...parseUrlList(await readFile(file, 'utf8')))
+  }
+  return [...new Set(urls)]
+}
+
+function parseUrlList(value: string): string[] {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter((item) => item && !item.startsWith('#'))
 }

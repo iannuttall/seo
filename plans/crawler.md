@@ -6,53 +6,53 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 ## Product Principles
 
-- [ ] Keep `seo report` as the main human entry point.
-- [ ] Add a dedicated crawler surface without making root help noisy.
-- [ ] Use plain English for humans: what happened, why it matters, what to do, how to verify.
-- [ ] Use stable structured data for agents: ids, rule codes, evidence, affected URLs, severity, impact, confidence, and fix hints.
+- [x] Keep `seo report` as the main human entry point.
+- [x] Add a dedicated crawler surface without making root help noisy.
+- [x] Use plain English for humans: what happened, why it matters, what to do, how to verify.
+- [x] Use stable structured data for agents: ids, rule codes, evidence, affected URLs, severity, impact, confidence, and fix hints.
 - [x] Make crawler operations idempotent: same input config should produce reusable report ids, deterministic cache keys, and safe repeat runs.
-- [ ] Keep CLI and MCP thin; put crawler logic, rules, scoring, and persistence in `packages/core`.
-- [ ] Treat crawl data as durable evidence that other reports can reuse, not disposable command output.
+- [x] Keep CLI and MCP thin; put crawler logic, rules, scoring, and persistence in `packages/core`.
+- [x] Treat crawl data as durable evidence that other reports can reuse, not disposable command output.
 - [ ] Keep local-only assumptions out of core types where practical, so hosted API support is an adapter later.
 
 ## Phase 1: Shared Rule System
 
-- [ ] Add a core `RuleInfo` registry for all technical, content, GEO, and data-backed rules.
-- [ ] Give every rule a stable machine id, human title, category, default severity, and owner area.
-- [ ] Store `whyItMatters`, `howToFix`, `impactIfIgnored`, and `howToVerify` for every rule.
-- [ ] Add structured fix hints for agents, for example affected field, suggested command, and verification tool.
-- [ ] Support issue instances that reference a rule id plus concrete evidence.
-- [ ] Add `listRules()` and `explainRule(ruleId)` core functions.
-- [ ] Expose rule explanations in CLI, MCP, JSON output, and later HTML reports.
-- [ ] Add tests that fail when a new issue code has no rule guidance.
+- [x] Add a core `RuleInfo` registry for all technical, content, GEO, and data-backed rules.
+- [x] Give every rule a stable machine id, human title, category, default severity, and owner area.
+- [x] Store `whyItMatters`, `howToFix`, `impactIfIgnored`, and `howToVerify` for every rule.
+- [x] Add structured fix hints for agents, for example affected field, suggested command, and verification tool.
+- [x] Support issue instances that reference a rule id plus concrete evidence.
+- [x] Add `listRules()` and `explainRule(ruleId)` core functions.
+- [x] Expose rule explanations in CLI, MCP, JSON output, and later HTML reports.
+- [x] Add tests that fail when a new issue code has no rule guidance.
 
 ## Phase 2: Full Crawl Engine
 
-- [ ] Add a first-class crawl config type in core.
-- [ ] Support crawl modes: site crawl, single URL, explicit URL list, and sitemap-only crawl.
-- [ ] Support `maxPages`, `maxDepth`, `concurrency`, `timeoutMs`, `include`, `exclude`, `respectRobots`, `useSitemap`, `checkExternal`, `js`.
-- [ ] Seed from homepage and XML sitemaps.
-- [ ] Parse nested sitemap indexes.
-- [ ] Respect robots.txt by default.
-- [ ] Capture robots-blocked URLs as skipped evidence, not fatal errors.
-- [ ] Normalize URLs consistently: remove fragments, handle trailing slash policy, handle `www` only where intended.
-- [ ] Avoid crawling common non-page assets as pages.
+- [x] Add a first-class crawl config type in core.
+- [x] Support crawl modes: site crawl, single URL, explicit URL list, and sitemap-only crawl.
+- [x] Support `maxPages`, `maxDepth`, `concurrency`, `timeoutMs`, `include`, `exclude`, `respectRobots`, `useSitemap`, `checkExternal`, `js`.
+- [x] Seed from homepage and XML sitemaps.
+- [x] Parse nested sitemap indexes.
+- [x] Respect robots.txt by default.
+- [x] Capture robots-blocked URLs as skipped evidence, not fatal errors.
+- [x] Normalize URLs consistently: remove fragments, handle trailing slash policy, handle `www` only where intended.
+- [x] Avoid crawling common non-page assets as pages.
 - [ ] Track discovered, queued, crawled, skipped, failed, and verified-link counts.
 - [ ] Make cancellation safe and return partial reports with clear status.
 - [ ] Reuse existing fetch/cache/rate-control code where possible.
-- [ ] Keep JS rendering optional and bounded because it is expensive.
+- [x] Keep JS rendering optional and bounded because it is expensive.
 
 ## Phase 3: Page Snapshot Model
 
-- [ ] Expand page snapshots beyond current crawl-diff fields.
+- [x] Expand page snapshots beyond current crawl-diff fields.
 - [ ] Capture request URL, final URL, status, redirect chain, content type, response time, size, headers, and cache diagnostics.
-- [ ] Capture title, meta description, canonical, meta robots, X-Robots-Tag, H1/H2/H3, word count, main content hash, and extracted text summary.
+- [x] Capture title, meta description, canonical, meta robots, X-Robots-Tag, H1/H2/H3, word count, main content hash, and extracted text summary.
 - [ ] Capture internal links, external links, inlink count, outgoing link count, anchor text samples, and crawl depth.
 - [ ] Capture images total, missing alt count, social tags, JSON-LD schema types, hreflang, lang, viewport, mixed content, HSTS, compression, and HTTPS.
 - [ ] Capture GEO signals: semantic HTML, structured data, author, date, question headings, answer-ready blocks, tables/lists, FAQ/QAPage schema, `llms.txt`.
-- [ ] Capture indexability as a derived field with reason.
+- [x] Capture indexability as a derived field with reason.
 - [ ] Capture per-page SEO score and per-page GEO score.
-- [ ] Preserve enough raw evidence for agents to propose exact fixes without re-fetching.
+- [x] Preserve enough raw evidence for agents to propose exact fixes without re-fetching.
 
 ## Phase 4: Audit Rules
 
@@ -68,7 +68,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Implement mobile/international rules: missing viewport, missing lang, hreflang issues.
 - [ ] Implement social/schema rules: missing Open Graph, missing Twitter card, missing structured data, invalid JSON-LD parse.
 - [ ] Implement GEO rules: no machine-readable structure, weak semantic HTML, missing author/date, not answer-ready, too thin to cite, missing `llms.txt`.
-- [ ] Keep every issue tied to a rule id and concrete evidence.
+- [x] Keep every issue tied to a rule id and concrete evidence.
 
 ## Phase 5: Scoring And Prioritisation
 

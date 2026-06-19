@@ -56,6 +56,7 @@ const EFFORT_BY_CATEGORY: Partial<
   metadata: 'low',
   mobile: 'low',
   response: 'medium',
+  security: 'medium',
   social: 'low',
   'structured-data': 'medium',
 }

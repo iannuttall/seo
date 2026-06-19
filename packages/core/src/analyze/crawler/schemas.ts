@@ -15,6 +15,7 @@ export const crawlerRuleCategorySchema = z.enum([
   'metadata',
   'mobile',
   'performance',
+  'security',
   'social',
   'structured-data',
   'geo',

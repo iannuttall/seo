@@ -115,6 +115,66 @@ test('auditCrawlPages flags redirect chains and slow responses', () => {
   assert.equal(issues[2]?.evidence?.thresholdMs, 2000)
 })
 
+test('auditCrawlPages flags performance and security issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/heavy',
+      contentType: 'text/html; charset=utf-8',
+      sizeBytes: 2_500_000,
+      compression: undefined,
+      isHttps: true,
+      hasHsts: true,
+    }),
+    page({
+      url: 'http://example.com/plain',
+      finalUrl: 'http://example.com/plain',
+      contentType: 'text/html',
+      sizeBytes: 20_000,
+      isHttps: false,
+    }),
+    page({
+      url: 'https://example.com/mixed',
+      contentType: 'text/html',
+      sizeBytes: 20_000,
+      compression: 'br',
+      isHttps: true,
+      hasHsts: false,
+      mixedContentCount: 2,
+      mixedContentSamples: [
+        'http://cdn.example/image.jpg',
+        'http://cdn.example/app.js',
+      ],
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter(
+        (issue) =>
+          issue.category === 'performance' || issue.category === 'security',
+      )
+      .map((issue) => issue.ruleId),
+    [
+      'large_html',
+      'no_compression',
+      'no_compression',
+      'http_not_secure',
+      'mixed_content',
+      'hsts_missing',
+    ],
+  )
+  assert.equal(
+    issues.find((issue) => issue.ruleId === 'large_html')?.evidence
+      ?.thresholdBytes,
+    2 * 1024 * 1024,
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'mixed_content')?.evidence
+      ?.mixedContentSamples,
+    ['http://cdn.example/image.jpg', 'http://cdn.example/app.js'],
+  )
+})
+
 test('auditCrawlPages flags link issues', () => {
   const issues = auditCrawlPages(
     [

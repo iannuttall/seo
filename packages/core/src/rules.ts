@@ -13,6 +13,7 @@ type RuleDefinition = {
     | 'metadata'
     | 'mobile'
     | 'performance'
+    | 'security'
     | 'social'
     | 'structured-data'
     | 'geo'
@@ -320,6 +321,94 @@ const RULE_DEFINITIONS = [
       'Users wait longer, crawlers spend more time per URL, and important pages may feel unreliable.',
     howToVerify:
       'Re-run the crawl and confirm responseTimeMs is under the slow-response threshold.',
+  },
+  {
+    id: 'large_html',
+    title: 'Large HTML response',
+    category: 'performance',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Large HTML takes longer to download and parse before the browser can even start the rest of the page.',
+    howToFix:
+      'Trim duplicated markup, remove heavy inline data, split non-critical content, and move large scripts or styles out of the HTML response.',
+    impactIfIgnored:
+      'Pages can feel slow on mobile connections and crawlers spend more time processing each URL.',
+    howToVerify:
+      'Re-run the crawl and confirm sizeBytes is below the large HTML threshold for normal pages.',
+    agentHints: {
+      evidenceFields: ['page.sizeBytes', 'issue.evidence.thresholdBytes'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'no_compression',
+    title: 'No text compression',
+    category: 'performance',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'HTML without gzip or brotli sends more bytes than necessary and slows every first page load.',
+    howToFix:
+      'Enable gzip or brotli for HTML and other text responses at the server, CDN, or reverse proxy.',
+    impactIfIgnored:
+      'Users download more data, pages load slower, and the origin may spend more bandwidth than needed.',
+    howToVerify:
+      'Re-run the crawl and confirm compression is br or gzip for sizeable HTML responses.',
+    agentHints: {
+      evidenceFields: [
+        'page.compression',
+        'page.sizeBytes',
+        'issue.evidence.thresholdBytes',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'http_not_secure',
+    title: 'Page is not served over HTTPS',
+    category: 'security',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'HTTPS is a baseline trust signal. Browsers label HTTP pages as not secure, and users can be intercepted or downgraded.',
+    howToFix:
+      'Install TLS, serve the page on HTTPS, and redirect the HTTP URL to the HTTPS version with a permanent redirect.',
+    impactIfIgnored:
+      'Users see trust warnings, conversions suffer, and search quality signals are weaker.',
+    howToVerify:
+      'Re-run the crawl and confirm finalUrl starts with https:// and isHttps is true.',
+  },
+  {
+    id: 'mixed_content',
+    title: 'Mixed content',
+    category: 'security',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'An HTTPS page that loads HTTP resources can trigger browser warnings or blocked images, scripts, fonts, or media.',
+    howToFix:
+      'Change insecure resource URLs to HTTPS, update CDN origins, or remove resources that are no longer available securely.',
+    impactIfIgnored:
+      'Parts of the page may break, users lose trust, and the security guarantee of HTTPS is weakened.',
+    howToVerify: 'Re-run the crawl and confirm mixedContentCount is zero.',
+    agentHints: {
+      evidenceFields: [
+        'page.mixedContentSamples',
+        'issue.evidence.mixedContentSamples',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'hsts_missing',
+    title: 'HSTS header missing',
+    category: 'security',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'HSTS tells browsers to keep using HTTPS, which reduces downgrade risk after the first secure visit.',
+    howToFix:
+      'Send a Strict-Transport-Security header with a suitable max-age once the whole site is stable on HTTPS.',
+    impactIfIgnored:
+      'Repeat visitors have a larger downgrade window if a network or link tries to send them to HTTP.',
+    howToVerify:
+      'Re-run the crawl and confirm hasHsts is true for HTTPS pages.',
   },
   {
     id: 'broken_internal_link',

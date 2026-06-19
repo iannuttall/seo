@@ -48,6 +48,8 @@ function urlKey(value?: string): string | undefined {
 }
 
 const SLOW_RESPONSE_MS = 2_000
+const LARGE_HTML_BYTES = 2 * 1024 * 1024
+const COMPRESSION_MIN_BYTES = 4 * 1024
 const DEEP_PAGE_DEPTH = 4
 const WEAK_VALUABLE_INLINKS = 1
 const TITLE_MIN_CHARS = 30
@@ -87,6 +89,10 @@ function isBrokenLinkStatus(status?: number): boolean {
   return (
     status === 0 || status === 404 || status === 410 || (status ?? 0) >= 500
   )
+}
+
+function isHtmlPage(page: CrawlPageSnapshot): boolean {
+  return /\bhtml\b/i.test(page.contentType ?? '')
 }
 
 function isValuablePage(page: CrawlPageSnapshot): boolean {
@@ -313,6 +319,60 @@ export function auditCrawlPages(
           thresholdMs: SLOW_RESPONSE_MS,
         }),
       )
+    }
+    if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {
+      issues.push(
+        issue(
+          'large_html',
+          page,
+          `${Math.round((page.sizeBytes ?? 0) / 1024)} KB`,
+          {
+            sizeBytes: page.sizeBytes,
+            thresholdBytes: LARGE_HTML_BYTES,
+          },
+        ),
+      )
+    }
+    if (
+      isHtmlPage(page) &&
+      !page.compression &&
+      (page.sizeBytes ?? 0) > COMPRESSION_MIN_BYTES
+    ) {
+      issues.push(
+        issue('no_compression', page, undefined, {
+          sizeBytes: page.sizeBytes,
+          thresholdBytes: COMPRESSION_MIN_BYTES,
+          compression: page.compression,
+        }),
+      )
+    }
+    if (page.isHttps === false) {
+      issues.push(
+        issue('http_not_secure', page, undefined, {
+          finalUrl: page.finalUrl,
+        }),
+      )
+    } else if (page.isHttps === true) {
+      if ((page.mixedContentCount ?? 0) > 0) {
+        issues.push(
+          issue(
+            'mixed_content',
+            page,
+            `${page.mixedContentCount} insecure resources`,
+            {
+              mixedContentCount: page.mixedContentCount,
+              mixedContentSamples: page.mixedContentSamples,
+            },
+          ),
+        )
+      }
+      if (page.hasHsts === false) {
+        issues.push(
+          issue('hsts_missing', page, undefined, {
+            header: 'strict-transport-security',
+          }),
+        )
+      }
     }
     for (const link of page.externalLinkChecks ?? []) {
       if (!isBrokenLinkStatus(link.status)) continue

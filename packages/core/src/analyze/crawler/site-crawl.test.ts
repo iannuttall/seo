@@ -29,6 +29,11 @@ async function withServer(
 
 test('crawlSite follows same-origin links within depth and page limits', async () => {
   const fixture = await withServer((req, res) => {
+    if (req.url === '/llms.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('# Test site\n\n- /: Home\n')
+      return
+    }
     res.setHeader('content-type', 'text/html')
     if (req.url === '/robots.txt') {
       res.end('User-agent: *\nAllow: /\n')
@@ -36,7 +41,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     }
     if (req.url === '/') {
       res.end(
-        '<title>Home</title><h1>Home</h1><a href="/a">About A</a><a href="https://example.org/ref">External ref</a>',
+        '<title>Home</title><script type="application/ld+json">{"@type":"FAQPage"}</script><h1>Home</h1><ul><li>One</li></ul><table><tr><td>One</td></tr></table><a href="/a">About A</a><a href="https://example.org/ref">External ref</a>',
       )
       return
     }
@@ -70,6 +75,15 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.pages[0]?.internalInlinkCount, 0)
     assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
     assert.equal(report.pages[0]?.crawlDepth, 0)
+    assert.equal(report.pages[0]?.geo?.hasLlmsTxt, true)
+    assert.equal(
+      report.pages[0]?.geo?.llmsTxtUrl,
+      `${fixture.baseUrl}/llms.txt`,
+    )
+    assert.equal(report.pages[0]?.geo?.llmsTxtStatus, 200)
+    assert.equal(report.pages[0]?.geo?.hasFaqSchema, true)
+    assert.equal(report.pages[0]?.geo?.listCount, 1)
+    assert.equal(report.pages[0]?.geo?.tableCount, 1)
     assert.equal(report.pages[0]?.outgoingExternalCount, 1)
     assert.deepEqual(report.pages[0]?.internalAnchorSamples, [
       { href: `${fixture.baseUrl}/a`, text: 'About A' },

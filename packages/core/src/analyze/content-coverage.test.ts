@@ -59,6 +59,8 @@ function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
     mixedContentUrls: [],
     semanticHtml: true,
     questionHeadings: 0,
+    listCount: 0,
+    tableCount: 0,
     structuredBlocks: 0,
     answerable: true,
     contentText:

@@ -115,6 +115,8 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.equal(page.hasDate, true)
   assert.equal(page.semanticHtml, true)
   assert.equal(page.questionHeadings, 1)
+  assert.equal(page.listCount, 1)
+  assert.equal(page.tableCount, 1)
   assert.equal(page.structuredBlocks, 2)
   assert.equal(page.answerable, true)
   assert.match(page.contentText, /Choose the right widget/)

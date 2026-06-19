@@ -1,3 +1,4 @@
+import { publicHttpFetch } from '../../fetch/http-client.js'
 import { queryPageMetrics } from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
@@ -19,6 +20,12 @@ type CrawlTask = QueueItem & {
     task: CrawlTask
     result: Awaited<ReturnType<typeof crawlOne>>
   }>
+}
+
+type LlmsTxtSignal = {
+  url: string
+  exists: boolean
+  status?: number
 }
 
 function normalizeUrl(value: string, base?: string): string | undefined {
@@ -88,6 +95,41 @@ async function sitemapSeeds(input: {
   return sitemap.urls
 }
 
+async function checkLlmsTxt(input: {
+  url: string
+  timeoutMs: number
+}): Promise<LlmsTxtSignal> {
+  const llmsUrl = new URL('/llms.txt', input.url).toString()
+  const controller = new AbortController()
+  const timer = setTimeout(
+    () => controller.abort(),
+    Math.min(input.timeoutMs, 5_000),
+  )
+
+  try {
+    const response = await publicHttpFetch(llmsUrl, {
+      profile: 'bot',
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    const contentType = response.headers.get('content-type') ?? ''
+    const exists =
+      response.status >= 200 &&
+      response.status < 300 &&
+      !/\btext\/html\b/i.test(contentType)
+    await response.body?.cancel().catch(() => undefined)
+    return {
+      url: response.url || llmsUrl,
+      exists,
+      status: response.status,
+    }
+  } catch {
+    return { url: llmsUrl, exists: false }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const config = normalizeCrawlConfig(input)
   const site = input.site
@@ -101,6 +143,10 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
   const pages: CrawlReport['pages'] = []
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
+  const llmsTxt = await checkLlmsTxt({
+    url: config.url,
+    timeoutMs: config.timeoutMs,
+  })
   let queuedUrls = 0
   let skippedUrls = 0
   let failedUrls = 0
@@ -252,6 +298,16 @@ export async function crawlSite(input: CrawlConfigInput): Promise<CrawlReport> {
       warnings,
       limit: input.analyticsLimit ?? 5000,
     })
+  }
+
+  for (const page of pages) {
+    if (!page.geo) continue
+    page.geo = {
+      ...page.geo,
+      hasLlmsTxt: llmsTxt.exists,
+      llmsTxtUrl: llmsTxt.url,
+      llmsTxtStatus: llmsTxt.status,
+    }
   }
 
   return createCrawlReport({

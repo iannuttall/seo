@@ -168,8 +168,12 @@ export async function crawlOne(
         hasAuthor: extracted.hasAuthor,
         hasDate: extracted.hasDate,
         questionHeadings: extracted.questionHeadings,
+        listCount: extracted.listCount,
+        tableCount: extracted.tableCount,
         structuredBlocks: extracted.structuredBlocks,
         answerable: extracted.answerable,
+        hasFaqSchema: extracted.schemaTypes.includes('FAQPage'),
+        hasQapageSchema: extracted.schemaTypes.includes('QAPage'),
       },
     }
     page.indexability = indexabilityReason(page)

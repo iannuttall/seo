@@ -1,8 +1,16 @@
 import { extractPage } from '../extract/page-extractor.js'
 import { fetchPage } from '../fetch/page-fetcher.js'
 import { queryPageMetrics } from '../gsc/client.js'
+import type { RuleId } from '../rules.js'
 import type { AuditPageReport, Recommendation } from '../types.js'
 import { normalizeText } from './shared.js'
+
+export const AUDIT_PAGE_RULE_IDS = [
+  'missing_title',
+  'title_too_wide',
+  'h1_count',
+  'canonical_mismatch',
+] as const satisfies readonly RuleId[]
 
 function titlePixelWidth(title?: string): number {
   return Math.round((title ?? '').length * 9.2)

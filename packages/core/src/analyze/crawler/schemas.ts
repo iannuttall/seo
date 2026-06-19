@@ -146,6 +146,14 @@ export const crawlPageSnapshotSchema = z.object({
   contentSample: z.string().optional(),
   lang: z.string().optional(),
   hasViewport: z.boolean().optional(),
+  isHttps: z.boolean().optional(),
+  hasHsts: z.boolean().optional(),
+  compression: z.string().optional(),
+  hreflang: z
+    .array(z.object({ hreflang: z.string(), href: z.string().url() }))
+    .optional(),
+  mixedContentCount: z.number().int().optional(),
+  mixedContentSamples: z.array(z.string().url()).optional(),
   imagesTotal: z.number().int().optional(),
   imagesMissingAlt: z.number().int().optional(),
   outgoingInternalCount: z.number().int(),

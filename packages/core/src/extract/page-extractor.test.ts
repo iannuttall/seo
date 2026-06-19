@@ -46,6 +46,8 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
           <meta property="article:published_time" content="2026-06-18T12:00:00Z">
           <meta name="twitter:card" content="summary_large_image">
           <link rel="canonical" href="/articles/widget-guide">
+          <link rel="alternate" hreflang="en-gb" href="/gb/widget-guide">
+          <script src="http://cdn.example/insecure.js"></script>
           <script type="application/ld+json">
             {
               "@context": "https://schema.org",
@@ -71,6 +73,7 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
               <a href="https://other.example/review" rel="nofollow">External review</a>
               <img src="/ok.jpg" alt="Installed widget">
               <img src="/missing.jpg">
+              <img src="http://cdn.example/insecure.jpg" alt="Mixed content">
             </article>
           </main>
         </body>
@@ -92,8 +95,18 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.equal(page.links[0]?.href, 'https://example.com/pricing')
   assert.equal(page.links[0]?.internal, true)
   assert.equal(page.links[1]?.internal, false)
-  assert.equal(page.imagesTotal, 2)
+  assert.deepEqual(page.hreflang, [
+    {
+      hreflang: 'en-gb',
+      href: 'https://example.com/gb/widget-guide',
+    },
+  ])
+  assert.equal(page.imagesTotal, 3)
   assert.equal(page.imagesMissingAlt, 1)
+  assert.deepEqual(page.mixedContentUrls.sort(), [
+    'http://cdn.example/insecure.jpg',
+    'http://cdn.example/insecure.js',
+  ])
   assert.deepEqual(page.schemaTypes.sort(), ['Article', 'FAQPage', 'Person'])
   assert.equal(page.openGraph['og:title'], 'Widget Guide OG')
   assert.equal(page.twitter['twitter:card'], 'summary_large_image')

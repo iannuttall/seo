@@ -35,6 +35,12 @@ export type CrawlPageSnapshot = {
   contentSample?: string
   lang?: string
   hasViewport?: boolean
+  isHttps?: boolean
+  hasHsts?: boolean
+  compression?: string
+  hreflang?: Array<{ hreflang: string; href: string }>
+  mixedContentCount?: number
+  mixedContentSamples?: string[]
   imagesTotal?: number
   imagesMissingAlt?: number
   outgoingInternalCount: number

@@ -116,6 +116,7 @@ export interface ExtractedPage {
   hasViewport: boolean
   headings: Array<{ level: number; text: string }>
   links: Array<{ href: string; text: string; rel: string[]; internal: boolean }>
+  hreflang: Array<{ hreflang: string; href: string }>
   jsonLd: unknown[]
   schemaTypes: string[]
   openGraph: Record<string, string>
@@ -125,6 +126,7 @@ export interface ExtractedPage {
   hasDate: boolean
   imagesTotal: number
   imagesMissingAlt: number
+  mixedContentUrls: string[]
   semanticHtml: boolean
   questionHeadings: number
   structuredBlocks: number

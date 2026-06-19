@@ -70,6 +70,18 @@ function hasSchemaKey(value: unknown, keys: string[]): boolean {
   )
 }
 
+function absoluteUrl(
+  value: string | undefined,
+  base: string,
+): string | undefined {
+  if (!value) return undefined
+  try {
+    return new URL(value, base).toString()
+  } catch {
+    return undefined
+  }
+}
+
 async function extractMainContent(
   fetchResult: PageFetchResult,
   extractor: 'defuddle' | 'readability' = 'defuddle',
@@ -151,6 +163,14 @@ export async function extractPage(
       }
     })
 
+  const hreflang = $('link[rel~="alternate"][hreflang][href]')
+    .toArray()
+    .map((element) => ({
+      hreflang: $(element).attr('hreflang') ?? '',
+      href: absoluteUrl($(element).attr('href'), fetchResult.finalUrl) ?? '',
+    }))
+    .filter((item) => item.hreflang && item.href)
+
   const openGraph = Object.fromEntries(
     $('meta[property^="og:"]')
       .toArray()
@@ -206,6 +226,28 @@ export async function extractPage(
           .filter(Boolean).length >= 25,
     )
   const imageElements = $('img').toArray()
+  const mixedContentUrls =
+    url.protocol === 'https:'
+      ? [
+          ...new Set(
+            $(
+              'img[src], script[src], iframe[src], source[src], video[src], audio[src], link[href]',
+            )
+              .toArray()
+              .map((element) =>
+                absoluteUrl(
+                  $(element).attr('src') ?? $(element).attr('href'),
+                  fetchResult.finalUrl,
+                ),
+              )
+              .filter(
+                (value): value is string =>
+                  typeof value === 'string' &&
+                  new URL(value).protocol === 'http:',
+              ),
+          ),
+        ]
+      : []
 
   return {
     url: fetchResult.url,
@@ -219,6 +261,7 @@ export async function extractPage(
     hasViewport: Boolean($('meta[name="viewport"]').attr('content')),
     headings,
     links,
+    hreflang,
     jsonLd,
     schemaTypes,
     openGraph,
@@ -231,6 +274,7 @@ export async function extractPage(
       const alt = $(element).attr('alt')
       return alt === undefined || alt.trim() === ''
     }).length,
+    mixedContentUrls,
     semanticHtml,
     questionHeadings,
     structuredBlocks,

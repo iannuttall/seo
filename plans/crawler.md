@@ -48,7 +48,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Capture request URL, final URL, status, redirect chain, content type, response time, size, headers, and cache diagnostics.
 - [x] Capture title, meta description, canonical, meta robots, X-Robots-Tag, H1/H2/H3, word count, main content hash, and extracted text summary.
 - [x] Capture internal links, external links, inlink count, outgoing link count, anchor text samples, and crawl depth.
-- [ ] Capture images total, missing alt count, social tags, JSON-LD schema types, hreflang, lang, viewport, mixed content, HSTS, compression, and HTTPS.
+- [x] Capture images total, missing alt count, social tags, JSON-LD schema types, hreflang, lang, viewport, mixed content, HSTS, compression, and HTTPS.
 - [ ] Capture GEO signals: semantic HTML, structured data, author, date, question headings, answer-ready blocks, tables/lists, FAQ/QAPage schema, `llms.txt`.
 - [x] Capture indexability as a derived field with reason.
 - [x] Capture per-page SEO score and per-page GEO score.

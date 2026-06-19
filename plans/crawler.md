@@ -173,7 +173,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Added report-boundary redaction for sensitive query params, credential headers, local paths, warning/caveat text, and issue evidence before reports are returned, saved, or exposed to agents.
 - [x] Add clear limits for future paid tiers: max pages, JS render count, schedules, report history, external link checks.
   Added structured local/free/starter/pro/enterprise crawler limit profiles in core and exposed them through MCP workflow guidance without enforcing hosted-only limits in local mode.
-- [ ] Add queue-friendly crawl status events.
+- [x] Add queue-friendly crawl status events.
+  Added opt-in typed crawl status events for started, queued/skipped URLs, page lifecycle, external link checks, cancellation, and completion; the callback is execution-only so saved config hashes stay idempotent.
 - [ ] Add resumable or partial crawl concepts only when local implementation needs them.
 - [ ] Avoid hosted-only complexity until the local crawler is excellent.
 

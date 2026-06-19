@@ -34,7 +34,47 @@ export type CrawlConfigInput = Partial<CrawlConfig> & {
   ga4PropertyId?: string
   analyticsLimit?: number
   signal?: AbortSignal
+  onStatus?: CrawlStatusHandler
 }
+
+export type CrawlStatusPhase =
+  | 'started'
+  | 'url_queued'
+  | 'url_skipped'
+  | 'page_started'
+  | 'page_completed'
+  | 'page_failed'
+  | 'page_skipped'
+  | 'external_links_started'
+  | 'external_links_completed'
+  | 'cancelled'
+  | 'completed'
+
+export type CrawlStatusEvent = {
+  type: 'crawl_status'
+  phase: CrawlStatusPhase
+  generatedAt: string
+  url?: string
+  depth?: number
+  statusCode?: number
+  reportId?: string
+  reportStatus?: CrawlReport['status']
+  reason?: string
+  message?: string
+  discoveredUrls: number
+  queuedUrls: number
+  pendingUrls: number
+  inFlightUrls: number
+  crawledUrls: number
+  skippedUrls: number
+  failedUrls: number
+  verifiedLinks: number
+  maxPages: number
+}
+
+export type CrawlStatusHandler = (
+  event: CrawlStatusEvent,
+) => void | Promise<void>
 
 export type CrawlIssue = {
   ruleId: RuleId

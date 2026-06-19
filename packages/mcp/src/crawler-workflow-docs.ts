@@ -37,6 +37,10 @@ Local mode is not a paid tier. It should only honor explicit crawl caps such as 
 
 Future hosted/API tiers should enforce explicit limits for max pages, JavaScript-rendered pages, schedules, saved report history, and external link checks. Agents can read \`seo://crawler/tools\` for the structured limit profile list.
 
+## Queue status
+
+Core crawls can emit typed status events for queue workers: started, URL queued/skipped, page started/completed/failed/skipped, external link checks, cancelled, and completed. These events are execution-only and are not part of saved report config or config hashing.
+
 ## Idempotency rules
 
 - Prefer saved report ids for follow-up tools.

@@ -171,7 +171,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Confirmed GSC and GA4 joins only run when `site` or `ga4PropertyId` is provided, and added a regression test proving no-auth local crawls never call those providers.
 - [x] Make report payloads tenant-safe: no local paths, no tokens, no raw secrets.
   Added report-boundary redaction for sensitive query params, credential headers, local paths, warning/caveat text, and issue evidence before reports are returned, saved, or exposed to agents.
-- [ ] Add clear limits for future paid tiers: max pages, JS render count, schedules, report history, external link checks.
+- [x] Add clear limits for future paid tiers: max pages, JS render count, schedules, report history, external link checks.
+  Added structured local/free/starter/pro/enterprise crawler limit profiles in core and exposed them through MCP workflow guidance without enforcing hosted-only limits in local mode.
 - [ ] Add queue-friendly crawl status events.
 - [ ] Add resumable or partial crawl concepts only when local implementation needs them.
 - [ ] Avoid hosted-only complexity until the local crawler is excellent.

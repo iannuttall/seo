@@ -10,6 +10,10 @@ function hasNoIndex(value?: string): boolean {
   return /\bnoindex\b/i.test(value ?? '')
 }
 
+function hasNoFollow(value?: string): boolean {
+  return /\bnofollow\b/i.test(value ?? '')
+}
+
 function sameUrl(a?: string, b?: string): boolean {
   if (!a || !b) return false
   try {
@@ -362,11 +366,48 @@ export function auditCrawlPages(
       )
     }
 
-    if (hasNoIndex(page.metaRobots) || hasNoIndex(page.xRobotsTag)) {
+    if (page.robotsTxt?.allowed === false) {
+      issues.push(
+        issue('robots_blocked', page, page.robotsTxt.matchedLine, {
+          robotsTxt: page.robotsTxt,
+        }),
+      )
+    }
+
+    const metaNoindex = hasNoIndex(page.metaRobots)
+    const xRobotsNoindex = hasNoIndex(page.xRobotsTag)
+    if (metaNoindex) {
       issues.push(
         issue('noindex', page, page.indexability, {
           metaRobots: page.metaRobots,
+        }),
+      )
+    }
+    if (!metaNoindex && xRobotsNoindex) {
+      issues.push(
+        issue('x_robots_noindex', page, page.xRobotsTag, {
           xRobotsTag: page.xRobotsTag,
+        }),
+      )
+    }
+    if (hasNoFollow(page.metaRobots) || hasNoFollow(page.xRobotsTag)) {
+      issues.push(
+        issue('nofollow', page, page.metaRobots ?? page.xRobotsTag, {
+          metaRobots: page.metaRobots,
+          xRobotsTag: page.xRobotsTag,
+        }),
+      )
+    }
+    if (
+      page.canonical &&
+      !sameUrl(page.canonical, page.finalUrl) &&
+      (page.indexable === false || /canonical/i.test(page.indexability ?? ''))
+    ) {
+      issues.push(
+        issue('canonicalized_page', page, page.canonical, {
+          canonical: page.canonical,
+          finalUrl: page.finalUrl,
+          indexability: page.indexability,
         }),
       )
     }

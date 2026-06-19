@@ -427,6 +427,13 @@ export async function crawlSite(
       continue
     }
     if (config.respectRobots && result.page.robotsTxt?.allowed === false) {
+      result.page.crawlDepth = task.depth
+      result.page.blocked = true
+      result.page.indexable = false
+      result.page.indexability = 'Robots.txt disallowed'
+      pages.push(result.page)
+      linkGraph[result.page.url] = []
+      linkGraph[result.page.finalUrl] = []
       warnings.push(
         `${result.page.url}: skipped because robots.txt disallows it`,
       )

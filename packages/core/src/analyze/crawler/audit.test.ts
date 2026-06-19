@@ -355,6 +355,61 @@ test('auditCrawlPages flags canonical issues', () => {
   )
 })
 
+test('auditCrawlPages flags content issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/thin',
+      wordCount: 80,
+      textRatio: 0.03,
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/duplicate-a',
+      mainContentHash: 'same-main-content',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/duplicate-b',
+      mainContentHash: 'same-main-content',
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/query-gap',
+      title: 'Salary guide',
+      metaDescription:
+        'A practical guide with useful compensation context for readers.',
+      h1: 'Salary guide',
+      contentSample: 'This guide explains typical pay and career factors.',
+      topQuery: {
+        query: 'plumber salary london',
+        clicks: 1,
+        impressions: 100,
+        ctr: 0.01,
+        position: 12,
+      },
+      internalInlinkCount: 1,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'content')
+      .map((issue) => issue.ruleId),
+    [
+      'thin_content',
+      'low_text_ratio',
+      'duplicate_content',
+      'duplicate_content',
+      'query_coverage_missing',
+    ],
+  )
+  assert.deepEqual(
+    issues.find((issue) => issue.ruleId === 'query_coverage_missing')?.evidence
+      ?.missingTerms,
+    ['plumber', 'london'],
+  )
+})
+
 test('auditCrawlPages flags metadata length and duplicate issues', () => {
   const duplicateTitle = 'Evergreen Product Guide for Search Teams'
   const duplicateDescription =

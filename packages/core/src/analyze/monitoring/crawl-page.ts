@@ -138,6 +138,10 @@ export async function crawlOne(
           extracted.contentText,
         ].join('\n'),
       ),
+      mainContentHash: hashText(extracted.contentText),
+      textRatio: fetched.html.length
+        ? Math.min(1, extracted.contentText.length / fetched.html.length)
+        : undefined,
       contentSample: truncate(extracted.contentText, 300),
       lang: extracted.lang,
       hasViewport: extracted.hasViewport,

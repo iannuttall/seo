@@ -578,6 +578,68 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm the word count and extracted content are substantial for the page type.',
   },
   {
+    id: 'duplicate_content',
+    title: 'Duplicate content',
+    category: 'content',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Pages with the same main content force search engines to choose a winner and can split internal signals across duplicates.',
+    howToFix:
+      'Consolidate duplicate pages with redirects or canonicals, or make each page meaningfully different for its own intent.',
+    impactIfIgnored:
+      'The wrong URL may rank, similar pages may underperform, and AI systems may cite a less useful duplicate.',
+    howToVerify:
+      'Re-run the crawl and confirm the duplicate mainContentHash appears on only one URL.',
+    agentHints: {
+      evidenceFields: [
+        'page.mainContentHash',
+        'issue.evidence.duplicateCount',
+        'issue.evidence.sampleUrls',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'low_text_ratio',
+    title: 'Low text-to-HTML ratio',
+    category: 'content',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'A page with lots of markup and very little readable text often behaves like a thin or template-heavy page.',
+    howToFix:
+      'Add useful visible content, reduce unnecessary markup, and move bulky scripts or styles out of the HTML where practical.',
+    impactIfIgnored:
+      'Crawlers and AI systems may find less useful content than the page weight suggests.',
+    howToVerify:
+      'Re-run the crawl and confirm textRatio rises above the low-text threshold.',
+    agentHints: {
+      evidenceFields: ['page.textRatio', 'page.wordCount', 'page.sizeBytes'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'query_coverage_missing',
+    title: 'Top query weakly covered',
+    category: 'content',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'When GSC shows impressions for a query, the page should visibly cover the important query terms in headings, snippets, and body copy.',
+    howToFix:
+      'Work the missing query terms into the title, H1, description, and relevant body section only where they are genuinely useful.',
+    impactIfIgnored:
+      'The page can keep earning impressions without enough relevance to improve rank or clicks.',
+    howToVerify:
+      'Re-run the crawl with the same GSC property and confirm missingTerms is empty or coverage is above the threshold.',
+    agentHints: {
+      evidenceFields: [
+        'page.topQuery',
+        'issue.evidence.missingTerms',
+        'issue.evidence.coverage',
+      ],
+      suggestedCommands: ['seo crawl <url> --project <id> --json'],
+    },
+  },
+  {
     id: 'image_missing_alt',
     title: 'Images missing alt text',
     category: 'images',

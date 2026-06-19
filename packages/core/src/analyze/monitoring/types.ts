@@ -34,6 +34,8 @@ export type CrawlPageSnapshot = {
   indexability?: string
   wordCount: number
   contentHash: string
+  mainContentHash?: string
+  textRatio?: number
   contentSample?: string
   lang?: string
   hasViewport?: boolean
@@ -77,6 +79,13 @@ export type CrawlPageSnapshot = {
     llmsTxtStatus?: number
   }
   searchMetrics?: {
+    clicks: number
+    impressions: number
+    ctr: number
+    position: number
+  }
+  topQuery?: {
+    query: string
     clicks: number
     impressions: number
     ctr: number

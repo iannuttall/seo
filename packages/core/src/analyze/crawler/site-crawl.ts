@@ -1,5 +1,5 @@
 import { publicHttpFetch } from '../../fetch/http-client.js'
-import { queryPageMetrics } from '../../gsc/client.js'
+import { queryPageMetrics, queryPageTopQuery } from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import {
@@ -40,6 +40,7 @@ type ResolvedCrawlSiteDependencies = {
   fetchSitemapUrls: typeof fetchSitemapUrls
   fetch: typeof publicHttpFetch
   queryPageMetrics: typeof queryPageMetrics
+  queryPageTopQuery: typeof queryPageTopQuery
   fetchLandingPageValues: typeof fetchLandingPageValues
   landingValueForUrl: typeof landingValueForUrl
   now: () => Date
@@ -55,6 +56,7 @@ function resolveCrawlSiteDependencies(
     fetchSitemapUrls: dependencies.fetchSitemapUrls ?? fetchSitemapUrls,
     fetch: dependencies.fetch ?? publicHttpFetch,
     queryPageMetrics: dependencies.queryPageMetrics ?? queryPageMetrics,
+    queryPageTopQuery: dependencies.queryPageTopQuery ?? queryPageTopQuery,
     fetchLandingPageValues:
       dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
@@ -473,6 +475,7 @@ export async function crawlSite(
       warnings,
       limit: input.searchMetricsLimit ?? 25,
       queryPageMetrics: deps.queryPageMetrics,
+      queryPageTopQuery: deps.queryPageTopQuery,
     })
   }
   if (!cancelled && input.ga4PropertyId) {
@@ -573,12 +576,15 @@ async function joinSearchMetrics(input: {
   warnings: string[]
   limit: number
   queryPageMetrics: typeof queryPageMetrics
+  queryPageTopQuery: typeof queryPageTopQuery
 }): Promise<void> {
   const pages = input.pages.slice(0, input.limit)
   for (const page of pages) {
     try {
       const metrics = await input.queryPageMetrics(input.site, page.finalUrl)
       if (metrics) page.searchMetrics = metrics
+      const topQuery = await input.queryPageTopQuery(input.site, page.finalUrl)
+      if (topQuery) page.topQuery = topQuery
     } catch (error) {
       input.warnings.push(
         `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,

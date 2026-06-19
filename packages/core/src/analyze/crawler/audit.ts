@@ -55,6 +55,10 @@ const TITLE_MAX_PIXELS = 580
 const META_DESCRIPTION_MIN_CHARS = 70
 const META_DESCRIPTION_MAX_CHARS = 160
 const HEADING_STRUCTURE_MIN_WORDS = 300
+const THIN_CONTENT_WORDS = 300
+const LOW_TEXT_RATIO = 0.08
+const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
+const QUERY_COVERAGE_MIN = 0.6
 
 function issue(
   ruleId: RuleId,
@@ -122,6 +126,91 @@ function metadataDuplicates(
   return new Map([...counts].filter(([, value]) => value.count > 1))
 }
 
+function contentDuplicates(
+  pages: CrawlPageSnapshot[],
+): Map<string, { count: number; sampleUrls: string[] }> {
+  const counts = new Map<string, { count: number; sampleUrls: string[] }>()
+  for (const page of pages) {
+    if (page.status < 200 || page.status >= 300) continue
+    if (page.wordCount < 20 || !page.mainContentHash) continue
+    const existing = counts.get(page.mainContentHash) ?? {
+      count: 0,
+      sampleUrls: [],
+    }
+    existing.count += 1
+    if (existing.sampleUrls.length < 10) existing.sampleUrls.push(page.url)
+    counts.set(page.mainContentHash, existing)
+  }
+  return new Map([...counts].filter(([, value]) => value.count > 1))
+}
+
+const QUERY_STOP_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'are',
+  'for',
+  'from',
+  'how',
+  'in',
+  'is',
+  'of',
+  'on',
+  'or',
+  'the',
+  'to',
+  'vs',
+  'what',
+  'with',
+])
+
+function queryTerms(query: string): string[] {
+  return [
+    ...new Set(
+      query
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((term) => term.length > 2 && !QUERY_STOP_WORDS.has(term)),
+    ),
+  ]
+}
+
+function queryCoverage(page: CrawlPageSnapshot):
+  | {
+      query: string
+      matchedTerms: string[]
+      missingTerms: string[]
+      coverage: number
+    }
+  | undefined {
+  const query = page.topQuery?.query
+  if (
+    !query ||
+    (page.topQuery?.impressions ?? 0) < QUERY_COVERAGE_MIN_IMPRESSIONS
+  ) {
+    return undefined
+  }
+  const terms = queryTerms(query)
+  if (!terms.length) return undefined
+  const haystack = [
+    page.title,
+    page.metaDescription,
+    page.h1,
+    page.contentSample,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  const matchedTerms = terms.filter((term) => haystack.includes(term))
+  const missingTerms = terms.filter((term) => !haystack.includes(term))
+  return {
+    query,
+    matchedTerms,
+    missingTerms,
+    coverage: matchedTerms.length / terms.length,
+  }
+}
+
 export function auditCrawlPages(
   pages: CrawlPageSnapshot[],
   opts: { startUrl?: string } = {},
@@ -132,6 +221,7 @@ export function auditCrawlPages(
     pages,
     (page) => page.metaDescription,
   )
+  const duplicateContent = contentDuplicates(pages)
   const pageByUrl = new Map<string, CrawlPageSnapshot>()
   for (const page of pages) {
     for (const value of [page.url, page.finalUrl]) {
@@ -462,10 +552,50 @@ export function auditCrawlPages(
       )
     }
 
-    if (page.wordCount < 300) {
+    if (page.wordCount < THIN_CONTENT_WORDS) {
       issues.push(
         issue('thin_content', page, `${page.wordCount} words`, {
           wordCount: page.wordCount,
+          threshold: THIN_CONTENT_WORDS,
+        }),
+      )
+    }
+    const contentDuplicate = page.mainContentHash
+      ? duplicateContent.get(page.mainContentHash)
+      : undefined
+    if (contentDuplicate) {
+      issues.push(
+        issue('duplicate_content', page, 'Duplicate main content', {
+          mainContentHash: page.mainContentHash,
+          duplicateCount: contentDuplicate.count,
+          sampleUrls: contentDuplicate.sampleUrls,
+        }),
+      )
+    }
+    if (
+      page.textRatio !== undefined &&
+      page.textRatio > 0 &&
+      page.textRatio < LOW_TEXT_RATIO &&
+      page.wordCount < THIN_CONTENT_WORDS
+    ) {
+      issues.push(
+        issue('low_text_ratio', page, `${Math.round(page.textRatio * 100)}%`, {
+          textRatio: page.textRatio,
+          threshold: LOW_TEXT_RATIO,
+          wordCount: page.wordCount,
+        }),
+      )
+    }
+    const coverage = queryCoverage(page)
+    if (coverage && coverage.coverage < QUERY_COVERAGE_MIN) {
+      issues.push(
+        issue('query_coverage_missing', page, coverage.query, {
+          query: coverage.query,
+          impressions: page.topQuery?.impressions,
+          matchedTerms: coverage.matchedTerms,
+          missingTerms: coverage.missingTerms,
+          coverage: coverage.coverage,
+          threshold: QUERY_COVERAGE_MIN,
         }),
       )
     }

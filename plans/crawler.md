@@ -153,7 +153,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add command follow-ups for every top fix.
 - [x] Add verification recipes for common fixes.
 - [x] Add "rerun same report config" support.
-- [ ] Add deterministic JSON schemas for crawl report, issue group, top fix, rule info, and page snapshot.
+- [x] Add deterministic JSON schemas for crawl report, issue group, top fix, rule info, and page snapshot.
 - [ ] Add MCP prompt/resource docs for crawler workflows.
 - [ ] Add a bundled skill/plugin later once the local API is stable.
 

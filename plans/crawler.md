@@ -173,7 +173,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [x] Add parser fixture tests for HTML extraction.
 - [ ] Add audit rule tests for every rule family.
-- [ ] Add crawler tests with local HTTP fixtures for redirects, robots, sitemap, broken links, and content types.
+- [x] Add crawler tests with local HTTP fixtures for redirects, robots, sitemap, broken links, and content types.
 - [ ] Add JSON schema snapshot tests for CLI and MCP outputs.
 - [x] Add help sweep tests for new commands.
 - [x] Add idempotency tests for config hashing and report loading.

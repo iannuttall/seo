@@ -31,6 +31,10 @@ export type TopFix = CrawlIssueGroup & {
   whyThisRanks: string
   howToFix: string
   howToVerify: string
+  verification: {
+    command: string
+    expected: string
+  }
 }
 
 const SEVERITY_SCORE: Record<RuleSeverity, number> = {
@@ -152,6 +156,13 @@ function whyThisRanks(input: TopFix['scoreFactors']): string {
   return `${visibility}${analytics} Severity contributes ${input.severity}; affected URL count contributes ${input.affectedUrls}; effort is ${input.effort}.`
 }
 
+function verificationCommand(
+  report: CrawlReport,
+  severity: RuleSeverity,
+): string {
+  return `seo crawl ${report.config.url} --severity ${severity} --max-pages ${Math.min(report.config.maxPages, 100)}`
+}
+
 export function topFixes(
   report: CrawlReport,
   filters: TopFixFilters = {},
@@ -190,6 +201,10 @@ export function topFixes(
       whyThisRanks: whyThisRanks(scoreFactors),
       howToFix: rule?.howToFix ?? '',
       howToVerify: rule?.howToVerify ?? '',
+      verification: {
+        command: verificationCommand(report, group.severity),
+        expected: rule?.howToVerify ?? '',
+      },
     }
   })
 

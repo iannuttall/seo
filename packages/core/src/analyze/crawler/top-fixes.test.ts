@@ -68,6 +68,11 @@ test('topFixes ranks search-visible errors above generic notices', () => {
     /GA4 adds 120 sessions and 3 conversions/,
   )
   assert.match(fixes[0]?.howToFix ?? '', /Restore the page/)
+  assert.match(
+    fixes[0]?.verification.command ?? '',
+    /seo crawl https:\/\/example.com\/ --severity high --max-pages 100/,
+  )
+  assert.match(fixes[0]?.verification.expected ?? '', /Re-run the crawl/)
 })
 
 test('topFixes filters by category, severity, and URL pattern', () => {

@@ -144,9 +144,12 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
       res.end()
       return
     }
+    res.setHeader('strict-transport-security', 'max-age=31536000')
     res.setHeader('x-test-header', 'visible')
     res.setHeader('content-type', 'text/html')
-    res.end('<title>New</title><h1>New</h1>')
+    res.end(
+      `<title>New</title><link rel="alternate" hreflang="en" href="/new"><h1>New</h1>`,
+    )
   })
 
   try {
@@ -170,6 +173,11 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     ])
     assert.equal(report.pages[0]?.responseHeaders?.['x-test-header'], 'visible')
     assert.equal(report.pages[0]?.responseHeaders?.['set-cookie'], undefined)
+    assert.equal(report.pages[0]?.hasHsts, true)
+    assert.equal(report.pages[0]?.isHttps, false)
+    assert.deepEqual(report.pages[0]?.hreflang, [
+      { hreflang: 'en', href: `${fixture.baseUrl}/new` },
+    ])
     assert.equal(issue?.evidence?.finalUrl, `${fixture.baseUrl}/new`)
   } finally {
     await fixture.close()

@@ -199,7 +199,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 
 - [x] Choose command name: `seo crawl`, `seo technical-audit`, or both with one alias.
   Decision: use `seo crawl` as the canonical human and agent command. Do not add `seo technical-audit` yet; `crawl` matches Crawlie's clear naming, keeps root/help output shorter, and leaves `seo report` as the broader human diagnosis command.
-- [ ] Decide whether to merge `audit-page` into the crawler model or keep it as a narrow page-level command.
+- [x] Decide whether to merge `audit-page` into the crawler model or keep it as a narrow page-level command.
+  Decision: keep `seo audit-page` as the narrow one-page fetch/extract/GSC helper. Use `seo crawl <url> --mode page` and `--mode list` for crawler-model output, saved reports, issue groups, exports, and MCP parity with Crawlie's `audit` command.
 - [ ] Decide initial severity names: existing `low|medium|high` vs crawler-style `notice|warning|error`.
 - [ ] Decide local report storage format: SQLite rows, JSON blobs, or hybrid.
 - [ ] Decide whether HTML export belongs under `seo crawl --format html` or `seo export crawl`.

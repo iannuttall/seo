@@ -53,6 +53,7 @@ import {
   monthlyReportCommand,
   reportNarrativeCommand,
 } from './commands/reports.js'
+import { explainCommand, rulesCommand } from './commands/rules.js'
 import { scheduleCommand } from './commands/schedule.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
 import {
@@ -140,6 +141,8 @@ const allHelpSections: HelpSection[] = [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
       ['seo crawl-reports', 'List saved crawl reports'],
+      ['seo rules', 'List crawler rule ids'],
+      ['seo explain --rule missing_title', 'Explain a crawler rule'],
       ['seo crawl-diff', 'Compare crawl changes'],
       ['seo index-watch', 'Check URL Inspection status'],
       ['seo link-recover', 'Find broken search-value URLs'],
@@ -221,6 +224,8 @@ const main = defineCommand({
     'monthly-report': monthlyReportCommand,
     monitoring: monitoringCommand,
     'report-narrative': reportNarrativeCommand,
+    rules: rulesCommand,
+    explain: explainCommand,
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,

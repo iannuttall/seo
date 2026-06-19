@@ -24,6 +24,7 @@ test('topFixes ranks search-visible errors above generic notices', () => {
         analytics: {
           sessions: 120,
           totalUsers: 90,
+          conversions: 3,
         },
       },
       {
@@ -59,9 +60,13 @@ test('topFixes ranks search-visible errors above generic notices', () => {
   assert.equal(fixes[0]?.ruleId, 'client_error')
   assert.equal(fixes[0]?.scoreFactors.clicks, 40)
   assert.equal(fixes[0]?.scoreFactors.sessions, 120)
+  assert.equal(fixes[0]?.scoreFactors.conversions, 3)
   assert.equal(fixes[0]?.scoreFactors.searchVisibleUrls, 1)
   assert.match(fixes[0]?.whyThisRanks ?? '', /GSC visibility/)
-  assert.match(fixes[0]?.whyThisRanks ?? '', /GA4 adds 120 sessions/)
+  assert.match(
+    fixes[0]?.whyThisRanks ?? '',
+    /GA4 adds 120 sessions and 3 conversions/,
+  )
   assert.match(fixes[0]?.howToFix ?? '', /Restore the page/)
 })
 

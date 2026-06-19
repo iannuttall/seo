@@ -3,6 +3,7 @@ import { ga4RowsToObjects, runGa4Report } from '../../ga4/client.js'
 export type LandingPageValue = {
   sessions: number
   totalUsers: number
+  conversions: number
 }
 
 function normalizePath(value: string): string {
@@ -40,7 +41,11 @@ export async function fetchLandingPageValues(input: {
     const result = await runGa4Report(input.propertyId, {
       dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
       dimensions: [{ name: 'landingPagePlusQueryString' }],
-      metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'totalUsers' },
+        { name: 'conversions' },
+      ],
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
       limit: input.limit ?? 5000,
     })
@@ -51,6 +56,7 @@ export async function fetchLandingPageValues(input: {
       values.set(path, {
         sessions: Number(row.sessions ?? 0),
         totalUsers: Number(row.totalUsers ?? 0),
+        conversions: Number(row.conversions ?? 0),
       })
     }
     return { values }

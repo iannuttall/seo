@@ -23,6 +23,7 @@ export type TopFix = CrawlIssueGroup & {
     impressions: number
     sessions: number
     totalUsers: number
+    conversions: number
     avgPosition?: number
     effort: 'low' | 'medium' | 'high'
     effortScore: number
@@ -123,6 +124,10 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
     (sum, page) => sum + (page.analytics?.totalUsers ?? 0),
     0,
   )
+  const conversions = pages.reduce(
+    (sum, page) => sum + (page.analytics?.conversions ?? 0),
+    0,
+  )
   const avgPosition = metrics.length
     ? metrics.reduce((sum, item) => sum + item.position, 0) / metrics.length
     : undefined
@@ -132,6 +137,7 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
     impressions,
     sessions,
     totalUsers,
+    conversions,
     avgPosition,
   }
 }
@@ -141,7 +147,7 @@ function whyThisRanks(input: TopFix['scoreFactors']): string {
     ? `${input.searchVisibleUrls} affected URLs have GSC visibility (${input.clicks} clicks, ${input.impressions} impressions).`
     : 'No affected URL has joined GSC visibility yet.'
   const analytics = input.sessions
-    ? ` GA4 adds ${input.sessions} sessions from affected landing pages.`
+    ? ` GA4 adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
     : ''
   return `${visibility}${analytics} Severity contributes ${input.severity}; affected URL count contributes ${input.affectedUrls}; effort is ${input.effort}.`
 }
@@ -162,6 +168,7 @@ export function topFixes(
       impressions: search.impressions,
       sessions: search.sessions,
       totalUsers: search.totalUsers,
+      conversions: search.conversions,
       avgPosition: search.avgPosition,
       effort,
       effortScore: EFFORT_SCORE[effort],
@@ -173,6 +180,7 @@ export function topFixes(
       scoreFactors.clicks * 20 +
       Math.min(scoreFactors.impressions, 10_000) / 25 +
       scoreFactors.sessions * 2 +
+      scoreFactors.conversions * 100 +
       scoreFactors.effortScore
     const rule = explainRule(group.ruleId)
     return {

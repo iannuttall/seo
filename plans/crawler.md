@@ -205,7 +205,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Decision: keep `low|medium|high` as the stable JSON, CLI filter, MCP, and rule-registry contract. Use plain-English priority wording in human output instead of adding Crawlie-style `notice|warning|error` aliases that would make agent filters and fail thresholds less predictable.
 - [x] Decide local report storage format: SQLite rows, JSON blobs, or hybrid.
   Decision: keep the hybrid SQLite format. Store report metadata in queryable columns for fast `list`, `latest`, tenant/project filtering, and future hosted indexes; store the full versioned report envelope as JSON so older reports can self-heal when scoring and guidance improve.
-- [ ] Decide whether HTML export belongs under `seo crawl --format html` or `seo export crawl`.
+- [x] Decide whether HTML export belongs under `seo crawl --format html` or `seo export crawl`.
+  Decision: keep fresh shareable crawler reports under `seo crawl --format html --output <path>`. Do not add `seo export crawl` yet; the direct format flag matches Crawlie, keeps the human path simple, and avoids splitting fresh crawls from their immediate artifact.
 - [ ] Decide when to add desktop/web UI, if ever, versus focusing on CLI/MCP/API.
 
 ## First Implementation Slice

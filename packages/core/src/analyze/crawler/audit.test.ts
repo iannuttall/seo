@@ -14,6 +14,8 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
     canonical: 'https://example.com/page',
     h1: 'Useful page',
     h1Count: 1,
+    h2Count: 2,
+    h3Count: 1,
     indexable: true,
     wordCount: 500,
     contentHash: 'hash',
@@ -189,7 +191,7 @@ test('auditCrawlPages flags high-value on-page issues', () => {
     [
       'missing_title',
       'missing_meta_description',
-      'h1_count',
+      'h1_missing',
       'canonical_missing',
       'noindex',
       'thin_content',
@@ -197,6 +199,45 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       'viewport_missing',
       'lang_missing',
     ],
+  )
+})
+
+test('auditCrawlPages flags heading issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/no-h1',
+      h1: undefined,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 1,
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/multiple-h1',
+      h1Count: 3,
+      h2Count: 2,
+      h3Count: 1,
+      internalInlinkCount: 1,
+    }),
+    page({
+      url: 'https://example.com/weak-outline',
+      h2Count: 0,
+      h3Count: 0,
+      wordCount: 600,
+      internalInlinkCount: 1,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'headings')
+      .map((issue) => issue.ruleId),
+    ['h1_missing', 'multiple_h1', 'heading_structure_weak'],
+  )
+  assert.equal(
+    issues.find((issue) => issue.ruleId === 'heading_structure_weak')?.evidence
+      ?.minWords,
+    300,
   )
 })
 

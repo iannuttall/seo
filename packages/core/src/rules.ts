@@ -123,6 +123,59 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'h1_missing',
+    title: 'Missing H1',
+    category: 'headings',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The H1 is the main visible page heading. It helps readers, search engines, screen readers, and AI systems understand the primary topic.',
+    howToFix:
+      'Add one clear H1 near the top of the main content. Make it describe the specific page, not just a generic section label.',
+    impactIfIgnored:
+      'The page has weaker topical clarity and may be harder to understand or cite.',
+    howToVerify:
+      'Re-run the crawl and confirm h1Count is 1 and the H1 text matches the page intent.',
+    agentHints: {
+      evidenceFields: ['page.h1', 'page.h1Count'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'multiple_h1',
+    title: 'Multiple H1s',
+    category: 'headings',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Multiple H1s can blur the primary topic and make the page outline less predictable for crawlers and assistive technology.',
+    howToFix:
+      'Keep the main page topic as the only H1. Demote secondary section titles to H2 or H3.',
+    impactIfIgnored:
+      'The heading hierarchy stays noisy, especially on templates reused across many pages.',
+    howToVerify: 'Re-run the crawl and confirm h1Count is exactly 1.',
+    agentHints: {
+      evidenceFields: ['page.h1Count'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'heading_structure_weak',
+    title: 'Weak heading structure',
+    category: 'headings',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Long pages without supporting section headings are harder to scan, parse, and turn into direct answers.',
+    howToFix:
+      'Break the main content into clear H2/H3 sections that match the questions and subtopics readers expect.',
+    impactIfIgnored:
+      'Users skim less effectively, and crawlers or AI agents get fewer structural cues about the page.',
+    howToVerify:
+      'Re-run the crawl and confirm longer pages have supporting H2 or H3 headings.',
+    agentHints: {
+      evidenceFields: ['page.h2Count', 'page.h3Count', 'page.wordCount'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'canonical_mismatch',
     title: 'Canonical differs from final URL',
     category: 'canonical',

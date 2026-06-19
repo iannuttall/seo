@@ -1,4 +1,4 @@
-import { crawlSite, saveCrawlReport } from '@seo/core'
+import { crawlSite, saveCrawlReport, topFixes } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -123,9 +123,14 @@ export const crawlCommand = defineCommand({
       js: Boolean(booleanArg(args.js)),
     })
     const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
+    const rankedFixes = topFixes(report)
 
     if (json) {
-      printJson(saved ? { ...report, saved } : report)
+      printJson({
+        ...report,
+        topFixes: rankedFixes,
+        ...(saved ? { saved } : {}),
+      })
       return
     }
 
@@ -145,18 +150,18 @@ export const crawlCommand = defineCommand({
       ['Saved report', saved?.id ?? 'no'],
     ])
 
-    if (report.issueGroups.length) {
-      process.stdout.write('\nTop issues\n')
+    if (rankedFixes.length) {
+      process.stdout.write('\nTop fixes\n')
       printTable(
-        ['Severity', 'Rule', 'Count', 'Sample URL'],
-        report.issueGroups
-          .slice(0, 10)
-          .map((group) => [
-            group.severity,
-            group.ruleId,
-            group.count,
-            truncate(group.sampleUrls[0] ?? '', 64),
-          ]),
+        ['Score', 'Severity', 'Rule', 'Count', 'Search', 'Sample URL'],
+        rankedFixes.map((fix) => [
+          fix.score,
+          fix.severity,
+          fix.ruleId,
+          fix.count,
+          `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.impressions} impr.`,
+          truncate(fix.sampleUrls[0] ?? '', 64),
+        ]),
       )
     }
 

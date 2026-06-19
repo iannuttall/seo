@@ -78,17 +78,17 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [ ] Add per-page GEO score.
 - [ ] Add internal link authority score.
 - [ ] Rank top fixes by severity, affected count, page importance, GSC clicks/impressions, GA4 sessions when available, and effort.
-- [ ] Do not let generic notices outrank search-visible errors.
-- [ ] Add `topFixes(report, filters)` as a core function.
-- [ ] Add category filters, severity filters, URL filters, and project filters.
-- [ ] Make scoring explainable in JSON so agents can audit why something ranked high.
+- [x] Do not let generic notices outrank search-visible errors.
+- [x] Add `topFixes(report, filters)` as a core function.
+- [x] Add category filters, severity filters, URL filters, and project filters.
+- [x] Make scoring explainable in JSON so agents can audit why something ranked high.
 
 ## Phase 6: Search Data Join
 
 - [ ] Join crawl issues to GSC page metrics when a site/property is available.
 - [ ] Mark issues on URLs with recent clicks, impressions, position, and CTR.
 - [ ] Join GA4 landing-page sessions/conversions when a property is available.
-- [ ] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
+- [x] Make value-aware recommendations: broken high-click URLs beat cosmetic low-traffic notices.
 - [ ] Add a "technical fixes with search value" section to `seo report`.
 - [ ] Add link recovery and redirect recommendations directly into crawl results where evidence exists.
 - [ ] Keep crawl commands usable without Google auth.

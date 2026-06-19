@@ -2,12 +2,12 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   crawlSite,
   explainRule,
-  groupCrawlIssues,
   latestCrawlReport,
   listCrawlReports,
   listRules,
   loadCrawlReport,
   saveCrawlReport,
+  topFixes,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -22,7 +22,7 @@ function compactCrawlResult(
     status: report.status,
     configHash: report.configHash,
     summary: report.summary,
-    topFixes: report.issueGroups.slice(0, 10),
+    topFixes: topFixes(report, { limit: 10 }),
     warnings: report.warnings,
     caveats: report.caveats,
   }
@@ -122,11 +122,7 @@ export function registerCrawlerTools(server: McpServer): void {
             'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
           )
         }
-        const groups = groupCrawlIssues(
-          category
-            ? report.issues.filter((issue) => issue.category === category)
-            : report.issues,
-        ).slice(0, limit ?? 10)
+        const groups = topFixes(report, { category, limit })
         return toolSuccess(
           `Found ${groups.length} top fix groups for ${report.config.url}.`,
           {

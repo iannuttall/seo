@@ -1,5 +1,5 @@
 import { getDb } from '../../storage/database.js'
-import type { CrawlReport } from './report.js'
+import { type CrawlReport, normalizeLoadedCrawlReport } from './report.js'
 
 export type CrawlReportMeta = {
   id: string
@@ -95,7 +95,7 @@ export function loadCrawlReport(id: string): CrawlReport | undefined {
     .prepare('SELECT report_json FROM crawl_reports WHERE id = ?')
     .get(id) as { report_json: string } | undefined
   if (!row) return undefined
-  return JSON.parse(row.report_json) as CrawlReport
+  return normalizeLoadedCrawlReport(JSON.parse(row.report_json) as CrawlReport)
 }
 
 export function deleteCrawlReport(id: string): boolean {
@@ -123,5 +123,5 @@ export function latestCrawlReport(site?: string): CrawlReport | undefined {
         )
         .get() as { report_json: string } | undefined)
   if (!row) return undefined
-  return JSON.parse(row.report_json) as CrawlReport
+  return normalizeLoadedCrawlReport(JSON.parse(row.report_json) as CrawlReport)
 }

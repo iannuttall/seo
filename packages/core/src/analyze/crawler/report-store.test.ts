@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
+import { getDb } from '../../storage/database.js'
+import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { createCrawlReport } from './report.js'
 import {
   deleteCrawlReport,
@@ -49,4 +51,58 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
     listCrawlReports({ site, limit: 2 }).map((item) => item.id),
     [second.id],
   )
+})
+
+test('crawl report store recomputes derived fields on load', () => {
+  const site = `sc-domain:legacy-${randomUUID()}.example`
+  const page: CrawlPageSnapshot = {
+    url: `https://${site.slice('sc-domain:'.length)}/`,
+    finalUrl: `https://${site.slice('sc-domain:'.length)}/`,
+    status: 200,
+    indexable: true,
+    wordCount: 120,
+    contentHash: 'legacy',
+    outgoingInternalCount: 1,
+  }
+  const report = createCrawlReport({
+    site,
+    generatedAt: '2026-06-19T00:03:00.000Z',
+    config: { url: page.url },
+    pages: [page],
+    issues: [
+      {
+        ruleId: 'missing_title',
+        title: 'Title missing',
+        category: 'metadata',
+        severity: 'high',
+        url: page.url,
+      },
+    ],
+  })
+
+  saveCrawlReport(report)
+
+  const legacyJson = JSON.parse(JSON.stringify(report)) as Record<
+    string,
+    unknown
+  >
+  const legacyPages = legacyJson.pages as Array<Record<string, unknown>>
+  delete legacyPages[0]?.seoScore
+  delete legacyPages[0]?.geoScore
+  const legacySummary = legacyJson.summary as Record<string, unknown>
+  delete legacySummary.healthScore
+  delete legacySummary.geoReadinessScore
+  legacyJson.issueGroups = []
+
+  getDb()
+    .prepare('UPDATE crawl_reports SET report_json = ? WHERE id = ?')
+    .run(JSON.stringify(legacyJson), report.id)
+
+  const loaded = loadCrawlReport(report.id)
+
+  assert.equal(loaded?.summary.healthScore, 70)
+  assert.equal(loaded?.summary.geoReadinessScore, 15)
+  assert.equal(loaded?.pages[0]?.seoScore, 70)
+  assert.equal(loaded?.pages[0]?.geoScore, 15)
+  assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
 })

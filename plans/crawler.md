@@ -207,7 +207,8 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
   Decision: keep the hybrid SQLite format. Store report metadata in queryable columns for fast `list`, `latest`, tenant/project filtering, and future hosted indexes; store the full versioned report envelope as JSON so older reports can self-heal when scoring and guidance improve.
 - [x] Decide whether HTML export belongs under `seo crawl --format html` or `seo export crawl`.
   Decision: keep fresh shareable crawler reports under `seo crawl --format html --output <path>`. Do not add `seo export crawl` yet; the direct format flag matches Crawlie, keeps the human path simple, and avoids splitting fresh crawls from their immediate artifact.
-- [ ] Decide when to add desktop/web UI, if ever, versus focusing on CLI/MCP/API.
+- [x] Decide when to add desktop/web UI, if ever, versus focusing on CLI/MCP/API.
+  Decision: defer desktop/web UI until the local CLI, MCP tools, saved-report model, and hosted API contract are stable. For now, beat Crawlie on richer data joins, agent slices, plain-English reports, HTML export, and API-ready boundaries before adding a visual shell.
 
 ## First Implementation Slice
 

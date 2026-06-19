@@ -6,6 +6,7 @@ import {
   renderCrawlCsv,
   renderCrawlHtml,
   renderCrawlMarkdownTickets,
+  renderCrawlPagesCsv,
   renderCrawlPretty,
   saveCrawlReport,
   topFixes,
@@ -132,6 +133,10 @@ export const crawlCommand = defineCommand({
       type: 'string',
       description: 'Write output to this path instead of stdout.',
     },
+    csv: {
+      type: 'string',
+      description: 'CSV table to render: issues or pages. Defaults to issues.',
+    },
     save: {
       type: 'boolean',
       default: false,
@@ -150,6 +155,7 @@ export const crawlCommand = defineCommand({
     const json = jsonFlag(args)
     const format = crawlFormatArg(args.format, json)
     const output = stringArg(args.output)
+    const csv = crawlCsvArg(args.csv)
     const severity = severityArg(args.severity)
     const failOn = severityArg(args['fail-on'])
     const project = projectArg(args)
@@ -214,7 +220,10 @@ export const crawlCommand = defineCommand({
     }
 
     if (format === 'csv') {
-      await writeOrPrint(output, renderCrawlCsv(report))
+      await writeOrPrint(
+        output,
+        csv === 'pages' ? renderCrawlPagesCsv(report) : renderCrawlCsv(report),
+      )
       if (failedThreshold) process.exitCode = 1
       return
     }
@@ -328,6 +337,13 @@ function crawlFormatArg(value: unknown, json: boolean): CrawlOutputFormat {
     return format as CrawlOutputFormat
   }
   throw new Error('Format must be one of: pretty, json, csv, html, markdown.')
+}
+
+function crawlCsvArg(value: unknown): 'issues' | 'pages' {
+  const csv = stringArg(value)
+  if (!csv) return 'issues'
+  if (['issues', 'pages'].includes(csv)) return csv as 'issues' | 'pages'
+  throw new Error('CSV table must be one of: issues, pages.')
 }
 
 async function urlListArgs(args: Record<string, unknown>): Promise<string[]> {

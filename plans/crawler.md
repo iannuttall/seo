@@ -142,7 +142,7 @@ For now this stays local-first: CLI, MCP, local storage, local reports. Design t
 - [x] Add plain-English issue groups with top affected URLs.
 - [x] Add "how to verify" commands after top fixes.
 - [x] Add shareable HTML export for crawl reports.
-- [ ] Add CSV export for issues and pages.
+- [x] Add CSV export for issues and pages.
 - [x] Add markdown export for agent-created implementation tickets.
 - [x] Keep sparse data graceful: no auth should still produce a technical crawl; no crawl URL should skip the section clearly.
 

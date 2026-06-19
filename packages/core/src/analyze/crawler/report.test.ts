@@ -23,6 +23,28 @@ test('normalizeCrawlConfig applies stable defaults', () => {
   assert.deepEqual(config.exclude, ['/archive', '/tag'])
   assert.equal(config.respectRobots, true)
   assert.equal(config.js, 'auto')
+  assert.equal(config.refresh, false)
+  assert.deepEqual(config.fetchRate, { concurrency: 8 })
+})
+
+test('normalizeCrawlConfig keeps fetch controls stable', () => {
+  const config = normalizeCrawlConfig({
+    url: 'https://example.com',
+    concurrency: 3,
+    refresh: true,
+    fetchRate: {
+      intervalCap: 2,
+      intervalMs: 250,
+    },
+  })
+
+  assert.equal(config.concurrency, 3)
+  assert.equal(config.refresh, true)
+  assert.deepEqual(config.fetchRate, {
+    concurrency: 3,
+    intervalCap: 2,
+    intervalMs: 250,
+  })
 })
 
 test('crawlConfigHash is stable for equivalent configs', () => {

@@ -306,7 +306,7 @@ test('crawlSite checks broken external links when enabled', async () => {
   }
 })
 
-test('crawlSite passes rate controls through the shared fetch layer', async () => {
+test('crawlSite passes cache and rate controls through the shared fetch layer', async () => {
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {
       res.setHeader('content-type', 'text/plain')
@@ -323,13 +323,20 @@ test('crawlSite passes rate controls through the shared fetch layer', async () =
       useSitemap: false,
       maxPages: 10,
       concurrency: 3,
+      refresh: true,
+      fetchRate: {
+        intervalCap: 2,
+        intervalMs: 250,
+      },
       timeoutMs: 5_000,
     })
 
     assert.equal(report.status, 'completed')
     assert.equal(report.summary.totalPages, 1)
     assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.concurrency, 3)
-    assert.equal(report.pages[0]?.fetchDiagnostics?.cache, 'miss')
+    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.intervalCap, 2)
+    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.intervalMs, 250)
+    assert.equal(report.pages[0]?.fetchDiagnostics?.cache, 'bypass')
   } finally {
     await fixture.close()
   }

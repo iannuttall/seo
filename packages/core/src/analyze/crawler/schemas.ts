@@ -130,6 +130,7 @@ export const crawlPageSnapshotSchema = z.object({
     .optional(),
   blocked: z.boolean().optional(),
   crawlDepth: z.number().int().optional(),
+  error: z.string().optional(),
   robotsTxt: z
     .object({
       url: z.string().url(),

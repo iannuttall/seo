@@ -39,14 +39,17 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
 
 test('auditCrawlPages flags response errors first', () => {
   const issues = auditCrawlPages([
+    page({ status: 0, error: 'fetch failed' }),
     page({ status: 404 }),
     page({ url: 'https://example.com/500', status: 500 }),
+    page({ url: 'https://example.com/raw-redirect', status: 302 }),
   ])
 
   assert.deepEqual(
     issues.map((issue) => issue.ruleId),
-    ['client_error', 'server_error'],
+    ['connection_error', 'client_error', 'server_error', 'redirected_url'],
   )
+  assert.equal(issues[0]?.evidence?.error, 'fetch failed')
 })
 
 test('auditCrawlPages flags redirected URLs with final target evidence', () => {
@@ -60,6 +63,53 @@ test('auditCrawlPages flags redirected URLs with final target evidence', () => {
 
   assert.equal(issues[0]?.ruleId, 'redirected_url')
   assert.equal(issues[0]?.evidence?.finalUrl, 'https://example.com/new')
+})
+
+test('auditCrawlPages flags redirect chains and slow responses', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/old',
+      finalUrl: 'https://example.com/final',
+      canonical: 'https://example.com/final',
+      responseTimeMs: 2_500,
+      fetchDiagnostics: {
+        source: 'network',
+        cache: 'miss',
+        fetched: true,
+        rendered: false,
+        blocked: false,
+        durationMs: 2_500,
+        retries: 0,
+        rateLimit: {
+          host: 'example.com',
+          concurrency: 8,
+          intervalCap: 4,
+          intervalMs: 1000,
+        },
+        redirectChain: [
+          {
+            url: 'https://example.com/old',
+            status: 301,
+            location: 'https://example.com/mid',
+          },
+          {
+            url: 'https://example.com/mid',
+            status: 301,
+            location: 'https://example.com/final',
+          },
+        ],
+      },
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'response')
+      .map((issue) => issue.ruleId),
+    ['redirected_url', 'redirect_chain', 'slow_response'],
+  )
+  assert.equal(issues[1]?.evidence?.hops, 2)
+  assert.equal(issues[2]?.evidence?.thresholdMs, 2000)
 })
 
 test('auditCrawlPages flags high-value on-page issues', () => {

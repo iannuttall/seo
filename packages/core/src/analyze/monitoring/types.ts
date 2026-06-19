@@ -14,6 +14,7 @@ export type CrawlPageSnapshot = {
   fetchDiagnostics?: PageFetchDiagnostics
   blocked?: boolean
   crawlDepth?: number
+  error?: string
   robotsTxt?: {
     url: string
     allowed: boolean

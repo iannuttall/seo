@@ -95,28 +95,26 @@ export function renderCrawlPretty(
     `Crawl report for ${report.config.url}`,
     '',
     `Status: ${report.status}`,
-    `Pages: ${report.summary.totalPages}`,
-    `Discovered: ${report.summary.discoveredUrls}`,
-    `Queued: ${report.summary.queuedUrls}`,
-    `Skipped: ${report.summary.skippedUrls}`,
-    `Failed fetches: ${report.summary.failedUrls}`,
-    `Verified links: ${report.summary.verifiedLinks}`,
+    `Pages: ${report.summary.totalPages} crawled, ${report.summary.discoveredUrls} discovered, ${report.summary.skippedUrls} skipped`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
-    `Indexable pages: ${report.summary.indexablePages}`,
-    `Technical health score: ${report.summary.healthScore}`,
-    `GEO readiness score: ${report.summary.geoReadinessScore}`,
+    `Scores: ${report.summary.healthScore}/100 technical, ${report.summary.geoReadinessScore}/100 GEO`,
   ]
 
   if (fixes.length) {
     lines.push('', 'Top fixes')
-    for (const fix of fixes.slice(0, 10)) {
+    for (const fix of fixes.slice(0, 5)) {
       lines.push(
         `- ${fix.title} (${fix.severity}, ${fix.count} URL${fix.count === 1 ? '' : 's'}): ${fix.howToFix}`,
       )
       if (fix.sampleUrls[0]) lines.push(`  First URL: ${fix.sampleUrls[0]}`)
-      lines.push(`  Verify: ${fix.howToVerify}`)
-      lines.push(`  Command: ${fix.verification.command}`)
     }
+  }
+
+  lines.push('', 'Next commands', `- seo crawl ${report.config.url} --json`)
+  for (const command of [
+    ...new Set(fixes.slice(0, 3).map((fix) => fix.verification.command)),
+  ]) {
+    lines.push(`- ${command}`)
   }
 
   if (report.warnings.length) {

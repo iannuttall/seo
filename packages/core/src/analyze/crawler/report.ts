@@ -105,6 +105,21 @@ export type CrawlReport = {
   caveats: string[]
 }
 
+const SENSITIVE_FIELD_NAMES = new Set([
+  'authorization',
+  'cookie',
+  'proxy-authorization',
+  'set-cookie',
+  'www-authenticate',
+  'x-api-key',
+  'api-key',
+  'access-token',
+  'refresh-token',
+])
+
+const SENSITIVE_PARAM_PATTERN =
+  /^(access_?token|auth|api_?key|client_?secret|code|jwt|key|password|refresh_?token|secret|session|sig|signature|token)$/i
+
 function uniqueSorted(values: string[] = []): string[] {
   return [...new Set(values.filter(Boolean))].sort()
 }
@@ -195,6 +210,69 @@ export function groupCrawlIssues(issues: CrawlIssue[]): CrawlIssueGroup[] {
     (a, b) =>
       severityRank[b.severity] - severityRank[a.severity] || b.count - a.count,
   )
+}
+
+function isSensitiveFieldName(key: string): boolean {
+  const lower = key.toLowerCase()
+  return (
+    SENSITIVE_FIELD_NAMES.has(lower) ||
+    SENSITIVE_PARAM_PATTERN.test(lower.replace(/-/g, '_'))
+  )
+}
+
+function sanitizeUrlString(value: string): string {
+  try {
+    const url = new URL(value)
+    for (const key of [...url.searchParams.keys()]) {
+      if (SENSITIVE_PARAM_PATTERN.test(key)) {
+        url.searchParams.set(key, '[redacted]')
+      }
+    }
+    return url.toString()
+  } catch {
+    return value
+  }
+}
+
+function sanitizeTenantString(value: string): string {
+  return value
+    .replace(/https?:\/\/[^\s"'<>`]+/g, (match) => sanitizeUrlString(match))
+    .replace(
+      /\b(access_?token|api_?key|auth|client_?secret|jwt|password|refresh_?token|secret|session|signature|token)(\s*[=:]\s*)[^\s,;&]+/gi,
+      (_match, key: string, separator: string) =>
+        `${key}${separator}[redacted]`,
+    )
+    .replace(/\b[A-Za-z]:\\[^\s"'<>`]+/g, '[local-path]')
+    .replace(/\/(?:Users|home|tmp|var\/folders)\/[^\s"'<>`]+/g, '[local-path]')
+}
+
+function sanitizeTenantValue(value: unknown, key?: string): unknown {
+  if (key && isSensitiveFieldName(key)) return '[redacted]'
+  if (typeof value === 'string') return sanitizeTenantString(value)
+  if (Array.isArray(value))
+    return value.map((item) => sanitizeTenantValue(item))
+  if (!value || typeof value !== 'object') return value
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(
+      ([entryKey, entry]) => [entryKey, sanitizeTenantValue(entry, entryKey)],
+    ),
+  )
+}
+
+function sanitizeCrawlConfig(config: CrawlConfig): CrawlConfig {
+  return sanitizeTenantValue(config) as CrawlConfig
+}
+
+function sanitizePages(pages: CrawlPageSnapshot[]): CrawlPageSnapshot[] {
+  return sanitizeTenantValue(pages) as CrawlPageSnapshot[]
+}
+
+function sanitizeIssues(issues: CrawlIssue[]): CrawlIssue[] {
+  return sanitizeTenantValue(issues) as CrawlIssue[]
+}
+
+function sanitizeMessages(values: string[] = []): string[] {
+  return values.map((value) => sanitizeTenantString(value))
 }
 
 export function summarizeCrawlReport(input: {
@@ -401,14 +479,17 @@ export function createCrawlReport(input: {
   stats?: Partial<CrawlRunStats>
   generatedAt?: string
 }): CrawlReport {
-  const config = normalizeCrawlConfig(input.config)
+  const config = sanitizeCrawlConfig(normalizeCrawlConfig(input.config))
   const pagesWithLinks = deriveInternalLinkAuthority(
     input.pages ?? [],
     input.linkGraph,
   )
+  const safePagesWithLinks = sanitizePages(pagesWithLinks)
   const issues =
-    input.issues ?? auditCrawlPages(pagesWithLinks, { startUrl: config.url })
-  const pages = scorePages(pagesWithLinks, issues)
+    input.issues ??
+    auditCrawlPages(safePagesWithLinks, { startUrl: config.url })
+  const safeIssues = sanitizeIssues(issues)
+  const pages = scorePages(safePagesWithLinks, safeIssues)
   return {
     id: crawlReportId({
       config,
@@ -422,28 +503,32 @@ export function createCrawlReport(input: {
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),
     config,
-    summary: summarizeCrawlReport({ pages, issues, stats: input.stats }),
+    summary: summarizeCrawlReport({
+      pages,
+      issues: safeIssues,
+      stats: input.stats,
+    }),
     pages,
-    issues,
-    issueGroups: groupCrawlIssues(issues),
-    warnings: input.warnings ?? [],
-    caveats: input.caveats ?? [],
+    issues: safeIssues,
+    issueGroups: groupCrawlIssues(safeIssues),
+    warnings: sanitizeMessages(input.warnings),
+    caveats: sanitizeMessages(input.caveats),
   }
 }
 
 export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
-  const issues = report.issues ?? []
+  const issues = sanitizeIssues(report.issues ?? [])
   const pages = scorePages(
-    deriveInternalLinkAuthority(report.pages ?? []),
+    sanitizePages(deriveInternalLinkAuthority(report.pages ?? [])),
     issues,
   )
   return {
-    ...report,
+    ...(sanitizeTenantValue(report) as CrawlReport),
     summary: summarizeCrawlReport({ pages, issues, stats: report.summary }),
     pages,
     issues,
     issueGroups: groupCrawlIssues(issues),
-    warnings: report.warnings ?? [],
-    caveats: report.caveats ?? [],
+    warnings: sanitizeMessages(report.warnings),
+    caveats: sanitizeMessages(report.caveats),
   }
 }

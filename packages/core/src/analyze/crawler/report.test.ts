@@ -165,6 +165,66 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.issueGroups[0]?.count, 2)
 })
 
+test('createCrawlReport redacts tenant-unsafe payload strings', () => {
+  const report = createCrawlReport({
+    config: {
+      url: 'https://example.com/private?token=abc123&ok=1',
+      urls: ['https://example.com/queued?api_key=raw-key'],
+    },
+    generatedAt: '2026-06-19T00:00:00.000Z',
+    pages: [
+      {
+        url: 'https://example.com/private?token=abc123&ok=1',
+        finalUrl: 'https://example.com/private?token=abc123&ok=1',
+        status: 200,
+        responseHeaders: {
+          authorization: 'Bearer raw-auth-token',
+          'x-public': 'visible',
+        },
+        error:
+          'Failed reading /Users/ian/.seo/token.json with password=hunter2',
+        indexable: true,
+        wordCount: 100,
+        contentHash: 'tenant-hash',
+        outgoingInternalCount: 0,
+        outgoingExternalCount: 1,
+        sampleExternalLinks: ['https://other.example/?signature=raw-signature'],
+      },
+    ],
+    issues: [
+      {
+        ruleId: 'connection_error',
+        title: 'Connection error',
+        category: 'response',
+        severity: 'high',
+        url: 'https://example.com/private?token=abc123&ok=1',
+        evidence: {
+          token: 'abc123',
+          log: '/tmp/seo/raw.log?secret=raw-secret',
+        },
+      },
+    ],
+    warnings: [
+      'Token leaked at /Users/ian/.seo/token.json token=abc123 refresh_token=raw-refresh',
+    ],
+    caveats: ['Local cache path C:\\Users\\ian\\seo\\token.json was hidden.'],
+  })
+
+  const payload = JSON.stringify(report)
+  assert.doesNotMatch(
+    payload,
+    /abc123|raw-key|raw-auth-token|hunter2|raw-signature|raw-secret|raw-refresh|\/Users\/ian|C:\\Users\\ian/,
+  )
+  assert.match(report.config.url, /token=\[redacted\]/)
+  assert.match(report.config.urls[0] ?? '', /api_key=\[redacted\]/)
+  assert.equal(report.pages[0]?.responseHeaders?.authorization, '[redacted]')
+  assert.equal(report.pages[0]?.responseHeaders?.['x-public'], 'visible')
+  assert.match(report.pages[0]?.error ?? '', /\[local-path\]/)
+  assert.equal(report.issues[0]?.evidence?.token, '[redacted]')
+  assert.match(report.warnings[0] ?? '', /\[local-path\]/)
+  assert.match(report.caveats[0] ?? '', /\[local-path\]/)
+})
+
 test('groupCrawlIssues ranks severity before count', () => {
   const groups = groupCrawlIssues([
     {

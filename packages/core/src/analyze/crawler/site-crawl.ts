@@ -371,8 +371,9 @@ export async function crawlSite(
       promise: deps
         .fetchPage(item.url, {
           js: config.js,
+          refresh: config.refresh,
           timeoutMs: config.timeoutMs,
-          rate: { concurrency: config.concurrency },
+          rate: config.fetchRate,
           signal,
         })
         .then((result) => ({

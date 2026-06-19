@@ -12,6 +12,7 @@ import {
   topFixes,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { fetchRateInput } from './fetch-rate.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 function compactCrawlResult(
@@ -46,6 +47,9 @@ export function registerCrawlerTools(server: McpServer): void {
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
         concurrency: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
         include: z.array(z.string()).optional(),
         exclude: z.array(z.string()).optional(),
         useSitemap: z.boolean().optional(),
@@ -63,6 +67,9 @@ export function registerCrawlerTools(server: McpServer): void {
       maxPages,
       maxDepth,
       concurrency,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
       include,
       exclude,
       useSitemap,
@@ -80,6 +87,12 @@ export function registerCrawlerTools(server: McpServer): void {
           maxPages,
           maxDepth,
           concurrency,
+          refresh,
+          fetchRate: fetchRateInput({
+            fetchConcurrency: concurrency,
+            fetchIntervalCap,
+            fetchIntervalMs,
+          }),
           include,
           exclude,
           useSitemap,
@@ -111,6 +124,9 @@ export function registerCrawlerTools(server: McpServer): void {
         ga4PropertyId: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         concurrency: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
         includePages: z.boolean().optional(),
         includeIssues: z.boolean().optional(),
         saveReport: z.boolean().optional(),
@@ -122,6 +138,9 @@ export function registerCrawlerTools(server: McpServer): void {
       ga4PropertyId,
       maxPages,
       concurrency,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
       includePages,
       includeIssues,
       saveReport,
@@ -135,6 +154,12 @@ export function registerCrawlerTools(server: McpServer): void {
           ga4PropertyId,
           maxPages: maxPages ?? urls.length,
           concurrency,
+          refresh,
+          fetchRate: fetchRateInput({
+            fetchConcurrency: concurrency,
+            fetchIntervalCap,
+            fetchIntervalMs,
+          }),
           useSitemap: false,
         })
         const saved = saveReport ? saveCrawlReport(report) : undefined
@@ -162,14 +187,38 @@ export function registerCrawlerTools(server: McpServer): void {
         site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
         category: z.string().optional(),
         limit: z.number().int().positive().optional(),
       },
     },
-    async ({ url, reportId, site, maxPages, maxDepth, category, limit }) => {
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      maxDepth,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+      category,
+      limit,
+    }) => {
       try {
         const report = url
-          ? await crawlSite({ url, site, maxPages, maxDepth })
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              maxDepth,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
           : reportId
             ? loadCrawlReport(reportId)
             : latestCrawlReport(site)
@@ -246,6 +295,9 @@ export function registerCrawlerTools(server: McpServer): void {
         category: z.string().optional(),
         severity: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
         limit: z.number().int().positive().optional(),
       },
     },
@@ -257,11 +309,23 @@ export function registerCrawlerTools(server: McpServer): void {
       category,
       severity,
       maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
       limit,
     }) => {
       try {
         const report = url
-          ? await crawlSite({ url, site, maxPages })
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
           : reportId
             ? loadCrawlReport(reportId)
             : latestCrawlReport(site)
@@ -300,13 +364,34 @@ export function registerCrawlerTools(server: McpServer): void {
         reportId: z.string().optional(),
         site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
         limit: z.number().int().positive().optional(),
       },
     },
-    async ({ url, reportId, site, maxPages, limit }) => {
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+      limit,
+    }) => {
       try {
         const report = url
-          ? await crawlSite({ url, site, maxPages })
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
           : reportId
             ? loadCrawlReport(reportId)
             : latestCrawlReport(site)

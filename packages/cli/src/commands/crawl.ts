@@ -15,6 +15,7 @@ import { defineCommand } from 'citty'
 import {
   booleanArg,
   csvArg,
+  fetchRateArg,
   jsonFlag,
   negatedBooleanArg,
   numberArg,
@@ -90,6 +91,19 @@ export const crawlCommand = defineCommand({
     concurrency: {
       type: 'string',
       description: 'Parallel page fetches. Defaults to 8.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds.',
+    },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass local HTTP cache and fetch fresh pages.',
     },
     include: {
       type: 'string',
@@ -189,6 +203,11 @@ export const crawlCommand = defineCommand({
       maxPages: numberArg(args['max-pages']),
       maxDepth: numberArg(args['max-depth']),
       concurrency: numberArg(args.concurrency),
+      refresh: booleanArg(args.refresh),
+      fetchRate: fetchRateArg({
+        ...args,
+        'fetch-concurrency': args.concurrency,
+      }),
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
       ga4PropertyId:

@@ -1,9 +1,12 @@
 import { createHash } from 'node:crypto'
+import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { auditCrawlPages } from './audit.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
+
+export type CrawlFetchRateConfig = FetchRateControls
 
 export type CrawlConfig = {
   url: string
@@ -19,6 +22,8 @@ export type CrawlConfig = {
   useSitemap: boolean
   checkExternal: boolean
   js: boolean | 'auto'
+  refresh: boolean
+  fetchRate: CrawlFetchRateConfig
 }
 
 export type CrawlConfigInput = Partial<CrawlConfig> & {
@@ -104,6 +109,21 @@ function uniqueSorted(values: string[] = []): string[] {
   return [...new Set(values.filter(Boolean))].sort()
 }
 
+function normalizeFetchRate(input: CrawlConfigInput): CrawlFetchRateConfig {
+  return {
+    concurrency: input.fetchRate?.concurrency ?? input.concurrency ?? 8,
+    ...(input.fetchRate?.intervalCap !== undefined
+      ? { intervalCap: input.fetchRate.intervalCap }
+      : {}),
+    ...(input.fetchRate?.intervalMs !== undefined
+      ? { intervalMs: input.fetchRate.intervalMs }
+      : {}),
+    ...(input.fetchRate?.backpressure
+      ? { backpressure: input.fetchRate.backpressure }
+      : {}),
+  }
+}
+
 export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
   return {
     url: new URL(input.url).toString(),
@@ -119,6 +139,8 @@ export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
     useSitemap: input.useSitemap ?? true,
     checkExternal: input.checkExternal ?? true,
     js: input.js ?? 'auto',
+    refresh: input.refresh ?? false,
+    fetchRate: normalizeFetchRate(input),
   }
 }
 

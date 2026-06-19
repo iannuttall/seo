@@ -276,6 +276,23 @@ export const crawlConfigSchema = z.object({
   useSitemap: z.boolean(),
   checkExternal: z.boolean(),
   js: z.union([z.boolean(), z.literal('auto')]),
+  refresh: z.boolean(),
+  fetchRate: z.object({
+    concurrency: z.number().int(),
+    intervalCap: z.number().int().optional(),
+    intervalMs: z.number().int().optional(),
+    backpressure: z
+      .object({
+        slowMs: z.number().int().optional(),
+        verySlowMs: z.number().int().optional(),
+        maxConsecutiveSlow: z.number().int().optional(),
+        maxConsecutiveBlocked: z.number().int().optional(),
+        maxConsecutiveErrors: z.number().int().optional(),
+        cooldownMs: z.number().int().optional(),
+        retryAfterCapMs: z.number().int().optional(),
+      })
+      .optional(),
+  }),
 })
 
 export const crawlReportSummarySchema = z.object({

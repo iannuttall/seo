@@ -1,6 +1,7 @@
 import {
   type CrawlReport,
   type CrawlReportMeta,
+  compareCrawlReports,
   crawlSite,
   deleteCrawlReport,
   latestCrawlReport,
@@ -91,6 +92,91 @@ function printReport(report: CrawlReport): void {
   printNotes('Caveats', report.caveats)
 }
 
+function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
+  printKeyValue([
+    ['Before', `${report.before.id} (${report.before.generatedAt})`],
+    ['After', `${report.after.id} (${report.after.generatedAt})`],
+    ['Headline', report.headline],
+    [
+      'Pages',
+      `${report.after.summary.totalPages} (${report.summary.pageDelta >= 0 ? '+' : ''}${report.summary.pageDelta})`,
+    ],
+    [
+      'Issues',
+      `${report.after.summary.highIssues + report.after.summary.mediumIssues + report.after.summary.lowIssues} (${report.summary.issueDelta >= 0 ? '+' : ''}${report.summary.issueDelta})`,
+    ],
+    [
+      'Health',
+      `${report.after.summary.healthScore}/100 (${report.summary.healthScoreDelta >= 0 ? '+' : ''}${report.summary.healthScoreDelta})`,
+    ],
+    [
+      'GEO',
+      `${report.after.summary.geoReadinessScore}/100 (${report.summary.geoReadinessDelta >= 0 ? '+' : ''}${report.summary.geoReadinessDelta})`,
+    ],
+    ['Changed pages', String(report.summary.changedPages)],
+    ['Added pages', String(report.summary.addedPages)],
+    ['Removed pages', String(report.summary.removedPages)],
+  ])
+
+  if (report.topActions.length) {
+    process.stdout.write('\nTop actions\n')
+    for (const [index, action] of report.topActions.entries()) {
+      process.stdout.write(`${index + 1}. ${action.title}: ${action.action}\n`)
+      process.stdout.write(`   ${action.plainEnglish}\n`)
+    }
+  }
+
+  if (report.pageChanges.length) {
+    process.stdout.write('\nChanged pages\n')
+    printTable(
+      ['Kind', 'Changes', 'URL'],
+      report.pageChanges
+        .slice(0, 15)
+        .map((item) => [
+          item.kind,
+          item.changes.join(', '),
+          truncate(item.url, 80),
+        ]),
+    )
+    if (report.pageChanges.length > 15) {
+      process.stdout.write(
+        `Showing 15 of ${report.pageChanges.length}. Use --json for all changes.\n`,
+      )
+    }
+  }
+
+  if (report.issueChanges.length) {
+    process.stdout.write('\nIssue movement\n')
+    printTable(
+      ['Rule', 'Before', 'After', 'Delta'],
+      report.issueChanges
+        .slice(0, 10)
+        .map((item) => [
+          item.ruleId,
+          String(item.before),
+          String(item.after),
+          `${item.delta >= 0 ? '+' : ''}${item.delta}`,
+        ]),
+    )
+  }
+}
+
+function resolveReportAlias(input: {
+  value: string
+  site?: string
+  skipId?: string
+}): CrawlReport | undefined {
+  if (input.value !== 'latest' && input.value !== 'previous') {
+    return loadCrawlReport(input.value)
+  }
+  const reports = listCrawlReports({ site: input.site, limit: 20 })
+  const meta =
+    input.value === 'latest'
+      ? reports.find((item) => item.id !== input.skipId)
+      : reports.filter((item) => item.id !== input.skipId)[1]
+  return meta ? loadCrawlReport(meta.id) : undefined
+}
+
 export const crawlReportsCommand = defineCommand({
   meta: {
     name: 'crawl-reports',
@@ -126,6 +212,14 @@ export const crawlReportsCommand = defineCommand({
       type: 'string',
       description: 'Rerun a saved crawl report by id, or pass latest.',
     },
+    compare: {
+      type: 'string',
+      description: 'Compare a saved report id, latest, or previous.',
+    },
+    against: {
+      type: 'string',
+      description: 'Baseline report id. Defaults to previous.',
+    },
     limit: {
       type: 'string',
       description: 'Maximum reports to list. Defaults to 20.',
@@ -141,6 +235,7 @@ export const crawlReportsCommand = defineCommand({
     const site = await reportSiteFilter(args, json)
     const deleteId = stringArg(args.delete)
     const rerunId = stringArg(args.rerun)
+    const compareId = stringArg(args.compare)
     const id = stringArg(args.id)
 
     if (deleteId) {
@@ -187,6 +282,31 @@ export const crawlReportsCommand = defineCommand({
       }
       process.stdout.write(`Reran crawl report ${previous.id}.\n\n`)
       printReport(report)
+      return
+    }
+
+    if (compareId) {
+      const after = resolveReportAlias({ value: compareId, site })
+      if (!after) {
+        throw new Error(`No saved crawl report found for ${compareId}.`)
+      }
+      const beforeAlias = stringArg(args.against) ?? 'previous'
+      const before = resolveReportAlias({
+        value: beforeAlias,
+        site: after.site ?? site,
+        skipId: after.id,
+      })
+      if (!before) {
+        throw new Error(
+          `No baseline crawl report found for ${beforeAlias}. Save at least two reports or pass --against <id>.`,
+        )
+      }
+      const diff = compareCrawlReports({ before, after })
+      if (json) {
+        printJson(diff)
+        return
+      }
+      printReportDiff(diff)
       return
     }
 

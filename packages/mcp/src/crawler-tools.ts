@@ -4,6 +4,7 @@ import {
   aiReadiness,
   auditLlmsTxt,
   buildOkfBundle,
+  compareCrawlReports,
   crawlSite,
   entityReadiness,
   explainOkfValidation,
@@ -39,6 +40,21 @@ function compactCrawlResult(
   if (opts.includeIssues) payload.issues = report.issues
   if (opts.includePages) payload.pages = report.pages
   return payload
+}
+
+function resolveSavedReportAlias(input: {
+  value?: string
+  site?: string
+  skipId?: string
+}) {
+  if (!input.value || input.value === 'latest' || input.value === 'previous') {
+    const reports = listCrawlReports({ site: input.site, limit: 20 }).filter(
+      (report) => report.id !== input.skipId,
+    )
+    const meta = input.value === 'previous' ? reports[1] : reports[0]
+    return meta ? loadCrawlReport(meta.id) : undefined
+  }
+  return loadCrawlReport(input.value)
 }
 
 export function registerCrawlerTools(server: McpServer): void {
@@ -787,6 +803,47 @@ export function registerCrawlerTools(server: McpServer): void {
         return toolSuccess(`Found ${reports.length} saved crawl reports.`, {
           reports,
         })
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_compare_crawl_reports',
+    {
+      description:
+        'Compare two saved crawl reports and return page, issue, score, and plain-English change summaries.',
+      inputSchema: {
+        after: z.string().optional(),
+        before: z.string().optional(),
+        site: z.string().optional(),
+      },
+    },
+    async ({ after, before, site }) => {
+      try {
+        const afterReport = resolveSavedReportAlias({
+          value: after ?? 'latest',
+          site,
+        })
+        if (!afterReport) {
+          return toolError('No newer crawl report found.')
+        }
+        const beforeReport = resolveSavedReportAlias({
+          value: before ?? 'previous',
+          site: afterReport.site ?? site,
+          skipId: afterReport.id,
+        })
+        if (!beforeReport) {
+          return toolError(
+            'No baseline crawl report found. Save at least two reports or pass before.',
+          )
+        }
+        const diff = compareCrawlReports({
+          before: beforeReport,
+          after: afterReport,
+        })
+        return toolSuccess(diff.headline, diff)
       } catch (error) {
         return toolError(error)
       }

@@ -107,6 +107,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
 
     assert.deepEqual(crawlerJsonKeySnapshot(payload), {
       root: [
+        'ai',
         'caveats',
         'config',
         'configHash',

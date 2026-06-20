@@ -1,3 +1,4 @@
+import robotsParserModule from 'robots-parser'
 import { publicHttpFetch } from '../../fetch/http-client.js'
 import {
   queryPageMetrics,
@@ -39,6 +40,27 @@ type LlmsTxtSignal = {
   exists: boolean
   status?: number
 }
+
+const AI_BOT_USER_AGENTS = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'PerplexityBot',
+  'Google-Extended',
+  'CCBot',
+  'Applebot',
+  'Bingbot',
+]
+
+const AGENT_RESOURCE_PATHS = [
+  '/.well-known/agent.json',
+  '/agent.json',
+  '/.well-known/mcp.json',
+  '/.well-known/ai-plugin.json',
+  '/.well-known/openapi.json',
+  '/openapi.json',
+]
 
 type ExternalLinkCheck = {
   url: string
@@ -222,6 +244,165 @@ async function checkLlmsTxt(input: {
   }
 }
 
+function parseRobots(robotsUrl: string, text: string) {
+  return (
+    robotsParserModule as unknown as (
+      url: string,
+      robotstxt: string,
+    ) => {
+      isAllowed(url: string, ua?: string): boolean | undefined
+    }
+  )(robotsUrl, text)
+}
+
+function declaredUserAgents(text: string): Set<string> {
+  const declared = new Set<string>()
+  for (const match of text.matchAll(/^\s*user-agent\s*:\s*(.+?)\s*$/gim)) {
+    const value = match[1]?.trim().toLowerCase()
+    if (value) declared.add(value)
+  }
+  return declared
+}
+
+function sitemapUrlsFromRobots(text: string): string[] {
+  const urls = new Set<string>()
+  for (const match of text.matchAll(/^\s*sitemap\s*:\s*(\S+)\s*$/gim)) {
+    const value = match[1]?.trim()
+    if (!value) continue
+    try {
+      urls.add(new URL(value).toString())
+    } catch {
+      // Ignore malformed sitemap declarations.
+    }
+  }
+  return [...urls]
+}
+
+async function checkRobotsAiAccess(input: {
+  url: string
+  timeoutMs: number
+  fetch: typeof publicHttpFetch
+  signal?: AbortSignal
+}): Promise<NonNullable<CrawlReport['ai']>['robotsTxt']> {
+  const robotsUrl = new URL('/robots.txt', input.url).toString()
+  const controller = abortController({
+    timeoutMs: input.timeoutMs,
+    signal: input.signal,
+  })
+  try {
+    const response = await input.fetch(robotsUrl, {
+      profile: 'bot',
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    const contentType = response.headers.get('content-type') ?? ''
+    const text = await response.text()
+    const exists =
+      response.status >= 200 &&
+      response.status < 300 &&
+      !/\btext\/html\b/i.test(contentType)
+    const declared = exists ? declaredUserAgents(text) : new Set<string>()
+    const parsed = parseRobots(robotsUrl, exists ? text : '')
+    return {
+      url: response.url || robotsUrl,
+      exists,
+      status: response.status,
+      sitemapUrls: exists ? sitemapUrlsFromRobots(text) : [],
+      botAccess: AI_BOT_USER_AGENTS.map((userAgent) => {
+        const lower = userAgent.toLowerCase()
+        return {
+          userAgent,
+          allowed: parsed.isAllowed(input.url, userAgent) ?? true,
+          declared: declared.has(lower),
+          coveredByWildcard: declared.has('*'),
+        }
+      }),
+    }
+  } catch {
+    return {
+      url: robotsUrl,
+      exists: false,
+      sitemapUrls: [],
+      botAccess: AI_BOT_USER_AGENTS.map((userAgent) => ({
+        userAgent,
+        allowed: true,
+        declared: false,
+        coveredByWildcard: false,
+      })),
+    }
+  } finally {
+    controller.cleanup()
+  }
+}
+
+async function checkAgentResource(input: {
+  baseUrl: string
+  path: string
+  timeoutMs: number
+  fetch: typeof publicHttpFetch
+  signal?: AbortSignal
+}): Promise<
+  NonNullable<NonNullable<CrawlReport['ai']>['agentResources']>[number]
+> {
+  const url = new URL(input.path, input.baseUrl).toString()
+  const controller = abortController({
+    timeoutMs: input.timeoutMs,
+    signal: input.signal,
+  })
+  try {
+    const response = await input.fetch(url, {
+      profile: 'bot',
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    const contentType = response.headers.get('content-type') ?? ''
+    const text = await response.text()
+    const exists = response.status >= 200 && response.status < 300
+    let validJson: boolean | undefined
+    if (exists && /\bjson\b/i.test(contentType)) {
+      try {
+        JSON.parse(text)
+        validJson = true
+      } catch {
+        validJson = false
+      }
+    }
+    return {
+      url: response.url || url,
+      exists,
+      status: response.status,
+      contentType,
+      ...(validJson === undefined ? {} : { validJson }),
+    }
+  } catch {
+    return { url, exists: false }
+  } finally {
+    controller.cleanup()
+  }
+}
+
+async function checkAgentResources(input: {
+  url: string
+  timeoutMs: number
+  fetch: typeof publicHttpFetch
+  signal?: AbortSignal
+}): Promise<NonNullable<CrawlReport['ai']>['agentResources']> {
+  const resources: NonNullable<CrawlReport['ai']>['agentResources'] = []
+  for (const path of AGENT_RESOURCE_PATHS) {
+    if (input.signal?.aborted) break
+    resources.push(
+      await checkAgentResource({
+        baseUrl: input.url,
+        path,
+        timeoutMs: input.timeoutMs,
+        fetch: input.fetch,
+        signal: input.signal,
+      }),
+    )
+  }
+  return resources
+}
+
 async function checkExternalLink(
   url: string,
   timeoutMs: number,
@@ -343,17 +524,36 @@ export async function crawlSite(
     message: `Started crawl for ${config.url}.`,
   })
 
-  const llmsTxt = isCancelled()
-    ? ({
-        url: new URL('/llms.txt', config.url).toString(),
-        exists: false,
-      } satisfies LlmsTxtSignal)
-    : await checkLlmsTxt({
-        url: config.url,
-        timeoutMs: config.timeoutMs,
-        fetch: deps.fetch,
-        signal,
-      })
+  const aiSignals = isCancelled()
+    ? undefined
+    : await Promise.all([
+        checkLlmsTxt({
+          url: config.url,
+          timeoutMs: config.timeoutMs,
+          fetch: deps.fetch,
+          signal,
+        }),
+        checkRobotsAiAccess({
+          url: config.url,
+          timeoutMs: config.timeoutMs,
+          fetch: deps.fetch,
+          signal,
+        }),
+        checkAgentResources({
+          url: config.url,
+          timeoutMs: config.timeoutMs,
+          fetch: deps.fetch,
+          signal,
+        }),
+      ])
+  const llmsTxt =
+    aiSignals?.[0] ??
+    ({
+      url: new URL('/llms.txt', config.url).toString(),
+      exists: false,
+    } satisfies LlmsTxtSignal)
+  const robotsTxt = aiSignals?.[1]
+  const agentResources = aiSignals?.[2]
   cancelled = isCancelled()
 
   const enqueue = (value: string, depth: number): void => {
@@ -634,6 +834,11 @@ export async function crawlSite(
     ga4PropertyId: input.ga4PropertyId,
     pages,
     linkGraph,
+    ai: {
+      llmsTxt,
+      ...(robotsTxt ? { robotsTxt } : {}),
+      ...(agentResources ? { agentResources } : {}),
+    },
     status: partial ? 'partial' : 'completed',
     warnings,
     caveats: cancelled

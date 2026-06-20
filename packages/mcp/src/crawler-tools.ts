@@ -3,8 +3,10 @@ import {
   affectedUrls,
   aiReadiness,
   auditLlmsTxt,
+  buildOkfBundle,
   crawlSite,
   entityReadiness,
+  explainOkfValidation,
   explainRule,
   generateLlmsTxt,
   geoGaps,
@@ -14,6 +16,7 @@ import {
   loadCrawlReport,
   saveCrawlReport,
   topFixes,
+  validateOkfFiles,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
@@ -643,6 +646,94 @@ export function registerCrawlerTools(server: McpServer): void {
       } catch (error) {
         return toolError(error)
       }
+    },
+  )
+
+  server.registerTool(
+    'seo_okf_build',
+    {
+      description:
+        'Build an OKF site knowledge bundle from a saved or freshly crawled report. Returns markdown files in memory.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        maxConcepts: z.number().int().positive().optional(),
+        title: z.string().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      maxConcepts,
+      title,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const bundle = buildOkfBundle(report, { maxConcepts, title })
+        const validation = validateOkfFiles(bundle.files)
+        return toolSuccess(
+          `Built OKF bundle with ${bundle.conceptCount} concepts.`,
+          { bundle, validation },
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_okf_validate',
+    {
+      description:
+        'Validate OKF markdown files supplied by an agent. Use seo_okf_build to generate files from a crawl.',
+      inputSchema: {
+        files: z
+          .array(
+            z.object({
+              path: z.string(),
+              content: z.string(),
+            }),
+          )
+          .min(1),
+      },
+    },
+    async ({ files }) => {
+      const validation = validateOkfFiles(files)
+      return toolSuccess(
+        validation.valid ? 'OKF bundle is valid.' : 'OKF bundle has issues.',
+        {
+          validation,
+          explanation: explainOkfValidation(validation),
+        },
+      )
     },
   )
 

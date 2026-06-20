@@ -29,6 +29,7 @@ import {
   monitoringCommand,
   redirectTraceCommand,
 } from './commands/monitoring.js'
+import { okfCommand } from './commands/okf.js'
 import {
   aiReferralsCommand,
   cannibalCommand,
@@ -147,6 +148,7 @@ const allHelpSections: HelpSection[] = [
       ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
       ['seo llms audit', 'Check llms.txt readiness from a saved crawl'],
       ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],
+      ['seo okf export', 'Export a saved crawl as an OKF knowledge bundle'],
       ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
       ['seo rules', 'List crawler rule ids'],
@@ -212,6 +214,7 @@ const main = defineCommand({
     llms: llmsCommand,
     auth: authCommand,
     mcp: mcpCommand,
+    okf: okfCommand,
     doctor: doctorCommand,
     'ga4-properties': ga4PropertiesCommand,
     privacy: privacyCommand,

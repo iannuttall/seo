@@ -17,6 +17,7 @@ import { entityReadinessCommand } from './commands/entity-readiness.js'
 import {
   changeLogCommand,
   contentGroupsCommand,
+  testsCommand,
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
@@ -172,6 +173,7 @@ const allHelpSections: HelpSection[] = [
       ['seo schedule cron', 'Print cron entries'],
       ['seo monitoring', 'Run and review monitoring'],
       ['seo change-log', 'Track SEO changes'],
+      ['seo tests', 'Create and report local SEO tests'],
       ['seo content-groups', 'Manage reusable page/query groups'],
       ['seo pseo', 'Audit programmatic SEO templates'],
       ['seo auth', 'Manage Google auth'],
@@ -227,6 +229,7 @@ const main = defineCommand({
     project: projectCommand,
     projects: projectCommand,
     'change-log': changeLogCommand,
+    tests: testsCommand,
     'content-groups': contentGroupsCommand,
     'crawl-diff': crawlDiffCommand,
     diagnose: diagnoseCommand,

@@ -25,6 +25,18 @@ CREATE TABLE IF NOT EXISTS gsc_cache (
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_gsc_expires ON gsc_cache(expires_at);
 
+CREATE TABLE IF NOT EXISTS ga4_cache (
+  property_id TEXT,
+  query_hash TEXT,
+  request_json TEXT,
+  response_json TEXT,
+  row_count INTEGER,
+  fetched_at INTEGER,
+  expires_at INTEGER,
+  PRIMARY KEY(property_id, query_hash)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_ga4_expires ON ga4_cache(expires_at);
+
 CREATE TABLE IF NOT EXISTS semrush_cache (
   endpoint TEXT,
   query_hash TEXT,
@@ -239,6 +251,9 @@ export function getCacheStats(): CacheStats {
     gsc_cache: database
       .prepare('SELECT COUNT(*) AS count FROM gsc_cache')
       .get() as { count: number },
+    ga4_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM ga4_cache')
+      .get() as { count: number },
     semrush_cache: database
       .prepare('SELECT COUNT(*) AS count FROM semrush_cache')
       .get() as { count: number },
@@ -257,7 +272,7 @@ export function getCacheStats(): CacheStats {
 }
 
 export function clearCache(
-  provider?: 'gsc' | 'semrush' | 'http',
+  provider?: 'gsc' | 'ga4' | 'semrush' | 'http',
   olderThanMs?: number,
 ): number {
   const database = getDb()
@@ -266,11 +281,13 @@ export function clearCache(
   const tables =
     provider === 'gsc'
       ? ['gsc_cache']
-      : provider === 'semrush'
-        ? ['semrush_cache']
-        : provider === 'http'
-          ? ['http_cache']
-          : ['gsc_cache', 'semrush_cache', 'http_cache']
+      : provider === 'ga4'
+        ? ['ga4_cache']
+        : provider === 'semrush'
+          ? ['semrush_cache']
+          : provider === 'http'
+            ? ['http_cache']
+            : ['gsc_cache', 'ga4_cache', 'semrush_cache', 'http_cache']
 
   let removed = 0
 

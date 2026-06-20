@@ -1,6 +1,7 @@
 import type { OAuth2Client } from 'google-auth-library'
 import { fetch, type RequestInit } from 'undici'
 import { createAuthorizedClient } from '../gsc/auth.js'
+import { getDb, hashKey } from '../storage/database.js'
 
 export interface Ga4ReportRequest {
   dateRanges: Array<{ startDate: string; endDate: string }>
@@ -63,7 +64,22 @@ async function authedFetch(
 export async function runGa4Report(
   propertyId: string,
   body: Ga4ReportRequest,
+  opts: { refresh?: boolean } = {},
 ): Promise<Ga4RunReportResult> {
+  const db = getDb()
+  const queryHash = hashKey([propertyId, body])
+  const cached = db
+    .prepare(
+      'SELECT response_json FROM ga4_cache WHERE property_id = ? AND query_hash = ? AND expires_at > ?',
+    )
+    .get(propertyId, queryHash, Date.now()) as
+    | { response_json?: string }
+    | undefined
+
+  if (!opts.refresh && cached?.response_json) {
+    return JSON.parse(cached.response_json) as Ga4RunReportResult
+  }
+
   const { client } = await createAuthorizedClient()
   const response = await authedFetch(
     client,
@@ -83,7 +99,21 @@ export async function runGa4Report(
     throw new Error(`GA4 report failed with ${response.status}.`)
   }
 
-  return (await response.json()) as Ga4RunReportResult
+  const result = (await response.json()) as Ga4RunReportResult
+  db.prepare(
+    `INSERT OR REPLACE INTO ga4_cache
+    (property_id, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    propertyId,
+    queryHash,
+    JSON.stringify(body),
+    JSON.stringify(result),
+    result.rowCount ?? result.rows?.length ?? 0,
+    Date.now(),
+    Date.now() + 86_400_000,
+  )
+  return result
 }
 
 export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {

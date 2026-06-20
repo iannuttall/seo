@@ -31,17 +31,65 @@ export type TestMetrics = {
   position: number
 }
 
+export type AnalyticsTestMetrics = {
+  sessions: number
+  engagedSessions: number
+  conversions: number
+  totalRevenue: number
+}
+
+export type MetricDelta = {
+  clicks: number
+  clickPct: number | null
+  impressions: number
+  impressionPct: number | null
+  ctr: number
+  position: number
+}
+
+export type AnalyticsMetricDelta = {
+  sessions: number
+  sessionPct: number | null
+  engagedSessions: number
+  engagedSessionPct: number | null
+  conversions: number
+  conversionPct: number | null
+  totalRevenue: number
+  revenuePct: number | null
+}
+
 export type ChangeMeasurement = {
   change: SeoChange
   before: { startDate: string; endDate: string; metrics: TestMetrics }
   after: { startDate: string; endDate: string; metrics: TestMetrics }
-  delta: {
-    clicks: number
-    clickPct: number | null
-    impressions: number
-    impressionPct: number | null
-    ctr: number
-    position: number
+  delta: MetricDelta
+  analytics?: {
+    propertyId: string
+    before: {
+      startDate: string
+      endDate: string
+      metrics: AnalyticsTestMetrics
+    }
+    after: {
+      startDate: string
+      endDate: string
+      metrics: AnalyticsTestMetrics
+    }
+    delta: AnalyticsMetricDelta
+    note: string
+  }
+  control?: {
+    change: SeoChange
+    before: { startDate: string; endDate: string; metrics: TestMetrics }
+    after: { startDate: string; endDate: string; metrics: TestMetrics }
+    delta: MetricDelta
+    adjusted: {
+      clickDelta: number
+      clickPctPoints: number | null
+      impressionDelta: number
+      impressionPctPoints: number | null
+    }
+    note: string
   }
   verdict: 'positive' | 'negative' | 'mixed' | 'flat' | 'not-enough-data'
   confidence: 'high' | 'medium' | 'low'

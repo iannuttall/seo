@@ -203,6 +203,11 @@ export const ga4ReportCommand = defineCommand({
     limit: { type: 'string', default: '25' },
     body: { type: 'string' },
     'body-file': { type: 'string' },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass local GA4 cache.',
+    },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -228,7 +233,9 @@ export const ga4ReportCommand = defineCommand({
         metrics: (csvArg(args.metrics) ?? []).map((name) => ({ name })),
         limit: stringArg(args.limit),
       } as Record<string, unknown>)
-    const result = await runGa4Report(property, body as never)
+    const result = await runGa4Report(property, body as never, {
+      refresh: booleanArg(args.refresh),
+    })
     if (json) {
       printJson(result)
       return

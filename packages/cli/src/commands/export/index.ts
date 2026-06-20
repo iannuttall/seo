@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty'
 import { exportDiagnoseCommand } from './diagnose.js'
+import { exportKnowledgeCommand } from './knowledge.js'
 import { exportMonthlyCommand } from './monthly.js'
 import { exportNarrativeCommand } from './narrative.js'
 import { exportPseoCommand } from './pseo.js'
@@ -13,6 +14,7 @@ export const exportCommand = defineCommand({
   },
   subCommands: {
     diagnose: exportDiagnoseCommand,
+    knowledge: exportKnowledgeCommand,
     narrative: exportNarrativeCommand,
     monthly: exportMonthlyCommand,
     'update-postmortem': exportUpdatePostmortemCommand,

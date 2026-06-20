@@ -64,9 +64,21 @@ If the project has a GSC property, it joins search metrics to the crawled pages.
 ```bash
 seo crawl --project keep --save
 seo crawl-reports
+seo crawl-reports --compare latest --against previous
 ```
 
 Saved reports let you ask follow-up questions without re-crawling. Agents can pull top fixes, affected URLs, and GEO gaps from the same report.
+
+## Check one change, page, or performance issue
+
+```bash
+seo tests create --project keep --title "Update title tags" --scope page --target https://example.com/page --date 2026-06-01
+seo tests report --project keep --id <test-id>
+seo content optimize --project keep --url https://example.com/page
+seo perf audit --project keep
+```
+
+The test workflow measures before and after periods from GSC and can add GA4 landing-page metrics when the project has a GA4 property. The content report uses real query demand for one URL. The performance audit uses local Lighthouse when available and falls back to a simple HTML response check when it is not.
 
 ## Use JSON for scripts and agents
 

@@ -15,6 +15,10 @@ This is local first today. The same core is shaped so it can later run as a host
 - Ranks fixes by severity, affected URLs, search visibility, analytics value, and effort.
 - Explains every issue in plain English: why it matters, how to fix it, and how to verify the fix.
 - Saves reports locally so humans and agents can slice the same crawl without running it again.
+- Compares saved crawl snapshots so agents can see exactly what changed.
+- Records local SEO tests and measures before/after impact with GSC, optional GA4, and optional control groups.
+- Builds content optimization reports from real search demand and crawled page content.
+- Runs local performance audits with Lighthouse when available, plus a lightweight fallback when it is not.
 - Scores AI readiness, entity readiness, llms.txt coverage, and OKF/site knowledge exports from the same saved crawl.
 - Exposes the same workflows through CLI and MCP.
 
@@ -73,6 +77,7 @@ Save a report for later:
 ```bash
 seo crawl https://example.com --save --format html --output report.html
 seo crawl-reports
+seo crawl-reports --compare latest --against previous
 ```
 
 Machine-readable output stays clean:
@@ -129,6 +134,35 @@ Agent tools include crawl, URL audit, rule explanation, top fixes, affected URLs
 
 The crawler tools are compact by default. Full pages and full issues are opt-in so agents do not waste context on giant reports.
 
+## Testing, content, and performance
+
+These workflows use your own data. They are meant to be the local data layer an SEO or agent can reason over, without buying a keyword database or rank tracker.
+
+Track a change:
+
+```bash
+seo tests create --project keep --title "Rewrite pricing page title" --scope page --target https://example.com/pricing --date 2026-06-01
+seo tests report --project keep --id <test-id> --property 123456789
+```
+
+Use `--control-scope` and `--control-target` when you have a similar group of pages to compare against. The report stays plain English for humans and returns GSC/GA4 deltas in JSON for agents.
+
+Build a content optimization report for one URL:
+
+```bash
+seo content optimize --project keep --url https://example.com/page
+seo content optimize --project keep --url https://example.com/page --json
+```
+
+Audit performance:
+
+```bash
+seo perf audit --url https://example.com/page
+seo perf audit --project keep --strategy desktop
+```
+
+If Lighthouse is installed, `seo perf audit` uses it. If not, it falls back to a fast HTML response audit and says what it could not measure. Pass `--crux-key` or set `SEO_CRUX_API_KEY` when you want Chrome UX Report field data too.
+
 ## GEO and AI-search readiness
 
 The crawler checks whether pages and sites are easy for AI systems to understand and cite:
@@ -177,6 +211,9 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | GA4 joins | No | Yes |
 | URL Inspection | No | Yes |
 | Crawl diffs | Roadmap | Yes |
+| Local SEO tests | No | Yes |
+| Content optimization reports | No | Yes |
+| Lighthouse/Core Web Vitals layer | No | Yes |
 | Link recovery | No | Yes |
 | Search opportunity reports | No | Yes |
 | pSEO/template analysis | No | Yes |

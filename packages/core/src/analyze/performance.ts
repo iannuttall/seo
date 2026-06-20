@@ -227,9 +227,13 @@ async function lighthouseReport(input: {
 async function fallbackReport(input: {
   url: string
   strategy: 'mobile' | 'desktop'
+  refresh?: boolean
   warning: string
 }): Promise<PerformanceAuditReport> {
-  const fetched = await fetchPage(input.url, { js: false, refresh: false })
+  const fetched = await fetchPage(input.url, {
+    js: false,
+    refresh: input.refresh ?? false,
+  })
   const responseTime = fetched.diagnostics.durationMs
   const score =
     responseTime <= 300
@@ -323,6 +327,7 @@ export async function performanceAudit(input: {
     report = await fallbackReport({
       url,
       strategy,
+      refresh: input.refresh,
       warning: `Lighthouse unavailable: ${error instanceof Error ? error.message : String(error)}`,
     })
   }

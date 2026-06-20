@@ -1,0 +1,76 @@
+# MCP and agents
+
+The MCP server gives agents the same SEO tools as the CLI.
+
+Use it when an agent needs to inspect a site, rank fixes, monitor a project, or pull structured data without copying huge reports into chat.
+
+## Install into local clients
+
+```bash
+seo mcp install
+```
+
+Run it directly:
+
+```bash
+seo mcp serve
+```
+
+Test the server:
+
+```bash
+seo mcp serve --test
+```
+
+## Crawler tools
+
+- `seo_crawl_site`
+- `seo_audit_urls`
+- `seo_top_fixes`
+- `seo_affected_urls`
+- `seo_geo_gaps`
+- `seo_explain_issue`
+- `seo_list_rules`
+- `seo_get_crawl_report`
+- `seo_list_crawl_reports`
+
+Crawler results are compact by default. Set `includePages` or `includeIssues` only when the agent really needs raw detail.
+
+## SEO analysis tools
+
+The MCP server also exposes tools for:
+
+- main property diagnosis
+- quick wins
+- second-page opportunities
+- decaying pages and queries
+- cannibalisation
+- CTR underperformers
+- internal link opportunities
+- query clustering
+- pSEO audits
+- crawl diffs
+- index monitoring
+- link recovery
+- update postmortems
+- monthly reports
+- AI referrals
+- SEO query to AI prompt conversion
+
+## Good agent workflow
+
+1. Run `seo_crawl_site` with `saveReport: true`.
+2. Read `summary`, `topFixes`, `warnings`, and `caveats`.
+3. Use `seo_explain_issue` for unfamiliar rule ids.
+4. Use `seo_affected_urls` to get exact URLs for one fix.
+5. Use `seo_geo_gaps` when the user asks about AI-search readiness.
+6. Use saved report ids for follow-up questions.
+
+This keeps the agent focused. It also avoids re-crawling when the user asks a second question.
+
+## Claude plugin status
+
+This repo now includes plugin metadata and standalone skills under `.claude-plugin` and `skills`.
+
+The plugin is not published to a marketplace yet. Use the files as the local packaging shape until the npm package name and public release path are final.
+

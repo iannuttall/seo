@@ -24,7 +24,7 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `seo_index_watch` to monitor URL Inspection coverage/indexing state changes.
 - Use `seo_audit_page` for one URL.
 - Use `seo_second_page` when the user wants opportunities with evidence.
-- Use `seo_quick_wins` for high-impression pages already ranking 4–10.
+- Use `seo_quick_wins` for high-impression pages already ranking 4-10.
 - Use `seo_cannibal` when the user suspects multiple URLs are competing for the same query.
 - Use `seo_decaying` when the user asks what dropped and why.
 - Use `seo_traffic_anomaly` when the user asks whether movement is statistically unusual.

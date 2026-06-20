@@ -1,0 +1,20 @@
+# Agent skills
+
+These skills teach an agent how to use `seo` without reading the whole repo.
+
+They work best with the MCP server installed:
+
+```bash
+seo mcp install
+```
+
+They can also call the CLI directly when the MCP tools are not available.
+
+## Included skills
+
+- `seo-site-audit`: run a full technical SEO and GEO audit.
+- `seo-geo-readiness`: check AI-search readiness and citation gaps.
+- `seo-fix-queue`: turn crawl results into an implementation queue.
+
+The existing `seo` skill is the broad tool-routing guide for the full MCP server.
+

@@ -4,6 +4,40 @@ Goal: build an enterprise-quality technical SEO and GEO crawler that feels simpl
 
 For now this stays local-first: CLI, MCP, local storage, local reports. Design the core APIs so a future hosted API can call the same crawler, rule engine, scoring, exports, and saved-report model.
 
+## Current v1 state
+
+- [x] Local CLI and MCP server are working from the same core packages.
+- [x] Technical SEO and GEO crawler is built with saved local reports, HTML/CSV/Markdown/JSON output, and plain-English fix guidance.
+- [x] Crawler rules, scoring, report storage, and MCP slicing are idempotent enough for repeat agent workflows.
+- [x] GSC and GA4 joins are local-first and cached where practical.
+- [x] Crawl snapshot comparison is built so agents can see what changed between reports.
+- [x] Local SEO tests can measure dated changes with GSC, optional GA4, and optional control groups.
+- [x] Content optimization reports use real GSC demand plus fetched page content.
+- [x] Performance audits use local Lighthouse when available and a lightweight fallback when it is not.
+- [x] AI readiness, entity readiness, llms.txt, OKF, and site knowledge exports are built from saved crawl data.
+- [x] README, docs, skills, `AGENTS.md`, and the `CLAUDE.md` symlink are in good v1 shape.
+
+## Pre-public work
+
+These are intentionally left until the product/package name is chosen.
+
+- [ ] Choose the product name, npm package name, binary name, and domain together.
+- [ ] Check npm availability for the package name and any scoped package option.
+- [ ] Check GitHub org/repo availability for the final public repo name.
+- [ ] Check domain availability for the product and docs site.
+- [ ] Decide whether the CLI binary stays `seo` or changes to the product name.
+- [ ] Add a `LICENSE` file before making the repo public.
+- [ ] Replace `<repo-url>` in README and docs with the final GitHub URL.
+- [ ] Replace `<package-name>` in README, docs, and `.claude-plugin/plugin.json`.
+- [ ] Update `package.json` metadata, repository URL, homepage, bugs URL, keywords, author, and license.
+- [ ] Update `.claude-plugin` metadata once the install command is real.
+- [ ] Decide whether the public README should show source install only or the final `npm i -g` path.
+- [ ] Keep release publishing dry-run-only until the npm name and scope are settled.
+- [ ] Decide where hosted SaaS code will live in this repo, likely `apps/api` and `apps/web`.
+- [ ] Keep paid SaaS features around hosting, scheduling, storage, teams, alerts, remote MCP/API, and managed history. Do not cripple the local open-source CLI.
+- [ ] Add public GitHub repo settings, topics, description, and basic issue/PR templates.
+- [ ] Re-run `pnpm build`, `pnpm typecheck`, `pnpm lint`, and `pnpm test` before the public push.
+
 ## Product Principles
 
 - [x] Keep `seo report` as the main human entry point.

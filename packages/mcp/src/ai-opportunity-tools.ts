@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   aiReferralsReport,
   communityIntentReport,
+  contentOptimizationReport,
   countLabel,
   pageOpportunitiesReport,
   seoToAiQueryReport,
@@ -72,6 +73,55 @@ export function registerAiOpportunityTools(server: McpServer): void {
     }) => {
       try {
         const result = await pageOpportunitiesReport({
+          site,
+          url,
+          days,
+          limit,
+          minImpressions,
+          includeBrand,
+          verifyContent,
+          refresh,
+          js: js ? true : 'auto',
+        })
+        return toolSuccess(result.summary.verdict, result)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_content_optimization',
+    {
+      description:
+        'Build a content optimization brief for one URL from first-party GSC queries and page content checks',
+      inputSchema: {
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'minImpressions',
+          'includeBrand',
+          'verifyContent',
+          'refresh',
+          'js',
+        ]),
+        url: z.string().url(),
+      },
+    },
+    async ({
+      site,
+      url,
+      days,
+      limit,
+      minImpressions,
+      includeBrand,
+      verifyContent,
+      refresh,
+      js,
+    }) => {
+      try {
+        const result = await contentOptimizationReport({
           site,
           url,
           days,

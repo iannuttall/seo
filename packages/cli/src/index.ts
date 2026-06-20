@@ -2,6 +2,7 @@ import { defineCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
+import { contentCommand } from './commands/content.js'
 import { crawlCommand } from './commands/crawl.js'
 import { crawlReportsCommand } from './commands/crawl-reports.js'
 import {
@@ -135,6 +136,7 @@ const allHelpSections: HelpSection[] = [
       ['seo ctr-underperformers', 'Find weak CTR by ranking position'],
       ['seo query-cluster', 'Cluster repeated demand themes'],
       ['seo page-opportunities', 'Analyze one URL for growth ideas'],
+      ['seo content optimize', 'Build a content optimization report'],
       ['seo internal-links', 'Find internal link opportunities'],
       ['seo community-intent', 'Find forum, review, and comparison intent'],
       ['seo ai-referrals', 'Find AI referral traffic in GA4'],
@@ -226,6 +228,7 @@ const main = defineCommand({
     'crawl-queue': crawlQueueCommand,
     'crawl-reports': crawlReportsCommand,
     client: clientCommand,
+    content: contentCommand,
     project: projectCommand,
     projects: projectCommand,
     'change-log': changeLogCommand,

@@ -5,6 +5,7 @@ import {
   contentOptimizationReport,
   countLabel,
   pageOpportunitiesReport,
+  performanceAudit,
   seoToAiQueryReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
@@ -133,6 +134,35 @@ export function registerAiOpportunityTools(server: McpServer): void {
           js: js ? true : 'auto',
         })
         return toolSuccess(result.summary.verdict, result)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_performance_audit',
+    {
+      description:
+        'Run a local Lighthouse performance audit, with fetch fallback and optional CrUX field data',
+      inputSchema: {
+        url: z.string().url(),
+        strategy: z.enum(['mobile', 'desktop']).optional(),
+        lighthouseBin: z.string().optional(),
+        cruxApiKey: z.string().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({ url, strategy, lighthouseBin, cruxApiKey, refresh }) => {
+      try {
+        const result = await performanceAudit({
+          url,
+          strategy,
+          lighthouseBin,
+          cruxApiKey,
+          refresh,
+        })
+        return toolSuccess(result.headline, result)
       } catch (error) {
         return toolError(error)
       }

@@ -46,6 +46,7 @@ import {
   seoToAiQueryCommand,
 } from './commands/opportunities/index.js'
 import { auditPageCommand } from './commands/page-audit.js'
+import { performanceCommand } from './commands/performance.js'
 import {
   diagnoseCommand,
   doctorCommand,
@@ -137,6 +138,7 @@ const allHelpSections: HelpSection[] = [
       ['seo query-cluster', 'Cluster repeated demand themes'],
       ['seo page-opportunities', 'Analyze one URL for growth ideas'],
       ['seo content optimize', 'Build a content optimization report'],
+      ['seo perf audit', 'Run a page performance audit'],
       ['seo internal-links', 'Find internal link opportunities'],
       ['seo community-intent', 'Find forum, review, and comparison intent'],
       ['seo ai-referrals', 'Find AI referral traffic in GA4'],
@@ -272,6 +274,7 @@ const main = defineCommand({
     decaying: decayingCommand,
     'quick-wins': quickWinsCommand,
     'page-opportunities': pageOpportunitiesCommand,
+    perf: performanceCommand,
     'internal-links': internalLinksCommand,
     'ctr-underperformers': ctrUnderperformersCommand,
     'query-cluster': queryClusterCommand,

@@ -117,3 +117,95 @@ test('crawlSite reports sparse GSC and missing GA4 joins', async () => {
   assert.match(report.warnings.join('\n'), /GSC metrics joined for 1 of 3/)
   assert.match(report.warnings.join('\n'), /GA4 metrics joined for 0/)
 })
+
+test('crawlSite bulk joins GSC metrics beyond the old first-page window', async () => {
+  const childUrls = Array.from(
+    { length: 29 },
+    (_, index) => `https://example.com/page-${index + 1}`,
+  )
+  const calls = {
+    metrics: [] as string[][],
+    topQueries: [] as string[][],
+    perPageMetrics: 0,
+    perPageTopQueries: 0,
+  }
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      site: 'sc-domain:example.com',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 30,
+      concurrency: 4,
+    },
+    {
+      fetch: async () =>
+        new Response('# llms', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async (url) => {
+        const urls = url === 'https://example.com/' ? childUrls : []
+        return {
+          urls,
+          page: crawlPageSnapshot(url, {
+            outgoingInternalCount: urls.length,
+            sampleInternalLinks: urls,
+          }),
+        }
+      },
+      queryPagesMetrics: async (_site, pageUrls) => {
+        calls.metrics.push(pageUrls)
+        return new Map(
+          pageUrls.map((pageUrl, index) => [
+            pageUrl,
+            {
+              clicks: index + 1,
+              impressions: (index + 1) * 10,
+              ctr: 0.1,
+              position: index + 2,
+            },
+          ]),
+        )
+      },
+      queryPagesTopQueries: async (_site, pageUrls) => {
+        calls.topQueries.push(pageUrls)
+        return new Map(
+          pageUrls.map((pageUrl, index) => [
+            pageUrl,
+            {
+              query: `query ${index + 1}`,
+              clicks: index + 1,
+              impressions: (index + 1) * 10,
+              ctr: 0.1,
+              position: index + 2,
+            },
+          ]),
+        )
+      },
+      queryPageMetrics: async () => {
+        calls.perPageMetrics += 1
+        return undefined
+      },
+      queryPageTopQuery: async () => {
+        calls.perPageTopQueries += 1
+        return undefined
+      },
+    },
+  )
+
+  assert.equal(report.summary.totalPages, 30)
+  assert.equal(calls.metrics.length, 1)
+  assert.equal(calls.topQueries.length, 1)
+  assert.equal(calls.metrics[0]?.length, 30)
+  assert.equal(calls.topQueries[0]?.length, 30)
+  assert.equal(calls.perPageMetrics, 0)
+  assert.equal(calls.perPageTopQueries, 0)
+  assert.equal(report.pages[29]?.searchMetrics?.clicks, 30)
+  assert.equal(report.pages[29]?.topQuery?.query, 'query 30')
+  assert.equal(
+    report.warnings.some((warning) => warning.includes('GSC metrics joined')),
+    false,
+  )
+})

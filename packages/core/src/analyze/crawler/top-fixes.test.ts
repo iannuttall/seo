@@ -111,7 +111,7 @@ test('topFixes filters by category, severity, and URL pattern', () => {
 })
 
 test('topFixes keeps medium fixes above low sitewide noise', () => {
-  const pages = Array.from({ length: 5 }, (_, index) => ({
+  const pages = Array.from({ length: 500 }, (_, index) => ({
     url: `https://example.com/page-${index}`,
     finalUrl: `https://example.com/page-${index}`,
     status: 200,
@@ -137,13 +137,13 @@ test('topFixes keeps medium fixes above low sitewide noise', () => {
         severity: 'low' as const,
         url: page.url,
       })),
-      {
-        ruleId: 'geo_no_structured_data',
+      ...pages.slice(0, 300).map((page) => ({
+        ruleId: 'geo_no_structured_data' as const,
         title: 'GEO: no machine-readable structure',
-        category: 'geo',
-        severity: 'medium',
-        url: pages[0]?.url ?? 'https://example.com/',
-      },
+        category: 'geo' as const,
+        severity: 'medium' as const,
+        url: page.url,
+      })),
     ],
   })
 

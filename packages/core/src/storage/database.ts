@@ -194,6 +194,16 @@ CREATE TABLE IF NOT EXISTS link_recover_items (
   FOREIGN KEY(run_id) REFERENCES link_recover_runs(id) ON DELETE CASCADE
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_link_recover_items_url ON link_recover_items(site_url, url, created_at);
+
+CREATE TABLE IF NOT EXISTS performance_reports (
+  id TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  strategy TEXT NOT NULL,
+  report_json TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_performance_reports_url ON performance_reports(url, strategy, created_at);
 `
 
 let db: Database.Database | undefined

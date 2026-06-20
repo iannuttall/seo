@@ -202,20 +202,25 @@ export function generateLlmsTxt(
   const counts: Record<string, number> = {}
 
   for (const [sectionName, sectionPages] of sections) {
-    const nextLines = [`## ${sectionName}`, '']
+    const sectionLines = [`## ${sectionName}`, '']
+    let sectionCount = 0
     for (const page of sectionPages) {
       const title = cleanTitle(page).replace(/\]/g, '\\]')
       const note = page.metaDescription
         ? ` - ${page.metaDescription.replace(/\s+/g, ' ').slice(0, 160)}`
         : ''
-      nextLines.push(`- [${title}](${page.finalUrl})${note}`)
+      const line = `- [${title}](${page.finalUrl})${note}`
+      const projected = [...lines, ...sectionLines, line, ''].join('\n')
+      if (estimatedTokens(projected) > tokenBudget && includedUrls > 0) break
+      sectionLines.push(line)
+      sectionCount += 1
+      includedUrls += 1
     }
-    nextLines.push('')
-    const projected = [...lines, ...nextLines].join('\n')
-    if (estimatedTokens(projected) > tokenBudget && includedUrls > 0) break
-    lines.push(...nextLines)
-    includedUrls += sectionPages.length
-    counts[sectionName] = sectionPages.length
+    if (!sectionCount) break
+    sectionLines.push('')
+    lines.push(...sectionLines)
+    counts[sectionName] = sectionCount
+    if (sectionCount < sectionPages.length) break
   }
 
   lines.push(

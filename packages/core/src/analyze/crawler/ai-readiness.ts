@@ -348,7 +348,10 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         section: 'crawl-completeness',
         maxScore: 8,
         score: report.summary.totalPages >= report.config.maxPages ? 3 : 8,
-        title: 'The crawl finished without hitting the page cap',
+        title:
+          report.summary.totalPages >= report.config.maxPages
+            ? 'The crawl hit the page cap'
+            : 'The crawl finished without hitting the page cap',
         plainEnglish:
           report.summary.totalPages >= report.config.maxPages
             ? `The crawl stopped at maxPages (${report.config.maxPages}), so the readiness score may under-sample the site.`

@@ -2,8 +2,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   affectedUrls,
   aiReadiness,
+  auditLlmsTxt,
   crawlSite,
   explainRule,
+  generateLlmsTxt,
   geoGaps,
   latestCrawlReport,
   listCrawlReports,
@@ -462,6 +464,129 @@ export function registerCrawlerTools(server: McpServer): void {
         }
         const readiness = aiReadiness(report)
         return toolSuccess(readiness.headline, readiness)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_llms_txt_audit',
+    {
+      description:
+        'Audit llms.txt readiness from a saved or freshly crawled report and return plain-English issues plus structured recommended pages.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const audit = auditLlmsTxt(report)
+        return toolSuccess(audit.headline, audit)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_llms_txt_generate',
+    {
+      description:
+        'Generate an llms.txt draft from a saved or freshly crawled report. Returns content and metadata.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        maxUrls: z.number().int().positive().optional(),
+        tokenBudget: z.number().int().positive().optional(),
+        exclude: z.array(z.string()).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      maxUrls,
+      tokenBudget,
+      exclude,
+      title,
+      description,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const generated = generateLlmsTxt(report, {
+          maxUrls,
+          tokenBudget,
+          exclude,
+          title,
+          description,
+        })
+        return toolSuccess(
+          `Generated llms.txt with ${generated.includedUrls} URLs.`,
+          generated,
+        )
       } catch (error) {
         return toolError(error)
       }

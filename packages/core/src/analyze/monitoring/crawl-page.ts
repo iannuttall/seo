@@ -69,6 +69,62 @@ function anchorSamples(
   return samples
 }
 
+function collectSchemaSameAs(value: unknown): string[] {
+  const urls = new Set<string>()
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item)
+      return
+    }
+    if (!node || typeof node !== 'object') return
+    const record = node as Record<string, unknown>
+    const sameAs = record.sameAs
+    const values = Array.isArray(sameAs) ? sameAs : [sameAs]
+    for (const item of values) {
+      if (typeof item !== 'string') continue
+      try {
+        const url = new URL(item)
+        if (['http:', 'https:'].includes(url.protocol)) urls.add(url.toString())
+      } catch {
+        // Ignore malformed sameAs values; invalid JSON-LD is reported elsewhere.
+      }
+    }
+    for (const item of Object.values(record)) visit(item)
+  }
+  visit(value)
+  return [...urls].slice(0, 50)
+}
+
+function socialProfileLinks(
+  links: Array<{ href: string; internal: boolean }>,
+): string[] {
+  const hosts = [
+    'facebook.com',
+    'instagram.com',
+    'linkedin.com',
+    'pinterest.com',
+    'tiktok.com',
+    'twitter.com',
+    'x.com',
+    'youtube.com',
+  ]
+  const profiles = new Set<string>()
+  for (const link of links) {
+    if (link.internal) continue
+    try {
+      const url = new URL(link.href)
+      const host = url.hostname.replace(/^www\./, '').toLowerCase()
+      if (hosts.some((value) => host === value || host.endsWith(`.${value}`))) {
+        url.hash = ''
+        profiles.add(url.toString())
+      }
+    } catch {
+      // Ignore malformed outgoing links.
+    }
+  }
+  return [...profiles].slice(0, 50)
+}
+
 function hasNoIndex(value?: string): boolean {
   return /\bnoindex\b/i.test(value ?? '')
 }
@@ -163,6 +219,8 @@ export async function crawlOne(
       internalAnchorSamples: anchorSamples(extracted.links, true),
       externalAnchorSamples: anchorSamples(extracted.links, false),
       schemaTypes: extracted.schemaTypes,
+      schemaSameAs: collectSchemaSameAs(extracted.jsonLd),
+      socialProfileLinks: socialProfileLinks(extracted.links),
       invalidJsonLdCount: extracted.invalidJsonLdCount,
       invalidJsonLdSamples: extracted.invalidJsonLdSamples,
       openGraphTitle: extracted.openGraph['og:title'],

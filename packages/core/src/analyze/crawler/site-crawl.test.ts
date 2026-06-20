@@ -726,6 +726,13 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
   assert.equal(calls.sitemap, 1)
   assert.deepEqual(calls.fetchUrls, [
     'https://example.com/llms.txt',
+    'https://example.com/robots.txt',
+    'https://example.com/.well-known/agent.json',
+    'https://example.com/agent.json',
+    'https://example.com/.well-known/mcp.json',
+    'https://example.com/.well-known/ai-plugin.json',
+    'https://example.com/.well-known/openapi.json',
+    'https://example.com/openapi.json',
     'https://external.example/gone',
   ])
   assert.deepEqual(calls.searchMetrics, [
@@ -767,6 +774,9 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
     conversions: 3,
   })
   assert.equal(report.pages[0]?.geo?.hasLlmsTxt, true)
+  assert.equal(report.ai?.llmsTxt?.exists, true)
+  assert.equal(report.ai?.robotsTxt?.exists, false)
+  assert.equal(report.ai?.agentResources?.length, 6)
   assert.deepEqual(report.pages[0]?.externalLinkChecks, [
     { url: 'https://external.example/gone', status: 404 },
   ])

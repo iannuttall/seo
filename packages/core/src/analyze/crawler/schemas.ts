@@ -200,6 +200,8 @@ export const crawlPageSnapshotSchema = z.object({
     )
     .optional(),
   schemaTypes: z.array(z.string()).optional(),
+  schemaSameAs: z.array(z.string().url()).optional(),
+  socialProfileLinks: z.array(z.string().url()).optional(),
   invalidJsonLdCount: z.number().int().optional(),
   invalidJsonLdSamples: z
     .array(z.object({ snippet: z.string(), error: z.string() }))
@@ -236,6 +238,43 @@ export const crawlIssueGroupSchema = z.object({
   severity: crawlerRuleSeveritySchema,
   count: z.number().int(),
   sampleUrls: z.array(z.string().url()),
+})
+
+const crawlAiSignalsSchema = z.object({
+  robotsTxt: z
+    .object({
+      url: z.string().url(),
+      exists: z.boolean(),
+      status: z.number().int().optional(),
+      sitemapUrls: z.array(z.string().url()),
+      botAccess: z.array(
+        z.object({
+          userAgent: z.string(),
+          allowed: z.boolean(),
+          declared: z.boolean(),
+          coveredByWildcard: z.boolean(),
+        }),
+      ),
+    })
+    .optional(),
+  llmsTxt: z
+    .object({
+      url: z.string().url(),
+      exists: z.boolean(),
+      status: z.number().int().optional(),
+    })
+    .optional(),
+  agentResources: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        exists: z.boolean(),
+        status: z.number().int().optional(),
+        contentType: z.string().optional(),
+        validJson: z.boolean().optional(),
+      }),
+    )
+    .optional(),
 })
 
 export const crawlTopFixSchema = crawlIssueGroupSchema.extend({
@@ -329,6 +368,7 @@ export const crawlReportSchema = z.object({
   pages: z.array(crawlPageSnapshotSchema),
   issues: z.array(crawlIssueSchema),
   issueGroups: z.array(crawlIssueGroupSchema),
+  ai: crawlAiSignalsSchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),
 })

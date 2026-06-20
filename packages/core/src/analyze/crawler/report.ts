@@ -107,6 +107,37 @@ export type CrawlRunStats = {
 
 export type CrawlLinkGraph = Record<string, string[]>
 
+export type CrawlAiBotAccess = {
+  userAgent: string
+  allowed: boolean
+  declared: boolean
+  coveredByWildcard: boolean
+}
+
+export type CrawlAiResourceSignal = {
+  url: string
+  exists: boolean
+  status?: number
+  contentType?: string
+  validJson?: boolean
+}
+
+export type CrawlAiSignals = {
+  robotsTxt?: {
+    url: string
+    exists: boolean
+    status?: number
+    sitemapUrls: string[]
+    botAccess: CrawlAiBotAccess[]
+  }
+  llmsTxt?: {
+    url: string
+    exists: boolean
+    status?: number
+  }
+  agentResources?: CrawlAiResourceSignal[]
+}
+
 export type CrawlReportSummary = {
   totalPages: number
   indexablePages: number
@@ -141,6 +172,7 @@ export type CrawlReport = {
   pages: CrawlPageSnapshot[]
   issues: CrawlIssue[]
   issueGroups: CrawlIssueGroup[]
+  ai?: CrawlAiSignals
   warnings: string[]
   caveats: string[]
 }
@@ -510,6 +542,7 @@ export function createCrawlReport(input: {
   pages?: CrawlPageSnapshot[]
   issues?: CrawlIssue[]
   linkGraph?: CrawlLinkGraph
+  ai?: CrawlAiSignals
   projectId?: string
   site?: string
   ga4PropertyId?: string
@@ -551,6 +584,9 @@ export function createCrawlReport(input: {
     pages,
     issues: safeIssues,
     issueGroups: groupCrawlIssues(safeIssues),
+    ...(input.ai
+      ? { ai: sanitizeTenantValue(input.ai) as CrawlAiSignals }
+      : {}),
     warnings: sanitizeMessages(input.warnings),
     caveats: sanitizeMessages(input.caveats),
   }

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
+import { mkdtemp, rm } from 'node:fs/promises'
 import {
   createServer,
   type IncomingMessage,
   type Server,
   type ServerResponse,
 } from 'node:http'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -13,10 +16,14 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('./index.js', import.meta.url))
 
-async function runSeo(args: string[]): Promise<string> {
+async function runSeo(
+  args: string[],
+  env: Record<string, string> = {},
+): Promise<string> {
   const result = await execFileAsync(process.execPath, [cliPath, ...args], {
     env: {
       ...process.env,
+      ...env,
       CI: '1',
       NO_UPDATE_NOTIFIER: '1',
     },
@@ -113,5 +120,80 @@ test('crawler negated flags disable sitemap and external checks', async () => {
     assert.equal(report.summary.totalPages, 1)
   } finally {
     await fixture.close()
+  }
+})
+
+test('crawl-reports compares latest against the previous saved report', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-cli-cache-'))
+  const env = { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir }
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/llms.txt') {
+      res.statusCode = 404
+      res.setHeader('content-type', 'text/plain')
+      res.end('missing')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(
+      '<title>Snapshot fixture page</title><meta name="description" content="Snapshot fixture page"><h1>Snapshot fixture</h1><p>Enough text for a saved crawl report fixture.</p>',
+    )
+  })
+
+  try {
+    await runSeo(
+      [
+        'crawl',
+        `${fixture.baseUrl}/before`,
+        '--max-pages',
+        '1',
+        '--no-sitemap',
+        '--no-external',
+        '--save',
+        '--json',
+      ],
+      env,
+    )
+    await runSeo(
+      [
+        'crawl',
+        `${fixture.baseUrl}/after`,
+        '--max-pages',
+        '1',
+        '--no-sitemap',
+        '--no-external',
+        '--save',
+        '--json',
+      ],
+      env,
+    )
+
+    const output = await runSeo(
+      [
+        'crawl-reports',
+        '--compare',
+        'latest',
+        '--against',
+        'previous',
+        '--json',
+      ],
+      env,
+    )
+    const diff = JSON.parse(output) as {
+      before: { url: string }
+      after: { url: string }
+    }
+
+    assert.equal(diff.before.url, `${fixture.baseUrl}/before`)
+    assert.equal(diff.after.url, `${fixture.baseUrl}/after`)
+  } finally {
+    await fixture.close()
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
   }
 })

@@ -133,11 +133,18 @@ export const testsCommand = defineCommand({
     list: defineCommand({
       meta: { name: 'list', description: 'List saved SEO tests' },
       args: {
-        site: { type: 'string' },
+        site: { type: 'string', description: 'GSC property URL.' },
         client: { type: 'string', description: 'Legacy alias for --project.' },
         project: { type: 'string', description: 'Saved project id or name.' },
-        limit: { type: 'string' },
-        json: { type: 'boolean', default: false },
+        limit: {
+          type: 'string',
+          description: 'Maximum tests to list. Defaults to 20.',
+        },
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)
@@ -173,15 +180,37 @@ export const testsCommand = defineCommand({
     create: defineCommand({
       meta: { name: 'create', description: 'Create a local SEO test' },
       args: {
-        site: { type: 'string' },
+        site: { type: 'string', description: 'GSC property URL.' },
         client: { type: 'string', description: 'Legacy alias for --project.' },
         project: { type: 'string', description: 'Saved project id or name.' },
-        scope: { type: 'string', default: 'page' },
-        target: { type: 'string', required: true },
-        title: { type: 'string', required: true },
-        description: { type: 'string' },
-        date: { type: 'string' },
-        json: { type: 'boolean', default: false },
+        scope: {
+          type: 'string',
+          default: 'page',
+          description: 'Change scope: site, page, query, or group.',
+        },
+        target: {
+          type: 'string',
+          required: true,
+          description: 'Changed URL, query, group pattern, or site marker.',
+        },
+        title: {
+          type: 'string',
+          required: true,
+          description: 'Plain-English name for the test.',
+        },
+        description: {
+          type: 'string',
+          description: 'Optional note about what changed.',
+        },
+        date: {
+          type: 'string',
+          description: 'Change date in YYYY-MM-DD. Defaults to today.',
+        },
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)
@@ -218,22 +247,55 @@ export const testsCommand = defineCommand({
         description: 'Report before/after SEO test impact',
       },
       args: {
-        id: { type: 'string' },
-        site: { type: 'string' },
+        id: { type: 'string', description: 'Saved SEO test id.' },
+        site: { type: 'string', description: 'GSC property URL.' },
         client: { type: 'string', description: 'Legacy alias for --project.' },
         project: { type: 'string', description: 'Saved project id or name.' },
-        scope: { type: 'string' },
-        target: { type: 'string' },
-        title: { type: 'string' },
-        date: { type: 'string' },
+        scope: {
+          type: 'string',
+          description: 'Ad-hoc change scope: site, page, query, or group.',
+        },
+        target: {
+          type: 'string',
+          description:
+            'Ad-hoc changed URL, query, group pattern, or site marker.',
+        },
+        title: { type: 'string', description: 'Ad-hoc test title.' },
+        date: {
+          type: 'string',
+          description: 'Ad-hoc change date in YYYY-MM-DD.',
+        },
         property: { type: 'string', description: 'GA4 property ID.' },
-        'control-scope': { type: 'string' },
-        'control-target': { type: 'string' },
-        'control-title': { type: 'string' },
-        before: { type: 'string' },
-        after: { type: 'string' },
-        refresh: { type: 'boolean', default: false },
-        json: { type: 'boolean', default: false },
+        'control-scope': {
+          type: 'string',
+          description: 'Control scope: site, page, query, or group.',
+        },
+        'control-target': {
+          type: 'string',
+          description: 'Control URL, query, group pattern, or site marker.',
+        },
+        'control-title': {
+          type: 'string',
+          description: 'Plain-English name for the control group.',
+        },
+        before: {
+          type: 'string',
+          description: 'Days before the change date. Defaults to 28.',
+        },
+        after: {
+          type: 'string',
+          description: 'Days after the change date. Defaults to 28.',
+        },
+        refresh: {
+          type: 'boolean',
+          default: false,
+          description: 'Bypass local GSC and GA4 cache.',
+        },
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)

@@ -161,6 +161,26 @@ function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
   }
 }
 
+function selectReportAliasMeta(
+  reports: CrawlReportMeta[],
+  input: {
+    value: 'latest' | 'previous'
+    skipId?: string
+  },
+): CrawlReportMeta | undefined {
+  if (input.value === 'latest') {
+    return reports.find((item) => item.id !== input.skipId)
+  }
+
+  if (input.skipId) {
+    const skippedIndex = reports.findIndex((item) => item.id === input.skipId)
+    const older = skippedIndex >= 0 ? reports.slice(skippedIndex + 1) : reports
+    return older.find((item) => item.id !== input.skipId)
+  }
+
+  return reports[1]
+}
+
 function resolveReportAlias(input: {
   value: string
   site?: string
@@ -170,10 +190,10 @@ function resolveReportAlias(input: {
     return loadCrawlReport(input.value)
   }
   const reports = listCrawlReports({ site: input.site, limit: 20 })
-  const meta =
-    input.value === 'latest'
-      ? reports.find((item) => item.id !== input.skipId)
-      : reports.filter((item) => item.id !== input.skipId)[1]
+  const meta = selectReportAliasMeta(reports, {
+    value: input.value,
+    skipId: input.skipId,
+  })
   return meta ? loadCrawlReport(meta.id) : undefined
 }
 

@@ -46,11 +46,14 @@ seo crawl --project keep --format html --output report.html
 seo crawl --project keep --json --output crawl.json
 seo crawl-reports
 seo crawl-reports --id <report-id>
+seo crawl-reports --compare latest --against previous
 seo rules
 seo explain --rule geo_no_structured_data
 ```
 
 The crawler supports site, page, list, and sitemap modes. It respects robots.txt by default.
+
+Saved crawl comparisons show new, fixed, and changed pages, plus issue movement and health score changes. Use JSON mode when an agent needs exact page and rule deltas.
 
 ## Search opportunities
 
@@ -63,9 +66,37 @@ seo ctr-underperformers --project keep
 seo internal-links --project keep --url https://example.com/page
 seo query-cluster --project keep
 seo page-opportunities --project keep --url https://example.com/page
+seo content optimize --project keep --url https://example.com/page
 ```
 
 These commands use GSC data. Most exclude branded queries by default when brand terms are saved.
+
+`content optimize` turns page-level GSC demand and fetched page content into a short brief. It suggests title, H1, meta description, section, and internal-link angles, then returns the source opportunity data for agents.
+
+## Local SEO tests
+
+```bash
+seo tests list --project keep
+seo tests create --project keep --title "Update title tags" --scope page --target https://example.com/page --date 2026-06-01
+seo tests report --project keep --id <test-id>
+seo tests report --project keep --id <test-id> --property 123456789 --control-scope group --control-target /blog/
+```
+
+Use tests when you changed titles, content, templates, internal links, schema, or site sections and want a before/after read from your own data.
+
+The GSC side works for page, query, group, and site changes. GA4 metrics are attached when the test maps to landing pages. Query-only tests stay GSC-only because GA4 does not have query data.
+
+## Performance
+
+```bash
+seo perf audit --url https://example.com/page
+seo perf audit --project keep
+seo perf audit --project keep --strategy desktop --crux-key <key>
+```
+
+`perf audit` uses local Lighthouse when it is available. If Lighthouse is missing, it runs a lightweight HTML response audit so the command still gives a useful result instead of failing.
+
+CrUX field data is optional. Pass `--crux-key` or set `SEO_CRUX_API_KEY` when you want field Core Web Vitals from Google.
 
 ## AI-search helpers
 

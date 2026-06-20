@@ -99,9 +99,12 @@ Use `--fail-on medium` when you want stricter gates before launch.
 seo crawl --project keep --save
 seo crawl-reports
 seo crawl-reports --id <report-id>
+seo crawl-reports --compare latest --against previous
 ```
 
 Saved reports are useful because agents can ask for top fixes, affected URLs, and GEO gaps without re-crawling.
+
+Comparisons are useful after deploys. They show which pages were added, removed, fixed, or changed, and which rules got better or worse. Agents get the same diff as structured JSON, including changed fields and issue counts by rule id.
 
 They also power the AI readiness and knowledge export commands:
 

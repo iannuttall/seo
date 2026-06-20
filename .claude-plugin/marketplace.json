@@ -1,0 +1,14 @@
+{
+  "name": "seo",
+  "owner": {
+    "name": "Ian Nuttall"
+  },
+  "description": "Local-first SEO and AI-search diagnostics.",
+  "plugins": [
+    {
+      "name": "seo",
+      "source": "./",
+      "description": "SEO MCP server plus skills for site audits, GEO readiness, and implementation queues."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Run npm publish without publishing"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      tag:
+        description: "npm dist tag"
+        required: true
+        default: "latest"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm lint
+      - name: Publish dry run
+        if: inputs.dryRun == 'true'
+        run: pnpm publish -r --dry-run --no-git-checks --tag "${{ inputs.tag }}"
+      - name: Publish to npm
+        if: inputs.dryRun == 'false'
+        run: pnpm publish -r --access public --provenance --no-git-checks --tag "${{ inputs.tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

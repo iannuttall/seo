@@ -1,186 +1,217 @@
 # seo
 
-Local-first TypeScript SEO CLI and MCP server for agent-led SEO diagnosis.
+Local-first SEO and AI-search diagnostics for people and agents.
 
-## Current state
+`seo` crawls your site, reads Search Console and GA4 when you connect them, and turns the mess into a short action list. Humans get plain English. Agents get stable JSON, saved reports, rule ids, evidence, and follow-up tools.
 
-This repo is now a runnable v1 foundation:
+This is local first today. The same core is shaped so it can later run as a hosted API, remote MCP server, and paid product without rewriting the crawler.
 
-- pnpm workspace monorepo with `core`, `cli`, and `mcp`
-- local config, token, and cache handling
-- Google OAuth loopback flow with shared-app-first auth and BYO fallback
-- Search Console API client, URL Inspection, and local SQLite cache
-- GA4 Data API report runner
-- official Google Search Status update feed integration
-- statistical traffic anomaly and update-correlation reports
-- end-to-end property diagnosis with segment impact and striking-distance opportunities
-- narrative and monthly reports that combine diagnosis, change logs, and monitoring history
-- agent workflow commands for diagnosis, update postmortems, technical monitoring, and priority refreshes
-- saved client profiles for GSC property, crawl URL, watched URLs, GA4 property, and cadence
-- guided setup command that creates the first client and prints next commands
-- cron helper for local recurring workflow runs
-- Semrush and DataForSEO provider adapters
-- CLI commands for `init`, `auth`, `privacy`, `reset`, `cache`, and the first diagnostic workflows
-- MCP stdio server exposing the same analysis functions
+## What it does
 
-## Packages
+- Crawls sites for technical SEO and GEO issues.
+- Checks 61 rules across metadata, links, indexability, canonicals, content, schema, performance, security, mobile, international, social, and AI-search readiness.
+- Joins crawled URLs with GSC clicks, impressions, CTR, position, and top query data.
+- Joins GA4 landing-page sessions and conversions when a project profile has a GA4 property.
+- Ranks fixes by severity, affected URLs, search visibility, analytics value, and effort.
+- Explains every issue in plain English: why it matters, how to fix it, and how to verify the fix.
+- Saves reports locally so humans and agents can slice the same crawl without running it again.
+- Exposes the same workflows through CLI and MCP.
 
-- `packages/core`: business logic, storage, providers, fetch/extract, analysis
-- `packages/cli`: `seo` command
-- `packages/mcp`: MCP stdio server
+## Start here
 
-## Install
+From source:
+
+```bash
+git clone <repo-url>
+cd seo
+pnpm install
+pnpm build
+node packages/cli/dist/index.js start
+```
+
+If you already have a built checkout, the short path is:
+
+```bash
+seo start
+seo report
+seo crawl https://example.com --format pretty
+```
+
+The npm package name is not final yet. Once it is published, the intended install story is:
+
+```bash
+npm i -g <package-name>
+seo start
+```
+
+Until then, use the built CLI from this repo or link it locally with your normal Node workflow.
+
+## The human path
+
+Most people should start with `seo start`. It connects Google, creates a project profile, and prints the next commands.
+
+```bash
+seo start
+seo report --project keep
+seo refresh-priorities --project keep
+seo technical-watch --project keep
+```
+
+`seo report` is the main report. It checks what data is available, skips sparse sections clearly, and recommends useful follow-up commands instead of dumping every tool at once.
+
+## The crawler path
+
+Run a quick technical and AI-search readiness crawl:
+
+```bash
+seo crawl https://example.com --max-pages 500 --format pretty
+```
+
+Save a report for later:
+
+```bash
+seo crawl https://example.com --save --format html --output report.html
+seo crawl-reports
+```
+
+Machine-readable output stays clean:
+
+```bash
+seo crawl https://example.com --json --output crawl.json
+```
+
+Useful flags:
+
+| Flag | What it does |
+| --- | --- |
+| `--max-pages <n>` | Caps pages fetched. Defaults to 500. |
+| `--max-depth <n>` | Caps click depth from the seed URL. |
+| `--concurrency <n>` | Controls parallel page fetches. |
+| `--include <pattern>` | Limits the crawl to matching URLs. |
+| `--exclude <pattern>` | Skips matching URLs. |
+| `--no-sitemap` | Does not seed from sitemap.xml. |
+| `--no-robots` | Does not skip robots-blocked URLs. |
+| `--no-external` | Skips external link checks. |
+| `--site <property>` | Joins GSC page data. |
+| `--ga4-property <id>` | Joins GA4 landing-page data. |
+| `--format pretty,json,csv,html,markdown` | Chooses the output format. |
+| `--fail-on high,medium,low` | Exits non-zero for CI gates. |
+
+## The agent path
+
+Install the MCP server into supported local clients:
+
+```bash
+seo mcp install
+```
+
+Run the server directly:
+
+```bash
+seo mcp serve
+```
+
+Agent tools include crawl, URL audit, rule explanation, top fixes, affected URLs, GEO gaps, crawl reports, GSC/GA4 analysis, monitoring, pSEO, and workflow reports.
+
+The crawler tools are compact by default. Full pages and full issues are opt-in so agents do not waste context on giant reports.
+
+## GEO and AI-search readiness
+
+The crawler checks whether pages are easy for AI systems to understand and cite:
+
+- structured data
+- semantic HTML
+- authorship
+- dates
+- direct answers under clear headings
+- tables, lists, and other extractable blocks
+- `/llms.txt`
+- thin pages that are unlikely to be cited
+
+There are also two AI-search support reports:
+
+```bash
+seo seo-to-ai-query --project keep
+seo ai-referrals --project keep
+```
+
+These do not claim to prove ChatGPT or Perplexity visibility. They help you turn real GSC demand into AI-monitoring prompts and find AI referral traffic in GA4. True AI answer visibility tracking is still a separate future layer.
+
+## How this compares to Crawlie
+
+Crawlie is a strong open-source crawler. This project goes wider.
+
+| Area | Crawlie | seo |
+| --- | --- | --- |
+| Local CLI | Yes | Yes |
+| MCP server | Yes | Yes |
+| Technical SEO crawl | Yes | Yes |
+| GEO checks | Yes | Yes |
+| Rule guidance | Yes | Yes |
+| Rule count | 46 | 61 |
+| GSC joins | No | Yes |
+| GA4 joins | No | Yes |
+| URL Inspection | No | Yes |
+| Crawl diffs | Roadmap | Yes |
+| Link recovery | No | Yes |
+| Search opportunity reports | No | Yes |
+| pSEO/template analysis | No | Yes |
+| AI referral report | No | Yes |
+| Desktop app | Yes | Not planned yet |
+
+The goal is to tell you which fixes are worth doing first.
+
+## Docs
+
+- [Getting started](docs/getting-started.md)
+- [CLI commands](docs/cli.md)
+- [Crawler](docs/crawler.md)
+- [MCP and agents](docs/mcp.md)
+- [GEO and AI search](docs/geo.md)
+- [Release and packaging](docs/release.md)
+
+## Development
 
 ```bash
 pnpm install
 pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
 ```
 
-If `better-sqlite3` native bindings are missing on your machine, run:
+Useful smoke tests:
 
 ```bash
-cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3
-npm run install
-```
-
-## Run locally
-
-```bash
-node packages/cli/dist/index.js init --dry-run
-node packages/cli/dist/index.js setup
-node packages/cli/dist/index.js sites
-node packages/cli/dist/index.js gsc-query --site sc-domain:example.com --start-date 2026-05-01 --end-date 2026-05-28 --dimensions query,page
-node packages/cli/dist/index.js ga4-report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
-node packages/cli/dist/index.js updates
-node packages/cli/dist/index.js doctor
-node packages/cli/dist/index.js traffic-anomaly --site sc-domain:example.com
-node packages/cli/dist/index.js diagnose --site sc-domain:example.com
-node packages/cli/dist/index.js client add --id example --site sc-domain:example.com --url https://example.com --default
-node packages/cli/dist/index.js setup --site sc-domain:example.com --id example --url https://example.com
-node packages/cli/dist/index.js report-narrative --site sc-domain:example.com
-node packages/cli/dist/index.js monthly-report --site sc-domain:example.com --month 2026-05
-node packages/cli/dist/index.js monthly-report --client example
-node packages/cli/dist/index.js technical-watch --site sc-domain:example.com --url https://example.com
-node packages/cli/dist/index.js refresh-priorities --site sc-domain:example.com
-node packages/cli/dist/index.js segment-impact --site sc-domain:example.com --dimension page
-node packages/cli/dist/index.js striking-distance --site sc-domain:example.com
-node packages/cli/dist/index.js audit-page --url https://example.com
+node packages/cli/dist/index.js help
+node packages/cli/dist/index.js start --dry-run
+node packages/cli/dist/index.js crawl --help
 node packages/cli/dist/index.js mcp serve --test
 ```
 
-## Auth model
+## Auth
 
-- Product default: use the shared `seo` Google desktop app.
-- User tokens still live locally on disk. The app client is just app identity for the OAuth consent flow.
-- Advanced fallback: `seo auth setup-client` for users who want or need BYO credentials.
+The CLI uses local Google OAuth tokens. Tokens stay on your machine.
 
-The thing worth protecting is the user's local refresh token, not the shipped desktop app client secret.
-
-Google APIs needed for local testing:
-
-- Search Console API for GSC Search Analytics and URL Inspection.
-- Google Analytics Data API for GA4 reports.
-- Google Analytics Admin API for GA4 property discovery.
-
-This local checkout does **not** include the production shared client. For real auth testing in the repo, use one of:
-
-- `seo auth setup-client`
-- `SEO_GOOGLE_CLIENT_ID`
-- `SEO_GOOGLE_CLIENT_SECRET`
-- legacy `GSC_CLIENT_ID`
-- legacy `GSC_CLIENT_SECRET`
-
-Release builds can inject the shared client at build or publish time without committing it to git.
-
-Example:
+For local auth testing, use one of these:
 
 ```bash
-SEO_GOOGLE_CLIENT_ID=... \
-SEO_GOOGLE_CLIENT_SECRET=... \
-pnpm auth:inject-shared-client
+seo auth setup-client
+SEO_GOOGLE_CLIENT_ID=...
+SEO_GOOGLE_CLIENT_SECRET=...
 ```
 
-## Shipped CLI commands
+Do not commit OAuth tokens, local config files, or provider credentials.
 
-- `seo init`
-- `seo setup`
-- `seo auth login|logout|whoami|status|refresh|setup-client`
-- `seo doctor`
-- `seo client setup|list|add|show|default|delete`
-- `seo sites`
-- `seo ga4-properties`
-- `seo gsc-query`
-- `seo url-inspect`
-- `seo ga4-report`
-- `seo updates`
-- `seo traffic-anomaly`
-- `seo update-correlate`
-- `seo diagnose`
-- `seo diagnose-property`
-- `seo update-postmortem`
-- `seo report-narrative`
-- `seo monthly-report`
-- `seo technical-watch`
-- `seo refresh-priorities`
-- `seo schedule cron`
-- `seo segment-impact`
-- `seo striking-distance`
-- `seo content-groups list|add|delete`
-- `seo change-log list|add|measure`
-- `seo crawl-diff`
-- `seo index-watch`
-- `seo privacy`
-- `seo reset`
-- `seo cache stats|clear`
-- `seo audit-page`
-- `seo second-page`
-- `seo cannibal`
-- `seo decaying`
-- `seo quick-wins`
-- `seo internal-links`
-- `seo ctr-underperformers`
-- `seo query-cluster`
-- `seo mcp serve|install`
+## Product status
 
-Every command has inline help:
+The local CLI, crawler, report store, and MCP server are strong enough for real use. The public packaging is being prepared now.
 
-```bash
-seo setup --help
-seo diagnose --help
-seo segment-impact --help
-seo striking-distance --help
-seo change-log measure --help
-seo crawl-diff --help
-seo report-narrative --help
-seo monthly-report --help
-seo client setup --help
-seo client add --help
-seo technical-watch --help
-seo refresh-priorities --help
-seo schedule cron --help
-```
+Not built yet:
 
-Defaults are optional. In an interactive terminal, commands that need a GSC
-site or GA4 property will open a searchable picker when one is not passed.
-For agents, scripts, and `--json`, pass explicit IDs so commands never block:
-
-```bash
-seo diagnose --site sc-domain:example.com --json
-seo ga4-report --property 123456789 --json
-```
-
-## Core boundaries
-
-- `CredentialsProvider`: keeps OAuth clients and Google tokens behind one interface. The CLI uses local files/keychain; a hosted API can swap in tenant storage later.
-- `StorageAdapter`: simple get/put/delete persistence for stateful features such as change logs, crawl diffs, and cached reports.
-- Analysis functions take data-shaped inputs and return structured reports. CLI and MCP should stay thin wrappers.
-
-## What still needs finishing
-
-- release-time shared OAuth client injection
-- richer GSC filtering and more acceptance-test coverage
-- hosted/remote MCP auth surface
-- scheduled agent workflows over reports and monitoring
-- MCP install support beyond the first three desktop clients
-- persistence for recent audit resources
-- stronger Semrush/DataForSEO endpoint coverage and more provider-aware routing
+- hosted API
+- remote authenticated MCP
+- paid accounts
+- AI answer visibility tracking
+- public web dashboard
+- macOS desktop app

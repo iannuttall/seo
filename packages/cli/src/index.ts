@@ -19,6 +19,7 @@ import {
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
+import { llmsCommand } from './commands/llms.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
   crawlDiffCommand,
@@ -143,6 +144,7 @@ const allHelpSections: HelpSection[] = [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
       ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
+      ['seo llms audit', 'Check llms.txt readiness from a saved crawl'],
       ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
       ['seo rules', 'List crawler rule ids'],
@@ -205,6 +207,7 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
+    llms: llmsCommand,
     auth: authCommand,
     mcp: mcpCommand,
     doctor: doctorCommand,

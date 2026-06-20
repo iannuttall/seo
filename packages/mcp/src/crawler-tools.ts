@@ -4,6 +4,7 @@ import {
   aiReadiness,
   auditLlmsTxt,
   crawlSite,
+  entityReadiness,
   explainRule,
   generateLlmsTxt,
   geoGaps,
@@ -587,6 +588,58 @@ export function registerCrawlerTools(server: McpServer): void {
           `Generated llms.txt with ${generated.includedUrls} URLs.`,
           generated,
         )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_entity_readiness',
+    {
+      description:
+        'Check schema, sameAs, social profile, author/date, and naming signals from a saved or freshly crawled report.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const readiness = entityReadiness(report)
+        return toolSuccess(readiness.headline, readiness)
       } catch (error) {
         return toolError(error)
       }

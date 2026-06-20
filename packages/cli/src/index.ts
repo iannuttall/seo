@@ -13,6 +13,7 @@ import {
   trafficAnomalyCommand,
   updateCorrelateCommand,
 } from './commands/diagnosis-reports.js'
+import { entityReadinessCommand } from './commands/entity-readiness.js'
 import {
   changeLogCommand,
   contentGroupsCommand,
@@ -145,6 +146,7 @@ const allHelpSections: HelpSection[] = [
       ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
       ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
       ['seo llms audit', 'Check llms.txt readiness from a saved crawl'],
+      ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],
       ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
       ['seo rules', 'List crawler rule ids'],
@@ -253,6 +255,7 @@ const main = defineCommand({
     'update-correlate': updateCorrelateCommand,
     'ai-referrals': aiReferralsCommand,
     'ai-readiness': aiReadinessCommand,
+    'entity-readiness': entityReadinessCommand,
     'audit-page': auditPageCommand,
     'second-page': secondPageCommand,
     cannibal: cannibalCommand,

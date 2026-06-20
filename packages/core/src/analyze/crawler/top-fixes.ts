@@ -67,6 +67,18 @@ const EFFORT_SCORE: Record<TopFix['scoreFactors']['effort'], number> = {
   high: 0,
 }
 
+const AFFECTED_URL_WEIGHT: Record<RuleSeverity, number> = {
+  high: 25,
+  medium: 15,
+  low: 2,
+}
+
+const VALUE_WEIGHT: Record<RuleSeverity, number> = {
+  high: 1,
+  medium: 0.75,
+  low: 0.15,
+}
+
 function matchesPattern(pattern: string, value: string): boolean {
   if (!pattern.includes('*')) return value.includes(pattern)
   const parts = pattern.split('*')
@@ -185,14 +197,15 @@ export function topFixes(
       effort,
       effortScore: EFFORT_SCORE[effort],
     }
+    const valueWeight = VALUE_WEIGHT[group.severity]
     const score =
       scoreFactors.severity +
-      scoreFactors.affectedUrls * 15 +
-      scoreFactors.searchVisibleUrls * 100 +
-      scoreFactors.clicks * 20 +
-      Math.min(scoreFactors.impressions, 10_000) / 25 +
-      scoreFactors.sessions * 2 +
-      scoreFactors.conversions * 100 +
+      scoreFactors.affectedUrls * AFFECTED_URL_WEIGHT[group.severity] +
+      scoreFactors.searchVisibleUrls * 100 * valueWeight +
+      scoreFactors.clicks * 20 * valueWeight +
+      (Math.min(scoreFactors.impressions, 10_000) / 25) * valueWeight +
+      scoreFactors.sessions * 2 * valueWeight +
+      scoreFactors.conversions * 100 * valueWeight +
       scoreFactors.effortScore
     const rule = explainRule(group.ruleId)
     return {

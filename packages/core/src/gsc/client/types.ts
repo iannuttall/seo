@@ -5,6 +5,7 @@ export interface SearchAnalyticsRequest {
   type?: 'web' | 'image' | 'video' | 'news' | 'discover' | 'googleNews'
   dataState?: 'final' | 'all'
   rowLimit?: number
+  maxRows?: number
   startRow?: number
   aggregationType?: 'auto' | 'byPage' | 'byProperty' | 'byNewsShowcasePanel'
   dimensionFilterGroups?: Array<{

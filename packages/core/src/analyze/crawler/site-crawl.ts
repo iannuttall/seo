@@ -1,5 +1,10 @@
 import { publicHttpFetch } from '../../fetch/http-client.js'
-import { queryPageMetrics, queryPageTopQuery } from '../../gsc/client.js'
+import {
+  queryPageMetrics,
+  queryPagesMetrics,
+  queryPagesTopQueries,
+  queryPageTopQuery,
+} from '../../gsc/client.js'
 import { crawlOne } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import {
@@ -27,6 +32,7 @@ type CrawlTask = QueueItem & {
 }
 
 const CRAWL_CANCELLED = Symbol('crawl-cancelled')
+const DEFAULT_SEARCH_METRICS_LIMIT = 5000
 
 type LlmsTxtSignal = {
   url: string
@@ -46,6 +52,8 @@ type ResolvedCrawlSiteDependencies = {
   fetch: typeof publicHttpFetch
   queryPageMetrics: typeof queryPageMetrics
   queryPageTopQuery: typeof queryPageTopQuery
+  queryPagesMetrics?: typeof queryPagesMetrics
+  queryPagesTopQueries?: typeof queryPagesTopQueries
   fetchLandingPageValues: typeof fetchLandingPageValues
   landingValueForUrl: typeof landingValueForUrl
   now: () => Date
@@ -56,12 +64,21 @@ export type CrawlSiteDependencies = Partial<ResolvedCrawlSiteDependencies>
 function resolveCrawlSiteDependencies(
   dependencies: CrawlSiteDependencies = {},
 ): ResolvedCrawlSiteDependencies {
+  const hasInjectedPerPageSearchProvider = Boolean(
+    dependencies.queryPageMetrics || dependencies.queryPageTopQuery,
+  )
   return {
     fetchPage: dependencies.fetchPage ?? crawlOne,
     fetchSitemapUrls: dependencies.fetchSitemapUrls ?? fetchSitemapUrls,
     fetch: dependencies.fetch ?? publicHttpFetch,
     queryPageMetrics: dependencies.queryPageMetrics ?? queryPageMetrics,
     queryPageTopQuery: dependencies.queryPageTopQuery ?? queryPageTopQuery,
+    queryPagesMetrics:
+      dependencies.queryPagesMetrics ??
+      (hasInjectedPerPageSearchProvider ? undefined : queryPagesMetrics),
+    queryPagesTopQueries:
+      dependencies.queryPagesTopQueries ??
+      (hasInjectedPerPageSearchProvider ? undefined : queryPagesTopQueries),
     fetchLandingPageValues:
       dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
@@ -565,9 +582,11 @@ export async function crawlSite(
       site,
       pages,
       warnings,
-      limit: input.searchMetricsLimit ?? 25,
+      limit: input.searchMetricsLimit ?? DEFAULT_SEARCH_METRICS_LIMIT,
       queryPageMetrics: deps.queryPageMetrics,
       queryPageTopQuery: deps.queryPageTopQuery,
+      queryPagesMetrics: deps.queryPagesMetrics,
+      queryPagesTopQueries: deps.queryPagesTopQueries,
     })
   }
   if (!cancelled && input.ga4PropertyId) {
@@ -685,9 +704,44 @@ async function joinSearchMetrics(input: {
   limit: number
   queryPageMetrics: typeof queryPageMetrics
   queryPageTopQuery: typeof queryPageTopQuery
+  queryPagesMetrics?: typeof queryPagesMetrics
+  queryPagesTopQueries?: typeof queryPagesTopQueries
 }): Promise<void> {
   const pages = input.pages.slice(0, input.limit)
   let joined = 0
+
+  if (input.queryPagesMetrics || input.queryPagesTopQueries) {
+    try {
+      const pageUrls = pages.map((page) => page.finalUrl)
+      const metricsByUrl = input.queryPagesMetrics
+        ? await input.queryPagesMetrics(input.site, pageUrls)
+        : new Map()
+      const topQueriesByUrl = input.queryPagesTopQueries
+        ? await input.queryPagesTopQueries(input.site, pageUrls)
+        : new Map()
+      for (const page of pages) {
+        const metrics = metricsByUrl.get(page.finalUrl)
+        if (metrics) page.searchMetrics = metrics
+        const topQuery = topQueriesByUrl.get(page.finalUrl)
+        if (topQuery) page.topQuery = topQuery
+        if (metrics || topQuery) joined += 1
+      }
+    } catch (error) {
+      input.warnings.push(
+        `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return
+    }
+    if (input.pages.length && joined === 0) {
+      input.warnings.push('GSC metrics joined for 0 crawled pages.')
+    } else if (joined < input.pages.length) {
+      input.warnings.push(
+        `GSC metrics joined for ${joined} of ${input.pages.length} pages.`,
+      )
+    }
+    return
+  }
+
   for (const page of pages) {
     try {
       const metrics = await input.queryPageMetrics(input.site, page.finalUrl)

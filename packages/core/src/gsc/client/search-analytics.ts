@@ -3,6 +3,28 @@ import type { GscRow } from '../../types.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import type { SearchAnalyticsRequest } from './types.js'
 
+export type PageSearchMetrics = {
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+}
+
+export type PageTopQuery = PageSearchMetrics & {
+  query: string
+}
+
+function searchDateRange(days: number): { startDate: string; endDate: string } {
+  const endDate = new Date()
+  endDate.setUTCDate(endDate.getUTCDate() - 4)
+  const startDate = new Date(endDate)
+  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
+  return {
+    startDate: startDate.toISOString().slice(0, 10),
+    endDate: endDate.toISOString().slice(0, 10),
+  }
+}
+
 export async function querySearchAnalytics(
   site: string,
   body: SearchAnalyticsRequest,
@@ -26,18 +48,30 @@ export async function querySearchAnalytics(
 
   const encodedSite = encodeURIComponent(site)
   const allRows: GscRow[] = []
+  const { maxRows: requestedMaxRows, ...apiBody } = body
+  const maxRows = requestedMaxRows ?? body.rowLimit
   let startRow = 0
   let calls = 0
 
   while (true) {
+    const remainingRows =
+      typeof maxRows === 'number' ? maxRows - allRows.length : undefined
+    if (typeof remainingRows === 'number' && remainingRows <= 0) {
+      break
+    }
+    const rowLimit = Math.min(
+      apiBody.rowLimit ?? 25_000,
+      remainingRows ?? 25_000,
+      25_000,
+    )
     const requestBody = {
-      ...body,
-      rowLimit: body.rowLimit ?? 25_000,
+      ...apiBody,
+      rowLimit,
       startRow,
-      dataState: body.dataState ?? 'final',
-      dimensions: body.dimensions ?? ['query', 'page'],
-      type: body.type ?? 'web',
-      aggregationType: body.aggregationType ?? 'auto',
+      dataState: apiBody.dataState ?? 'final',
+      dimensions: apiBody.dimensions ?? ['query', 'page'],
+      type: apiBody.type ?? 'web',
+      aggregationType: apiBody.aggregationType ?? 'auto',
     }
 
     const response = await authedFetch(
@@ -60,10 +94,13 @@ export async function querySearchAnalytics(
     const json = (await response.json()) as { rows?: GscRow[] }
     const rows = json.rows ?? []
     allRows.push(...rows)
-    if (rows.length < 25_000) {
+    if (
+      rows.length < rowLimit ||
+      (typeof maxRows === 'number' && allRows.length >= maxRows)
+    ) {
       break
     }
-    startRow += 25_000
+    startRow += rowLimit
   }
 
   db.prepare(
@@ -87,18 +124,12 @@ export async function queryPageMetrics(
   site: string,
   pageUrl: string,
   days = 28,
-): Promise<
-  | { clicks: number; impressions: number; ctr: number; position: number }
-  | undefined
-> {
-  const endDate = new Date()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
+): Promise<PageSearchMetrics | undefined> {
+  const { startDate, endDate } = searchDateRange(days)
 
   const result = await querySearchAnalytics(site, {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
+    startDate,
+    endDate,
     dimensions: ['page'],
     dimensionFilterGroups: [
       {
@@ -120,28 +151,46 @@ export async function queryPageMetrics(
     : undefined
 }
 
+export async function queryPagesMetrics(
+  site: string,
+  pageUrls: string[],
+  days = 28,
+): Promise<Map<string, PageSearchMetrics>> {
+  const wanted = new Set(pageUrls)
+  if (!wanted.size) return new Map()
+  const { startDate, endDate } = searchDateRange(days)
+  const result = await querySearchAnalytics(site, {
+    startDate,
+    endDate,
+    dimensions: ['page'],
+    rowLimit: 25_000,
+    maxRows: 25_000,
+  })
+
+  const metrics = new Map<string, PageSearchMetrics>()
+  for (const row of result.rows) {
+    const pageUrl = row.keys[0]
+    if (!pageUrl || !wanted.has(pageUrl)) continue
+    metrics.set(pageUrl, {
+      clicks: row.clicks,
+      impressions: row.impressions,
+      ctr: row.ctr,
+      position: row.position,
+    })
+  }
+  return metrics
+}
+
 export async function queryPageTopQuery(
   site: string,
   pageUrl: string,
   days = 28,
-): Promise<
-  | {
-      query: string
-      clicks: number
-      impressions: number
-      ctr: number
-      position: number
-    }
-  | undefined
-> {
-  const endDate = new Date()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
+): Promise<PageTopQuery | undefined> {
+  const { startDate, endDate } = searchDateRange(days)
 
   const result = await querySearchAnalytics(site, {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
+    startDate,
+    endDate,
     dimensions: ['query'],
     dimensionFilterGroups: [
       {
@@ -164,4 +213,38 @@ export async function queryPageTopQuery(
         position: row.position,
       }
     : undefined
+}
+
+export async function queryPagesTopQueries(
+  site: string,
+  pageUrls: string[],
+  days = 28,
+): Promise<Map<string, PageTopQuery>> {
+  const wanted = new Set(pageUrls)
+  if (!wanted.size) return new Map()
+  const { startDate, endDate } = searchDateRange(days)
+  const result = await querySearchAnalytics(site, {
+    startDate,
+    endDate,
+    dimensions: ['page', 'query'],
+    rowLimit: 25_000,
+    maxRows: 25_000,
+  })
+
+  const topQueries = new Map<string, PageTopQuery>()
+  for (const row of result.rows) {
+    const pageUrl = row.keys[0]
+    const query = row.keys[1]
+    if (!pageUrl || !query || !wanted.has(pageUrl) || topQueries.has(pageUrl)) {
+      continue
+    }
+    topQueries.set(pageUrl, {
+      query,
+      clicks: row.clicks,
+      impressions: row.impressions,
+      ctr: row.ctr,
+      position: row.position,
+    })
+  }
+  return topQueries
 }

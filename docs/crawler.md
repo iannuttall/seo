@@ -28,6 +28,7 @@ For each page, the crawler records:
 - internal links, external links, inlinks, depth, and internal link authority
 - images, missing alt text, Open Graph, Twitter card, schema types, hreflang, mixed content, compression, HTTPS, and HSTS
 - GEO signals such as semantic HTML, structured data, author, date, question headings, answer-ready blocks, lists, tables, FAQ schema, and `/llms.txt`
+- AI discovery signals such as per-bot robots.txt access, sitemap declarations, agent resource files, schema sameAs, and official social profile links
 
 ## Rules
 
@@ -101,3 +102,12 @@ seo crawl-reports --id <report-id>
 ```
 
 Saved reports are useful because agents can ask for top fixes, affected URLs, and GEO gaps without re-crawling.
+
+They also power the AI readiness and knowledge export commands:
+
+```bash
+seo ai-readiness --project keep
+seo entity-readiness --project keep
+seo llms generate --project keep --output llms.txt
+seo okf export --project keep --output ./okf
+```

@@ -70,9 +70,27 @@ These commands use GSC data. Most exclude branded queries by default when brand 
 ## AI-search helpers
 
 ```bash
+seo ai-readiness --project keep
+seo entity-readiness --project keep
+seo llms audit --project keep
+seo llms generate --project keep --output llms.txt
+seo okf export --project keep --output ./okf
+seo okf validate ./okf
+seo okf explain ./okf
+seo export knowledge --project keep --format okf --output ./okf
+seo export knowledge --project keep --format markdown --output knowledge.md
+seo export knowledge --project keep --format json --output knowledge.json
 seo seo-to-ai-query --project keep
 seo ai-referrals --project keep
 ```
+
+`ai-readiness` scores bot access, llms.txt, machine-readable structure, direct-answer content, entity signals, technical UX, and crawl completeness from a saved crawl.
+
+`entity-readiness` focuses on whether agents can connect the site to the right brand, people, products, and official profiles.
+
+`llms audit` checks whether `/llms.txt` exists and whether the crawl has enough good candidate pages. `llms generate` drafts a focused file from the saved crawl.
+
+`okf` exports a directory of Markdown files that follows the OKF bundle shape. `export knowledge` is the generic alias when you want OKF, Markdown, or JSON from the same saved crawl.
 
 `seo-to-ai-query` turns real search demand into prompts worth monitoring in AI engines.
 

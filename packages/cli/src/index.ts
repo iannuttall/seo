@@ -49,6 +49,7 @@ import {
   strikingDistanceCommand,
 } from './commands/product/index.js'
 import { pseoCommand } from './commands/pseo/index.js'
+import { aiReadinessCommand } from './commands/readiness.js'
 import {
   monthlyReportCommand,
   reportNarrativeCommand,
@@ -141,6 +142,7 @@ const allHelpSections: HelpSection[] = [
     commands: [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
+      ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
       ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
       ['seo rules', 'List crawler rule ids'],
@@ -247,6 +249,7 @@ const main = defineCommand({
     'traffic-anomaly': trafficAnomalyCommand,
     'update-correlate': updateCorrelateCommand,
     'ai-referrals': aiReferralsCommand,
+    'ai-readiness': aiReadinessCommand,
     'audit-page': auditPageCommand,
     'second-page': secondPageCommand,
     cannibal: cannibalCommand,

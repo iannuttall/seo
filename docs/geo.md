@@ -9,6 +9,8 @@ The crawler does not guess whether a page will be cited. It checks whether the p
 The GEO rules look for:
 
 - machine-readable structure through JSON-LD and schema
+- AI crawler access in robots.txt
+- optional agent resource files such as OpenAPI, MCP metadata, ai-plugin, and agent descriptors
 - semantic HTML such as `main`, `article`, and clean heading structure
 - authorship and trust signals
 - published or modified dates
@@ -17,6 +19,7 @@ The GEO rules look for:
 - lists, tables, and other extractable blocks
 - enough content depth to cite
 - `/llms.txt`
+- entity signals such as Organization, Person, Product, WebSite, sameAs, and official social links
 
 Run:
 
@@ -24,7 +27,36 @@ Run:
 seo crawl --project keep --severity medium
 ```
 
-For a focused GEO slice, use MCP tool `seo_geo_gaps` after a saved crawl.
+For focused readiness slices after a saved crawl:
+
+```bash
+seo ai-readiness --project keep
+seo entity-readiness --project keep
+seo llms audit --project keep
+```
+
+For agent workflows, use MCP tools `seo_ai_readiness`, `seo_entity_readiness`, `seo_llms_txt_audit`, and `seo_geo_gaps`.
+
+## Site knowledge exports
+
+Agents work better when the site has a compact, cited knowledge bundle.
+
+```bash
+seo llms generate --project keep --output llms.txt
+seo okf export --project keep --output ./okf
+seo okf validate ./okf
+seo okf explain ./okf
+```
+
+`llms.txt` is the short entry point. OKF is the richer site knowledge bundle: index, log, concepts, inventory, graph, caveats, and citations.
+
+You can also use the generic export command:
+
+```bash
+seo export knowledge --project keep --format okf --output ./okf
+seo export knowledge --project keep --format markdown --output knowledge.md
+seo export knowledge --project keep --format json --output knowledge.json
+```
 
 ## What the AI-search helpers do
 

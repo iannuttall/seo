@@ -29,6 +29,12 @@ seo mcp serve --test
 - `seo_top_fixes`
 - `seo_affected_urls`
 - `seo_geo_gaps`
+- `seo_ai_readiness`
+- `seo_entity_readiness`
+- `seo_llms_txt_audit`
+- `seo_llms_txt_generate`
+- `seo_okf_build`
+- `seo_okf_validate`
 - `seo_explain_issue`
 - `seo_list_rules`
 - `seo_get_crawl_report`
@@ -63,8 +69,9 @@ The MCP server also exposes tools for:
 2. Read `summary`, `topFixes`, `warnings`, and `caveats`.
 3. Use `seo_explain_issue` for unfamiliar rule ids.
 4. Use `seo_affected_urls` to get exact URLs for one fix.
-5. Use `seo_geo_gaps` when the user asks about AI-search readiness.
-6. Use saved report ids for follow-up questions.
+5. Use `seo_ai_readiness`, `seo_entity_readiness`, and `seo_geo_gaps` when the user asks about AI-search readiness.
+6. Use `seo_llms_txt_generate` or `seo_okf_build` when the user asks for agent-readable site knowledge.
+7. Use saved report ids for follow-up questions.
 
 This keeps the agent focused. It also avoids re-crawling when the user asks a second question.
 
@@ -73,4 +80,3 @@ This keeps the agent focused. It also avoids re-crawling when the user asks a se
 This repo now includes plugin metadata and standalone skills under `.claude-plugin` and `skills`.
 
 The plugin is not published to a marketplace yet. Use the files as the local packaging shape until the npm package name and public release path are final.
-

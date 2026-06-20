@@ -15,6 +15,7 @@ This is local first today. The same core is shaped so it can later run as a host
 - Ranks fixes by severity, affected URLs, search visibility, analytics value, and effort.
 - Explains every issue in plain English: why it matters, how to fix it, and how to verify the fix.
 - Saves reports locally so humans and agents can slice the same crawl without running it again.
+- Scores AI readiness, entity readiness, llms.txt coverage, and OKF/site knowledge exports from the same saved crawl.
 - Exposes the same workflows through CLI and MCP.
 
 ## Start here
@@ -80,6 +81,19 @@ Machine-readable output stays clean:
 seo crawl https://example.com --json --output crawl.json
 ```
 
+Use the saved crawl for AI and agent-readiness work:
+
+```bash
+seo crawl --project keep --save
+seo ai-readiness --project keep
+seo entity-readiness --project keep
+seo llms audit --project keep
+seo llms generate --project keep --output llms.txt
+seo okf export --project keep --output ./okf
+seo okf validate ./okf
+seo okf explain ./okf
+```
+
 Useful flags:
 
 | Flag | What it does |
@@ -117,20 +131,26 @@ The crawler tools are compact by default. Full pages and full issues are opt-in 
 
 ## GEO and AI-search readiness
 
-The crawler checks whether pages are easy for AI systems to understand and cite:
+The crawler checks whether pages and sites are easy for AI systems to understand and cite:
 
 - structured data
+- AI crawler access in robots.txt
+- agent resource files such as OpenAPI, MCP, and agent descriptors
 - semantic HTML
 - authorship
 - dates
 - direct answers under clear headings
 - tables, lists, and other extractable blocks
 - `/llms.txt`
+- entity signals such as Organization, Person, Product, sameAs, and official social profiles
 - thin pages that are unlikely to be cited
 
-There are also two AI-search support reports:
+There are also focused AI-search support reports:
 
 ```bash
+seo ai-readiness --project keep
+seo entity-readiness --project keep
+seo llms audit --project keep
 seo seo-to-ai-query --project keep
 seo ai-referrals --project keep
 ```
@@ -147,6 +167,10 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | MCP server | Yes | Yes |
 | Technical SEO crawl | Yes | Yes |
 | GEO checks | Yes | Yes |
+| AI readiness report | No | Yes |
+| llms.txt generator | No | Yes |
+| Entity readiness | No | Yes |
+| OKF/site knowledge export | No | Yes |
 | Rule guidance | Yes | Yes |
 | Rule count | 46 | 61 |
 | GSC joins | No | Yes |

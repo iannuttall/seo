@@ -38,8 +38,8 @@ export type TopFix = CrawlIssueGroup & {
 }
 
 const SEVERITY_SCORE: Record<RuleSeverity, number> = {
-  high: 1000,
-  medium: 500,
+  high: 5000,
+  medium: 1200,
   low: 100,
 }
 

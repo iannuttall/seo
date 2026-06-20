@@ -109,3 +109,46 @@ test('topFixes filters by category, severity, and URL pattern', () => {
     ['missing_meta_description'],
   )
 })
+
+test('topFixes keeps medium fixes above low sitewide noise', () => {
+  const pages = Array.from({ length: 5 }, (_, index) => ({
+    url: `https://example.com/page-${index}`,
+    finalUrl: `https://example.com/page-${index}`,
+    status: 200,
+    indexable: true,
+    wordCount: 500,
+    contentHash: `page-${index}`,
+    outgoingInternalCount: 2,
+    searchMetrics: {
+      clicks: 1,
+      impressions: 100,
+      ctr: 0.01,
+      position: 12,
+    },
+  }))
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages,
+    issues: [
+      ...pages.map((page) => ({
+        ruleId: 'twitter_card_missing' as const,
+        title: 'Twitter card missing',
+        category: 'social' as const,
+        severity: 'low' as const,
+        url: page.url,
+      })),
+      {
+        ruleId: 'geo_no_structured_data',
+        title: 'GEO: no machine-readable structure',
+        category: 'geo',
+        severity: 'medium',
+        url: pages[0]?.url ?? 'https://example.com/',
+      },
+    ],
+  })
+
+  const fixes = topFixes(report)
+
+  assert.equal(fixes[0]?.ruleId, 'geo_no_structured_data')
+  assert.equal(fixes[1]?.ruleId, 'twitter_card_missing')
+})

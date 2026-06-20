@@ -52,6 +52,7 @@ function frontmatter(values: Record<string, unknown>): string {
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) continue
     if (Array.isArray(value)) {
+      if (!value.length) continue
       lines.push(`${key}:`)
       for (const item of value) lines.push(`  - ${JSON.stringify(item)}`)
     } else {

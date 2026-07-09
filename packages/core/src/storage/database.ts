@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS http_cache (
   status INTEGER,
   headers_json TEXT,
   body_blob BLOB,
+  metadata_json TEXT,
   etag TEXT,
   fetched_at INTEGER,
   expires_at INTEGER
@@ -232,6 +233,7 @@ function initDb(database: Database.Database): void {
   database.pragma('busy_timeout = 5000')
   database.exec(CREATE_SQL)
   ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
+  ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
 }
 
 export function getDb(): Database.Database {

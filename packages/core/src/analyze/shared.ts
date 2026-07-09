@@ -25,11 +25,24 @@ export function normalizeText(value: string): string {
     .trim()
 }
 
+export function unicodeTokens(value: string): string[] {
+  const normalized = normalizeText(value)
+
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    const segmenter = new Intl.Segmenter('und', { granularity: 'word' })
+    return [...segmenter.segment(normalized)]
+      .filter((part) => part.isWordLike)
+      .map((part) => part.segment.trim())
+      .filter((token) => token.length > 1)
+  }
+
+  return (normalized.match(/[\p{L}\p{N}]+/gu) ?? []).filter(
+    (token) => token.length > 1,
+  )
+}
+
 export function tokenize(value: string): string[] {
-  return normalizeText(value)
-    .split(/[^a-z0-9]+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length > 1)
+  return unicodeTokens(value)
 }
 
 export function jaccard(a: string[], b: string[]): number {

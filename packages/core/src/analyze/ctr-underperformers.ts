@@ -1,10 +1,130 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import type { GscRow } from '../types.js'
+import {
+  createCtrBenchmarkContext,
+  roundedPosition,
+} from './opportunity-primitives.js'
 import { isLowActionabilityQuery } from './query-quality.js'
-import { CTR_BASELINE, defaultDateRange } from './shared.js'
+import { defaultDateRange } from './shared.js'
 
 function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
   return count === 1 ? singular : pluralLabel
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
+export type CtrUnderperformer = {
+  query: string
+  url: string
+  position: number
+  impressions: number
+  actualCtr: number
+  expectedCtr: number
+  clicks: number
+  expectedClicks: number
+  clickShortfall: number
+  benchmark: {
+    expectedCtr: number
+    source: string
+    peerRows: number
+    peerImpressions: number
+    qualifiedPeerImpressions: number
+    urlSamples: number
+    positiveUrlSamples: number
+  }
+  recommendation: {
+    principle: 'C.3'
+    evidenceRef: string
+    action: string
+    effort: 'S'
+    confidence: 'medium'
+  }
+}
+
+export function analyzeCtrUnderperformersFromRows(input: {
+  rows: GscRow[]
+  site: string
+  minImpressions?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
+}): {
+  items: CtrUnderperformer[]
+  totalClickShortfall: number
+  minImpressions: number
+} {
+  const minImpressions = input.minImpressions ?? 200
+  const benchmarkRows = input.rows.filter((row) => {
+    const query = row.keys[0] ?? ''
+    return (
+      row.position >= 1 &&
+      row.position <= 10 &&
+      row.impressions > 0 &&
+      !isLowActionabilityQuery(query) &&
+      !shouldExcludeBrandQuery({
+        query,
+        siteUrl: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      })
+    )
+  })
+  const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
+
+  const items = benchmarkRows
+    .filter((row) => row.impressions >= minImpressions)
+    .map((row): CtrUnderperformer => {
+      const rounded = roundedPosition(row.position)
+      const benchmark = benchmarkContext.forRow(row)
+      const expectedClicks = benchmark.ctr * row.impressions
+      const clickShortfall = Math.max(0, expectedClicks - row.clicks)
+
+      return {
+        query: row.keys[0] ?? '',
+        url: row.keys[1] ?? '',
+        position: row.position,
+        impressions: row.impressions,
+        actualCtr: row.ctr,
+        expectedCtr: benchmark.ctr,
+        clicks: row.clicks,
+        expectedClicks,
+        clickShortfall,
+        benchmark: {
+          expectedCtr: benchmark.ctr,
+          source: benchmark.source,
+          peerRows: benchmark.rows,
+          peerImpressions: benchmark.impressions,
+          qualifiedPeerImpressions: benchmark.qualifiedImpressions,
+          urlSamples: benchmark.urlSamples,
+          positiveUrlSamples: benchmark.positiveUrlSamples,
+        },
+        recommendation: {
+          principle: 'C.3',
+          evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${benchmark.ctr.toFixed(3)} at position ${rounded}, leaving about ${clickShortfall.toFixed(0)} clicks on the table.`,
+          action: `This page ranks on page one for "${row.keys[0]}" but gets fewer clicks than expected. Rewrite the title and meta description to match the main search intent; do not rewrite the page body unless rankings also drop.`,
+          effort: 'S',
+          confidence: 'medium',
+        },
+      }
+    })
+    .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
+    .sort(
+      (left, right) =>
+        right.clickShortfall - left.clickShortfall ||
+        compareText(left.query, right.query) ||
+        compareText(left.url, right.url),
+    )
+
+  return {
+    items,
+    totalClickShortfall: items.reduce(
+      (sum, item) => sum + item.clickShortfall,
+      0,
+    ),
+    minImpressions,
+  }
 }
 
 export async function ctrUnderperformersReport(input: {
@@ -14,7 +134,6 @@ export async function ctrUnderperformersReport(input: {
   includeBrand?: boolean
   refresh?: boolean
 }) {
-  const minImpressions = input.minImpressions ?? 200
   const range = defaultDateRange(28)
   const { rows } = await querySearchAnalytics(
     input.site,
@@ -26,54 +145,14 @@ export async function ctrUnderperformersReport(input: {
     },
     { refresh: input.refresh },
   )
-
-  const items = rows
-    .filter((row) => {
-      const query = row.keys[0] ?? ''
-      return (
-        row.position >= 1 &&
-        row.position <= 10 &&
-        row.impressions >= minImpressions &&
-        !isLowActionabilityQuery(query) &&
-        !shouldExcludeBrandQuery({
-          query,
-          siteUrl: input.site,
-          brandTerms: input.brandTerms,
-          includeBrand: input.includeBrand,
-        })
-      )
+  const { items, totalClickShortfall, minImpressions } =
+    analyzeCtrUnderperformersFromRows({
+      rows,
+      site: input.site,
+      minImpressions: input.minImpressions,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
     })
-    .map((row) => {
-      const rounded = Math.max(1, Math.min(10, Math.round(row.position)))
-      const expected = CTR_BASELINE[rounded] ?? 0.01
-      const expectedClicks = expected * row.impressions
-      const clickShortfall = Math.max(0, expectedClicks - row.clicks)
-      return {
-        query: row.keys[0] ?? '',
-        url: row.keys[1] ?? '',
-        position: row.position,
-        impressions: row.impressions,
-        actualCtr: row.ctr,
-        expectedCtr: expected,
-        clicks: row.clicks,
-        expectedClicks,
-        clickShortfall,
-        recommendation: {
-          principle: 'C.3',
-          evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${expected.toFixed(3)} at position ${rounded}, leaving about ${clickShortfall.toFixed(0)} clicks on the table.`,
-          action: `This page ranks on page one for "${row.keys[0]}" but gets fewer clicks than expected. Rewrite the title and meta description to match the main search intent; do not rewrite the page body unless rankings also drop.`,
-          effort: 'S' as const,
-          confidence: 'medium' as const,
-        },
-      }
-    })
-    .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
-    .sort((a, b) => b.clickShortfall - a.clickShortfall)
-
-  const totalClickShortfall = items.reduce(
-    (sum, item) => sum + item.clickShortfall,
-    0,
-  )
   const top = items[0]
 
   return {
@@ -94,7 +173,8 @@ export async function ctrUnderperformersReport(input: {
       `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
       `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
       `Only queries ranking position 1-10 with at least ${minImpressions} impressions were checked.`,
-      'Expected CTR is a directional baseline by rounded ranking position, not a promise of available clicks.',
+      'Expected CTR uses a robust site-aware position benchmark when enough peer data exists, otherwise the fallback position curve.',
+      'CTR benchmarks are directional heuristics, not promises of available clicks. Validate the search intent and SERP before editing.',
     ],
     recommendations: top
       ? [

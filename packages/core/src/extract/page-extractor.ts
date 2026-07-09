@@ -1,8 +1,13 @@
-import { Readability } from '@mozilla/readability'
 import { load } from 'cheerio'
-import DefuddleDefault from 'defuddle'
-import { parseHTML } from 'linkedom'
-import type { ExtractedPage, PageFetchResult } from '../types.js'
+import type {
+  ContentExtractor,
+  ExtractedPage,
+  PageFetchResult,
+} from '../types.js'
+import {
+  extractMainContent,
+  type MainContentDependencies,
+} from './main-content.js'
 
 function safeText(value?: string | null): string | undefined {
   const trimmed = value?.replace(/\s+/g, ' ').trim()
@@ -121,64 +126,14 @@ function imageDimensionsFromUrl(
   return { width, height }
 }
 
-async function extractMainContent(
-  fetchResult: PageFetchResult,
-  extractor: 'defuddle' | 'readability' = 'defuddle',
-) {
-  const { document } = parseHTML(fetchResult.html)
-
-  const readWithReadability = () => {
-    const reader = new Readability(document as never)
-    const article = reader.parse()
-    return {
-      text: article?.textContent ?? document.body.textContent ?? '',
-      excerpt: article?.excerpt ?? undefined,
-    }
-  }
-
-  if (extractor === 'readability') {
-    return readWithReadability()
-  }
-
-  const Defuddle = DefuddleDefault as unknown as new (
-    doc: unknown,
-  ) => {
-    parse(): { content?: string; excerpt?: string }
-  }
-  const original = {
-    log: console.log,
-    warn: console.warn,
-    error: console.error,
-  }
-
-  try {
-    console.log = () => undefined
-    console.warn = () => undefined
-    console.error = () => undefined
-    const article = new Defuddle(document).parse()
-    const textContent =
-      typeof article?.content === 'string'
-        ? load(article.content).text()
-        : undefined
-    return {
-      text: textContent ?? document.body.textContent ?? '',
-      excerpt: article?.excerpt ?? undefined,
-    }
-  } catch {
-    return readWithReadability()
-  } finally {
-    console.log = original.log
-    console.warn = original.warn
-    console.error = original.error
-  }
-}
-
 export async function extractPage(
   fetchResult: PageFetchResult,
-  extractor: 'defuddle' | 'readability' = 'defuddle',
+  extractor: ContentExtractor = 'defuddle',
+  dependencies: MainContentDependencies = {},
 ): Promise<ExtractedPage> {
   const $ = load(fetchResult.html)
-  const { text, excerpt } = await extractMainContent(fetchResult, extractor)
+  const content = extractMainContent(fetchResult, extractor, dependencies)
+  const { text, excerpt } = content
   const url = new URL(fetchResult.finalUrl)
 
   const headings = $('h1, h2, h3, h4, h5, h6')
@@ -373,7 +328,8 @@ export async function extractPage(
     answerable,
     contentText: text.replace(/\s+/g, ' ').trim(),
     excerpt,
-    wordCount: text.trim().split(/\s+/).filter(Boolean).length,
-    warnings: [...fetchResult.warnings],
+    wordCount: content.wordCount,
+    contentExtraction: content.diagnostics,
+    warnings: [...fetchResult.warnings, ...content.warnings],
   }
 }

@@ -134,7 +134,7 @@ export async function auditPage(input: {
     metrics,
     issues,
     recommendations: [],
-    warnings: fetched.warnings,
+    warnings: page.warnings,
   }
 
   report.recommendations = buildRecommendations(report)

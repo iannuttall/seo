@@ -185,6 +185,8 @@ export async function crawlOne(
         .length,
       indexable: false,
       wordCount: extracted.wordCount,
+      contentExtraction: extracted.contentExtraction,
+      warnings: extracted.warnings,
       contentHash: hashText(
         [
           extracted.title,

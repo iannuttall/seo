@@ -96,6 +96,13 @@ function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
       'Laroya is a last name. This page covers origin, popularity, rarity, and Philippines census data.',
     excerpt: undefined,
     wordCount: 100,
+    contentExtraction: {
+      requested: 'defuddle',
+      used: 'defuddle',
+      fallback: false,
+      wordCountSource: 'defuddle',
+      baseUrl: input.finalUrl ?? 'https://example.com/page/',
+    },
     warnings: [],
     ...input,
   }

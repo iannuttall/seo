@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { PageFetchResult } from '../types.js'
+import { extractMainContent } from './main-content.js'
 import { extractPage } from './page-extractor.js'
 
 function fetchResult(html: string): PageFetchResult {
@@ -142,5 +143,129 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.equal(page.structuredBlocks, 2)
   assert.equal(page.answerable, true)
   assert.match(page.contentText, /Choose the right widget/)
+  assert.deepEqual(page.contentExtraction, {
+    requested: 'readability',
+    used: 'readability',
+    fallback: false,
+    wordCountSource: 'local_cjk_aware',
+    baseUrl: 'https://example.com/articles/widget-guide',
+  })
   assert.deepEqual(page.warnings, ['fixture warning'])
+})
+
+test('Defuddle receives the final URL and preserves its metadata and word count', async () => {
+  const fetched = {
+    ...fetchResult('<main><p>Original page body</p></main>'),
+    url: 'https://example.com/old-location',
+    finalUrl: 'https://example.com/new-location',
+  }
+  let receivedUrl: string | undefined
+  let useAsync: boolean | undefined
+  const page = await extractPage(fetched, 'defuddle', {
+    parseDefuddle(_document, options) {
+      receivedUrl = options.url
+      useAsync = options.useAsync
+      return {
+        content: '<article><p>検索技術 alpha beta</p></article>',
+        description: 'A parser-provided description.',
+        wordCount: 6,
+        extractorType: 'article',
+      }
+    },
+  })
+
+  assert.equal(receivedUrl, fetched.finalUrl)
+  assert.equal(useAsync, false)
+  assert.equal(page.contentText, '検索技術 alpha beta')
+  assert.equal(page.excerpt, 'A parser-provided description.')
+  assert.equal(page.wordCount, 6)
+  assert.deepEqual(page.contentExtraction, {
+    requested: 'defuddle',
+    used: 'defuddle',
+    fallback: false,
+    wordCountSource: 'defuddle',
+    baseUrl: fetched.finalUrl,
+    extractorType: 'article',
+  })
+})
+
+test('Defuddle failures use a fresh Readability document and disclose fallback', async () => {
+  const fetched = fetchResult(`<!doctype html>
+    <html><head><title>Fallback</title></head><body>
+      <article><h1>Fallback article</h1><p>This content remains available after the primary extractor fails and is long enough for Readability to retain.</p></article>
+    </body></html>`)
+  const page = await extractPage(fetched, 'defuddle', {
+    parseDefuddle() {
+      throw new Error('fixture extractor failure')
+    },
+  })
+
+  assert.match(page.contentText, /content remains available/)
+  assert.deepEqual(page.contentExtraction, {
+    requested: 'defuddle',
+    used: 'readability',
+    fallback: true,
+    fallbackReason: 'defuddle_error',
+    fallbackDetail: 'fixture extractor failure',
+    wordCountSource: 'local_cjk_aware',
+    baseUrl: fetched.finalUrl,
+  })
+  assert.deepEqual(page.warnings, [
+    'fixture warning',
+    'Defuddle extraction fell back to Readability: fixture extractor failure',
+  ])
+})
+
+test('invalid Defuddle counts use local CJK-aware counting', () => {
+  const content = extractMainContent(
+    fetchResult(
+      '<!doctype html><html><body><article><p>Original</p></article></body></html>',
+    ),
+    'defuddle',
+    {
+      parseDefuddle() {
+        return {
+          content: '<article><p>検索技術 alpha beta</p></article>',
+          wordCount: Number.NaN,
+        }
+      },
+    },
+  )
+
+  assert.equal(content.wordCount, 6)
+  assert.equal(content.diagnostics.wordCountSource, 'local_cjk_aware')
+})
+
+test('empty Defuddle content falls back with explicit provenance', () => {
+  const content = extractMainContent(
+    fetchResult(`<!doctype html><html><body><article>
+      <h1>Usable fallback</h1>
+      <p>This readable page body remains available when Defuddle returns an empty result.</p>
+    </article></body></html>`),
+    'defuddle',
+    {
+      parseDefuddle() {
+        return { content: '', wordCount: 0 }
+      },
+    },
+  )
+
+  assert.match(content.text, /page body remains available/)
+  assert.equal(content.diagnostics.used, 'readability')
+  assert.equal(content.diagnostics.fallbackReason, 'defuddle_empty')
+  assert.deepEqual(content.warnings, [
+    'Defuddle extraction fell back to Readability: Defuddle returned no main content',
+  ])
+})
+
+test('Readability fallback word counts remain useful for CJK content', () => {
+  const content = extractMainContent(
+    fetchResult(
+      '<!doctype html><html><body><article><p>検索技術 alpha beta</p></article></body></html>',
+    ),
+    'readability',
+  )
+
+  assert.equal(content.wordCount, 6)
+  assert.equal(content.diagnostics.wordCountSource, 'local_cjk_aware')
 })

@@ -123,6 +123,11 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.pages[0]?.geo?.listCount, 1)
     assert.equal(report.pages[0]?.geo?.tableCount, 1)
     assert.equal(report.pages[0]?.outgoingExternalCount, 1)
+    assert.equal(report.pages[0]?.contentExtraction?.requested, 'defuddle')
+    assert.equal(
+      report.pages[0]?.contentExtraction?.baseUrl,
+      `${fixture.baseUrl}/`,
+    )
     assert.deepEqual(report.pages[0]?.internalAnchorSamples, [
       { href: `${fixture.baseUrl}/a`, text: 'About A' },
     ])

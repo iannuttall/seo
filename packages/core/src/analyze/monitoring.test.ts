@@ -130,6 +130,18 @@ test('crawl store preserves rich page snapshots', () => {
         h2Count: 3,
         imagesTotal: 4,
         imagesMissingAlt: 1,
+        contentExtraction: {
+          requested: 'defuddle',
+          used: 'readability',
+          fallback: true,
+          fallbackReason: 'defuddle_empty',
+          fallbackDetail: 'Defuddle returned no main content',
+          wordCountSource: 'local_cjk_aware',
+          baseUrl: url,
+        },
+        warnings: [
+          'Defuddle extraction fell back to Readability: Defuddle returned no main content',
+        ],
         outgoingExternalCount: 2,
         sampleExternalLinks: ['https://example.org/resource'],
         schemaTypes: ['Article'],
@@ -153,6 +165,8 @@ test('crawl store preserves rich page snapshots', () => {
   assert.equal(saved?.imagesMissingAlt, 1)
   assert.deepEqual(saved?.schemaTypes, ['Article'])
   assert.equal(saved?.geo?.structuredData, true)
+  assert.equal(saved?.contentExtraction?.fallbackReason, 'defuddle_empty')
+  assert.match(saved?.warnings?.[0] ?? '', /Readability/)
 })
 
 test('monitoringStatus flags saved crawl recommendations', () => {

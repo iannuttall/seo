@@ -1,4 +1,7 @@
-import type { PageFetchDiagnostics } from '../../types.js'
+import type {
+  ContentExtractionDiagnostics,
+  PageFetchDiagnostics,
+} from '../../types.js'
 
 export type CrawlPageSnapshot = {
   url: string
@@ -33,6 +36,8 @@ export type CrawlPageSnapshot = {
   indexable: boolean
   indexability?: string
   wordCount: number
+  contentExtraction?: ContentExtractionDiagnostics
+  warnings?: string[]
   contentHash: string
   mainContentHash?: string
   textRatio?: number

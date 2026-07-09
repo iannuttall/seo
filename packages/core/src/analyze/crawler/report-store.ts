@@ -1,7 +1,7 @@
 import { getDb } from '../../storage/database.js'
 import { type CrawlReport, normalizeLoadedCrawlReport } from './report.js'
 
-export const CRAWL_REPORT_STORAGE_VERSION = 1
+export const CRAWL_REPORT_STORAGE_VERSION = 2
 
 export type CrawlReportMeta = {
   id: string
@@ -103,11 +103,12 @@ function reportFromJson(value: string): CrawlReport {
 }
 
 function saveCrawlReportToSqlite(report: CrawlReport): CrawlReportMeta {
-  getDb()
+  const result = getDb()
     .prepare(
-      `INSERT OR REPLACE INTO crawl_reports
+      `INSERT INTO crawl_reports
       (id, config_hash, site_url, url, status, total_pages, issue_count, created_at, report_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO NOTHING`,
     )
     .run(
       report.id,
@@ -120,6 +121,12 @@ function saveCrawlReportToSqlite(report: CrawlReport): CrawlReportMeta {
       Date.parse(report.generatedAt),
       JSON.stringify(storageEnvelope(report)),
     )
+  if (result.changes === 0) {
+    const existing = getDb()
+      .prepare('SELECT * FROM crawl_reports WHERE id = ?')
+      .get(report.id) as CrawlReportRow | undefined
+    if (existing) return toMeta(existing)
+  }
   return {
     id: report.id,
     configHash: report.configHash,
@@ -142,14 +149,14 @@ function listCrawlReportsFromSqlite(
         .prepare(
           `SELECT * FROM crawl_reports
           WHERE site_url = ?
-          ORDER BY created_at DESC
+          ORDER BY created_at DESC, id DESC
           LIMIT ?`,
         )
         .all(input.site, limit) as CrawlReportRow[])
     : (getDb()
         .prepare(
           `SELECT * FROM crawl_reports
-          ORDER BY created_at DESC
+          ORDER BY created_at DESC, id DESC
           LIMIT ?`,
         )
         .all(limit) as CrawlReportRow[])
@@ -177,14 +184,14 @@ function latestCrawlReportFromSqlite(site?: string): CrawlReport | undefined {
         .prepare(
           `SELECT report_json FROM crawl_reports
           WHERE site_url = ?
-          ORDER BY created_at DESC
+          ORDER BY created_at DESC, id DESC
           LIMIT 1`,
         )
         .get(site) as { report_json: string } | undefined)
     : (getDb()
         .prepare(
           `SELECT report_json FROM crawl_reports
-          ORDER BY created_at DESC
+          ORDER BY created_at DESC, id DESC
           LIMIT 1`,
         )
         .get() as { report_json: string } | undefined)

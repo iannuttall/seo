@@ -111,6 +111,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'caveats',
         'config',
         'configHash',
+        'definitionId',
         'generatedAt',
         'id',
         'issueGroups',

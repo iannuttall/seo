@@ -29,6 +29,7 @@ function compactCrawlResult(
 ) {
   const payload: Record<string, unknown> = {
     id: report.id,
+    definitionId: report.definitionId,
     headline: `Crawled ${report.summary.totalPages} pages. Found ${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, and ${report.summary.lowIssues} low issues.`,
     status: report.status,
     configHash: report.configHash,

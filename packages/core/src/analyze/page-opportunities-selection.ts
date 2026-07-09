@@ -4,6 +4,7 @@ import type {
   PageOpportunityAnalysisInput,
   PageOpportunitySelection,
 } from './page-opportunities-types.js'
+import { samePageUrl } from './page-technical-signals.js'
 import { isLowActionabilityQuery } from './query-quality.js'
 
 const DEFAULT_MIN_IMPRESSIONS = 10
@@ -18,23 +19,6 @@ function integerInRange(
 ): number {
   if (value === undefined || !Number.isFinite(value)) return fallback
   return Math.min(maximum, Math.max(minimum, Math.floor(value)))
-}
-
-function normalizedUrl(value: string): string {
-  try {
-    const parsed = new URL(value)
-    parsed.hash = ''
-    if (parsed.pathname !== '/') {
-      parsed.pathname = parsed.pathname.replace(/\/$/, '')
-    }
-    return parsed.toString()
-  } catch {
-    return value.trim().replace(/\/$/, '')
-  }
-}
-
-export function samePage(left: string, right: string): boolean {
-  return normalizedUrl(left) === normalizedUrl(right)
 }
 
 function isHttpUrl(value: string): boolean {
@@ -122,7 +106,7 @@ export function selectTargetRows(input: {
       selection.invalidRows++
       continue
     }
-    if (!samePage(page, input.url)) {
+    if (!samePageUrl(page, input.url)) {
       selection.wrongPageRows++
       continue
     }

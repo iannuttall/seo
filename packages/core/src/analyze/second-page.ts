@@ -155,6 +155,8 @@ export async function secondPage(input: {
         url,
         page: extracted,
         fetchDiagnostics: fetched.diagnostics,
+        httpStatus: fetched.status,
+        warnings: fetched.warnings,
       })
     }
 

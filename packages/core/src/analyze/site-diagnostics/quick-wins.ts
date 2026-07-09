@@ -182,7 +182,9 @@ export async function quickWinsReport(input: {
       ? {
           requested: true,
           limit: input.verifyLimit ?? 5,
-          verified: items.filter((item) => item.contentVerification).length,
+          verified: items.filter(
+            (item) => item.contentVerification?.status === 'verified',
+          ).length,
           failed: items.filter(
             (item) => item.contentVerification?.status === 'failed',
           ).length,

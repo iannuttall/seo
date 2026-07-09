@@ -125,6 +125,12 @@ function fixtureReport() {
   })
 }
 
+function fixturePage(report: ReturnType<typeof fixtureReport>, index: number) {
+  const page = report.pages[index]
+  assert.ok(page)
+  return page
+}
+
 test('aiReadiness returns scored checks, bot access, and actions', () => {
   const report = aiReadiness(fixtureReport())
 
@@ -168,4 +174,125 @@ test('OKF bundle builds concept files and validates frontmatter', () => {
   assert.equal(bundle.conceptCount, 2)
   assert.equal(validation.valid, true)
   assert.equal(explanation.valid, true)
+  assert.match(explanation.summary, /passes seo OKF checks/)
+  assert.equal(bundle.generatedAt, '2026-06-20T00:00:00.000Z')
+  assert.equal(bundle.selection.eligiblePages, 2)
+})
+
+test('OKF concept paths stay unique when readable URL prefixes collide', () => {
+  const report = fixtureReport()
+  const home = fixturePage(report, 0)
+  const base = `https://example.com/${'same-prefix-'.repeat(10)}`
+  report.pages = [
+    { ...home, url: `${base}one`, finalUrl: `${base}one` },
+    { ...home, url: `${base}two`, finalUrl: `${base}two` },
+  ]
+
+  const bundle = buildOkfBundle(report)
+  const paths = bundle.files
+    .filter((file) => file.path.startsWith('concepts/'))
+    .filter((file) => file.path !== 'concepts/index.md')
+    .map((file) => file.path)
+
+  assert.equal(paths.length, 2)
+  assert.equal(new Set(paths).size, 2)
+  assert.equal(validateOkfFiles(bundle.files).valid, true)
+})
+
+test('OKF selection deduplicates final URLs and excludes non-2xx pages', () => {
+  const report = fixtureReport()
+  const home = fixturePage(report, 0)
+  const docs = fixturePage(report, 1)
+  report.pages = [
+    home,
+    {
+      ...home,
+      url: 'https://example.com/home-alias',
+    },
+    {
+      ...docs,
+      status: 301,
+    },
+  ]
+
+  const bundle = buildOkfBundle(report)
+
+  assert.equal(bundle.conceptCount, 1)
+  assert.equal(bundle.selection.sourcePages, 3)
+  assert.equal(bundle.selection.eligiblePages, 1)
+  assert.equal(bundle.selection.duplicateFinalUrls, 1)
+  assert.match(bundle.caveats.join(' '), /duplicate final URL/i)
+})
+
+test('OKF selection prioritizes observed search demand deterministically', () => {
+  const report = fixtureReport()
+  const home = fixturePage(report, 0)
+  const docs = fixturePage(report, 1)
+  report.pages = [
+    {
+      ...home,
+      url: 'https://example.com/high-authority',
+      finalUrl: 'https://example.com/high-authority',
+      internalLinkAuthorityScore: 100,
+    },
+    {
+      ...docs,
+      url: 'https://example.com/search-demand',
+      finalUrl: 'https://example.com/search-demand',
+      internalLinkAuthorityScore: 0,
+      searchMetrics: { clicks: 10, impressions: 100, ctr: 0.1, position: 4 },
+    },
+  ]
+
+  const first = buildOkfBundle(report, { maxConcepts: 1 })
+  const second = buildOkfBundle(report, { maxConcepts: 1 })
+  const concept = first.files.find(
+    (file) =>
+      file.path.startsWith('concepts/') && file.path !== 'concepts/index.md',
+  )
+
+  assert.match(concept?.content ?? '', /https:\/\/example\.com\/search-demand/)
+  assert.equal(first.selection.limitedPages, 1)
+  assert.deepEqual(first, second)
+})
+
+test('OKF rejects unsafe concept limits', () => {
+  const report = fixtureReport()
+
+  for (const maxConcepts of [0, -1, 1.5, 5_001, Number.NaN]) {
+    assert.throws(
+      () => buildOkfBundle(report, { maxConcepts }),
+      /whole number between 1 and 5000/,
+    )
+  }
+  assert.throws(
+    () => buildOkfBundle(report, { title: 'x'.repeat(201) }),
+    /1 to 200 characters/,
+  )
+})
+
+test('OKF validation rejects duplicate and unsafe paths', () => {
+  const bundle = buildOkfBundle(fixtureReport())
+  const concept = bundle.files.find(
+    (file) =>
+      file.path.startsWith('concepts/') && file.path !== 'concepts/index.md',
+  )
+  assert.ok(concept)
+
+  const duplicate = validateOkfFiles([...bundle.files, concept])
+  assert.equal(duplicate.valid, false)
+  assert.match(
+    duplicate.issues.map((issue) => issue.message).join(' '),
+    /duplicated/,
+  )
+
+  const unsafe = validateOkfFiles([
+    ...bundle.files,
+    { path: '../outside.md', content: '# outside' },
+  ])
+  assert.equal(unsafe.valid, false)
+  assert.match(
+    unsafe.issues.map((issue) => issue.message).join(' '),
+    /safe relative/,
+  )
 })

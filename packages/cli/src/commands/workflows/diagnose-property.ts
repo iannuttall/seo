@@ -76,11 +76,13 @@ function printTechnicalSection(
   )
 }
 
-function reportFollowups(
+export function reportFollowups(
   report: DiagnoseWorkflowReport,
-  input: { crawlStartUrl?: string } = {},
+  input: { crawlStartUrl?: string; projectId?: string } = {},
 ) {
-  const site = `--site ${shellArg(report.site)}`
+  const identity = input.projectId
+    ? `--project ${shellArg(input.projectId)}`
+    : `--site ${shellArg(report.site)}`
   const diagnosis = report.output.narrative.diagnosis
   const commands: Array<{ command: string; why: string }> = []
   const skippedNames = new Set(
@@ -89,14 +91,14 @@ function reportFollowups(
 
   addFollowup(
     commands,
-    `seo refresh-priorities ${site} --verify-content --limit 25`,
+    `seo refresh-priorities ${identity} --verify-content --limit 25`,
     'Turn the report into a ranked action queue with content checks.',
   )
 
   if (diagnosis.decay.summary.rows > 0) {
     addFollowup(
       commands,
-      `seo decaying ${site} --limit 25`,
+      `seo decaying ${identity} --limit 25`,
       'Inspect pages and queries losing clicks.',
     )
   }
@@ -104,7 +106,7 @@ function reportFollowups(
   if (diagnosis.cannibalization.items.length > 0) {
     addFollowup(
       commands,
-      `seo cannibal ${site} --limit 25`,
+      `seo cannibal ${identity} --limit 25`,
       'Find queries split across competing URLs.',
     )
   }
@@ -112,7 +114,7 @@ function reportFollowups(
   if (diagnosis.quickWins.summary.rows > 0) {
     addFollowup(
       commands,
-      `seo quick-wins ${site} --verify-content --verify-limit 5`,
+      `seo quick-wins ${identity} --verify-content --verify-limit 5`,
       'Check high-ranking pages with weak CTR or missing query coverage.',
     )
   }
@@ -120,7 +122,7 @@ function reportFollowups(
   if (diagnosis.strikingDistance.summary.opportunities > 0) {
     addFollowup(
       commands,
-      `seo second-page ${site} --verify-content --verify-limit 5`,
+      `seo second-page ${identity} --verify-content --verify-limit 5`,
       'Work pages sitting just outside page-one rankings.',
     )
   }
@@ -131,12 +133,12 @@ function reportFollowups(
   ) {
     addFollowup(
       commands,
-      `seo quick-wins ${site} --min-impressions 10 --verify-content --verify-limit 5`,
+      `seo quick-wins ${identity} --min-impressions 10 --verify-content --verify-limit 5`,
       'Sparse GSC data: lower thresholds and look for early content wins.',
     )
     addFollowup(
       commands,
-      `seo second-page ${site} --min-impressions 10 --verify-content --verify-limit 5`,
+      `seo second-page ${identity} --min-impressions 10 --verify-content --verify-limit 5`,
       'Sparse GSC data: inspect early second-page opportunities.',
     )
   }
@@ -155,14 +157,14 @@ function reportFollowups(
   if (input.crawlStartUrl && !hasTechnicalBaseline(report.site)) {
     addFollowup(
       commands,
-      `seo crawl --url ${shellArg(input.crawlStartUrl)} ${site} --save`,
+      `seo crawl --url ${shellArg(input.crawlStartUrl)} ${identity} --save`,
       'Create the first technical crawler baseline with plain-English fixes and JSON-ready issue data.',
     )
   }
 
   addFollowup(
     commands,
-    `seo technical-watch ${site} --limit 50`,
+    `seo technical-watch ${identity} --limit 50`,
     'Save a crawl/index baseline so future reports can flag technical drift.',
   )
 
@@ -170,10 +172,8 @@ function reportFollowups(
 }
 
 function printReportFollowups(
-  report: DiagnoseWorkflowReport,
-  input: { crawlStartUrl?: string } = {},
+  commands: Array<{ command: string; why: string }>,
 ): void {
-  const commands = reportFollowups(report, input)
   if (!commands.length) {
     return
   }
@@ -244,21 +244,29 @@ function workflowCommandMeta(input: {
       const technicalCrawl = input.printFollowups
         ? savedTechnicalSection(selection.site)
         : undefined
+      const followups = input.printFollowups
+        ? reportFollowups(outputReport, {
+            crawlStartUrl:
+              selection.client?.startUrl ?? startUrlForSite(selection.site),
+            projectId: selection.client?.id,
+          })
+        : undefined
       if (json) {
         printJson(
-          technicalCrawl ? { ...outputReport, technicalCrawl } : outputReport,
+          technicalCrawl || followups
+            ? {
+                ...outputReport,
+                ...(technicalCrawl ? { technicalCrawl } : {}),
+                ...(followups ? { nextCommands: followups } : {}),
+              }
+            : outputReport,
         )
         return
       }
       process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
       printWorkflow(outputReport)
       printTechnicalSection(technicalCrawl)
-      if (input.printFollowups) {
-        printReportFollowups(outputReport, {
-          crawlStartUrl:
-            selection.client?.startUrl ?? startUrlForSite(selection.site),
-        })
-      }
+      if (followups) printReportFollowups(followups)
     },
   })
 }

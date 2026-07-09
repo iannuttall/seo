@@ -357,6 +357,7 @@ export const crawlReportSummarySchema = z.object({
 
 export const crawlReportSchema = z.object({
   id: z.string(),
+  definitionId: z.string(),
   projectId: z.string().optional(),
   site: z.string().optional(),
   ga4PropertyId: z.string().optional(),

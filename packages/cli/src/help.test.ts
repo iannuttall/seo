@@ -184,6 +184,7 @@ test('crawl-reports compares latest against the previous saved report', async ()
   const configDir = await mkdtemp(join(tmpdir(), 'seo-cli-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-cli-cache-'))
   const env = { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir }
+  let snapshotRequests = 0
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {
       res.setHeader('content-type', 'text/plain')
@@ -197,38 +198,48 @@ test('crawl-reports compares latest against the previous saved report', async ()
       return
     }
     res.setHeader('content-type', 'text/html')
+    snapshotRequests += 1
     res.end(
-      '<title>Snapshot fixture page</title><meta name="description" content="Snapshot fixture page"><h1>Snapshot fixture</h1><p>Enough text for a saved crawl report fixture.</p>',
+      `<title>Snapshot fixture ${snapshotRequests}</title><meta name="description" content="Snapshot fixture page"><h1>Snapshot fixture</h1><p>Enough text for saved crawl report fixture ${snapshotRequests}.</p>`,
     )
   })
 
   try {
-    await runSeo(
-      [
-        'crawl',
-        `${fixture.baseUrl}/before`,
-        '--max-pages',
-        '1',
-        '--no-sitemap',
-        '--no-external',
-        '--save',
-        '--json',
-      ],
-      env,
-    )
-    await runSeo(
-      [
-        'crawl',
-        `${fixture.baseUrl}/after`,
-        '--max-pages',
-        '1',
-        '--no-sitemap',
-        '--no-external',
-        '--save',
-        '--json',
-      ],
-      env,
-    )
+    const beforeRun = JSON.parse(
+      await runSeo(
+        [
+          'crawl',
+          `${fixture.baseUrl}/snapshot`,
+          '--max-pages',
+          '1',
+          '--no-sitemap',
+          '--no-external',
+          '--refresh',
+          '--save',
+          '--json',
+        ],
+        env,
+      ),
+    ) as { id: string; definitionId: string }
+    const afterRun = JSON.parse(
+      await runSeo(
+        [
+          'crawl',
+          `${fixture.baseUrl}/snapshot`,
+          '--max-pages',
+          '1',
+          '--no-sitemap',
+          '--no-external',
+          '--refresh',
+          '--save',
+          '--json',
+        ],
+        env,
+      ),
+    ) as { id: string; definitionId: string }
+
+    assert.notEqual(beforeRun.id, afterRun.id)
+    assert.equal(beforeRun.definitionId, afterRun.definitionId)
 
     const output = await runSeo(
       [
@@ -242,12 +253,16 @@ test('crawl-reports compares latest against the previous saved report', async ()
       env,
     )
     const diff = JSON.parse(output) as {
-      before: { url: string }
-      after: { url: string }
+      before: { id: string; url: string }
+      after: { id: string; url: string }
+      summary: { titleChanges: number; contentChanges: number }
     }
 
-    assert.equal(diff.before.url, `${fixture.baseUrl}/before`)
-    assert.equal(diff.after.url, `${fixture.baseUrl}/after`)
+    assert.notEqual(diff.before.id, diff.after.id)
+    assert.equal(diff.before.url, `${fixture.baseUrl}/snapshot`)
+    assert.equal(diff.after.url, `${fixture.baseUrl}/snapshot`)
+    assert.equal(diff.summary.titleChanges, 1)
+    assert.equal(diff.summary.contentChanges, 1)
   } finally {
     await fixture.close()
     await rm(configDir, { recursive: true, force: true })

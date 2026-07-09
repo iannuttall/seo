@@ -127,6 +127,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       structured: [
         'caveats',
         'configHash',
+        'definitionId',
         'headline',
         'id',
         'status',

@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
@@ -161,6 +161,7 @@ export type CrawlReportSummary = {
 
 export type CrawlReport = {
   id: string
+  definitionId: string
   projectId?: string
   site?: string
   ga4PropertyId?: string
@@ -239,7 +240,7 @@ export function crawlConfigHash(config: CrawlConfigInput): string {
     .slice(0, 16)
 }
 
-export function crawlReportId(input: {
+export function crawlDefinitionId(input: {
   config: CrawlConfigInput
   site?: string
   ga4PropertyId?: string
@@ -253,7 +254,11 @@ export function crawlReportId(input: {
     .update(JSON.stringify(normalized))
     .digest('hex')
     .slice(0, 20)
-  return `crawl_${hash}`
+  return `crawl_def_${hash}`
+}
+
+export function crawlRunId(): string {
+  return `crawl_${randomUUID().replaceAll('-', '')}`
 }
 
 export function groupCrawlIssues(issues: CrawlIssue[]): CrawlIssueGroup[] {
@@ -538,6 +543,7 @@ function deriveInternalLinkAuthority(
 }
 
 export function createCrawlReport(input: {
+  id?: string
   config: CrawlConfigInput
   pages?: CrawlPageSnapshot[]
   issues?: CrawlIssue[]
@@ -553,6 +559,11 @@ export function createCrawlReport(input: {
   generatedAt?: string
 }): CrawlReport {
   const config = sanitizeCrawlConfig(normalizeCrawlConfig(input.config))
+  const definitionId = crawlDefinitionId({
+    config,
+    site: input.site,
+    ga4PropertyId: input.ga4PropertyId,
+  })
   const pagesWithLinks = deriveInternalLinkAuthority(
     input.pages ?? [],
     input.linkGraph,
@@ -564,11 +575,8 @@ export function createCrawlReport(input: {
   const safeIssues = sanitizeIssues(issues)
   const pages = scorePages(safePagesWithLinks, safeIssues)
   return {
-    id: crawlReportId({
-      config,
-      site: input.site,
-      ga4PropertyId: input.ga4PropertyId,
-    }),
+    id: input.id ?? crawlRunId(),
+    definitionId,
     projectId: input.projectId,
     site: input.site,
     ga4PropertyId: input.ga4PropertyId,
@@ -600,6 +608,13 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
   )
   return {
     ...(sanitizeTenantValue(report) as CrawlReport),
+    definitionId:
+      report.definitionId ??
+      crawlDefinitionId({
+        config: report.config,
+        site: report.site,
+        ga4PropertyId: report.ga4PropertyId,
+      }),
     summary: summarizeCrawlReport({ pages, issues, stats: report.summary }),
     pages,
     issues,

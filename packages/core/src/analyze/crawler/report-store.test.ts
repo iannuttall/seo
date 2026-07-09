@@ -39,13 +39,16 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
 
   assert.equal(saved.id, second.id)
   assert.equal(saved.storageVersion, CRAWL_REPORT_STORAGE_VERSION)
-  assert.equal(updated.id, second.id)
+  assert.equal(updated.id, rerun.id)
+  assert.notEqual(rerun.id, second.id)
+  assert.equal(rerun.definitionId, second.definitionId)
   assert.equal(loadCrawlReport(first.id)?.id, first.id)
-  assert.equal(loadCrawlReport(second.id)?.status, 'partial')
-  assert.equal(latestCrawlReport(site)?.id, second.id)
+  assert.equal(loadCrawlReport(second.id)?.status, 'completed')
+  assert.equal(loadCrawlReport(rerun.id)?.status, 'partial')
+  assert.equal(latestCrawlReport(site)?.id, rerun.id)
   assert.deepEqual(
-    listCrawlReports({ site, limit: 2 }).map((item) => item.id),
-    [second.id, first.id],
+    listCrawlReports({ site, limit: 3 }).map((item) => item.id),
+    [rerun.id, second.id, first.id],
   )
   assert.deepEqual(
     listCrawlReports({ site, limit: 1 }).map((item) => item.storageVersion),
@@ -62,9 +65,35 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
   assert.equal(loadCrawlReport(first.id), undefined)
   assert.equal(deleteCrawlReport(first.id), false)
   assert.deepEqual(
-    listCrawlReports({ site, limit: 2 }).map((item) => item.id),
-    [second.id],
+    listCrawlReports({ site, limit: 3 }).map((item) => item.id),
+    [rerun.id, second.id],
   )
+})
+
+test('crawl report store never replaces an existing run id', () => {
+  const site = `sc-domain:immutable-${randomUUID()}.example`
+  const id = `crawl_${randomUUID().replaceAll('-', '')}`
+  const original = createCrawlReport({
+    id,
+    site,
+    generatedAt: '2026-06-19T00:02:00.000Z',
+    config: { url: `https://${site.slice('sc-domain:'.length)}/` },
+  })
+  const conflicting = createCrawlReport({
+    id,
+    site,
+    generatedAt: '2026-06-19T00:03:00.000Z',
+    config: { url: `https://${site.slice('sc-domain:'.length)}/` },
+    status: 'failed',
+  })
+
+  saveCrawlReport(original)
+  const saved = saveCrawlReport(conflicting)
+
+  assert.equal(saved.status, 'completed')
+  assert.equal(saved.createdAt, original.generatedAt)
+  assert.equal(loadCrawlReport(id)?.status, 'completed')
+  assert.equal(loadCrawlReport(id)?.generatedAt, original.generatedAt)
 })
 
 test('crawl report store recomputes derived fields on load', () => {
@@ -106,6 +135,7 @@ test('crawl report store recomputes derived fields on load', () => {
   const legacySummary = legacyJson.summary as Record<string, unknown>
   delete legacySummary.healthScore
   delete legacySummary.geoReadinessScore
+  delete legacyJson.definitionId
   legacyJson.issueGroups = []
 
   getDb()
@@ -119,6 +149,7 @@ test('crawl report store recomputes derived fields on load', () => {
   assert.equal(loaded?.pages[0]?.seoScore, 70)
   assert.equal(loaded?.pages[0]?.geoScore, 15)
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
+  assert.equal(loaded?.definitionId, report.definitionId)
 })
 
 test('crawl report loading stays idempotent after derived normalization', () => {

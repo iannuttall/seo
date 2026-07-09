@@ -3,7 +3,8 @@ import { test } from 'node:test'
 import {
   type CrawlIssue,
   crawlConfigHash,
-  crawlReportId,
+  crawlDefinitionId,
+  crawlRunId,
   createCrawlReport,
   groupCrawlIssues,
   normalizeCrawlConfig,
@@ -60,20 +61,20 @@ test('crawlConfigHash is stable for equivalent configs', () => {
   assert.equal(a, b)
 })
 
-test('crawlReportId is stable for equivalent configs and scoped by site', () => {
-  const a = crawlReportId({
+test('crawlDefinitionId is stable for equivalent configs and scoped by site', () => {
+  const a = crawlDefinitionId({
     config: { url: 'https://example.com', include: ['/b', '/a'] },
     site: 'sc-domain:example.com',
   })
-  const b = crawlReportId({
+  const b = crawlDefinitionId({
     config: { url: 'https://example.com/', include: ['/a', '/b'] },
     site: 'sc-domain:example.com',
   })
-  const c = crawlReportId({
+  const c = crawlDefinitionId({
     config: { url: 'https://example.com/', include: ['/a', '/b'] },
     site: 'sc-domain:other.example',
   })
-  const d = crawlReportId({
+  const d = crawlDefinitionId({
     config: { url: 'https://example.com/', include: ['/a', '/b'] },
     site: 'sc-domain:example.com',
     ga4PropertyId: '123',
@@ -82,7 +83,15 @@ test('crawlReportId is stable for equivalent configs and scoped by site', () => 
   assert.equal(a, b)
   assert.notEqual(a, c)
   assert.notEqual(a, d)
-  assert.match(a, /^crawl_[a-f0-9]{20}$/)
+  assert.match(a, /^crawl_def_[a-f0-9]{20}$/)
+})
+
+test('crawlRunId creates a unique execution id', () => {
+  const first = crawlRunId()
+  const second = crawlRunId()
+
+  assert.notEqual(first, second)
+  assert.match(first, /^crawl_[a-f0-9]{32}$/)
 })
 
 test('createCrawlReport summarizes pages and grouped issues', () => {
@@ -140,7 +149,8 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   })
 
   assert.equal(report.generatedAt, '2026-06-19T00:00:00.000Z')
-  assert.match(report.id, /^crawl_[a-f0-9]{20}$/)
+  assert.match(report.id, /^crawl_[a-f0-9]{32}$/)
+  assert.match(report.definitionId, /^crawl_def_[a-f0-9]{20}$/)
   assert.equal(report.summary.totalPages, 2)
   assert.equal(report.summary.statusErrors, 1)
   assert.equal(report.summary.discoveredUrls, 2)

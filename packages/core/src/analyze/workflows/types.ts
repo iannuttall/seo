@@ -38,7 +38,7 @@ export type PriorityQueueItem = {
     | 'observed_clicks'
     | 'heuristic_ctr_click_shortfall'
     | 'heuristic_priority_score'
-    | 'heuristic_impression_fragmentation'
+    | 'heuristic_multi_url_exposure'
     | 'ordinal'
   confidence: 'high' | 'medium' | 'low'
   template?: {

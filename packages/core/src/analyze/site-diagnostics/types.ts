@@ -2,39 +2,18 @@ import type { Recommendation } from '../../types.js'
 import type { PageTemplate, TemplateSummary } from '../page-patterns.js'
 
 export type {
+  CannibalItem,
+  CannibalPage,
+  CannibalReport,
+  CannibalSelection,
+  CannibalSuppression,
+  CannibalSuppressionReason,
+} from './cannibal-types.js'
+export type {
   QuickWinGroup,
   QuickWinItem,
   QuickWinTemplateRecommendation,
 } from './quick-wins-types.js'
-
-export type CannibalSuppressionReason =
-  | 'brand_query'
-  | 'quoted_boilerplate'
-  | 'local_or_entity_intent'
-  | 'template_overlap'
-
-export interface CannibalSuppression {
-  query: string
-  reason: CannibalSuppressionReason
-  urlCount: number
-  template?: PageTemplate
-  evidenceRef: string
-}
-
-export interface CannibalItem {
-  query: string
-  pages: Array<{
-    url: string
-    clicks: number
-    impressions: number
-    position: number
-    template: PageTemplate
-  }>
-  hhi: number
-  ownerUrl: string
-  template?: PageTemplate
-  recommendation: Recommendation
-}
 
 export interface DecayItem {
   query: string

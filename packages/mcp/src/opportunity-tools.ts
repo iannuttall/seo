@@ -49,22 +49,46 @@ export function registerOpportunityTools(server: McpServer): void {
   server.registerTool(
     'seo_cannibal',
     {
-      description: 'Detect keyword cannibalisation',
+      description:
+        'Find multi-URL query exposure candidates for intent and technical review',
       inputSchema: {
-        ...mcpReportInputSchema(['site', 'minImpressions', 'includeBrand']),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'minImpressions',
+          'includeBrand',
+          'refresh',
+        ]),
+        days: z.number().int().min(1).max(548).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
       },
     },
-    async ({ site, minImpressions, includeBrand }) => {
+    async ({
+      site,
+      days,
+      limit,
+      minImpressions,
+      brandTerms,
+      includeBrand,
+      refresh,
+    }) => {
       try {
         const result = await cannibalReport({
           site,
+          days,
+          limit,
           minImpressions,
+          brandTerms,
           includeBrand,
+          refresh,
         })
-        return toolSuccess(
-          `${result.items.length} cannibalisation clusters found; ${result.suppressed.length} likely false positives suppressed.`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

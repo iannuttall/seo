@@ -108,10 +108,25 @@ test('long help and crawler command help are available', async () => {
     ['crawl', '--help'],
     ['crawl-reports', '--help'],
     ['internal-links', '--help'],
+    ['cannibal', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
+  }
+})
+
+test('cannibal help exposes bounded discovery controls', async () => {
+  const output = await runSeo(['cannibal', '--help'])
+
+  for (const flag of [
+    '--days',
+    '--limit',
+    '--min-impressions',
+    '--brand-terms',
+    '--refresh',
+  ]) {
+    assert.match(output, new RegExp(flag))
   }
 })
 

@@ -6,6 +6,7 @@ import type { TemplateSummary } from './page-patterns.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import { defaultDateRange } from './shared.js'
 import {
+  analyzeCannibalRows,
   analyzeQuickWinsFromRows,
   cannibalReport,
   decayingReport,
@@ -187,14 +188,82 @@ function emptyDecay(input: {
 
 function emptyCannibal(input: {
   site: string
+  days?: number
+  startDate?: string
+  endDate?: string
 }): Awaited<ReturnType<typeof cannibalReport>> {
+  const range = fallbackRange(input)
+  const rangeDays =
+    Math.floor(
+      (new Date(`${range.endDate}T00:00:00.000Z`).getTime() -
+        new Date(`${range.startDate}T00:00:00.000Z`).getTime()) /
+        86_400_000,
+    ) + 1
+  const analysis = analyzeCannibalRows({ site: input.site, rows: [] })
   return {
+    schemaVersion: 1,
     site: input.site,
     generatedAt: new Date().toISOString(),
+    range,
+    rangeDays,
+    dataStatus: 'unavailable',
+    source: {
+      provider: 'google-search-console',
+      searchType: 'web',
+      dataState: 'final',
+      pageExposure: {
+        dimensions: ['query', 'page'],
+        aggregationType: 'auto',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      propertyDemand: {
+        dimensions: ['query'],
+        aggregationType: 'byProperty',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      completeness: 'unavailable',
+    },
+    methodology: {
+      id: 'gsc_url_overlap_v2',
+      version: 2,
+      minimumPageImpressions: 10,
+      minimumPageImpressionShare: 0.1,
+      maximumDominantPageShare: 0.8,
+      matching: 'normalized_exact_query',
+      finding: 'url-overlap-candidate',
+      requiresIntentReview: true,
+    },
+    verification: {
+      status: 'not-requested',
+      technicalStateChecked: false,
+      searchIntentChecked: false,
+    },
+    filters: analysis.filters,
+    selection: analysis.selection,
+    summary: {
+      eligibleClusters: 0,
+      returnedClusters: 0,
+      suppressedQueries: 0,
+      brandFiltering: 'excluded',
+      verdict: 'Multi-URL query analysis was unavailable.',
+    },
     templates: [],
     suppressed: [],
     suppressionSummary: {},
     items: [],
+    caveats: [
+      'Multi-URL query analysis was skipped because required GSC data was unavailable.',
+    ],
+    recommendations: [
+      'Run this section again after Search Console query/page data is available.',
+    ],
+    ledgerSummary: 'GSC: 0 calls, 0 rows.',
   }
 }
 
@@ -370,13 +439,11 @@ function buildPriorities(input: {
 
   if (input.cannibal.items.length) {
     priorities.push({
-      label: 'Resolve cannibalisation',
-      reason: `${input.cannibal.items.length} split-query clusters found.`,
+      label: 'Review multi-URL query candidates',
+      reason: `${input.cannibal.selection.eligibleClusters} multi-URL query candidates found.`,
       action:
-        input.cannibal.suppressed.length > input.cannibal.items.length
-          ? 'Review the remaining split-query clusters manually. Many template/local false positives were filtered out, so these are the cases most likely to need a decision.'
-          : 'For each split query, decide whether the URLs answer the same intent. If yes, pick one main URL and consolidate links/canonicals. If no, make each page target clearer.',
-      confidence: 'medium',
+        'Confirm whether each URL set satisfies the same intent and inspect technical state. Consolidate only verified duplicate or same-intent pages; otherwise clarify the distinction.',
+      confidence: 'low',
     })
   }
 
@@ -493,6 +560,10 @@ export async function diagnoseProperty(input: {
       () =>
         cannibalReport({
           site: input.site,
+          days: input.days,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          limit,
           brandTerms: input.brandTerms,
           includeBrand: input.includeBrand,
           refresh: input.refresh,
@@ -567,7 +638,7 @@ export async function diagnoseProperty(input: {
       updateMatches: update.overlappingUpdates.length,
       largestPageMovements: page.items.length,
       decayItems: decay.items.length,
-      cannibalItems: cannibal.items.length,
+      cannibalItems: cannibal.selection.eligibleClusters,
       strikingDistanceItems: striking.items.length,
       quickWinItems: quickWins.items.length,
     },

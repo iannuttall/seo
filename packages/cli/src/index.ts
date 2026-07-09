@@ -134,7 +134,7 @@ const allHelpSections: HelpSection[] = [
     commands: [
       ['seo diagnose', 'Run raw end-to-end diagnosis'],
       ['seo decaying', 'Find pages and queries losing clicks'],
-      ['seo cannibal', 'Find competing URLs for the same query'],
+      ['seo cannibal', 'Review queries exposed across multiple URLs'],
       ['seo ctr-underperformers', 'Find weak CTR by ranking position'],
       ['seo query-cluster', 'Cluster repeated demand themes'],
       ['seo page-opportunities', 'Analyze one URL for growth ideas'],

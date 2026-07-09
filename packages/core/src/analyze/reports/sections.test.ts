@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
-import { analyzeQuickWinsFromRows } from '../site-diagnostics.js'
+import {
+  analyzeCannibalRows,
+  analyzeQuickWinsFromRows,
+} from '../site-diagnostics.js'
 import { analyzeStrikingDistanceRows } from '../striking-distance.js'
 import { contentOpportunityBullets, headlineLine } from './sections.js'
 
@@ -65,6 +68,74 @@ function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
     items: [],
     ledgerSummary: 'No provider calls recorded.',
     warnings: [],
+  }
+}
+
+function emptyCannibal(): DiagnosePropertyReport['cannibalization'] {
+  const analysis = analyzeCannibalRows({
+    site: 'sc-domain:example.com',
+    rows: [],
+  })
+  return {
+    schemaVersion: 1,
+    site: 'sc-domain:example.com',
+    generatedAt: '',
+    range: { startDate: '2026-05-01', endDate: '2026-05-28' },
+    rangeDays: 28,
+    dataStatus: 'empty',
+    source: {
+      provider: 'google-search-console',
+      searchType: 'web',
+      dataState: 'final',
+      pageExposure: {
+        dimensions: ['query', 'page'],
+        aggregationType: 'auto',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      propertyDemand: {
+        dimensions: ['query'],
+        aggregationType: 'byProperty',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      completeness: 'complete',
+    },
+    methodology: {
+      id: 'gsc_url_overlap_v2',
+      version: 2,
+      minimumPageImpressions: 10,
+      minimumPageImpressionShare: 0.1,
+      maximumDominantPageShare: 0.8,
+      matching: 'normalized_exact_query',
+      finding: 'url-overlap-candidate',
+      requiresIntentReview: true,
+    },
+    verification: {
+      status: 'not-requested',
+      technicalStateChecked: false,
+      searchIntentChecked: false,
+    },
+    filters: analysis.filters,
+    selection: analysis.selection,
+    summary: {
+      eligibleClusters: 0,
+      returnedClusters: 0,
+      suppressedQueries: 0,
+      brandFiltering: 'excluded',
+      verdict: 'No retained rows.',
+    },
+    items: [],
+    suppressed: [],
+    suppressionSummary: {},
+    templates: [],
+    caveats: [],
+    recommendations: [],
+    ledgerSummary: 'GSC: 0 calls, 0 rows.',
   }
 }
 
@@ -144,14 +215,7 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       groups: [],
       templates: [],
     },
-    cannibalization: {
-      site: 'sc-domain:example.com',
-      generatedAt: '',
-      items: [],
-      suppressed: [],
-      suppressionSummary: {},
-      templates: [],
-    },
+    cannibalization: emptyCannibal(),
     strikingDistance: {
       site: 'sc-domain:example.com',
       generatedAt: '',

@@ -134,7 +134,15 @@ export const reportSurfaces = [
       file: 'packages/mcp/src/opportunity-tools.ts',
       marker: "'seo_cannibal'",
     },
-    options: [common.site, common.includeBrand, common.minImpressions],
+    options: [
+      common.site,
+      common.days,
+      common.limit,
+      common.includeBrand,
+      common.minImpressions,
+      common.brandTerms,
+      common.refresh,
+    ],
   },
   {
     id: 'community-intent',

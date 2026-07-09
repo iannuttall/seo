@@ -1,4 +1,4 @@
-// biome-ignore-all lint/nursery/noExcessiveLinesPerFile: central rule guidance registry for CLI and MCP parity.
+// biome-ignore-all lint/style/noExcessiveLinesPerFile: central rule guidance registry for CLI and MCP parity.
 
 type RuleDefinition = {
   id: string

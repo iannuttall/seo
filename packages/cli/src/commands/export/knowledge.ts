@@ -1,17 +1,17 @@
 import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 import {
   aiReadiness,
   auditLlmsTxt,
   buildOkfBundle,
   type CrawlReport,
   entityReadiness,
-  type OkfFile,
-  validateOkfFiles,
+  okfConceptLimit,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, stringArg } from '../../args.js'
+import { jsonFlag, strictNumberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue } from '../../utils.js'
+import { writeOkfDirectory } from '../okf-files.js'
 import { resolveSavedCrawlReport } from '../readiness.js'
 
 type KnowledgeFormat = 'okf' | 'markdown' | 'json'
@@ -24,15 +24,6 @@ async function writeOrPrint(path: string | undefined, content: string) {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, content)
   process.stdout.write(`Wrote ${path}\n`)
-}
-
-async function writeOkfFiles(outDir: string, files: OkfFile[]): Promise<void> {
-  await mkdir(outDir, { recursive: true })
-  for (const file of files) {
-    const path = join(outDir, file.path)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, file.content)
-  }
 }
 
 function formatArg(value: unknown): KnowledgeFormat {
@@ -166,16 +157,21 @@ export const exportKnowledgeCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const format = formatArg(args.format)
+    const maxConcepts =
+      format === 'okf'
+        ? okfConceptLimit(
+            strictNumberArg(args['max-concepts'], '--max-concepts'),
+          )
+        : undefined
     const report = await resolveSavedCrawlReport(args, { json })
     const output = stringArg(args.output)
 
     if (format === 'okf') {
       const bundle = buildOkfBundle(report, {
-        maxConcepts: numberArg(args['max-concepts']),
+        maxConcepts,
       })
       const outDir = output ?? './okf'
-      await writeOkfFiles(outDir, bundle.files)
-      const validation = validateOkfFiles(bundle.files)
+      const validation = await writeOkfDirectory(outDir, bundle.files)
       if (json) {
         printJson({ format, output: outDir, bundle, validation })
         return

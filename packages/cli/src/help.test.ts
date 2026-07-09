@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import {
   createServer,
   type IncomingMessage,
@@ -239,6 +239,36 @@ test('report JSON fails clearly when Google auth is missing', async () => {
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('OKF JSON validation failures use a failing exit code', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'seo-okf-invalid-'))
+  try {
+    await writeFile(join(directory, 'index.md'), '# Not an OKF bundle\n')
+    const result = await runSeoResult(['okf', 'validate', directory, '--json'])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 1)
+    assert.equal(output.valid, false)
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('OKF rejects invalid concept limits before reading crawl state', async () => {
+  for (const value of ['later', '0', '1.5', '5001']) {
+    const result = await runSeoResult([
+      'okf',
+      'export',
+      '--max-concepts',
+      value,
+      '--json',
+    ])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
 

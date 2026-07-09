@@ -1,46 +1,14 @@
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
 import {
   buildOkfBundle,
   explainOkfValidation,
-  type OkfFile,
+  okfConceptLimit,
   validateOkfFiles,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, stringArg } from '../args.js'
+import { jsonFlag, strictNumberArg, stringArg } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
+import { readOkfMarkdownFiles, writeOkfDirectory } from './okf-files.js'
 import { resolveSavedCrawlReport } from './readiness.js'
-
-async function writeOkfFiles(outDir: string, files: OkfFile[]): Promise<void> {
-  await mkdir(outDir, { recursive: true })
-  for (const file of files) {
-    const path = join(outDir, file.path)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, file.content)
-  }
-}
-
-async function readMarkdownFiles(root: string): Promise<OkfFile[]> {
-  const files: OkfFile[] = []
-  async function walk(dir: string, prefix = ''): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true })
-    for (const entry of entries) {
-      const relative = prefix ? `${prefix}/${entry.name}` : entry.name
-      const fullPath = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        await walk(fullPath, relative)
-        continue
-      }
-      if (!entry.isFile() || !entry.name.endsWith('.md')) continue
-      files.push({
-        path: relative,
-        content: await readFile(fullPath, 'utf8'),
-      })
-    }
-  }
-  await walk(root)
-  return files.sort((a, b) => a.path.localeCompare(b.path))
-}
 
 function printValidation(
   filesPath: string,
@@ -118,14 +86,16 @@ export const okfExportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const maxConcepts = okfConceptLimit(
+      strictNumberArg(args['max-concepts'], '--max-concepts'),
+    )
     const report = await resolveSavedCrawlReport(args, { json })
     const bundle = buildOkfBundle(report, {
-      maxConcepts: numberArg(args['max-concepts']),
+      maxConcepts,
       title: stringArg(args.title),
     })
     const output = stringArg(args.output) ?? './okf'
-    await writeOkfFiles(output, bundle.files)
-    const validation = validateOkfFiles(bundle.files)
+    const validation = await writeOkfDirectory(output, bundle.files)
     if (json) {
       printJson({ output, bundle, validation })
       return
@@ -159,14 +129,14 @@ export const okfValidateCommand = defineCommand({
   run: async ({ args }) => {
     const path = stringArg(args.path)
     if (!path) throw new Error('Pass an OKF bundle directory.')
-    const files = await readMarkdownFiles(path)
+    const files = await readOkfMarkdownFiles(path)
     const validation = validateOkfFiles(files)
+    if (!validation.valid) process.exitCode = 1
     if (jsonFlag(args)) {
       printJson(validation)
       return
     }
     printValidation(path, validation)
-    if (!validation.valid) process.exitCode = 1
   },
 })
 
@@ -190,8 +160,9 @@ export const okfExplainCommand = defineCommand({
   run: async ({ args }) => {
     const path = stringArg(args.path)
     if (!path) throw new Error('Pass an OKF bundle directory.')
-    const validation = validateOkfFiles(await readMarkdownFiles(path))
+    const validation = validateOkfFiles(await readOkfMarkdownFiles(path))
     const explanation = explainOkfValidation(validation)
+    if (!explanation.valid) process.exitCode = 1
     if (jsonFlag(args)) {
       printJson(explanation)
       return
@@ -210,7 +181,6 @@ export const okfExplainCommand = defineCommand({
         process.stdout.write(`- ${action}\n`)
       }
     }
-    if (!explanation.valid) process.exitCode = 1
   },
 })
 

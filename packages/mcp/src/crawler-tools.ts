@@ -670,14 +670,15 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_okf_build',
     {
       description:
-        'Build an OKF site knowledge bundle from a saved or freshly crawled report. Returns markdown files in memory.',
+        'Build a compact OKF site knowledge manifest from a saved or freshly crawled report. Set includeFiles for bounded inline markdown.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
-        maxConcepts: z.number().int().positive().optional(),
-        title: z.string().optional(),
+        maxConcepts: z.number().int().min(1).max(100).optional(),
+        includeFiles: z.boolean().optional(),
+        title: z.string().min(1).max(200).optional(),
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -689,6 +690,7 @@ export function registerCrawlerTools(server: McpServer): void {
       site,
       maxPages,
       maxConcepts,
+      includeFiles,
       title,
       fetchIntervalCap,
       fetchIntervalMs,
@@ -714,11 +716,22 @@ export function registerCrawlerTools(server: McpServer): void {
             'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
           )
         }
-        const bundle = buildOkfBundle(report, { maxConcepts, title })
+        const bundle = buildOkfBundle(report, {
+          maxConcepts: maxConcepts ?? (includeFiles ? 25 : 100),
+          title,
+        })
         const validation = validateOkfFiles(bundle.files)
+        const { files, ...manifest } = bundle
         return toolSuccess(
           `Built OKF bundle with ${bundle.conceptCount} concepts.`,
-          { bundle, validation },
+          {
+            manifest: {
+              ...manifest,
+              filePaths: files.map((file) => file.path),
+            },
+            ...(includeFiles ? { files } : {}),
+            validation,
+          },
         )
       } catch (error) {
         return toolError(error)
@@ -735,17 +748,20 @@ export function registerCrawlerTools(server: McpServer): void {
         files: z
           .array(
             z.object({
-              path: z.string(),
-              content: z.string(),
+              path: z.string().min(1).max(512),
+              content: z.string().max(2_000_000),
             }),
           )
-          .min(1),
+          .min(1)
+          .max(5_006),
       },
     },
     async ({ files }) => {
       const validation = validateOkfFiles(files)
       return toolSuccess(
-        validation.valid ? 'OKF bundle is valid.' : 'OKF bundle has issues.',
+        validation.valid
+          ? 'Bundle passes seo OKF checks.'
+          : 'Bundle has seo OKF issues.',
         {
           validation,
           explanation: explainOkfValidation(validation),

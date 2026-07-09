@@ -184,6 +184,42 @@ test('crawler MCP structured output schema stays stable', async () => {
       ],
       topFixVerification: ['command', 'expected'],
     })
+
+    const okfTool = tools.get('seo_okf_build')
+    assert.ok(okfTool)
+    assert.deepEqual(keys(okfTool.config.inputSchema), [
+      'fetchIntervalCap',
+      'fetchIntervalMs',
+      'includeFiles',
+      'maxConcepts',
+      'maxPages',
+      'refresh',
+      'reportId',
+      'site',
+      'title',
+      'url',
+    ])
+    const okf = await okfTool.handler({
+      url: fixture.baseUrl,
+      maxPages: 1,
+      maxConcepts: 1,
+    })
+    const okfStructured = okf.structuredContent as JsonRecord
+    assert.deepEqual(keys(okfStructured), ['manifest', 'validation'])
+    assert.equal('files' in okfStructured, false)
+    assert.deepEqual(keys(okfStructured.manifest), [
+      'caveats',
+      'conceptCount',
+      'crawlStatus',
+      'filePaths',
+      'generatedAt',
+      'reportId',
+      'rootTitle',
+      'schemaVersion',
+      'selection',
+      'sourceUrl',
+      'warnings',
+    ])
   } finally {
     await fixture.close()
   }

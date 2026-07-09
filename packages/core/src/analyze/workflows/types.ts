@@ -34,6 +34,12 @@ export type PriorityQueueItem = {
   category: 'technical' | 'content' | 'serp' | 'authority' | 'strategy'
   score: number
   impact: number
+  impactKind?:
+    | 'observed_clicks'
+    | 'heuristic_ctr_click_shortfall'
+    | 'heuristic_priority_score'
+    | 'heuristic_impression_fragmentation'
+    | 'ordinal'
   confidence: 'high' | 'medium' | 'low'
   template?: {
     id: string
@@ -55,6 +61,7 @@ export type PriorityQueueItem = {
       category: PriorityQueueItem['category']
       score: number
       impact: number
+      impactKind?: PriorityQueueItem['impactKind']
       confidence: PriorityQueueItem['confidence']
       template?: PriorityQueueItem['template']
       analytics?: PriorityQueueItem['analytics']

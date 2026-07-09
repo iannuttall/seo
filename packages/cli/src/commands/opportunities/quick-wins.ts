@@ -2,6 +2,7 @@ import { quickWinsReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  csvArg,
   fetchRateArg,
   jsonFlag,
   numberArg,
@@ -33,6 +34,8 @@ export const quickWinsCommand = defineCommand({
     project: { type: 'string', description: 'Saved project id or name.' },
     client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs([
+      'days',
+      'limit',
       'includeBrand',
       'minImpressions',
       'verifyContent',
@@ -43,6 +46,10 @@ export const quickWinsCommand = defineCommand({
       'fetchIntervalMs',
       'refresh',
     ]),
+    'brand-terms': {
+      type: 'string',
+      description: 'Comma-separated brand terms to exclude.',
+    },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -57,8 +64,13 @@ export const quickWinsCommand = defineCommand({
     })
     const report = await quickWinsReport({
       site: selection.site,
+      days: numberArg(args.days),
+      limit: numberArg(args.limit),
       minImpressions: numberArg(args['min-impressions']),
-      brandTerms: selection.client?.brandTerms,
+      brandTerms: [
+        ...(selection.client?.brandTerms ?? []),
+        ...(csvArg(args['brand-terms']) ?? []),
+      ],
       includeBrand: booleanArg(args['include-brand']),
       verifyContent,
       verifyLimit,
@@ -72,20 +84,24 @@ export const quickWinsCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Quick wins', formatCount(report.summary.rows)],
+      ['Eligible rows', formatCount(report.summary.eligibleRows)],
+      ['Returned rows', formatCount(report.summary.returnedRows)],
       [
         'Repeated-query clusters',
         formatCount(report.summary.repeatedQueryGroups),
       ],
       ['Template patterns', formatCount(report.summary.templatePatterns)],
-      ['Estimated lift', formatCount(report.summary.totalEstimatedClickLift)],
+      [
+        'CTR click shortfall',
+        formatCount(report.summary.returnedEstimatedCtrClickShortfall),
+      ],
       ['Brand queries', report.summary.brandFiltering],
       ['Verification', verificationSummary(report)],
       ['Verdict', report.summary.verdict],
     ])
     printNotes('Why this matters', [
-      'Quick wins already rank on page one, so better SERP framing and clearer on-page intent can recover clicks without creating new pages.',
-      'Template patterns show when the same fix can be applied across many similar pages.',
+      'These rows have GSC average positions from 4 to 10 and observed CTR below a site-peer or versioned fallback target.',
+      'Page evidence is needed before treating a CTR shortfall as a title, content, or technical finding.',
     ])
     printNotes('Recommended actions', report.recommendations)
     printNotes('Report caveats', report.caveats)
@@ -96,11 +112,12 @@ export const quickWinsCommand = defineCommand({
 
     if (report.templateRecommendations.length) {
       printLimitedTable(
-        ['Template', 'Rows', 'Lift', 'Impr', 'Action'],
+        ['Template', 'URLs', 'Rows', 'Shortfall', 'Impr', 'Action'],
         report.templateRecommendations.map((template) => [
           truncate(template.templateLabel, 34),
-          formatCount(template.count),
-          formatCount(template.totalEstimatedClickLift),
+          formatCount(template.urlCount),
+          formatCount(template.rowCount),
+          formatCount(template.totalEstimatedCtrClickShortfall),
           formatCount(template.totalImpressions),
           truncate(template.action, 72),
         ]),
@@ -109,7 +126,7 @@ export const quickWinsCommand = defineCommand({
         'Top template actions',
         report.templateRecommendations.map((template) => ({
           label: template.templateLabel,
-          context: `${formatCount(template.count)} rows, ${formatCount(template.totalEstimatedClickLift)} estimated click lift`,
+          context: `${formatCount(template.urlCount)} URLs, ${formatCount(template.totalEstimatedCtrClickShortfall)} heuristic CTR click shortfall`,
           action: `${template.action} ${template.evidence}`,
         })),
       )
@@ -117,11 +134,20 @@ export const quickWinsCommand = defineCommand({
 
     if (report.groups.length) {
       printLimitedTable(
-        ['Cluster', 'Rows', 'Lift', 'Impr', 'Sample URL', 'Action'],
+        [
+          'Cluster',
+          'URLs',
+          'Rows',
+          'Shortfall',
+          'Impr',
+          'Sample URL',
+          'Action',
+        ],
         report.groups.map((group) => [
           truncate(group.label, 44),
-          formatCount(group.count),
-          formatCount(group.totalEstimatedClickLift),
+          formatCount(group.urlCount),
+          formatCount(group.rowCount),
+          formatCount(group.totalEstimatedCtrClickShortfall),
           formatCount(group.totalImpressions),
           truncate(group.sampleUrls[0] ?? '-', 46),
           truncate(group.recommendation, 72),
@@ -131,7 +157,7 @@ export const quickWinsCommand = defineCommand({
         'Top cluster actions',
         report.groups.map((group) => ({
           label: group.label,
-          context: `${formatCount(group.count)} rows, ${formatCount(group.totalEstimatedClickLift)} estimated click lift`,
+          context: `${formatCount(group.urlCount)} URLs, ${formatCount(group.totalEstimatedCtrClickShortfall)} heuristic CTR click shortfall`,
           action: group.recommendation,
         })),
       )
@@ -144,8 +170,8 @@ export const quickWinsCommand = defineCommand({
         'URL',
         'Pos',
         'Impr',
-        'CTR / expected',
-        'Lift',
+        'CTR / target',
+        'Shortfall',
         'Fetch',
         'Check',
         'Action',
@@ -156,8 +182,8 @@ export const quickWinsCommand = defineCommand({
         truncate(item.url, 48),
         formatPosition(item.position),
         formatCount(item.impressions),
-        `${formatPercent(item.ctr)} / ${formatPercent(item.expectedCtr)}`,
-        formatCount(item.estimatedClickLift),
+        `${formatPercent(item.ctr)} / ${formatPercent(item.targetCtr)}`,
+        formatCount(item.estimatedCtrClickShortfall),
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
         formatContentCheck(item.contentVerification?.classification),
         truncate(item.recommendation.action, 64),

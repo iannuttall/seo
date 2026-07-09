@@ -9,29 +9,31 @@ function row(input: {
   clicks: number
   impressions: number
   position: number
+  ctr?: number
 }): GscRow {
   return {
     keys: [input.query, input.url],
     clicks: input.clicks,
     impressions: input.impressions,
-    ctr: input.impressions ? input.clicks / input.impressions : 0,
+    ctr:
+      input.ctr ?? (input.impressions ? input.clicks / input.impressions : 0),
     position: input.position,
   }
 }
 
-function peerRows(position = 9): GscRow[] {
-  return [20, 18, 15, 12, 10].map((clicks, index) =>
+function peerRows(clicks = [20, 18, 15, 12, 10], position = 9): GscRow[] {
+  return clicks.map((value, index) =>
     row({
       query: `seo peer ${index}`,
       url: `https://example.com/peer-${index}`,
-      clicks,
+      clicks: value,
       impressions: 1000,
       position,
     }),
   )
 }
 
-test('quick wins use current-position site peers instead of position three', () => {
+test('uses an all-sample leave-target-URL-out CTR heuristic', () => {
   const candidate = row({
     query: 'technical seo audit',
     url: 'https://example.com/audit',
@@ -39,9 +41,15 @@ test('quick wins use current-position site peers instead of position three', () 
     impressions: 10_000,
     position: 9,
   })
-
+  const sameUrl = row({
+    query: 'seo audit software',
+    url: 'https://example.com/audit/#features',
+    clicks: 500,
+    impressions: 1000,
+    position: 5,
+  })
   const result = analyzeQuickWinsFromRows({
-    rows: [candidate, ...peerRows()],
+    rows: [candidate, sameUrl, ...peerRows()],
     site: 'sc-domain:example.com',
   })
   const item = result.items.find(
@@ -49,33 +57,23 @@ test('quick wins use current-position site peers instead of position three', () 
   )
 
   assert.ok(item)
-  assert.equal(item.expectedCtr, 0.018)
-  assert.equal(item.estimatedClickLift, 180)
-  assert.equal(item.benchmark.source.includes('leave_one_out'), true)
+  assert.equal(item.targetCtr, 0.018)
+  assert.equal(item.estimatedCtrClickShortfall, 180)
+  assert.equal(item.benchmark.excludedTargetRows, 2)
+  assert.equal(item.benchmark.peerRows, 5)
   assert.equal(item.benchmark.qualifiedPeerImpressions, 5000)
-})
-
-test('quick wins exclude rows already beating their position benchmark', () => {
-  const candidate = row({
-    query: 'technical seo audit',
-    url: 'https://example.com/audit',
-    clicks: 200,
-    impressions: 10_000,
-    position: 9,
-  })
-
-  const result = analyzeQuickWinsFromRows({
-    rows: [candidate, ...peerRows()],
-    site: 'sc-domain:example.com',
-  })
-
-  assert.equal(
-    result.items.some((item) => item.query === candidate.keys[0]),
-    false,
+  assert.match(item.benchmark.source, /leave_target_url_out/)
+  assert.equal(item.benchmark.samplePopulation, 'all_qualified_url_samples')
+  assert.equal(item.priority.estimatedClickLift, false)
+  assert.equal(Object.hasOwn(item, 'expectedCtr'), false)
+  assert.equal(Object.hasOwn(item, 'estimatedClickLift'), false)
+  assert.match(
+    item.recommendation.impactEstimate ?? '',
+    /not a traffic forecast/,
   )
 })
 
-test('quick wins keep invalid and excluded rows out of peer benchmarks', () => {
+test('includes zero-CTR qualified URLs in the site percentile', () => {
   const candidate = row({
     query: 'technical seo audit',
     url: 'https://example.com/audit',
@@ -83,106 +81,211 @@ test('quick wins keep invalid and excluded rows out of peer benchmarks', () => {
     impressions: 10_000,
     position: 9,
   })
-  const excluded = [
+  const result = analyzeQuickWinsFromRows({
+    rows: [candidate, ...peerRows([0, 0, 10, 20, 30])],
+    site: 'sc-domain:example.com',
+  })
+
+  assert.equal(result.items[0]?.targetCtr, 0.02)
+  assert.equal(result.items[0]?.benchmark.urlSamples, 5)
+  assert.equal(result.items[0]?.benchmark.positiveUrlSamples, 3)
+})
+
+test('treats a zero site percentile as evidence before applying the floor', () => {
+  const peers = peerRows([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 20, 30])
+  const result = analyzeQuickWinsFromRows({
+    rows: [
+      row({
+        query: 'technical seo audit',
+        url: 'https://example.com/audit',
+        clicks: 0,
+        impressions: 10_000,
+        position: 9,
+      }),
+      ...peers,
+    ],
+    site: 'sc-domain:example.com',
+  })
+
+  assert.equal(result.items[0]?.targetCtr, 0.0075)
+  assert.match(result.items[0]?.benchmark.source ?? '', /site_gsc_.*floored/)
+  assert.doesNotMatch(
+    result.items[0]?.benchmark.source ?? '',
+    /builtin_position_ctr_curve/,
+  )
+})
+
+test('publishes versioned fallback provenance for sparse peers', () => {
+  const result = analyzeQuickWinsFromRows({
+    rows: [
+      row({
+        query: 'technical seo audit',
+        url: 'https://example.com/audit',
+        clicks: 0,
+        impressions: 10_000,
+        position: 9,
+      }),
+      ...peerRows([20, 18, 15, 12]),
+    ],
+    site: 'sc-domain:example.com',
+  })
+
+  assert.equal(result.items[0]?.targetCtr, 0.015)
+  assert.equal(
+    result.items[0]?.benchmark.source,
+    'builtin_position_ctr_curve_v1',
+  )
+  assert.deepEqual(result.methodology.benchmark.fallback, {
+    id: 'seo_builtin_position_ctr',
+    version: 1,
+    kind: 'built_in_heuristic',
+    curve: {
+      '1': 0.27,
+      '2': 0.15,
+      '3': 0.1,
+      '4': 0.07,
+      '5': 0.05,
+      '6': 0.035,
+      '7': 0.025,
+      '8': 0.02,
+      '9': 0.015,
+      '10': 0.012,
+    },
+  })
+})
+
+test('validates rows and records sequential sparse states', () => {
+  const invalid: GscRow[] = [
     row({
-      query: 'example login',
-      url: 'https://example.com/login',
-      clicks: 900,
+      query: 'bad url',
+      url: '/relative',
+      clicks: 0,
       impressions: 1000,
-      position: 9,
+      position: 8,
     }),
     row({
-      query: 'site:example.com',
-      url: 'https://example.com/operator',
-      clicks: 900,
+      query: 'bad ctr',
+      url: 'https://example.com/bad',
+      clicks: 0,
       impressions: 1000,
-      position: 9,
+      position: 8,
+      ctr: Number.NaN,
     }),
     row({
-      query: 'page two noise',
-      url: 'https://example.com/page-two',
-      clicks: 900,
+      query: 'too many clicks',
+      url: 'https://example.com/clicks',
+      clicks: 1001,
       impressions: 1000,
-      position: 20,
+      position: 8,
     }),
   ]
-
   const result = analyzeQuickWinsFromRows({
-    rows: [candidate, ...peerRows(), ...excluded],
+    rows: [
+      ...invalid,
+      row({
+        query: 'page two',
+        url: 'https://example.com/two',
+        clicks: 0,
+        impressions: 1000,
+        position: 10.001,
+      }),
+      row({
+        query: 'example login',
+        url: 'https://example.com/login',
+        clicks: 0,
+        impressions: 1000,
+        position: 8,
+      }),
+      row({
+        query: 'low demand',
+        url: 'https://example.com/low',
+        clicks: 0,
+        impressions: 199,
+        position: 8,
+      }),
+    ],
     site: 'sc-domain:example.com',
     brandTerms: ['example'],
   })
 
-  assert.equal(result.benchmarkRows, 6)
-  assert.equal(result.items[0]?.expectedCtr, 0.018)
+  assert.equal(result.dataStatus, 'filtered')
+  assert.equal(result.selection.invalidRows, 3)
+  assert.equal(result.selection.outsideBenchmarkPositionRows, 1)
+  assert.equal(result.selection.brandRows, 1)
+  assert.equal(result.selection.belowMinimumRows, 1)
 })
 
-test('quick wins use qualified peers below the reporting threshold', () => {
-  const candidate = row({
-    query: 'technical seo audit',
-    url: 'https://example.com/audit',
-    clicks: 0,
-    impressions: 10_000,
-    position: 9,
-  })
-  const peers = Array.from({ length: 10 }, (_, index) =>
-    row({
-      query: `long-tail peer ${index}`,
-      url: `https://example.com/long-tail-${index}`,
-      clicks: index < 5 ? 2 : 1,
-      impressions: 100,
-      position: 9,
-    }),
-  )
-
-  const result = analyzeQuickWinsFromRows({
-    rows: [candidate, ...peers],
-    site: 'sc-domain:example.com',
-    minImpressions: 200,
-  })
-
-  assert.equal(result.items.length, 1)
-  assert.equal(
-    result.items[0]?.benchmark.source.includes('site_gsc_position_bucket'),
-    true,
-  )
-  assert.equal(result.items[0]?.benchmark.qualifiedPeerImpressions, 1000)
-})
-
-test('quick wins break equal lift ties by query and URL', () => {
+test('uses inclusive GSC average-position boundaries from 4 through 10', () => {
   const result = analyzeQuickWinsFromRows({
     rows: [
       row({
-        query: 'beta query',
-        url: 'https://example.com/b',
+        query: 'below boundary',
+        url: 'https://example.com/below',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3.999,
       }),
       row({
-        query: 'alpha query',
-        url: 'https://example.com/z',
+        query: 'lower boundary',
+        url: 'https://example.com/lower',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 4,
       }),
       row({
-        query: 'alpha query',
-        url: 'https://example.com/a',
+        query: 'upper boundary',
+        url: 'https://example.com/upper',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 10,
+      }),
+      row({
+        query: 'above boundary',
+        url: 'https://example.com/above',
+        clicks: 0,
+        impressions: 1000,
+        position: 10.001,
       }),
     ],
     site: 'sc-domain:example.com',
   })
 
-  assert.deepEqual(
-    result.items.map((item) => [item.query, item.url]),
-    [
-      ['alpha query', 'https://example.com/a'],
-      ['alpha query', 'https://example.com/z'],
-      ['beta query', 'https://example.com/b'],
-    ],
+  assert.deepEqual(result.items.map((item) => item.query).sort(), [
+    'lower boundary',
+    'upper boundary',
+  ])
+  assert.equal(result.selection.outsideCandidatePositionRows, 1)
+  assert.equal(result.selection.outsideBenchmarkPositionRows, 1)
+})
+
+test('bounds options, preserves totals, and is input-order deterministic', () => {
+  const rows = Array.from({ length: 120 }, (_, index) =>
+    row({
+      query: 'technical seo guide',
+      url: `https://example.com/page-${index}`,
+      clicks: 0,
+      impressions: 1000 + index,
+      position: 8,
+    }),
   )
+  const forward = analyzeQuickWinsFromRows({
+    rows,
+    site: 'sc-domain:example.com',
+    minImpressions: -1,
+    limit: 500,
+  })
+  const reverse = analyzeQuickWinsFromRows({
+    rows: [...rows].reverse(),
+    site: 'sc-domain:example.com',
+    minImpressions: -1,
+    limit: 500,
+  })
+
+  assert.equal(forward.minImpressions, 0)
+  assert.equal(forward.limit, 100)
+  assert.equal(forward.selection.eligibleRows, 120)
+  assert.equal(forward.selection.returnedRows, 100)
+  assert.equal(forward.selection.limitedRows, 20)
+  assert.deepEqual(forward.items, reverse.items)
+  assert.deepEqual(forward.selection, reverse.selection)
 })

@@ -7,7 +7,6 @@ import {
 import { groupPriorityQueue } from './priority-grouping.js'
 import { priorityCategory, scorePriority } from './priority-scoring.js'
 import { workflowReport } from './report.js'
-import { templateOpportunityRecommendation } from './template-recommendations.js'
 import type { PriorityQueueItem, WorkflowReport } from './types.js'
 
 type QueueDraft = Omit<
@@ -20,10 +19,11 @@ type QueueDraft = Omit<
 }
 
 function templateCount(input: {
-  templates?: Array<{ id: string; count: number }>
+  templates?: Array<{ id: string; count?: number; urlCount?: number }>
   id?: string
 }): number | undefined {
-  return input.templates?.find((template) => template.id === input.id)?.count
+  const template = input.templates?.find((item) => item.id === input.id)
+  return template?.urlCount ?? template?.count
 }
 
 function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
@@ -68,6 +68,7 @@ export function decayClusterDrafts(input: {
       title: `${group.label} cluster`,
       target: group.sampleUrls[0] ?? input.site,
       impact: group.totalClickLoss,
+      impactKind: 'observed_clicks',
       confidence: group.diagnosis === 'lost_visibility' ? 'high' : 'medium',
       effort: group.diagnosis === 'lost_ctr' ? 'S' : 'M',
       template: {
@@ -124,6 +125,7 @@ export async function refreshPrioritiesWorkflow(input: {
       title: item.query,
       target: item.url,
       impact: item.priority.score,
+      impactKind: 'heuristic_priority_score',
       confidence: item.recommendation.confidence,
       verification: item.contentVerification?.classification,
       template: {
@@ -150,7 +152,8 @@ export async function refreshPrioritiesWorkflow(input: {
       source: 'quick-win',
       title: item.query,
       target: item.url,
-      impact: Number(item.estimatedClickLift.toFixed(2)),
+      impact: Number(item.estimatedCtrClickShortfall.toFixed(2)),
+      impactKind: 'heuristic_ctr_click_shortfall',
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
       verification: item.contentVerification?.classification,
@@ -176,6 +179,7 @@ export async function refreshPrioritiesWorkflow(input: {
       title: item.query,
       target: item.url,
       impact: item.clickLoss,
+      impactKind: 'observed_clicks',
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
       template: {
@@ -206,6 +210,7 @@ export async function refreshPrioritiesWorkflow(input: {
       title: item.query,
       target: item.ownerUrl,
       impact: Number((impressions * (1 - item.hhi)).toFixed(2)),
+      impactKind: 'heuristic_impression_fragmentation',
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
       template: item.template
@@ -231,41 +236,29 @@ export async function refreshPrioritiesWorkflow(input: {
           : item.confidence === 'medium'
             ? 75
             : 25,
+      impactKind: 'ordinal',
       confidence: item.confidence,
       action: item.action,
       evidence: item.reason,
     })
   }
 
-  for (const template of diagnosis.quickWins.templates.filter(
-    (item) => item.id !== 'other' && item.count >= 3,
-  )) {
-    const templateItems = diagnosis.quickWins.items.filter(
-      (item) => item.template.id === template.id,
-    )
-    const impact = templateItems.reduce(
-      (sum, item) => sum + item.estimatedClickLift,
-      0,
-    )
-    const recommendation = templateOpportunityRecommendation({
-      templateId: template.id,
-      templateLabel: template.label,
-      items: templateItems,
-    })
+  for (const template of diagnosis.quickWins.templateRecommendations) {
     drafts.push({
       source: 'template',
-      title: `${template.label} opportunity template`,
-      target: `${template.label} template (${template.count} URLs)`,
-      impact,
-      confidence: 'high',
+      title: `${template.templateLabel} opportunity template`,
+      target: `${template.templateLabel} template (${template.urlCount} URLs)`,
+      impact: template.totalEstimatedCtrClickShortfall,
+      impactKind: 'heuristic_ctr_click_shortfall',
+      confidence: 'medium',
       effort: 'M',
       template: {
-        id: template.id,
-        label: template.label,
-        count: template.count,
+        id: template.templateId,
+        label: template.templateLabel,
+        count: template.urlCount,
       },
-      action: recommendation.action,
-      evidence: recommendation.evidence,
+      action: template.action,
+      evidence: template.evidence,
     })
   }
 

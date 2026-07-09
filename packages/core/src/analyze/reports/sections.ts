@@ -155,13 +155,13 @@ export function templateOpportunityLine(
   report: DiagnosePropertyReport,
 ): string {
   const template = report.quickWins.templates[0]
-  if (!template || template.count < 2) {
+  if (!template || template.urlCount < 2) {
     return 'No dominant opportunity template stood out.'
   }
   if (template.id === 'other') {
-    return `${template.count} quick wins sit outside a recognised reusable template. Triage the top URLs individually, then create a content group if they share the same page pattern.`
+    return `${template.urlCount} quick-win URLs sit outside a recognised reusable template. Triage them individually, then create a content group only if they share real page structure.`
   }
-  return `${template.count} quick wins sit in the ${template.label} template, so fix the reusable template before editing pages one by one.`
+  return `${template.urlCount} distinct quick-win URLs sit in the ${template.label} template. Compare their technical and page evidence before choosing a shared change.`
 }
 
 function decayDiagnosisLabel(diagnosis: string): string {

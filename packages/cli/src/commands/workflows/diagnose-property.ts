@@ -111,11 +111,11 @@ export function reportFollowups(
     )
   }
 
-  if (diagnosis.quickWins.summary.rows > 0) {
+  if (diagnosis.quickWins.summary.eligibleRows > 0) {
     addFollowup(
       commands,
       `seo quick-wins ${identity} --verify-content --verify-limit 5`,
-      'Check high-ranking pages with weak CTR or missing query coverage.',
+      'Review average-position rows below their heuristic CTR target with optional page evidence.',
     )
   }
 

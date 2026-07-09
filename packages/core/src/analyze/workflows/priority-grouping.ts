@@ -95,6 +95,7 @@ function groupedItem(items: PriorityQueueItem[]): PriorityQueueItem {
         category: item.category,
         score: item.score,
         impact: item.impact,
+        impactKind: item.impactKind,
         confidence: item.confidence,
         template: item.template,
         analytics: item.analytics,

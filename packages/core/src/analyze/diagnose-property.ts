@@ -6,6 +6,7 @@ import type { TemplateSummary } from './page-patterns.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import { defaultDateRange } from './shared.js'
 import {
+  analyzeQuickWinsFromRows,
   cannibalReport,
   decayingReport,
   quickWinsReport,
@@ -43,6 +44,7 @@ export type DiagnosePropertyReport = {
     decayItems: number
     cannibalItems: number
     strikingDistanceItems: number
+    quickWinItems: number
   }
   skippedSections?: SkippedDiagnosisSection[]
   priorities: DiagnosisPriority[]
@@ -246,22 +248,54 @@ function emptyStriking(input: {
 
 function emptyQuickWins(input: {
   site: string
+  days?: number
 }): Awaited<ReturnType<typeof quickWinsReport>> {
+  const analysis = analyzeQuickWinsFromRows({ rows: [], site: input.site })
+  const range = fallbackRange(input)
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
-    range: defaultDateRange(28),
-    benchmark: {
-      method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
-      peerRows: 0,
-      byPosition: {},
+    range,
+    rangeDays: input.days ?? 28,
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      searchType: 'web',
+      dataState: 'final',
+      rowsFetched: 0,
+      calls: 0,
+      maxRows: 100_000,
+      possiblyTruncated: false,
+      completeness: 'retained-query-rows-only',
     },
-    verification: { requested: false, verified: 0, failed: 0 },
+    dataStatus: analysis.dataStatus,
+    selection: analysis.selection,
+    methodology: analysis.methodology,
+    provenance: {
+      ...analysis.provenance,
+      verification: {
+        optional: true,
+        population: 'returned_rows_in_priority_order',
+        fetchDeduplication: 'exact_url',
+      },
+    },
+    benchmark: {
+      method: analysis.methodology.benchmark.method,
+      peerRows: 0,
+      byPosition: analysis.benchmarkByPosition,
+    },
+    verification: {
+      requested: false,
+      attemptedRows: 0,
+      attemptedUrls: 0,
+      verified: 0,
+      technical: 0,
+      failed: 0,
+    },
     summary: {
-      rows: 0,
+      ...analysis.summary,
       repeatedQueryGroups: 0,
       templatePatterns: 0,
-      totalEstimatedClickLift: 0,
       brandFiltering: 'excluded',
       verdict: 'Quick-win analysis was skipped.',
     },
@@ -275,6 +309,8 @@ function emptyQuickWins(input: {
     templateRecommendations: [],
     groups: [],
     items: [],
+    ledgerSummary: 'No provider calls recorded.',
+    warnings: [],
   }
 }
 
@@ -473,6 +509,10 @@ export async function diagnoseProperty(input: {
       () =>
         quickWinsReport({
           site: input.site,
+          days: input.days,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          limit,
           brandTerms: input.brandTerms,
           includeBrand: input.includeBrand,
           verifyContent: input.verifyContent,
@@ -529,6 +569,7 @@ export async function diagnoseProperty(input: {
       decayItems: decay.items.length,
       cannibalItems: cannibal.items.length,
       strikingDistanceItems: striking.items.length,
+      quickWinItems: quickWins.items.length,
     },
     skippedSections,
     priorities,

@@ -1,75 +1,81 @@
-import { normalizeText } from '../shared.js'
-import type { QuickWinGroup, QuickWinItem } from './types.js'
+import type { QuickWinGroup, QuickWinItem } from './quick-wins-types.js'
 
-function groupKey(item: QuickWinItem): string {
-  return `${item.template.id}:${normalizeText(item.query)}`
+function normalizedQuery(value: string): string {
+  return value
+    .normalize('NFKC')
+    .toLocaleLowerCase('und')
+    .replace(/\s+/gu, ' ')
+    .trim()
 }
 
-function groupLabel(item: QuickWinItem): string {
-  return `${item.template.label} - ${item.query}`
+function groupKey(item: QuickWinItem): string {
+  return `${item.template.id}:${normalizedQuery(item.query)}`
 }
 
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0
 }
 
-function groupAction(group: QuickWinGroup): string {
-  if (group.template.id.endsWith('-salary')) {
-    return `${group.count} salary pages have the same quick-win pattern for "${group.query}". Update the shared template so the role/entity, location, currency, and monthly/hourly pay are clear in the title, H1, meta, and opening summary.`
+function groupAction(input: {
+  group: QuickWinGroup
+  technicalUrls: number
+}): string {
+  if (input.technicalUrls > 0) {
+    return `${input.technicalUrls} of ${input.group.urlCount} affected URLs have verified technical evidence. Fix those HTTP, indexability, redirect, or canonical issues before testing shared search-framing changes.`
   }
-  if (group.template.id === 'location-schedule') {
-    return `${group.count} location pages have the same quick-win pattern for "${group.query}". Update the shared template so the exact place, date/time, chart/table, current-year wording, and local aliases are clear before adding more copy.`
-  }
-  if (group.template.id === 'surname-entity') {
-    return `${group.count} surname/entity pages have the same quick-win pattern for "${group.query}". Update the shared template so origin, meaning, rarity, geography, or people-count intent is obvious in the title, H1, meta, and intro.`
-  }
-  if (group.template.id.includes('name-list')) {
-    return `${group.count} name-list pages have the same quick-win pattern for "${group.query}". Make the title, H1, meta, and intro match the exact list facet instead of using generic list wording.`
-  }
-  if (
-    group.template.id === 'alternative-page' ||
-    group.template.id === 'comparison-page'
-  ) {
-    return `${group.count} comparison/alternative pages have the same quick-win pattern for "${group.query}". Make the winner, criteria, pricing/features, and alternatives clearer in the title, H1, meta, and opening summary.`
-  }
-  return `${group.count} URLs have the same quick-win pattern for "${group.query}". Fix the shared title/H1/meta wording first, then check whether any page still needs unique body copy.`
+  return `${input.group.urlCount} distinct ${input.group.template.label.toLowerCase()} URLs share the query pattern "${input.group.query}". Compare their live search results and verified page evidence before testing a shared title, snippet, or heading change.`
 }
 
 export function groupQuickWins(items: QuickWinItem[]): QuickWinGroup[] {
-  const groups = new Map<string, QuickWinGroup>()
-
+  const groups = new Map<string, QuickWinItem[]>()
   for (const item of items) {
     const key = groupKey(item)
-    const existing = groups.get(key) ?? {
-      id: key,
-      label: groupLabel(item),
-      query: item.query,
-      template: item.template,
-      count: 0,
-      totalEstimatedClickLift: 0,
-      totalImpressions: 0,
-      sampleUrls: [],
-      recommendation: '',
-    }
-    existing.count += 1
-    existing.totalEstimatedClickLift += item.estimatedClickLift
-    existing.totalImpressions += item.impressions
-    if (existing.sampleUrls.length < 3) existing.sampleUrls.push(item.url)
-    groups.set(key, existing)
+    groups.set(key, [...(groups.get(key) ?? []), item])
   }
 
-  return [...groups.values()]
-    .filter((group) => group.count >= 2)
-    .map((group) => ({
-      ...group,
-      totalEstimatedClickLift: Number(group.totalEstimatedClickLift.toFixed(2)),
-      totalImpressions: Number(group.totalImpressions.toFixed(0)),
-      recommendation: groupAction(group),
-    }))
+  return [...groups.entries()]
+    .map(([id, groupItems]): QuickWinGroup | undefined => {
+      const first = groupItems[0]
+      if (!first || first.template.confidence === 'low') return undefined
+      const urls = [...new Set(groupItems.map((item) => item.url))]
+      if (urls.length < 2) return undefined
+      const technicalUrls = new Set(
+        groupItems
+          .filter(
+            (item) =>
+              item.contentVerification?.classification === 'technical-check',
+          )
+          .map((item) => item.url),
+      ).size
+      const group: QuickWinGroup = {
+        id,
+        label: `${first.template.label} - ${first.query}`,
+        query: first.query,
+        template: first.template,
+        rowCount: groupItems.length,
+        urlCount: urls.length,
+        totalEstimatedCtrClickShortfall: Number(
+          groupItems
+            .reduce((sum, item) => sum + item.estimatedCtrClickShortfall, 0)
+            .toFixed(2),
+        ),
+        totalImpressions: Number(
+          groupItems
+            .reduce((sum, item) => sum + item.impressions, 0)
+            .toFixed(0),
+        ),
+        sampleUrls: urls.slice(0, 3),
+        recommendation: '',
+      }
+      group.recommendation = groupAction({ group, technicalUrls })
+      return group
+    })
+    .filter((group): group is QuickWinGroup => group !== undefined)
     .sort(
-      (a, b) =>
-        b.totalEstimatedClickLift - a.totalEstimatedClickLift ||
-        b.totalImpressions - a.totalImpressions ||
-        compareText(a.id, b.id),
+      (left, right) =>
+        right.totalEstimatedCtrClickShortfall -
+          left.totalEstimatedCtrClickShortfall ||
+        right.totalImpressions - left.totalImpressions ||
+        compareText(left.id, right.id),
     )
 }

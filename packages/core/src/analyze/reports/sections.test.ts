@@ -1,8 +1,72 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
+import { analyzeQuickWinsFromRows } from '../site-diagnostics.js'
 import { analyzeStrikingDistanceRows } from '../striking-distance.js'
 import { contentOpportunityBullets, headlineLine } from './sections.js'
+
+function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
+  const analysis = analyzeQuickWinsFromRows({
+    site: 'sc-domain:example.com',
+    rows: [],
+  })
+  return {
+    site: 'sc-domain:example.com',
+    generatedAt: '',
+    range: { startDate: '2026-05-01', endDate: '2026-05-28' },
+    rangeDays: 28,
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      searchType: 'web',
+      dataState: 'final',
+      rowsFetched: 0,
+      calls: 0,
+      maxRows: 100_000,
+      possiblyTruncated: false,
+      completeness: 'retained-query-rows-only',
+    },
+    dataStatus: analysis.dataStatus,
+    selection: analysis.selection,
+    methodology: analysis.methodology,
+    provenance: {
+      ...analysis.provenance,
+      verification: {
+        optional: true,
+        population: 'returned_rows_in_priority_order',
+        fetchDeduplication: 'exact_url',
+      },
+    },
+    benchmark: {
+      method: analysis.methodology.benchmark.method,
+      peerRows: 0,
+      byPosition: analysis.benchmarkByPosition,
+    },
+    verification: {
+      requested: false,
+      attemptedRows: 0,
+      attemptedUrls: 0,
+      verified: 0,
+      technical: 0,
+      failed: 0,
+    },
+    summary: {
+      ...analysis.summary,
+      repeatedQueryGroups: 0,
+      templatePatterns: 0,
+      brandFiltering: 'excluded',
+      verdict: 'No quick wins matched these filters.',
+    },
+    caveats: [],
+    recommendations: [],
+    templates: [],
+    templateRecommendations: [],
+    groups: [],
+    items: [],
+    ledgerSummary: 'No provider calls recorded.',
+    warnings: [],
+  }
+}
 
 function emptyDiagnosis(): DiagnosePropertyReport {
   const striking = analyzeStrikingDistanceRows({
@@ -20,6 +84,7 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       decayItems: 0,
       cannibalItems: 0,
       strikingDistanceItems: 0,
+      quickWinItems: 0,
     },
     priorities: [],
     anomaly: {
@@ -124,31 +189,7 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       caveats: [],
       recommendations: [],
     },
-    quickWins: {
-      site: 'sc-domain:example.com',
-      generatedAt: '',
-      range: { startDate: '2026-05-01', endDate: '2026-05-28' },
-      benchmark: {
-        method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
-        peerRows: 0,
-        byPosition: {},
-      },
-      verification: { requested: false, verified: 0, failed: 0 },
-      summary: {
-        rows: 0,
-        repeatedQueryGroups: 0,
-        templatePatterns: 0,
-        totalEstimatedClickLift: 0,
-        brandFiltering: 'excluded',
-        verdict: 'No quick wins matched these filters.',
-      },
-      caveats: [],
-      recommendations: [],
-      templates: [],
-      templateRecommendations: [],
-      groups: [],
-      items: [],
-    },
+    quickWins: emptyQuickWins(),
   }
 }
 

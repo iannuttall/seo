@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as z from 'zod/v4'
 import { registerDiagnosisTools } from '../diagnosis-tools.js'
+import { registerOpportunityTools } from '../opportunity-tools.js'
 import { registerSecondPageTool } from './second-page.js'
 
 type ToolConfig = { inputSchema: z.ZodRawShape }
@@ -76,4 +77,34 @@ test('striking-distance MCP uses the same bounded numeric contract', () => {
     schema.safeParse({ site: 'sc-domain:example.com', limit: -1 }).success,
     false,
   )
+})
+
+test('quick-wins MCP bounds output, verification, fetch, and brand inputs', () => {
+  const schema = inputSchema(
+    captureTools(registerOpportunityTools),
+    'seo_quick_wins',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      days: 548,
+      minImpressions: 0,
+      limit: 100,
+      verifyLimit: 0,
+      brandTerms: ['Example'],
+      fetchConcurrency: 16,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', days: 549 },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', minImpressions: -1 },
+    { site: 'sc-domain:example.com', verifyLimit: 1.5 },
+    { site: 'sc-domain:example.com', fetchConcurrency: 17 },
+    { site: 'sc-domain:example.com', brandTerms: [''] },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
 })

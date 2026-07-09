@@ -77,6 +77,7 @@ export const diagnoseCommand = defineCommand({
       ['Decay items', String(report.summary.decayItems)],
       ['Cannibal items', String(report.summary.cannibalItems)],
       ['Striking distance', String(report.summary.strikingDistanceItems)],
+      ['Quick wins', String(report.summary.quickWinItems)],
     ])
     printTable(
       ['Priority', 'Confidence', 'Reason', 'Action'],

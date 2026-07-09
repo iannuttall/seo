@@ -124,6 +124,11 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       site: 'sc-domain:example.com',
       generatedAt: '',
       range: { startDate: '2026-05-01', endDate: '2026-05-28' },
+      benchmark: {
+        method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
+        peerRows: 0,
+        byPosition: {},
+      },
       verification: { requested: false, verified: 0, failed: 0 },
       summary: {
         rows: 0,

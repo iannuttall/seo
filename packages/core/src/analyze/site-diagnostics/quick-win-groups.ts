@@ -9,6 +9,10 @@ function groupLabel(item: QuickWinItem): string {
   return `${item.template.label} - ${item.query}`
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
 function groupAction(group: QuickWinGroup): string {
   if (group.template.id.endsWith('-salary')) {
     return `${group.count} salary pages have the same quick-win pattern for "${group.query}". Update the shared template so the role/entity, location, currency, and monthly/hourly pay are clear in the title, H1, meta, and opening summary.`
@@ -65,6 +69,7 @@ export function groupQuickWins(items: QuickWinItem[]): QuickWinGroup[] {
     .sort(
       (a, b) =>
         b.totalEstimatedClickLift - a.totalEstimatedClickLift ||
-        b.totalImpressions - a.totalImpressions,
+        b.totalImpressions - a.totalImpressions ||
+        compareText(a.id, b.id),
     )
 }

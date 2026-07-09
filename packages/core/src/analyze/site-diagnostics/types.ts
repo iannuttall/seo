@@ -76,9 +76,19 @@ export interface QuickWinItem {
   url: string
   template: PageTemplate
   position: number
+  clicks: number
   impressions: number
   ctr: number
-  expectedCtrAt3: number
+  expectedCtr: number
+  benchmark: {
+    expectedCtr: number
+    source: string
+    peerRows: number
+    peerImpressions: number
+    qualifiedPeerImpressions: number
+    urlSamples: number
+    positiveUrlSamples: number
+  }
   estimatedClickLift: number
   contentVerification?: QueryContentCoverage
   recommendation: Recommendation

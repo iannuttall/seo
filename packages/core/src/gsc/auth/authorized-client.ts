@@ -1,4 +1,5 @@
 import { OAuth2Client } from 'google-auth-library'
+import { SeoError } from '../../errors.js'
 import { getSeoCliPaths } from '../../paths.js'
 import { deleteTokens, readTokens, writeTokens } from '../../storage/config.js'
 import { withFileLock } from '../../storage/lock.js'
@@ -11,12 +12,16 @@ export async function createAuthorizedClient(): Promise<{
 }> {
   const stored = await readTokens()
   if (!stored) {
-    throw new Error('Not logged in. Run `seo auth login` first.')
+    throw new SeoError(
+      'AUTH_REQUIRED',
+      'Not logged in. Run `seo auth login` first.',
+    )
   }
 
   const clientConfig = getClientConfig()
   if (!clientConfig) {
-    throw new Error(
+    throw new SeoError(
+      'AUTH_CONFIG_REQUIRED',
       'OAuth client config missing. Re-run `seo auth setup-client`.',
     )
   }
@@ -56,12 +61,18 @@ export async function refreshAuthToken(
   return withFileLock(getSeoCliPaths().tokensFile, async () => {
     const current = await readTokens()
     if (!current) {
-      throw new Error('Not logged in.')
+      throw new SeoError(
+        'AUTH_REQUIRED',
+        'Not logged in. Run `seo auth login` first.',
+      )
     }
 
     const clientConfig = getClientConfig()
     if (!clientConfig) {
-      throw new Error('OAuth client config missing.')
+      throw new SeoError(
+        'AUTH_CONFIG_REQUIRED',
+        'OAuth client config missing. Re-run `seo auth setup-client`.',
+      )
     }
 
     const oauth =
@@ -87,7 +98,8 @@ export async function refreshAuthToken(
       const message = error instanceof Error ? error.message : String(error)
       if (/invalid_grant|401/.test(message)) {
         await deleteTokens()
-        throw new Error(
+        throw new SeoError(
+          'AUTH_EXPIRED',
           'Google refresh token is no longer valid. Run `seo auth login` again.',
         )
       }

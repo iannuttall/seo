@@ -1,3 +1,4 @@
+import { SeoError } from '../../errors.js'
 import { getDb, hashKey } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
 import { authedFetch, getAuthorized } from './fetch.js'
@@ -86,9 +87,39 @@ export async function querySearchAnalytics(
     calls += 1
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error('GSC rate limit hit. Back off for 15 minutes.')
+        throw new SeoError(
+          'RATE_LIMITED',
+          'GSC rate limit hit. Back off for 15 minutes.',
+        )
       }
-      throw new Error(`GSC query failed with ${response.status}.`)
+      if (response.status === 401) {
+        throw new SeoError(
+          'AUTH_EXPIRED',
+          'Google rejected the access token. Run `seo auth login` again.',
+        )
+      }
+      if (response.status === 403) {
+        throw new SeoError(
+          'ACCESS_DENIED',
+          `Google Search Console denied access to ${site}. Check the selected Google account and property permissions.`,
+        )
+      }
+      if (response.status === 404) {
+        throw new SeoError(
+          'PROPERTY_NOT_FOUND',
+          `Google Search Console could not find ${site}. Check the property value and account access.`,
+        )
+      }
+      if (response.status >= 500) {
+        throw new SeoError(
+          'PROVIDER_UNAVAILABLE',
+          `Google Search Console is unavailable (${response.status}). Try again later.`,
+        )
+      }
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        `GSC query failed with ${response.status}.`,
+      )
     }
 
     const json = (await response.json()) as { rows?: GscRow[] }

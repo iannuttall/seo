@@ -33,6 +33,36 @@ async function runSeo(
   return `${result.stdout}${result.stderr}`
 }
 
+async function runSeoResult(
+  args: string[],
+  env: Record<string, string> = {},
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  try {
+    const result = await execFileAsync(process.execPath, [cliPath, ...args], {
+      env: {
+        ...process.env,
+        ...env,
+        CI: '1',
+        NO_UPDATE_NOTIFIER: '1',
+      },
+      maxBuffer: 1024 * 1024,
+      timeout: 10_000,
+    })
+    return { exitCode: 0, stdout: result.stdout, stderr: result.stderr }
+  } catch (error) {
+    const result = error as {
+      code?: number
+      stdout?: string
+      stderr?: string
+    }
+    return {
+      exitCode: result.code ?? 1,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+    }
+  }
+}
+
 async function withServer(
   handler: (req: IncomingMessage, res: ServerResponse) => void,
 ): Promise<{ baseUrl: string; close: () => Promise<void> }> {
@@ -81,6 +111,33 @@ test('long help and crawler command help are available', async () => {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
+  }
+})
+
+test('report JSON fails clearly when Google auth is missing', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-cli-cache-'))
+
+  try {
+    const result = await runSeoResult(
+      ['report', '--site', 'sc-domain:example.com', '--json'],
+      { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir },
+    )
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 3)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(output, {
+      ok: false,
+      error: {
+        code: 'AUTH_REQUIRED',
+        message: 'Not logged in. Run `seo auth login` first.',
+        retryable: false,
+      },
+    })
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
   }
 })
 

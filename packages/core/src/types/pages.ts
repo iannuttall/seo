@@ -126,6 +126,12 @@ export interface ContentExtractionDiagnostics {
   extractorType?: string
 }
 
+export type ExtractedLinkLocation =
+  | 'main-content'
+  | 'navigation'
+  | 'footer'
+  | 'other'
+
 export interface ExtractedPage {
   url: string
   finalUrl: string
@@ -137,7 +143,13 @@ export interface ExtractedPage {
   lang?: string
   hasViewport: boolean
   headings: Array<{ level: number; text: string }>
-  links: Array<{ href: string; text: string; rel: string[]; internal: boolean }>
+  links: Array<{
+    href: string
+    text: string
+    rel: string[]
+    internal: boolean
+    location: ExtractedLinkLocation
+  }>
   hreflang: Array<{ hreflang: string; href: string }>
   jsonLd: unknown[]
   invalidJsonLdCount: number

@@ -5,6 +5,11 @@ const common = {
   days: opt('days', 'days:', 'days: z.number().optional()'),
   recentDays: opt('recentDays', 'recent:', 'recentDays: z.number().optional()'),
   limit: opt('limit', 'limit:', 'limit: z.number().optional()'),
+  checkLimit: opt(
+    'checkLimit',
+    "'check-limit':",
+    'checkLimit: z.number().optional()',
+  ),
   includeBrand: opt(
     'includeBrand',
     "'include-brand':",
@@ -325,8 +330,18 @@ export const reportSurfaces = [
     },
     options: [
       common.site,
-      opt('targetUrl', 'url:', 'targetUrl: z.string().url()'),
+      opt('targetUrl', 'url:', 'targetUrl: z'),
+      common.days,
       common.limit,
+      common.checkLimit,
+      common.minImpressions,
+      common.brandTerms,
+      common.includeBrand,
+      common.js,
+      common.fetchConcurrency,
+      common.fetchIntervalCap,
+      common.fetchIntervalMs,
+      common.refresh,
     ],
   },
   {

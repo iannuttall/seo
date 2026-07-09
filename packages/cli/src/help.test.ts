@@ -107,10 +107,27 @@ test('long help and crawler command help are available', async () => {
     ['start', '--help'],
     ['crawl', '--help'],
     ['crawl-reports', '--help'],
+    ['internal-links', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
+  }
+})
+
+test('internal-links help exposes bounded matching and fetch controls', async () => {
+  const output = await runSeo(['internal-links', '--help'])
+
+  for (const flag of [
+    '--days',
+    '--limit',
+    '--check-limit',
+    '--min-impressions',
+    '--brand-terms',
+    '--fetch-concurrency',
+    '--refresh',
+  ]) {
+    assert.match(output, new RegExp(flag))
   }
 })
 

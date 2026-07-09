@@ -2,11 +2,12 @@ import { querySearchAnalytics } from './gsc/client.js'
 
 function normalizeBrandText(value: string): string {
   return value
+    .normalize('NFKC')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .toLowerCase()
     .replace(/^https?:\/\//, '')
     .replace(/^sc-domain:/, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -77,8 +78,11 @@ export function isBrandQuery(query: string, brandTerms: string[]): boolean {
     const normalizedTerm = normalizeBrandText(term)
     if (!normalizedTerm) return false
     const compactTerm = normalizedTerm.replace(/\s+/g, '')
+    const compactTermLength = [...compactTerm].length
     const compactMatches =
-      compactTerm.length >= 6 && compactQuery.includes(compactTerm)
+      (compactTermLength >= 6 ||
+        (/[^\p{ASCII}]/u.test(compactTerm) && compactTermLength >= 2)) &&
+      compactQuery.includes(compactTerm)
     const termTokens = normalizedTerm.split(' ')
     if (termTokens.length === 1) {
       return (

@@ -18,7 +18,7 @@ import {
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
-import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
+import { formatFetchDiagnostics } from '../shared.js'
 
 export const pageOpportunitiesCommand = defineCommand({
   meta: {
@@ -87,10 +87,15 @@ export const pageOpportunitiesCommand = defineCommand({
       ['URL', report.url],
       ['Title', report.page?.title ?? 'not fetched'],
       ['Fetch', formatFetchDiagnostics(report.page?.fetchDiagnostics)],
+      ['Verification', report.verification.status],
+      [
+        'Rows',
+        `${formatCount(report.selection.returnedRows)} returned / ${formatCount(report.selection.eligibleRows)} eligible / ${formatCount(report.selection.sourceRows)} source`,
+      ],
       ['Queries', formatCount(report.summary.queries)],
       ['Impressions', formatCount(report.summary.impressions)],
       ['Opportunities', formatCount(report.summary.opportunities)],
-      ['Estimated lift', formatCount(report.summary.estimatedClickLift)],
+      ['CTR shortfall', formatCount(report.summary.estimatedCtrClickShortfall)],
       ['Focus', report.summary.focus],
       ['Verdict', report.summary.verdict],
     ])
@@ -102,20 +107,41 @@ export const pageOpportunitiesCommand = defineCommand({
     printNotes('Report caveats', report.caveats)
 
     if (!report.items.length) {
-      process.stdout.write('No GSC query rows found for this exact URL.\n')
+      process.stdout.write(
+        report.dataStatus === 'empty'
+          ? 'No GSC query rows found for this exact URL.\n'
+          : 'GSC rows were found, but none met the report criteria.\n',
+      )
       return
     }
 
     printLimitedTable(
-      ['Type', 'Query', 'Check', 'Pos', 'CTR', 'Impr', 'Lift', 'Action'],
+      [
+        'Type',
+        'Query',
+        'Evidence',
+        'Pos',
+        'CTR',
+        'Expected',
+        'Impr',
+        'Shortfall',
+        'Action',
+      ],
       report.items.map((item) => [
         item.opportunityType,
         truncate(item.query, 38),
-        formatContentCheck(item.coverage?.classification),
+        item.verification.signals.length
+          ? item.verification.signals.join(', ')
+          : item.verification.status,
         item.position.toFixed(1),
         formatPercent(item.ctr),
+        item.expectedCtr === undefined
+          ? 'n/a'
+          : formatPercent(item.expectedCtr),
         formatCount(item.impressions),
-        formatCount(item.estimatedClickLift),
+        item.estimatedCtrClickShortfall === undefined
+          ? 'n/a'
+          : formatCount(item.estimatedCtrClickShortfall),
         truncate(item.recommendation, 72),
       ]),
     )

@@ -24,6 +24,13 @@ test('brand query matching is token-aware for short brands', () => {
   assert.equal(isBrandQuery('examples brand', ['example brand']), true)
 })
 
+test('brand query matching preserves non-Latin brand terms', () => {
+  assert.equal(isBrandQuery('品牌評測', ['品牌']), true)
+  assert.equal(isBrandQuery('مراجعة أكمي', ['أكمي']), true)
+  assert.equal(isBrandQuery('отзывы маяк', ['маяк']), true)
+  assert.equal(isBrandQuery('seo guide', ['品']), false)
+})
+
 test('shouldExcludeBrandQuery can include brand when requested', () => {
   assert.equal(
     shouldExcludeBrandQuery({

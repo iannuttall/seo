@@ -1,4 +1,5 @@
 import { fetch } from 'undici'
+import { SeoError } from '../errors.js'
 
 const INCIDENTS_URL = 'https://status.search.google.com/incidents.json'
 
@@ -47,7 +48,8 @@ export async function fetchSearchStatusIncidents(): Promise<
 > {
   const response = await fetch(INCIDENTS_URL)
   if (!response.ok) {
-    throw new Error(
+    throw new SeoError(
+      'OPTIONAL_PROVIDER_UNAVAILABLE',
       `Google Search Status fetch failed with ${response.status}.`,
     )
   }

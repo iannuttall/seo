@@ -1,3 +1,4 @@
+import { isSkippableReportError } from '../errors.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { countLabel } from '../phrasing.js'
 import type { ProgressReporter } from '../progress.js'
@@ -356,6 +357,9 @@ export async function diagnoseProperty(input: {
       input.progress?.(`Finished ${label}`)
       return { status: 'completed', value: result }
     } catch (error) {
+      if (!isSkippableReportError(error)) {
+        throw error
+      }
       const reason = errorReason(error)
       input.progress?.(`Skipped ${label}: ${reason}`)
       return {

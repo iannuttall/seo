@@ -1,4 +1,5 @@
-import { defineCommand, runMain } from 'citty'
+import { seoErrorEnvelope, toSeoError } from '@seo/core'
+import { defineCommand, runCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
@@ -312,4 +313,19 @@ if (argv[0] === 'help' && argv.length > 1) {
     '--help',
   ]
 }
-await runMain(main)
+if (
+  argv.includes('--json') &&
+  !argv.some((arg) => ['--help', '-h'].includes(arg))
+) {
+  try {
+    await runCommand(main, { rawArgs: argv })
+  } catch (error) {
+    const normalized = toSeoError(error)
+    process.stdout.write(
+      `${JSON.stringify(seoErrorEnvelope(normalized), null, 2)}\n`,
+    )
+    process.exitCode = normalized.exitCode
+  }
+} else {
+  await runMain(main)
+}

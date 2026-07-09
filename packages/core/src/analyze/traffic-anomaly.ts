@@ -1,3 +1,4 @@
+import { SeoError } from '../errors.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import {
   findOverlappingSearchUpdates,
@@ -317,7 +318,10 @@ export async function trafficAnomaly(input: {
     (input.startDate && !input.endDate) ||
     (!input.startDate && input.endDate)
   ) {
-    throw new Error('Pass both startDate and endDate, or neither.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Pass both startDate and endDate, or neither.',
+    )
   }
   const range =
     input.startDate && input.endDate
@@ -340,7 +344,10 @@ export async function trafficAnomaly(input: {
   const baselineRows = rows.slice(0, Math.max(0, rows.length - recentDays))
   const comparisonRows = rows.slice(Math.max(0, rows.length - recentDays))
   if (baselineRows.length < 14 || comparisonRows.length < 3) {
-    throw new Error('Not enough daily GSC data for anomaly detection.')
+    throw new SeoError(
+      'INSUFFICIENT_DATA',
+      'Not enough daily GSC data for anomaly detection.',
+    )
   }
 
   const metrics: Array<'clicks' | 'impressions'> = ['clicks', 'impressions']

@@ -15,6 +15,6 @@ They can also call the CLI directly when the MCP tools are not available.
 - `seo-site-audit`: run a full technical SEO and GEO audit.
 - `seo-geo-readiness`: check AI-search readiness and citation gaps.
 - `seo-fix-queue`: turn crawl results into an implementation queue.
+- `pseo-audit`: audit repeated URL templates with GSC, crawl, and URL Inspection evidence.
 
 The existing `seo` skill is the broad tool-routing guide for the full MCP server.
-

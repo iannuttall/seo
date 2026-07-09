@@ -26,11 +26,32 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
+function compareText(left: string, right: string): number {
+  const leftPoints = [...left].map((value) => value.codePointAt(0) ?? 0)
+  const rightPoints = [...right].map((value) => value.codePointAt(0) ?? 0)
+  for (
+    let index = 0;
+    index < Math.min(leftPoints.length, rightPoints.length);
+    index++
+  ) {
+    const difference = (leftPoints[index] ?? 0) - (rightPoints[index] ?? 0)
+    if (difference) return difference
+  }
+  return leftPoints.length - rightPoints.length
+}
+
 export function parsePseoPath(url: string): string[] {
+  const decode = (part: string) => {
+    try {
+      return decodeURIComponent(part)
+    } catch {
+      return part
+    }
+  }
   try {
-    return new URL(url).pathname.split('/').filter(Boolean)
+    return new URL(url).pathname.split('/').filter(Boolean).map(decode)
   } catch {
-    return url.split('?')[0]?.split('/').filter(Boolean) ?? []
+    return url.split('?')[0]?.split('/').filter(Boolean).map(decode) ?? []
   }
 }
 
@@ -38,8 +59,8 @@ function placeholder(segment: string): string | undefined {
   if (/^\d+$/.test(segment)) return ':num'
   if (UUID_RE.test(segment)) return ':id'
   if (DATE_RE.test(segment)) return ':date'
-  if (/^[a-z0-9]+(?:-[a-z0-9]+)+$/i.test(segment)) return ':slug'
-  if (segment.length >= 12 && /^[a-z0-9]+$/i.test(segment)) return ':slug'
+  if (/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+$/u.test(segment)) return ':slug'
+  if (segment.length >= 12 && /^[\p{L}\p{N}]+$/u.test(segment)) return ':slug'
   return undefined
 }
 
@@ -73,16 +94,19 @@ function broadTemplate(url: string): string {
 function valueTokens(values: string[]): string[] {
   const counts = new Map<string, number>()
   for (const value of values) {
-    for (const token of value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, ' ')
-      .split(/\s+/)
-      .filter((item) => item.length > 2 && !/^\d+$/.test(item))) {
+    const tokens =
+      value
+        .normalize('NFKC')
+        .toLowerCase()
+        .match(/[\p{L}\p{N}]+/gu) ?? []
+    for (const token of tokens.filter(
+      (item) => item.length > 1 || /[^\p{ASCII}]/u.test(item),
+    )) {
       counts.set(token, (counts.get(token) ?? 0) + 1)
     }
   }
   return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .sort((a, b) => b[1] - a[1] || compareText(a[0], b[0]))
     .slice(0, 8)
     .map(([token]) => token)
 }
@@ -154,11 +178,17 @@ function collectClusters(urls: string[], signatures: Map<string, string>) {
 
 export function clusterPseoTemplates(
   urls: string[],
-  opts: { minUrls?: number; minShare?: number; limit?: number } = {},
+  opts: {
+    minUrls?: number
+    minShare?: number
+    limit?: number
+    sampleSize?: number
+  } = {},
 ): PseoTemplateCluster[] {
-  const uniqueUrls = [...new Set(urls)]
+  const uniqueUrls = [...new Set(urls)].sort(compareText)
   const minUrls = opts.minUrls ?? 3
   const minShare = opts.minShare ?? 0.01
+  const sampleSize = opts.sampleSize ?? 5
   const primarySignatures = new Map(
     uniqueUrls.map((url) => [url, inferPseoTemplate(url)]),
   )
@@ -191,16 +221,14 @@ export function clusterPseoTemplates(
       shape: templateShape(signature, clusterUrls),
       urlCount: clusterUrls.length,
       share: uniqueUrls.length ? clusterUrls.length / uniqueUrls.length : 0,
-      sampleUrls: clusterUrls.slice(0, 5),
+      sampleUrls: clusterUrls.sort(compareText).slice(0, sampleSize),
     }))
     .filter(
-      (cluster) =>
-        cluster.urlCount >= minUrls ||
-        cluster.share >= Math.min(minShare, 0.05),
+      (cluster) => cluster.urlCount >= minUrls && cluster.share >= minShare,
     )
     .sort(
       (a, b) =>
-        b.urlCount - a.urlCount || a.signature.localeCompare(b.signature),
+        b.urlCount - a.urlCount || compareText(a.signature, b.signature),
     )
     .slice(0, opts.limit ?? 50)
 }

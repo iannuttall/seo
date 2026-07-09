@@ -16,6 +16,7 @@ export default defineConfig([
       'src/diagnosis-tools.ts',
       'src/fetch-rate.ts',
       'src/opportunity-tools.ts',
+      'src/pseo-tools.ts',
       'src/report-options.ts',
       'src/report-tools/input.ts',
       'src/report-tools/second-page.ts',

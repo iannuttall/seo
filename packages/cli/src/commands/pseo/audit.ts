@@ -1,12 +1,6 @@
 import { countLabel, pseoAuditReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
+import { booleanArg, jsonFlag, projectArg, stringArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
@@ -20,21 +14,16 @@ import {
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
-import { formatContentCheck } from '../shared.js'
-
-function csv(value?: string): string[] | undefined {
-  return value
-    ?.split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+import { pseoOptions } from './options.js'
 
 function formatInspection(input: {
   indexed: number
   notIndexed: number
+  unknown: number
   warnings: number
 }): string {
-  const total = input.indexed + input.notIndexed + input.warnings
+  const total =
+    input.indexed + input.notIndexed + input.unknown + input.warnings
   if (!total) return '-'
   return `${input.indexed}/${total} indexed`
 }
@@ -42,6 +31,7 @@ function formatInspection(input: {
 function formatCrawl(input: {
   samples: unknown[]
   blockedOrFailed: number
+  usable: number
   medianWordCount?: number
   weakQueryCoverage?: number
 }): string {
@@ -53,7 +43,13 @@ function formatCrawl(input: {
   const weak = input.weakQueryCoverage
     ? `; ${input.weakQueryCoverage} weak coverage`
     : ''
-  return `${words}; ${input.blockedOrFailed}/${input.samples.length} blocked/failed${weak}`
+  return `${words}; ${input.usable}/${input.samples.length} usable${weak}`
+}
+
+function formatCoverage(classification: string): string {
+  if (classification === 'serp-framing-review') return 'wording review'
+  if (classification === 'body-term-review') return 'literal term review'
+  return 'covered terms'
 }
 
 function formatTemplateShape(
@@ -135,7 +131,7 @@ function printTemplateDetails(
           ? ` missing ${item.missingTerms.slice(0, 4).join(', ')}`
           : ''
         process.stdout.write(
-          `    - ${formatContentCheck(item.classification)}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
+          `    - ${formatCoverage(item.classification)}: ${truncate(item.query, 64)} (body ${(item.bodyCoverage * 100).toFixed(0)}%${missing})\n`,
         )
       }
     }
@@ -195,10 +191,47 @@ export const pseoAuditCommand = defineCommand({
       description:
         'Sample URLs to check per detected template with URL Inspection.',
     },
+    'max-sitemap-urls': {
+      type: 'string',
+      description: 'Maximum discovered URLs per sitemap. Defaults to 50000.',
+    },
+    'minimum-template-urls': {
+      type: 'string',
+      description:
+        'Minimum repeated URLs required for a template. Defaults to 3.',
+    },
+    'minimum-template-share': {
+      type: 'string',
+      description:
+        'Minimum share of discovered URLs from 0 to 1. Defaults to 0.',
+    },
+    'minimum-template-impressions': {
+      type: 'string',
+      description:
+        'Minimum retained page impressions for a template. Defaults to 0.',
+    },
+    'brand-terms': {
+      type: 'string',
+      description:
+        'Comma-separated brand terms to exclude from query evidence.',
+    },
+    'fetch-concurrency': {
+      type: 'string',
+      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+    },
+    'fetch-interval-cap': {
+      type: 'string',
+      description: 'Maximum page fetches per interval per host. Defaults to 4.',
+    },
+    'fetch-interval-ms': {
+      type: 'string',
+      description: 'Fetch rate interval in milliseconds. Defaults to 1000.',
+    },
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const options = pseoOptions(args)
     const selection = await resolveClientSelection({
       client: projectArg(args),
       site: stringArg(args.site),
@@ -206,15 +239,8 @@ export const pseoAuditCommand = defineCommand({
     })
     const report = await pseoAuditReport({
       site: selection.site,
-      days: numberArg(args.days),
-      sitemaps: csv(stringArg(args.sitemap)),
-      templateLimit: numberArg(args.limit),
-      crawlSamples: numberArg(args['crawl-samples']),
-      inspectSamples: numberArg(args['inspect-samples']),
-      brandTerms: selection.client?.brandTerms,
-      includeBrand: booleanArg(args['include-brand']),
-      js: booleanArg(args.js) ? true : 'auto',
-      refresh: booleanArg(args.refresh),
+      ...options,
+      brandTerms: options.brandTerms ?? selection.client?.brandTerms,
       progress: createProgressReporter(!json),
     })
 
@@ -230,8 +256,14 @@ export const pseoAuditCommand = defineCommand({
       ['Sitemap URLs', formatCount(report.summary.sitemapUrls)],
       ['Clicks', formatCount(report.summary.clicks)],
       ['Impressions', formatCount(report.summary.impressions)],
-      ['Crawled URLs', formatCount(report.summary.crawledUrls)],
-      ['Inspected URLs', formatCount(report.summary.inspectedUrls)],
+      [
+        'Usable crawls',
+        `${formatCount(report.summary.crawledUrls)}/${formatCount(report.summary.crawlAttempts)}`,
+      ],
+      [
+        'Inspection responses',
+        `${formatCount(report.summary.inspectedUrls)}/${formatCount(report.summary.inspectionAttempts)}`,
+      ],
     ])
     printNotes('Report caveats', report.caveats)
 

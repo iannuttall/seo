@@ -23,8 +23,12 @@ export type StrikingDistancePriority = {
 }
 
 export type StrikingDistanceRecommendation = {
-  type: 'investigate-ranking'
-  confidence: 'low'
+  type:
+    | 'investigate-ranking'
+    | 'review-page-evidence'
+    | 'fix-technical'
+    | 'verification-failed'
+  confidence: 'low' | 'medium'
   evidence: string
   action: string
 }

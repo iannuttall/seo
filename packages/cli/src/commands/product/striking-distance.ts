@@ -29,7 +29,7 @@ function rowCountLabel(count: number): string {
 export const strikingDistanceCommand = defineCommand({
   meta: {
     name: 'striking-distance',
-    description: 'Find position 11-20 query/page opportunities',
+    description: 'Find query/page rows averaging positions above 10 through 20',
   },
   args: {
     site: {
@@ -92,38 +92,40 @@ export const strikingDistanceCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Opportunities', formatCount(report.summary.opportunities)],
+      ['Eligible rows', formatCount(report.summary.eligibleRows)],
+      ['Returned rows', formatCount(report.summary.returnedRows)],
       ['Template groups', formatCount(report.summary.groups)],
-      ['Impressions', formatCount(report.summary.totalImpressions)],
+      ['Eligible impressions', formatCount(report.summary.eligibleImpressions)],
       ['Brand queries', report.summary.brandFiltering],
       ['Verification', report.verification.requested ? 'requested' : 'off'],
       ['Verdict', report.summary.verdict],
     ])
     printNotes('Why this matters', [
-      'These rows already rank in positions 11-20, so small relevance and internal-link improvements can move them onto page one.',
-      'Grouped actions show whether the work is a one-page edit or a shared template/internal-link fix.',
+      'These rows have a GSC average position above 10 and at most 20. Treat them as candidates for investigation, not guaranteed page-two rankings.',
+      'Groups use all eligible rows. A shared-template label is only a candidate until recurring evidence is verified across distinct URLs.',
     ])
     printNotes('Recommended actions', report.recommendations)
     printNotes('Report caveats', report.caveats)
 
     if (report.groups.length) {
       printLimitedTable(
-        ['Group', 'Rows', 'Impr', 'Best pos', 'Avg pos', 'Action'],
+        ['Group', 'Rows', 'URLs', 'Impr', 'Avg pos', 'Scope', 'Action'],
         report.groups.map((group) => [
           truncate(group.label, 36),
-          formatCount(group.count),
+          formatCount(group.rowCount),
+          formatCount(group.uniqueUrls),
           formatCount(group.totalImpressions),
-          formatPosition(group.bestPosition),
-          formatPosition(group.averagePosition),
-          truncate(group.recommendation, 72),
+          formatPosition(group.impressionWeightedPosition),
+          group.actionScope,
+          truncate(group.recommendation.action, 72),
         ]),
       )
       printActionDetails(
         'Top striking-distance group actions',
         report.groups.map((group) => ({
           label: group.label,
-          context: `${rowCountLabel(group.count)}, ${formatCount(group.totalImpressions)} impressions`,
-          action: group.recommendation,
+          context: `${rowCountLabel(group.rowCount)}, ${formatCount(group.totalImpressions)} impressions`,
+          action: group.recommendation.action,
         })),
       )
     }
@@ -155,10 +157,10 @@ export const strikingDistanceCommand = defineCommand({
         formatCount(item.impressions),
         formatPercent(item.ctr),
         formatPosition(item.position),
-        item.opportunityScore,
+        item.priority.score,
         formatFetchDiagnostics(item.contentVerification?.fetchDiagnostics),
         formatContentCheck(item.contentVerification?.classification),
-        truncate(item.action, 72),
+        truncate(item.recommendation.action, 72),
       ]),
     )
     printActionDetails(
@@ -166,7 +168,7 @@ export const strikingDistanceCommand = defineCommand({
       report.items.map((item) => ({
         label: item.query,
         context: `${item.template.label}, pos ${formatPosition(item.position)}, ${formatCount(item.impressions)} impressions`,
-        action: item.action,
+        action: item.recommendation.action,
       })),
     )
   },

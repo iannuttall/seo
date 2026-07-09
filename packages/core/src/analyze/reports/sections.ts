@@ -228,8 +228,8 @@ export function contentOpportunityBullets(
     const top = report.strikingDistance.items[0]
     bullets.push(
       top
-        ? `${report.summary.strikingDistanceItems} position 11-20 ${plural(report.summary.strikingDistanceItems, 'opportunity', 'opportunities')} are available. Start with "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
-        : `${report.summary.strikingDistanceItems} position 11-20 ${plural(report.summary.strikingDistanceItems, 'opportunity', 'opportunities')} are available.`,
+        ? `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20. Start by investigating "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
+        : `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20.`,
     )
   }
 

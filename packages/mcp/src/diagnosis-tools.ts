@@ -20,6 +20,7 @@ type StrikingDistanceToolInput = {
   verifyContent?: boolean
   verifyLimit?: number
   includeBrand?: boolean
+  brandTerms?: string[]
   js?: boolean
   fetchConcurrency?: number
   fetchIntervalCap?: number
@@ -135,6 +136,17 @@ export function registerDiagnosisTools(server: McpServer): void {
           'fetchIntervalMs',
           'refresh',
         ]),
+        days: z.number().int().min(1).max(548).optional(),
+        minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        verifyLimit: z.number().int().min(0).max(100).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
+        fetchConcurrency: z.number().int().min(1).max(16).optional(),
+        fetchIntervalCap: z.number().int().min(1).max(60).optional(),
+        fetchIntervalMs: z.number().int().min(100).max(60_000).optional(),
       },
     },
     async ({
@@ -145,6 +157,7 @@ export function registerDiagnosisTools(server: McpServer): void {
       verifyContent,
       verifyLimit,
       includeBrand,
+      brandTerms,
       js,
       fetchConcurrency,
       fetchIntervalCap,
@@ -160,6 +173,7 @@ export function registerDiagnosisTools(server: McpServer): void {
           verifyContent,
           verifyLimit,
           includeBrand,
+          brandTerms,
           js: js ? true : undefined,
           rate: fetchRateInput({
             fetchConcurrency,

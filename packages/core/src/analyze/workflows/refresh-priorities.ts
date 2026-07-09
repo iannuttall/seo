@@ -123,16 +123,17 @@ export async function refreshPrioritiesWorkflow(input: {
       source: 'striking-distance',
       title: item.query,
       target: item.url,
-      impact: item.opportunityScore,
-      confidence: 'high',
+      impact: item.priority.score,
+      confidence: item.recommendation.confidence,
+      verification: item.contentVerification?.classification,
       template: {
         id: item.template.id,
         label: item.template.label,
         count: templateItems ?? 1,
       },
       analytics: landingValue,
-      action: item.action,
-      evidence: `${item.impressions} impressions at position ${item.position}.`,
+      action: item.recommendation.action,
+      evidence: item.recommendation.evidence,
     })
   }
 

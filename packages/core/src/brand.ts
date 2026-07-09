@@ -1,5 +1,15 @@
 import { querySearchAnalytics } from './gsc/client.js'
 
+const COUNTRY_CODE_SECOND_LEVELS = new Set([
+  'ac',
+  'co',
+  'com',
+  'edu',
+  'gov',
+  'net',
+  'org',
+])
+
 function normalizeBrandText(value: string): string {
   return value
     .normalize('NFKC')
@@ -18,7 +28,11 @@ function domainStem(siteUrl: string): string | undefined {
   if (!host) return undefined
   const parts = host.split('.').filter(Boolean)
   if (!parts.length) return undefined
-  return parts.length > 2 ? parts.at(-2) : parts[0]
+  const last = parts.at(-1) ?? ''
+  const secondLast = parts.at(-2) ?? ''
+  const suffixDepth =
+    last.length === 2 && COUNTRY_CODE_SECOND_LEVELS.has(secondLast) ? 2 : 1
+  return parts.at(-(suffixDepth + 1)) ?? parts[0]
 }
 
 function unique(values: string[]): string[] {

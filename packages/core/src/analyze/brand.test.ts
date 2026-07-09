@@ -17,6 +17,17 @@ test('deriveBrandTerms includes domain and compact client names', () => {
   assert.ok(terms.includes('examplebrand'))
 })
 
+test('deriveBrandTerms handles common country-code public suffixes', () => {
+  assert.deepEqual(
+    deriveBrandTerms({ siteUrl: 'sc-domain:shop.example.co.uk' }),
+    ['example'],
+  )
+  assert.deepEqual(
+    deriveBrandTerms({ siteUrl: 'https://www.example.com.au/products' }),
+    ['example'],
+  )
+})
+
 test('brand query matching is token-aware for short brands', () => {
   assert.equal(isBrandQuery('acme docs', ['acme']), true)
   assert.equal(isBrandQuery('best academic apps', ['acme']), false)

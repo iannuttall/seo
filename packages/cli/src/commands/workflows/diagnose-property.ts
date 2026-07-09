@@ -119,7 +119,7 @@ export function reportFollowups(
     )
   }
 
-  if (diagnosis.strikingDistance.summary.opportunities > 0) {
+  if (diagnosis.strikingDistance.summary.eligibleRows > 0) {
     addFollowup(
       commands,
       `seo second-page ${identity} --verify-content --verify-limit 5`,

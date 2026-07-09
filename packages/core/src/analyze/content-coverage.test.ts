@@ -13,6 +13,14 @@ test('normalizeForCoverage folds accents and apostrophe variants', () => {
   assert.equal(normalizeForCoverage('peoples surname'), 'peoples surname')
 })
 
+test('normalizeForCoverage preserves non-Latin scripts', () => {
+  assert.equal(
+    normalizeForCoverage('تويتر: بحث بدون حساب'),
+    'تويتر بحث بدون حساب',
+  )
+  assert.equal(normalizeForCoverage('技术 搜索引擎优化'), '技术 搜索引擎优化')
+})
+
 test('measureCoverage counts normalized phrase matches', () => {
   const coverage = measureCoverage(
     'peoples surname',
@@ -31,6 +39,18 @@ test('measureCoverage separates phrase match from term coverage', () => {
 
   assert.equal(coverage.phraseCount, 0)
   assert.equal(coverage.termCoverage, 1)
+})
+
+test('measureCoverage matches Arabic and CJK content', () => {
+  const arabic = measureCoverage(
+    'تويتر بحث بدون حساب',
+    'دليل تويتر بحث بدون حساب للمبتدئين.',
+  )
+  const cjk = measureCoverage('搜索引擎优化', '搜索引擎优化技术指南')
+
+  assert.equal(arabic.phraseCount, 1)
+  assert.equal(arabic.termCoverage, 1)
+  assert.equal(cjk.termCoverage, 1)
 })
 
 function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
@@ -124,4 +144,21 @@ test('contentCoverageRecommendation flags redirected GSC URLs first', () => {
   assert.equal(coverage.classification, 'technical-check')
   assert.match(contentCoverageRecommendation(coverage), /resolves/)
   assert.match(contentCoverageRecommendation(coverage), /salary for plumber/)
+})
+
+test('queryContentCoverageFromPage does not invent Arabic content gaps', () => {
+  const query = 'تويتر بحث بدون حساب'
+  const coverage = queryContentCoverageFromPage({
+    query,
+    url: 'https://example.com/page/',
+    page: page({
+      title: query,
+      metaDescription: `دليل ${query}`,
+      headings: [{ level: 1, text: query }],
+      contentText: `هذا دليل ${query} للمبتدئين.`,
+    }),
+  })
+
+  assert.equal(coverage.classification, 'covered')
+  assert.deepEqual(coverage.fields.mainContent.missingTerms, [])
 })

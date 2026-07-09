@@ -2,6 +2,7 @@ import { technicalWatchWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  defaultTrueBooleanArg,
   jsonFlag,
   listArg,
   numberArg,
@@ -72,12 +73,10 @@ export const technicalWatchCommand = defineCommand({
       type: 'string',
       description: 'Optional URL Inspection language code.',
     },
-    'recover-links': {
-      type: 'boolean',
-      default: true,
-      description:
-        'Check search-value GSC pages for broken, blocked, or poorly redirected URLs. Defaults to true.',
-    },
+    'recover-links': defaultTrueBooleanArg(
+      'Check search-value GSC pages for broken, blocked, or poorly redirected URLs. Defaults to true.',
+      'Skip link recovery checks.',
+    ),
     'recover-days': {
       type: 'string',
       description: 'GSC lookback window for link recovery. Defaults to 90.',

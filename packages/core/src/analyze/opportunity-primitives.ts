@@ -171,14 +171,16 @@ export function createCtrBenchmarkContext(rows: OpportunityBenchmarkRow[]) {
     sourceSuffix?: string,
   ): PositionBenchmark {
     const position = roundedPosition(row.position)
-    const rowRaw = {
-      ...raw,
-      [position]: bucketBenchmark({
-        rows: buckets.get(position) ?? [],
-        position,
-        excludedRows: new Set(excludedRows),
+    const excludedSet = new Set(excludedRows)
+    const rowRaw: Record<number, PositionBenchmark> = {}
+
+    for (const bucketPosition of Object.keys(CTR_BASELINE).map(Number)) {
+      rowRaw[bucketPosition] = bucketBenchmark({
+        rows: buckets.get(bucketPosition) ?? [],
+        position: bucketPosition,
+        excludedRows: excludedSet,
         sourceSuffix,
-      }),
+      })
     }
 
     return (

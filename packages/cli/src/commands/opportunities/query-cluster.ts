@@ -1,6 +1,12 @@
 import { queryClusterReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, projectArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  projectArg,
+  stringArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -23,9 +29,15 @@ export const queryClusterCommand = defineCommand({
     project: { type: 'string', description: 'Saved project id or name.' },
     client: { type: 'string', description: 'Legacy alias for --project.' },
     scope: { type: 'string' },
-    ...cliReportArgs(['includeBrand'], {
+    ...cliReportArgs(['includeBrand', 'minImpressions', 'limit'], {
       includeBrand: {
         description: 'Include branded queries in query clustering.',
+      },
+      minImpressions: {
+        description: 'Minimum impressions per query. Defaults to 25.',
+      },
+      limit: {
+        description: 'Maximum clusters to return. Defaults to 25; max 100.',
       },
     }),
     json: { type: 'boolean', default: false },
@@ -43,6 +55,8 @@ export const queryClusterCommand = defineCommand({
       brand: selection.client?.brandTerms?.[0],
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
+      minImpressions: numberArg(args['min-impressions']),
+      limit: numberArg(args.limit),
     })
     if (json) {
       printJson(report)
@@ -55,6 +69,8 @@ export const queryClusterCommand = defineCommand({
       ['Queries', formatCount(report.summary.queries)],
       ['Impressions', formatCount(report.summary.impressions)],
       ['Clicks', formatCount(report.summary.clicks)],
+      ['Minimum impressions', formatCount(report.summary.minImpressions)],
+      ['Result limit', formatCount(report.summary.limit)],
       ['Brand queries', report.summary.brandFiltering],
       [
         'High-opportunity clusters',
@@ -69,15 +85,27 @@ export const queryClusterCommand = defineCommand({
     printNotes('Recommended actions', report.recommendations)
     printNotes('Report caveats', report.caveats)
     printLimitedTable(
-      ['Cluster', 'Intent', 'Queries', 'Impr', 'Clicks', 'CTR', 'Action'],
+      [
+        'Cluster',
+        'Intent',
+        'Queries',
+        'Impr',
+        'CTR',
+        'Expected',
+        'Lift',
+        'Action',
+      ],
       report.clusters.map((cluster) => {
         return [
           truncate(cluster.label, 32),
           cluster.intent,
           cluster.queries.length,
           formatCount(cluster.totals?.impressions ?? 0),
-          formatCount(cluster.totals?.clicks ?? 0),
           formatPercent(cluster.totals?.ctr ?? 0),
+          formatPercent(cluster.benchmark?.expectedCtr ?? 0),
+          cluster.estimatedClickLift === undefined
+            ? '-'
+            : formatCount(cluster.estimatedClickLift),
           truncate(cluster.recommendation ?? '', 72),
         ]
       }),
@@ -86,7 +114,7 @@ export const queryClusterCommand = defineCommand({
       'Top cluster actions',
       report.clusters.map((cluster) => ({
         label: cluster.label,
-        context: `${formatCount(cluster.totals?.impressions ?? 0)} impressions`,
+        context: `${formatCount(cluster.totals?.impressions ?? 0)} impressions, ${cluster.estimatedClickLift === undefined ? 'ranking opportunity' : `${formatCount(cluster.estimatedClickLift)} estimated click lift`}`,
         action: cluster.recommendation ?? '',
       })),
     )

@@ -115,6 +115,16 @@ export interface QueryCluster {
     averagePosition: number
     ctr: number
   }
+  benchmark?: {
+    expectedCtr: number
+    source: string
+    peerRows: number
+    peerImpressions: number
+    qualifiedPeerImpressions: number
+    urlSamples: number
+    positiveUrlSamples: number
+  }
+  estimatedClickLift?: number
   opportunityScore?: number
   summary?: string
   recommendation?: string

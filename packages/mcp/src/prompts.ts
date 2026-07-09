@@ -18,7 +18,7 @@ export function registerPrompts(server: McpServer): void {
           role: 'user',
           content: {
             type: 'text',
-            text: `Run the seo_second_page tool with site=${site}, range=${range ?? '28'}, limit=${limit ?? '5'}. Use only tool output. Quote the evidenceRef. Do not invent data.`,
+            text: `Run the seo_second_page tool with site=${site}, range=${range ?? '28'}, limit=${limit ?? '5'}. Use only tool output. Cite each recommendation's evidence field. Do not invent data.`,
           },
         },
       ],

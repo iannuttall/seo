@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { secondPage } from '@seo/core'
+import * as z from 'zod/v4'
 import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
 import {
@@ -14,6 +15,7 @@ type SecondPageToolInput = ReportFetchToolInput & {
   minImpressions?: number
   limit?: number
   includeBrand?: boolean
+  brandTerms?: string[]
 }
 
 export function registerSecondPageTool(server: McpServer): void {
@@ -21,7 +23,7 @@ export function registerSecondPageTool(server: McpServer): void {
     'seo_second_page',
     {
       description:
-        'Find page-two opportunities with evidence-grounded recommendations',
+        'Find URLs with GSC average position above 10 through 20 and return evidence-grounded investigation prompts',
       inputSchema: {
         ...mcpReportInputSchema([
           'site',
@@ -31,6 +33,17 @@ export function registerSecondPageTool(server: McpServer): void {
           'includeBrand',
         ]),
         ...reportFetchInputSchema,
+        range: z.number().int().min(1).max(548).optional(),
+        minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        verifyLimit: z.number().int().min(0).max(100).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
+        fetchConcurrency: z.number().int().min(1).max(16).optional(),
+        fetchIntervalCap: z.number().int().min(1).max(60).optional(),
+        fetchIntervalMs: z.number().int().min(100).max(60_000).optional(),
       },
     },
     async ({
@@ -39,6 +52,7 @@ export function registerSecondPageTool(server: McpServer): void {
       minImpressions,
       limit,
       includeBrand,
+      brandTerms,
       ...fetchInput
     }: SecondPageToolInput) => {
       try {
@@ -48,6 +62,7 @@ export function registerSecondPageTool(server: McpServer): void {
           minImpressions,
           limit,
           includeBrand,
+          brandTerms,
           ...reportFetchOptions(fetchInput),
         })
         return toolSuccess(result.summary.verdict, result)

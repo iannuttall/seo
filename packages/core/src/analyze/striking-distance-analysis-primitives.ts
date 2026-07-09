@@ -135,7 +135,7 @@ export function groupStrikingDistanceItems(
   }
 
   return [...grouped.entries()]
-    .map(([id, members]) => {
+    .map(([id, members]): StrikingDistanceAnalysisGroup | undefined => {
       const first = members[0]
       if (!first) return undefined
       const urls = [...new Set(members.map((item) => item.url))]
@@ -174,7 +174,7 @@ export function groupStrikingDistanceItems(
             ? `Review the sampled ${first.template.label.toLowerCase()} URLs for a recurring technical, content, or internal-link pattern before changing the shared template.`
             : `Review these URLs individually; the current evidence does not support a shared-template change.`,
         },
-      } satisfies StrikingDistanceAnalysisGroup
+      }
     })
     .filter(
       (group): group is StrikingDistanceAnalysisGroup => group !== undefined,

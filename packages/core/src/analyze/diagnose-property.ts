@@ -10,7 +10,10 @@ import {
   decayingReport,
   quickWinsReport,
 } from './site-diagnostics.js'
-import { strikingDistance } from './striking-distance.js'
+import {
+  analyzeStrikingDistanceRows,
+  strikingDistance,
+} from './striking-distance.js'
 import {
   trafficAnomaly,
   type UpdateCorrelationReport,
@@ -197,18 +200,38 @@ function emptyStriking(input: {
   site: string
   days?: number
 }): Awaited<ReturnType<typeof strikingDistance>> {
+  const analysis = analyzeStrikingDistanceRows({ rows: [], site: input.site })
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
     range: defaultDateRange(input.days ?? 28),
-    verification: { requested: false, verified: 0, failed: 0 },
+    rangeDays: input.days ?? 28,
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      searchType: 'web',
+      dataState: 'final',
+      rowsFetched: 0,
+      calls: 0,
+      maxRows: 100_000,
+      possiblyTruncated: false,
+      completeness: 'retained-query-rows-only',
+    },
+    dataStatus: analysis.dataStatus,
+    selection: analysis.selection,
+    methodology: analysis.methodology,
+    verification: {
+      requested: false,
+      attempted: 0,
+      verified: 0,
+      technical: 0,
+      failed: 0,
+    },
     items: [],
     templates: [] as TemplateSummary[],
     groups: [],
     summary: {
-      opportunities: 0,
-      groups: 0,
-      totalImpressions: 0,
+      ...analysis.summary,
       brandFiltering: 'excluded',
       verdict: 'Striking-distance analysis was skipped.',
     },
@@ -322,12 +345,14 @@ function buildPriorities(input: {
   }
 
   if (input.striking.items.length) {
+    const top = input.striking.items[0]
     priorities.push({
-      label: 'Exploit striking-distance wins',
-      reason: `${input.striking.items.length} position 11-20 opportunities found.`,
+      label: 'Investigate striking-distance candidates',
+      reason: `${input.striking.items.length} query/page rows have an average GSC position above 10 and at most 20.`,
       action:
-        'These queries are close to page one. Improve the matching page title/H1/body coverage and add internal links from related pages before creating new content.',
-      confidence: 'high',
+        top?.recommendation.action ??
+        'Check technical state, query coverage, competing URLs, and relevant internal links before choosing a change.',
+      confidence: top?.recommendation.confidence ?? 'low',
     })
   }
 

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { analyzeStrikingDistanceRows } from '../analyze/striking-distance.js'
 import { diagnoseCsvFiles, renderCsv } from './csv.js'
 
 test('renderCsv escapes commas, quotes, and newlines', () => {
@@ -24,6 +25,10 @@ test('renderCsv can render empty tables with explicit headers', () => {
 })
 
 test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
+  const striking = analyzeStrikingDistanceRows({
+    site: 'sc-domain:example.com',
+    rows: [],
+  })
   const files = diagnoseCsvFiles({
     site: 'sc-domain:example.com',
     generatedAt: '',
@@ -106,14 +111,33 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       site: 'sc-domain:example.com',
       generatedAt: '',
       range: { startDate: '2026-05-01', endDate: '2026-05-30' },
-      verification: { requested: false, verified: 0, failed: 0 },
+      rangeDays: 30,
+      source: {
+        provider: 'google-search-console',
+        dimensions: ['query', 'page'],
+        searchType: 'web',
+        dataState: 'final',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+        completeness: 'retained-query-rows-only',
+      },
+      dataStatus: striking.dataStatus,
+      selection: striking.selection,
+      methodology: striking.methodology,
+      verification: {
+        requested: false,
+        attempted: 0,
+        verified: 0,
+        technical: 0,
+        failed: 0,
+      },
       items: [],
       templates: [],
       groups: [],
       summary: {
-        opportunities: 0,
-        groups: 0,
-        totalImpressions: 0,
+        ...striking.summary,
         brandFiltering: 'excluded',
         verdict: 'No position 11-20 opportunities matched these filters.',
       },

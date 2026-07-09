@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
+import { analyzeStrikingDistanceRows } from '../striking-distance.js'
 import { contentOpportunityBullets, headlineLine } from './sections.js'
 
 function emptyDiagnosis(): DiagnosePropertyReport {
+  const striking = analyzeStrikingDistanceRows({
+    site: 'sc-domain:example.com',
+    rows: [],
+  })
   return {
     site: 'sc-domain:example.com',
     generatedAt: '2026-06-03T00:00:00.000Z',
@@ -86,14 +91,33 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       site: 'sc-domain:example.com',
       generatedAt: '',
       range: { startDate: '2026-05-01', endDate: '2026-05-30' },
-      verification: { requested: false, verified: 0, failed: 0 },
+      rangeDays: 30,
+      source: {
+        provider: 'google-search-console',
+        dimensions: ['query', 'page'],
+        searchType: 'web',
+        dataState: 'final',
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+        completeness: 'retained-query-rows-only',
+      },
+      dataStatus: striking.dataStatus,
+      selection: striking.selection,
+      methodology: striking.methodology,
+      verification: {
+        requested: false,
+        attempted: 0,
+        verified: 0,
+        technical: 0,
+        failed: 0,
+      },
       items: [],
       templates: [],
       groups: [],
       summary: {
-        opportunities: 0,
-        groups: 0,
-        totalImpressions: 0,
+        ...striking.summary,
         brandFiltering: 'excluded',
         verdict: 'No position 11-20 opportunities matched these filters.',
       },

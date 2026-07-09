@@ -74,12 +74,19 @@ export type QueryContentClassification =
   | 'fetch-failed'
 
 export type QueryContentSignal =
+  | 'http-non-2xx'
+  | 'http-no-content'
   | 'redirected'
+  | 'fetch-incomplete'
   | 'exact-phrase-missing'
   | 'title-gap'
+  | 'meta-description-gap'
   | 'h1-gap'
   | 'body-gap'
   | 'blocked'
+  | 'meta-noindex'
+  | 'x-robots-noindex'
+  | 'canonical-mismatch'
 
 export interface QueryContentCoverage {
   verifiedAt: string
@@ -88,6 +95,8 @@ export interface QueryContentCoverage {
   finalUrl?: string
   status: 'verified' | 'failed'
   error?: string
+  httpStatus?: number
+  warnings?: string[]
   wordCount?: number
   fetchDiagnostics?: PageFetchDiagnostics
   contentGapScore: number

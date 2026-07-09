@@ -8,7 +8,6 @@ import {
 } from './page-opportunities-evidence.js'
 import {
   normalizePageOpportunityOptions,
-  samePage,
   selectBenchmarkRows,
   selectTargetRows,
 } from './page-opportunities-selection.js'
@@ -17,6 +16,7 @@ import type {
   PageOpportunityAnalysisInput,
   PageOpportunityItem,
 } from './page-opportunities-types.js'
+import { samePageUrl } from './page-technical-signals.js'
 
 export { technicalPageSignals } from './page-opportunities-evidence.js'
 export type {
@@ -124,7 +124,7 @@ export function analyzePageOpportunitiesFromRows(
     includeBrand: input.includeBrand,
   })
   const excludedTargetRows = benchmarkRows.filter((row) =>
-    samePage(row.keys[1] ?? '', input.url),
+    samePageUrl(row.keys[1] ?? '', input.url),
   )
   const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
   const items = eligibleRows

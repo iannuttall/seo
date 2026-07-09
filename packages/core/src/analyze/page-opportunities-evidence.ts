@@ -1,68 +1,17 @@
 import type { ExtractedPage, PageFetchDiagnostics } from '../types.js'
-import { measureCoverage } from './content-coverage.js'
+import {
+  contentCoverageType,
+  queryContentFieldsFromPage,
+} from './content-coverage.js'
 import type { PositionBenchmark } from './opportunity-primitives.js'
-import { samePage } from './page-opportunities-selection.js'
 import type {
   PageOpportunityBenchmark,
   PageOpportunityType,
   PageOpportunityVerification,
 } from './page-opportunities-types.js'
+import { pageTechnicalSignals } from './page-technical-signals.js'
 
-function absoluteUrl(value: string, base: string): string {
-  try {
-    return new URL(value, base).toString()
-  } catch {
-    return value
-  }
-}
-
-export function technicalPageSignals(input: {
-  url: string
-  page?: ExtractedPage
-  fetchDiagnostics?: PageFetchDiagnostics
-  httpStatus?: number
-}): string[] {
-  const signals: string[] = []
-  if (
-    input.httpStatus !== undefined &&
-    (input.httpStatus < 200 || input.httpStatus > 299)
-  ) {
-    signals.push('http-non-2xx')
-  }
-  if (input.httpStatus === 204 || input.httpStatus === 205) {
-    signals.push('http-no-content')
-  }
-  if (input.fetchDiagnostics?.blocked) signals.push('fetch-blocked')
-  if (
-    input.fetchDiagnostics &&
-    !input.fetchDiagnostics.fetched &&
-    input.fetchDiagnostics.source !== 'cache'
-  ) {
-    signals.push('fetch-incomplete')
-  }
-  if (
-    (input.fetchDiagnostics?.redirectChain?.length ?? 0) > 0 ||
-    (input.page && !samePage(input.url, input.page.finalUrl))
-  ) {
-    signals.push('redirected')
-  }
-  if (/\b(?:noindex|none)\b/i.test(input.page?.metaRobots ?? '')) {
-    signals.push('meta-noindex')
-  }
-  if (/\b(?:noindex|none)\b/i.test(input.page?.xRobotsTag ?? '')) {
-    signals.push('x-robots-noindex')
-  }
-  if (
-    input.page?.canonical &&
-    !samePage(
-      input.page.finalUrl,
-      absoluteUrl(input.page.canonical, input.page.finalUrl),
-    )
-  ) {
-    signals.push('canonical-mismatch')
-  }
-  return signals
-}
+export { pageTechnicalSignals as technicalPageSignals }
 
 export function verificationFor(input: {
   query: string
@@ -71,7 +20,7 @@ export function verificationFor(input: {
   fetchDiagnostics?: PageFetchDiagnostics
   httpStatus?: number
 }): PageOpportunityVerification {
-  const signals = technicalPageSignals(input)
+  const signals = pageTechnicalSignals(input)
   if (signals.length > 0) {
     return {
       status: 'technical-check',
@@ -92,38 +41,13 @@ export function verificationFor(input: {
     }
   }
 
-  const h1 = input.page.headings
-    .filter((heading) => heading.level === 1)
-    .map((heading) => heading.text)
-    .join(' ')
   return {
     status: 'verified',
     reason: 'The recommendation uses extracted on-page evidence.',
     signals: [],
     httpStatus: input.httpStatus,
-    fields: {
-      title: measureCoverage(input.query, input.page.title),
-      metaDescription: measureCoverage(input.query, input.page.metaDescription),
-      h1: measureCoverage(input.query, h1),
-      mainContent: measureCoverage(input.query, input.page.contentText),
-    },
+    fields: queryContentFieldsFromPage(input.query, input.page),
   }
-}
-
-function verifiedCoverageType(
-  verification: PageOpportunityVerification,
-): 'content-gap' | 'serp-framing' | 'covered' {
-  const fields = verification.fields
-  if (!fields) return 'covered'
-  if (fields.mainContent.termCoverage < 0.8) return 'content-gap'
-  if (
-    fields.title.termCoverage < 0.8 ||
-    fields.metaDescription.termCoverage < 0.8 ||
-    fields.h1.termCoverage < 0.8
-  ) {
-    return 'serp-framing'
-  }
-  return 'covered'
 }
 
 export function opportunityType(input: {
@@ -133,8 +57,8 @@ export function opportunityType(input: {
   verification: PageOpportunityVerification
 }): PageOpportunityType {
   if (input.verification.status === 'technical-check') return 'technical-check'
-  if (input.verification.status === 'verified') {
-    const coverageType = verifiedCoverageType(input.verification)
+  if (input.verification.status === 'verified' && input.verification.fields) {
+    const coverageType = contentCoverageType(input.verification.fields)
     if (coverageType !== 'covered') return coverageType
   }
   if (input.position > 10) return 'ranking'

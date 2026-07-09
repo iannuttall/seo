@@ -21,8 +21,8 @@ test('clusterPseoTemplates infers static and variable path shape', () => {
   assert.equal(cluster?.shape.variableSegments[0]?.index, 1)
   assert.equal(cluster?.shape.variableSegments[0]?.distinctValues, 4)
   assert.deepEqual(cluster?.shape.variableSegments[0]?.examples.slice(0, 2), [
-    'red-widget',
     'blue-widget',
+    'green-widget',
   ])
 })
 
@@ -37,4 +37,31 @@ test('templateForUrl still resolves broad templates for sparse URL shapes', () =
     templateForUrl('https://example.com/library/delta-notes', clusters),
     '/library/:slug',
   )
+})
+
+test('clusterPseoTemplates excludes singleton static pages', () => {
+  assert.deepEqual(
+    clusterPseoTemplates(['https://example.com/about'], { minShare: 0 }),
+    [],
+  )
+})
+
+test('clusterPseoTemplates keeps Unicode and numeric variable evidence', () => {
+  const [cluster] = clusterPseoTemplates([
+    'https://example.com/models/x5/東京',
+    'https://example.com/models/x7/大阪',
+    'https://example.com/models/x9/京都',
+  ])
+
+  assert.equal(cluster?.signature, '/models/:value/:value')
+  assert.deepEqual(cluster?.shape.variableSegments[0]?.tokenExamples, [
+    'x5',
+    'x7',
+    'x9',
+  ])
+  assert.deepEqual(cluster?.shape.variableSegments[1]?.tokenExamples, [
+    '京都',
+    '大阪',
+    '東京',
+  ])
 })

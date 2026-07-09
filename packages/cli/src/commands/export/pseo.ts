@@ -1,15 +1,9 @@
 import { pseoAuditReport, pseoCsvFiles } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  csvArg,
-  fetchRateArg,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
+import { projectArg, stringArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
+import { pseoOptions } from '../pseo/options.js'
 import {
   defaultOutDir,
   exportSelectionArgs,
@@ -49,6 +43,30 @@ export const exportPseoCommand = defineCommand({
       description:
         'Number of representative URLs to inspect in GSC per template. Defaults to 0.',
     },
+    'max-sitemap-urls': {
+      type: 'string',
+      description: 'Maximum discovered URLs per sitemap. Defaults to 50000.',
+    },
+    'minimum-template-urls': {
+      type: 'string',
+      description:
+        'Minimum repeated URLs required for a template. Defaults to 3.',
+    },
+    'minimum-template-share': {
+      type: 'string',
+      description:
+        'Minimum share of discovered URLs from 0 to 1. Defaults to 0.',
+    },
+    'minimum-template-impressions': {
+      type: 'string',
+      description:
+        'Minimum retained page impressions for a template. Defaults to 0.',
+    },
+    'brand-terms': {
+      type: 'string',
+      description:
+        'Comma-separated brand terms to exclude from query evidence.',
+    },
     'include-brand': {
       type: 'boolean',
       default: false,
@@ -78,22 +96,15 @@ export const exportPseoCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const options = pseoOptions(args)
     const selection = await resolveClientSelection({
       client: projectArg(args),
       site: stringArg(args.site),
     })
     const report = await pseoAuditReport({
       site: selection.site,
-      days: numberArg(args.days),
-      templateLimit: numberArg(args.limit),
-      sitemaps: csvArg(args.sitemap),
-      crawlSamples: numberArg(args['crawl-samples']),
-      inspectSamples: numberArg(args['inspect-samples']),
-      brandTerms: selection.client?.brandTerms,
-      includeBrand: booleanArg(args['include-brand']),
-      js: booleanArg(args.js) ? true : 'auto',
-      rate: fetchRateArg(args),
-      refresh: booleanArg(args.refresh),
+      ...options,
+      brandTerms: options.brandTerms ?? selection.client?.brandTerms,
       progress: createProgressReporter(true),
     })
     const outDir =

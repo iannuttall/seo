@@ -5,15 +5,15 @@ function inspectionLabel(template: PseoAuditReport['templates'][number]) {
   const total =
     template.inspection.indexed +
     template.inspection.notIndexed +
+    template.inspection.unknown +
     template.inspection.warnings
   if (!total) return 'not checked'
   return `${template.inspection.indexed}/${total} indexed`
 }
 
 function crawlLabel(template: PseoAuditReport['templates'][number]) {
-  const samples = template.crawl.samples.length
-  if (!samples) return 'not crawled'
-  return `${template.crawl.blockedOrFailed}/${samples} blocked/failed`
+  if (!template.crawl.attempted) return 'not crawled'
+  return `${template.crawl.usable}/${template.crawl.attempted} usable`
 }
 
 export function pseoPresentation(report: PseoAuditReport): Presentation {
@@ -54,7 +54,12 @@ export function pseoPresentation(report: PseoAuditReport): Presentation {
           { metric: 'clicks', value: report.summary.clicks },
           { metric: 'impressions', value: report.summary.impressions },
           { metric: 'crawled_urls', value: report.summary.crawledUrls },
+          { metric: 'crawl_attempts', value: report.summary.crawlAttempts },
           { metric: 'inspected_urls', value: report.summary.inspectedUrls },
+          {
+            metric: 'inspection_attempts',
+            value: report.summary.inspectionAttempts,
+          },
         ],
       },
       {

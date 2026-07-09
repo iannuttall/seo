@@ -110,6 +110,7 @@ test('long help and crawler command help are available', async () => {
     ['internal-links', '--help'],
     ['cannibal', '--help'],
     ['decaying', '--help'],
+    ['pseo', 'audit', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
@@ -189,6 +190,47 @@ test('internal-links help exposes bounded matching and fetch controls', async ()
     '--refresh',
   ]) {
     assert.match(output, new RegExp(flag))
+  }
+})
+
+test('pSEO help exposes bounded discovery and sampling controls', async () => {
+  const output = await runSeo(['pseo', 'audit', '--help'])
+
+  for (const flag of [
+    '--days',
+    '--limit',
+    '--minimum-template-urls',
+    '--minimum-template-share',
+    '--minimum-template-impressions',
+    '--max-sitemap-urls',
+    '--crawl-samples',
+    '--inspect-samples',
+    '--fetch-concurrency',
+    '--refresh',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
+test('pSEO JSON rejects invalid bounds before authentication', async () => {
+  for (const args of [
+    ['--crawl-samples', '11'],
+    ['--minimum-template-share', '1.1'],
+    ['--days', 'later'],
+  ]) {
+    const result = await runSeoResult([
+      'pseo',
+      'audit',
+      '--site',
+      'sc-domain:example.com',
+      ...args,
+      '--json',
+    ])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
 

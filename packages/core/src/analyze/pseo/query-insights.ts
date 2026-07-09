@@ -98,24 +98,28 @@ const THEME_STOPWORDS = new Set([
 
 export function normalizePseoText(value: string): string {
   return value
-    .normalize('NFKD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/([a-z0-9])[’']([a-z0-9])/gi, '$1$2')
+    .normalize('NFKC')
+    .replace(/([\p{L}\p{N}])[’']([\p{L}\p{N}])/gu, '$1$2')
     .toLowerCase()
     .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function isUsefulQueryTerm(term: string): boolean {
+  return term.length > 1 || /^\d$/u.test(term) || /[^\p{ASCII}]/u.test(term)
 }
 
 export function pseoQueryTerms(query: string): string[] {
   const terms = normalizePseoText(query)
     .split(' ')
-    .filter((term) => term.length > 2 && !QUERY_STOPWORDS.has(term))
+    .filter((term) => isUsefulQueryTerm(term) && !QUERY_STOPWORDS.has(term))
   return [...new Set(terms)]
 }
 
 export function canonicalPseoTerm(term: string): string {
+  if (!/^[a-z]+$/i.test(term)) return term
   if (['surname', 'surnames'].includes(term)) return 'name'
   if (['beginning', 'begins', 'started'].includes(term)) return 'start'
   if (/(as|is|ss|us)$/.test(term)) return term
@@ -131,10 +135,7 @@ export function canonicalPseoTerm(term: string): string {
 export function pseoQueryThemeTerms(query: string): string[] {
   return normalizePseoText(query)
     .split(' ')
-    .filter(
-      (term) =>
-        term.length > 2 && !THEME_STOPWORDS.has(term) && !/^\d+$/.test(term),
-    )
+    .filter((term) => isUsefulQueryTerm(term) && !THEME_STOPWORDS.has(term))
 }
 
 function queryPatternLabel(query: string): string {
@@ -197,21 +198,32 @@ function learnedQueryThemeLabels(
   >()
   const queryCandidates = new Map<string, string[]>()
 
+  const rowsByQuery = new Map<string, number>()
   for (const row of rows) {
-    const candidates = queryThemeCandidates(row.query)
-    queryCandidates.set(row.query, candidates)
+    rowsByQuery.set(
+      row.query,
+      (rowsByQuery.get(row.query) ?? 0) + row.impressions,
+    )
+  }
+
+  for (const [query, impressions] of rowsByQuery) {
+    const candidates = queryThemeCandidates(query)
+    queryCandidates.set(query, candidates)
     for (const candidate of candidates) {
       const existing = phraseStats.get(candidate) ?? {
         queryCount: 0,
         impressions: 0,
       }
       existing.queryCount += 1
-      existing.impressions += row.impressions
+      existing.impressions += impressions
       phraseStats.set(candidate, existing)
     }
   }
 
-  const totalImpressions = rows.reduce((sum, row) => sum + row.impressions, 0)
+  const totalImpressions = [...rowsByQuery.values()].reduce(
+    (sum, impressions) => sum + impressions,
+    0,
+  )
   const scoredPhrases = [...phraseStats.entries()]
     .filter(([, stats]) => stats.queryCount >= 2)
     .filter(
@@ -240,6 +252,7 @@ export function pseoQueryPatterns(
   }>,
 ): PseoQueryPattern[] {
   const patterns = new Map<string, PseoQueryPattern>()
+  const patternQueries = new Map<string, Set<string>>()
   const learnedThemes = learnedQueryThemeLabels(rows)
   for (const row of rows) {
     const intentLabel = queryPatternLabel(row.query)
@@ -254,7 +267,10 @@ export function pseoQueryPatterns(
       impressions: 0,
       examples: [],
     }
-    existing.queryCount += 1
+    const queries = patternQueries.get(label) ?? new Set<string>()
+    queries.add(row.query)
+    patternQueries.set(label, queries)
+    existing.queryCount = queries.size
     existing.clicks += row.clicks
     existing.impressions += row.impressions
     if (

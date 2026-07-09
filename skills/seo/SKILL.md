@@ -32,6 +32,7 @@ Use the `seo` MCP server exposed by the repository or installed package.
 - Use `seo_quick_wins` for high-impression pages already ranking 4-10.
 - Use `seo_cannibal` to find multi-URL query exposure candidates that need intent and technical review.
 - Use `seo_decaying` to find query/page click declines observed in both retained GSC windows and the signals to investigate. Do not treat its signals as proven causes.
+- Use `seo_pseo_audit` to find repeated URL template families and review retained page metrics, query patterns, bounded crawl samples, and exact URL Inspection verdicts.
 - Use `seo_traffic_anomaly` when the user asks whether movement is statistically unusual.
 - Use `seo_update_correlate` to compare a traffic movement with official Google update windows.
 - Use `seo_internal_links` to find contextual internal-link candidates for one target URL.

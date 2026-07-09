@@ -1,0 +1,4 @@
+interface:
+  display_name: "pSEO Audit"
+  short_description: "Audit programmatic SEO templates with evidence"
+  default_prompt: "Use $pseo-audit to audit this site's programmatic SEO templates and explain the evidence."

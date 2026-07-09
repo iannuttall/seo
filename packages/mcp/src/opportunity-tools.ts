@@ -15,7 +15,10 @@ import { summarize, toolError, toolSuccess } from './tool-result.js'
 
 type QuickWinsToolInput = {
   site: string
+  days?: number
+  limit?: number
   minImpressions?: number
+  brandTerms?: string[]
   verifyContent?: boolean
   verifyLimit?: number
   includeBrand?: boolean
@@ -92,6 +95,8 @@ export function registerOpportunityTools(server: McpServer): void {
       inputSchema: {
         ...mcpReportInputSchema([
           'site',
+          'days',
+          'limit',
           'minImpressions',
           'verifyContent',
           'verifyLimit',
@@ -102,11 +107,25 @@ export function registerOpportunityTools(server: McpServer): void {
           'fetchIntervalMs',
           'refresh',
         ]),
+        days: z.number().int().min(1).max(548).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+        verifyLimit: z.number().int().min(0).max(100).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
+        fetchConcurrency: z.number().int().min(1).max(16).optional(),
+        fetchIntervalCap: z.number().int().min(1).max(60).optional(),
+        fetchIntervalMs: z.number().int().min(100).max(60_000).optional(),
       },
     },
     async ({
       site,
+      days,
+      limit,
       minImpressions,
+      brandTerms,
       verifyContent,
       verifyLimit,
       includeBrand,
@@ -119,7 +138,10 @@ export function registerOpportunityTools(server: McpServer): void {
       try {
         const result = await quickWinsReport({
           site,
+          days,
+          limit,
           minImpressions,
+          brandTerms,
           verifyContent,
           verifyLimit,
           includeBrand,

@@ -27,6 +27,7 @@ const common = {
     "'min-impressions':",
     'minImpressions: z.number().optional()',
   ),
+  brandTerms: opt('brandTerms', "'brand-terms':", 'brandTerms: z'),
   fetchConcurrency: opt(
     'fetchConcurrency',
     "'fetch-concurrency':",
@@ -452,7 +453,14 @@ export const reportSurfaces = [
       file: 'packages/mcp/src/opportunity-tools.ts',
       marker: "'seo_quick_wins'",
     },
-    options: [common.site, common.minImpressions, ...fetchOptions],
+    options: [
+      common.site,
+      common.days,
+      common.limit,
+      common.minImpressions,
+      common.brandTerms,
+      ...fetchOptions,
+    ],
   },
   {
     id: 'redirect-trace',

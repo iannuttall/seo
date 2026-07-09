@@ -1,7 +1,72 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import type { DiagnosePropertyReport } from '../analyze/diagnose-property.js'
+import { analyzeQuickWinsFromRows } from '../analyze/site-diagnostics.js'
 import { analyzeStrikingDistanceRows } from '../analyze/striking-distance.js'
-import { diagnoseCsvFiles, renderCsv } from './csv.js'
+import { diagnoseCsvFiles, quickWinsCsvRows, renderCsv } from './csv.js'
+
+function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
+  const analysis = analyzeQuickWinsFromRows({
+    site: 'sc-domain:example.com',
+    rows: [],
+  })
+  return {
+    site: 'sc-domain:example.com',
+    generatedAt: '',
+    range: { startDate: '2026-05-01', endDate: '2026-05-28' },
+    rangeDays: 28,
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      searchType: 'web',
+      dataState: 'final',
+      rowsFetched: 0,
+      calls: 0,
+      maxRows: 100_000,
+      possiblyTruncated: false,
+      completeness: 'retained-query-rows-only',
+    },
+    dataStatus: analysis.dataStatus,
+    selection: analysis.selection,
+    methodology: analysis.methodology,
+    provenance: {
+      ...analysis.provenance,
+      verification: {
+        optional: true,
+        population: 'returned_rows_in_priority_order',
+        fetchDeduplication: 'exact_url',
+      },
+    },
+    benchmark: {
+      method: analysis.methodology.benchmark.method,
+      peerRows: 0,
+      byPosition: analysis.benchmarkByPosition,
+    },
+    verification: {
+      requested: false,
+      attemptedRows: 0,
+      attemptedUrls: 0,
+      verified: 0,
+      technical: 0,
+      failed: 0,
+    },
+    summary: {
+      ...analysis.summary,
+      repeatedQueryGroups: 0,
+      templatePatterns: 0,
+      brandFiltering: 'excluded',
+      verdict: 'No quick wins matched these filters.',
+    },
+    caveats: [],
+    recommendations: [],
+    templates: [],
+    templateRecommendations: [],
+    groups: [],
+    items: [],
+    ledgerSummary: 'No provider calls recorded.',
+    warnings: [],
+  }
+}
 
 test('renderCsv escapes commas, quotes, and newlines', () => {
   const csv = renderCsv([
@@ -40,6 +105,7 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       decayItems: 0,
       cannibalItems: 0,
       strikingDistanceItems: 0,
+      quickWinItems: 0,
     },
     priorities: [],
     anomaly: {
@@ -144,31 +210,7 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       caveats: [],
       recommendations: [],
     },
-    quickWins: {
-      site: 'sc-domain:example.com',
-      generatedAt: '',
-      range: { startDate: '2026-05-01', endDate: '2026-05-28' },
-      benchmark: {
-        method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
-        peerRows: 0,
-        byPosition: {},
-      },
-      verification: { requested: false, verified: 0, failed: 0 },
-      summary: {
-        rows: 0,
-        repeatedQueryGroups: 0,
-        templatePatterns: 0,
-        totalEstimatedClickLift: 0,
-        brandFiltering: 'excluded',
-        verdict: 'No quick wins matched these filters.',
-      },
-      caveats: [],
-      recommendations: [],
-      templates: [],
-      templateRecommendations: [],
-      groups: [],
-      items: [],
-    },
+    quickWins: emptyQuickWins(),
   })
 
   const decay = files.find((file) => file.filename === 'decay.csv')
@@ -177,6 +219,39 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
     renderCsv(decay?.rows ?? [], decay?.headers),
     'rank,query,url,template,diagnosis,click_loss,drop_pct,previous_clicks,current_clicks,previous_position,current_position,action\n',
   )
+  const quickWins = files.find((file) => file.filename === 'quick-wins.csv')
+  assert.equal(quickWins?.headers?.includes('target_ctr'), true)
+  assert.equal(
+    quickWins?.headers?.includes('estimated_ctr_click_shortfall'),
+    true,
+  )
+  assert.equal(quickWins?.headers?.includes('expected_ctr'), false)
+  assert.equal(quickWins?.headers?.includes('estimated_click_lift'), false)
+})
+
+test('quick-win CSV preserves heuristic provenance without forecast fields', () => {
+  const quickWins = emptyQuickWins()
+  const analysis = analyzeQuickWinsFromRows({
+    site: 'sc-domain:example.com',
+    rows: [
+      {
+        keys: ['technical seo audit', 'https://example.com/audit'],
+        clicks: 0,
+        impressions: 1000,
+        ctr: 0,
+        position: 9,
+      },
+    ],
+  })
+  quickWins.items = analysis.items
+  const [row] = quickWinsCsvRows(quickWins)
+
+  assert.equal(row?.target_ctr, 0.015)
+  assert.equal(row?.estimated_ctr_click_shortfall, 15)
+  assert.equal(row?.heuristic, true)
+  assert.equal(row?.traffic_forecast, false)
+  assert.equal(Object.hasOwn(row ?? {}, 'expected_ctr'), false)
+  assert.equal(Object.hasOwn(row ?? {}, 'estimated_click_lift'), false)
 })
 
 function segment(dimension: 'page' | 'query' | 'device' | 'country') {

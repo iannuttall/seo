@@ -1,6 +1,11 @@
 import type { Recommendation } from '../../types.js'
-import type { QueryContentCoverage } from '../content-coverage.js'
 import type { PageTemplate, TemplateSummary } from '../page-patterns.js'
+
+export type {
+  QuickWinGroup,
+  QuickWinItem,
+  QuickWinTemplateRecommendation,
+} from './quick-wins-types.js'
 
 export type CannibalSuppressionReason =
   | 'brand_query'
@@ -67,41 +72,6 @@ export interface DecayGroup {
   totalPreviousClicks: number
   averageDropPct: number
   sampleQueries: string[]
-  sampleUrls: string[]
-  recommendation: string
-}
-
-export interface QuickWinItem {
-  query: string
-  url: string
-  template: PageTemplate
-  position: number
-  clicks: number
-  impressions: number
-  ctr: number
-  expectedCtr: number
-  benchmark: {
-    expectedCtr: number
-    source: string
-    peerRows: number
-    peerImpressions: number
-    qualifiedPeerImpressions: number
-    urlSamples: number
-    positiveUrlSamples: number
-  }
-  estimatedClickLift: number
-  contentVerification?: QueryContentCoverage
-  recommendation: Recommendation
-}
-
-export interface QuickWinGroup {
-  id: string
-  label: string
-  query: string
-  template: PageTemplate
-  count: number
-  totalEstimatedClickLift: number
-  totalImpressions: number
   sampleUrls: string[]
   recommendation: string
 }

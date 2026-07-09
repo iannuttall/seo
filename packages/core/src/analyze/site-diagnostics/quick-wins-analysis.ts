@@ -1,136 +1,156 @@
-import { shouldExcludeBrandQuery } from '../../brand.js'
-import type { GscRow } from '../../types.js'
+import { createCtrBenchmarkContext } from '../opportunity-primitives.js'
+import { samePageUrl } from '../page-technical-signals.js'
+import { CTR_BASELINE } from '../shared.js'
 import {
-  createCtrBenchmarkContext,
-  type PositionBenchmark,
-  queryOpportunityRecommendation,
-  roundedPosition,
-} from '../opportunity-primitives.js'
-import { detectPageTemplate } from '../page-patterns.js'
-import { isLowActionabilityQuery } from '../query-quality.js'
-import type { QuickWinItem } from './types.js'
+  boundedInteger,
+  compareQuickWinItems,
+  quickWinItem,
+  roundedSum,
+  selectBenchmarkRows,
+} from './quick-wins-analysis-primitives.js'
+import type {
+  AnalyzeQuickWinsInput,
+  QuickWinAnalysis,
+  QuickWinItem,
+} from './quick-wins-types.js'
 
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0
-}
+export type {
+  AnalyzeQuickWinsInput,
+  QuickWinAnalysis,
+  QuickWinItem,
+  QuickWinSelection,
+} from './quick-wins-types.js'
 
-function benchmarkDetails(benchmark: PositionBenchmark) {
-  return {
-    expectedCtr: benchmark.ctr,
-    source: benchmark.source,
-    peerRows: benchmark.rows,
-    peerImpressions: benchmark.impressions,
-    qualifiedPeerImpressions: benchmark.qualifiedImpressions,
-    urlSamples: benchmark.urlSamples,
-    positiveUrlSamples: benchmark.positiveUrlSamples,
+const DEFAULT_MIN_IMPRESSIONS = 200
+const MAX_MIN_IMPRESSIONS = 1_000_000_000
+const DEFAULT_LIMIT = 25
+const MAX_LIMIT = 100
+const FALLBACK_SOURCE = 'builtin_position_ctr_curve_v1'
+
+export function analyzeQuickWinsFromRows(
+  input: AnalyzeQuickWinsInput,
+): QuickWinAnalysis {
+  const minImpressions = boundedInteger(
+    input.minImpressions,
+    DEFAULT_MIN_IMPRESSIONS,
+    0,
+    MAX_MIN_IMPRESSIONS,
+  )
+  const limit = boundedInteger(input.limit, DEFAULT_LIMIT, 1, MAX_LIMIT)
+  const selected = selectBenchmarkRows(input)
+  const benchmarkContext = createCtrBenchmarkContext(selected.rows, {
+    samplePopulation: 'all_qualified_url_samples',
+    fallbackSource: FALLBACK_SOURCE,
+  })
+  const eligibleItems: QuickWinItem[] = []
+
+  for (const row of selected.rows) {
+    if (row.position < 4) {
+      selected.selection.outsideCandidatePositionRows++
+      continue
+    }
+    if (row.impressions < minImpressions) {
+      selected.selection.belowMinimumRows++
+      continue
+    }
+    const targetUrl = row.keys[1] ?? ''
+    const excludedTargetRows = selected.rows.filter((candidate) =>
+      samePageUrl(candidate.keys[1] ?? '', targetUrl),
+    ).length
+    const benchmark = benchmarkContext.forUrl(row)
+    if (row.ctr >= benchmark.ctr) {
+      selected.selection.atOrAboveTargetRows++
+      continue
+    }
+    eligibleItems.push(quickWinItem({ row, benchmark, excludedTargetRows }))
+    selected.selection.eligibleRows++
   }
-}
 
-function isBenchmarkRow(input: {
-  row: GscRow
-  site: string
-  brandTerms?: string[]
-  includeBrand?: boolean
-}): boolean {
-  const query = input.row.keys[0] ?? ''
-  return (
-    input.row.keys.length >= 2 &&
-    input.row.position >= 1 &&
-    input.row.position <= 10 &&
-    input.row.impressions > 0 &&
-    !isLowActionabilityQuery(query) &&
-    !shouldExcludeBrandQuery({
-      query,
-      siteUrl: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-    })
-  )
-}
-
-export function analyzeQuickWinsFromRows(input: {
-  rows: GscRow[]
-  site: string
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-}): {
-  items: QuickWinItem[]
-  minImpressions: number
-  benchmarkRows: number
-  benchmarkByPosition: Record<string, PositionBenchmark>
-} {
-  const minImpressions = input.minImpressions ?? 200
-  const benchmarkRows = input.rows.filter((row) =>
-    isBenchmarkRow({
-      row,
-      site: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-    }),
-  )
-  const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
-
-  const items = benchmarkRows
-    .filter(
-      (row) =>
-        row.position >= 4 &&
-        row.position <= 10 &&
-        row.impressions >= minImpressions,
-    )
-    .map((row): QuickWinItem | undefined => {
-      const benchmark = benchmarkContext.forRow(row)
-      if (row.ctr >= benchmark.ctr) return undefined
-
-      const query = row.keys[0] ?? ''
-      const url = row.keys[1] ?? ''
-      const rounded = roundedPosition(row.position)
-      const estimatedClickLift = Number(
-        (Math.max(0, benchmark.ctr - row.ctr) * row.impressions).toFixed(2),
-      )
-      const opportunity = queryOpportunityRecommendation({
-        query,
-        position: row.position,
-        ctr: row.ctr,
-        expectedCtr: benchmark.ctr,
-        estimatedClickLift,
-      })
-
-      return {
-        query,
-        url,
-        template: detectPageTemplate(url),
-        position: row.position,
-        clicks: row.clicks,
-        impressions: row.impressions,
-        ctr: row.ctr,
-        expectedCtr: benchmark.ctr,
-        benchmark: benchmarkDetails(benchmark),
-        estimatedClickLift,
-        recommendation: {
-          principle: 'C.3',
-          evidenceRef: `Query "${query}" sits at position ${rounded} with ${row.impressions} impressions and CTR ${row.ctr.toFixed(3)} versus benchmark ${benchmark.ctr.toFixed(3)}.`,
-          action: `${opportunity.title} Match the title, meta description, and visible heading to the search intent before adding more body copy.`,
-          effort: 'S',
-          confidence: benchmark.source.startsWith('site_gsc_')
-            ? 'medium'
-            : 'low',
-          impactEstimate: opportunity.expectedImpact,
-        },
-      }
-    })
-    .filter((item): item is QuickWinItem => item !== undefined)
-    .sort(
-      (left, right) =>
-        right.estimatedClickLift - left.estimatedClickLift ||
-        compareText(left.query, right.query) ||
-        compareText(left.url, right.url),
-    )
+  eligibleItems.sort(compareQuickWinItems)
+  const items = eligibleItems.slice(0, limit)
+  selected.selection.returnedRows = items.length
+  selected.selection.limitedRows = eligibleItems.length - items.length
 
   return {
-    items,
+    site: input.site,
     minImpressions,
-    benchmarkRows: benchmarkRows.length,
+    limit,
+    dataStatus:
+      input.rows.length === 0
+        ? 'empty'
+        : eligibleItems.length === 0
+          ? 'filtered'
+          : 'available',
+    selection: selected.selection,
+    methodology: {
+      id: 'gsc_quick_wins_v2',
+      source: 'google_search_console_query_page_rows',
+      position: {
+        metric: 'gsc_average_position',
+        minimumInclusive: 4,
+        maximumInclusive: 10,
+      },
+      benchmark: {
+        method: 'position_bucket_url_p75_v2',
+        samplePopulation: 'all_qualified_url_samples',
+        leaveOut: 'target_url',
+        minimumUrlImpressions: 30,
+        minimumQualifiedImpressions: 1000,
+        minimumUrlSamples: 5,
+        minimumPositiveUrlSamples: 3,
+        fallback: {
+          id: 'seo_builtin_position_ctr',
+          version: 1,
+          kind: 'built_in_heuristic',
+          curve: Object.fromEntries(
+            Object.entries(CTR_BASELINE).map(([position, ctr]) => [
+              position,
+              ctr,
+            ]),
+          ),
+        },
+        heuristic: true,
+      },
+      priority: {
+        method: 'impressions_x_target_ctr_shortfall',
+        formula: 'impressions * max(0, target CTR - observed CTR)',
+        heuristic: true,
+        estimatedClickLift: false,
+      },
+    },
+    provenance: {
+      inputScope: 'provided_rows',
+      selectionOrder: [
+        'valid_row',
+        'benchmark_position',
+        'query_quality',
+        'brand',
+        'candidate_position',
+        'minimum_impressions',
+        'target_ctr_shortfall',
+        'limit',
+      ],
+      selection: selected.selection,
+    },
+    summary: {
+      eligibleRows: eligibleItems.length,
+      returnedRows: items.length,
+      eligibleImpressions: roundedSum(
+        eligibleItems.map((item) => item.impressions),
+      ),
+      returnedImpressions: roundedSum(items.map((item) => item.impressions)),
+      eligibleEstimatedCtrClickShortfall: roundedSum(
+        eligibleItems.map((item) => item.estimatedCtrClickShortfall),
+      ),
+      returnedEstimatedCtrClickShortfall: roundedSum(
+        items.map((item) => item.estimatedCtrClickShortfall),
+      ),
+      uniqueEligibleUrls: new Set(eligibleItems.map((item) => item.url)).size,
+      uniqueEligibleQueries: new Set(eligibleItems.map((item) => item.query))
+        .size,
+    },
+    items,
+    eligibleItems,
     benchmarkByPosition: benchmarkContext.byPosition,
   }
 }

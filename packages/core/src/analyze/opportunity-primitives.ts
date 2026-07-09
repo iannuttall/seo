@@ -1,3 +1,4 @@
+import { samePageUrl } from './page-technical-signals.js'
 import { CTR_BASELINE, unicodeTokens } from './shared.js'
 
 export { unicodeTokens } from './shared.js'
@@ -13,6 +14,7 @@ export type OpportunityBenchmarkRow = {
 export type PositionBenchmark = {
   ctr: number
   source: string
+  samplePopulation: 'positive_url_samples' | 'all_qualified_url_samples'
   rows: number
   impressions: number
   qualifiedImpressions: number
@@ -65,6 +67,8 @@ function bucketBenchmark(input: {
   position: number
   excludedRows?: Set<OpportunityBenchmarkRow>
   sourceSuffix?: string
+  samplePopulation?: PositionBenchmark['samplePopulation']
+  fallbackSource?: string
 }): PositionBenchmark {
   const peerRows = input.rows.filter((row) => !input.excludedRows?.has(row))
   const impressions = peerRows.reduce((sum, row) => sum + row.impressions, 0)
@@ -94,27 +98,34 @@ function bucketBenchmark(input: {
     urlCtrSamples.length >= MIN_BENCHMARK_URL_SAMPLES &&
     positiveUrlCtrSamples.length >= MIN_POSITIVE_URL_SAMPLES
   const fallbackCtr = expectedCtrForPosition(input.position)
+  const samplePopulation = input.samplePopulation ?? 'positive_url_samples'
+  const percentileSamples =
+    samplePopulation === 'all_qualified_url_samples'
+      ? urlCtrSamples
+      : positiveUrlCtrSamples
   const rawSiteCtr = hasEnoughSiteData
-    ? percentile(positiveUrlCtrSamples, 75)
+    ? percentile(percentileSamples, 75)
     : undefined
   const floorCtr = fallbackCtr * SITE_BENCHMARK_FLOOR_MULTIPLIER
   const capCtr = fallbackCtr * SITE_BENCHMARK_CAP_MULTIPLIER
-  const ctr = rawSiteCtr
+  const hasSiteCtr = rawSiteCtr !== undefined
+  const ctr = hasSiteCtr
     ? Math.max(floorCtr, Math.min(rawSiteCtr, capCtr))
     : fallbackCtr
   const adjustment =
-    rawSiteCtr && rawSiteCtr < floorCtr
+    hasSiteCtr && rawSiteCtr < floorCtr
       ? '_floored'
-      : rawSiteCtr && rawSiteCtr > capCtr
+      : hasSiteCtr && rawSiteCtr > capCtr
         ? '_capped'
         : ''
-  const source = rawSiteCtr
-    ? `site_gsc_position_bucket_robust_p75${input.sourceSuffix ?? ''}${adjustment}`
-    : 'default_position_curve'
+  const source = hasSiteCtr
+    ? `site_gsc_position_bucket_robust_p75${samplePopulation === 'all_qualified_url_samples' ? '_all_samples' : ''}${input.sourceSuffix ?? ''}${adjustment}`
+    : (input.fallbackSource ?? 'default_position_curve')
 
   return {
     ctr: Number(ctr.toFixed(4)),
     source,
+    samplePopulation,
     rows: peerRows.length,
     impressions,
     qualifiedImpressions,
@@ -147,7 +158,13 @@ function smoothMonotonicBenchmarks(
   return byPosition
 }
 
-export function createCtrBenchmarkContext(rows: OpportunityBenchmarkRow[]) {
+export function createCtrBenchmarkContext(
+  rows: OpportunityBenchmarkRow[],
+  options: {
+    samplePopulation?: PositionBenchmark['samplePopulation']
+    fallbackSource?: string
+  } = {},
+) {
   const buckets = new Map<number, OpportunityBenchmarkRow[]>()
 
   for (const row of rows) {
@@ -160,6 +177,8 @@ export function createCtrBenchmarkContext(rows: OpportunityBenchmarkRow[]) {
     raw[position] = bucketBenchmark({
       rows: buckets.get(position) ?? [],
       position,
+      samplePopulation: options.samplePopulation,
+      fallbackSource: options.fallbackSource,
     })
   }
 
@@ -180,6 +199,8 @@ export function createCtrBenchmarkContext(rows: OpportunityBenchmarkRow[]) {
         position: bucketPosition,
         excludedRows: excludedSet,
         sourceSuffix,
+        samplePopulation: options.samplePopulation,
+        fallbackSource: options.fallbackSource,
       })
     }
 
@@ -194,6 +215,15 @@ export function createCtrBenchmarkContext(rows: OpportunityBenchmarkRow[]) {
     byPosition,
     forRow(row: OpportunityBenchmarkRow): PositionBenchmark {
       return benchmarkForRow(row, [row], '_leave_one_out')
+    },
+    forUrl(row: OpportunityBenchmarkRow): PositionBenchmark {
+      const url = row.keys?.[1]
+      const excludedRows = url
+        ? rows.filter((candidate) =>
+            samePageUrl(candidate.keys?.[1] ?? '', url),
+          )
+        : [row]
+      return benchmarkForRow(row, excludedRows, '_leave_target_url_out')
     },
     forAggregate(
       row: OpportunityBenchmarkRow,

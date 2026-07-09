@@ -1,111 +1,45 @@
-import type { FetchRateControls } from '../../fetch/page-fetcher.js'
+import { extractPage } from '../../extract/page-extractor.js'
+import { type FetchRateControls, fetchPage } from '../../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
-import { countLabel } from '../../phrasing.js'
+import { SessionLedger } from '../../storage/ledger.js'
+import type { PageFetchResult } from '../../types.js'
 import {
   contentCoverageRecommendation,
   type QueryContentCoverage,
   verifyQueryContent,
 } from '../content-coverage.js'
-import { summarizeTemplates } from '../page-patterns.js'
-import { defaultDateRange } from '../shared.js'
-import { templateOpportunityRecommendation } from '../workflows/template-recommendations.js'
 import { groupQuickWins } from './quick-win-groups.js'
 import { analyzeQuickWinsFromRows } from './quick-wins-analysis.js'
-import type { QuickWinItem } from './types.js'
+import {
+  defaultDateRange,
+  explicitDateRange,
+  integerOption,
+} from './quick-wins-report-input.js'
+import {
+  quickWinTemplateRecommendations,
+  quickWinTemplateSummaries,
+} from './quick-wins-templates.js'
+import type { QuickWinItem } from './quick-wins-types.js'
 
-type QuickWinTemplateRecommendation = {
-  templateId: string
-  templateLabel: string
-  count: number
-  totalEstimatedClickLift: number
-  totalImpressions: number
-  action: string
-  evidence: string
-}
+export * from './quick-wins-analysis.js'
 
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0
-}
+const DEFAULT_DAYS = 28
+const MAX_DAYS = 548
+const DEFAULT_VERIFY_LIMIT = 5
+const MAX_VERIFY_LIMIT = 100
+const MAX_SOURCE_ROWS = 100_000
 
-function verifiedQuickWinAction(coverage: QueryContentCoverage): {
-  action: string
-  confidence: 'high' | 'medium' | 'low'
-} {
-  const action = contentCoverageRecommendation(coverage)
-  if (coverage.status === 'failed') return { action, confidence: 'low' }
-  if (coverage.classification === 'content-gap') {
-    return { action, confidence: 'high' }
-  }
-  if (coverage.classification === 'technical-check') {
-    return { action, confidence: 'medium' }
-  }
-  return { action, confidence: 'medium' }
-}
+type SearchAnalytics = typeof querySearchAnalytics
+type FetchPage = typeof fetchPage
+type ExtractPage = typeof extractPage
 
-function templateRecommendations(
-  items: QuickWinItem[],
-): QuickWinTemplateRecommendation[] {
-  const byTemplate = new Map<string, QuickWinItem[]>()
-  for (const item of items) {
-    const existing = byTemplate.get(item.template.id) ?? []
-    existing.push(item)
-    byTemplate.set(item.template.id, existing)
-  }
-
-  return [...byTemplate.entries()]
-    .map(([templateId, templateItems]) => {
-      const first = templateItems[0]
-      if (!first) return undefined
-      const recommendation = templateOpportunityRecommendation({
-        templateId,
-        templateLabel: first.template.label,
-        items: templateItems,
-      })
-      return {
-        templateId,
-        templateLabel: first.template.label,
-        count: templateItems.length,
-        totalEstimatedClickLift: Number(
-          templateItems
-            .reduce((sum, item) => sum + item.estimatedClickLift, 0)
-            .toFixed(2),
-        ),
-        totalImpressions: Number(
-          templateItems
-            .reduce((sum, item) => sum + item.impressions, 0)
-            .toFixed(0),
-        ),
-        action: recommendation.action,
-        evidence: recommendation.evidence,
-      }
-    })
-    .filter(
-      (recommendation): recommendation is QuickWinTemplateRecommendation =>
-        recommendation !== undefined && recommendation.count >= 2,
-    )
-    .sort(
-      (a, b) =>
-        b.totalEstimatedClickLift - a.totalEstimatedClickLift ||
-        b.totalImpressions - a.totalImpressions ||
-        compareText(a.templateId, b.templateId),
-    )
-}
-
-function quickWinVerdict(input: {
-  items: QuickWinItem[]
-  templates: QuickWinTemplateRecommendation[]
-}): string {
-  if (!input.items.length) return 'No quick wins matched these filters.'
-  const topTemplate = input.templates[0]
-  if (topTemplate) {
-    return `${input.items.length} quick wins found. The biggest template pattern is ${topTemplate.templateLabel}, with ${topTemplate.count} rows and about ${topTemplate.totalEstimatedClickLift.toFixed(0)} estimated clicks available.`
-  }
-  return `${input.items.length} quick wins found. Start with the highest estimated click lift rows.`
-}
-
-export async function quickWinsReport(input: {
+export type QuickWinsInput = {
   site: string
+  days?: number
+  startDate?: string
+  endDate?: string
   minImpressions?: number
+  limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
   verifyContent?: boolean
@@ -113,111 +47,245 @@ export async function quickWinsReport(input: {
   js?: boolean | 'auto'
   rate?: FetchRateControls
   refresh?: boolean
-}) {
-  const range = defaultDateRange(28)
-  const { rows } = await querySearchAnalytics(
+}
+
+export type QuickWinsDependencies = {
+  searchAnalytics: SearchAnalytics
+  fetch: FetchPage
+  extract: ExtractPage
+  now: () => Date
+}
+
+const defaultDependencies: QuickWinsDependencies = {
+  searchAnalytics: querySearchAnalytics,
+  fetch: fetchPage,
+  extract: extractPage,
+  now: () => new Date(),
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))]
+}
+
+function applyVerification(
+  item: QuickWinItem,
+  coverage: QueryContentCoverage,
+): void {
+  item.contentVerification = coverage
+  item.finding = coverage.classification
+  item.recommendation = {
+    ...item.recommendation,
+    action: contentCoverageRecommendation(coverage),
+    confidence:
+      coverage.status === 'verified' && coverage.classification !== 'covered'
+        ? 'medium'
+        : 'low',
+    evidenceRef: `${item.recommendation.evidenceRef} ${coverage.summary}`,
+  }
+}
+
+export async function quickWinsReport(
+  input: QuickWinsInput,
+  dependencies: QuickWinsDependencies = defaultDependencies,
+) {
+  const explicitRange = explicitDateRange(input, MAX_DAYS)
+  const days =
+    explicitRange?.days ??
+    integerOption({
+      value: input.days,
+      fallback: DEFAULT_DAYS,
+      minimum: 1,
+      maximum: MAX_DAYS,
+      label: 'Days',
+    })
+  const verifyLimit = integerOption({
+    value: input.verifyLimit,
+    fallback: DEFAULT_VERIFY_LIMIT,
+    minimum: 0,
+    maximum: MAX_VERIFY_LIMIT,
+    label: 'Verification limit',
+  })
+  const generatedAt = dependencies.now().toISOString()
+  const range =
+    explicitRange?.range ?? defaultDateRange(days, new Date(generatedAt))
+  const source = await dependencies.searchAnalytics(
     input.site,
     {
       ...range,
       dimensions: ['query', 'page'],
       type: 'web',
       dataState: 'final',
+      maxRows: MAX_SOURCE_ROWS,
     },
     { refresh: input.refresh },
   )
-  const { items, minImpressions, benchmarkRows, benchmarkByPosition } =
-    analyzeQuickWinsFromRows({
-      rows,
-      site: input.site,
-      minImpressions: input.minImpressions,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-    })
-
-  if (input.verifyContent) {
-    const verifyLimit = input.verifyLimit ?? 5
-    const coverageByKey = new Map<string, QueryContentCoverage>()
-    for (const item of items.slice(0, verifyLimit)) {
-      const key = `${item.query}\n${item.url}`
-      const existing = coverageByKey.get(key)
-      const contentVerification =
-        existing ??
-        (await verifyQueryContent({
-          query: item.query,
-          url: item.url,
-          js: input.js,
-          refresh: input.refresh,
-          rate: input.rate,
-        }))
-      coverageByKey.set(key, contentVerification)
-      item.contentVerification = contentVerification
-      const verified = verifiedQuickWinAction(contentVerification)
-      item.recommendation = {
-        ...item.recommendation,
-        action: verified.action,
-        confidence: verified.confidence,
-        evidenceRef: `${item.recommendation.evidenceRef} ${contentVerification.summary}`,
-      }
-    }
+  const ledger = new SessionLedger()
+  ledger.addGsc(source.calls, source.rowsFetched)
+  const analysis = analyzeQuickWinsFromRows({
+    rows: source.rows,
+    site: input.site,
+    minImpressions: input.minImpressions,
+    limit: input.limit,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
+  const verificationRequested =
+    input.verifyContent === true || input.verifyLimit !== undefined
+  const verificationItems = verificationRequested
+    ? analysis.items.slice(0, verifyLimit)
+    : []
+  const fetches = new Map<string, Promise<PageFetchResult>>()
+  const cachedFetch: FetchPage = (url, options) => {
+    const existing = fetches.get(url)
+    if (existing) return existing
+    const request = dependencies.fetch(url, options)
+    fetches.set(url, request)
+    return request
   }
 
-  const groups = groupQuickWins(items)
-  const templates = summarizeTemplates(items)
-  const templateActions = templateRecommendations(items)
-  const recommendations = [
-    ...templateActions.slice(0, 5).map((template) => template.action),
-    ...groups.slice(0, 5).map((group) => group.recommendation),
-  ].slice(0, 5)
+  for (const item of verificationItems) {
+    const coverage = await verifyQueryContent({
+      query: item.query,
+      url: item.url,
+      js: input.js,
+      refresh: input.refresh,
+      rate: input.rate,
+      verifiedAt: generatedAt,
+      fetch: cachedFetch,
+      extract: dependencies.extract,
+    })
+    applyVerification(item, coverage)
+  }
+
+  const groups = groupQuickWins(analysis.eligibleItems)
+  const templates = quickWinTemplateSummaries(analysis.eligibleItems)
+  const templateActions = quickWinTemplateRecommendations(
+    analysis.eligibleItems,
+  )
+  const verified = verificationItems.filter(
+    (item) => item.contentVerification?.status === 'verified',
+  ).length
+  const failed = verificationItems.filter(
+    (item) => item.contentVerification?.status === 'failed',
+  ).length
+  const technical = verificationItems.filter(
+    (item) => item.contentVerification?.classification === 'technical-check',
+  ).length
+  const recommendations = unique([
+    ...templateActions.slice(0, 3).map((item) => item.action),
+    ...groups.slice(0, 3).map((item) => item.recommendation),
+    analysis.items[0]?.recommendation.action ?? '',
+  ]).slice(0, 5)
+  const warnings = verificationItems.flatMap((item) => {
+    const coverage = item.contentVerification
+    if (!coverage) return []
+    return [
+      ...(coverage.warnings ?? []).map((message) => ({
+        stage: 'verification' as const,
+        url: item.url,
+        code: 'page-warning' as const,
+        message,
+      })),
+      ...(coverage.error
+        ? [
+            {
+              stage: 'verification' as const,
+              url: item.url,
+              code: 'verification-failed' as const,
+              message: coverage.error,
+            },
+          ]
+        : []),
+    ]
+  })
 
   return {
     site: input.site,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     range,
-    benchmark: {
-      method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
-      peerRows: benchmarkRows,
-      byPosition: benchmarkByPosition,
+    rangeDays: days,
+    source: {
+      provider: 'google-search-console' as const,
+      dimensions: ['query', 'page'] as const,
+      searchType: 'web' as const,
+      dataState: 'final' as const,
+      rowsFetched: source.rowsFetched,
+      calls: source.calls,
+      maxRows: MAX_SOURCE_ROWS,
+      possiblyTruncated: source.rowsFetched >= MAX_SOURCE_ROWS,
+      completeness: 'retained-query-rows-only' as const,
     },
-    verification: input.verifyContent
+    dataStatus: analysis.dataStatus,
+    selection: analysis.selection,
+    methodology: analysis.methodology,
+    provenance: {
+      ...analysis.provenance,
+      verification: {
+        optional: true as const,
+        population: 'returned_rows_in_priority_order' as const,
+        fetchDeduplication: 'exact_url' as const,
+      },
+    },
+    benchmark: {
+      method: analysis.methodology.benchmark.method,
+      peerRows: analysis.selection.benchmarkRows,
+      byPosition: analysis.benchmarkByPosition,
+    },
+    verification: verificationRequested
       ? {
-          requested: true,
-          limit: input.verifyLimit ?? 5,
-          verified: items.filter(
-            (item) => item.contentVerification?.status === 'verified',
-          ).length,
-          failed: items.filter(
-            (item) => item.contentVerification?.status === 'failed',
-          ).length,
+          requested: true as const,
+          limit: verifyLimit,
+          attemptedRows: verificationItems.length,
+          attemptedUrls: fetches.size,
+          verified,
+          technical,
+          failed,
         }
-      : { requested: false, verified: 0, failed: 0 },
+      : {
+          requested: false as const,
+          attemptedRows: 0 as const,
+          attemptedUrls: 0 as const,
+          verified: 0 as const,
+          technical: 0 as const,
+          failed: 0 as const,
+        },
     summary: {
-      rows: items.length,
+      ...analysis.summary,
       repeatedQueryGroups: groups.length,
       templatePatterns: templateActions.length,
-      totalEstimatedClickLift: Number(
-        items
-          .reduce((sum, item) => sum + item.estimatedClickLift, 0)
-          .toFixed(2),
-      ),
       brandFiltering: input.includeBrand ? 'included' : 'excluded',
-      verdict: quickWinVerdict({ items, templates: templateActions }),
+      verdict:
+        analysis.dataStatus === 'empty'
+          ? 'Search Console returned no retained query/page rows for this date window.'
+          : analysis.dataStatus === 'filtered'
+            ? 'No retained rows met the quick-win report criteria.'
+            : `${analysis.summary.eligibleRows} eligible CTR-target rows found; ${analysis.summary.returnedRows} returned for review.`,
     },
     caveats: [
-      `Date window: ${range.startDate} to ${range.endDate}.`,
-      `Filters: positions 4-10, at least ${minImpressions} impressions, and brand queries ${input.includeBrand ? 'included' : 'excluded when detected/configured'}.`,
-      'Estimated lift is the gap between actual and expected CTR at the current rounded position, multiplied by impressions.',
-      'The expected CTR uses a robust site-aware benchmark when enough peer data exists, otherwise the fallback position curve.',
-      'CTR benchmarks are directional heuristics and do not account for SERP features. Treat lift as prioritisation, not a traffic forecast.',
-      `Content verification: ${input.verifyContent ? `requested for top ${countLabel(input.verifyLimit ?? 5, 'row')}` : 'not run'}.`,
-    ],
+      `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,
+      `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.benchmarkRows} benchmark rows, ${analysis.selection.eligibleRows} eligible rows, ${analysis.selection.returnedRows} returned.`,
+      'Position is GSC average position across impressions; a value from 4 to 10 does not mean the URL ranked on page one for every impression.',
+      'Target CTR is a deterministic site-peer or versioned built-in heuristic. The calculated CTR click shortfall is for prioritisation and is not a traffic forecast.',
+      'Search Analytics exposes top retained query rows only. Anonymized and lower-value queries can be absent even after pagination is exhausted.',
+      source.rowsFetched >= MAX_SOURCE_ROWS
+        ? `The report reached its ${MAX_SOURCE_ROWS.toLocaleString('en-US')}-row safety cap.`
+        : '',
+      verificationRequested
+        ? `Page evidence was checked for ${verificationItems.length} returned rows across ${fetches.size} distinct URLs.`
+        : 'Page evidence was not requested; CTR shortfalls do not establish why CTR differs.',
+    ].filter(Boolean),
     recommendations: recommendations.length
       ? recommendations
       : [
-          'No quick-win action is recommended from this report. Lower --min-impressions if you want long-tail inspection.',
+          analysis.dataStatus === 'empty'
+            ? 'Choose a longer window only if this property should have Search Console data.'
+            : 'Adjust the minimum impressions only if you intentionally want a broader, lower-confidence review.',
         ],
     templates,
     templateRecommendations: templateActions,
     groups,
-    items,
+    items: analysis.items,
+    ledgerSummary: ledger.summary(),
+    warnings,
   }
 }

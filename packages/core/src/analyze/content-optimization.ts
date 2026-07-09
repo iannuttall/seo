@@ -113,6 +113,10 @@ function titleCase(value: string): string {
     .join(' ')
 }
 
+function ctrShortfall(item: PageOpportunityReport['items'][number]): number {
+  return item.estimatedCtrClickShortfall ?? item.estimatedClickLift ?? 0
+}
+
 function sectionHeading(
   intent: ContentOptimizationIntent,
   query: string,
@@ -153,17 +157,28 @@ function brief(
   report: PageOpportunityReport,
 ): ContentOptimizationReport['brief'] {
   const actionable = report.items
-    .filter((item) => item.opportunityType !== 'covered')
-    .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)
-  const primary = actionable[0] ?? report.items[0]
-  const sections = actionable.slice(0, 5).map((item) => {
+    .filter(
+      (item) =>
+        item.opportunityType !== 'covered' &&
+        item.opportunityType !== 'technical-check' &&
+        item.opportunityType !== 'unverified',
+    )
+    .sort((a, b) => ctrShortfall(b) - ctrShortfall(a))
+  const primary = actionable[0]
+  const bodyCandidates = actionable.filter(
+    (item) =>
+      item.verification.status === 'verified' &&
+      (item.opportunityType === 'content-gap' ||
+        item.opportunityType === 'ranking'),
+  )
+  const sections = bodyCandidates.slice(0, 5).map((item) => {
     const intent = intentFor(item.query)
     return {
       heading: sectionHeading(intent, item.query),
       why: item.recommendation,
       queries: [
         item.query,
-        ...actionable
+        ...bodyCandidates
           .filter(
             (candidate) =>
               candidate.query !== item.query &&
@@ -186,7 +201,7 @@ function brief(
       ? `Use the meta description to state the outcome, trade-off, or direct answer searchers get.`
       : undefined,
     sections,
-    internalLinkAnchors: actionable
+    internalLinkAnchors: bodyCandidates
       .slice(0, 8)
       .map((item) => item.query)
       .filter((query, index, values) => values.indexOf(query) === index),
@@ -196,6 +211,12 @@ function brief(
 function topActions(
   report: PageOpportunityReport,
 ): ContentOptimizationReport['topActions'] {
+  const technical = report.items.filter(
+    (item) => item.opportunityType === 'technical-check',
+  )
+  const unverified = report.items.filter(
+    (item) => item.opportunityType === 'unverified',
+  )
   const gaps = report.items.filter(
     (item) => item.opportunityType === 'content-gap',
   )
@@ -208,6 +229,15 @@ function topActions(
   )
   const actions: ContentOptimizationReport['topActions'] = []
 
+  if (technical.length) {
+    actions.push({
+      title: 'Resolve technical evidence first',
+      plainEnglish: `${technical.length} query observation is attached to a URL with conflicting fetch or indexability evidence.`,
+      action:
+        'Check status, redirects, robots directives, noindex, and canonical signals before producing a content brief.',
+      queries: technical.slice(0, 8).map((item) => item.query),
+    })
+  }
   if (gaps.length) {
     actions.push({
       title: 'Add missing answer coverage',
@@ -236,6 +266,17 @@ function topActions(
     })
   }
   if (!actions.length) {
+    if (unverified.length) {
+      actions.push({
+        title: 'Verify the page before editing',
+        plainEnglish:
+          'GSC visibility exists, but live content evidence was not available.',
+        action:
+          'Fetch and inspect the live page and current SERP before turning these observations into a content brief.',
+        queries: unverified.slice(0, 8).map((item) => item.query),
+      })
+      return actions
+    }
     actions.push({
       title: 'Avoid unnecessary content expansion',
       plainEnglish:
@@ -255,14 +296,19 @@ export function contentOptimizationFromPageOpportunities(
   const primaryIntent = mix[0]?.intent ?? 'general'
   const primaryQuery =
     sourceReport.items
-      .filter((item) => item.opportunityType !== 'covered')
-      .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)[0]?.query ??
+      .filter(
+        (item) =>
+          item.opportunityType !== 'covered' &&
+          item.opportunityType !== 'technical-check' &&
+          item.opportunityType !== 'unverified',
+      )
+      .sort((a, b) => ctrShortfall(b) - ctrShortfall(a))[0]?.query ??
     sourceReport.items[0]?.query
 
   return {
     site: sourceReport.site,
     url: sourceReport.url,
-    generatedAt: new Date().toISOString(),
+    generatedAt: sourceReport.generatedAt,
     sourceReport,
     summary: {
       score: score(sourceReport),

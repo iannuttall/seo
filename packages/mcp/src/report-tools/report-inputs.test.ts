@@ -108,3 +108,52 @@ test('quick-wins MCP bounds output, verification, fetch, and brand inputs', () =
     assert.equal(schema.safeParse(input).success, false)
   }
 })
+
+test('internal-links MCP bounds matching, checking, fetch, and brand inputs', () => {
+  const schema = inputSchema(
+    captureTools(registerOpportunityTools),
+    'seo_internal_links',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/target',
+      days: 548,
+      limit: 100,
+      checkLimit: 200,
+      minImpressions: 0,
+      brandTerms: ['Example'],
+      fetchIntervalMs: 60_000,
+    }).success,
+    true,
+  )
+  for (const input of [
+    {
+      site: 'sc-domain:example.com',
+      targetUrl: 'ftp://example.com/target',
+    },
+    {
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/target',
+      days: 0,
+    },
+    {
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/target',
+      checkLimit: 201,
+    },
+    {
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/target',
+      fetchIntervalMs: 99,
+    },
+    {
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/target',
+      brandTerms: [''],
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { parseArgs } from 'citty'
-import { defaultTrueBooleanArg } from './args.js'
+import {
+  defaultTrueBooleanArg,
+  strictFetchRateArg,
+  strictNumberArg,
+} from './args.js'
 
 const args = {
   'verify-content': defaultTrueBooleanArg(
@@ -21,4 +25,17 @@ test('default-true flags support Citty negation', () => {
 
 test('string flags preserve hyphen-prefixed values', () => {
   assert.equal(parseArgs(['--project', '-staging'], args).project, '-staging')
+})
+
+test('strict numeric flags reject invalid values instead of using defaults', () => {
+  assert.equal(strictNumberArg('28', '--days'), 28)
+  assert.equal(strictNumberArg(undefined, '--days'), undefined)
+  assert.throws(
+    () => strictNumberArg('later', '--days'),
+    /--days must be a number/,
+  )
+  assert.throws(
+    () => strictFetchRateArg({ 'fetch-concurrency': 'many' }),
+    /--fetch-concurrency must be a number/,
+  )
 })

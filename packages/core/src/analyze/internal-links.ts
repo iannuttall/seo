@@ -1,180 +1,347 @@
-import { shouldExcludeBrandQuery } from '../brand.js'
 import { extractPage } from '../extract/page-extractor.js'
-import { fetchPage } from '../fetch/page-fetcher.js'
+import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
-import { isLowActionabilityQuery } from './query-quality.js'
-import { defaultDateRange, jaccard, tokenize } from './shared.js'
+import { assertUrlMatchesGscProperty } from '../gsc/property-url.js'
+import { SessionLedger } from '../storage/ledger.js'
+import {
+  analyzeInternalLinksFromRows,
+  INTERNAL_LINK_LEXICAL_TARGET_LIMIT,
+} from './internal-links-analysis.js'
+import {
+  completeInternalLinksSelection,
+  internalLinksIntegerOption,
+  internalLinksNumberOption,
+  internalLinksReportRange,
+  internalLinksVerdict,
+  uniqueInternalLinksWarnings,
+} from './internal-links-report.js'
+import type { InternalLinksReport } from './internal-links-types.js'
+import {
+  verifyInternalLinkCandidate,
+  verifyInternalLinkTarget,
+} from './internal-links-verification.js'
 
-function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
-  return count === 1 ? singular : pluralLabel
-}
+export * from './internal-links-analysis.js'
+export type * from './internal-links-types.js'
 
-function internalLinksVerdict(input: {
-  opportunities: number
-  targetQueries: number
-}): string {
-  if (input.opportunities > 0) {
-    const verb = input.opportunities === 1 ? 'ranks' : 'rank'
-    return `${input.opportunities} source ${plural(input.opportunities, 'page')} ${verb} for related demand and do not link to the target.`
-  }
-  if (input.targetQueries === 0) {
-    return 'No non-brand target queries were found for this URL in the selected GSC window.'
-  }
-  return 'No source pages with related query demand were found missing a link to the target.'
-}
+const MAX_GSC_ROWS = 100_000
 
-export async function internalLinksReport(input: {
+type SearchAnalytics = typeof querySearchAnalytics
+type FetchPage = typeof fetchPage
+type ExtractPage = typeof extractPage
+
+export interface InternalLinksInput {
   site: string
   targetUrl: string
+  days?: number
   limit?: number
+  checkLimit?: number
+  minImpressions?: number
   brandTerms?: string[]
   includeBrand?: boolean
+  js?: boolean | 'auto'
+  rate?: FetchRateControls
   refresh?: boolean
-}) {
-  const range = defaultDateRange(28)
-  const { rows } = await querySearchAnalytics(
-    input.site,
-    {
-      ...range,
-      dimensions: ['query', 'page'],
-      type: 'web',
-      dataState: 'final',
-    },
-    { refresh: input.refresh },
+}
+
+export interface InternalLinksDependencies {
+  searchAnalytics: SearchAnalytics
+  fetch: FetchPage
+  extract: ExtractPage
+  now: () => Date
+}
+
+const defaultDependencies: InternalLinksDependencies = {
+  searchAnalytics: querySearchAnalytics,
+  fetch: fetchPage,
+  extract: extractPage,
+  now: () => new Date(),
+}
+
+export async function internalLinksReport(
+  input: InternalLinksInput,
+  dependencies: InternalLinksDependencies = defaultDependencies,
+): Promise<InternalLinksReport> {
+  const targetPage = new URL(
+    assertUrlMatchesGscProperty(input.site, input.targetUrl),
   )
+  targetPage.hash = ''
+  const targetUrl = targetPage.toString()
+  const days = internalLinksIntegerOption({
+    value: input.days,
+    fallback: 28,
+    minimum: 1,
+    maximum: 548,
+    label: 'days',
+  })
+  const limit = internalLinksIntegerOption({
+    value: input.limit,
+    fallback: 20,
+    minimum: 1,
+    maximum: 100,
+    label: 'limit',
+  })
+  const checkLimit = internalLinksIntegerOption({
+    value: input.checkLimit,
+    fallback: Math.max(limit, 40),
+    minimum: 1,
+    maximum: 200,
+    label: 'checkLimit',
+  })
+  const minImpressions = internalLinksNumberOption({
+    value: input.minImpressions,
+    fallback: 1,
+    minimum: 0,
+    maximum: 1_000_000_000,
+    label: 'minImpressions',
+  })
+  const now = dependencies.now()
+  const range = internalLinksReportRange(days, now)
+  const ledger = new SessionLedger()
+  const target = await verifyInternalLinkTarget({
+    site: input.site,
+    targetUrl,
+    js: input.js,
+    refresh: input.refresh,
+    rate: input.rate,
+    dependencies,
+  })
 
-  const targetQueries = rows
-    .filter(
-      (row) =>
-        (row.keys[1] ?? '') === input.targetUrl &&
-        !isLowActionabilityQuery(row.keys[0] ?? '') &&
-        !shouldExcludeBrandQuery({
-          query: row.keys[0] ?? '',
-          siteUrl: input.site,
-          brandTerms: input.brandTerms,
-          includeBrand: input.includeBrand,
-        }),
-    )
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 20)
-
-  const targetTokens = new Set(
-    targetQueries.flatMap((row) => tokenize(row.keys[0] ?? '')),
+  const targetRequests = await Promise.all(
+    target.aliases.map(async (alias) => {
+      const result = await dependencies.searchAnalytics(
+        input.site,
+        {
+          ...range,
+          dimensions: ['query', 'page'],
+          type: 'web',
+          dataState: 'final',
+          maxRows: MAX_GSC_ROWS,
+          dimensionFilterGroups: [
+            {
+              groupType: 'and',
+              filters: [
+                { dimension: 'page', operator: 'equals', expression: alias },
+              ],
+            },
+          ],
+        },
+        { refresh: input.refresh },
+      )
+      ledger.addGsc(result.calls, result.rowsFetched)
+      return { alias, result }
+    }),
   )
-  const candidates = rows
-    .filter((row) => (row.keys[1] ?? '') !== input.targetUrl)
-    .map((row) => ({
-      url: row.keys[1] ?? '',
-      query: row.keys[0] ?? '',
-      impressions: row.impressions,
-      overlap: jaccard([...targetTokens], tokenize(row.keys[0] ?? '')),
-    }))
-    .filter(
-      (row) =>
-        !isLowActionabilityQuery(row.query) &&
-        !shouldExcludeBrandQuery({
-          query: row.query,
-          siteUrl: input.site,
-          brandTerms: input.brandTerms,
-          includeBrand: input.includeBrand,
-        }) &&
-        (row.overlap >= 0.6 ||
-          targetQueries.some((target) => target.keys[0] === row.query)),
-    )
+  const targetRows = targetRequests.flatMap(({ result }) => result.rows)
+  const preliminary = analyzeInternalLinksFromRows({
+    targetRows,
+    sourceRows: [],
+    site: input.site,
+    targetAliases: target.aliases,
+    minImpressions,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
+  const queryCandidates =
+    target.verification === 'verified' &&
+    preliminary.selection.targetEligibleQueries > 0
+  const sourceResult = queryCandidates
+    ? await dependencies.searchAnalytics(
+        input.site,
+        {
+          ...range,
+          dimensions: ['query', 'page'],
+          type: 'web',
+          dataState: 'final',
+          maxRows: MAX_GSC_ROWS,
+        },
+        { refresh: input.refresh },
+      )
+    : { rows: [], calls: 0, rowsFetched: 0 }
+  ledger.addGsc(sourceResult.calls, sourceResult.rowsFetched)
+  const analysis = analyzeInternalLinksFromRows({
+    targetRows,
+    sourceRows: sourceResult.rows,
+    site: input.site,
+    targetAliases: target.aliases,
+    minImpressions,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
 
-  const byUrl = new Map<
-    string,
-    { impressions: number; overlap: number; queries: string[] }
-  >()
-  for (const candidate of candidates) {
-    const current = byUrl.get(candidate.url) ?? {
-      impressions: 0,
-      overlap: 0,
-      queries: [],
-    }
-    current.impressions += candidate.impressions
-    current.overlap = Math.max(current.overlap, candidate.overlap)
-    current.queries.push(candidate.query)
-    byUrl.set(candidate.url, current)
-  }
-
-  const items = []
-  const warnings: string[] = []
+  const items: InternalLinksReport['items'] = []
+  const warnings = [...target.warnings]
   let checkedSources = 0
-  for (const [url, data] of [...byUrl.entries()]
-    .sort((a, b) => b[1].impressions - a[1].impressions)
-    .slice(0, input.limit ?? 20)) {
+  let existingLinkExclusions = 0
+  let technicalExclusions = 0
+  let selfAliasExclusions = 0
+  let failedChecks = 0
+  for (const candidate of analysis.candidates) {
+    if (checkedSources >= checkLimit || items.length >= limit) break
     checkedSources += 1
-    const fetched = await fetchPage(url, {
-      js: 'auto',
+    const verified = await verifyInternalLinkCandidate({
+      site: input.site,
+      candidate,
+      target,
+      js: input.js,
       refresh: input.refresh,
-    }).catch((error) => {
-      warnings.push(
-        `${url}: ${error instanceof Error ? error.message : String(error)}`,
-      )
-      return undefined
+      rate: input.rate,
+      dependencies,
     })
-    if (!fetched) continue
-    const extracted = await extractPage(fetched).catch((error) => {
-      warnings.push(
-        `${url}: ${error instanceof Error ? error.message : String(error)}`,
-      )
-      return undefined
-    })
-    if (!extracted) continue
-    const alreadyLinks = extracted.links.some(
-      (link) => link.href === input.targetUrl,
-    )
-    if (alreadyLinks) {
-      continue
-    }
-
-    items.push({
-      sourceUrl: url,
-      sourceImpressions: data.impressions,
-      sharedQueries: data.queries.slice(0, 5),
-      recommendation: {
-        principle: 'C.6',
-        evidenceRef: `${url} overlaps with the target URL on ${data.queries.length} queries and does not currently link to it.`,
-        action: `This page ranks for similar queries but does not link to the target URL. Add one natural in-content link to ${input.targetUrl} using wording from the shared queries: ${data.queries.slice(0, 3).join('; ')}.`,
-        effort: 'S',
-        confidence: 'medium',
-      },
-    })
+    warnings.push(...verified.warnings)
+    if (verified.item) items.push(verified.item)
+    if (verified.exclusion === 'existing-link') existingLinkExclusions += 1
+    if (verified.exclusion === 'technical') technicalExclusions += 1
+    if (verified.exclusion === 'self-alias') selfAliasExclusions += 1
+    if (verified.exclusion === 'failed') failedChecks += 1
   }
+  const uncheckedCandidates = Math.max(
+    0,
+    analysis.candidates.length - checkedSources,
+  )
+  const targetTruncated = targetRequests.some(
+    ({ result }) => result.rowsFetched >= MAX_GSC_ROWS,
+  )
+  const sourceTruncated = sourceResult.rowsFetched >= MAX_GSC_ROWS
+  const structuredWarnings = uniqueInternalLinksWarnings(warnings)
+  const dataStatus: InternalLinksReport['dataStatus'] =
+    target.verification === 'technical-issue'
+      ? 'target-technical-issue'
+      : target.verification === 'failed'
+        ? 'partial'
+        : targetRows.length === 0
+          ? 'empty'
+          : analysis.selection.targetEligibleQueries === 0 ||
+              analysis.candidates.length === 0
+            ? 'filtered'
+            : targetTruncated ||
+                sourceTruncated ||
+                failedChecks > 0 ||
+                uncheckedCandidates > 0
+              ? 'partial'
+              : 'complete'
+  const selection = completeInternalLinksSelection(analysis, {
+    checkedSources,
+    returnedSources: items.length,
+    existingLinkExclusions,
+    technicalExclusions,
+    selfAliasExclusions,
+    failedChecks,
+    uncheckedCandidates,
+  })
+  const summaryVerdict = internalLinksVerdict({
+    dataStatus,
+    returned: items.length,
+    checked: checkedSources,
+    candidates: analysis.candidates.length,
+  })
 
   return {
     site: input.site,
-    targetUrl: input.targetUrl,
-    generatedAt: new Date().toISOString(),
+    targetUrl,
+    generatedAt: now.toISOString(),
+    range,
+    rangeDays: days,
+    dataStatus,
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      searchType: 'web',
+      dataState: 'final',
+      target: {
+        pageFilters: targetRequests.map(({ alias }) => alias),
+        requests: targetRequests.map(({ alias, result }) => ({
+          pageFilter: alias,
+          rowsFetched: result.rowsFetched,
+          calls: result.calls,
+          possiblyTruncated: result.rowsFetched >= MAX_GSC_ROWS,
+        })),
+        rowsFetched: targetRequests.reduce(
+          (sum, { result }) => sum + result.rowsFetched,
+          0,
+        ),
+        calls: targetRequests.reduce(
+          (sum, { result }) => sum + result.calls,
+          0,
+        ),
+        maxRowsPerRequest: MAX_GSC_ROWS,
+        possiblyTruncated: targetTruncated,
+      },
+      candidates: {
+        queried: queryCandidates,
+        rowsFetched: sourceResult.rowsFetched,
+        calls: sourceResult.calls,
+        maxRows: MAX_GSC_ROWS,
+        possiblyTruncated: sourceTruncated,
+      },
+      completeness: !queryCandidates
+        ? 'not-queried'
+        : targetTruncated || sourceTruncated
+          ? 'possibly-truncated'
+          : 'complete',
+    },
+    methodology: {
+      id: 'gsc_internal_link_candidates',
+      version: 2,
+      lexicalTargetLimit: INTERNAL_LINK_LEXICAL_TARGET_LIMIT,
+      matching: 'pairwise_exact_then_precision_lexical',
+      ranking: 'exact_matches_then_matched_query_impressions_then_relevance',
+      contextualPlacementVerified: true,
+    },
+    target: {
+      requestedUrl: target.requestedUrl,
+      preferredUrl: target.preferredUrl,
+      finalUrl: target.finalUrl,
+      canonical: target.canonical,
+      status: target.status,
+      aliases: target.aliases,
+      verification: target.verification,
+      technicalSignals: target.technicalSignals,
+      fetchDiagnostics: target.fetchDiagnostics,
+      queries: analysis.targetQueries,
+    },
+    selection,
     summary: {
-      targetQueries: targetQueries.length,
-      candidateSources: byUrl.size,
+      targetQueries: analysis.selection.targetEligibleQueries,
+      candidateSources: analysis.candidates.length,
       checkedSources,
-      opportunities: items.length,
-      skippedSources: warnings.length,
+      returnedSources: items.length,
+      existingLinksObserved: existingLinkExclusions,
+      technicalExclusions,
+      failedChecks,
+      uncheckedCandidates,
+      matchedQueryImpressions: items.reduce(
+        (sum, item) => sum + item.matchedQueryImpressions,
+        0,
+      ),
       brandFiltering: input.includeBrand ? 'included' : 'excluded',
-      verdict: internalLinksVerdict({
-        opportunities: items.length,
-        targetQueries: targetQueries.length,
-      }),
+      verdict: summaryVerdict,
     },
     items,
-    warnings,
+    warnings: structuredWarnings,
     caveats: [
-      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
-      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
-      'Only source pages with overlapping GSC query demand were checked.',
-      warnings.length
-        ? `${warnings.length} source ${plural(warnings.length, 'page')} could not be fetched or extracted, so some opportunities may be missing.`
+      `Date window: ${range.startDate} to ${range.endDate} (${days} days), using final GSC data where available.`,
+      `Selection: ${analysis.selection.targetEligibleQueries} eligible target queries, ${analysis.selection.candidateUrls} matched source pages, ${checkedSources} checked, ${items.length} returned.`,
+      `Minimum retained query impressions: ${minImpressions}. Brand queries were ${input.includeBrand ? 'included' : 'excluded when detected or configured'}.`,
+      'GSC query rows omit anonymized queries and lower-volume rows. A 100,000-row cap is reported separately when reached.',
+      'Exact query overlap is medium-confidence affinity evidence; lexical matches are low-confidence review evidence. Neither predicts traffic lift or link equity.',
+      'The fetch checks HTML link placement, but it cannot prove editorial relevance. Review intent and reader usefulness before adding a link.',
+      uncheckedCandidates
+        ? `${uncheckedCandidates} matched source page${uncheckedCandidates === 1 ? ' was' : 's were'} not checked because the output or check limit was reached.`
         : '',
-    ].filter((item) => item.length > 0),
-    recommendations: items.length
-      ? [
-          `Add links from the highest-impression source pages first. Use natural anchors from the shared query list, not forced exact-match anchors.`,
-        ]
-      : [
-          'No internal link action is needed from this report. Try a broader target, more days, or a different URL if this page should have more internal support.',
-        ],
+    ].filter(Boolean),
+    recommendations:
+      target.verification !== 'verified'
+        ? [
+            'Resolve the target fetch, indexability, redirect, or canonical issue before adding internal links.',
+          ]
+        : items.length
+          ? [
+              'Review exact-query candidates first, then lexical candidates. Add or update a contextual link only when it helps a reader move between complementary intents.',
+            ]
+          : [
+              'No ready-to-apply link action was confirmed among the checked sources. Review completeness and unchecked counts before treating this as a site-wide absence.',
+            ],
+    ledgerSummary: ledger.summary(),
   }
 }

@@ -154,6 +154,13 @@ export async function extractPage(
         text: $(element).text().replace(/\s+/g, ' ').trim(),
         rel: ($(element).attr('rel') ?? '').split(/\s+/).filter(Boolean),
         internal: absolute.host === url.host,
+        location: $(element).closest('nav, header').length
+          ? ('navigation' as const)
+          : $(element).closest('footer').length
+            ? ('footer' as const)
+            : $(element).closest('main, article').length
+              ? ('main-content' as const)
+              : ('other' as const),
       }
     })
 

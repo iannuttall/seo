@@ -8,6 +8,7 @@ const REPORT_OPTIONS = {
   recentDays: { mcp: 'recentDays', schema: z.number().optional() },
   range: { mcp: 'range', schema: z.number().optional() },
   limit: { mcp: 'limit', schema: z.number().optional() },
+  checkLimit: { mcp: 'checkLimit', schema: z.number().optional() },
   minImpressions: { mcp: 'minImpressions', schema: z.number().optional() },
   includeBrand: { mcp: 'includeBrand', schema: z.boolean().optional() },
   verifyContent: { mcp: 'verifyContent', schema: z.boolean().optional() },

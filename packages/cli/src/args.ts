@@ -63,6 +63,16 @@ export function numberArg(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+export function strictNumberArg(
+  value: unknown,
+  label: string,
+): number | undefined {
+  if (value === undefined || value === '') return undefined
+  const parsed = numberArg(value)
+  if (parsed === undefined) throw new Error(`${label} must be a number.`)
+  return parsed
+}
+
 export function csvArg(value: unknown): string[] | undefined {
   if (typeof value !== 'string') return undefined
   const items = value
@@ -87,6 +97,32 @@ export function fetchRateArg(args: Record<string, unknown>):
     concurrency: numberArg(args['fetch-concurrency']),
     intervalCap: numberArg(args['fetch-interval-cap']),
     intervalMs: numberArg(args['fetch-interval-ms']),
+  }
+  return Object.values(rate).some((value) => value !== undefined)
+    ? rate
+    : undefined
+}
+
+export function strictFetchRateArg(args: Record<string, unknown>):
+  | {
+      concurrency?: number
+      intervalCap?: number
+      intervalMs?: number
+    }
+  | undefined {
+  const rate = {
+    concurrency: strictNumberArg(
+      args['fetch-concurrency'],
+      '--fetch-concurrency',
+    ),
+    intervalCap: strictNumberArg(
+      args['fetch-interval-cap'],
+      '--fetch-interval-cap',
+    ),
+    intervalMs: strictNumberArg(
+      args['fetch-interval-ms'],
+      '--fetch-interval-ms',
+    ),
   }
   return Object.values(rate).some((value) => value !== undefined)
     ? rate

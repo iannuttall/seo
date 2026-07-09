@@ -100,6 +100,7 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.equal(page.links.length, 2)
   assert.equal(page.links[0]?.href, 'https://example.com/pricing')
   assert.equal(page.links[0]?.internal, true)
+  assert.equal(page.links[0]?.location, 'main-content')
   assert.equal(page.links[1]?.internal, false)
   assert.deepEqual(page.hreflang, [
     {
@@ -268,4 +269,21 @@ test('Readability fallback word counts remain useful for CJK content', () => {
 
   assert.equal(content.wordCount, 6)
   assert.equal(content.diagnostics.wordCountSource, 'local_cjk_aware')
+})
+
+test('classifies link placement for contextual-link evidence', async () => {
+  const result = await extractPage(
+    fetchResult(`<!doctype html><html><body>
+      <header><nav><a href="/nav">Navigation</a></nav></header>
+      <main><article><a href="/article">Article</a></article></main>
+      <aside><a href="/other">Other</a></aside>
+      <footer><a href="/footer">Footer</a></footer>
+    </body></html>`),
+    'readability',
+  )
+
+  assert.deepEqual(
+    result.links.map((link) => link.location),
+    ['navigation', 'main-content', 'other', 'footer'],
+  )
 })

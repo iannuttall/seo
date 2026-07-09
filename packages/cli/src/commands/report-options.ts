@@ -36,6 +36,13 @@ const REPORT_OPTIONS = {
       description: 'Maximum rows to return.',
     },
   },
+  checkLimit: {
+    cli: 'check-limit',
+    arg: {
+      type: 'string',
+      description: 'Maximum candidate pages to fetch and check.',
+    },
+  },
   minImpressions: {
     cli: 'min-impressions',
     arg: {

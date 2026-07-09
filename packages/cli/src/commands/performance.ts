@@ -47,11 +47,6 @@ export const performanceCommand = defineCommand({
           description:
             'Lighthouse binary path. Defaults to lighthouse on PATH.',
         },
-        'crux-key': {
-          type: 'string',
-          description:
-            'Chrome UX Report API key. Defaults to SEO_CRUX_API_KEY.',
-        },
         refresh: {
           type: 'boolean',
           default: false,
@@ -75,8 +70,6 @@ export const performanceCommand = defineCommand({
           url,
           strategy: strategy(args.strategy),
           lighthouseBin: stringArg(args['lighthouse-bin']),
-          cruxApiKey:
-            stringArg(args['crux-key']) ?? process.env.SEO_CRUX_API_KEY,
           refresh: booleanArg(args.refresh),
         })
         if (json) {
@@ -97,8 +90,9 @@ export const performanceCommand = defineCommand({
           ['LCP', metric(report.metrics.largestContentfulPaint)],
           ['TBT', metric(report.metrics.totalBlockingTime)],
           ['CLS', metric(report.metrics.cumulativeLayoutShift)],
+          ['INP', metric(report.metrics.interactionToNextPaint)],
           ['Response', metric(report.metrics.responseTime)],
-          ['Field data', report.fieldData ? 'attached' : 'not attached'],
+          ['Field data', report.fieldDataStatus.status],
         ])
         printActionDetails(
           'Top actions',

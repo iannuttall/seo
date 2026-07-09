@@ -27,14 +27,28 @@ export type PerformanceAuditReport = {
     largestContentfulPaint?: PerformanceMetric
     totalBlockingTime?: PerformanceMetric
     cumulativeLayoutShift?: PerformanceMetric
+    interactionToNextPaint?: PerformanceMetric
     speedIndex?: PerformanceMetric
     responseTime?: PerformanceMetric
   }
   fieldData?: {
     source: 'crux'
+    status: 'available'
     url?: string
     origin?: string
     metrics: Record<string, unknown>
+  }
+  fieldDataStatus: {
+    provider: 'crux'
+    status:
+      | 'not_configured'
+      | 'available'
+      | 'unavailable_no_coverage'
+      | 'request_failed'
+    reason: string
+    checkedUrl: string
+    checkedOrigin: string
+    httpStatus?: number
   }
   topActions: Array<{
     title: string
@@ -82,9 +96,9 @@ function cacheGet(id: string): PerformanceAuditReport | undefined {
       'SELECT report_json FROM performance_reports WHERE id = ? AND expires_at > ?',
     )
     .get(id, Date.now()) as { report_json?: string } | undefined
-  return row?.report_json
-    ? (JSON.parse(row.report_json) as PerformanceAuditReport)
-    : undefined
+  if (!row?.report_json) return undefined
+  const report = JSON.parse(row.report_json) as PerformanceAuditReport
+  return report.fieldDataStatus ? report : undefined
 }
 
 function cacheSet(report: PerformanceAuditReport): void {
@@ -111,6 +125,7 @@ function actions(
   const lcp = report.metrics.largestContentfulPaint
   const tbt = report.metrics.totalBlockingTime
   const cls = report.metrics.cumulativeLayoutShift
+  const inp = report.metrics.interactionToNextPaint
   const response = report.metrics.responseTime
   if ((lcp?.value ?? 0) > 2500) {
     actions.push({
@@ -137,6 +152,15 @@ function actions(
       action:
         'Reserve dimensions for images, ads, embeds, banners, and late-loading UI before they render.',
       evidence: { cumulativeLayoutShift: cls },
+    })
+  }
+  if ((inp?.value ?? 0) > 200) {
+    actions.push({
+      title: 'Improve interaction responsiveness',
+      plainEnglish: `Interaction to Next Paint is ${inp?.displayValue ?? `${inp?.value}ms`}.`,
+      action:
+        'Break up long event handlers, reduce main-thread work, and give immediate visual feedback after user input.',
+      evidence: { interactionToNextPaint: inp },
     })
   }
   if ((response?.value ?? 0) > 800) {
@@ -214,8 +238,18 @@ async function lighthouseReport(input: {
       ),
       totalBlockingTime: metric(parsed.audits?.['total-blocking-time']),
       cumulativeLayoutShift: metric(parsed.audits?.['cumulative-layout-shift']),
+      interactionToNextPaint: metric(
+        parsed.audits?.['interaction-to-next-paint'],
+      ),
       speedIndex: metric(parsed.audits?.['speed-index']),
       responseTime: metric(parsed.audits?.['server-response-time']),
+    },
+    fieldDataStatus: {
+      provider: 'crux',
+      status: 'not_configured',
+      reason: 'Field Core Web Vitals were not checked yet.',
+      checkedUrl: input.url,
+      checkedOrigin: new URL(input.url).origin,
     },
     caveats: [],
     raw: parsed,
@@ -260,43 +294,134 @@ async function fallbackReport(input: {
         score: score / 100,
       },
     },
+    fieldDataStatus: {
+      provider: 'crux',
+      status: 'not_configured',
+      reason: 'Field Core Web Vitals were not checked yet.',
+      checkedUrl: input.url,
+      checkedOrigin: new URL(input.url).origin,
+    },
     caveats: [
       input.warning,
-      'Fallback mode does not measure JavaScript execution, LCP, CLS, TBT, or field Core Web Vitals.',
+      'Fallback mode does not measure JavaScript execution, LCP, CLS, TBT, or INP.',
     ],
     topActions: [],
   }
   return { ...report, topActions: actions(report) }
 }
 
-async function cruxFieldData(input: {
+export async function fetchCruxFieldData(input: {
   url: string
   apiKey?: string
-}): Promise<PerformanceAuditReport['fieldData'] | undefined> {
-  if (!input.apiKey) return undefined
-  const response = await fetch(
-    `https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${encodeURIComponent(input.apiKey)}`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ url: input.url }),
-      headers: { 'content-type': 'application/json' },
-    },
-  )
-  if (!response.ok) return undefined
-  const json = (await response.json()) as {
-    record?: {
-      key?: { url?: string; origin?: string }
-      metrics?: Record<string, unknown>
+  fetchImpl?: typeof fetch
+}): Promise<{
+  fieldData?: PerformanceAuditReport['fieldData']
+  status: PerformanceAuditReport['fieldDataStatus']
+  caveat: string
+}> {
+  const checkedUrl = input.url
+  const checkedOrigin = new URL(input.url).origin
+
+  if (!input.apiKey) {
+    return {
+      status: {
+        provider: 'crux',
+        status: 'not_configured',
+        reason: 'Chrome UX Report field data is not configured.',
+        checkedUrl,
+        checkedOrigin,
+      },
+      caveat: 'Field Core Web Vitals were not checked in this run.',
     }
   }
-  return json.record
-    ? {
-        source: 'crux',
-        url: json.record.key?.url,
-        origin: json.record.key?.origin,
-        metrics: json.record.metrics ?? {},
+
+  const fetchImpl = input.fetchImpl ?? fetch
+  const endpoint = `https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${encodeURIComponent(input.apiKey)}`
+
+  async function query(body: { url?: string; origin?: string }) {
+    const response = await fetchImpl(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'content-type': 'application/json' },
+    })
+    const json = (await response.json().catch(() => ({}))) as {
+      record?: {
+        key?: { url?: string; origin?: string }
+        metrics?: Record<string, unknown>
       }
-    : undefined
+    }
+    return { response, json }
+  }
+
+  try {
+    const attempts = [{ url: checkedUrl }, { origin: checkedOrigin }]
+    let lastStatus: number | undefined
+
+    for (const body of attempts) {
+      const { response, json } = await query(body)
+      lastStatus = response.status
+
+      if (response.ok && json.record) {
+        return {
+          fieldData: {
+            source: 'crux',
+            status: 'available',
+            url: json.record.key?.url,
+            origin: json.record.key?.origin,
+            metrics: json.record.metrics ?? {},
+          },
+          status: {
+            provider: 'crux',
+            status: 'available',
+            reason: 'Chrome UX Report field data was available.',
+            checkedUrl,
+            checkedOrigin,
+            httpStatus: response.status,
+          },
+          caveat: 'CrUX field data was attached from the Chrome UX Report API.',
+        }
+      }
+
+      if (!response.ok && response.status !== 404) {
+        return {
+          status: {
+            provider: 'crux',
+            status: 'request_failed',
+            reason: 'Chrome UX Report field data could not be fetched.',
+            checkedUrl,
+            checkedOrigin,
+            httpStatus: response.status,
+          },
+          caveat: 'Chrome UX Report field data could not be fetched right now.',
+        }
+      }
+    }
+
+    return {
+      status: {
+        provider: 'crux',
+        status: 'unavailable_no_coverage',
+        reason:
+          'Chrome UX Report does not have enough field data for this URL or origin.',
+        checkedUrl,
+        checkedOrigin,
+        httpStatus: lastStatus,
+      },
+      caveat:
+        'Chrome UX Report does not have enough field data for this URL or origin yet.',
+    }
+  } catch {
+    return {
+      status: {
+        provider: 'crux',
+        status: 'request_failed',
+        reason: 'Chrome UX Report field data could not be fetched.',
+        checkedUrl,
+        checkedOrigin,
+      },
+      caveat: 'Chrome UX Report field data could not be fetched right now.',
+    }
+  }
 }
 
 export async function performanceAudit(input: {
@@ -306,6 +431,7 @@ export async function performanceAudit(input: {
   cruxApiKey?: string
   refresh?: boolean
   timeoutMs?: number
+  cruxFetch?: typeof fetch
 }): Promise<PerformanceAuditReport> {
   const strategy = input.strategy ?? 'mobile'
   const url = new URL(input.url).toString()
@@ -331,16 +457,19 @@ export async function performanceAudit(input: {
       warning: `Lighthouse unavailable: ${error instanceof Error ? error.message : String(error)}`,
     })
   }
-  const fieldData = await cruxFieldData({ url, apiKey: input.cruxApiKey })
+  const fieldData = await fetchCruxFieldData({
+    url,
+    apiKey:
+      input.cruxApiKey ??
+      process.env.SEO_CRUX_API_KEY ??
+      process.env.CRUX_API_KEY,
+    fetchImpl: input.cruxFetch,
+  })
   report = {
     ...report,
-    ...(fieldData ? { fieldData } : {}),
-    caveats: [
-      ...report.caveats,
-      fieldData
-        ? 'CrUX field data was attached from the Chrome UX Report API.'
-        : 'No CrUX field data was attached. Pass a CrUX API key when field Core Web Vitals are needed.',
-    ],
+    ...(fieldData.fieldData ? { fieldData: fieldData.fieldData } : {}),
+    fieldDataStatus: fieldData.status,
+    caveats: [...report.caveats, fieldData.caveat],
   }
   cacheSet(report)
   return report

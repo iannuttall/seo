@@ -37,20 +37,25 @@ export function normalizeForCoverage(value: string): string {
   return value
     .normalize('NFKD')
     .replace(/\p{Diacritic}/gu, '')
-    .replace(/([a-z0-9])[’']([a-z0-9])/gi, '$1$2')
+    .replace(/([\p{L}\p{N}])[’']([\p{L}\p{N}])/gu, '$1$2')
     .toLowerCase()
     .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function hasNonAscii(value: string): boolean {
+  return [...value].some((character) => (character.codePointAt(0) ?? 0) > 127)
 }
 
 function queryTerms(query: string): string[] {
   const tokens = normalizeForCoverage(query)
     .split(' ')
-    .filter((token) => token.length > 1)
+    .filter((token) => token.length > 1 || hasNonAscii(token))
   const meaningful = tokens.filter(
-    (token) => token.length > 2 && !STOPWORDS.has(token),
+    (token) =>
+      (token.length > 2 || hasNonAscii(token)) && !STOPWORDS.has(token),
   )
   return [...new Set(meaningful.length ? meaningful : tokens)]
 }

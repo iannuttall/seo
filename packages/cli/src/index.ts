@@ -113,7 +113,7 @@ const helpSections: HelpSection[] = [
     commands: [
       ['seo refresh-priorities', 'Rank the next best SEO actions'],
       ['seo quick-wins', 'Find ranking 4-10 low-CTR wins'],
-      ['seo second-page', 'Find position 11-20 opportunities'],
+      ['seo second-page', 'Investigate URLs averaging positions 10-20'],
       ['seo technical-watch', 'Crawl and index-monitor a site'],
     ],
   },

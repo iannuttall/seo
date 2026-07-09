@@ -24,11 +24,13 @@ import { formatContentCheck, formatFetchDiagnostics } from '../shared.js'
 export const secondPageCommand = defineCommand({
   meta: {
     name: 'second-page',
-    description:
-      'Find position 11-20 URLs and check whether pages cover the query',
+    description: 'Find URLs averaging positions above 10 through 20 in GSC',
   },
   args: {
-    site: { type: 'string' },
+    site: {
+      type: 'string',
+      description: 'GSC property URL, for example sc-domain:example.com.',
+    },
     project: { type: 'string', description: 'Saved project id or name.' },
     client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs([
@@ -44,7 +46,11 @@ export const secondPageCommand = defineCommand({
       'fetchIntervalMs',
       'refresh',
     ]),
-    json: { type: 'boolean', default: false },
+    json: {
+      type: 'boolean',
+      default: false,
+      description: 'Print machine-readable JSON.',
+    },
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
@@ -75,10 +81,13 @@ export const secondPageCommand = defineCommand({
     }
     printKeyValue([
       ['Site', report.site],
-      ['Opportunities', formatCount(report.summary.opportunities)],
-      ['Templates', formatCount(report.summary.templates)],
-      ['Impressions', formatCount(report.summary.impressions)],
+      ['Eligible pages', formatCount(report.summary.eligiblePages)],
+      ['Returned pages', formatCount(report.summary.returnedPages)],
+      ['Eligible queries', formatCount(report.summary.eligibleQueries)],
+      ['Eligible impressions', formatCount(report.summary.eligibleImpressions)],
       ['Content issues', formatCount(report.summary.contentIssues)],
+      ['Technical issues', formatCount(report.summary.technicalIssues)],
+      ['Fetch failures', formatCount(report.summary.fetchFailures)],
       ['Brand queries', report.summary.brandFiltering],
       ['Verification', verificationSummary(report)],
       ['Verdict', report.summary.verdict],
@@ -87,7 +96,7 @@ export const secondPageCommand = defineCommand({
     printNotes('Report caveats', report.caveats)
     if (!report.items.length) {
       process.stdout.write(
-        'No second-page opportunities matched this report.\n',
+        'No average-position candidates matched this report.\n',
       )
       process.stdout.write(`${report.ledgerSummary}\n`)
       return
@@ -99,7 +108,7 @@ export const secondPageCommand = defineCommand({
         'Pos',
         'Impr',
         'CTR',
-        'Coverage',
+        'Queries',
         'Fetch',
         'Check',
         'Action',
@@ -110,11 +119,10 @@ export const secondPageCommand = defineCommand({
         item.position.toFixed(1),
         Math.round(item.impressions),
         item.ctr.toFixed(3),
-        `${item.coverage.inTitleExact ? 'T' : '-'}${item.coverage.inH1 ? 'H' : '-'}${item.coverage.inMeta ? 'M' : '-'}${item.coverage.inFirst100Words ? 'F' : '-'}`,
+        formatCount(item.queryCount),
         formatFetchDiagnostics(item.fetchDiagnostics),
         formatContentCheck(item.contentVerification?.classification),
-        item.recommendations[0]?.action ??
-          'Review the ranking URL before creating a new page.',
+        item.recommendation.action,
       ]),
     )
     printActionDetails(
@@ -122,7 +130,7 @@ export const secondPageCommand = defineCommand({
       report.items.map((item) => ({
         label: item.primaryQuery,
         context: `${item.template.label}, pos ${formatPosition(item.position)}, ${formatCount(item.impressions)} impressions`,
-        action: item.recommendations[0]?.action ?? '',
+        action: item.recommendation.action,
       })),
     )
     process.stdout.write(`${report.ledgerSummary}\n`)

@@ -1,10 +1,5 @@
-import type { PageTemplate } from '../analyze/page-patterns.js'
 import type { RuleId } from '../rules.js'
-import type {
-  ExtractedPage,
-  PageFetchDiagnostics,
-  QueryContentCoverage,
-} from './pages.js'
+import type { ExtractedPage, PageFetchDiagnostics } from './pages.js'
 
 export interface Recommendation {
   principle: string
@@ -38,51 +33,10 @@ export interface AuditPageReport {
   warnings: string[]
 }
 
-export interface SecondPageItem {
-  url: string
-  primaryQuery: string
-  template: PageTemplate
-  position: number
-  impressions: number
-  ctr: number
-  coverage: {
-    inTitleExact: boolean
-    inMeta: boolean
-    inH1: boolean
-    inFirst100Words: boolean
-    inSlug: boolean
-    bodyCount: number
-  }
-  fetchDiagnostics?: PageFetchDiagnostics
-  contentVerification?: QueryContentCoverage
-  recommendations: Recommendation[]
-}
-
-export interface SecondPageReport {
-  site: string
-  range: number
-  dateRange: {
-    startDate: string
-    endDate: string
-  }
-  generatedAt: string
-  summary: {
-    opportunities: number
-    templates: number
-    impressions: number
-    contentIssues: number
-    brandFiltering: 'included' | 'excluded'
-    verdict: string
-  }
-  verification:
-    | { requested: false; verified: 0; failed: 0 }
-    | { requested: true; limit: number; verified: number; failed: number }
-  items: SecondPageItem[]
-  caveats: string[]
-  recommendations: string[]
-  ledgerSummary: string
-  warnings: string[]
-}
+export type {
+  SecondPageItem,
+  SecondPageReport,
+} from '../analyze/second-page-analysis-types.js'
 
 export interface QueryCluster {
   label: string

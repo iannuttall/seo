@@ -7,8 +7,10 @@ import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import { defaultDateRange } from './shared.js'
 import {
   analyzeCannibalRows,
+  analyzeDecay,
   analyzeQuickWinsFromRows,
   cannibalReport,
+  decayComparisonRange,
   decayingReport,
   quickWinsReport,
 } from './site-diagnostics.js'
@@ -145,33 +147,77 @@ function emptySegment(input: {
 
 function emptyDecay(input: {
   site: string
+  days?: number
+  startDate?: string
+  endDate?: string
+  limit?: number
+  includeBrand?: boolean
 }): Awaited<ReturnType<typeof decayingReport>> {
-  const current = defaultDateRange(28)
-  const previousEnd = new Date(`${current.startDate}T00:00:00.000Z`)
-  previousEnd.setUTCDate(previousEnd.getUTCDate() - 1)
-  const previousStart = new Date(previousEnd)
-  previousStart.setUTCDate(previousStart.getUTCDate() - 27)
+  const current = fallbackRange(input)
+  const previous = decayComparisonRange(current)
+  const analysis = analyzeDecay({
+    site: input.site,
+    currentRows: [],
+    previousRows: [],
+    limit: input.limit,
+    includeBrand: input.includeBrand,
+  })
   return {
+    schemaVersion: 1,
     site: input.site,
     generatedAt: new Date().toISOString(),
-    ranges: {
-      current,
-      previous: {
-        startDate: previousStart.toISOString().slice(0, 10),
-        endDate: previousEnd.toISOString().slice(0, 10),
+    comparison: 'previous-period',
+    ranges: { current, previous },
+    rangeDays:
+      Math.floor(
+        (new Date(`${current.endDate}T00:00:00.000Z`).getTime() -
+          new Date(`${current.startDate}T00:00:00.000Z`).getTime()) /
+          86_400_000,
+      ) + 1,
+    dataStatus: 'unavailable',
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      aggregationType: 'auto',
+      searchType: 'web',
+      dataState: 'final',
+      current: {
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
       },
+      previous: {
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      completeness: 'unavailable',
+    },
+    methodology: {
+      id: 'gsc_retained_query_page_decay_v2',
+      version: 2,
+      gscHistoryMonths: 16,
+      missingRowsTreatedAsZero: false,
+      urlShiftsExcluded: true,
+      causeLanguage: 'signals-not-attribution',
     },
     filters: {
       minDropPct: 20,
       minPreviousClicks: 2,
       minClickLoss: 1,
-      brand: 'excluded',
+      limit: input.limit ?? 25,
+      brand: input.includeBrand ? 'included' : 'excluded',
     },
+    selection: analysis.selection,
     summary: {
-      rows: 0,
+      eligibleRows: 0,
+      returnedRows: 0,
       groups: 0,
-      totalClickLoss: 0,
-      brandFiltering: 'excluded',
+      observedRetainedQueryClickLoss: 0,
+      returnedObservedRetainedQueryClickLoss: 0,
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
       verdict: 'Decay analysis was skipped.',
     },
     caveats: [
@@ -180,9 +226,11 @@ function emptyDecay(input: {
     recommendations: [
       'Run this section again after the property has enough query/page history.',
     ],
-    items: [],
-    groups: [],
-    templates: [],
+    items: analysis.items,
+    groups: analysis.groups,
+    templates: analysis.templates,
+    ledgerSummary: 'GSC: 0 calls, 0 rows.',
+    warnings: [],
   }
 }
 
@@ -423,13 +471,13 @@ function buildPriorities(input: {
     })
   }
 
-  if (input.decay.items.length) {
+  if (input.decay.selection.eligibleRows) {
     const topGroup = input.decay.groups[0]
     priorities.push({
       label: 'Refresh decaying content',
       reason: topGroup
-        ? `${input.decay.items.length} decaying query/page rows found; ${topGroup.label} lost ${topGroup.totalClickLoss.toFixed(0)} clicks.`
-        : `${input.decay.items.length} decaying query/page rows found.`,
+        ? `${input.decay.selection.eligibleRows} observed retained query/page declines found; ${topGroup.label} declined by ${topGroup.totalClickLoss.toFixed(0)} clicks.`
+        : `${input.decay.selection.eligibleRows} observed retained query/page declines found.`,
       action: topGroup
         ? topGroup.recommendation
         : 'Start with declines that continued outside the update window. Check indexability first, then ranking and CTR causes.',
@@ -549,11 +597,15 @@ export async function diagnoseProperty(input: {
       () =>
         decayingReport({
           site: input.site,
+          days: input.days,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          limit,
           brandTerms: input.brandTerms,
           includeBrand: input.includeBrand,
           refresh: input.refresh,
         }),
-      () => emptyDecay(input),
+      () => emptyDecay({ ...input, limit }),
     ),
     track(
       'cannibalisation analysis',
@@ -637,7 +689,7 @@ export async function diagnoseProperty(input: {
         .length,
       updateMatches: update.overlappingUpdates.length,
       largestPageMovements: page.items.length,
-      decayItems: decay.items.length,
+      decayItems: decay.selection.eligibleRows,
       cannibalItems: cannibal.selection.eligibleClusters,
       strikingDistanceItems: striking.items.length,
       quickWinItems: quickWins.items.length,

@@ -109,6 +109,7 @@ test('long help and crawler command help are available', async () => {
     ['crawl-reports', '--help'],
     ['internal-links', '--help'],
     ['cannibal', '--help'],
+    ['decaying', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
@@ -127,6 +128,51 @@ test('cannibal help exposes bounded discovery controls', async () => {
     '--refresh',
   ]) {
     assert.match(output, new RegExp(flag))
+  }
+})
+
+test('decaying help exposes bounded comparison controls', async () => {
+  const output = await runSeo(['decaying', '--help'])
+
+  for (const flag of [
+    '--days',
+    '--limit',
+    '--comparison',
+    '--min-drop-pct',
+    '--min-previous-clicks',
+    '--min-click-loss',
+    '--brand-terms',
+    '--refresh',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
+test('decaying JSON rejects invalid flags before authentication', async () => {
+  for (const args of [
+    [
+      'decaying',
+      '--site',
+      'sc-domain:example.com',
+      '--limit',
+      'later',
+      '--json',
+    ],
+    [
+      'decaying',
+      '--site',
+      'sc-domain:example.com',
+      '--comparison',
+      'weekly',
+      '--json',
+    ],
+  ]) {
+    const result = await runSeoResult(args)
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
 

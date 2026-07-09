@@ -9,7 +9,7 @@ function reportFixture(): Parameters<typeof reportFollowups>[0] {
       narrative: {
         diagnosis: {
           skippedSections: [],
-          decay: { summary: { rows: 0 } },
+          decay: { rangeDays: 90, summary: { eligibleRows: 0 } },
           cannibalization: { items: [] },
           quickWins: { summary: { eligibleRows: 0 } },
           strikingDistance: { summary: { eligibleRows: 0 } },
@@ -44,4 +44,5 @@ test('report follow-ups use the site without a project profile', () => {
     ),
   )
   assert.ok(followups.every((item) => !item.command.includes('--project')))
+  assert.match(followups[0]?.command ?? '', /--days 90/)
 })

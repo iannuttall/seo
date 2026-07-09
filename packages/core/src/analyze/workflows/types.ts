@@ -35,7 +35,7 @@ export type PriorityQueueItem = {
   score: number
   impact: number
   impactKind?:
-    | 'observed_clicks'
+    | 'observed_retained_query_clicks'
     | 'heuristic_ctr_click_shortfall'
     | 'heuristic_priority_score'
     | 'heuristic_multi_url_exposure'

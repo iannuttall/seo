@@ -32,7 +32,10 @@ export function headlineLine(report: DiagnosePropertyReport): string {
       report.summary.significantAnomalies,
       'significant anomaly signal',
     ),
-    countPhrase(report.summary.decayItems, 'decay item'),
+    countPhrase(
+      report.summary.decayItems,
+      'observed retained query/page decline',
+    ),
     countPhrase(
       report.summary.strikingDistanceItems,
       'striking-distance opportunity',
@@ -166,9 +169,10 @@ export function templateOpportunityLine(
 
 function decayDiagnosisLabel(diagnosis: string): string {
   if (diagnosis === 'lost_ctr') return 'CTR dropped while rankings held'
-  if (diagnosis === 'lost_position') return 'rankings dropped'
-  if (diagnosis === 'lost_visibility') return 'lost visibility'
+  if (diagnosis === 'lost_position') return 'average position worsened'
   if (diagnosis === 'lost_impressions') return 'impressions dropped'
+  if (diagnosis === 'lost_clicks')
+    return 'clicks dropped without one dominant signal'
   return diagnosis.replaceAll('_', ' ')
 }
 
@@ -181,7 +185,7 @@ export function decayClusterLine(report: DiagnosePropertyReport): string {
   if (!group) return 'No material decay cluster stood out.'
   const diagnosis = decayDiagnosisLabel(group.diagnosis)
   const samples = group.sampleQueries.slice(0, 2).join('; ')
-  return `Top decay cluster: ${group.count} ${plural(group.count, 'finding')} in the ${group.template.label} template (${diagnosis}), ${group.totalClickLoss.toFixed(0)} lost clicks. Action: ${group.recommendation}${samples ? ` Example queries: ${samples}.` : ''}`
+  return `Top decay cluster: ${group.count} ${plural(group.count, 'finding')} in the ${group.template.label} template (${diagnosis}), ${group.totalClickLoss.toFixed(0)} fewer observed clicks across rows retained in both windows. Action: ${group.recommendation}${samples ? ` Example queries: ${samples}.` : ''}`
 }
 
 export function cannibalSuppressionLine(
@@ -204,8 +208,8 @@ export function contentOpportunityBullets(
     const top = report.decay.items[0]
     bullets.push(
       top
-        ? `${report.summary.decayItems} decaying query/page ${plural(report.summary.decayItems, 'row')} need review. Start with "${top.query}" on ${top.url}; it lost ${top.clickLoss.toFixed(0)} clicks.`
-        : `${report.summary.decayItems} decaying query/page ${plural(report.summary.decayItems, 'row')} need review.`,
+        ? `${report.summary.decayItems} observed retained query/page ${plural(report.summary.decayItems, 'decline')} need review. Start with "${top.query}" on ${top.url}; it had ${top.clickLoss.toFixed(0)} fewer clicks.`
+        : `${report.summary.decayItems} observed retained query/page ${plural(report.summary.decayItems, 'decline')} need review.`,
     )
     bullets.push(decayClusterLine(report))
   }

@@ -84,6 +84,7 @@ export function reportFollowups(
     ? `--project ${shellArg(input.projectId)}`
     : `--site ${shellArg(report.site)}`
   const diagnosis = report.output.narrative.diagnosis
+  const days = diagnosis.decay.rangeDays
   const commands: Array<{ command: string; why: string }> = []
   const skippedNames = new Set(
     (diagnosis.skippedSections ?? []).map((section) => section.section),
@@ -91,22 +92,22 @@ export function reportFollowups(
 
   addFollowup(
     commands,
-    `seo refresh-priorities ${identity} --verify-content --limit 25`,
+    `seo refresh-priorities ${identity} --days ${days} --verify-content --limit 25`,
     'Turn the report into a ranked action queue with content checks.',
   )
 
-  if (diagnosis.decay.summary.rows > 0) {
+  if (diagnosis.decay.summary.eligibleRows > 0) {
     addFollowup(
       commands,
-      `seo decaying ${identity} --limit 25`,
-      'Inspect pages and queries losing clicks.',
+      `seo decaying ${identity} --days ${days} --limit 25`,
+      'Inspect query/page declines observed in both retained-row windows.',
     )
   }
 
   if (diagnosis.cannibalization.items.length > 0) {
     addFollowup(
       commands,
-      `seo cannibal ${identity} --limit 25`,
+      `seo cannibal ${identity} --days ${days} --limit 25`,
       'Find queries split across competing URLs.',
     )
   }
@@ -114,7 +115,7 @@ export function reportFollowups(
   if (diagnosis.quickWins.summary.eligibleRows > 0) {
     addFollowup(
       commands,
-      `seo quick-wins ${identity} --verify-content --verify-limit 5`,
+      `seo quick-wins ${identity} --days ${days} --verify-content --verify-limit 5`,
       'Review average-position rows below their heuristic CTR target with optional page evidence.',
     )
   }
@@ -122,7 +123,7 @@ export function reportFollowups(
   if (diagnosis.strikingDistance.summary.eligibleRows > 0) {
     addFollowup(
       commands,
-      `seo second-page ${identity} --verify-content --verify-limit 5`,
+      `seo second-page ${identity} --days ${days} --verify-content --verify-limit 5`,
       'Work pages sitting just outside page-one rankings.',
     )
   }
@@ -133,12 +134,12 @@ export function reportFollowups(
   ) {
     addFollowup(
       commands,
-      `seo quick-wins ${identity} --min-impressions 10 --verify-content --verify-limit 5`,
+      `seo quick-wins ${identity} --days ${days} --min-impressions 10 --verify-content --verify-limit 5`,
       'Sparse GSC data: lower thresholds and look for early content wins.',
     )
     addFollowup(
       commands,
-      `seo second-page ${identity} --min-impressions 10 --verify-content --verify-limit 5`,
+      `seo second-page ${identity} --days ${days} --min-impressions 10 --verify-content --verify-limit 5`,
       'Sparse GSC data: inspect early second-page opportunities.',
     )
   }

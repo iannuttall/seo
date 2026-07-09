@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../analyze/diagnose-property.js'
+import { analyzeDecay } from '../analyze/site-diagnostics/decay-analysis.js'
 import {
   analyzeCannibalRows,
   analyzeQuickWinsFromRows,
@@ -139,6 +140,78 @@ function emptyCannibal(): DiagnosePropertyReport['cannibalization'] {
   }
 }
 
+function emptyDecay(): DiagnosePropertyReport['decay'] {
+  const analysis = analyzeDecay({
+    site: 'sc-domain:example.com',
+    currentRows: [],
+    previousRows: [],
+  })
+  return {
+    schemaVersion: 1,
+    site: 'sc-domain:example.com',
+    generatedAt: '',
+    comparison: 'previous-period',
+    ranges: {
+      current: { startDate: '2026-05-01', endDate: '2026-05-28' },
+      previous: { startDate: '2026-04-03', endDate: '2026-04-30' },
+    },
+    rangeDays: 28,
+    dataStatus: 'empty',
+    source: {
+      provider: 'google-search-console',
+      dimensions: ['query', 'page'],
+      aggregationType: 'auto',
+      searchType: 'web',
+      dataState: 'final',
+      current: {
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      previous: {
+        rowsFetched: 0,
+        calls: 0,
+        maxRows: 100_000,
+        possiblyTruncated: false,
+      },
+      completeness: 'retained-query-rows-only',
+    },
+    methodology: {
+      id: 'gsc_retained_query_page_decay_v2',
+      version: 2,
+      gscHistoryMonths: 16,
+      missingRowsTreatedAsZero: false,
+      urlShiftsExcluded: true,
+      causeLanguage: 'signals-not-attribution',
+    },
+    filters: {
+      minDropPct: 20,
+      minPreviousClicks: 2,
+      minClickLoss: 1,
+      limit: 25,
+      brand: 'excluded',
+    },
+    selection: analysis.selection,
+    summary: {
+      eligibleRows: 0,
+      returnedRows: 0,
+      groups: 0,
+      observedRetainedQueryClickLoss: 0,
+      returnedObservedRetainedQueryClickLoss: 0,
+      brandFiltering: 'excluded',
+      verdict: 'No material decay matched these filters.',
+    },
+    caveats: [],
+    recommendations: [],
+    items: analysis.items,
+    groups: analysis.groups,
+    templates: analysis.templates,
+    ledgerSummary: 'GSC: 0 calls, 0 rows.',
+    warnings: [],
+  }
+}
+
 test('renderCsv escapes commas, quotes, and newlines', () => {
   const csv = renderCsv([
     {
@@ -210,32 +283,7 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
       device: segment('device'),
       country: segment('country'),
     },
-    decay: {
-      site: 'sc-domain:example.com',
-      generatedAt: '',
-      ranges: {
-        current: { startDate: '2026-05-01', endDate: '2026-05-28' },
-        previous: { startDate: '2026-04-03', endDate: '2026-04-30' },
-      },
-      filters: {
-        minDropPct: 20,
-        minPreviousClicks: 2,
-        minClickLoss: 1,
-        brand: 'excluded',
-      },
-      summary: {
-        rows: 0,
-        groups: 0,
-        totalClickLoss: 0,
-        brandFiltering: 'excluded',
-        verdict: 'No material decay matched these filters.',
-      },
-      caveats: [],
-      recommendations: [],
-      items: [],
-      groups: [],
-      templates: [],
-    },
+    decay: emptyDecay(),
     cannibalization: emptyCannibal(),
     strikingDistance: {
       site: 'sc-domain:example.com',
@@ -281,7 +329,7 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
   assert.deepEqual(decay?.headers?.slice(0, 3), ['rank', 'query', 'url'])
   assert.equal(
     renderCsv(decay?.rows ?? [], decay?.headers),
-    'rank,query,url,template,diagnosis,click_loss,drop_pct,previous_clicks,current_clicks,previous_position,current_position,action\n',
+    'rank,query,url,template,diagnosis,signals,evidence_scope,click_loss,drop_pct,previous_clicks,current_clicks,previous_position,current_position,action\n',
   )
   const quickWins = files.find((file) => file.filename === 'quick-wins.csv')
   assert.equal(quickWins?.headers?.includes('target_ctr'), true)

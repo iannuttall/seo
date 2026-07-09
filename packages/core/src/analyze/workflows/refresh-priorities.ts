@@ -201,16 +201,12 @@ export async function refreshPrioritiesWorkflow(input: {
   )
 
   for (const item of diagnosis.cannibalization.items) {
-    const impressions = item.pages.reduce(
-      (sum, page) => sum + page.impressions,
-      0,
-    )
     drafts.push({
       source: 'cannibalization',
       title: item.query,
-      target: item.ownerUrl,
-      impact: Number((impressions * (1 - item.hhi)).toFixed(2)),
-      impactKind: 'heuristic_impression_fragmentation',
+      target: item.suggestedOwnerUrl,
+      impact: item.priority.score,
+      impactKind: 'heuristic_multi_url_exposure',
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
       template: item.template

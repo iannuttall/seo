@@ -41,7 +41,7 @@ export function headlineLine(report: DiagnosePropertyReport): string {
   ]
   if (report.summary.cannibalItems) {
     parts.push(
-      countPhrase(report.summary.cannibalItems, 'cannibalisation cluster'),
+      countPhrase(report.summary.cannibalItems, 'multi-URL query candidate'),
     )
   }
   return `${report.summary.classification}; ${parts.join('; ')}.`
@@ -187,13 +187,12 @@ export function decayClusterLine(report: DiagnosePropertyReport): string {
 export function cannibalSuppressionLine(
   report: DiagnosePropertyReport,
 ): string {
-  const suppressed = report.cannibalization.suppressed.length
-  if (!suppressed)
-    return 'No likely false-positive cannibal clusters were suppressed.'
+  const suppressed = report.cannibalization.selection.suppressedQueries
+  if (!suppressed) return 'No branded multi-URL query candidates were excluded.'
   const reasons = Object.entries(report.cannibalization.suppressionSummary)
     .map(([reason, count]) => `${count} ${reason.replace(/_/g, ' ')}`)
     .join(', ')
-  return `${suppressed} likely false-positive cannibal clusters were suppressed (${reasons}).`
+  return `${suppressed} branded multi-URL query candidates were excluded (${reasons}).`
 }
 
 export function contentOpportunityBullets(
@@ -215,12 +214,12 @@ export function contentOpportunityBullets(
     const top = report.cannibalization.items[0]
     bullets.push(
       top
-        ? `${report.summary.cannibalItems} cannibalisation ${plural(report.summary.cannibalItems, 'cluster')} need a primary URL decision. Start with "${top.query}" and decide whether ${top.pages.length} ranking URLs answer the same intent.`
-        : `${report.summary.cannibalItems} cannibalisation ${plural(report.summary.cannibalItems, 'cluster')} need a primary URL decision.`,
+        ? `${report.summary.cannibalItems} multi-URL query ${plural(report.summary.cannibalItems, 'candidate')} need intent and technical review. Start with "${top.query}" and decide whether ${top.pages.length} ranking URLs answer the same intent.`
+        : `${report.summary.cannibalItems} multi-URL query ${plural(report.summary.cannibalItems, 'candidate')} need intent and technical review.`,
     )
   }
 
-  if (report.cannibalization.suppressed.length) {
+  if (report.cannibalization.selection.suppressedQueries) {
     bullets.push(cannibalSuppressionLine(report))
   }
 

@@ -25,6 +25,33 @@ function inputSchema(tools: Map<string, ToolConfig>, name: string) {
   return z.object(config.inputSchema)
 }
 
+test('cannibal MCP bounds discovery inputs and accepts brand terms', () => {
+  const schema = inputSchema(
+    captureTools(registerOpportunityTools),
+    'seo_cannibal',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      days: 548,
+      limit: 100,
+      minImpressions: 0,
+      brandTerms: ['Example'],
+      refresh: true,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', days: 0 },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', minImpressions: -1 },
+    { site: 'sc-domain:example.com', brandTerms: [''] },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})
+
 test('second-page MCP bounds agent inputs and accepts explicit brand terms', () => {
   const schema = inputSchema(
     captureTools(registerSecondPageTool),

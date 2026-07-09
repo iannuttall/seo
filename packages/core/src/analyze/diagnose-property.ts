@@ -228,6 +228,11 @@ function emptyQuickWins(input: {
     site: input.site,
     generatedAt: new Date().toISOString(),
     range: defaultDateRange(28),
+    benchmark: {
+      method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
+      peerRows: 0,
+      byPosition: {},
+    },
     verification: { requested: false, verified: 0, failed: 0 },
     summary: {
       rows: 0,

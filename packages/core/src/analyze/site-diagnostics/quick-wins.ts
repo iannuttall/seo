@@ -1,4 +1,3 @@
-import { shouldExcludeBrandQuery } from '../../brand.js'
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { countLabel } from '../../phrasing.js'
@@ -7,11 +6,11 @@ import {
   type QueryContentCoverage,
   verifyQueryContent,
 } from '../content-coverage.js'
-import { detectPageTemplate, summarizeTemplates } from '../page-patterns.js'
-import { isLowActionabilityQuery } from '../query-quality.js'
-import { CTR_BASELINE, defaultDateRange } from '../shared.js'
+import { summarizeTemplates } from '../page-patterns.js'
+import { defaultDateRange } from '../shared.js'
 import { templateOpportunityRecommendation } from '../workflows/template-recommendations.js'
 import { groupQuickWins } from './quick-win-groups.js'
+import { analyzeQuickWinsFromRows } from './quick-wins-analysis.js'
 import type { QuickWinItem } from './types.js'
 
 type QuickWinTemplateRecommendation = {
@@ -22,6 +21,10 @@ type QuickWinTemplateRecommendation = {
   totalImpressions: number
   action: string
   evidence: string
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
 }
 
 function verifiedQuickWinAction(coverage: QueryContentCoverage): {
@@ -83,7 +86,8 @@ function templateRecommendations(
     .sort(
       (a, b) =>
         b.totalEstimatedClickLift - a.totalEstimatedClickLift ||
-        b.totalImpressions - a.totalImpressions,
+        b.totalImpressions - a.totalImpressions ||
+        compareText(a.templateId, b.templateId),
     )
 }
 
@@ -110,7 +114,6 @@ export async function quickWinsReport(input: {
   rate?: FetchRateControls
   refresh?: boolean
 }) {
-  const minImpressions = input.minImpressions ?? 200
   const range = defaultDateRange(28)
   const { rows } = await querySearchAnalytics(
     input.site,
@@ -122,50 +125,14 @@ export async function quickWinsReport(input: {
     },
     { refresh: input.refresh },
   )
-
-  const items: QuickWinItem[] = rows
-    .filter((row) => {
-      const query = row.keys[0] ?? ''
-      return (
-        row.position >= 4 &&
-        row.position <= 10 &&
-        row.impressions >= minImpressions &&
-        !isLowActionabilityQuery(query) &&
-        !shouldExcludeBrandQuery({
-          query,
-          siteUrl: input.site,
-          brandTerms: input.brandTerms,
-          includeBrand: input.includeBrand,
-        })
-      )
+  const { items, minImpressions, benchmarkRows, benchmarkByPosition } =
+    analyzeQuickWinsFromRows({
+      rows,
+      site: input.site,
+      minImpressions: input.minImpressions,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
     })
-    .map((row) => {
-      const rounded = Math.max(1, Math.min(10, Math.round(row.position)))
-      const expectedCtrAt3 = CTR_BASELINE[3] ?? 0.1
-      const estimatedClickLift = Math.max(
-        0,
-        (expectedCtrAt3 - row.ctr) * row.impressions,
-      )
-      return {
-        query: row.keys[0] ?? '',
-        url: row.keys[1] ?? '',
-        template: detectPageTemplate(row.keys[1] ?? ''),
-        position: row.position,
-        impressions: row.impressions,
-        ctr: row.ctr,
-        expectedCtrAt3,
-        estimatedClickLift,
-        recommendation: {
-          principle: 'C.3',
-          evidenceRef: `Query "${row.keys[0]}" sits at position ${rounded} with ${row.impressions} impressions and CTR ${row.ctr.toFixed(3)}.`,
-          action: `This page already ranks well for "${row.keys[0]}". Improve the title, meta description, and visible heading so searchers can immediately see that the page answers this query before adding more body copy.`,
-          effort: 'S' as const,
-          confidence: 'medium' as const,
-          impactEstimate: `~+${Math.round(estimatedClickLift)} clicks if it reaches position 3.`,
-        },
-      }
-    })
-    .sort((a, b) => b.estimatedClickLift - a.estimatedClickLift)
 
   if (input.verifyContent) {
     const verifyLimit = input.verifyLimit ?? 5
@@ -206,6 +173,11 @@ export async function quickWinsReport(input: {
     site: input.site,
     generatedAt: new Date().toISOString(),
     range,
+    benchmark: {
+      method: 'site_gsc_position_bucket_robust_p75_leave_one_out',
+      peerRows: benchmarkRows,
+      byPosition: benchmarkByPosition,
+    },
     verification: input.verifyContent
       ? {
           requested: true,
@@ -231,7 +203,9 @@ export async function quickWinsReport(input: {
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate}.`,
       `Filters: positions 4-10, at least ${minImpressions} impressions, and brand queries ${input.includeBrand ? 'included' : 'excluded when detected/configured'}.`,
-      `Estimated lift assumes movement toward position 3 using the built-in CTR baseline; treat it as prioritisation, not a traffic forecast.`,
+      'Estimated lift is the gap between actual and expected CTR at the current rounded position, multiplied by impressions.',
+      'The expected CTR uses a robust site-aware benchmark when enough peer data exists, otherwise the fallback position curve.',
+      'CTR benchmarks are directional heuristics and do not account for SERP features. Treat lift as prioritisation, not a traffic forecast.',
       `Content verification: ${input.verifyContent ? `requested for top ${countLabel(input.verifyLimit ?? 5, 'row')}` : 'not run'}.`,
     ],
     recommendations: recommendations.length

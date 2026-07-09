@@ -1,3 +1,5 @@
+import { defaultTrueBooleanArg } from '../../args.js'
+
 export function monitoringRunArgs() {
   return {
     site: {
@@ -53,12 +55,10 @@ export function monitoringRunArgs() {
       type: 'string',
       description: 'Optional URL Inspection language code.',
     },
-    'recover-links': {
-      type: 'boolean',
-      default: true,
-      description:
-        'Check search-value GSC pages for broken, blocked, or poorly redirected URLs.',
-    },
+    'recover-links': defaultTrueBooleanArg(
+      'Check search-value GSC pages for broken, blocked, or poorly redirected URLs.',
+      'Skip link recovery checks.',
+    ),
     'recover-days': {
       type: 'string',
       description: 'GSC lookback window for link recovery. Defaults to 90.',

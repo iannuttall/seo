@@ -1,6 +1,12 @@
 import { refreshPrioritiesCsvFiles, refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, numberArg, projectArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  defaultTrueBooleanArg,
+  numberArg,
+  projectArg,
+  stringArg,
+} from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { cliReportArgs } from '../report-options.js'
 import {
@@ -36,12 +42,10 @@ export const exportRefreshPrioritiesCommand = defineCommand({
       description:
         'GA4 property ID to use for analytics value. Defaults from the selected project.',
     },
-    'verify-content': {
-      type: 'boolean',
-      default: true,
-      description:
-        'Verify top opportunities against page title, meta, and content. Defaults to true.',
-    },
+    'verify-content': defaultTrueBooleanArg(
+      'Verify top opportunities against page title, meta, and content. Defaults to true.',
+      'Skip page content verification.',
+    ),
     'verify-limit': {
       type: 'string',
       description: 'Maximum opportunity URLs to verify. Defaults to 5.',

@@ -2,6 +2,7 @@ import { contentOptimizationReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  defaultTrueBooleanArg,
   jsonFlag,
   numberArg,
   projectArg,
@@ -50,11 +51,10 @@ export const contentCommand = defineCommand({
           default: false,
           description: 'Include branded queries.',
         },
-        'no-verify-content': {
-          type: 'boolean',
-          default: false,
-          description: 'Skip fetching the page for content checks.',
-        },
+        'verify-content': defaultTrueBooleanArg(
+          'Fetch the page for content checks. Defaults to true.',
+          'Skip fetching the page for content checks.',
+        ),
         js: {
           type: 'boolean',
           default: false,
@@ -82,7 +82,7 @@ export const contentCommand = defineCommand({
           minImpressions: numberArg(args['min-impressions']),
           brandTerms: selection.client?.brandTerms,
           includeBrand: booleanArg(args['include-brand']),
-          verifyContent: booleanArg(args['no-verify-content']) !== true,
+          verifyContent: booleanArg(args['verify-content']) !== false,
           js: booleanArg(args.js) ? true : 'auto',
           refresh: booleanArg(args.refresh),
         })

@@ -2,6 +2,7 @@ import { refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  defaultTrueBooleanArg,
   jsonFlag,
   numberArg,
   projectArg,
@@ -47,12 +48,10 @@ export const refreshPrioritiesCommand = defineCommand({
       description:
         'GA4 property ID to use for analytics value. Defaults from the selected project.',
     },
-    'verify-content': {
-      type: 'boolean',
-      default: true,
-      description:
-        'Verify top opportunities against page title, meta, and content. Defaults to true.',
-    },
+    'verify-content': defaultTrueBooleanArg(
+      'Verify top opportunities against page title, meta, and content. Defaults to true.',
+      'Skip page content verification.',
+    ),
     'verify-limit': {
       type: 'string',
       description: 'Maximum opportunity URLs to verify. Defaults to 5.',

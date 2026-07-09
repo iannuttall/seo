@@ -2,6 +2,7 @@ import { pageOpportunitiesReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  defaultTrueBooleanArg,
   jsonFlag,
   numberArg,
   projectArg,
@@ -50,11 +51,10 @@ export const pageOpportunitiesCommand = defineCommand({
         },
       },
     ),
-    'no-verify-content': {
-      type: 'boolean',
-      default: false,
-      description: 'Skip fetching the page for title/H1/body checks.',
-    },
+    'verify-content': defaultTrueBooleanArg(
+      'Fetch the page for title/H1/body checks. Defaults to true.',
+      'Skip fetching the page for title/H1/body checks.',
+    ),
     json: { type: 'boolean', default: false },
   },
   run: async ({ args }) => {
@@ -72,7 +72,7 @@ export const pageOpportunitiesCommand = defineCommand({
       minImpressions: numberArg(args['min-impressions']),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      verifyContent: booleanArg(args['no-verify-content']) !== true,
+      verifyContent: booleanArg(args['verify-content']) !== false,
       js: booleanArg(args.js) ? true : 'auto',
       refresh: booleanArg(args.refresh),
     })

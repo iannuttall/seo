@@ -114,6 +114,29 @@ test('long help and crawler command help are available', async () => {
   }
 })
 
+test('version aliases and nested command help are available', async () => {
+  assert.match(await runSeo(['--version']), /0\.1\.0/)
+  assert.match(await runSeo(['-v']), /0\.1\.0/)
+
+  for (const args of [
+    ['content', 'optimize', '--help'],
+    ['monitoring', 'cron', '--help'],
+    ['export', 'refresh-priorities', '--help'],
+  ]) {
+    const output = await runSeo(args)
+    assert.doesNotMatch(output, /Unknown command/)
+    assert.match(output, /USAGE|Usage:/)
+  }
+})
+
+test('unknown commands emit one error and exit with failure', async () => {
+  const result = await runSeoResult(['definitely-not-a-command'])
+  const output = `${result.stdout}${result.stderr}`
+
+  assert.equal(result.exitCode, 1)
+  assert.equal(output.match(/Unknown command/g)?.length, 1)
+})
+
 test('report JSON fails clearly when Google auth is missing', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-cli-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-cli-cache-'))

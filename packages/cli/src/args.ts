@@ -1,4 +1,17 @@
 import { readFile } from 'node:fs/promises'
+import type { BooleanArgDef } from 'citty'
+
+export function defaultTrueBooleanArg(
+  description: string,
+  negativeDescription: string,
+): BooleanArgDef {
+  return {
+    type: 'boolean',
+    default: true,
+    description,
+    negativeDescription,
+  }
+}
 
 export function stringArg(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined

@@ -152,6 +152,19 @@ export const crawlPageSnapshotSchema = z.object({
   indexable: z.boolean(),
   indexability: z.string().optional(),
   wordCount: z.number().int(),
+  contentExtraction: z
+    .object({
+      requested: z.enum(['defuddle', 'readability']),
+      used: z.enum(['defuddle', 'readability']),
+      fallback: z.boolean(),
+      fallbackReason: z.enum(['defuddle_error', 'defuddle_empty']).optional(),
+      fallbackDetail: z.string().optional(),
+      wordCountSource: z.enum(['defuddle', 'local_cjk_aware']),
+      baseUrl: z.string().url(),
+      extractorType: z.string().optional(),
+    })
+    .optional(),
+  warnings: z.array(z.string()).optional(),
   contentHash: z.string(),
   mainContentHash: z.string().optional(),
   textRatio: z.number().min(0).max(1).optional(),

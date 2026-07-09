@@ -97,8 +97,8 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
       defuddle:
-        specifier: ^0.18.1
-        version: 0.18.1
+        specifier: ^0.19.1
+        version: 0.19.1
       env-paths:
         specifier: ^3.0.0
         version: 3.0.0
@@ -1478,8 +1478,8 @@ packages:
     resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
     engines: {node: '>=12'}
 
-  defuddle@0.18.1:
-    resolution: {integrity: sha512-AvFPFOsoDjt5xUOA1QxzafSSzJ5dqEIC63yO72tHYtSjj1DYY/XM0XTPUCsHkm5A2f1X9ulBvoSVFJrd4s2ckA==}
+  defuddle@0.19.1:
+    resolution: {integrity: sha512-7e2IVQYuNncMe9Ws8KkU/KHD8H1LFfFPmdTgRVuQNgJPOeQQSqZzAhacCyNAGwg44cM2vwuCW1cy9fmbdOZ+pA==}
     hasBin: true
 
   depd@2.0.0:
@@ -3855,7 +3855,7 @@ snapshots:
 
   define-lazy-prop@3.0.0: {}
 
-  defuddle@0.18.1:
+  defuddle@0.19.1:
     dependencies:
       commander: 12.1.0
     optionalDependencies:

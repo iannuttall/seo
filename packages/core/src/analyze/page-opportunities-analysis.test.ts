@@ -56,6 +56,13 @@ function extractedPage(overrides: Partial<ExtractedPage> = {}): ExtractedPage {
     answerable: true,
     contentText: 'This technical SEO guide explains practical technical SEO.',
     wordCount: 9,
+    contentExtraction: {
+      requested: 'defuddle',
+      used: 'defuddle',
+      fallback: false,
+      wordCountSource: 'defuddle',
+      baseUrl: url,
+    },
     warnings: [],
     ...overrides,
   }

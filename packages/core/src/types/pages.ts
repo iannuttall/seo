@@ -113,6 +113,19 @@ export interface QueryContentCoverage {
   summary: string
 }
 
+export type ContentExtractor = 'defuddle' | 'readability'
+
+export interface ContentExtractionDiagnostics {
+  requested: ContentExtractor
+  used: ContentExtractor
+  fallback: boolean
+  fallbackReason?: 'defuddle_error' | 'defuddle_empty'
+  fallbackDetail?: string
+  wordCountSource: 'defuddle' | 'local_cjk_aware'
+  baseUrl: string
+  extractorType?: string
+}
+
 export interface ExtractedPage {
   url: string
   finalUrl: string
@@ -153,5 +166,6 @@ export interface ExtractedPage {
   contentText: string
   excerpt?: string
   wordCount: number
+  contentExtraction: ContentExtractionDiagnostics
   warnings: string[]
 }

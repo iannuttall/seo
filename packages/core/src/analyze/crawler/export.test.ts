@@ -19,6 +19,14 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
         status: 200,
         indexable: true,
         wordCount: 100,
+        contentExtraction: {
+          requested: 'defuddle',
+          used: 'defuddle',
+          fallback: false,
+          wordCountSource: 'defuddle',
+          baseUrl: 'https://example.com/',
+          extractorType: 'article',
+        },
         contentHash: 'hash',
         outgoingInternalCount: 1,
         outgoingExternalCount: 2,
@@ -60,6 +68,11 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   assert.match(pagesCsv, /^url,final_url,status,indexable,title/)
   assert.match(pagesCsv, /internal_inlinks,internal_authority_score/)
   assert.match(pagesCsv, /seo_score,geo_score/)
+  assert.match(
+    pagesCsv,
+    /content_extractor,content_extractor_type,content_extraction_fallback,word_count_source/,
+  )
+  assert.match(pagesCsv, /defuddle,article,false,defuddle/)
   assert.match(
     pagesCsv,
     /https:\/\/example.com\/,https:\/\/example.com\/,200,true/,

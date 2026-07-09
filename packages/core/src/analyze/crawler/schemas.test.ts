@@ -21,6 +21,13 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
         status: 200,
         indexable: true,
         wordCount: 100,
+        contentExtraction: {
+          requested: 'defuddle',
+          used: 'defuddle',
+          fallback: false,
+          wordCountSource: 'defuddle',
+          baseUrl: 'https://example.com/',
+        },
         contentHash: 'hash',
         outgoingInternalCount: 0,
       },
@@ -39,6 +46,10 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
 
   assert.doesNotThrow(() => crawlReportSchema.parse(report))
   assert.doesNotThrow(() => crawlerSchemas.pageSnapshot.parse(report.pages[0]))
+  assert.equal(
+    crawlerSchemas.pageSnapshot.parse(report.pages[0]).contentExtraction?.used,
+    'defuddle',
+  )
   assert.doesNotThrow(() =>
     crawlerSchemas.issueGroup.parse(report.issueGroups[0]),
   )

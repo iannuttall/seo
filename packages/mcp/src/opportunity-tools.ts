@@ -98,28 +98,52 @@ export function registerOpportunityTools(server: McpServer): void {
   server.registerTool(
     'seo_decaying',
     {
-      description: 'Detect decaying query performance',
+      description:
+        'Find query/page click declines observed in both retained GSC windows and investigation signals',
       inputSchema: {
-        ...mcpReportInputSchema(['site', 'includeBrand']),
-        minDropPct: z.number().optional(),
-        minPreviousClicks: z.number().optional(),
-        minClickLoss: z.number().optional(),
+        ...mcpReportInputSchema([
+          'site',
+          'days',
+          'limit',
+          'includeBrand',
+          'refresh',
+        ]),
+        days: z.number().int().min(1).max(548).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        comparison: z.enum(['previous-period', 'year-over-year']).optional(),
+        minDropPct: z.number().min(0).max(100).optional(),
+        minPreviousClicks: z.number().min(0).max(1_000_000_000).optional(),
+        minClickLoss: z.number().min(0).max(1_000_000_000).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
       },
     },
     async ({
       site,
+      days,
+      limit,
+      comparison,
       minDropPct,
       minPreviousClicks,
       minClickLoss,
+      brandTerms,
       includeBrand,
+      refresh,
     }) => {
       try {
         const result = await decayingReport({
           site,
+          days,
+          limit,
+          comparison,
           minDropPct,
           minPreviousClicks,
           minClickLoss,
+          brandTerms,
           includeBrand,
+          refresh,
         })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {

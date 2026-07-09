@@ -47,11 +47,7 @@ function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
 export function decayClusterDrafts(input: {
   groups: Array<{
     label: string
-    diagnosis:
-      | 'lost_visibility'
-      | 'lost_position'
-      | 'lost_ctr'
-      | 'lost_impressions'
+    diagnosis: 'lost_position' | 'lost_ctr' | 'lost_impressions' | 'lost_clicks'
     count: number
     totalClickLoss: number
     template: { id: string; label: string }
@@ -68,8 +64,8 @@ export function decayClusterDrafts(input: {
       title: `${group.label} cluster`,
       target: group.sampleUrls[0] ?? input.site,
       impact: group.totalClickLoss,
-      impactKind: 'observed_clicks',
-      confidence: group.diagnosis === 'lost_visibility' ? 'high' : 'medium',
+      impactKind: 'observed_retained_query_clicks',
+      confidence: 'medium',
       effort: group.diagnosis === 'lost_ctr' ? 'S' : 'M',
       template: {
         id: group.template.id,
@@ -77,7 +73,7 @@ export function decayClusterDrafts(input: {
         count: group.count,
       },
       action: group.recommendation,
-      evidence: `${group.count} matching decay findings lost ${group.totalClickLoss.toFixed(0)} clicks versus the previous window. Examples: ${group.sampleQueries.slice(0, 3).join('; ')}.`,
+      evidence: `${group.count} matching query/page rows retained in both windows had ${group.totalClickLoss.toFixed(0)} fewer clicks. Examples: ${group.sampleQueries.slice(0, 3).join('; ')}.`,
     }))
 }
 
@@ -179,7 +175,7 @@ export async function refreshPrioritiesWorkflow(input: {
       title: item.query,
       target: item.url,
       impact: item.clickLoss,
-      impactKind: 'observed_clicks',
+      impactKind: 'observed_retained_query_clicks',
       confidence: item.recommendation.confidence,
       effort: item.recommendation.effort,
       template: {

@@ -1,4 +1,5 @@
 export * from './site-diagnostics/cannibal.js'
+export * from './site-diagnostics/decay-analysis.js'
 export * from './site-diagnostics/decaying.js'
 export * from './site-diagnostics/quick-wins.js'
 export * from './site-diagnostics/quick-wins-analysis.js'

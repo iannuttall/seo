@@ -209,18 +209,19 @@ export const reportSurfaces = [
     },
     options: [
       common.site,
-      opt('minDropPct', "'min-drop-pct':", 'minDropPct: z.number().optional()'),
+      common.days,
+      common.limit,
       opt(
-        'minPreviousClicks',
-        "'min-previous-clicks':",
-        'minPreviousClicks: z.number().optional()',
+        'comparison',
+        'comparison:',
+        "comparison: z.enum(['previous-period', 'year-over-year']).optional()",
       ),
-      opt(
-        'minClickLoss',
-        "'min-click-loss':",
-        'minClickLoss: z.number().optional()',
-      ),
+      opt('minDropPct', "'min-drop-pct':", 'minDropPct:'),
+      opt('minPreviousClicks', "'min-previous-clicks':", 'minPreviousClicks:'),
+      opt('minClickLoss', "'min-click-loss':", 'minClickLoss:'),
       common.includeBrand,
+      common.brandTerms,
+      common.refresh,
     ],
   },
   {

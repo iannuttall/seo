@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { SeoError } from '@seo/core'
 import type { BooleanArgDef } from 'citty'
 
 export function defaultTrueBooleanArg(
@@ -69,7 +70,8 @@ export function strictNumberArg(
 ): number | undefined {
   if (value === undefined || value === '') return undefined
   const parsed = numberArg(value)
-  if (parsed === undefined) throw new Error(`${label} must be a number.`)
+  if (parsed === undefined)
+    throw new SeoError('INVALID_INPUT', `${label} must be a number.`)
   return parsed
 }
 

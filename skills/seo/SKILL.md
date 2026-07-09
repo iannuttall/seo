@@ -1,6 +1,11 @@
+---
+name: seo
+description: Use the local SEO CLI and MCP server to run deterministic technical SEO, Search Console, GA4, crawl, opportunity, monitoring, and reporting workflows. Use when an agent needs to diagnose a site, inspect report evidence, choose an SEO tool, or turn measured findings into next actions.
+---
+
 # seo
 
-Use this skill when the repo or installed package exposes the `seo` MCP server.
+Use the `seo` MCP server exposed by the repository or installed package.
 
 ## When to call which tool
 
@@ -25,8 +30,8 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 - Use `seo_audit_page` for one URL.
 - Use `seo_second_page` when the user wants opportunities with evidence.
 - Use `seo_quick_wins` for high-impression pages already ranking 4-10.
-- Use `seo_cannibal` when the user suspects multiple URLs are competing for the same query.
-- Use `seo_decaying` when the user asks what dropped and why.
+- Use `seo_cannibal` to find multi-URL query exposure candidates that need intent and technical review.
+- Use `seo_decaying` to find query/page click declines observed in both retained GSC windows and the signals to investigate. Do not treat its signals as proven causes.
 - Use `seo_traffic_anomaly` when the user asks whether movement is statistically unusual.
 - Use `seo_update_correlate` to compare a traffic movement with official Google update windows.
 - Use `seo_internal_links` to find contextual internal-link candidates for one target URL.
@@ -41,7 +46,8 @@ Use this skill when the repo or installed package exposes the `seo` MCP server.
 
 ## Rules
 
-- Treat the tool output as authoritative. Do not invent metrics.
+- Treat observations as evidence within the report's methodology and data limits. Do not invent metrics.
+- Check `dataStatus`, source completeness, selection counts, warnings, and caveats before summarising a report.
 - Quote `principle` and `evidenceRef` when explaining recommendations.
 - Do not generate titles, metas, or copy. Keep advice structural and diagnostic.
 - If the tool returns no rows, say that clearly instead of padding the answer.

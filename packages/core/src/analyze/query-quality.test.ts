@@ -6,6 +6,8 @@ test('isLowActionabilityQuery keeps normal SEO queries', () => {
   assert.equal(isLowActionabilityQuery('x search'), false)
   assert.equal(isLowActionabilityQuery('origin of the last name laroya'), false)
   assert.equal(isLowActionabilityQuery('high tide today cebu'), false)
+  assert.equal(isLowActionabilityQuery('تويتر بحث بدون حساب'), false)
+  assert.equal(isLowActionabilityQuery('技术搜索引擎优化'), false)
 })
 
 test('isLowActionabilityQuery drops currency and operator dumps', () => {

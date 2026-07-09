@@ -192,13 +192,24 @@ export function registerOpportunityTools(server: McpServer): void {
     {
       description: 'Cluster queries by token overlap',
       inputSchema: {
-        ...mcpReportInputSchema(['site', 'includeBrand']),
+        ...mcpReportInputSchema([
+          'site',
+          'includeBrand',
+          'minImpressions',
+          'limit',
+        ]),
         scope: z.string().optional(),
       },
     },
-    async ({ site, scope, includeBrand }) => {
+    async ({ site, scope, includeBrand, minImpressions, limit }) => {
       try {
-        const result = await queryClusterReport({ site, scope, includeBrand })
+        const result = await queryClusterReport({
+          site,
+          scope,
+          includeBrand,
+          minImpressions,
+          limit,
+        })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

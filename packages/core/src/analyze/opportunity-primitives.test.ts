@@ -96,6 +96,40 @@ test('CTR benchmark excludes grouped rows from aggregate peer buckets', () => {
   assert.equal(benchmark.rows, 5)
 })
 
+test('CTR benchmark excludes a mixed-position group from every peer bucket', () => {
+  const groupedRows = [
+    row({
+      query: 'technical seo audit',
+      url: 'https://example.com/a',
+      clicks: 0,
+      impressions: 10_000,
+      position: 6,
+    }),
+    row({
+      query: 'technical seo checklist',
+      url: 'https://example.com/b',
+      clicks: 0,
+      impressions: 8000,
+      position: 8,
+    }),
+  ]
+
+  const benchmark = createCtrBenchmarkContext(groupedRows).forAggregate(
+    {
+      keys: ['technical seo', 'https://example.com/a'],
+      clicks: 0,
+      impressions: 18_000,
+      ctr: 0,
+      position: 7,
+    },
+    groupedRows,
+  )
+
+  assert.equal(benchmark.ctr, 0.025)
+  assert.equal(benchmark.rows, 0)
+  assert.equal(benchmark.source.includes('leave_group_out'), false)
+})
+
 test('CTR benchmark curve stays monotonic by ranking position', () => {
   const rows = [
     ...[1, 1, 1, 1, 1].map((clicks, index) =>

@@ -1,7 +1,7 @@
 import { tokenize } from './shared.js'
 
 function hasLetter(value: string): boolean {
-  return /[a-z]/i.test(value)
+  return /\p{L}/u.test(value)
 }
 
 function hasDigit(value: string): boolean {

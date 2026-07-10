@@ -26,8 +26,47 @@ test('geoGaps returns evidence-backed AI Search eligibility blockers', () => {
   assert.equal(gaps.length, 1)
   assert.equal(gaps[0]?.url, 'https://example.com/a')
   assert.equal(gaps[0]?.observations.structuredData, false)
-  assert.equal(gaps[0]?.searchEligibility.snippetEligibility, 'not-evaluated')
+  assert.equal(
+    gaps[0]?.searchEligibility.snippetEligibility.status,
+    'not-restricted',
+  )
   assert.equal(gaps[0]?.issues[0]?.ruleId, 'noindex')
+})
+
+test('geoGaps returns blocked and limited snippet controls with evidence', () => {
+  const blocked = page('https://example.com/blocked-snippet', false)
+  blocked.metaRobots = 'nosnippet'
+  const limited = page('https://example.com/limited-snippet', false)
+  limited.xRobotsTag =
+    'otherbot: nosnippet, googlebot: max-snippet:40, max-image-preview:large'
+  const unrestricted = page('https://example.com/unrestricted', false)
+  unrestricted.metaRobots = 'max-snippet:-1'
+  const gaps = geoGaps(
+    createCrawlReport({
+      config: { url: 'https://example.com/' },
+      pages: [blocked, limited, unrestricted],
+    }),
+  )
+
+  assert.deepEqual(
+    gaps.map((gap) => [
+      gap.url,
+      gap.searchEligibility.snippetEligibility.status,
+      gap.searchEligibility.snippetEligibility.maxCharacters,
+    ]),
+    [
+      ['https://example.com/blocked-snippet', 'blocked', 0],
+      ['https://example.com/limited-snippet', 'limited', 40],
+    ],
+  )
+  assert.deepEqual(gaps[1]?.searchEligibility.snippetEligibility.evidence, [
+    {
+      source: 'x-robots-tag',
+      directive: 'max-snippet',
+      raw: 'max-snippet:40',
+      value: 40,
+    },
+  ])
 })
 
 function page(url: string, structuredData: boolean): CrawlPageSnapshot {

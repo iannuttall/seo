@@ -10,7 +10,9 @@ The crawler does not guess whether a page will be cited. It records technical el
 
 The technical eligibility view reports failed responses, robots.txt blocks, noindex directives, and canonicalized pages. These are evidence-backed blockers to being an indexable Search candidate.
 
-Snippet eligibility is not yet evaluated, so the tool does not claim a passing page is fully eligible for Google AI features. It separately records optional observations such as structured data, semantic HTML, authorship, dates, question headings, lists, tables, entity signals, agent resource files, and `/llms.txt`. Those observations do not create SEO issues or citation predictions.
+Snippet eligibility reports publisher controls from robots meta tags and `X-Robots-Tag`. `nosnippet` and `max-snippet:0` are blocked, positive `max-snippet` values are limited, and `max-snippet:-1` is unrestricted. The evidence includes the effective value and source; it does not claim Google will select the page.
+
+The tool separately records optional observations such as structured data, semantic HTML, authorship, dates, question headings, lists, tables, entity signals, agent resource files, and `/llms.txt`. Those observations do not create SEO issues or citation predictions.
 
 Run:
 

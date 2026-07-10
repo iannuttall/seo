@@ -25,7 +25,8 @@ Use these workflows when an agent needs technical SEO and GEO crawl data without
 1. Run \`seo_crawl_site\` or reuse the latest saved report.
 2. Call \`seo_geo_gaps\` with \`reportId\` and a page limit to find crawl and indexability blockers.
 3. Explain the returned technical rule ids with \`seo_explain_issue\`.
-4. Keep optional page observations separate. Snippet eligibility is not yet evaluated, and citation likelihood cannot be inferred from paragraph shape, word count, structured data, or \`/llms.txt\`.
+4. Read the returned page-level snippet controls separately: \`nosnippet\` and \`max-snippet:0\` block snippets, positive \`max-snippet\` values limit them, and \`max-snippet:-1\` is unrestricted. No detected restriction is not a promise that Google will select or show the page.
+5. Keep optional page observations separate. Citation likelihood cannot be inferred from paragraph shape, word count, structured data, or \`/llms.txt\`.
 
 ## Focused URL audit
 

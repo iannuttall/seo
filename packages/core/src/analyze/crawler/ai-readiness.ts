@@ -1,3 +1,4 @@
+import { effectiveSnippetControl } from '../../robots-directives.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type {
   CrawlAiBotAccess,
@@ -130,6 +131,22 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       ) ||
       (page.schemaSameAs?.length ?? 0) > 0 ||
       (page.socialProfileLinks?.length ?? 0) > 0,
+  )
+  const snippetControls = pages.map((page) => ({
+    url: page.finalUrl,
+    control: effectiveSnippetControl({
+      metaRobots: page.metaRobots,
+      xRobotsTag: page.xRobotsTag,
+    }),
+  }))
+  const restrictedSnippets = snippetControls.filter(
+    ({ control }) => control.status !== 'not-restricted',
+  )
+  const blockedSnippets = restrictedSnippets.filter(
+    ({ control }) => control.status === 'blocked',
+  )
+  const limitedSnippets = restrictedSnippets.filter(
+    ({ control }) => control.status === 'limited',
   )
   const sections = [
     section('agent-access', 'Agent access', [
@@ -277,10 +294,10 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         section: 'content-clarity',
         maxScore: 0,
         score: 0,
-        title: 'Titles, H1s, and descriptions are clear',
+        title: 'Title, H1, and description coverage observed',
         plainEnglish: `${pct(titlePages.length, pageCount)}% of indexable pages have title/H1 coverage and ${pct(metaPages.length, pageCount)}% have meta descriptions.`,
         action:
-          'Write a unique title, one clear H1, and a useful description for every indexable page.',
+          'Write a unique title and descriptive H1. Add a useful meta description when a summary would help searchers understand the page.',
       }),
       check({
         id: 'language',
@@ -318,6 +335,28 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       }),
     ]),
     section('technical-ux', 'Technical UX', [
+      check({
+        id: 'snippet-controls',
+        section: 'technical-ux',
+        maxScore: 0,
+        score: 0,
+        title: restrictedSnippets.length
+          ? 'Page-level snippet restrictions observed'
+          : 'No page-level snippet restriction detected',
+        plainEnglish: restrictedSnippets.length
+          ? `${blockedSnippets.length} indexable ${blockedSnippets.length === 1 ? 'page has' : 'pages have'} snippets blocked and ${limitedSnippets.length} ${limitedSnippets.length === 1 ? 'has' : 'have'} a positive max-snippet limit.`
+          : 'No nosnippet or restrictive max-snippet directive was detected on the evaluated indexable pages.',
+        action: restrictedSnippets.length
+          ? 'Confirm each restriction is intentional. Do not remove publisher controls solely to satisfy this report.'
+          : 'No action is required. This observation does not guarantee that Google will select or show a snippet.',
+        urls: restrictedSnippets.slice(0, 10).map(({ url }) => url),
+        evidence: {
+          evaluatedPages: pages.length,
+          blockedPages: blockedSnippets.length,
+          limitedPages: limitedSnippets.length,
+          restrictions: restrictedSnippets.slice(0, 10),
+        },
+      }),
       check({
         id: 'https-viewport-readable',
         section: 'technical-ux',
@@ -421,6 +460,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       'This report deliberately has no aggregate readiness score. Google documents no separate technical requirements for its generative AI Search features.',
       'llms.txt is treated as optional agent-discovery metadata, not a Google Search ranking or visibility factor.',
       'Paragraph length and placement are observations only. Google does not require content chunking or special answer blocks for generative AI features.',
+      'Snippet controls reflect page-level publisher directives only. No detected restriction does not guarantee selection, visibility, or a displayed snippet.',
       ...(report.ai?.robotsTxt
         ? robotsUnavailable
           ? [

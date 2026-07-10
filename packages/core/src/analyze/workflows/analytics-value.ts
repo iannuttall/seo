@@ -27,6 +27,45 @@ function urlPath(url: string): string {
   }
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
+export function landingPageValuesFromRows(
+  rows: Array<Record<string, string>>,
+): Map<string, LandingPageValue> {
+  const orderedRows = [...rows].sort((left, right) => {
+    const leftPath = normalizePath(left.landingPagePlusQueryString ?? '')
+    const rightPath = normalizePath(right.landingPagePlusQueryString ?? '')
+    return (
+      compareText(leftPath, rightPath) ||
+      compareText(
+        left.landingPagePlusQueryString ?? '',
+        right.landingPagePlusQueryString ?? '',
+      ) ||
+      compareText(left.sessions ?? '', right.sessions ?? '') ||
+      compareText(left.totalUsers ?? '', right.totalUsers ?? '') ||
+      compareText(left.conversions ?? '', right.conversions ?? '')
+    )
+  })
+  const values = new Map<string, LandingPageValue>()
+  for (const row of orderedRows) {
+    const path = normalizePath(row.landingPagePlusQueryString ?? '')
+    if (!path) continue
+    const existing = values.get(path) ?? {
+      sessions: 0,
+      totalUsers: 0,
+      conversions: 0,
+    }
+    values.set(path, {
+      sessions: existing.sessions + Number(row.sessions ?? 0),
+      totalUsers: existing.totalUsers + Number(row.totalUsers ?? 0),
+      conversions: existing.conversions + Number(row.conversions ?? 0),
+    })
+  }
+  return values
+}
+
 export function landingValueForUrl(
   values: Map<string, LandingPageValue>,
   url: string,
@@ -67,17 +106,8 @@ export async function fetchLandingPageValues(input: {
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
       limit: retainedRowLimit,
     })
-    const values = new Map<string, LandingPageValue>()
     const rows = ga4RowsToObjects(result)
-    for (const row of rows) {
-      const path = normalizePath(row.landingPagePlusQueryString ?? '')
-      if (!path) continue
-      values.set(path, {
-        sessions: Number(row.sessions ?? 0),
-        totalUsers: Number(row.totalUsers ?? 0),
-        conversions: Number(row.conversions ?? 0),
-      })
-    }
+    const values = landingPageValuesFromRows(rows)
     const availableRows = result.rowCount
     return {
       values,

@@ -1,0 +1,36 @@
+name: Incorrect SEO finding
+description: Challenge a report conclusion, data contract, heuristic, or recommendation.
+title: "report: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report quality matters. Please separate observed data from the conclusion you think is unsupported. Do not include private site or analytics data. Report security problems through GitHub's private vulnerability reporting flow.
+  - type: input
+    id: report
+    attributes:
+      label: Report or command
+      placeholder: seo audit-page
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding or recommendation
+      description: Quote only the smallest relevant output fragment.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Why is it unsupported or inaccurate?
+      description: Link to primary documentation or provide a safe minimal fixture when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected evidence contract
+      description: Explain how observed, partial, capped, or missing data should be represented.
+    validations:
+      required: true

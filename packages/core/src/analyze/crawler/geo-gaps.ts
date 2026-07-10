@@ -1,3 +1,7 @@
+import {
+  type EffectiveSnippetControl,
+  effectiveSnippetControl,
+} from '../../robots-directives.js'
 import type { CrawlReport } from './report.js'
 
 export type GeoGapFilters = {
@@ -18,7 +22,7 @@ export type GeoGap = {
     indexableCandidate: boolean
     declaredIndexability?: string
     indexability?: string
-    snippetEligibility: 'not-evaluated'
+    snippetEligibility: EffectiveSnippetControl
   }
   observations: {
     semanticHtml: boolean
@@ -68,6 +72,10 @@ export function geoGaps(
         structuredBlocks: 0,
         answerable: false,
       }
+      const snippetEligibility = effectiveSnippetControl({
+        metaRobots: page.metaRobots,
+        xRobotsTag: page.xRobotsTag,
+      })
       return {
         url: page.finalUrl,
         issueCount: eligibilityIssuesByUrl.get(page.url)?.length ?? 0,
@@ -81,7 +89,7 @@ export function geoGaps(
           indexableCandidate: page.indexable,
           declaredIndexability: page.declaredIndexability,
           indexability: page.indexability,
-          snippetEligibility: 'not-evaluated' as const,
+          snippetEligibility,
         },
         observations: {
           semanticHtml: geo.semanticHtml,
@@ -99,7 +107,8 @@ export function geoGaps(
         gap.issueCount > 0 ||
         !gap.searchEligibility.successfulHtmlResponse ||
         gap.searchEligibility.crawlAllowed === false ||
-        !gap.searchEligibility.indexableCandidate,
+        !gap.searchEligibility.indexableCandidate ||
+        gap.searchEligibility.snippetEligibility.status !== 'not-restricted',
     )
     .sort((a, b) => b.issueCount - a.issueCount || a.url.localeCompare(b.url))
     .slice(0, filters.limit ?? 50)

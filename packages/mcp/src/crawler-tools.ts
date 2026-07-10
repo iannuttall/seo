@@ -404,7 +404,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_geo_gaps',
     {
       description:
-        'Return crawl and indexability blockers for Google AI Search eligibility, with optional page observations kept separate. Snippet eligibility is explicitly not yet evaluated.',
+        'Return crawl, indexability, and page-level snippet controls for Google AI Search eligibility, with optional page observations kept separate. No detected restriction does not guarantee selection or visibility.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),

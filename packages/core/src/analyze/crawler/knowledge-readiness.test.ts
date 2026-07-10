@@ -197,6 +197,63 @@ test('aiReadiness is deterministic for a saved crawl report', () => {
   assert.equal(aiReadiness(report).generatedAt, report.generatedAt)
 })
 
+test('aiReadiness preserves page-level snippet control evidence', () => {
+  const crawl = fixtureReport()
+  fixturePage(crawl, 0).metaRobots = 'nosnippet'
+  fixturePage(crawl, 1).xRobotsTag = 'googlebot: max-snippet:40'
+
+  const report = aiReadiness(crawl)
+  const check = report.checks.find((item) => item.id === 'snippet-controls')
+
+  assert.equal(check?.status, 'info')
+  assert.deepEqual(check?.urls, [
+    'https://example.com/',
+    'https://example.com/docs',
+  ])
+  assert.deepEqual(check?.evidence, {
+    evaluatedPages: 2,
+    blockedPages: 1,
+    limitedPages: 1,
+    restrictions: [
+      {
+        url: 'https://example.com/',
+        control: {
+          status: 'blocked',
+          reason: 'nosnippet',
+          maxCharacters: 0,
+          evidence: [
+            {
+              source: 'meta-robots',
+              directive: 'nosnippet',
+              raw: 'nosnippet',
+            },
+          ],
+        },
+      },
+      {
+        url: 'https://example.com/docs',
+        control: {
+          status: 'limited',
+          reason: 'max-snippet-limit',
+          maxCharacters: 40,
+          evidence: [
+            {
+              source: 'x-robots-tag',
+              directive: 'max-snippet',
+              raw: 'max-snippet:40',
+              value: 40,
+            },
+          ],
+        },
+      },
+    ],
+  })
+  assert.equal(
+    report.topActions.some((item) => item.id === 'snippet-controls'),
+    false,
+  )
+})
+
 test('aiReadiness does not score absent JSON-LD as valid or invalid', () => {
   const crawl = fixtureReport()
   for (const page of crawl.pages) {

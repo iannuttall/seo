@@ -62,4 +62,4 @@ seo llms audit --project <project>
 
 If the user asks whether they appear in AI answers, say the truth: this tool checks readiness and referral evidence. It does not yet run scheduled prompts across AI engines or track citations.
 
-Also state that snippet eligibility is not yet evaluated, so a page without a returned blocker is only a technical candidate, not proven eligible or visible.
+Report page-level snippet controls from robots meta tags and \`X-Robots-Tag\`: \`nosnippet\` and \`max-snippet:0\` block snippets, positive \`max-snippet\` values limit them, and \`max-snippet:-1\` is unrestricted. Treat no detected restriction as evidence only that no page-level publisher restriction was found, not proof that Google will select or show the page.

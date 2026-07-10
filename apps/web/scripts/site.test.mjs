@@ -46,24 +46,27 @@ test('build contains every public route with one complete SEO contract', () => {
       relativePath,
     )
     assert.equal(
-      matches(html, /<meta name="description" content="[^"]+">/g).length,
+      matches(html, /<meta name="description" content="[^"]+"\s*\/?>/g).length,
       1,
       relativePath,
     )
     assert.equal(
-      matches(html, /<link rel="canonical" href="[^"]+">/g).length,
+      matches(html, /<link rel="canonical" href="[^"]+"\s*\/?>/g).length,
       1,
       relativePath,
     )
-    assert.match(html, new RegExp(`<link rel="canonical" href="${canonical}">`))
-    assert.match(html, /<meta property="og:title" content="[^"]+">/)
     assert.match(
       html,
-      /<meta property="og:image" content="https:\/\/seoskills\.dev\/og\.png">/,
+      new RegExp(`<link rel="canonical" href="${canonical}"\\s*/?>`),
+    )
+    assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
+    assert.match(
+      html,
+      /<meta property="og:image" content="https:\/\/seoskills\.dev\/og\.png"\s*\/?>/,
     )
     assert.match(
       html,
-      /<meta name="twitter:card" content="summary_large_image">/,
+      /<meta name="twitter:card" content="summary_large_image"\s*\/?>/,
     )
 
     const schemaMatch = html.match(

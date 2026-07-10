@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <title>Decorative light grid</title>
-  <path d="M8 0v32M16 0v32M24 0v32M0 8h32M0 16h32M0 24h32" fill="none" stroke="#6656c7" stroke-opacity=".045" stroke-width="1"/>
-  <path d="M32 0H0v32" fill="none" stroke="#5143a6" stroke-opacity=".14" stroke-width="1"/>
-</svg>

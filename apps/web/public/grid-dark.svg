@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <title>Decorative dark grid</title>
-  <path d="M8 0v32M16 0v32M24 0v32M0 8h32M0 16h32M0 24h32" fill="none" stroke="#a99fff" stroke-opacity=".035" stroke-width="1"/>
-  <path d="M32 0H0v32" fill="none" stroke="#978bff" stroke-opacity=".1" stroke-width="1"/>
-</svg>

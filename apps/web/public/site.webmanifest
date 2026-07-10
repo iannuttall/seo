@@ -4,8 +4,8 @@
   "description": "Find technical SEO problems and rank fixes with local reports.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f2f8",
-  "theme_color": "#6657d9",
+  "background_color": "#ffffff",
+  "theme_color": "#050a2e",
   "icons": [
     {
       "src": "/favicon.svg",

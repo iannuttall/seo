@@ -1,0 +1,50 @@
+---
+title: Documentation
+description: Start with the guided setup, then use the part of the tool that matches the job in front of you.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components'
+
+<CardGrid>
+  <LinkCard
+    title="Getting started"
+    href="/docs/getting-started"
+    description="Install the CLI, connect Google, save a project profile, and run the main report."
+  />
+  <LinkCard
+    title="CLI guide"
+    href="/docs/cli"
+    description="The short human path, focused commands, project selection, JSON, and CI use."
+  />
+  <LinkCard
+    title="Crawler"
+    href="/docs/crawler"
+    description="Technical checks, crawl controls, saved reports, comparisons, exports, and CI gates."
+  />
+  <LinkCard
+    title="Reports and data"
+    href="/docs/reports"
+    description="How reports separate evidence, findings, caveats, and incomplete provider data."
+  />
+  <LinkCard
+    title="Agents and MCP"
+    href="/docs/agents"
+    description="Structured JSON, packaged skills, and the compact local stdio MCP interface."
+  />
+  <LinkCard
+    title="AI search evidence"
+    href="/docs/ai-search"
+    description="What the technical checks can establish and which visibility claims they deliberately avoid."
+  />
+</CardGrid>
+
+## Need a command quickly?
+
+Run `seo help` for the common path or `seo help all` for the complete command
+tree. Every command has its own `--help` page.
+
+## Questions and bugs
+
+Use [GitHub Issues](https://github.com/iannuttall/seo/issues). Keep tokens,
+private reports, account identifiers, and client data out of public issues.
+Suspected vulnerabilities belong in the [private reporting flow](/security).

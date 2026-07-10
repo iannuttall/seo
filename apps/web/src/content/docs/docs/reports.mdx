@@ -1,0 +1,54 @@
+---
+title: Reports and data
+description: Each report keeps source evidence, conclusions, missing data, and provider limits clear enough for another person or agent to check.
+---
+
+import { productFacts } from '@/lib/facts'
+
+## Start broad, then narrow down
+
+```sh
+seo report --project example
+seo refresh-priorities --project example
+seo quick-wins --project example
+seo technical-watch --project example
+```
+
+The main report finds the useful next slice. Focused reports then answer a
+smaller question with less data and less noise.
+
+## What a report preserves
+
+- Observed provider or crawl data.
+- Derived findings and the rules behind them.
+- Coverage dates, row caps, thresholds, and sampling limits.
+- Skipped sections and the reason each one could not run.
+- Provider errors that affect only part of the analysis.
+- Commands that verify a fix or fetch a useful follow-up.
+
+## Report catalog
+
+The local MCP catalog exposes {productFacts.reports} reports across
+{productFacts.reportCategories} categories. It covers setup and diagnosis,
+opportunities, crawling, monitoring, experiments, reporting, AI search
+evidence, and multi-report workflows.
+
+Ask the installed package for the live catalog and exact input schema:
+
+```sh
+seo reports list --json
+seo reports list --category crawl --json
+seo reports describe audit-page --json
+seo reports run audit-page --params '{"url":"https://example.com"}' --json
+```
+
+The CLI and MCP server use one report registry. Agents using MCP should call
+`seo_list_reports`, `seo_describe_report`, and then `seo_run_report` rather
+than treating a copied schema as permanent.
+
+## Report accuracy
+
+SEO systems expose incomplete evidence. Reports avoid turning rough
+heuristics into ranking rules, label estimates as estimates, and lower the
+strength of a conclusion when the input is sparse. Important changes still
+deserve a check against the live page and the relevant provider.

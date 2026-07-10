@@ -5,6 +5,7 @@ import type {
   ExtractedPage,
   PageFetchResult,
 } from '../types.js'
+import { extractCanonicalEvidence } from './canonical.js'
 import {
   extractMainContent,
   type MainContentDependencies,
@@ -109,6 +110,11 @@ export async function extractPage(
   )
   const { text, excerpt } = content
   const url = new URL(fetchResult.finalUrl)
+  const canonicalEvidence = extractCanonicalEvidence(
+    $,
+    fetchResult.headers,
+    fetchResult.finalUrl,
+  )
 
   const headings = $('h1, h2, h3, h4, h5, h6')
     .toArray()
@@ -303,7 +309,8 @@ export async function extractPage(
     metaDescription: safeText($('meta[name="description"]').attr('content')),
     metaRobots,
     xRobotsTag: safeText(headerValue(fetchResult.headers, 'x-robots-tag')),
-    canonical: safeText($('link[rel="canonical"]').attr('href')),
+    canonical: canonicalEvidence.selectedRaw,
+    canonicalEvidence,
     lang: safeText($('html').attr('lang')),
     hasViewport: Boolean($('meta[name="viewport"]').attr('content')),
     headings,

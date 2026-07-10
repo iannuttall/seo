@@ -732,6 +732,74 @@ test('auditCrawlPages flags canonical issues', () => {
   )
 })
 
+test('auditCrawlPages keeps ambiguous canonical evidence explicit', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/conflict',
+      finalUrl: 'https://example.com/conflict',
+      canonical: undefined,
+      canonicalRaw: 'https://example.com/html',
+      canonicalStatus: 'conflicting',
+      canonicalCandidates: [
+        {
+          source: 'html-head',
+          raw: 'https://example.com/html',
+          resolved: 'https://example.com/html',
+        },
+        {
+          source: 'http-header',
+          raw: 'https://example.com/header',
+          resolved: 'https://example.com/header',
+        },
+      ],
+    }),
+    page({
+      url: 'https://example.com/body',
+      finalUrl: 'https://example.com/body',
+      canonical: undefined,
+      canonicalRaw: 'https://example.com/preferred',
+      canonicalStatus: 'outside-head-only',
+      canonicalCandidates: [
+        {
+          source: 'html-body',
+          raw: 'https://example.com/preferred',
+          ignoredReason: 'outside-head',
+        },
+      ],
+    }),
+    page({
+      url: 'https://example.com/duplicate',
+      finalUrl: 'https://example.com/duplicate',
+      canonical: 'https://example.com/duplicate',
+      canonicalRaw: 'https://example.com/duplicate',
+      canonicalStatus: 'duplicate',
+      canonicalCandidates: [
+        {
+          source: 'html-head',
+          raw: 'https://example.com/duplicate',
+          resolved: 'https://example.com/duplicate',
+        },
+        {
+          source: 'http-header',
+          raw: 'https://example.com/duplicate',
+          resolved: 'https://example.com/duplicate',
+        },
+      ],
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.category === 'canonical')
+      .map((issue) => [issue.url, issue.ruleId]),
+    [
+      ['https://example.com/conflict', 'canonical_conflict'],
+      ['https://example.com/body', 'canonical_outside_head'],
+      ['https://example.com/duplicate', 'canonical_multiple'],
+    ],
+  )
+})
+
 test('auditCrawlPages flags content issues', () => {
   const issues = auditCrawlPages([
     page({

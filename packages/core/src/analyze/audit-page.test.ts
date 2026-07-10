@@ -55,8 +55,40 @@ test('auditPage reports malformed canonical evidence without throwing', async ()
 
   assert.equal(report.fetchedAt, '2026-07-09T12:00:00.000Z')
   assert.equal(report.page.title, 'Canonical fixture page')
-  assert.equal(report.page.canonical, 'http://[::1')
+  assert.equal(report.page.canonical, undefined)
+  assert.equal(report.page.canonicalEvidence?.status, 'invalid')
+  assert.equal(report.page.canonicalEvidence?.candidates[0]?.raw, 'http://[::1')
+  assert.equal(
+    report.page.canonicalEvidence?.candidates[0]?.ignoredReason,
+    'invalid-url',
+  )
   assert.equal(report.issues[0]?.code, 'canonical_invalid')
+  assert.ok(
+    report.recommendations.every(
+      (recommendation) =>
+        recommendation.evidenceRef !== 'No canonical link tag detected.',
+    ),
+  )
+})
+
+test('auditPage does not select conflicting canonical declarations', async () => {
+  const result = fetched('https://example.com/foo')
+  result.headers.link = '<https://example.com/bar>; rel="canonical"'
+
+  const report = await auditPage(
+    { url: 'https://example.com/foo', extractor: 'readability' },
+    dependencies(result),
+  )
+
+  assert.equal(report.page.canonical, undefined)
+  assert.equal(report.page.canonicalEvidence?.status, 'conflicting')
+  assert.deepEqual(
+    report.page.canonicalEvidence?.candidates.map(
+      (candidate) => candidate.source,
+    ),
+    ['html-head', 'http-header'],
+  )
+  assert.equal(report.issues[0]?.code, 'canonical_conflict')
 })
 
 test('auditPage preserves case-sensitive URL path identity', async () => {

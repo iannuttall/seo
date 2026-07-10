@@ -3,7 +3,41 @@ import type { DiagnosePropertyReport } from '../diagnose-property.js'
 import type { ChangeMeasurement } from '../experiments.js'
 import type { ReportNarrative } from './types.js'
 
+function skippedReason(
+  report: DiagnosePropertyReport,
+  section: string,
+): string | undefined {
+  return report.skippedSections?.find((item) => item.section === section)
+    ?.reason
+}
+
+function unavailablePhrase(
+  report: DiagnosePropertyReport,
+  section: string,
+  label: string,
+): string | undefined {
+  return skippedReason(report, section) ? `${label} unavailable` : undefined
+}
+
+export function diagnosisAvailabilityCaveats(
+  report: DiagnosePropertyReport,
+): string[] {
+  return [
+    ...(report.skippedSections ?? []).map(
+      (section) =>
+        `Skipped ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
+    ),
+    ...(report.partialReasons ?? []).map(
+      (section) =>
+        `Partial ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
+    ),
+  ]
+}
+
 export function movementLine(report: DiagnosePropertyReport): string {
+  if (skippedReason(report, 'traffic anomaly')) {
+    return 'Traffic anomaly detection was not available for this run.'
+  }
   const anomaly = report.anomaly.anomalies.find((item) => item.significant)
   if (!anomaly) {
     return 'No statistically significant traffic anomaly was detected.'
@@ -28,33 +62,80 @@ function countPhrase(
 
 export function headlineLine(report: DiagnosePropertyReport): string {
   const parts = [
-    countPhrase(
-      report.summary.significantAnomalies,
-      'significant anomaly signal',
-    ),
-    countPhrase(
-      report.summary.decayItems,
-      'observed retained query/page decline',
-    ),
-    countPhrase(
-      report.summary.strikingDistanceItems,
-      'striking-distance opportunity',
+    unavailablePhrase(report, 'traffic anomaly', 'traffic anomaly analysis') ??
+      countPhrase(
+        report.summary.significantAnomalies,
+        'significant anomaly signal',
+      ),
+    unavailablePhrase(report, 'decay analysis', 'content decay analysis') ??
+      countPhrase(
+        report.summary.decayItems,
+        'observed retained query/page decline',
+      ),
+    unavailablePhrase(
+      report,
       'striking-distance opportunities',
-    ),
+      'striking-distance analysis',
+    ) ??
+      countPhrase(
+        report.summary.strikingDistanceItems,
+        'striking-distance opportunity',
+        'striking-distance opportunities',
+      ),
+    unavailablePhrase(
+      report,
+      'quick-win opportunities',
+      'quick-win analysis',
+    ) ?? countPhrase(report.summary.quickWinItems, 'quick-win candidate'),
   ]
-  if (report.summary.cannibalItems) {
+  if (
+    report.summary.cannibalItems ||
+    skippedReason(report, 'cannibalisation analysis')
+  ) {
     parts.push(
-      countPhrase(report.summary.cannibalItems, 'multi-URL query candidate'),
+      unavailablePhrase(
+        report,
+        'cannibalisation analysis',
+        'multi-URL query analysis',
+      ) ??
+        countPhrase(report.summary.cannibalItems, 'multi-URL query candidate'),
     )
   }
-  return `${report.summary.classification}; ${parts.join('; ')}.`
+  const prefix =
+    report.dataStatus === 'partial'
+      ? 'Partial diagnosis; '
+      : report.dataStatus === 'unavailable'
+        ? 'Diagnosis unavailable; '
+        : ''
+  return `${prefix}${parts.join('; ')}.`
 }
 
 export function topSegmentLine(report: DiagnosePropertyReport): string {
+  if (skippedReason(report, 'page movement segments')) {
+    return 'Page movement comparison was not available for this run.'
+  }
   const page = report.segments.page.items[0]
   if (!page) return 'No page-level movement stood out.'
   const direction = page.clickDelta < 0 ? 'lost' : 'gained'
   return `${page.key} ${direction} ${Math.abs(page.clickDelta)} clicks compared with the previous window.`
+}
+
+export function updateAttributionLine(report: DiagnosePropertyReport): string {
+  if (report.summary.updateAttributionStatus === 'unavailable') {
+    return 'Update attribution was not available for this run.'
+  }
+
+  const overlapCount = report.updateCorrelation.overlappingUpdates.length
+  const significant = report.anomaly.anomalies.some(
+    (anomaly) => anomaly.significant,
+  )
+  if (!overlapCount) {
+    return 'No official Google update window overlapped the comparison window.'
+  }
+  if (!significant) {
+    return `${countLabel(overlapCount, 'official Google update window')} overlapped the comparison window, but no statistically significant movement was detected.`
+  }
+  return `${countLabel(overlapCount, 'official Google update window')} overlapped the significant movement comparison window; attribution is ${report.summary.updateAttribution}.`
 }
 
 export function changeLine(measurement: ChangeMeasurement): string {
@@ -199,6 +280,21 @@ export function contentOpportunityBullets(
   report: DiagnosePropertyReport,
 ): string[] {
   const bullets: string[] = []
+  const unavailableSections: string[] = (
+    [
+      ['decay analysis', 'content decay'],
+      ['cannibalisation analysis', 'multi-URL query'],
+      ['striking-distance opportunities', 'striking-distance'],
+      ['quick-win opportunities', 'quick-win'],
+    ] as const
+  )
+    .filter(([section]) => skippedReason(report, section))
+    .map(([, label]) => label)
+  if (unavailableSections.length) {
+    bullets.push(
+      `Could not assess ${unavailableSections.join(', ')} opportunities in this run; see report caveats.`,
+    )
+  }
 
   if (report.summary.decayItems) {
     const top = report.decay.items[0]
@@ -229,6 +325,18 @@ export function contentOpportunityBullets(
       top
         ? `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20. Start by investigating "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
         : `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20.`,
+    )
+  }
+
+  if (
+    !skippedReason(report, 'quick-win opportunities') &&
+    report.summary.quickWinItems
+  ) {
+    const top = report.quickWins.items[0]
+    bullets.push(
+      top
+        ? `${report.summary.quickWinItems} retained query/page ${plural(report.summary.quickWinItems, 'candidate')} fell below a site-peer or versioned heuristic CTR target. Start with "${top.query}" on ${top.url}; it had ${top.impressions.toFixed(0)} impressions at average position ${top.position.toFixed(1)}.`
+        : `${report.summary.quickWinItems} CTR-target ${plural(report.summary.quickWinItems, 'candidate')} need review.`,
     )
   }
 

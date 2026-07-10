@@ -1,7 +1,11 @@
 import { isSkippableReportError } from '../errors.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
-import { countLabel } from '../phrasing.js'
 import type { ProgressReporter } from '../progress.js'
+import { buildDiagnosisPriorities } from './diagnosis-priorities.js'
+import {
+  diagnosisDataStatus,
+  diagnosisPartialReasons,
+} from './diagnosis-status.js'
 import type { TemplateSummary } from './page-patterns.js'
 import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
 import { defaultDateRange } from './shared.js'
@@ -36,11 +40,22 @@ export type SkippedDiagnosisSection = {
   reason: string
 }
 
+export type DiagnosisDataStatus = 'complete' | 'partial' | 'unavailable'
+
+export type PartialDiagnosisReason = {
+  section: string
+  reason: string
+}
+
 export type DiagnosePropertyReport = {
   site: string
   generatedAt: string
+  dataStatus: DiagnosisDataStatus
   summary: {
-    classification: string
+    updateAttribution: UpdateCorrelationReport['classification'] | 'unavailable'
+    updateAttributionStatus: 'available' | 'unavailable'
+    /** @deprecated Use updateAttribution. */
+    classification: UpdateCorrelationReport['classification']
     significantAnomalies: number
     updateMatches: number
     largestPageMovements: number
@@ -50,6 +65,7 @@ export type DiagnosePropertyReport = {
     quickWinItems: number
   }
   skippedSections?: SkippedDiagnosisSection[]
+  partialReasons?: PartialDiagnosisReason[]
   priorities: DiagnosisPriority[]
   anomaly: Awaited<ReturnType<typeof trafficAnomaly>>
   updateCorrelation: Awaited<ReturnType<typeof updateCorrelation>>
@@ -94,11 +110,22 @@ function emptyAnomaly(input: {
   }
 }
 
-function emptyUpdateCorrelation(input: {
-  site: string
-  days?: number
-  recentDays?: number
-}): UpdateCorrelationReport {
+function emptyUpdateCorrelation(
+  input: {
+    site: string
+    days?: number
+    recentDays?: number
+  },
+  unavailable?: {
+    reason: string
+    source: 'traffic-anomaly' | 'search-status'
+  },
+): UpdateCorrelationReport {
+  const sparseDataReason =
+    'The traffic anomaly section was skipped or returned no daily rows.'
+  const reason = unavailable
+    ? `Update correlation was unavailable: ${unavailable.reason}`
+    : sparseDataReason
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
@@ -108,16 +135,24 @@ function emptyUpdateCorrelation(input: {
     attribution: 'weak-or-no-overlap',
     confidence: 'low',
     confounders: [],
-    summary: `${input.site} does not have enough daily GSC data for update correlation yet.`,
-    evidence: [
-      'The traffic anomaly section was skipped or returned no daily rows.',
-    ],
+    summary: unavailable
+      ? `${input.site} update attribution was unavailable for this run.`
+      : `${input.site} does not have enough daily GSC data for update correlation yet.`,
+    evidence: [reason],
     caveats: [
       `GSC window: ${input.days ?? 90} days; recent comparison window: ${input.recentDays ?? 7} days.`,
-      'New or sparse properties need more daily GSC data before update attribution is useful.',
+      ...(unavailable
+        ? ['No update-attribution conclusion was produced.']
+        : [
+            'New or sparse properties need more daily GSC data before update attribution is useful.',
+          ]),
     ],
     actions: [
-      'Use quick wins, second-page opportunities, page audit, and technical checks until enough daily GSC data exists.',
+      unavailable?.source === 'search-status'
+        ? 'Retry update attribution when the Search Status provider is available; use the canonical traffic anomalies and other report evidence in the meantime.'
+        : unavailable?.source === 'traffic-anomaly'
+          ? 'Restore traffic anomaly evidence, then retry update attribution; use other report evidence in the meantime.'
+          : 'Use quick wins, second-page opportunities, page audit, and technical checks until enough daily GSC data exists.',
     ],
     source: {
       name: 'Google Search Status Dashboard incidents feed',
@@ -431,101 +466,46 @@ function emptyQuickWins(input: {
   }
 }
 
-function topDelta(report: SegmentImpactReport): string {
-  const top = report.items[0]
-  if (!top) return 'No segment movement found.'
-  const direction = top.clickDelta < 0 ? 'lost' : 'gained'
-  return `${top.key} ${direction} ${Math.abs(top.clickDelta)} clicks.`
+export type DiagnosePropertyDependencies = {
+  trafficAnomaly: typeof trafficAnomaly
+  updateCorrelation: typeof updateCorrelation
+  segmentImpact: typeof segmentImpact
+  decayingReport: typeof decayingReport
+  cannibalReport: typeof cannibalReport
+  strikingDistance: typeof strikingDistance
+  quickWinsReport: typeof quickWinsReport
 }
 
-function buildPriorities(input: {
-  update: Awaited<ReturnType<typeof updateCorrelation>>
-  page: SegmentImpactReport
-  decay: Awaited<ReturnType<typeof decayingReport>>
-  cannibal: Awaited<ReturnType<typeof cannibalReport>>
-  striking: Awaited<ReturnType<typeof strikingDistance>>
-}): DiagnosisPriority[] {
-  const priorities: DiagnosisPriority[] = []
-
-  if (input.update.classification !== 'not-enough-evidence') {
-    priorities.push({
-      label: 'Review update exposure',
-      reason: `${countLabel(input.update.overlappingUpdates.length, 'official update window')} ${input.update.overlappingUpdates.length === 1 ? 'overlaps' : 'overlap'} recent movement.`,
-      action:
-        'Do not edit individual pages yet. First compare winning and losing templates so you know which page type was affected by the update.',
-      confidence:
-        input.update.classification === 'likely-update-related'
-          ? 'medium'
-          : 'low',
-    })
-  }
-
-  const largestPage = input.page.items[0]
-  if (largestPage) {
-    priorities.push({
-      label: 'Investigate largest page movement',
-      reason: topDelta(input.page),
-      action:
-        'Open the page and check the queries that moved, whether the URL is still canonical/indexable, and whether the title, H1, or body changed recently.',
-      confidence: Math.abs(largestPage.clickDelta) > 50 ? 'high' : 'medium',
-    })
-  }
-
-  if (input.decay.selection.eligibleRows) {
-    const topGroup = input.decay.groups[0]
-    priorities.push({
-      label: 'Refresh decaying content',
-      reason: topGroup
-        ? `${input.decay.selection.eligibleRows} observed retained query/page declines found; ${topGroup.label} declined by ${topGroup.totalClickLoss.toFixed(0)} clicks.`
-        : `${input.decay.selection.eligibleRows} observed retained query/page declines found.`,
-      action: topGroup
-        ? topGroup.recommendation
-        : 'Start with declines that continued outside the update window. Check indexability first, then ranking and CTR causes.',
-      confidence: 'medium',
-    })
-  }
-
-  if (input.cannibal.items.length) {
-    priorities.push({
-      label: 'Review multi-URL query candidates',
-      reason: `${input.cannibal.selection.eligibleClusters} multi-URL query candidates found.`,
-      action:
-        'Confirm whether each URL set satisfies the same intent and inspect technical state. Consolidate only verified duplicate or same-intent pages; otherwise clarify the distinction.',
-      confidence: 'low',
-    })
-  }
-
-  if (input.striking.items.length) {
-    const top = input.striking.items[0]
-    priorities.push({
-      label: 'Investigate striking-distance candidates',
-      reason: `${input.striking.items.length} query/page rows have an average GSC position above 10 and at most 20.`,
-      action:
-        top?.recommendation.action ??
-        'Check technical state, query coverage, competing URLs, and relevant internal links before choosing a change.',
-      confidence: top?.recommendation.confidence ?? 'low',
-    })
-  }
-
-  return priorities.slice(0, 6)
+const defaultDependencies: DiagnosePropertyDependencies = {
+  trafficAnomaly,
+  updateCorrelation,
+  segmentImpact,
+  decayingReport,
+  cannibalReport,
+  strikingDistance,
+  quickWinsReport,
 }
 
-export async function diagnoseProperty(input: {
-  site: string
-  days?: number
-  recentDays?: number
-  startDate?: string
-  endDate?: string
-  limit?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  verifyContent?: boolean
-  verifyLimit?: number
-  js?: boolean | 'auto'
-  rate?: FetchRateControls
-  refresh?: boolean
-  progress?: ProgressReporter
-}): Promise<DiagnosePropertyReport> {
+export async function diagnoseProperty(
+  input: {
+    site: string
+    days?: number
+    recentDays?: number
+    startDate?: string
+    endDate?: string
+    limit?: number
+    brandTerms?: string[]
+    includeBrand?: boolean
+    verifyContent?: boolean
+    verifyLimit?: number
+    js?: boolean | 'auto'
+    rate?: FetchRateControls
+    refresh?: boolean
+    progress?: ProgressReporter
+  },
+  dependencies: Partial<DiagnosePropertyDependencies> = {},
+): Promise<DiagnosePropertyReport> {
+  const providers = { ...defaultDependencies, ...dependencies }
   const limit = input.limit ?? 10
   const track = async <T>(
     label: string,
@@ -550,8 +530,50 @@ export async function diagnoseProperty(input: {
       }
     }
   }
+  const skipped = <T>(
+    label: string,
+    value: T,
+    reason: string,
+  ): SectionResult<T> => {
+    input.progress?.(`Skipped ${label}: ${reason}`)
+    return {
+      status: 'skipped',
+      value,
+      skipped: { section: label, reason },
+    }
+  }
+
+  const anomalyResult = await track(
+    'traffic anomaly',
+    () => providers.trafficAnomaly(input),
+    () => emptyAnomaly(input),
+  )
+  const updateTask =
+    anomalyResult.status === 'skipped'
+      ? Promise.resolve(
+          skipped(
+            'update correlation',
+            emptyUpdateCorrelation(input, {
+              reason: `Traffic anomaly evidence was unavailable: ${anomalyResult.skipped.reason}`,
+              source: 'traffic-anomaly',
+            }),
+            `Traffic anomaly evidence was unavailable: ${anomalyResult.skipped.reason}`,
+          ),
+        )
+      : track(
+          'update correlation',
+          () =>
+            providers.updateCorrelation({
+              ...input,
+              trafficAnomalies: anomalyResult.value.anomalies,
+            }),
+          (error) =>
+            emptyUpdateCorrelation(input, {
+              reason: errorReason(error),
+              source: 'search-status',
+            }),
+        )
   const [
-    anomalyResult,
     updateResult,
     pageResult,
     queryResult,
@@ -562,40 +584,31 @@ export async function diagnoseProperty(input: {
     strikingResult,
     quickWinsResult,
   ] = await Promise.all([
-    track(
-      'traffic anomaly',
-      () => trafficAnomaly(input),
-      () => emptyAnomaly(input),
-    ),
-    track(
-      'update correlation',
-      () => updateCorrelation(input),
-      () => emptyUpdateCorrelation(input),
-    ),
+    updateTask,
     track(
       'page movement segments',
-      () => segmentImpact({ ...input, dimension: 'page', limit }),
+      () => providers.segmentImpact({ ...input, dimension: 'page', limit }),
       () => emptySegment({ ...input, dimension: 'page' }),
     ),
     track(
       'query movement segments',
-      () => segmentImpact({ ...input, dimension: 'query', limit }),
+      () => providers.segmentImpact({ ...input, dimension: 'query', limit }),
       () => emptySegment({ ...input, dimension: 'query' }),
     ),
     track(
       'device movement segments',
-      () => segmentImpact({ ...input, dimension: 'device', limit }),
+      () => providers.segmentImpact({ ...input, dimension: 'device', limit }),
       () => emptySegment({ ...input, dimension: 'device' }),
     ),
     track(
       'country movement segments',
-      () => segmentImpact({ ...input, dimension: 'country', limit }),
+      () => providers.segmentImpact({ ...input, dimension: 'country', limit }),
       () => emptySegment({ ...input, dimension: 'country' }),
     ),
     track(
       'decay analysis',
       () =>
-        decayingReport({
+        providers.decayingReport({
           site: input.site,
           days: input.days,
           startDate: input.startDate,
@@ -610,7 +623,7 @@ export async function diagnoseProperty(input: {
     track(
       'cannibalisation analysis',
       () =>
-        cannibalReport({
+        providers.cannibalReport({
           site: input.site,
           days: input.days,
           startDate: input.startDate,
@@ -624,13 +637,13 @@ export async function diagnoseProperty(input: {
     ),
     track(
       'striking-distance opportunities',
-      () => strikingDistance({ ...input, limit }),
+      () => providers.strikingDistance({ ...input, limit }),
       () => emptyStriking(input),
     ),
     track(
       'quick-win opportunities',
       () =>
-        quickWinsReport({
+        providers.quickWinsReport({
           site: input.site,
           days: input.days,
           startDate: input.startDate,
@@ -659,7 +672,7 @@ export async function diagnoseProperty(input: {
   const cannibal = cannibalResult.value
   const striking = strikingResult.value
   const quickWins = quickWinsResult.value
-  const skippedSections = [
+  const sectionResults = [
     anomalyResult,
     updateResult,
     pageResult,
@@ -670,20 +683,54 @@ export async function diagnoseProperty(input: {
     cannibalResult,
     strikingResult,
     quickWinsResult,
-  ].flatMap((result) => (result.status === 'skipped' ? [result.skipped] : []))
+  ]
+  const skippedSections = sectionResults.flatMap((result) =>
+    result.status === 'skipped' ? [result.skipped] : [],
+  )
 
-  const priorities = buildPriorities({
+  const priorities = buildDiagnosisPriorities({
+    anomaly,
     update,
     page,
     decay,
     cannibal,
     striking,
+    quickWins,
   })
+
+  const partialReasons = diagnosisPartialReasons({
+    decay,
+    cannibalization: cannibal,
+    strikingDistance: striking,
+    quickWins,
+  })
+  const criticalResults = [
+    anomalyResult,
+    updateResult,
+    pageResult,
+    decayResult,
+    cannibalResult,
+    strikingResult,
+    quickWinsResult,
+  ]
+  const dataStatus = diagnosisDataStatus({
+    criticalStatuses: criticalResults.map((result) => result.status),
+    skippedSections: skippedSections.length,
+    partialReasons: partialReasons.length,
+  })
+  const updateAttributionStatus =
+    updateResult.status === 'skipped' ? 'unavailable' : 'available'
 
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
+    dataStatus,
     summary: {
+      updateAttribution:
+        updateAttributionStatus === 'available'
+          ? update.classification
+          : 'unavailable',
+      updateAttributionStatus,
       classification: update.classification,
       significantAnomalies: anomaly.anomalies.filter((item) => item.significant)
         .length,
@@ -695,6 +742,7 @@ export async function diagnoseProperty(input: {
       quickWinItems: quickWins.items.length,
     },
     skippedSections,
+    partialReasons,
     priorities,
     anomaly,
     updateCorrelation: update,

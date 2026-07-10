@@ -241,7 +241,10 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
   const files = diagnoseCsvFiles({
     site: 'sc-domain:example.com',
     generatedAt: '',
+    dataStatus: 'complete',
     summary: {
+      updateAttribution: 'not-enough-evidence',
+      updateAttributionStatus: 'available',
       classification: 'not-enough-evidence',
       significantAnomalies: 0,
       updateMatches: 0,

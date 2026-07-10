@@ -7,6 +7,7 @@ test('reportPresentation exposes caveats, sections, and priorities as tables', (
   const presentation = reportPresentation({
     site: 'sc-domain:example.com',
     generatedAt: '2026-06-04T10:00:00.000Z',
+    dataStatus: 'complete',
     periodDays: 28,
     period: { startDate: '2026-05-01', endDate: '2026-05-28' },
     headline: 'Content opportunities found.',

@@ -14,6 +14,7 @@ export type NarrativeSection = {
 export type ReportNarrative = {
   site: string
   generatedAt: string
+  dataStatus: DiagnosePropertyReport['dataStatus']
   periodDays: number
   period: {
     startDate: string

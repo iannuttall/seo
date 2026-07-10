@@ -233,6 +233,7 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
       mode: 'sitemap',
       maxPages: 10,
       concurrency: 1,
+      refresh: true,
     })
 
     assert.deepEqual(

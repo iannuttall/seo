@@ -77,7 +77,7 @@ export function registerDiagnosisTools(server: McpServer): void {
           refresh,
         })
         return toolSuccess(
-          `Diagnosis complete. Classification: ${result.summary.classification}.`,
+          `Diagnosis ${result.dataStatus}. Update attribution: ${result.summary.updateAttribution}.`,
           result,
         )
       } catch (error) {

@@ -48,18 +48,24 @@ export function registerMonitoringTools(server: McpServer): void {
     'seo_index_watch',
     {
       description:
-        'Inspect URLs with GSC URL Inspection and alert on index status changes',
+        "Inspect a bounded URL set against Google's indexed snapshot and separate current issues, regressions, recoveries, and operational failures",
       inputSchema: {
         site: z.string(),
-        urls: z.array(z.string().url()),
-        languageCode: z.string().optional(),
+        urls: z.array(z.string().url()).min(1).max(100),
+        languageCode: z.string().min(1).max(35).optional(),
+        dailyLimit: z.number().int().min(1).max(2_000).optional(),
       },
     },
-    async ({ site, urls, languageCode }) => {
+    async ({ site, urls, languageCode, dailyLimit }) => {
       try {
-        const result = await indexWatch({ site, urls, languageCode })
+        const result = await indexWatch({
+          site,
+          urls,
+          languageCode,
+          dailyLimit,
+        })
         return toolSuccess(
-          `Inspected ${result.summary.inspected} URLs. ${result.summary.alerts} alerts.`,
+          `Inspected ${result.summary.inspected} URLs. ${result.summary.currentIssues} current reviews, ${result.summary.regressions} regressions, ${result.summary.failed} failed, ${result.summary.quotaBlocked} quota-blocked, ${result.summary.deferred} deferred.`,
           result,
         )
       } catch (error) {
@@ -75,11 +81,11 @@ export function registerMonitoringTools(server: McpServer): void {
         'Plan sitemap URL allocation across GSC properties and suggest URL-prefix properties for better URL Inspection coverage',
       inputSchema: {
         site: z.string(),
-        sitemaps: z.array(z.string().url()),
+        sitemaps: z.array(z.string().url()).min(1).max(20),
         properties: z.array(z.string()).optional(),
-        dailyLimit: z.number().optional(),
-        targetCycleDays: z.number().optional(),
-        maxUrls: z.number().optional(),
+        dailyLimit: z.number().int().min(1).max(2_000).optional(),
+        targetCycleDays: z.number().int().min(1).max(365).optional(),
+        maxUrls: z.number().int().min(1).max(250_000).optional(),
       },
     },
     async ({
@@ -113,15 +119,15 @@ export function registerMonitoringTools(server: McpServer): void {
     'seo_index_monitor',
     {
       description:
-        'Run quota-aware URL Inspection monitoring from XML sitemaps and store index snapshots',
+        "Run bounded, locally quota-enforced URL Inspection monitoring from XML sitemaps and store Google's indexed snapshots",
       inputSchema: {
         site: z.string(),
-        sitemaps: z.array(z.string().url()),
+        sitemaps: z.array(z.string().url()).min(1).max(20),
         properties: z.array(z.string()).optional(),
-        dailyLimit: z.number().optional(),
-        inspectLimit: z.number().optional(),
-        maxUrls: z.number().optional(),
-        languageCode: z.string().optional(),
+        dailyLimit: z.number().int().min(1).max(2_000).optional(),
+        inspectLimit: z.number().int().min(1).max(100).optional(),
+        maxUrls: z.number().int().min(1).max(250_000).optional(),
+        languageCode: z.string().min(1).max(35).optional(),
       },
     },
     async ({
@@ -144,7 +150,7 @@ export function registerMonitoringTools(server: McpServer): void {
           languageCode,
         })
         return toolSuccess(
-          `Inspected ${result.summary.inspected} of ${result.summary.inventoryUrls} sitemap URLs. ${result.summary.alerts} alerts.`,
+          `Inventory ${result.summary.inventoryUrls}; ${result.summary.due} due, ${result.summary.selected} selected, ${result.summary.inspected} inspected, ${result.summary.unselectedDue} due but not selected. ${result.summary.currentIssues} current reviews in selected results, ${result.summary.regressions} regressions, ${result.summary.failed} failed, ${result.summary.quotaBlocked} quota-blocked, ${result.summary.deferred} deferred.`,
           result,
         )
       } catch (error) {

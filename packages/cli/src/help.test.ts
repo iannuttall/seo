@@ -234,6 +234,42 @@ test('pSEO JSON rejects invalid bounds before authentication', async () => {
   }
 })
 
+test('index-watch help exposes bounded quota and inventory controls', async () => {
+  const output = await runSeo(['index-watch', '--help'])
+
+  for (const flag of [
+    '--urls',
+    '--sitemaps',
+    '--daily-limit',
+    '--inspect-limit',
+    '--max-urls',
+    '--target-days',
+    '--language',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
+test('index-watch JSON rejects unsafe bounds before authentication', async () => {
+  for (const args of [
+    ['--urls', 'https://example.com/a', '--daily-limit', '2001'],
+    ['--sitemaps', 'https://example.com/sitemap.xml', '--inspect-limit', '101'],
+  ]) {
+    const result = await runSeoResult([
+      'index-watch',
+      '--site',
+      'sc-domain:example.com',
+      ...args,
+      '--json',
+    ])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.equal(output.error.code, 'INVALID_INPUT')
+  }
+})
+
 test('version aliases and nested command help are available', async () => {
   assert.match(await runSeo(['--version']), /0\.1\.0/)
   assert.match(await runSeo(['-v']), /0\.1\.0/)

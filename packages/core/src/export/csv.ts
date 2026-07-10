@@ -188,6 +188,9 @@ const CSV_SCHEMAS: Record<string, string[]> = {
     'latest_inspected_at',
     'non_pass',
     'blocked',
+    'earliest_inspected_at',
+    'current_issues',
+    'failed',
   ],
   'monitoring-link-recover.csv': [
     'id',
@@ -687,6 +690,10 @@ export function narrativeCsvFiles(report: ReportNarrative): CsvFile[] {
           latest_inspected_at: report.monitoring.indexWatch.latestInspectedAt,
           non_pass: report.monitoring.indexWatch.nonPass,
           blocked: report.monitoring.indexWatch.blocked,
+          earliest_inspected_at:
+            report.monitoring.indexWatch.earliestInspectedAt,
+          current_issues: report.monitoring.indexWatch.currentIssues,
+          failed: report.monitoring.indexWatch.failed,
         },
       ],
     },

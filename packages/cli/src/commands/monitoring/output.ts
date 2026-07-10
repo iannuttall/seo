@@ -32,17 +32,25 @@ export function printMonitoringRun(report: TechnicalWatchReport): void {
 
   if (report.output.index?.items.length) {
     const items = report.output.index.items
-      .filter((item) => item.alert || item.changed || item.verdict !== 'PASS')
+      .filter(
+        (item) =>
+          item.currentIssue ||
+          item.changed ||
+          item.inspectionStatus !== 'succeeded',
+      )
       .slice(0, 25)
     if (items.length) {
-      process.stdout.write('\nIndex issues and changes\n')
+      process.stdout.write('\nIndex reviews, changes, and failed checks\n')
       printTable(
-        ['Alert', 'Changed', 'Verdict', 'Coverage', 'URL'],
+        ['Check', 'Change', 'Index state', 'Evidence', 'URL'],
         items.map((item) => [
-          item.alert ? 'yes' : 'no',
-          item.changed ? 'yes' : 'no',
-          item.verdict ?? 'unknown',
-          truncate(item.coverageState ?? 'unknown', 40),
+          item.inspectionStatus,
+          item.changeKind,
+          item.indexStatus,
+          truncate(
+            (item.errorCode ?? item.issueCodes.join(', ')) || 'none',
+            40,
+          ),
           truncate(item.url, 64),
         ]),
       )

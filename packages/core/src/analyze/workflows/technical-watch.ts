@@ -15,10 +15,18 @@ type TechnicalWatchIndexOutput =
 function indexSummary(index?: TechnicalWatchIndexOutput): {
   inspected: number
   alerts: number
+  currentIssues: number
+  failed: number
+  quotaBlocked: number
+  deferred: number
 } {
   return {
     inspected: index?.summary.inspected ?? 0,
     alerts: index?.summary.alerts ?? 0,
+    currentIssues: index?.summary.currentIssues ?? 0,
+    failed: index?.summary.failed ?? 0,
+    quotaBlocked: index?.summary.quotaBlocked ?? 0,
+    deferred: index?.summary.deferred ?? 0,
   }
 }
 
@@ -81,6 +89,7 @@ export async function technicalWatchWorkflow(input: {
             site: input.site,
             urls: input.urls,
             languageCode: input.languageCode,
+            dailyLimit: input.dailyLimit,
           })
         : undefined,
     recoverLinks
@@ -97,43 +106,50 @@ export async function technicalWatchWorkflow(input: {
   ])
   const indexCounts = indexSummary(index)
 
-  const alertCount =
+  const findingCount =
     (crawl?.summary.highPriorityRecommendations ?? 0) +
-    indexCounts.alerts +
+    indexCounts.currentIssues +
     (recovery?.summary.high ?? 0) +
     (recovery?.summary.medium ?? 0)
-  const actions =
-    alertCount > 0
-      ? [
-          ...(recovery?.items[0]
-            ? [
-                {
-                  title: 'Recover search-value URL',
-                  action: recovery.items[0].recommendation.action,
-                  confidence: recovery.items[0].recommendation.confidence,
-                },
-              ]
-            : []),
-          {
-            title: 'Triage technical alerts',
-            action:
-              'Prioritize new status errors, indexability flips, URL Inspection alerts, and recoverable search-value URLs before content work.',
-            confidence: 'high' as const,
-          },
-        ]
-      : [
-          {
-            title: 'No material technical alert',
-            action:
-              'Keep the saved crawl and index snapshots; repeat the recovery check on the next run.',
-            confidence: 'medium' as const,
-          },
-        ]
+  const incompleteChecks =
+    indexCounts.failed + indexCounts.quotaBlocked + indexCounts.deferred
+  const actions = []
+  if (recovery?.items[0]) {
+    actions.push({
+      title: 'Recover search-value URL',
+      action: recovery.items[0].recommendation.action,
+      confidence: recovery.items[0].recommendation.confidence,
+    })
+  }
+  if (findingCount > 0) {
+    actions.push({
+      title: 'Triage technical findings',
+      action:
+        'Prioritize current index issues, crawl actions, and recoverable search-value URLs before content work.',
+      confidence: 'high' as const,
+    })
+  }
+  if (incompleteChecks > 0) {
+    actions.push({
+      title: 'Complete URL Inspection coverage',
+      action:
+        'Retry failed or deferred URL Inspection checks after resolving access, provider, or quota errors. Do not treat incomplete checks as SEO defects.',
+      confidence: 'high' as const,
+    })
+  }
+  if (!actions.length) {
+    actions.push({
+      title: 'No material technical finding',
+      action:
+        'Keep the saved crawl and index snapshots; repeat the recovery check on the next run.',
+      confidence: 'medium' as const,
+    })
+  }
 
   return workflowReport({
     workflow: 'technical-watch',
     site: input.site,
-    summary: `${countLabel(alertCount, 'material technical alert')} found.`,
+    summary: `${countLabel(findingCount, 'material technical finding')}; ${countLabel(incompleteChecks, 'incomplete URL Inspection check')}.`,
     steps: [
       {
         tool: 'seo_crawl_diff',
@@ -146,7 +162,7 @@ export async function technicalWatchWorkflow(input: {
         tool: input.sitemaps?.length ? 'seo_index_monitor' : 'seo_index_watch',
         status: index ? 'completed' : 'skipped',
         summary: index
-          ? `Inspected ${countLabel(indexCounts.inspected, 'URL')}; ${countLabel(indexCounts.alerts, 'alert')}.`
+          ? `Inspected ${countLabel(indexCounts.inspected, 'selected URL')}; ${countLabel(indexCounts.currentIssues, 'current review in selected results')}, ${countLabel(indexCounts.alerts, 'new alert')}, ${countLabel(indexCounts.failed, 'failed check')}, ${indexCounts.quotaBlocked + indexCounts.deferred} quota-blocked or deferred.`
           : 'No inspection URLs or sitemaps passed.',
       },
       {

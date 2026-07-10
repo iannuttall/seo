@@ -1,161 +1,390 @@
 import { randomUUID } from 'node:crypto'
-import { inspectUrl, type UrlInspectionResult } from '../../gsc/client.js'
+import { SeoError, toSeoError } from '../../errors.js'
+import { UrlInspectionQuotaError } from '../../gsc/client/inspection-quota.js'
+import {
+  inspectUrl,
+  type UrlInspectionRequest,
+  type UrlInspectionResult,
+} from '../../gsc/client.js'
+import { assertUrlMatchesGscProperty } from '../../gsc/property-url.js'
 import { getDb } from '../../storage/database.js'
+import { integerOption } from '../site-diagnostics/quick-wins-report-input.js'
+import {
+  indexWatchFailureItem,
+  indexWatchIssueCodes,
+  indexWatchItemFromInspection,
+} from './index-watch-analysis.js'
 import type {
   IndexWatchItem,
+  IndexWatchPrevious,
   IndexWatchReport,
   IndexWatchRow,
 } from './types.js'
 
-function statusFromInspection(result: UrlInspectionResult): IndexWatchItem {
-  const status = result.inspectionResult?.indexStatusResult
+const MAX_DIRECT_INSPECTIONS = 100
+
+type InspectUrl = (input: UrlInspectionRequest) => Promise<UrlInspectionResult>
+
+export type IndexWatchStore = {
+  latest(rootSite: string, url: string): IndexWatchPrevious | undefined
+  insert(item: IndexWatchItem): void
+}
+
+export type IndexWatchDependencies = {
+  inspectUrl: InspectUrl
+  now: () => Date
+  store: IndexWatchStore
+}
+
+function previousFromRow(row: IndexWatchRow): IndexWatchPrevious | undefined {
+  if (!row.inspected_at) return undefined
   return {
-    url: '',
-    verdict: status?.verdict,
-    coverageState: status?.coverageState,
-    indexingState: status?.indexingState,
-    robotsTxtState: status?.robotsTxtState,
-    pageFetchState: status?.pageFetchState,
-    googleCanonical: status?.googleCanonical,
-    userCanonical: status?.userCanonical,
-    lastCrawlTime: status?.lastCrawlTime,
-    changed: false,
-    alert: false,
+    inspectedAt: new Date(row.inspected_at).toISOString(),
+    verdict: row.verdict ?? undefined,
+    coverageState: row.coverage_state ?? undefined,
+    indexingState: row.indexing_state ?? undefined,
+    robotsTxtState: row.robots_txt_state ?? undefined,
+    pageFetchState: row.page_fetch_state ?? undefined,
+    googleCanonical: row.google_canonical ?? undefined,
+    userCanonical: row.user_canonical ?? undefined,
+    lastCrawlTime: row.last_crawl_time ?? undefined,
   }
 }
 
-function latestIndexWatch(
-  site: string,
-  url: string,
-): IndexWatchRow | undefined {
-  return getDb()
-    .prepare(
-      `SELECT verdict, coverage_state, indexing_state, robots_txt_state
-      FROM index_watch_snapshots
-      WHERE site_url = ? AND url = ?
-      ORDER BY inspected_at DESC LIMIT 1`,
-    )
-    .get(site, url) as IndexWatchRow | undefined
+const sqliteIndexWatchStore: IndexWatchStore = {
+  latest(rootSite, url) {
+    const row = getDb()
+      .prepare(
+        `SELECT *
+        FROM index_watch_snapshots
+        WHERE root_site_url = ? AND url = ? AND error_code IS NULL
+        ORDER BY inspected_at DESC, id DESC
+        LIMIT 1`,
+      )
+      .get(rootSite, url) as IndexWatchRow | undefined
+    return row ? previousFromRow(row) : undefined
+  },
+  insert(item) {
+    getDb()
+      .prepare(
+        `INSERT INTO index_watch_snapshots
+        (id, site_url, root_site_url, property_site_url, url, verdict,
+         coverage_state, indexing_state, robots_txt_state, page_fetch_state,
+         google_canonical, user_canonical, last_crawl_time, inspection_status,
+         error_code, error_message, inspected_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        randomUUID(),
+        item.property,
+        item.rootSite,
+        item.property,
+        item.url,
+        item.verdict ?? null,
+        item.coverageState ?? null,
+        item.indexingState ?? null,
+        item.robotsTxtState ?? null,
+        item.pageFetchState ?? null,
+        item.googleCanonical ?? null,
+        item.userCanonical ?? null,
+        item.lastCrawlTime ?? null,
+        item.inspectionStatus,
+        item.errorCode ?? null,
+        item.errorMessage ?? null,
+        Date.parse(item.inspectedAt),
+      )
+  },
 }
 
-function insertIndexWatch(site: string, item: IndexWatchItem): void {
-  getDb()
-    .prepare(
-      `INSERT INTO index_watch_snapshots
-      (id, site_url, url, verdict, coverage_state, indexing_state,
-       robots_txt_state, page_fetch_state, google_canonical, user_canonical,
-       last_crawl_time, inspected_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      randomUUID(),
-      site,
-      item.url,
-      item.verdict ?? null,
-      item.coverageState ?? null,
-      item.indexingState ?? null,
-      item.robotsTxtState ?? null,
-      item.pageFetchState ?? null,
-      item.googleCanonical ?? null,
-      item.userCanonical ?? null,
-      item.lastCrawlTime ?? null,
-      Date.now(),
-    )
+const defaultDependencies: IndexWatchDependencies = {
+  inspectUrl,
+  now: () => new Date(),
+  store: sqliteIndexWatchStore,
 }
 
-export async function indexWatch(input: {
-  site: string
-  urls: string[]
-  languageCode?: string
-}): Promise<IndexWatchReport> {
+function validateLanguageCode(value?: string): string | undefined {
+  const code = value?.trim()
+  if (!code) return undefined
+  if (code.length > 35 || !/^[A-Za-z0-9-]+$/.test(code)) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'languageCode must be a valid BCP 47 tag.',
+    )
+  }
+  return code
+}
+
+function normalizedUrls(property: string, urls: string[]): string[] {
+  if (!urls.length) {
+    throw new SeoError('INVALID_INPUT', 'Pass at least one URL to inspect.')
+  }
+  if (urls.length > MAX_DIRECT_INSPECTIONS) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Direct index watch accepts at most ${MAX_DIRECT_INSPECTIONS} URLs per run.`,
+    )
+  }
+  return [
+    ...new Set(urls.map((url) => assertUrlMatchesGscProperty(property, url))),
+  ]
+}
+
+function failureCode(error: unknown): string {
+  return error instanceof SeoError
+    ? error.code.toLowerCase()
+    : 'inspection_failed'
+}
+
+function isFatalBatchError(error: SeoError): boolean {
+  return ['AUTH_CONFIG_REQUIRED', 'AUTH_EXPIRED', 'AUTH_REQUIRED'].includes(
+    error.code,
+  )
+}
+
+export async function indexWatch(
+  input: {
+    site: string
+    rootSite?: string
+    urls: string[]
+    languageCode?: string
+    dailyLimit?: number
+    continueOnPropertyError?: boolean
+  },
+  dependencies: IndexWatchDependencies = defaultDependencies,
+): Promise<IndexWatchReport> {
+  const languageCode = validateLanguageCode(input.languageCode)
+  const dailyLimit = integerOption({
+    value: input.dailyLimit,
+    fallback: 2_000,
+    minimum: 1,
+    maximum: 2_000,
+    label: 'dailyLimit',
+  })
+  const urls = normalizedUrls(input.site, input.urls)
+  const rootSite = input.rootSite ?? input.site
   const items: IndexWatchItem[] = []
-  for (const url of input.urls) {
-    const previous = latestIndexWatch(input.site, url)
-    const result = await inspectUrl({
-      siteUrl: input.site,
-      inspectionUrl: url,
-      languageCode: input.languageCode,
-    })
-    const item = { ...statusFromInspection(result), url }
-    item.previous = previous
-      ? {
-          verdict: previous.verdict ?? undefined,
-          coverageState: previous.coverage_state ?? undefined,
-          indexingState: previous.indexing_state ?? undefined,
-          robotsTxtState: previous.robots_txt_state ?? undefined,
+  const warnings: string[] = []
+
+  for (const [index, url] of urls.entries()) {
+    const inspectedAt = dependencies.now().toISOString()
+    try {
+      const result = await dependencies.inspectUrl({
+        siteUrl: input.site,
+        inspectionUrl: url,
+        languageCode,
+        quotaLimit: dailyLimit,
+      })
+      const item = indexWatchItemFromInspection({
+        rootSite,
+        property: input.site,
+        url,
+        inspectedAt,
+        result,
+        previous: dependencies.store.latest(rootSite, url),
+      })
+      dependencies.store.insert(item)
+      items.push(item)
+    } catch (error) {
+      const normalized = toSeoError(error)
+      if (isFatalBatchError(normalized)) throw normalized
+      const propertyError = ['ACCESS_DENIED', 'PROPERTY_NOT_FOUND'].includes(
+        normalized.code,
+      )
+      if (propertyError && !input.continueOnPropertyError) throw normalized
+      const quotaBlocked = normalized.code === 'RATE_LIMITED'
+      const requestSent =
+        normalized instanceof UrlInspectionQuotaError
+          ? normalized.requestSent
+          : true
+      const retryAt =
+        normalized instanceof UrlInspectionQuotaError
+          ? normalized.resetAt
+          : undefined
+      const item = indexWatchFailureItem({
+        rootSite,
+        property: input.site,
+        url,
+        inspectedAt,
+        errorCode: failureCode(normalized),
+        errorMessage: normalized.message,
+        quotaBlocked,
+        requestSent,
+        retryAt,
+      })
+      dependencies.store.insert(item)
+      items.push(item)
+      warnings.push(`${url}: ${normalized.message}`)
+
+      if (quotaBlocked || propertyError) {
+        for (const blockedUrl of urls.slice(index + 1)) {
+          const blocked = indexWatchFailureItem({
+            rootSite,
+            property: input.site,
+            url: blockedUrl,
+            inspectedAt: dependencies.now().toISOString(),
+            errorCode: quotaBlocked
+              ? 'rate_limited'
+              : normalized.code.toLowerCase(),
+            errorMessage: quotaBlocked
+              ? 'URL Inspection quota is blocked for this property; no request was sent.'
+              : `URL Inspection stopped for this property after ${normalized.code}; no request was sent.`,
+            quotaBlocked,
+            deferred: true,
+            requestSent: false,
+            retryAt,
+          })
+          items.push(blocked)
         }
-      : undefined
-    item.changed = Boolean(
-      previous &&
-        (previous.verdict !== item.verdict ||
-          previous.coverage_state !== item.coverageState ||
-          previous.indexing_state !== item.indexingState ||
-          previous.robots_txt_state !== item.robotsTxtState),
-    )
-    item.alert = Boolean(
-      item.changed &&
-        (item.verdict !== 'PASS' ||
-          /not indexed|excluded|blocked|error/i.test(item.coverageState ?? '')),
-    )
-    insertIndexWatch(input.site, item)
-    items.push(item)
+        break
+      }
+    }
   }
 
+  const inspected = items.filter(
+    (item) => item.inspectionStatus === 'succeeded',
+  ).length
+  const failed = items.filter(
+    (item) => item.inspectionStatus === 'failed',
+  ).length
+  const quotaBlocked = items.filter(
+    (item) => item.inspectionStatus === 'quota-blocked',
+  ).length
+  const deferred = items.filter(
+    (item) => item.inspectionStatus === 'deferred',
+  ).length
+  const currentIssues = items.filter((item) => item.currentIssue).length
   return {
-    site: input.site,
-    generatedAt: new Date().toISOString(),
+    schemaVersion: 1,
+    methodology: 'index-watch-v2',
+    site: rootSite,
+    generatedAt: dependencies.now().toISOString(),
+    dataStatus: failed || quotaBlocked || deferred ? 'partial' : 'complete',
+    source: {
+      type: 'url-inspection-indexed-snapshot',
+      property: input.site,
+      dailyLimit,
+      languageCode,
+    },
     summary: {
-      inspected: items.length,
+      requested: input.urls.length,
+      unique: urls.length,
+      attempted: items.filter((item) => item.requestSent).length,
+      inspected,
+      failed,
+      quotaBlocked,
+      deferred,
+      currentIssues,
       changed: items.filter((item) => item.changed).length,
+      regressions: items.filter((item) => item.regression).length,
+      recoveries: items.filter((item) => item.recovery).length,
       alerts: items.filter((item) => item.alert).length,
     },
+    caveats: [
+      "URL Inspection reports Google's indexed snapshot for one URL, not a live test of the current page.",
+      'PASS, NEUTRAL, and FAIL map to indexed, excluded, and invalid. Translated coverage text is display evidence only.',
+      'An excluded URL or canonical difference may be intentional. Issue codes mean review the URL against its intended state, not that every URL is defective.',
+      'The local quota ledger uses a conservative UTC-day safety cap and cannot see URL Inspection calls made by other machines or Google clients.',
+    ],
+    warnings,
     items,
   }
 }
 
 export function latestIndexWatchSummary(site: string): {
   inspectedUrls: number
+  earliestInspectedAt?: string
   latestInspectedAt?: string
+  currentIssues: number
+  failed: number
   nonPass: number
   blocked: number
 } {
-  const row = getDb()
+  const rows = getDb()
     .prepare(
-      `WITH latest AS (
-        SELECT snapshot.*
+      `WITH attempts AS (
+        SELECT snapshot.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY url
+            ORDER BY inspected_at DESC, id DESC
+          ) AS attempt_rank
         FROM index_watch_snapshots snapshot
-        INNER JOIN (
-          SELECT url, MAX(inspected_at) AS inspected_at
-          FROM index_watch_snapshots
-          WHERE site_url = ?
-          GROUP BY url
-        ) latest_snapshot
-          ON latest_snapshot.url = snapshot.url
-          AND latest_snapshot.inspected_at = snapshot.inspected_at
-        WHERE snapshot.site_url = ?
+        WHERE root_site_url = ?
+      ), successes AS (
+        SELECT snapshot.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY url
+            ORDER BY inspected_at DESC, id DESC
+          ) AS success_rank
+        FROM index_watch_snapshots snapshot
+        WHERE root_site_url = ?
+          AND inspection_status = 'succeeded'
+          AND error_code IS NULL
       )
       SELECT
-        COUNT(*) AS inspected_urls,
-        MAX(inspected_at) AS latest_inspected_at,
-        COALESCE(SUM(CASE WHEN verdict IS NOT NULL AND verdict != 'PASS' THEN 1 ELSE 0 END), 0) AS non_pass,
-        COALESCE(SUM(CASE WHEN lower(COALESCE(coverage_state, '') || ' ' || COALESCE(robots_txt_state, '')) LIKE '%blocked%' THEN 1 ELSE 0 END), 0) AS blocked
-      FROM latest`,
+        attempts.url,
+        attempts.inspected_at AS attempt_inspected_at,
+        attempts.error_code AS latest_error_code,
+        successes.inspected_at AS success_inspected_at,
+        successes.verdict,
+        successes.indexing_state,
+        successes.robots_txt_state,
+        successes.page_fetch_state,
+        successes.google_canonical,
+        successes.user_canonical
+      FROM attempts
+      LEFT JOIN successes
+        ON successes.url = attempts.url AND successes.success_rank = 1
+      WHERE attempts.attempt_rank = 1`,
     )
-    .get(site, site) as
-    | {
-        inspected_urls: number
-        latest_inspected_at?: number
-        non_pass: number
-        blocked: number
-      }
-    | undefined
+    .all(site, site) as Array<
+    IndexWatchRow & {
+      attempt_inspected_at?: number | null
+      latest_error_code?: string | null
+      success_inspected_at?: number | null
+    }
+  >
+  const timestamps = rows
+    .map((row) => row.success_inspected_at)
+    .filter((value): value is number => Boolean(value))
+  const earliestTimestamp = timestamps.reduce(
+    (earliest, timestamp) => Math.min(earliest, timestamp),
+    Number.POSITIVE_INFINITY,
+  )
+  const successful = rows.filter((row) => Boolean(row.success_inspected_at))
+  const issues = successful.map((row) =>
+    indexWatchIssueCodes({
+      verdict: row.verdict ?? undefined,
+      indexingState: row.indexing_state ?? undefined,
+      robotsTxtState: row.robots_txt_state ?? undefined,
+      pageFetchState: row.page_fetch_state ?? undefined,
+      googleCanonical: row.google_canonical ?? undefined,
+      userCanonical: row.user_canonical ?? undefined,
+    }),
+  )
 
   return {
-    inspectedUrls: row?.inspected_urls ?? 0,
-    latestInspectedAt: row?.latest_inspected_at
-      ? new Date(row.latest_inspected_at).toISOString()
+    inspectedUrls: rows.length,
+    earliestInspectedAt: timestamps.length
+      ? new Date(earliestTimestamp).toISOString()
       : undefined,
-    nonPass: row?.non_pass ?? 0,
-    blocked: row?.blocked ?? 0,
+    latestInspectedAt: rows.length
+      ? new Date(
+          Math.max(...rows.map((row) => row.attempt_inspected_at ?? 0)),
+        ).toISOString()
+      : undefined,
+    currentIssues: issues.filter((codes) => codes.length > 0).length,
+    failed: rows.filter((row) => Boolean(row.latest_error_code)).length,
+    nonPass: successful.filter((row) => row.verdict && row.verdict !== 'PASS')
+      .length,
+    blocked: issues.filter((codes) =>
+      codes.some((code) =>
+        [
+          'indexing_blocked_header',
+          'indexing_blocked_meta',
+          'page_fetch_failed',
+          'robots_disallowed',
+        ].includes(code),
+      ),
+    ).length,
   }
 }

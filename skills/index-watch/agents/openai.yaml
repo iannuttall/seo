@@ -1,0 +1,4 @@
+interface:
+  display_name: "Index Watch"
+  short_description: "Monitor exact Google indexed-state changes safely"
+  default_prompt: "Use $index-watch to inspect a bounded URL set, separate current index reviews from regressions and failures, and explain the evidence without treating Google URL Inspection as a live test."

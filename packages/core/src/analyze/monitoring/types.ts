@@ -165,8 +165,39 @@ export type CrawlDiffReport = {
   warnings: string[]
 }
 
-export type IndexWatchItem = {
-  url: string
+export type IndexWatchIssueCode =
+  | 'canonical_mismatch'
+  | 'indexing_blocked_header'
+  | 'indexing_blocked_meta'
+  | 'inspection_failed'
+  | 'inspection_quota_blocked'
+  | 'page_fetch_failed'
+  | 'robots_disallowed'
+  | 'verdict_excluded'
+  | 'verdict_invalid'
+
+export type IndexWatchChangeKind =
+  | 'baseline'
+  | 'changed'
+  | 'not-comparable'
+  | 'recovery'
+  | 'regression'
+  | 'unchanged'
+
+export type IndexWatchChange = {
+  field:
+    | 'googleCanonical'
+    | 'indexingState'
+    | 'pageFetchState'
+    | 'robotsTxtState'
+    | 'userCanonical'
+    | 'verdict'
+  before?: string
+  after?: string
+}
+
+export type IndexWatchPrevious = {
+  inspectedAt: string
   verdict?: string
   coverageState?: string
   indexingState?: string
@@ -175,24 +206,67 @@ export type IndexWatchItem = {
   googleCanonical?: string
   userCanonical?: string
   lastCrawlTime?: string
-  previous?: {
-    verdict?: string
-    coverageState?: string
-    indexingState?: string
-    robotsTxtState?: string
-  }
+}
+
+export type IndexWatchItem = {
+  rootSite: string
+  property: string
+  url: string
+  inspectedAt: string
+  inspectionStatus: 'deferred' | 'failed' | 'quota-blocked' | 'succeeded'
+  requestSent: boolean
+  indexStatus: 'excluded' | 'indexed' | 'invalid' | 'unknown'
+  verdict?: string
+  coverageState?: string
+  indexingState?: string
+  robotsTxtState?: string
+  pageFetchState?: string
+  googleCanonical?: string
+  userCanonical?: string
+  lastCrawlTime?: string
+  previous?: IndexWatchPrevious
+  issueCodes: IndexWatchIssueCode[]
+  currentIssue: boolean
+  severity: 'high' | 'medium' | 'none'
+  changes: IndexWatchChange[]
+  changeKind: IndexWatchChangeKind
   changed: boolean
+  regression: boolean
+  recovery: boolean
   alert: boolean
+  errorCode?: string
+  errorMessage?: string
+  retryAt?: string
 }
 
 export type IndexWatchReport = {
+  schemaVersion: 1
+  methodology: 'index-watch-v2'
   site: string
   generatedAt: string
+  dataStatus: 'complete' | 'partial'
+  source: {
+    type: 'url-inspection-indexed-snapshot'
+    property: string
+    dailyLimit: number
+    languageCode?: string
+  }
   summary: {
+    requested: number
+    unique: number
+    attempted: number
     inspected: number
+    failed: number
+    quotaBlocked: number
+    deferred: number
+    currentIssues: number
     changed: number
+    regressions: number
+    recoveries: number
     alerts: number
   }
+  caveats: string[]
+  warnings: string[]
   items: IndexWatchItem[]
 }
 
@@ -200,27 +274,64 @@ export type IndexMonitorPropertyRun = {
   property: string
   inventoryUrls: number
   selectedUrls: number
+  attempted: number
   inspected: number
+  failed: number
+  quotaBlocked: number
+  deferred: number
+  currentIssues: number
   changed: number
+  regressions: number
+  recoveries: number
   alerts: number
   sampleUrls: string[]
 }
 
 export type IndexMonitorReport = {
+  schemaVersion: 1
+  methodology: 'index-monitor-v2'
   site: string
   generatedAt: string
+  dataStatus: 'complete' | 'partial'
+  source: {
+    type: 'sitemap-url-inspection-indexed-snapshot'
+    sitemaps: string[]
+    maxUrls: number
+    dailyLimit: number
+    inspectLimit: number
+    staleAfterDays: number
+    failureRetryHours: number
+    possiblyTruncated: boolean
+    discoveredUrls: number
+    invalidUrls: number
+  }
   summary: {
     inventoryUrls: number
     properties: number
     dailyCapacity: number
+    neverAttempted: number
+    neverSucceeded: number
+    retryWaiting: number
+    fresh: number
+    stale: number
+    due: number
     selected: number
+    unselectedDue: number
+    attempted: number
     inspected: number
+    failed: number
+    quotaBlocked: number
+    deferred: number
+    currentIssues: number
     changed: number
+    regressions: number
+    recoveries: number
     alerts: number
     skipped: number
   }
   properties: IndexMonitorPropertyRun[]
   items: IndexWatchItem[]
+  caveats: string[]
   warnings: string[]
 }
 
@@ -252,10 +363,20 @@ export type CrawlPageRow = {
 }
 
 export type IndexWatchRow = {
+  id?: string
+  root_site_url?: string | null
+  property_site_url?: string | null
   verdict?: string | null
   coverage_state?: string | null
   indexing_state?: string | null
   robots_txt_state?: string | null
+  page_fetch_state?: string | null
+  google_canonical?: string | null
+  user_canonical?: string | null
+  last_crawl_time?: string | null
+  error_code?: string | null
+  error_message?: string | null
+  inspection_status?: string | null
   inspected_at?: number | null
 }
 

@@ -15,6 +15,7 @@ export default defineConfig([
       'src/crawler-tools.ts',
       'src/diagnosis-tools.ts',
       'src/fetch-rate.ts',
+      'src/monitoring-tools.ts',
       'src/opportunity-tools.ts',
       'src/pseo-tools.ts',
       'src/report-options.ts',

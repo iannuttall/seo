@@ -103,7 +103,7 @@ export const indexWatchCommand = defineCommand({
         return
       }
       printKeyValue([
-        ['Property', report.site],
+        ['Project site', report.site],
         ['Sitemap URLs', String(report.summary.urlCount)],
         ['Properties used', String(report.summary.properties)],
         ['Daily capacity', String(report.summary.dailyCapacity)],
@@ -164,40 +164,71 @@ export const indexWatchCommand = defineCommand({
         return
       }
       printKeyValue([
-        ['Property', report.site],
+        ['Project site', report.site],
+        ['Discovered sitemap URLs', String(report.source.discoveredUrls)],
+        ['Invalid sitemap URLs', String(report.source.invalidUrls)],
         ['Inventory URLs', String(report.summary.inventoryUrls)],
         ['Properties used', String(report.summary.properties)],
         ['Daily capacity', String(report.summary.dailyCapacity)],
+        ['Never attempted', String(report.summary.neverAttempted)],
+        ['Never succeeded', String(report.summary.neverSucceeded)],
+        ['Retry waiting', String(report.summary.retryWaiting)],
+        ['Fresh', String(report.summary.fresh)],
+        ['Stale', String(report.summary.stale)],
+        ['Due', String(report.summary.due)],
         ['Selected this run', String(report.summary.selected)],
+        ['Due but not selected', String(report.summary.unselectedDue)],
+        ['Attempted', String(report.summary.attempted)],
         ['Inspected', String(report.summary.inspected)],
+        ['Failed', String(report.summary.failed)],
+        ['Quota blocked', String(report.summary.quotaBlocked)],
+        ['Deferred', String(report.summary.deferred)],
+        ['Current reviews', String(report.summary.currentIssues)],
+        ['Regressions', String(report.summary.regressions)],
+        ['Recoveries', String(report.summary.recoveries)],
         ['Changed', String(report.summary.changed)],
-        ['Alerts', String(report.summary.alerts)],
+        ['New alerts', String(report.summary.alerts)],
         ['Skipped', String(report.summary.skipped)],
       ])
       if (report.properties.length) {
         printTable(
-          ['Property', 'Inventory', 'Selected', 'Inspected', 'Alerts'],
+          [
+            'Property',
+            'Inventory',
+            'Selected',
+            'Inspected',
+            'Failed',
+            'Current',
+            'Alerts',
+          ],
           report.properties.map((property) => [
             property.property,
             property.inventoryUrls,
             property.selectedUrls,
             property.inspected,
+            property.failed + property.quotaBlocked,
+            property.currentIssues,
             property.alerts,
           ]),
         )
       }
       const issueItems = report.items
-        .filter((item) => item.alert || item.changed || item.verdict !== 'PASS')
+        .filter(
+          (item) =>
+            item.currentIssue ||
+            item.changed ||
+            item.inspectionStatus !== 'succeeded',
+        )
         .slice(0, 50)
       if (issueItems.length) {
-        process.stdout.write('\nIndex issues and changes\n')
+        process.stdout.write('\nIndex reviews, changes, and failed checks\n')
         printTable(
-          ['Alert', 'Changed', 'Verdict', 'Coverage', 'URL'],
+          ['Check', 'Change', 'Index state', 'Evidence', 'URL'],
           issueItems.map((item) => [
-            item.alert ? 'yes' : 'no',
-            item.changed ? 'yes' : 'no',
-            item.verdict ?? 'unknown',
-            item.coverageState ?? 'unknown',
+            item.inspectionStatus,
+            item.changeKind,
+            item.indexStatus,
+            (item.errorCode ?? item.issueCodes.join(', ')) || 'none',
             item.url,
           ]),
         )
@@ -217,24 +248,33 @@ export const indexWatchCommand = defineCommand({
       site,
       urls,
       languageCode: stringArg(args.language),
+      dailyLimit: numberArg(args['daily-limit']),
     })
     if (json) {
       printJson(report)
       return
     }
     printKeyValue([
-      ['Property', report.site],
+      ['Project site', report.site],
+      ['Inspection property', report.source.property],
+      ['Attempted', String(report.summary.attempted)],
       ['Inspected', String(report.summary.inspected)],
+      ['Failed', String(report.summary.failed)],
+      ['Quota blocked', String(report.summary.quotaBlocked)],
+      ['Deferred', String(report.summary.deferred)],
+      ['Current reviews', String(report.summary.currentIssues)],
+      ['Regressions', String(report.summary.regressions)],
+      ['Recoveries', String(report.summary.recoveries)],
       ['Changed', String(report.summary.changed)],
-      ['Alerts', String(report.summary.alerts)],
+      ['New alerts', String(report.summary.alerts)],
     ])
     printTable(
-      ['Alert', 'Changed', 'Verdict', 'Coverage', 'URL'],
+      ['Check', 'Change', 'Index state', 'Evidence', 'URL'],
       report.items.map((item) => [
-        item.alert ? 'yes' : 'no',
-        item.changed ? 'yes' : 'no',
-        item.verdict ?? 'unknown',
-        item.coverageState ?? 'unknown',
+        item.inspectionStatus,
+        item.changeKind,
+        item.indexStatus,
+        (item.errorCode ?? item.issueCodes.join(', ')) || 'none',
         item.url,
       ]),
     )

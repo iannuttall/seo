@@ -18,7 +18,7 @@ This is local first today. The same core is shaped so it can later run as a host
 - Compares saved crawl snapshots so agents can see exactly what changed.
 - Records local SEO tests and measures before/after impact with GSC, optional GA4, and optional control groups.
 - Builds content optimization reports from real search demand and crawled page content.
-- Runs local performance audits with Lighthouse when available, plus a lightweight fallback when it is not.
+- Runs local performance audits with bundled Lighthouse, device-specific CrUX field data when configured, and an explicitly unscored transport fallback.
 - Scores AI readiness, entity readiness, llms.txt coverage, and OKF/site knowledge exports from the same saved crawl.
 - Exposes the same workflows through CLI and MCP.
 
@@ -161,7 +161,7 @@ seo perf audit --url https://example.com/page
 seo perf audit --project keep --strategy desktop
 ```
 
-If Lighthouse is installed, `seo perf audit` uses it. If not, it falls back to a fast HTML response audit and says what it could not measure. Pass `--crux-key` or set `SEO_CRUX_API_KEY` when you want Chrome UX Report field data too.
+`seo perf audit` uses its bundled Lighthouse with a compatible local Chrome installation. If the lab run is unavailable, it returns an unscored HTTP transport diagnostic and says what it could not measure. Set `SEO_CRUX_API_KEY` (preferred) or pass `--crux-key` when you want device-specific Chrome UX Report field data too.
 
 ## GEO and AI-search readiness
 

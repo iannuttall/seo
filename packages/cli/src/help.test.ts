@@ -270,6 +270,22 @@ test('index-watch JSON rejects unsafe bounds before authentication', async () =>
   }
 })
 
+test('performance help exposes lab and field controls', async () => {
+  const output = await runSeo(['perf', 'audit', '--help'])
+
+  for (const flag of [
+    '--url',
+    '--strategy',
+    '--lighthouse-bin',
+    '--crux-key',
+    '--refresh',
+    '--raw',
+    '--json',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
 test('version aliases and nested command help are available', async () => {
   assert.match(await runSeo(['--version']), /0\.1\.0/)
   assert.match(await runSeo(['-v']), /0\.1\.0/)

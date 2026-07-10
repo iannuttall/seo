@@ -1,6 +1,7 @@
 import { rmSync } from 'node:fs'
 import { cancel, confirm } from '@clack/prompts'
 import {
+  deleteTokens,
   getCacheStats,
   getPrivacySnapshot,
   getSeoCliPaths,
@@ -60,6 +61,7 @@ export const resetCommand = defineCommand({
       cancel('Reset aborted.')
       return
     }
+    await deleteTokens()
     rmSync(paths.configDir, { recursive: true, force: true })
     rmSync(paths.cacheDir, { recursive: true, force: true })
     rmSync(paths.logDir, { recursive: true, force: true })

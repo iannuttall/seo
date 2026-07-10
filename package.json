@@ -40,7 +40,9 @@
   },
   "files": [
     "dist",
-    "skills"
+    "skills",
+    "PRIVACY.md",
+    "TERMS.md"
   ],
   "publishConfig": {
     "access": "public",

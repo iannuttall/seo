@@ -28,7 +28,7 @@ export const authCommand = defineCommand({
       },
     }),
     logout: defineCommand({
-      meta: { name: 'logout', description: 'Delete local token file' },
+      meta: { name: 'logout', description: 'Delete locally stored tokens' },
       run: async () => {
         await deleteTokens()
         process.stdout.write(

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import { geoGaps } from './geo-gaps.js'
+import { geoGaps, geoGapsReport } from './geo-gaps.js'
 import { createCrawlReport } from './report.js'
 
 test('geoGaps returns evidence-backed AI Search eligibility blockers', () => {
@@ -66,6 +66,69 @@ test('geoGaps returns blocked and limited snippet controls with evidence', () =>
       raw: 'max-snippet:40',
       value: 40,
     },
+  ])
+})
+
+test('geoGapsReport preserves partial crawl evidence and output truncation', () => {
+  const pages = [
+    page('https://example.com/a', false),
+    page('https://example.com/b', false),
+    page('https://example.com/c', false),
+  ]
+  for (const item of pages) item.indexable = false
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/', maxPages: 3 },
+    pages,
+    requestEvidenceStatus: 'partial',
+    warnings: ['One request was cancelled.'],
+    caveats: ['Stopped after reaching maxPages (3).'],
+  })
+  report.status = 'partial'
+  report.summary.pageLimitReached = true
+  report.summary.failedRequests = 1
+  report.summary.extractionFailures = 1
+
+  const result = geoGapsReport(report, { limit: 1 })
+
+  assert.equal(result.schemaVersion, 1)
+  assert.equal(result.dataStatus, 'partial')
+  assert.equal(result.source.reportId, report.id)
+  assert.equal(result.source.configuredMaxPages, 3)
+  assert.deepEqual(result.source.partialReasons, [
+    'crawl-not-complete',
+    'request-evidence-partial',
+    'page-limit-reached',
+    'failed-requests',
+    'extraction-failures',
+  ])
+  assert.deepEqual(result.selection, {
+    evaluatedPages: 3,
+    totalMatchedPages: 3,
+    returnedPages: 1,
+    limit: 1,
+    truncated: true,
+  })
+  assert.deepEqual(result.warnings, ['One request was cancelled.'])
+  assert.match(result.caveats.join('\n'), /2 matched pages were omitted/)
+  assert.match(result.caveats.join('\n'), /does not prove indexing/)
+})
+
+test('geoGapsReport marks missing evaluated pages as unavailable evidence', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    requestEvidenceStatus: 'unavailable',
+  })
+  report.status = 'failed'
+
+  const result = geoGapsReport(report)
+
+  assert.equal(result.dataStatus, 'unavailable')
+  assert.equal(result.selection.evaluatedPages, 0)
+  assert.equal(result.selection.totalMatchedPages, 0)
+  assert.deepEqual(result.source.partialReasons, [
+    'no-pages-evaluated',
+    'crawl-not-complete',
+    'request-evidence-unavailable',
   ])
 })
 

@@ -10,7 +10,7 @@ import {
   explainOkfValidation,
   explainRule,
   generateLlmsTxt,
-  geoGaps,
+  geoGapsReport,
   latestCrawlReport,
   listCrawlReports,
   listRules,
@@ -234,7 +234,7 @@ export function registerCrawlerTools(server: McpServer): void {
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
         category: z.string().optional(),
-        limit: z.number().int().positive().optional(),
+        limit: z.number().int().min(1).max(1_000).optional(),
       },
     },
     async ({
@@ -448,13 +448,13 @@ export function registerCrawlerTools(server: McpServer): void {
             'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
           )
         }
-        const gaps = geoGaps(report, { limit })
+        const gaps = geoGapsReport(report, { limit })
         return toolSuccess(
-          `Found ${gaps.length} AI Search technical eligibility gap pages for ${report.config.url}.`,
+          `Returned ${gaps.selection.returnedPages} of ${gaps.selection.totalMatchedPages} AI Search technical eligibility gap pages for ${report.config.url}; evidence is ${gaps.dataStatus}.`,
           {
             url: report.config.url,
             reportId: report.id,
-            eligibilityGaps: gaps,
+            ...gaps,
           },
         )
       } catch (error) {

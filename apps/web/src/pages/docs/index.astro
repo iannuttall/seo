@@ -1,0 +1,50 @@
+---
+import DocLayout from '@/layouts/DocLayout.astro'
+---
+
+<DocLayout
+  title="Documentation"
+  description="Start with the guided setup, then use the part of the tool that matches the job in front of you."
+>
+  <ul class="doc-links">
+    <li>
+      <a href="/docs/getting-started">Getting started</a>
+      <p>Install the CLI, connect Google, save a project profile, and run the main report.</p>
+    </li>
+    <li>
+      <a href="/docs/cli">CLI guide</a>
+      <p>The short human path, focused commands, project selection, JSON, and CI use.</p>
+    </li>
+    <li>
+      <a href="/docs/crawler">Crawler</a>
+      <p>Technical checks, crawl controls, saved reports, comparisons, exports, and CI gates.</p>
+    </li>
+    <li>
+      <a href="/docs/reports">Reports and data</a>
+      <p>How reports separate evidence, findings, caveats, and incomplete provider data.</p>
+    </li>
+    <li>
+      <a href="/docs/agents">Agents and MCP</a>
+      <p>Structured JSON, packaged skills, and the compact local stdio MCP interface.</p>
+    </li>
+    <li>
+      <a href="/docs/ai-search">AI search evidence</a>
+      <p>What the technical checks can establish and which visibility claims they deliberately avoid.</p>
+    </li>
+  </ul>
+
+  <h2>Need a command quickly?</h2>
+  <p>
+    Run <code>seo help</code> for the common path or <code>seo help all</code>
+    for the complete command tree. Every command has its own <code>--help</code>
+    page.
+  </p>
+
+  <h2>Questions and bugs</h2>
+  <p>
+    Use <a href="https://github.com/iannuttall/seo/issues">GitHub Issues</a>.
+    Keep tokens, private reports, account identifiers, and client data out of
+    public issues. Suspected vulnerabilities belong in the
+    <a href="/security">private reporting flow</a>.
+  </p>
+</DocLayout>

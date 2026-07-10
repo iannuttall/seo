@@ -1,0 +1,13 @@
+---
+interface Props {
+  command: string
+  label?: string
+}
+
+const { command, label = 'Terminal' } = Astro.props
+---
+
+<div class="command-block">
+  <div class="command-label">{label}</div>
+  <pre><code><span aria-hidden="true">$ </span>{command}</code></pre>
+</div>

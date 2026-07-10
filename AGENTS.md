@@ -57,13 +57,20 @@ skills/         packaged agent skills
 - `packages/cli`: `seo` command, prompt flows, command help, selection, and
   terminal output.
 - `packages/mcp`: local stdio MCP server exposing core analysis.
-- `apps/web`: placeholder for a future optional web surface.
+- `apps/web`: static Astro documentation and landing site for seoskills.dev.
 - `skills/<name>/SKILL.md`: focused instructions for agents using one workflow.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: human usage documentation.
 - `plans`: ignored working notes and checklists. Never depend on them for
   product behavior or durable project context.
 - `dist`: generated public package bundles. Do not hand-edit or commit them.
+
+Useful web areas:
+
+- `apps/web/src/layouts/SiteLayout.astro`: canonical SEO and metadata contract.
+- `apps/web/src/pages`: landing, docs, policy wrappers, and the custom 404.
+- `apps/web/scripts/build-sitemap.mjs`: exact static sitemap generation.
+- `apps/web/AGENTS.md`: site content, design, and deployment rules.
 
 Useful CLI areas:
 

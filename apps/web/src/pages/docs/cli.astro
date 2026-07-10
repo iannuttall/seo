@@ -1,0 +1,58 @@
+---
+import DocLayout from '@/layouts/DocLayout.astro'
+---
+
+<DocLayout
+  title="CLI guide"
+  description="Use the short report path for day-to-day work and explicit flags for scripts, CI, and deeper analysis."
+  section="Command line"
+>
+  <h2>Everyday commands</h2>
+  <pre><code>seo start
+seo report
+seo refresh-priorities
+seo quick-wins
+seo second-page
+seo technical-watch</code></pre>
+  <p>
+    <code>seo report</code> is the main report. It reads the evidence available
+    for the selected project, explains gaps, and recommends focused follow-ups.
+  </p>
+
+  <h2>Project profiles</h2>
+  <pre><code>seo projects list
+seo report --project example
+seo crawl --project example --max-pages 500</code></pre>
+  <p>
+    <code>--project</code> is the public selector for saved profiles. Commands
+    that accept a site or URL can still run without one.
+  </p>
+
+  <h2>Search opportunities</h2>
+  <pre><code>seo quick-wins --project example
+seo second-page --project example
+seo decaying --project example
+seo cannibal --project example
+seo ctr-underperformers --project example
+seo internal-links --project example --url https://example.com/page</code></pre>
+  <p>
+    These reports use Search Console data. Saved brand terms let opportunity
+    reports exclude branded queries where that distinction matters.
+  </p>
+
+  <h2>JSON and CI</h2>
+  <p>JSON mode never prompts. Pass the project, site, URL, or property explicitly.</p>
+  <pre><code>seo report --project example --json
+seo crawl https://example.com --json --output crawl.json
+seo crawl https://example.com --fail-on high --json</code></pre>
+  <p>
+    Automation can inspect structured evidence, findings, skipped sections,
+    limits, and provider errors without parsing terminal prose.
+  </p>
+
+  <h2>Find the rest</h2>
+  <p>
+    Run <code>seo help</code> for the curated path, <code>seo help all</code> for
+    every command, or append <code>--help</code> to a command for its arguments.
+  </p>
+</DocLayout>

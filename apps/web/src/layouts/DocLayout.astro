@@ -1,0 +1,39 @@
+---
+import SiteLayout from './SiteLayout.astro'
+
+interface Props {
+  title: string
+  description: string
+  section?: string
+}
+
+const { title, description, section } = Astro.props
+const path = Astro.url.pathname
+const pages = [
+  ['/docs', 'Docs home'],
+  ['/docs/getting-started', 'Getting started'],
+  ['/docs/cli', 'CLI guide'],
+  ['/docs/crawler', 'Crawler'],
+  ['/docs/reports', 'Reports and data'],
+  ['/docs/agents', 'Agents and MCP'],
+  ['/docs/ai-search', 'AI search evidence'],
+] as const
+---
+
+<SiteLayout title={title} description={description}>
+  <div class="shell docs-shell">
+    <aside class="docs-nav">
+      <nav aria-label="Documentation">
+        {pages.map(([href, label]) => (
+          <a href={href} aria-current={path === href ? 'page' : undefined}>{label}</a>
+        ))}
+      </nav>
+    </aside>
+    <article class="prose docs-content">
+      {section && <p class="page-context">{section}</p>}
+      <h1>{title}</h1>
+      <p class="lead">{description}</p>
+      <slot />
+    </article>
+  </div>
+</SiteLayout>

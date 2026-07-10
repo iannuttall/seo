@@ -56,7 +56,9 @@ The report checks what data is available. If GSC, GA4, crawl, or monitoring data
 seo crawl --project keep --max-pages 500 --format pretty
 ```
 
-The crawler finds technical SEO issues, AI Search eligibility blockers, broken links, duplicate metadata, indexability problems, schema gaps, weak internal links, and more.
+The crawler finds technical SEO issues, broken links, duplicate metadata,
+indexability and snippet restrictions, schema gaps, weak internal links, and
+separately labelled AI-search observations.
 
 If the project has a GSC property, it joins search metrics to the crawled pages. If the project has GA4, it joins landing-page sessions and conversions too.
 

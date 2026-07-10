@@ -1,14 +1,13 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "seo-web",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-06-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  },
-  "vars": {
-    "SEO_APP_NAME": "SEO"
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "seo-skills-site",
+  "compatibility_date": "2026-07-10",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "seoskills.dev", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
   }
 }

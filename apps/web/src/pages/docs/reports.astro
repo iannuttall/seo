@@ -1,0 +1,53 @@
+---
+import DocLayout from '@/layouts/DocLayout.astro'
+import { productFacts } from '@/lib/facts'
+---
+
+<DocLayout
+  title="Reports and data"
+  description="Each report keeps source evidence, conclusions, missing data, and provider limits clear enough for another person or agent to check."
+  section="Analysis"
+>
+  <h2>Start broad, then narrow down</h2>
+  <pre><code>seo report --project example
+seo refresh-priorities --project example
+seo quick-wins --project example
+seo technical-watch --project example</code></pre>
+  <p>
+    The main report finds the useful next slice. Focused reports then answer a
+    smaller question with less data and less noise.
+  </p>
+
+  <h2>What a report preserves</h2>
+  <ul>
+    <li>Observed provider or crawl data.</li>
+    <li>Derived findings and the rules behind them.</li>
+    <li>Coverage dates, row caps, thresholds, and sampling limits.</li>
+    <li>Skipped sections and the reason each one could not run.</li>
+    <li>Provider errors that affect only part of the analysis.</li>
+    <li>Commands that verify a fix or fetch a useful follow-up.</li>
+  </ul>
+
+  <h2>Report catalog</h2>
+  <p>
+    The local MCP catalog exposes {productFacts.reports} reports across
+    {productFacts.reportCategories} categories. It covers setup and diagnosis,
+    opportunities, crawling, monitoring, experiments, reporting, AI search
+    evidence, and multi-report workflows.
+  </p>
+  <p>Ask the installed package for the live catalog:</p>
+  <pre><code>seo mcp serve --test
+seo skills list</code></pre>
+  <p>
+    Agents should call <code>seo_list_reports</code>, optionally with a category,
+    rather than treating a copied list as permanent.
+  </p>
+
+  <h2>Report accuracy</h2>
+  <p>
+    SEO systems expose incomplete evidence. Reports avoid turning rough
+    heuristics into ranking rules, label estimates as estimates, and lower the
+    strength of a conclusion when the input is sparse. Important changes still
+    deserve a check against the live page and the relevant provider.
+  </p>
+</DocLayout>

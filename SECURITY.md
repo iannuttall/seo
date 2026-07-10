@@ -30,7 +30,7 @@ committed, pasted into issues, or included in fixtures.
 
 Use `seo privacy` to inspect local storage and `seo reset --yes` to remove it.
 Google grants can also be revoked at
-<https://myaccount.google.com/permissions>.
+<https://myaccount.google.com/connections>.
 
 ## Maintainer checks
 

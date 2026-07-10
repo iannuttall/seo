@@ -7,9 +7,10 @@ documentation, and seoskills.dev website.
 
 ## Open source licence
 
-The software is licensed under the [Apache License 2.0](LICENSE). That licence
-controls your right to use, copy, modify, and distribute the code. Third-party
-packages keep their own licences.
+The software is licensed under the [Apache License
+2.0](https://github.com/iannuttall/seo/blob/main/LICENSE). That licence controls
+your right to use, copy, modify, and distribute the code. Third-party packages
+keep their own licences.
 
 These terms do not take away rights granted by an applicable open source
 licence. They cover use of the official website, documentation, name, Google
@@ -57,8 +58,8 @@ You are responsible for protecting local tokens, configuration, caches,
 reports, exports, backups, and environment variables. Keep secrets out of
 public issues, logs, screenshots, repositories, and shared report files.
 
-The [privacy policy](PRIVACY.md) explains what the software stores and how to
-remove it.
+The [privacy policy](https://seoskills.dev/privacy) explains what the software
+stores and how to remove it.
 
 ## Availability and changes
 

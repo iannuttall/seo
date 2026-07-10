@@ -16,4 +16,8 @@ allowBuilds:
   better-sqlite3@12.11.1: true
   esbuild@0.28.1: true
   sharp@0.34.5: true
-  workerd@1.20260702.1: true
+  workerd@1.20260708.1: true
+
+minimumReleaseAgeExclude:
+  - miniflare@4.20260708.1
+  - wrangler@4.110.0

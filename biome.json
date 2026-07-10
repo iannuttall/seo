@@ -6,6 +6,8 @@
       "!!**/node_modules",
       "!!**/dist",
       "!!**/dist-firefox",
+      "!!**/.astro",
+      "!!apps/web/**/*.astro",
       "!!**/public/assets",
       "!!**/.turbo",
       "!!**/.wrangler",

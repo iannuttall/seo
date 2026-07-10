@@ -1,4 +1,5 @@
 import { fetchRateInput } from '../fetch-rate.js'
+import { resolveJsOption } from '../input-schemas.js'
 import { mcpReportInputSchema } from '../report-options.js'
 
 export const reportFetchInputSchema = mcpReportInputSchema([
@@ -25,7 +26,7 @@ export function reportFetchOptions(input: ReportFetchToolInput) {
   return {
     verifyContent: input.verifyContent,
     verifyLimit: input.verifyLimit,
-    js: input.js ? true : undefined,
+    js: resolveJsOption(input.js, undefined),
     rate: fetchRateInput({
       fetchConcurrency: input.fetchConcurrency,
       fetchIntervalCap: input.fetchIntervalCap,

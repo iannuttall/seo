@@ -9,7 +9,7 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
-import { calendarDateSchema } from './input-schemas.js'
+import { calendarDateSchema, resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -197,7 +197,7 @@ export function registerDiagnosisTools(
           verifyLimit,
           includeBrand,
           brandTerms,
-          js: js ? true : undefined,
+          js: resolveJsOption(js, undefined),
           rate: fetchRateInput({
             fetchConcurrency,
             fetchIntervalCap,

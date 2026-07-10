@@ -141,3 +141,51 @@ test('query opportunity MCP preserves schema v2 evidence contracts', async () =>
     'Evidence status: partial. Partial evidence: one retained query matched.',
   )
 })
+
+test('AI page handlers preserve explicit JavaScript disablement and auto defaults', async () => {
+  const handlers = new Map<
+    string,
+    (input: Record<string, unknown>) => Promise<unknown>
+  >()
+  const pageInputs: Array<Record<string, unknown>> = []
+  const contentInputs: Array<Record<string, unknown>> = []
+
+  registerAiOpportunityTools(
+    {
+      registerTool(name: string, _config: unknown, handler: never) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      pageOpportunitiesReport: async (input) => {
+        pageInputs.push(input)
+        return { summary: { verdict: 'Page fixture.' } } as never
+      },
+      contentOptimizationReport: async (input) => {
+        contentInputs.push(input)
+        return { summary: { verdict: 'Content fixture.' } } as never
+      },
+    },
+  )
+
+  const required = {
+    site: 'sc-domain:example.com',
+    url: 'https://example.com/page',
+  }
+  await handlers.get('seo_page_opportunities')?.({ ...required, js: false })
+  await handlers.get('seo_page_opportunities')?.(required)
+  await handlers.get('seo_content_optimization')?.({
+    ...required,
+    js: false,
+  })
+  await handlers.get('seo_content_optimization')?.(required)
+
+  assert.deepEqual(
+    pageInputs.map((input) => input.js),
+    [false, 'auto'],
+  )
+  assert.deepEqual(
+    contentInputs.map((input) => input.js),
+    [false, 'auto'],
+  )
+})

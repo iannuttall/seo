@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { auditPage } from '@seo/core'
 import * as z from 'zod/v4'
+import { resolveJsOption } from '../input-schemas.js'
 import { toolError, toolSuccess } from '../tool-result.js'
 
 export function registerAuditPageTool(server: McpServer): void {
@@ -20,7 +21,7 @@ export function registerAuditPageTool(server: McpServer): void {
         const result = await auditPage({
           url,
           site,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
           refresh,
         })
         return toolSuccess(

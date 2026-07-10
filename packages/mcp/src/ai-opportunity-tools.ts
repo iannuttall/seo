@@ -10,7 +10,7 @@ import {
   seoToAiQueryReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
-import { calendarDateSchema } from './input-schemas.js'
+import { calendarDateSchema, resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -38,6 +38,8 @@ export function registerAiOpportunityTools(
   server: McpServer,
   dependencies: {
     aiReferralsReport?: typeof aiReferralsReport
+    contentOptimizationReport?: typeof contentOptimizationReport
+    pageOpportunitiesReport?: typeof pageOpportunitiesReport
     seoToAiQueryReport?: typeof seoToAiQueryReport
     communityIntentReport?: typeof communityIntentReport
   } = {},
@@ -134,7 +136,9 @@ export function registerAiOpportunityTools(
       js,
     }) => {
       try {
-        const result = await pageOpportunitiesReport({
+        const result = await (
+          dependencies.pageOpportunitiesReport ?? pageOpportunitiesReport
+        )({
           site,
           url,
           days,
@@ -143,7 +147,7 @@ export function registerAiOpportunityTools(
           includeBrand,
           verifyContent,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
@@ -186,7 +190,9 @@ export function registerAiOpportunityTools(
       js,
     }) => {
       try {
-        const result = await contentOptimizationReport({
+        const result = await (
+          dependencies.contentOptimizationReport ?? contentOptimizationReport
+        )({
           site,
           url,
           days,
@@ -195,7 +201,7 @@ export function registerAiOpportunityTools(
           includeBrand,
           verifyContent,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {

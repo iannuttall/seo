@@ -10,7 +10,7 @@ import {
   workflowPresentation,
 } from '@seo/core'
 import * as z from 'zod/v4'
-import { calendarMonthSchema } from './input-schemas.js'
+import { calendarMonthSchema, resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -208,7 +208,7 @@ export function registerWorkflowTools(server: McpServer): void {
           properties,
           limit,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
           languageCode,
           dailyLimit,
           inspectLimit,

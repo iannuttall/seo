@@ -42,7 +42,7 @@ skills/         packaged agent skills
 ```
 
 - Do not publish or teach `@seo/core`, `@seo/cli`, or `@seo/mcp`.
-- The root `package.json`, `tsup.config.ts`, and `scripts/package.test.mjs` own
+- The root `package.json`, `tsdown.config.ts`, and `scripts/package.test.mjs` own
   the public package contract.
 - Runtime bundles must not depend on private workspace package names.
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
@@ -69,7 +69,8 @@ skills/         packaged agent skills
 
 Useful web areas:
 
-- `apps/web/src/layouts/SiteLayout.astro`: canonical SEO and metadata contract.
+- `apps/web/src/layouts/BaseLayout.astro`: canonical SEO, metadata, header, and
+  footer contract.
 - `apps/web/src/pages`: landing, docs, policy wrappers, and the custom 404.
 - `apps/web/scripts/build-sitemap.mjs`: exact static sitemap generation.
 - `apps/web/AGENTS.md`: site content, design, and deployment rules.

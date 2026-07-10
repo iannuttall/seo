@@ -1,11 +1,11 @@
 ---
-title: Reports and data
-description: Each report keeps source evidence, conclusions, missing data, and provider limits clear enough for another person or agent to check.
+title: Find the SEO report that gets you to the next fix
+description: Find the right local SEO report for lost traffic, technical problems, page opportunities, release regressions, AI search evidence, and measurement.
 ---
 
 import { productFacts } from '@/lib/facts'
 
-## Start broad, then narrow down
+## Get to the first useful answer faster
 
 ```sh
 seo report --project example
@@ -14,24 +14,27 @@ seo quick-wins --project example
 seo technical-watch --project example
 ```
 
-The main report finds the useful next slice. Focused reports then answer a
-smaller question with less data and less noise.
+Run `seo report` when you need to know what deserves attention across the site.
+Use a focused report when you already know the problem: lost clicks, a broken
+URL, weak page-one CTR, page-two rankings, or a technical change after a
+release. You get the affected pages and queries without digging through an
+unrelated audit.
 
-## What a report preserves
+## Keep every recommendation tied to evidence you can check
 
-- Observed provider or crawl data.
-- Derived findings and the rules behind them.
-- Coverage dates, row caps, thresholds, and sampling limits.
-- Skipped sections and the reason each one could not run.
-- Provider errors that affect only part of the analysis.
-- Commands that verify a fix or fetch a useful follow-up.
+Each result keeps the observed crawl or provider data beside the finding. It
+also carries the date range, row caps, thresholds, skipped sections, source
+limits, and the command that verifies the change.
 
-## Report catalog
+That means a missing row stays missing instead of becoming zero. A capped
+crawl cannot produce an all-clear. A low-CTR row can earn a place in the review
+queue without becoming a promise of more traffic.
 
-The local MCP catalog exposes {productFacts.reports} reports across
-{productFacts.reportCategories} categories. It covers setup and diagnosis,
-opportunities, crawling, monitoring, experiments, reporting, AI search
-evidence, and multi-report workflows.
+## Find a report by the job you need done
+
+The catalog includes {productFacts.reports} reports across
+{productFacts.reportCategories} categories. Browse the plain-English list
+below, or ask the installed package for the live ids and input schemas.
 
 Ask the installed package for the live catalog and exact input schema:
 
@@ -46,7 +49,9 @@ The CLI and MCP server use one report registry. Agents using MCP should call
 `seo_list_reports`, `seo_describe_report`, and then `seo_run_report` rather
 than treating a copied schema as permanent.
 
-## Report accuracy
+<ReportCatalog />
+
+## Know where the answer stops
 
 SEO systems expose incomplete evidence. Reports avoid turning rough
 heuristics into ranking rules, label estimates as estimates, and lower the

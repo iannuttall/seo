@@ -1,0 +1,21 @@
+---
+type Props = {
+  eyebrow: string;
+  text: string;
+};
+
+const { eyebrow, text } = Astro.props;
+---
+
+<div class="mb-10 flex max-w-2xl flex-col gap-3">
+  <h2
+    class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]"
+  >
+    {eyebrow}
+  </h2>
+  <p
+    class="text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]"
+  >
+    {text}
+  </p>
+</div>

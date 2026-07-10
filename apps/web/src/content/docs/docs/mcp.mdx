@@ -1,0 +1,168 @@
+---
+title: Connect the local SEO MCP server to your AI client
+description: Install the local SEO MCP server in Codex, Claude Code, Claude Desktop, or Cursor, then give agents compact access to every structured report.
+---
+
+The MCP server runs as a local process on your computer. Your client starts
+`npx -y seo mcp serve`, sends tool calls over standard input and output, and
+receives the same structured reports as the CLI.
+
+MCP supplies the tools. The packaged [SEO skills](/docs/skills) supply the
+report-specific instructions that help an agent choose the right tool, read
+the evidence, and verify a change. Install both for the best agent results.
+
+There is no hosted SEO MCP endpoint in this release. Google tokens, project
+profiles, caches, and saved crawls remain in the local SEO config directory.
+
+## Set up the CLI before connecting an agent
+
+Run the human setup and confirm the main report works:
+
+```sh
+npx seo start
+npx seo report
+```
+
+This separates Google or property-selection problems from MCP configuration
+problems. Node 22 or newer must remain available when your client starts the
+server.
+
+## Connect a client without hand-editing its config
+
+With `seo` installed globally, run:
+
+```sh
+seo mcp install
+```
+
+The interactive flow detects supported clients and lets you choose one or
+more. It preserves unrelated settings, creates a timestamped backup before it
+changes a JSON config, and refuses to replace an existing `seo` server that it
+does not manage.
+
+For scripts or a specific client, pass an explicit flag:
+
+```sh
+seo mcp install --codex --json
+seo mcp install --claude-code --json
+seo mcp install --claude-desktop --json
+seo mcp install --cursor --json
+```
+
+`--json` never prompts. Use `--all` only when you really want every detected
+client updated.
+
+## Connect Codex
+
+```sh
+seo mcp install --codex
+codex mcp get seo
+```
+
+The installer uses the native Codex command to update its TOML config. Codex
+CLI, the desktop app, and its IDE extension share that MCP configuration on the
+same host. OpenAI documents this behavior in the
+<a href="https://developers.openai.com/codex/mcp/" target="_blank" rel="noreferrer">Codex MCP guide</a>.
+
+You can also add the process with the native command:
+
+```sh
+codex mcp add seo -- npx -y seo mcp serve
+```
+
+## Connect Claude Code
+
+```sh
+seo mcp install --claude-code
+claude mcp get seo
+```
+
+The equivalent native command installs it for your user account:
+
+```sh
+claude mcp add --scope user seo -- npx -y seo mcp serve
+```
+
+The `--` separates Claude's own flags from the local server command. Anthropic's
+<a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noreferrer">Claude Code MCP documentation</a>
+covers scopes, server management, and the `/mcp` status view.
+
+## Connect Claude Desktop
+
+```sh
+seo mcp install --claude-desktop
+```
+
+Close and reopen Claude Desktop after installation. Claude Desktop and Claude
+Code use different configuration files, so installing one does not configure
+the other.
+
+Local developer-defined MCP servers can be restricted by organization policy.
+Anthropic's
+<a href="https://support.anthropic.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop" target="_blank" rel="noreferrer">Claude Desktop local MCP guide</a>
+covers the current desktop controls and troubleshooting steps.
+
+## Connect Cursor
+
+```sh
+seo mcp install --cursor
+```
+
+Restart Cursor, open its MCP settings, and check that the `seo` server is
+enabled. The installer edits Cursor's user MCP config and leaves other servers
+alone.
+
+Cursor changes its settings UI more often than anyone enjoys. The generated
+config is the durable part. If the server is missing from the UI, run the test
+below and inspect the path printed by the installer.
+
+## Check that the server can start
+
+```sh
+seo mcp serve --test
+```
+
+Test mode constructs the server, prints a success message, and exits. A normal
+`seo mcp serve` waits for an MCP client on stdin and stdout, so running it in a
+terminal will appear to sit there doing nothing. That is expected.
+
+If the client cannot start it, check:
+
+```sh
+node --version
+npx -y seo mcp serve --test
+seo doctor
+seo auth status
+```
+
+A missing Node runtime, broken npm install, expired Google login, and wrong
+project are separate failures. Check them in that order.
+
+## Keep tool selection fast with three MCP tools
+
+The server keeps discovery small:
+
+1. `seo_list_reports` finds report ids, optionally by category.
+2. `seo_describe_report` returns one report's JSON Schema.
+3. `seo_run_report` runs that report with validated parameters.
+
+Ask the agent to choose the smallest report that answers the question. It
+should describe the selected report before passing parameters and inspect the
+result's status, warnings, limits, and skipped sections before recommending
+work.
+
+The [agent workflow guide](/docs/agents) shows how to keep those calls bounded.
+[Focused skills](/docs/skills) add the SEO context that tells an agent why a
+report matters and how to act on its result.
+
+## Remove the managed server entry
+
+```sh
+seo mcp install --uninstall --codex
+seo mcp install --uninstall --claude-code
+seo mcp install --uninstall --claude-desktop
+seo mcp install --uninstall --cursor
+```
+
+Uninstall removes only the managed `seo` entry. It refuses to remove a custom
+server with the same name.

@@ -1,5 +1,5 @@
 ---
-import SiteLayout from './SiteLayout.astro'
+import BaseLayout from './BaseLayout.astro'
 
 interface Props {
   title: string
@@ -9,10 +9,10 @@ interface Props {
 const { title, description } = Astro.props
 ---
 
-<SiteLayout title={title} description={description} noindex>
-  <article class="shell prose policy-page">
-    <div class="policy-content">
+<BaseLayout title={title} description={description} noindex>
+  <article>
+    <div class="docs-prose">
       <slot />
     </div>
   </article>
-</SiteLayout>
+</BaseLayout>

@@ -1,50 +1,114 @@
 ---
-title: Documentation
-description: Start with the guided setup, then use the part of the tool that matches the job in front of you.
+title: 'SEO Skills CLI docs: turn site evidence into fixes'
+description: Install SEO Skills CLI, connect your site, and turn local crawl, Search Console, and GA4 evidence into fixes you can prioritize, explain, and verify.
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components'
+import { productFacts } from '@/lib/facts'
 
-<CardGrid>
-  <LinkCard
-    title="Getting started"
-    href="/docs/getting-started"
-    description="Install the CLI, connect Google, save a project profile, and run the main report."
-  />
-  <LinkCard
-    title="CLI guide"
-    href="/docs/cli"
-    description="The short human path, focused commands, project selection, JSON, and CI use."
-  />
-  <LinkCard
-    title="Crawler"
-    href="/docs/crawler"
-    description="Technical checks, crawl controls, saved reports, comparisons, exports, and CI gates."
-  />
-  <LinkCard
-    title="Reports and data"
-    href="/docs/reports"
-    description="How reports separate evidence, findings, caveats, and incomplete provider data."
-  />
-  <LinkCard
-    title="Agents and MCP"
-    href="/docs/agents"
-    description="Structured JSON, packaged skills, and the compact local stdio MCP interface."
-  />
-  <LinkCard
-    title="AI search evidence"
-    href="/docs/ai-search"
-    description="What the technical checks can establish and which visibility claims they deliberately avoid."
-  />
-</CardGrid>
+SEO Skills CLI runs on your computer. It crawls your site, reads the Google
+data you choose to connect, and returns reports that show the evidence behind
+each recommendation.
 
-## Need a command quickly?
+You can use it yourself in a terminal or give the same reports to an AI agent
+through skills, JSON, or a local MCP server. Either way, the analysis comes
+from the same code.
 
-Run `seo help` for the common path or `seo help all` for the complete command
-tree. Every command has its own `--help` page.
+## Install the engine and its playbook
 
-## Questions and bugs
+An agent gets the best result with both parts of the project:
 
-Use [GitHub Issues](https://github.com/iannuttall/seo/issues). Keep tokens,
-private reports, account identifiers, and client data out of public issues.
-Suspected vulnerabilities belong in the [private reporting flow](/security).
+- The `seo` package is the engine. It crawls sites, connects Google, and runs
+  deterministic reports through the CLI or MCP.
+- The skills are the playbook. They teach the agent which report to run, how
+  to read incomplete evidence, and what to verify before changing a site.
+
+Install both when an agent will do the work:
+
+```sh
+npm i -g seo
+npx skills add iannuttall/seo
+```
+
+The engine still works on its own for people, scripts, and CI. The skills can
+teach an agent about the reports, but it still needs access to the engine to
+run them.
+
+## Get your first useful report
+
+You need Node 22 or newer. Start the guided setup without installing anything
+globally:
+
+```sh
+npx seo start
+```
+
+The setup opens Google sign-in, lets you choose a Search Console property,
+offers a matching GA4 property, and saves those choices as a local project
+profile. Then run:
+
+```sh
+npx seo report
+```
+
+The main report checks the data that is available, tells you which sections
+could not run, and points you to a small number of focused follow-ups. The
+[getting started guide](/docs/getting-started) walks through the result and the
+local files created during setup.
+
+## Get to the right fix faster
+
+A technical baseline starts with a crawl. A question about underperforming
+page-one queries needs Search Console evidence instead. The focused report gets
+you to the affected queries and pages without unrelated crawl findings.
+
+SEO Skills CLI includes {productFacts.reports} discoverable reports. They cover
+jobs such as:
+
+- finding low-CTR rankings on page one and realistic page-two opportunities;
+- checking one page before a rewrite, redirect, canonical change, or release;
+- finding broken URLs that still have evidence of search value;
+- comparing saved crawls after a deploy;
+- separating a real decline from a partial or unfinished data window;
+- inspecting technical eligibility for search and AI search features.
+
+Browse the [report catalog](/docs/reports) by goal. The [crawler guide](/docs/crawler)
+explains the page evidence behind technical findings.
+
+## Add post-click context when it changes the priority
+
+Search Console provides first-party search performance and property access.
+GA4 is optional. It adds post-click evidence such as landing-page sessions,
+engagement, and known referral sources.
+
+Both integrations are read-only. Tokens, project profiles, caches, and saved
+crawls stay on your machine. The [Google data guide](/docs/google) explains
+what each source can establish, where its numbers can be incomplete, and how
+local sign-in works.
+
+## Let an agent act without redoing the analysis
+
+Agents should start with a compact result, inspect its status and caveats, then
+ask for detail on the affected pages or queries. Loading every report schema
+and every raw row into a conversation burns context without improving the
+answer.
+
+<DocsCards />
+
+## Know where each conclusion stops
+
+SEO data is messy. Search Console hides some queries, GA4 can withhold or
+process data later, crawls stop at configured limits, and a site can change
+between collection and review.
+
+The reports keep observed evidence separate from findings. They also carry
+date ranges, limits, skipped sections, partial-data states, and verification
+steps. A missing row does not quietly become zero. An intentional `noindex` or
+canonical does not automatically become a defect either.
+
+## Questions and bugs belong on GitHub
+
+Open a
+<a href="https://github.com/iannuttall/seo/issues" target="_blank" rel="noreferrer">GitHub issue</a>
+for ordinary questions and bugs. Leave tokens, account identifiers, private
+URLs, and client reports out of public issues. Suspected vulnerabilities belong
+in the [private security reporting flow](/security).

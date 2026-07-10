@@ -1,5 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { reportIds } from '../src/content/reports/manifest.mjs'
 
 const site = (process.env.SITE_URL ?? 'https://seoskills.dev').replace(
   /\/$/,
@@ -14,7 +15,11 @@ const paths = [
   '/docs/cli',
   '/docs/crawler',
   '/docs/getting-started',
+  '/docs/google',
+  '/docs/mcp',
   '/docs/reports',
+  '/docs/skills',
+  ...reportIds.map((id) => `/docs/reports/${id}`),
 ]
 
 function escapeXml(value) {

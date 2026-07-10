@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { cn } from "@/lib/utils";
+
+type AccordionContentProps = HTMLAttributes<"div">;
+
+const { class: className, ...props } = Astro.props as AccordionContentProps;
+---
+<div
+    data-accordion-content
+    data-state="closed"
+    class={cn(
+      'grid text-sm transition-[grid-template-rows] duration-200 ease-out',
+      'data-[state=closed]:grid-rows-[0fr]',
+      'data-[state=open]:grid-rows-[1fr]',
+      className
+    )}
+    {...props}
+  >
+    <div class="overflow-hidden">
+      <div class="pb-5 text-base leading-7 text-foreground-muted"><slot /></div>
+    </div>
+  </div>

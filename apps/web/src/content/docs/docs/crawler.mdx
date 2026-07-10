@@ -1,66 +1,166 @@
 ---
-title: Crawler
-description: Inspect technical SEO evidence page by page, save the result locally, and compare it after a deploy.
+title: Crawl a site and turn technical SEO evidence into work
+description: Run a bounded local crawl, inspect technical findings, save a baseline, compare releases, and gate CI with page evidence your team can verify.
 ---
 
 import { productFacts } from '@/lib/facts'
 
-## Run a crawl
+The crawler fetches pages from your machine and records what a crawler can
+observe at that moment. It gives you a technical baseline, an affected URL
+set, and a way to verify changes after a release.
+
+## Run a useful first crawl
+
+Start with the public URL you expect search engines and users to reach:
 
 ```sh
-seo crawl https://example.com --format pretty
+seo crawl https://example.com --save
 ```
 
-Use a project profile when you have one:
+The default site crawl stops at 500 pages and a click depth of 16. It can seed
+URLs from sitemaps, follows internal links, and respects robots.txt by default.
+Saving the result lets focused reports reuse the page evidence without fetching
+the site again.
+
+Use a project profile to join the crawl to available Search Console and GA4
+evidence:
 
 ```sh
-seo crawl --project example --max-pages 500
+seo crawl --project example --max-pages 500 --save
 ```
 
-## What it records
-
-The crawler records response and redirect data, indexability, canonicals,
-titles, descriptions, headings, links, images, structured data, hreflang,
-mobile configuration, security headers, social previews, and performance
-observations. Its {productFacts.crawlerRules} documented rules have stable
-IDs, severity, evidence fields, repair guidance, and verification steps.
+The live catalog exposes {productFacts.crawlerRules} documented crawler rules.
+List their stable IDs or inspect one rule's evidence and repair guidance:
 
 ```sh
 seo rules
 seo explain --rule missing_meta_description
 ```
 
-## Control the work
+## Keep the crawl focused and fast
 
-Useful limits include `--max-pages`, `--max-depth`, `--include`, `--exclude`,
-`--no-sitemap`, and `--no-external`. Robots.txt is respected by default.
+Bound the crawl to the question in front of you:
 
-## Save and compare
+```sh
+seo crawl https://example.com --max-pages 100 --max-depth 4
+seo crawl https://example.com --include '/products/' --exclude '/account/'
+seo crawl --mode sitemap https://example.com
+seo crawl --mode page --url https://example.com/pricing
+seo crawl --mode list --urls-file changed-urls.txt
+```
+
+`site` mode discovers internal URLs from the start page and sitemap. `sitemap`
+mode starts from a sitemap. `page` fetches one page, while `list` keeps the run
+to URLs you provide.
+
+Google describes a sitemap as a discovery signal rather than an indexing
+guarantee in its
+<a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview" target="_blank" rel="noreferrer">sitemap guidance</a>.
+Treat sitemap membership the same way in a crawl report. A listed URL deserves
+inspection, but its presence does not prove that Google indexed it.
+
+## Robots.txt controls crawling, not indexing
+
+The crawler skips disallowed URLs by default. That matches the site's stated
+crawl policy and avoids surprising a site owner.
+
+```sh
+seo crawl https://example.com --no-robots
+```
+
+Use `--no-robots` only when you control the target and need to diagnose rules
+that block your own crawl. Google notes that a disallowed URL can still appear
+in search results when it is discovered elsewhere. Its
+<a href="https://developers.google.com/search/docs/crawling-indexing/robots/intro" target="_blank" rel="noreferrer">robots.txt documentation</a>
+explains why robots.txt should not be treated as a removal tool.
+
+The crawler reports the rule it observed. It cannot know whether the rule is
+intentional. The same caution applies to `noindex`, canonicals, redirects, and
+snippet controls.
+
+## Read technical findings without inventing an SEO rule
+
+The crawl records response status, redirects, robots directives, canonicals,
+titles, descriptions, headings, internal links, images, structured data,
+hreflang, viewport configuration, security headers, social previews, and
+available performance observations.
+
+Keep three distinctions in view:
+
+1. **Observed evidence** says what the response or rendered page contained.
+2. **A finding** applies a documented rule or heuristic to that evidence.
+3. **An action** depends on the page's purpose, intended canonical, template,
+   and business context.
+
+A different canonical is not automatically wrong. Google treats a declared
+canonical as one signal and may select another URL. Its
+<a href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls" target="_blank" rel="noreferrer">canonical URL guidance</a>
+is the useful reference when a crawl finds conflicting signals.
+
+Structured data is similar. Valid markup can make a page eligible for a search
+appearance, but Google does not guarantee that appearance. Check the visible
+page, required properties, and the relevant
+<a href="https://developers.google.com/search/docs/appearance/structured-data/sd-policies" target="_blank" rel="noreferrer">structured data policies</a>
+before opening a ticket.
+
+## Render JavaScript when the source response is not enough
+
+```sh
+seo crawl https://example.com --js --max-pages 50
+```
+
+`--js` forces browser rendering when Playwright is installed. Use it for a
+client-rendered site whose links, canonicals, or main content are absent from
+the initial HTML. Browser rendering costs more time and memory, so a smaller
+first run is sensible.
+
+Google's
+<a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics" target="_blank" rel="noreferrer">JavaScript SEO guidance</a>
+explains how rendered HTML affects discovery and indexing. A local rendered
+crawl is still your observation, not a copy of Google's renderer or index.
+
+## Save a baseline and compare the next release
 
 ```sh
 seo crawl --project example --save
-seo crawl-reports
-seo crawl-reports --compare latest --against previous
+seo crawl-reports --project example
+seo crawl-reports --project example --compare latest --against previous
 ```
 
-Comparisons show added, removed, fixed, and changed pages, plus rule and
-health movement. Reusing a saved report also lets an agent inspect affected
-URLs or top fixes without crawling again.
+The comparison reports pages and findings that were added, removed, fixed, or
+changed. Check the crawl limits and URL sets on both sides before calling a
+difference a regression. Comparing a 100-page sample with a 500-page crawl can
+produce dramatic numbers for a very boring reason.
 
-## Choose an output
+Run a fresh crawl after the deployment, then use the affected URLs to verify
+the template or route that changed.
+
+## Export the part another person needs
 
 ```sh
-seo crawl https://example.com --format json
-seo crawl https://example.com --format csv --csv issues
+seo crawl https://example.com --format json --output crawl.json
+seo crawl https://example.com --format csv --csv issues --output issues.csv
 seo crawl https://example.com --format html --output report.html
 seo crawl https://example.com --format markdown --output tickets.md
 ```
 
-## Gate a deployment
+JSON preserves the structured contract for scripts and agents. CSV works for
+sorting issues or pages. HTML gives you a local standalone report, while
+Markdown is useful for a bounded implementation brief.
+
+## Fail CI on a severity you have agreed to enforce
 
 ```sh
 seo crawl https://example.com --fail-on high --json
 ```
 
-The command exits unsuccessfully when findings meet the chosen severity,
-while the JSON output preserves the evidence that caused the gate to fail.
+The process exits unsuccessfully when findings meet the selected severity or
+higher. JSON output still includes the triggering evidence.
+
+A CI gate is strongest when the crawl scope is stable and the team agrees what
+that severity means. Save the output as an artifact. Without the affected URLs
+and rule evidence, a red build is just a red build.
+
+Use the [CLI automation guide](/docs/cli) for explicit JSON runs. The
+[AI search evidence guide](/docs/ai-search) covers technical eligibility checks
+that reuse a saved crawl.

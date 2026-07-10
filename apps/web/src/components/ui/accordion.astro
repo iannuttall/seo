@@ -1,0 +1,24 @@
+---
+import { cn } from "@/lib/utils";
+
+type AccordionProps = {
+  type?: "single" | "multiple";
+  class?: string;
+};
+
+const { type = "single", class: className } = Astro.props as AccordionProps;
+---
+<div
+    data-accordion
+    data-accordion-type={type}
+    class={cn('w-full', className)}
+  >
+    <slot />
+  </div>
+
+<script>
+  import { accordion } from "@kiwa-ui/enhance/accordion";
+
+  accordion();
+  document.addEventListener("astro:page-load", accordion);
+</script>

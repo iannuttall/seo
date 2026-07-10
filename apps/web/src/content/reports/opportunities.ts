@@ -1,0 +1,252 @@
+import type { ReportEditorial } from './types'
+
+export const opportunityReports = [
+  {
+    id: 'cannibal',
+    name: 'Query overlap',
+    category: 'opportunities',
+    summary:
+      'Find queries associated with multiple URLs so you can separate healthy coverage from genuine intent or canonical conflicts.',
+    question:
+      'Which retained queries surface more than one URL and deserve a closer intent review?',
+    useWhen: [
+      'Several pages appear to compete for the same search topic.',
+      'A migration or template change may have split signals across URLs.',
+    ],
+    avoidWhen: [
+      'You plan to merge pages solely because they share a query. Multiple URLs can be appropriate for different intents.',
+    ],
+    evidence: [
+      'Retained Search Console query and page rows, grouped by normalized query with clicks, impressions, CTR, and average position.',
+    ],
+    methodology: [
+      'Aggregates duplicate provider rows, filters low-evidence groups, and ranks multi-URL exposure candidates with stable tie-breakers.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      days: 90,
+      limit: 20,
+      minImpressions: 100,
+      includeBrand: false,
+    },
+    interpretation: [
+      'Compare each URL’s purpose, canonical target, content, and search-result history. Query overlap is the observation; cannibalisation is a hypothesis to verify.',
+    ],
+    caveats: [
+      'Anonymised queries and retained row limits can hide additional URLs or make a group incomplete.',
+    ],
+    nextSteps: [
+      'Audit the competing URLs and decide whether to differentiate, consolidate, redirect, or leave them alone.',
+      'Measure any consolidation after a complete comparison window.',
+    ],
+    related: ['audit-page', 'redirect-trace', 'measure-change'],
+    sources: ['search-analytics', 'canonical'],
+  },
+  {
+    id: 'ctr-underperformers',
+    name: 'CTR underperformers',
+    category: 'opportunities',
+    summary:
+      'Find high-impression retained queries whose CTR trails a documented expectation, then review the live result before changing anything.',
+    question:
+      'Which visible query rows may warrant a search-result presentation review?',
+    useWhen: [
+      'You need a bounded list of high-impression rows for title and snippet investigation.',
+      'Brand filtering and the selected impression floor match the task.',
+    ],
+    avoidWhen: [
+      'You expect one universal CTR curve to describe every query, device, feature, and result type.',
+    ],
+    evidence: [
+      'Retained Search Console query metrics and the report’s stated CTR expectation.',
+    ],
+    methodology: [
+      'Filters by evidence and compares each eligible row with an explicit benchmark while preserving source limits.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      minImpressions: 250,
+      includeBrand: false,
+    },
+    interpretation: [
+      'A gap is a review signal. Inspect search intent, result features, title rendering, snippet text, and device mix before proposing a test.',
+    ],
+    caveats: [
+      'CTR varies by query and search appearance. The report cannot see every SERP context that shaped the metric.',
+    ],
+    nextSteps: [
+      'Use content optimization for a supported page-level brief.',
+      'Record and measure any title or snippet change instead of forecasting clicks.',
+    ],
+    related: ['content-optimization', 'quick-wins', 'measure-change'],
+    sources: ['search-analytics'],
+  },
+  {
+    id: 'decaying',
+    name: 'Decaying search visibility',
+    category: 'opportunities',
+    summary:
+      'Find query and page rows with supported click declines across matched Search Console windows.',
+    question:
+      'Which retained search segments lost meaningful clicks in the comparison period?',
+    useWhen: [
+      'You need a repeatable refresh or investigation queue based on observed losses.',
+      'Both comparison windows contain enough finalised evidence.',
+    ],
+    avoidWhen: [
+      'You plan to label an old page stale from its publication date or word count alone.',
+    ],
+    evidence: [
+      'Retained query and page rows from adjacent Search Console periods with absolute and percentage click change.',
+    ],
+    methodology: [
+      'Requires evidence in both windows, applies explicit loss thresholds, and ranks supported declines deterministically.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      days: 28,
+      comparison: 'previous-period',
+      limit: 20,
+      minDropPct: 20,
+      minPreviousClicks: 10,
+      minClickLoss: 5,
+    },
+    interpretation: [
+      'Separate demand loss, position movement, CTR movement, and technical evidence. A decline tells you where to look, not what caused it.',
+    ],
+    caveats: [
+      'Seasonality and missing lower-volume rows can change the shape of a comparison.',
+    ],
+    nextSteps: [
+      'Audit affected pages and inspect their query mix before refreshing content.',
+      'Use update correlation or segment impact when the decline is broad.',
+    ],
+    related: ['audit-page', 'segment-impact', 'update-correlate'],
+    sources: ['search-analytics'],
+  },
+  {
+    id: 'internal-links',
+    name: 'Internal link candidates',
+    category: 'opportunities',
+    summary:
+      'Find fetched pages with relevant query evidence and no verified contextual link to a chosen target.',
+    question:
+      'Which existing pages may be useful, natural places to link to this target URL?',
+    useWhen: [
+      'A sound target page needs better discovery paths or supporting context.',
+      'You want a review queue rather than automatic anchor insertion.',
+    ],
+    avoidWhen: [
+      'The target is technically unsuitable, off-intent, or already linked appropriately.',
+    ],
+    evidence: [
+      'Retained Search Console query overlap, fetched source content, target aliases, technical state, and observed link placement.',
+    ],
+    methodology: [
+      'Ranks exact and lexical relevance, fetches a bounded candidate set, excludes unsuitable pages, then verifies whether a contextual link exists.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      targetUrl: 'https://example.com/guides/seo',
+      days: 90,
+      limit: 15,
+      checkLimit: 40,
+      minImpressions: 25,
+    },
+    interpretation: [
+      'Read the source passage. Add a link only when the target genuinely helps at that point, using anchor text that makes sense to a reader.',
+    ],
+    caveats: [
+      'Unchecked candidates remain unknown when the fetch limit is reached. A relevance score is not an impact forecast.',
+    ],
+    nextSteps: [
+      'Add one useful contextual link and recrawl the source page.',
+      'Use audit page to verify the target remains indexable and canonical as intended.',
+    ],
+    related: ['audit-page', 'crawl-site', 'measure-change'],
+    sources: ['search-analytics', 'crawlable-links'],
+  },
+  {
+    id: 'query-cluster',
+    name: 'Query clusters',
+    category: 'opportunities',
+    summary:
+      'Group retained queries by reproducible token overlap so a large query export becomes easier to review.',
+    question:
+      'Which query rows share enough wording to review as a topic group?',
+    useWhen: [
+      'You need compact themes for research, page review, or reporting.',
+      'A deterministic lexical grouping is more useful than a model-generated label.',
+    ],
+    avoidWhen: [
+      'You need a definitive search-intent taxonomy. Similar words can express different needs.',
+    ],
+    evidence: [
+      'Retained Search Console queries and their metrics within the selected site or path scope.',
+    ],
+    methodology: [
+      'Normalizes query tokens, applies a documented overlap rule, aggregates metrics, and uses stable ordering.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      scope: '/guides/',
+      minImpressions: 50,
+      limit: 20,
+      includeBrand: false,
+    },
+    interpretation: [
+      'Use clusters to reduce a review set. Read representative queries before assigning intent or deciding that one page should cover the group.',
+    ],
+    caveats: [
+      'Token overlap misses synonyms and can join phrases whose meaning differs. Anonymised queries are absent.',
+    ],
+    nextSteps: [
+      'Inspect the pages receiving impressions for each useful cluster.',
+      'Run query overlap when several URLs appear for the same group.',
+    ],
+    related: ['cannibal', 'page-opportunities', 'content-optimization'],
+    sources: ['search-analytics'],
+  },
+  {
+    id: 'quick-wins',
+    name: 'Quick-win review queue',
+    category: 'opportunities',
+    summary:
+      'Rank visible query and page rows whose CTR trails a site-aware target, with optional live-page checks before action.',
+    question:
+      'Which already-visible search rows deserve a focused CTR or content review?',
+    useWhen: [
+      'You want a small queue from retained positions 4 to 10 with meaningful impressions.',
+      'You can verify the live result and page before proposing work.',
+    ],
+    avoidWhen: [
+      'You need guaranteed easy wins. The name describes the queue, not effort or expected lift.',
+    ],
+    evidence: [
+      'Retained Search Console query and page rows, a leave-target-out site benchmark or documented fallback, and optional page verification.',
+    ],
+    methodology: [
+      'Filters positions 4 to 10, compares CTR with the stated benchmark, ranks deterministically, and bounds optional page fetches.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      days: 90,
+      limit: 20,
+      minImpressions: 100,
+      verifyContent: true,
+      verifyLimit: 5,
+    },
+    interpretation: [
+      'Check benchmark confidence and verification status. Estimated click shortfall is a prioritisation heuristic, not a traffic forecast.',
+    ],
+    caveats: [
+      'Search appearance, device mix, brand intent, and SERP features can all explain CTR differences.',
+    ],
+    nextSteps: [
+      'Inspect the SERP and live page for the best-supported rows.',
+      'Record a specific change and measure it over a complete later window.',
+    ],
+    related: ['content-optimization', 'audit-page', 'measure-change'],
+    sources: ['search-analytics'],
+  },
+] as const satisfies readonly ReportEditorial[]

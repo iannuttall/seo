@@ -46,7 +46,7 @@ test('recommendCrawlDiffItem explains lost indexability', () => {
     url: 'https://example.com/noindex',
     changes: ['indexability'],
     before: page({ indexable: true }),
-    after: page({ indexable: false, metaRobots: 'noindex' }),
+    after: page({ indexable: false, metaRobots: 'none' }),
   })
 
   assert.equal(recommendation?.severity, 'high')

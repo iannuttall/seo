@@ -1,3 +1,7 @@
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../robots-directives.js'
 import type {
   ExtractedPage,
   PageFetchDiagnostics,
@@ -71,10 +75,10 @@ export function pageTechnicalSignals(input: {
   ) {
     signals.push('redirected')
   }
-  if (/\b(?:noindex|none)\b/i.test(input.page?.metaRobots ?? '')) {
+  if (hasMetaRobotsDirective(input.page?.metaRobots, 'noindex')) {
     signals.push('meta-noindex')
   }
-  if (/\b(?:noindex|none)\b/i.test(input.page?.xRobotsTag ?? '')) {
+  if (hasXRobotsDirective(input.page?.xRobotsTag, 'noindex')) {
     signals.push('x-robots-noindex')
   }
   if (

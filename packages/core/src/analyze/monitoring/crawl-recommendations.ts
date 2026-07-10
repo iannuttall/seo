@@ -1,8 +1,8 @@
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../../robots-directives.js'
 import type { CrawlDiffItem, CrawlDiffRecommendation } from './types.js'
-
-function hasNoIndex(value?: string): boolean {
-  return /\bnoindex\b/i.test(value ?? '')
-}
 
 function statusMovedToError(item: CrawlDiffItem): boolean {
   return (
@@ -64,7 +64,8 @@ export function recommendCrawlDiffItem(
 
   if (indexabilityLost(item)) {
     const noindex =
-      hasNoIndex(item.after?.metaRobots) || hasNoIndex(item.after?.xRobotsTag)
+      hasMetaRobotsDirective(item.after?.metaRobots, 'noindex') ||
+      hasXRobotsDirective(item.after?.xRobotsTag, 'noindex')
     return {
       severity: 'high',
       category: 'indexability',

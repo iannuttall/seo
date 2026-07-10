@@ -1,4 +1,5 @@
 import { load } from 'cheerio'
+import { combineRobotsValues } from '../robots-directives.js'
 import type {
   ContentExtractor,
   ExtractedPage,
@@ -12,6 +13,16 @@ import {
 function safeText(value?: string | null): string | undefined {
   const trimmed = value?.replace(/\s+/g, ' ').trim()
   return trimmed ? trimmed : undefined
+}
+
+function headerValue(
+  headers: Record<string, string>,
+  name: string,
+): string | undefined {
+  const target = name.toLowerCase()
+  return Object.entries(headers).find(
+    ([key]) => key.toLowerCase() === target,
+  )?.[1]
 }
 
 function parseJsonLdBlocks(blocks: string[]): {
@@ -297,14 +308,23 @@ export async function extractPage(
           ),
         ]
       : []
+  const metaRobots = combineRobotsValues(
+    $('meta[name]')
+      .toArray()
+      .filter((element) => {
+        const name = $(element).attr('name')?.trim().toLowerCase()
+        return name === 'robots' || name === 'googlebot'
+      })
+      .map((element) => $(element).attr('content')),
+  )
 
   return {
     url: fetchResult.url,
     finalUrl: fetchResult.finalUrl,
     title: safeText($('title').first().text()),
     metaDescription: safeText($('meta[name="description"]').attr('content')),
-    metaRobots: safeText($('meta[name="robots"]').attr('content')),
-    xRobotsTag: safeText(fetchResult.headers['x-robots-tag']),
+    metaRobots,
+    xRobotsTag: safeText(headerValue(fetchResult.headers, 'x-robots-tag')),
     canonical: safeText($('link[rel="canonical"]').attr('href')),
     lang: safeText($('html').attr('lang')),
     hasViewport: Boolean($('meta[name="viewport"]').attr('content')),

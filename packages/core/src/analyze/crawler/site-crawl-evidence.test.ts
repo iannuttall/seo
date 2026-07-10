@@ -343,6 +343,44 @@ test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
   }
 })
 
+test('crawlSite applies repeated robots and googlebot restrictions', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(`<!doctype html><html><head>
+      <title>Robots directives fixture page</title>
+      <meta name="robots" content="index, follow">
+      <meta name="googlebot" content="none">
+      <meta name="description" content="A useful description for the robots directives fixture page.">
+      <link rel="canonical" href="${fixture.baseUrl}/robots-meta">
+    </head><body><main><h1>Robots directives</h1><p>Useful content.</p></main></body></html>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/robots-meta`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+    })
+
+    assert.equal(report.pages[0]?.declaredIndexability, 'noindex')
+    assert.equal(report.pages[0]?.indexable, false)
+    assert.deepEqual(
+      report.issues
+        .filter((issue) => ['noindex', 'nofollow'].includes(issue.ruleId))
+        .map((issue) => issue.ruleId),
+      ['noindex', 'nofollow'],
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('crawlSite exposes live non-self canonical state once', async () => {
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {

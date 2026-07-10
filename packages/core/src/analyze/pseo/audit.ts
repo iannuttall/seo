@@ -7,6 +7,7 @@ import type { UrlInspectionResult } from '../../gsc/client/types.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { countLabel } from '../../phrasing.js'
 import type { ProgressReporter } from '../../progress.js'
+import { effectiveRobotsDirectives } from '../../robots-directives.js'
 import type { PageFetchResult } from '../../types.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { isLowActionabilityQuery } from '../query-quality.js'
@@ -245,9 +246,7 @@ function crawlTechnicalStatus(input: {
   if (input.fetched.status < 200 || input.fetched.status >= 300) {
     return 'http-error'
   }
-  if (
-    /\bnoindex\b/i.test(`${input.metaRobots ?? ''} ${input.xRobotsTag ?? ''}`)
-  ) {
+  if (effectiveRobotsDirectives(input).has('noindex')) {
     return 'noindex'
   }
   const canonical = absoluteUrl(input.canonical, input.fetched.finalUrl)

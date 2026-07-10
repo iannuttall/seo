@@ -1,3 +1,7 @@
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../../robots-directives.js'
 import { explainRule, type RuleId } from '../../rules.js'
 import type {
   CrawlPageSnapshot,
@@ -12,14 +16,6 @@ import type { CrawlIssue } from './report.js'
 
 function titlePixelWidth(title?: string): number {
   return Math.round((title ?? '').length * 9.2)
-}
-
-function hasNoIndex(value?: string): boolean {
-  return /\bnoindex\b/i.test(value ?? '')
-}
-
-function hasNoFollow(value?: string): boolean {
-  return /\bnofollow\b/i.test(value ?? '')
 }
 
 function sameUrl(a?: string, b?: string): boolean {
@@ -525,7 +521,7 @@ export function auditCrawlPages(
         }),
       )
     }
-    const xRobotsNoindex = hasNoIndex(page.xRobotsTag)
+    const xRobotsNoindex = hasXRobotsDirective(page.xRobotsTag, 'noindex')
     if (xRobotsNoindex) {
       issues.push(
         issue('x_robots_noindex', page, page.xRobotsTag, {
@@ -533,7 +529,7 @@ export function auditCrawlPages(
         }),
       )
     }
-    const xRobotsNofollow = hasNoFollow(page.xRobotsTag)
+    const xRobotsNofollow = hasXRobotsDirective(page.xRobotsTag, 'nofollow')
     if (xRobotsNofollow) {
       issues.push(
         issue('nofollow', page, page.xRobotsTag, {
@@ -679,7 +675,7 @@ export function auditCrawlPages(
         )
       }
     }
-    const metaNoindex = hasNoIndex(page.metaRobots)
+    const metaNoindex = hasMetaRobotsDirective(page.metaRobots, 'noindex')
     if (metaNoindex) {
       issues.push(
         issue('noindex', page, page.indexability, {
@@ -687,7 +683,10 @@ export function auditCrawlPages(
         }),
       )
     }
-    if (hasNoFollow(page.metaRobots) && !xRobotsNofollow) {
+    if (
+      hasMetaRobotsDirective(page.metaRobots, 'nofollow') &&
+      !xRobotsNofollow
+    ) {
       issues.push(
         issue('nofollow', page, page.metaRobots, {
           metaRobots: page.metaRobots,

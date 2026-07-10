@@ -1,0 +1,317 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import {
+  legacyReportAliases,
+  reports,
+  reportsById,
+} from '@/content/reports'
+import {
+  categoryLabels,
+  describeCommand,
+  reportCommand,
+  reportMetaDescription,
+  reportPageTitle,
+  reportPath,
+} from '@/content/reports/helpers'
+import { reportSources } from '@/content/reports/sources'
+import type { ReportEditorial } from '@/content/reports/types'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+export function getStaticPaths() {
+  return [
+    ...reports.map((report) => ({
+      params: { slug: report.id },
+      props: { report },
+    })),
+    ...Object.entries(legacyReportAliases).map(([slug, target]) => ({
+      params: { slug },
+      props: {
+        redirectTo: target.startsWith('/') ? target : reportPath(target),
+      },
+    })),
+  ]
+}
+
+type Props = {
+  report?: ReportEditorial
+  redirectTo?: string
+}
+
+const { report, redirectTo } = Astro.props
+
+if (redirectTo) {
+  return Astro.redirect(redirectTo, 301)
+}
+
+if (!report) {
+  return Astro.rewrite('/404')
+}
+
+const relatedReports = report.related
+  .map((id) => reportsById.get(id))
+  .filter((item): item is ReportEditorial => item !== undefined)
+const sources = report.sources.map((key) => reportSources[key])
+const description = reportMetaDescription(report)
+const pageTitle = reportPageTitle(report)
+const reportIndex = reports.findIndex(({ id }) => id === report.id)
+const previousReport = reportIndex > 0 ? reports[reportIndex - 1] : undefined
+const nextReport =
+  reportIndex >= 0 && reportIndex < reports.length - 1
+    ? reports[reportIndex + 1]
+    : undefined
+const commands = [
+  {
+    label: 'Check the input schema',
+    value: describeCommand(report),
+  },
+  {
+    label: 'Run the report',
+    value: reportCommand(report),
+  },
+]
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={description}
+  canonicalPath={reportPath(report.id)}
+>
+  <main>
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        <li>
+          <a
+            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+            href="/"
+          >
+            Home
+          </a>
+        </li>
+        <li aria-hidden="true" class="text-border">/</li>
+        <li>
+          <a
+            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+            href="/docs"
+          >
+            Docs
+          </a>
+        </li>
+        <li aria-hidden="true" class="text-border">/</li>
+        <li>
+          <a
+            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+            href="/docs/reports"
+          >
+            Reports
+          </a>
+        </li>
+        <li aria-hidden="true" class="text-border">/</li>
+        <li class="text-foreground">{report.name}</li>
+      </ol>
+    </nav>
+
+    <PageHeader
+      title={report.name}
+      description={report.summary}
+      bordered={false}
+    />
+
+    <div class="docs-prose">
+      <p>
+        Run this report yourself in the CLI or let an agent call it through
+        MCP. Both receive the same URLs, dates, source limits, and structured
+        evidence.
+      </p>
+
+      <h2 id="what-this-report-answers">What this report answers</h2>
+      <p>{report.question}</p>
+
+      <h2 id="when-this-report-earns-its-place">
+        When this report earns its place
+      </h2>
+      <ul>
+        {report.useWhen.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <h2 id="when-to-choose-another-report">
+        When to choose another report
+      </h2>
+      <ul>
+        {report.avoidWhen.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <h2 id="evidence-this-report-uses">Evidence this report uses</h2>
+      <ul>
+        {report.evidence.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <h2 id="how-the-report-reaches-its-findings">
+        How the report reaches its findings
+      </h2>
+      <ul>
+        {report.methodology.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>
+        The JSON result keeps dates, thresholds, limits, skipped work, and
+        source completeness beside the finding. Missing, partial, capped,
+        filtered, and complete data remain different states.
+      </p>
+
+      <h2 id="run-the-report-from-the-cli">Run the report from the CLI</h2>
+      <p>
+        Describe the live input schema first when an agent has not used this
+        report before. The second command runs it with bounded example inputs.
+      </p>
+
+      {
+        commands.map(({ label, value }) => (
+          <div class="mt-5">
+            <p class="mb-2 text-sm font-medium text-foreground">{label}</p>
+            <div class="relative min-w-0 overflow-hidden rounded-lg border border-input bg-card">
+              <pre class="m-0 min-h-9 min-w-0 overflow-x-auto border-0 bg-card px-3 py-2 pr-20 font-mono text-sm leading-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><code>{value}</code></pre>
+              <div
+                class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent via-card/95 to-card"
+                aria-hidden="true"
+              />
+              <button
+                type="button"
+                class="absolute right-1 top-1/2 inline-flex h-8 -translate-y-1/2 items-center justify-center bg-card px-2 text-xs text-foreground-muted hover:text-foreground"
+                data-copy-report-command
+                data-copy-value={value}
+                aria-label={`Copy ${label.toLowerCase()}`}
+              >
+                <span data-copy-label>Copy</span>
+              </button>
+            </div>
+          </div>
+        ))
+      }
+
+      <p>
+        Project profiles can fill supported property and analytics inputs for
+        the human-facing commands. The catalog form shown here is explicit by
+        design, so agents and CI jobs do not prompt or guess.
+      </p>
+
+      <h2 id="how-to-read-the-result">How to read the result</h2>
+      <ul>
+        {report.interpretation.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>
+        Start with <code>dataStatus</code>, provenance, warnings, and caveats.
+        Then inspect the observed evidence before derived findings or suggested
+        actions.
+      </p>
+
+      <h2 id="limits-to-keep-with-the-result">
+        Limits to keep with the result
+      </h2>
+      <ul>
+        {report.caveats.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <h2 id="what-to-do-next">What to do next</h2>
+      <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-base/6 text-foreground-muted">
+        {report.nextSteps.map((item) => <li>{item}</li>)}
+      </ol>
+
+      <h2 id="related-reports">Related reports</h2>
+      <ul>
+        {
+          relatedReports.map((related) => (
+            <li>
+              <a href={reportPath(related.id)}>{related.name}</a>.{' '}
+              {related.summary}
+            </li>
+          ))
+        }
+      </ul>
+
+      {
+        sources.length ? (
+          <>
+            <h2 id="sources-behind-the-guidance">
+              Sources behind the guidance
+            </h2>
+            <p>
+              These primary sources define the provider data or search controls
+              used in the interpretation above.
+            </p>
+            <ul>
+              {sources.map((source) => (
+                <li>
+                  <a href={source.url} target="_blank" rel="noreferrer">
+                    {source.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null
+      }
+
+      <p>
+        <a href="/docs/reports">Browse all reports</a> in{' '}
+        {categoryLabels[report.category]}.
+      </p>
+    </div>
+
+    {
+      previousReport || nextReport ? (
+        <nav
+          aria-label="Report docs"
+          class="mt-16 flex items-stretch justify-between gap-4 pt-6"
+        >
+          {previousReport ? (
+            <a
+              href={reportPath(previousReport.id)}
+              class="group flex flex-col gap-1 no-underline"
+            >
+              <span class="text-sm text-foreground-muted">Previous</span>
+              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
+                {previousReport.name}
+              </span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {nextReport ? (
+            <a
+              href={reportPath(nextReport.id)}
+              class="group flex flex-col items-end gap-1 text-right no-underline"
+            >
+              <span class="text-sm text-foreground-muted">Next</span>
+              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
+                {nextReport.name}
+              </span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null
+    }
+  </main>
+</BaseLayout>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '[data-copy-report-command]',
+  )) {
+    button.addEventListener('click', async () => {
+      const value = button.dataset.copyValue
+      const label = button.querySelector<HTMLElement>('[data-copy-label]')
+      if (!value) return
+
+      try {
+        await navigator.clipboard.writeText(value)
+        if (label) label.textContent = 'Copied'
+        window.setTimeout(() => {
+          if (label) label.textContent = 'Copy'
+        }, 1500)
+      } catch {
+        if (label) label.textContent = 'Select'
+      }
+    })
+  }
+</script>

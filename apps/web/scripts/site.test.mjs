@@ -17,7 +17,10 @@ const expectedPages = new Map([
   ],
   ['docs/cli/index.html', 'https://seoskills.dev/docs/cli'],
   ['docs/crawler/index.html', 'https://seoskills.dev/docs/crawler'],
+  ['docs/google/index.html', 'https://seoskills.dev/docs/google'],
+  ['docs/mcp/index.html', 'https://seoskills.dev/docs/mcp'],
   ['docs/reports/index.html', 'https://seoskills.dev/docs/reports'],
+  ['docs/skills/index.html', 'https://seoskills.dev/docs/skills'],
   ['docs/agents/index.html', 'https://seoskills.dev/docs/agents'],
   ['docs/ai-search/index.html', 'https://seoskills.dev/docs/ai-search'],
   ['privacy/index.html', 'https://seoskills.dev/privacy'],
@@ -39,19 +42,20 @@ test('build contains every public route with one complete SEO contract', () => {
     const file = resolve(dist, relativePath)
     assert.ok(existsSync(file), `Missing built page ${relativePath}`)
     const html = readFileSync(file, 'utf8')
+    const head = html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? ''
 
     assert.equal(
-      matches(html, /<title>[^<]+<\/title>/g).length,
+      matches(head, /<title>[^<]+<\/title>/g).length,
       1,
       relativePath,
     )
     assert.equal(
-      matches(html, /<meta name="description" content="[^"]+"\s*\/?>/g).length,
+      matches(head, /<meta name="description" content="[^"]+"\s*\/?>/g).length,
       1,
       relativePath,
     )
     assert.equal(
-      matches(html, /<link rel="canonical" href="[^"]+"\s*\/?>/g).length,
+      matches(head, /<link rel="canonical" href="[^"]+"\s*\/?>/g).length,
       1,
       relativePath,
     )
@@ -97,7 +101,7 @@ test('legal and error pages are noindex but remain crawlable', () => {
   )
 })
 
-test('sitemap is exact and contains only indexable canonical pages', () => {
+test('sitemap is exact and contains only indexable canonical pages', async () => {
   const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf8')
   const locations = matches(sitemap, /<loc>([^<]+)<\/loc>/g).map(
     (match) => match[1],
@@ -105,6 +109,14 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
   const indexable = [...expectedPages.entries()]
     .filter(([path]) => path === 'index.html' || path.startsWith('docs/'))
     .map(([, canonical]) => canonical)
+  const { listReportDefinitions } = await import(
+    resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
+  )
+  indexable.push(
+    ...listReportDefinitions().map(
+      ({ id }) => `https://seoskills.dev/docs/reports/${id}`,
+    ),
+  )
 
   assert.deepEqual(locations.sort(), indexable.sort())
   assert.match(
@@ -113,33 +125,100 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
   )
 })
 
-test('published product counts stay tied to the implementation', async () => {
-  const { listRules } = await import(
-    resolve(repoRoot, 'packages/core/dist/index.js')
-  )
-  const { listReportDefinitions, REPORT_CATEGORIES } = await import(
+test('report library covers the live registry and keeps legacy routes', async () => {
+  const { getReportDefinition, listReportDefinitions } = await import(
     resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
   )
-  const skillCount = readdirSync(resolve(repoRoot, 'skills'), {
-    withFileTypes: true,
-  }).filter(
-    (entry) =>
-      entry.isDirectory() &&
-      existsSync(resolve(repoRoot, 'skills', entry.name, 'SKILL.md')),
-  ).length
+  const { legacyReportAliases, reportIds } = await import(
+    resolve(appRoot, 'src/content/reports/manifest.mjs')
+  )
+  const liveIds = listReportDefinitions()
+    .map(({ id }) => id)
+    .sort()
+  const catalogHtml = readFileSync(
+    resolve(dist, 'docs/reports/index.html'),
+    'utf8',
+  )
+
+  assert.deepEqual([...reportIds].sort(), liveIds)
+
+  for (const id of liveIds) {
+    const relativePath = `docs/reports/${id}/index.html`
+    const html = readFileSync(resolve(dist, relativePath), 'utf8')
+    const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
+    const description = html.match(
+      /<meta name="description" content="([^"]+)"\s*\/?>/,
+    )?.[1]
+
+    assert.ok(title && title.length >= 55 && title.length <= 70, id)
+    assert.ok(
+      description && description.length >= 140 && description.length <= 160,
+      id,
+    )
+    assert.match(catalogHtml, new RegExp(`href="/docs/reports/${id}"`))
+    assert.match(
+      html,
+      new RegExp(
+        `<link rel="canonical" href="https://seoskills\\.dev/docs/reports/${id}"\\s*/?>`,
+      ),
+    )
+    assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)
+    assert.match(html, /What this report answers/)
+    assert.match(html, /Evidence this report uses/)
+    assert.match(html, /Run the report from the CLI/)
+    assert.match(html, /How to read the result/)
+    assert.match(html, /Limits to keep with the result/)
+    assert.match(html, /What to do next/)
+    assert.match(html, new RegExp(`seo reports describe ${id}`))
+    assert.match(html, new RegExp(`seo reports run ${id}`))
+    assert.doesNotMatch(html, /noindex/)
+
+    const commandStart = `seo reports run ${id} --params &#39;`
+    const paramsStart = html.indexOf(commandStart)
+    const paramsEnd = html.indexOf('&#39; --json', paramsStart)
+    assert.ok(paramsStart >= 0 && paramsEnd > paramsStart)
+    const encodedParams = html.slice(
+      paramsStart + commandStart.length,
+      paramsEnd,
+    )
+    const params = JSON.parse(
+      encodedParams
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#x22;', '"')
+        .replaceAll('&#x27;', "'")
+        .replaceAll('&#x26;', '&')
+        .replaceAll('&#x3C;', '<')
+        .replaceAll('&#x3E;', '>'),
+    )
+    const definition = getReportDefinition(id)
+    assert.ok(definition)
+    assert.equal(definition.inputSchema.safeParse(params).success, true, id)
+  }
+
+  for (const [alias, target] of Object.entries(legacyReportAliases)) {
+    const html = readFileSync(
+      resolve(dist, 'docs/reports', alias, 'index.html'),
+      'utf8',
+    )
+    const destination = target.startsWith('/')
+      ? target
+      : `/docs/reports/${target}`
+    assert.match(html, new RegExp(destination))
+  }
+})
+
+test('published report count stays tied to the implementation', async () => {
+  const { listReportDefinitions } = await import(
+    resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
+  )
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const homeText = home.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
 
-  assert.equal(listRules().length, 50)
   assert.equal(listReportDefinitions().length, 51)
-  assert.equal(REPORT_CATEGORIES.length, 9)
-  assert.equal(skillCount, 57)
   assert.match(
     homeText,
-    new RegExp(`${listReportDefinitions().length} discoverable reports`),
+    new RegExp(`${listReportDefinitions().length} reports`),
   )
-  assert.match(homeText, new RegExp(`${listRules().length} crawler rules`))
-  assert.match(homeText, new RegExp(`${skillCount} agent skills`))
 })
 
 test('well-known discovery publishes canonical skills with verified digests', () => {
@@ -227,7 +306,8 @@ test('site copy has no stale hosted product, email contact, or dash punctuation'
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = resolve(directory, entry.name)
       if (entry.isDirectory()) pending.push(path)
-      else if (/\.(astro|css|ts)$/.test(entry.name)) sourceFiles.push(path)
+      else if (/\.(astro|css|md|mdx|ts)$/.test(entry.name))
+        sourceFiles.push(path)
     }
   }
 
@@ -237,27 +317,36 @@ test('site copy has no stale hosted product, email contact, or dash punctuation'
   assert.doesNotMatch(copy, /[\u2013\u2014]/u)
 })
 
-test('site keeps square controls and copyable install choices', () => {
+test('site uses the shared visual system and copyable install choices', () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
-  const css = readFileSync(resolve(appRoot, 'src/styles/global.css'), 'utf8')
+  const css = readFileSync(resolve(appRoot, 'src/styles/globals.css'), 'utf8')
 
   assert.match(home, /data-install-picker/)
-  assert.match(home, /data-copy-button/)
+  assert.match(home, /data-copy-install-command/)
   assert.match(home, /npx skills add iannuttall\/seo/)
   assert.match(home, /npx seo start/)
   assert.match(home, /npm i -g seo/)
   assert.match(home, /seo mcp install/)
-  assert.doesNotMatch(css, /border-radius/)
+  assert.match(css, /font-family: "InterVariable"/)
+  assert.match(css, /font-family: "JetBrains Mono"/)
+  assert.match(css, /--frame-max: 48rem/)
+  assert.match(css, /prefers-color-scheme: dark/)
 })
 
-test('bundled display font ships with its open font license', () => {
-  const font = resolve(appRoot, 'public/fonts/departure-mono.woff2')
-  const license = readFileSync(
-    resolve(appRoot, 'public/fonts/LICENSE-departure-mono.txt'),
-    'utf8',
-  )
+test('bundled fonts ship with their open font licenses', () => {
+  const fonts = [
+    ['InterVF.woff2', 'LICENSE-inter.txt'],
+    ['JetBrainsMonoVF.woff2', 'LICENSE-jetbrains-mono.txt'],
+  ]
 
-  assert.ok(statSync(font).size > 20_000)
-  assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/)
-  assert.match(license, /Copyright 2022.+2024 Helena Zhang/)
+  for (const [fontName, licenseName] of fonts) {
+    const font = resolve(appRoot, 'public/fonts', fontName)
+    const license = readFileSync(
+      resolve(appRoot, 'public/fonts', licenseName),
+      'utf8',
+    )
+
+    assert.ok(statSync(font).size > 20_000)
+    assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/)
+  }
 })

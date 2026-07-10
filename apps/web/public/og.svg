@@ -1,15 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <title>SEO Skills CLI, technical SEO skills for AI agents</title>
-  <rect width="1200" height="630" fill="#ffffff"/>
-  <rect x="40.5" y="40.5" width="1119" height="549" fill="none" stroke="#e4e4e7"/>
-  <g transform="translate(84 84) scale(0.5179)">
-    <rect width="112" height="112" fill="#050A2E"/>
-    <path d="M10 10h92v24H48v10h54v58H10V78h54V68H10z" fill="#7E6AF8"/>
+  <title>SEO Skills CLI, local SEO tools for agents</title>
+  <rect width="1200" height="630" fill="#fafafa"/>
+  <rect x="48.5" y="48.5" width="1103" height="533" rx="20" fill="#ffffff" stroke="#e4e4e7"/>
+  <g transform="translate(88 88)">
+    <circle cx="30" cy="30" r="27" fill="none" stroke="#0891b2" stroke-width="6"/>
+    <circle cx="30" cy="30" r="7" fill="#0891b2"/>
+    <path d="M30 0v12M30 48v12M0 30h12M48 30h12" stroke="#0891b2" stroke-width="6"/>
   </g>
-  <text x="164" y="123" fill="#18181b" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="26" letter-spacing="1">SEO_SKILLS</text>
-  <text x="84" y="306" fill="#18181b" font-family="Instrument Serif, Georgia, serif" font-size="92" letter-spacing="-1">Technical SEO skills</text>
-  <text x="84" y="386" fill="#5646d9" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="60">FOR AI AGENTS.</text>
-  <text x="84" y="461" fill="#5646d9" font-family="JetBrains Mono, Menlo, monospace" font-size="22">$</text>
-  <text x="106" y="461" fill="#18181b" font-family="JetBrains Mono, Menlo, monospace" font-size="22">npx skills add iannuttall/seo</text>
-  <text x="84" y="530" fill="#6b6b76" font-family="JetBrains Mono, Menlo, monospace" font-size="16">Open source / Apache-2.0 / Working data stays local</text>
+  <text x="172" y="128" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="650">SEO Skills CLI</text>
+  <text x="88" y="286" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">Find and fix the SEO work</text>
+  <text x="88" y="364" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">that will move the needle.</text>
+  <text x="88" y="446" fill="#52525b" font-family="Inter, Arial, sans-serif" font-size="27">Crawl evidence, Search Console and GA4. Local by default.</text>
+  <rect x="88" y="492" width="481" height="62" rx="10" fill="#f4f4f5"/>
+  <text x="112" y="532" fill="#0891b2" font-family="JetBrains Mono, Menlo, monospace" font-size="22">$</text>
+  <text x="140" y="532" fill="#27272a" font-family="JetBrains Mono, Menlo, monospace" font-size="22">npm i -g seo</text>
 </svg>

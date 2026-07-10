@@ -1,0 +1,30 @@
+---
+type Props = {
+  title: string
+  description?: string
+  href?: string
+  class?: string
+}
+
+const { title, description, href, class: className } = Astro.props
+const Tag = href ? 'a' : 'div'
+---
+
+<Tag
+  href={href}
+  class:list={[
+    'flex h-full flex-col gap-2 rounded-lg bg-muted p-6 no-underline',
+    href && 'transition-colors hover:bg-secondary-hover',
+    className,
+  ]}
+>
+  <div class="flex items-start justify-between gap-3">
+    <h2 class="text-base font-medium text-foreground">{title}</h2>
+  </div>
+  {
+    description ? (
+      <p class="text-sm/6 text-foreground-muted">{description}</p>
+    ) : null
+  }
+  <slot />
+</Tag>

@@ -1,19 +1,26 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
 ---
 
-<SiteLayout
+<BaseLayout
   title="Page not found"
   description="The requested seoskills.dev page could not be found."
   canonicalPath="/404"
   noindex
 >
-  <section class="shell not-found prose">
-    <h1>404: That page is not here.</h1>
+  <section>
+    <PageHeader
+      title="404: That page is not here."
+      description="The requested page could not be found."
+      bordered={false}
+    />
+    <div class="docs-prose">
     <p>
       Try the <a href="/docs">documentation</a>, go back to the
       <a href="/">home page</a>, or report a broken link through
       <a href="https://github.com/iannuttall/seo/issues">GitHub Issues</a>.
     </p>
+    </div>
   </section>
-</SiteLayout>
+</BaseLayout>

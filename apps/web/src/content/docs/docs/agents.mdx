@@ -1,119 +1,115 @@
 ---
-title: Agents and MCP
-description: Give an agent a compact local tool surface, deterministic output, and focused instructions without loading every report schema into context.
+title: Give an AI agent reliable SEO evidence
+description: Give an AI agent structured SEO reports, focused follow-ups, local MCP tools, and skills without filling its context with raw crawl or provider data.
 ---
 
-import { productFacts } from '@/lib/facts'
+An agent is useful here when it can choose a narrow report, inspect the data
+status, and explain the evidence in plain language. It is much less useful when
+it receives thousands of crawl rows and starts inventing priorities.
 
-## Use JSON from the CLI
+## Start the agent with a specific job
+
+Good requests name the site and the decision you need to make:
+
+- "Find page-one queries with weak CTR evidence and show the pages to inspect."
+- "Compare the latest two crawls and list high-severity regressions introduced in the new one."
+- "Audit this pricing page before I change its canonical and internal links."
+- "Check whether this traffic decline is present in a complete Search Console window."
+
+"Do all my SEO" gives the agent no useful stopping point. Start with
+`seo report` when the request really is broad, then let its recommendations
+narrow the next call.
+
+## Give the agent access that fits the workflow
+
+| Path | Best for |
+| --- | --- |
+| CLI with `--json` | Scripts, CI, and agents that can run shell commands |
+| Local stdio MCP | Interactive agents that select and call tools |
+| Focused skills | Teaching an agent when a report helps and how to act on it |
+
+All three paths call the same report logic. The [MCP setup guide](/docs/mcp)
+connects Codex, Claude Code, Claude Desktop, and Cursor. The
+[skills guide](/docs/skills) explains global and project installation. For the
+best agent results, install the runtime or MCP tools and the skills: one runs
+the reports, the other teaches the agent how to use them.
+
+## Use explicit JSON from the CLI
 
 ```sh
 seo report --project example --json
 seo crawl https://example.com --json --output crawl.json
-```
-
-JSON mode never prompts. Agents should pass explicit selectors, inspect data
-status and caveats, and reuse saved crawl IDs for follow-up questions.
-
-## Install the local MCP server
-
-Humans can choose a detected client interactively:
-
-```sh
-seo mcp install
-```
-
-Agents and setup scripts choose the destination explicitly:
-
-```sh
-seo mcp install --claude-desktop --json
-seo mcp install --claude-code --json
-seo mcp install --codex --json
-seo mcp install --cursor --json
-seo mcp install --all --json
-```
-
-The installer preserves unrelated settings and refuses to replace an
-unmanaged server named `seo`.
-
-## Use native client commands
-
-### Codex
-
-```sh
-codex mcp add seo -- npx -y seo mcp serve
-codex mcp get seo
-```
-
-One setup covers the Codex CLI, desktop app, and IDE extension.
-
-### Claude Code
-
-```sh
-claude mcp add --scope user seo -- npx -y seo mcp serve
-claude mcp get seo
-```
-
-### Cursor and Claude Desktop
-
-```sh
-seo mcp install --cursor
-seo mcp install --claude-desktop
-```
-
-Restart desktop clients after installation. Cursor shows the server in its
-MCP settings. Claude Desktop and Claude Code use separate config files.
-
-Your client normally starts the server. Run it directly for testing:
-
-```sh
-seo mcp serve
-seo mcp serve --test
-```
-
-## Three tools cover the report suite
-
-1. Call `seo_list_reports` to find the smallest relevant report.
-2. Call `seo_describe_report` to get that report's input schema.
-3. Call `seo_run_report` with the accepted parameters.
-
-The compact surface keeps dozens of schemas out of the initial context.
-Report results still return structured content and a readable display layer.
-
-## Use the same catalog without MCP
-
-```sh
-seo reports list --category opportunities --json
 seo reports describe quick-wins --json
 seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
 ```
 
-These commands read the same registry and run the same handlers as MCP. Use
-`describe` first instead of guessing parameter names, then keep the result in
-JSON mode for scripts and agent context.
+JSON mode never prompts. An unattended run must pass its project, property,
+URL, output path, and other required inputs explicitly.
 
-## Install focused skills
+Use `seo reports describe <id> --json` before constructing `params`. The schema
+is the current contract. A command copied from an old prompt is not.
 
-The npm package ships {productFacts.skills} skills:
+## Keep MCP discovery compact
 
-```sh
-seo skills list
-seo skills install --target agents
-seo skills install --target codex
-seo skills install --target claude
-seo skills install --target project
-```
+The local MCP server exposes three tools:
 
-Pass a skill name after `install` to copy one skill, or use `--dir` for a
-custom skills directory. Add `--json` in unattended setup.
+1. `seo_list_reports` returns compact report ids and descriptions.
+2. `seo_describe_report` returns the selected report's parameter schema.
+3. `seo_run_report` validates the parameters and runs the report.
 
-Agent tooling can discover the full catalog at
-`/.well-known/agent-skills/index.json`. Every entry points to the canonical
-skill instructions and includes a SHA-256 digest so clients can verify the
-downloaded file.
+An agent should list by category when it can, describe one report, then run it.
+This keeps dozens of unused schemas out of the first tool selection.
 
-## Reason from evidence
+For example, an agent investigating a single URL can discover `audit-page`,
+load that schema, and run it with the URL. It should not request a site crawl
+and a full property diagnosis as a warm-up.
 
-Check `dataStatus`, source completeness, row caps, warnings, and caveats
-before reaching a conclusion. Use structured errors instead of parsing error
-text when `structuredContent.error` is available.
+## Read status before recommendations
+
+Ask the agent to check these fields and concepts before it reaches a verdict:
+
+- the analysis date and source date windows;
+- complete, partial, capped, filtered, missing, and unavailable states;
+- warnings, skipped sections, failed subqueries, and retained row limits;
+- the observed page or provider evidence behind each finding;
+- whether the action is a rule, a heuristic, or a verification step.
+
+Search Console can omit anonymized queries. GA4 can process recent data later
+or withhold rows. A crawl can stop at its page cap. Those states are reasons to
+bound a conclusion, not reasons to fill the gap with a guess. The
+[Google data guide](/docs/google) covers the provider-specific limits.
+
+## Ask for a small follow-up
+
+The first result should identify the affected set. The next call should inspect
+that set rather than rerunning everything.
+
+A sensible sequence looks like this:
+
+1. Run `quick-wins` for the retained opportunity list.
+2. Pick one query and page using the evidence in the result.
+3. Run `audit-page` for current on-page and technical evidence.
+4. Check the live result and intended page purpose before proposing a change.
+5. Save the baseline needed to measure or verify that change.
+
+This is slower than a made-up answer and much faster than fixing the wrong
+page.
+
+## Treat agent output as analysis, not provider truth
+
+An agent can summarize a canonical conflict, index status snapshot, estimated
+title width, or traffic change. It cannot prove ranking causation, future
+clicks, index inclusion, or an AI citation unless the source returned that
+exact evidence.
+
+Keep the final answer traceable to URLs, queries, dates, rule IDs, and provider
+states. The [report accuracy guide](/docs/reports) explains the result contract,
+while [AI search evidence](/docs/ai-search) covers the claims those reports
+deliberately avoid.
+
+## Keep private inputs out of public prompts
+
+The SEO process and report files stay local, but the agent client may send tool
+results to its model provider. Review that client's data controls before
+sharing private URLs or analytics. Keep OAuth tokens, account identifiers, and
+raw client exports out of prompts and public issues.

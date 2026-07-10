@@ -1,0 +1,71 @@
+---
+import { reports } from '@/content/reports'
+import { categoryLabels, reportPath } from '@/content/reports/helpers'
+import type { ReportCategory } from '@/content/reports/types'
+
+const categoryOrder: readonly ReportCategory[] = [
+  'setup',
+  'diagnosis',
+  'opportunities',
+  'crawl',
+  'monitoring',
+  'reporting',
+  'experiments',
+  'ai-search',
+  'workflows',
+]
+
+const categoryIntroductions: Record<ReportCategory, string> = {
+  setup: 'Fix local setup and sign-in problems before you investigate a site.',
+  diagnosis: 'Find where a property changed and which evidence deserves a closer look.',
+  opportunities: 'Turn existing search visibility into bounded page, query, and link review queues.',
+  crawl: 'Inspect live technical evidence, then reuse one saved crawl for focused follow-ups.',
+  monitoring: 'Catch technical, redirect, and indexed-state changes without confusing missing evidence with a recovery.',
+  reporting: 'Explain page, property, and template evidence clearly enough for someone to act on it.',
+  experiments: 'Measure a recorded change with matched windows and visible confounders.',
+  'ai-search': 'Review observed search, referral, page, and performance evidence without inventing AI visibility scores.',
+  workflows: 'Combine focused reports into a small next-action sequence for an agent.',
+}
+---
+
+<div class="mt-10 space-y-14">
+  {
+    categoryOrder.map((category) => {
+      const categoryReports = reports.filter(
+        (report) => report.category === category,
+      )
+
+      return (
+        <section>
+          <header class="max-w-2xl">
+            <h2 class="text-2xl/8 font-medium text-foreground">
+              {categoryLabels[category]}
+            </h2>
+            <p class="mt-2 text-base/7 text-foreground-muted">
+              {categoryIntroductions[category]}
+            </p>
+          </header>
+
+          <div class="mt-6 grid gap-2 sm:grid-cols-2">
+            {categoryReports.map((report) => (
+              <a
+                href={reportPath(report.id)}
+                class="group flex min-h-40 flex-col rounded-lg bg-muted p-6 no-underline transition-colors hover:bg-secondary-hover"
+              >
+                <span class="block text-base font-medium text-foreground">
+                  {report.name}
+                </span>
+                <span class="mt-3 block text-sm/6 text-foreground-muted">
+                  {report.summary}
+                </span>
+                <span class="mt-auto pt-5 font-mono text-xs text-foreground-soft">
+                  {report.id}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    })
+  }
+</div>

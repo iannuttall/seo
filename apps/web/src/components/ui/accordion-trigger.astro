@@ -1,0 +1,26 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import ChevronDownIcon from "@/components/ui/chevron-down-icon.astro";
+import { cn } from "@/lib/utils";
+
+type AccordionTriggerProps = HTMLAttributes<"button">;
+
+const { class: className, ...props } = Astro.props as AccordionTriggerProps;
+---
+<h3 class="flex">
+    <button
+      data-accordion-trigger
+      aria-expanded="false"
+      class={cn(
+        'flex flex-1 items-center justify-between rounded-md border border-transparent py-5 text-base font-medium outline-none',
+        'transition-all',
+        'focus-visible:border-ring focus-visible:ring-ring/20 focus-visible:ring-[3px]',
+        '[&[aria-expanded=true]>svg]:rotate-180',
+        className
+      )}
+      {...props}
+    >
+      <slot />
+      <ChevronDownIcon class="size-3.5 shrink-0 text-foreground transition-transform duration-200" />
+    </button>
+  </h3>

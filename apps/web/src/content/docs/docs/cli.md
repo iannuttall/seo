@@ -1,23 +1,32 @@
 ---
-title: CLI guide
-description: Use the short report path for day-to-day work and explicit flags for scripts, CI, and deeper analysis.
+title: Use SEO Skills CLI for daily work and automation
+description: Choose the right SEO command, switch projects safely, save technical evidence, and produce deterministic JSON that agents and CI can inspect.
 ---
 
-## Everyday commands
+The CLI has a short path for normal work and a report registry for agents and
+scripts. You do not need to learn the whole command tree before getting a useful
+answer.
 
-```sh
-seo start
-seo report
-seo refresh-priorities
-seo quick-wins
-seo second-page
-seo technical-watch
-```
+## Get the answer without running the whole site
 
-`seo report` is the main report. It reads the evidence available for the
-selected project, explains gaps, and recommends focused follow-ups.
+| Job | Start with |
+| --- | --- |
+| Broad review with recommended next steps | `seo report` |
+| Rank the next search and technical actions | `seo refresh-priorities` |
+| Find page-one rankings with weak CTR evidence | `seo quick-wins` |
+| Review rankings averaging positions 10 to 20 | `seo second-page` |
+| Check crawl and index monitoring evidence | `seo technical-watch` |
+| Audit one live URL | `seo audit-page --url <url>` |
+| Build a technical site baseline | `seo crawl <url> --save` |
 
-## Project profiles
+Run `seo report` first when the request is broad. Pick a focused command when
+the question already names the job. A one-page audit takes you straight to the
+live evidence when one landing page is all you need to inspect.
+
+The [report catalog](/docs/reports) explains what each report checks and when
+its evidence is useful.
+
+## Switch sites without copying property IDs
 
 ```sh
 seo projects list
@@ -25,10 +34,23 @@ seo report --project example
 seo crawl --project example --max-pages 500
 ```
 
-`--project` is the public selector for saved profiles. Commands that accept a
-site or URL can still run without one.
+`--project` is the public selector for saved profiles. A profile can hold the
+Search Console property, default crawl URL, optional GA4 property, brand terms,
+and reporting preferences.
 
-## Search opportunities
+Commands can still run without a profile when you provide their required site
+or URL:
+
+```sh
+seo report --site sc-domain:example.com
+seo crawl https://example.com
+seo redirect-trace --url https://example.com/old-page
+```
+
+Use `seo start` to create the first profile. The [setup guide](/docs/getting-started)
+covers multiple sites and local storage.
+
+## Find search opportunities from first-party data
 
 ```sh
 seo quick-wins --project example
@@ -36,15 +58,35 @@ seo second-page --project example
 seo decaying --project example
 seo cannibal --project example
 seo ctr-underperformers --project example
-seo internal-links --project example --url https://example.com/page
+seo page-opportunities --project example --url https://example.com/pricing
 ```
 
-These reports use Search Console data. Saved brand terms let opportunity
-reports exclude branded queries where that distinction matters.
+These reports use retained Search Console rows. Saved brand terms let reports
+exclude branded queries where that comparison matters. Read the date window,
+row limits, and omitted-query caveats before you call a list complete.
 
-## JSON and CI
+The [Google data guide](/docs/google) explains why Search Console chart totals
+and exported query rows can differ.
 
-JSON mode never prompts. Pass the project, site, URL, or property explicitly.
+## Save technical evidence before you change the site
+
+```sh
+seo crawl --project example --save
+seo crawl-reports --project example
+seo crawl-reports --project example --compare latest --against previous
+```
+
+A saved crawl gives you a baseline for deployment checks, technical follow-ups,
+and agent questions. Reuse it when the page evidence is still current. Crawl
+again after a release or when the stored result no longer represents the live
+site.
+
+The [crawler guide](/docs/crawler) covers limits, JavaScript rendering, robots
+handling, exports, and severity gates.
+
+## Use JSON when nobody is watching the terminal
+
+JSON mode never prompts. Pass every selector a command needs:
 
 ```sh
 seo report --project example --json
@@ -52,21 +94,49 @@ seo crawl https://example.com --json --output crawl.json
 seo crawl https://example.com --fail-on high --json
 ```
 
-Automation can inspect structured evidence, findings, skipped sections,
-limits, and provider errors without parsing terminal prose.
+Structured output keeps observed evidence, derived findings, skipped sections,
+thresholds, source limits, and errors in fields a program can inspect. Do not
+scrape the human table output.
 
-## Discover every report
+`--fail-on high` returns a non-zero exit when the crawl contains findings at
+that severity or above. The JSON still contains the evidence that caused the
+gate to fail, which makes the command useful in CI logs.
+
+## Keep scripts current as report inputs change
 
 ```sh
-seo reports list --json
-seo reports describe audit-page --json
-seo reports run audit-page --params '{"url":"https://example.com"}' --json
+seo reports list --category opportunities --json
+seo reports describe quick-wins --json
+seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
 ```
 
-The generic report runner is the low-level path for agents and scripts. It
-shares ids, schemas, and implementations with the compact MCP catalog.
+`list` gives you compact report ids and descriptions. `describe` returns the
+current input schema. `run` executes that registered report. The same registry
+backs the CLI and [local MCP tools](/docs/mcp), so there is one implementation
+of the analysis.
 
-## Find the rest
+## Refresh only when you need fresh provider data
 
-Run `seo help` for the curated path, `seo help all` for every command, or
-append `--help` to a command for its arguments.
+Many provider requests use a local cache to avoid repeated API calls. Add
+`--refresh` when a command supports it and you need to bypass that cache:
+
+```sh
+seo report --project example --refresh
+seo crawl --project example --refresh --save
+```
+
+Fresh does not mean final. Recent Search Console rows and GA4 processing can
+still change at the provider.
+
+## Get focused help in the terminal
+
+```sh
+seo help
+seo report --help
+seo crawl --help
+seo help all
+```
+
+Root help keeps the common path short. `seo help all` lists the deeper command
+tree when you need raw provider queries, experiments, exports, monitoring, or
+local data controls.

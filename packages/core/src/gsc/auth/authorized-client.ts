@@ -4,7 +4,11 @@ import { getSeoCliPaths } from '../../paths.js'
 import { deleteTokens, readTokens, writeTokens } from '../../storage/config.js'
 import { withFileLock } from '../../storage/lock.js'
 import type { StoredTokens } from '../../types.js'
-import { getAuthModeStatus, getClientConfig } from './client-config.js'
+import {
+  getAuthModeStatus,
+  getClientConfig,
+  missingOAuthClientMessage,
+} from './client-config.js'
 
 export async function createAuthorizedClient(): Promise<{
   client: OAuth2Client
@@ -18,11 +22,11 @@ export async function createAuthorizedClient(): Promise<{
     )
   }
 
-  const clientConfig = getClientConfig()
+  const clientConfig = getClientConfig(stored.client_source)
   if (!clientConfig) {
     throw new SeoError(
       'AUTH_CONFIG_REQUIRED',
-      'OAuth client config missing. Re-run `seo auth setup-client`.',
+      missingOAuthClientMessage(stored.client_source),
     )
   }
 
@@ -67,11 +71,11 @@ export async function refreshAuthToken(
       )
     }
 
-    const clientConfig = getClientConfig()
+    const clientConfig = getClientConfig(current.client_source)
     if (!clientConfig) {
       throw new SeoError(
         'AUTH_CONFIG_REQUIRED',
-        'OAuth client config missing. Re-run `seo auth setup-client`.',
+        missingOAuthClientMessage(current.client_source),
       )
     }
 
@@ -115,9 +119,10 @@ export async function authStatus(): Promise<{
   byoConfigured: boolean
 }> {
   const status = getAuthModeStatus()
+  const tokens = await readTokens()
   return {
-    tokens: await readTokens(),
-    configured: Boolean(getClientConfig()),
+    tokens,
+    configured: Boolean(getClientConfig(tokens?.client_source)),
     sharedConfigured: status.sharedConfigured,
     byoConfigured: status.byoConfigured,
   }

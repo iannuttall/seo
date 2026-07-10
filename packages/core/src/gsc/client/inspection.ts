@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
-import { getClientConfig } from '../auth/client-config.js'
+import {
+  getClientConfig,
+  missingOAuthClientMessage,
+} from '../auth/client-config.js'
 import { assertUrlMatchesGscProperty } from '../property-url.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import {
@@ -69,11 +72,11 @@ export async function inspectUrl(
     input.inspectionUrl,
   )
   const { client, tokens } = await getAuthorized()
-  const clientConfig = getClientConfig()
+  const clientConfig = getClientConfig(tokens.client_source)
   if (!clientConfig) {
     throw new SeoError(
       'AUTH_CONFIG_REQUIRED',
-      'OAuth client config missing. Re-run `seo auth setup-client`.',
+      missingOAuthClientMessage(tokens.client_source),
     )
   }
   const reservation = reserveUrlInspectionQuota({

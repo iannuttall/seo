@@ -143,12 +143,14 @@ function fixturePage(report: ReturnType<typeof fixtureReport>, index: number) {
   return page
 }
 
-test('aiReadiness returns scored checks, bot access, and actions', () => {
+test('aiReadiness returns evidence without an aggregate verdict', () => {
   const report = aiReadiness(fixtureReport())
 
   assert.equal(report.url, 'https://example.com/')
   assert.equal(report.botAccess.length, 2)
-  assert.ok(report.score > 0)
+  assert.equal(report.assessment, 'evidence-only')
+  assert.equal('score' in report, false)
+  assert.equal('grade' in report, false)
   assert.ok(report.topActions.some((action) => action.id === 'robots-ai-bots'))
   assert.ok(
     report.checks.some((check) => check.plainEnglish.includes('llms.txt')),
@@ -235,7 +237,7 @@ test('llms audit and generator use crawl inventory', () => {
   assert.equal(generated.includedUrls, 2)
 })
 
-test('llms.txt does not change the AI readiness score', () => {
+test('llms.txt remains an informational AI-search observation', () => {
   const missing = fixtureReport()
   const present = fixtureReport()
   if (!present.ai?.llmsTxt) throw new Error('Expected llms.txt fixture data.')
@@ -246,16 +248,18 @@ test('llms.txt does not change the AI readiness score', () => {
   const presentReadiness = aiReadiness(present)
   const check = missingReadiness.checks.find((item) => item.id === 'llms-txt')
 
-  assert.equal(missingReadiness.score, presentReadiness.score)
+  assert.equal('score' in missingReadiness, false)
+  assert.equal('score' in presentReadiness, false)
   assert.equal(check?.status, 'info')
-  assert.equal(check?.maxScore, 0)
+  assert.equal(check && 'score' in check, false)
+  assert.equal(check && 'maxScore' in check, false)
   assert.equal(
     missingReadiness.topActions.some((item) => item.id === 'llms-txt'),
     false,
   )
 })
 
-test('paragraph shape does not change the AI readiness score', () => {
+test('paragraph shape remains an informational AI-search observation', () => {
   const observed = fixtureReport()
   const absent = fixtureReport()
   for (const page of absent.pages) {
@@ -268,9 +272,11 @@ test('paragraph shape does not change the AI readiness score', () => {
     (item) => item.id === 'answerable-content',
   )
 
-  assert.equal(observedReadiness.score, absentReadiness.score)
+  assert.equal('score' in observedReadiness, false)
+  assert.equal('score' in absentReadiness, false)
   assert.equal(check?.status, 'info')
-  assert.equal(check?.maxScore, 0)
+  assert.equal(check && 'score' in check, false)
+  assert.equal(check && 'maxScore' in check, false)
   assert.match(check?.plainEnglish ?? '', /does not establish/i)
   assert.equal(
     absentReadiness.topActions.some((item) => item.id === 'answerable-content'),

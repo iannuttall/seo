@@ -199,7 +199,7 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | MCP server | Yes | Yes |
 | Technical SEO crawl | Yes | Yes |
 | AI Search eligibility evidence | No | Yes |
-| AI readiness report | No | Yes |
+| AI-search evidence report | No | Yes |
 | llms.txt generator | No | Yes |
 | Entity readiness | No | Yes |
 | OKF/site knowledge export | No | Yes |

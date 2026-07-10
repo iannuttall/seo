@@ -115,7 +115,7 @@ seo seo-to-ai-query --project keep
 seo ai-referrals --project keep
 ```
 
-`ai-readiness` scores crawl and technical signals from a saved crawl. It reports paragraph shape and llms.txt as optional information and does not include either in the score.
+`ai-readiness` returns crawl and technical evidence from a saved crawl without inventing an aggregate score. It reports paragraph shape, structured data, entity signals, agent resource files, and llms.txt as contextual observations rather than ranking or citation factors.
 
 `entity-readiness` focuses on whether agents can connect the site to the right brand, people, products, and official profiles.
 

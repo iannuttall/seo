@@ -151,7 +151,7 @@ const allHelpSections: HelpSection[] = [
     commands: [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO issues'],
-      ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
+      ['seo ai-readiness', 'Review AI-search technical evidence'],
       ['seo llms audit', 'Inspect optional llms.txt presence'],
       ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],
       ['seo okf export', 'Export a saved crawl as an OKF knowledge bundle'],

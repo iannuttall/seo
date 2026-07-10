@@ -75,6 +75,15 @@ function fixtureReport() {
         ],
         schemaTypes: ['Organization', 'WebSite'],
         schemaSameAs: ['https://www.linkedin.com/company/example'],
+        schemaSameAsEvidence: [
+          {
+            url: 'https://www.linkedin.com/company/example',
+            block: 0,
+            path: '$.sameAs',
+            subjectId: 'https://example.com/#organization',
+            subjectTypes: ['Organization'],
+          },
+        ],
         socialProfileLinks: ['https://www.linkedin.com/company/example'],
         author: 'Example Team',
         hasDate: true,
@@ -204,6 +213,58 @@ test('entityReadiness summarizes schema and official profile signals', () => {
     'https://www.linkedin.com/company/example',
   ])
   assert.ok(report.score > 0)
+  assert.equal(report.dataStatus, 'complete')
+})
+
+test('entityReadiness scopes partial crawls and unclassified social links', () => {
+  const crawl = fixtureReport()
+  crawl.status = 'partial'
+  const firstPage = crawl.pages[0]
+  assert.ok(firstPage)
+  crawl.pages = [
+    {
+      ...firstPage,
+      schemaSameAs: [],
+      schemaSameAsEvidence: [],
+      socialProfileLinks: ['https://youtube.com/watch?v=not-a-profile'],
+    },
+  ]
+
+  const report = entityReadiness(crawl)
+  const sameAs = report.checks.find((check) => check.id === 'same-as')
+
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(report.evaluatedPages, 1)
+  assert.match(report.headline, /not the whole site/i)
+  assert.equal(report.entities.sameAs.length, 0)
+  assert.equal(sameAs?.status, 'fail')
+  assert.match(sameAs?.plainEnglish ?? '', /not enough to prove/i)
+  assert.match(report.caveats.join(' '), /not proof/i)
+})
+
+test('entityReadiness does not use an author profile as site identity', () => {
+  const crawl = fixtureReport()
+  const page = crawl.pages[0]
+  assert.ok(page)
+  page.schemaSameAs = ['https://example.net/jane']
+  page.schemaSameAsEvidence = [
+    {
+      url: 'https://example.net/jane',
+      block: 0,
+      path: '$.author.sameAs',
+      subjectId: 'https://example.com/#jane',
+      subjectTypes: ['Person'],
+    },
+  ]
+
+  const report = entityReadiness(crawl)
+  const check = report.checks.find((item) => item.id === 'same-as')
+
+  assert.deepEqual(report.entities.sameAsByType, {
+    Person: ['https://example.net/jane'],
+  })
+  assert.equal(check?.status, 'fail')
+  assert.match(check?.plainEnglish ?? '', /Person sameAs links/)
 })
 
 test('OKF bundle builds concept files and validates frontmatter', () => {

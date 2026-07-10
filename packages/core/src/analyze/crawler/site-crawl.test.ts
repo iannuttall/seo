@@ -78,7 +78,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     }
     if (req.url === '/') {
       res.end(
-        '<title>Home</title><script type="application/ld+json">{"@type":"FAQPage"}</script><h1>Home</h1><ul><li>One</li></ul><table><tr><td>One</td></tr></table><a href="/a">About A</a><a href="https://example.org/ref">External ref</a>',
+        '<title>Home</title><script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage"}</script><h1>Home</h1><ul><li>One</li></ul><table><tr><td>One</td></tr></table><a href="/a">About A</a><a href="https://example.org/ref">External ref</a>',
       )
       return
     }
@@ -97,6 +97,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
       maxPages: 10,
       concurrency: 1,
       checkExternal: false,
+      refresh: true,
     })
 
     assert.equal(report.summary.totalPages, 2)

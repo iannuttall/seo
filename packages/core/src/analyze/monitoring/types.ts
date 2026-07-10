@@ -90,10 +90,32 @@ export type CrawlPageSnapshot = {
   externalAnchorSamples?: Array<{ href: string; text: string }>
   externalLinkChecks?: Array<{ url: string; status?: number; error?: string }>
   schemaTypes?: string[]
+  structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
   schemaSameAs?: string[]
+  schemaSameAsEvidence?: Array<{
+    url: string
+    block: number
+    path: string
+    subjectId?: string
+    subjectTypes: string[]
+  }>
+  invalidSchemaSameAs?: Array<{
+    block: number
+    path: string
+    value: string
+  }>
   socialProfileLinks?: string[]
   invalidJsonLdCount?: number
   invalidJsonLdSamples?: Array<{ snippet: string; error: string }>
+  unrecognizedJsonLdTypes?: Array<{
+    block: number
+    path: string
+    value: string
+    reason:
+      | 'missing-schema-context'
+      | 'unresolved-context'
+      | 'unsupported-vocabulary'
+  }>
   openGraphTitle?: string
   openGraphDescription?: string
   openGraphImage?: string

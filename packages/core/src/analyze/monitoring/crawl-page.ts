@@ -94,32 +94,6 @@ function anchorSamples(
   return samples
 }
 
-function collectSchemaSameAs(value: unknown): string[] {
-  const urls = new Set<string>()
-  const visit = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      for (const item of node) visit(item)
-      return
-    }
-    if (!node || typeof node !== 'object') return
-    const record = node as Record<string, unknown>
-    const sameAs = record.sameAs
-    const values = Array.isArray(sameAs) ? sameAs : [sameAs]
-    for (const item of values) {
-      if (typeof item !== 'string') continue
-      try {
-        const url = new URL(item)
-        if (['http:', 'https:'].includes(url.protocol)) urls.add(url.toString())
-      } catch {
-        // Ignore malformed sameAs values; invalid JSON-LD is reported elsewhere.
-      }
-    }
-    for (const item of Object.values(record)) visit(item)
-  }
-  visit(value)
-  return [...urls].slice(0, 50)
-}
-
 function socialProfileLinks(
   links: Array<{ href: string; internal: boolean }>,
 ): string[] {
@@ -431,10 +405,20 @@ export async function crawlOne(
       internalAnchorSamples: anchorSamples(extracted.links, true),
       externalAnchorSamples: anchorSamples(extracted.links, false),
       schemaTypes: extracted.schemaTypes,
-      schemaSameAs: collectSchemaSameAs(extracted.jsonLd),
+      structuredDataFormats: extracted.structuredDataFormats ?? [],
+      schemaSameAs: [
+        ...new Set(
+          (extracted.schemaSameAsEvidence ?? []).map(
+            (evidence) => evidence.url,
+          ),
+        ),
+      ].slice(0, 50),
+      schemaSameAsEvidence: (extracted.schemaSameAsEvidence ?? []).slice(0, 50),
+      invalidSchemaSameAs: (extracted.invalidSchemaSameAs ?? []).slice(0, 25),
       socialProfileLinks: socialProfileLinks(extracted.links),
       invalidJsonLdCount: extracted.invalidJsonLdCount,
       invalidJsonLdSamples: extracted.invalidJsonLdSamples,
+      unrecognizedJsonLdTypes: extracted.unrecognizedJsonLdTypes ?? [],
       openGraphTitle: extracted.openGraph['og:title'],
       openGraphDescription: extracted.openGraph['og:description'],
       openGraphImage: extracted.openGraph['og:image'],
@@ -443,7 +427,7 @@ export async function crawlOne(
       hasDate: extracted.hasDate,
       geo: {
         semanticHtml: extracted.semanticHtml,
-        structuredData: extracted.schemaTypes.length > 0,
+        structuredData: (extracted.structuredDataFormats?.length ?? 0) > 0,
         hasAuthor: extracted.hasAuthor,
         hasDate: extracted.hasDate,
         questionHeadings: extracted.questionHeadings,

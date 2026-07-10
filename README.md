@@ -11,6 +11,8 @@
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
+  <a href="PRIVACY.md">Privacy</a>
+  ·
   <a href="LICENSE">License</a>
   ·
   <a href="AGENTS.md">Agent notes</a>
@@ -200,6 +202,8 @@ Power users can bring their own Google OAuth client. See
 - [Crawler](docs/crawler.md)
 - [MCP and agents](docs/mcp.md)
 - [AI-search evidence](docs/geo.md)
+- [Privacy policy](PRIVACY.md)
+- [Terms of use](TERMS.md)
 
 ## Develop locally
 

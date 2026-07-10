@@ -35,6 +35,15 @@ test('the CLI bundle is executable and skills ship in the package', async () => 
   }
 })
 
+test('the public package includes its privacy policy and terms', async () => {
+  await Promise.all([
+    readFile('PRIVACY.md', 'utf8'),
+    readFile('TERMS.md', 'utf8'),
+  ])
+  assert.ok(packageJson.files.includes('PRIVACY.md'))
+  assert.ok(packageJson.files.includes('TERMS.md'))
+})
+
 test('root runtime dependencies cover private workspace dependencies', async () => {
   const workspaceFiles = [
     'packages/core/package.json',

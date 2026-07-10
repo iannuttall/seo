@@ -2,6 +2,7 @@ import { diagnoseProperty } from '../diagnose-property.js'
 import { defaultDateRange } from '../shared.js'
 import {
   fetchLandingPageValues,
+  landingPageRankingPolicy,
   landingValueForUrl,
 } from './analytics-value.js'
 import { groupPriorityQueue } from './priority-grouping.js'
@@ -26,7 +27,10 @@ function templateCount(input: {
   return template?.urlCount ?? template?.count
 }
 
-function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
+function priorityFromDraft(
+  draft: QueueDraft,
+  analyticsCanRank: boolean,
+): PriorityQueueItem {
   const breakdown = scorePriority({
     source: draft.source,
     impact: draft.impact,
@@ -34,7 +38,7 @@ function priorityFromDraft(draft: QueueDraft): PriorityQueueItem {
     effort: draft.effort,
     verification: draft.verification,
     templateCount: draft.template?.count,
-    analyticsSessions: draft.analytics?.sessions,
+    analyticsSessions: analyticsCanRank ? draft.analytics?.sessions : undefined,
   })
   return {
     ...draft,
@@ -106,7 +110,12 @@ export async function refreshPrioritiesWorkflow(input: {
     startDate: range.startDate,
     endDate: range.endDate,
   })
-  const warnings = analytics.warning ? [`GA4: ${analytics.warning}`] : []
+  const analyticsPolicy = landingPageRankingPolicy({
+    propertyId: input.ga4PropertyId,
+    source: analytics.source,
+    warning: analytics.warning,
+  })
+  const warnings = analyticsPolicy.warnings
   const drafts: QueueDraft[] = []
   const opportunityCandidateLimit = Math.max(input.limit ?? 25, 25)
 
@@ -256,7 +265,7 @@ export async function refreshPrioritiesWorkflow(input: {
 
   const ranked = groupPriorityQueue(
     drafts
-      .map(priorityFromDraft)
+      .map((draft) => priorityFromDraft(draft, analyticsPolicy.canRank))
       .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score),
   ).slice(0, input.limit ?? 25)
@@ -278,6 +287,15 @@ export async function refreshPrioritiesWorkflow(input: {
       action: item.action,
       confidence: item.confidence,
     })),
-    output: { queue: ranked, warnings, diagnosis },
+    output: {
+      queue: ranked,
+      warnings,
+      diagnosis,
+      analyticsSource: analytics.source,
+      analyticsRankingEligible: analyticsPolicy.canRank,
+      analyticsRankingApplied: ranked.some(
+        (item) => item.scoreBreakdown.analytics > 1,
+      ),
+    },
   })
 }

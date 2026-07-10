@@ -1,4 +1,8 @@
-import { ga4RowsToObjects, runGa4Report } from '../../ga4/client.js'
+import {
+  ga4ReportQualityWarnings,
+  ga4RowsToObjects,
+  runGa4Report,
+} from '../../ga4/client.js'
 
 export type LandingPageValue = {
   sessions: number
@@ -7,11 +11,25 @@ export type LandingPageValue = {
 }
 
 export type LandingPageValueSource = {
+  dataStatus?: 'complete' | 'partial'
   returnedRows: number
   availableRows?: number
   retainedRowLimit: number
   retainedRowLimitReached: boolean
+  qualityWarnings?: string[]
 }
+
+export type LandingPageValueResult = {
+  values: Map<string, LandingPageValue>
+  source?: LandingPageValueSource
+  warning?: string
+}
+
+type LandingPageValueDependencies = {
+  runGa4Report: typeof runGa4Report
+}
+
+const defaultDependencies: LandingPageValueDependencies = { runGa4Report }
 
 function normalizePath(value: string): string {
   if (!value || value === '(not set)') return ''
@@ -73,29 +91,67 @@ export function landingValueForUrl(
   return values.get(urlPath(url))
 }
 
-export async function fetchLandingPageValues(input: {
+export function landingPageValuesCanRank(
+  source: LandingPageValueSource | undefined,
+): boolean {
+  return source?.dataStatus === 'complete'
+}
+
+export function landingPageRankingPolicy(input: {
   propertyId?: string
-  startDate: string
-  endDate: string
-  limit?: number
-}): Promise<{
-  values: Map<string, LandingPageValue>
   source?: LandingPageValueSource
   warning?: string
-}> {
+}): { canRank: boolean; warnings: string[] } {
+  if (!input.propertyId) return { canRank: false, warnings: [] }
+  const warningSuffix =
+    'Observed landing-page values remain visible but do not affect priority scores.'
+  const warnings = [
+    ...(input.warning ? [`GA4: ${input.warning}`] : []),
+    ...(input.source?.retainedRowLimitReached
+      ? [`GA4: the retained-row limit was reached. ${warningSuffix}`]
+      : []),
+    ...(input.source?.qualityWarnings?.map(
+      (warning) => `${warning} ${warningSuffix}`,
+    ) ?? []),
+  ]
+  if (!input.source?.dataStatus && !input.warning) {
+    warnings.push(
+      `GA4: landing-page completeness was not reported. ${warningSuffix}`,
+    )
+  }
+  return {
+    canRank:
+      !input.warning &&
+      warnings.length === 0 &&
+      landingPageValuesCanRank(input.source),
+    warnings,
+  }
+}
+
+export async function fetchLandingPageValues(
+  input: {
+    propertyId?: string
+    startDate: string
+    endDate: string
+    limit?: number
+  },
+  dependencies: LandingPageValueDependencies = defaultDependencies,
+): Promise<LandingPageValueResult> {
   const retainedRowLimit = input.limit ?? 5000
   if (!input.propertyId) {
     return {
       values: new Map(),
       source: {
+        dataStatus: 'complete',
         returnedRows: 0,
         retainedRowLimit,
         retainedRowLimitReached: false,
+        qualityWarnings: [],
       },
     }
   }
   try {
-    const result = await runGa4Report(input.propertyId, {
+    const result = await dependencies.runGa4Report(input.propertyId, {
       dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
       dimensions: [{ name: 'landingPagePlusQueryString' }],
       metrics: [
@@ -109,24 +165,36 @@ export async function fetchLandingPageValues(input: {
     const rows = ga4RowsToObjects(result)
     const values = landingPageValuesFromRows(rows)
     const availableRows = result.rowCount
+    const retainedRowLimitReached =
+      (availableRows !== undefined && availableRows > rows.length) ||
+      rows.length >= retainedRowLimit
+    const qualityWarnings = ga4ReportQualityWarnings(
+      result,
+      'GA4 landing-page report',
+    )
     return {
       values,
       source: {
+        dataStatus:
+          retainedRowLimitReached || qualityWarnings.length
+            ? 'partial'
+            : 'complete',
         returnedRows: rows.length,
         ...(availableRows !== undefined ? { availableRows } : {}),
         retainedRowLimit,
-        retainedRowLimitReached:
-          (availableRows !== undefined && availableRows > rows.length) ||
-          rows.length >= retainedRowLimit,
+        retainedRowLimitReached,
+        qualityWarnings,
       },
     }
   } catch (error) {
     return {
       values: new Map(),
       source: {
+        dataStatus: 'partial',
         returnedRows: 0,
         retainedRowLimit,
         retainedRowLimitReached: false,
+        qualityWarnings: [],
       },
       warning: error instanceof Error ? error.message : String(error),
     }

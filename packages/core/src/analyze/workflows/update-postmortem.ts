@@ -14,6 +14,7 @@ type SplitSegment = ReturnType<typeof splitSegments>
 type PostmortemInsight = {
   dimension: 'page' | 'query' | 'device' | 'country'
   dataStatus: SplitSegment['dataStatus']
+  coverage: SplitSegment['coverage']
   unmatchedRows: number
   summary: string
   winner?: SegmentImpactItem
@@ -28,6 +29,9 @@ type TemplateMovement = {
   clickDelta: number
   impressionDelta: number
   movementShare: number
+  movementShareScope: 'returned-directional-page-click-movement'
+  confidenceScope: 'pattern-within-returned-matched-retained-page-segments'
+  segmentCoverage: SplitSegment['coverage']
   commonTerms: string[]
   sampleUrls: string[]
   summary: string
@@ -53,6 +57,14 @@ function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
+function coverageSummary(coverage: SplitSegment['coverage']): string {
+  return `${coverage.returnedRows} of ${coverage.eligibleRows} eligible matched retained rows returned under result limit ${coverage.resultLimit}${coverage.sourcePossiblyTruncated ? `; at least one source window reached the ${coverage.sourceRowLimit}-row source limit` : ''}`
+}
+
 function directionLabel(item: SegmentImpactItem): string {
   if (item.clickDelta > 0) return 'gained'
   if (item.clickDelta < 0) return 'lost'
@@ -75,49 +87,55 @@ function insightForSegment(
     return {
       dimension,
       dataStatus: segment.dataStatus,
+      coverage: segment.coverage,
       unmatchedRows: segment.summary.unmatchedRows,
-      summary: `${dimension}: no matched retained segment movement was available. ${segment.summary.verdict}`,
+      summary: `${dimension}: no matched retained segment movement was available. ${segment.summary.verdict} Scope: ${coverageSummary(segment.coverage)}.`,
     }
   }
   const evidenceSuffix =
     segment.dataStatus === 'partial'
       ? ` Evidence is partial; ${segment.summary.unmatchedRows} one-window rows were not treated as zero.`
       : ''
+  const coverageSuffix = ` Scope: ${coverageSummary(segment.coverage)}.`
   const winner = segment.winners[0]
   const loser = segment.losers[0]
   if (winner && loser) {
     return {
       dimension,
       dataStatus: segment.dataStatus,
+      coverage: segment.coverage,
       unmatchedRows: segment.summary.unmatchedRows,
       winner,
       loser,
-      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks.${evidenceSuffix}`,
+      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks.${evidenceSuffix}${coverageSuffix}`,
     }
   }
   if (winner) {
     return {
       dimension,
       dataStatus: segment.dataStatus,
+      coverage: segment.coverage,
       unmatchedRows: segment.summary.unmatchedRows,
       winner,
-      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; no material loser appeared in the top segment rows.${evidenceSuffix}`,
+      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; no material loser appeared in the returned segment rows.${evidenceSuffix}${coverageSuffix}`,
     }
   }
   if (loser) {
     return {
       dimension,
       dataStatus: segment.dataStatus,
+      coverage: segment.coverage,
       unmatchedRows: segment.summary.unmatchedRows,
       loser,
-      summary: `${dimension}: top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks; no material winner appeared in the top segment rows.${evidenceSuffix}`,
+      summary: `${dimension}: top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks; no material winner appeared in the returned segment rows.${evidenceSuffix}${coverageSuffix}`,
     }
   }
   return {
     dimension,
     dataStatus: segment.dataStatus,
+    coverage: segment.coverage,
     unmatchedRows: segment.summary.unmatchedRows,
-    summary: `${dimension}: no material winner or loser appeared in the matched retained segment rows.${evidenceSuffix}`,
+    summary: `${dimension}: no material winner or loser appeared in the returned matched retained segment rows.${evidenceSuffix}${coverageSuffix}`,
   }
 }
 
@@ -131,18 +149,18 @@ function buildSummary(input: {
     page?.dataStatus === 'empty' || page?.dataStatus === 'unavailable'
       ? 'page segment evidence unavailable'
       : page?.winner
-        ? `top page gained ${formatMagnitude(page.winner.clickDelta)} clicks`
+        ? `top returned page gained ${formatMagnitude(page.winner.clickDelta)} clicks`
         : page?.loser
-          ? `top page lost ${formatMagnitude(page.loser.clickDelta)} clicks`
-          : 'no material page movement found'
+          ? `top returned page lost ${formatMagnitude(page.loser.clickDelta)} clicks`
+          : 'no material page movement found in returned rows'
   const queryMovement =
     query?.dataStatus === 'empty' || query?.dataStatus === 'unavailable'
       ? 'query segment evidence unavailable'
       : query?.winner
-        ? `top query gained ${formatMagnitude(query.winner.clickDelta)} clicks`
+        ? `top returned query gained ${formatMagnitude(query.winner.clickDelta)} clicks`
         : query?.loser
-          ? `top query lost ${formatMagnitude(query.loser.clickDelta)} clicks`
-          : 'no material query movement found'
+          ? `top returned query lost ${formatMagnitude(query.loser.clickDelta)} clicks`
+          : 'no material query movement found in returned rows'
 
   return `Cause not established; ${pageMovement}; ${queryMovement}.`
 }
@@ -165,8 +183,8 @@ function buildActions(input: {
       title: `${topTemplate.direction === 'winner' ? 'Protect' : 'Fix'} ${topTemplate.signature}`,
       action:
         topTemplate.direction === 'winner'
-          ? `${topTemplate.signature} is a repeated winning URL pattern across ${topTemplate.urlCount} moved URLs. Preserve the shared title/H1/content/internal-link pattern before making broad edits.`
-          : `${topTemplate.signature} is a repeated losing URL pattern across ${topTemplate.urlCount} moved URLs. Check indexability, canonical/robots state, internal links, and whether the shared template still matches search intent.`,
+          ? `${topTemplate.signature} is a repeated winning URL pattern across ${topTemplate.urlCount} URLs in the returned matched-retained page subset. Preserve the shared title/H1/content/internal-link pattern before making broad edits.`
+          : `${topTemplate.signature} is a repeated losing URL pattern across ${topTemplate.urlCount} URLs in the returned matched-retained page subset. Check indexability, canonical/robots state, internal links, and whether the shared template still matches search intent.`,
       confidence: topTemplate.confidence,
     })
   }
@@ -200,7 +218,7 @@ function buildActions(input: {
     actions.push({
       title: 'Protect the winning pages',
       action:
-        'The page split is mostly positive. Check the winning pages for common query intent, title/H1 pattern, internal links, and template shape before making broad edits.',
+        'The returned page split contains positive movers and no negative movers. Check those pages for common query intent, title/H1 pattern, internal links, and template shape before making broad edits.',
       confidence: 'medium',
     })
   }
@@ -218,7 +236,7 @@ function buildActions(input: {
     actions.push({
       title: 'Expand winning query angles',
       action:
-        'The query split is mostly positive. Use the winning query wording to improve internal anchors and supporting copy on related pages.',
+        'The returned query split contains positive movers and no negative movers. Use that query wording to improve internal anchors and supporting copy on related pages.',
       confidence: 'medium',
     })
   }
@@ -284,6 +302,7 @@ function templateMovementForDirection(input: {
   items: SegmentImpactItem[]
   clusters: PseoTemplateCluster[]
   totalMovement: number
+  segmentCoverage: SplitSegment['coverage']
 }): TemplateMovement[] {
   const rows = movementRows({
     items: sameDirectionItems(input.items, input.direction),
@@ -297,7 +316,12 @@ function templateMovementForDirection(input: {
         : 0
       if (row.items.length < 3 || movementShare < 0.2) return undefined
       const confidence: TemplateMovement['confidence'] =
-        row.items.length >= 10 && movementShare >= 0.35 ? 'high' : 'medium'
+        row.items.length >= 10 &&
+        movementShare >= 0.35 &&
+        input.segmentCoverage.limitedRows === 0 &&
+        !input.segmentCoverage.sourcePossiblyTruncated
+          ? 'high'
+          : 'medium'
       const directionWord = input.direction === 'winner' ? 'gained' : 'lost'
       const commonTerms = clusterCommonTerms(row.cluster)
       const termText = commonTerms.length
@@ -311,25 +335,35 @@ function templateMovementForDirection(input: {
         clickDelta: Number(row.clickDelta.toFixed(3)),
         impressionDelta: Number(row.impressionDelta.toFixed(3)),
         movementShare: Number(movementShare.toFixed(3)),
+        movementShareScope: 'returned-directional-page-click-movement',
+        confidenceScope:
+          'pattern-within-returned-matched-retained-page-segments',
+        segmentCoverage: input.segmentCoverage,
         commonTerms,
         sampleUrls: row.items.slice(0, 5).map((item) => item.key),
-        summary: `${row.signature} ${directionWord} ${formatMagnitude(row.clickDelta)} clicks across ${row.items.length} moved URLs (${formatPercent(movementShare)} of ${input.direction} page movement).${termText}`,
+        summary: `${row.signature} ${directionWord} ${formatMagnitude(row.clickDelta)} clicks across ${row.items.length} moved URLs (${formatPercent(movementShare)} of returned ${input.direction} page click movement). Coverage: ${input.segmentCoverage.returnedRows} of ${input.segmentCoverage.eligibleRows} eligible matched retained page rows returned under result limit ${input.segmentCoverage.resultLimit}.${termText}`,
       }
     })
     .filter((item): item is TemplateMovement => Boolean(item))
     .sort(
       (a, b) =>
         Math.abs(b.clickDelta) - Math.abs(a.clickDelta) ||
-        b.urlCount - a.urlCount,
+        b.urlCount - a.urlCount ||
+        compareText(a.signature, b.signature),
     )
 }
 
 export function inferTemplateMovement(
-  pageSegment: Pick<SplitSegment, 'winners' | 'losers'>,
+  pageSegment: Pick<SplitSegment, 'winners' | 'losers' | 'coverage'>,
 ): TemplateMovement[] {
   const movedPages = [...pageSegment.winners, ...pageSegment.losers]
     .filter((item) => item.key.startsWith('http'))
     .filter((item) => Math.abs(item.clickDelta) > 0)
+    .sort(
+      (left, right) =>
+        Math.abs(right.clickDelta) - Math.abs(left.clickDelta) ||
+        compareText(left.key, right.key),
+    )
   if (movedPages.length < 6) return []
 
   const clusters = clusterPseoTemplates(
@@ -355,12 +389,14 @@ export function inferTemplateMovement(
       items: movedPages,
       clusters,
       totalMovement: winnerMovement,
+      segmentCoverage: pageSegment.coverage,
     }),
     ...templateMovementForDirection({
       direction: 'loser',
       items: movedPages,
       clusters,
       totalMovement: loserMovement,
+      segmentCoverage: pageSegment.coverage,
     }),
   ].slice(0, 6)
 }

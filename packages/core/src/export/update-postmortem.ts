@@ -1,3 +1,4 @@
+import type { WorkflowSegmentCoverage } from '../analyze/workflows/segments.js'
 import type { WorkflowReport } from '../analyze/workflows/types.js'
 import type { CsvFile, CsvRow } from './csv.js'
 
@@ -20,6 +21,7 @@ type PostmortemCsvReport = WorkflowReport<{
   insights: Array<{
     dimension: 'page' | 'query' | 'device' | 'country'
     dataStatus: SegmentStatus
+    coverage: WorkflowSegmentCoverage
     unmatchedRows: number
     summary: string
     winner?: SegmentItem
@@ -33,6 +35,9 @@ type PostmortemCsvReport = WorkflowReport<{
     clickDelta: number
     impressionDelta: number
     movementShare: number
+    movementShareScope: string
+    confidenceScope: string
+    segmentCoverage: WorkflowSegmentCoverage
     commonTerms: string[]
     sampleUrls: string[]
     summary: string
@@ -43,6 +48,7 @@ type PostmortemCsvReport = WorkflowReport<{
       winners: SegmentItem[]
       losers: SegmentItem[]
       dataStatus: SegmentStatus
+      coverage: WorkflowSegmentCoverage
       summary: {
         matchedRows: number
         returnedRows: number
@@ -92,12 +98,36 @@ const HEADERS = {
     'updates_matched',
     'known_confounders',
     'page_segment_status',
+    'page_segment_eligible_rows',
+    'page_segment_returned_rows',
+    'page_segment_limited_rows',
+    'page_segment_result_limit',
+    'page_segment_source_row_limit',
+    'page_segment_source_possibly_truncated',
     'page_segment_warnings',
     'query_segment_status',
+    'query_segment_eligible_rows',
+    'query_segment_returned_rows',
+    'query_segment_limited_rows',
+    'query_segment_result_limit',
+    'query_segment_source_row_limit',
+    'query_segment_source_possibly_truncated',
     'query_segment_warnings',
     'device_segment_status',
+    'device_segment_eligible_rows',
+    'device_segment_returned_rows',
+    'device_segment_limited_rows',
+    'device_segment_result_limit',
+    'device_segment_source_row_limit',
+    'device_segment_source_possibly_truncated',
     'device_segment_warnings',
     'country_segment_status',
+    'country_segment_eligible_rows',
+    'country_segment_returned_rows',
+    'country_segment_limited_rows',
+    'country_segment_result_limit',
+    'country_segment_source_row_limit',
+    'country_segment_source_possibly_truncated',
     'country_segment_warnings',
   ],
   steps: ['rank', 'tool', 'status', 'summary'],
@@ -105,6 +135,10 @@ const HEADERS = {
   findings: [
     'dimension',
     'data_status',
+    'eligible_rows',
+    'returned_rows',
+    'limited_rows',
+    'result_limit',
     'unmatched_rows',
     'summary',
     'winner_key',
@@ -125,6 +159,13 @@ const HEADERS = {
     'click_delta',
     'impression_delta',
     'movement_share',
+    'movement_share_scope',
+    'confidence_scope',
+    'eligible_rows',
+    'returned_rows',
+    'limited_rows',
+    'result_limit',
+    'source_possibly_truncated',
     'common_terms',
     'sample_urls',
     'summary',
@@ -231,15 +272,63 @@ export function updatePostmortemCsvFiles(
           updates_matched: report.output.update.overlappingUpdates.length,
           known_confounders: report.output.update.confounders.length,
           page_segment_status: report.output.segments.page.dataStatus,
+          page_segment_eligible_rows:
+            report.output.segments.page.coverage.eligibleRows,
+          page_segment_returned_rows:
+            report.output.segments.page.coverage.returnedRows,
+          page_segment_limited_rows:
+            report.output.segments.page.coverage.limitedRows,
+          page_segment_result_limit:
+            report.output.segments.page.coverage.resultLimit,
+          page_segment_source_row_limit:
+            report.output.segments.page.coverage.sourceRowLimit,
+          page_segment_source_possibly_truncated:
+            report.output.segments.page.coverage.sourcePossiblyTruncated,
           page_segment_warnings:
             report.output.segments.page.warnings.join('; '),
           query_segment_status: report.output.segments.query.dataStatus,
+          query_segment_eligible_rows:
+            report.output.segments.query.coverage.eligibleRows,
+          query_segment_returned_rows:
+            report.output.segments.query.coverage.returnedRows,
+          query_segment_limited_rows:
+            report.output.segments.query.coverage.limitedRows,
+          query_segment_result_limit:
+            report.output.segments.query.coverage.resultLimit,
+          query_segment_source_row_limit:
+            report.output.segments.query.coverage.sourceRowLimit,
+          query_segment_source_possibly_truncated:
+            report.output.segments.query.coverage.sourcePossiblyTruncated,
           query_segment_warnings:
             report.output.segments.query.warnings.join('; '),
           device_segment_status: report.output.segments.device.dataStatus,
+          device_segment_eligible_rows:
+            report.output.segments.device.coverage.eligibleRows,
+          device_segment_returned_rows:
+            report.output.segments.device.coverage.returnedRows,
+          device_segment_limited_rows:
+            report.output.segments.device.coverage.limitedRows,
+          device_segment_result_limit:
+            report.output.segments.device.coverage.resultLimit,
+          device_segment_source_row_limit:
+            report.output.segments.device.coverage.sourceRowLimit,
+          device_segment_source_possibly_truncated:
+            report.output.segments.device.coverage.sourcePossiblyTruncated,
           device_segment_warnings:
             report.output.segments.device.warnings.join('; '),
           country_segment_status: report.output.segments.country.dataStatus,
+          country_segment_eligible_rows:
+            report.output.segments.country.coverage.eligibleRows,
+          country_segment_returned_rows:
+            report.output.segments.country.coverage.returnedRows,
+          country_segment_limited_rows:
+            report.output.segments.country.coverage.limitedRows,
+          country_segment_result_limit:
+            report.output.segments.country.coverage.resultLimit,
+          country_segment_source_row_limit:
+            report.output.segments.country.coverage.sourceRowLimit,
+          country_segment_source_possibly_truncated:
+            report.output.segments.country.coverage.sourcePossiblyTruncated,
           country_segment_warnings:
             report.output.segments.country.warnings.join('; '),
         },
@@ -271,6 +360,10 @@ export function updatePostmortemCsvFiles(
       rows: report.output.insights.map((item) => ({
         dimension: item.dimension,
         data_status: item.dataStatus,
+        eligible_rows: item.coverage.eligibleRows,
+        returned_rows: item.coverage.returnedRows,
+        limited_rows: item.coverage.limitedRows,
+        result_limit: item.coverage.resultLimit,
         unmatched_rows: item.unmatchedRows,
         summary: item.summary,
         winner_key: item.winner?.key,
@@ -295,6 +388,13 @@ export function updatePostmortemCsvFiles(
         click_delta: item.clickDelta,
         impression_delta: item.impressionDelta,
         movement_share: item.movementShare,
+        movement_share_scope: item.movementShareScope,
+        confidence_scope: item.confidenceScope,
+        eligible_rows: item.segmentCoverage.eligibleRows,
+        returned_rows: item.segmentCoverage.returnedRows,
+        limited_rows: item.segmentCoverage.limitedRows,
+        result_limit: item.segmentCoverage.resultLimit,
+        source_possibly_truncated: item.segmentCoverage.sourcePossiblyTruncated,
         common_terms: item.commonTerms.join('; '),
         sample_urls: item.sampleUrls.join('; '),
         summary: item.summary,

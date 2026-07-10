@@ -46,6 +46,37 @@ function printSegmentTable(label: string, split: SegmentSplit): void {
   )
 }
 
+function printSegmentCoverage(
+  segments: Awaited<
+    ReturnType<typeof updatePostmortemWorkflow>
+  >['output']['segments'],
+): void {
+  process.stdout.write('\nSegment coverage\n')
+  printTable(
+    [
+      'Dimension',
+      'Eligible',
+      'Returned',
+      'Limited',
+      'Result cap',
+      'Source cap',
+      'Source capped',
+    ],
+    (['page', 'query', 'device', 'country'] as const).map((dimension) => {
+      const coverage = segments[dimension].coverage
+      return [
+        dimension,
+        coverage.eligibleRows,
+        coverage.returnedRows,
+        coverage.limitedRows,
+        coverage.resultLimit,
+        coverage.sourceRowLimit,
+        coverage.sourcePossiblyTruncated ? 'yes' : 'no',
+      ]
+    }),
+  )
+}
+
 type TemplateMovement = Awaited<
   ReturnType<typeof updatePostmortemWorkflow>
 >['output']['templateMovement'][number]
@@ -57,10 +88,10 @@ function printTemplateMovement(items: TemplateMovement[]): void {
     [
       'Direction',
       'Template',
-      'Confidence',
+      'Pattern confidence',
       'URLs',
       'Clicks',
-      'Share',
+      'Returned share',
       'Common terms',
     ],
     items.map((item) => [
@@ -77,6 +108,9 @@ function printTemplateMovement(items: TemplateMovement[]): void {
     'Template actions',
     items.map((item) => item.summary),
   )
+  printNotes('Template evidence scope', [
+    'Shares use returned directional page click movement. Pattern confidence applies only to returned matched-retained page segments.',
+  ])
 }
 
 export const updatePostmortemCommand = defineCommand({
@@ -182,6 +216,7 @@ export const updatePostmortemCommand = defineCommand({
     )
     printTemplateMovement(report.output.templateMovement)
     printNotes('Update evidence', report.output.update.evidence)
+    printSegmentCoverage(report.output.segments)
     printSegmentTable('Page winners and losers', report.output.segments.page)
     printSegmentTable('Query winners and losers', report.output.segments.query)
     printSegmentTable(

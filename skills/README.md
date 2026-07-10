@@ -10,17 +10,15 @@ seo mcp install
 ```
 
 They can also call the CLI directly when MCP tools are not available. The npm
-package contains the skill folders and can copy them into a supported agent:
+package and repository contain the same skill folders. Install the collection
+with the standard agent skills installer:
 
 ```bash
-seo skills install --target agents
-seo skills install --target codex
-seo skills install --target claude
-seo skills install --target project
+npx skills add iannuttall/seo
 ```
 
-Pass one skill name after `install` to copy only that skill. Use `--dir` for a
-custom location.
+Use `seo skills list` or `seo skills path <name>` to inspect the copies bundled
+with the npm package.
 
 The MCP path is deliberately small: discover ids with `seo_list_reports`, load
 one schema with `seo_describe_report`, then execute it with `seo_run_report`.

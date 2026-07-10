@@ -1,51 +1,16 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-} from 'node:fs'
-import { homedir } from 'node:os'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { select } from '@clack/prompts'
 import { SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../args.js'
-import {
-  canPrompt,
-  maybeExitCancelled,
-  printJson,
-  printTable,
-} from '../utils.js'
-
-type SkillTarget = 'agents' | 'claude' | 'codex' | 'project'
+import { jsonFlag, stringArg } from '../args.js'
+import { printJson, printTable } from '../utils.js'
 
 type SkillInfo = {
   name: string
   description: string
   path: string
 }
-
-const targets: Array<{
-  value: SkillTarget
-  label: string
-  hint: string
-}> = [
-  {
-    value: 'agents',
-    label: 'Shared agent skills',
-    hint: '~/.agents/skills',
-  },
-  { value: 'codex', label: 'Codex', hint: '~/.codex/skills' },
-  { value: 'claude', label: 'Claude Code', hint: '~/.claude/skills' },
-  {
-    value: 'project',
-    label: 'This project',
-    hint: './.agents/skills',
-  },
-]
 
 function skillsDirectory(): string {
   const override = process.env.SEO_SKILLS_DIR
@@ -94,25 +59,6 @@ function selectedSkill(name?: string): SkillInfo[] {
   return [skill]
 }
 
-function targetDirectory(target: SkillTarget): string {
-  if (target === 'project') return resolve('.agents/skills')
-  if (target === 'agents') return join(homedir(), '.agents', 'skills')
-  if (target === 'claude') return join(homedir(), '.claude', 'skills')
-  return join(process.env.CODEX_HOME ?? join(homedir(), '.codex'), 'skills')
-}
-
-function parseTarget(value?: string): SkillTarget | undefined {
-  if (!value) return undefined
-  const target = targets.find((entry) => entry.value === value)?.value
-  if (!target) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      '--target must be agents, codex, claude, or project.',
-    )
-  }
-  return target
-}
-
 const listCommand = defineCommand({
   meta: { name: 'list', description: 'List packaged agent skills' },
   args: {
@@ -159,92 +105,10 @@ const pathCommand = defineCommand({
   },
 })
 
-const installCommand = defineCommand({
-  meta: {
-    name: 'install',
-    description: 'Copy packaged skills into an agent skills directory',
-  },
-  args: {
-    name: {
-      type: 'positional',
-      description: 'One skill name. Omit it to install every skill.',
-    },
-    target: {
-      type: 'string',
-      description: 'Install target: agents, codex, claude, or project.',
-    },
-    dir: {
-      type: 'string',
-      description: 'Custom destination skills directory.',
-    },
-    force: {
-      type: 'boolean',
-      default: false,
-      description: 'Replace existing skill folders.',
-    },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const customDirectory = stringArg(args.dir)
-    let target = parseTarget(stringArg(args.target))
-    if (customDirectory && target) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        'Use either --target or --dir, not both.',
-      )
-    }
-    if (!customDirectory && !target) {
-      if (!canPrompt({ json })) {
-        throw new SeoError(
-          'INVALID_INPUT',
-          'Choose a skills destination with --target or --dir.',
-        )
-      }
-      target = maybeExitCancelled(
-        await select({
-          message: 'Install SEO skills where?',
-          options: targets,
-        }),
-      )
-    }
-
-    const destination = customDirectory
-      ? resolve(customDirectory)
-      : targetDirectory(target ?? 'agents')
-    mkdirSync(destination, { recursive: true, mode: 0o700 })
-    const force = booleanArg(args.force) ?? false
-    const results = selectedSkill(stringArg(args.name)).map((skill) => {
-      const path = join(destination, skill.name)
-      const exists = existsSync(path)
-      if (!exists || force) {
-        if (exists) rmSync(path, { recursive: true, force: true })
-        cpSync(skill.path, path, { recursive: true, force })
-      }
-      return { name: skill.name, path, changed: !exists || force }
-    })
-
-    if (json) {
-      printJson({ destination, results })
-      return
-    }
-    for (const result of results) {
-      process.stdout.write(
-        `${result.changed ? 'installed' : 'skipped'} ${result.name} · ${result.path}\n`,
-      )
-    }
-  },
-})
-
 export const skillsCommand = defineCommand({
-  meta: { name: 'skills', description: 'Discover and install agent skills' },
+  meta: { name: 'skills', description: 'Inspect packaged agent skills' },
   subCommands: {
     list: listCommand,
     path: pathCommand,
-    install: installCommand,
   },
 })

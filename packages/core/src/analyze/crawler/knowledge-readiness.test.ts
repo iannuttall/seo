@@ -74,6 +74,7 @@ function fixtureReport() {
           'https://example.com/blog/answer',
         ],
         schemaTypes: ['Organization', 'WebSite'],
+        structuredDataFormats: ['json-ld'],
         schemaSameAs: ['https://www.linkedin.com/company/example'],
         schemaSameAsEvidence: [
           {
@@ -119,6 +120,7 @@ function fixtureReport() {
         outgoingInternalCount: 1,
         sampleInternalLinks: ['https://example.com/'],
         schemaTypes: ['Article'],
+        structuredDataFormats: ['json-ld'],
         hasDate: true,
         geo: {
           semanticHtml: true,
@@ -191,6 +193,27 @@ test('aiReadiness is deterministic for a saved crawl report', () => {
 
   assert.deepEqual(aiReadiness(report), aiReadiness(report))
   assert.equal(aiReadiness(report).generatedAt, report.generatedAt)
+})
+
+test('aiReadiness does not score absent JSON-LD as valid or invalid', () => {
+  const crawl = fixtureReport()
+  for (const page of crawl.pages) {
+    page.schemaTypes = []
+    page.structuredDataFormats = []
+    page.invalidJsonLdCount = 0
+    if (page.geo) page.geo.structuredData = false
+  }
+
+  const report = aiReadiness(crawl)
+  const check = report.checks.find((item) => item.id === 'valid-json-ld')
+
+  assert.equal(check?.evaluated, false)
+  assert.equal(check?.status, 'unknown')
+  assert.match(check?.plainEnglish ?? '', /cannot make a syntax claim/i)
+  assert.equal(
+    report.checks.some((item) => item.id === 'structured-data-coverage'),
+    false,
+  )
 })
 
 test('llms audit and generator use crawl inventory', () => {

@@ -607,7 +607,6 @@ function pageGeoScore(
   const geo = page.geo
   let score = 100
   if (!geo?.semanticHtml) score -= 15
-  if (!geo?.structuredData) score -= 25
   if (!geo?.hasAuthor) score -= 15
   if (!geo?.hasDate) score -= 5
   if (!geo?.answerable) score -= 20

@@ -842,9 +842,6 @@ export function auditCrawlPages(
         )
       }
     }
-    if (!page.schemaTypes?.length) {
-      issues.push(issue('structured_data_missing', page))
-    }
     if ((page.invalidJsonLdCount ?? 0) > 0) {
       issues.push(
         issue('jsonld_invalid', page, `${page.invalidJsonLdCount} invalid`, {
@@ -867,9 +864,6 @@ export function auditCrawlPages(
     }
 
     if (page.geo && page.wordCount > 50) {
-      if (!page.geo?.structuredData) {
-        issues.push(issue('geo_no_structured_data', page))
-      }
       if (!page.geo?.answerable) {
         issues.push(issue('geo_not_answerable', page))
       }

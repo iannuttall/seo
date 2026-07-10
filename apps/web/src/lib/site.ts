@@ -3,7 +3,7 @@ export const site = {
   packageName: 'seo',
   url: 'https://seoskills.dev',
   description:
-    'Find technical SEO problems, rank fixes with real search data, and give reliable local reports to people, agents, or CI.',
+    'Technical SEO skills for AI agents and developers. Crawl sites, connect search data, and turn local evidence into prioritised fixes.',
   repository: 'https://github.com/iannuttall/seo',
   issues: 'https://github.com/iannuttall/seo/issues',
   advisory: 'https://github.com/iannuttall/seo/security/advisories/new',

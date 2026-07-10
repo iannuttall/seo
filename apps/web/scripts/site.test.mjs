@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -240,6 +240,21 @@ test('site keeps square controls and copyable install choices', () => {
 
   assert.match(home, /data-install-picker/)
   assert.match(home, /data-copy-button/)
+  assert.match(home, /npx skills add iannuttall\/seo/)
+  assert.match(home, /npx seo start/)
   assert.match(home, /npm i -g seo/)
+  assert.match(home, /seo mcp install/)
   assert.doesNotMatch(css, /border-radius/)
+})
+
+test('bundled display font ships with its open font license', () => {
+  const font = resolve(appRoot, 'public/fonts/departure-mono.woff2')
+  const license = readFileSync(
+    resolve(appRoot, 'public/fonts/LICENSE-departure-mono.txt'),
+    'utf8',
+  )
+
+  assert.ok(statSync(font).size > 20_000)
+  assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/)
+  assert.match(license, /Copyright 2022.+2024 Helena Zhang/)
 })

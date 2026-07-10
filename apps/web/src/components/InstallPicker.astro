@@ -1,14 +1,12 @@
 ---
-const commands = [
-  { id: 'npx', label: 'npx', command: 'npx seo start' },
-  { id: 'npm', label: 'npm global', command: 'npm i -g seo && seo start' },
-] as const
-const initial = commands[0]
+import { installCommands } from '@/lib/install'
+
+const initial = installCommands[0]
 ---
 
 <div class="install-picker" data-install-picker>
   <div class="install-tabs" role="tablist" aria-label="Install method">
-    {commands.map((entry, index) => (
+    {installCommands.map((entry, index) => (
       <button
         type="button"
         role="tab"
@@ -22,10 +20,21 @@ const initial = commands[0]
       </button>
     ))}
   </div>
-  <div class="install-command" id="install-command" role="tabpanel" aria-labelledby="install-tab-npx">
-    <code><span aria-hidden="true">$ </span><span data-install-output>{initial.command}</span></code>
-    <button class="copy-button" type="button" data-copy-button data-copy-value={initial.command}>
-      <span aria-hidden="true">[ </span><span data-copy-label>copy</span><span aria-hidden="true"> ]</span>
+  <div id="install-command" role="tabpanel" aria-labelledby={`install-tab-${initial.id}`}>
+    <button
+      class="install-command"
+      type="button"
+      data-copy-button
+      data-copy-value={initial.command}
+      aria-label={`Copy ${initial.command}`}
+    >
+      <code><span aria-hidden="true">$ </span><span data-install-output>{initial.command}</span></code>
+      <span class="copy-control">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M6 6V3h11v11h-3M3 6h11v11H3z"></path>
+        </svg>
+        <span data-copy-label>copy</span>
+      </span>
     </button>
   </div>
 </div>

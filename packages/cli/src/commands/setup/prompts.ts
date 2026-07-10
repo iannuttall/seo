@@ -4,40 +4,45 @@ import {
   ga4PropertyIdFromName,
   listGa4AccountSummaries,
   loginWithLoopback,
+  SeoError,
   writeOauthClient,
 } from '@seo/core'
-import { maybeExitCancelled } from '../../utils.js'
+import { canPrompt, maybeExitCancelled } from '../../utils.js'
 import { detectMcpClients, installMcpConfig } from '../mcp-config.js'
 
 export type SetupAuthStatus = 'connected' | 'already-connected' | 'skipped'
 export type SetupMcpInstall = { client: string; path: string; changed: boolean }
-
-export function canPrompt(): boolean {
-  return Boolean(process.stdin.isTTY && process.stdout.isTTY && !process.env.CI)
-}
 
 export async function maybeConnectAuth(
   args: Record<string, unknown>,
 ): Promise<SetupAuthStatus> {
   const status = await authStatus()
   if (status.tokens) return 'already-connected'
-  if (args['skip-auth'] || !canPrompt()) return 'skipped'
+  if (args['skip-auth']) return 'skipped'
+  if (!canPrompt({ json: args.json === true })) {
+    throw new SeoError(
+      'AUTH_REQUIRED',
+      'Not logged in. Run `seo auth login`, or pass --skip-auth to save a project profile without connecting Google.',
+    )
+  }
+
+  const canSkip = typeof args.site === 'string' && args.site.length > 0
+  const skipOption = canSkip
+    ? [{ value: 'skip' as const, label: 'Skip for now' }]
+    : []
 
   const choice = maybeExitCancelled(
     await select({
       message: 'Connect Google now?',
       options: status.sharedConfigured
-        ? [
-            { value: 'login', label: 'Open Google sign-in' },
-            { value: 'skip', label: 'Skip for now' },
-          ]
+        ? [{ value: 'login', label: 'Open Google sign-in' }, ...skipOption]
         : [
             {
               value: 'setup',
               label: 'Use my own Google OAuth client',
               hint: 'Required in this checkout',
             },
-            { value: 'skip', label: 'Skip for now' },
+            ...skipOption,
           ],
     }),
   )
@@ -65,9 +70,10 @@ export async function maybeConnectAuth(
 
 export async function chooseGa4Property(
   explicit?: string,
+  interactive = canPrompt(),
 ): Promise<string | undefined> {
   if (explicit) return explicit
-  if (!canPrompt()) return undefined
+  if (!interactive) return undefined
 
   const summaries = await listGa4AccountSummaries().catch(() => [])
   const properties = summaries.flatMap((account) =>
@@ -98,7 +104,7 @@ export async function chooseGa4Property(
 export async function maybeInstallMcp(
   args: Record<string, unknown>,
 ): Promise<SetupMcpInstall[]> {
-  if (args['skip-mcp'] || !canPrompt()) return []
+  if (args['skip-mcp'] || !canPrompt({ json: args.json === true })) return []
   const shouldInstall = maybeExitCancelled(
     await confirm({
       message: 'Install seo as an MCP server too?',

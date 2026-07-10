@@ -7,10 +7,17 @@ import {
   loginWithLoopback,
   readTokens,
   refreshAuthToken,
+  SeoError,
   writeOauthClient,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { maybeExitCancelled, printKeyValue } from '../utils.js'
+import { jsonFlag } from '../args.js'
+import {
+  canPrompt,
+  maybeExitCancelled,
+  printJson,
+  printKeyValue,
+} from '../utils.js'
 
 export const authCommand = defineCommand({
   meta: {
@@ -57,15 +64,36 @@ export const authCommand = defineCommand({
         name: 'status',
         description: 'Show local Google auth status',
       },
-      run: async () => {
+      args: {
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
+      },
+      run: async ({ args }) => {
         const status = await authStatus()
+        if (jsonFlag(args)) {
+          printJson({
+            authenticated: Boolean(status.tokens),
+            account: status.tokens?.account_email,
+            scopes: status.tokens?.scope,
+            clientSource: status.tokens?.client_source,
+            expiresAt: status.tokens?.expires_at,
+            sharedConfigured: status.sharedConfigured,
+            byoConfigured: status.byoConfigured,
+          })
+          return
+        }
         if (!status.tokens) {
           const authMode = status.sharedConfigured
             ? 'Shared seo app available'
             : status.byoConfigured
               ? 'BYO client configured'
               : 'No OAuth client configured'
-          process.stdout.write(`Not logged in. ${authMode}.\n`)
+          process.stdout.write(
+            `Not logged in. ${authMode}. Run \`seo auth login\` to connect Google.\n`,
+          )
           return
         }
         printKeyValue([
@@ -108,7 +136,20 @@ export const authCommand = defineCommand({
         name: 'setup-client',
         description: 'Save your own Google Desktop OAuth client',
       },
-      run: async () => {
+      args: {
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Return a structured error instead of prompting.',
+        },
+      },
+      run: async ({ args }) => {
+        if (!canPrompt({ json: jsonFlag(args) })) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            '`seo auth setup-client` needs an interactive terminal. Run it without --json, or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
+          )
+        }
         intro('seo BYO OAuth client')
         note(
           [

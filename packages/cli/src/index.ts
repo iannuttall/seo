@@ -313,19 +313,24 @@ if (argv[0] === 'help' && argv.length > 1) {
     '--help',
   ]
 }
-if (
-  argv.includes('--json') &&
-  !argv.some((arg) => ['--help', '-h'].includes(arg))
-) {
+const helpRequested = argv.some((arg) => ['--help', '-h'].includes(arg))
+const versionRequested =
+  argv.length === 1 && ['--version', '-v'].includes(argv[0] ?? '')
+
+if (helpRequested || versionRequested) {
+  await runMain(main)
+} else {
   try {
     await runCommand(main, { rawArgs: argv })
   } catch (error) {
     const normalized = toSeoError(error)
-    process.stdout.write(
-      `${JSON.stringify(seoErrorEnvelope(normalized), null, 2)}\n`,
-    )
+    if (argv.includes('--json')) {
+      process.stdout.write(
+        `${JSON.stringify(seoErrorEnvelope(normalized), null, 2)}\n`,
+      )
+    } else {
+      process.stderr.write(`Error: ${normalized.message}\n`)
+    }
     process.exitCode = normalized.exitCode
   }
-} else {
-  await runMain(main)
 }

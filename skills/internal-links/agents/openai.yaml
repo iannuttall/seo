@@ -1,0 +1,4 @@
+interface:
+  display_name: "Internal link candidates"
+  short_description: "Find verified internal-link review candidates for one target URL"
+  default_prompt: "Use $internal-links to run the internal-links report and explain its evidence and limits."

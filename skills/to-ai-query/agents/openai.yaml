@@ -1,0 +1,4 @@
+interface:
+  display_name: "Queries to AI prompts"
+  short_description: "Convert retained GSC wording into deterministic monitoring prompts"
+  default_prompt: "Use $to-ai-query to run the to-ai-query report and explain its evidence and limits."

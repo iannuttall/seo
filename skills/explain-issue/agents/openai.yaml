@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain issue"
+  short_description: "Explain one crawler rule"
+  default_prompt: "Use $explain-issue to run the explain-issue report and explain its evidence and limits."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance audit"
+  short_description: "Audit one URL with Lighthouse and optional CrUX"
+  default_prompt: "Use $performance-audit to run the performance-audit report and explain its evidence and limits."

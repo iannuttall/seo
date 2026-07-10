@@ -1,0 +1,4 @@
+interface:
+  display_name: "Traffic anomaly"
+  short_description: "Detect statistically unusual recent GSC movement"
+  default_prompt: "Use $traffic-anomaly to run the traffic-anomaly report and explain its evidence and limits."

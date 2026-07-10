@@ -1,0 +1,4 @@
+interface:
+  display_name: "Affected URLs"
+  short_description: "Return affected URLs from a crawl report"
+  default_prompt: "Use $affected-urls to run the affected-urls report and explain its evidence and limits."

@@ -5,7 +5,9 @@ description: Convert retained Google Search Console queries into deterministic A
 
 # SEO to AI query prompts
 
-Call the `seo_to_ai_query` MCP tool. Use the CLI when MCP is unavailable:
+Run report id `to-ai-query` through `seo_run_report`. Call
+`seo_describe_report` first when its parameters are not already known. Use the
+CLI when MCP is unavailable:
 
 ```bash
 seo seo-to-ai-query --project <project> --json
@@ -22,6 +24,8 @@ For a reproducible prompt set pass `startDate` and `endDate` to MCP or use `--st
 
 Generated prompts are deterministic suggestions. They are not queries observed in ChatGPT, Gemini, Copilot, or another AI product. They do not prove AI demand, visibility, citations, or referral traffic.
 
-Use `seo_ai_referrals` for GA4 referral evidence. Use a separate prompt-monitoring provider or manual checks to measure AI answers and citations.
+Use report id `ai-referrals` for GA4 referral evidence. Use a separate
+prompt-monitoring provider or manual checks to measure AI answers and
+citations.
 
 Use explicit `brandTerms` when the brand cannot be derived reliably from the property. Keep `includeBrand` false unless branded prompts are required.

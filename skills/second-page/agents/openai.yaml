@@ -1,0 +1,4 @@
+interface:
+  display_name: "Second-page opportunities"
+  short_description: "Find URLs with retained GSC average positions above 10 through 20"
+  default_prompt: "Use $second-page to run the second-page report and explain its evidence and limits."

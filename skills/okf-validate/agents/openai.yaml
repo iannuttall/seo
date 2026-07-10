@@ -1,0 +1,4 @@
+interface:
+  display_name: "Validate OKF"
+  short_description: "Validate supplied OKF Markdown files"
+  default_prompt: "Use $okf-validate to run the okf-validate report and explain its evidence and limits."

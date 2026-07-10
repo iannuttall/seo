@@ -1,0 +1,4 @@
+interface:
+  display_name: "Redirect trace"
+  short_description: "Trace one redirect chain"
+  default_prompt: "Use $redirect-trace to run the redirect-trace report and explain its evidence and limits."

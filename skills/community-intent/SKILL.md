@@ -5,7 +5,11 @@ description: Find explicit forum, comparison, review, experience, and recommenda
 
 # Community intent
 
-Call the `seo_community_intent` MCP tool. Use the CLI when MCP is unavailable:
+Call `seo_list_reports` with category `ai-search` when discovery is needed.
+Call `seo_describe_report` with id `community-intent`, then call
+`seo_run_report` with that id and only the described parameters. Read
+`structuredContent` as the machine contract. Use the CLI when MCP is
+unavailable:
 
 ```bash
 seo community-intent --project <project> --json

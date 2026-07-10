@@ -5,7 +5,10 @@ description: Audit programmatic SEO template families with retained Google Searc
 
 # pSEO audit
 
-Use the `seo_pseo_audit` MCP tool when it is available. Use the CLI for CI, saved JSON, or environments without MCP.
+Call `seo_list_reports` with category `reporting` when discovery is needed.
+Call `seo_describe_report` with id `pseo-audit`, then call `seo_run_report` with
+that id and only the described parameters. Read `structuredContent` as the
+machine contract. Use the CLI for CI, saved JSON, or environments without MCP.
 
 ```bash
 seo pseo audit --project <project> --json

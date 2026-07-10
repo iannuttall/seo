@@ -5,9 +5,12 @@ description: Monitor a bounded URL set with Google Search Console URL Inspection
 
 # Index watch
 
-Use `seo_index_watch` for explicit URLs. Use `seo_index_monitor` for a bounded
-oldest-first sitemap sample. Use `seo_index_coverage_plan` before monitoring a
-large inventory across multiple Search Console properties.
+Call `seo_list_reports` with category `monitoring` when discovery is needed.
+Call `seo_describe_report` with id `index-watch`, then call `seo_run_report`
+with that id and only the described parameters. Read `structuredContent` as the
+machine contract. Use report id `index-monitor` for a bounded oldest-first
+sitemap sample. Use report id `index-coverage-plan` before monitoring a large
+inventory across multiple Search Console properties.
 
 ## Run the report
 

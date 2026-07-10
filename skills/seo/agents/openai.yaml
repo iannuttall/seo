@@ -1,0 +1,4 @@
+interface:
+  display_name: "seo"
+  short_description: "Route local SEO reports and inspect evidence"
+  default_prompt: "Use $seo to choose the right local SEO report and explain its evidence."

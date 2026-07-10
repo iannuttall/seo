@@ -1,0 +1,4 @@
+interface:
+  display_name: "Get crawl report"
+  short_description: "Load one saved crawl report"
+  default_prompt: "Use $get-crawl-report to run the get-crawl-report report and explain its evidence and limits."

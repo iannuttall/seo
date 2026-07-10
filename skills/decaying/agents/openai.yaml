@@ -1,0 +1,4 @@
+interface:
+  display_name: "Decaying queries and pages"
+  short_description: "Find observed click declines across retained GSC windows"
+  default_prompt: "Use $decaying to run the decaying report and explain its evidence and limits."

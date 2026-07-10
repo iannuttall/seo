@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quick wins"
+  short_description: "Find high-impression ranking and CTR review candidates"
+  default_prompt: "Use $quick-wins to run the quick-wins report and explain its evidence and limits."

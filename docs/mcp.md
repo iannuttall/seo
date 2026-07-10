@@ -1,89 +1,99 @@
 # MCP and agents
 
-The MCP server gives agents the same SEO tools as the CLI.
+The local stdio MCP server exposes the same report implementations as the CLI
+without loading dozens of tool schemas into an agent's context.
 
-Use it when an agent needs to inspect a site, rank fixes, monitor a project, or pull structured data without copying huge reports into chat.
+## Install it
 
-## Install into local clients
+Humans can choose detected clients interactively:
 
 ```bash
 seo mcp install
 ```
 
-Run it directly:
+Agents and setup scripts must choose targets explicitly:
+
+```bash
+seo mcp install --claude-desktop --json
+seo mcp install --claude-code --json
+seo mcp install --cursor --json
+seo mcp install --all --json
+```
+
+Run or test the server directly:
 
 ```bash
 seo mcp serve
-```
-
-Test the server:
-
-```bash
 seo mcp serve --test
 ```
 
-## Crawler tools
+## Compact tool surface
 
-- `seo_crawl_site`
-- `seo_audit_urls`
-- `seo_top_fixes`
-- `seo_affected_urls`
-- `seo_geo_gaps`
-- `seo_ai_readiness`
-- `seo_entity_readiness`
-- `seo_llms_txt_audit`
-- `seo_llms_txt_generate`
-- `seo_okf_build`
-- `seo_okf_validate`
-- `seo_explain_issue`
-- `seo_list_rules`
-- `seo_get_crawl_report`
-- `seo_list_crawl_reports`
-- `seo_compare_crawl_reports`
+The default server exposes exactly three tools:
 
-Crawler results are compact by default. Set `includePages` or `includeIssues` only when the agent really needs raw detail.
+- `seo_list_reports` returns report ids, categories, and one-line descriptions.
+- `seo_describe_report` returns the parameter schema for one report id.
+- `seo_run_report` validates those parameters and runs the report.
 
-## SEO analysis tools
+This keeps tool discovery small while preserving the full report suite. Raw
+provider passthrough and project-profile mutations remain explicit CLI work,
+not hidden MCP side effects.
 
-The MCP server also exposes tools for:
+## Agent workflow
 
-- main property diagnosis
-- quick wins
-- second-page opportunities
-- decaying pages and queries
-- cannibalisation
-- CTR underperformers
-- internal link opportunities
-- query clustering
-- content optimization reports
-- local SEO test measurement with GSC, optional GA4, and optional controls
-- page performance audits with Lighthouse or local fallback
-- pSEO audits
-- crawl diffs
-- index monitoring
-- link recovery
-- update postmortems
-- monthly reports
-- AI referrals
-- SEO query to AI prompt conversion
+1. Call `seo_list_reports`, optionally with a category.
+2. Pick the smallest report that answers the question.
+3. Call `seo_describe_report` for that id.
+4. Call `seo_run_report` with only the parameters that schema accepts.
+5. Reason from `structuredContent`. Use returned text or Markdown as the
+   display layer.
+6. Check `dataStatus`, source completeness, caps, warnings, and caveats before
+   making a conclusion.
+7. Reuse saved crawl report ids for follow-ups instead of crawling again.
 
-## Good agent workflow
+Useful report ids include:
 
-1. Run `seo_crawl_site` with `saveReport: true`.
-2. Read `summary`, `topFixes`, `warnings`, and `caveats`.
-3. Use `seo_explain_issue` for unfamiliar rule ids.
-4. Use `seo_affected_urls` to get exact URLs for one fix.
-5. Use `seo_ai_readiness`, `seo_entity_readiness`, and `seo_geo_gaps` when the user asks about AI-search readiness.
-6. Use `seo_llms_txt_generate` or `seo_okf_build` when the user asks for agent-readable site knowledge.
-7. Use `seo_compare_crawl_reports` after a deploy when the user asks what changed.
-8. Use `seo_content_optimization` when the user asks how to improve one URL.
-9. Use `seo_measure_change` when the user has a dated SEO change and wants before/after impact.
-10. Use saved report ids for follow-up questions.
+- `workflow-diagnose-property` for the main diagnosis.
+- `workflow-refresh-priorities` for a ranked action queue.
+- `crawl-site`, then `top-fixes` or `affected-urls`, for technical work.
+- `audit-page` and `performance-audit` for one URL.
+- `index-watch` for bounded Google URL Inspection evidence.
+- `pseo-audit` for repeated template families.
+- `report-narrative` and `monthly-report` for readable reporting.
 
-This keeps the agent focused. It also avoids re-crawling when the user asks a second question.
+Call `seo_list_reports` instead of treating this list as the complete catalog.
 
-## Claude plugin status
+## Error contract
 
-This repo now includes plugin metadata and standalone skills under `.claude-plugin` and `skills`.
+Tool errors set `isError` and return a structured envelope:
 
-The plugin is not published to a marketplace yet. The standalone skills ship inside the `seo` npm package and remain available directly from this repository.
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "Unknown report: example.",
+    "retryable": false
+  }
+}
+```
+
+Do not parse error text when `structuredContent.error` is available.
+
+## Skills and plugin metadata
+
+Focused agent skills ship under `skills/` in the npm package and repository.
+Install every packaged skill into a supported location with one command:
+
+```bash
+seo skills install --target agents
+seo skills install --target codex
+seo skills install --target claude
+seo skills install --target project
+```
+
+Pass a skill name after `install` to copy only that skill. Use `--dir` for a
+custom agent skills directory. Agents and CI should add `--json`.
+
+The repository includes Claude plugin metadata, but the plugin is not yet
+published to a marketplace.

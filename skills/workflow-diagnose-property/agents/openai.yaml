@@ -1,0 +1,4 @@
+interface:
+  display_name: "Diagnosis workflow"
+  short_description: "Run the full property diagnosis workflow"
+  default_prompt: "Use $workflow-diagnose-property to run the workflow-diagnose-property report and explain its evidence and limits."

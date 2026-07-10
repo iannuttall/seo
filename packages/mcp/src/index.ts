@@ -3,6 +3,18 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { SEO_VERSION } from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
 
+export {
+  REPORT_CATEGORIES,
+  type ReportCategory,
+  type ReportSummary,
+} from './report-registry.js'
+export {
+  describeReport,
+  executeReport,
+  listReports,
+  runReport,
+} from './reports.js'
+
 export function createServer(): McpServer {
   const server = new McpServer(
     {

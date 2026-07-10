@@ -57,6 +57,7 @@ import {
 } from './commands/product/index.js'
 import { pseoCommand } from './commands/pseo/index.js'
 import { aiReadinessCommand } from './commands/readiness.js'
+import { reportCatalogCommand } from './commands/report-catalog.js'
 import {
   monthlyReportCommand,
   reportNarrativeCommand,
@@ -125,6 +126,7 @@ const helpSections: HelpSection[] = [
       ['seo export diagnose', 'Export report data to CSV'],
       ['seo mcp install', 'Install SEO tools into MCP clients'],
       ['seo skills list', 'List packaged skills for agents'],
+      ['seo reports list', 'Discover every structured report'],
     ],
   },
 ]
@@ -257,6 +259,7 @@ const main = defineCommand({
     start: startCommand,
     setup: setupCommand,
     report: mainReportCommand,
+    reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
     'technical-watch': technicalWatchCommand,

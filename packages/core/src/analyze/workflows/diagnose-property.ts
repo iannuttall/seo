@@ -16,6 +16,13 @@ export async function diagnosePropertyWorkflow(input: {
   }>
 > {
   const narrative = await reportNarrative(input)
+  const skippedCount = narrative.diagnosis.skippedSections?.length ?? 0
+  const stepSummary =
+    narrative.dataStatus === 'complete'
+      ? 'Generated diagnosis, movement, change, and monitoring narrative.'
+      : skippedCount
+        ? `Generated ${narrative.dataStatus === 'unavailable' ? 'an' : 'a'} ${narrative.dataStatus} diagnosis; ${skippedCount} sections were unavailable.`
+        : 'Generated a partial diagnosis because one or more source datasets were incomplete.'
   return workflowReport({
     workflow: 'diagnose-property',
     site: input.site,
@@ -24,8 +31,7 @@ export async function diagnosePropertyWorkflow(input: {
       {
         tool: 'seo_report_narrative',
         status: 'completed',
-        summary:
-          'Generated diagnosis, movement, change, and monitoring narrative.',
+        summary: stepSummary,
       },
     ],
     actions: narrative.priorities.map((priority) => ({

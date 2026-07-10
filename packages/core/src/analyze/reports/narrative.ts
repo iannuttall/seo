@@ -17,10 +17,12 @@ import { renderMarkdown } from './markdown.js'
 import {
   changeLine,
   contentOpportunityBullets,
+  diagnosisAvailabilityCaveats,
   headlineLine,
   monitoringBullets,
   movementLine,
   topSegmentLine,
+  updateAttributionLine,
 } from './sections.js'
 import type { ReportNarrative } from './types.js'
 
@@ -128,6 +130,7 @@ export async function reportNarrative(input: {
   const report: ReportNarrative = {
     site: input.site,
     generatedAt: new Date().toISOString(),
+    dataStatus: diagnosis.dataStatus,
     periodDays: period ? rangeDays(period) : periodDays,
     period: diagnosisPeriod,
     headline: headlineLine(diagnosis),
@@ -142,10 +145,7 @@ export async function reportNarrative(input: {
         verified: diagnosis.quickWins.verification.verified,
         quickWinCount: diagnosis.quickWins.items.length,
       }),
-      ...(diagnosis.skippedSections ?? []).map(
-        (section) =>
-          `Skipped ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
-      ),
+      ...diagnosisAvailabilityCaveats(diagnosis),
     ],
     sections: [
       {
@@ -153,7 +153,7 @@ export async function reportNarrative(input: {
         bullets: [
           movementLine(diagnosis),
           topSegmentLine(diagnosis),
-          `${countLabel(diagnosis.summary.updateMatches, 'official Google update window')} overlapped recent movement.`,
+          updateAttributionLine(diagnosis),
         ],
       },
       {

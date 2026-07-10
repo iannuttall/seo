@@ -71,7 +71,8 @@ export const diagnoseCommand = defineCommand({
     }
     printKeyValue([
       ['Property', report.site],
-      ['Classification', report.summary.classification],
+      ['Data status', report.dataStatus],
+      ['Update attribution', report.summary.updateAttribution],
       ['Significant anomalies', String(report.summary.significantAnomalies)],
       ['Update matches', String(report.summary.updateMatches)],
       ['Decay items', String(report.summary.decayItems)],

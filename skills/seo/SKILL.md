@@ -50,6 +50,9 @@ Use the `seo` MCP server exposed by the repository or installed package.
 
 - Treat observations as evidence within the report's methodology and data limits. Do not invent metrics.
 - Check `dataStatus`, source completeness, selection counts, warnings, and caveats before summarising a report.
+- In diagnosis output, check `summary.updateAttributionStatus` first and treat `summary.updateAttribution` as update-correlation context, not the site's overall diagnosis.
+- If `dataStatus` is `partial` or `unavailable`, name the skipped or incomplete evidence before describing findings. Never turn an unavailable section into a zero-result claim.
+- Treat quick-win CTR targets and calculated shortfalls as deterministic prioritisation heuristics, not traffic forecasts.
 - Quote `principle` and `evidenceRef` when explaining recommendations.
 - Do not generate titles, metas, or copy. Keep advice structural and diagnostic.
 - If the tool returns no rows, say that clearly instead of padding the answer.

@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
+import { buildDiagnosisPriorities } from '../diagnosis-priorities.js'
+import { diagnosisPartialReasons } from '../diagnosis-status.js'
 import { analyzeDecay } from '../site-diagnostics/decay-analysis.js'
 import {
   analyzeCannibalRows,
   analyzeQuickWinsFromRows,
 } from '../site-diagnostics.js'
 import { analyzeStrikingDistanceRows } from '../striking-distance.js'
-import { contentOpportunityBullets, headlineLine } from './sections.js'
+import {
+  contentOpportunityBullets,
+  diagnosisAvailabilityCaveats,
+  headlineLine,
+  movementLine,
+  topSegmentLine,
+  updateAttributionLine,
+} from './sections.js'
 
 function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
   const analysis = analyzeQuickWinsFromRows({
@@ -220,7 +229,10 @@ function emptyDiagnosis(): DiagnosePropertyReport {
   return {
     site: 'sc-domain:example.com',
     generatedAt: '2026-06-03T00:00:00.000Z',
+    dataStatus: 'complete',
     summary: {
+      updateAttribution: 'not-enough-evidence',
+      updateAttributionStatus: 'available',
       classification: 'not-enough-evidence',
       significantAnomalies: 0,
       updateMatches: 0,
@@ -316,6 +328,27 @@ function segment(dimension: 'page' | 'query' | 'device' | 'country') {
   }
 }
 
+function significantClickAnomaly(
+  site: string,
+): DiagnosePropertyReport['anomaly']['anomalies'][number] {
+  return {
+    site,
+    metric: 'clicks',
+    baselineStart: '2026-04-01',
+    baselineEnd: '2026-04-30',
+    comparisonStart: '2026-05-01',
+    comparisonEnd: '2026-05-14',
+    baselineMean: 100,
+    comparisonMean: 60,
+    baselineTotal: 3_000,
+    comparisonTotal: 840,
+    percentChange: -40,
+    zScore: -3,
+    direction: 'drop',
+    significant: true,
+  }
+}
+
 test('contentOpportunityBullets hides zero-count non-findings', () => {
   const bullets = contentOpportunityBullets(emptyDiagnosis())
 
@@ -330,7 +363,265 @@ test('headlineLine writes zero counts as plain English', () => {
 
   assert.equal(
     headline,
-    'not-enough-evidence; no significant anomaly signals; no observed retained query/page declines; no striking-distance opportunities.',
+    'no significant anomaly signals; no observed retained query/page declines; no striking-distance opportunities; no quick-win candidates.',
   )
   assert.doesNotMatch(headline, /0 .*item/)
+})
+
+test('partial source evidence is visible in narrative caveats', () => {
+  const report = emptyDiagnosis()
+  report.dataStatus = 'partial'
+  report.partialReasons = [
+    {
+      section: 'quick-win opportunities',
+      reason: 'The retained Search Console response reached its row cap.',
+    },
+  ]
+
+  assert.deepEqual(diagnosisAvailabilityCaveats(report), [
+    'Partial quick-win opportunities: The retained Search Console response reached its row cap.',
+  ])
+})
+
+test('skipped evidence is unavailable instead of a reassuring negative', () => {
+  const report = emptyDiagnosis()
+  report.dataStatus = 'partial'
+  report.skippedSections = [
+    { section: 'traffic anomaly', reason: 'Daily rows were unavailable.' },
+    {
+      section: 'page movement segments',
+      reason: 'Comparison rows were unavailable.',
+    },
+    {
+      section: 'update correlation',
+      reason: 'Search Status was unavailable.',
+    },
+    { section: 'decay analysis', reason: 'Historical rows were unavailable.' },
+    {
+      section: 'cannibalisation analysis',
+      reason: 'Query/page rows were unavailable.',
+    },
+    {
+      section: 'striking-distance opportunities',
+      reason: 'Query/page rows were unavailable.',
+    },
+    {
+      section: 'quick-win opportunities',
+      reason: 'Query/page rows were unavailable.',
+    },
+  ]
+  report.summary.updateAttribution = 'unavailable'
+  report.summary.updateAttributionStatus = 'unavailable'
+
+  assert.match(headlineLine(report), /^Partial diagnosis;/)
+  assert.match(headlineLine(report), /traffic anomaly analysis unavailable/)
+  assert.doesNotMatch(headlineLine(report), /no significant anomaly/)
+  assert.match(movementLine(report), /not available/)
+  assert.match(topSegmentLine(report), /not available/)
+  assert.equal(
+    updateAttributionLine(report),
+    'Update attribution was not available for this run.',
+  )
+  const opportunities = contentOpportunityBullets(report).join('\n')
+  assert.match(opportunities, /Could not assess/)
+  assert.doesNotMatch(opportunities, /No material content opportunity/)
+})
+
+test('quick-win-only evidence is visible in the headline, content, and priorities', () => {
+  const report = emptyDiagnosis()
+  const analysis = analyzeQuickWinsFromRows({
+    site: report.site,
+    rows: [
+      {
+        keys: ['technical seo audit', 'https://example.com/audit'],
+        clicks: 2,
+        impressions: 1_000,
+        ctr: 0.002,
+        position: 5,
+      },
+    ],
+  })
+  assert.equal(analysis.items.length, 1)
+  report.quickWins.items = analysis.items
+  report.summary.quickWinItems = analysis.items.length
+
+  assert.match(headlineLine(report), /1 quick-win candidate/)
+  assert.match(
+    contentOpportunityBullets(report).join('\n'),
+    /"technical seo audit" on https:\/\/example\.com\/audit/,
+  )
+  const priorities = buildDiagnosisPriorities({
+    anomaly: report.anomaly,
+    update: report.updateCorrelation,
+    page: report.segments.page,
+    decay: report.decay,
+    cannibal: report.cannibalization,
+    striking: report.strikingDistance,
+    quickWins: report.quickWins,
+  })
+  assert.equal(priorities[0]?.label, 'Review CTR-target opportunity')
+  assert.equal(priorities[0]?.action, analysis.items[0]?.recommendation.action)
+
+  const top = report.quickWins.items[0]
+  assert.ok(top)
+  top.recommendation.confidence = 'high'
+  report.quickWins.source.possiblyTruncated = true
+  assert.equal(
+    buildDiagnosisPriorities({
+      anomaly: report.anomaly,
+      update: report.updateCorrelation,
+      page: report.segments.page,
+      decay: report.decay,
+      cannibal: report.cannibalization,
+      striking: report.strikingDistance,
+      quickWins: report.quickWins,
+    })[0]?.confidence,
+    'low',
+  )
+})
+
+test('failed quick-win verification makes diagnosis evidence partial', () => {
+  const report = emptyDiagnosis()
+  report.quickWins.verification = {
+    requested: true,
+    limit: 2,
+    attemptedRows: 2,
+    attemptedUrls: 2,
+    verified: 0,
+    technical: 0,
+    failed: 2,
+  }
+
+  assert.deepEqual(
+    diagnosisPartialReasons(report).map((reason) => reason.section),
+    ['quick-win content verification'],
+  )
+  assert.match(
+    diagnosisPartialReasons(report)[0]?.reason ?? '',
+    /2 of 2 attempted candidate verifications failed/,
+  )
+})
+
+test('failed striking-distance verification makes diagnosis evidence partial', () => {
+  const report = emptyDiagnosis()
+  report.strikingDistance.verification = {
+    requested: true,
+    limit: 3,
+    attempted: 3,
+    verified: 1,
+    technical: 0,
+    failed: 2,
+  }
+
+  assert.deepEqual(
+    diagnosisPartialReasons(report).map((reason) => reason.section),
+    ['striking-distance content verification'],
+  )
+  assert.match(
+    diagnosisPartialReasons(report)[0]?.reason ?? '',
+    /2 of 3 attempted candidate verifications failed/,
+  )
+})
+
+test('partial decay evidence downgrades its priority confidence', () => {
+  const report = emptyDiagnosis()
+  report.decay.dataStatus = 'partial'
+  report.decay.selection.eligibleRows = 1
+
+  const priorities = buildDiagnosisPriorities({
+    anomaly: report.anomaly,
+    update: report.updateCorrelation,
+    page: report.segments.page,
+    decay: report.decay,
+    cannibal: report.cannibalization,
+    striking: report.strikingDistance,
+    quickWins: report.quickWins,
+  })
+
+  assert.equal(priorities[0]?.label, 'Refresh decaying content')
+  assert.equal(priorities[0]?.confidence, 'low')
+})
+
+test('update overlap without significant movement is context, not a priority', () => {
+  const report = emptyDiagnosis()
+  report.updateCorrelation.overlappingUpdates = [
+    {
+      id: 'core-update',
+      name: 'Core update',
+      type: 'core',
+      product: 'Ranking',
+      start: '2026-05-01T00:00:00.000Z',
+      end: '2026-05-14T00:00:00.000Z',
+      status: 'complete',
+      sourceUrl: 'https://status.search.google.com/incidents/core-update',
+    },
+  ]
+  report.summary.updateMatches = 1
+  report.summary.updateAttribution = 'possibly-update-related'
+  report.summary.classification = 'possibly-update-related'
+  report.updateCorrelation.anomalies = [significantClickAnomaly(report.site)]
+
+  assert.match(
+    updateAttributionLine(report),
+    /overlapped the comparison window, but no statistically significant movement/,
+  )
+  assert.equal(
+    buildDiagnosisPriorities({
+      anomaly: report.anomaly,
+      update: report.updateCorrelation,
+      page: report.segments.page,
+      decay: report.decay,
+      cannibal: report.cannibalization,
+      striking: report.strikingDistance,
+      quickWins: report.quickWins,
+    }).some((priority) => priority.label === 'Review update exposure'),
+    false,
+  )
+})
+
+test('update action requires both significant movement and an update overlap', () => {
+  const report = emptyDiagnosis()
+  const anomalies = [significantClickAnomaly(report.site)]
+  report.anomaly.anomalies = anomalies
+  report.updateCorrelation.anomalies = anomalies
+  report.updateCorrelation.overlappingUpdates = [
+    {
+      id: 'core-update',
+      name: 'Core update',
+      type: 'core',
+      product: 'Ranking',
+      start: '2026-05-01T00:00:00.000Z',
+      end: '2026-05-14T00:00:00.000Z',
+      status: 'complete',
+      sourceUrl: 'https://status.search.google.com/incidents/core-update',
+    },
+  ]
+  const priorities = buildDiagnosisPriorities({
+    anomaly: report.anomaly,
+    update: report.updateCorrelation,
+    page: report.segments.page,
+    decay: report.decay,
+    cannibal: report.cannibalization,
+    striking: report.strikingDistance,
+    quickWins: report.quickWins,
+  })
+
+  assert.equal(priorities.length, 1)
+  assert.equal(priorities[0]?.label, 'Review update exposure')
+  assert.match(priorities[0]?.reason ?? '', /significant movement comparison/)
+  assert.match(updateAttributionLine(report), /significant movement comparison/)
+
+  report.updateCorrelation.overlappingUpdates = []
+  assert.equal(
+    buildDiagnosisPriorities({
+      anomaly: report.anomaly,
+      update: report.updateCorrelation,
+      page: report.segments.page,
+      decay: report.decay,
+      cannibal: report.cannibalization,
+      striking: report.strikingDistance,
+      quickWins: report.quickWins,
+    }).length,
+    0,
+  )
 })

@@ -403,16 +403,16 @@ export async function updateCorrelation(input: {
   knownConfounders?: string[]
   includeChangeLog?: boolean
   refresh?: boolean
+  trafficAnomalies?: TrafficAnomaly[]
 }): Promise<UpdateCorrelationReport> {
   const days = input.days ?? 90
   const recentDays = input.recentDays ?? 7
   const paddingDays = input.paddingDays ?? 3
-  const anomalyReport = await trafficAnomaly(input)
-  const significant = anomalyReport.anomalies.filter(
-    (anomaly) => anomaly.significant,
-  )
-  const comparisonStart = anomalyReport.anomalies[0]?.comparisonStart
-  const comparisonEnd = anomalyReport.anomalies[0]?.comparisonEnd
+  const anomalies =
+    input.trafficAnomalies ?? (await trafficAnomaly(input)).anomalies
+  const significant = anomalies.filter((anomaly) => anomaly.significant)
+  const comparisonStart = anomalies[0]?.comparisonStart
+  const comparisonEnd = anomalies[0]?.comparisonEnd
   const updates = await listSearchUpdates({ product: 'Ranking', limit: 50 })
   const overlappingUpdates =
     comparisonStart && comparisonEnd
@@ -459,12 +459,12 @@ export async function updateCorrelation(input: {
   return {
     site: input.site,
     generatedAt: new Date().toISOString(),
-    anomalies: anomalyReport.anomalies,
+    anomalies,
     overlappingUpdates,
     classification,
     ...interpretUpdateCorrelation({
       site: input.site,
-      anomalies: anomalyReport.anomalies,
+      anomalies,
       overlappingUpdates,
       classification,
       confounders,

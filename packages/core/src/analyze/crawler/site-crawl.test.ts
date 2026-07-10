@@ -7,6 +7,7 @@ import {
 } from 'node:http'
 import { test } from 'node:test'
 import { Response } from 'undici'
+import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type { CrawlStatusEvent } from './report.js'
 import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
@@ -660,12 +661,7 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
   const dependencies: CrawlSiteDependencies = {
     fetchSitemapUrls: async (input) => {
       calls.sitemap += 1
-      return {
-        sitemapUrl: input.sitemapUrl,
-        urls: [],
-        nestedSitemaps: [],
-        warnings: [],
-      }
+      return completeSitemapResult(input.sitemapUrl)
     },
     fetch: async (url) => {
       calls.fetchUrls.push(url)
@@ -921,12 +917,8 @@ test('crawlSite returns a partial report when cancelled before work starts', asy
         fetchPageCalls += 1
         return { urls: [] }
       },
-      fetchSitemapUrls: async (input) => ({
-        sitemapUrl: input.sitemapUrl,
-        urls: ['https://example.com/queued'],
-        nestedSitemaps: [],
-        warnings: [],
-      }),
+      fetchSitemapUrls: async (input) =>
+        completeSitemapResult(input.sitemapUrl, ['https://example.com/queued']),
     },
   )
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Response } from 'undici'
 import type { CrawlSiteDependencies } from '../crawler/site-crawl.js'
+import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
 import { crawlImplementationQueueWorkflow } from './crawl-implementation-queue.js'
 
 test('crawlImplementationQueueWorkflow crawls, joins providers, and ranks fixes', async () => {
@@ -17,12 +18,7 @@ test('crawlImplementationQueueWorkflow crawls, joins providers, and ranks fixes'
         status: 404,
         headers: { 'content-type': 'text/plain' },
       }),
-    fetchSitemapUrls: async (input) => ({
-      sitemapUrl: input.sitemapUrl,
-      urls: [],
-      nestedSitemaps: [],
-      warnings: [],
-    }),
+    fetchSitemapUrls: async (input) => completeSitemapResult(input.sitemapUrl),
     fetchPage: async (url) => ({
       urls: [],
       page: {

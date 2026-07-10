@@ -8,7 +8,7 @@ import { getDb } from '../../storage/database.js'
 import { integerOption } from '../site-diagnostics/quick-wins-report-input.js'
 import { allocateIndexUrlsToProperties } from './index-plan.js'
 import { indexWatch } from './index-watch.js'
-import { fetchSitemapUrls } from './sitemaps.js'
+import { boundedSitemapInventory, fetchSitemapUrls } from './sitemaps.js'
 import type { IndexMonitorReport } from './types.js'
 
 type DueUrl = {
@@ -311,9 +311,8 @@ export async function indexMonitor(input: {
       fetchSitemapUrls({ sitemapUrl, limit: maxUrls }),
     ),
   )
-  const discoveredUrls = [
-    ...new Set(sitemapResults.flatMap((result) => result.urls)),
-  ].slice(0, maxUrls)
+  const inventory = boundedSitemapInventory(sitemapResults, maxUrls)
+  const discoveredUrls = inventory.urls
   const warnings = sitemapResults.flatMap((result) => result.warnings)
   const inventoryUrls: string[] = []
   let invalidUrls = 0
@@ -325,13 +324,10 @@ export async function indexMonitor(input: {
       warnings.push(error instanceof Error ? error.message : String(error))
     }
   }
-  const possiblyTruncated = sitemapResults.some(
-    (result) =>
-      result.urls.length >= maxUrls || result.nestedSitemaps.length >= 50,
-  )
+  const possiblyTruncated = inventory.truncation.possiblyTruncated
   if (possiblyTruncated) {
     warnings.push(
-      'Sitemap discovery reached a configured URL or nested-sitemap boundary; inventory and skipped counts may be incomplete.',
+      'Sitemap discovery exceeded a configured URL or nested-sitemap boundary; inventory and skipped counts may be incomplete.',
     )
   }
   const accountProperties: string[] = input.properties
@@ -434,6 +430,8 @@ export async function indexMonitor(input: {
       staleAfterDays,
       failureRetryHours,
       possiblyTruncated,
+      inventoryLimitExceeded: inventory.truncation.inventoryLimitExceeded,
+      omittedUrlsAtLeast: inventory.truncation.omittedUrlsAtLeast,
       discoveredUrls: discoveredUrls.length,
       invalidUrls,
     },

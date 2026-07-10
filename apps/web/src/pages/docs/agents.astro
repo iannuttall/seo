@@ -22,9 +22,32 @@ seo crawl https://example.com --json --output crawl.json</code></pre>
   <p>Agents and setup scripts choose the destination explicitly:</p>
   <pre><code>seo mcp install --claude-desktop --json
 seo mcp install --claude-code --json
+seo mcp install --codex --json
 seo mcp install --cursor --json
 seo mcp install --all --json</code></pre>
-  <p>Run or test the server directly:</p>
+  <p>
+    The installer preserves unrelated settings and refuses to replace an
+    unmanaged server named <code>seo</code>.
+  </p>
+
+  <h2>Use native client commands</h2>
+  <h3>Codex</h3>
+  <pre><code>codex mcp add seo -- npx -y seo mcp serve
+codex mcp get seo</code></pre>
+  <p>One setup covers the Codex CLI, desktop app, and IDE extension.</p>
+
+  <h3>Claude Code</h3>
+  <pre><code>claude mcp add --scope user seo -- npx -y seo mcp serve
+claude mcp get seo</code></pre>
+
+  <h3>Cursor and Claude Desktop</h3>
+  <pre><code>seo mcp install --cursor
+seo mcp install --claude-desktop</code></pre>
+  <p>
+    Restart desktop clients after installation. Cursor shows the server in its
+    MCP settings. Claude Desktop and Claude Code use separate config files.
+  </p>
+  <p>Your client normally starts the server. Run it directly for testing:</p>
   <pre><code>seo mcp serve
 seo mcp serve --test</code></pre>
 

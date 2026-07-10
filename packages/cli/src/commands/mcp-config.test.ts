@@ -11,19 +11,24 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { parse } from 'jsonc-parser'
 import {
-  type ClientConfigTarget,
-  installMcpConfig,
-  uninstallMcpConfig,
-} from './mcp-config.js'
+  detectMcpClients,
+  type JsonClientConfigTarget,
+  mcpClientTargets,
+} from './mcp-clients.js'
+import { installMcpConfig, uninstallMcpConfig } from './mcp-config.js'
 
 function fixture(source?: string): {
   dir: string
-  target: ClientConfigTarget
+  target: JsonClientConfigTarget
 } {
   const dir = mkdtempSync(join(tmpdir(), 'seo-mcp-config-'))
   const target = {
+    kind: 'json' as const,
     client: 'cursor' as const,
+    label: 'Cursor',
     path: join(dir, 'mcp.json'),
+    commandNames: ['cursor'],
+    detectionPaths: [join(dir, '.cursor')],
   }
   if (source !== undefined) writeFileSync(target.path, source, 'utf8')
   return { dir, target }
@@ -139,4 +144,97 @@ test('MCP install creates private config files', () => {
   if (process.platform !== 'win32') {
     assert.equal(statSync(target.path).mode & 0o777, 0o600)
   }
+})
+
+test('MCP targets use the documented Windows Claude Desktop path', () => {
+  const windows = mcpClientTargets({
+    home: 'C:\\Users\\seo',
+    platform: 'win32',
+    env: { APPDATA: 'C:\\Users\\seo\\AppData\\Roaming' },
+  })
+  const desktop = windows.find((target) => target.client === 'claude-desktop')
+  assert.equal(
+    desktop?.path,
+    'C:\\Users\\seo\\AppData\\Roaming\\Claude\\claude_desktop_config.json',
+  )
+
+  const linux = mcpClientTargets({
+    home: '/home/seo',
+    platform: 'linux',
+    env: {},
+  })
+  assert.equal(
+    linux.some((target) => target.client === 'claude-desktop'),
+    false,
+  )
+})
+
+test('Claude Code config matches its native stdio schema', () => {
+  const target = mcpClientTargets({
+    home: '/tmp/seo-home',
+    platform: 'linux',
+    env: {},
+  }).find((entry) => entry.client === 'claude-code')
+  assert.ok(target)
+  assert.equal(target.kind, 'json')
+  if (target.kind !== 'json') return
+
+  const { target: fixtureTarget } = fixture()
+  installMcpConfig({ ...fixtureTarget, includeType: target.includeType })
+  const config = parse(readFileSync(fixtureTarget.path, 'utf8')) as {
+    mcpServers: { seo: Record<string, unknown> }
+  }
+  assert.equal(config.mcpServers.seo.type, 'stdio')
+})
+
+test('MCP detection returns only clients present on the machine', () => {
+  const targets = mcpClientTargets({
+    home: '/tmp/seo-home',
+    platform: 'linux',
+    env: {},
+  })
+  const detected = detectMcpClients({
+    targets,
+    hasPath: (path) => path.includes('.cursor'),
+    hasCommand: (command) => command === 'codex',
+  })
+
+  assert.deepEqual(
+    detected.map((target) => target.client),
+    ['codex', 'cursor'],
+  )
+})
+
+test('Codex MCP install uses the native CLI and stays idempotent', () => {
+  const target = mcpClientTargets({
+    home: '/tmp/seo-home',
+    platform: 'linux',
+    env: {},
+  }).find((entry) => entry.client === 'codex')
+  assert.ok(target)
+
+  let installed = false
+  const calls: string[][] = []
+  const runCommand = (_command: string, args: string[]) => {
+    calls.push(args)
+    if (args[1] === 'get') {
+      return installed
+        ? {
+            status: 0,
+            stdout: 'seo\n  command: npx\n  args: -y seo mcp serve\n',
+            stderr: '',
+          }
+        : { status: 1, stdout: '', stderr: 'not found' }
+    }
+    if (args[1] === 'add') installed = true
+    if (args[1] === 'remove') installed = false
+    return { status: 0, stdout: '', stderr: '' }
+  }
+
+  assert.equal(installMcpConfig(target, { runCommand }).changed, true)
+  assert.equal(installMcpConfig(target, { runCommand }).changed, false)
+  assert.equal(uninstallMcpConfig(target, { runCommand }).changed, true)
+  assert.equal(uninstallMcpConfig(target, { runCommand }).changed, false)
+  assert.ok(calls.some((args) => args.join(' ').includes('mcp add seo --env')))
+  assert.ok(calls.some((args) => args.join(' ') === 'mcp remove seo'))
 })

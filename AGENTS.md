@@ -47,7 +47,8 @@ skills/         packaged agent skills
 - Runtime bundles must not depend on private workspace package names.
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
   deliberately migrated and verified.
-- Use SEO Skills CLI as the product name in human-facing copy and `seo` for the command and package.
+- Use SEO Skills CLI as the product name in human-facing copy and `seo` for the
+  command and package.
 - `npx seo start` and `npm i -g seo` are the primary README paths.
 - Library and contributor setup belongs below normal CLI usage in the README.
 
@@ -62,8 +63,8 @@ skills/         packaged agent skills
 - `skills/<name>/SKILL.md`: focused instructions for agents using one workflow.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: human usage documentation.
-- `plans`: ignored working notes and checklists. Never depend on them for
-  product behavior or durable project context.
+- Working plans live outside the repository in the sibling `seo-plans`
+  directory. Never depend on them for product behavior or durable context.
 - `dist`: generated public package bundles. Do not hand-edit or commit them.
 
 Useful web areas:
@@ -79,6 +80,8 @@ Useful CLI areas:
 - `packages/cli/src/args.ts`: shared argument parsing, including `projectArg`.
 - `packages/cli/src/selection.ts`: project, site, and GA4 selection.
 - `packages/cli/src/commands/setup`: `seo start` and guided onboarding.
+- `packages/cli/src/commands/mcp-clients.ts`: MCP client paths and detection.
+- `packages/cli/src/commands/mcp-config.ts`: safe MCP install and removal.
 - `packages/cli/src/commands/workflows/diagnose-property.ts`: `seo report`.
 - `packages/cli/src/commands/report-options.ts`: shared report flags.
 
@@ -134,6 +137,16 @@ The guided flow should not ask humans for implementation details.
   production secrets or generated credential modules.
 - Installed-app client values are identifiers, not a substitute for protecting
   refresh tokens. Local token files must keep private permissions.
+
+## MCP Rules
+
+- Keep `seo mcp install` interactive for humans. Require explicit targets in
+  JSON and CI mode.
+- Preserve unrelated client settings, create backups, and refuse to replace
+  unmanaged `seo` entries.
+- Use the native Codex CLI for its TOML config. Do not rewrite that file with
+  string replacement.
+- Keep platform paths covered by tests, especially Claude Desktop on Windows.
 
 ## Report Truth Rules
 

@@ -20,7 +20,8 @@ import {
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import { maybeExitCancelled } from '../utils.js'
-import { detectMcpClients, installMcpConfig } from './mcp-config.js'
+import { detectMcpClients } from './mcp-clients.js'
+import { installMcpConfig } from './mcp-config.js'
 
 export const initCommand = defineCommand({
   meta: {
@@ -179,21 +180,27 @@ export const initCommand = defineCommand({
       )
       if (installMcp) {
         const detected = detectMcpClients()
-        const targets = maybeExitCancelled(
-          await multiselect({
-            message: 'Which clients?',
-            options: detected.map((target) => ({
-              value: target.client,
-              label: target.client,
-              hint: target.path,
-            })),
-            initialValues: detected.map((target) => target.client),
-          }),
-        )
-        for (const target of detected.filter((entry) =>
-          targets.includes(entry.client),
-        )) {
-          installMcpConfig(target)
+        if (detected.length === 0) {
+          note(
+            'No supported MCP client was detected. Run `seo mcp install` later.',
+          )
+        } else {
+          const targets = maybeExitCancelled(
+            await multiselect({
+              message: 'Which clients?',
+              options: detected.map((target) => ({
+                value: target.client,
+                label: target.label,
+                hint: target.path,
+              })),
+              initialValues: detected.map((target) => target.client),
+            }),
+          )
+          for (const target of detected.filter((entry) =>
+            targets.includes(entry.client),
+          )) {
+            installMcpConfig(target)
+          }
         }
       }
     }

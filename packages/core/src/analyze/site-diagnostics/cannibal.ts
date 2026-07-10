@@ -45,9 +45,15 @@ function verdict(input: {
     return 'Search Console returned no retained query/page rows for this window.'
   }
   if (!input.eligible) {
+    if (input.status === 'partial') {
+      return 'No material multi-URL query candidates remained in the validated retained rows, but partial evidence prevents an all-clear.'
+    }
     return 'No material multi-URL query candidates remained after validation and filtering.'
   }
-  return `${input.returned} of ${input.eligible} multi-URL query candidate${input.eligible === 1 ? '' : 's'} returned for intent and technical review.`
+  const result = `${input.returned} of ${input.eligible} multi-URL query candidate${input.eligible === 1 ? '' : 's'} returned for intent and technical review.`
+  return input.status === 'partial'
+    ? `${result} Provider evidence is partial.`
+    : result
 }
 
 export async function cannibalReport(
@@ -120,10 +126,23 @@ export async function cannibalReport(
   const pageTruncated = pageExposure.rowsFetched >= MAX_GSC_ROWS
   const propertyTruncated = propertyDemand.rowsFetched >= MAX_GSC_ROWS
   const possiblyTruncated = pageTruncated || propertyTruncated
+  const invalidRows =
+    analysis.selection.invalidRows + analysis.selection.propertyInvalidRows
+  const partialValidation = invalidRows > 0
+  const completeness: CannibalReport['source']['completeness'] =
+    possiblyTruncated && partialValidation
+      ? 'partial-and-possibly-truncated'
+      : possiblyTruncated
+        ? 'possibly-truncated'
+        : partialValidation
+          ? 'partial'
+          : 'complete'
   const dataStatus: CannibalReport['dataStatus'] =
-    pageExposure.rowsFetched === 0
+    analysis.selection.sourceRows === 0
       ? 'empty'
-      : possiblyTruncated || analysis.selection.missingPropertyQueries > 0
+      : possiblyTruncated ||
+          partialValidation ||
+          analysis.selection.missingPropertyQueries > 0
         ? 'partial'
         : analysis.selection.eligibleClusters === 0
           ? 'filtered'
@@ -144,6 +163,10 @@ export async function cannibalReport(
         dimensions: ['query', 'page'],
         aggregationType: 'auto',
         rowsFetched: pageExposure.rowsFetched,
+        validation: {
+          retainedRows: analysis.selection.validRows,
+          invalidRows: analysis.selection.invalidRows,
+        },
         calls: pageExposure.calls,
         maxRows: MAX_GSC_ROWS,
         possiblyTruncated: pageTruncated,
@@ -152,11 +175,17 @@ export async function cannibalReport(
         dimensions: ['query'],
         aggregationType: 'byProperty',
         rowsFetched: propertyDemand.rowsFetched,
+        validation: {
+          retainedRows:
+            analysis.selection.propertySourceRows -
+            analysis.selection.propertyInvalidRows,
+          invalidRows: analysis.selection.propertyInvalidRows,
+        },
         calls: propertyDemand.calls,
         maxRows: MAX_GSC_ROWS,
         possiblyTruncated: propertyTruncated,
       },
-      completeness: possiblyTruncated ? 'possibly-truncated' : 'complete',
+      completeness,
     },
     methodology: {
       id: 'gsc_url_overlap_v2',
@@ -195,15 +224,24 @@ export async function cannibalReport(
       'This report finds queries with material exposure across multiple URLs. It does not prove that the URLs satisfy the same intent or that consolidation is correct.',
       'Page exposure impressions can count more than one URL for a property impression. Property-level query impressions are reported separately instead of calling page exposure split demand.',
       'Search Console retains top rows and omits anonymized queries, so absent rows are not proof of absent traffic.',
+      ...(partialValidation
+        ? [
+            `${analysis.selection.invalidRows} invalid page-exposure row${analysis.selection.invalidRows === 1 ? '' : 's'} and ${analysis.selection.propertyInvalidRows} invalid property-demand row${analysis.selection.propertyInvalidRows === 1 ? '' : 's'} were excluded. Findings use validated retained rows only.`,
+          ]
+        : []),
       'The suggested owner is only a deterministic review starting point based on clicks, impressions, and position. Verify intent, indexability, redirects, and canonicals before changing URLs.',
     ],
     recommendations: analysis.items.length
       ? [
           'Review the highest-exposure candidates first. Confirm whether URLs serve the same intent and inspect technical state before changing canonicals, redirects, or content.',
         ]
-      : [
-          'No URL-overlap action is recommended from the retained rows and current filters.',
-        ],
+      : partialValidation
+        ? [
+            'No URL-overlap action is recommended from the validated retained rows. Inspect or refresh the provider data before treating this result as an all-clear.',
+          ]
+        : [
+            'No URL-overlap action is recommended from the retained rows and current filters.',
+          ],
     ledgerSummary: ledger.summary(),
   }
 }

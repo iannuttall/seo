@@ -113,7 +113,7 @@ export type CrawlLinkGraph = Record<string, string[]>
 
 export type CrawlAiBotAccess = {
   userAgent: string
-  allowed: boolean
+  allowed: boolean | null
   declared: boolean
   coveredByWildcard: boolean
 }
@@ -130,7 +130,14 @@ export type CrawlAiSignals = {
   robotsTxt?: {
     url: string
     exists: boolean
+    availability:
+      | 'available'
+      | 'absent'
+      | 'access-blocked'
+      | 'rate-limited'
+      | 'unreachable'
     status?: number
+    error?: string
     sitemapUrls: string[]
     botAccess: CrawlAiBotAccess[]
   }
@@ -434,11 +441,15 @@ function sortRequests(
     const leftDetail =
       left.outcome === 'response'
         ? `${left.status}:${left.finalUrl}`
-        : `${left.failureKind}:${left.error}`
+        : left.outcome === 'skipped'
+          ? left.reason
+          : `${left.failureKind}:${left.error}`
     const rightDetail =
       right.outcome === 'response'
         ? `${right.status}:${right.finalUrl}`
-        : `${right.failureKind}:${right.error}`
+        : right.outcome === 'skipped'
+          ? right.reason
+          : `${right.failureKind}:${right.error}`
     return compareText(leftDetail, rightDetail)
   })
 }
@@ -478,9 +489,11 @@ export function summarizeCrawlReport(input: {
     const status =
       request.outcome === 'response'
         ? String(request.status)
-        : request.failureKind === 'aborted'
-          ? 'aborted'
-          : 'no-response'
+        : request.outcome === 'skipped'
+          ? request.reason
+          : request.failureKind === 'aborted'
+            ? 'aborted'
+            : 'no-response'
     requestByStatus[status] = (requestByStatus[status] ?? 0) + 1
     if (typeof request.durationMs === 'number') {
       requestMs += request.durationMs

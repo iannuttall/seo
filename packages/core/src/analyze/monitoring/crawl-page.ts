@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { extractPage } from '../../extract/page-extractor.js'
+import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
 import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
 import {
   hasMetaRobotsDirective,
@@ -299,6 +300,25 @@ export async function crawlOne(
   try {
     fetched = await fetchPage(url, opts)
   } catch (error) {
+    if (error instanceof RobotsAccessError) {
+      return {
+        request: {
+          requestedUrl: url,
+          outcome: 'skipped',
+          reason: error.reason,
+          robotsTxt: {
+            url: error.evidence.url,
+            allowed: error.evidence.allowed,
+            availability: error.evidence.availability,
+            status: error.evidence.status,
+            error: error.evidence.error,
+            matchedLine: error.evidence.matchedLine,
+          },
+          extraction: 'not-applicable',
+        },
+        urls: [],
+      }
+    }
     const message = error instanceof Error ? error.message : String(error)
     return {
       request: {

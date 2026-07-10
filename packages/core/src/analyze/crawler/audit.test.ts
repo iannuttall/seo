@@ -637,6 +637,7 @@ test('auditCrawlPages flags indexability issues', () => {
       robotsTxt: {
         url: 'https://example.com/robots.txt',
         allowed: false,
+        availability: 'available',
         matchedLine: 'Disallow: /blocked',
       },
       indexable: false,
@@ -672,6 +673,7 @@ test('auditCrawlPages flags indexability issues', () => {
       robotsTxt: {
         url: 'https://example.com/robots.txt',
         allowed: false,
+        availability: 'available',
         matchedLine: 'Disallow: /blocked',
       },
     }).robotsTxt,

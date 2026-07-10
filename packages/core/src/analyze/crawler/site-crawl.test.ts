@@ -208,6 +208,7 @@ test('crawlSite emits queue-friendly status events', async () => {
 })
 
 test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () => {
+  let blockedPageRequests = 0
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {
       res.setHeader('content-type', 'text/plain')
@@ -223,6 +224,7 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
       </urlset>`)
       return
     }
+    if (req.url === '/blocked') blockedPageRequests += 1
     res.setHeader('content-type', 'text/html')
     res.end(`<title>${req.url}</title><h1>${req.url}</h1>`)
   })
@@ -238,21 +240,31 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
 
     assert.deepEqual(
       report.pages.map((page) => new URL(page.url).pathname),
-      ['/blocked', '/sitemap-only'],
+      ['/sitemap-only'],
     )
     assert.equal(report.summary.discoveredUrls, 2)
     assert.equal(report.summary.queuedUrls, 2)
-    assert.equal(report.summary.crawledUrls, 2)
+    assert.equal(report.summary.crawledUrls, 1)
     assert.equal(report.summary.skippedUrls, 1)
     assert.equal(report.summary.failedUrls, 0)
-    assert.equal(report.pages[0]?.blocked, true)
-    assert.equal(report.pages[0]?.indexability, 'Robots.txt disallowed')
-    assert.equal(
-      report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
-      true,
+    assert.equal(blockedPageRequests, 0)
+    const blockedRequest = report.requests.find(
+      (request) => request.requestedUrl === `${fixture.baseUrl}/blocked`,
     )
-    assert.equal(report.status, 'partial')
-    assert.match(report.warnings.join('\n'), /robots\.txt/)
+    assert.equal(blockedRequest?.outcome, 'skipped')
+    assert.equal(
+      blockedRequest?.outcome === 'skipped' ? blockedRequest.reason : undefined,
+      'robots-disallowed',
+    )
+    assert.deepEqual(blockedRequest?.robotsTxt, {
+      url: `${fixture.baseUrl}/robots.txt`,
+      allowed: false,
+      availability: 'available',
+      status: 200,
+      error: undefined,
+      matchedLine: 'Disallow: /blocked',
+    })
+    assert.equal(report.status, 'completed')
   } finally {
     await fixture.close()
   }
@@ -281,6 +293,7 @@ test('crawlSite audits fetched HTML when robots enforcement is disabled', async 
           robotsTxt: {
             url: 'https://example.com/robots.txt',
             allowed: false,
+            availability: 'available',
             matchedLine: 'Disallow: /blocked',
           },
           title: undefined,

@@ -42,6 +42,13 @@ function compactCrawlResult(
     configHash: report.configHash,
     summary: report.summary,
     dataSources: report.dataSources,
+    ai: report.ai
+      ? {
+          robotsTxt: report.ai.robotsTxt,
+          llmsTxt: report.ai.llmsTxt,
+          agentResources: report.ai.agentResources,
+        }
+      : undefined,
     topFixes: topFixes(report, { limit: 10 }),
     warnings: report.warnings,
     caveats: report.caveats,

@@ -9,8 +9,8 @@ import {
   retryAfterMs,
   waitForHostBackpressure,
 } from './rate-controls.js'
-import { fetchRobots } from './robots.js'
-import type { NormalizedFetchRateControls } from './types.js'
+import { fetchRobots, RobotsAccessError } from './robots.js'
+import type { NormalizedFetchRateControls, RobotsResult } from './types.js'
 
 type RedirectHop = NonNullable<
   PageFetchResult['diagnostics']['redirectChain']
@@ -23,6 +23,32 @@ type CachedPageEvidence = {
   diagnosticsRobotsTxt?: PageFetchResult['diagnostics']['robotsTxt']
   redirectChain?: PageFetchResult['diagnostics']['redirectChain']
   warnings: string[]
+}
+
+function pageRobotsEvidence(
+  robots: RobotsResult,
+): NonNullable<PageFetchResult['robotsTxt']> {
+  return {
+    url: robots.url,
+    allowed: robots.allowed,
+    availability: robots.availability,
+    status: robots.status,
+    error: robots.error,
+    matchedLine: robots.matchedLine,
+  }
+}
+
+function diagnosticRobotsEvidence(
+  robots: RobotsResult,
+): NonNullable<PageFetchResult['diagnostics']['robotsTxt']> {
+  return {
+    url: robots.url,
+    cache: robots.cache,
+    allowed: robots.allowed,
+    availability: robots.availability,
+    status: robots.status,
+    error: robots.error,
+  }
 }
 
 export function encodePageFetchCacheEvidence(result: PageFetchResult): string {
@@ -95,11 +121,21 @@ export async function fetchPlain(
   timeoutMs = 20_000,
   rate: NormalizedFetchRateControls,
   signal?: AbortSignal,
+  respectRobots = false,
 ): Promise<PageFetchResult> {
   const startedAt = Date.now()
   const db = getDb()
   const key = hashKey(['page', url])
   const host = new URL(url).host
+  let robots = respectRobots
+    ? await fetchRobots(new URL(url).origin, url, refresh)
+    : undefined
+  if (robots && robots.allowed !== true) {
+    throw new RobotsAccessError(
+      robots.allowed === false ? 'robots-disallowed' : 'robots-deferred',
+      robots,
+    )
+  }
   const cached = db
     .prepare(
       'SELECT status, headers_json, body_blob, metadata_json, expires_at FROM http_cache WHERE url_hash = ? AND expires_at > ?',
@@ -135,19 +171,21 @@ export async function fetchPlain(
           ...rateLimitDiagnostics(host, rate),
         },
         backpressure: hostBackpressureSnapshot(host),
-        robotsTxt: evidence?.diagnosticsRobotsTxt
-          ? { ...evidence.diagnosticsRobotsTxt, cache: 'hit' }
-          : undefined,
+        robotsTxt: robots
+          ? diagnosticRobotsEvidence(robots)
+          : evidence?.diagnosticsRobotsTxt
+            ? { ...evidence.diagnosticsRobotsTxt, cache: 'hit' }
+            : undefined,
         redirectChain: evidence?.redirectChain,
       },
       warnings: evidence?.warnings ?? [
         'Cached page predates redirect and robots diagnostics. Rerun with refresh before making technical decisions.',
       ],
-      robotsTxt: evidence?.robotsTxt,
+      robotsTxt: robots ? pageRobotsEvidence(robots) : evidence?.robotsTxt,
     }
   }
 
-  const robots = await fetchRobots(new URL(url).origin, url, refresh)
+  robots ??= await fetchRobots(new URL(url).origin, url, refresh)
   const beforeFetch = await waitForHostBackpressure(host, rate)
   let attempts = 0
 
@@ -201,7 +239,8 @@ export async function fetchPlain(
       fetched: true,
       rendered: false,
       blocked:
-        !robots.allowed || [401, 403, 429].includes(response.response.status),
+        robots.allowed === false ||
+        [401, 403, 429].includes(response.response.status),
       durationMs,
       retries: Math.max(0, attempts - 1),
       rateLimit: {
@@ -211,19 +250,16 @@ export async function fetchPlain(
         backpressure.status === 'ok' && beforeFetch.status !== 'ok'
           ? beforeFetch
           : backpressure,
-      robotsTxt: {
-        url: robots.url,
-        cache: robots.cache,
-        allowed: robots.allowed,
-      },
+      robotsTxt: diagnosticRobotsEvidence(robots),
       redirectChain: response.redirectChain,
     },
-    warnings: [],
-    robotsTxt: {
-      url: robots.url,
-      allowed: robots.allowed,
-      matchedLine: robots.matchedLine,
-    },
+    warnings:
+      robots.allowed === null
+        ? [
+            `robots.txt availability is unknown${robots.status ? ` after HTTP ${robots.status}` : ''}; this fetch does not prove crawler access is allowed.`,
+          ]
+        : [],
+    robotsTxt: pageRobotsEvidence(robots),
   }
 
   db.prepare(

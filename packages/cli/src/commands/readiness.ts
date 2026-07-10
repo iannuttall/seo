@@ -48,6 +48,7 @@ function printAiReadiness(report: AiReadinessReport): void {
   printKeyValue([
     ['Score', `${report.score}/100`],
     ['Grade', report.grade],
+    ['Data', report.dataStatus],
     ['Report', report.reportId],
   ])
   process.stdout.write(`\n${report.headline}\n`)
@@ -70,7 +71,7 @@ function printAiReadiness(report: AiReadinessReport): void {
       ['User agent', 'Allowed', 'Declared'],
       report.botAccess.map((bot) => [
         bot.userAgent,
-        bot.allowed ? 'yes' : 'no',
+        bot.allowed === null ? 'unknown' : bot.allowed ? 'yes' : 'no',
         bot.declared ? 'yes' : bot.coveredByWildcard ? 'wildcard' : 'no',
       ]),
     )

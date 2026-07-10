@@ -226,37 +226,54 @@ async function checkRobotsAiAccess(input: {
       redirect: 'follow',
       signal: controller.signal,
     })
-    const contentType = response.headers.get('content-type') ?? ''
     const text = await response.text()
-    const exists =
-      response.status >= 200 &&
-      response.status < 300 &&
-      !/\btext\/html\b/i.test(contentType)
+    const available = response.status >= 200 && response.status < 300
+    const absent =
+      response.status >= 400 && response.status < 500 && response.status !== 429
+    const availability = available
+      ? ('available' as const)
+      : [401, 403].includes(response.status)
+        ? ('access-blocked' as const)
+        : response.status === 429
+          ? ('rate-limited' as const)
+          : absent
+            ? ('absent' as const)
+            : ('unreachable' as const)
+    const exists = available
     const declared = exists ? declaredUserAgents(text) : new Set<string>()
     const parsed = parseRobots(robotsUrl, exists ? text : '')
     return {
       url: response.url || robotsUrl,
       exists,
+      availability,
       status: response.status,
+      ...(['rate-limited', 'unreachable'].includes(availability)
+        ? { error: `robots.txt returned HTTP ${response.status}.` }
+        : {}),
       sitemapUrls: exists ? sitemapUrlsFromRobots(text) : [],
       botAccess: AI_BOT_USER_AGENTS.map((userAgent) => {
         const lower = userAgent.toLowerCase()
         return {
           userAgent,
-          allowed: parsed.isAllowed(input.url, userAgent) ?? true,
+          allowed:
+            availability === 'rate-limited' || availability === 'unreachable'
+              ? null
+              : (parsed.isAllowed(input.url, userAgent) ?? true),
           declared: declared.has(lower),
           coveredByWildcard: declared.has('*'),
         }
       }),
     }
-  } catch {
+  } catch (error) {
     return {
       url: robotsUrl,
       exists: false,
+      availability: 'unreachable',
+      error: error instanceof Error ? error.message : String(error),
       sitemapUrls: [],
       botAccess: AI_BOT_USER_AGENTS.map((userAgent) => ({
         userAgent,
-        allowed: true,
+        allowed: null,
         declared: false,
         coveredByWildcard: false,
       })),
@@ -615,6 +632,7 @@ export async function crawlSite(
           timeoutMs: config.timeoutMs,
           rate: config.fetchRate,
           signal,
+          respectRobots: config.respectRobots,
         })
         .then((result) => ({
           task,
@@ -680,6 +698,21 @@ export async function crawlSite(
             extraction: 'not-applicable' as const,
           })
     requests.push(request)
+
+    if (request.outcome === 'skipped') {
+      skippedUrls += 1
+      if (request.reason === 'robots-deferred') {
+        warnings.push(
+          `${task.url}: crawl deferred because robots.txt availability is unknown.`,
+        )
+      }
+      emitStatus('page_skipped', {
+        url: task.url,
+        depth: task.depth,
+        reason: request.reason,
+      })
+      continue
+    }
 
     if (result.warning) {
       warnings.push(result.warning)
@@ -854,7 +887,11 @@ export async function crawlSite(
     queue.length > 0 ||
     inFlight.size > 0 ||
     warnings.length > 0
-  const failed = !cancelled && pages.length === 0 && requests.length > 0
+  const failed =
+    !cancelled &&
+    pages.length === 0 &&
+    requests.length > 0 &&
+    requests.every((request) => request.outcome === 'failure')
   const requestEvidenceStatus =
     cancelled && inFlight.size > 0 ? 'partial' : 'available'
 

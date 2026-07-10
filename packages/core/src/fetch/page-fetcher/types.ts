@@ -21,6 +21,7 @@ export interface FetchPageOptions {
   timeoutMs?: number
   rate?: FetchRateControls
   signal?: AbortSignal
+  respectRobots?: boolean
 }
 
 export type NormalizedFetchRateControls = {
@@ -31,7 +32,15 @@ export type NormalizedFetchRateControls = {
 }
 
 export type RobotsResult = {
-  allowed: boolean
+  allowed: boolean | null
+  availability:
+    | 'available'
+    | 'absent'
+    | 'access-blocked'
+    | 'rate-limited'
+    | 'unreachable'
+  status?: number
+  error?: string
   matchedLine?: string
   cache: 'hit' | 'miss' | 'bypass'
   url: string

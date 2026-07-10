@@ -129,6 +129,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       root: ['content', 'structuredContent'],
       contentItem: ['text', 'type'],
       structured: [
+        'ai',
         'caveats',
         'configHash',
         'dataSources',
@@ -220,6 +221,11 @@ test('crawler MCP structured output schema stays stable', async () => {
       ],
       topFixVerification: ['command', 'expected'],
     })
+    const structured = result.structuredContent as JsonRecord
+    const ai = structured.ai as JsonRecord
+    const robotsTxt = ai.robotsTxt as JsonRecord
+    assert.equal(robotsTxt.availability, 'available')
+    assert.equal(firstRecord(robotsTxt.botAccess).allowed, true)
 
     const topFixTool = tools.get('seo_top_fixes')
     const affectedTool = tools.get('seo_affected_urls')

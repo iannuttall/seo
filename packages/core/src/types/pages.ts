@@ -17,7 +17,15 @@ export interface PageFetchResult {
   warnings: string[]
   robotsTxt?: {
     url: string
-    allowed: boolean
+    allowed: boolean | null
+    availability:
+      | 'available'
+      | 'absent'
+      | 'access-blocked'
+      | 'rate-limited'
+      | 'unreachable'
+    status?: number
+    error?: string
     matchedLine?: string
   }
 }
@@ -50,7 +58,15 @@ export interface PageFetchDiagnostics {
   robotsTxt?: {
     url: string
     cache: 'hit' | 'miss' | 'bypass'
-    allowed: boolean
+    allowed: boolean | null
+    availability:
+      | 'available'
+      | 'absent'
+      | 'access-blocked'
+      | 'rate-limited'
+      | 'unreachable'
+    status?: number
+    error?: string
   }
   redirectChain?: Array<{
     url: string

@@ -25,6 +25,7 @@ export async function fetchPage(
       opts.timeoutMs,
       rate,
       opts.signal,
+      opts.respectRobots,
     )
     const warnings = [...first.warnings]
     const lowWordCount = first.html.split(/\s+/).length < 150

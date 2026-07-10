@@ -11,22 +11,23 @@ seo refresh-priorities
 seo technical-watch
 ```
 
-## Install from source
+## Install the CLI
 
-The npm package name is not final yet, so source install is the honest path today.
+Install the `seo` package globally, then start the guided setup:
 
 ```bash
-git clone <repo-url>
+npm install --global seo
+seo start
+```
+
+To work on the source instead:
+
+```bash
+git clone https://github.com/iannuttall/seo.git
 cd seo
 pnpm install
 pnpm build
-node packages/cli/dist/index.js start
-```
-
-If you link the CLI locally, the command becomes:
-
-```bash
-seo start
+node dist/cli.js start
 ```
 
 ## Connect Google

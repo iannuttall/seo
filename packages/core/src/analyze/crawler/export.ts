@@ -99,13 +99,19 @@ export function renderCrawlPretty(
   report: CrawlReport,
   fixes: TopFix[] = topFixes(report),
 ): string {
+  const requestSummary =
+    report.requestEvidenceStatus === 'available'
+      ? `${report.requests.length} requests`
+      : report.requestEvidenceStatus === 'partial'
+        ? `${report.requests.length} observed requests; some started requests were still in flight when the crawl stopped`
+        : 'request evidence unavailable for this legacy report'
   const lines = [
     `Crawl report for ${report.config.url}`,
     '',
     `Status: ${report.status}`,
-    `Pages: ${report.summary.totalPages} crawled, ${report.summary.discoveredUrls} discovered, ${report.summary.skippedUrls} skipped`,
+    `Documents: ${report.summary.totalPages} retained; ${requestSummary}, ${report.summary.discoveredUrls} URLs discovered, ${report.summary.failedUrls} failed, ${report.summary.skippedUrls} skipped`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
-    `Scores: ${report.summary.healthScore}/100 technical, ${report.summary.geoReadinessScore}/100 GEO`,
+    `Scores: ${report.summary.technicalScorePages ? `${report.summary.healthScore}/100 technical (${report.summary.technicalScorePages} pages)` : 'technical not available'}, ${report.summary.geoScorePages ? `${report.summary.geoReadinessScore}/100 GEO (${report.summary.geoScorePages} pages)` : 'GEO not available'}`,
   ]
 
   if (fixes.length) {
@@ -183,7 +189,8 @@ export function renderCrawlHtml(
   <p>${escapeHtml(report.config.url)}</p>
   <section class="summary">
     <div class="metric"><span>Status</span><strong>${escapeHtml(report.status)}</strong></div>
-    <div class="metric"><span>Pages</span><strong>${report.summary.totalPages}</strong></div>
+    <div class="metric"><span>Documents</span><strong>${report.summary.totalPages}</strong></div>
+    <div class="metric"><span>Requests</span><strong>${report.requestEvidenceStatus === 'unavailable' ? 'n/a' : report.requests.length}${report.requestEvidenceStatus === 'partial' ? ' (partial)' : ''}</strong></div>
     <div class="metric"><span>Discovered</span><strong>${report.summary.discoveredUrls}</strong></div>
     <div class="metric"><span>Queued</span><strong>${report.summary.queuedUrls}</strong></div>
     <div class="metric"><span>Skipped</span><strong>${report.summary.skippedUrls}</strong></div>

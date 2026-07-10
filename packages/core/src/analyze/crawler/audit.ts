@@ -1,5 +1,13 @@
 import { explainRule, type RuleId } from '../../rules.js'
-import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import type {
+  CrawlPageSnapshot,
+  CrawlRequestObservation,
+} from '../monitoring/types.js'
+import {
+  isAuditableHtmlPage,
+  isHtmlPage,
+  isRedirectedPage,
+} from './page-eligibility.js'
 import type { CrawlIssue } from './report.js'
 
 function titlePixelWidth(title?: string): number {
@@ -85,14 +93,31 @@ function issue(
   }
 }
 
+function requestIssue(
+  ruleId: RuleId,
+  request: CrawlRequestObservation,
+  detail?: string,
+  evidence?: Record<string, unknown>,
+): CrawlIssue {
+  const rule = explainRule(ruleId)
+  if (!rule) {
+    throw new Error(`Missing rule guidance for ${ruleId}`)
+  }
+  return {
+    ruleId,
+    title: rule.title,
+    category: rule.category,
+    severity: rule.defaultSeverity,
+    url: request.requestedUrl,
+    detail,
+    evidence,
+  }
+}
+
 function isBrokenLinkStatus(status?: number): boolean {
   return (
     status === 0 || status === 404 || status === 410 || (status ?? 0) >= 500
   )
-}
-
-function isHtmlPage(page: CrawlPageSnapshot): boolean {
-  return /\bhtml\b/i.test(page.contentType ?? '')
 }
 
 function hreflangPrimary(value?: string): string | undefined {
@@ -134,7 +159,7 @@ function metadataDuplicates(
     { count: number; sampleUrls: string[]; value: string }
   >()
   for (const page of pages) {
-    if (page.status < 200 || page.status >= 300) continue
+    if (!isAuditableHtmlPage(page)) continue
     const raw = read(page)?.trim()
     const key = normalizedMetadata(raw)
     if (!key || !raw) continue
@@ -151,7 +176,7 @@ function contentDuplicates(
 ): Map<string, { count: number; sampleUrls: string[] }> {
   const counts = new Map<string, { count: number; sampleUrls: string[] }>()
   for (const page of pages) {
-    if (page.status < 200 || page.status >= 300) continue
+    if (!isAuditableHtmlPage(page)) continue
     if (page.wordCount < 20 || !page.mainContentHash) continue
     const existing = counts.get(page.mainContentHash) ?? {
       count: 0,
@@ -231,6 +256,60 @@ function queryCoverage(page: CrawlPageSnapshot):
   }
 }
 
+export function auditCrawlRequests(
+  requests: CrawlRequestObservation[],
+): CrawlIssue[] {
+  const issues: CrawlIssue[] = []
+  for (const request of requests) {
+    if (request.outcome === 'failure') {
+      if (request.failureKind === 'aborted') continue
+      issues.push(
+        requestIssue('connection_error', request, request.error, {
+          outcome: request.outcome,
+          failureKind: request.failureKind,
+          durationMs: request.durationMs,
+          error: request.error,
+        }),
+      )
+      continue
+    }
+
+    const redirectChain = request.redirectChain ?? []
+    const redirected =
+      redirectChain.length > 0 ||
+      !sameUrl(request.requestedUrl, request.finalUrl)
+    if (redirected) {
+      issues.push(
+        requestIssue(
+          'redirected_url',
+          request,
+          request.finalUrl ? `Final URL: ${request.finalUrl}` : undefined,
+          {
+            requestedUrl: request.requestedUrl,
+            finalUrl: request.finalUrl,
+            status: redirectChain[0]?.status,
+            finalStatus: request.status,
+          },
+        ),
+      )
+    }
+    if (redirectChain.length > 1) {
+      issues.push(
+        requestIssue(
+          'redirect_chain',
+          request,
+          `${redirectChain.length} hops`,
+          {
+            redirectChain,
+            hops: redirectChain.length,
+          },
+        ),
+      )
+    }
+  }
+  return issues
+}
+
 export function auditCrawlPages(
   pages: CrawlPageSnapshot[],
   opts: { startUrl?: string } = {},
@@ -244,6 +323,7 @@ export function auditCrawlPages(
   const duplicateContent = contentDuplicates(pages)
   const pageByUrl = new Map<string, CrawlPageSnapshot>()
   for (const page of pages) {
+    if (!isAuditableHtmlPage(page)) continue
     for (const value of [page.url, page.finalUrl]) {
       const key = urlKey(value)
       if (key) pageByUrl.set(key, page)
@@ -307,7 +387,8 @@ export function auditCrawlPages(
     }
     if (page.status < 200) continue
 
-    if (!sameUrl(page.url, page.finalUrl)) {
+    const redirected = isRedirectedPage(page)
+    if (redirected) {
       issues.push(
         issue('redirected_url', page, `Final URL: ${page.finalUrl}`, {
           requestedUrl: page.url,
@@ -333,6 +414,8 @@ export function auditCrawlPages(
         }),
       )
     }
+    if (redirected) continue
+
     if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {
       issues.push(
         issue(
@@ -434,6 +517,31 @@ export function auditCrawlPages(
         ),
       )
     }
+
+    if (page.robotsTxt?.allowed === false) {
+      issues.push(
+        issue('robots_blocked', page, page.robotsTxt.matchedLine, {
+          robotsTxt: page.robotsTxt,
+        }),
+      )
+    }
+    const xRobotsNoindex = hasNoIndex(page.xRobotsTag)
+    if (xRobotsNoindex) {
+      issues.push(
+        issue('x_robots_noindex', page, page.xRobotsTag, {
+          xRobotsTag: page.xRobotsTag,
+        }),
+      )
+    }
+    const xRobotsNofollow = hasNoFollow(page.xRobotsTag)
+    if (xRobotsNofollow) {
+      issues.push(
+        issue('nofollow', page, page.xRobotsTag, {
+          xRobotsTag: page.xRobotsTag,
+        }),
+      )
+    }
+    if (!isAuditableHtmlPage(page)) continue
 
     const title = page.title?.trim()
     const titleLength = metadataLength(title)
@@ -571,25 +679,7 @@ export function auditCrawlPages(
         )
       }
     }
-    if (page.canonical && !sameUrl(page.canonical, page.finalUrl)) {
-      issues.push(
-        issue('canonical_mismatch', page, page.canonical, {
-          canonical: page.canonical,
-          finalUrl: page.finalUrl,
-        }),
-      )
-    }
-
-    if (page.robotsTxt?.allowed === false) {
-      issues.push(
-        issue('robots_blocked', page, page.robotsTxt.matchedLine, {
-          robotsTxt: page.robotsTxt,
-        }),
-      )
-    }
-
     const metaNoindex = hasNoIndex(page.metaRobots)
-    const xRobotsNoindex = hasNoIndex(page.xRobotsTag)
     if (metaNoindex) {
       issues.push(
         issue('noindex', page, page.indexability, {
@@ -597,31 +687,32 @@ export function auditCrawlPages(
         }),
       )
     }
-    if (!metaNoindex && xRobotsNoindex) {
+    if (hasNoFollow(page.metaRobots) && !xRobotsNofollow) {
       issues.push(
-        issue('x_robots_noindex', page, page.xRobotsTag, {
-          xRobotsTag: page.xRobotsTag,
-        }),
-      )
-    }
-    if (hasNoFollow(page.metaRobots) || hasNoFollow(page.xRobotsTag)) {
-      issues.push(
-        issue('nofollow', page, page.metaRobots ?? page.xRobotsTag, {
+        issue('nofollow', page, page.metaRobots, {
           metaRobots: page.metaRobots,
-          xRobotsTag: page.xRobotsTag,
         }),
       )
     }
-    if (
+    const canonicalized =
       page.canonical &&
       !sameUrl(page.canonical, page.finalUrl) &&
-      (page.indexable === false || /canonical/i.test(page.indexability ?? ''))
-    ) {
+      (page.declaredIndexability === 'canonical-hint-other' ||
+        (page.declaredIndexability === undefined &&
+          /canonical/i.test(page.indexability ?? '')))
+    if (canonicalized) {
       issues.push(
         issue('canonicalized_page', page, page.canonical, {
           canonical: page.canonical,
           finalUrl: page.finalUrl,
           indexability: page.indexability,
+        }),
+      )
+    } else if (page.canonical && !sameUrl(page.canonical, page.finalUrl)) {
+      issues.push(
+        issue('canonical_mismatch', page, page.canonical, {
+          canonical: page.canonical,
+          finalUrl: page.finalUrl,
         }),
       )
     }

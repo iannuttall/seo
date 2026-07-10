@@ -54,14 +54,54 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
     crawlerSchemas.issueGroup.parse(report.issueGroups[0]),
   )
   assert.doesNotThrow(() => crawlerSchemas.ruleInfo.parse(listRules()[0]))
+  assert.throws(() =>
+    crawlerSchemas.requestObservation.parse({
+      requestedUrl: 'https://example.com/',
+      outcome: 'response',
+      finalUrl: 'https://example.com/',
+      status: 200,
+      extraction: 'failed',
+    }),
+  )
+  assert.throws(() =>
+    crawlerSchemas.crawlReport.parse({
+      ...report,
+      requestEvidenceStatus: 'available',
+      requests: undefined,
+    }),
+  )
+  assert.throws(() =>
+    crawlerSchemas.crawlReport.parse({
+      ...report,
+      requestEvidenceStatus: 'unavailable',
+      requests: [
+        {
+          requestedUrl: 'https://example.com/',
+          outcome: 'response',
+          finalUrl: 'https://example.com/',
+          status: 200,
+          extraction: 'complete',
+        },
+      ],
+    }),
+  )
   assert.ok(fix)
   assert.doesNotThrow(() => crawlTopFixSchema.parse(fix))
 })
 
 test('crawler JSON schemas expose deterministic object contracts', () => {
-  assert.equal(crawlerJsonSchemas.crawlReport.type, 'object')
+  const reportVariants = crawlerJsonSchemas.crawlReport.oneOf as Array<{
+    type?: string
+    properties?: Record<string, unknown>
+  }>
+  assert.equal(reportVariants.length, 3)
+  assert.equal(
+    reportVariants.every(
+      (variant) => variant.type === 'object' && variant.properties?.summary,
+    ),
+    true,
+  )
   assert.equal(crawlerJsonSchemas.pageSnapshot.type, 'object')
   assert.equal(crawlerJsonSchemas.ruleInfo.type, 'object')
-  assert.ok(crawlerJsonSchemas.crawlReport.properties?.summary)
   assert.ok(crawlerJsonSchemas.topFix.properties?.scoreFactors)
 })

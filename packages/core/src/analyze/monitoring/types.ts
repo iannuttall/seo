@@ -16,6 +16,7 @@ export type CrawlPageSnapshot = {
   cacheState?: 'hit' | 'miss' | 'bypass'
   fetchDiagnostics?: PageFetchDiagnostics
   blocked?: boolean
+  contentAuditAllowed?: boolean
   crawlDepth?: number
   error?: string
   robotsTxt?: {
@@ -35,6 +36,19 @@ export type CrawlPageSnapshot = {
   h3Count?: number
   indexable: boolean
   indexability?: string
+  declaredIndexability?:
+    | 'indexable-candidate'
+    | 'noindex'
+    | 'robots-blocked'
+    | 'canonical-hint-other'
+    | 'not-html'
+    | 'unknown'
+  extractionStatus?:
+    | 'complete'
+    | 'failed'
+    | 'not-applicable'
+    | 'unknown-media-type'
+  extractionError?: string
   wordCount: number
   contentExtraction?: ContentExtractionDiagnostics
   warnings?: string[]
@@ -115,6 +129,36 @@ export type CrawlPageSnapshot = {
     conversions: number
   }
 }
+
+export type CrawlResponseObservation = {
+  requestedUrl: string
+  outcome: 'response'
+  finalUrl: string
+  status: number
+  contentType?: string
+  durationMs?: number
+  redirectChain?: PageFetchDiagnostics['redirectChain']
+} & (
+  | { extraction: 'complete' | 'not-applicable' | 'unknown-media-type' }
+  | { extraction: 'failed'; extractionError: string }
+)
+
+export type CrawlRequestObservation =
+  | CrawlResponseObservation
+  | {
+      requestedUrl: string
+      outcome: 'failure'
+      durationMs?: number
+      failureKind:
+        | 'dns'
+        | 'tls'
+        | 'timeout'
+        | 'redirect-limit'
+        | 'aborted'
+        | 'unknown'
+      error: string
+      extraction: 'not-applicable'
+    }
 
 export type CrawlRun = {
   id: string

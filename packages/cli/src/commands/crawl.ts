@@ -224,6 +224,7 @@ export const crawlCommand = defineCommand({
           (issue) => severityRank[issue.severity] >= severityRank[failOn],
         )
       : false
+    const failedRun = report.status === 'failed'
 
     const payload = {
       ...report,
@@ -234,7 +235,7 @@ export const crawlCommand = defineCommand({
 
     if (format === 'json') {
       await writeOrPrint(output, `${JSON.stringify(payload, null, 2)}\n`)
-      if (failedThreshold) process.exitCode = 1
+      if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
 
@@ -243,13 +244,13 @@ export const crawlCommand = defineCommand({
         output,
         csv === 'pages' ? renderCrawlPagesCsv(report) : renderCrawlCsv(report),
       )
-      if (failedThreshold) process.exitCode = 1
+      if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
 
     if (format === 'html') {
       await writeOrPrint(output, renderCrawlHtml(report, rankedFixes))
-      if (failedThreshold) process.exitCode = 1
+      if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
 
@@ -258,13 +259,13 @@ export const crawlCommand = defineCommand({
         output,
         renderCrawlMarkdownTickets(report, rankedFixes),
       )
-      if (failedThreshold) process.exitCode = 1
+      if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
 
     if (output) {
       await writeOrPrint(output, renderCrawlPretty(report, rankedFixes))
-      if (failedThreshold) process.exitCode = 1
+      if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
 
@@ -276,7 +277,7 @@ export const crawlCommand = defineCommand({
         ['Fail threshold', failOn ?? 'off'],
       ])
     }
-    if (failedThreshold) {
+    if (failedRun || failedThreshold) {
       process.exitCode = 1
     }
   },

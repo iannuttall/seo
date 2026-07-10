@@ -2,12 +2,14 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   type CrawlIssue,
+  type CrawlReport,
   crawlConfigHash,
   crawlDefinitionId,
   crawlRunId,
   createCrawlReport,
   groupCrawlIssues,
   normalizeCrawlConfig,
+  normalizeLoadedCrawlReport,
 } from './report.js'
 
 test('normalizeCrawlConfig applies stable defaults', () => {
@@ -127,6 +129,7 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
         url: 'https://example.com/a',
         finalUrl: 'https://example.com/a',
         status: 200,
+        contentType: 'text/html',
         indexable: true,
         wordCount: 100,
         contentHash: 'a',
@@ -160,10 +163,14 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.summary.failedUrls, 1)
   assert.equal(report.summary.verifiedLinks, 1)
   assert.equal(report.summary.healthScore, 40)
+  assert.equal(report.summary.technicalScorePages, 2)
   assert.equal(report.summary.geoReadinessScore, 15)
+  assert.equal(report.summary.geoScorePages, 1)
   assert.equal(report.summary.highIssues, 2)
   assert.equal(report.summary.mediumIssues, 1)
   assert.equal(report.summary.avgResponseMs, 200)
+  assert.equal(report.requestEvidenceStatus, 'unavailable')
+  assert.equal(report.summary.attemptedRequests, 0)
   assert.deepEqual(report.summary.byStatus, { '200': 1, '404': 1 })
   assert.equal(report.pages[0]?.internalInlinkCount, 0)
   assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
@@ -173,6 +180,137 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.pages[1]?.seoScore, 10)
   assert.equal(report.issueGroups[0]?.ruleId, 'missing_title')
   assert.equal(report.issueGroups[0]?.count, 2)
+})
+
+test('createCrawlReport keeps request outcomes separate from documents', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    requests: [
+      {
+        requestedUrl: 'https://example.com/extraction-failed',
+        outcome: 'response',
+        finalUrl: 'https://example.com/extraction-failed',
+        status: 200,
+        durationMs: 100,
+        extraction: 'failed',
+        extractionError: 'Malformed response body',
+      },
+      {
+        requestedUrl: 'https://missing.example/',
+        outcome: 'failure',
+        durationMs: 200,
+        failureKind: 'dns',
+        error: 'ENOTFOUND',
+        extraction: 'not-applicable',
+      },
+      {
+        requestedUrl: 'https://example.com/cancelled',
+        outcome: 'failure',
+        failureKind: 'aborted',
+        error: 'Cancelled',
+        extraction: 'not-applicable',
+      },
+    ],
+  })
+
+  assert.equal(report.requestEvidenceStatus, 'available')
+  assert.equal(report.summary.totalPages, 0)
+  assert.equal(report.summary.statusErrors, 0)
+  assert.equal(report.summary.attemptedRequests, 3)
+  assert.equal(report.summary.responseRequests, 1)
+  assert.equal(report.summary.failedRequests, 1)
+  assert.equal(report.summary.abortedRequests, 1)
+  assert.equal(report.summary.extractionFailures, 1)
+  assert.equal(report.summary.avgRequestMs, 150)
+  assert.deepEqual(report.summary.requestByStatus, {
+    '200': 1,
+    'no-response': 1,
+    aborted: 1,
+  })
+  assert.deepEqual(report.summary.byStatus, {})
+  assert.deepEqual(
+    report.issues.map((issue) => issue.ruleId),
+    ['connection_error'],
+  )
+})
+
+test('legacy report normalization preserves scores without media evidence', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [
+      {
+        url: 'https://example.com/',
+        finalUrl: 'https://example.com/',
+        status: 200,
+        indexable: true,
+        wordCount: 100,
+        contentHash: 'legacy',
+        outgoingInternalCount: 0,
+      },
+    ],
+    issues: [],
+  })
+  if (report.pages[0]) {
+    report.pages[0].seoScore = 82
+    report.pages[0].geoScore = 64
+  }
+  const legacy = JSON.parse(JSON.stringify(report)) as CrawlReport
+  delete (legacy as Partial<CrawlReport>).requests
+  delete (legacy as Partial<CrawlReport>).requestEvidenceStatus
+
+  const normalized = normalizeLoadedCrawlReport(legacy)
+
+  assert.equal(normalized.requestEvidenceStatus, 'unavailable')
+  assert.equal(normalized.pages[0]?.seoScore, 82)
+  assert.equal(normalized.pages[0]?.geoScore, 64)
+  assert.equal(normalized.summary.healthScore, 82)
+  assert.equal(normalized.summary.geoReadinessScore, 64)
+})
+
+test('createCrawlReport orders request and document evidence deterministically', () => {
+  const build = (reverse: boolean) =>
+    createCrawlReport({
+      config: { url: 'https://example.com/' },
+      pages: (reverse
+        ? ['https://example.com/b', 'https://example.com/a']
+        : ['https://example.com/a', 'https://example.com/b']
+      ).map((url) => ({
+        url,
+        finalUrl: url,
+        status: 200,
+        contentType: 'application/json',
+        indexable: true,
+        wordCount: 0,
+        contentHash: url,
+        outgoingInternalCount: 0,
+      })),
+      requests: (reverse
+        ? ['https://example.com/b', 'https://example.com/a']
+        : ['https://example.com/a', 'https://example.com/b']
+      ).map((requestedUrl) => ({
+        requestedUrl,
+        outcome: 'response' as const,
+        finalUrl: requestedUrl,
+        status: 200,
+        extraction: 'not-applicable' as const,
+      })),
+      warnings: reverse
+        ? ['Warning B', 'Warning A']
+        : ['Warning A', 'Warning B'],
+    })
+
+  const first = build(false)
+  const second = build(true)
+
+  assert.deepEqual(
+    first.pages.map((page) => page.url),
+    second.pages.map((page) => page.url),
+  )
+  assert.deepEqual(
+    first.requests.map((request) => request.requestedUrl),
+    second.requests.map((request) => request.requestedUrl),
+  )
+  assert.deepEqual(first.warnings, second.warnings)
 })
 
 test('createCrawlReport redacts tenant-unsafe payload strings', () => {

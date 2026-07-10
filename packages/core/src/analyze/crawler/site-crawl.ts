@@ -12,6 +12,11 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from '../workflows/analytics-value.js'
+import {
+  abortController,
+  CRAWL_CANCELLED,
+  cancellationRace,
+} from './crawl-control.js'
 import type {
   CrawlConfigInput,
   CrawlReport,
@@ -19,6 +24,8 @@ import type {
   CrawlStatusPhase,
 } from './report.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
+import { observationFromPage } from './request-evidence.js'
+import { joinAnalytics, joinSearchMetrics } from './site-crawl-providers.js'
 
 type QueueItem = {
   url: string
@@ -32,7 +39,6 @@ type CrawlTask = QueueItem & {
   }>
 }
 
-const CRAWL_CANCELLED = Symbol('crawl-cancelled')
 const DEFAULT_SEARCH_METRICS_LIMIT = 5000
 
 type LlmsTxtSignal = {
@@ -106,38 +112,6 @@ function resolveCrawlSiteDependencies(
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
     now: dependencies.now ?? (() => new Date()),
   }
-}
-
-function abortController(input: { timeoutMs: number; signal?: AbortSignal }): {
-  signal: AbortSignal
-  cleanup: () => void
-} {
-  const controller = new AbortController()
-  const abort = () => controller.abort()
-  const timer = setTimeout(abort, Math.min(input.timeoutMs, 5_000))
-  if (input.signal?.aborted) {
-    controller.abort()
-  } else {
-    input.signal?.addEventListener('abort', abort, { once: true })
-  }
-  return {
-    signal: controller.signal,
-    cleanup: () => {
-      clearTimeout(timer)
-      input.signal?.removeEventListener('abort', abort)
-    },
-  }
-}
-
-function cancellationRace(
-  signal: AbortSignal,
-): Promise<typeof CRAWL_CANCELLED> {
-  if (signal.aborted) return Promise.resolve(CRAWL_CANCELLED)
-  return new Promise((resolve) => {
-    signal.addEventListener('abort', () => resolve(CRAWL_CANCELLED), {
-      once: true,
-    })
-  })
 }
 
 function normalizeUrl(value: string, base?: string): string | undefined {
@@ -484,6 +458,17 @@ export async function crawlSite(
   const discovered = new Set<string>()
   const linkGraph: Record<string, string[]> = {}
   const pages: CrawlReport['pages'] = []
+  const requests: CrawlReport['requests'] = []
+  const documentIndexes = new Map<
+    string,
+    {
+      index: number
+      directlyRequested: boolean
+      sourceRequest: string
+      links: Set<string>
+      minDepth: number
+    }
+  >()
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
   let queuedUrls = 0
@@ -568,7 +553,17 @@ export async function crawlSite(
       return
     }
     discovered.add(normalized)
-    if (queued.has(normalized) || visited.has(normalized)) return
+    if (visited.has(normalized)) return
+    if (queued.has(normalized)) {
+      const existing = queue.find((item) => item.url === normalized)
+      if (existing && depth < existing.depth) existing.depth = depth
+      queue.sort(
+        (left, right) =>
+          left.depth - right.depth ||
+          (left.url < right.url ? -1 : left.url > right.url ? 1 : 0),
+      )
+      return
+    }
     if (!sameOrigin(normalized, origin)) {
       skippedUrls += 1
       emitStatus('url_skipped', {
@@ -608,6 +603,11 @@ export async function crawlSite(
     queued.add(normalized)
     queuedUrls += 1
     queue.push({ url: normalized, depth })
+    queue.sort(
+      (left, right) =>
+        left.depth - right.depth ||
+        (left.url < right.url ? -1 : left.url > right.url ? 1 : 0),
+    )
     emitStatus('url_queued', { url: normalized, depth })
   }
 
@@ -665,6 +665,13 @@ export async function crawlSite(
         .catch((error) => ({
           task,
           result: {
+            request: {
+              requestedUrl: item.url,
+              outcome: 'failure' as const,
+              failureKind: 'unknown' as const,
+              error: error instanceof Error ? error.message : String(error),
+              extraction: 'not-applicable' as const,
+            },
             urls: [],
             warning: `${item.url}: ${error instanceof Error ? error.message : String(error)}`,
           },
@@ -703,6 +710,19 @@ export async function crawlSite(
     const { task, result } = next
     inFlight.delete(task)
 
+    const request =
+      result.request ??
+      (result.page
+        ? observationFromPage(task.url, result.page)
+        : {
+            requestedUrl: task.url,
+            outcome: 'failure' as const,
+            failureKind: 'unknown' as const,
+            error: result.warning ?? 'Crawler returned no page snapshot.',
+            extraction: 'not-applicable' as const,
+          })
+    requests.push(request)
+
     if (result.warning) {
       warnings.push(result.warning)
       failedUrls += 1
@@ -722,36 +742,109 @@ export async function crawlSite(
       })
       continue
     }
-    if (config.respectRobots && result.page.robotsTxt?.allowed === false) {
-      result.page.crawlDepth = task.depth
-      result.page.blocked = true
-      result.page.indexable = false
-      result.page.indexability = 'Robots.txt disallowed'
-      pages.push(result.page)
-      linkGraph[result.page.url] = []
-      linkGraph[result.page.finalUrl] = []
-      warnings.push(
-        `${result.page.url}: skipped because robots.txt disallows it`,
-      )
+    const page = result.page
+    const finalUrl = normalizeUrl(page.finalUrl, config.url)
+    if (!finalUrl) {
+      failedUrls += 1
+      warnings.push(`${task.url}: invalid final URL ${page.finalUrl}`)
+      emitStatus('page_failed', {
+        url: task.url,
+        depth: task.depth,
+        reason: 'invalid_final_url',
+      })
+      continue
+    }
+    page.url = finalUrl
+    page.finalUrl = finalUrl
+    page.crawlDepth = task.depth
+    page.contentAuditAllowed =
+      !config.respectRobots || page.robotsTxt?.allowed !== false
+
+    const storeDocument = (urls: string[]): void => {
+      const sourceRequest = normalizeUrl(task.url, config.url) ?? task.url
+      const directlyRequested = sourceRequest === finalUrl
+      const normalizedLinks = urls
+        .map((url) => normalizeUrl(url, finalUrl))
+        .filter((url): url is string => Boolean(url))
+      const syncLinkEvidence = (
+        target: CrawlReport['pages'][number],
+        links: Set<string>,
+      ): void => {
+        const sortedLinks = [...links].sort((left, right) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+        target.outgoingInternalCount = sortedLinks.length
+        target.sampleInternalLinks = sortedLinks.slice(0, 25)
+      }
+      const existing = documentIndexes.get(finalUrl)
+      if (existing) {
+        const links = new Set([...existing.links, ...normalizedLinks])
+        const minDepth = Math.min(existing.minDepth, task.depth)
+        const replace =
+          (!existing.directlyRequested && directlyRequested) ||
+          (existing.directlyRequested === directlyRequested &&
+            sourceRequest < existing.sourceRequest)
+        if (replace) {
+          page.crawlDepth = minDepth
+          pages[existing.index] = page
+        } else {
+          const existingPage = pages[existing.index]
+          if (existingPage) existingPage.crawlDepth = minDepth
+        }
+        const retainedPage = pages[existing.index]
+        if (retainedPage) syncLinkEvidence(retainedPage, links)
+        verifiedLinks += links.size - existing.links.size
+        documentIndexes.set(finalUrl, {
+          ...existing,
+          directlyRequested: existing.directlyRequested || directlyRequested,
+          sourceRequest: replace ? sourceRequest : existing.sourceRequest,
+          links,
+          minDepth,
+        })
+        linkGraph[finalUrl] = [...links].sort((left, right) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+      } else {
+        const links = new Set(normalizedLinks)
+        syncLinkEvidence(page, links)
+        pages.push(page)
+        verifiedLinks += links.size
+        documentIndexes.set(finalUrl, {
+          index: pages.length - 1,
+          directlyRequested,
+          sourceRequest,
+          links,
+          minDepth: task.depth,
+        })
+        linkGraph[finalUrl] = [...links].sort((left, right) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+      }
+    }
+
+    if (config.respectRobots && page.robotsTxt?.allowed === false) {
+      page.blocked = true
+      page.contentAuditAllowed = false
+      page.indexable = false
+      page.indexability = 'Robots.txt disallowed'
+      page.declaredIndexability = 'robots-blocked'
+      storeDocument([])
+      warnings.push(`${page.url}: skipped because robots.txt disallows it`)
       skippedUrls += 1
       emitStatus('page_skipped', {
-        url: result.page.url,
+        url: page.url,
         depth: task.depth,
-        statusCode: result.page.status,
+        statusCode: page.status,
         reason: 'robots_txt_disallowed',
       })
       continue
     }
 
-    result.page.crawlDepth = task.depth
-    pages.push(result.page)
-    linkGraph[result.page.url] = result.urls
-    linkGraph[result.page.finalUrl] = result.urls
-    verifiedLinks += result.urls.length
+    storeDocument(result.urls)
     emitStatus('page_completed', {
-      url: result.page.url,
+      url: task.url,
       depth: task.depth,
-      statusCode: result.page.status,
+      statusCode: page.status,
     })
 
     if (followLinks && task.depth < config.maxDepth) {
@@ -759,6 +852,32 @@ export async function crawlSite(
         enqueue(url, task.depth + 1)
       }
     }
+  }
+
+  const pageIndexes = new Map(
+    pages.map((page, index) => [page.url, index] as const),
+  )
+  const depths = pages.map((page) => page.crawlDepth ?? 0)
+  for (let pass = 0; pass < pages.length; pass += 1) {
+    let changed = false
+    for (const [sourceUrl, targets] of Object.entries(linkGraph)) {
+      const sourceIndex = pageIndexes.get(sourceUrl)
+      if (sourceIndex === undefined) continue
+      for (const target of targets) {
+        const targetIndex = pageIndexes.get(target)
+        if (targetIndex === undefined) continue
+        const nextDepth = (depths[sourceIndex] ?? 0) + 1
+        if (nextDepth >= (depths[targetIndex] ?? Number.POSITIVE_INFINITY)) {
+          continue
+        }
+        depths[targetIndex] = nextDepth
+        changed = true
+      }
+    }
+    if (!changed) break
+  }
+  for (const [index, page] of pages.entries()) {
+    page.crawlDepth = depths[index]
   }
 
   cancelled = isCancelled()
@@ -772,10 +891,14 @@ export async function crawlSite(
 
   const partial =
     cancelled ||
+    failedUrls > 0 ||
     pages.length >= config.maxPages ||
     queue.length > 0 ||
     inFlight.size > 0 ||
     warnings.length > 0
+  const failed = !cancelled && pages.length === 0 && requests.length > 0
+  const requestEvidenceStatus =
+    cancelled && inFlight.size > 0 ? 'partial' : 'available'
 
   if (!cancelled && site) {
     await joinSearchMetrics({
@@ -833,13 +956,15 @@ export async function crawlSite(
     site,
     ga4PropertyId: input.ga4PropertyId,
     pages,
+    requests,
+    requestEvidenceStatus,
     linkGraph,
     ai: {
       llmsTxt,
       ...(robotsTxt ? { robotsTxt } : {}),
       ...(agentResources ? { agentResources } : {}),
     },
-    status: partial ? 'partial' : 'completed',
+    status: failed ? 'failed' : partial ? 'partial' : 'completed',
     warnings,
     caveats: cancelled
       ? ['Crawl cancelled before all queued URLs finished.']
@@ -863,109 +988,4 @@ export async function crawlSite(
   })
   await flushStatusEvents()
   return report
-}
-
-async function joinAnalytics(input: {
-  propertyId: string
-  pages: CrawlReport['pages']
-  warnings: string[]
-  limit: number
-  fetchLandingPageValues: typeof fetchLandingPageValues
-  landingValueForUrl: typeof landingValueForUrl
-  now: () => Date
-}): Promise<void> {
-  const endDate = input.now()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - 27)
-
-  const analytics = await input.fetchLandingPageValues({
-    propertyId: input.propertyId,
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-    limit: input.limit,
-  })
-  if (analytics.warning) {
-    input.warnings.push(`GA4 metrics skipped: ${analytics.warning}`)
-    return
-  }
-
-  let joined = 0
-  for (const page of input.pages) {
-    const value = input.landingValueForUrl(analytics.values, page.finalUrl)
-    if (!value) continue
-    page.analytics = value
-    joined += 1
-  }
-  if (input.pages.length && joined === 0) {
-    input.warnings.push('GA4 metrics joined for 0 crawled pages.')
-  }
-}
-
-async function joinSearchMetrics(input: {
-  site: string
-  pages: CrawlReport['pages']
-  warnings: string[]
-  limit: number
-  queryPageMetrics: typeof queryPageMetrics
-  queryPageTopQuery: typeof queryPageTopQuery
-  queryPagesMetrics?: typeof queryPagesMetrics
-  queryPagesTopQueries?: typeof queryPagesTopQueries
-}): Promise<void> {
-  const pages = input.pages.slice(0, input.limit)
-  let joined = 0
-
-  if (input.queryPagesMetrics || input.queryPagesTopQueries) {
-    try {
-      const pageUrls = pages.map((page) => page.finalUrl)
-      const metricsByUrl = input.queryPagesMetrics
-        ? await input.queryPagesMetrics(input.site, pageUrls)
-        : new Map()
-      const topQueriesByUrl = input.queryPagesTopQueries
-        ? await input.queryPagesTopQueries(input.site, pageUrls)
-        : new Map()
-      for (const page of pages) {
-        const metrics = metricsByUrl.get(page.finalUrl)
-        if (metrics) page.searchMetrics = metrics
-        const topQuery = topQueriesByUrl.get(page.finalUrl)
-        if (topQuery) page.topQuery = topQuery
-        if (metrics || topQuery) joined += 1
-      }
-    } catch (error) {
-      input.warnings.push(
-        `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,
-      )
-      return
-    }
-    if (input.pages.length && joined === 0) {
-      input.warnings.push('GSC metrics joined for 0 crawled pages.')
-    } else if (joined < input.pages.length) {
-      input.warnings.push(
-        `GSC metrics joined for ${joined} of ${input.pages.length} pages.`,
-      )
-    }
-    return
-  }
-
-  for (const page of pages) {
-    try {
-      const metrics = await input.queryPageMetrics(input.site, page.finalUrl)
-      if (metrics) page.searchMetrics = metrics
-      const topQuery = await input.queryPageTopQuery(input.site, page.finalUrl)
-      if (topQuery) page.topQuery = topQuery
-      if (metrics || topQuery) joined += 1
-    } catch (error) {
-      input.warnings.push(
-        `GSC metrics skipped: ${error instanceof Error ? error.message : String(error)}`,
-      )
-      return
-    }
-  }
-  if (input.pages.length && joined === 0) {
-    input.warnings.push('GSC metrics joined for 0 crawled pages.')
-  } else if (joined < input.pages.length) {
-    input.warnings.push(
-      `GSC metrics joined for ${joined} of ${input.pages.length} pages.`,
-    )
-  }
 }

@@ -465,7 +465,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_ai_readiness',
     {
       description:
-        'Score observed crawl and technical signals for AI discovery workflows. Paragraph shape and llms.txt are unscored observations, and the report does not predict citations.',
+        'Return AI-search technical evidence and optional observations without an aggregate score or citation prediction.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),

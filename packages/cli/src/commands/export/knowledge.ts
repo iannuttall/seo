@@ -77,7 +77,7 @@ function renderKnowledgeMarkdown(report: CrawlReport): string {
     `- Indexable pages: ${report.summary.indexablePages}`,
     `- Technical score: ${report.summary.technicalScorePages ? `${report.summary.healthScore}/100 across ${report.summary.technicalScorePages} pages` : 'not available'}`,
     `- GEO score: ${report.summary.geoScorePages ? `${report.summary.geoReadinessScore}/100 across ${report.summary.geoScorePages} pages` : 'not available'}`,
-    `- AI readiness: ${payload.aiReadiness.score}/100`,
+    `- AI-search evidence: ${payload.aiReadiness.dataStatus} (${payload.aiReadiness.assessment})`,
     `- Entity readiness: ${payload.entityReadiness.score}/100 (${payload.entityReadiness.dataStatus} evidence)`,
     '',
     '## Top AI Readiness Actions',
@@ -86,7 +86,7 @@ function renderKnowledgeMarkdown(report: CrawlReport): string {
       ? payload.aiReadiness.topActions.map(
           (action) => `- ${action.title}: ${action.action}`,
         )
-      : ['- No top AI readiness actions.']),
+      : ['- No AI-search technical actions in this crawl.']),
     '',
     '## Entity Signals',
     '',

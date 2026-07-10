@@ -12,8 +12,6 @@ export type ReadinessCheck = {
   section: string
   status: ReadinessStatus
   evaluated: boolean
-  score: number
-  maxScore: number
   title: string
   plainEnglish: string
   action: string
@@ -24,8 +22,6 @@ export type ReadinessCheck = {
 export type ReadinessSection = {
   id: string
   title: string
-  score: number
-  maxScore: number
   checks: ReadinessCheck[]
 }
 
@@ -34,8 +30,7 @@ export type AiReadinessReport = {
   url: string
   generatedAt: string
   dataStatus: 'complete' | 'partial'
-  score: number
-  grade: 'excellent' | 'strong' | 'needs-work' | 'blocked'
+  assessment: 'evidence-only'
   headline: string
   sections: ReadinessSection[]
   checks: ReadinessCheck[]
@@ -67,27 +62,22 @@ function section(
   title: string,
   checks: ReadinessCheck[],
 ): ReadinessSection {
-  const maxScore = checks.reduce(
-    (sum, check) => sum + (check.evaluated ? check.maxScore : 0),
-    0,
-  )
-  const score = checks.reduce(
-    (sum, check) => sum + (check.evaluated ? check.score : 0),
-    0,
-  )
-  return { id, title, score, maxScore, checks }
+  return { id, title, checks }
 }
 
 function check(
   input: Omit<ReadinessCheck, 'status' | 'evaluated'> & {
     evaluated?: boolean
+    score: number
+    maxScore: number
   },
 ): ReadinessCheck {
+  const { score, maxScore, ...output } = input
   const evaluated = input.evaluated ?? true
   return {
-    ...input,
+    ...output,
     evaluated,
-    status: evaluated ? status(input.score, input.maxScore) : 'unknown',
+    status: evaluated ? status(score, maxScore) : 'unknown',
   }
 }
 
@@ -103,13 +93,6 @@ function sampleUrls(
     .filter(predicate)
     .slice(0, 10)
     .map((page) => page.finalUrl)
-}
-
-function grade(score: number): AiReadinessReport['grade'] {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'strong'
-  if (score >= 50) return 'needs-work'
-  return 'blocked'
 }
 
 export function aiReadiness(report: CrawlReport): AiReadinessReport {
@@ -148,17 +131,13 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       (page.schemaSameAs?.length ?? 0) > 0 ||
       (page.socialProfileLinks?.length ?? 0) > 0,
   )
-  const httpsPages = pages.filter((page) => page.isHttps)
-  const viewportPages = pages.filter((page) => page.hasViewport)
-  const readablePages = pages.filter((page) => (page.textRatio ?? 0) >= 0.05)
-
   const sections = [
     section('agent-access', 'Agent access', [
       check({
         id: 'robots-ai-bots',
         section: 'agent-access',
         maxScore: 20,
-        evaluated: !robotsUnavailable,
+        evaluated: !robotsUnavailable && botAccess.length > 0,
         score: robotsUnavailable
           ? 0
           : botAccess.length
@@ -196,13 +175,9 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'robots-sitemap',
         section: 'agent-access',
-        maxScore: 8,
+        maxScore: 0,
         evaluated: !robotsUnavailable,
-        score: robotsUnavailable
-          ? 0
-          : report.ai?.robotsTxt?.sitemapUrls.length
-            ? 8
-            : 3,
+        score: 0,
         title: 'robots.txt points agents to sitemaps',
         plainEnglish: robotsUnavailable
           ? 'The robots.txt response was unavailable, so sitemap declarations could not be checked.'
@@ -217,8 +192,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'agent-resources',
         section: 'agent-access',
-        maxScore: 7,
-        score: detectedResources?.length ? 7 : 3,
+        maxScore: 0,
+        score: 0,
         title: 'Agent descriptor files are discoverable',
         plainEnglish: detectedResources?.length
           ? `${detectedResources.length} machine-readable agent resource was found.`
@@ -290,8 +265,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'semantic-html',
         section: 'content-clarity',
-        maxScore: 8,
-        score: scoreFromPercent(pct(semanticPages.length, pageCount), 8),
+        maxScore: 0,
+        score: 0,
         title: 'Pages use semantic HTML',
         plainEnglish: `${pct(semanticPages.length, pageCount)}% of indexable pages use semantic structure.`,
         action:
@@ -300,15 +275,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'titles-headings-meta',
         section: 'content-clarity',
-        maxScore: 10,
-        score: scoreFromPercent(
-          Math.round(
-            (pct(titlePages.length, pageCount) +
-              pct(metaPages.length, pageCount)) /
-              2,
-          ),
-          10,
-        ),
+        maxScore: 0,
+        score: 0,
         title: 'Titles, H1s, and descriptions are clear',
         plainEnglish: `${pct(titlePages.length, pageCount)}% of indexable pages have title/H1 coverage and ${pct(metaPages.length, pageCount)}% have meta descriptions.`,
         action:
@@ -317,8 +285,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'language',
         section: 'content-clarity',
-        maxScore: 4,
-        score: scoreFromPercent(pct(langPages.length, pageCount), 4),
+        maxScore: 0,
+        score: 0,
         title: 'HTML language is declared',
         plainEnglish: `${pct(langPages.length, pageCount)}% of indexable pages declare a language.`,
         action:
@@ -329,8 +297,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'entity-schema',
         section: 'entity-signals',
-        maxScore: 14,
-        score: scoreFromPercent(pct(entityPages.length, pageCount), 14),
+        maxScore: 0,
+        score: 0,
         title: 'The site states who or what it represents',
         plainEnglish: `${pct(entityPages.length, pageCount)}% of indexable pages include entity signals such as Organization, Person, Product, sameAs, or social profile links.`,
         action:
@@ -340,21 +308,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'authors-dates',
         section: 'entity-signals',
-        maxScore: 8,
-        score: scoreFromPercent(
-          Math.round(
-            (pct(
-              pages.filter((page) => page.geo?.hasAuthor).length,
-              pageCount,
-            ) +
-              pct(
-                pages.filter((page) => page.geo?.hasDate).length,
-                pageCount,
-              )) /
-              2,
-          ),
-          8,
-        ),
+        maxScore: 0,
+        score: 0,
         title: 'People and dates are visible where they matter',
         plainEnglish:
           'Author and date signals help agents judge freshness and accountability.',
@@ -366,16 +321,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'https-viewport-readable',
         section: 'technical-ux',
-        maxScore: 12,
-        score: scoreFromPercent(
-          Math.round(
-            (pct(httpsPages.length, pageCount) +
-              pct(viewportPages.length, pageCount) +
-              pct(readablePages.length, pageCount)) /
-              3,
-          ),
-          12,
-        ),
+        maxScore: 0,
+        score: 0,
         title: 'Pages are secure, mobile-ready, and readable from HTML',
         plainEnglish:
           'Agents need stable HTML content, not just a visual page that works in one browser session.',
@@ -386,6 +333,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'status-indexability',
         section: 'technical-ux',
         maxScore: 12,
+        evaluated: report.pages.length > 0,
         score: scoreFromPercent(
           pct(pages.length, report.pages.length || 1),
           12,
@@ -416,9 +364,8 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'internal-link-discovery',
         section: 'crawl-completeness',
-        maxScore: 8,
-        score:
-          report.summary.discoveredUrls > report.summary.totalPages ? 8 : 4,
+        maxScore: 0,
+        score: 0,
         title: 'Internal links expose more of the site',
         plainEnglish:
           'A healthy crawl should discover important pages through internal links, not only through a seed URL.',
@@ -429,16 +376,27 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   ]
 
   const checks = sections.flatMap((item) => item.checks)
-  const maxScore = sections.reduce((sum, item) => sum + item.maxScore, 0)
-  const rawScore = sections.reduce((sum, item) => sum + item.score, 0)
-  const score = scoreFromPercent(pct(rawScore, maxScore), 100)
   const dataStatus =
     report.status === 'completed' && !robotsUnavailable
       ? ('complete' as const)
       : ('partial' as const)
   const topActions = checks
-    .filter((item) => item.status !== 'pass' && item.status !== 'info')
-    .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score))
+    .filter(
+      (item) =>
+        item.evaluated &&
+        (item.status === 'warning' || item.status === 'fail') &&
+        [
+          'robots-ai-bots',
+          'valid-json-ld',
+          'status-indexability',
+          'crawl-depth',
+        ].includes(item.id),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.status === 'fail') - Number(a.status === 'fail') ||
+        a.id.localeCompare(b.id),
+    )
     .slice(0, 8)
 
   return {
@@ -446,14 +404,13 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
     url: report.config.url,
     generatedAt: report.generatedAt,
     dataStatus,
-    score,
-    grade: grade(score),
+    assessment: 'evidence-only',
     headline:
       dataStatus === 'partial'
-        ? 'Readiness evidence is incomplete; rerun after fixing the collection gaps before treating this as a site-wide verdict.'
-        : score >= 75
-          ? 'The site has a solid foundation for AI discovery.'
-          : 'The site needs readiness fixes before AI discovery work will compound.',
+        ? 'AI-search evidence is incomplete. Fix the collection gaps before drawing site-wide conclusions.'
+        : topActions.length
+          ? `${topActions.length} evidence-backed technical ${topActions.length === 1 ? 'action remains' : 'actions remain'}. Optional observations are not treated as ranking or citation factors.`
+          : 'No evidence-backed technical action was found in this crawl. This is not a visibility or citation verdict.',
     sections,
     checks,
     topActions,
@@ -461,6 +418,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
     agentResources: report.ai?.agentResources ?? [],
     caveats: [
       ...report.caveats,
+      'This report deliberately has no aggregate readiness score. Google documents no separate technical requirements for its generative AI Search features.',
       'llms.txt is treated as optional agent-discovery metadata, not a Google Search ranking or visibility factor.',
       'Paragraph length and placement are observations only. Google does not require content chunking or special answer blocks for generative AI features.',
       ...(report.ai?.robotsTxt

@@ -44,10 +44,9 @@ export async function resolveSavedCrawlReport(
 }
 
 function printAiReadiness(report: AiReadinessReport): void {
-  process.stdout.write(`AI readiness for ${report.url}\n\n`)
+  process.stdout.write(`AI-search evidence for ${report.url}\n\n`)
   printKeyValue([
-    ['Score', `${report.score}/100`],
-    ['Grade', report.grade],
+    ['Assessment', 'evidence only'],
     ['Data', report.dataStatus],
     ['Report', report.reportId],
   ])
@@ -84,7 +83,7 @@ export const aiReadinessCommand = defineCommand({
   meta: {
     name: 'ai-readiness',
     description:
-      'Score a saved crawl for AI discovery readiness with plain-English fixes',
+      'Review AI-search technical evidence and optional observations',
   },
   args: {
     'report-id': {

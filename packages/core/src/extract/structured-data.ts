@@ -1,4 +1,9 @@
 import type { CheerioAPI } from 'cheerio'
+import type { GoogleRichResultAssessment } from '../types.js'
+import {
+  assessGoogleRichResults,
+  unassessedGoogleRichResult,
+} from './google-rich-results.js'
 
 export type StructuredDataFormat = 'json-ld' | 'microdata' | 'rdfa'
 
@@ -25,6 +30,7 @@ export type StructuredDataExtraction = {
   }>
   invalidSameAs: Array<{ block: number; path: string; value: string }>
   schemaTypes: string[]
+  googleRichResults: GoogleRichResultAssessment[]
   formats: StructuredDataFormat[]
   hasAuthor: boolean
   hasDate: boolean
@@ -151,6 +157,7 @@ function parseJsonLd(
   const sameAs: StructuredDataExtraction['sameAs'] = []
   const invalidSameAs: StructuredDataExtraction['invalidSameAs'] = []
   const schemaTypes = new Set<string>()
+  const googleRichResults: GoogleRichResultAssessment[] = []
   let hasAuthor = false
   let hasDate = false
 
@@ -189,6 +196,9 @@ function parseJsonLd(
       }
     }
     if (nodeTypes.length) {
+      googleRichResults.push(
+        ...assessGoogleRichResults({ block, path, nodeTypes, record }),
+      )
       hasAuthor ||= usableAuthor(record.author)
       hasDate ||=
         isValidStructuredDate(record.datePublished) ||
@@ -243,6 +253,7 @@ function parseJsonLd(
     sameAs,
     invalidSameAs,
     schemaTypes: [...schemaTypes],
+    googleRichResults,
     hasAuthor,
     hasDate,
   }
@@ -324,11 +335,21 @@ export function extractStructuredData(
   if (parsed.schemaTypes.length) formats.push('json-ld')
   if (microdata.length) formats.push('microdata')
   if (rdfa.length) formats.push('rdfa')
+  const googleRichResults = [
+    ...parsed.googleRichResults,
+    ...microdata.flatMap((schemaType) =>
+      unassessedGoogleRichResult({ format: 'microdata', schemaType }),
+    ),
+    ...rdfa.flatMap((schemaType) =>
+      unassessedGoogleRichResult({ format: 'rdfa', schemaType }),
+    ),
+  ]
 
   return {
     ...parsed,
     schemaTypes,
     formats,
+    googleRichResults,
     hasAuthor:
       parsed.hasAuthor ||
       usableElementValue($, '[itemprop~="author"], [property~="author"]'),

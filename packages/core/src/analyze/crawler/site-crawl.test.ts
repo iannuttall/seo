@@ -121,6 +121,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     )
     assert.equal(report.pages[0]?.geo?.llmsTxtStatus, 200)
     assert.equal(report.pages[0]?.geo?.hasFaqSchema, true)
+    assert.equal(report.pages[0]?.googleRichResults?.[0]?.status, 'retired')
     assert.equal(report.pages[0]?.geo?.listCount, 1)
     assert.equal(report.pages[0]?.geo?.tableCount, 1)
     assert.equal(report.pages[0]?.outgoingExternalCount, 1)

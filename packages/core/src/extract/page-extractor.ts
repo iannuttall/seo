@@ -324,6 +324,7 @@ export async function extractPage(
       25,
     ),
     structuredDataFormats: structuredData.formats,
+    googleRichResults: structuredData.googleRichResults,
     schemaSameAsEvidence: structuredData.sameAs,
     invalidSchemaSameAs: structuredData.invalidSameAs,
     schemaTypes: structuredData.schemaTypes,

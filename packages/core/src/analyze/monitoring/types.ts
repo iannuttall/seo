@@ -100,6 +100,7 @@ export type CrawlPageSnapshot = {
   externalLinkChecks?: Array<{ url: string; status?: number; error?: string }>
   schemaTypes?: string[]
   structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
+  googleRichResults?: import('../../types.js').GoogleRichResultAssessment[]
   schemaSameAs?: string[]
   schemaSameAsEvidence?: Array<{
     url: string

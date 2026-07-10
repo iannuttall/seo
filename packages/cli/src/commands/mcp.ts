@@ -1,12 +1,35 @@
 import { multiselect } from '@clack/prompts'
+import { SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg } from '../args.js'
-import { maybeExitCancelled } from '../utils.js'
+import { booleanArg, jsonFlag } from '../args.js'
+import { canPrompt, maybeExitCancelled, printJson } from '../utils.js'
 import {
   detectMcpClients,
   installMcpConfig,
+  type SupportedClient,
   uninstallMcpConfig,
 } from './mcp-config.js'
+
+const targetFlags: Array<{
+  client: SupportedClient
+  flag: 'claude-desktop' | 'cursor' | 'claude-code'
+  label: string
+}> = [
+  {
+    client: 'claude-desktop',
+    flag: 'claude-desktop',
+    label: 'Claude Desktop',
+  },
+  { client: 'cursor', flag: 'cursor', label: 'Cursor' },
+  { client: 'claude-code', flag: 'claude-code', label: 'Claude Code' },
+]
+
+function selectedClients(args: Record<string, unknown>): SupportedClient[] {
+  if (booleanArg(args.all)) return targetFlags.map(({ client }) => client)
+  return targetFlags
+    .filter(({ flag }) => booleanArg(args[flag]))
+    .map(({ client }) => client)
+}
 
 export const mcpCommand = defineCommand({
   meta: { name: 'mcp', description: 'MCP server helpers' },
@@ -39,30 +62,79 @@ export const mcpCommand = defineCommand({
           default: false,
           description: 'Remove the SEO MCP config instead of adding it',
         },
+        'claude-desktop': {
+          type: 'boolean',
+          default: false,
+          description: 'Update Claude Desktop',
+        },
+        cursor: {
+          type: 'boolean',
+          default: false,
+          description: 'Update Cursor',
+        },
+        'claude-code': {
+          type: 'boolean',
+          default: false,
+          description: 'Update Claude Code',
+        },
+        all: {
+          type: 'boolean',
+          default: false,
+          description: 'Update every supported MCP client',
+        },
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print structured JSON output',
+        },
       },
       run: async ({ args }) => {
         const detected = detectMcpClients()
-        const selected = maybeExitCancelled(
-          await multiselect({
-            message: args.uninstall
-              ? 'Remove seo from which MCP clients?'
-              : 'Install seo into which MCP clients?',
-            options: detected.map((target) => ({
-              value: target.client,
-              label: target.client,
-              hint: target.path,
-            })),
-            initialValues: detected.map((target) => target.client),
-            required: true,
-          }),
-        )
+        const json = jsonFlag(args)
+        let selected = selectedClients(args)
 
-        for (const target of detected.filter((entry) =>
-          selected.includes(entry.client),
-        )) {
-          const result = args.uninstall
-            ? uninstallMcpConfig(target)
-            : installMcpConfig(target)
+        if (selected.length === 0) {
+          if (!canPrompt({ json })) {
+            throw new SeoError(
+              'INVALID_INPUT',
+              'Choose an MCP client with --claude-desktop, --cursor, --claude-code, or --all.',
+            )
+          }
+          selected = maybeExitCancelled(
+            await multiselect({
+              message: args.uninstall
+                ? 'Remove seo from which MCP clients?'
+                : 'Install seo into which MCP clients?',
+              options: detected.map((target) => ({
+                value: target.client,
+                label:
+                  targetFlags.find(({ client }) => client === target.client)
+                    ?.label ?? target.client,
+                hint: target.path,
+              })),
+              initialValues: detected.map((target) => target.client),
+              required: true,
+            }),
+          )
+        }
+
+        const results = detected
+          .filter((entry) => selected.includes(entry.client))
+          .map((target) =>
+            booleanArg(args.uninstall)
+              ? uninstallMcpConfig(target)
+              : installMcpConfig(target),
+          )
+
+        if (json) {
+          printJson({
+            operation: booleanArg(args.uninstall) ? 'uninstall' : 'install',
+            results,
+          })
+          return
+        }
+
+        for (const result of results) {
           process.stdout.write(
             `${result.changed ? 'updated' : 'skipped'} ${result.client} · ${result.path}\n`,
           )

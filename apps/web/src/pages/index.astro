@@ -29,12 +29,22 @@ const faqs = [
   {
     question: 'Does SEO Skills CLI include an AI agent?',
     answer:
-      'No. It gives Claude, Codex, Cursor, and other agents reliable SEO tools and structured evidence. Your agent still does the reasoning, writing, and implementation work.',
+      'No. SEO Skills gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work. SEO Skills provides the crawl data, Search Console data, GA4 data, and report evidence.',
+  },
+  {
+    question: 'Why not build another SEO dashboard?',
+    answer:
+      'Dashboards are useful when you want to click around. SEO Skills is built for the way agents work. They discover reports, run them, and read structured evidence without leaving your editor or terminal.',
+  },
+  {
+    question: 'What does my agent actually get back?',
+    answer:
+      'It gets JSON or Markdown with the date range, units, caveats, evidence, recommendations, and useful next commands. That gives the model enough context to explain the problem and help fix it.',
   },
   {
     question: 'Why connect Search Console?',
     answer:
-      'Search Console adds the queries, pages, clicks, impressions, CTR, and average position needed to find real opportunities on a site you can access. URL Inspection can add Google index evidence for selected pages. The CLI requests read-only access.',
+      'Search Console proves you can access the site and gives reports real search demand. That lets SEO Skills find page-two queries, weak CTR, decaying pages, cannibalisation, and indexing candidates using your own data. The CLI requests read-only access.',
   },
   {
     question: 'Is GA4 required?',
@@ -49,7 +59,7 @@ const faqs = [
   {
     question: 'Can it change my site?',
     answer:
-      'The SEO tools inspect and report. An agent can use that evidence to edit code or content in a separate workflow, but the CLI does not publish changes to your site by itself.',
+      'The CLI does not publish changes by itself. It gives your agent the evidence it needs to edit code or content, draft a fix, or open a ticket inside the tools you already use.',
   },
   {
     question: 'Do I need MCP?',
@@ -65,6 +75,16 @@ const faqs = [
     question: 'Which report should I run first?',
     answer:
       'Run seo report after setup. It checks the evidence available for the project, explains skipped sections, ranks the first investigation queue, and points to focused follow-up reports.',
+  },
+  {
+    question: 'How is this different from generic SEO advice?',
+    answer:
+      'Generic advice guesses from best practices. SEO Skills works from the site, crawl, queries, search demand, and analytics data in front of it. Your agent can inspect the evidence behind each finding instead of trusting a generic score.',
+  },
+  {
+    question: 'Who is SEO Skills for?',
+    answer:
+      'Developers, founders, SEO consultants, agencies, and technical teams who want their agents to work from clean SEO evidence instead of screenshots or copied dashboard rows.',
   },
 ]
 ---
@@ -83,8 +103,8 @@ const faqs = [
               Turn your agents into an SEO team that grows your organic and AI search visibility.
             </h1>
             <p class="text-pretty text-2xl/8 font-medium -tracking-[0.2px] text-foreground-muted xl:text-3xl/10 xl:-tracking-[0.4px]">
-              Local-first SEO tools to find and fix issues, measure performance, and improve
-              visibility through one CLI or MCP server.
+              Agent-first SEO tools to find and fix issues, measure your performance, and improve
+              your organic and AI search visibility.
             </p>
           </div>
           <InstallPicker />
@@ -95,39 +115,39 @@ const faqs = [
     <div class="space-y-24 py-24">
       <section class="site-frame grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Your agent audits the site without you.</h2>
+          <h2 class="text-lg font-semibold">Your agent audits your site without you.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            It crawls the site, finds technical problems, and hands back affected URLs and specific
-            next steps while you stay in your editor.
+            It crawls the site, finds the technical SEO and AI-readiness issues, and hands back
+            specific fixes. You stay in your editor while it does the busywork.
           </p>
         </div>
         <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Use the search data you already own.</h2>
+          <h2 class="text-lg font-semibold">Data other tools keep behind a dashboard.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Join crawl findings with read-only Search Console and GA4 data so your agent can rank
-            work by observed demand, not a generic score.
+            SEO Skills gives your agent owner-verified Search Console and GA4 data on your machine,
+            joined to crawl findings, so it sees what is actually losing visibility.
           </p>
         </div>
         <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">It works where your agents already work.</h2>
+          <h2 class="text-lg font-semibold">It lives in your CLI and MCP, where your agents already work.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Run the same reports through the CLI, local MCP, TypeScript package, or CI and receive
-            structured JSON or readable Markdown.
+            Run an audit from a script, an agent, your terminal, or CI and read the results back as
+            structured JSON or Markdown.
           </p>
         </div>
         <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Catch regressions before they become normal.</h2>
+          <h2 class="text-lg font-semibold">Your search visibility grows while you ship.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Save crawl evidence locally, compare like-for-like snapshots, and trace changed pages
-            and rules after a release.
+            Your agent fixes issues, tracks new and resolved ones build over build, and measures the
+            impact across organic and AI search.
           </p>
         </div>
       </section>
 
       <section class="site-frame">
         <SectionHeading
-          eyebrow="See your agent do the work"
-          text="It reads crawl findings and first-party search data, runs the focused follow-up, and keeps every recommendation tied to evidence you can inspect."
+          eyebrow="See your agent in the loop"
+          text="It reads your crawl findings and Search Console data through SEO Skills, finds what is hurting visibility, then drafts the fix in your stack."
         />
         <HeroPanel />
       </section>
@@ -161,11 +181,11 @@ const faqs = [
         <div class="border-t border-border pt-12">
           <div class="max-w-2xl">
             <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-              Before you give an agent access to a site
+              Questions people ask before adding SEO Skills to an agent
             </h2>
             <p class="mt-4 text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]">
-              The report engine is local, Google access is read-only, and your agent gets evidence
-              instead of another dashboard to interpret.
+              SEO Skills gives the best models better SEO evidence. It does not try to replace
+              Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use.
             </p>
           </div>
 

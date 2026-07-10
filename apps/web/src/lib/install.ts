@@ -8,14 +8,14 @@ export const installCommands = [
   },
   {
     id: 'skills',
-    label: 'skills only',
+    label: 'Skills only',
     command: 'npx skills add iannuttall/seo',
     description:
       'Add the instruction layer to an agent that can already run the seo package.',
   },
   {
     id: 'npx',
-    label: 'try with npx',
+    label: 'Try with npx',
     command: 'npx seo start',
     description:
       'Run the guided setup without installing the CLI or agent skills globally.',

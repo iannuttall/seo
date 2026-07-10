@@ -1,172 +1,139 @@
-import { shouldExcludeBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
-import type { GscRow } from '../types.js'
 import {
-  createCtrBenchmarkContext,
-  roundedPosition,
-} from './opportunity-primitives.js'
-import { isLowActionabilityQuery } from './query-quality.js'
+  analyzeCtrUnderperformersFromRows,
+  CTR_DEFAULT_LIMIT,
+  CTR_DEFAULT_MIN_IMPRESSIONS,
+  CTR_MAX_LIMIT,
+  CTR_MAX_MIN_IMPRESSIONS,
+} from './ctr-underperformers-analysis.js'
 import { defaultDateRange } from './shared.js'
+import { integerOption } from './site-diagnostics/quick-wins-report-input.js'
+
+export * from './ctr-underperformers-analysis.js'
+export type * from './ctr-underperformers-types.js'
+
+const MAX_GSC_ROWS = 100_000
 
 function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
   return count === 1 ? singular : pluralLabel
 }
 
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0
+type SearchAnalytics = typeof querySearchAnalytics
+
+export interface CtrUnderperformerDependencies {
+  searchAnalytics: SearchAnalytics
+  now: () => Date
 }
 
-export type CtrUnderperformer = {
-  query: string
-  url: string
-  position: number
-  impressions: number
-  actualCtr: number
-  expectedCtr: number
-  clicks: number
-  expectedClicks: number
-  clickShortfall: number
-  benchmark: {
-    expectedCtr: number
-    source: string
-    peerRows: number
-    peerImpressions: number
-    qualifiedPeerImpressions: number
-    urlSamples: number
-    positiveUrlSamples: number
-  }
-  recommendation: {
-    principle: 'C.3'
-    evidenceRef: string
-    action: string
-    effort: 'S'
-    confidence: 'medium'
-  }
+const defaultDependencies: CtrUnderperformerDependencies = {
+  searchAnalytics: querySearchAnalytics,
+  now: () => new Date(),
 }
 
-export function analyzeCtrUnderperformersFromRows(input: {
-  rows: GscRow[]
-  site: string
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-}): {
-  items: CtrUnderperformer[]
-  totalClickShortfall: number
-  minImpressions: number
-} {
-  const minImpressions = input.minImpressions ?? 200
-  const benchmarkRows = input.rows.filter((row) => {
-    const query = row.keys[0] ?? ''
-    return (
-      row.position >= 1 &&
-      row.position <= 10 &&
-      row.impressions > 0 &&
-      !isLowActionabilityQuery(query) &&
-      !shouldExcludeBrandQuery({
-        query,
-        siteUrl: input.site,
-        brandTerms: input.brandTerms,
-        includeBrand: input.includeBrand,
-      })
-    )
+export async function ctrUnderperformersReport(
+  input: {
+    site: string
+    minImpressions?: number
+    limit?: number
+    brandTerms?: string[]
+    includeBrand?: boolean
+    refresh?: boolean
+  },
+  dependencies: CtrUnderperformerDependencies = defaultDependencies,
+) {
+  const minImpressions = integerOption({
+    value: input.minImpressions,
+    fallback: CTR_DEFAULT_MIN_IMPRESSIONS,
+    minimum: 1,
+    maximum: CTR_MAX_MIN_IMPRESSIONS,
+    label: 'minImpressions',
   })
-  const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
-
-  const items = benchmarkRows
-    .filter((row) => row.impressions >= minImpressions)
-    .map((row): CtrUnderperformer => {
-      const rounded = roundedPosition(row.position)
-      const benchmark = benchmarkContext.forRow(row)
-      const expectedClicks = benchmark.ctr * row.impressions
-      const clickShortfall = Math.max(0, expectedClicks - row.clicks)
-
-      return {
-        query: row.keys[0] ?? '',
-        url: row.keys[1] ?? '',
-        position: row.position,
-        impressions: row.impressions,
-        actualCtr: row.ctr,
-        expectedCtr: benchmark.ctr,
-        clicks: row.clicks,
-        expectedClicks,
-        clickShortfall,
-        benchmark: {
-          expectedCtr: benchmark.ctr,
-          source: benchmark.source,
-          peerRows: benchmark.rows,
-          peerImpressions: benchmark.impressions,
-          qualifiedPeerImpressions: benchmark.qualifiedImpressions,
-          urlSamples: benchmark.urlSamples,
-          positiveUrlSamples: benchmark.positiveUrlSamples,
-        },
-        recommendation: {
-          principle: 'C.3',
-          evidenceRef: `Query "${row.keys[0]}" has CTR ${row.ctr.toFixed(3)} vs expected ${benchmark.ctr.toFixed(3)} at position ${rounded}, leaving about ${clickShortfall.toFixed(0)} clicks on the table.`,
-          action: `This page ranks on page one for "${row.keys[0]}" but gets fewer clicks than expected. Rewrite the title and meta description to match the main search intent; do not rewrite the page body unless rankings also drop.`,
-          effort: 'S',
-          confidence: 'medium',
-        },
-      }
-    })
-    .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
-    .sort(
-      (left, right) =>
-        right.clickShortfall - left.clickShortfall ||
-        compareText(left.query, right.query) ||
-        compareText(left.url, right.url),
-    )
-
-  return {
-    items,
-    totalClickShortfall: items.reduce(
-      (sum, item) => sum + item.clickShortfall,
-      0,
-    ),
-    minImpressions,
-  }
-}
-
-export async function ctrUnderperformersReport(input: {
-  site: string
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  refresh?: boolean
-}) {
-  const range = defaultDateRange(28)
-  const { rows } = await querySearchAnalytics(
+  const limit = integerOption({
+    value: input.limit,
+    fallback: CTR_DEFAULT_LIMIT,
+    minimum: 1,
+    maximum: CTR_MAX_LIMIT,
+    label: 'limit',
+  })
+  const now = dependencies.now()
+  const range = defaultDateRange(28, now)
+  const source = await dependencies.searchAnalytics(
     input.site,
     {
       ...range,
       dimensions: ['query', 'page'],
       type: 'web',
       dataState: 'final',
+      maxRows: MAX_GSC_ROWS,
     },
     { refresh: input.refresh },
   )
-  const { items, totalClickShortfall, minImpressions } =
+  const { items, totalClickShortfall, returnedClickShortfall, selection } =
     analyzeCtrUnderperformersFromRows({
-      rows,
+      rows: source.rows,
       site: input.site,
-      minImpressions: input.minImpressions,
+      minImpressions,
+      limit,
       brandTerms: input.brandTerms,
       includeBrand: input.includeBrand,
     })
   const top = items[0]
+  const possiblyTruncated = source.rowsFetched >= MAX_GSC_ROWS
+  const partialValidation = selection.invalidRows > 0
+  const dataStatus =
+    selection.sourceRows === 0
+      ? ('empty' as const)
+      : possiblyTruncated || partialValidation
+        ? ('partial' as const)
+        : selection.eligibleUnderperformers === 0
+          ? ('filtered' as const)
+          : ('complete' as const)
+  const completeness =
+    possiblyTruncated && partialValidation
+      ? ('partial-and-possibly-truncated' as const)
+      : possiblyTruncated
+        ? ('possibly-truncated' as const)
+        : partialValidation
+          ? ('partial' as const)
+          : ('complete' as const)
 
   return {
+    schemaVersion: 1 as const,
     site: input.site,
     range,
-    generatedAt: new Date().toISOString(),
+    generatedAt: now.toISOString(),
+    dataStatus,
+    source: {
+      provider: 'google-search-console' as const,
+      dimensions: ['query', 'page'] as const,
+      searchType: 'web' as const,
+      dataState: 'final' as const,
+      rowsFetched: source.rowsFetched,
+      calls: source.calls,
+      maxRows: MAX_GSC_ROWS,
+      possiblyTruncated,
+      completeness,
+      validation: {
+        retainedRows: selection.validRows,
+        invalidRows: selection.invalidRows,
+        aggregatedRows: selection.aggregatedRows,
+        duplicateRows: selection.duplicateRows,
+      },
+    },
+    selection,
     summary: {
-      underperformers: items.length,
+      underperformers: selection.eligibleUnderperformers,
+      returnedUnderperformers: selection.returnedUnderperformers,
       estimatedClickShortfall: totalClickShortfall,
+      returnedClickShortfall,
       minImpressions,
+      limit,
       brandFiltering: input.includeBrand ? 'included' : 'excluded',
       verdict: top
-        ? `${items.length} CTR ${plural(items.length, 'underperformer')} found, with about ${totalClickShortfall.toFixed(0)} estimated clicks available. Start with "${top.query}" because it has the largest click gap.`
-        : 'No high-impression page-one queries are materially underperforming the expected CTR curve.',
+        ? `${selection.eligibleUnderperformers} CTR ${plural(selection.eligibleUnderperformers, 'underperformer')} found in retained rows, with a calculated heuristic shortfall of ${totalClickShortfall.toFixed(0)} clicks for this window. Start review with "${top.query}" because it has the largest gap.`
+        : dataStatus === 'partial'
+          ? 'No material CTR underperformers remained in the validated retained rows, but partial evidence prevents an all-clear.'
+          : 'No high-impression page-one queries in the retained rows are materially below the heuristic CTR benchmark.',
     },
     items,
     caveats: [
@@ -174,16 +141,40 @@ export async function ctrUnderperformersReport(input: {
       `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
       `Only queries ranking position 1-10 with at least ${minImpressions} impressions were checked.`,
       'Expected CTR uses a robust site-aware position benchmark when enough peer data exists, otherwise the fallback position curve.',
-      'CTR benchmarks are directional heuristics, not promises of available clicks. Validate the search intent and SERP before editing.',
+      'CTR benchmarks and calculated click shortfalls are directional heuristics, not forecasts or proof that clicks are available. Validate the search intent and live SERP before editing.',
+      ...(selection.invalidRows
+        ? [
+            `${selection.invalidRows} invalid provider ${plural(selection.invalidRows, 'row')} ${selection.invalidRows === 1 ? 'was' : 'were'} excluded, so this report is partial.`,
+          ]
+        : []),
+      ...(selection.duplicateRows
+        ? [
+            `${selection.duplicateRows} repeated query/page ${plural(selection.duplicateRows, 'row')} ${selection.duplicateRows === 1 ? 'was' : 'were'} aggregated before CTR and average position were calculated.`,
+          ]
+        : []),
+      ...(possiblyTruncated
+        ? [
+            `The retained-row limit of ${MAX_GSC_ROWS} was reached, so lower-ranked source rows may be absent.`,
+          ]
+        : []),
+      ...(selection.limitedUnderperformers
+        ? [
+            `${selection.limitedUnderperformers} eligible ${plural(selection.limitedUnderperformers, 'underperformer')} ${selection.limitedUnderperformers === 1 ? 'was' : 'were'} omitted by the output limit.`,
+          ]
+        : []),
     ],
     recommendations: top
       ? [
-          `Rewrite the title and meta description for "${top.query}" first. Keep the page body mostly stable unless rankings or content coverage are also weak.`,
-          'Prioritise rows with high impressions, low actual CTR, and clear search intent. Avoid testing tiny queries where noise will hide the result.',
+          `Review the live SERP and displayed snippet for "${top.query}" first. Test the title or meta description only if the observed framing does not match the query intent.`,
+          'Prioritise rows with high impressions and clear intent, but treat the benchmark gap as a hypothesis rather than a diagnosed copy defect.',
           'After changing SERP copy, annotate the change and compare the next full 28-day period before making more edits.',
         ]
-      : [
-          'No CTR-only action is recommended from this report. Use striking-distance or page-opportunities if you want more growth ideas.',
-        ],
+      : dataStatus === 'partial'
+        ? [
+            'No CTR-only action is recommended from the validated retained rows. Refresh or inspect the provider evidence before treating this as an all-clear.',
+          ]
+        : [
+            'No CTR-only action is recommended from this report. Use striking-distance or page-opportunities if you want more growth ideas.',
+          ],
   }
 }

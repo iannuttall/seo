@@ -52,7 +52,7 @@
   },
   "packageManager": "pnpm@11.10.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "auth:inject-shared-client": "node scripts/inject-shared-oauth-client.mjs",
@@ -73,7 +73,7 @@
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
-    "@clack/prompts": "^0.11.0",
+    "@clack/prompts": "^1.7.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@mozilla/readability": "^0.6.0",
     "@napi-rs/keyring": "^1.3.0",
@@ -83,20 +83,20 @@
     "consola": "^3.4.2",
     "debug": "^4.4.3",
     "defuddle": "^0.19.1",
-    "env-paths": "^3.0.0",
+    "env-paths": "^4.0.0",
     "jsonc-parser": "^3.3.1",
     "lighthouse": "13.4.0",
     "linkedom": "^0.18.13",
-    "open": "^10.2.0",
-    "p-queue": "^8.1.1",
-    "p-retry": "^7.1.1",
+    "open": "^11.0.0",
+    "p-queue": "^9.3.1",
+    "p-retry": "^8.0.0",
     "picocolors": "^1.1.1",
-    "pino": "^9.14.0",
+    "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
-    "schema-dts": "^1.1.5",
-    "undici": "^7.28.0",
+    "schema-dts": "^2.0.0",
+    "undici": "^8.7.0",
     "update-notifier": "^7.3.1",
     "user-agents": "2.1.116",
     "zod": "^4.4.3"
@@ -105,7 +105,7 @@
     "@biomejs/biome": "^2.5.3",
     "@changesets/cli": "^2.31.0",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^24.13.3",
+    "@types/node": "^22.20.1",
     "tsup": "^8.5.1",
     "turbo": "^2.10.4",
     "typescript": "^5.9.3"

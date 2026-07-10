@@ -6,10 +6,18 @@ export type ReportGuideInput = {
   source?: ReportSourceKey
 }
 
+export type ReportGuideAlternative = {
+  when: string
+  doInstead: string
+  reportId?: string
+}
+
 export type ReportGuideSeo = {
   title: string
   description: string
   heading: string
+  primaryKeyword?: string
+  supportingKeywords?: readonly string[]
 }
 
 export type ReportGuideOverride = {
@@ -19,6 +27,7 @@ export type ReportGuideOverride = {
   inputs?: readonly [ReportGuideInput, ...ReportGuideInput[]]
   checks?: readonly [string, ...string[]]
   returns?: readonly [string, ...string[]]
+  alternatives?: readonly [ReportGuideAlternative, ...ReportGuideAlternative[]]
   seo?: ReportGuideSeo
 }
 
@@ -29,5 +38,6 @@ export type ResolvedReportGuide = Omit<ReportEditorial, 'name' | 'summary'> & {
   inputs: readonly [ReportGuideInput, ...ReportGuideInput[]]
   checks: readonly [string, ...string[]]
   returns: readonly [string, ...string[]]
+  alternatives: readonly [ReportGuideAlternative, ...ReportGuideAlternative[]]
   seo?: ReportGuideSeo
 }

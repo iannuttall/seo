@@ -2,6 +2,7 @@ import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
 import type {
+  ReportGuideAlternative,
   ReportGuideInput,
   ReportGuideOverride,
   ResolvedReportGuide,
@@ -9,6 +10,7 @@ import type {
 import type { ReportEditorial } from './types'
 
 export type {
+  ReportGuideAlternative,
   ReportGuideInput,
   ReportGuideOverride,
   ReportGuideSeo,
@@ -35,6 +37,11 @@ export function resolveReportGuide(
     ReportGuideInput,
     ...ReportGuideInput[],
   ]
+  const fallbackAlternatives = report.avoidWhen.map((when) => ({
+    when,
+    doInstead:
+      'Choose a report whose stated purpose matches the decision you need to make, or collect the missing evidence before continuing.',
+  })) as [ReportGuideAlternative, ...ReportGuideAlternative[]]
 
   return {
     ...report,
@@ -47,6 +54,7 @@ export function resolveReportGuide(
       'A structured JSON result with report status, source details, warnings, caveats, and limited evidence.',
       'The dates, limits, thresholds, and skipped work needed to judge what the result supports.',
     ],
+    alternatives: override?.alternatives ?? fallbackAlternatives,
     seo: override?.seo,
   }
 }

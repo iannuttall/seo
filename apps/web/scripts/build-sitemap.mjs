@@ -16,6 +16,7 @@ const paths = [
   '/docs/crawler',
   '/docs/getting-started',
   '/docs/google',
+  '/docs/library',
   '/docs/mcp',
   '/docs/reports',
   '/docs/skills',

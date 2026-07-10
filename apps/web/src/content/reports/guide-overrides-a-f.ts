@@ -26,18 +26,34 @@ export const reportGuideOverridesAF: Partial<
       'Affected URLs with rule id, severity, detail, evidence, and available Search Console or GA4 metrics.',
       'Selection metadata showing total matches, returned rows, limit, and whether the list was truncated.',
     ],
+    alternatives: [
+      {
+        when: 'You know several crawl issues exist but need to decide which ones deserve attention first.',
+        reportId: 'top-fixes',
+        doInstead:
+          'Run top fixes. It compares issue severity, affected-page counts, and available search or analytics value so you get a ranked work list rather than the URLs for one chosen issue.',
+      },
+      {
+        when: 'You do not yet understand what a crawler rule means or whether its suggested fix applies to your site.',
+        reportId: 'explain-crawl-issue',
+        doInstead:
+          'Explain the crawl issue first. It adds the maintained rule meaning, rationale, fix, and verification method. Then return here when you are ready to inspect the real affected URLs.',
+      },
+    ],
     seo: {
-      title: 'Affected SEO URLs: Find Every Page Behind a Crawl Issue',
+      title: 'Technical SEO Issues: Find Every Affected URL',
       description:
-        'Find the exact URLs affected by an SEO crawler rule, category, or severity and keep technical evidence, search metrics, limits, and truncation visible.',
-      heading: 'Find every URL affected by a specific crawl issue',
+        'Find every URL affected by specific technical SEO issues, inspect the crawl evidence, and turn a summary count into a practical review list.',
+      heading: 'Find the URLs behind your technical SEO issues',
+      primaryKeyword: 'technical SEO issues',
+      supportingKeywords: [],
     },
   },
   'ai-readiness': {
     name: 'Check AI search technical readiness',
     summary:
       'Review crawl access, indexability, snippet controls, page structure, and optional agent resources without inventing an AI visibility score.',
-    lead: 'This report checks whether technical controls could prevent pages being crawled, indexed, or used with snippets. It cannot predict selection, citations, rankings, or traffic from an AI product.',
+    lead: 'Use this broad AI search audit to check whether technical controls could prevent important pages from being crawled, indexed, or used with snippets. It cannot predict selection, citations, rankings, or traffic from an AI product.',
     inputs: [
       {
         label: 'Saved or fresh crawl report',
@@ -57,18 +73,34 @@ export const reportGuideOverridesAF: Partial<
       'Technical eligibility blockers and affected pages grouped by the observed control.',
       'Separate optional observations, source status, crawl limits, warnings, and caveats with no aggregate score.',
     ],
+    alternatives: [
+      {
+        when: 'You only need to check the Google crawl, index, canonical, and snippet controls used for AI feature eligibility.',
+        reportId: 'geo-gaps',
+        doInstead:
+          'Run Google AI search controls. It narrows the evidence to Google-supported technical eligibility controls and leaves optional page observations outside the blocker list.',
+      },
+      {
+        when: 'You need to know whether an AI product will cite, mention, rank, or send traffic to a page.',
+        doInstead:
+          'No automated report in this package can decide that. Check the relevant AI products with a repeatable external monitoring method and review their returned answers and citations. This report can still identify technical controls that may prevent eligibility.',
+      },
+    ],
     seo: {
-      title: 'AI Search Readiness: Check Crawl, Index, and Snippet Controls',
+      title: 'AI Search Readiness Report: Crawl Access and Citation Signals',
       description:
-        'Check crawl access, indexability, snippet controls, page structure, and optional AI resources without relying on an invented visibility or citation score.',
-      heading: 'Check the technical controls that affect AI search eligibility',
+        'Check whether AI search engines and agents can access, parse, understand, and cite important pages from your crawl.',
+      heading:
+        'AI search readiness report for crawl access and citation signals.',
+      primaryKeyword: 'ai search optimization',
+      supportingKeywords: ['ai search readiness', 'seo ai tools'],
     },
   },
   'ai-referrals': {
     name: 'Find AI referral traffic',
     summary:
       'See which known AI products sent referral sessions recorded by GA4 and which landing pages received them.',
-    lead: 'Use this for observed referral traffic rather than visibility estimates. The report only counts GA4 rows that match documented AI referral sources inside the chosen date range.',
+    lead: 'Use this to check whether known AI assistants are already sending traffic and which landing pages receive it. This is observed GA4 referral traffic, not an estimate of AI visibility.',
     inputs: [
       {
         label: 'GA4 traffic acquisition rows',
@@ -88,18 +120,33 @@ export const reportGuideOverridesAF: Partial<
       'AI referral sessions grouped by matched source and landing page with the requested GA4 date range.',
       'Returned-row limits and caveats for missing referrers, consent, redirects, attribution settings, and source changes.',
     ],
+    alternatives: [
+      {
+        when: 'You want to know whether important pages are technically available to AI search systems, regardless of whether GA4 recorded a visit.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI readiness. It checks crawl, index, snippet, and page-structure evidence that referral analytics cannot see.',
+      },
+      {
+        when: 'You need to know whether assistants mention or cite the site even when nobody clicks through.',
+        doInstead:
+          'No automated report in this package measures unclicked mentions or citations. Use repeatable external prompt monitoring and inspect the answers and cited URLs. AI referrals can only confirm visits that reached GA4 with a recognisable source.',
+      },
+    ],
     seo: {
-      title: 'AI Referral Traffic: Find Visits From ChatGPT and More in GA4',
+      title: 'AI Referral Traffic Report: Find Assistant Visits in GA4',
       description:
-        'Find AI referral sessions recorded in GA4, see the matched sources and landing pages, and keep date scope, attribution limits, and missing referrers clear.',
-      heading: 'Find referral traffic from known AI products in GA4',
+        'Find AI assistant referral traffic in GA4 and see which sources, pages, and sessions are already showing up in analytics.',
+      heading: 'AI referral traffic report for assistant visits in GA4.',
+      primaryKeyword: 'ai referrals',
+      supportingKeywords: ['ga4 report', 'ai search optimization'],
     },
   },
   'audit-page': {
     name: 'Audit one page',
     summary:
       'Inspect one live URL before changing its metadata, canonical, directives, structured data, links, or content.',
-    lead: 'Use this when the question is about one page. The report fetches the live URL, records what it can observe, and keeps title width, heading counts, and content length as evidence rather than universal quality rules.',
+    lead: 'Use this when you need page-level evidence before changing a title, canonical, internal link, or indexing control. The report fetches the live URL and keeps title width, heading counts, and content length as evidence rather than universal quality rules.',
     inputs: [
       {
         label: 'Live page fetch and extraction',
@@ -120,11 +167,28 @@ export const reportGuideOverridesAF: Partial<
       'A page snapshot with observed technical, metadata, content, link, and structured-data evidence.',
       'Focused findings, optional Search Console context, caveats, and verification steps for the exact URL.',
     ],
+    alternatives: [
+      {
+        when: 'You need to discover the same technical problem across a whole site rather than inspect one known URL.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a site crawl. It follows eligible links and sitemaps within explicit limits, groups repeated findings, and saves a reusable site-level baseline.',
+      },
+      {
+        when: 'The page is technically sound and you need a Search Console-backed brief for improving its existing content.',
+        reportId: 'content-optimization',
+        doInstead:
+          'Run content optimization. It joins the live page with its returned queries and separates technical conflicts from supported content review ideas.',
+      },
+    ],
     seo: {
-      title: 'SEO Page Audit: Check One URL Before You Change It for SEO',
+      title: 'SEO Page Audit: Check One URL With Crawl and GSC Evidence',
       description:
-        'Audit one live URL for redirects, canonicals, directives, metadata, headings, links, schema, and content evidence before making an SEO change.',
-      heading: 'Audit one live page before you change it',
+        'Audit one URL for technical SEO, metadata, content evidence, schema, links, canonicals, and Search Console query data.',
+      heading:
+        'SEO page audit for one URL with crawl and Search Console evidence.',
+      primaryKeyword: 'seo page audit',
+      supportingKeywords: ['seo audit', 'google search console seo'],
     },
   },
   'audit-urls': {
@@ -151,18 +215,34 @@ export const reportGuideOverridesAF: Partial<
       'A compact summary with page status, grouped technical findings, top fixes, warnings, and caveats.',
       'Optional limited page and issue inventories plus a saved report id when storage is requested.',
     ],
+    alternatives: [
+      {
+        when: 'You do not know which URLs are affected and need the crawler to discover pages from links and sitemaps.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a site crawl. It discovers an explicitly limited same-origin page set before applying the technical checks. A selected-URL audit never widens the supplied list.',
+      },
+      {
+        when: 'You already saved two crawl reports and need to compare new, resolved, and changed findings.',
+        reportId: 'compare-crawls',
+        doInstead:
+          'Compare the saved crawls. It checks whether both scopes are comparable and then reports page, issue, score, and summary movement between the two snapshots.',
+      },
+    ],
     seo: {
-      title: 'SEO URL List Audit: Check Selected Pages Without a Crawl',
+      title: 'Bulk SEO Checker: Audit a Selected List of URLs',
       description:
-        'Audit an exact list of URLs with technical SEO checks for launch gates, template samples, migrations, and post-fix verification without crawling the site.',
-      heading: 'Audit a selected list of URLs without crawling the whole site',
+        'Use a bulk SEO checker to audit an exact list of URLs for launch checks, template samples, migrations, and post-fix verification.',
+      heading: 'Check a list of URLs without crawling the whole site',
+      primaryKeyword: 'bulk SEO checker',
+      supportingKeywords: ['bulk URL checker'],
     },
   },
   cannibalisation: {
     name: 'Review query overlap and cannibalisation',
     summary:
       'Find queries associated with several URLs and separate healthy search coverage from genuine intent, canonical, or consolidation problems.',
-    lead: 'Multiple URLs appearing for one query is not automatically cannibalisation. This report gives you the overlap, metrics, and page evidence needed to decide whether the pages compete, complement each other, or need technical review.',
+    lead: 'Use this to find duplicate intent, pages that swap visibility for the same query, or overlapping scaled content. Multiple URLs appearing for one query is not automatically cannibalisation, so the report keeps the overlap, metrics, and page evidence visible.',
     inputs: [
       {
         label: 'Returned Search Console query and page rows',
@@ -183,18 +263,37 @@ export const reportGuideOverridesAF: Partial<
       'Overlapping queries with their URLs, metrics, concentration, and the evidence behind the review priority.',
       'Optional page observations and cautious actions such as leave alone, inspect intent, review canonicals, or consider consolidation.',
     ],
+    alternatives: [
+      {
+        when: 'You need to find relevant pages that could link to one chosen target URL rather than investigate several URLs shown for the same query.',
+        reportId: 'internal-links',
+        doInstead:
+          'Run internal links. It uses related Search Console query evidence and live link checks to find candidate source pages for the target.',
+      },
+      {
+        when: 'You need a final decision to merge, redirect, canonicalise, or keep the overlapping pages separate.',
+        doInstead:
+          'No automated report can decide page intent, business value, or the preferred information architecture. Review the live pages, SERP intent, conversions, backlinks, and ownership of each topic. This report can still supply the overlap and first-party metrics for that review.',
+      },
+    ],
     seo: {
-      title: 'SEO Cannibalisation Review: Find Query and URL Overlap in GSC',
+      title: 'Keyword Cannibalization Report: Find Competing URLs',
       description:
-        'Find Search Console queries associated with multiple URLs and review intent, canonicals, and page evidence before calling the overlap cannibalisation.',
-      heading: 'Find query overlap before deciding pages are competing',
+        'Find keyword cannibalization in Search Console and see which URLs compete, split impressions, or need clearer intent.',
+      heading:
+        'Keyword cannibalization report for competing URLs on your site.',
+      primaryKeyword: 'keyword cannibalization',
+      supportingKeywords: [
+        'seo cannibalization',
+        'keyword cannibalization tool',
+      ],
     },
   },
   'community-intent': {
     name: 'Find community and comparison searches',
     summary:
       'Surface searches containing explicit review, comparison, forum, recommendation, or first-hand experience wording.',
-    lead: 'Use this to find language that may call for opinions, comparisons, evidence, or lived experience. The phrase classifier creates a review hypothesis, not a complete model of intent.',
+    lead: 'Use this to find searches that may need opinions, comparisons, reviews, or first-hand experience rather than a normal landing page. The phrase classifier creates a review hypothesis, not a complete model of intent.',
     inputs: [
       {
         label: 'Returned Search Console queries',
@@ -214,11 +313,27 @@ export const reportGuideOverridesAF: Partial<
       'Matched queries grouped by phrase category with clicks, impressions, CTR, position, and source dates.',
       'A limited content review list with caveats for ambiguous wording and anonymised lower-volume queries.',
     ],
+    alternatives: [
+      {
+        when: 'You want broader repeated query themes and content gaps, not only searches containing community or comparison wording.',
+        reportId: 'query-clusters',
+        doInstead:
+          'Run query clusters. It groups the returned Search Console demand into repeated themes without requiring the explicit phrase patterns used here.',
+      },
+      {
+        when: 'You need to decide whether a page should contain first-hand experience, reviews, comparisons, or a discussion format.',
+        doInstead:
+          'No automated report can judge whether you have credible experience or which editorial format will satisfy the searcher. Review representative results, the existing page, and the evidence your business can genuinely provide. This report can still select the query wording and current ranking pages for that review.',
+      },
+    ],
     seo: {
-      title: 'Community Search Intent: Find Reviews and Comparisons in GSC',
+      title: 'Community Intent Report: Find Forum and Review Queries',
       description:
-        'Find Search Console queries with review, forum, comparison, recommendation, or experience wording and turn them into a grounded content review list.',
-      heading: 'Find searches asking for reviews, comparisons, and experience',
+        'Find Search Console queries with forum, review, comparison, Reddit, and discussion intent so content can match real demand.',
+      heading:
+        'Community intent report for forum, review, and comparison queries.',
+      primaryKeyword: 'community intent',
+      supportingKeywords: ['search console queries', 'content optimization'],
     },
   },
   'compare-crawls': {
@@ -244,18 +359,33 @@ export const reportGuideOverridesAF: Partial<
       'New, resolved, and persistent page and issue changes with before and after summary values.',
       'A plain-language headline, comparability status, warnings, and caveats for scope or completeness differences.',
     ],
+    alternatives: [
+      {
+        when: 'You have one saved baseline but still need to fetch the current site before comparing it.',
+        reportId: 'crawl-diff',
+        doInstead:
+          'Run crawl diff. It fetches the current limited scope, compares it with the compatible monitoring snapshot, and keeps failures or scope changes separate from real regressions.',
+      },
+      {
+        when: 'You need to know which release, edit, or external event caused a crawl change.',
+        doInstead:
+          'No automated report can prove the cause from two crawl snapshots. Compare deployment records, source changes, server logs, and the affected page templates. This report can still identify when the evidence changed and which URLs or rules need that investigation.',
+      },
+    ],
     seo: {
-      title: 'Compare SEO Crawls: Find New, Fixed, and Changed Issues',
+      title: 'SEO Crawl Comparison: Find New, Fixed, and Changed Issues',
       description:
         'Compare two saved SEO crawl reports, find new and resolved issues, inspect changed pages and scores, and see whether both crawl scopes are comparable.',
       heading: 'Compare two saved crawls and see exactly what changed',
+      primaryKeyword: 'SEO crawl',
+      supportingKeywords: [],
     },
   },
   'content-optimization': {
     name: 'Build a content optimization brief',
     summary:
       'Create a focused brief for one existing page from its own search queries and the content observed on the live URL.',
-    lead: 'Use this when a page already has search visibility and needs a careful review. It separates technical conflicts from content ideas and never asks you to force every query phrase into the page.',
+    lead: 'Use this to improve an existing page with the Search Console demand it already earns. It finds missing subtopics, answer gaps, and search-result framing issues while keeping technical conflicts separate from content ideas.',
     inputs: [
       {
         label: 'Exact-page Search Console queries',
@@ -276,18 +406,37 @@ export const reportGuideOverridesAF: Partial<
       'A limited edit brief with source queries, page observations, technical blockers, and supported review actions.',
       'Explicit heuristic labels, source completeness, failed verification, caveats, and a measurement follow-up.',
     ],
+    alternatives: [
+      {
+        when: 'You only need a technical check of one live URL before changing its metadata, canonical, directives, links, or schema.',
+        reportId: 'audit-page',
+        doInstead:
+          'Run the page audit. It focuses on observed live-page evidence and does not build a content brief from query demand.',
+      },
+      {
+        when: 'You need to decide whether to rewrite the current page, create a new page, merge it with another page, or leave it alone.',
+        doInstead:
+          'No automated report can make that editorial and information-architecture decision. Review search intent, the live SERP, conversions, backlinks, business goals, and overlapping pages. This report can still provide the page evidence and returned queries used in that decision.',
+      },
+    ],
     seo: {
-      title: 'SEO Content Optimization Brief: Use Real Search Queries',
+      title: 'Content Optimization Report: Build a Brief From GSC Data',
       description:
-        'Build a content optimization brief for one page from its Search Console queries and live content, with technical conflicts and heuristic ideas kept clear.',
-      heading: 'Build a content brief from the searches a page already sees',
+        'Build a content optimization brief from Search Console queries, page evidence, headings, titles, and missing coverage.',
+      heading:
+        'Content optimization report built from Search Console and page evidence.',
+      primaryKeyword: 'content optimization',
+      supportingKeywords: [
+        'seo content optimization',
+        'google search console keywords',
+      ],
     },
   },
   'crawl-diff': {
     name: 'Monitor crawl changes',
     summary:
       'Crawl the same limited URL scope again and find technical or page changes since the previous monitoring run.',
-    lead: 'Use this for repeatable regression checks where the tool should fetch the current pages itself. Keep the scope stable between runs so changes describe the site rather than a different sample.',
+    lead: 'Use this after a release or SEO sprint to find new issues, fixed issues, and changed pages. It fetches the current scope itself, so keep that scope stable between runs or the comparison will describe a different sample.',
     inputs: [
       {
         label: 'Current limited same-origin crawl',
@@ -306,18 +455,35 @@ export const reportGuideOverridesAF: Partial<
       'Current crawl evidence plus new, resolved, and changed technical or page findings.',
       'A saved comparison snapshot, data status, warnings, and caveats for caps, failures, and non-comparable scope.',
     ],
+    alternatives: [
+      {
+        when: 'Both crawl snapshots already exist and you need to choose the exact earlier and later report IDs yourself.',
+        reportId: 'compare-crawls',
+        doInstead:
+          'Compare the saved crawls. It reads both local snapshots without fetching the site and checks their configuration and completeness before presenting changes.',
+      },
+      {
+        when: 'There is no compatible baseline yet and you need the first technical snapshot.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a site crawl and save it as the baseline. A change report cannot identify regressions from a single snapshot, but the saved crawl gives the next run something comparable.',
+      },
+    ],
     seo: {
-      title: 'SEO Crawl Monitoring: Find Technical Changes After a Release',
+      title: 'SEO Crawl Diff: Compare Technical SEO Changes After a Release',
       description:
-        'Run a limited crawl against the previous monitoring snapshot and find technical regressions, recoveries, page changes, failures, and scope differences.',
-      heading: 'Run a fresh crawl and find technical changes since last time',
+        'Compare two saved crawls and see which technical SEO issues were added, fixed, or changed after a release or SEO sprint.',
+      heading:
+        'SEO crawl diff for release checks and technical SEO regressions.',
+      primaryKeyword: 'seo crawl',
+      supportingKeywords: ['technical SEO audit', 'site audit'],
     },
   },
   'site-crawl': {
     name: 'Crawl a site for technical SEO issues',
     summary:
       'Map a limited part of a site, run the maintained technical checks, and save a reusable evidence baseline.',
-    lead: 'This is the starting point for a technical site audit. It follows same-origin links and optional sitemaps within explicit limits, then turns fetched page evidence into grouped findings and follow-up reports.',
+    lead: 'This is the baseline technical SEO audit when you do not have a saved crawl yet. It follows same-origin links and optional sitemaps within explicit limits, then saves grouped findings that later reports can reuse without fetching the whole site again.',
     inputs: [
       {
         label: 'Live site responses and discovered links',
@@ -343,18 +509,35 @@ export const reportGuideOverridesAF: Partial<
       'A compact technical summary with crawl status, page totals, grouped issues, top fixes, warnings, caveats, and source coverage.',
       'Optional limited page and issue inventories plus a local report id for comparisons and focused follow-ups.',
     ],
+    alternatives: [
+      {
+        when: 'The question is about one known URL and you do not need page discovery or a site-level baseline.',
+        reportId: 'audit-page',
+        doInstead:
+          'Run the page audit. It fetches one URL and returns focused response, metadata, canonical, directive, link, structured-data, and content evidence.',
+      },
+      {
+        when: 'Clicks or impressions changed and you need to find which pages, queries, countries, or devices explain the movement.',
+        reportId: 'search-performance-overview',
+        doInstead:
+          'Run the search performance overview. It compares Search Console evidence and points to the segments and focused reports behind the movement. A crawl cannot explain search demand by itself.',
+      },
+    ],
     seo: {
-      title: 'Technical SEO Site Crawl: Find Issues and Save a Baseline',
+      title: 'Technical SEO Site Crawl: Indexing, Links and Metadata',
       description:
-        'Crawl a limited part of your site, check technical SEO evidence, rank practical fixes, and save a local baseline for focused reports and comparisons.',
-      heading: 'Crawl your site and turn technical evidence into a fix plan',
+        'Run a technical SEO site crawl that checks indexability, redirects, canonicals, links, metadata, schema, and AI readiness.',
+      heading:
+        'Technical SEO site crawl for indexing, links, metadata, and AI readiness.',
+      primaryKeyword: 'technical SEO audit',
+      supportingKeywords: ['seo site audit', 'seo crawler', 'website audit'],
     },
   },
   'ctr-underperformers': {
     name: 'Find weak CTR evidence',
     summary:
       'Find high-impression queries whose CTR trails a documented expectation and review the search result before changing anything.',
-    lead: 'Use this to narrow a large Search Console export to queries worth a snippet and SERP review. CTR expectations are comparison heuristics, not Google targets or click forecasts.',
+    lead: 'Use this to find titles and snippets that may be underselling pages with useful rankings. It compares page and query CTR with a documented benchmark, but the benchmark is a review heuristic rather than a Google target or click forecast.',
     inputs: [
       {
         label: 'Returned Search Console query rows',
@@ -374,18 +557,34 @@ export const reportGuideOverridesAF: Partial<
       'A query review list with observed CTR, expected CTR, position, impressions, clicks, and estimated shortfall.',
       'Methodology and caveats that prevent the expectation or shortfall being read as a requirement or traffic promise.',
     ],
+    alternatives: [
+      {
+        when: 'The main opportunity is queries averaging positions 11 to 20 rather than weak CTR at an existing position.',
+        reportId: 'second-page',
+        doInstead:
+          'Run second-page opportunities. It groups the returned page and query evidence near page one without treating the average position as a fixed rank.',
+      },
+      {
+        when: 'You need to know whether changing a title or snippet actually improved clicks or CTR.',
+        reportId: 'measure-change',
+        doInstead:
+          'Record and measure the change across matched Search Console windows. It adds before-and-after evidence, but it still cannot isolate the edit from demand, ranking, SERP, or seasonality changes.',
+      },
+    ],
     seo: {
-      title: 'CTR Underperformers: Find Search Queries Worth Reviewing',
+      title: 'CTR Optimization Report: Find Search Snippets Losing Clicks',
       description:
-        'Find high-impression Search Console queries with weak CTR evidence, compare them with a documented expectation, and review the live search result first.',
-      heading: 'Find high-impression searches with weak CTR evidence',
+        'Find Search Console rows where CTR is weak for the ranking position, then improve title tags, snippets, and SERP framing.',
+      heading: 'CTR optimization report for search snippets losing clicks.',
+      primaryKeyword: 'ctr optimization',
+      supportingKeywords: ['google search console seo', 'seo quick wins'],
     },
   },
   'decaying-pages': {
     name: 'Find declining search pages and queries',
     summary:
       'Find returned page and query rows with supported click declines across two matched Search Console windows.',
-    lead: 'Use this when organic traffic appears to be slipping and you need to locate the affected pages or searches. The report only calls a decline where both returned windows support the comparison.',
+    lead: 'Use this to find pages or queries that recently lost meaningful clicks and separate position movement from CTR or demand changes. It builds a recovery list from matched Search Console evidence, not publication dates.',
     inputs: [
       {
         label: 'Two matched finalised Search Console windows',
@@ -405,11 +604,27 @@ export const reportGuideOverridesAF: Partial<
       'Declining pages and queries with before and after metrics, absolute movement, percentage movement, and source dates.',
       'Investigation signals, optional page evidence, completeness, caveats, and no claim about why the decline happened.',
     ],
+    alternatives: [
+      {
+        when: 'Search performance changed but you do not yet know whether the movement is a decline, which segment moved, or where to start.',
+        reportId: 'search-performance-overview',
+        doInstead:
+          'Run the search performance overview. It checks broader movement and breaks it down by page, query, country, and device before recommending a focused follow-up.',
+      },
+      {
+        when: 'You need a definitive explanation for why a page lost clicks.',
+        doInstead:
+          'No automated report can isolate the cause from Search Console rows. Review the live page, competing results, demand, release history, tracking, links, and known Google updates. This report can still identify the affected pages, dates, and whether position, CTR, or impressions moved with the loss.',
+      },
+    ],
     seo: {
-      title: 'SEO Content Decay: Find Pages and Queries Losing Clicks',
+      title: 'SEO Content Decay Report: Find Pages Losing GSC Clicks',
       description:
-        'Find pages and queries losing Search Console clicks across matched finalised windows, then inspect position, CTR, demand, and live-page evidence.',
-      heading: 'Find where Search Console clicks are declining',
+        'Compare two Search Console windows and find pages or queries losing clicks, rankings, CTR, or search visibility.',
+      heading:
+        'SEO content decay report for pages losing Search Console clicks.',
+      primaryKeyword: 'content decay SEO',
+      supportingKeywords: ['decaying content', 'google search console seo'],
     },
   },
   'setup-check': {
@@ -435,18 +650,33 @@ export const reportGuideOverridesAF: Partial<
       'A pass, warning, or failure for each local setup check with the observed path or state.',
       'A specific local command for every failed check that has a supported fix.',
     ],
+    alternatives: [
+      {
+        when: 'Google sign-in and the local project are working and you need to find SEO problems on the site itself.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a site crawl. It fetches site evidence and applies the technical checks. Setup check only verifies the local configuration and access needed to run other reports.',
+      },
+      {
+        when: 'The setup checks pass but a provider still returns missing, delayed, partial, or unexpected data.',
+        doInstead:
+          'No automated setup report can recover data that the provider did not return. Review the selected property, date range, provider limits, Google account access, and the report source status. Setup check can confirm local credentials and scopes, but it cannot make unavailable rows appear.',
+      },
+    ],
     seo: {
       title: 'SEO CLI Setup Check: Fix Google Login and Configuration',
       description:
         'Check local SEO CLI configuration, Google login, OAuth client, read-only scopes, and saved properties, then get an exact fix for each failed check.',
       heading: 'Check your local SEO setup and fix what is missing',
+      primaryKeyword: 'SEO CLI',
+      supportingKeywords: [],
     },
   },
   'entity-readiness': {
     name: 'Check entity and publisher signals',
     summary:
       'Review naming, authorship, dates, schema, and sameAs links without claiming a search engine has recognised an entity.',
-    lead: 'Use this to find inconsistent or missing identity evidence across crawled pages. The report describes what is present and connected, then leaves search-engine recognition as unknown.',
+    lead: 'Use this to check Organization, Person, WebSite, Article, author, and sameAs signals across crawled pages. It finds weak or inconsistent identity evidence while leaving search-engine recognition as unknown.',
     inputs: [
       {
         label: 'Saved or fresh crawl extraction',
@@ -466,11 +696,26 @@ export const reportGuideOverridesAF: Partial<
       'Observed entity and publisher signals with representative pages, schema types, names, authors, dates, and sameAs links.',
       'Limited gaps and verification steps with explicit caveats about search-engine understanding and eligibility.',
     ],
+    alternatives: [
+      {
+        when: 'You need the broader crawl, index, snippet, page-structure, and optional resource checks used for AI search readiness.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI readiness. It adds technical access and page-level readiness evidence beyond the identity and publisher signals reviewed here.',
+      },
+      {
+        when: 'You need proof that Google or an AI product has recognised a particular person, organisation, brand, or topic entity.',
+        doInstead:
+          "No automated report in this package can observe a search engine's internal entity understanding. Review visible search results, knowledge features, primary profiles, authoritative references, and structured-data validation. This report can still show which names, authors, schema types, and sameAs links are present or inconsistent.",
+      },
+    ],
     seo: {
-      title: 'SEO Entity Signals: Check Schema, Authors, and sameAs Links',
+      title: 'Entity SEO Audit: Check Schema, Authors and Brand Signals',
       description:
-        'Check entity and publisher signals across a crawl, including names, authors, dates, schema, and sameAs links, without claiming search-engine recognition.',
-      heading: 'Check the entity and publisher signals present on your site',
+        'Check schema, authorship, sameAs links, organization data, and visible entity signals that help search engines understand the site.',
+      heading: 'Entity SEO audit for schema, authors, and brand signals.',
+      primaryKeyword: 'entity SEO',
+      supportingKeywords: ['schema audit', 'ai search optimization'],
     },
   },
   'explain-crawl-issue': {
@@ -496,11 +741,26 @@ export const reportGuideOverridesAF: Partial<
       'A plain-English explanation of what the crawler observed and why the rule may matter.',
       'Practical fix, impact, and verification guidance that can be paired with affected URLs from a real crawl.',
     ],
+    alternatives: [
+      {
+        when: 'You understand the rule and need the real URLs, evidence, and first-party metrics behind that finding in a saved crawl.',
+        reportId: 'affected-urls',
+        doInstead:
+          'Run affected URLs with the rule id. It turns the catalog explanation into a limited list of actual pages and keeps the selection count and truncation visible.',
+      },
+      {
+        when: 'You need to know whether the observed condition is intentional for a particular page or template.',
+        doInstead:
+          'No automated rule explanation can know site intent. Review the page purpose, template rules, canonical plan, robots policy, and release context with the owner. This report can explain the condition and verification method, but it cannot label an intentional control as a defect.',
+      },
+    ],
     seo: {
-      title: 'Explain an SEO Crawl Issue: Meaning, Fix, and Verification',
+      title: 'Technical SEO Issues: Meaning, Fixes and Verification',
       description:
-        'Explain any SEO crawler rule in plain English, see why it may matter, get practical fix guidance, and learn how to verify the result after a change.',
-      heading: 'Understand what a crawler issue means and how to verify it',
+        'Explain technical SEO issues in plain English, see why each crawler rule may matter, get a practical fix, and learn how to verify the result.',
+      heading: 'Understand a technical SEO issue and how to fix it',
+      primaryKeyword: 'technical SEO issues',
+      supportingKeywords: [],
     },
   },
   'geo-gaps': {
@@ -527,12 +787,27 @@ export const reportGuideOverridesAF: Partial<
       'Pages with observed technical eligibility restrictions and the exact crawl, index, canonical, or snippet evidence.',
       'Selection limits, data status, optional observations, warnings, and a clear statement that eligibility does not guarantee selection.',
     ],
+    alternatives: [
+      {
+        when: 'You want a broader AI readiness review that also covers page structure, structured data, and optional agent resources.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI readiness. It includes the supported Google controls and adds separate observations for structure and optional resources without treating them as visibility requirements.',
+      },
+      {
+        when: 'You need to know whether Google will show a page in an AI Overview or how often it already appears there.',
+        doInstead:
+          'No automated report in this package measures AI Overview selection or visibility. Use repeatable external SERP monitoring for the target queries and inspect the cited pages. This report can still identify technical controls that may prevent eligibility.',
+      },
+    ],
     seo: {
-      title: 'Google AI Search Controls: Find Crawl and Snippet Blocks',
+      title: 'Google AI Overview SEO: Check Crawl and Snippet Controls',
       description:
-        'Check crawl, indexability, canonical, nosnippet, and max-snippet controls that affect Google AI search eligibility without predicting selection.',
+        'Check the crawl, indexability, canonical, nosnippet, and max-snippet controls used for Google AI Overview SEO without predicting selection.',
       heading:
-        'Find technical controls that can block Google AI search eligibility',
+        'Check the technical controls behind Google AI Overview eligibility',
+      primaryKeyword: 'Google AI Overview SEO',
+      supportingKeywords: ['AI search optimization'],
     },
   },
   'crawl-report': {
@@ -558,11 +833,27 @@ export const reportGuideOverridesAF: Partial<
       'Saved crawl metadata, configuration, summary, source status, top-level warnings, caveats, and report id.',
       'Optional page and issue inventories from the same snapshot with no fresh network requests.',
     ],
+    alternatives: [
+      {
+        when: 'You need current live evidence rather than the pages and issues stored in an earlier snapshot.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a new site crawl. It fetches the current limited scope and creates a new saved report instead of presenting stale evidence as current.',
+      },
+      {
+        when: 'You need to see what changed between this saved report and another crawl snapshot.',
+        reportId: 'compare-crawls',
+        doInstead:
+          'Compare the two saved crawls. It checks scope and completeness first, then reports new, resolved, persistent, and changed page or issue evidence.',
+      },
+    ],
     seo: {
-      title: 'Saved SEO Crawl Report: Open a Local Snapshot by ID Locally',
+      title: 'SEO Crawl Report: Open a Saved Local Audit',
       description:
-        'Open a saved local SEO crawl report by id or site, read the compact summary first, and request page or issue details without crawling the site again.',
-      heading: 'Open a saved crawl without fetching the site again',
+        'Open a saved SEO crawl report by id or site, read the compact summary, and request page or issue details without crawling the site again.',
+      heading: 'Open a saved SEO crawl report without fetching the site again',
+      primaryKeyword: 'SEO crawl report',
+      supportingKeywords: ['SEO audit report'],
     },
   },
 }

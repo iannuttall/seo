@@ -222,13 +222,47 @@ Install the same unscoped package in any Node 22 or newer project:
 npm install seo
 ```
 
+Run any public report by id with the same definition, input schema, and
+evidence used by the CLI and MCP server:
+
+```ts
+import { describeReport, executeReport } from 'seo/mcp'
+
+const description = describeReport('quick-wins')
+const result = await executeReport('quick-wins', {
+  site: 'sc-domain:example.com',
+  days: 90,
+})
+
+console.log(description.inputSchema)
+console.log(result)
+```
+
+Or call typed analysis functions directly when your app already knows the job
+it needs to run:
+
 ```ts
 import { auditPage, crawlSite } from 'seo'
-import { createServer } from 'seo/mcp'
+
+const page = await auditPage({
+  url: 'https://example.com/pricing',
+})
+
+const crawl = await crawlSite({
+  url: 'https://example.com',
+  maxPages: 100,
+  maxDepth: 4,
+})
+
+console.log(page.issues)
+console.log(crawl.summary, crawl.issueGroups)
 ```
 
 The main `seo` export contains the report, provider, crawler, storage, and
-rendering APIs. `seo/mcp` exposes the stdio MCP server.
+rendering APIs. `seo/mcp` exposes report discovery, report execution, and the
+embeddable MCP server. See the [TypeScript library
+guide](https://seoskills.dev/docs/library) for structured error handling,
+local Google access, and more examples.
 
 ## Local data and Google access
 

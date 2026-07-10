@@ -1,0 +1,134 @@
+---
+title: Use SEO reports inside a TypeScript app
+description: Install the seo npm package, call typed crawl and report functions, discover schemas, and handle structured SEO errors in Node 22 or newer.
+---
+
+The `seo` npm package is the CLI, MCP server, and TypeScript library. Install it
+inside a Node 22 or newer project when your own app needs to crawl a site, audit
+a page, or run one of the same structured reports used by agents.
+
+```sh
+npm install seo
+```
+
+The package is ESM-only and includes its TypeScript declarations. There are no
+separate `@seo/core` or `@seo/mcp` packages to install.
+
+## Run a report by its public id
+
+Use the report catalog when you want the same ids, input validation, and
+underlying report evidence as the CLI and local MCP server. The outer transport
+shape differs: the CLI prints `structuredContent` in JSON mode, while the
+library and MCP return the complete `ToolResult` envelope.
+
+```ts
+import { describeReport, executeReport, listReports } from 'seo/mcp'
+
+const reports = listReports('opportunities')
+const description = describeReport('quick-wins')
+
+const result = await executeReport('quick-wins', {
+  site: 'sc-domain:example.com',
+  days: 90,
+})
+
+console.log({ reports, description, result })
+```
+
+`describeReport()` returns the current JSON Schema plus the reason to use or
+avoid the report. Check it when parameters may change between package versions.
+
+`executeReport()` rejects an unknown report id or invalid parameters. Once the
+input is valid, it returns the same `ToolResult` envelope as MCP. Check
+`isError` because provider and runtime failures are returned as structured
+results.
+
+Use `runReport()` when ids or parameters come from a user or agent and your app
+wants discovery and validation errors returned in that envelope too.
+
+```ts
+import { runReport } from 'seo/mcp'
+
+const result = await runReport('audit-page', {
+  url: 'https://example.com/pricing',
+})
+
+if (result.isError) console.error(result.content)
+```
+
+## Call typed core functions directly
+
+The root export gives application code direct access to the crawler, page
+audit, analysis, storage, Google clients, and rendering functions.
+
+Audit one live page:
+
+```ts
+import { auditPage } from 'seo'
+
+const report = await auditPage({
+  url: 'https://example.com/pricing',
+})
+
+console.log(report.page.title, report.issues)
+```
+
+Create a limited site crawl:
+
+```ts
+import { crawlSite } from 'seo'
+
+const report = await crawlSite({
+  url: 'https://example.com',
+  maxPages: 100,
+  maxDepth: 4,
+})
+
+console.log(report.summary, report.issueGroups)
+```
+
+Direct functions are useful when your application already knows which analysis
+it needs. The report catalog is a better fit when users or agents choose a
+report at runtime.
+
+## Use local Google access from an app
+
+Google-backed functions use the same local OAuth token, project profiles, and
+cache as the CLI. Run the guided setup once on the machine that will execute
+the app:
+
+```sh
+npx seo start
+```
+
+Search Console and GA4 access stays read-only. A server, container, or CI runner
+still needs its own supported credential setup. Do not copy a personal token
+file into a deployment image.
+
+The [Google data guide](/docs/google) covers local OAuth, service accounts,
+provider limits, and incomplete rows.
+
+## Embed the local MCP server
+
+Use the MCP subpath when another Node process needs to construct the server
+itself:
+
+```ts
+import { createServer } from 'seo/mcp'
+
+const server = createServer()
+```
+
+Most applications should use `executeReport()` directly. `createServer()` is
+for MCP hosts that will attach their own transport.
+
+## Keep output handling honest
+
+Structured reports include source dates, thresholds, limits, warnings, and
+skipped work because SEO provider data is often partial. Keep those fields when
+you store or transform a result. A missing Search Console row is not zero, a
+limited crawl is not a complete site inventory, and timing around a change is
+not proof of causation.
+
+The [report catalog](/docs/reports) documents the evidence and limits for every
+public report id.

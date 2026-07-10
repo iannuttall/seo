@@ -1,86 +1,248 @@
 # Agent Notes
 
-This repo is a local-first TypeScript SEO CLI and MCP server. Build for two users:
+This is the source for `seo`, a local-first TypeScript SEO CLI, library, skills
+collection, and stdio MCP server. The public repository is
+`iannuttall/seo`. The public npm package is the unscoped `seo` package.
 
-- Humans: start with a simple prompt flow and a main report.
-- Agents: use explicit flags, structured JSON, and low-level commands.
+The product has two primary users:
 
-Keep the human path calm. Keep the agent path powerful.
+- Humans start with a guided prompt flow and one main report.
+- Agents use explicit flags, structured JSON, focused skills, and MCP tools.
 
-## Product Rules
+Keep the human path calm. Keep the agent path powerful. Both paths must use the
+same core report logic and return the same evidence.
 
-- `seo start` is the human onboarding entry point.
-- `seo help` and `seo --help` must stay short and useful. Do not dump every command at the root.
-- `seo report` is the main report. It should run first, explain gaps, then recommend follow-up commands.
-- Saved site profiles are called project profiles in user-facing copy.
-- `--project` is the primary selector for saved profiles.
-- `--client` is a legacy alias. Keep it working, but do not teach it in new human-facing output.
-- Commands must still work without a project profile when given `--site` or `--url`.
-- Sparse or missing data should skip sections with a clear reason, not fail the whole report.
-- JSON mode is for agents and scripts. Never add prompts when `--json` is used.
-- Interactive prompts are for humans only. Check TTY/CI before prompting.
+`CLAUDE.md` must stay a symlink to this file. Do not maintain separate copies of
+agent instructions.
+
+## Product Direction
+
+- The product is local first. Do not add a required hosted backend, account,
+  database, job queue, or telemetry service.
+- Reports, tokens, project profiles, and caches stay on the user's machine.
+- A future hosted API or remote MCP may live in this monorepo and deploy to
+  Cloudflare, but local CLI and library use must remain first class.
+- Report accuracy, deterministic output, and simple onboarding matter more than
+  adding another surface or speculative score.
+- The moat is the `seo` package, product quality, verified OAuth app, test
+  corpus, report depth, brand, and release velocity. Do not hide core report
+  logic behind private packages.
+- The license is Apache-2.0. Brand and trademark rules belong in a separate
+  public policy, not in code-level restrictions.
+
+## Public Package Contract
+
+The repository is a monorepo internally, but users install one package:
+
+```txt
+seo package     core TypeScript API
+seo/mcp         stdio MCP server API
+bin: seo        executable CLI command
+skills/         packaged agent skills
+```
+
+- Do not publish or teach `@seo/core`, `@seo/cli`, or `@seo/mcp`.
+- The root `package.json`, `tsup.config.ts`, and `scripts/package.test.mjs` own
+  the public package contract.
+- Runtime bundles must not depend on private workspace package names.
+- Keep Node 22 or newer as the supported runtime unless the whole repository is
+  deliberately migrated and verified.
+- `npx seo start` and `npm install --global seo` are the primary README paths.
+- Library and contributor setup belongs below normal CLI usage in the README.
 
 ## Repo Map
 
-- `packages/core`: business logic, storage, providers, GSC/GA4 clients, fetch/extract, analysis, reports, workflows.
-- `packages/cli`: `seo` command, prompt flows, command help, terminal output.
-- `packages/mcp`: MCP stdio server exposing core analysis tools.
-- `apps/web`: placeholder web package.
-- `scripts`: release/build checks and local utilities.
+- `packages/core`: report logic, storage, providers, GSC/GA4 clients,
+  fetch/extract, crawling, analysis, workflows, and renderers.
+- `packages/cli`: `seo` command, prompt flows, command help, selection, and
+  terminal output.
+- `packages/mcp`: local stdio MCP server exposing core analysis.
+- `apps/web`: placeholder for a future optional web surface.
+- `skills/<name>/SKILL.md`: focused instructions for agents using one workflow.
+- `scripts`: package, release, quality, OAuth injection, and local utilities.
+- `docs`: human usage documentation.
+- `plans`: ignored working notes and checklists. Never depend on them for
+  product behavior or durable project context.
+- `dist`: generated public package bundles. Do not hand-edit or commit them.
 
 Useful CLI areas:
 
-- `packages/cli/src/index.ts`: root command registration and short help.
-- `packages/cli/src/args.ts`: shared CLI arg parsing, including `projectArg`.
-- `packages/cli/src/selection.ts`: site/project/GA4 selection and prompt fallbacks.
-- `packages/cli/src/commands/setup`: `seo start` / guided setup.
-- `packages/cli/src/commands/workflows/diagnose-property.ts`: `seo report` and diagnosis workflow wrapper.
+- `packages/cli/src/index.ts`: root command registration and curated help.
+- `packages/cli/src/args.ts`: shared argument parsing, including `projectArg`.
+- `packages/cli/src/selection.ts`: project, site, and GA4 selection.
+- `packages/cli/src/commands/setup`: `seo start` and guided onboarding.
+- `packages/cli/src/commands/workflows/diagnose-property.ts`: `seo report`.
 - `packages/cli/src/commands/report-options.ts`: shared report flags.
 
 Useful core areas:
 
-- `packages/core/src/analyze/diagnose-property.ts`: main diagnosis primitives and graceful section fallbacks.
+- `packages/core/src/analyze/diagnose-property.ts`: main diagnosis primitives.
 - `packages/core/src/analyze/reports`: narrative report assembly.
-- `packages/core/src/analyze/workflows`: agent workflow reports.
-- `packages/core/src/export`: CSV/export rendering.
+- `packages/core/src/analyze/workflows`: focused agent workflow reports.
+- `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.
+- `packages/core/src/extract`: page and structured-data extraction.
+- `packages/core/src/export`: CSV and export rendering.
+- `packages/core/src/gsc` and `packages/core/src/ga4`: provider boundaries.
+
+## Product Rules
+
+- `seo start` is the human onboarding entry point.
+- `seo report` is the main report. Run it first, explain gaps, then recommend a
+  small number of follow-up commands.
+- `seo help` and `seo --help` must stay short. Put the full inventory under
+  `seo help all` and focused subcommand help.
+- Every command and subcommand needs a useful `meta.description`.
+- Saved site profiles are project profiles in user-facing copy.
+- `--project` is the primary saved-profile selector.
+- `--client` is a legacy alias. Keep it working, but never teach it in new
+  output or docs.
+- Commands must work without a profile when given the required `--site` or
+  `--url` input.
+- JSON mode is for agents and scripts. It must never prompt or contain terminal
+  decoration.
+- Interactive prompts are for humans only. Check TTY and CI state before
+  prompting.
+- Sparse data should skip the affected section with a clear reason. It should
+  not fail unrelated sections or become a false zero.
+- Bad auth, invalid selection, corrupt provider data, and errors that invalidate
+  all output must still fail clearly.
+
+## Onboarding Rules
+
+The guided flow should not ask humans for implementation details.
+
+- Ask for a project name, not an internal id.
+- Derive stable ids automatically.
+- Explain project profiles in one short sentence.
+- Default to saving a profile, but allow profile-free use with `--site`.
+- Discover Search Console and GA4 choices after sign-in. Do not expect users to
+  copy property ids if the provider can list them.
+- Keep advanced OAuth, service-account, quota, and cache choices out of the
+  default path.
+- A service-account auth path may be added as an advanced option, but do not
+  document it as available until the implementation and provider tests exist.
+- Printed next steps should start with `seo report --project <id>`.
+- Shared desktop OAuth credentials are build or release inputs. Never commit
+  production secrets or generated credential modules.
+- Installed-app client values are identifiers, not a substitute for protecting
+  refresh tokens. Local token files must keep private permissions.
+
+## Report Truth Rules
+
+Every report must be technically defensible and useful to another program.
+
+- Preserve observed evidence separately from derived findings and actions.
+- Label heuristics as heuristics. Do not turn conventions, correlations, or
+  arbitrary thresholds into search-engine requirements.
+- Do not claim causation, ranking impact, indexing, crawler access, rich-result
+  eligibility, or AI visibility unless the evidence supports that exact claim.
+- Treat intentional controls such as `noindex`, canonicals, robots rules, and
+  snippet limits as observations until intent or contradictory evidence makes
+  them defects.
+- Keep zero, missing, unavailable, invalid, filtered, partial, capped, and
+  complete states distinct.
+- Provider row limits, sampling, pagination, failed subqueries, invalid rows,
+  and retained subsets must remain visible in structured provenance.
+- A capped or partial source cannot support a definitive zero or all-clear.
+- GSC final-data dates use the `America/Los_Angeles` calendar and the shared
+  final-data helper. Do not recreate date windows with naive UTC subtraction.
+- Aggregate duplicate provider rows deterministically before ranking or
+  limiting results.
+- Use stable codepoint tie-breakers so input order never changes output.
+- Keep analysis dates, thresholds, limits, units, source semantics, and schema
+  versions in JSON where an agent needs them to interpret a result.
+- Report skipped sections in terminal output, JSON, Markdown, and narrative
+  caveats.
+- Recommend evidence-backed verification steps. Do not invent traffic, click,
+  revenue, or ranking forecasts.
+- Add regression fixtures for false positives, false negatives, partial data,
+  malformed provider rows, boundary values, and deterministic ordering.
+
+## Architecture And Code Style
+
+- TypeScript ESM only.
+- Keep CLI and MCP wrappers thin. Reusable behavior belongs in `packages/core`.
+- Prefer structured APIs and schemas over string parsing.
+- Prefer small modules with one clear responsibility. Split files when a real
+  boundary appears; do not create abstract layers that only rename calls.
+- Remove real duplication, but do not merge reports that need different source
+  semantics or provenance.
+- Keep terminal output concise and action oriented.
+- Use ASCII unless the file already needs non-ASCII text.
+- Keep dependencies lean. Prefer a small, tested local implementation when the
+  behavior is stable and importing a package would add more surface than value.
+- Do not leave warnings, ignored errors, disabled tests, or unexplained
+  pre-existing failures behind.
+- Preserve unrelated user changes in a dirty worktree.
+
+## Skills And MCP
+
+Each focused agent workflow may have a skill at `skills/<name>/SKILL.md` plus
+only the references, scripts, or assets it genuinely needs.
+
+- Follow the skill format and progressive-disclosure rules in
+  `skills/README.md`.
+- Keep descriptions specific enough for reliable tool selection.
+- Teach agents to start compact, inspect evidence, then request detail.
+- Do not duplicate the full CLI manual in every skill.
+- Skills and MCP must call the same core functions as the CLI.
+- Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
+  tools when discovery plus a report id can cover them cleanly.
+- Bound inputs and outputs. Large pages, issue inventories, and raw provider
+  rows should be opt-in.
+- Preserve structured error and report schemas across CLI and MCP surfaces.
+
+## Project Selection
+
+When a command can use a saved profile:
+
+1. Add `project` with description `Saved project id or name.`
+2. Add `client` with description `Legacy alias for --project.`
+3. Resolve both with `projectArg(args)`.
+4. Pass the result as `client` to existing internal selection APIs until core
+   types are renamed.
+5. Print and document `--project`, never `--client`.
+
+If both flags are passed with different values, fail clearly.
 
 ## Development Commands
 
-Run these from the repo root:
+Run these from the repository root:
 
-```bash
+```sh
+pnpm install
 pnpm build
 pnpm typecheck
 pnpm test
 pnpm lint
+pnpm pack --dry-run
+pnpm outdated --recursive
 ```
 
-For CLI smoke tests, use the built entry:
+Use `pnpm exec biome format <files> --write` after edits. Avoid unrelated
+formatting churn.
 
-```bash
-node packages/cli/dist/index.js help
-node packages/cli/dist/index.js report --help
-node packages/cli/dist/index.js start --dry-run
-node packages/cli/dist/index.js report --project keep --json
+For public-package and CLI smoke tests, use the built root entries:
+
+```sh
+node dist/cli.js help
+node dist/cli.js report --help
+node dist/cli.js start --dry-run
+node dist/cli.js report --project keep --json
+node dist/cli.js mcp serve --test
 ```
 
-Use `pnpm exec biome format <files> --write` after edits. Avoid unrelated formatting churn.
+After changing commands, sweep at least:
 
-## Help Page Requirements
-
-Every command and subcommand needs useful `meta.description`.
-
-After changing CLI commands, run a help sweep. At minimum check:
-
-```bash
-node packages/cli/dist/index.js help
-node packages/cli/dist/index.js help all
-node packages/cli/dist/index.js report --help
-node packages/cli/dist/index.js projects --help
-node packages/cli/dist/index.js start --help
+```sh
+node dist/cli.js help
+node dist/cli.js help all
+node dist/cli.js report --help
+node dist/cli.js projects --help
+node dist/cli.js start --help
 ```
 
-Root help should show a curated path:
+Root help must keep this curated path:
 
 - `seo start`
 - `seo report`
@@ -92,51 +254,31 @@ Root help should show a curated path:
 
 Do not let `seo help` return `Unknown command help`.
 
-## Project Selection
+## Verification And Commits
 
-When adding a command that can use a saved profile:
+Every implementation slice needs proportionate tests plus all four repository
+gates before it is considered finished:
 
-1. Add both args:
-   - `project`: `Saved project id or name.`
-   - `client`: `Legacy alias for --project.`
-2. Resolve with `projectArg(args)`.
-3. Pass the result as `client` to existing internal selection APIs until core types are renamed.
-4. In generated commands or docs, print `--project`, not `--client`.
+```sh
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
 
-If both flags are passed with different values, fail clearly.
+- Fix warnings as part of the slice.
+- Run focused tests while iterating, then the full gate before committing.
+- Run `pnpm pack --dry-run` and package contract tests for packaging changes.
+- Run the help sweep for command changes.
+- Use focused conventional commits with type, optional scope, and imperative
+  subject.
+- Do not mix generated output, unrelated formatting, or separate report fixes
+  into one commit.
 
-## Onboarding Rules
+## Local Auth And Security
 
-The guided flow should not ask humans for implementation details.
-
-- Ask for project name, not client id.
-- Derive stable ids automatically.
-- Explain project profiles briefly when saving one.
-- Default to saving a project profile.
-- Let users skip profile creation and continue with `--site`.
-- Next commands printed by setup should start with `seo report --project <id>`.
-
-## Report And Fallback Rules
-
-The report stack must be robust against partial data:
-
-- If anomaly/update data is too sparse, skip those sections and keep the report.
-- Include skipped sections in terminal, JSON, and narrative caveats.
-- Recommend useful follow-up commands when sparse data exists, such as lower-threshold `quick-wins` and `second-page`.
-- Do not hide real errors that affect all output, such as bad auth or invalid property selection.
-
-## Style
-
-- TypeScript ESM only.
-- Prefer structured APIs over string parsing.
-- Keep CLI wrappers thin; put reusable analysis in `packages/core`.
-- Keep terminal output concise and action-oriented.
-- Use ASCII unless the edited file already uses non-ASCII for a reason.
-- Do not introduce large abstractions unless they remove real duplication.
-
-## Local Auth Notes
-
-The CLI uses local Google OAuth tokens and local config/cache paths. The repo checkout may not include production shared OAuth credentials. For local auth testing use one of:
+The checkout may not include production shared OAuth credentials. For local
+auth testing use one of:
 
 - `seo auth setup-client`
 - `SEO_GOOGLE_CLIENT_ID`
@@ -144,4 +286,17 @@ The CLI uses local Google OAuth tokens and local config/cache paths. The repo ch
 - legacy `GSC_CLIENT_ID`
 - legacy `GSC_CLIENT_SECRET`
 
-Do not commit secrets or local token/config files.
+Never commit OAuth tokens, shared client secrets, local config or cache files,
+private keys, generated credential modules, provider payloads, or real site
+data. Keep examples fake and safe for a public repository.
+
+Before a public release:
+
+- Run all repository gates and `pnpm pack --dry-run`.
+- Inspect the tarball file list and install it in a clean temporary directory.
+- Verify the CLI, root library export, `seo/mcp`, and packaged skills.
+- Run dependency and secret scans defined by the repository.
+- Confirm workflows do not expose release credentials to untrusted pull
+  requests.
+- Confirm the README, changelog or release notes, license, security policy, and
+  trademark policy match the shipped package.

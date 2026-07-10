@@ -1,57 +1,171 @@
-# seo
+<h1 align="center">seo</h1>
 
-Local-first SEO and AI-search diagnostics for people and agents.
+<p align="center">
+  Local SEO reports, site crawling, Search Console, GA4, and MCP tools for people and agents.
+</p>
 
-`seo` crawls your site, reads Search Console and GA4 when you connect them, and turns the mess into a short action list. Humans get plain English. Agents get stable JSON, saved reports, rule ids, evidence, and follow-up tools.
+<p align="center">
+  <a href="#quick-start">Get started</a>
+  ·
+  <a href="docs/README.md">Documentation</a>
+  ·
+  <a href="https://www.npmjs.com/package/seo">npm</a>
+  ·
+  <a href="LICENSE">License</a>
+  ·
+  <a href="AGENTS.md">Agent notes</a>
+</p>
 
-This is local first today. The same core is shaped so it can later run as a hosted API, remote MCP server, and paid product without rewriting the crawler.
+<p align="center">
+  <a href="https://github.com/iannuttall/seo/actions/workflows/ci.yml"><img alt="Checks" src="https://img.shields.io/github/actions/workflow/status/iannuttall/seo/ci.yml?branch=main&label=checks&style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/seo"><img alt="npm version" src="https://img.shields.io/npm/v/seo?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/seo"><img alt="npm downloads" src="https://img.shields.io/npm/dm/seo?style=flat-square"></a>
+  <img alt="Node 22 or newer" src="https://img.shields.io/badge/Node-22%2B-339933?style=flat-square">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-ready-3178c6?style=flat-square">
+  <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
+</p>
+
+`seo` finds technical problems, connects them to real search and analytics data,
+and tells you what to do next. It runs on your machine. Reports, project
+profiles, Google tokens, and caches stay local.
+
+## Quick start
+
+Requires Node 22 or newer.
+
+Run the guided setup without installing anything globally:
+
+```sh
+npx seo start
+npx seo report
+```
+
+Or install the command once:
+
+```sh
+npm install --global seo
+seo start
+seo report
+```
+
+The setup walks you through Google sign-in, your Search Console property, an
+optional GA4 property, and a local project profile. Public releases can include
+the shared Google app. If it is unavailable in your build, setup guides you
+through adding your own desktop OAuth client.
+
+That is the normal human path. Examples below use the global `seo` command. If
+you prefer not to install it, prefix the same commands with `npx`.
+
+The main report uses whatever evidence is available,
+explains anything it could not check, and recommends a short list of follow-up
+commands.
 
 ## What it does
 
-- Crawls sites for technical SEO and GEO issues.
-- Checks 50 rules across metadata, links, indexability, canonicals, content, schema, performance, security, mobile, international, and social previews.
-- Joins crawled URLs with GSC clicks, impressions, CTR, position, and top query data.
-- Joins GA4 landing-page sessions and conversions when a project profile has a GA4 property.
-- Ranks fixes by severity, affected URLs, search visibility, analytics value, and effort.
-- Explains every issue in plain English: why it matters, how to fix it, and how to verify the fix.
-- Saves reports locally so humans and agents can slice the same crawl without running it again.
-- Compares saved crawl snapshots so agents can see exactly what changed.
-- Records local SEO tests and measures before/after impact with GSC, optional GA4, and optional control groups.
-- Builds content optimization reports from real search demand and crawled page content.
-- Runs local performance audits with bundled Lighthouse, device-specific CrUX field data when configured, and an explicitly unscored transport fallback.
-- Reports AI-search and entity evidence, reports optional llms.txt presence without treating it as an SEO factor, and builds OKF/site knowledge exports from the same saved crawl.
-- Exposes the same workflows through CLI and MCP.
+- Crawls sites for technical SEO problems across metadata, links,
+  indexability, canonicals, structured data, performance, security, mobile,
+  international SEO, and social previews.
+- Reads Google Search Console and GA4 when you connect them.
+- Ranks work using rule severity, affected URLs, search visibility, and
+  analytics value.
+- Explains why each finding matters, how to fix it, and how to verify the fix.
+- Saves crawl reports locally so you can inspect or compare them without
+  crawling again.
+- Measures SEO changes with before and after Search Console data.
+- Produces deterministic JSON and Markdown for scripts and AI agents.
+- Runs the same analysis through a local stdio MCP server.
 
-## Start here
+## Everyday use
 
-From source:
+`seo start` can save a project profile, which is a local shortcut for a site,
+Search Console property, GA4 property, and brand terms. If you have one default
+project, most commands need no flags.
 
-```bash
-git clone https://github.com/iannuttall/seo.git
-cd seo
-pnpm install
-pnpm build
-node dist/cli.js start
+```sh
+seo report
+seo refresh-priorities
+seo quick-wins
+seo second-page
+seo technical-watch
 ```
 
-If you already have a built checkout, the short path is:
+Use `--project` when you have more than one:
 
-```bash
-seo start
-seo report
+```sh
+seo report --project example
+seo projects list
+```
+
+You can also work without a saved profile:
+
+```sh
+seo report --site sc-domain:example.com
+seo crawl https://example.com
+seo audit-page --url https://example.com/pricing
+```
+
+Run `seo help` for the short path or `seo help all` for the full command list.
+
+## Crawl a site
+
+Run a readable technical crawl:
+
+```sh
 seo crawl https://example.com --format pretty
 ```
 
-Install the CLI from the unscoped `seo` package:
+Save it, export it, or compare it with an earlier crawl:
 
-```bash
-npm install --global seo
-seo start
+```sh
+seo crawl https://example.com --save
+seo crawl https://example.com --format html --output report.html
+seo crawl-reports
+seo crawl-reports --compare latest --against previous
 ```
 
-Developers can use the same package as a library:
+Useful crawl controls include `--max-pages`, `--max-depth`, `--include`,
+`--exclude`, `--no-sitemap`, `--no-external`, and `--fail-on` for CI.
 
-```bash
+## Use it in CI and scripts
+
+JSON mode never prompts. Pass the site or project explicitly in unattended
+runs.
+
+```sh
+seo report --project example --json
+seo crawl https://example.com --json --output crawl.json
+seo crawl https://example.com --fail-on high --json
+```
+
+Reports keep observed data, derived findings, skipped sections, limits, and
+provider errors separate so automation can make decisions without parsing
+terminal prose.
+
+## Use it with AI agents
+
+Install the local stdio MCP server into a supported client:
+
+```sh
+seo mcp install
+```
+
+Or run it directly:
+
+```sh
+seo mcp serve
+```
+
+The package also ships focused skills under `skills/`. They teach agents when
+to discover reports, run an analysis, inspect evidence, and request a smaller
+follow-up instead of loading a giant report into context.
+
+See [MCP and agents](docs/mcp.md) for setup and tool details.
+
+## Use it as a library
+
+Install the same unscoped package in any Node 22 or newer project:
+
+```sh
 npm install seo
 ```
 
@@ -60,226 +174,57 @@ import { auditPage, crawlSite } from 'seo'
 import { createServer } from 'seo/mcp'
 ```
 
-## The human path
+The main `seo` export contains the report, provider, crawler, storage, and
+rendering APIs. `seo/mcp` exposes the stdio MCP server.
 
-Most people should start with `seo start`. It connects Google, creates a project profile, and prints the next commands.
+## Local data and Google access
 
-```bash
-seo start
-seo report --project keep
-seo refresh-priorities --project keep
-seo technical-watch --project keep
+Google OAuth tokens and project profiles are stored in your user config
+directory with private file permissions. Crawl reports and provider caches are
+also local. Use these commands to inspect or remove them:
+
+```sh
+seo privacy
+seo doctor
+seo auth logout
+seo reset
 ```
 
-`seo report` is the main report. It checks what data is available, skips sparse sections clearly, and recommends useful follow-up commands instead of dumping every tool at once.
+Power users can bring their own Google OAuth client. See
+[getting started](docs/getting-started.md) for the available auth paths.
 
-## The crawler path
-
-Run a quick technical and AI-search readiness crawl:
-
-```bash
-seo crawl https://example.com --max-pages 500 --format pretty
-```
-
-Save a report for later:
-
-```bash
-seo crawl https://example.com --save --format html --output report.html
-seo crawl-reports
-seo crawl-reports --compare latest --against previous
-```
-
-Machine-readable output stays clean:
-
-```bash
-seo crawl https://example.com --json --output crawl.json
-```
-
-Use the saved crawl for AI and agent-readiness work:
-
-```bash
-seo crawl --project keep --save
-seo ai-readiness --project keep
-seo entity-readiness --project keep
-seo llms audit --project keep
-seo llms generate --project keep --output llms.txt
-seo okf export --project keep --output ./okf
-seo okf validate ./okf
-seo okf explain ./okf
-```
-
-Useful flags:
-
-| Flag | What it does |
-| --- | --- |
-| `--max-pages <n>` | Caps pages fetched. Defaults to 500. |
-| `--max-depth <n>` | Caps click depth from the seed URL. |
-| `--concurrency <n>` | Controls parallel page fetches. |
-| `--include <pattern>` | Limits the crawl to matching URLs. |
-| `--exclude <pattern>` | Skips matching URLs. |
-| `--no-sitemap` | Does not seed from sitemap.xml. |
-| `--no-robots` | Does not skip robots-blocked URLs. |
-| `--no-external` | Skips external link checks. |
-| `--site <property>` | Joins GSC page data. |
-| `--ga4-property <id>` | Joins GA4 landing-page data. |
-| `--format pretty,json,csv,html,markdown` | Chooses the output format. |
-| `--fail-on high,medium,low` | Exits non-zero for CI gates. |
-
-## The agent path
-
-Install the MCP server into supported local clients:
-
-```bash
-seo mcp install
-```
-
-Run the server directly:
-
-```bash
-seo mcp serve
-```
-
-Agent tools include crawl, URL audit, rule explanation, top fixes, affected URLs, AI Search eligibility gaps, crawl reports, GSC/GA4 analysis, monitoring, pSEO, and workflow reports.
-
-The crawler tools are compact by default. Full pages and full issues are opt-in so agents do not waste context on giant reports.
-
-## Testing, content, and performance
-
-These workflows use your own data. They are meant to be the local data layer an SEO or agent can reason over, without buying a keyword database or rank tracker.
-
-Track a change:
-
-```bash
-seo tests create --project keep --title "Rewrite pricing page title" --scope page --target https://example.com/pricing --date 2026-06-01
-seo tests report --project keep --id <test-id> --property 123456789
-```
-
-Use `--control-scope` and `--control-target` when you have a similar group of pages to compare against. The report stays plain English for humans and returns GSC/GA4 deltas in JSON for agents.
-
-Build a content optimization report for one URL:
-
-```bash
-seo content optimize --project keep --url https://example.com/page
-seo content optimize --project keep --url https://example.com/page --json
-```
-
-Audit performance:
-
-```bash
-seo perf audit --url https://example.com/page
-seo perf audit --project keep --strategy desktop
-```
-
-`seo perf audit` uses its bundled Lighthouse with a compatible local Chrome installation. If the lab run is unavailable, it returns an unscored HTTP transport diagnostic and says what it could not measure. Set `SEO_CRUX_API_KEY` (preferred) or pass `--crux-key` when you want device-specific Chrome UX Report field data too.
-
-## AI-search evidence
-
-The crawler separates Google Search eligibility evidence from optional page and agent-protocol observations. It does not predict citations:
-
-- structured data
-- AI crawler access in robots.txt
-- agent resource files such as OpenAPI, MCP, and agent descriptors
-- semantic HTML
-- authorship
-- dates
-- tables, lists, and other extractable blocks
-- `/llms.txt`
-- entity signals such as Organization, Person, Product, sameAs, and official social profiles
-
-There are also focused AI-search support reports:
-
-```bash
-seo ai-readiness --project keep
-seo entity-readiness --project keep
-seo llms audit --project keep
-seo seo-to-ai-query --project keep
-seo ai-referrals --project keep
-```
-
-These do not claim to prove ChatGPT or Perplexity visibility. They help you turn real GSC demand into AI-monitoring prompts and find AI referral traffic in GA4. True AI answer visibility tracking is still a separate future layer.
-
-## How this compares to Crawlie
-
-Crawlie is a strong open-source crawler. This project goes wider.
-
-| Area | Crawlie | seo |
-| --- | --- | --- |
-| Local CLI | Yes | Yes |
-| MCP server | Yes | Yes |
-| Technical SEO crawl | Yes | Yes |
-| AI Search eligibility evidence | No | Yes |
-| AI-search evidence report | No | Yes |
-| llms.txt generator | No | Yes |
-| Entity evidence report | No | Yes |
-| OKF/site knowledge export | No | Yes |
-| Rule guidance | Yes | Yes |
-| Rule count | 46 | 50 |
-| GSC joins | No | Yes |
-| GA4 joins | No | Yes |
-| URL Inspection | No | Yes |
-| Crawl diffs | Roadmap | Yes |
-| Local SEO tests | No | Yes |
-| Content optimization reports | No | Yes |
-| Lighthouse/Core Web Vitals layer | No | Yes |
-| Link recovery | No | Yes |
-| Search opportunity reports | No | Yes |
-| pSEO/template analysis | No | Yes |
-| AI referral report | No | Yes |
-| Desktop app | Yes | Not planned yet |
-
-The goal is to tell you which fixes are worth doing first.
-
-## Docs
+## Documentation
 
 - [Getting started](docs/getting-started.md)
 - [CLI commands](docs/cli.md)
 - [Crawler](docs/crawler.md)
 - [MCP and agents](docs/mcp.md)
-- [GEO and AI search](docs/geo.md)
-- [Release and packaging](docs/release.md)
+- [AI-search evidence](docs/geo.md)
 
-## Development
+## Develop locally
 
-```bash
+Most users do not need the source checkout. If you want to contribute:
+
+```sh
+git clone https://github.com/iannuttall/seo.git
+cd seo
 pnpm install
+pnpm build
+node dist/cli.js start --dry-run
+```
+
+Run the full quality gate before opening a pull request:
+
+```sh
 pnpm build
 pnpm typecheck
 pnpm test
 pnpm lint
+pnpm pack --dry-run
 ```
 
-Useful smoke tests:
+Contributor architecture and report-quality rules live in [AGENTS.md](AGENTS.md).
 
-```bash
-node packages/cli/dist/index.js help
-node packages/cli/dist/index.js start --dry-run
-node packages/cli/dist/index.js crawl --help
-node packages/cli/dist/index.js mcp serve --test
-```
+## License
 
-## Auth
-
-The CLI uses local Google OAuth tokens. Tokens stay on your machine.
-
-For local auth testing, use one of these:
-
-```bash
-seo auth setup-client
-SEO_GOOGLE_CLIENT_ID=...
-SEO_GOOGLE_CLIENT_SECRET=...
-```
-
-Do not commit OAuth tokens, local config files, or provider credentials.
-
-## Product status
-
-The local CLI, crawler, report store, and MCP server are strong enough for real use. The public packaging is being prepared now.
-
-Not built yet:
-
-- hosted API
-- remote authenticated MCP
-- paid accounts
-- AI answer visibility tracking
-- public web dashboard
-- macOS desktop app
+Apache-2.0. See [LICENSE](LICENSE).

@@ -28,7 +28,10 @@ type StrikingDistanceToolInput = {
   refresh?: boolean
 }
 
-export function registerDiagnosisTools(server: McpServer): void {
+export function registerDiagnosisTools(
+  server: McpServer,
+  dependencies: { segmentImpact?: typeof segmentImpact } = {},
+): void {
   server.registerTool(
     'seo_doctor',
     {
@@ -90,27 +93,52 @@ export function registerDiagnosisTools(server: McpServer): void {
     'seo_segment_impact',
     {
       description:
-        'Compare GSC movement by page, query, device, or country across two adjacent periods',
+        'Compare matched retained GSC segments across adjacent equal-length periods without treating missing rows as zero',
       inputSchema: {
-        ...mcpReportInputSchema(['site', 'days', 'limit', 'refresh']),
+        site: z.string().trim().min(1),
+        days: z.number().int().min(1).max(240).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        refresh: z.boolean().optional(),
         dimension: z.enum(['page', 'query', 'country', 'device']).optional(),
-        compareDays: z.number().optional(),
+        compareDays: z.number().int().min(1).max(240).optional(),
+        startDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        endDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        maxRows: z.number().int().min(1).max(250_000).optional(),
+        unmatchedLimit: z.number().int().min(0).max(100).optional(),
       },
     },
-    async ({ site, dimension, days, compareDays, limit, refresh }) => {
+    async ({
+      site,
+      dimension,
+      days,
+      compareDays,
+      startDate,
+      endDate,
+      limit,
+      maxRows,
+      unmatchedLimit,
+      refresh,
+    }) => {
       try {
-        const result = await segmentImpact({
+        const result = await (dependencies.segmentImpact ?? segmentImpact)({
           site,
           dimension,
           days,
           compareDays,
+          startDate,
+          endDate,
           limit,
+          maxRows,
+          unmatchedLimit,
           refresh,
         })
-        return toolSuccess(
-          `${result.items.length} ${result.dimension} segments compared.`,
-          result,
-        )
+        return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)
       }

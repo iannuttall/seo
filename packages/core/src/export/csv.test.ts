@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { DiagnosePropertyReport } from '../analyze/diagnose-property.js'
+import { compareSegmentRows } from '../analyze/segment-impact.js'
 import { analyzeDecay } from '../analyze/site-diagnostics/decay-analysis.js'
 import {
   analyzeCannibalRows,
@@ -342,6 +343,15 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
   )
   assert.equal(quickWins?.headers?.includes('expected_ctr'), false)
   assert.equal(quickWins?.headers?.includes('estimated_click_lift'), false)
+  const unmatched = files.find(
+    (file) => file.filename === 'segment-page-unmatched.csv',
+  )
+  assert.equal(unmatched?.headers?.includes('retained_in'), true)
+  assert.equal(unmatched?.headers?.includes('reason'), true)
+  const status = files.find((file) => file.filename === 'segment-status.csv')
+  assert.equal(status?.rows.length, 4)
+  assert.equal(status?.headers?.includes('data_status'), true)
+  assert.equal(status?.headers?.includes('warnings'), true)
 })
 
 test('quick-win CSV preserves heuristic provenance without forecast fields', () => {
@@ -370,12 +380,13 @@ test('quick-win CSV preserves heuristic provenance without forecast fields', () 
 })
 
 function segment(dimension: 'page' | 'query' | 'device' | 'country') {
-  return {
+  return compareSegmentRows({
     site: 'sc-domain:example.com',
     dimension,
     before: { startDate: '2026-04-01', endDate: '2026-04-30' },
     after: { startDate: '2026-05-01', endDate: '2026-05-30' },
+    beforeRows: [],
+    afterRows: [],
     generatedAt: '',
-    items: [],
-  }
+  })
 }

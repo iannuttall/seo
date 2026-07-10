@@ -5,6 +5,7 @@ import type {
   PriorityQueueItem,
   WorkflowReport,
 } from '../analyze/workflows/types.js'
+import { diagnosisSegmentCsvFiles } from './diagnosis-segment-csv.js'
 
 export type CsvValue = string | number | boolean | null | undefined
 export type CsvRow = Record<string, CsvValue>
@@ -31,10 +32,6 @@ const CSV_SCHEMAS: Record<string, string[]> = {
     'percent_change',
     'z_score',
   ],
-  'segment-page.csv': segmentHeaders(),
-  'segment-query.csv': segmentHeaders(),
-  'segment-device.csv': segmentHeaders(),
-  'segment-country.csv': segmentHeaders(),
   'decay.csv': [
     'rank',
     'query',
@@ -347,23 +344,6 @@ const CSV_SCHEMAS: Record<string, string[]> = {
   ],
 }
 
-function segmentHeaders(): string[] {
-  return [
-    'rank',
-    'dimension',
-    'key',
-    'before_clicks',
-    'after_clicks',
-    'click_delta',
-    'before_impressions',
-    'after_impressions',
-    'impression_delta',
-    'before_position',
-    'after_position',
-    'position_delta',
-  ]
-}
-
 function schemaKey(filename: string): string {
   return filename.startsWith('diagnosis-')
     ? filename.slice('diagnosis-'.length)
@@ -467,23 +447,7 @@ export function diagnoseCsvFiles(report: DiagnosePropertyReport): CsvFile[] {
         z_score: item.zScore,
       })),
     },
-    ...(['page', 'query', 'device', 'country'] as const).map((dimension) => ({
-      filename: `segment-${dimension}.csv`,
-      rows: report.segments[dimension].items.map((item, index) => ({
-        rank: index + 1,
-        dimension,
-        key: item.key,
-        before_clicks: item.beforeClicks,
-        after_clicks: item.afterClicks,
-        click_delta: item.clickDelta,
-        before_impressions: item.beforeImpressions,
-        after_impressions: item.afterImpressions,
-        impression_delta: item.impressionDelta,
-        before_position: item.beforePosition,
-        after_position: item.afterPosition,
-        position_delta: item.positionDelta,
-      })),
-    })),
+    ...diagnosisSegmentCsvFiles(report),
     {
       filename: 'decay.csv',
       rows: report.decay.items.map((item, index) => ({

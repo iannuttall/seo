@@ -13,6 +13,8 @@ type SplitSegment = ReturnType<typeof splitSegments>
 
 type PostmortemInsight = {
   dimension: 'page' | 'query' | 'device' | 'country'
+  dataStatus: SplitSegment['dataStatus']
+  unmatchedRows: number
   summary: string
   winner?: SegmentImpactItem
   loser?: SegmentImpactItem
@@ -69,33 +71,53 @@ function insightForSegment(
   dimension: PostmortemInsight['dimension'],
   segment: SplitSegment,
 ): PostmortemInsight {
+  if (segment.dataStatus === 'unavailable' || segment.dataStatus === 'empty') {
+    return {
+      dimension,
+      dataStatus: segment.dataStatus,
+      unmatchedRows: segment.summary.unmatchedRows,
+      summary: `${dimension}: no matched retained segment movement was available. ${segment.summary.verdict}`,
+    }
+  }
+  const evidenceSuffix =
+    segment.dataStatus === 'partial'
+      ? ` Evidence is partial; ${segment.summary.unmatchedRows} one-window rows were not treated as zero.`
+      : ''
   const winner = segment.winners[0]
   const loser = segment.losers[0]
   if (winner && loser) {
     return {
       dimension,
+      dataStatus: segment.dataStatus,
+      unmatchedRows: segment.summary.unmatchedRows,
       winner,
       loser,
-      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks.`,
+      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks.${evidenceSuffix}`,
     }
   }
   if (winner) {
     return {
       dimension,
+      dataStatus: segment.dataStatus,
+      unmatchedRows: segment.summary.unmatchedRows,
       winner,
-      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; no material loser appeared in the top segment rows.`,
+      summary: `${dimension}: top winner ${segmentLabel(dimension, winner)} ${directionLabel(winner)} ${formatMagnitude(winner.clickDelta)} clicks; no material loser appeared in the top segment rows.${evidenceSuffix}`,
     }
   }
   if (loser) {
     return {
       dimension,
+      dataStatus: segment.dataStatus,
+      unmatchedRows: segment.summary.unmatchedRows,
       loser,
-      summary: `${dimension}: top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks; no material winner appeared in the top segment rows.`,
+      summary: `${dimension}: top loser ${segmentLabel(dimension, loser)} ${directionLabel(loser)} ${formatMagnitude(loser.clickDelta)} clicks; no material winner appeared in the top segment rows.${evidenceSuffix}`,
     }
   }
   return {
     dimension,
-    summary: `${dimension}: no material winner or loser appeared in the top segment rows.`,
+    dataStatus: segment.dataStatus,
+    unmatchedRows: segment.summary.unmatchedRows,
+    summary: `${dimension}: no material winner or loser appeared in the matched retained segment rows.${evidenceSuffix}`,
   }
 }
 
@@ -105,16 +127,22 @@ function buildSummary(input: {
 }): string {
   const page = input.insights.find((item) => item.dimension === 'page')
   const query = input.insights.find((item) => item.dimension === 'query')
-  const pageMovement = page?.winner
-    ? `top page gained ${formatMagnitude(page.winner.clickDelta)} clicks`
-    : page?.loser
-      ? `top page lost ${formatMagnitude(page.loser.clickDelta)} clicks`
-      : 'no material page movement found'
-  const queryMovement = query?.winner
-    ? `top query gained ${formatMagnitude(query.winner.clickDelta)} clicks`
-    : query?.loser
-      ? `top query lost ${formatMagnitude(query.loser.clickDelta)} clicks`
-      : 'no material query movement found'
+  const pageMovement =
+    page?.dataStatus === 'empty' || page?.dataStatus === 'unavailable'
+      ? 'page segment evidence unavailable'
+      : page?.winner
+        ? `top page gained ${formatMagnitude(page.winner.clickDelta)} clicks`
+        : page?.loser
+          ? `top page lost ${formatMagnitude(page.loser.clickDelta)} clicks`
+          : 'no material page movement found'
+  const queryMovement =
+    query?.dataStatus === 'empty' || query?.dataStatus === 'unavailable'
+      ? 'query segment evidence unavailable'
+      : query?.winner
+        ? `top query gained ${formatMagnitude(query.winner.clickDelta)} clicks`
+        : query?.loser
+          ? `top query lost ${formatMagnitude(query.loser.clickDelta)} clicks`
+          : 'no material query movement found'
 
   return `${input.update.attribution} (${input.update.confidence} confidence); ${pageMovement}; ${queryMovement}.`
 }
@@ -295,7 +323,7 @@ function templateMovementForDirection(input: {
 }
 
 export function inferTemplateMovement(
-  pageSegment: SplitSegment,
+  pageSegment: Pick<SplitSegment, 'winners' | 'losers'>,
 ): TemplateMovement[] {
   const movedPages = [...pageSegment.winners, ...pageSegment.losers]
     .filter((item) => item.key.startsWith('http'))
@@ -335,24 +363,33 @@ export function inferTemplateMovement(
   ].slice(0, 6)
 }
 
-export async function updatePostmortemWorkflow(input: {
-  site: string
-  days?: number
-  recentDays?: number
-  limit?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  knownConfounders?: string[]
-  includeChangeLog?: boolean
-  refresh?: boolean
-}): Promise<WorkflowReport<PostmortemOutput>> {
+export async function updatePostmortemWorkflow(
+  input: {
+    site: string
+    days?: number
+    recentDays?: number
+    limit?: number
+    brandTerms?: string[]
+    includeBrand?: boolean
+    knownConfounders?: string[]
+    includeChangeLog?: boolean
+    refresh?: boolean
+  },
+  dependencies: {
+    updateCorrelation?: typeof updateCorrelation
+    segmentImpact?: typeof segmentImpact
+  } = {},
+): Promise<WorkflowReport<PostmortemOutput>> {
   const limit = input.limit ?? 20
+  const runUpdateCorrelation =
+    dependencies.updateCorrelation ?? updateCorrelation
+  const runSegmentImpact = dependencies.segmentImpact ?? segmentImpact
   const [update, page, query, device, country] = await Promise.all([
-    updateCorrelation(input),
-    segmentImpact({ ...input, dimension: 'page', limit }),
-    segmentImpact({ ...input, dimension: 'query', limit }),
-    segmentImpact({ ...input, dimension: 'device', limit }),
-    segmentImpact({ ...input, dimension: 'country', limit }),
+    runUpdateCorrelation(input),
+    runSegmentImpact({ ...input, dimension: 'page', limit }),
+    runSegmentImpact({ ...input, dimension: 'query', limit }),
+    runSegmentImpact({ ...input, dimension: 'device', limit }),
+    runSegmentImpact({ ...input, dimension: 'country', limit }),
   ])
 
   const segments = {
@@ -368,6 +405,17 @@ export async function updatePostmortemWorkflow(input: {
     insightForSegment('country', segments.country),
   ]
   const templateMovement = inferTemplateMovement(segments.page)
+  const segmentStepStatus = [
+    segments.page,
+    segments.query,
+    segments.device,
+    segments.country,
+  ].every(
+    (segment) =>
+      segment.dataStatus === 'empty' || segment.dataStatus === 'unavailable',
+  )
+    ? 'skipped'
+    : 'completed'
 
   return workflowReport({
     workflow: 'update-postmortem',
@@ -381,7 +429,7 @@ export async function updatePostmortemWorkflow(input: {
       },
       {
         tool: 'seo_segment_impact',
-        status: 'completed',
+        status: segmentStepStatus,
         summary: insights.map((insight) => insight.summary).join(' '),
       },
     ],

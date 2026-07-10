@@ -7,7 +7,12 @@ import {
   diagnosisPartialReasons,
 } from './diagnosis-status.js'
 import type { TemplateSummary } from './page-patterns.js'
-import { type SegmentImpactReport, segmentImpact } from './segment-impact.js'
+import {
+  type SegmentImpactReport,
+  segmentImpact,
+  segmentRangeDays,
+  unavailableSegmentImpactReport,
+} from './segment-impact.js'
 import { defaultDateRange } from './shared.js'
 import {
   analyzeCannibalRows,
@@ -162,22 +167,34 @@ function emptyUpdateCorrelation(
   }
 }
 
-function emptySegment(input: {
-  site: string
-  dimension: SegmentImpactReport['dimension']
+function emptySegment(
+  input: {
+    site: string
+    dimension: SegmentImpactReport['dimension']
+    days?: number
+    startDate?: string
+    endDate?: string
+  },
+  reason = 'Segment evidence was unavailable.',
+): SegmentImpactReport {
+  const after = fallbackRange(input)
+  return unavailableSegmentImpactReport({
+    site: input.site,
+    dimension: input.dimension,
+    after,
+    reason,
+  })
+}
+
+function segmentWindowUnavailableReason(input: {
   days?: number
   startDate?: string
   endDate?: string
-}): SegmentImpactReport {
-  const after = fallbackRange(input)
-  return {
-    site: input.site,
-    dimension: input.dimension,
-    before: after,
-    after,
-    generatedAt: new Date().toISOString(),
-    items: [],
-  }
+}): string | undefined {
+  const days = segmentRangeDays(fallbackRange(input))
+  return days > 240
+    ? `The ${days}-day diagnosis window is too long for an adjacent segment comparison inside Search Console's rolling 16-month API history. Use 240 days or fewer for segment movement.`
+    : undefined
 }
 
 function emptyDecay(input: {
@@ -573,6 +590,24 @@ export async function diagnoseProperty(
               source: 'search-status',
             }),
         )
+  const segmentUnavailable = segmentWindowUnavailableReason(input)
+  const segmentTask = (
+    label: string,
+    dimension: SegmentImpactReport['dimension'],
+  ): Promise<SectionResult<SegmentImpactReport>> =>
+    segmentUnavailable
+      ? Promise.resolve(
+          skipped(
+            label,
+            emptySegment({ ...input, dimension }, segmentUnavailable),
+            segmentUnavailable,
+          ),
+        )
+      : track(
+          label,
+          () => providers.segmentImpact({ ...input, dimension, limit }),
+          (error) => emptySegment({ ...input, dimension }, errorReason(error)),
+        )
   const [
     updateResult,
     pageResult,
@@ -585,26 +620,10 @@ export async function diagnoseProperty(
     quickWinsResult,
   ] = await Promise.all([
     updateTask,
-    track(
-      'page movement segments',
-      () => providers.segmentImpact({ ...input, dimension: 'page', limit }),
-      () => emptySegment({ ...input, dimension: 'page' }),
-    ),
-    track(
-      'query movement segments',
-      () => providers.segmentImpact({ ...input, dimension: 'query', limit }),
-      () => emptySegment({ ...input, dimension: 'query' }),
-    ),
-    track(
-      'device movement segments',
-      () => providers.segmentImpact({ ...input, dimension: 'device', limit }),
-      () => emptySegment({ ...input, dimension: 'device' }),
-    ),
-    track(
-      'country movement segments',
-      () => providers.segmentImpact({ ...input, dimension: 'country', limit }),
-      () => emptySegment({ ...input, dimension: 'country' }),
-    ),
+    segmentTask('page movement segments', 'page'),
+    segmentTask('query movement segments', 'query'),
+    segmentTask('device movement segments', 'device'),
+    segmentTask('country movement segments', 'country'),
     track(
       'decay analysis',
       () =>
@@ -699,6 +718,7 @@ export async function diagnoseProperty(
   })
 
   const partialReasons = diagnosisPartialReasons({
+    segments: { page, query, device, country },
     decay,
     cannibalization: cannibal,
     strikingDistance: striking,

@@ -19,6 +19,8 @@ type PostmortemCsvReport = WorkflowReport<{
   }
   insights: Array<{
     dimension: 'page' | 'query' | 'device' | 'country'
+    dataStatus: SegmentStatus
+    unmatchedRows: number
     summary: string
     winner?: SegmentItem
     loser?: SegmentItem
@@ -40,21 +42,42 @@ type PostmortemCsvReport = WorkflowReport<{
     {
       winners: SegmentItem[]
       losers: SegmentItem[]
+      dataStatus: SegmentStatus
+      summary: {
+        matchedRows: number
+        returnedRows: number
+        unmatchedRows: number
+        verdict: string
+      }
+      unmatchedSegments: UnmatchedSegment[]
+      warnings: string[]
     }
   >
 }>
 
+type SegmentStatus = 'unavailable' | 'empty' | 'partial' | 'complete'
+
+type UnmatchedSegment = {
+  key: string
+  retainedIn: 'before' | 'after'
+  clicks: number
+  impressions: number
+  position: number | null
+  reason: 'not-retained-in-other-window'
+}
+
 type SegmentItem = {
   key: string
+  evidenceScope: 'matched-retained-segment'
   beforeClicks: number
   afterClicks: number
   clickDelta: number
   beforeImpressions: number
   afterImpressions: number
   impressionDelta: number
-  beforePosition: number
-  afterPosition: number
-  positionDelta: number
+  beforePosition: number | null
+  afterPosition: number | null
+  positionDelta: number | null
 }
 
 const HEADERS = {
@@ -68,11 +91,21 @@ const HEADERS = {
     'classification',
     'updates_matched',
     'known_confounders',
+    'page_segment_status',
+    'page_segment_warnings',
+    'query_segment_status',
+    'query_segment_warnings',
+    'device_segment_status',
+    'device_segment_warnings',
+    'country_segment_status',
+    'country_segment_warnings',
   ],
   steps: ['rank', 'tool', 'status', 'summary'],
   actions: ['rank', 'title', 'confidence', 'action'],
   findings: [
     'dimension',
+    'data_status',
+    'unmatched_rows',
     'summary',
     'winner_key',
     'winner_click_delta',
@@ -109,6 +142,8 @@ const HEADERS = {
   segment: [
     'rank',
     'dimension',
+    'data_status',
+    'evidence_scope',
     'key',
     'before_clicks',
     'after_clicks',
@@ -119,6 +154,17 @@ const HEADERS = {
     'before_position',
     'after_position',
     'position_delta',
+  ],
+  unmatchedSegment: [
+    'rank',
+    'dimension',
+    'data_status',
+    'key',
+    'retained_in',
+    'clicks',
+    'impressions',
+    'position',
+    'reason',
   ],
 } as const
 
@@ -132,6 +178,8 @@ function postmortemSegmentRows(
   ].map((item, index) => ({
     rank: index + 1,
     dimension,
+    data_status: report.output.segments[dimension].dataStatus,
+    evidence_scope: item.evidenceScope,
     key: item.key,
     before_clicks: item.beforeClicks,
     after_clicks: item.afterClicks,
@@ -143,6 +191,25 @@ function postmortemSegmentRows(
     after_position: item.afterPosition,
     position_delta: item.positionDelta,
   }))
+}
+
+function postmortemUnmatchedSegmentRows(
+  report: PostmortemCsvReport,
+  dimension: 'page' | 'query' | 'device' | 'country',
+): CsvRow[] {
+  return report.output.segments[dimension].unmatchedSegments.map(
+    (item, index) => ({
+      rank: index + 1,
+      dimension,
+      data_status: report.output.segments[dimension].dataStatus,
+      key: item.key,
+      retained_in: item.retainedIn,
+      clicks: item.clicks,
+      impressions: item.impressions,
+      position: item.position,
+      reason: item.reason,
+    }),
+  )
 }
 
 export function updatePostmortemCsvFiles(
@@ -163,6 +230,18 @@ export function updatePostmortemCsvFiles(
           classification: report.output.update.classification,
           updates_matched: report.output.update.overlappingUpdates.length,
           known_confounders: report.output.update.confounders.length,
+          page_segment_status: report.output.segments.page.dataStatus,
+          page_segment_warnings:
+            report.output.segments.page.warnings.join('; '),
+          query_segment_status: report.output.segments.query.dataStatus,
+          query_segment_warnings:
+            report.output.segments.query.warnings.join('; '),
+          device_segment_status: report.output.segments.device.dataStatus,
+          device_segment_warnings:
+            report.output.segments.device.warnings.join('; '),
+          country_segment_status: report.output.segments.country.dataStatus,
+          country_segment_warnings:
+            report.output.segments.country.warnings.join('; '),
         },
       ],
     },
@@ -191,6 +270,8 @@ export function updatePostmortemCsvFiles(
       headers: [...HEADERS.findings],
       rows: report.output.insights.map((item) => ({
         dimension: item.dimension,
+        data_status: item.dataStatus,
+        unmatched_rows: item.unmatchedRows,
         summary: item.summary,
         winner_key: item.winner?.key,
         winner_click_delta: item.winner?.clickDelta,
@@ -244,6 +325,11 @@ export function updatePostmortemCsvFiles(
       filename: `postmortem-segment-${dimension}.csv`,
       headers: [...HEADERS.segment],
       rows: postmortemSegmentRows(report, dimension),
+    })),
+    ...(['page', 'query', 'device', 'country'] as const).map((dimension) => ({
+      filename: `postmortem-segment-${dimension}-unmatched.csv`,
+      headers: [...HEADERS.unmatchedSegment],
+      rows: postmortemUnmatchedSegmentRows(report, dimension),
     })),
   ]
 }

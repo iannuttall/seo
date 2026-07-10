@@ -61,6 +61,41 @@ test('AI referrals MCP bounds rows and validates agent inputs', () => {
   }
 })
 
+test('segment impact MCP bounds comparison and evidence inputs', () => {
+  const schema = inputSchema(
+    captureTools(registerDiagnosisTools),
+    'seo_segment_impact',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      dimension: 'page',
+      days: 240,
+      compareDays: 240,
+      startDate: '2026-05-01',
+      endDate: '2026-05-28',
+      limit: 100,
+      unmatchedLimit: 0,
+      maxRows: 250_000,
+      refresh: true,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: '' },
+    { site: 'sc-domain:example.com', days: 0 },
+    { site: 'sc-domain:example.com', days: 241 },
+    { site: 'sc-domain:example.com', compareDays: 1.5 },
+    { site: 'sc-domain:example.com', startDate: 'last month' },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', unmatchedLimit: -1 },
+    { site: 'sc-domain:example.com', maxRows: 250_001 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})
+
 test('cannibal MCP bounds discovery inputs and accepts brand terms', () => {
   const schema = inputSchema(
     captureTools(registerOpportunityTools),

@@ -3,6 +3,7 @@ import test from 'node:test'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
 import { buildDiagnosisPriorities } from '../diagnosis-priorities.js'
 import { diagnosisPartialReasons } from '../diagnosis-status.js'
+import { compareSegmentRows } from '../segment-impact.js'
 import { analyzeDecay } from '../site-diagnostics/decay-analysis.js'
 import {
   analyzeCannibalRows,
@@ -318,14 +319,15 @@ function emptyDiagnosis(): DiagnosePropertyReport {
 }
 
 function segment(dimension: 'page' | 'query' | 'device' | 'country') {
-  return {
+  return compareSegmentRows({
     site: 'sc-domain:example.com',
     dimension,
     before: { startDate: '2026-04-01', endDate: '2026-04-30' },
     after: { startDate: '2026-05-01', endDate: '2026-05-30' },
+    beforeRows: [],
+    afterRows: [],
     generatedAt: '',
-    items: [],
-  }
+  })
 }
 
 function significantClickAnomaly(
@@ -480,6 +482,17 @@ test('quick-win-only evidence is visible in the headline, content, and prioritie
   )
 })
 
+test('empty segment evidence is not phrased as a conclusive no-movement result', () => {
+  const report = emptyDiagnosis()
+
+  assert.match(topSegmentLine(report), /no retained page rows/i)
+  assert.ok(
+    diagnosisPartialReasons(report).some(
+      (reason) => reason.section === 'page movement segments',
+    ),
+  )
+})
+
 test('failed quick-win verification makes diagnosis evidence partial', () => {
   const report = emptyDiagnosis()
   report.quickWins.verification = {
@@ -492,12 +505,16 @@ test('failed quick-win verification makes diagnosis evidence partial', () => {
     failed: 2,
   }
 
-  assert.deepEqual(
-    diagnosisPartialReasons(report).map((reason) => reason.section),
-    ['quick-win content verification'],
+  const reasons = diagnosisPartialReasons(report)
+  assert.ok(
+    reasons.some(
+      (reason) => reason.section === 'quick-win content verification',
+    ),
   )
   assert.match(
-    diagnosisPartialReasons(report)[0]?.reason ?? '',
+    reasons.find(
+      (reason) => reason.section === 'quick-win content verification',
+    )?.reason ?? '',
     /2 of 2 attempted candidate verifications failed/,
   )
 })
@@ -513,14 +530,68 @@ test('failed striking-distance verification makes diagnosis evidence partial', (
     failed: 2,
   }
 
-  assert.deepEqual(
-    diagnosisPartialReasons(report).map((reason) => reason.section),
-    ['striking-distance content verification'],
+  const reasons = diagnosisPartialReasons(report)
+  assert.ok(
+    reasons.some(
+      (reason) => reason.section === 'striking-distance content verification',
+    ),
   )
   assert.match(
-    diagnosisPartialReasons(report)[0]?.reason ?? '',
+    reasons.find(
+      (reason) => reason.section === 'striking-distance content verification',
+    )?.reason ?? '',
     /2 of 3 attempted candidate verifications failed/,
   )
+})
+
+test('partial segment evidence is surfaced and lowers movement confidence', () => {
+  const report = emptyDiagnosis()
+  report.segments.page = compareSegmentRows({
+    site: report.site,
+    dimension: 'page',
+    before: { startDate: '2026-04-01', endDate: '2026-04-30' },
+    after: { startDate: '2026-05-01', endDate: '2026-05-30' },
+    beforeRows: [
+      {
+        keys: ['https://example.com/matched'],
+        clicks: 100,
+        impressions: 1_000,
+        ctr: 0.1,
+        position: 4,
+      },
+      {
+        keys: ['https://example.com/before-only'],
+        clicks: 20,
+        impressions: 200,
+        ctr: 0.1,
+        position: 5,
+      },
+    ],
+    afterRows: [
+      {
+        keys: ['https://example.com/matched'],
+        clicks: 20,
+        impressions: 500,
+        ctr: 0.04,
+        position: 8,
+      },
+    ],
+  })
+
+  assert.equal(
+    diagnosisPartialReasons(report)[0]?.section,
+    'page movement segments',
+  )
+  const priority = buildDiagnosisPriorities({
+    anomaly: report.anomaly,
+    update: report.updateCorrelation,
+    page: report.segments.page,
+    decay: report.decay,
+    cannibal: report.cannibalization,
+    striking: report.strikingDistance,
+    quickWins: report.quickWins,
+  }).find((item) => item.label === 'Investigate largest page movement')
+  assert.equal(priority?.confidence, 'low')
 })
 
 test('partial decay evidence downgrades its priority confidence', () => {

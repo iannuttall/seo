@@ -114,8 +114,15 @@ export function topSegmentLine(report: DiagnosePropertyReport): string {
   if (skippedReason(report, 'page movement segments')) {
     return 'Page movement comparison was not available for this run.'
   }
-  const page = report.segments.page.items[0]
-  if (!page) return 'No page-level movement stood out.'
+  const segment = report.segments.page
+  if (segment.dataStatus === 'empty') {
+    return 'Search Console returned no retained page rows for either movement window.'
+  }
+  if (segment.dataStatus === 'unavailable') {
+    return 'No page was retained in both movement windows, so page movement could not be compared.'
+  }
+  const page = segment.items[0]
+  if (!page) return 'No matched retained page movement stood out.'
   const direction = page.clickDelta < 0 ? 'lost' : 'gained'
   return `${page.key} ${direction} ${Math.abs(page.clickDelta)} clicks compared with the previous window.`
 }

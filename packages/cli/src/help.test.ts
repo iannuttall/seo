@@ -111,10 +111,47 @@ test('long help and crawler command help are available', async () => {
     ['cannibal', '--help'],
     ['decaying', '--help'],
     ['pseo', 'audit', '--help'],
+    ['ai-referrals', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
+  }
+})
+
+test('AI referrals help exposes bounded evidence controls', async () => {
+  const output = await runSeo(['ai-referrals', '--help'])
+
+  for (const flag of [
+    '--property',
+    '--start-date',
+    '--end-date',
+    '--max-rows',
+    '--refresh',
+    '--json',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
+test('AI referrals JSON rejects invalid evidence controls before auth', async () => {
+  for (const args of [
+    ['--max-rows', 'nope'],
+    ['--max-rows', '0'],
+    ['--start-date', '2026-06-01', '--end-date', 'yesterday'],
+  ]) {
+    const result = await runSeoResult([
+      'ai-referrals',
+      '--property',
+      '123',
+      ...args,
+      '--json',
+    ])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
 

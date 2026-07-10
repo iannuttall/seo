@@ -92,9 +92,16 @@ export const reportSurfaces = [
     },
     options: [
       opt('property', 'property:', 'property: z.string()'),
-      opt('startDate', "'start-date':", 'startDate: z.string().optional()'),
-      opt('endDate', "'end-date':", 'endDate: z.string().optional()'),
+      opt('startDate', "'start-date':", 'startDate: ga4DateSchema.optional()'),
+      opt('endDate', "'end-date':", 'endDate: ga4DateSchema.optional()'),
+      opt(
+        'maxRows',
+        "'max-rows':",
+        'maxRows: z.number().int()',
+        'maxRows?: number',
+      ),
       common.limit,
+      common.refresh,
     ],
   },
   {

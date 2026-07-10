@@ -34,11 +34,11 @@ function formatArg(value: unknown): KnowledgeFormat {
   throw new Error('Format must be one of: okf, markdown, json.')
 }
 
-function knowledgePayload(report: CrawlReport) {
+export function knowledgePayload(report: CrawlReport) {
   return {
     reportId: report.id,
     url: report.config.url,
-    generatedAt: new Date().toISOString(),
+    generatedAt: report.generatedAt,
     crawl: {
       summary: report.summary,
       caveats: report.caveats,

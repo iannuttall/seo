@@ -89,8 +89,10 @@ test('crawler MCP structured output schema stays stable', async () => {
       return
     }
     res.setHeader('content-type', 'text/html')
+    const robots =
+      req.url === '/geo' ? '<meta name="robots" content="noindex">' : ''
     res.end(
-      '<title>MCP schema snapshot fixture page</title><h1>MCP schema snapshot fixture</h1><p>This page intentionally omits metadata, social tags, and schema so MCP contract tests have stable crawler issues.</p>',
+      `${robots}<title>MCP schema snapshot fixture page</title><h1>MCP schema snapshot fixture</h1><p>This page intentionally omits metadata, social tags, and schema so MCP contract tests have stable crawler issues.</p>`,
     )
   })
 
@@ -267,6 +269,66 @@ test('crawler MCP structured output schema stays stable', async () => {
     assert.equal(affectedSelection.limit, 1)
     assert.equal(affectedSelection.truncated, true)
     assert.ok(Number(affectedSelection.totalMatchedRows) > 1)
+
+    const geoTool = tools.get('seo_geo_gaps')
+    assert.ok(geoTool)
+    const geoResult = await geoTool.handler({
+      url: `${fixture.baseUrl}/geo`,
+      maxPages: 1,
+      limit: 1,
+    })
+    const geo = geoResult.structuredContent as JsonRecord
+    assert.deepEqual(keys(geo), [
+      'caveats',
+      'dataStatus',
+      'eligibilityGaps',
+      'reportId',
+      'schemaVersion',
+      'selection',
+      'source',
+      'url',
+      'warnings',
+    ])
+    assert.equal(geo.dataStatus, 'complete')
+    assert.deepEqual(keys(geo.selection), [
+      'evaluatedPages',
+      'limit',
+      'returnedPages',
+      'totalMatchedPages',
+      'truncated',
+    ])
+    assert.deepEqual(geo.selection, {
+      evaluatedPages: 1,
+      totalMatchedPages: 1,
+      returnedPages: 1,
+      limit: 1,
+      truncated: false,
+    })
+    const geoSource = geo.source as JsonRecord
+    assert.deepEqual(keys(geoSource), [
+      'configuredMaxPages',
+      'crawlStatus',
+      'crawledUrls',
+      'definitionId',
+      'discoveredUrls',
+      'extractionFailures',
+      'failedRequests',
+      'generatedAt',
+      'pageLimitReached',
+      'partialReasons',
+      'provider',
+      'queuedUrls',
+      'reportId',
+      'requestEvidenceStatus',
+      'skippedUrls',
+      'startUrl',
+    ])
+    assert.deepEqual(geoSource.partialReasons, [])
+    assert.equal((geo.eligibilityGaps as unknown[]).length, 1)
+    assert.match(
+      String((geoResult.content as Array<JsonRecord>)[0]?.text),
+      /Returned 1 of 1.*evidence is complete/,
+    )
 
     const okfTool = tools.get('seo_okf_build')
     assert.ok(okfTool)

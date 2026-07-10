@@ -1,20 +1,31 @@
 ---
 name: ai-referrals
-description: Find known AI referral traffic in GA4. Use when an agent needs observed landing-page and source evidence from Analytics.
+description: Measure sessions and landing pages attributed to known AI referral sources in GA4; use when an agent needs bounded analytics evidence without equating missing referrers with zero AI visibility.
 ---
 
 # AI referrals
 
-Use the compact MCP report flow:
+Use this report to see which known AI referral domains appeared as GA4 session sources, which landing pages received those sessions, and how activity changed by day. It is useful for observed referral analysis, not for measuring every mention or citation. Referrers can be stripped, reclassified, or recorded as direct or unassigned traffic, so an empty result is not proof that no AI system sent or cited the site.
 
-1. Call `seo_list_reports` with category `ai-search` when discovery is needed.
-2. Call `seo_describe_report` with id `ai-referrals` before supplying parameters.
-3. Call `seo_run_report` with id `ai-referrals` and only the described parameters.
+## Run the report
 
-Read MCP `structuredContent` as the machine contract. Keep returned Markdown or
-text for the user-facing explanation.
+Use the compact MCP flow:
 
-## Evidence rules
+1. Call `seo_list_reports` with `{"category":"ai-search"}`.
+2. Call `seo_describe_report` with `{"id":"ai-referrals"}` and inspect the current schema.
+3. Call `seo_run_report` with `{"id":"ai-referrals","params":{"property":"123456789","startDate":"28daysAgo","endDate":"yesterday","limit":25}}`.
 
-- Check the GA4 property, date range, source status, retained row count, and warnings before using totals.
-- A referral session is observed traffic. Missing referrals do not prove that an AI product never cited the site.
+The CLI uses the same registry and handler:
+
+```sh
+seo reports describe ai-referrals --json
+seo reports run ai-referrals --params '{"property":"123456789","startDate":"28daysAgo","endDate":"yesterday","limit":25}' --json
+```
+
+`property` is required. Dates accept `YYYY-MM-DD` or GA4 relative dates such as `28daysAgo`. `maxRows` bounds retained provider rows; `limit` is its legacy alias, so never pass both.
+
+## Interpret and act
+
+Start with `dataStatus`, `range`, `methodology`, and `dataSource.partialReasons`. Check `possiblyTruncated`, query-level statuses, warnings, returned rows, and the GA4 time zone before comparing totals. `summary.sessions` and `summary.eventCount` are additive; `summary.totalUsers` can be unavailable and must not be reconstructed by adding per-source or per-page values. Use `sources[].observedSessionSources` to preserve the exact attribution evidence, `shareOfAiSessions` only within detected AI sessions, and `landingPages` to choose pages for a qualitative review.
+
+Safe actions include checking whether high-volume landing pages answer the referring context, comparing complete like-for-like periods, and annotating material changes. Do not claim that referral sessions caused conversions, represent all AI traffic, or reveal the prompt, answer, citation, or user intent that produced the visit.

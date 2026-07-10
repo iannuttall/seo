@@ -10,8 +10,50 @@ import {
   workflowPresentation,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { calendarMonthSchema } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
+
+const technicalWatchInputSchema = z
+  .strictObject({
+    site: z.string().trim().min(1).max(2_048),
+    startUrl: z.string().url().optional(),
+    urls: z.array(z.string().url()).min(1).max(100).optional(),
+    sitemaps: z.array(z.string().url()).min(1).max(20).optional(),
+    properties: z
+      .array(z.string().trim().min(1).max(2_048))
+      .min(1)
+      .max(1_000)
+      .optional(),
+    limit: z.number().int().min(1).max(250_000).optional(),
+    refresh: z.boolean().optional(),
+    js: z.boolean().optional(),
+    languageCode: z.string().trim().min(1).max(35).optional(),
+    dailyLimit: z.number().int().min(1).max(2_000).optional(),
+    inspectLimit: z.number().int().min(1).max(100).optional(),
+    maxUrls: z.number().int().min(1).max(250_000).optional(),
+    recoverLinks: z.boolean().optional(),
+    recoverDays: z.number().int().min(1).max(548).optional(),
+    recoverLimit: z.number().int().min(1).max(100).optional(),
+    recoverMinClicks: z.number().int().min(0).max(1_000_000_000).optional(),
+    recoverMinImpressions: z
+      .number()
+      .int()
+      .min(0)
+      .max(1_000_000_000)
+      .optional(),
+  })
+  .superRefine((input, context) => {
+    const hasIndexInput = Boolean(input.urls?.length || input.sitemaps?.length)
+    if (!input.startUrl && !hasIndexInput && input.recoverLinks === false) {
+      context.addIssue({
+        code: 'custom',
+        path: ['recoverLinks'],
+        message:
+          'Pass startUrl, urls, sitemaps, or enable link recovery for technical-watch.',
+      })
+    }
+  })
 
 function workflowSuccess(result: WorkflowReport<unknown>) {
   return toolSuccess(
@@ -66,7 +108,7 @@ export function registerWorkflowTools(server: McpServer): void {
       description: 'Run the monthly reporting workflow with next actions',
       inputSchema: {
         ...mcpReportInputSchema(['site', 'limit', 'includeBrand', 'refresh']),
-        month: z.string().optional(),
+        month: calendarMonthSchema.optional(),
       },
     },
     async ({ site, month, limit, includeBrand, refresh }) => {
@@ -136,25 +178,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       description:
         'Run scheduled-style crawl-diff and index-watch monitoring in one workflow',
-      inputSchema: {
-        site: z.string(),
-        startUrl: z.string().url().optional(),
-        urls: z.array(z.string().url()).optional(),
-        sitemaps: z.array(z.string().url()).optional(),
-        properties: z.array(z.string()).optional(),
-        limit: z.number().optional(),
-        refresh: z.boolean().optional(),
-        js: z.boolean().optional(),
-        languageCode: z.string().optional(),
-        dailyLimit: z.number().optional(),
-        inspectLimit: z.number().optional(),
-        maxUrls: z.number().optional(),
-        recoverLinks: z.boolean().optional(),
-        recoverDays: z.number().optional(),
-        recoverLimit: z.number().optional(),
-        recoverMinClicks: z.number().optional(),
-        recoverMinImpressions: z.number().optional(),
-      },
+      inputSchema: technicalWatchInputSchema,
     },
     async ({
       site,

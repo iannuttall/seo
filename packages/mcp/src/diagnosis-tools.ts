@@ -9,6 +9,7 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
+import { calendarDateSchema } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -101,14 +102,8 @@ export function registerDiagnosisTools(
         refresh: z.boolean().optional(),
         dimension: z.enum(['page', 'query', 'country', 'device']).optional(),
         compareDays: z.number().int().min(1).max(240).optional(),
-        startDate: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .optional(),
-        endDate: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .optional(),
+        startDate: calendarDateSchema.optional(),
+        endDate: calendarDateSchema.optional(),
         maxRows: z.number().int().min(1).max(250_000).optional(),
         unmatchedLimit: z.number().int().min(0).max(100).optional(),
       },

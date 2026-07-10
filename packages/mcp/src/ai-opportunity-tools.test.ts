@@ -41,6 +41,63 @@ test('AI referrals MCP preserves the schema v2 structured contract', async () =>
   assert.match(result.content[0]?.text ?? '', /evidence is complete/)
 })
 
+test('AI referrals rejects conflicting row-limit aliases before provider work', async () => {
+  let calls = 0
+  let handler:
+    | ((input: {
+        property: string
+        maxRows?: number
+        limit?: number
+      }) => Promise<{
+        isError?: boolean
+        structuredContent?: Record<string, unknown>
+      }>)
+    | undefined
+
+  registerAiOpportunityTools(
+    {
+      registerTool(
+        name: string,
+        _config: unknown,
+        toolHandler: typeof handler,
+      ) {
+        if (name === 'seo_ai_referrals') handler = toolHandler
+      },
+    } as never,
+    {
+      aiReferralsReport: async () => {
+        calls++
+        return {
+          dataStatus: 'complete',
+          summary: { sessions: 0, sources: 0 },
+        } as never
+      },
+    },
+  )
+
+  assert.ok(handler)
+  const result = await handler({ property: '123', maxRows: 100, limit: 50 })
+  assert.equal(calls, 0)
+  assert.equal(result.isError, true)
+  assert.deepEqual(result.structuredContent, {
+    ok: false,
+    error: {
+      code: 'INVALID_INPUT',
+      message:
+        'maxRows and the legacy limit option must match when both are provided.',
+      retryable: false,
+    },
+  })
+
+  const compatible = await handler({
+    property: '123',
+    maxRows: 100,
+    limit: 100,
+  })
+  assert.equal(calls, 1)
+  assert.equal(compatible.isError, undefined)
+})
+
 test('query opportunity MCP preserves schema v2 evidence contracts', async () => {
   const promptFixture = {
     schemaVersion: 2,

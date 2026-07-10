@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { reportNarrative, reportPresentation } from '@seo/core'
 import * as z from 'zod/v4'
+import { calendarDateSchema } from '../input-schemas.js'
 import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
 import {
@@ -34,8 +35,8 @@ export function registerNarrativeReportTool(server: McpServer): void {
           'limit',
           'includeBrand',
         ]),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
+        startDate: calendarDateSchema.optional(),
+        endDate: calendarDateSchema.optional(),
         changeLimit: z.number().optional(),
         ...reportFetchInputSchema,
       },

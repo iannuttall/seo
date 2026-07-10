@@ -271,13 +271,21 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'answerable-content',
         section: 'content-clarity',
-        maxScore: 16,
-        score: scoreFromPercent(pct(answerablePages.length, pageCount), 16),
-        title: 'Pages answer questions directly',
-        plainEnglish: `${pct(answerablePages.length, pageCount)}% of indexable pages look answer-ready.`,
+        maxScore: 0,
+        score: 0,
+        title: 'Short opening paragraphs are an unscored observation',
+        plainEnglish: `${pct(answerablePages.length, pageCount)}% of indexable pages have at least one 25-word paragraph near the start. This does not establish content quality, citation likelihood, or Google AI eligibility.`,
         action:
-          'Put short, direct answers near the top of informational pages, then support them with examples, steps, data, or citations.',
+          'Write for the reader and the page intent. Do not create artificial answer blocks or chunk content solely for AI Search.',
         urls: sampleUrls(pages, (page) => !page.geo?.answerable),
+        evidence: {
+          observedPages: answerablePages.length,
+          evaluatedPages: pageCount,
+          heuristic: 'one-of-first-three-paragraphs-has-at-least-25-words',
+          googleSearchImpact: 'not-established',
+          guidanceUrl:
+            'https://developers.google.com/search/docs/fundamentals/ai-optimization-guide',
+        },
       }),
       check({
         id: 'semantic-html',
@@ -454,6 +462,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
     caveats: [
       ...report.caveats,
       'llms.txt is treated as optional agent-discovery metadata, not a Google Search ranking or visibility factor.',
+      'Paragraph length and placement are observations only. Google does not require content chunking or special answer blocks for generative AI features.',
       ...(report.ai?.robotsTxt
         ? robotsUnavailable
           ? [

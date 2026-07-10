@@ -255,6 +255,29 @@ test('llms.txt does not change the AI readiness score', () => {
   )
 })
 
+test('paragraph shape does not change the AI readiness score', () => {
+  const observed = fixtureReport()
+  const absent = fixtureReport()
+  for (const page of absent.pages) {
+    if (page.geo) page.geo.answerable = false
+  }
+
+  const observedReadiness = aiReadiness(observed)
+  const absentReadiness = aiReadiness(absent)
+  const check = absentReadiness.checks.find(
+    (item) => item.id === 'answerable-content',
+  )
+
+  assert.equal(observedReadiness.score, absentReadiness.score)
+  assert.equal(check?.status, 'info')
+  assert.equal(check?.maxScore, 0)
+  assert.match(check?.plainEnglish ?? '', /does not establish/i)
+  assert.equal(
+    absentReadiness.topActions.some((item) => item.id === 'answerable-content'),
+    false,
+  )
+})
+
 test('entityReadiness summarizes schema and official profile signals', () => {
   const report = entityReadiness(fixtureReport())
 

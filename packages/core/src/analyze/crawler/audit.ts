@@ -61,8 +61,6 @@ const TITLE_MAX_PIXELS = 580
 const META_DESCRIPTION_MIN_CHARS = 70
 const META_DESCRIPTION_MAX_CHARS = 160
 const HEADING_STRUCTURE_MIN_WORDS = 300
-const THIN_CONTENT_WORDS = 300
-const LOW_TEXT_RATIO = 0.08
 const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
 const QUERY_COVERAGE_MIN = 0.6
 const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
@@ -747,14 +745,6 @@ export function auditCrawlPages(
       )
     }
 
-    if (page.wordCount < THIN_CONTENT_WORDS) {
-      issues.push(
-        issue('thin_content', page, `${page.wordCount} words`, {
-          wordCount: page.wordCount,
-          threshold: THIN_CONTENT_WORDS,
-        }),
-      )
-    }
     const contentDuplicate = page.mainContentHash
       ? duplicateContent.get(page.mainContentHash)
       : undefined
@@ -764,20 +754,6 @@ export function auditCrawlPages(
           mainContentHash: page.mainContentHash,
           duplicateCount: contentDuplicate.count,
           sampleUrls: contentDuplicate.sampleUrls,
-        }),
-      )
-    }
-    if (
-      page.textRatio !== undefined &&
-      page.textRatio > 0 &&
-      page.textRatio < LOW_TEXT_RATIO &&
-      page.wordCount < THIN_CONTENT_WORDS
-    ) {
-      issues.push(
-        issue('low_text_ratio', page, `${Math.round(page.textRatio * 100)}%`, {
-          textRatio: page.textRatio,
-          threshold: LOW_TEXT_RATIO,
-          wordCount: page.wordCount,
         }),
       )
     }
@@ -906,9 +882,6 @@ export function auditCrawlPages(
     }
 
     if (page.geo && page.wordCount > 50) {
-      if (!page.geo?.answerable) {
-        issues.push(issue('geo_not_answerable', page))
-      }
       if (!page.geo?.hasAuthor) {
         issues.push(issue('geo_no_author', page))
       }
@@ -917,14 +890,6 @@ export function auditCrawlPages(
       }
       if (!page.geo?.semanticHtml) {
         issues.push(issue('geo_no_semantic_html', page))
-      }
-      if (page.wordCount < THIN_CONTENT_WORDS) {
-        issues.push(
-          issue('geo_thin_to_cite', page, `${page.wordCount} words`, {
-            wordCount: page.wordCount,
-            threshold: THIN_CONTENT_WORDS,
-          }),
-        )
       }
     }
   }

@@ -730,20 +730,6 @@ const RULE_DEFINITIONS = [
     },
   },
   {
-    id: 'thin_content',
-    title: 'Thin content',
-    category: 'content',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Pages with little useful content rarely satisfy search intent and are poor candidates for AI citation.',
-    howToFix:
-      'Add genuinely useful sections, examples, details, and answers that match the page intent.',
-    impactIfIgnored:
-      'The page is easier to outrank and less likely to be cited or used by answer engines.',
-    howToVerify:
-      'Re-run the crawl and confirm the word count and extracted content are substantial for the page type.',
-  },
-  {
     id: 'duplicate_content',
     title: 'Duplicate content',
     category: 'content',
@@ -763,24 +749,6 @@ const RULE_DEFINITIONS = [
         'issue.evidence.sampleUrls',
       ],
       suggestedCommands: ['seo crawl <url> --json'],
-    },
-  },
-  {
-    id: 'low_text_ratio',
-    title: 'Low text-to-HTML ratio',
-    category: 'content',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'A page with lots of markup and very little readable text often behaves like a thin or template-heavy page.',
-    howToFix:
-      'Add useful visible content, reduce unnecessary markup, and move bulky scripts or styles out of the HTML where practical.',
-    impactIfIgnored:
-      'Crawlers and AI systems may find less useful content than the page weight suggests.',
-    howToVerify:
-      'Re-run the crawl and confirm textRatio rises above the low-text threshold.',
-    agentHints: {
-      evidenceFields: ['page.textRatio', 'page.wordCount', 'page.sizeBytes'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
     },
   },
   {
@@ -1039,20 +1007,6 @@ const RULE_DEFINITIONS = [
     howToVerify: 'Re-run the crawl and confirm geo.structuredData is true.',
   },
   {
-    id: 'geo_not_answerable',
-    title: 'GEO: not answer-ready',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'AI answer engines prefer clear headings followed by direct, self-contained answers.',
-    howToFix:
-      'Put the direct answer near the top of each important section, then add supporting detail.',
-    impactIfIgnored:
-      'The page may be skipped in favor of competitors with cleaner answer blocks.',
-    howToVerify:
-      'Re-run the crawl and confirm geo.answerable is true for important pages.',
-  },
-  {
     id: 'geo_no_author',
     title: 'GEO: authorship missing',
     category: 'geo',
@@ -1089,24 +1043,6 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'AI systems may extract the wrong content or miss the main answer.',
     howToVerify: 'Re-run the crawl and confirm geo.semanticHtml is true.',
-  },
-  {
-    id: 'geo_thin_to_cite',
-    title: 'GEO: too thin to cite',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'AI answer engines need self-contained passages with enough context to quote or summarize confidently.',
-    howToFix:
-      'Add substantive definitions, specifics, examples, data, caveats, and direct answers that can stand alone outside the page.',
-    impactIfIgnored:
-      'There may not be enough useful material for an AI system to cite, even if the page is technically crawlable.',
-    howToVerify:
-      'Re-run the crawl and confirm wordCount is above the citation-depth threshold for important pages.',
-    agentHints: {
-      evidenceFields: ['page.wordCount', 'issue.evidence.threshold'],
-      suggestedCommands: ['seo crawl <url> --json'],
-    },
   },
 ] as const satisfies readonly RuleDefinition[]
 

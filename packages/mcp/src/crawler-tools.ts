@@ -404,7 +404,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_geo_gaps',
     {
       description:
-        'Return GEO/readiness gaps for pages, including structured-data, author, date, semantic HTML, and answer-ready signals.',
+        'Return GEO/readiness observations for pages, including structured-data, author, date, and semantic HTML. Does not predict AI citations.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
@@ -465,7 +465,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_ai_readiness',
     {
       description:
-        'Score a crawl for AI discovery readiness using bot access, structured data, content clarity, entity signals, and crawl completeness. llms.txt is optional unscored metadata.',
+        'Score observed crawl and technical signals for AI discovery workflows. Paragraph shape and llms.txt are unscored observations, and the report does not predict citations.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),

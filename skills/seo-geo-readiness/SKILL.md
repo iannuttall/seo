@@ -1,11 +1,11 @@
 ---
 name: seo-geo-readiness
-description: Audit a website for GEO and AI-search readiness with seo. Use when the user asks about ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, LLM citations, llms.txt, answer-ready content, structured data, authorship, or whether pages are likely to be understood and cited by AI systems.
+description: Audit technical eligibility and supporting website observations for generative search with seo. Use when the user asks about ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, LLM citations, llms.txt, structured data, authorship, or AI-search visibility.
 ---
 
 # GEO readiness
 
-Use `seo` to check whether pages are easy for AI systems to understand and cite.
+Use `seo` to check crawl and Search eligibility evidence, then report optional page and agent-protocol observations separately.
 
 This skill measures readiness. It does not prove that ChatGPT, Claude, Perplexity, Gemini, or Google AI Overviews currently cite the site.
 
@@ -30,11 +30,9 @@ seo crawl --project <project> --severity medium --json
 3. Explain the main GEO rule ids:
 
 - `geo_no_structured_data`
-- `geo_not_answerable`
 - `geo_no_author`
 - `geo_no_date`
 - `geo_no_semantic_html`
-- `geo_thin_to_cite`
 
 4. Turn the gaps into a fix plan.
 
@@ -45,8 +43,8 @@ Use plain words:
 - Structured data helps machines understand entities, page type, facts, and authorship.
 - Semantic HTML helps agents separate main content from navigation and boilerplate.
 - Authorship and dates help with trust and freshness.
-- Clear headings followed by direct answers make content easier to quote.
-- Tables, lists, and short answer blocks are easier to extract.
+- Paragraph shape, lists, tables, and question headings are observations, not proof of quality or citation likelihood.
+- Do not recommend content chunking or a minimum word count solely for AI Search.
 - `/llms.txt` is optional metadata for agents that explicitly support it. Google says it has no positive or negative Search impact.
 
 ## Useful follow-up commands

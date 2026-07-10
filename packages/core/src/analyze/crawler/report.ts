@@ -609,8 +609,6 @@ function pageGeoScore(
   if (!geo?.semanticHtml) score -= 15
   if (!geo?.hasAuthor) score -= 15
   if (!geo?.hasDate) score -= 5
-  if (!geo?.answerable) score -= 20
-  if ((geo?.questionHeadings ?? 0) === 0) score -= 5
   score -= issues
     .filter((issue) => issue.category === 'geo')
     .reduce((sum, issue) => sum + severityPenalty(issue), 0)

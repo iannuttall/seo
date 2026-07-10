@@ -1,8 +1,10 @@
 # GEO and AI search
 
-GEO means making pages easier for AI answer engines to understand and cite.
+GEO is commonly used for work aimed at generative search experiences. For Google Search, the same foundational SEO practices apply and there are no extra technical requirements for AI Overviews or AI Mode.
 
-The crawler does not guess whether a page will be cited. It checks whether the page has the signals that make citation more likely.
+Google's [generative AI Search guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) explicitly says to focus on foundational SEO and ignore tactics such as artificial content chunking or minimum-format hacks.
+
+The crawler does not guess whether a page will be cited. It records technical eligibility evidence and clearly labels optional heuristics that do not establish visibility or citation likelihood.
 
 ## What the crawler checks
 
@@ -14,10 +16,8 @@ The GEO rules look for:
 - semantic HTML such as `main`, `article`, and clean heading structure
 - authorship and trust signals
 - published or modified dates
-- direct answers near clear headings
 - question-style headings
 - lists, tables, and other extractable blocks
-- enough content depth to cite
 - optional `/llms.txt` presence, reported without affecting SEO or AI-readiness scores
 - entity signals such as Organization, Person, Product, WebSite, sameAs, and official social links
 
@@ -92,4 +92,4 @@ That means we do not yet:
 - compare share of voice against competitors
 - track prompt visibility over time
 
-The current product helps you make pages ready for AI search. The next product layer should prove whether that readiness turns into mentions and citations.
+The current product audits technical eligibility and records supporting observations. It does not claim those observations cause mentions or citations.

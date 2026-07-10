@@ -11,6 +11,9 @@ with that id and only the described parameters. Read `structuredContent` as the
 machine contract. Use the CLI for CI, saved JSON, or environments without MCP.
 
 ```bash
+seo reports describe measure-change --json
+seo reports run measure-change --params '{"site":"sc-domain:example.com","scope":"page","target":"https://example.com/page","title":"Updated page","changedAt":"2025-10-01","beforeDays":28,"afterDays":28}' --json
+
 seo tests report \
   --project <project> \
   --scope page \
@@ -20,6 +23,10 @@ seo tests report \
   --after 28 \
   --json
 ```
+
+Describe the report before building ad hoc parameters because the schema keeps
+saved-test and inline-test inputs in one contract. The catalog runner and the
+focused command execute the same measurement logic.
 
 For a saved test, pass its `id` instead of the ad hoc site, scope, target, and date fields.
 

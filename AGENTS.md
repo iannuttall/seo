@@ -295,6 +295,10 @@ It requires the `SEO_GOOGLE_CLIENT_ID` and `SEO_GOOGLE_CLIENT_SECRET` GitHub
 Actions secrets. The tracked generated module must contain `undefined`
 placeholders between release builds.
 
+npm publishing uses GitHub Actions trusted publishing from `release.yml`. Do
+not add an `NPM_TOKEN`; the Google OAuth build secrets and npm OIDC identity are
+separate concerns.
+
 Before a public release:
 
 - Run all repository gates and `pnpm pack --dry-run`.

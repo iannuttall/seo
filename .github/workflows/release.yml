@@ -12,7 +12,7 @@ on:
           - "true"
           - "false"
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
@@ -20,15 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
         with:
           version: 11.10.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache: pnpm
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - name: Use an npm CLI with trusted publishing support
+        run: npm install --global npm@11.10.0
       - run: pnpm install --frozen-lockfile
       - name: Inject shared desktop OAuth client
         run: pnpm auth:inject-shared-client
@@ -39,11 +41,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm lint
+      - run: pnpm security:audit
       - name: Publish dry run
         if: inputs.dryRun == 'true'
-        run: pnpm publish --dry-run --no-git-checks
+        run: npm publish --dry-run
       - name: Publish to npm
         if: inputs.dryRun == 'false'
-        run: pnpm publish --access public --provenance --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance

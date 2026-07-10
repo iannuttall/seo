@@ -107,6 +107,28 @@ function absoluteUrl(
   }
 }
 
+function httpUrl(value: string | undefined, base: string): string | undefined {
+  const resolved = absoluteUrl(value, base)
+  if (!resolved) return undefined
+  const protocol = new URL(resolved).protocol
+  return protocol === 'http:' || protocol === 'https:' ? resolved : undefined
+}
+
+function sanitizedContentHtml(html: string, base: string): string {
+  const $ = load(html)
+  let changed = false
+  for (const element of $('[href], [src]').toArray()) {
+    for (const attribute of ['href', 'src'] as const) {
+      const value = $(element).attr(attribute)
+      if (value && !absoluteUrl(value, base)) {
+        $(element).removeAttr(attribute)
+        changed = true
+      }
+    }
+  }
+  return changed ? $.html() : html
+}
+
 function numericAttribute(value: string | undefined): number | undefined {
   if (!value) return undefined
   const match = value.trim().match(/^\d+/)
@@ -143,7 +165,14 @@ export async function extractPage(
   dependencies: MainContentDependencies = {},
 ): Promise<ExtractedPage> {
   const $ = load(fetchResult.html)
-  const content = extractMainContent(fetchResult, extractor, dependencies)
+  const content = extractMainContent(
+    {
+      ...fetchResult,
+      html: sanitizedContentHtml(fetchResult.html, fetchResult.finalUrl),
+    },
+    extractor,
+    dependencies,
+  )
   const { text, excerpt } = content
   const url = new URL(fetchResult.finalUrl)
 
@@ -155,12 +184,18 @@ export async function extractPage(
     }))
     .filter((heading) => heading.text.length > 0)
 
-  const links = $('a[href]')
-    .toArray()
-    .map((element) => {
-      const href = $(element).attr('href') ?? ''
+  const links: ExtractedPage['links'] = []
+  let invalidLinkCount = 0
+  let unsupportedLinkCount = 0
+  for (const element of $('a[href]').toArray()) {
+    const href = $(element).attr('href') ?? ''
+    try {
       const absolute = new URL(href, fetchResult.finalUrl)
-      return {
+      if (!['http:', 'https:'].includes(absolute.protocol)) {
+        unsupportedLinkCount += 1
+        continue
+      }
+      links.push({
         href: absolute.toString(),
         text: $(element).text().replace(/\s+/g, ' ').trim(),
         rel: ($(element).attr('rel') ?? '').split(/\s+/).filter(Boolean),
@@ -172,16 +207,23 @@ export async function extractPage(
             : $(element).closest('main, article').length
               ? ('main-content' as const)
               : ('other' as const),
-      }
-    })
+      })
+    } catch {
+      invalidLinkCount += 1
+    }
+  }
 
-  const hreflang = $('link[rel~="alternate"][hreflang][href]')
-    .toArray()
-    .map((element) => ({
-      hreflang: $(element).attr('hreflang') ?? '',
-      href: absoluteUrl($(element).attr('href'), fetchResult.finalUrl) ?? '',
-    }))
-    .filter((item) => item.hreflang && item.href)
+  const hreflang: ExtractedPage['hreflang'] = []
+  let invalidHreflangCount = 0
+  for (const element of $('link[rel~="alternate"][hreflang][href]').toArray()) {
+    const language = $(element).attr('hreflang') ?? ''
+    const href = httpUrl($(element).attr('href'), fetchResult.finalUrl)
+    if (language && href) {
+      hreflang.push({ hreflang: language, href })
+    } else {
+      invalidHreflangCount += 1
+    }
+  }
 
   const openGraph = Object.fromEntries(
     $('meta[property^="og:"]')
@@ -357,6 +399,24 @@ export async function extractPage(
     excerpt,
     wordCount: content.wordCount,
     contentExtraction: content.diagnostics,
-    warnings: [...fetchResult.warnings, ...content.warnings],
+    warnings: [
+      ...fetchResult.warnings,
+      ...content.warnings,
+      ...(invalidLinkCount
+        ? [
+            `Skipped ${invalidLinkCount} malformed link URL${invalidLinkCount === 1 ? '' : 's'}.`,
+          ]
+        : []),
+      ...(unsupportedLinkCount
+        ? [
+            `Excluded ${unsupportedLinkCount} non-HTTP link URL${unsupportedLinkCount === 1 ? '' : 's'} from page link evidence.`,
+          ]
+        : []),
+      ...(invalidHreflangCount
+        ? [
+            `Skipped ${invalidHreflangCount} invalid or non-HTTP hreflang URL${invalidHreflangCount === 1 ? '' : 's'}.`,
+          ]
+        : []),
+    ],
   }
 }

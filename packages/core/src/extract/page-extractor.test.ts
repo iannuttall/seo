@@ -175,6 +175,44 @@ test('extractPage combines effective Googlebot meta directives across the docume
   assert.equal(page.xRobotsTag, 'NONE')
 })
 
+test('extractPage skips malformed links without discarding page evidence', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head>
+      <title>Valid page evidence</title>
+      <meta name="robots" content="noindex">
+      <link rel="canonical" href="/valid-page">
+    </head><body><main>
+      <h1>Valid heading</h1>
+      <a href="http://[::1">Malformed</a>
+      <a href="/working">Working</a>
+      <a href="mailto:editor@example.com">Email</a>
+      <a href="javascript:void(0)">Script</a>
+      <link rel="alternate" hreflang="fr" href="http://[::1">
+      <link rel="alternate" hreflang="de" href="mailto:test@example.com">
+      <link rel="alternate" hreflang="es" href="/es/working">
+      <p>This useful paragraph remains available to the extractor.</p>
+    </main></body></html>`),
+    'readability',
+  )
+
+  assert.equal(page.title, 'Valid page evidence')
+  assert.equal(page.metaRobots, 'noindex')
+  assert.equal(page.canonical, '/valid-page')
+  assert.deepEqual(
+    page.links.map((link) => link.href),
+    ['https://example.com/working'],
+  )
+  assert.deepEqual(page.hreflang, [
+    { hreflang: 'es', href: 'https://example.com/es/working' },
+  ])
+  assert.match(page.warnings.join(' '), /Skipped 1 malformed link URL/)
+  assert.match(page.warnings.join(' '), /Excluded 2 non-HTTP link URLs/)
+  assert.match(
+    page.warnings.join(' '),
+    /Skipped 2 invalid or non-HTTP hreflang/,
+  )
+})
+
 test('Defuddle receives the final URL and preserves its metadata and word count', async () => {
   const fetched = {
     ...fetchResult('<main><p>Original page body</p></main>'),

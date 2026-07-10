@@ -24,6 +24,21 @@ function sameOriginUrl(href: string, base: URL): string | undefined {
   }
 }
 
+function resolvedUrl(
+  href: string | undefined,
+  base: string,
+): string | undefined {
+  if (!href) return undefined
+  try {
+    const url = new URL(href, base)
+    return ['http:', 'https:'].includes(url.protocol)
+      ? url.toString()
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function hashText(value: string): string {
   return createHash('sha256').update(value).digest('hex')
 }
@@ -324,6 +339,7 @@ export async function crawlOne(
     const h1 = extracted.headings.find((heading) => heading.level === 1)?.text
     const uniqueInternalLinks = [...new Set(internalLinks)]
     const uniqueExternalLinks = [...new Set(externalLinks)]
+    const canonical = resolvedUrl(extracted.canonical, extracted.finalUrl)
     const page: CrawlPageSnapshot = {
       url: extracted.finalUrl,
       finalUrl: extracted.finalUrl,
@@ -340,9 +356,7 @@ export async function crawlOne(
       robotsTxt: fetched.robotsTxt,
       title: extracted.title,
       metaDescription: extracted.metaDescription,
-      canonical: extracted.canonical
-        ? new URL(extracted.canonical, extracted.finalUrl).toString()
-        : undefined,
+      canonical,
       canonicalRaw: extracted.canonical,
       metaRobots: extracted.metaRobots,
       xRobotsTag: extracted.xRobotsTag,
@@ -357,7 +371,12 @@ export async function crawlOne(
       extractionStatus: 'complete',
       wordCount: extracted.wordCount,
       contentExtraction: extracted.contentExtraction,
-      warnings: extracted.warnings,
+      warnings: [
+        ...extracted.warnings,
+        ...(extracted.canonical && !canonical
+          ? ['Ignored a malformed canonical URL.']
+          : []),
+      ],
       contentHash: hashText(
         [
           extracted.title,

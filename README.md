@@ -19,7 +19,7 @@ This is local first today. The same core is shaped so it can later run as a host
 - Records local SEO tests and measures before/after impact with GSC, optional GA4, and optional control groups.
 - Builds content optimization reports from real search demand and crawled page content.
 - Runs local performance audits with bundled Lighthouse, device-specific CrUX field data when configured, and an explicitly unscored transport fallback.
-- Scores AI readiness, entity readiness, llms.txt coverage, and OKF/site knowledge exports from the same saved crawl.
+- Scores AI and entity readiness, reports optional llms.txt presence without treating it as an SEO factor, and builds OKF/site knowledge exports from the same saved crawl.
 - Exposes the same workflows through CLI and MCP.
 
 ## Start here

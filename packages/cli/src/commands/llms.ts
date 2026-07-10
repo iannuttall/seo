@@ -44,7 +44,7 @@ const sharedArgs = {
 export const llmsAuditCommand = defineCommand({
   meta: {
     name: 'audit',
-    description: 'Audit llms.txt readiness from a saved crawl',
+    description: 'Inspect optional llms.txt presence from a saved crawl',
   },
   args: sharedArgs,
   run: async ({ args }) => {
@@ -58,7 +58,8 @@ export const llmsAuditCommand = defineCommand({
 
     process.stdout.write(`llms.txt audit for ${audit.url}\n\n`)
     printKeyValue([
-      ['Score', `${audit.score}/100`],
+      ['SEO impact', audit.googleSearchImpact],
+      ['Optional', audit.optional ? 'yes' : 'no'],
       ['Found', audit.exists ? 'yes' : 'no'],
       ['URL', audit.llmsTxtUrl],
       ['Status', audit.status ? String(audit.status) : '-'],
@@ -144,7 +145,7 @@ export const llmsGenerateCommand = defineCommand({
 export const llmsCommand = defineCommand({
   meta: {
     name: 'llms',
-    description: 'Audit or generate llms.txt from saved crawl data',
+    description: 'Inspect or generate optional llms.txt from saved crawl data',
   },
   subCommands: {
     audit: llmsAuditCommand,

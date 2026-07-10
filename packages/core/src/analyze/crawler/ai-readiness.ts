@@ -5,7 +5,7 @@ import type {
   CrawlReport,
 } from './report.js'
 
-export type ReadinessStatus = 'pass' | 'warning' | 'fail' | 'unknown'
+export type ReadinessStatus = 'pass' | 'warning' | 'fail' | 'unknown' | 'info'
 
 export type ReadinessCheck = {
   id: string
@@ -55,6 +55,7 @@ function scoreFromPercent(value: number, maxScore: number): number {
 }
 
 function status(score: number, maxScore: number): ReadinessStatus {
+  if (maxScore === 0) return 'info'
   const ratio = maxScore ? score / maxScore : 0
   if (ratio >= 0.85) return 'pass'
   if (ratio >= 0.5) return 'warning'
@@ -231,15 +232,20 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       check({
         id: 'llms-txt',
         section: 'machine-readable',
-        maxScore: 15,
-        score: report.ai?.llmsTxt?.exists ? 15 : 3,
-        title: 'llms.txt exists',
+        maxScore: 0,
+        score: 0,
+        title: 'llms.txt is optional',
         plainEnglish: report.ai?.llmsTxt?.exists
-          ? 'The site has an llms.txt file agents can use as a compact entry point.'
-          : 'No llms.txt file was found.',
+          ? 'An optional llms.txt file was found. Google says it has no positive or negative Search impact.'
+          : 'No llms.txt file was found. Google says the file is not needed for Search and does not affect visibility.',
         action:
-          'Generate an llms.txt from the crawl and keep it focused on the pages agents should read first.',
-        evidence: { llmsTxt: report.ai?.llmsTxt },
+          'No SEO action is required. Generate one only for a specific agent or service that consumes it.',
+        evidence: {
+          llmsTxt: report.ai?.llmsTxt,
+          googleSearchImpact: 'none',
+          guidanceUrl:
+            'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
+        },
       }),
       check({
         id: 'valid-json-ld',
@@ -423,7 +429,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       ? ('complete' as const)
       : ('partial' as const)
   const topActions = checks
-    .filter((item) => item.status !== 'pass')
+    .filter((item) => item.status !== 'pass' && item.status !== 'info')
     .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score))
     .slice(0, 8)
 
@@ -447,6 +453,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
     agentResources: report.ai?.agentResources ?? [],
     caveats: [
       ...report.caveats,
+      'llms.txt is treated as optional agent-discovery metadata, not a Google Search ranking or visibility factor.',
       ...(report.ai?.robotsTxt
         ? robotsUnavailable
           ? [

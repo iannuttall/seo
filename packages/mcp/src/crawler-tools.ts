@@ -465,7 +465,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_ai_readiness',
     {
       description:
-        'Score a crawl for AI discovery readiness: bot access, llms.txt, structured data, content clarity, entity signals, and crawl completeness.',
+        'Score a crawl for AI discovery readiness using bot access, structured data, content clarity, entity signals, and crawl completeness. llms.txt is optional unscored metadata.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
@@ -517,7 +517,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_llms_txt_audit',
     {
       description:
-        'Audit llms.txt readiness from a saved or freshly crawled report and return plain-English issues plus structured recommended pages.',
+        'Inspect optional llms.txt presence from a saved or freshly crawled report and return current Google guidance plus candidate pages.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),

@@ -115,11 +115,11 @@ seo seo-to-ai-query --project keep
 seo ai-referrals --project keep
 ```
 
-`ai-readiness` scores bot access, llms.txt, machine-readable structure, direct-answer content, entity signals, technical UX, and crawl completeness from a saved crawl.
+`ai-readiness` scores bot access, machine-readable structure, direct-answer content, entity signals, technical UX, and crawl completeness from a saved crawl. It reports llms.txt as optional information and does not include it in the score.
 
 `entity-readiness` focuses on whether agents can connect the site to the right brand, people, products, and official profiles.
 
-`llms audit` checks whether `/llms.txt` exists and whether the crawl has enough good candidate pages. `llms generate` drafts a focused file from the saved crawl.
+`llms audit` reports whether optional `/llms.txt` exists and whether the crawl has enough candidate pages to generate one. Missing llms.txt is not an SEO issue. `llms generate` drafts a focused file for services that explicitly consume it.
 
 `okf` exports a directory of Markdown files that follows the OKF bundle shape. `export knowledge` is the generic alias when you want OKF, Markdown, or JSON from the same saved crawl.
 

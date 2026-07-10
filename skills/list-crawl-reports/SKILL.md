@@ -1,20 +1,37 @@
 ---
 name: list-crawl-reports
-description: List saved crawl metadata. Use when an agent needs a report id for a compact follow-up or comparison.
+description: Discover locally saved crawl snapshots and their compact metadata without loading full evidence. Use to select stable report ids for follow-ups, comparisons, or verification.
 ---
 
-# List crawl reports
+# List saved crawl reports
 
-Use the compact MCP report flow:
+This report is the index for local crawl history. It returns metadata only, ordered newest first, so an agent can choose a snapshot without loading pages and issues or fetching the site again. It says what is stored locally, not what is currently true online.
 
-1. Call `seo_list_reports` with category `crawl` when discovery is needed.
-2. Call `seo_describe_report` with id `list-crawl-reports` before supplying parameters.
-3. Call `seo_run_report` with id `list-crawl-reports` and only the described parameters.
+## Run it
 
-Read MCP `structuredContent` as the machine contract. Keep returned Markdown or
-text for the user-facing explanation.
+For MCP, call `seo_list_reports` with category `crawl` if discovery is needed. Call `seo_describe_report` with `{ "id": "list-crawl-reports" }`, then `seo_run_report` with:
 
-## Evidence rules
+```json
+{
+  "id": "list-crawl-reports",
+  "params": {
+    "site": "sc-domain:example.com",
+    "limit": 10
+  }
+}
+```
 
-- Treat this as local metadata discovery, not a fresh site check.
-- Use the site filter and limit, then load only the report needed for the task.
+Confirm MCP `isError` is false, then consume `structuredContent`. The equivalent CLI commands are:
+
+```sh
+seo reports describe list-crawl-reports --json
+seo reports run list-crawl-reports --params '{"site":"sc-domain:example.com","limit":10}' --json
+```
+
+The site filter prevents an unrelated recent crawl from becoming the implicit source. Increase `limit` only when older baselines are genuinely needed.
+
+## Choose a source deliberately
+
+Review each report's id, site, start URL, creation time, status, total pages, issue count, configuration hash, and storage version. Counts are orientation metadata, not enough to judge severity or data completeness. A smaller page count could reflect a scope change, cap, failure, or real site change.
+
+Select an explicit id and load it with `get-crawl-report` before analysis. For a comparison, inspect both candidates' configuration and caveats instead of assuming adjacent timestamps are comparable. If the expected snapshot is absent, do not silently substitute another site or a fresh crawl; state that the local report was not found. Report lists can also expose old data, so include the creation time whenever presenting a saved finding as context.

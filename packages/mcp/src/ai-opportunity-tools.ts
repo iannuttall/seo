@@ -12,28 +12,47 @@ import * as z from 'zod/v4'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
-export function registerAiOpportunityTools(server: McpServer): void {
+const ga4DateSchema = z
+  .string()
+  .regex(
+    /^(?:\d{4}-\d{2}-\d{2}|today|yesterday|\d+daysAgo)$/,
+    'Use YYYY-MM-DD or a GA4 relative date.',
+  )
+
+export function registerAiOpportunityTools(
+  server: McpServer,
+  dependencies: {
+    aiReferralsReport?: typeof aiReferralsReport
+  } = {},
+): void {
   server.registerTool(
     'seo_ai_referrals',
     {
-      description: 'Find AI referral traffic detected in GA4',
+      description:
+        'Find AI referral traffic detected in GA4. Returns the explicit ai-referrals schema v2 contract.',
       inputSchema: {
-        property: z.string(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        limit: z.number().optional(),
+        property: z.string().trim().min(1),
+        startDate: ga4DateSchema.optional(),
+        endDate: ga4DateSchema.optional(),
+        maxRows: z.number().int().min(1).max(100_000).optional(),
+        limit: z.number().int().min(1).max(100_000).optional(),
+        refresh: z.boolean().optional(),
       },
     },
-    async ({ property, startDate, endDate, limit }) => {
+    async ({ property, startDate, endDate, maxRows, limit, refresh }) => {
       try {
-        const result = await aiReferralsReport({
+        const result = await (
+          dependencies.aiReferralsReport ?? aiReferralsReport
+        )({
           property,
           startDate,
           endDate,
+          maxRows,
           limit,
+          refresh,
         })
         return toolSuccess(
-          `${countLabel(result.summary.sessions, 'AI referral session')} detected across ${countLabel(result.summary.sources, 'source')}.`,
+          `${countLabel(result.summary.sessions, 'AI referral session')} detected across ${countLabel(result.summary.sources, 'source')}; evidence is ${result.dataStatus}.`,
           result,
         )
       } catch (error) {

@@ -22,7 +22,17 @@ export interface Ga4RunReportResult {
     metricValues?: Array<{ value?: string }>
   }>
   rowCount?: number
-  metadata?: unknown
+  metadata?: {
+    dataLossFromOtherRow?: boolean
+    subjectToThresholding?: boolean
+    timeZone?: string
+    currencyCode?: string
+    emptyReason?: string
+    samplingMetadatas?: Array<{
+      samplesReadCount?: string
+      samplingSpaceSize?: string
+    }>
+  }
   propertyQuota?: unknown
 }
 
@@ -37,6 +47,14 @@ export interface Ga4AccountSummary {
   account: string
   displayName?: string
   propertySummaries: Ga4PropertySummary[]
+}
+
+export function ga4RequestCanUseCache(body: Ga4ReportRequest): boolean {
+  return body.dateRanges.every(
+    (range) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(range.startDate) &&
+      /^\d{4}-\d{2}-\d{2}$/.test(range.endDate),
+  )
 }
 
 async function authedFetch(
@@ -68,13 +86,16 @@ export async function runGa4Report(
 ): Promise<Ga4RunReportResult> {
   const db = getDb()
   const queryHash = hashKey([propertyId, body])
-  const cached = db
-    .prepare(
-      'SELECT response_json FROM ga4_cache WHERE property_id = ? AND query_hash = ? AND expires_at > ?',
-    )
-    .get(propertyId, queryHash, Date.now()) as
-    | { response_json?: string }
-    | undefined
+  const cacheable = ga4RequestCanUseCache(body)
+  const cached = cacheable
+    ? (db
+        .prepare(
+          'SELECT response_json FROM ga4_cache WHERE property_id = ? AND query_hash = ? AND expires_at > ?',
+        )
+        .get(propertyId, queryHash, Date.now()) as
+        | { response_json?: string }
+        | undefined)
+    : undefined
 
   if (!opts.refresh && cached?.response_json) {
     return JSON.parse(cached.response_json) as Ga4RunReportResult
@@ -100,19 +121,21 @@ export async function runGa4Report(
   }
 
   const result = (await response.json()) as Ga4RunReportResult
-  db.prepare(
-    `INSERT OR REPLACE INTO ga4_cache
+  if (cacheable) {
+    db.prepare(
+      `INSERT OR REPLACE INTO ga4_cache
     (property_id, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    propertyId,
-    queryHash,
-    JSON.stringify(body),
-    JSON.stringify(result),
-    result.rowCount ?? result.rows?.length ?? 0,
-    Date.now(),
-    Date.now() + 86_400_000,
-  )
+    ).run(
+      propertyId,
+      queryHash,
+      JSON.stringify(body),
+      JSON.stringify(result),
+      result.rowCount ?? result.rows?.length ?? 0,
+      Date.now(),
+      Date.now() + 86_400_000,
+    )
+  }
   return result
 }
 
@@ -158,4 +181,24 @@ export function ga4RowsToObjects(
     })
     return output
   })
+}
+
+export function ga4ReportQualityWarnings(
+  result: Ga4RunReportResult,
+  label = 'GA4 report',
+): string[] {
+  const warnings: string[] = []
+  if (result.metadata?.dataLossFromOtherRow) {
+    warnings.push(`${label} grouped high-cardinality data into (other).`)
+  }
+  if (result.metadata?.subjectToThresholding) {
+    warnings.push(`${label} was subject to Google Analytics thresholding.`)
+  }
+  const sampled = result.metadata?.samplingMetadatas?.some((sampling) => {
+    const read = Number(sampling.samplesReadCount)
+    const space = Number(sampling.samplingSpaceSize)
+    return Number.isFinite(read) && Number.isFinite(space) && read < space
+  })
+  if (sampled) warnings.push(`${label} was sampled by Google Analytics.`)
+  return warnings
 }

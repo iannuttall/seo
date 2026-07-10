@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as z from 'zod/v4'
+import { registerAiOpportunityTools } from '../ai-opportunity-tools.js'
 import { registerDiagnosisTools } from '../diagnosis-tools.js'
 import { registerOpportunityTools } from '../opportunity-tools.js'
 import { registerSecondPageTool } from './second-page.js'
@@ -24,6 +25,41 @@ function inputSchema(tools: Map<string, ToolConfig>, name: string) {
   assert.ok(config)
   return z.object(config.inputSchema)
 }
+
+test('AI referrals MCP bounds rows and validates agent inputs', () => {
+  const schema = inputSchema(
+    captureTools(registerAiOpportunityTools),
+    'seo_ai_referrals',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      property: '123',
+      startDate: '2026-06-01',
+      endDate: '2026-06-28',
+      maxRows: 100_000,
+      refresh: true,
+    }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      property: '123',
+      startDate: '28daysAgo',
+      endDate: 'yesterday',
+    }).success,
+    true,
+  )
+  for (const input of [
+    { property: '' },
+    { property: '123', maxRows: 0 },
+    { property: '123', maxRows: 1.5 },
+    { property: '123', maxRows: 100_001 },
+    { property: '123', startDate: 'last month' },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})
 
 test('cannibal MCP bounds discovery inputs and accepts brand terms', () => {
   const schema = inputSchema(

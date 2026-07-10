@@ -1,6 +1,6 @@
 import { aiReferralsReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg, projectArg, stringArg } from '../../args.js'
+import { jsonFlag, projectArg, strictNumberArg, stringArg } from '../../args.js'
 import { resolveClient, resolveGa4Property } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
@@ -30,9 +30,18 @@ export const aiReferralsCommand = defineCommand({
     },
     'start-date': { type: 'string', default: '28daysAgo' },
     'end-date': { type: 'string', default: 'yesterday' },
+    'max-rows': {
+      type: 'string',
+      description: 'Maximum GA4 rows per query. Defaults to 100000.',
+    },
     limit: {
       type: 'string',
-      description: 'Maximum GA4 rows to scan. Defaults to 10000.',
+      description: 'Legacy alias for --max-rows.',
+    },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass cached GA4 responses.',
     },
     json: { type: 'boolean', default: false },
   },
@@ -50,7 +59,9 @@ export const aiReferralsCommand = defineCommand({
       property,
       startDate: stringArg(args['start-date']),
       endDate: stringArg(args['end-date']),
-      limit: numberArg(args.limit),
+      maxRows: strictNumberArg(args['max-rows'], '--max-rows'),
+      limit: strictNumberArg(args.limit, '--limit'),
+      refresh: args.refresh === true,
     })
 
     if (json) {
@@ -60,22 +71,32 @@ export const aiReferralsCommand = defineCommand({
 
     printKeyValue([
       ['Property', report.property],
+      ['Evidence', report.dataStatus === 'complete' ? 'Complete' : 'Partial'],
       ['Verdict', report.summary.verdict],
       ['AI sessions', formatCount(report.summary.sessions)],
-      ['AI users', formatCount(report.summary.totalUsers)],
+      [
+        'AI users',
+        report.summary.totalUsers === null
+          ? 'Unavailable'
+          : formatCount(report.summary.totalUsers),
+      ],
       ['Sources', formatCount(report.summary.sources)],
       ['Landing pages', formatCount(report.summary.landingPages)],
+      [
+        'Source rows',
+        formatCount(report.dataSource.sourceDiscovery.returnedRows),
+      ],
     ])
 
     if (report.sources.length) {
       process.stdout.write('\nAI sources\n')
       printLimitedTable(
-        ['Source', 'Sessions', 'Users', 'Share'],
+        ['Source', 'Sessions', 'Events', 'Share of AI sessions'],
         report.sources.map((source) => [
-          source.source,
+          source.label,
           formatCount(source.sessions),
-          formatCount(source.totalUsers),
-          formatPercent(source.share),
+          formatCount(source.eventCount),
+          formatPercent(source.shareOfAiSessions),
         ]),
       )
     }
@@ -83,14 +104,21 @@ export const aiReferralsCommand = defineCommand({
     if (report.landingPages.length) {
       process.stdout.write('\nLanding pages\n')
       printLimitedTable(
-        ['Landing page', 'Sessions', 'Users', 'Top source'],
+        ['Landing page', 'Sessions', 'Events', 'Top source'],
         report.landingPages.map((page) => [
           truncate(page.landingPage, 64),
           formatCount(page.sessions),
-          formatCount(page.totalUsers),
-          page.topSource,
+          formatCount(page.eventCount),
+          page.topSourceDetails.label,
         ]),
       )
+    }
+
+    if (report.dataSource.partialReasons.length) {
+      process.stdout.write('\nEvidence warnings\n')
+      for (const warning of report.dataSource.partialReasons) {
+        process.stdout.write(`- ${warning}\n`)
+      }
     }
 
     process.stdout.write(`\nNote: ${report.summary.caveat}\n`)

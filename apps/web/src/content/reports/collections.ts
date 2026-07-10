@@ -6,28 +6,42 @@ export type ReportCollection = {
 
 export const reportCollections = [
   {
-    title: 'Crawl & technical',
+    title: 'Crawl & page checks',
     introduction:
-      'Find technical problems, open the affected URLs, and verify what changed after a fix or release.',
+      'Crawl a whole site or inspect selected pages for technical problems your agent can fix.',
     reports: [
       ['site-crawl', 'Site crawl'],
-      ['crawl-diff', 'Crawl diff'],
       ['audit-page', 'Audit page'],
       ['audit-urls', 'Audit selected URLs'],
-      ['compare-crawls', 'Compare crawls'],
       ['redirect-trace', 'Redirect trace'],
+      ['performance-audit', 'Performance audit'],
+    ],
+  },
+  {
+    title: 'Crawl findings & evidence',
+    introduction:
+      'Turn a crawl finding into affected URLs, understand the rule, and inspect saved evidence.',
+    reports: [
+      ['top-fixes', 'Top fixes'],
+      ['affected-urls', 'Affected URLs'],
+      ['explain-crawl-issue', 'Explain a crawl issue'],
+      ['crawler-rules', 'Crawler rules'],
+      ['crawl-history', 'Crawl history'],
+      ['crawl-report', 'Saved crawl report'],
+    ],
+  },
+  {
+    title: 'Indexing & monitoring',
+    introduction:
+      'Find indexing candidates, compare crawls, and catch technical changes after a release.',
+    reports: [
+      ['crawl-diff', 'Crawl diff'],
+      ['compare-crawls', 'Compare crawls'],
       ['index-coverage', 'Index coverage'],
       ['index-coverage-plan', 'Index plan'],
       ['index-monitor', 'Index monitor'],
       ['index-watch', 'Index watch'],
-      ['link-recovery', 'Link recovery'],
       ['technical-watch', 'Technical watch'],
-      ['top-fixes', 'Top fixes'],
-      ['affected-urls', 'Affected URLs'],
-      ['explain-crawl-issue', 'Explain a crawl issue'],
-      ['crawl-history', 'Crawl history'],
-      ['crawl-report', 'Saved crawl report'],
-      ['crawler-rules', 'Crawler rules'],
     ],
   },
   {
@@ -39,18 +53,27 @@ export const reportCollections = [
       ['striking-distance', 'Striking distance'],
       ['second-page', 'Second page'],
       ['decaying-pages', 'Decaying pages'],
-      ['cannibalisation', 'Cannibalisation'],
       ['ctr-underperformers', 'CTR underperformers'],
-      ['internal-links', 'Internal links'],
       ['page-opportunities', 'Page opportunities'],
-      ['content-optimization', 'Content optimization'],
-      ['query-clusters', 'Query clusters'],
     ],
   },
   {
-    title: 'AI search readiness',
+    title: 'Content & internal links',
     introduction:
-      'Find technical restrictions, weak entity signals, and measurable AI referrals without inventing a visibility score.',
+      'Find competing pages, weak internal links, and query groups that deserve clearer content.',
+    reports: [
+      ['cannibalisation', 'Cannibalisation'],
+      ['internal-links', 'Internal links'],
+      ['content-optimization', 'Content optimization'],
+      ['query-clusters', 'Query clusters'],
+      ['link-recovery', 'Link recovery'],
+      ['community-intent', 'Community intent'],
+    ],
+  },
+  {
+    title: 'AI search visibility',
+    introduction:
+      'Find technical restrictions, improve machine-readable context, and measure AI referral traffic.',
     reports: [
       ['ai-readiness', 'AI readiness'],
       ['entity-readiness', 'Entity readiness'],
@@ -59,11 +82,10 @@ export const reportCollections = [
       ['generate-llms-txt', 'Generate llms.txt'],
       ['seo-to-ai-query', 'SEO to AI query'],
       ['ai-referrals', 'AI referrals'],
-      ['community-intent', 'Community intent'],
     ],
   },
   {
-    title: 'Search Console & GA4',
+    title: 'Understand search performance',
     introduction:
       'Work out where search performance moved, which part of the site explains it, and whether the change is unusual.',
     reports: [
@@ -71,7 +93,6 @@ export const reportCollections = [
       ['segment-impact', 'Segment impact'],
       ['traffic-anomaly', 'Traffic anomaly'],
       ['update-correlation', 'Google update correlation'],
-      ['setup-check', 'Setup check'],
     ],
   },
   {
@@ -87,12 +108,12 @@ export const reportCollections = [
     ],
   },
   {
-    title: 'Testing & exports',
+    title: 'Testing, setup & exports',
     introduction:
-      'Measure known changes, review repeated page templates, and package site knowledge for agents.',
+      'Check local setup, measure known changes, review templates, and package site knowledge for agents.',
     reports: [
+      ['setup-check', 'Setup check'],
       ['measure-change', 'Measure a change'],
-      ['performance-audit', 'Performance audit'],
       ['pseo-audit', 'pSEO audit'],
       ['okf-build', 'OKF export'],
       ['okf-validate', 'OKF validation'],

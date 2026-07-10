@@ -1,3 +1,5 @@
+import { seoErrorEnvelope } from '@seo/core'
+
 export type ToolResult = {
   content: Array<{ type: 'text'; text: string }>
   structuredContent?: Record<string, unknown>
@@ -9,9 +11,10 @@ export function summarize(data: unknown): string {
 }
 
 export function toolError(error: unknown): ToolResult {
-  const message = error instanceof Error ? error.message : String(error)
+  const envelope = seoErrorEnvelope(error)
   return {
-    content: [{ type: 'text', text: `Error: ${message}` }],
+    content: [{ type: 'text', text: `Error: ${envelope.error.message}` }],
+    structuredContent: envelope,
     isError: true,
   }
 }

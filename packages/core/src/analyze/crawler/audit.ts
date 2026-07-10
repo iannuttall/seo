@@ -880,18 +880,6 @@ export function auditCrawlPages(
     if (!page.twitterCard) {
       issues.push(issue('twitter_card_missing', page))
     }
-
-    if (page.geo && page.wordCount > 50) {
-      if (!page.geo?.hasAuthor) {
-        issues.push(issue('geo_no_author', page))
-      }
-      if (!page.geo?.hasDate) {
-        issues.push(issue('geo_no_date', page))
-      }
-      if (!page.geo?.semanticHtml) {
-        issues.push(issue('geo_no_semantic_html', page))
-      }
-    }
   }
 
   return issues

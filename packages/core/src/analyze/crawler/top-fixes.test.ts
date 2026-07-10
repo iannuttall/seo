@@ -138,9 +138,9 @@ test('topFixes keeps medium fixes above low sitewide noise', () => {
         url: page.url,
       })),
       ...pages.slice(0, 300).map((page) => ({
-        ruleId: 'geo_no_structured_data' as const,
-        title: 'GEO: no machine-readable structure',
-        category: 'geo' as const,
+        ruleId: 'image_missing_alt' as const,
+        title: 'Images missing alt text',
+        category: 'images' as const,
         severity: 'medium' as const,
         url: page.url,
       })),
@@ -149,7 +149,7 @@ test('topFixes keeps medium fixes above low sitewide noise', () => {
 
   const fixes = topFixes(report)
 
-  assert.equal(fixes[0]?.ruleId, 'geo_no_structured_data')
+  assert.equal(fixes[0]?.ruleId, 'image_missing_alt')
   assert.equal(fixes[1]?.ruleId, 'twitter_card_missing')
 })
 

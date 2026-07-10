@@ -48,7 +48,7 @@ seo crawl-reports
 seo crawl-reports --id <report-id>
 seo crawl-reports --compare latest --against previous
 seo rules
-seo explain --rule geo_no_structured_data
+seo explain --rule robots_blocked
 ```
 
 The crawler supports site, page, list, and sitemap modes. It respects robots.txt by default.

@@ -60,7 +60,7 @@ export function registerResources(server: McpServer): void {
     {
       mimeType: 'text/markdown',
       description:
-        'MCP workflow guide for crawler audits, implementation queues, GEO readiness, and focused URL audits.',
+        'MCP workflow guide for crawler audits, implementation queues, AI Search eligibility, and focused URL audits.',
     },
     async () => ({
       contents: [

@@ -915,7 +915,7 @@ test('auditCrawlPages flags metadata length and duplicate issues', () => {
   )
 })
 
-test('auditCrawlPages flags social, schema, and GEO gaps', () => {
+test('auditCrawlPages flags social and invalid schema evidence', () => {
   const issues = auditCrawlPages([
     page({
       internalInlinkCount: 1,
@@ -951,9 +951,6 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
       'og_description_missing',
       'og_image_missing',
       'twitter_card_missing',
-      'geo_no_author',
-      'geo_no_date',
-      'geo_no_semantic_html',
     ],
   )
   assert.deepEqual(

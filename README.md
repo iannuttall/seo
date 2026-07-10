@@ -19,7 +19,7 @@ This is local first today. The same core is shaped so it can later run as a host
 - Records local SEO tests and measures before/after impact with GSC, optional GA4, and optional control groups.
 - Builds content optimization reports from real search demand and crawled page content.
 - Runs local performance audits with bundled Lighthouse, device-specific CrUX field data when configured, and an explicitly unscored transport fallback.
-- Scores AI and entity readiness, reports optional llms.txt presence without treating it as an SEO factor, and builds OKF/site knowledge exports from the same saved crawl.
+- Reports AI-search and entity evidence, reports optional llms.txt presence without treating it as an SEO factor, and builds OKF/site knowledge exports from the same saved crawl.
 - Exposes the same workflows through CLI and MCP.
 
 ## Start here
@@ -130,7 +130,7 @@ Run the server directly:
 seo mcp serve
 ```
 
-Agent tools include crawl, URL audit, rule explanation, top fixes, affected URLs, GEO gaps, crawl reports, GSC/GA4 analysis, monitoring, pSEO, and workflow reports.
+Agent tools include crawl, URL audit, rule explanation, top fixes, affected URLs, AI Search eligibility gaps, crawl reports, GSC/GA4 analysis, monitoring, pSEO, and workflow reports.
 
 The crawler tools are compact by default. Full pages and full issues are opt-in so agents do not waste context on giant reports.
 
@@ -198,13 +198,13 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | Local CLI | Yes | Yes |
 | MCP server | Yes | Yes |
 | Technical SEO crawl | Yes | Yes |
-| GEO checks | Yes | Yes |
+| AI Search eligibility evidence | No | Yes |
 | AI readiness report | No | Yes |
 | llms.txt generator | No | Yes |
 | Entity readiness | No | Yes |
 | OKF/site knowledge export | No | Yes |
 | Rule guidance | Yes | Yes |
-| Rule count | 46 | 61 |
+| Rule count | 46 | 57 |
 | GSC joins | No | Yes |
 | GA4 joins | No | Yes |
 | URL Inspection | No | Yes |

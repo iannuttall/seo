@@ -150,7 +150,7 @@ const allHelpSections: HelpSection[] = [
     title: 'Technical and data',
     commands: [
       ['seo audit-page', 'Audit one page'],
-      ['seo crawl', 'Crawl a site for technical SEO/GEO issues'],
+      ['seo crawl', 'Crawl a site for technical SEO issues'],
       ['seo ai-readiness', 'Score a saved crawl for AI discovery readiness'],
       ['seo llms audit', 'Inspect optional llms.txt presence'],
       ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],

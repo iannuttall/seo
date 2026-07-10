@@ -993,57 +993,6 @@ const RULE_DEFINITIONS = [
       'Links shared on Twitter/X may earn fewer clicks because the preview is weaker.',
     howToVerify: 'Re-run the crawl and confirm twitterCard is present.',
   },
-  {
-    id: 'geo_no_structured_data',
-    title: 'GEO: no machine-readable structure',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Structured data can describe supported entities and page features, but it is not a general requirement for inclusion in AI search features.',
-    howToFix:
-      'Do not add markup solely for AI visibility. Use an applicable supported type and keep it aligned with visible content.',
-    impactIfIgnored:
-      'There is no standalone penalty; only applicable structured-data search features may be unavailable.',
-    howToVerify: 'Re-run the crawl and confirm geo.structuredData is true.',
-  },
-  {
-    id: 'geo_no_author',
-    title: 'GEO: authorship missing',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Authorship is a trust signal for users, search engines, and AI systems deciding whether to cite a page.',
-    howToFix:
-      'Add a named author, byline, author schema, or organization attribution where appropriate.',
-    impactIfIgnored: 'The page has weaker trust and attribution signals.',
-    howToVerify: 'Re-run the crawl and confirm geo.hasAuthor is true.',
-  },
-  {
-    id: 'geo_no_date',
-    title: 'GEO: date missing',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Dates help AI systems and users judge freshness, especially for topics where advice, pricing, or rules change.',
-    howToFix:
-      'Add a visible published or updated date, and mirror it in Article or WebPage structured data where appropriate.',
-    impactIfIgnored:
-      'The page may look stale or harder to trust when an answer engine chooses sources.',
-    howToVerify: 'Re-run the crawl and confirm geo.hasDate is true.',
-  },
-  {
-    id: 'geo_no_semantic_html',
-    title: 'GEO: weak semantic HTML',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Semantic landmarks help machines separate main content from navigation, ads, and boilerplate.',
-    howToFix:
-      'Use main, article, section, and a logical heading outline around the primary content.',
-    impactIfIgnored:
-      'AI systems may extract the wrong content or miss the main answer.',
-    howToVerify: 'Re-run the crawl and confirm geo.semanticHtml is true.',
-  },
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']

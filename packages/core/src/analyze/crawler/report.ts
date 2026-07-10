@@ -599,22 +599,6 @@ function pageSeoScore(
   return Math.max(0, Math.min(100, 100 - penalty))
 }
 
-function pageGeoScore(
-  page: CrawlPageSnapshot,
-  issues: CrawlIssue[],
-): number | undefined {
-  if (!isAuditableHtmlPage(page)) return undefined
-  const geo = page.geo
-  let score = 100
-  if (!geo?.semanticHtml) score -= 15
-  if (!geo?.hasAuthor) score -= 15
-  if (!geo?.hasDate) score -= 5
-  score -= issues
-    .filter((issue) => issue.category === 'geo')
-    .reduce((sum, issue) => sum + severityPenalty(issue), 0)
-  return Math.max(0, Math.min(100, score))
-}
-
 function scorePages(
   pages: CrawlPageSnapshot[],
   issues: CrawlIssue[],
@@ -633,9 +617,7 @@ function scorePages(
       seoScore: preserveStoredScores
         ? page.seoScore
         : pageSeoScore(page, pageIssues),
-      geoScore: preserveStoredScores
-        ? page.geoScore
-        : pageGeoScore(page, pageIssues),
+      geoScore: preserveStoredScores ? page.geoScore : undefined,
     }
   })
 }

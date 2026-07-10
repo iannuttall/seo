@@ -8,18 +8,9 @@ The crawler does not guess whether a page will be cited. It records technical el
 
 ## What the crawler checks
 
-The GEO rules look for:
+The technical eligibility view reports failed responses, robots.txt blocks, noindex directives, and canonicalized pages. These are evidence-backed blockers to being an indexable Search candidate.
 
-- machine-readable structure through JSON-LD and schema
-- AI crawler access in robots.txt
-- optional agent resource files such as OpenAPI, MCP metadata, ai-plugin, and agent descriptors
-- semantic HTML such as `main`, `article`, and clean heading structure
-- authorship and trust signals
-- published or modified dates
-- question-style headings
-- lists, tables, and other extractable blocks
-- optional `/llms.txt` presence, reported without affecting SEO or AI-readiness scores
-- entity signals such as Organization, Person, Product, WebSite, sameAs, and official social links
+Snippet eligibility is not yet evaluated, so the tool does not claim a passing page is fully eligible for Google AI features. It separately records optional observations such as structured data, semantic HTML, authorship, dates, question headings, lists, tables, entity signals, agent resource files, and `/llms.txt`. Those observations do not create SEO issues or citation predictions.
 
 Run:
 

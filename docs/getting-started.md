@@ -55,7 +55,7 @@ The report checks what data is available. If GSC, GA4, crawl, or monitoring data
 seo crawl --project keep --max-pages 500 --format pretty
 ```
 
-The crawler finds technical SEO issues, GEO gaps, broken links, duplicate metadata, indexability problems, schema gaps, weak internal links, and more.
+The crawler finds technical SEO issues, AI Search eligibility blockers, broken links, duplicate metadata, indexability problems, schema gaps, weak internal links, and more.
 
 If the project has a GSC property, it joins search metrics to the crawled pages. If the project has GA4, it joins landing-page sessions and conversions too.
 
@@ -67,7 +67,7 @@ seo crawl-reports
 seo crawl-reports --compare latest --against previous
 ```
 
-Saved reports let you ask follow-up questions without re-crawling. Agents can pull top fixes, affected URLs, and GEO gaps from the same report.
+Saved reports let you ask follow-up questions without re-crawling. Agents can pull top fixes, affected URLs, and AI Search eligibility blockers from the same report.
 
 ## Check one change, page, or performance issue
 

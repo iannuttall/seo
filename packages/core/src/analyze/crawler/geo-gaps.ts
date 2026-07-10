@@ -12,7 +12,15 @@ export type GeoGap = {
     title: string
     severity: string
   }>
-  signals: {
+  searchEligibility: {
+    successfulHtmlResponse: boolean
+    crawlAllowed: boolean | null
+    indexableCandidate: boolean
+    declaredIndexability?: string
+    indexability?: string
+    snippetEligibility: 'not-evaluated'
+  }
+  observations: {
     semanticHtml: boolean
     structuredData: boolean
     hasAuthor: boolean
@@ -23,20 +31,30 @@ export type GeoGap = {
   }
 }
 
+const ELIGIBILITY_RULES = new Set([
+  'connection_error',
+  'client_error',
+  'server_error',
+  'robots_blocked',
+  'noindex',
+  'x_robots_noindex',
+  'canonicalized_page',
+])
+
 export function geoGaps(
   report: CrawlReport,
   filters: GeoGapFilters = {},
 ): GeoGap[] {
-  const geoIssuesByUrl = new Map<string, GeoGap['issues']>()
+  const eligibilityIssuesByUrl = new Map<string, GeoGap['issues']>()
   for (const issue of report.issues) {
-    if (issue.category !== 'geo') continue
-    const issues = geoIssuesByUrl.get(issue.url) ?? []
+    if (!ELIGIBILITY_RULES.has(issue.ruleId)) continue
+    const issues = eligibilityIssuesByUrl.get(issue.url) ?? []
     issues.push({
       ruleId: issue.ruleId,
       title: issue.title,
       severity: issue.severity,
     })
-    geoIssuesByUrl.set(issue.url, issues)
+    eligibilityIssuesByUrl.set(issue.url, issues)
   }
 
   return report.pages
@@ -52,9 +70,20 @@ export function geoGaps(
       }
       return {
         url: page.finalUrl,
-        issueCount: geoIssuesByUrl.get(page.url)?.length ?? 0,
-        issues: geoIssuesByUrl.get(page.url) ?? [],
-        signals: {
+        issueCount: eligibilityIssuesByUrl.get(page.url)?.length ?? 0,
+        issues: eligibilityIssuesByUrl.get(page.url) ?? [],
+        searchEligibility: {
+          successfulHtmlResponse:
+            page.status >= 200 &&
+            page.status < 300 &&
+            page.contentType?.toLowerCase().includes('text/html') === true,
+          crawlAllowed: page.robotsTxt?.allowed ?? null,
+          indexableCandidate: page.indexable,
+          declaredIndexability: page.declaredIndexability,
+          indexability: page.indexability,
+          snippetEligibility: 'not-evaluated' as const,
+        },
+        observations: {
           semanticHtml: geo.semanticHtml,
           structuredData: geo.structuredData,
           hasAuthor: geo.hasAuthor,
@@ -65,7 +94,13 @@ export function geoGaps(
         },
       }
     })
-    .filter((gap) => gap.issueCount > 0)
+    .filter(
+      (gap) =>
+        gap.issueCount > 0 ||
+        !gap.searchEligibility.successfulHtmlResponse ||
+        gap.searchEligibility.crawlAllowed === false ||
+        !gap.searchEligibility.indexableCandidate,
+    )
     .sort((a, b) => b.issueCount - a.issueCount || a.url.localeCompare(b.url))
     .slice(0, filters.limit ?? 50)
 }

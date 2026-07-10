@@ -557,10 +557,6 @@ test('crawlSite recognizes supported Microdata without JSON-LD', async () => {
       report.issues.some((issue) => issue.ruleId === 'structured_data_missing'),
       false,
     )
-    assert.equal(
-      report.issues.some((issue) => issue.ruleId === 'geo_no_structured_data'),
-      false,
-    )
   } finally {
     await fixture.close()
   }

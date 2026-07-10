@@ -81,7 +81,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_crawl_site',
     {
       description:
-        'Crawl a site and run technical SEO/GEO checks. Compact by default; set includePages/includeIssues for raw data.',
+        'Crawl a site and run technical SEO checks. Compact by default; set includePages/includeIssues for raw data.',
       inputSchema: {
         url: z.string().url(),
         site: z.string().optional(),
@@ -159,7 +159,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_audit_urls',
     {
       description:
-        'Audit an explicit list of URLs with technical SEO/GEO checks. Compact by default; set includePages/includeIssues for raw data.',
+        'Audit an explicit list of URLs with technical SEO checks. Compact by default; set includePages/includeIssues for raw data.',
       inputSchema: {
         urls: z.array(z.string().url()).min(1),
         site: z.string().optional(),
@@ -222,7 +222,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_top_fixes',
     {
       description:
-        'Return top technical SEO/GEO fixes for a URL by running a compact crawl.',
+        'Return top technical SEO fixes for a URL by running a compact crawl.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
@@ -404,7 +404,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_geo_gaps',
     {
       description:
-        'Return GEO/readiness observations for pages, including structured-data, author, date, and semantic HTML. Does not predict AI citations.',
+        'Return crawl and indexability blockers for Google AI Search eligibility, with optional page observations kept separate. Snippet eligibility is explicitly not yet evaluated.',
       inputSchema: {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
@@ -448,11 +448,11 @@ export function registerCrawlerTools(server: McpServer): void {
         }
         const gaps = geoGaps(report, { limit })
         return toolSuccess(
-          `Found ${gaps.length} GEO gap pages for ${report.config.url}.`,
+          `Found ${gaps.length} AI Search technical eligibility gap pages for ${report.config.url}.`,
           {
             url: report.config.url,
             reportId: report.id,
-            geoGaps: gaps,
+            eligibilityGaps: gaps,
           },
         )
       } catch (error) {

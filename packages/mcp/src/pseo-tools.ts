@@ -6,6 +6,7 @@ import {
   renderPseoMarkdown,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { resolveJsOption } from './input-schemas.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function compactPseoReport(
@@ -116,7 +117,7 @@ export function registerPseoTools(server: McpServer): void {
           brandTerms,
           includeBrand,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
           rate: {
             concurrency: fetchConcurrency,
             intervalCap: fetchIntervalCap,

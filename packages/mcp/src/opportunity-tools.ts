@@ -10,6 +10,7 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
+import { resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { summarize, toolError, toolSuccess } from './tool-result.js'
 
@@ -49,7 +50,9 @@ export function registerOpportunityTools(
   server: McpServer,
   dependencies: {
     ctrUnderperformersReport?: typeof ctrUnderperformersReport
+    internalLinksReport?: typeof internalLinksReport
     queryClusterReport?: typeof queryClusterReport
+    quickWinsReport?: typeof quickWinsReport
   } = {},
 ): void {
   server.registerTool(
@@ -206,7 +209,7 @@ export function registerOpportunityTools(
       refresh,
     }: QuickWinsToolInput) => {
       try {
-        const result = await quickWinsReport({
+        const result = await (dependencies.quickWinsReport ?? quickWinsReport)({
           site,
           days,
           limit,
@@ -215,7 +218,7 @@ export function registerOpportunityTools(
           verifyContent,
           verifyLimit,
           includeBrand,
-          js: js ? true : undefined,
+          js: resolveJsOption(js, undefined),
           rate: fetchRateInput({
             fetchConcurrency,
             fetchIntervalCap,
@@ -282,7 +285,9 @@ export function registerOpportunityTools(
       refresh,
     }: InternalLinksToolInput) => {
       try {
-        const result = await internalLinksReport({
+        const result = await (
+          dependencies.internalLinksReport ?? internalLinksReport
+        )({
           site,
           targetUrl,
           days,
@@ -291,7 +296,7 @@ export function registerOpportunityTools(
           minImpressions,
           brandTerms,
           includeBrand,
-          js: js ? true : undefined,
+          js: resolveJsOption(js, undefined),
           rate: fetchRateInput({
             fetchConcurrency,
             fetchIntervalCap,

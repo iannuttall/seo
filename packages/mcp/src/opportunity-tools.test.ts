@@ -63,3 +63,49 @@ test('opportunity handlers forward bounded CTR and cluster controls', async () =
     summary: { verdict: 'Cluster fixture.' },
   })
 })
+
+test('verified opportunity handlers preserve false and omitted JavaScript options', async () => {
+  const handlers = new Map<string, ToolHandler>()
+  const quickWinsInputs: Array<{ js?: boolean | 'auto' }> = []
+  const internalLinksInputs: Array<{ js?: boolean | 'auto' }> = []
+
+  registerOpportunityTools(
+    {
+      registerTool(name: string, _config: unknown, handler: ToolHandler) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      quickWinsReport: async (input) => {
+        quickWinsInputs.push(input)
+        return { summary: { verdict: 'Quick wins fixture.' } } as never
+      },
+      internalLinksReport: async (input) => {
+        internalLinksInputs.push(input)
+        return { summary: { verdict: 'Internal links fixture.' } } as never
+      },
+    },
+  )
+
+  const site = 'sc-domain:example.com'
+  await handlers.get('seo_quick_wins')?.({ site, js: false })
+  await handlers.get('seo_quick_wins')?.({ site })
+  await handlers.get('seo_internal_links')?.({
+    site,
+    targetUrl: 'https://example.com/target',
+    js: false,
+  })
+  await handlers.get('seo_internal_links')?.({
+    site,
+    targetUrl: 'https://example.com/target',
+  })
+
+  assert.deepEqual(
+    quickWinsInputs.map((input) => input.js),
+    [false, undefined],
+  )
+  assert.deepEqual(
+    internalLinksInputs.map((input) => input.js),
+    [false, undefined],
+  )
+})

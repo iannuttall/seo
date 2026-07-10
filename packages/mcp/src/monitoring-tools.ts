@@ -8,6 +8,7 @@ import {
   redirectTrace,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -32,7 +33,7 @@ export function registerMonitoringTools(server: McpServer): void {
           site,
           limit,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(
           `Crawled ${result.summary.crawled} URLs. ${result.summary.changed} changed vs previous run.`,
@@ -177,7 +178,7 @@ export function registerMonitoringTools(server: McpServer): void {
           url,
           maxHops,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(
           `Traced ${result.summary.hops} hops. Final status ${result.summary.finalStatus}. ${result.summary.issues.length} issues.`,
@@ -215,7 +216,7 @@ export function registerMonitoringTools(server: McpServer): void {
           minClicks,
           minImpressions,
           refresh,
-          js: js ? true : 'auto',
+          js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(
           `Checked ${result.summary.checked} search-value URLs. ${result.summary.recoverable} recoverable issues.`,

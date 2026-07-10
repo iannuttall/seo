@@ -1,4 +1,4 @@
-import { statSync } from 'node:fs'
+import { chmodSync, statSync } from 'node:fs'
 import * as KeytarCompat from '@napi-rs/keyring/keytar.js'
 import { ensureSeoCliDirs, getSeoCliPaths } from '../paths.js'
 import {
@@ -10,10 +10,23 @@ import {
 import { fileMode, readJsonFile, safeRemove, writeJsonAtomic } from './files.js'
 
 const KEYRING_SERVICE = 'seo'
+const PRIVATE_FILE_MODE = 0o600
+
+function tightenConfigPermissions(path: string): void {
+  try {
+    chmodSync(path, PRIVATE_FILE_MODE)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error
+    }
+  }
+}
 
 export function readConfig(): AppConfig {
   ensureSeoCliDirs()
-  const raw = readJsonFile<AppConfig>(getSeoCliPaths().configFile)
+  const configFile = getSeoCliPaths().configFile
+  tightenConfigPermissions(configFile)
+  const raw = readJsonFile<AppConfig>(configFile)
   return configSchema.parse(raw ?? {})
 }
 
@@ -22,7 +35,7 @@ export function writeConfig(config: AppConfig): void {
   writeJsonAtomic(
     getSeoCliPaths().configFile,
     configSchema.parse(config),
-    0o644,
+    PRIVATE_FILE_MODE,
   )
 }
 

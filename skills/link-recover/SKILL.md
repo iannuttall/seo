@@ -1,20 +1,51 @@
 ---
 name: link-recover
-description: Find search-value URLs that now fail technical checks. Use when an agent needs broken, blocked, or poor-redirect recovery candidates.
+description: Join retained GSC page value with current redirect and indexability checks; use it to prioritise previously visible URLs that may now be broken or misdirected.
 ---
 
-# Link recovery
+# Recover search-value URLs
 
-Use the compact MCP report flow:
+Use `link-recover` to find retained GSC page rows with prior clicks or
+impressions whose current fetch path ends in a technical problem. This joins
+historical search observations with a present redirect trace, which is useful
+for triage after migrations or URL changes. Prior visibility helps order the
+queue. It does not prove that fixing a URL will restore the same traffic.
 
-1. Call `seo_list_reports` with category `monitoring` when discovery is needed.
-2. Call `seo_describe_report` with id `link-recover` before supplying parameters.
-3. Call `seo_run_report` with id `link-recover` and only the described parameters.
+## Run the report
 
-Read MCP `structuredContent` as the machine contract. Keep returned Markdown or
-text for the user-facing explanation.
+With MCP, call `seo_list_reports` with `{"category":"monitoring"}`, call
+`seo_describe_report` with `{"id":"link-recover"}`, then use `seo_run_report`.
+Example:
+`{"id":"link-recover","params":{"site":"sc-domain:example.com","days":90,"limit":25,"minClicks":1,"minImpressions":100,"js":false,"refresh":true}}`.
 
-## Evidence rules
+The CLI has the same schema:
 
-- Join retained GSC evidence with current fetch and redirect evidence, and disclose limits or failed checks.
-- Observed clicks or impressions help priority. They do not prove that a redirect or restoration will recover traffic.
+```sh
+seo reports describe link-recover --json
+seo reports run link-recover --params '{"site":"sc-domain:example.com","days":90,"limit":25,"minClicks":1,"minImpressions":100,"refresh":true}' --json
+```
+
+The discovery schema currently exposes broad number types. Use positive whole
+days and bounded non-negative thresholds.
+
+## Interpret the output
+
+Confirm `range` and `summary.checked` before reading recoverable counts. The
+summary separates high, medium, and low severity and totals observed clicks and
+impressions for affected retained rows. Those `clicksAtRisk` and
+`impressionsAtRisk` values describe the checked period; they are not a forecast
+of future loss or recovery.
+
+Each item preserves the original URL, final URL, GSC metrics, primary and full
+issue lists, severity, the redirect `trace`, and a recommendation with evidence,
+effort, and confidence. Inspect chain status, final-page indexability,
+canonicals, and warnings directly. Failed checks, selection limits, or retained
+GSC rows outside the returned set constrain coverage.
+
+## Act safely
+
+Restore a page only when it should still exist. Otherwise add one direct 301 to
+the closest equivalent destination and align its canonical after verifying
+intent. Fix server errors and accidental noindex controls before content work.
+Do not redirect unrelated URLs to a homepage, remove intentional controls, or
+promise traffic recovery from historical metrics.

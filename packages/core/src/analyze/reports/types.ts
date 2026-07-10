@@ -1,5 +1,6 @@
+import type { SeoErrorCode } from '../../errors.js'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
-import type { ChangeMeasurement } from '../experiments.js'
+import type { ChangeMeasurement, SeoChange } from '../experiments.js'
 import type {
   latestCrawlSummaries,
   latestIndexWatchSummary,
@@ -10,6 +11,24 @@ export type NarrativeSection = {
   title: string
   bullets: string[]
 }
+
+export type ChangeMeasurementAttempt =
+  | {
+      status: 'measured'
+      dataStatus: ChangeMeasurement['dataStatus']
+      change: SeoChange
+      measurement: ChangeMeasurement
+    }
+  | {
+      status: 'failed'
+      dataStatus: 'unavailable'
+      change: SeoChange
+      error: {
+        code: SeoErrorCode
+        message: string
+        retryable: boolean
+      }
+    }
 
 export type ReportNarrative = {
   site: string
@@ -30,6 +49,7 @@ export type ReportNarrative = {
   }>
   diagnosis: DiagnosePropertyReport
   changeMeasurements: ChangeMeasurement[]
+  changeMeasurementAttempts: ChangeMeasurementAttempt[]
   monitoring: {
     crawlRuns: ReturnType<typeof latestCrawlSummaries>
     indexWatch: ReturnType<typeof latestIndexWatchSummary>

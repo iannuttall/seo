@@ -2,20 +2,21 @@ import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import { countLabel } from '../../phrasing.js'
 import type { ProgressReporter } from '../../progress.js'
 import { diagnoseProperty } from '../diagnose-property.js'
-import {
-  type ChangeMeasurement,
-  listChanges,
-  measureChange,
-} from '../experiments.js'
+import { listChanges } from '../experiments.js'
 import {
   latestCrawlSummaries,
   latestIndexWatchSummary,
   latestLinkRecoverSummary,
 } from '../monitoring.js'
+import {
+  changeMeasurementCaveats,
+  measureSavedChanges,
+  narrativeDataStatus,
+} from './change-measurements.js'
 import { rangeDays } from './dates.js'
 import { renderMarkdown } from './markdown.js'
 import {
-  changeLine,
+  changeMeasurementLine,
   contentOpportunityBullets,
   diagnosisAvailabilityCaveats,
   headlineLine,
@@ -103,15 +104,12 @@ export async function reportNarrative(input: {
     site: input.site,
     limit: input.changeLimit ?? 5,
   })
-  const changeMeasurements = (
-    await Promise.all(
-      changes.map((change) =>
-        measureChange({ id: change.id, refresh: input.refresh }).catch(
-          () => undefined,
-        ),
-      ),
-    )
-  ).filter((item): item is ChangeMeasurement => Boolean(item))
+  const changeMeasurementAttempts = await measureSavedChanges(changes, {
+    refresh: input.refresh,
+  })
+  const changeMeasurements = changeMeasurementAttempts.flatMap((attempt) =>
+    attempt.status === 'measured' ? [attempt.measurement] : [],
+  )
   const monitoring = {
     crawlRuns: latestCrawlSummaries(input.site),
     indexWatch: latestIndexWatchSummary(input.site),
@@ -130,7 +128,10 @@ export async function reportNarrative(input: {
   const report: ReportNarrative = {
     site: input.site,
     generatedAt: new Date().toISOString(),
-    dataStatus: diagnosis.dataStatus,
+    dataStatus: narrativeDataStatus(
+      diagnosis.dataStatus,
+      changeMeasurementAttempts,
+    ),
     periodDays: period ? rangeDays(period) : periodDays,
     period: diagnosisPeriod,
     headline: headlineLine(diagnosis),
@@ -146,6 +147,7 @@ export async function reportNarrative(input: {
         quickWinCount: diagnosis.quickWins.items.length,
       }),
       ...diagnosisAvailabilityCaveats(diagnosis),
+      ...changeMeasurementCaveats(changeMeasurementAttempts),
     ],
     sections: [
       {
@@ -162,8 +164,8 @@ export async function reportNarrative(input: {
       },
       {
         title: 'Change Measurements',
-        bullets: changeMeasurements.length
-          ? changeMeasurements.map(changeLine)
+        bullets: changeMeasurementAttempts.length
+          ? changeMeasurementAttempts.map(changeMeasurementLine)
           : ['No measured changes are saved for this property yet.'],
       },
       {
@@ -178,6 +180,7 @@ export async function reportNarrative(input: {
     })),
     diagnosis,
     changeMeasurements,
+    changeMeasurementAttempts,
     monitoring,
   }
 

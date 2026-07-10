@@ -27,6 +27,7 @@ test('reportPresentation exposes caveats, sections, and priorities as tables', (
     ],
     diagnosis: {} as ReportNarrative['diagnosis'],
     changeMeasurements: [],
+    changeMeasurementAttempts: [],
     monitoring: {} as ReportNarrative['monitoring'],
   })
 

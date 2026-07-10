@@ -146,6 +146,9 @@ export function updateAttributionLine(report: DiagnosePropertyReport): string {
 }
 
 export function changeLine(measurement: ChangeMeasurement): string {
+  if (measurement.delta.clicks === null) {
+    return `${measurement.change.title}: ${measurement.verdict}; comparable click movement is unavailable.`
+  }
   const pct =
     measurement.delta.clickPct === null
       ? ''

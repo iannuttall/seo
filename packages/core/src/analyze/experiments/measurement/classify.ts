@@ -16,9 +16,22 @@ export function classify(input: {
     }
   }
 
-  const pctValue = input.clickPct ?? 0
   const betterPosition = input.positionDelta < -0.5
   const worsePosition = input.positionDelta > 0.5
+  if (
+    input.clickPct === null &&
+    input.before.clicks === 0 &&
+    input.after.clicks > 0 &&
+    input.after.ctr > input.before.ctr
+  ) {
+    return {
+      verdict: 'positive',
+      confidence: 'low',
+      note: 'Clicks and CTR increased from a zero-click baseline. Treat the direction as early evidence because percentage growth is undefined.',
+    }
+  }
+
+  const pctValue = input.clickPct ?? 0
   const positive = input.clickDelta > 0 && (pctValue >= 10 || betterPosition)
   const negative = input.clickDelta < 0 && (pctValue <= -10 || worsePosition)
 

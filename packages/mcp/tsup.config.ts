@@ -15,6 +15,7 @@ export default defineConfig([
       'src/ai-opportunity-tools.ts',
       'src/crawler-tools.ts',
       'src/diagnosis-tools.ts',
+      'src/experiment-tools.ts',
       'src/fetch-rate.ts',
       'src/monitoring-tools.ts',
       'src/opportunity-tools.ts',

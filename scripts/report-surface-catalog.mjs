@@ -375,6 +375,63 @@ export const reportSurfaces = [
     ],
   },
   {
+    id: 'measure-change',
+    core: 'measureChange',
+    cli: {
+      file: 'packages/cli/src/commands/experiments/tests.ts',
+      marker: 'tests: testsCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/experiment-tools.ts',
+      marker: "'seo_measure_change'",
+    },
+    options: [
+      opt('id', 'id:', 'id: z.string()', 'id?: string'),
+      common.site,
+      opt('scope', 'scope:', 'scope: z.enum(', 'scope?: ChangeScope'),
+      opt('target', 'target:', 'target: z.string()', 'target?: string'),
+      opt('title', 'title:', 'title: z.string()', 'title?: string'),
+      opt('changedAt', 'date:', 'changedAt: z.string()', 'changedAt?: string'),
+      opt(
+        'ga4PropertyId',
+        'property:',
+        'ga4PropertyId: z.string()',
+        'ga4PropertyId?: string',
+      ),
+      opt(
+        'controlScope',
+        "'control-scope':",
+        'controlScope: z.enum(',
+        'controlScope?: ChangeScope',
+      ),
+      opt(
+        'controlTarget',
+        "'control-target':",
+        'controlTarget: z.string()',
+        'controlTarget?: string',
+      ),
+      opt(
+        'controlTitle',
+        "'control-title':",
+        'controlTitle: z.string()',
+        'controlTitle?: string',
+      ),
+      opt(
+        'beforeDays',
+        'before:',
+        'beforeDays: z.number().int()',
+        'beforeDays?: number',
+      ),
+      opt(
+        'afterDays',
+        'after:',
+        'afterDays: z.number().int()',
+        'afterDays?: number',
+      ),
+      common.refresh,
+    ],
+  },
+  {
     id: 'monthly-report',
     core: 'monthlyReport',
     cli: {

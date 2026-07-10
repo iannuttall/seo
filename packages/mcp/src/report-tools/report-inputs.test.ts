@@ -3,6 +3,7 @@ import test from 'node:test'
 import * as z from 'zod/v4'
 import { registerAiOpportunityTools } from '../ai-opportunity-tools.js'
 import { registerDiagnosisTools } from '../diagnosis-tools.js'
+import { registerExperimentTools } from '../experiment-tools.js'
 import { registerOpportunityTools } from '../opportunity-tools.js'
 import { registerSecondPageTool } from './second-page.js'
 
@@ -127,6 +128,35 @@ test('segment impact MCP bounds comparison and evidence inputs', () => {
     { site: 'sc-domain:example.com', limit: 101 },
     { site: 'sc-domain:example.com', unmatchedLimit: -1 },
     { site: 'sc-domain:example.com', maxRows: 250_001 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})
+
+test('change measurement MCP bounds equal-window inputs', () => {
+  const schema = inputSchema(
+    captureTools(registerExperimentTools),
+    'seo_measure_change',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      scope: 'page',
+      target: 'https://example.com/page',
+      changedAt: '2026-06-01',
+      beforeDays: 28,
+      afterDays: 28,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: '' },
+    { site: 'sc-domain:example.com', changedAt: 'last month' },
+    { site: 'sc-domain:example.com', beforeDays: 0 },
+    { site: 'sc-domain:example.com', beforeDays: 1.5 },
+    { site: 'sc-domain:example.com', afterDays: 549 },
+    { site: 'sc-domain:example.com', target: '' },
   ]) {
     assert.equal(schema.safeParse(input).success, false)
   }

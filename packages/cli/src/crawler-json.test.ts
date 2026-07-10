@@ -23,7 +23,7 @@ async function runSeo(args: string[]): Promise<string> {
       NO_UPDATE_NOTIFIER: '1',
     },
     maxBuffer: 1024 * 1024,
-    timeout: 10_000,
+    timeout: 30_000,
   })
   return result.stdout
 }
@@ -43,6 +43,7 @@ async function withServer(
           if (error) reject(error)
           else resolve()
         })
+        server.closeAllConnections()
       }),
   }
 }

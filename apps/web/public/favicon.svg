@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>SEO Skills CLI</title>
-  <rect width="64" height="64" fill="#18191d"/>
-  <path d="M8 8h48v13H23v6h27v29H8V43h27v-6H8z" fill="#ff7653"/>
+  <rect width="64" height="64" fill="#17151d"/>
+  <path d="M8 8h48v12H20v6h36v30H8V44h36v-6H8z" fill="#f7f4ff"/>
+  <path d="M8 26h12v12H8z" fill="#9184ff"/>
 </svg>

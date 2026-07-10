@@ -5,7 +5,7 @@
 <h1 align="center">SEO Skills CLI</h1>
 
 <p align="center">
-  Find the SEO work worth doing. Crawl your site, rank fixes with real search data, and give people or agents the evidence to act.
+  Technical SEO skills for AI agents and developers. Crawl sites, connect search data, and turn local evidence into prioritised fixes.
 </p>
 
 <p align="center">

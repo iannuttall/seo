@@ -10,98 +10,93 @@ import { site } from '@/lib/site'
   <div class="shell home-shell">
     <section class="home-hero">
       <Logo title="SEO Skills CLI" />
-      <h1>Find the SEO work <em>worth doing.</em></h1>
+      <h1>
+        <span class="scramble-text" data-scramble="TECHNICAL SEO SKILLS" aria-hidden="true">TECHNICAL SEO SKILLS</span>
+        <span class="visually-hidden">Technical SEO skills</span>
+        <em>for AI agents.</em>
+      </h1>
       <p class="lead">
-        Crawl your site, connect real search data, and get a clear list of what
-        to fix first. The reports run locally and work just as well for people,
-        agents, and CI.
+        Crawl sites, connect real search data, and turn technical evidence into
+        prioritised fixes. One local CLI for agents, developers, and CI.
       </p>
       <InstallPicker />
-      <p class="install-note">Node 22+ / Apache-2.0 / Your working data stays local</p>
+      <p class="install-note">Open source / Apache-2.0 / Working data stays local</p>
       <div class="hero-actions">
-        <a class="button" href="/docs/getting-started">Start with the CLI</a>
-        <a class="button secondary" href={site.repository}>Read the source</a>
+        <a class="button" href="/docs/getting-started">Get started</a>
+        <a class="button secondary" href={site.repository}>View on GitHub</a>
       </div>
     </section>
 
-    <ul class="metric-list" aria-label="Project facts">
-      <li><strong>{productFacts.reports}</strong> discoverable reports</li>
-      <li><strong>{productFacts.crawlerRules}</strong> crawler rules</li>
-      <li><strong>{productFacts.skills}</strong> agent skills</li>
-      <li><strong>0</strong> hosted report backends</li>
-    </ul>
-
-    <section class="home-section" aria-labelledby="normal-path">
-      <div class="section-heading">
-        <h2 id="normal-path">Get from setup to a useful report quickly</h2>
+    <section class="home-section intro-section" aria-labelledby="what-it-does">
+      <div class="home-intro">
+        <h2 id="what-it-does">Give agents evidence, not SEO folklore.</h2>
         <p>
-          <code>seo start</code> handles Google sign-in, property selection,
-          and a local project profile. Then <code>seo report</code> checks the
-          evidence you have and points to the next useful report.
+          SEO Skills combines live crawls with Search Console and GA4 data. It
+          finds technical problems, shows the pages and queries they affect,
+          and ranks the work so an agent can act without guessing.
         </p>
       </div>
-      <ol class="steps">
+      <ul class="feature-list">
         <li>
-          <h3>Connect your site</h3>
-          <p>Follow a short prompt flow. You do not need to create config files or learn the command tree.</p>
+          <h3>Deterministic reports</h3>
+          <p>Stable schemas, rule IDs, date ranges, and bounded evidence.</p>
         </li>
         <li>
-          <h3>See what matters</h3>
-          <p>Combine crawl evidence with read-only Search Console and GA4 data to rank the work.</p>
+          <h3>Real priorities</h3>
+          <p>Fixes ranked by technical severity, affected URLs, and search value.</p>
         </li>
         <li>
-          <h3>Inspect the evidence</h3>
-          <p>Open focused reports for the affected pages, queries, templates, and technical rules.</p>
+          <h3>Agent-ready context</h3>
+          <p>Compact JSON and Markdown that explain findings, caveats, and next steps.</p>
         </li>
-      </ol>
+        <li>
+          <h3>Local by default</h3>
+          <p>No hosted report backend, job queue, or account full of client data.</p>
+        </li>
+      </ul>
+      <p class="scope-note">
+        {productFacts.reports} discoverable reports / {productFacts.crawlerRules} crawler rules / {productFacts.skills} agent skills
+      </p>
     </section>
 
-    <section class="home-section" aria-labelledby="trust-reports">
-      <div class="section-heading">
-        <h2 id="trust-reports">Reports that show their working</h2>
+    <section class="home-section report-section" aria-labelledby="show-working">
+      <div class="home-intro">
+        <h2 id="show-working">Reports that show their working.</h2>
         <p>
-          Observations stay separate from interpretations. Every report exposes
-          its date range, retained rows, source limits, skipped sections, and
-          caveats. Missing data stays missing instead of becoming a false zero.
+          Every recommendation stays connected to observed data. Sparse inputs
+          become explicit caveats, not false certainty, and follow-up commands
+          keep the next request small enough for an agent context window.
         </p>
       </div>
-      <div class="surface-list">
-        <div class="surface-row">
-          <h3>Fixes tied to evidence</h3>
-          <p>Priorities explain the affected URL or query, the observed signal, and why the action is worth reviewing.</p>
+      <div class="report-demo" aria-label="Example SEO report output">
+        <div class="report-demo-header">
+          <span>seo report --project example</span>
+          <span>local / read-only</span>
         </div>
-        <div class="surface-row">
-          <h3>Stable output for agents</h3>
-          <p>JSON, Markdown, rule IDs, and bounded evidence make reports safe to pass into scripts and model context.</p>
-        </div>
-        <div class="surface-row">
-          <h3>One core across every surface</h3>
-          <p>The CLI, Node library, skills, and local MCP server run the same report implementations.</p>
+        <div class="report-demo-body">
+          <p><span class="report-status high">high</span><strong>17 valuable URLs are not indexable</strong></p>
+          <p class="report-evidence">Search Console clicks: 8,421 / affected templates: 2 / source: crawl + GSC</p>
+          <p class="report-action"><span>$</span> seo affected-urls --rule noindex_page --project example</p>
+          <p><span class="report-status watch">watch</span><strong>CTR evidence is too sparse for a safe verdict</strong></p>
+          <p class="report-evidence">Section skipped / reason retained in JSON / no zero-value substitution</p>
         </div>
       </div>
     </section>
 
-    <section class="home-section" aria-labelledby="local-data">
-      <div class="local-note">
-        <div>
-          <h2 id="local-data">Keep the work on your machine</h2>
-          <p>
-            OAuth tokens, project profiles, caches, and saved reports stay with
-            the machine running the command. Requests go to Google and the sites
-            you choose to inspect. There is no SEO account or report database to maintain.
-          </p>
-        </div>
-        <ul>
-          <li>Read-only Google scopes</li>
-          <li>Private local file permissions</li>
-          <li>No project usage telemetry</li>
-          <li>No background job queue</li>
-        </ul>
-      </div>
+    <section class="home-section local-section" aria-labelledby="local-data">
+      <Logo />
+      <h2 id="local-data">Your clients' data stays on the machine doing the work.</h2>
+      <p>
+        OAuth tokens, project profiles, caches, and saved reports remain local.
+        Requests go to Google and the sites you choose to inspect. There is no
+        SEO account, analytics tracker, or hosted report database in the middle.
+      </p>
+      <a href="/privacy">Read the privacy model</a>
     </section>
 
     <section class="home-section closing-section" aria-labelledby="use-anywhere">
-      <h2 id="use-anywhere">Use the same SEO evidence wherever the work happens.</h2>
+      <h2 id="use-anywhere">One report engine. CLI, Node, skills, and MCP.</h2>
+      <p>Start with the guided setup, or give an agent the exact report schema it needs.</p>
       <div class="hero-actions">
         <a class="button" href="/docs/reports">Explore the reports</a>
         <a class="button secondary" href="/docs/agents">Connect an agent</a>

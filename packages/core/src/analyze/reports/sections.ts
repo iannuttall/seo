@@ -1,7 +1,7 @@
 import { countLabel } from '../../phrasing.js'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
 import type { ChangeMeasurement } from '../experiments.js'
-import type { ReportNarrative } from './types.js'
+import type { ChangeMeasurementAttempt, ReportNarrative } from './types.js'
 
 function skippedReason(
   report: DiagnosePropertyReport,
@@ -146,14 +146,24 @@ export function updateAttributionLine(report: DiagnosePropertyReport): string {
 }
 
 export function changeLine(measurement: ChangeMeasurement): string {
+  const status = measurement.dataStatus === 'partial' ? 'partial; ' : ''
   if (measurement.delta.clicks === null) {
-    return `${measurement.change.title}: ${measurement.verdict}; comparable click movement is unavailable.`
+    return `${measurement.change.title}: ${status}${measurement.verdict}; comparable click movement is unavailable.`
   }
   const pct =
     measurement.delta.clickPct === null
       ? ''
       : ` (${measurement.delta.clickPct}%)`
-  return `${measurement.change.title}: ${measurement.verdict}, ${measurement.delta.clicks} clicks${pct}.`
+  return `${measurement.change.title}: ${status}${measurement.verdict}, ${measurement.delta.clicks} clicks${pct}.`
+}
+
+export function changeMeasurementLine(
+  attempt: ChangeMeasurementAttempt,
+): string {
+  if (attempt.status === 'failed') {
+    return `${attempt.change.title}: measurement unavailable (${attempt.error.code}); ${attempt.error.message.replace(/[.!?]+$/, '')}.`
+  }
+  return changeLine(attempt.measurement)
 }
 
 export function monitoringBullets(

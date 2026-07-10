@@ -151,6 +151,10 @@ const CSV_SCHEMAS: Record<string, string[]> = {
     'changed_at',
     'verdict',
     'confidence',
+    'data_status',
+    'error_code',
+    'error_retryable',
+    'error_message',
     'before_start',
     'before_end',
     'after_start',
@@ -417,6 +421,42 @@ export function quickWinsCsvRows(
   }))
 }
 
+export function changeMeasurementCsvRows(
+  report: Pick<ReportNarrative, 'changeMeasurementAttempts'>,
+): CsvRow[] {
+  return report.changeMeasurementAttempts.map((attempt) => {
+    const measurement =
+      attempt.status === 'measured' ? attempt.measurement : undefined
+    return {
+      change_id: attempt.change.id,
+      title: attempt.change.title,
+      scope: attempt.change.scope,
+      target: attempt.change.target,
+      changed_at: attempt.change.changedAt,
+      verdict: measurement?.verdict,
+      confidence: measurement?.confidence,
+      data_status: attempt.dataStatus,
+      error_code: attempt.status === 'failed' ? attempt.error.code : undefined,
+      error_retryable:
+        attempt.status === 'failed' ? attempt.error.retryable : undefined,
+      error_message:
+        attempt.status === 'failed' ? attempt.error.message : undefined,
+      before_start: measurement?.before.startDate,
+      before_end: measurement?.before.endDate,
+      after_start: measurement?.after.startDate,
+      after_end: measurement?.after.endDate,
+      before_clicks: measurement?.before.metrics?.clicks,
+      after_clicks: measurement?.after.metrics?.clicks,
+      click_delta: measurement?.delta.clicks,
+      click_pct: measurement?.delta.clickPct,
+      impression_delta: measurement?.delta.impressions,
+      ctr_delta: measurement?.delta.ctr,
+      position_delta: measurement?.delta.position,
+      note: measurement?.note,
+    }
+  })
+}
+
 export function diagnoseCsvFiles(report: DiagnosePropertyReport): CsvFile[] {
   return withCsvSchemas([
     {
@@ -605,28 +645,7 @@ export function narrativeCsvFiles(report: ReportNarrative): CsvFile[] {
     },
     {
       filename: 'change-measurements.csv',
-      rows: report.changeMeasurements.map((measurement) => ({
-        change_id: measurement.change.id,
-        title: measurement.change.title,
-        scope: measurement.change.scope,
-        target: measurement.change.target,
-        changed_at: measurement.change.changedAt,
-        verdict: measurement.verdict,
-        confidence: measurement.confidence,
-        data_status: measurement.dataStatus,
-        before_start: measurement.before.startDate,
-        before_end: measurement.before.endDate,
-        after_start: measurement.after.startDate,
-        after_end: measurement.after.endDate,
-        before_clicks: measurement.before.metrics?.clicks,
-        after_clicks: measurement.after.metrics?.clicks,
-        click_delta: measurement.delta.clicks,
-        click_pct: measurement.delta.clickPct,
-        impression_delta: measurement.delta.impressions,
-        ctr_delta: measurement.delta.ctr,
-        position_delta: measurement.delta.position,
-        note: measurement.note,
-      })),
+      rows: changeMeasurementCsvRows(report),
     },
     {
       filename: 'monitoring-crawls.csv',

@@ -45,6 +45,34 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
               'https://developers.google.com/search/docs/appearance/structured-data/product-snippet',
           },
         ],
+        googleRichResultsSelection: {
+          limit: 50,
+          eligible: 51,
+          returned: 50,
+          omitted: 1,
+          partial: true,
+          eligibleByStatus: {
+            'no-required-properties': 0,
+            'required-properties-observed': 50,
+            'missing-required-properties': 1,
+            retired: 0,
+            'not-assessed': 0,
+          },
+          returnedByStatus: {
+            'no-required-properties': 0,
+            'required-properties-observed': 49,
+            'missing-required-properties': 1,
+            retired: 0,
+            'not-assessed': 0,
+          },
+          omittedByStatus: {
+            'no-required-properties': 0,
+            'required-properties-observed': 1,
+            'missing-required-properties': 0,
+            retired: 0,
+            'not-assessed': 0,
+          },
+        },
         unrecognizedJsonLdTypes: [
           {
             block: 1,
@@ -105,6 +133,11 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
     crawlerSchemas.pageSnapshot.parse(report.pages[0]).googleRichResults?.[0]
       ?.status,
     'missing-required-properties',
+  )
+  assert.deepEqual(
+    crawlerSchemas.pageSnapshot.parse(report.pages[0])
+      .googleRichResultsSelection,
+    report.pages[0]?.googleRichResultsSelection,
   )
   assert.equal(
     crawlerSchemas.pageSnapshot.parse(report.pages[0])

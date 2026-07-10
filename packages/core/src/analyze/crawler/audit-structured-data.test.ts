@@ -82,3 +82,67 @@ test('audit separates missing rich-result properties from valid JSON', () => {
     false,
   )
 })
+
+test('audit preserves total incomplete assessment evidence beyond stored detail', () => {
+  const assessment = {
+    format: 'json-ld' as const,
+    block: 0,
+    path: '$',
+    schemaType: 'Product' as const,
+    feature: 'product-snippet' as const,
+    status: 'missing-required-properties' as const,
+    observedProperties: [],
+    missingRequiredProperties: ['name'],
+    limitations: ['Property evidence only.'],
+    documentationUrl:
+      'https://developers.google.com/search/docs/appearance/structured-data/product-snippet',
+  }
+  const counts = {
+    'no-required-properties': 0,
+    'required-properties-observed': 0,
+    'missing-required-properties': 55,
+    retired: 0,
+    'not-assessed': 0,
+  }
+  const returnedCounts = {
+    ...counts,
+    'missing-required-properties': 50,
+  }
+  const omittedCounts = {
+    ...counts,
+    'missing-required-properties': 5,
+  }
+  const issues = auditCrawlPages([
+    page({
+      googleRichResults: Array.from({ length: 50 }, () => assessment),
+      googleRichResultsSelection: {
+        limit: 50,
+        eligible: 55,
+        returned: 50,
+        omitted: 5,
+        partial: true,
+        eligibleByStatus: counts,
+        returnedByStatus: returnedCounts,
+        omittedByStatus: omittedCounts,
+      },
+    }),
+  ])
+
+  const issue = issues.find(
+    (item) => item.ruleId === 'rich_result_required_fields_missing',
+  )
+  const selection = issue?.evidence?.selection as
+    | { eligible: number; omitted: number; partial: boolean }
+    | undefined
+  assert.match(issue?.detail ?? '', /5 more incomplete assessments omitted/)
+  assert.deepEqual(selection, {
+    limit: 50,
+    eligible: 55,
+    returned: 50,
+    omitted: 5,
+    partial: true,
+    eligibleByStatus: counts,
+    returnedByStatus: returnedCounts,
+    omittedByStatus: omittedCounts,
+  })
+})

@@ -1,4 +1,8 @@
-import type { GoogleRichResultAssessment } from '../types.js'
+import type {
+  GoogleRichResultAssessment,
+  GoogleRichResultAssessmentSelection,
+  GoogleRichResultAssessmentStatus,
+} from '../types.js'
 
 type SupportedType = GoogleRichResultAssessment['schemaType']
 
@@ -10,6 +14,16 @@ const SUPPORTED_TYPES = new Set<SupportedType>([
   'BreadcrumbList',
   'FAQPage',
 ])
+
+const ASSESSMENT_STATUSES = [
+  'no-required-properties',
+  'required-properties-observed',
+  'missing-required-properties',
+  'retired',
+  'not-assessed',
+] as const satisfies readonly GoogleRichResultAssessmentStatus[]
+
+export const GOOGLE_RICH_RESULT_ASSESSMENT_LIMIT = 50
 
 function isSupportedType(value: string): value is SupportedType {
   return SUPPORTED_TYPES.has(value as SupportedType)
@@ -398,4 +412,87 @@ export function unassessedGoogleRichResult(input: {
       documentationUrl: metadata.documentationUrl,
     },
   ]
+}
+
+function emptyStatusCounts(): Record<GoogleRichResultAssessmentStatus, number> {
+  return Object.fromEntries(
+    ASSESSMENT_STATUSES.map((status) => [status, 0]),
+  ) as Record<GoogleRichResultAssessmentStatus, number>
+}
+
+function statusCounts(
+  assessments: GoogleRichResultAssessment[],
+): Record<GoogleRichResultAssessmentStatus, number> {
+  const counts = emptyStatusCounts()
+  for (const assessment of assessments) counts[assessment.status] += 1
+  return counts
+}
+
+function compareCodepoints(left: string, right: string): number {
+  if (left === right) return 0
+  return left < right ? -1 : 1
+}
+
+function assessmentSortKey(assessment: GoogleRichResultAssessment): string {
+  return JSON.stringify([
+    assessment.schemaType,
+    assessment.format,
+    assessment.block ?? -1,
+    assessment.path,
+    assessment.status,
+    assessment.observedProperties,
+    assessment.missingRequiredProperties,
+    assessment.limitations,
+    assessment.documentationUrl,
+  ])
+}
+
+/**
+ * Bounds stored assessment detail without letting successful examples displace
+ * missing-required-property evidence. Full status counts remain available when
+ * even the failure set is larger than the detail limit.
+ */
+export function selectGoogleRichResultAssessments(
+  assessments: GoogleRichResultAssessment[],
+  limit = GOOGLE_RICH_RESULT_ASSESSMENT_LIMIT,
+): {
+  assessments: GoogleRichResultAssessment[]
+  selection: GoogleRichResultAssessmentSelection
+} {
+  if (!Number.isInteger(limit) || limit < 0) {
+    throw new Error(
+      'Google rich-result assessment limit must be a whole number.',
+    )
+  }
+
+  const ordered = [...assessments].sort((left, right) => {
+    const leftPriority = left.status === 'missing-required-properties' ? 0 : 1
+    const rightPriority = right.status === 'missing-required-properties' ? 0 : 1
+    return (
+      leftPriority - rightPriority ||
+      compareCodepoints(assessmentSortKey(left), assessmentSortKey(right))
+    )
+  })
+  const returned = ordered.slice(0, limit)
+  const eligibleByStatus = statusCounts(ordered)
+  const returnedByStatus = statusCounts(returned)
+  const omittedByStatus = emptyStatusCounts()
+  for (const status of ASSESSMENT_STATUSES) {
+    omittedByStatus[status] =
+      eligibleByStatus[status] - returnedByStatus[status]
+  }
+
+  return {
+    assessments: returned,
+    selection: {
+      limit,
+      eligible: ordered.length,
+      returned: returned.length,
+      omitted: ordered.length - returned.length,
+      partial: returned.length < ordered.length,
+      eligibleByStatus,
+      returnedByStatus,
+      omittedByStatus,
+    },
+  }
 }

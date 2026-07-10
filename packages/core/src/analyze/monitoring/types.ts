@@ -101,6 +101,7 @@ export type CrawlPageSnapshot = {
   schemaTypes?: string[]
   structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
   googleRichResults?: import('../../types.js').GoogleRichResultAssessment[]
+  googleRichResultsSelection?: import('../../types.js').GoogleRichResultAssessmentSelection
   schemaSameAs?: string[]
   schemaSameAsEvidence?: Array<{
     url: string

@@ -747,8 +747,8 @@ test('crawlSite accepts hosted-safe provider dependencies', async () => {
   assert.deepEqual(calls.analytics, [
     {
       propertyId: 'properties/123',
-      startDate: '2026-05-19',
-      endDate: '2026-06-15',
+      startDate: '2026-05-18',
+      endDate: '2026-06-14',
       limit: 5000,
     },
   ])

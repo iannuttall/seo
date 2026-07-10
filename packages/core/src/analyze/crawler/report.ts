@@ -142,6 +142,53 @@ export type CrawlAiSignals = {
   agentResources?: CrawlAiResourceSignal[]
 }
 
+export type CrawlDataSourceStatus =
+  | 'joined'
+  | 'partial'
+  | 'none'
+  | 'skipped'
+  | 'unavailable'
+
+export type CrawlDataSourceWindow = {
+  startDate: string
+  endDate: string
+  days: number
+}
+
+export type CrawlSearchDataSource = {
+  status: CrawlDataSourceStatus
+  window?: CrawlDataSourceWindow
+  totalPages: number
+  queriedPages: number
+  joinedMetricPages: number
+  joinedQueryPages: number
+  pageLimit: number
+  pageLimitReached: boolean
+  metricRowsReturned?: number
+  queryRowsReturned?: number
+  retainedRowLimit?: number
+  retainedRowLimitReached?: boolean
+  warning?: string
+}
+
+export type CrawlAnalyticsDataSource = {
+  status: CrawlDataSourceStatus
+  window?: CrawlDataSourceWindow
+  totalPages: number
+  queriedPages: number
+  joinedPages: number
+  returnedRows?: number
+  availableRows?: number
+  retainedRowLimit?: number
+  retainedRowLimitReached?: boolean
+  warning?: string
+}
+
+export type CrawlReportDataSources = {
+  searchConsole: CrawlSearchDataSource
+  analytics: CrawlAnalyticsDataSource
+}
+
 export type CrawlReportSummary = {
   totalPages: number
   indexablePages: number
@@ -188,6 +235,7 @@ export type CrawlReport = {
   pages: CrawlPageSnapshot[]
   issues: CrawlIssue[]
   issueGroups: CrawlIssueGroup[]
+  dataSources?: CrawlReportDataSources
   ai?: CrawlAiSignals
   warnings: string[]
   caveats: string[]
@@ -662,6 +710,7 @@ export function createCrawlReport(input: {
   projectId?: string
   site?: string
   ga4PropertyId?: string
+  dataSources?: CrawlReportDataSources
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -718,6 +767,13 @@ export function createCrawlReport(input: {
     pages,
     issues: safeIssues,
     issueGroups: groupCrawlIssues(safeIssues),
+    ...(input.dataSources
+      ? {
+          dataSources: sanitizeTenantValue(
+            input.dataSources,
+          ) as CrawlReportDataSources,
+        }
+      : {}),
     ...(input.ai
       ? { ai: sanitizeTenantValue(input.ai) as CrawlAiSignals }
       : {}),

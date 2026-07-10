@@ -25,6 +25,29 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
     site,
     generatedAt: '2026-06-19T00:01:00.000Z',
     config: { url: `https://${site.slice('sc-domain:'.length)}/blog/` },
+    dataSources: {
+      searchConsole: {
+        status: 'partial',
+        totalPages: 10,
+        queriedPages: 10,
+        joinedMetricPages: 2,
+        joinedQueryPages: 2,
+        pageLimit: 5000,
+        pageLimitReached: false,
+        retainedRowLimit: 25_000,
+        retainedRowLimitReached: true,
+      },
+      analytics: {
+        status: 'none',
+        totalPages: 10,
+        queriedPages: 10,
+        joinedPages: 0,
+        returnedRows: 0,
+        availableRows: 0,
+        retainedRowLimit: 5000,
+        retainedRowLimitReached: false,
+      },
+    },
   })
   const rerun = createCrawlReport({
     site,
@@ -44,6 +67,10 @@ test('crawl report store saves, lists, loads, and returns latest', () => {
   assert.equal(rerun.definitionId, second.definitionId)
   assert.equal(loadCrawlReport(first.id)?.id, first.id)
   assert.equal(loadCrawlReport(second.id)?.status, 'completed')
+  assert.equal(
+    loadCrawlReport(second.id)?.dataSources?.searchConsole.status,
+    'partial',
+  )
   assert.equal(loadCrawlReport(rerun.id)?.status, 'partial')
   assert.equal(latestCrawlReport(site)?.id, rerun.id)
   assert.deepEqual(

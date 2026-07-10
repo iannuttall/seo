@@ -15,7 +15,16 @@ export type PageTopQuery = PageSearchMetrics & {
   query: string
 }
 
-function searchDateRange(days: number): { startDate: string; endDate: string } {
+export type SearchDateWindow = { startDate: string; endDate: string }
+
+export type SearchPageBatch<T> = {
+  values: Map<string, T>
+  returnedRows: number
+  retainedRowLimit: number
+  retainedRowLimitReached: boolean
+}
+
+function searchDateRange(days: number): SearchDateWindow {
   const endDate = new Date()
   endDate.setUTCDate(endDate.getUTCDate() - 4)
   const startDate = new Date(endDate)
@@ -24,6 +33,12 @@ function searchDateRange(days: number): { startDate: string; endDate: string } {
     startDate: startDate.toISOString().slice(0, 10),
     endDate: endDate.toISOString().slice(0, 10),
   }
+}
+
+function resolveSearchDateWindow(
+  input: number | SearchDateWindow = 28,
+): SearchDateWindow {
+  return typeof input === 'number' ? searchDateRange(input) : input
 }
 
 export async function querySearchAnalytics(
@@ -187,15 +202,31 @@ export async function queryPagesMetrics(
   pageUrls: string[],
   days = 28,
 ): Promise<Map<string, PageSearchMetrics>> {
+  return (await queryPagesMetricsBatch(site, pageUrls, days)).values
+}
+
+export async function queryPagesMetricsBatch(
+  site: string,
+  pageUrls: string[],
+  range: number | SearchDateWindow = 28,
+): Promise<SearchPageBatch<PageSearchMetrics>> {
   const wanted = new Set(pageUrls)
-  if (!wanted.size) return new Map()
-  const { startDate, endDate } = searchDateRange(days)
+  const retainedRowLimit = 25_000
+  if (!wanted.size) {
+    return {
+      values: new Map(),
+      returnedRows: 0,
+      retainedRowLimit,
+      retainedRowLimitReached: false,
+    }
+  }
+  const { startDate, endDate } = resolveSearchDateWindow(range)
   const result = await querySearchAnalytics(site, {
     startDate,
     endDate,
     dimensions: ['page'],
-    rowLimit: 25_000,
-    maxRows: 25_000,
+    rowLimit: retainedRowLimit,
+    maxRows: retainedRowLimit,
   })
 
   const metrics = new Map<string, PageSearchMetrics>()
@@ -209,7 +240,12 @@ export async function queryPagesMetrics(
       position: row.position,
     })
   }
-  return metrics
+  return {
+    values: metrics,
+    returnedRows: result.rowsFetched,
+    retainedRowLimit,
+    retainedRowLimitReached: result.rowsFetched >= retainedRowLimit,
+  }
 }
 
 export async function queryPageTopQuery(
@@ -251,15 +287,31 @@ export async function queryPagesTopQueries(
   pageUrls: string[],
   days = 28,
 ): Promise<Map<string, PageTopQuery>> {
+  return (await queryPagesTopQueriesBatch(site, pageUrls, days)).values
+}
+
+export async function queryPagesTopQueriesBatch(
+  site: string,
+  pageUrls: string[],
+  range: number | SearchDateWindow = 28,
+): Promise<SearchPageBatch<PageTopQuery>> {
   const wanted = new Set(pageUrls)
-  if (!wanted.size) return new Map()
-  const { startDate, endDate } = searchDateRange(days)
+  const retainedRowLimit = 25_000
+  if (!wanted.size) {
+    return {
+      values: new Map(),
+      returnedRows: 0,
+      retainedRowLimit,
+      retainedRowLimitReached: false,
+    }
+  }
+  const { startDate, endDate } = resolveSearchDateWindow(range)
   const result = await querySearchAnalytics(site, {
     startDate,
     endDate,
     dimensions: ['page', 'query'],
-    rowLimit: 25_000,
-    maxRows: 25_000,
+    rowLimit: retainedRowLimit,
+    maxRows: retainedRowLimit,
   })
 
   const topQueries = new Map<string, PageTopQuery>()
@@ -277,5 +329,10 @@ export async function queryPagesTopQueries(
       position: row.position,
     })
   }
-  return topQueries
+  return {
+    values: topQueries,
+    returnedRows: result.rowsFetched,
+    retainedRowLimit,
+    retainedRowLimitReached: result.rowsFetched >= retainedRowLimit,
+  }
 }

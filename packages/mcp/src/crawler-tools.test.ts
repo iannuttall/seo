@@ -60,11 +60,15 @@ function captureCrawlerTools(): Map<string, CapturedTool> {
 function mcpCrawlerKeySnapshot(result: JsonRecord) {
   const structured = result.structuredContent as JsonRecord
   const firstFix = firstRecord(structured.topFixes)
+  const dataSources = structured.dataSources as JsonRecord
   return {
     root: keys(result),
     contentItem: keys(firstRecord(result.content)),
     structured: keys(structured),
     summary: keys(structured.summary),
+    dataSources: keys(dataSources),
+    searchConsole: keys(dataSources.searchConsole),
+    analytics: keys(dataSources.analytics),
     topFix: keys(firstFix),
     topFixScoreFactors: keys(firstFix.scoreFactors),
     topFixVerification: keys(firstFix.verification),
@@ -127,6 +131,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       structured: [
         'caveats',
         'configHash',
+        'dataSources',
         'definitionId',
         'headline',
         'id',
@@ -135,6 +140,27 @@ test('crawler MCP structured output schema stays stable', async () => {
         'summary',
         'topFixes',
         'warnings',
+      ],
+      dataSources: ['analytics', 'searchConsole'],
+      searchConsole: [
+        'joinedMetricPages',
+        'joinedQueryPages',
+        'pageLimit',
+        'pageLimitReached',
+        'queriedPages',
+        'retainedRowLimitReached',
+        'status',
+        'totalPages',
+        'warning',
+      ],
+      analytics: [
+        'joinedPages',
+        'queriedPages',
+        'retainedRowLimit',
+        'retainedRowLimitReached',
+        'status',
+        'totalPages',
+        'warning',
       ],
       summary: [
         'abortedRequests',
@@ -194,6 +220,33 @@ test('crawler MCP structured output schema stays stable', async () => {
       ],
       topFixVerification: ['command', 'expected'],
     })
+
+    const topFixTool = tools.get('seo_top_fixes')
+    const affectedTool = tools.get('seo_affected_urls')
+    assert.ok(topFixTool)
+    assert.ok(affectedTool)
+    const topFixResult = await topFixTool.handler({
+      url: fixture.baseUrl,
+      maxPages: 1,
+    })
+    const affectedResult = await affectedTool.handler({
+      url: fixture.baseUrl,
+      maxPages: 1,
+    })
+    const topFixStructured = topFixResult.structuredContent as JsonRecord
+    const affectedStructured = affectedResult.structuredContent as JsonRecord
+    assert.deepEqual(keys(topFixStructured.dataSources), [
+      'analytics',
+      'searchConsole',
+    ])
+    assert.deepEqual(keys(affectedStructured), [
+      'affectedUrls',
+      'caveats',
+      'dataSources',
+      'reportId',
+      'url',
+      'warnings',
+    ])
 
     const okfTool = tools.get('seo_okf_build')
     assert.ok(okfTool)

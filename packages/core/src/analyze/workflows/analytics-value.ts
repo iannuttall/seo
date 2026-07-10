@@ -6,6 +6,13 @@ export type LandingPageValue = {
   conversions: number
 }
 
+export type LandingPageValueSource = {
+  returnedRows: number
+  availableRows?: number
+  retainedRowLimit: number
+  retainedRowLimitReached: boolean
+}
+
 function normalizePath(value: string): string {
   if (!value || value === '(not set)') return ''
   const [path = ''] = value.split('?')
@@ -34,9 +41,20 @@ export async function fetchLandingPageValues(input: {
   limit?: number
 }): Promise<{
   values: Map<string, LandingPageValue>
+  source?: LandingPageValueSource
   warning?: string
 }> {
-  if (!input.propertyId) return { values: new Map() }
+  const retainedRowLimit = input.limit ?? 5000
+  if (!input.propertyId) {
+    return {
+      values: new Map(),
+      source: {
+        returnedRows: 0,
+        retainedRowLimit,
+        retainedRowLimitReached: false,
+      },
+    }
+  }
   try {
     const result = await runGa4Report(input.propertyId, {
       dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
@@ -47,10 +65,11 @@ export async function fetchLandingPageValues(input: {
         { name: 'conversions' },
       ],
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-      limit: input.limit ?? 5000,
+      limit: retainedRowLimit,
     })
     const values = new Map<string, LandingPageValue>()
-    for (const row of ga4RowsToObjects(result)) {
+    const rows = ga4RowsToObjects(result)
+    for (const row of rows) {
       const path = normalizePath(row.landingPagePlusQueryString ?? '')
       if (!path) continue
       values.set(path, {
@@ -59,10 +78,26 @@ export async function fetchLandingPageValues(input: {
         conversions: Number(row.conversions ?? 0),
       })
     }
-    return { values }
+    const availableRows = result.rowCount
+    return {
+      values,
+      source: {
+        returnedRows: rows.length,
+        ...(availableRows !== undefined ? { availableRows } : {}),
+        retainedRowLimit,
+        retainedRowLimitReached:
+          (availableRows !== undefined && availableRows > rows.length) ||
+          rows.length >= retainedRowLimit,
+      },
+    }
   } catch (error) {
     return {
       values: new Map(),
+      source: {
+        returnedRows: 0,
+        retainedRowLimit,
+        retainedRowLimitReached: false,
+      },
       warning: error instanceof Error ? error.message : String(error),
     }
   }

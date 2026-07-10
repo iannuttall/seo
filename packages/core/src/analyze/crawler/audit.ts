@@ -60,7 +60,6 @@ const TITLE_MIN_CHARS = 30
 const TITLE_MAX_PIXELS = 580
 const META_DESCRIPTION_MIN_CHARS = 70
 const META_DESCRIPTION_MAX_CHARS = 160
-const HEADING_STRUCTURE_MIN_WORDS = 300
 const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
 const QUERY_COVERAGE_MIN = 0.6
 const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
@@ -629,26 +628,6 @@ export function auditCrawlPages(
         }),
       )
     }
-    if (
-      page.indexable &&
-      page.wordCount >= HEADING_STRUCTURE_MIN_WORDS &&
-      (page.h2Count ?? 0) + (page.h3Count ?? 0) === 0
-    ) {
-      issues.push(
-        issue(
-          'heading_structure_weak',
-          page,
-          'No supporting H2 or H3 headings',
-          {
-            h2Count: page.h2Count ?? 0,
-            h3Count: page.h3Count ?? 0,
-            wordCount: page.wordCount,
-            minWords: HEADING_STRUCTURE_MIN_WORDS,
-          },
-        ),
-      )
-    }
-
     if (page.canonicalStatus === 'conflicting') {
       issues.push(
         issue('canonical_conflict', page, undefined, {

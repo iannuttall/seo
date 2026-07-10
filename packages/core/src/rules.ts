@@ -161,24 +161,6 @@ const RULE_DEFINITIONS = [
     },
   },
   {
-    id: 'heading_structure_weak',
-    title: 'Weak heading structure',
-    category: 'headings',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Long pages without supporting section headings are harder to scan, parse, and turn into direct answers.',
-    howToFix:
-      'Break the main content into clear H2/H3 sections that match the questions and subtopics readers expect.',
-    impactIfIgnored:
-      'Users skim less effectively, and crawlers or AI agents get fewer structural cues about the page.',
-    howToVerify:
-      'Re-run the crawl and confirm longer pages have supporting H2 or H3 headings.',
-    agentHints: {
-      evidenceFields: ['page.h2Count', 'page.h3Count', 'page.wordCount'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
-    },
-  },
-  {
     id: 'canonical_invalid',
     title: 'Canonical URL is invalid',
     category: 'canonical',
@@ -888,20 +870,6 @@ const RULE_DEFINITIONS = [
     },
   },
   {
-    id: 'structured_data_missing',
-    title: 'Structured data missing',
-    category: 'structured-data',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Applicable structured data can make a page eligible for specific Google Search features, but missing markup is not a universal technical defect.',
-    howToFix:
-      'Add only the supported type and properties that accurately describe the visible page. Do not add schema just to satisfy a score.',
-    impactIfIgnored:
-      'The page may miss an applicable rich-result opportunity; ordinary indexing and ranking do not require structured data.',
-    howToVerify:
-      'Re-run the crawl and confirm schemaTypes includes the expected schema.',
-  },
-  {
     id: 'jsonld_invalid',
     title: 'Invalid JSON-LD',
     category: 'structured-data',
@@ -911,7 +879,7 @@ const RULE_DEFINITIONS = [
     howToFix:
       'Fix the JSON syntax in each application/ld+json script. Validate quotes, commas, braces, and any server-rendered values inserted into the block.',
     impactIfIgnored:
-      'Search and AI systems may ignore the structured data, which weakens rich-result and citation context.',
+      'Consumers cannot reliably read the invalid block, and Google cannot use unreadable markup for supported Search features.',
     howToVerify:
       'Re-run the crawl and confirm invalidJsonLdCount is zero, then validate the page with a structured data tester.',
     agentHints: {

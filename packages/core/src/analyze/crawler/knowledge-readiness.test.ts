@@ -190,6 +190,72 @@ test('aiReadiness treats unavailable robots evidence as unknown, not blocked', (
   assert.equal(report.botAccess[0]?.allowed, null)
 })
 
+test('aiReadiness keeps missing top-level robots evidence inconclusive', () => {
+  const missingAi = fixtureReport()
+  delete missingAi.ai
+  const missingRobots = fixtureReport()
+  if (!missingRobots.ai) throw new Error('Expected AI fixture signals.')
+  delete missingRobots.ai.robotsTxt
+
+  for (const crawl of [missingAi, missingRobots]) {
+    const report = aiReadiness(crawl)
+    const access = report.checks.find((check) => check.id === 'robots-ai-bots')
+    const sitemap = report.checks.find((check) => check.id === 'robots-sitemap')
+
+    assert.equal(report.dataStatus, 'partial')
+    assert.equal(access?.status, 'unknown')
+    assert.equal(access?.evaluated, false)
+    assert.doesNotMatch(access?.title ?? '', /can fetch/i)
+    assert.equal(sitemap?.status, 'unknown')
+    assert.equal(sitemap?.evaluated, false)
+    assert.match(sitemap?.plainEnglish ?? '', /could not be checked/i)
+    assert.doesNotMatch(sitemap?.plainEnglish ?? '', /does not declare/i)
+    assert.match(report.headline, /evidence is incomplete/i)
+  }
+})
+
+test('aiReadiness keeps missing per-bot policy evidence inconclusive', () => {
+  const crawl = fixtureReport()
+  if (!crawl.ai?.robotsTxt) throw new Error('Expected robots.txt fixture data.')
+  crawl.ai.robotsTxt.botAccess = []
+
+  const report = aiReadiness(crawl)
+  const access = report.checks.find((check) => check.id === 'robots-ai-bots')
+  const sitemap = report.checks.find((check) => check.id === 'robots-sitemap')
+
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(access?.status, 'unknown')
+  assert.equal(access?.evaluated, false)
+  assert.match(access?.plainEnglish ?? '', /does not include per-bot/i)
+  assert.equal(sitemap?.status, 'info')
+  assert.equal(sitemap?.evaluated, true)
+  assert.match(sitemap?.plainEnglish ?? '', /declares at least one sitemap/i)
+  assert.ok(
+    report.caveats.some((caveat) =>
+      /without per-bot policy evidence/i.test(caveat),
+    ),
+  )
+})
+
+test('aiReadiness scopes robots findings to start-URL policy evidence', () => {
+  const report = aiReadiness(fixtureReport())
+  const access = report.checks.find((check) => check.id === 'robots-ai-bots')
+
+  assert.match(
+    access?.title ?? '',
+    /robots\.txt blocks selected crawler tokens/i,
+  )
+  assert.match(access?.plainEnglish ?? '', /at the start URL/i)
+  assert.doesNotMatch(access?.title ?? '', /can fetch the site/i)
+  assert.deepEqual(access?.evidence?.scope, 'start-url-robots-policy')
+  assert.deepEqual(access?.evidence?.startUrl, 'https://example.com/')
+  assert.ok(
+    report.caveats.some((caveat) =>
+      /do not verify actual crawler requests or site-wide access/i.test(caveat),
+    ),
+  )
+})
+
 test('aiReadiness is deterministic for a saved crawl report', () => {
   const report = fixtureReport()
 

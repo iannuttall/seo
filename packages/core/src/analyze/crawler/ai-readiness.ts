@@ -99,12 +99,19 @@ function sampleUrls(
 export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const pages = indexablePages(report)
   const pageCount = pages.length || report.pages.length
-  const botAccess = report.ai?.robotsTxt?.botAccess ?? []
+  const robotsTxt = report.ai?.robotsTxt
+  const botAccess = robotsTxt?.botAccess ?? []
   const blockedBots = botAccess.filter((bot) => bot.allowed === false)
   const unknownBots = botAccess.filter((bot) => bot.allowed === null)
   const robotsUnavailable =
-    report.ai?.robotsTxt?.availability === 'rate-limited' ||
-    report.ai?.robotsTxt?.availability === 'unreachable'
+    robotsTxt?.availability === 'rate-limited' ||
+    robotsTxt?.availability === 'unreachable'
+  const hasRobotsEvidence = robotsTxt !== undefined
+  const hasBotAccessEvidence = hasRobotsEvidence && botAccess.length > 0
+  const botAccessEvaluated = hasBotAccessEvidence && !robotsUnavailable
+  const sitemapEvaluated = hasRobotsEvidence && !robotsUnavailable
+  const robotsEvidenceIncomplete =
+    robotsUnavailable || !hasRobotsEvidence || !hasBotAccessEvidence
   const declaredBots = botAccess.filter(
     (bot) => bot.declared || bot.coveredByWildcard,
   )
@@ -154,7 +161,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'robots-ai-bots',
         section: 'agent-access',
         maxScore: 20,
-        evaluated: !robotsUnavailable && botAccess.length > 0,
+        evaluated: botAccessEvaluated,
         score: robotsUnavailable
           ? 0
           : botAccess.length
@@ -166,45 +173,59 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
               : 20
             : 8,
         title: robotsUnavailable
-          ? 'robots.txt access evidence is unavailable'
-          : 'AI crawlers can fetch the site',
+          ? 'robots.txt crawler-policy evidence is unavailable'
+          : !hasBotAccessEvidence
+            ? 'robots.txt crawler-policy evidence was not collected'
+            : blockedBots.length
+              ? 'robots.txt blocks selected crawler tokens at the start URL'
+              : 'robots.txt allows selected crawler tokens at the start URL',
         plainEnglish: robotsUnavailable
-          ? 'The robots.txt request failed, so this report cannot say whether known AI crawlers are allowed.'
-          : blockedBots.length
-            ? `${blockedBots.length} known AI crawler user agent is blocked in robots.txt.`
-            : botAccess.length
-              ? 'Known AI crawler user agents are not blocked at the start URL.'
-              : 'This crawl does not include per-bot robots.txt data yet.',
+          ? 'The robots.txt request failed, so this report cannot say whether selected crawler tokens are allowed at the start URL.'
+          : !hasBotAccessEvidence
+            ? 'This crawl does not include per-bot robots.txt policy data for the start URL.'
+            : blockedBots.length
+              ? `robots.txt policy blocks ${blockedBots.length} selected crawler ${blockedBots.length === 1 ? 'token' : 'tokens'} at the start URL.`
+              : 'robots.txt policy does not block the selected crawler tokens at the start URL. This does not verify actual or site-wide fetchability.',
         action: robotsUnavailable
-          ? 'Restore a stable robots.txt response, then rerun this report before making crawler-access claims.'
-          : blockedBots.length
-            ? 'Only block AI crawlers intentionally. If discovery matters, remove accidental Disallow rules for the blocked user agents.'
-            : 'Keep robots.txt explicit and intentional so humans and agents can see what is allowed.',
+          ? 'Restore a stable robots.txt response, then rerun this report before making crawler-policy claims.'
+          : !hasBotAccessEvidence
+            ? 'Rerun the crawl with top-level per-bot robots.txt evidence before making crawler-policy claims.'
+            : blockedBots.length
+              ? 'Only block AI crawlers intentionally. If discovery matters, remove accidental Disallow rules for the blocked user agents.'
+              : 'Keep robots.txt explicit and intentional so humans and agents can see what is allowed.',
         evidence: {
           blockedBots,
           unknownBots,
           declaredBots: declaredBots.length,
-          availability: report.ai?.robotsTxt?.availability,
-          status: report.ai?.robotsTxt?.status,
-          error: report.ai?.robotsTxt?.error,
+          availability: robotsTxt?.availability,
+          status: robotsTxt?.status,
+          error: robotsTxt?.error,
+          scope: 'start-url-robots-policy',
+          startUrl: report.config.url,
         },
       }),
       check({
         id: 'robots-sitemap',
         section: 'agent-access',
         maxScore: 0,
-        evaluated: !robotsUnavailable,
+        evaluated: sitemapEvaluated,
         score: 0,
-        title: 'robots.txt points agents to sitemaps',
+        title: sitemapEvaluated
+          ? 'robots.txt sitemap declarations were checked'
+          : 'robots.txt sitemap declarations were not evaluated',
         plainEnglish: robotsUnavailable
           ? 'The robots.txt response was unavailable, so sitemap declarations could not be checked.'
-          : report.ai?.robotsTxt?.sitemapUrls.length
-            ? 'robots.txt declares at least one sitemap URL.'
-            : 'robots.txt does not declare a sitemap URL.',
+          : !hasRobotsEvidence
+            ? 'This crawl does not include top-level robots.txt evidence, so sitemap declarations could not be checked.'
+            : robotsTxt.sitemapUrls.length
+              ? 'robots.txt declares at least one sitemap URL.'
+              : 'robots.txt does not declare a sitemap URL.',
         action: robotsUnavailable
           ? 'Restore robots.txt availability and rerun before evaluating sitemap declarations.'
-          : 'Add a Sitemap line to robots.txt so crawlers can discover the full index quickly.',
-        evidence: { sitemapUrls: report.ai?.robotsTxt?.sitemapUrls ?? [] },
+          : !hasRobotsEvidence
+            ? 'Rerun the crawl with top-level robots.txt evidence before evaluating sitemap declarations.'
+            : 'Add a Sitemap line to robots.txt so crawlers can discover the full index quickly.',
+        evidence: { sitemapUrls: robotsTxt?.sitemapUrls ?? [] },
       }),
       check({
         id: 'agent-resources',
@@ -416,7 +437,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
 
   const checks = sections.flatMap((item) => item.checks)
   const dataStatus =
-    report.status === 'completed' && !robotsUnavailable
+    report.status === 'completed' && !robotsEvidenceIncomplete
       ? ('complete' as const)
       : ('partial' as const)
   const topActions = checks
@@ -461,15 +482,20 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
       'llms.txt is treated as optional agent-discovery metadata, not a Google Search ranking or visibility factor.',
       'Paragraph length and placement are observations only. Google does not require content chunking or special answer blocks for generative AI features.',
       'Snippet controls reflect page-level publisher directives only. No detected restriction does not guarantee selection, visibility, or a displayed snippet.',
-      ...(report.ai?.robotsTxt
+      ...(robotsTxt
         ? robotsUnavailable
           ? [
               'robots.txt was unavailable, so crawler access and sitemap declaration checks are inconclusive.',
             ]
-          : []
+          : !hasBotAccessEvidence
+            ? [
+                'robots.txt was collected without per-bot policy evidence, so the crawler-policy check is inconclusive.',
+              ]
+            : []
         : [
             'This crawl report does not include top-level robots.txt AI bot data.',
           ]),
+      'robots.txt checks describe policy for the configured start URL only. They do not verify actual crawler requests or site-wide access.',
     ],
   }
 }

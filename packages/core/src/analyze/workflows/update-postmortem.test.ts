@@ -1,7 +1,104 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { SegmentImpactItem } from '../segment-impact.js'
-import { inferTemplateMovement } from './update-postmortem.js'
+import { updatePostmortemCsvFiles } from '../../export/update-postmortem.js'
+import type { GscRow } from '../../types.js'
+import {
+  compareSegmentRows,
+  type SegmentImpactItem,
+} from '../segment-impact.js'
+import type { UpdateCorrelationReport } from '../traffic-anomaly.js'
+import {
+  inferTemplateMovement,
+  updatePostmortemWorkflow,
+} from './update-postmortem.js'
+
+function updateFixture(): UpdateCorrelationReport {
+  return {
+    attribution: 'weak-or-no-overlap',
+    confidence: 'low',
+    classification: 'not-enough-evidence',
+    summary: 'No update attribution evidence.',
+    overlappingUpdates: [],
+    evidence: [],
+    confounders: [],
+  } as unknown as UpdateCorrelationReport
+}
+
+function pageRow(key: string, clicks: number): GscRow {
+  return {
+    keys: [key],
+    clicks,
+    impressions: clicks * 10,
+    ctr: 0.1,
+    position: 5,
+  }
+}
+
+test('postmortem marks empty segment evidence as skipped and unavailable', async () => {
+  const report = await updatePostmortemWorkflow(
+    { site: 'sc-domain:example.com' },
+    {
+      updateCorrelation: async () => updateFixture(),
+      segmentImpact: async (input) =>
+        compareSegmentRows({
+          site: input.site,
+          dimension: input.dimension ?? 'page',
+          before: { startDate: '2026-04-01', endDate: '2026-04-28' },
+          after: { startDate: '2026-04-29', endDate: '2026-05-26' },
+          beforeRows: [],
+          afterRows: [],
+        }),
+    },
+  )
+
+  assert.match(report.summary, /page segment evidence unavailable/)
+  assert.equal(report.steps[1]?.status, 'skipped')
+  assert.equal(report.output.insights[0]?.dataStatus, 'empty')
+  assert.match(
+    report.output.insights[0]?.summary ?? '',
+    /no matched retained segment movement was available/,
+  )
+})
+
+test('postmortem CSV preserves segment status and unmatched evidence', async () => {
+  const report = await updatePostmortemWorkflow(
+    { site: 'sc-domain:example.com' },
+    {
+      updateCorrelation: async () => updateFixture(),
+      segmentImpact: async (input) =>
+        compareSegmentRows({
+          site: input.site,
+          dimension: input.dimension ?? 'page',
+          before: { startDate: '2026-04-01', endDate: '2026-04-28' },
+          after: { startDate: '2026-04-29', endDate: '2026-05-26' },
+          beforeRows: [pageRow('matched', 10), pageRow('before-only', 5)],
+          afterRows: [pageRow('matched', 20)],
+        }),
+    },
+  )
+  const files = updatePostmortemCsvFiles(report)
+  const summary = files.find(
+    (file) => file.filename === 'postmortem-summary.csv',
+  )
+  const pageSegments = files.find(
+    (file) => file.filename === 'postmortem-segment-page.csv',
+  )
+  const unmatched = files.find(
+    (file) => file.filename === 'postmortem-segment-page-unmatched.csv',
+  )
+
+  assert.equal(summary?.rows[0]?.page_segment_status, 'partial')
+  assert.match(
+    String(summary?.rows[0]?.page_segment_warnings),
+    /not treated as zero/,
+  )
+  assert.equal(
+    pageSegments?.rows[0]?.evidence_scope,
+    'matched-retained-segment',
+  )
+  assert.equal(unmatched?.rows[0]?.retained_in, 'before')
+  assert.equal(unmatched?.rows[0]?.reason, 'not-retained-in-other-window')
+})
 
 test('inferTemplateMovement surfaces repeated winning URL patterns', () => {
   const movement = inferTemplateMovement({
@@ -60,6 +157,7 @@ test('inferTemplateMovement explains broad slug patterns with common terms', () 
 function page(url: string, clickDelta: number): SegmentImpactItem {
   return {
     key: url,
+    evidenceScope: 'matched-retained-segment',
     beforeClicks: clickDelta < 0 ? Math.abs(clickDelta) : 0,
     afterClicks: clickDelta > 0 ? clickDelta : 0,
     clickDelta,

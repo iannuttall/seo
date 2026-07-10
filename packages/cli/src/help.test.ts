@@ -155,6 +155,50 @@ test('AI referrals JSON rejects invalid evidence controls before auth', async ()
   }
 })
 
+test('segment impact help exposes bounded comparison evidence', async () => {
+  const output = await runSeo(['segment-impact', '--help'])
+
+  for (const flag of [
+    '--dimension',
+    '--days',
+    '--compare',
+    '--start-date',
+    '--end-date',
+    '--limit',
+    '--unmatched-limit',
+    '--max-rows',
+    '--refresh',
+    '--json',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
+test('segment impact JSON rejects malformed bounds before auth', async () => {
+  for (const args of [
+    ['--days', 'later'],
+    ['--days', '241'],
+    ['--max-rows', 'many'],
+    ['--max-rows', '0'],
+    ['--unmatched-limit', 'none'],
+    ['--unmatched-limit', '101'],
+    ['--start-date', 'not-a-date', '--end-date', '2026-05-28'],
+  ]) {
+    const result = await runSeoResult([
+      'segment-impact',
+      '--site',
+      'sc-domain:example.com',
+      ...args,
+      '--json',
+    ])
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.equal(output.error.code, 'INVALID_INPUT')
+  }
+})
+
 test('cannibal help exposes bounded discovery controls', async () => {
   const output = await runSeo(['cannibal', '--help'])
 

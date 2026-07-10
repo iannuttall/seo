@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { SeoError } from '../errors.js'
 import { diagnoseProperty } from './diagnose-property.js'
+import { compareSegmentRows } from './segment-impact.js'
 
 const site = 'sc-domain:example.com'
 
@@ -107,14 +108,23 @@ test('non-critical device and country data do not mask an unavailable diagnosis'
       updateCorrelation: unavailable,
       segmentImpact: (input) =>
         input.dimension === 'device' || input.dimension === 'country'
-          ? Promise.resolve({
-              site,
-              dimension: input.dimension,
-              before: { startDate: '2026-05-01', endDate: '2026-05-28' },
-              after: { startDate: '2026-05-29', endDate: '2026-06-25' },
-              generatedAt: '2026-07-09T00:00:00.000Z',
-              items: [],
-            })
+          ? Promise.resolve(
+              compareSegmentRows({
+                site,
+                dimension: input.dimension,
+                before: {
+                  startDate: '2026-05-01',
+                  endDate: '2026-05-28',
+                },
+                after: {
+                  startDate: '2026-05-29',
+                  endDate: '2026-06-25',
+                },
+                beforeRows: [],
+                afterRows: [],
+                generatedAt: '2026-07-09T00:00:00.000Z',
+              }),
+            )
           : unavailable(),
       decayingReport: unavailable,
       cannibalReport: unavailable,
@@ -126,6 +136,34 @@ test('non-critical device and country data do not mask an unavailable diagnosis'
   assert.equal(report.dataStatus, 'unavailable')
   assert.equal(report.segments.device.dimension, 'device')
   assert.equal(report.segments.country.dimension, 'country')
+})
+
+test('long diagnosis windows skip impossible adjacent segment comparisons', async () => {
+  let segmentCalls = 0
+  const report = await diagnoseProperty(
+    { site, days: 365 },
+    {
+      trafficAnomaly: unavailable,
+      updateCorrelation: unavailable,
+      segmentImpact: async () => {
+        segmentCalls += 1
+        return unavailable()
+      },
+      decayingReport: unavailable,
+      cannibalReport: unavailable,
+      strikingDistance: unavailable,
+      quickWinsReport: unavailable,
+    },
+  )
+
+  assert.equal(segmentCalls, 0)
+  const segmentSkips =
+    report.skippedSections?.filter((section) =>
+      section.section.endsWith('movement segments'),
+    ) ?? []
+  assert.equal(segmentSkips.length, 4)
+  assert.match(segmentSkips[0]?.reason ?? '', /240 days or fewer/)
+  assert.equal(report.segments.page.dataStatus, 'unavailable')
 })
 
 test('diagnoseProperty keeps authentication and access failures fatal', async () => {

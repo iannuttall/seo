@@ -49,7 +49,12 @@ export function buildDiagnosisPriorities(
       reason: topDelta(input.page),
       action:
         'Open the page and check the queries that moved, whether the URL is still canonical/indexable, and whether the title, H1, or body changed recently.',
-      confidence: Math.abs(largestPage.clickDelta) > 50 ? 'high' : 'medium',
+      confidence:
+        input.page.dataStatus === 'partial'
+          ? 'low'
+          : Math.abs(largestPage.clickDelta) > 50
+            ? 'high'
+            : 'medium',
     })
   }
 

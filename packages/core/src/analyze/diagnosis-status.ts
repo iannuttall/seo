@@ -7,10 +7,25 @@ import type {
 export function diagnosisPartialReasons(
   report: Pick<
     DiagnosePropertyReport,
-    'decay' | 'cannibalization' | 'strikingDistance' | 'quickWins'
+    'segments' | 'decay' | 'cannibalization' | 'strikingDistance' | 'quickWins'
   >,
 ): PartialDiagnosisReason[] {
+  const segmentReasons = (
+    ['page', 'query', 'device', 'country'] as const
+  ).flatMap((dimension) => {
+    const segment = report.segments[dimension]
+    if (segment.dataStatus === 'complete') {
+      return []
+    }
+    return [
+      {
+        section: `${dimension} movement segments`,
+        reason: `${segment.summary.verdict} Inspect its retained-row source evidence and warnings.`,
+      },
+    ]
+  })
   return [
+    ...segmentReasons,
     ...(report.decay.dataStatus === 'partial'
       ? [
           {

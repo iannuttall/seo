@@ -1,116 +1,31 @@
 import { querySearchAnalytics } from '../gsc/client.js'
-import type { GscRow } from '../types.js'
-import { defaultDateRange } from './shared.js'
+import { analyzeSegmentRows } from './segment-impact-analysis.js'
+import {
+  resolveSegmentRanges,
+  segmentRangeDays,
+  validateSegmentRanges,
+  validateSegmentSite,
+} from './segment-impact-input.js'
+import type {
+  SegmentDimension,
+  SegmentImpactReport,
+} from './segment-impact-types.js'
+import { validateDecayRanges } from './site-diagnostics/decay-report-input.js'
+import { integerOption } from './site-diagnostics/quick-wins-report-input.js'
 
-export type SegmentDimension = 'page' | 'query' | 'country' | 'device'
+export { analyzeSegmentRows } from './segment-impact-analysis.js'
+export { unavailableSegmentImpactReport } from './segment-impact-fallback.js'
+export {
+  resolveSegmentRanges,
+  segmentComparisonRange,
+  segmentRangeDays,
+} from './segment-impact-input.js'
+export type * from './segment-impact-types.js'
 
-export type SegmentImpactItem = {
-  key: string
-  beforeClicks: number
-  afterClicks: number
-  clickDelta: number
-  beforeImpressions: number
-  afterImpressions: number
-  impressionDelta: number
-  beforePosition: number
-  afterPosition: number
-  positionDelta: number
-}
+const DEFAULT_MAX_ROWS = 100_000
+type SearchAnalytics = typeof querySearchAnalytics
 
-export type SegmentImpactReport = {
-  site: string
-  dimension: SegmentDimension
-  before: { startDate: string; endDate: string }
-  after: { startDate: string; endDate: string }
-  generatedAt: string
-  items: SegmentImpactItem[]
-}
-
-function weightedPosition(rows: GscRow[]): number {
-  const impressions = rows.reduce((sum, row) => sum + row.impressions, 0)
-  if (impressions <= 0) return 0
-  return (
-    rows.reduce((sum, row) => sum + row.position * row.impressions, 0) /
-    impressions
-  )
-}
-
-function groupRows(rows: GscRow[]): Map<string, GscRow[]> {
-  const grouped = new Map<string, GscRow[]>()
-  for (const row of rows) {
-    const key = row.keys[0] ?? ''
-    if (!key) continue
-    const existing = grouped.get(key) ?? []
-    existing.push(row)
-    grouped.set(key, existing)
-  }
-  return grouped
-}
-
-function summarizeRows(rows: GscRow[]) {
-  return {
-    clicks: rows.reduce((sum, row) => sum + row.clicks, 0),
-    impressions: rows.reduce((sum, row) => sum + row.impressions, 0),
-    position: weightedPosition(rows),
-  }
-}
-
-function fixed(value: number): number {
-  return Number(value.toFixed(3))
-}
-
-function rangeDays(range: { startDate: string; endDate: string }): number {
-  const start = Date.parse(`${range.startDate}T00:00:00Z`)
-  const end = Date.parse(`${range.endDate}T00:00:00Z`)
-  return Math.floor((end - start) / 86_400_000) + 1
-}
-
-export function compareSegmentRows(input: {
-  site: string
-  dimension: SegmentDimension
-  before: { startDate: string; endDate: string }
-  after: { startDate: string; endDate: string }
-  beforeRows: GscRow[]
-  afterRows: GscRow[]
-  limit?: number
-}): SegmentImpactReport {
-  const before = groupRows(input.beforeRows)
-  const after = groupRows(input.afterRows)
-  const keys = new Set([...before.keys(), ...after.keys()])
-
-  const items = [...keys]
-    .map((key) => {
-      const beforeSummary = summarizeRows(before.get(key) ?? [])
-      const afterSummary = summarizeRows(after.get(key) ?? [])
-      return {
-        key,
-        beforeClicks: fixed(beforeSummary.clicks),
-        afterClicks: fixed(afterSummary.clicks),
-        clickDelta: fixed(afterSummary.clicks - beforeSummary.clicks),
-        beforeImpressions: fixed(beforeSummary.impressions),
-        afterImpressions: fixed(afterSummary.impressions),
-        impressionDelta: fixed(
-          afterSummary.impressions - beforeSummary.impressions,
-        ),
-        beforePosition: fixed(beforeSummary.position),
-        afterPosition: fixed(afterSummary.position),
-        positionDelta: fixed(afterSummary.position - beforeSummary.position),
-      }
-    })
-    .sort((a, b) => Math.abs(b.clickDelta) - Math.abs(a.clickDelta))
-    .slice(0, input.limit ?? 25)
-
-  return {
-    site: input.site,
-    dimension: input.dimension,
-    before: input.before,
-    after: input.after,
-    generatedAt: new Date().toISOString(),
-    items,
-  }
-}
-
-export async function segmentImpact(input: {
+export interface SegmentImpactInput {
   site: string
   dimension?: SegmentDimension
   days?: number
@@ -118,50 +33,139 @@ export async function segmentImpact(input: {
   startDate?: string
   endDate?: string
   limit?: number
+  unmatchedLimit?: number
+  maxRows?: number
   refresh?: boolean
-}): Promise<SegmentImpactReport> {
-  if (
-    (input.startDate && !input.endDate) ||
-    (!input.startDate && input.endDate)
-  ) {
-    throw new Error('Pass both startDate and endDate, or neither.')
-  }
-  const days = input.days ?? 28
-  const after =
-    input.startDate && input.endDate
-      ? { startDate: input.startDate, endDate: input.endDate }
-      : defaultDateRange(days)
-  const compareDays = input.compareDays ?? rangeDays(after)
-  const beforeEnd = new Date(`${after.startDate}T00:00:00Z`)
-  beforeEnd.setUTCDate(beforeEnd.getUTCDate() - 1)
-  const beforeStart = new Date(beforeEnd)
-  beforeStart.setUTCDate(beforeStart.getUTCDate() - (compareDays - 1))
-  const before = {
-    startDate: beforeStart.toISOString().slice(0, 10),
-    endDate: beforeEnd.toISOString().slice(0, 10),
-  }
-  const dimension = input.dimension ?? 'page'
+}
 
+export interface SegmentImpactDependencies {
+  searchAnalytics: SearchAnalytics
+  now: () => Date
+}
+
+const defaultDependencies: SegmentImpactDependencies = {
+  searchAnalytics: querySearchAnalytics,
+  now: () => new Date(),
+}
+
+export function compareSegmentRows(input: {
+  site: string
+  dimension: SegmentDimension
+  before: { startDate: string; endDate: string }
+  after: { startDate: string; endDate: string }
+  beforeRows: import('../types.js').GscRow[]
+  afterRows: import('../types.js').GscRow[]
+  limit?: number
+  unmatchedLimit?: number
+  maxRows?: number
+  generatedAt?: string
+}): SegmentImpactReport {
+  validateSegmentSite(input.site)
+  const limit = integerOption({
+    value: input.limit,
+    fallback: 25,
+    minimum: 1,
+    maximum: 100,
+    label: 'limit',
+  })
+  const unmatchedLimit = integerOption({
+    value: input.unmatchedLimit,
+    fallback: 25,
+    minimum: 0,
+    maximum: 100,
+    label: 'unmatchedLimit',
+  })
+  const maxRows = integerOption({
+    value: input.maxRows,
+    fallback: DEFAULT_MAX_ROWS,
+    minimum: 1,
+    maximum: 250_000,
+    label: 'maxRows',
+  })
+  const rangeDays = validateSegmentRanges({
+    before: input.before,
+    after: input.after,
+  })
+  return analyzeSegmentRows({
+    ...input,
+    ...rangeDays,
+    limit,
+    unmatchedLimit,
+    maxRows,
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
+  })
+}
+
+export async function segmentImpact(
+  input: SegmentImpactInput,
+  dependencies: SegmentImpactDependencies = defaultDependencies,
+): Promise<SegmentImpactReport> {
+  validateSegmentSite(input.site)
+  const now = dependencies.now()
+  const ranges = resolveSegmentRanges({ ...input, now })
+  validateDecayRanges({
+    current: ranges.after,
+    previous: ranges.before,
+    now,
+  })
+  const limit = integerOption({
+    value: input.limit,
+    fallback: 25,
+    minimum: 1,
+    maximum: 100,
+    label: 'limit',
+  })
+  const unmatchedLimit = integerOption({
+    value: input.unmatchedLimit,
+    fallback: 25,
+    minimum: 0,
+    maximum: 100,
+    label: 'unmatchedLimit',
+  })
+  const maxRows = integerOption({
+    value: input.maxRows,
+    fallback: DEFAULT_MAX_ROWS,
+    minimum: 1,
+    maximum: 250_000,
+    label: 'maxRows',
+  })
+  const dimension = input.dimension ?? 'page'
+  const request = {
+    dimensions: [dimension],
+    type: 'web' as const,
+    dataState: 'final' as const,
+    aggregationType: 'auto' as const,
+    maxRows,
+  }
   const [beforeResult, afterResult] = await Promise.all([
-    querySearchAnalytics(
+    dependencies.searchAnalytics(
       input.site,
-      { ...before, dimensions: [dimension], type: 'web', dataState: 'final' },
+      { ...ranges.before, ...request },
       { refresh: input.refresh },
     ),
-    querySearchAnalytics(
+    dependencies.searchAnalytics(
       input.site,
-      { ...after, dimensions: [dimension], type: 'web', dataState: 'final' },
+      { ...ranges.after, ...request },
       { refresh: input.refresh },
     ),
   ])
 
-  return compareSegmentRows({
+  return analyzeSegmentRows({
     site: input.site,
     dimension,
-    before,
-    after,
+    before: ranges.before,
+    after: ranges.after,
+    beforeDays: segmentRangeDays(ranges.before),
+    afterDays: segmentRangeDays(ranges.after),
     beforeRows: beforeResult.rows,
     afterRows: afterResult.rows,
-    limit: input.limit,
+    beforeRowsFetched: beforeResult.rowsFetched,
+    afterRowsFetched: afterResult.rowsFetched,
+    beforeCalls: beforeResult.calls,
+    afterCalls: afterResult.calls,
+    limit,
+    unmatchedLimit,
+    maxRows,
+    generatedAt: now.toISOString(),
   })
 }

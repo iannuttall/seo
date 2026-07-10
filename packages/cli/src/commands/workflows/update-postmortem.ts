@@ -16,7 +16,8 @@ type SegmentSplit = Awaited<
   ReturnType<typeof updatePostmortemWorkflow>
 >['output']['segments']['page']
 
-function formatNumber(value: number): string {
+function formatNumber(value: number | null): string {
+  if (value === null) return '-'
   return value.toLocaleString('en-GB', {
     maximumFractionDigits: value >= 100 ? 0 : 1,
   })
@@ -164,6 +165,17 @@ export const updatePostmortemCommand = defineCommand({
     printNotes(
       'Postmortem findings',
       report.output.insights.map((insight) => insight.summary),
+    )
+    printNotes(
+      'Segment evidence warnings',
+      [
+        ...report.output.segments.page.warnings,
+        ...report.output.segments.query.warnings,
+        ...report.output.segments.device.warnings,
+        ...report.output.segments.country.warnings,
+      ].filter(
+        (warning, index, warnings) => warnings.indexOf(warning) === index,
+      ),
     )
     printTemplateMovement(report.output.templateMovement)
     printNotes('Update evidence', report.output.update.evidence)

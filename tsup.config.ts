@@ -1,6 +1,6 @@
 import { defineConfig } from 'tsup'
 
-const internalPackages = [/^@seo\//]
+const bundledPackages = [/^@seo\//, /^cheerio(?:\/|$)/]
 
 export default defineConfig([
   {
@@ -14,7 +14,10 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     clean: true,
-    noExternal: internalPackages,
+    noExternal: bundledPackages,
+    banner: {
+      js: "import { createRequire as __seoCreateRequire } from 'node:module'; const require = __seoCreateRequire(import.meta.url);",
+    },
   },
   {
     entry: { cli: 'packages/cli/src/index.ts' },
@@ -25,9 +28,9 @@ export default defineConfig([
     sourcemap: true,
     clean: false,
     minify: true,
-    noExternal: internalPackages,
+    noExternal: bundledPackages,
     banner: {
-      js: '#!/usr/bin/env node',
+      js: "#!/usr/bin/env node\nimport { createRequire as __seoCreateRequire } from 'node:module'; const require = __seoCreateRequire(import.meta.url);",
     },
   },
 ])

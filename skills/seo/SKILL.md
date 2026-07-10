@@ -36,6 +36,7 @@ Use the `seo` MCP server exposed by the repository or installed package.
 - Use `seo_traffic_anomaly` when the user asks whether movement is statistically unusual.
 - Use `seo_update_correlate` to compare a traffic movement with official Google update windows.
 - Use `seo_internal_links` to find contextual internal-link candidates for one target URL.
+- Use `seo_performance_audit` for one URL's Lighthouse lab diagnostics and device-specific CrUX field Core Web Vitals. Treat fallback fetch evidence as unscored and never call TBT field INP.
 - Use `seo_ctr_underperformers` when the page ranks but click-through rate is weak.
 - Use `seo_query_cluster` when the user wants explainable clustering with no embeddings.
 - Use `gsc_query` only when the user explicitly wants raw Search Console rows.

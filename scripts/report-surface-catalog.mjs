@@ -462,6 +462,27 @@ export const reportSurfaces = [
     ],
   },
   {
+    id: 'performance',
+    core: 'performanceAudit',
+    cli: {
+      file: 'packages/cli/src/commands/performance.ts',
+      marker: 'perf: performanceCommand',
+    },
+    mcp: {
+      file: 'packages/mcp/src/ai-opportunity-tools.ts',
+      marker: "'seo_performance_audit'",
+    },
+    options: [
+      opt('url', 'url:', 'url: z.string().url()'),
+      opt(
+        'strategy',
+        'strategy:',
+        "strategy: z.enum(['mobile', 'desktop']).optional()",
+      ),
+      common.refresh,
+    ],
+  },
+  {
     id: 'query-cluster',
     core: 'queryClusterReport',
     cli: {

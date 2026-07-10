@@ -150,22 +150,18 @@ export function registerAiOpportunityTools(server: McpServer): void {
     'seo_performance_audit',
     {
       description:
-        'Run a local Lighthouse performance audit, with fetch fallback and optional CrUX field data',
+        'Run a local Lighthouse lab audit and optional device-specific CrUX field Core Web Vitals. Configure CrUX with SEO_CRUX_API_KEY.',
       inputSchema: {
         url: z.string().url(),
         strategy: z.enum(['mobile', 'desktop']).optional(),
-        lighthouseBin: z.string().optional(),
-        cruxApiKey: z.string().optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ url, strategy, lighthouseBin, cruxApiKey, refresh }) => {
+    async ({ url, strategy, refresh }) => {
       try {
         const result = await performanceAudit({
           url,
           strategy,
-          lighthouseBin,
-          cruxApiKey,
           refresh,
         })
         return toolSuccess(result.headline, result)

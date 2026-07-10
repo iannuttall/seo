@@ -1,4 +1,4 @@
-import { performanceAudit } from '@seo/core'
+import { performanceAudit, SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
 import { resolveClient } from '../selection.js'
@@ -8,7 +8,10 @@ import { printActionDetails, printNotes } from './output.js'
 function strategy(value: unknown): 'mobile' | 'desktop' {
   const selected = stringArg(value) ?? 'mobile'
   if (selected !== 'mobile' && selected !== 'desktop') {
-    throw new Error('Invalid --strategy. Use mobile or desktop.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Invalid --strategy. Use mobile or desktop.',
+    )
   }
   return selected
 }
@@ -18,10 +21,20 @@ function metric(value?: { displayValue?: string; value?: number }): string {
   return value.displayValue ?? String(value.value ?? 'not measured')
 }
 
+function fieldMetric(value?: {
+  p75: number
+  rating: string
+  unit: 'milliseconds' | 'score'
+}): string {
+  if (!value) return 'not available'
+  const suffix = value.unit === 'milliseconds' ? 'ms' : ''
+  return `${value.p75}${suffix} (${value.rating})`
+}
+
 export const performanceCommand = defineCommand({
   meta: {
     name: 'perf',
-    description: 'Audit page performance with Lighthouse or local fallback',
+    description: 'Audit lab performance and field Core Web Vitals',
   },
   subCommands: {
     audit: defineCommand({
@@ -45,7 +58,17 @@ export const performanceCommand = defineCommand({
         'lighthouse-bin': {
           type: 'string',
           description:
-            'Lighthouse binary path. Defaults to lighthouse on PATH.',
+            'Custom Lighthouse binary path. Defaults to the bundled version.',
+        },
+        'crux-key': {
+          type: 'string',
+          description:
+            'CrUX API key. Prefer SEO_CRUX_API_KEY to avoid shell history.',
+        },
+        raw: {
+          type: 'boolean',
+          default: false,
+          description: 'Include the full Lighthouse JSON in JSON output.',
         },
         refresh: {
           type: 'boolean',
@@ -70,7 +93,9 @@ export const performanceCommand = defineCommand({
           url,
           strategy: strategy(args.strategy),
           lighthouseBin: stringArg(args['lighthouse-bin']),
+          cruxApiKey: stringArg(args['crux-key']),
           refresh: booleanArg(args.refresh),
+          includeRaw: json && booleanArg(args.raw),
         })
         if (json) {
           printJson(report)
@@ -81,18 +106,44 @@ export const performanceCommand = defineCommand({
           ['Source', report.source],
           ['Strategy', report.strategy],
           [
-            'Score',
+            'Lab score',
             report.score === undefined ? 'unknown' : `${report.score}/100`,
           ],
-          ['Grade', report.grade],
+          ['Lab grade', report.grade],
+          ['Data status', report.dataStatus],
           ['Headline', report.headline],
           ['FCP', metric(report.metrics.firstContentfulPaint)],
           ['LCP', metric(report.metrics.largestContentfulPaint)],
           ['TBT', metric(report.metrics.totalBlockingTime)],
           ['CLS', metric(report.metrics.cumulativeLayoutShift)],
           ['INP', metric(report.metrics.interactionToNextPaint)],
-          ['Response', metric(report.metrics.responseTime)],
-          ['Field data', report.fieldDataStatus.status],
+          ['Server response', metric(report.metrics.serverResponseTime)],
+          ['Fallback fetch', metric(report.metrics.fallbackFetchDuration)],
+          [
+            'Field data',
+            report.fieldData
+              ? `${report.fieldData.scope} ${report.fieldData.formFactor.toLowerCase()} (${report.fieldData.assessment.status})`
+              : report.fieldDataStatus.status,
+          ],
+          [
+            'Field period',
+            report.fieldData?.collectionPeriod?.firstDate &&
+            report.fieldData.collectionPeriod.lastDate
+              ? `${report.fieldData.collectionPeriod.firstDate} to ${report.fieldData.collectionPeriod.lastDate}`
+              : 'not available',
+          ],
+          [
+            'Field LCP p75',
+            fieldMetric(report.fieldData?.metrics.largestContentfulPaint),
+          ],
+          [
+            'Field INP p75',
+            fieldMetric(report.fieldData?.metrics.interactionToNextPaint),
+          ],
+          [
+            'Field CLS p75',
+            fieldMetric(report.fieldData?.metrics.cumulativeLayoutShift),
+          ],
         ])
         printActionDetails(
           'Top actions',

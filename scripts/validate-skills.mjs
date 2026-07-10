@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseSkillFrontmatter } from './skill-frontmatter.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const failures = []
@@ -22,30 +23,6 @@ async function sourceFiles(directory) {
     else files.push(path)
   }
   return files
-}
-
-function frontmatter(source, path) {
-  const match = source.match(/^---\n([\s\S]*?)\n---\n/)
-  if (!match) {
-    fail(`${path}: missing YAML frontmatter`)
-    return {}
-  }
-
-  const values = {}
-  for (const line of match[1].split('\n')) {
-    const field = line.match(/^([a-z]+):\s+(.+)$/)
-    if (!field) {
-      fail(`${path}: unsupported frontmatter line ${JSON.stringify(line)}`)
-      continue
-    }
-    values[field[1]] = field[2]
-  }
-
-  const keys = Object.keys(values).sort()
-  if (keys.join(',') !== 'description,name') {
-    fail(`${path}: frontmatter must contain only name and description`)
-  }
-  return values
 }
 
 function rootCommands(source) {
@@ -161,7 +138,14 @@ for (const reportId of reportIds) {
 for (const skillName of skillEntries) {
   const path = `skills/${skillName}/SKILL.md`
   const source = await text(path)
-  const metadata = frontmatter(source, path)
+  let metadata = {}
+  try {
+    metadata = parseSkillFrontmatter(source, path)
+  } catch (error) {
+    fail(
+      error instanceof Error ? error.message : `${path}: invalid frontmatter`,
+    )
+  }
 
   if (metadata.name !== skillName) {
     fail(`${path}: name must match its folder`)

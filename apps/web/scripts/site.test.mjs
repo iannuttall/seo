@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import test from 'node:test'
@@ -26,6 +27,8 @@ const expectedPages = new Map([
   ['cookies/index.html', 'https://seoskills.dev/cookies'],
   ['404.html', 'https://seoskills.dev/404'],
 ])
+const discoverySchema =
+  'https://schemas.agentskills.io/discovery/0.2.0/schema.json'
 
 function matches(html, pattern) {
   return [...html.matchAll(pattern)]
@@ -133,6 +136,82 @@ test('published product counts stay tied to the implementation', async () => {
   )
   assert.match(home, new RegExp(`${listRules().length} crawler rules`))
   assert.match(home, new RegExp(`${skillCount} agent skills`))
+})
+
+test('well-known discovery publishes canonical skills with verified digests', () => {
+  const skillNames = readdirSync(resolve(repoRoot, 'skills'), {
+    withFileTypes: true,
+  })
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        existsSync(resolve(repoRoot, 'skills', entry.name, 'SKILL.md')),
+    )
+    .map((entry) => entry.name)
+    .sort()
+  const indexPath = resolve(dist, '.well-known/agent-skills/index.json')
+  const index = JSON.parse(readFileSync(indexPath, 'utf8'))
+
+  assert.equal(index.$schema, discoverySchema)
+  assert.equal(index.skills.length, skillNames.length)
+  assert.deepEqual(
+    index.skills.map((skill) => skill.name),
+    skillNames,
+  )
+
+  const urls = new Set()
+  for (const skill of index.skills) {
+    assert.equal(skill.type, 'skill-md')
+    assert.match(skill.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    assert.ok(skill.name.length <= 64)
+    assert.ok(skill.description.length >= 1)
+    assert.ok(skill.description.length <= 1024)
+    assert.match(skill.digest, /^sha256:[a-f0-9]{64}$/)
+    assert.equal(skill.files, undefined)
+    assert.equal(skill.url, `/.well-known/agent-skills/${skill.name}/SKILL.md`)
+    assert.equal(urls.has(skill.url), false)
+    urls.add(skill.url)
+
+    const canonical = readFileSync(
+      resolve(repoRoot, 'skills', skill.name, 'SKILL.md'),
+    )
+    const published = readFileSync(resolve(dist, skill.url.slice(1)))
+    assert.deepEqual(published, canonical)
+    assert.equal(
+      skill.digest,
+      `sha256:${createHash('sha256').update(published).digest('hex')}`,
+    )
+
+    const frontmatter = canonical
+      .toString('utf8')
+      .match(/^---\n([\s\S]*?)\n---\n/)?.[1]
+    assert.ok(frontmatter)
+    assert.match(frontmatter, new RegExp(`^name: ${skill.name}$`, 'm'))
+    assert.match(
+      frontmatter,
+      new RegExp(
+        `^description: ${skill.description.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+        'm',
+      ),
+    )
+  }
+
+  const publishedNames = readdirSync(
+    resolve(dist, '.well-known/agent-skills'),
+    { withFileTypes: true },
+  )
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
+  assert.deepEqual(publishedNames, skillNames)
+
+  const headers = readFileSync(resolve(dist, '_headers'), 'utf8')
+  assert.match(headers, /\.well-known\/agent-skills\/index\.json/)
+  assert.match(headers, /Content-Type: application\/json; charset=utf-8/)
+  assert.match(headers, /Content-Type: text\/markdown; charset=utf-8/)
+  assert.match(headers, /Access-Control-Allow-Origin: \*/)
+  assert.match(headers, /Cache-Control: public, max-age=300, must-revalidate/)
+  assert.match(headers, /X-Content-Type-Options: nosniff/)
 })
 
 test('site copy has no stale hosted product, email contact, or dash punctuation', () => {

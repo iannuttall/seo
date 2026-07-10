@@ -6,3 +6,4 @@ dist
 coverage
 *.tsbuildinfo
 /plans/
+/apps/web/public/.well-known/agent-skills/

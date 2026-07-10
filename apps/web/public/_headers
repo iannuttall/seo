@@ -5,3 +5,13 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/.well-known/agent-skills/index.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300, must-revalidate
+  Content-Type: application/json; charset=utf-8
+
+/.well-known/agent-skills/*/SKILL.md
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300, must-revalidate
+  Content-Type: text/markdown; charset=utf-8

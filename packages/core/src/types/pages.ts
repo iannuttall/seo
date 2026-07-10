@@ -148,6 +148,13 @@ export type ExtractedLinkLocation =
   | 'footer'
   | 'other'
 
+export type GoogleRichResultAssessmentStatus =
+  | 'no-required-properties'
+  | 'required-properties-observed'
+  | 'missing-required-properties'
+  | 'retired'
+  | 'not-assessed'
+
 export type GoogleRichResultAssessment = {
   format: 'json-ld' | 'microdata' | 'rdfa'
   block?: number
@@ -160,16 +167,22 @@ export type GoogleRichResultAssessment = {
     | 'BreadcrumbList'
     | 'FAQPage'
   feature: 'article' | 'product-snippet' | 'breadcrumb' | 'faq'
-  status:
-    | 'no-required-properties'
-    | 'required-properties-observed'
-    | 'missing-required-properties'
-    | 'retired'
-    | 'not-assessed'
+  status: GoogleRichResultAssessmentStatus
   observedProperties: string[]
   missingRequiredProperties: string[]
   limitations: string[]
   documentationUrl: string
+}
+
+export type GoogleRichResultAssessmentSelection = {
+  limit: number
+  eligible: number
+  returned: number
+  omitted: number
+  partial: boolean
+  eligibleByStatus: Record<GoogleRichResultAssessmentStatus, number>
+  returnedByStatus: Record<GoogleRichResultAssessmentStatus, number>
+  omittedByStatus: Record<GoogleRichResultAssessmentStatus, number>
 }
 
 export interface ExtractedPage {

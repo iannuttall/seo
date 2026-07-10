@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   assessGoogleRichResults,
+  selectGoogleRichResultAssessments,
   unassessedGoogleRichResult,
 } from './google-rich-results.js'
 
@@ -228,4 +229,96 @@ test('Microdata and RDFa coverage stays explicitly unassessed', () => {
     unassessedGoogleRichResult({ format: 'rdfa', schemaType: 'WebPage' }),
     [],
   )
+})
+
+test('bounded rich-result evidence prioritizes failures and reports omissions', () => {
+  const complete = Array.from(
+    { length: 55 },
+    (_, block) =>
+      assessGoogleRichResults({
+        block,
+        path: `$[${block}]`,
+        nodeTypes: ['Product'],
+        record: {
+          '@type': 'Product',
+          name: `Product ${block}`,
+          offers: { '@type': 'Offer', price: block + 1 },
+        },
+      })[0],
+  ).filter((assessment) => assessment !== undefined)
+  const incomplete = assessGoogleRichResults({
+    block: 55,
+    path: '$[55]',
+    nodeTypes: ['Product'],
+    record: { '@type': 'Product' },
+  })[0]
+  assert.ok(incomplete)
+
+  const forward = selectGoogleRichResultAssessments([...complete, incomplete])
+  const reverse = selectGoogleRichResultAssessments([
+    incomplete,
+    ...[...complete].reverse(),
+  ])
+
+  assert.deepEqual(forward, reverse)
+  assert.equal(forward.assessments.length, 50)
+  assert.equal(forward.assessments[0]?.status, 'missing-required-properties')
+  assert.deepEqual(forward.selection, {
+    limit: 50,
+    eligible: 56,
+    returned: 50,
+    omitted: 6,
+    partial: true,
+    eligibleByStatus: {
+      'no-required-properties': 0,
+      'required-properties-observed': 55,
+      'missing-required-properties': 1,
+      retired: 0,
+      'not-assessed': 0,
+    },
+    returnedByStatus: {
+      'no-required-properties': 0,
+      'required-properties-observed': 49,
+      'missing-required-properties': 1,
+      retired: 0,
+      'not-assessed': 0,
+    },
+    omittedByStatus: {
+      'no-required-properties': 0,
+      'required-properties-observed': 6,
+      'missing-required-properties': 0,
+      retired: 0,
+      'not-assessed': 0,
+    },
+  })
+})
+
+test('bounded rich-result evidence counts failures that exceed the detail limit', () => {
+  const incomplete = Array.from(
+    { length: 55 },
+    (_, block) =>
+      assessGoogleRichResults({
+        block,
+        path: `$[${block}]`,
+        nodeTypes: ['Product'],
+        record: { '@type': 'Product' },
+      })[0],
+  ).filter((assessment) => assessment !== undefined)
+
+  const result = selectGoogleRichResultAssessments(incomplete)
+
+  assert.equal(result.assessments.length, 50)
+  assert.equal(
+    result.selection.eligibleByStatus['missing-required-properties'],
+    55,
+  )
+  assert.equal(
+    result.selection.returnedByStatus['missing-required-properties'],
+    50,
+  )
+  assert.equal(
+    result.selection.omittedByStatus['missing-required-properties'],
+    5,
+  )
+  assert.equal(result.selection.partial, true)
 })

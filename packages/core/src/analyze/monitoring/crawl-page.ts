@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { extractHttpCanonicalEvidence } from '../../extract/canonical.js'
+import { selectGoogleRichResultAssessments } from '../../extract/google-rich-results.js'
 import { extractPage } from '../../extract/page-extractor.js'
 import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
 import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
@@ -346,6 +347,9 @@ export async function crawlOne(
     const canonical =
       extracted.canonicalEvidence?.selectedUrl ??
       resolvedUrl(extracted.canonical, extracted.finalUrl)
+    const richResults = selectGoogleRichResultAssessments(
+      extracted.googleRichResults ?? [],
+    )
     const page: CrawlPageSnapshot = {
       url: extracted.finalUrl,
       finalUrl: extracted.finalUrl,
@@ -432,7 +436,8 @@ export async function crawlOne(
       externalAnchorSamples: anchorSamples(extracted.links, false),
       schemaTypes: extracted.schemaTypes,
       structuredDataFormats: extracted.structuredDataFormats ?? [],
-      googleRichResults: (extracted.googleRichResults ?? []).slice(0, 50),
+      googleRichResults: richResults.assessments,
+      googleRichResultsSelection: richResults.selection,
       schemaSameAs: [
         ...new Set(
           (extracted.schemaSameAsEvidence ?? []).map(

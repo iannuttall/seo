@@ -72,6 +72,22 @@ const geoSignalsSchema = z.object({
   llmsTxtStatus: z.number().int().optional(),
 })
 
+const googleRichResultAssessmentStatusSchema = z.enum([
+  'no-required-properties',
+  'required-properties-observed',
+  'missing-required-properties',
+  'retired',
+  'not-assessed',
+])
+
+const googleRichResultStatusCountsSchema = z.object({
+  'no-required-properties': z.number().int().nonnegative(),
+  'required-properties-observed': z.number().int().nonnegative(),
+  'missing-required-properties': z.number().int().nonnegative(),
+  retired: z.number().int().nonnegative(),
+  'not-assessed': z.number().int().nonnegative(),
+})
+
 const googleRichResultAssessmentSchema = z.object({
   format: z.enum(['json-ld', 'microdata', 'rdfa']),
   block: z.number().int().nonnegative().optional(),
@@ -85,13 +101,7 @@ const googleRichResultAssessmentSchema = z.object({
     'FAQPage',
   ]),
   feature: z.enum(['article', 'product-snippet', 'breadcrumb', 'faq']),
-  status: z.enum([
-    'no-required-properties',
-    'required-properties-observed',
-    'missing-required-properties',
-    'retired',
-    'not-assessed',
-  ]),
+  status: googleRichResultAssessmentStatusSchema,
   observedProperties: z.array(z.string()),
   missingRequiredProperties: z.array(z.string()),
   limitations: z.array(z.string()),
@@ -305,6 +315,18 @@ export const crawlPageSnapshotSchema = z.object({
     .array(z.enum(['json-ld', 'microdata', 'rdfa']))
     .optional(),
   googleRichResults: z.array(googleRichResultAssessmentSchema).optional(),
+  googleRichResultsSelection: z
+    .object({
+      limit: z.number().int().nonnegative(),
+      eligible: z.number().int().nonnegative(),
+      returned: z.number().int().nonnegative(),
+      omitted: z.number().int().nonnegative(),
+      partial: z.boolean(),
+      eligibleByStatus: googleRichResultStatusCountsSchema,
+      returnedByStatus: googleRichResultStatusCountsSchema,
+      omittedByStatus: googleRichResultStatusCountsSchema,
+    })
+    .optional(),
   schemaSameAs: z.array(z.string().url()).optional(),
   schemaSameAsEvidence: z
     .array(

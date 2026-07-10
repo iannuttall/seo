@@ -778,18 +778,38 @@ export function auditCrawlPages(
     const incompleteRichResults = (page.googleRichResults ?? []).filter(
       (assessment) => assessment.status === 'missing-required-properties',
     )
-    if (incompleteRichResults.length) {
+    const selectedIncompleteCount =
+      page.googleRichResultsSelection?.eligibleByStatus[
+        'missing-required-properties'
+      ] ?? 0
+    const incompleteRichResultCount = Math.max(
+      incompleteRichResults.length,
+      selectedIncompleteCount,
+    )
+    if (incompleteRichResultCount) {
+      const details = incompleteRichResults.map(
+        (assessment) =>
+          `${assessment.schemaType}: ${assessment.missingRequiredProperties.join(', ')}`,
+      )
+      const omittedDetails = incompleteRichResultCount - details.length
       issues.push(
         issue(
           'rich_result_required_fields_missing',
           page,
-          incompleteRichResults
-            .map(
-              (assessment) =>
-                `${assessment.schemaType}: ${assessment.missingRequiredProperties.join(', ')}`,
-            )
-            .join('; '),
-          { assessments: incompleteRichResults },
+          [
+            ...details,
+            ...(omittedDetails > 0
+              ? [
+                  `${omittedDetails} more incomplete assessment${omittedDetails === 1 ? '' : 's'} omitted from bounded detail`,
+                ]
+              : []),
+          ].join('; '),
+          {
+            assessments: incompleteRichResults,
+            ...(page.googleRichResultsSelection
+              ? { selection: page.googleRichResultsSelection }
+              : {}),
+          },
         ),
       )
     }

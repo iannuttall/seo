@@ -7,16 +7,13 @@ import type {
   CrawlPageSnapshot,
   CrawlRequestObservation,
 } from '../monitoring/types.js'
+import { estimateSerpTitleWidth } from '../title-width.js'
 import {
   isAuditableHtmlPage,
   isHtmlPage,
   isRedirectedPage,
 } from './page-eligibility.js'
 import type { CrawlIssue } from './report.js'
-
-function titlePixelWidth(title?: string): number {
-  return Math.round((title ?? '').length * 9.2)
-}
 
 function sameUrl(a?: string, b?: string): boolean {
   if (!a || !b) return false
@@ -56,10 +53,6 @@ const LARGE_HTML_BYTES = 2 * 1024 * 1024
 const COMPRESSION_MIN_BYTES = 4 * 1024
 const DEEP_PAGE_DEPTH = 4
 const WEAK_VALUABLE_INLINKS = 1
-const TITLE_MIN_CHARS = 30
-const TITLE_MAX_PIXELS = 580
-const META_DESCRIPTION_MIN_CHARS = 70
-const META_DESCRIPTION_MAX_CHARS = 160
 const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
 const QUERY_COVERAGE_MIN = 0.6
 const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
@@ -132,10 +125,6 @@ function isValuablePage(page: CrawlPageSnapshot): boolean {
     (page.searchMetrics?.impressions ?? 0) >= 100 ||
     (page.analytics?.sessions ?? 0) >= 25
   )
-}
-
-function metadataLength(value?: string): number {
-  return Array.from(value?.trim() ?? '').length
 }
 
 function normalizedMetadata(value?: string): string | undefined {
@@ -538,25 +527,15 @@ export function auditCrawlPages(
     if (!isAuditableHtmlPage(page)) continue
 
     const title = page.title?.trim()
-    const titleLength = metadataLength(title)
-    const titleWidth = titlePixelWidth(title)
+    const titleWidth = title ? estimateSerpTitleWidth(title) : undefined
     const duplicateTitle = duplicateTitles.get(normalizedMetadata(title) ?? '')
     if (!title) {
       issues.push(issue('missing_title', page))
-    } else if (titleLength < TITLE_MIN_CHARS) {
+    } else if (titleWidth?.status === 'over-reference') {
       issues.push(
-        issue('title_too_short', page, `${titleLength} chars`, {
+        issue('title_too_wide', page, `${titleWidth.estimatedPixels}px`, {
           title,
-          length: titleLength,
-          minLength: TITLE_MIN_CHARS,
-        }),
-      )
-    } else if (titleWidth > TITLE_MAX_PIXELS) {
-      issues.push(
-        issue('title_too_wide', page, `${titleWidth}px`, {
-          title,
-          estimatedPixels: titleWidth,
-          maxPixels: TITLE_MAX_PIXELS,
+          ...titleWidth,
         }),
       )
     }
@@ -571,38 +550,11 @@ export function auditCrawlPages(
     }
 
     const metaDescription = page.metaDescription?.trim()
-    const metaDescriptionLength = metadataLength(metaDescription)
     const duplicateDescription = duplicateDescriptions.get(
       normalizedMetadata(metaDescription) ?? '',
     )
     if (!metaDescription) {
       issues.push(issue('missing_meta_description', page))
-    } else if (metaDescriptionLength < META_DESCRIPTION_MIN_CHARS) {
-      issues.push(
-        issue(
-          'meta_description_too_short',
-          page,
-          `${metaDescriptionLength} chars`,
-          {
-            metaDescription,
-            length: metaDescriptionLength,
-            minLength: META_DESCRIPTION_MIN_CHARS,
-          },
-        ),
-      )
-    } else if (metaDescriptionLength > META_DESCRIPTION_MAX_CHARS) {
-      issues.push(
-        issue(
-          'meta_description_too_long',
-          page,
-          `${metaDescriptionLength} chars`,
-          {
-            metaDescription,
-            length: metaDescriptionLength,
-            maxLength: META_DESCRIPTION_MAX_CHARS,
-          },
-        ),
-      )
     }
     if (metaDescription && duplicateDescription) {
       issues.push(
@@ -618,12 +570,6 @@ export function auditCrawlPages(
     if (h1Count === 0) {
       issues.push(
         issue('h1_missing', page, 'No H1 found', {
-          h1Count,
-        }),
-      )
-    } else if (h1Count > 1) {
-      issues.push(
-        issue('multiple_h1', page, `Found ${h1Count} H1 elements`, {
           h1Count,
         }),
       )

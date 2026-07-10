@@ -51,38 +51,26 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'title_too_wide',
-    title: 'Title likely truncates',
-    category: 'metadata',
-    defaultSeverity: 'medium',
-    whyItMatters:
-      'Over-wide titles are often truncated in search results, hiding the part that explains why the page is relevant.',
-    howToFix:
-      'Tighten the title, front-load the important phrase, and remove filler that does not help the searcher choose the page.',
-    impactIfIgnored:
-      'Search snippets may cut off the strongest wording, which can reduce click-through even when rankings hold.',
-    howToVerify:
-      'Re-run the page audit and confirm the estimated title width no longer exceeds the SERP budget.',
-    agentHints: {
-      evidenceFields: ['page.title'],
-      suggestedCommands: ['seo audit-page --url <url> --json'],
-    },
-  },
-  {
-    id: 'title_too_short',
-    title: 'Title too short',
+    title: 'Title may truncate on some devices',
     category: 'metadata',
     defaultSeverity: 'low',
     whyItMatters:
-      'Very short titles waste the search-result headline and usually omit the useful words people scan for.',
+      'Google has no fixed title length limit, but title links are truncated to fit the available device width. Important wording placed late may not always display.',
     howToFix:
-      'Expand the title so it clearly names the page topic, entity, product, or location. Aim for a useful human headline, not keyword stuffing.',
+      'Review the title rather than shortening it blindly. Put the clearest page-specific wording first and remove filler only when meaning is preserved.',
     impactIfIgnored:
-      'The page may look generic in search and send weaker topical signals than competing pages.',
+      'Some result layouts may truncate later words. This is a display estimate, not an indexing or ranking defect.',
     howToVerify:
-      'Re-run the crawl and confirm the title length is at least 30 characters.',
+      'Re-run the audit and review estimatedPixels, referencePixels, confidence, and profile. Confirm the important wording appears early.',
     agentHints: {
-      evidenceFields: ['page.title', 'issue.evidence.length'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+      evidenceFields: [
+        'page.title',
+        'issue.evidence.estimatedPixels',
+        'issue.evidence.referencePixels',
+        'issue.evidence.confidence',
+        'issue.evidence.profile',
+      ],
+      suggestedCommands: ['seo audit-page --url <url> --json'],
     },
   },
   {
@@ -108,55 +96,20 @@ const RULE_DEFINITIONS = [
     },
   },
   {
-    id: 'h1_count',
-    title: 'H1 structure issue',
-    category: 'headings',
-    defaultSeverity: 'medium',
-    whyItMatters:
-      'The H1 should make the page topic obvious to readers, search engines, and assistive technology. Missing or competing H1s blur that signal.',
-    howToFix:
-      'Use one clear H1 for the main page topic. Demote secondary headings to H2 or H3 so the page outline is easy to parse.',
-    impactIfIgnored:
-      'The page has weaker topical clarity and may be harder for humans, crawlers, and AI systems to interpret.',
-    howToVerify:
-      'Re-run `seo audit-page --url <url>` and confirm exactly one H1 is detected.',
-    agentHints: {
-      evidenceFields: ['page.headings'],
-      suggestedCommands: ['seo audit-page --url <url> --json'],
-    },
-  },
-  {
     id: 'h1_missing',
     title: 'Missing H1',
     category: 'headings',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'The H1 is the main visible page heading. It helps readers, search engines, screen readers, and AI systems understand the primary topic.',
+      'A descriptive main heading helps readers and assistive technology identify the page topic and navigate its content.',
     howToFix:
       'Add one clear H1 near the top of the main content. Make it describe the specific page, not just a generic section label.',
     impactIfIgnored:
-      'The page has weaker topical clarity and may be harder to understand or cite.',
+      'The visible document outline may be less clear to readers and assistive technology.',
     howToVerify:
-      'Re-run the crawl and confirm h1Count is 1 and the H1 text matches the page intent.',
+      'Re-run the crawl and confirm an H1 describes the page’s main visible topic.',
     agentHints: {
       evidenceFields: ['page.h1', 'page.h1Count'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
-    },
-  },
-  {
-    id: 'multiple_h1',
-    title: 'Multiple H1s',
-    category: 'headings',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Multiple H1s can blur the primary topic and make the page outline less predictable for crawlers and assistive technology.',
-    howToFix:
-      'Keep the main page topic as the only H1. Demote secondary section titles to H2 or H3.',
-    impactIfIgnored:
-      'The heading hierarchy stays noisy, especially on templates reused across many pages.',
-    howToVerify: 'Re-run the crawl and confirm h1Count is exactly 1.',
-    agentHints: {
-      evidenceFields: ['page.h1Count'],
       suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
     },
   },
@@ -552,42 +505,6 @@ const RULE_DEFINITIONS = [
       'Search snippets may be generic or less persuasive, especially on pages that already rank.',
     howToVerify:
       'Re-run the crawl and confirm the page has a meta description.',
-  },
-  {
-    id: 'meta_description_too_short',
-    title: 'Meta description too short',
-    category: 'metadata',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Very short descriptions under-use the snippet space and rarely give searchers enough reason to click.',
-    howToFix:
-      'Write a clear one- or two-sentence description that summarizes the page value and matches the likely search intent.',
-    impactIfIgnored:
-      'Search engines may replace the snippet or show copy that does not sell the page well.',
-    howToVerify:
-      'Re-run the crawl and confirm the description is at least 70 characters.',
-    agentHints: {
-      evidenceFields: ['page.metaDescription', 'issue.evidence.length'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
-    },
-  },
-  {
-    id: 'meta_description_too_long',
-    title: 'Meta description too long',
-    category: 'metadata',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'Over-long descriptions are likely to be truncated or rewritten, which can hide the most useful click promise.',
-    howToFix:
-      'Tighten the description to the clearest value proposition and put the most important words near the front.',
-    impactIfIgnored:
-      'The visible snippet may cut off the strongest part of the message or get replaced by generated text.',
-    howToVerify:
-      'Re-run the crawl and confirm the description is no longer over 160 characters.',
-    agentHints: {
-      evidenceFields: ['page.metaDescription', 'issue.evidence.length'],
-      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
-    },
   },
   {
     id: 'meta_description_duplicate',

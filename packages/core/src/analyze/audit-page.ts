@@ -4,11 +4,12 @@ import { queryPageMetrics } from '../gsc/client.js'
 import type { RuleId } from '../rules.js'
 import type { AuditPageReport, Recommendation } from '../types.js'
 import { samePageUrl } from './page-technical-signals.js'
+import { estimateSerpTitleWidth } from './title-width.js'
 
 export const AUDIT_PAGE_RULE_IDS = [
   'missing_title',
   'title_too_wide',
-  'h1_count',
+  'h1_missing',
   'canonical_invalid',
   'canonical_conflict',
   'canonical_multiple',
@@ -28,37 +29,27 @@ const defaultDependencies: AuditPageDependencies = {
   now: () => new Date(),
 }
 
-function titlePixelWidth(title?: string): number {
-  return Math.round((title ?? '').length * 9.2)
-}
-
 function buildRecommendations(report: AuditPageReport): Recommendation[] {
   const recommendations: Recommendation[] = []
   const page = report.page
 
-  if (
-    !page.title ||
-    page.headings.filter((heading) => heading.level === 1).length === 0
-  ) {
+  if (!page.title) {
     recommendations.push({
       principle: 'C.2',
-      evidenceRef:
-        'Primary document labels are incomplete: title or H1 is missing.',
-      action:
-        'Add a single clear H1 and align the title with the page’s primary query target.',
+      evidenceRef: 'The HTML document has no title element.',
+      action: 'Add a concise, descriptive title that identifies this page.',
       effort: 'S',
       confidence: 'high',
     })
   }
 
-  if ((page.wordCount ?? 0) < 300) {
+  if (page.headings.every((heading) => heading.level !== 1)) {
     recommendations.push({
-      principle: 'C.5',
-      evidenceRef: `Main content extracted only ${page.wordCount} words.`,
-      action:
-        'Expand the page with missing subtopics that answer the query more completely.',
-      effort: 'M',
-      confidence: 'medium',
+      principle: 'C.4',
+      evidenceRef: 'The extracted document has no H1 heading.',
+      action: 'Add a descriptive H1 for the page’s main visible topic.',
+      effort: 'S',
+      confidence: 'high',
     })
   }
 
@@ -108,25 +99,28 @@ export async function auditPage(
     })
   }
 
-  if (page.title && titlePixelWidth(page.title) > 580) {
-    issues.push({
-      code: 'title_too_wide',
-      title: 'Title likely truncates',
-      detail: `Estimated width ${titlePixelWidth(page.title)}px exceeds the usual SERP budget.`,
-      principle: 'C.3',
-      evidenceRef: `Title "${page.title}" is approximately ${titlePixelWidth(page.title)}px wide.`,
-      severity: 'medium',
-    })
+  if (page.title) {
+    const titleWidth = estimateSerpTitleWidth(page.title)
+    if (titleWidth.status === 'over-reference') {
+      issues.push({
+        code: 'title_too_wide',
+        title: 'Title may truncate on some devices',
+        detail: `Estimated title width ${titleWidth.estimatedPixels}px exceeds the ${titleWidth.referencePixels}px review reference.`,
+        principle: 'C.3',
+        evidenceRef: `Title width estimate: ${titleWidth.estimatedPixels}px using ${titleWidth.profile.id} (${titleWidth.confidence} confidence).`,
+        severity: 'low',
+      })
+    }
   }
 
-  if (h1s.length !== 1) {
+  if (h1s.length === 0) {
     issues.push({
-      code: 'h1_count',
-      title: 'H1 structure issue',
-      detail: `Expected one H1, found ${h1s.length}.`,
+      code: 'h1_missing',
+      title: 'Missing H1',
+      detail: 'No H1 element was found.',
       principle: 'C.4',
-      evidenceRef: `Detected ${h1s.length} H1 elements.`,
-      severity: h1s.length === 0 ? 'high' : 'medium',
+      evidenceRef: 'Detected 0 H1 elements.',
+      severity: 'low',
     })
   }
 

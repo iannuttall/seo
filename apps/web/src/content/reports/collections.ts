@@ -18,7 +18,7 @@ export const reportCollections = [
     ],
   },
   {
-    title: 'Crawl findings & evidence',
+    title: 'Crawl findings',
     introduction:
       'Turn a crawl finding into affected URLs, understand the rule, and inspect saved evidence.',
     reports: [
@@ -85,7 +85,7 @@ export const reportCollections = [
     ],
   },
   {
-    title: 'Understand search performance',
+    title: 'Understand performance',
     introduction:
       'Work out where search performance moved, which part of the site explains it, and whether the change is unusual.',
     reports: [

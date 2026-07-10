@@ -26,6 +26,33 @@ The MCP path is deliberately small: discover ids with `seo_list_reports`, load
 one schema with `seo_describe_report`, then execute it with `seo_run_report`.
 The skills name the report ids for their workflow.
 
+The same catalog is available without MCP:
+
+```bash
+seo reports list --json
+seo reports describe <report-id> --json
+seo reports run <report-id> --params '<json>' --json
+```
+
+## Adding a report skill
+
+Register a structured report once in `packages/mcp/src/report-registry.ts`.
+CLI and MCP discovery will then share its id, description, input schema, and
+handler. Add the same-name skill only after that contract exists.
+
+Every report skill must:
+
+- explain the technical SEO question and why it is useful;
+- show `seo_list_reports`, `seo_describe_report`, and `seo_run_report` usage;
+- show schema discovery and one valid `seo reports run` CLI example;
+- explain the evidence fields, partial-data states, and important caveats;
+- turn findings into bounded actions and verification steps; and
+- avoid turning estimates, conventions, or samples into search-engine rules.
+
+Run `pnpm skills:validate` after adding or changing a skill. The validator
+checks registry parity, command and tool names, frontmatter, package metadata,
+and minimum report guidance depth.
+
 ## Curated workflow skills
 
 - `seo-site-audit`: start with the main report, then add bounded technical evidence.

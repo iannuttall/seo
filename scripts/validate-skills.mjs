@@ -133,6 +133,22 @@ for (const reportId of reportIds) {
       fail(`skills/${reportId}/SKILL.md: missing compact MCP tool ${tool}`)
     }
   }
+  const words = source.match(/[A-Za-z0-9][A-Za-z0-9'/-]*/g)?.length ?? 0
+  if (words < 200) {
+    fail(
+      `skills/${reportId}/SKILL.md: report skills need at least 200 words of specific guidance; found ${words}`,
+    )
+  }
+  if (!source.includes(`seo reports describe ${reportId} --json`)) {
+    fail(
+      `skills/${reportId}/SKILL.md: missing schema discovery command for ${reportId}`,
+    )
+  }
+  if (!source.includes(`seo reports run ${reportId} --params`)) {
+    fail(
+      `skills/${reportId}/SKILL.md: missing schema-backed run command for ${reportId}`,
+    )
+  }
 }
 
 for (const skillName of skillEntries) {

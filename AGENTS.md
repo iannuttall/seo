@@ -206,6 +206,7 @@ only the references, scripts, or assets it genuinely needs.
   `skills/README.md`.
 - Keep descriptions specific enough for reliable tool selection.
 - Teach agents to start compact, inspect evidence, then request detail.
+- Give every report skill a schema-backed `seo reports describe` and `run` example.
 - Do not duplicate the full CLI manual in every skill.
 - Skills and MCP must call the same core functions as the CLI.
 - Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical

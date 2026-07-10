@@ -47,7 +47,8 @@ skills/         packaged agent skills
 - Runtime bundles must not depend on private workspace package names.
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
   deliberately migrated and verified.
-- `npx seo start` and `npm install --global seo` are the primary README paths.
+- Use SEO Skills CLI as the product name in human-facing copy and `seo` for the command and package.
+- `npx seo start` and `npm i -g seo` are the primary README paths.
 - Library and contributor setup belongs below normal CLI usage in the README.
 
 ## Repo Map

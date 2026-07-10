@@ -1,7 +1,7 @@
 {
   "name": "seo",
   "version": "0.1.0",
-  "description": "Local-first SEO reports, crawling, Google Search Console, GA4, CLI, and MCP tools.",
+  "description": "SEO Skills CLI and MCP for finding technical problems, ranking fixes with search data, and running reports locally.",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Ian Nuttall",
@@ -59,7 +59,7 @@
     "build": "turbo run build && pnpm run build:package",
     "build:package": "tsup --config tsup.config.ts",
     "clean": "turbo run clean && rm -rf dist",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "lint": "biome check . && node scripts/check-emdashes.mjs && node scripts/check-report-parity.mjs && pnpm run skills:validate && turbo run lint",
     "lint:fix": "biome check . --write",
     "loc:audit": "node scripts/loc-audit.mjs",

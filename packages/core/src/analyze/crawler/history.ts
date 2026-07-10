@@ -1,9 +1,9 @@
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import type {
-  CrawlIssueGroup,
-  CrawlReport,
-  CrawlReportSummary,
-} from './report.js'
+import {
+  type CrawlComparisonMetadata,
+  crawlComparisonMetadata,
+} from './history-provenance.js'
+import type { CrawlIssueGroup, CrawlReport } from './report.js'
 
 export type CrawlSnapshotPageChange = {
   url: string
@@ -50,20 +50,12 @@ export type CrawlSnapshotIssueChange = {
 }
 
 export type CrawlSnapshotDiffReport = {
-  before: {
-    id: string
-    generatedAt: string
-    site?: string
-    url: string
-    summary: CrawlReportSummary
-  }
-  after: {
-    id: string
-    generatedAt: string
-    site?: string
-    url: string
-    summary: CrawlReportSummary
-  }
+  schemaVersion: 1
+  before: CrawlComparisonMetadata['before']
+  after: CrawlComparisonMetadata['after']
+  comparability: CrawlComparisonMetadata['comparability']
+  completeness: CrawlComparisonMetadata['completeness']
+  caveats: string[]
   summary: {
     pageDelta: number
     issueDelta: number
@@ -324,6 +316,7 @@ export function compareCrawlReports(input: {
   before: CrawlReport
   after: CrawlReport
 }): CrawlSnapshotDiffReport {
+  const metadata = crawlComparisonMetadata(input)
   const changes = pageChanges(input.before, input.after)
   const issues = issueChanges(input.before, input.after)
   const summary = {
@@ -361,20 +354,8 @@ export function compareCrawlReports(input: {
   }
 
   return {
-    before: {
-      id: input.before.id,
-      generatedAt: input.before.generatedAt,
-      site: input.before.site,
-      url: input.before.config.url,
-      summary: input.before.summary,
-    },
-    after: {
-      id: input.after.id,
-      generatedAt: input.after.generatedAt,
-      site: input.after.site,
-      url: input.after.config.url,
-      summary: input.after.summary,
-    },
+    schemaVersion: 1,
+    ...metadata,
     summary,
     headline: headline(summary),
     topActions: actions({ changes, issues, summary }),

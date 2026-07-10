@@ -7,7 +7,7 @@ export const reportGuideOverridesIP: Partial<
     name: 'Index coverage signals',
     summary:
       'Find crawlable pages missing from the returned Search Console data, then choose representative URLs for direct inspection.',
-    lead: 'Use this when you need to investigate index coverage across more than one source. It compares pages found in a saved crawl and sitemap with pages that appeared in Search Console results, then gives you a focused list to check with URL Inspection.',
+    lead: 'Use this Google index coverage report to compare a saved crawl, sitemap inventory, and Search Console page data. It finds page groups that deserve URL Inspection without treating a missing Search Console row as proof that Google has not indexed the URL.',
     inputs: [
       {
         label: 'Saved crawl report',
@@ -33,18 +33,37 @@ export const reportGuideOverridesIP: Partial<
       'Exact cross-source counts plus limited URL lists for each evidence group.',
       'A representative review queue, template samples, source details, and caveats that explain what missing Search Console rows cannot prove.',
     ],
+    alternatives: [
+      {
+        when: 'You need Google’s current indexed verdict for a specific URL.',
+        reportId: 'index-watch',
+        doInstead:
+          'Run index watch for a limited URL set. It adds direct URL Inspection verdicts and saved-history comparisons instead of inferring index state from crawl, sitemap, or Search Analytics data.',
+      },
+      {
+        when: 'You need a definitive count of every indexed URL on a large site.',
+        doInstead:
+          'No automated report can produce that count from Search Analytics or a quota-limited URL Inspection sample. Use this report to select representative URLs, inspect them directly, and review Search Console indexing reports alongside the site’s intended URL inventory.',
+      },
+    ],
     seo: {
-      title: 'Index Coverage Signals: Find Pages That Need URL Inspection',
+      title: 'Google Index Coverage Report: Crawl, Sitemap and GSC Checks',
       description:
-        'Compare crawl, sitemap, and Search Console evidence to choose pages for URL Inspection without treating missing search rows as proof they are unindexed.',
-      heading: 'Find the right pages to check with URL Inspection',
+        'Compare crawl, sitemap, and Google Search Console evidence to find page groups that deserve direct URL Inspection checks.',
+      heading:
+        'Google index coverage report for crawl, sitemap, and GSC checks.',
+      primaryKeyword: 'index coverage',
+      supportingKeywords: [
+        'google search console audit',
+        'technical SEO audit',
+      ],
     },
   },
   'index-coverage-plan': {
     name: 'Plan Google index monitoring',
     summary:
       'Turn sitemap URLs, Search Console properties, and daily URL Inspection limits into a realistic monitoring cycle.',
-    lead: 'Run this before spending URL Inspection quota on a large site. It allocates sitemap URLs to available properties and shows where an additional URL-prefix property could improve monitoring coverage.',
+    lead: 'Use this URL inspection plan before spending Google quota on a large site. It assigns sitemap URLs to available Search Console properties, estimates the monitoring cycle, and shows where another URL-prefix property could improve coverage.',
     inputs: [
       {
         label: 'XML sitemap inventories',
@@ -65,18 +84,36 @@ export const reportGuideOverridesIP: Partial<
       'URL inventory counts, property allocations, daily capacity, target cycle, and uncovered or unassigned URLs.',
       'Suggested URL-prefix properties and representative paths, with no URL Inspection quota spent.',
     ],
+    alternatives: [
+      {
+        when: 'You need to collect Google index verdicts now rather than plan future coverage.',
+        reportId: 'index-monitor',
+        doInstead:
+          'Run index monitor after checking the proposed sample and quota. It spends the configured URL Inspection capacity, stores exact provider results locally, and keeps deferred and failed requests separate.',
+      },
+      {
+        when: 'You need to decide whether every sitemap URL deserves indexing.',
+        doInstead:
+          'No automated report can infer page intent or business value from a sitemap. Review the intended page types and canonical strategy with the people who own the site, then use this plan to create a representative inspection cycle.',
+      },
+    ],
     seo: {
-      title: 'Google Index Monitoring Plan: Use URL Inspection Quota Wisely',
+      title: 'URL Inspection Plan: Monitor More Pages Without Wasting Quota',
       description:
-        'Plan Google index monitoring from sitemap URLs, Search Console properties, and URL Inspection limits before spending daily quota on a large site.',
-      heading: 'Plan URL Inspection coverage before spending Google quota',
+        'Plan representative URL Inspection samples, check property coverage, and find folder-level Search Console property recommendations.',
+      heading: 'URL inspection planning before spending Google quota.',
+      primaryKeyword: 'url inspection api',
+      supportingKeywords: [
+        'google search console url inspection tool',
+        'index coverage',
+      ],
     },
   },
   'index-monitor': {
     name: 'Collect Google index snapshots',
     summary:
       'Inspect a quota-limited sitemap sample and save Google indexed-state snapshots for later comparison.',
-    lead: 'Use this to build or refresh the snapshot history behind index monitoring. It selects due URLs within locally enforced quota and records every inspected, deferred, blocked, or failed request.',
+    lead: 'Use Google index monitoring to build or refresh local URL Inspection history. The report selects due sitemap URLs within your daily limit and records every inspected, deferred, blocked, or failed request.',
     inputs: [
       {
         label: 'XML sitemap URLs',
@@ -101,18 +138,34 @@ export const reportGuideOverridesIP: Partial<
       'Inventory, due, selected, inspected, deferred, failed, quota-blocked, and unselected counts with exact selection source details.',
       'Current Google indexed-state snapshots, operational review rows, warnings, and a projected monitoring cycle.',
     ],
+    alternatives: [
+      {
+        when: 'You need to know which inspected URLs regressed or recovered since an earlier snapshot.',
+        reportId: 'index-watch',
+        doInstead:
+          'Run index watch after snapshots exist. It compares compatible URL Inspection fields and separates regressions, recoveries, unchanged results, and provider failures.',
+      },
+      {
+        when: 'You need to diagnose the live technical state of one URL flagged by Google.',
+        reportId: 'audit-page',
+        doInstead:
+          'Audit the live page to add current response, redirect, canonical, robots, metadata, link, and schema evidence. URL Inspection describes Google’s indexed version and can lag the deployed page.',
+      },
+    ],
     seo: {
       title: 'Google Index Monitor: Collect URL Inspection Snapshots Locally',
       description:
         'Collect quota-limited Google URL Inspection snapshots from sitemap URLs, save local history, and keep deferred, failed, blocked, and unselected states clear.',
       heading: 'Collect Google index snapshots within your daily quota',
+      primaryKeyword: 'Google index monitoring',
+      supportingKeywords: ['URL inspection monitoring'],
     },
   },
   'index-watch': {
     name: 'Review Google index changes',
     summary:
       'Inspect a limited URL set and separate current index issues, regressions, recoveries, and operational failures.',
-    lead: 'Use this when you already know which URLs matter and want to compare Google’s latest indexed-state evidence with saved snapshots. Intentional controls stay observations until the history shows a meaningful contradiction.',
+    lead: 'Use URL inspection monitoring when you already know which pages matter and want to track Google index status changes. It compares the latest indexed-state evidence with local snapshots while keeping intentional controls and provider failures separate.',
     inputs: [
       {
         label: 'Explicit URL sample',
@@ -136,18 +189,34 @@ export const reportGuideOverridesIP: Partial<
       'Per-URL Google indexed-state evidence with current classification and previous snapshot comparison.',
       'Summary counts, operational failures, retry guidance, source limits, and caveats for intentional directives and incomplete samples.',
     ],
+    alternatives: [
+      {
+        when: 'You do not yet know which URLs deserve direct inspection.',
+        reportId: 'index-coverage',
+        doInstead:
+          'Run index coverage first. It compares crawl, sitemap, and returned Search Console evidence to build a limited review sample without spending URL Inspection quota on every discovered URL.',
+      },
+      {
+        when: 'You need to decide whether a noindex, canonical, or exclusion is intentional.',
+        doInstead:
+          'No automated report can recover the site owner’s intent. Compare the page purpose with the canonical and index strategy, then use this report’s exact Google verdict and history to check whether the observed state contradicts that decision.',
+      },
+    ],
     seo: {
-      title: 'Google Index Watch: Find Regressions and Recoveries in Google',
+      title: 'URL Inspection Monitoring: Track Google Index Status Changes',
       description:
-        'Check a limited URL set with Google URL Inspection and separate current index issues, regressions, recoveries, quota blocks, and provider failures.',
-      heading: 'Review Google index changes for the URLs that matter',
+        "Monitor important URLs with Google's URL Inspection API, tracked quota, saved snapshots, and index status change alerts.",
+      heading:
+        'Quota-aware URL inspection monitoring for Google index status changes.',
+      primaryKeyword: 'google search console url inspection tool',
+      supportingKeywords: ['url inspection api', 'index coverage'],
     },
   },
   'internal-links': {
     name: 'Find internal link candidates',
     summary:
       'Find fetched pages with relevant search evidence that do not currently contain a verified contextual link to a chosen target.',
-    lead: 'Use this when a sound target page needs better discovery paths from related content. Every candidate combines query evidence with a fetched source page and a verified missing link.',
+    lead: 'Use this internal linking SEO report when a target page needs links from relevant pages on the same site. Every candidate combines related Search Console demand with a fetched source page where the link is currently missing.',
     inputs: [
       {
         label: 'Search Console page and query evidence',
@@ -168,18 +237,33 @@ export const reportGuideOverridesIP: Partial<
       'Ranked source-page candidates with supporting queries, metrics, current link state, and target URL.',
       'Verification status, failed fetches, limits, caveats, and a prompt to choose natural anchor and placement manually.',
     ],
+    alternatives: [
+      {
+        when: 'You need a page brief for the target rather than possible source pages.',
+        reportId: 'content-optimization',
+        doInstead:
+          'Run content optimization for the target URL. It adds the live page structure and its returned Search Console queries so you can review topic coverage before adding links.',
+      },
+      {
+        when: 'You need the final anchor text and exact sentence where a link should appear.',
+        doInstead:
+          'No automated report can choose natural wording without editorial context. Use these candidates to open the source and target pages, then place a descriptive link only where it helps the reader and matches the surrounding copy.',
+      },
+    ],
     seo: {
-      title: 'Internal Link Opportunities: Find Relevant Source Pages',
+      title: 'Internal Linking SEO Report: Find Links to Target Pages',
       description:
-        'Find relevant internal link source pages from Search Console evidence, verify the link is missing, and review each page before adding a contextual link.',
-      heading: 'Find relevant pages that could link to a chosen target',
+        'Find internal linking opportunities from pages with related search demand, shared queries, and missing links to a target URL.',
+      heading: 'Internal linking SEO report for stronger target pages.',
+      primaryKeyword: 'internal linking SEO',
+      supportingKeywords: ['internal links seo', 'seo audit'],
     },
   },
   'link-recovery': {
     name: 'Recover broken URLs with search value',
     summary:
       'Find URLs that still earn returned clicks or impressions but now fail, block access, or redirect poorly.',
-    lead: 'Use this after a migration, deletion, redesign, or crawl regression to find broken destinations that still matter in search. The result prioritises observed demand and leaves the recovery choice to the page’s intent and replacement.',
+    lead: 'Use broken link recovery after a migration, deletion, redesign, or crawl regression. It finds failed URLs and weak redirects that still have Search Console value, then leaves the restore or redirect decision tied to page intent and the available replacement.',
     inputs: [
       {
         label: 'Returned Search Console page evidence',
@@ -200,11 +284,27 @@ export const reportGuideOverridesIP: Partial<
       'Broken, blocked, or poorly redirected URLs with returned clicks, impressions, live status, and final destination evidence.',
       'A limited recovery queue with restore, redirect, canonical, investigate, or leave-alone guidance tied to observed evidence.',
     ],
+    alternatives: [
+      {
+        when: 'You need every redirect hop and the final page controls for one recovery candidate.',
+        reportId: 'redirect-trace',
+        doInstead:
+          'Run redirect trace for that URL. It adds the complete hop sequence plus the final response, canonical, robots directives, and indexability evidence needed to verify a redirect fix.',
+      },
+      {
+        when: 'You need to decide whether an old URL should be restored, redirected, or left gone.',
+        doInstead:
+          'No automated report can decide relevance, replacement quality, or business intent. Use this report to rank URLs with observed search value, then review the old purpose and the best current destination before choosing a response.',
+      },
+    ],
     seo: {
-      title: 'SEO Link Recovery: Find Broken URLs With Search Value in GSC',
+      title: 'Broken Link Recovery for SEO: Find URLs With Search Value',
       description:
-        'Find broken, blocked, or poorly redirected URLs that still hold Search Console clicks or impressions and build an evidence-backed recovery list.',
-      heading: 'Find broken URLs that still hold search value',
+        'Find broken URLs and weak redirects that still have Search Console value, then decide what to restore, redirect, or leave.',
+      heading:
+        'Broken link recovery for SEO pages that still have search value.',
+      primaryKeyword: 'broken link recovery',
+      supportingKeywords: ['technical SEO audit', 'seo audit'],
     },
   },
   'crawl-history': {
@@ -230,11 +330,27 @@ export const reportGuideOverridesIP: Partial<
       'A compact list of saved crawl ids, sites, dates, status, page totals, issue totals, and configuration metadata.',
       'Enough context to open one snapshot or choose compatible before and after reports for comparison.',
     ],
+    alternatives: [
+      {
+        when: 'You need the pages and issues inside one saved snapshot.',
+        reportId: 'crawl-report',
+        doInstead:
+          'Open the saved crawl report by id. It loads the report summary and lets you request its page or issue detail without fetching the site again.',
+      },
+      {
+        when: 'You need to know what changed between two saved snapshots.',
+        reportId: 'compare-crawls',
+        doInstead:
+          'Compare the chosen crawl reports. It matches compatible page and issue evidence and separates additions, removals, regressions, and recoveries.',
+      },
+    ],
     seo: {
       title: 'Saved SEO Crawl Reports: Find the Right Local Snapshot by Date',
       description:
         'List saved local SEO crawl reports by site and date, compare their scope and status, and choose the right snapshot without loading every page or issue.',
       heading: 'Find the saved crawl snapshot you need',
+      primaryKeyword: 'SEO crawl',
+      supportingKeywords: ['SEO crawl report'],
     },
   },
   'crawler-rules': {
@@ -260,18 +376,34 @@ export const reportGuideOverridesIP: Partial<
       'A compact list of valid rule ids with category, severity, and guidance metadata.',
       'The identifiers needed to explain a rule or find affected URLs in a saved crawl.',
     ],
+    alternatives: [
+      {
+        when: 'You need a plain-English explanation and verification steps for one rule.',
+        reportId: 'explain-crawl-issue',
+        doInstead:
+          'Run explain crawl issue with the rule id. It adds the rule meaning, why it may matter, practical fix guidance, and a check you can perform after the change.',
+      },
+      {
+        when: 'You need the URLs currently affected by a rule in a saved crawl.',
+        reportId: 'affected-urls',
+        doInstead:
+          'Run affected URLs with the saved crawl and rule id. It returns the observed page instances, counts, limits, and available search evidence rather than the rule definition alone.',
+      },
+    ],
     seo: {
       title: 'SEO Crawler Rules: Browse Every Technical Check | SEO Skills CLI',
       description:
         'Browse every SEO crawler rule, filter technical checks by category, and find the exact rule id needed for issue guidance or affected URLs from a saved crawl.',
       heading: 'Browse the technical checks built into SEO Skills CLI',
+      primaryKeyword: 'SEO crawler',
+      supportingKeywords: ['SEO crawler tool'],
     },
   },
   'llms-txt-audit': {
     name: 'Audit an llms.txt file',
     summary:
       'Check whether an optional llms.txt file is reachable, readable, and consistent with useful pages from the crawl.',
-    lead: 'This report is for publishers who have chosen to maintain llms.txt. It checks the file and its links without treating the format as a Google requirement or a shortcut to AI visibility.',
+    lead: 'Use this llms.txt audit after choosing to publish the optional file. It checks the fetch status, structure, linked pages, and crawl-backed coverage without treating llms.txt as a Google requirement or a shortcut to AI visibility.',
     inputs: [
       {
         label: 'Saved or fresh crawl report',
@@ -291,18 +423,33 @@ export const reportGuideOverridesIP: Partial<
       'The observed file status, parsed entries, broken or questionable destinations, and candidate pages.',
       'Clear caveats explaining that presence or absence does not predict crawling, citations, rankings, or AI visibility.',
     ],
+    alternatives: [
+      {
+        when: 'You need to check the site’s wider crawl, indexability, snippet, and page-structure controls for AI search.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI readiness on the crawl. It checks the controls and page evidence that apply beyond the optional llms.txt file, while still avoiding unsupported visibility or citation predictions.',
+      },
+      {
+        when: 'You need to know whether llms.txt improved AI citations, rankings, or visibility.',
+        doInstead:
+          'No automated report can attribute those outcomes to llms.txt. Keep a dated record of the change, review referral and visibility evidence over time, and treat any movement as observational rather than proof that the file caused it.',
+      },
+    ],
     seo: {
-      title: 'llms.txt Audit: Check the File, Links, and Page Coverage',
+      title: 'llms.txt Audit: Check Whether Agents Can Read Your Site',
       description:
-        'Audit an optional llms.txt file, check its linked pages, and find crawl-backed gaps without treating the format as a search ranking requirement.',
-      heading: 'Check whether your llms.txt file is useful and accurate',
+        'Audit llms.txt for fetch status, structure, useful page coverage, and whether it gives AI agents clear site guidance.',
+      heading: 'llms.txt audit for agent-readable site guidance.',
+      primaryKeyword: 'llms.txt',
+      supportingKeywords: ['what is llms.txt', 'ai search optimization'],
     },
   },
   'generate-llms-txt': {
     name: 'Create an llms.txt draft',
     summary:
       'Build a concise llms.txt draft from selected crawl evidence when someone has decided to maintain the optional file.',
-    lead: 'The generator turns a limited page inventory into a draft you can review. It does not claim that publishing the file will improve rankings, indexing, citations, or AI visibility.',
+    lead: 'Use this to generate an llms.txt draft from selected crawl content and useful page evidence. The result is a reviewable artifact, not a claim that publishing the file will improve rankings, indexing, citations, or AI visibility.',
     inputs: [
       {
         label: 'Saved or fresh crawl report',
@@ -321,18 +468,34 @@ export const reportGuideOverridesIP: Partial<
       'A reviewable llms.txt draft with the selected page titles, descriptions, and URLs.',
       'Generation metadata showing the crawl source, limits, exclusions, selected count, and caveats.',
     ],
+    alternatives: [
+      {
+        when: 'You need to check a published llms.txt file and the pages it links to.',
+        reportId: 'llms-txt-audit',
+        doInstead:
+          'Run the llms.txt audit after publishing. It fetches the live file, parses its entries, checks linked destinations, and compares them with limited crawl candidates.',
+      },
+      {
+        when: 'You need to decide whether the site should publish llms.txt at all.',
+        doInstead:
+          'No automated report can make that product decision because the format is optional and does not guarantee crawling, citations, or rankings. Review who will maintain the file and whether the intended agent audience benefits from a curated page list; this generator can show the likely draft before you commit.',
+      },
+    ],
     seo: {
-      title: 'llms.txt Generator: Create a Draft From Your Site Crawl',
+      title: 'Generate llms.txt: Draft Agent Guidance From a Crawl',
       description:
-        'Create a limited llms.txt draft from crawl evidence, review every selected page, and keep the optional file accurate as your site changes over time.',
-      heading: 'Create an llms.txt draft from pages you have crawled',
+        'Generate an llms.txt draft from crawled content, useful page selection, and artifact output that agents can review.',
+      heading:
+        'Generate llms.txt from crawled content and useful page evidence.',
+      primaryKeyword: 'llms.txt',
+      supportingKeywords: ['generate llms.txt', 'ai search optimization'],
     },
   },
   'measure-change': {
     name: 'Measure an SEO change',
     summary:
       'Compare equal, finalised search windows around a recorded change and see what moved without claiming the change caused it.',
-    lead: 'Use this after a title update, migration, template release, internal-link change, or content edit with a known date. The report keeps incomplete windows and competing explanations in view.',
+    lead: 'Use this SEO testing report after a page, template, internal-link, migration, or content change with a known date. It can compare a changed page or group with a control, while keeping incomplete windows and competing explanations in view.',
     inputs: [
       {
         label: 'Search Console performance windows',
@@ -357,18 +520,33 @@ export const reportGuideOverridesIP: Partial<
       'Before and after search metrics, absolute and percentage movement, window coverage, and a cautious verdict.',
       'Optional control and GA4 comparisons plus warnings for incomplete data and plausible confounders.',
     ],
+    alternatives: [
+      {
+        when: 'You know total performance moved but need to find the pages, queries, countries, or devices behind it.',
+        reportId: 'segment-impact',
+        doInstead:
+          'Run segment impact across the same comparable periods. It breaks the movement down by the selected Search Console dimension and keeps unmatched or partial rows visible.',
+      },
+      {
+        when: 'You need proof that the recorded change caused the observed movement.',
+        doInstead:
+          'No automated report can prove causation from a before-and-after comparison, even with a control. Review releases, seasonality, demand, ranking updates, and experimental design; use this report to preserve the measured windows and confounders for that review.',
+      },
+    ],
     seo: {
-      title: 'Measure an SEO Change: Before and After Search Evidence',
+      title: 'SEO Testing Report: Compare Control and Variant Pages',
       description:
-        'Measure an SEO change with equal finalised Search Console windows, optional controls, and clear caveats that stop timing being mistaken for causation.',
-      heading: 'Measure what changed after a specific SEO update',
+        'Compare control and variant page groups with Search Console and GA4 movement so SEO tests have clearer evidence.',
+      heading: 'SEO testing report for control and variant page groups.',
+      primaryKeyword: 'seo testing',
+      supportingKeywords: ['seo report', 'google search console seo'],
     },
   },
   'monthly-report': {
     name: 'Monthly SEO report',
     summary:
       'Turn one calendar month of finalised search data into a clear report with changes, opportunities, gaps, and follow-up work.',
-    lead: 'Use this for a repeatable monthly review that people can read without opening raw Search Console exports. Every headline stays tied to its date range and source coverage.',
+    lead: 'Use this monthly SEO report for a short, repeatable summary of search performance and the next work to investigate. Every headline stays tied to its finalised date range, returned rows, and source coverage.',
     inputs: [
       {
         label: 'Finalised Search Console data',
@@ -386,20 +564,36 @@ export const reportGuideOverridesIP: Partial<
     ],
     returns: [
       'A readable monthly narrative with headline metrics, comparison context, opportunities, and caveats.',
-      'Structured JSON with exact dates, source source details, returned rows, skipped work, and focused next actions.',
+      'Structured JSON with exact dates, source details, returned rows, skipped work, and focused next actions.',
+    ],
+    alternatives: [
+      {
+        when: 'You need a current technical inventory rather than a monthly Search Console summary.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a site crawl to add current response, redirect, canonical, robots, metadata, link, and structured-data evidence. The monthly report does not crawl the whole site.',
+      },
+      {
+        when: 'You need to explain why search performance changed during the month.',
+        doInstead:
+          'No automated report can assign a cause from monthly totals. Use this report to identify the movement and next evidence to inspect, then review releases, page changes, demand, competitor activity, and confirmed Google updates before drawing a conclusion.',
+      },
     ],
     seo: {
-      title: 'Monthly SEO Report: Search Performance and Next Actions',
+      title: 'Monthly SEO Report: Search Console Summary and Next Actions',
       description:
-        'Create a monthly SEO report from finalised Search Console data with clear comparisons, opportunity evidence, data gaps, and useful follow-up actions.',
-      heading: 'Turn a month of search data into a useful SEO report',
+        'Create a monthly SEO report from finalised Search Console data with clear comparisons, opportunity evidence, gaps, and next actions.',
+      heading:
+        'Monthly SEO report from finalised Search Console data and live-page evidence.',
+      primaryKeyword: 'monthly SEO report',
+      supportingKeywords: ['seo report', 'google analytics seo report'],
     },
   },
   'okf-build': {
     name: 'Build site knowledge for agents',
     summary:
       'Turn a saved crawl into a compact OKF knowledge pack with source pages an agent can inspect and verify locally.',
-    lead: 'Use this when an agent needs a limited map of a site instead of thousands of crawl rows. The generated knowledge pack keeps citations back to the pages it came from.',
+    lead: 'Use this OKF export when an agent needs a compact site knowledge bundle instead of thousands of crawl rows. The local manifest and files stay within the requested limits and keep references back to the source pages.',
     inputs: [
       {
         label: 'Saved or fresh crawl report',
@@ -418,11 +612,26 @@ export const reportGuideOverridesIP: Partial<
       'A compact OKF manifest with concept counts, source references, file paths, and inherited crawl caveats.',
       'Optional limited Markdown files plus a validation result when inline files are requested.',
     ],
+    alternatives: [
+      {
+        when: 'You need to check an edited or generated OKF file set for broken structure and references.',
+        reportId: 'okf-validate',
+        doInstead:
+          'Run OKF validation on the exact files. It checks supported frontmatter, paths, headings, links, citations, and manifest references without rebuilding the pack.',
+      },
+      {
+        when: 'You need to prove that every statement in the knowledge pack is current and correct.',
+        doInstead:
+          'No automated report can verify the truth of every extracted statement. Use this build to retain source-page references, then have a person compare important claims with the current live pages and the intended site meaning.',
+      },
+    ],
     seo: {
-      title: 'Site Knowledge for AI Agents: Build a Cited OKF Pack Locally',
+      title: 'OKF Export: Create a Site Knowledge Bundle for Agents',
       description:
-        'Build a compact site knowledge pack from a saved crawl, keep every concept tied to source pages, and validate the OKF files before agents use them.',
-      heading: 'Build a cited site knowledge pack for an AI agent',
+        'Export crawl evidence as an OKF site-knowledge bundle for agents, with manifests, artifacts, and size-safe output.',
+      heading: 'OKF export for agent-ready site knowledge bundles.',
+      primaryKeyword: 'OKF export',
+      supportingKeywords: ['site knowledge', 'ai search optimization'],
     },
   },
   'okf-validate': {
@@ -444,18 +653,33 @@ export const reportGuideOverridesIP: Partial<
       'A pass or fail result with structured validation errors and warnings for each affected file.',
       'Plain-language guidance for fixing supported format and reference problems.',
     ],
+    alternatives: [
+      {
+        when: 'You need to rebuild the knowledge pack from a current saved crawl.',
+        reportId: 'okf-build',
+        doInstead:
+          'Run OKF build with the current crawl and explicit file limits. It regenerates the manifest, concepts, source references, and optional Markdown files before validation.',
+      },
+      {
+        when: 'You need to know whether the content inside valid files is accurate, complete, or still current.',
+        doInstead:
+          'No automated report can establish factual accuracy from file structure. Follow the citations to the current source pages and review the claims manually; this validator can still identify broken references that would prevent that review.',
+      },
+    ],
     seo: {
       title: 'Validate an OKF Knowledge Pack: Find File and Link Errors',
       description:
         'Validate OKF Markdown files, find broken paths, links, citations, and manifest references, then fix the pack before an AI agent relies on it.',
       heading: 'Check an OKF knowledge pack before an agent uses it',
+      primaryKeyword: 'open knowledge format',
+      supportingKeywords: ['file validation'],
     },
   },
   'page-opportunities': {
     name: 'Find opportunities for one page',
     summary:
       'See which returned search queries are already associated with one URL and what deserves a closer look on the live page.',
-    lead: 'Start here when one page needs a focused opportunity review. You get its first-party query evidence and optional page checks without turning every query into a content recommendation.',
+    lead: 'Use this page SEO opportunities report when one URL needs a focused growth review. It combines the page’s Search Console queries with optional live-page evidence without turning every returned query into a content recommendation.',
     inputs: [
       {
         label: 'Exact-page Search Console rows',
@@ -476,18 +700,35 @@ export const reportGuideOverridesIP: Partial<
       'A compact query opportunity list with metrics, source completeness, and the selected page scope.',
       'Optional live-page observations plus investigation prompts that stay separate from measured search evidence.',
     ],
+    alternatives: [
+      {
+        when: 'You need a detailed content brief for the selected page.',
+        reportId: 'content-optimization',
+        doInstead:
+          'Run content optimization for the URL. It combines its returned Search Console queries with the fetched title, headings, content, and technical conflicts to produce a reviewable brief.',
+      },
+      {
+        when: 'You suspect several URLs may be sharing the same query demand.',
+        reportId: 'cannibalisation',
+        doInstead:
+          'Run cannibalisation across the property. It shows queries associated with multiple URLs so you can compare intent, canonicals, and live-page evidence before deciding whether the overlap is harmful.',
+      },
+    ],
     seo: {
-      title: 'SEO Page Opportunities: Find Queries Worth Investigating',
+      title: 'Page SEO Opportunities: Find Growth Ideas for One URL',
       description:
-        'Find the Search Console queries attached to one page, review clicks, impressions, CTR, and position, then verify the live URL before making changes.',
-      heading: 'Find the search opportunities attached to one page',
+        'Audit one URL against its Search Console queries and page evidence to find content, CTR, and coverage opportunities.',
+      heading:
+        'Page SEO opportunities report for one URL and its ranking queries.',
+      primaryKeyword: 'page SEO',
+      supportingKeywords: ['seo page audit', 'google search console seo'],
     },
   },
   'performance-audit': {
     name: 'Audit page performance',
     summary:
       'Combine a local Lighthouse test with available CrUX field data and see where a page is slow without mixing lab and real-user evidence.',
-    lead: 'Use this to reproduce loading problems and check available Core Web Vitals for one URL. Lab results explain a controlled run. CrUX describes eligible real-user visits.',
+    lead: 'Use this Core Web Vitals report to check one page before or after a change. Lighthouse reproduces a controlled lab run, while available CrUX data describes eligible real-user visits.',
     inputs: [
       {
         label: 'Local Lighthouse navigation',
@@ -507,18 +748,34 @@ export const reportGuideOverridesIP: Partial<
       'A lab performance summary with Lighthouse metrics, diagnostics, and the strongest reproducible bottlenecks.',
       'Available CrUX LCP, INP, and CLS evidence with device, scope, thresholds, and unavailable states shown explicitly.',
     ],
+    alternatives: [
+      {
+        when: 'You need technical SEO evidence beyond loading performance for this URL.',
+        reportId: 'audit-page',
+        doInstead:
+          'Audit the page to add redirects, canonicals, directives, metadata, headings, links, schema, and content evidence. Lighthouse and CrUX do not answer those questions.',
+      },
+      {
+        when: 'You need to conclude that one Lighthouse run represents every page using the same template.',
+        doInstead:
+          'No automated report can generalise one lab run to a whole template. Select representative URLs across device, traffic, content, and template states, run the audit for each, and compare available URL-level or origin-level CrUX coverage separately.',
+      },
+    ],
     seo: {
-      title: 'Page Performance Audit: Lighthouse and Core Web Vitals for SEO',
+      title: 'Core Web Vitals Report: Lighthouse and Page Speed Audit',
       description:
-        'Audit one page with a local Lighthouse run and available CrUX Core Web Vitals, keeping lab diagnostics and real-user field evidence separate.',
-      heading: 'Check page speed with lab and real-user evidence',
+        'Run a Core Web Vitals and Lighthouse performance audit for one URL, with top fixes and optional raw JSON artifacts.',
+      heading:
+        'Core Web Vitals report with Lighthouse and page speed evidence.',
+      primaryKeyword: 'core web vitals report',
+      supportingKeywords: ['lighthouse audit', 'page speed audit'],
     },
   },
   'pseo-audit': {
     name: 'Audit programmatic SEO templates',
     summary:
       'Review repeated page families with search demand, limited crawl samples, and optional Google index evidence kept separate.',
-    lead: 'Use this for city pages, directories, comparisons, integrations, and other repeated templates. It looks for patterns worth reviewing without condemning thousands of URLs from one sample.',
+    lead: 'Use this programmatic SEO audit for city pages, directories, comparisons, integrations, and other repeated templates. It finds template-level demand and technical patterns without condemning thousands of URLs from one limited sample.',
     inputs: [
       {
         label: 'Sitemap and template inventory',
@@ -544,18 +801,34 @@ export const reportGuideOverridesIP: Partial<
       'Template families with population counts, returned search evidence, sampled findings, and representative URLs.',
       'A limited verdict and review plan that states which claims apply only to crawl or inspection samples.',
     ],
+    alternatives: [
+      {
+        when: 'You want a definitive quality verdict from word count or one sampled URL.',
+        doInstead:
+          'No report should condemn a template from word count or one sampled URL. Use the pSEO audit to select representative pages and compare template, crawl, Search Console, and optional URL Inspection evidence. Then manually review whether those pages satisfy their search intent, provide distinct value, and deserve to exist.',
+      },
+      {
+        when: 'You need Google’s current indexed verdict for one representative template URL.',
+        reportId: 'index-watch',
+        doInstead:
+          'Run index watch for the selected URL. It adds a direct URL Inspection result and any compatible local history, while keeping that single-page evidence separate from claims about the full template.',
+      },
+    ],
     seo: {
-      title: 'Programmatic SEO Audit: Check Templates, Demand, and Indexing',
+      title: 'Programmatic SEO Audit: Templates, Pages and Demand',
       description:
-        'Audit programmatic SEO templates with sitemap, Search Console, crawl, and optional URL Inspection evidence while keeping every sample limit visible.',
-      heading: 'Audit repeated page templates with evidence you can check',
+        'Audit programmatic SEO templates, repeated URL patterns, page evidence, Search Console demand, and pSEO-specific fixes.',
+      heading:
+        'Programmatic SEO audit for templates, scaled pages, and search demand.',
+      primaryKeyword: 'programmatic SEO',
+      supportingKeywords: ['pseo', 'programmatic seo tools'],
     },
   },
   'query-clusters': {
     name: 'Group related search queries',
     summary:
       'Turn a large returned Search Console query set into reproducible groups that are easier to review for shared demand.',
-    lead: 'Use query clusters to organise similar wording before content or reporting work. The grouping is based on token overlap, so it stays reproducible and does not pretend to understand every search intent.',
+    lead: 'Use this search query clustering report to turn a large Search Console export into repeated demand themes. The local grouping uses documented token overlap, so it stays reproducible and does not pretend to understand every search intent.',
     inputs: [
       {
         label: 'Returned Search Console queries',
@@ -575,11 +848,26 @@ export const reportGuideOverridesIP: Partial<
       'Named query groups with member queries, aggregate metrics, representative terms, and stable ordering.',
       'Selection and source metadata showing returned rows, limits, filtering, and possible truncation.',
     ],
+    alternatives: [
+      {
+        when: 'You need to understand the opportunities and live content for one page rather than group query wording.',
+        reportId: 'page-opportunities',
+        doInstead:
+          'Run page opportunities for the URL. It adds exact-page Search Console rows and optional live-page verification instead of grouping property-wide query text.',
+      },
+      {
+        when: 'You need a final information architecture or a definitive judgment that grouped queries share the same search intent.',
+        doInstead:
+          'No automated report can settle intent from token overlap alone. Review the cluster members, current search results, existing pages, and user task manually; use these repeatable groups to reduce the query set you need to inspect.',
+      },
+    ],
     seo: {
-      title: 'SEO Query Clusters: Group Related Search Console Demand',
+      title: 'Search Query Clustering Report: Group GSC Demand Themes',
       description:
-        'Group related Search Console queries with reproducible token overlap, inspect each member and metric, and turn a large export into reviewable themes.',
-      heading: 'Group related Search Console queries into useful themes',
+        'Cluster Search Console queries into repeated demand themes so content gaps, templates, and cannibalization patterns are easier to see.',
+      heading: 'Search query clustering report for repeated GSC demand themes.',
+      primaryKeyword: 'search query clustering',
+      supportingKeywords: ['google search console keywords', 'query clusters'],
     },
   },
 }

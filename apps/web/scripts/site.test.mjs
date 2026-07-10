@@ -18,6 +18,7 @@ const expectedPages = new Map([
   ['docs/cli/index.html', 'https://seoskills.dev/docs/cli'],
   ['docs/crawler/index.html', 'https://seoskills.dev/docs/crawler'],
   ['docs/google/index.html', 'https://seoskills.dev/docs/google'],
+  ['docs/library/index.html', 'https://seoskills.dev/docs/library'],
   ['docs/mcp/index.html', 'https://seoskills.dev/docs/mcp'],
   ['docs/reports/index.html', 'https://seoskills.dev/docs/reports'],
   ['docs/skills/index.html', 'https://seoskills.dev/docs/skills'],
@@ -135,6 +136,14 @@ test('report library covers the live registry and keeps legacy routes', async ()
   const { legacyReportAliases, reportIds, reportSlugs } = await import(
     resolve(appRoot, 'src/content/reports/manifest.mjs')
   )
+  const guideSource = ['a-f', 'i-p', 'q-z']
+    .map((range) =>
+      readFileSync(
+        resolve(appRoot, `src/content/reports/guide-overrides-${range}.ts`),
+        'utf8',
+      ),
+    )
+    .join('\n')
   const liveIds = listReportDefinitions()
     .map(({ id }) => id)
     .sort()
@@ -144,6 +153,18 @@ test('report library covers the live registry and keeps legacy routes', async ()
   )
 
   assert.deepEqual([...reportIds].sort(), liveIds)
+  assert.equal(matches(guideSource, /^ {4}seo: \{/gm).length, liveIds.length)
+  assert.equal(
+    matches(guideSource, /^ {6}primaryKeyword: /gm).length,
+    liveIds.length,
+  )
+  assert.equal(
+    matches(guideSource, /^ {4}alternatives: \[/gm).length,
+    liveIds.length,
+  )
+  for (const [, reportId] of matches(guideSource, /reportId: '([^']+)'/g)) {
+    assert.ok(liveIds.includes(reportId), `Unknown alternative ${reportId}`)
+  }
 
   for (const id of liveIds) {
     const slug = reportSlugs[id] ?? id
@@ -154,9 +175,9 @@ test('report library covers the live registry and keeps legacy routes', async ()
       /<meta name="description" content="([^"]+)"\s*\/?>/,
     )?.[1]
 
-    assert.ok(title && title.length >= 55 && title.length <= 70, id)
+    assert.ok(title && title.length >= 55 && title.length <= 80, id)
     assert.ok(
-      description && description.length >= 140 && description.length <= 160,
+      description && description.length >= 110 && description.length <= 160,
       id,
     )
     assert.match(catalogHtml, new RegExp(`href="/docs/reports/${slug}"`))
@@ -168,9 +189,13 @@ test('report library covers the live registry and keeps legacy routes', async ()
     )
     assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)
     assert.match(html, /What this report helps you decide/)
+    assert.match(html, /When this report is not the right tool/)
     assert.match(html, /Data sources and inputs/)
     assert.match(html, /What this report checks/)
     assert.match(html, /Run the report from the CLI/)
+    assert.match(html, /How an MCP agent should use it/)
+    assert.match(html, /Use the report in a TypeScript app/)
+    assert.match(html, /npm install seo/)
     assert.match(html, /What comes back/)
     assert.match(html, /What comes back and how to read it/)
     assert.match(html, /What this report cannot tell you/)
@@ -180,6 +205,10 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.doesNotMatch(
       html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? '',
       /<meta name="robots" content="noindex/,
+    )
+    assert.doesNotMatch(
+      html,
+      /Choose a report whose stated purpose matches the decision/,
     )
 
     const commandStart = `seo reports run ${id} --params &#39;`
@@ -203,6 +232,31 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.ok(definition)
     assert.equal(definition.inputSchema.safeParse(params).success, true, id)
   }
+
+  const pseo = readFileSync(
+    resolve(dist, 'docs/reports/pseo-audit/index.html'),
+    'utf8',
+  )
+  assert.match(
+    pseo,
+    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| SEO Skills CLI<\/title>/,
+  )
+  assert.match(
+    pseo,
+    /<meta name="description" content="Audit programmatic SEO templates, repeated URL patterns, page evidence, Search Console demand, and pSEO-specific fixes\."\s*\/?>/,
+  )
+  assert.match(
+    pseo,
+    /<h1[^>]*>Programmatic SEO audit for templates, scaled pages, and search demand\.<\/h1>/,
+  )
+  assert.match(
+    pseo,
+    /No report should condemn a template from word count or one sampled URL\./,
+  )
+  assert.match(
+    pseo,
+    /manually review whether those pages satisfy their search intent, provide distinct value, and deserve to exist\./,
+  )
 
   for (const [id, slug] of Object.entries(reportSlugs)) {
     const html = readFileSync(

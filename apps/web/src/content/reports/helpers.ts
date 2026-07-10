@@ -52,20 +52,7 @@ export function reportPageTitle(
   seo?: ReportGuideSeo,
   displayName = report.name,
 ): string {
-  if (seo?.title.includes('SEO Skills CLI')) return seo.title
-
-  const customCandidates = seo
-    ? [
-        seo.title,
-        `${displayName}: evidence and CLI guide`,
-        `${displayName}: SEO report guide`,
-        displayName,
-      ]
-    : []
-  const fittedCustomTitle = customCandidates.find(
-    (title) => title.length >= 38 && title.length <= 53,
-  )
-  if (fittedCustomTitle) return fittedCustomTitle
+  if (seo) return seo.title
 
   const candidates = [
     `${displayName}: SEO report evidence and local CLI guide | SEO Skills CLI`,

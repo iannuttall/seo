@@ -26,6 +26,20 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   )
 })
 
+test('the public TypeScript library and MCP entry points load', async () => {
+  const [core, mcp] = await Promise.all([
+    import('../dist/index.js'),
+    import('../dist/mcp.js'),
+  ])
+
+  assert.equal(typeof core.auditPage, 'function')
+  assert.equal(typeof core.crawlSite, 'function')
+  assert.equal(typeof mcp.createServer, 'function')
+  assert.equal(typeof mcp.describeReport, 'function')
+  assert.equal(typeof mcp.executeReport, 'function')
+  assert.ok(mcp.listReports().length > 0)
+})
+
 test('public runtime bundles do not depend on private workspace packages', async () => {
   const files = (await readdir('dist')).filter((file) => file.endsWith('.js'))
   assert.ok(files.length >= 3)

@@ -25,6 +25,12 @@ export const docsNav: DocsNavEntry[] = [
       'Run focused SEO reports yourself, produce deterministic JSON, and reuse the same commands in scripts and CI.',
   },
   {
+    path: '/docs/library',
+    label: 'TypeScript library',
+    description:
+      'Install the seo package in a Node app, call typed core functions, or run the same report catalog used by the CLI and MCP.',
+  },
+  {
     path: '/docs/crawler',
     label: 'Crawler',
     description:

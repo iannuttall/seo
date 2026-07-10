@@ -927,17 +927,6 @@ export function auditCrawlPages(
         )
       }
     }
-    if (
-      page.geo?.hasLlmsTxt === false &&
-      (!opts.startUrl || sameUrl(page.url, opts.startUrl))
-    ) {
-      issues.push(
-        issue('geo_no_llms_txt', page, undefined, {
-          llmsTxtUrl: page.geo.llmsTxtUrl,
-          llmsTxtStatus: page.geo.llmsTxtStatus,
-        }),
-      )
-    }
   }
 
   return issues

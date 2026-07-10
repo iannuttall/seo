@@ -964,7 +964,7 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
   )
 })
 
-test('auditCrawlPages flags thin GEO pages and missing llms.txt once', () => {
+test('auditCrawlPages does not treat missing llms.txt as an SEO issue', () => {
   const issues = auditCrawlPages(
     [
       page({
@@ -1006,11 +1006,7 @@ test('auditCrawlPages flags thin GEO pages and missing llms.txt once', () => {
 
   assert.deepEqual(
     geoIssues.map((issue) => issue.ruleId),
-    ['geo_thin_to_cite', 'geo_no_llms_txt', 'geo_thin_to_cite'],
-  )
-  assert.equal(
-    geoIssues.find((issue) => issue.ruleId === 'geo_no_llms_txt')?.url,
-    'https://example.com/',
+    ['geo_thin_to_cite', 'geo_thin_to_cite'],
   )
   assert.equal(
     geoIssues.find((issue) => issue.ruleId === 'geo_thin_to_cite')?.evidence

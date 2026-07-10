@@ -222,10 +222,37 @@ test('llms audit and generator use crawl inventory', () => {
   const generated = generateLlmsTxt(report, { tokenBudget: 2_000 })
 
   assert.equal(audit.exists, false)
-  assert.equal(audit.issues[0]?.id, 'missing-llms-txt')
+  assert.equal(audit.optional, true)
+  assert.equal(audit.googleSearchImpact, 'none')
+  assert.equal(
+    audit.issues.some((issue) => issue.id === 'missing-llms-txt'),
+    false,
+  )
+  assert.match(audit.headline, /not an SEO issue/i)
   assert.match(generated.content, /^# example\.com/m)
   assert.match(generated.content, /https:\/\/example.com\/docs/)
+  assert.match(generated.content, /does not affect visibility or rankings/i)
   assert.equal(generated.includedUrls, 2)
+})
+
+test('llms.txt does not change the AI readiness score', () => {
+  const missing = fixtureReport()
+  const present = fixtureReport()
+  if (!present.ai?.llmsTxt) throw new Error('Expected llms.txt fixture data.')
+  present.ai.llmsTxt.exists = true
+  present.ai.llmsTxt.status = 200
+
+  const missingReadiness = aiReadiness(missing)
+  const presentReadiness = aiReadiness(present)
+  const check = missingReadiness.checks.find((item) => item.id === 'llms-txt')
+
+  assert.equal(missingReadiness.score, presentReadiness.score)
+  assert.equal(check?.status, 'info')
+  assert.equal(check?.maxScore, 0)
+  assert.equal(
+    missingReadiness.topActions.some((item) => item.id === 'llms-txt'),
+    false,
+  )
 })
 
 test('entityReadiness summarizes schema and official profile signals', () => {

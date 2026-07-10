@@ -18,7 +18,7 @@ The GEO rules look for:
 - question-style headings
 - lists, tables, and other extractable blocks
 - enough content depth to cite
-- `/llms.txt`
+- optional `/llms.txt` presence, reported without affecting SEO or AI-readiness scores
 - entity signals such as Organization, Person, Product, WebSite, sameAs, and official social links
 
 Run:
@@ -48,7 +48,7 @@ seo okf validate ./okf
 seo okf explain ./okf
 ```
 
-`llms.txt` is the short entry point. OKF is the richer site knowledge bundle: index, log, concepts, inventory, graph, caveats, and citations.
+`llms.txt` can be a short entry point for agents that explicitly support it. Google says it is not needed for Search and has no positive or negative visibility impact. OKF is the richer site knowledge bundle: index, log, concepts, inventory, graph, caveats, and citations.
 
 You can also use the generic export command:
 

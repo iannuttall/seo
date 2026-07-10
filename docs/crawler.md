@@ -27,7 +27,8 @@ For each page, the crawler records:
 - title, meta description, canonical, robots directives, H1/H2/H3, language, viewport, and word count
 - internal links, external links, inlinks, depth, and internal link authority
 - images, missing alt text, Open Graph, Twitter card, schema types, hreflang, mixed content, compression, HTTPS, and HSTS
-- GEO signals such as semantic HTML, structured data, author, date, question headings, answer-ready blocks, lists, tables, FAQ schema, and `/llms.txt`
+- GEO signals such as semantic HTML, structured data, author, date, question headings, answer-ready blocks, lists, tables, and FAQ schema
+- optional `/llms.txt` presence as unscored agent metadata, not a Google Search factor
 - AI discovery signals such as per-bot robots.txt access, sitemap declarations, agent resource files, schema sameAs, and official social profile links
 
 ## Rules

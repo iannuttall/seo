@@ -25,7 +25,7 @@ Use these workflows when an agent needs technical SEO and GEO crawl data without
 1. Run \`seo_crawl_site\` or reuse the latest saved report.
 2. Call \`seo_geo_gaps\` with \`reportId\` and a page limit.
 3. Explain the major GEO rule ids with \`seo_explain_issue\`.
-4. Separate content fixes from technical fixes. Important GEO fields include structured data, semantic HTML, author, date, answerable content, and \`/llms.txt\`.
+4. Separate content fixes from technical fixes. Important GEO fields include structured data, semantic HTML, author, date, and answerable content. Treat \`/llms.txt\` as optional agent metadata, not an SEO factor.
 
 ## Focused URL audit
 

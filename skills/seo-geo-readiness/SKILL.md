@@ -35,7 +35,6 @@ seo crawl --project <project> --severity medium --json
 - `geo_no_date`
 - `geo_no_semantic_html`
 - `geo_thin_to_cite`
-- `geo_no_llms_txt`
 
 4. Turn the gaps into a fix plan.
 
@@ -48,14 +47,14 @@ Use plain words:
 - Authorship and dates help with trust and freshness.
 - Clear headings followed by direct answers make content easier to quote.
 - Tables, lists, and short answer blocks are easier to extract.
-- `/llms.txt` gives agents a map of the pages that matter most.
+- `/llms.txt` is optional metadata for agents that explicitly support it. Google says it has no positive or negative Search impact.
 
 ## Useful follow-up commands
 
 ```bash
 seo seo-to-ai-query --project <project>
 seo ai-referrals --project <project>
-seo explain --rule geo_no_llms_txt
+seo llms audit --project <project>
 ```
 
 `seo-to-ai-query` turns retained GSC query wording into deterministic monitoring-prompt suggestions. These prompts are not observed AI demand. `ai-referrals` checks GA4 for known AI referral sources.

@@ -16,7 +16,9 @@ export type LlmsAuditReport = {
   exists: boolean
   llmsTxtUrl: string
   status?: number
-  score: number
+  optional: true
+  googleSearchImpact: 'none'
+  guidanceUrl: string
   headline: string
   issues: LlmsAuditIssue[]
   recommendedPages: Array<{
@@ -113,48 +115,18 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
   const pages = candidatePages(report)
   const issues: LlmsAuditIssue[] = []
 
-  if (!llmsTxt?.exists) {
-    issues.push({
-      id: 'missing-llms-txt',
-      severity: 'high',
-      title: 'llms.txt is missing',
-      plainEnglish:
-        'Agents do not have a compact, curated entry point for the site.',
-      action:
-        'Generate llms.txt from the latest crawl, review it, and publish it at /llms.txt.',
-      evidence: {
-        checkedUrl:
-          llmsTxt?.url ?? new URL('/llms.txt', report.config.url).toString(),
-      },
-    })
-  }
   if (pages.length < 3) {
     issues.push({
       id: 'thin-llms-inventory',
-      severity: 'medium',
+      severity: 'low',
       title: 'The crawl has a small llms.txt inventory',
       plainEnglish:
         'There are very few indexable candidate pages to include in llms.txt.',
       action:
-        'Run a deeper crawl or sitemap crawl before generating the final llms.txt.',
+        'If you choose to generate the optional file, run a deeper crawl or sitemap crawl first.',
       evidence: { candidatePages: pages.length },
     })
   }
-
-  const score = Math.max(
-    0,
-    100 -
-      issues.reduce(
-        (sum, issue) =>
-          sum +
-          (issue.severity === 'high'
-            ? 45
-            : issue.severity === 'medium'
-              ? 20
-              : 8),
-        0,
-      ),
-  )
 
   return {
     reportId: report.id,
@@ -163,10 +135,13 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
     llmsTxtUrl:
       llmsTxt?.url ?? new URL('/llms.txt', report.config.url).toString(),
     status: llmsTxt?.status,
-    score,
+    optional: true,
+    googleSearchImpact: 'none',
+    guidanceUrl:
+      'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
     headline: llmsTxt?.exists
-      ? 'llms.txt is present. Review whether it points agents to the best pages.'
-      : 'llms.txt is missing. This is a simple, high-leverage AI readiness fix.',
+      ? 'An optional llms.txt file is present. It has no Google Search visibility impact.'
+      : 'No llms.txt file was found. This is not an SEO issue and requires no action.',
     issues,
     recommendedPages: pages.slice(0, 25).map((page) => ({
       url: page.finalUrl,
@@ -226,6 +201,8 @@ export function generateLlmsTxt(
   lines.push(
     '## Notes',
     '',
+    '- Optional metadata for agents and services that explicitly support llms.txt.',
+    '- [Google Search guidance](https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files) says llms.txt does not affect visibility or rankings.',
     `- Generated from crawl report ${report.id}.`,
     `- Crawl generated at ${report.generatedAt}.`,
   )

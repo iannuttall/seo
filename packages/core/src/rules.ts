@@ -1108,28 +1108,6 @@ const RULE_DEFINITIONS = [
       suggestedCommands: ['seo crawl <url> --json'],
     },
   },
-  {
-    id: 'geo_no_llms_txt',
-    title: 'GEO: llms.txt missing',
-    category: 'geo',
-    defaultSeverity: 'low',
-    whyItMatters:
-      'An llms.txt file gives AI agents a concise map of the site, the most useful pages, and how to use the content.',
-    howToFix:
-      'Add /llms.txt at the site root with a short Markdown overview and links to the pages agents should read first.',
-    impactIfIgnored:
-      'Agents have to infer the important pages from normal navigation, which can lead to weaker discovery and citations.',
-    howToVerify:
-      'Re-run the crawl and confirm geo.hasLlmsTxt is true on the seed page.',
-    agentHints: {
-      evidenceFields: [
-        'page.geo.llmsTxtUrl',
-        'page.geo.llmsTxtStatus',
-        'issue.evidence.llmsTxtStatus',
-      ],
-      suggestedCommands: ['seo crawl <url> --json'],
-    },
-  },
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']

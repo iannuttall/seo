@@ -287,8 +287,13 @@ auth testing use one of:
 - legacy `GSC_CLIENT_SECRET`
 
 Never commit OAuth tokens, shared client secrets, local config or cache files,
-private keys, generated credential modules, provider payloads, or real site
-data. Keep examples fake and safe for a public repository.
+private keys, a populated generated credential module, provider payloads, or
+real site data. Keep examples fake and safe for a public repository.
+
+The release workflow injects the shared desktop client into the package build.
+It requires the `SEO_GOOGLE_CLIENT_ID` and `SEO_GOOGLE_CLIENT_SECRET` GitHub
+Actions secrets. The tracked generated module must contain `undefined`
+placeholders between release builds.
 
 Before a public release:
 

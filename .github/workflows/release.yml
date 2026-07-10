@@ -11,11 +11,6 @@ on:
         options:
           - "true"
           - "false"
-      tag:
-        description: "npm dist tag"
-        required: true
-        default: "latest"
-
 permissions:
   contents: write
   id-token: write
@@ -35,15 +30,20 @@ jobs:
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
       - run: pnpm install --frozen-lockfile
+      - name: Inject shared desktop OAuth client
+        run: pnpm auth:inject-shared-client
+        env:
+          SEO_GOOGLE_CLIENT_ID: ${{ secrets.SEO_GOOGLE_CLIENT_ID }}
+          SEO_GOOGLE_CLIENT_SECRET: ${{ secrets.SEO_GOOGLE_CLIENT_SECRET }}
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm lint
       - name: Publish dry run
         if: inputs.dryRun == 'true'
-        run: pnpm publish --dry-run --no-git-checks --tag "${{ inputs.tag }}"
+        run: pnpm publish --dry-run --no-git-checks
       - name: Publish to npm
         if: inputs.dryRun == 'false'
-        run: pnpm publish --access public --provenance --no-git-checks --tag "${{ inputs.tag }}"
+        run: pnpm publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

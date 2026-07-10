@@ -8,6 +8,25 @@ const target = resolve(
 const clientId = process.env.SEO_GOOGLE_CLIENT_ID
 const clientSecret = process.env.SEO_GOOGLE_CLIENT_SECRET
 
+function singleQuotedString(value) {
+  let escaped = ''
+  for (const character of value) {
+    const codePoint = character.codePointAt(0)
+    if (character === '\\') escaped += '\\\\'
+    else if (character === "'") escaped += "\\'"
+    else if (
+      codePoint !== undefined &&
+      (codePoint <= 0x1f ||
+        (codePoint >= 0x7f && codePoint <= 0x9f) ||
+        codePoint === 0x2028 ||
+        codePoint === 0x2029)
+    ) {
+      escaped += `\\u${codePoint.toString(16).padStart(4, '0')}`
+    } else escaped += character
+  }
+  return `'${escaped}'`
+}
+
 if (!clientId || !clientSecret) {
   console.error(
     'SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET must both be set.',
@@ -16,9 +35,9 @@ if (!clientId || !clientSecret) {
 }
 
 const contents = `export const SHARED_OAUTH_CLIENT = {
-  clientId: ${JSON.stringify(clientId)},
-  clientSecret: ${JSON.stringify(clientSecret)},
-} as const;
+  clientId: ${singleQuotedString(clientId)},
+  clientSecret: ${singleQuotedString(clientSecret)},
+} as const
 `
 
 mkdirSync(dirname(target), { recursive: true })

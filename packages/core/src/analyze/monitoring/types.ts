@@ -36,6 +36,14 @@ export type CrawlPageSnapshot = {
   metaDescription?: string
   canonical?: string
   canonicalRaw?: string
+  canonicalStatus?:
+    | 'missing'
+    | 'single'
+    | 'duplicate'
+    | 'conflicting'
+    | 'outside-head-only'
+    | 'invalid'
+  canonicalCandidates?: import('../../extract/canonical.js').CanonicalCandidate[]
   metaRobots?: string
   xRobotsTag?: string
   h1?: string
@@ -48,6 +56,7 @@ export type CrawlPageSnapshot = {
     | 'indexable-candidate'
     | 'noindex'
     | 'robots-blocked'
+    | 'canonical-conflict'
     | 'canonical-hint-other'
     | 'not-html'
     | 'unknown'

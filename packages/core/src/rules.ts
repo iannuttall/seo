@@ -201,6 +201,59 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'canonical_conflict',
+    title: 'Canonical declarations conflict',
+    category: 'canonical',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'Different canonical targets in HTML or HTTP headers give search engines contradictory consolidation signals.',
+    howToFix:
+      'Choose one preferred absolute URL and make every canonical declaration agree, or remove the extra declaration source.',
+    impactIfIgnored:
+      'Search engines may ignore the declarations or select a different canonical than the site intended.',
+    howToVerify:
+      'Re-run the crawl and confirm canonicalStatus is single with one intended target.',
+    agentHints: {
+      evidenceFields: ['page.canonicalCandidates', 'page.canonicalStatus'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'canonical_multiple',
+    title: 'Canonical declared more than once',
+    category: 'canonical',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Repeated canonical declarations are error-prone even when they currently point to the same URL.',
+    howToFix:
+      'Keep one canonical method per response where practical. If HTML and HTTP headers are both required, keep their targets identical.',
+    impactIfIgnored:
+      'A future template or header change can create a hidden canonical conflict.',
+    howToVerify: 'Re-run the crawl and confirm canonicalStatus is single.',
+    agentHints: {
+      evidenceFields: ['page.canonicalCandidates', 'page.canonicalStatus'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'canonical_outside_head',
+    title: 'Canonical appears outside the HTML head',
+    category: 'canonical',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Google only accepts an HTML canonical link element in the document head.',
+    howToFix:
+      'Move the canonical link element into a valid head section and keep one absolute preferred URL.',
+    impactIfIgnored:
+      'The body declaration may be ignored, leaving the page without the intended canonical signal.',
+    howToVerify:
+      'Re-run the crawl and confirm the canonical candidate source is html-head.',
+    agentHints: {
+      evidenceFields: ['page.canonicalCandidates', 'page.canonicalStatus'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'canonical_mismatch',
     title: 'Canonical differs from final URL',
     category: 'canonical',
@@ -582,11 +635,11 @@ const RULE_DEFINITIONS = [
     category: 'canonical',
     defaultSeverity: 'low',
     whyItMatters:
-      'A canonical tells search engines which URL is preferred when duplicates or parameters exist.',
+      'A canonical can clarify the preferred URL when duplicate or parameter variants exist, though Google does not require one on every page.',
     howToFix:
-      'Add a self-referencing canonical to pages that should be indexable.',
+      'Add a self-referencing canonical when the site uses canonical tags as part of a deliberate duplicate-URL strategy.',
     impactIfIgnored:
-      'Search engines may choose the wrong URL variant or split signals across duplicates.',
+      'When duplicate variants exist, search engines may choose a different preferred URL. Unique pages without duplicates may need no action.',
     howToVerify:
       'Re-run the crawl and confirm the canonical field is present and points to the preferred URL.',
   },

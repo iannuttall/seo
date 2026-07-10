@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { extractHttpCanonicalEvidence } from '../../extract/canonical.js'
 import { extractPage } from '../../extract/page-extractor.js'
 import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
 import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
@@ -208,6 +209,10 @@ function unextractedPage(
   contentType?: string,
 ): CrawlPageSnapshot {
   const xRobotsTag = headerValue(fetched.headers, 'x-robots-tag')
+  const canonicalEvidence = extractHttpCanonicalEvidence(
+    fetched.headers,
+    fetched.finalUrl,
+  )
   const noindex = hasXRobotsDirective(xRobotsTag, 'noindex')
   const knownNonHtml = Boolean(contentType)
   return {
@@ -225,6 +230,11 @@ function unextractedPage(
     blocked: fetched.diagnostics.blocked,
     robotsTxt: fetched.robotsTxt,
     xRobotsTag,
+    canonical: canonicalEvidence.selectedUrl,
+    canonicalRaw:
+      canonicalEvidence.selectedRaw ?? canonicalEvidence.candidates[0]?.raw,
+    canonicalStatus: canonicalEvidence.status,
+    canonicalCandidates: canonicalEvidence.candidates,
     indexable: fetched.status >= 200 && fetched.status < 300 && !noindex,
     indexability: noindex
       ? 'X-Robots-Tag noindex'
@@ -333,7 +343,9 @@ export async function crawlOne(
     const h1 = extracted.headings.find((heading) => heading.level === 1)?.text
     const uniqueInternalLinks = [...new Set(internalLinks)]
     const uniqueExternalLinks = [...new Set(externalLinks)]
-    const canonical = resolvedUrl(extracted.canonical, extracted.finalUrl)
+    const canonical =
+      extracted.canonicalEvidence?.selectedUrl ??
+      resolvedUrl(extracted.canonical, extracted.finalUrl)
     const page: CrawlPageSnapshot = {
       url: extracted.finalUrl,
       finalUrl: extracted.finalUrl,
@@ -351,7 +363,12 @@ export async function crawlOne(
       title: extracted.title,
       metaDescription: extracted.metaDescription,
       canonical,
-      canonicalRaw: extracted.canonical,
+      canonicalRaw:
+        extracted.canonicalEvidence?.selectedRaw ??
+        extracted.canonicalEvidence?.candidates[0]?.raw ??
+        extracted.canonical,
+      canonicalStatus: extracted.canonicalEvidence?.status,
+      canonicalCandidates: extracted.canonicalEvidence?.candidates,
       metaRobots: extracted.metaRobots,
       xRobotsTag: extracted.xRobotsTag,
       h1,
@@ -367,8 +384,17 @@ export async function crawlOne(
       contentExtraction: extracted.contentExtraction,
       warnings: [
         ...extracted.warnings,
-        ...(extracted.canonical && !canonical
+        ...(extracted.canonicalEvidence?.status === 'invalid' ||
+        (extracted.canonical && !canonical)
           ? ['Ignored a malformed canonical URL.']
+          : []),
+        ...(extracted.canonicalEvidence?.status === 'conflicting'
+          ? ['Found conflicting canonical declarations.']
+          : []),
+        ...(extracted.canonicalEvidence?.status === 'outside-head-only'
+          ? [
+              'Ignored canonical link elements outside the document head because Google does not accept them.',
+            ]
           : []),
       ],
       contentHash: hashText(
@@ -447,9 +473,11 @@ export async function crawlOne(
         ? 'noindex'
         : page.robotsTxt?.allowed === false
           ? 'robots-blocked'
-          : page.canonical && !sameDocumentUrl(page.canonical, page.finalUrl)
-            ? 'canonical-hint-other'
-            : 'indexable-candidate'
+          : page.canonicalStatus === 'conflicting'
+            ? 'canonical-conflict'
+            : page.canonical && !sameDocumentUrl(page.canonical, page.finalUrl)
+              ? 'canonical-hint-other'
+              : 'indexable-candidate'
     return {
       request: responseObservation(url, fetched, 'complete'),
       page,

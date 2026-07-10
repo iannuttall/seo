@@ -10,6 +10,9 @@ export const AUDIT_PAGE_RULE_IDS = [
   'title_too_wide',
   'h1_count',
   'canonical_invalid',
+  'canonical_conflict',
+  'canonical_multiple',
+  'canonical_outside_head',
   'canonical_mismatch',
 ] as const satisfies readonly RuleId[]
 
@@ -59,12 +62,15 @@ function buildRecommendations(report: AuditPageReport): Recommendation[] {
     })
   }
 
-  if (!page.canonical) {
+  if (
+    !page.canonical &&
+    (!page.canonicalEvidence || page.canonicalEvidence.status === 'missing')
+  ) {
     recommendations.push({
       principle: 'C.7',
       evidenceRef: 'No canonical link tag detected.',
       action:
-        'Declare the canonical URL explicitly to remove ambiguity around the preferred URL.',
+        'If duplicate or parameter variants exist, declare the preferred canonical URL consistently; otherwise no change is required.',
       effort: 'S',
       confidence: 'medium',
     })
@@ -124,7 +130,55 @@ export async function auditPage(
     })
   }
 
-  if (page.canonical) {
+  const canonicalEvidence = page.canonicalEvidence
+  if (canonicalEvidence?.status === 'conflicting') {
+    const targets = [
+      ...new Set(
+        canonicalEvidence.candidates.flatMap((candidate) =>
+          candidate.resolved && !candidate.ignoredReason
+            ? [candidate.resolved]
+            : [],
+        ),
+      ),
+    ]
+    issues.push({
+      code: 'canonical_conflict',
+      title: 'Canonical declarations conflict',
+      detail: `Canonical declarations identify ${targets.length} different targets.`,
+      principle: 'C.7',
+      evidenceRef: `Canonical targets: ${targets.join(', ')}.`,
+      severity: 'high',
+    })
+  } else if (canonicalEvidence?.status === 'duplicate') {
+    issues.push({
+      code: 'canonical_multiple',
+      title: 'Canonical is declared more than once',
+      detail:
+        'Multiple eligible declarations identify the same target; keep one canonical method.',
+      principle: 'C.7',
+      evidenceRef: `${canonicalEvidence.candidates.length} canonical declarations were found for ${canonicalEvidence.selectedUrl}.`,
+      severity: 'low',
+    })
+  } else if (canonicalEvidence?.status === 'outside-head-only') {
+    issues.push({
+      code: 'canonical_outside_head',
+      title: 'Canonical appears outside the document head',
+      detail: 'Google only accepts HTML canonical link elements in the head.',
+      principle: 'C.7',
+      evidenceRef: `Ignored canonical value ${canonicalEvidence.candidates[0]?.raw ?? '(empty)'}.`,
+      severity: 'medium',
+    })
+  } else if (canonicalEvidence?.status === 'invalid') {
+    const raw = canonicalEvidence.candidates[0]?.raw ?? '(empty)'
+    issues.push({
+      code: 'canonical_invalid',
+      title: 'Canonical URL is invalid',
+      detail: 'The canonical link does not resolve to an HTTP or HTTPS URL.',
+      principle: 'C.7',
+      evidenceRef: `Canonical value ${raw} is not a valid HTTP or HTTPS URL.`,
+      severity: 'high',
+    })
+  } else if (page.canonical) {
     let canonicalUrl: string | undefined
     try {
       const resolved = new URL(page.canonical, page.finalUrl)

@@ -162,6 +162,34 @@ export const crawlPageSnapshotSchema = z.object({
   metaDescription: z.string().optional(),
   canonical: z.string().url().optional(),
   canonicalRaw: z.string().optional(),
+  canonicalStatus: z
+    .enum([
+      'missing',
+      'single',
+      'duplicate',
+      'conflicting',
+      'outside-head-only',
+      'invalid',
+    ])
+    .optional(),
+  canonicalCandidates: z
+    .array(
+      z.object({
+        source: z.enum(['html-head', 'html-body', 'http-header']),
+        raw: z.string(),
+        resolved: z.string().url().optional(),
+        ignoredReason: z
+          .enum([
+            'outside-head',
+            'alternate-qualifier',
+            'fragment',
+            'invalid-url',
+            'non-http-url',
+          ])
+          .optional(),
+      }),
+    )
+    .optional(),
   metaRobots: z.string().optional(),
   xRobotsTag: z.string().optional(),
   h1: z.string().optional(),
@@ -175,6 +203,7 @@ export const crawlPageSnapshotSchema = z.object({
       'indexable-candidate',
       'noindex',
       'robots-blocked',
+      'canonical-conflict',
       'canonical-hint-other',
       'not-html',
       'unknown',

@@ -156,6 +156,7 @@ export interface ExtractedPage {
   metaRobots?: string
   xRobotsTag?: string
   canonical?: string
+  canonicalEvidence?: import('../extract/canonical.js').CanonicalEvidence
   lang?: string
   hasViewport: boolean
   headings: Array<{ level: number; text: string }>

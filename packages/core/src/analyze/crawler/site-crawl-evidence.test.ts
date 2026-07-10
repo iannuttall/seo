@@ -319,6 +319,7 @@ test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
     }
     res.setHeader('content-type', 'application/json')
     res.setHeader('x-robots-tag', 'noindex')
+    res.setHeader('link', `<${fixture.baseUrl}/api-source>; rel="canonical"`)
     res.end('{"ok":true}')
   })
 
@@ -331,6 +332,12 @@ test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
     })
 
     assert.equal(report.pages[0]?.contentType, 'application/json')
+    assert.equal(report.pages[0]?.canonical, `${fixture.baseUrl}/api-source`)
+    assert.equal(report.pages[0]?.canonicalStatus, 'single')
+    assert.equal(
+      report.pages[0]?.canonicalCandidates?.[0]?.source,
+      'http-header',
+    )
     assert.equal(report.pages[0]?.extractionStatus, 'not-applicable')
     assert.equal(report.requests[0]?.extraction, 'not-applicable')
     assert.equal(report.summary.technicalScorePages, 0)
@@ -553,6 +560,56 @@ test('crawlSite recognizes supported Microdata without JSON-LD', async () => {
     assert.equal(
       report.issues.some((issue) => issue.ruleId === 'geo_no_structured_data'),
       false,
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite preserves conflicting HTML and HTTP canonical evidence', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.setHeader('link', `<${fixture.baseUrl}/header>; rel="canonical"`)
+    res.end(`<!doctype html><html><head>
+      <title>Canonical conflict</title>
+      <meta name="description" content="A useful canonical conflict fixture description.">
+      <link rel="canonical" href="${fixture.baseUrl}/html">
+    </head><body><main><h1>Canonical conflict</h1></main></body></html>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/conflict`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+      refresh: true,
+    })
+    const page = report.pages[0]
+
+    assert.equal(page?.canonical, undefined)
+    assert.equal(page?.canonicalStatus, 'conflicting')
+    assert.equal(page?.declaredIndexability, 'canonical-conflict')
+    assert.deepEqual(
+      page?.canonicalCandidates?.map(({ source, resolved }) => ({
+        source,
+        resolved,
+      })),
+      [
+        { source: 'html-head', resolved: `${fixture.baseUrl}/html` },
+        { source: 'http-header', resolved: `${fixture.baseUrl}/header` },
+      ],
+    )
+    assert.deepEqual(
+      report.issues
+        .filter((issue) => issue.category === 'canonical')
+        .map((issue) => issue.ruleId),
+      ['canonical_conflict'],
     )
   } finally {
     await fixture.close()

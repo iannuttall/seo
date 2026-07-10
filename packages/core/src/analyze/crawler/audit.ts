@@ -651,7 +651,31 @@ export function auditCrawlPages(
       )
     }
 
-    if (!page.canonical) {
+    if (page.canonicalStatus === 'conflicting') {
+      issues.push(
+        issue('canonical_conflict', page, undefined, {
+          candidates: page.canonicalCandidates,
+        }),
+      )
+    } else if (page.canonicalStatus === 'duplicate') {
+      issues.push(
+        issue('canonical_multiple', page, page.canonical, {
+          canonical: page.canonical,
+          candidates: page.canonicalCandidates,
+        }),
+      )
+    } else if (page.canonicalStatus === 'outside-head-only') {
+      issues.push(
+        issue('canonical_outside_head', page, page.canonicalRaw, {
+          candidates: page.canonicalCandidates,
+        }),
+      )
+    }
+
+    if (
+      !page.canonical &&
+      !['conflicting', 'outside-head-only'].includes(page.canonicalStatus ?? '')
+    ) {
       issues.push(
         page.canonicalRaw
           ? issue('canonical_invalid', page, page.canonicalRaw, {

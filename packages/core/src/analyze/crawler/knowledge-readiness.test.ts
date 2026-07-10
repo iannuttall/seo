@@ -341,6 +341,47 @@ test('aiReadiness does not score absent JSON-LD as valid or invalid', () => {
   )
 })
 
+test('aiReadiness keeps indexable-page coverage unknown without eligible pages', () => {
+  const crawl = fixtureReport()
+  for (const page of crawl.pages) page.indexable = false
+
+  const report = aiReadiness(crawl)
+  const coverageChecks = [
+    'answerable-content',
+    'semantic-html',
+    'titles-headings-meta',
+    'language',
+    'entity-schema',
+    'snippet-controls',
+  ]
+
+  for (const id of coverageChecks) {
+    const check = report.checks.find((item) => item.id === id)
+    assert.equal(check?.evaluated, false, id)
+    assert.equal(check?.status, 'unknown', id)
+    assert.match(check?.plainEnglish ?? '', /not evaluated/i, id)
+    assert.doesNotMatch(check?.plainEnglish ?? '', /0% of indexable/i, id)
+  }
+
+  const indexability = report.checks.find(
+    (item) => item.id === 'status-indexability',
+  )
+  assert.equal(indexability?.evaluated, true)
+  assert.match(indexability?.plainEnglish ?? '', /^0% of crawled pages/)
+})
+
+test('aiReadiness does not infer a page-cap stop from an exact page count', () => {
+  const crawl = fixtureReport()
+  crawl.config.maxPages = crawl.pages.length
+
+  const report = aiReadiness(crawl)
+  const depth = report.checks.find((item) => item.id === 'crawl-depth')
+
+  assert.equal(crawl.summary.pageLimitReached, false)
+  assert.equal(depth?.status, 'pass')
+  assert.match(depth?.title ?? '', /without hitting the page cap/i)
+})
+
 test('llms audit and generator use crawl inventory', () => {
   const report = fixtureReport()
   const audit = auditLlmsTxt(report)

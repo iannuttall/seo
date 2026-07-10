@@ -107,6 +107,7 @@ export type CrawlRunStats = {
   skippedUrls: number
   failedUrls: number
   verifiedLinks: number
+  pageLimitReached: boolean
 }
 
 export type CrawlLinkGraph = Record<string, string[]>
@@ -207,6 +208,7 @@ export type CrawlReportSummary = {
   skippedUrls: number
   failedUrls: number
   verifiedLinks: number
+  pageLimitReached: boolean
   attemptedRequests: number
   responseRequests: number
   failedRequests: number
@@ -569,6 +571,7 @@ function crawlRunStats(
       stats.failedUrls ??
       pages.filter((page) => page.status === 0 || page.status >= 400).length,
     verifiedLinks: stats.verifiedLinks ?? verifiedLinks,
+    pageLimitReached: stats.pageLimitReached ?? false,
   }
 }
 

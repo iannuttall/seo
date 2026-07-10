@@ -53,7 +53,6 @@ export function normalizeInternalLinkUrl(value: string): string | undefined {
     const url = new URL(value)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined
     url.hash = ''
-    if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/$/, '')
     return url.toString()
   } catch {
     return undefined

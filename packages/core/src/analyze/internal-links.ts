@@ -6,6 +6,7 @@ import { SessionLedger } from '../storage/ledger.js'
 import {
   analyzeInternalLinksFromRows,
   INTERNAL_LINK_LEXICAL_TARGET_LIMIT,
+  INTERNAL_LINK_MATCH_EVIDENCE_LIMIT,
 } from './internal-links-analysis.js'
 import {
   completeInternalLinksSelection,
@@ -17,6 +18,7 @@ import {
 } from './internal-links-report.js'
 import type { InternalLinksReport } from './internal-links-types.js'
 import {
+  INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT,
   verifyInternalLinkCandidate,
   verifyInternalLinkTarget,
 } from './internal-links-verification.js'
@@ -171,14 +173,15 @@ export async function internalLinksReport(
 
   const items: InternalLinksReport['items'] = []
   const warnings = [...target.warnings]
+  let attemptedSources = 0
   let checkedSources = 0
   let existingLinkExclusions = 0
   let technicalExclusions = 0
   let selfAliasExclusions = 0
   let failedChecks = 0
   for (const candidate of analysis.candidates) {
-    if (checkedSources >= checkLimit || items.length >= limit) break
-    checkedSources += 1
+    if (attemptedSources >= checkLimit || items.length >= limit) break
+    attemptedSources += 1
     const verified = await verifyInternalLinkCandidate({
       site: input.site,
       candidate,
@@ -194,15 +197,18 @@ export async function internalLinksReport(
     if (verified.exclusion === 'technical') technicalExclusions += 1
     if (verified.exclusion === 'self-alias') selfAliasExclusions += 1
     if (verified.exclusion === 'failed') failedChecks += 1
+    else checkedSources += 1
   }
   const uncheckedCandidates = Math.max(
     0,
-    analysis.candidates.length - checkedSources,
+    analysis.candidates.length - attemptedSources,
   )
   const targetTruncated = targetRequests.some(
     ({ result }) => result.rowsFetched >= MAX_GSC_ROWS,
   )
   const sourceTruncated = sourceResult.rowsFetched >= MAX_GSC_ROWS
+  const invalidRows =
+    analysis.selection.targetInvalidRows + analysis.selection.sourceInvalidRows
   const structuredWarnings = uniqueInternalLinksWarnings(warnings)
   const dataStatus: InternalLinksReport['dataStatus'] =
     target.verification === 'technical-issue'
@@ -211,16 +217,18 @@ export async function internalLinksReport(
         ? 'partial'
         : targetRows.length === 0
           ? 'empty'
-          : analysis.selection.targetEligibleQueries === 0 ||
-              analysis.candidates.length === 0
-            ? 'filtered'
-            : targetTruncated ||
-                sourceTruncated ||
-                failedChecks > 0 ||
-                uncheckedCandidates > 0
-              ? 'partial'
-              : 'complete'
+          : targetTruncated || sourceTruncated || invalidRows > 0
+            ? 'partial'
+            : queryCandidates && sourceResult.rows.length === 0
+              ? 'source-empty'
+              : analysis.selection.targetEligibleQueries === 0 ||
+                  analysis.candidates.length === 0
+                ? 'filtered'
+                : failedChecks > 0 || uncheckedCandidates > 0
+                  ? 'partial'
+                  : 'complete'
   const selection = completeInternalLinksSelection(analysis, {
+    attemptedSources,
     checkedSources,
     returnedSources: items.length,
     existingLinkExclusions,
@@ -232,8 +240,11 @@ export async function internalLinksReport(
   const summaryVerdict = internalLinksVerdict({
     dataStatus,
     returned: items.length,
+    attempted: attemptedSources,
     checked: checkedSources,
     candidates: analysis.candidates.length,
+    failed: failedChecks,
+    unchecked: uncheckedCandidates,
   })
 
   return {
@@ -278,15 +289,23 @@ export async function internalLinksReport(
         ? 'not-queried'
         : targetTruncated || sourceTruncated
           ? 'possibly-truncated'
-          : 'complete',
+          : 'retained-rows-only',
     },
     methodology: {
       id: 'gsc_internal_link_candidates',
-      version: 2,
+      version: 3,
       lexicalTargetLimit: INTERNAL_LINK_LEXICAL_TARGET_LIMIT,
+      matchedQueryEvidenceLimit: INTERNAL_LINK_MATCH_EVIDENCE_LIMIT,
+      observedLinkEvidenceLimit: INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT,
       matching: 'pairwise_exact_then_precision_lexical',
       ranking: 'exact_matches_then_matched_query_impressions_then_relevance',
       contextualPlacementVerified: true,
+    },
+    filters: {
+      minImpressions,
+      resultLimit: limit,
+      checkLimit,
+      maxGscRowsPerRequest: MAX_GSC_ROWS,
     },
     target: {
       requestedUrl: target.requestedUrl,
@@ -304,6 +323,7 @@ export async function internalLinksReport(
     summary: {
       targetQueries: analysis.selection.targetEligibleQueries,
       candidateSources: analysis.candidates.length,
+      attemptedSources,
       checkedSources,
       returnedSources: items.length,
       existingLinksObserved: existingLinkExclusions,
@@ -321,13 +341,16 @@ export async function internalLinksReport(
     warnings: structuredWarnings,
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate} (${days} days), using final GSC data where available.`,
-      `Selection: ${analysis.selection.targetEligibleQueries} eligible target queries, ${analysis.selection.candidateUrls} matched source pages, ${checkedSources} checked, ${items.length} returned.`,
+      `Selection: ${analysis.selection.targetEligibleQueries} eligible target queries, ${analysis.selection.candidateUrls} matched source pages, ${attemptedSources} attempted, ${checkedSources} successfully checked, ${items.length} returned.`,
       `Minimum retained query impressions: ${minImpressions}. Brand queries were ${input.includeBrand ? 'included' : 'excluded when detected or configured'}.`,
       'GSC query rows omit anonymized queries and lower-volume rows. A 100,000-row cap is reported separately when reached.',
       'Exact query overlap is medium-confidence affinity evidence; lexical matches are low-confidence review evidence. Neither predicts traffic lift or link equity.',
       'The fetch checks HTML link placement, but it cannot prove editorial relevance. Review intent and reader usefulness before adding a link.',
       uncheckedCandidates
         ? `${uncheckedCandidates} matched source page${uncheckedCandidates === 1 ? ' was' : 's were'} not checked because the output or check limit was reached.`
+        : '',
+      failedChecks
+        ? `${failedChecks} source verification attempt${failedChecks === 1 ? '' : 's'} failed. Failed fetches or extraction attempts are not counted as checked pages and do not support a missing-link conclusion.`
         : '',
     ].filter(Boolean),
     recommendations:

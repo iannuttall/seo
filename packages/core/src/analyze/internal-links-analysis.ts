@@ -17,6 +17,7 @@ import { isLowActionabilityQuery } from './query-quality.js'
 
 const LEXICAL_TARGET_LIMIT = 50
 export const INTERNAL_LINK_LEXICAL_TARGET_LIMIT = LEXICAL_TARGET_LIMIT
+export const INTERNAL_LINK_MATCH_EVIDENCE_LIMIT = 10
 
 export interface InternalLinksAnalysisInput {
   targetRows: GscRow[]
@@ -33,6 +34,7 @@ export interface InternalLinksAnalysis {
   candidates: InternalLinkCandidate[]
   selection: Omit<
     InternalLinksSelection,
+    | 'attemptedSources'
     | 'checkedSources'
     | 'returnedSources'
     | 'existingLinkExclusions'
@@ -162,7 +164,7 @@ function candidatesFromMatches(
         bestMatchKind: ordered.some((match) => match.kind === 'exact-query')
           ? 'exact-query'
           : 'lexical-review',
-        matches: ordered.slice(0, 10),
+        matches: ordered.slice(0, INTERNAL_LINK_MATCH_EVIDENCE_LIMIT),
       }
     })
     .sort(

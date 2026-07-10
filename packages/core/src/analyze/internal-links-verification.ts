@@ -6,7 +6,7 @@ import type {
   InternalLinkOpportunity,
   InternalLinksWarning,
 } from './internal-links-types.js'
-import { pageTechnicalSignals, samePageUrl } from './page-technical-signals.js'
+import { pageTechnicalSignals } from './page-technical-signals.js'
 
 type FetchPage = (
   url: string,
@@ -26,6 +26,8 @@ export interface InternalLinksVerificationDependencies {
   fetch: FetchPage
   extract: ExtractPage
 }
+
+export const INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT = 20
 
 export interface VerifiedInternalLinkTarget {
   requestedUrl: string
@@ -60,6 +62,14 @@ function withoutFragment(value: string): string {
   const url = new URL(value)
   url.hash = ''
   return url.toString()
+}
+
+function sameObservedUrl(left: string, right: string): boolean {
+  try {
+    return withoutFragment(left) === withoutFragment(right)
+  } catch {
+    return false
+  }
 }
 
 function absoluteCanonical(page: ExtractedPage): string | undefined {
@@ -169,7 +179,7 @@ export async function verifyInternalLinkTarget(input: {
 
 function linksToAliases(page: ExtractedPage, aliases: string[]) {
   return page.links.filter((link) =>
-    aliases.some((alias) => samePageUrl(link.href, alias)),
+    aliases.some((alias) => sameObservedUrl(link.href, alias)),
   )
 }
 
@@ -264,7 +274,9 @@ export async function verifyInternalLinkCandidate(input: {
       message,
     }),
   )
-  if (input.target.aliases.some((alias) => samePageUrl(page.finalUrl, alias))) {
+  if (
+    input.target.aliases.some((alias) => sameObservedUrl(page.finalUrl, alias))
+  ) {
     return { exclusion: 'self-alias', warnings }
   }
   const technicalSignals = pageTechnicalSignals({
@@ -285,7 +297,7 @@ export async function verifyInternalLinkCandidate(input: {
   }))
   const contextual = observed.filter((link) => link.location === 'main-content')
   const preferredContextual = contextual.some((link) =>
-    samePageUrl(link.href, input.target.preferredUrl),
+    sameObservedUrl(link.href, input.target.preferredUrl),
   )
   if (preferredContextual) return { exclusion: 'existing-link', warnings }
   const aliasContextual = contextual.length > 0
@@ -300,8 +312,8 @@ export async function verifyInternalLinkCandidate(input: {
       ? 'medium'
       : 'low'
   const actionType = aliasContextual
-    ? 'update-alias-link'
-    : 'add-contextual-link'
+    ? 'review-alias-link'
+    : 'review-contextual-link'
   const evidenceRef = aliasContextual
     ? `A main-content link points to a non-preferred target alias; the preferred target is ${input.target.preferredUrl}.`
     : `${input.candidate.sourceUrl} matched ${input.candidate.matchedQueries} retained GSC query row${input.candidate.matchedQueries === 1 ? '' : 's'}, and no main-content link to the preferred target was observed in the fetched HTML.`
@@ -321,7 +333,12 @@ export async function verifyInternalLinkCandidate(input: {
       linkEvidence: {
         status: linkStatus,
         observedCount: observed.length,
-        observed: observed.slice(0, 20),
+        observedLimit: INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT,
+        limitedCount: Math.max(
+          0,
+          observed.length - INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT,
+        ),
+        observed: observed.slice(0, INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT),
       },
       confidence,
       priority: priority(input.candidate),

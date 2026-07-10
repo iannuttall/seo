@@ -103,6 +103,7 @@ export const internalLinksCommand = defineCommand({
       ['Target state', report.target.verification],
       ['Target queries', formatCount(report.summary.targetQueries)],
       ['Matched sources', formatCount(report.summary.candidateSources)],
+      ['Attempted sources', formatCount(report.summary.attemptedSources)],
       ['Checked sources', formatCount(report.summary.checkedSources)],
       ['Review candidates', formatCount(report.summary.returnedSources)],
       [

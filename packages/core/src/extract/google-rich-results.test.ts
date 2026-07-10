@@ -33,7 +33,108 @@ test('Product assessment separates syntax from required property evidence', () =
   })
   assert.equal(observed?.status, 'required-properties-observed')
   assert.deepEqual(observed?.observedProperties, ['name', 'offers'])
-  assert.match(observed?.limitations[0] ?? '', /Nested/)
+  assert.match(observed?.limitations[0] ?? '', /nested/i)
+})
+
+test('Product assessment rejects wrong value types and validates nested branches', () => {
+  const wrongTypes = assess('Product', {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: false,
+    offers: true,
+  })
+  assert.equal(wrongTypes?.status, 'missing-required-properties')
+  assert.deepEqual(wrongTypes?.missingRequiredProperties, [
+    'name',
+    'one of review, aggregateRating, or offers',
+  ])
+
+  const incompleteOffer = assess('Product', {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Example product',
+    offers: { '@type': 'Offer', priceCurrency: 'GBP' },
+  })
+  assert.deepEqual(incompleteOffer?.missingRequiredProperties, [
+    'one of review, aggregateRating, or offers',
+  ])
+
+  const invalidBranches = [
+    {
+      review: {
+        '@type': 'Review',
+        author: 'Jane Reviewer',
+        reviewRating: 5,
+      },
+    },
+    {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: 4.5,
+        reviewCount: 'twelve',
+      },
+    },
+    {
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: 20,
+        priceCurrency: false,
+      },
+    },
+  ]
+  for (const branch of invalidBranches) {
+    const assessment = assess('Product', {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Example product',
+      ...branch,
+    })
+    assert.deepEqual(assessment?.missingRequiredProperties, [
+      'one of review, aggregateRating, or offers',
+    ])
+  }
+
+  const validBranches = [
+    {
+      review: {
+        '@type': 'Review',
+        author: { '@type': 'Person', name: 'Jane Reviewer' },
+        reviewRating: { '@type': 'Rating', ratingValue: '4 / 5' },
+      },
+    },
+    {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: 4.5,
+        reviewCount: 12,
+      },
+    },
+    {
+      offers: {
+        '@type': 'Offer',
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          price: '20.00',
+        },
+      },
+    },
+    {
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: 20,
+        priceCurrency: 'GBP',
+      },
+    },
+  ]
+  for (const branch of validBranches) {
+    const assessment = assess('Product', {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Example product',
+      ...branch,
+    })
+    assert.equal(assessment?.status, 'required-properties-observed')
+  }
 })
 
 test('Breadcrumb assessment reports exact missing ListItem properties', () => {
@@ -51,6 +152,50 @@ test('Breadcrumb assessment reports exact missing ListItem properties', () => {
     'itemListElement[0].item',
     'itemListElement[1].name',
   ])
+})
+
+test('Breadcrumb assessment validates ListItem types, values, and targets', () => {
+  const invalid = assess('BreadcrumbList', {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { position: 1, name: false, item: true },
+      {
+        '@type': 'ListItem',
+        position: 0,
+        name: { value: 'Current' },
+        item: 'javascript:alert(1)',
+      },
+    ],
+  })
+  assert.equal(invalid?.status, 'missing-required-properties')
+  assert.deepEqual(invalid?.missingRequiredProperties, [
+    'itemListElement[0].@type ListItem',
+    'itemListElement[0].name',
+    'itemListElement[0].item',
+    'itemListElement[1].position',
+    'itemListElement[1].name',
+    'itemListElement[1].item',
+  ])
+
+  const observed = assess('BreadcrumbList', {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        item: { '@id': '/guides', name: 'Guides' },
+      },
+      {
+        '@type': ['Thing', 'https://schema.org/ListItem'],
+        position: 2,
+        name: 'Current page',
+      },
+    ],
+  })
+  assert.equal(observed?.status, 'required-properties-observed')
+  assert.deepEqual(observed?.missingRequiredProperties, [])
 })
 
 test('Article and FAQ assessments preserve current Google feature status', () => {

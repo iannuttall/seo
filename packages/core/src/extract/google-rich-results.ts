@@ -36,6 +36,154 @@ function hasValue(value: unknown): boolean {
   )
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value))
+}
+
+function isNonEmptyText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function schemaTypeName(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.startsWith('schema:')) return trimmed.slice('schema:'.length)
+  try {
+    const url = new URL(trimmed)
+    if (url.hostname.replace(/^www\./, '').toLowerCase() === 'schema.org') {
+      return decodeURIComponent(url.pathname.replace(/^\/+/, ''))
+    }
+  } catch {
+    // A compact Schema.org type is expected in the common case.
+  }
+  return trimmed
+}
+
+function hasSchemaType(
+  record: Record<string, unknown>,
+  expected: string[],
+): boolean {
+  const values = Array.isArray(record['@type'])
+    ? record['@type']
+    : [record['@type']]
+  return values.some(
+    (value) =>
+      typeof value === 'string' && expected.includes(schemaTypeName(value)),
+  )
+}
+
+function hasTypedObject(
+  value: unknown,
+  predicate: (record: Record<string, unknown>) => boolean,
+): boolean {
+  return (Array.isArray(value) ? value : [value]).some(
+    (item) => isRecord(item) && predicate(item),
+  )
+}
+
+function isFiniteNumericValue(value: unknown): boolean {
+  if (typeof value === 'number') return Number.isFinite(value)
+  return (
+    typeof value === 'string' &&
+    value.trim().length > 0 &&
+    Number.isFinite(Number(value))
+  )
+}
+
+function isPositiveInteger(value: unknown): boolean {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+function isRatingValue(value: unknown): boolean {
+  if (isFiniteNumericValue(value)) return true
+  if (typeof value !== 'string') return false
+  return /^(?:\d+(?:\.\d+)?\s*%|\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?)$/.test(
+    value.trim(),
+  )
+}
+
+function isNamedReviewAuthor(value: unknown): boolean {
+  return hasTypedObject(
+    value,
+    (author) =>
+      hasSchemaType(author, ['Person', 'Organization']) &&
+      isNonEmptyText(author.name) &&
+      author.name.trim().length < 100,
+  )
+}
+
+function isRating(value: unknown): boolean {
+  return hasTypedObject(
+    value,
+    (rating) =>
+      hasSchemaType(rating, ['Rating', 'AggregateRating']) &&
+      isRatingValue(rating.ratingValue),
+  )
+}
+
+function isReview(value: unknown): boolean {
+  return hasTypedObject(
+    value,
+    (review) =>
+      hasSchemaType(review, ['Review']) &&
+      isNamedReviewAuthor(review.author) &&
+      isRating(review.reviewRating),
+  )
+}
+
+function isAggregateRating(value: unknown): boolean {
+  return hasTypedObject(
+    value,
+    (rating) =>
+      hasSchemaType(rating, ['AggregateRating']) &&
+      isRatingValue(rating.ratingValue) &&
+      [rating.ratingCount, rating.reviewCount].some(isPositiveInteger),
+  )
+}
+
+function isPriceSpecification(value: unknown): boolean {
+  return hasTypedObject(
+    value,
+    (specification) =>
+      hasSchemaType(specification, [
+        'PriceSpecification',
+        'UnitPriceSpecification',
+      ]) && isFiniteNumericValue(specification.price),
+  )
+}
+
+function isOffer(value: unknown): boolean {
+  return hasTypedObject(value, (offer) => {
+    if (hasSchemaType(offer, ['Offer'])) {
+      return (
+        isFiniteNumericValue(offer.price) ||
+        isPriceSpecification(offer.priceSpecification)
+      )
+    }
+    if (hasSchemaType(offer, ['AggregateOffer'])) {
+      return (
+        isFiniteNumericValue(offer.lowPrice) &&
+        isNonEmptyText(offer.priceCurrency)
+      )
+    }
+    return false
+  })
+}
+
+function isUrlReference(value: unknown): value is string {
+  if (!isNonEmptyText(value) || /\s/.test(value)) return false
+  try {
+    const url = new URL(value, 'https://example.invalid/')
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function isBreadcrumbTarget(value: unknown): boolean {
+  if (isUrlReference(value)) return true
+  return isRecord(value) && isUrlReference(value['@id'])
+}
+
 function observedProperties(record: Record<string, unknown>): string[] {
   return Object.keys(record)
     .filter((key) => !key.startsWith('@') && hasValue(record[key]))
@@ -71,8 +219,14 @@ function productAssessment(
   record: Record<string, unknown>,
 ): GoogleRichResultAssessment {
   const missing: string[] = []
-  if (!hasValue(record.name)) missing.push('name')
-  if (![record.review, record.aggregateRating, record.offers].some(hasValue)) {
+  if (!isNonEmptyText(record.name)) missing.push('name')
+  if (
+    ![
+      isReview(record.review),
+      isAggregateRating(record.aggregateRating),
+      isOffer(record.offers),
+    ].some(Boolean)
+  ) {
     missing.push('one of review, aggregateRating, or offers')
   }
   return {
@@ -82,7 +236,7 @@ function productAssessment(
       : 'required-properties-observed',
     missingRequiredProperties: missing,
     limitations: [
-      'This checks only Product-level required property presence. Nested Review, AggregateRating, Offer, and policy requirements are not validated.',
+      'This checks documented Product name and minimal nested Review, AggregateRating, Offer, or AggregateOffer value shapes. Recommended properties, value ranges, and feature-specific policy requirements are not fully validated.',
       'Visible-content parity, crawlability, Search policies, and actual rich-result eligibility require Google validation.',
     ],
   }
@@ -99,23 +253,26 @@ function breadcrumbAssessment(
     missing.push('itemListElement with at least two ListItem values')
   }
   items.forEach((value, index) => {
-    if (!value || typeof value !== 'object') {
+    if (!isRecord(value)) {
       missing.push(`itemListElement[${index}] ListItem object`)
       return
     }
-    const item = value as Record<string, unknown>
-    if (!Number.isInteger(item.position) || Number(item.position) < 1) {
+    const item = value
+    if (!hasSchemaType(item, ['ListItem'])) {
+      missing.push(`itemListElement[${index}].@type ListItem`)
+    }
+    if (!isPositiveInteger(item.position)) {
       missing.push(`itemListElement[${index}].position`)
     }
     const target = item.item
-    const targetName =
-      target && typeof target === 'object'
-        ? (target as Record<string, unknown>).name
-        : undefined
-    if (!hasValue(item.name) && !hasValue(targetName)) {
+    const targetName = isRecord(target) ? target.name : undefined
+    if (!isNonEmptyText(item.name) && !isNonEmptyText(targetName)) {
       missing.push(`itemListElement[${index}].name`)
     }
-    if (index < items.length - 1 && !hasValue(target)) {
+    if (
+      (index < items.length - 1 || target !== undefined) &&
+      !isBreadcrumbTarget(target)
+    ) {
       missing.push(`itemListElement[${index}].item`)
     }
   })
@@ -126,7 +283,7 @@ function breadcrumbAssessment(
       : 'required-properties-observed',
     missingRequiredProperties: missing,
     limitations: [
-      'This checks required breadcrumb property presence, not URL validity, visible breadcrumb parity, crawlability, or Search policies.',
+      'This checks ListItem typing, positive integer positions, non-empty names, and URL or @id target shapes. Visible breadcrumb parity, target crawlability, and Search policies are not verified.',
       'Observed properties do not guarantee that Google will show a breadcrumb rich result.',
     ],
   }

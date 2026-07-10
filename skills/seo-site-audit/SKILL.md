@@ -9,7 +9,7 @@ Start with the main report. It joins the available first-party evidence and
 returns a small set of follow-up commands.
 
 Through MCP, call `seo_run_report` with report id
-`workflow-diagnose-property`. Call `seo_describe_report` first when its
+`search-performance-overview`. Call `seo_describe_report` first when its
 parameters are not already known. Use the CLI when MCP is not available:
 
 ```bash
@@ -43,8 +43,8 @@ for detail instead of crawling again:
 
 - Report id `top-fixes` returns a bounded queue.
 - Report id `affected-urls` returns URLs for one rule.
-- Report id `explain-issue` explains an unfamiliar rule.
-- Report id `get-crawl-report` returns requested report detail.
+- Report id `explain-crawl-issue` explains an unfamiliar rule.
+- Report id `crawl-report` returns requested report detail.
 
 Use report id `performance-audit` for a selected URL when performance evidence
 is needed. A crawl does not replace Lighthouse lab data or CrUX field data.

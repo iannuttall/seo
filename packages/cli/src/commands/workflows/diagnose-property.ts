@@ -210,7 +210,7 @@ function workflowCommandMeta(input: {
         ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
         {
           days: {
-            description: 'Diagnosis window length in days. Defaults to 90.',
+            description: 'Search performance window in days. Defaults to 90.',
           },
           limit: {
             description: 'Maximum rows per section. Defaults to 10.',
@@ -274,7 +274,7 @@ function workflowCommandMeta(input: {
 
 export const diagnosePropertyWorkflowCommand = workflowCommandMeta({
   name: 'diagnose-property',
-  description: 'Agent workflow for full property diagnosis and next actions',
+  description: 'Find what changed in Google Search and what to inspect next',
 })
 
 export const mainReportCommand = workflowCommandMeta({

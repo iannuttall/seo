@@ -2,7 +2,7 @@ import type { ReportEditorial } from './types'
 
 export const setupReports = [
   {
-    id: 'doctor',
+    id: 'setup-check',
     name: 'Doctor',
     category: 'setup',
     summary:
@@ -30,9 +30,9 @@ export const setupReports = [
     ],
     nextSteps: [
       'Run `seo start` if the installation still needs a project profile.',
-      'Run the property diagnosis after auth and defaults pass.',
+      'Run the search performance overview after auth and project defaults pass.',
     ],
-    related: ['diagnose-property'],
+    related: ['search-performance-overview'],
     sources: [],
   },
 ] as const satisfies readonly ReportEditorial[]

@@ -11,7 +11,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     'seo_list_reports',
     {
       description:
-        'List compact SEO report ids and descriptions, optionally by category',
+        'List compact SEO report ids, names, and purposes, optionally by category',
       inputSchema: {
         category: z.enum(REPORT_CATEGORIES).optional(),
       },
@@ -36,7 +36,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     'seo_describe_report',
     {
       description:
-        'Describe one SEO report and return the JSON Schema for its parameters',
+        'Explain when to use one SEO report, what it returns, and which parameters it accepts',
       inputSchema: {
         id: z.string().trim().min(1).max(100),
       },

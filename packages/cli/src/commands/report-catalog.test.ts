@@ -63,6 +63,14 @@ test('reports list exposes the shared sorted catalog', async () => {
       .map((report: { id: string }) => report.id)
       .sort((a: string, b: string) => a.localeCompare(b)),
   )
+  assert.ok(
+    output.reports.every(
+      (report: Record<string, unknown>) =>
+        typeof report.name === 'string' &&
+        typeof report.description === 'string' &&
+        !('useWhen' in report),
+    ),
+  )
 })
 
 test('reports describe returns the exact report input schema', async () => {
@@ -73,8 +81,33 @@ test('reports describe returns the exact report input schema', async () => {
   const output = JSON.parse(result.stdout)
   assert.equal(output.report.id, 'audit-page')
   assert.equal(output.report.category, 'reporting')
+  assert.equal(output.report.name, 'Single-page SEO audit')
+  assert.deepEqual(output.report.useWhen, [
+    'One page needs a technical review before you change it.',
+    'A broader report points to a specific URL.',
+  ])
+  assert.deepEqual(output.report.avoidWhen, [
+    'You need to discover issues across a whole site.',
+    'The page requires a logged-in browser session.',
+  ])
+  assert.equal(
+    output.report.outcome,
+    'A page-level audit that separates observed evidence from review advice.',
+  )
   assert.deepEqual(output.report.inputSchema.required, ['url'])
   assert.equal(output.report.inputSchema.additionalProperties, false)
+})
+
+test('reports describe explains when the report is useful', async () => {
+  const result = await runSeo(['reports', 'describe', 'audit-page'])
+
+  assert.equal(result.exitCode, 0)
+  assert.equal(result.stderr, '')
+  assert.match(result.stdout, /Name\s+Single-page SEO audit/)
+  assert.match(result.stdout, /Outcome\s+A page-level audit/)
+  assert.match(result.stdout, /Use when/)
+  assert.match(result.stdout, /Avoid when/)
+  assert.match(result.stdout, /Parameters \(JSON Schema\)/)
 })
 
 test('reports run validates inline and file parameters consistently', async () => {

@@ -571,6 +571,23 @@ test('index-watch help exposes bounded quota and inventory controls', async () =
   }
 })
 
+test('index-coverage help explains project, crawl, sitemap, and source limits', async () => {
+  const output = await runSeo(['index-coverage', '--help'])
+
+  for (const flag of [
+    '--project',
+    '--site',
+    '--crawl-report-id',
+    '--sitemaps',
+    '--days',
+    '--row-limit',
+    '--max-sitemap-urls',
+    '--limit',
+  ]) {
+    assert.match(output, new RegExp(flag))
+  }
+})
+
 test('index-watch JSON rejects unsafe bounds before authentication', async () => {
   for (const args of [
     ['--urls', 'https://example.com/a', '--daily-limit', '2001'],

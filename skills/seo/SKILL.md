@@ -34,23 +34,23 @@ for repeated runs in the same session.
 
 ## Which report id to use
 
-- Diagnosis: `workflow-diagnose-property`, `diagnose-property`,
+- Diagnosis: `search-performance-overview`,
   `segment-impact`, `striking-distance`, `traffic-anomaly`, and
-  `update-correlate`.
-- Main follow-ups: `workflow-refresh-priorities`, `quick-wins`, `second-page`,
-  `decaying`, `cannibal`, `ctr-underperformers`, and `query-cluster`.
+  `update-correlation`.
+- Main follow-ups: `refresh-priorities`, `quick-wins`, `second-page`,
+  `decaying-pages`, `cannibalisation`, `ctr-underperformers`, and `query-clusters`.
 - Page work: `audit-page`, `page-opportunities`, `content-optimization`,
   `internal-links`, and `performance-audit`.
-- Technical crawling: `crawl-site`, `top-fixes`, `affected-urls`,
-  `explain-issue`, `get-crawl-report`, and `compare-crawl-reports`.
-- Indexing and monitoring: `index-watch`, `index-monitor`,
-  `index-coverage-plan`, `crawl-diff`, `redirect-trace`, and `link-recover`.
+- Technical crawling: `site-crawl`, `top-fixes`, `affected-urls`,
+  `explain-crawl-issue`, `crawl-report`, and `compare-crawls`.
+- Indexing and monitoring: `index-coverage`, `index-watch`, `index-monitor`,
+  `index-coverage-plan`, `crawl-diff`, `redirect-trace`, and `link-recovery`.
 - AI-search evidence: `ai-readiness`, `geo-gaps`, `community-intent`,
-  `to-ai-query`, and `ai-referrals`.
-- Reporting and measurement: `report-narrative`, `monthly-report`,
-  `measure-change`, `pseo-audit`, `workflow-update-postmortem`, and
-  `workflow-technical-watch`.
-- Local setup health: `doctor`.
+  `seo-to-ai-query`, and `ai-referrals`.
+- Reporting and measurement: `narrative-report`, `monthly-report`,
+  `measure-change`, `pseo-audit`, `update-postmortem`, and
+  `technical-watch`.
+- Local setup health: `setup-check`.
 
 Use the CLI for project-profile administration and intentionally raw provider
 queries. Useful commands include `seo projects list --json`, `seo gsc-query`,

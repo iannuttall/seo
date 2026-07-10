@@ -311,7 +311,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_list_rules',
     {
       description:
-        'List crawler rule ids and guidance metadata. Use this before seo_explain_issue when you need valid rule ids.',
+        'List crawler rule ids and guidance metadata. Use this before the explain-crawl-issue report when you need valid rule ids.',
       inputSchema: {
         category: crawlerRuleCategorySchema.optional(),
       },
@@ -767,7 +767,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_okf_validate',
     {
       description:
-        'Validate OKF markdown files supplied by an agent. Use seo_okf_build to generate files from a crawl.',
+        'Validate OKF markdown files supplied by an agent. Use the okf-build report to generate files from a crawl.',
       inputSchema: {
         files: z
           .array(

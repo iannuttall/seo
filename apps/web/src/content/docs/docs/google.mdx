@@ -69,6 +69,73 @@ That changes how you should read a report:
 Reports keep caps, filters, and source state in their provenance so an agent can
 make that distinction.
 
+## Ask Search Console a precise question
+
+`seo gsc-query` gives you the Search Analytics rows behind the higher-level
+opportunity reports. Use it when you need a specific date range or dimension
+combination and a focused report would make too many decisions for you.
+
+It helps with questions such as:
+
+- Which queries sent impressions to one page last month?
+- Did mobile and desktop visibility move differently?
+- Which countries account for a change in clicks?
+- What rows did Search Console retain for a page and query combination?
+
+Run a query with explicit dates and dimensions:
+
+```sh
+seo gsc-query --project example --start-date 2026-05-01 --end-date 2026-05-31 --dimensions query,page --limit 100 --json
+seo gsc-query --help
+```
+
+The command requests clicks, impressions, CTR, and average position grouped by
+the dimensions you choose. Supported dimensions include query, page, country,
+device, and date. `--type` changes the Search Console search type. Advanced
+users can pass a complete Search Analytics request with `--body` or
+`--body-file`.
+
+JSON output includes the property, request body, returned rows, rows fetched,
+API call count, and the number of rows kept after the local output limit. Human
+output shows a compact table of the first rows.
+
+This is retained Search Console data, not a complete keyword database.
+Anonymized queries are missing, dimensional rows may not reconcile with
+property totals, and Google returns top rows rather than promising every row.
+Keep the request dates, dimensions, search type, filters, and row limits beside
+any conclusion.
+
+Use [quick-win review](/docs/reports/quick-wins),
+[segment impact](/docs/reports/segment-impact), or
+[decaying pages](/docs/reports/decaying-pages) when you want the CLI to turn those
+rows into a bounded investigation queue.
+
+## Check the indexed version Google reports for one URL
+
+`seo url-inspect` calls the Search Console URL Inspection API for a URL inside
+a property you can access. Use it when the decision depends on Google's stored
+index evidence rather than another live fetch from your computer.
+
+```sh
+seo url-inspect --project example --url https://example.com/pricing --json
+seo url-inspect --help
+```
+
+The request checks that the URL belongs to the selected property, then asks
+Google for its inspection result. Human output shows the verdict, coverage
+state, robots state, last crawl time, and Google-selected canonical. JSON keeps
+the complete structured response returned by the API.
+
+The result describes Google's indexed snapshot. It is not a live test and it
+does not prove that the page appears for a query today. A URL can also change
+after Google's recorded crawl. URL Inspection has provider quotas, so use it
+for important URLs and representative samples rather than trying to inspect a
+large site in one run.
+
+Run [audit one page](/docs/reports/audit-page) to compare the current live URL
+with that indexed evidence. Use [index monitoring](/docs/reports/index-monitor)
+when you need a repeatable, quota-bounded sample across a sitemap.
+
 ## Compare finalized Search Console windows
 
 Recent Search Console data can be incomplete. Google defines finalized data as
@@ -86,6 +153,32 @@ Check the dates in every result. Use `--refresh` when you need to bypass the
 local cache, but remember that a fresh API response can still contain provider
 data that is not final.
 
+## Use official Google update windows
+
+`seo updates` lists ranking updates from the official Google Search Status
+Dashboard. Use it to confirm the name, start date, end date, and status of a
+known update before comparing search performance around it.
+
+```sh
+seo updates --product Ranking --limit 10
+seo updates --product Ranking --limit 10 --json
+seo updates --help
+```
+
+The command requests official incidents for the selected product and returns
+their start time, end time, type, name, and status. An open incident has no end
+date yet. `--limit` bounds the rows returned.
+
+This feed does not include third-party volatility scores, unconfirmed chatter,
+or a diagnosis for your site. Matching dates establish timing context only. A
+release, migration, tracking change, seasonality, competitor, or demand shift
+can overlap the same window.
+
+Use [update correlation](/docs/reports/update-correlation) to compare a property
+with overlapping official windows. Use the
+[Google update postmortem](/docs/reports/update-postmortem) when you
+also need page, query, device, country, and known-confounder evidence.
+
 ## Add GA4 when post-click behavior changes the decision
 
 GA4 can add landing-page sessions, users, engagement, events, key events,
@@ -100,11 +193,27 @@ questions:
 GA4 cannot restore visits that were never measured, identify a referrer that
 was stripped, or prove that an SEO edit caused a conversion change.
 
-Run a raw report when you need a supported GA4 dimension and metric combination:
+Run a raw report when you need a supported GA4 dimension and metric
+combination:
 
 ```sh
+seo ga4-report --project example --start-date 2026-05-01 --end-date 2026-05-31 --dimensions landingPage --metrics sessions,totalUsers,eventCount --limit 100 --json
 seo ga4-report --help
 ```
+
+The command uses the GA4 property saved in the project profile unless you pass
+`--property`. It requests the date range, dimensions, metrics, and row limit you
+provide. Advanced users can pass a complete Data API request with `--body` or
+`--body-file`.
+
+Human output shows the selected property, row count, and a compact table. JSON
+keeps the Data API response, including headers, rows, totals, metadata, and row
+count when Google returns them. This makes `seo ga4-report` useful when you need
+raw post-click evidence without a higher-level SEO interpretation.
+
+Use [AI referrals](/docs/reports/ai-referrals) for known assistant referral
+sources. Use [measure change](/docs/reports/measure-change) when a recorded page
+or page-group change needs equal before and after windows.
 
 ## Leave room for GA4 processing and data controls
 

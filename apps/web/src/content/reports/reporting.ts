@@ -37,7 +37,7 @@ export const reportingReports = [
       'Fix concrete contradictions and refetch the URL.',
       'Run a site crawl when the same pattern may affect a template.',
     ],
-    related: ['crawl-site', 'redirect-trace', 'content-optimization'],
+    related: ['site-crawl', 'redirect-trace', 'content-optimization'],
     sources: ['canonical', 'robots-meta', 'structured-data', 'javascript'],
   },
   {
@@ -73,16 +73,16 @@ export const reportingReports = [
       'Read data coverage before headline movements. Use the report to choose investigations, not to fill gaps with explanations.',
     ],
     caveats: [
-      'Search Console totals and retained dimensional rows have different semantics and may not reconcile exactly.',
+      'Search Console totals and returned dimensional rows have different semantics and may not reconcile exactly.',
     ],
     nextSteps: [
       'Run the focused report attached to a leading item.',
       'Save the report as the baseline for the next monthly review.',
     ],
     related: [
-      'report-narrative',
-      'workflow-monthly-report',
-      'diagnose-property',
+      'narrative-report',
+      'monthly-action-plan',
+      'search-performance-overview',
     ],
     sources: ['search-analytics'],
   },
@@ -91,7 +91,7 @@ export const reportingReports = [
     name: 'Programmatic SEO audit',
     category: 'reporting',
     summary:
-      'Review repeated URL templates with Search Console evidence and bounded crawl or URL Inspection samples.',
+      'Review repeated URL templates with Search Console evidence and limited crawl or URL Inspection samples.',
     question:
       'Which programmatic page families show supported index, crawl, visibility, or page-quality review signals?',
     useWhen: [
@@ -102,17 +102,17 @@ export const reportingReports = [
       'You plan to label pages thin from word count or condemn a whole template from one sampled URL.',
     ],
     evidence: [
-      'Sitemap discovery, retained Search Console page and query rows, sampled crawls, optional exact URL Inspection verdicts, and template signatures.',
+      'Sitemap discovery, returned Search Console page and query rows, sampled crawls, optional exact URL Inspection verdicts, and template signatures.',
     ],
     methodology: [
-      'Detects repeated URL patterns, ranks retained template evidence, then applies explicit bounded technical samples and verdict rules.',
+      'Detects repeated URL patterns, ranks returned template evidence, then applies explicit limited technical samples and verdict rules.',
     ],
     exampleParams: { site: 'sc-domain:example.com', detail: 'summary' },
     interpretation: [
-      'Separate population, retained search evidence, crawl samples, and inspection samples. A verdict applies to the evidence sampled, not every URL in the family.',
+      'Separate population, returned search evidence, crawl samples, and inspection samples. A verdict applies to the evidence sampled, not every URL in the family.',
     ],
     caveats: [
-      'A sitemap URL without a retained row does not prove zero demand. Literal query coverage and repeated text are review heuristics, not spam verdicts.',
+      'A sitemap URL without a returned row does not prove zero demand. Literal query coverage and repeated text are review heuristics, not spam verdicts.',
     ],
     nextSteps: [
       'Sample representative URLs from the strongest risk or opportunity.',
@@ -122,7 +122,7 @@ export const reportingReports = [
     sources: ['search-analytics', 'sitemaps', 'url-inspection'],
   },
   {
-    id: 'report-narrative',
+    id: 'narrative-report',
     name: 'SEO narrative',
     category: 'reporting',
     summary:
@@ -137,7 +137,7 @@ export const reportingReports = [
       'You need new source data that the underlying reports did not collect.',
     ],
     evidence: [
-      'Property diagnosis sections, recorded change measurements, monitoring results, skipped reasons, and provenance from each source report.',
+      'Property diagnosis sections, recorded change measurements, monitoring results, skipped reasons, and source details from each source report.',
     ],
     methodology: [
       'Assembles structured outputs into a stable narrative order and preserves caveats rather than generating unsupported explanations.',
@@ -160,7 +160,11 @@ export const reportingReports = [
       'Run the focused report behind any unresolved headline.',
       'Share the caveats with the actions so certainty is not overstated.',
     ],
-    related: ['diagnose-property', 'monthly-report', 'measure-change'],
+    related: [
+      'search-performance-overview',
+      'monthly-report',
+      'measure-change',
+    ],
     sources: ['search-analytics'],
   },
   {
@@ -168,7 +172,7 @@ export const reportingReports = [
     name: 'Second-page opportunities',
     category: 'reporting',
     summary:
-      'Find retained URL opportunities averaging positions above 10 through 20, with evidence-grounded prompts for review.',
+      'Find returned URL opportunities averaging positions above 10 through 20, with evidence-grounded prompts for review.',
     question:
       'Which visible pages just beyond the first results page deserve investigation?',
     useWhen: [
@@ -179,10 +183,10 @@ export const reportingReports = [
       'You expect position thresholds to predict a ranking gain or define a universal priority.',
     ],
     evidence: [
-      'Retained Search Console page and query rows with optional live-page verification.',
+      'Returned Search Console page and query rows with optional live-page verification.',
     ],
     methodology: [
-      'Filters the documented average-position range, applies evidence thresholds, ranks deterministically, and bounds fetched verification.',
+      'Filters the documented average-position range, applies evidence thresholds, ranks consistently, and bounds fetched verification.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -197,7 +201,7 @@ export const reportingReports = [
       'Treat the result as a queue for SERP, intent, content, link, and technical review. Average position is not a fixed rank.',
     ],
     caveats: [
-      'Search appearances vary by query, device, location, and feature. Retained rows can be capped or incomplete.',
+      'Search appearances vary by query, device, location, and feature. Returned rows can be capped or incomplete.',
     ],
     nextSteps: [
       'Audit the best-supported page.',

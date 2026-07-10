@@ -12,7 +12,7 @@ seo crawl-queue --project <project> --json
 seo crawl-queue https://example.com --json
 ```
 
-Through MCP, use `seo_run_report` with report id `crawl-site` and
+Through MCP, use `seo_run_report` with report id `site-crawl` and
 `saveReport: true`. Pass its `reportId` to report ids `top-fixes` and
 `affected-urls`. Reuse that report instead of crawling again. Call
 `seo_describe_report` before a report when its parameters are not already
@@ -38,7 +38,7 @@ structured output:
 seo explain --rule <rule-id> --json
 ```
 
-Use report id `explain-issue` through `seo_run_report`.
+Use report id `explain-crawl-issue` through `seo_run_report`.
 
 Write Markdown implementation tickets only when the user wants a handoff file:
 

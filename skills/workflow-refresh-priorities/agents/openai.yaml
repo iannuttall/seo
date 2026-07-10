@@ -1,4 +1,0 @@
-interface:
-  display_name: "Refresh priorities workflow"
-  short_description: "Rank several first-party opportunity reports into one action queue"
-  default_prompt: "Use $workflow-refresh-priorities to run the workflow-refresh-priorities report and explain its evidence and limits."

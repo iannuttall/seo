@@ -16,29 +16,29 @@
   <url><loc>https://seoskills.dev/docs/reports/ai-referrals</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/audit-page</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/audit-urls</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/cannibal</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/cannibalisation</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/community-intent</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/compare-crawl-reports</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/compare-crawls</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/content-optimization</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/crawl-diff</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/crawl-site</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/site-crawl</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/ctr-underperformers</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/decaying</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/diagnose-property</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/doctor</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/decaying-pages</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/setup-check</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/entity-readiness</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/explain-issue</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/explain-crawl-issue</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/geo-gaps</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/get-crawl-report</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/index-coverage-plan</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/crawl-report</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/index-coverage</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/index-plan</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/index-monitor</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/index-watch</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/internal-links</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/link-recover</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/list-crawl-reports</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/list-rules</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/link-recovery</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/crawl-history</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/crawler-rules</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/llms-txt-audit</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/llms-txt-generate</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/generate-llms-txt</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/measure-change</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/monthly-report</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/okf-build</loc></url>
@@ -46,20 +46,20 @@
   <url><loc>https://seoskills.dev/docs/reports/page-opportunities</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/performance-audit</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/pseo-audit</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/query-cluster</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/query-clusters</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/quick-wins</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/redirect-trace</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/report-narrative</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/narrative-report</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/second-page</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/segment-impact</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/striking-distance</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/to-ai-query</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/seo-to-ai-query</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/top-fixes</loc></url>
   <url><loc>https://seoskills.dev/docs/reports/traffic-anomaly</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/update-correlate</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/workflow-diagnose-property</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/workflow-monthly-report</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/workflow-refresh-priorities</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/workflow-technical-watch</loc></url>
-  <url><loc>https://seoskills.dev/docs/reports/workflow-update-postmortem</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/update-correlation</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/search-performance-overview</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/monthly-action-plan</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/refresh-priorities</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/technical-watch</loc></url>
+  <url><loc>https://seoskills.dev/docs/reports/update-postmortem</loc></url>
 </urlset>

@@ -10,7 +10,7 @@ export const crawlReports = [
     question:
       'Which crawled URLs are affected by this rule, category, or severity?',
     useWhen: [
-      'A crawl summary has identified a pattern and you need the bounded URL inventory.',
+      'A crawl summary has identified a pattern and you need the limited URL inventory.',
       'An agent needs evidence for a targeted follow-up rather than the whole crawl payload.',
     ],
     avoidWhen: [
@@ -32,13 +32,13 @@ export const crawlReports = [
       'Confirm the rule meaning and page intent before bulk changes. Repeated URLs can reveal a template problem, but the report does not prove one shared cause.',
     ],
     caveats: [
-      'The result is bounded by the original crawl and the requested output limit.',
+      'The result is limited by the original crawl and the requested output limit.',
     ],
     nextSteps: [
       'Use explain issue for the rule guidance.',
       'Audit representative URLs and recrawl after the fix.',
     ],
-    related: ['explain-issue', 'audit-page', 'compare-crawl-reports'],
+    related: ['explain-crawl-issue', 'audit-page', 'compare-crawls'],
     sources: [],
   },
   {
@@ -85,7 +85,7 @@ export const crawlReports = [
     question:
       'What technical evidence and repeated issues appear across these chosen URLs?',
     useWhen: [
-      'A release, template, migration batch, or priority list needs a bounded audit.',
+      'A release, template, migration batch, or priority list needs a limited audit.',
       'The exact URL set matters more than site discovery.',
     ],
     avoidWhen: [
@@ -112,11 +112,11 @@ export const crawlReports = [
       'Inspect affected URLs for a repeated rule.',
       'Save and compare the report after the release is fixed.',
     ],
-    related: ['affected-urls', 'compare-crawl-reports', 'audit-page'],
+    related: ['affected-urls', 'compare-crawls', 'audit-page'],
     sources: ['javascript', 'canonical', 'structured-data'],
   },
   {
-    id: 'compare-crawl-reports',
+    id: 'compare-crawls',
     name: 'Compare crawl reports',
     category: 'crawl',
     summary:
@@ -154,11 +154,11 @@ export const crawlReports = [
     sources: [],
   },
   {
-    id: 'crawl-site',
+    id: 'site-crawl',
     name: 'Site crawl',
     category: 'crawl',
     summary:
-      'Map a bounded part of the site and turn technical evidence into a reusable baseline for follow-up work.',
+      'Map a limited part of the site and turn technical evidence into a reusable baseline for follow-up work.',
     question:
       'What can the crawler discover and verify across this site scope?',
     useWhen: [
@@ -190,7 +190,7 @@ export const crawlReports = [
       'Use top fixes for a compact action queue.',
       'Use affected URLs or a focused readiness report without rerunning the crawl.',
     ],
-    related: ['top-fixes', 'affected-urls', 'compare-crawl-reports'],
+    related: ['top-fixes', 'affected-urls', 'compare-crawls'],
     sources: ['robots', 'canonical', 'crawlable-links', 'javascript'],
   },
   {
@@ -225,11 +225,11 @@ export const crawlReports = [
       'Correct inconsistent source facts and rerun the crawl.',
       'Use AI readiness for the broader technical access review.',
     ],
-    related: ['ai-readiness', 'audit-page', 'crawl-site'],
+    related: ['ai-readiness', 'audit-page', 'site-crawl'],
     sources: ['structured-data'],
   },
   {
-    id: 'explain-issue',
+    id: 'explain-crawl-issue',
     name: 'Explain a crawler issue',
     category: 'crawl',
     summary:
@@ -259,7 +259,7 @@ export const crawlReports = [
       'Fetch the affected URL list for this rule.',
       'Audit representative pages and verify the change with a fresh crawl.',
     ],
-    related: ['affected-urls', 'audit-page', 'list-rules'],
+    related: ['affected-urls', 'audit-page', 'crawler-rules'],
     sources: [],
   },
   {
@@ -278,7 +278,7 @@ export const crawlReports = [
       'You need a visibility score, prompt rank, citation forecast, or guarantee of selection.',
     ],
     evidence: [
-      'Crawl access, indexability, canonical and snippet directives, plus bounded page observations.',
+      'Crawl access, indexability, canonical and snippet directives, plus limited page observations.',
     ],
     methodology: [
       'Maps observed controls to Google’s published AI-feature guidance and reports unknown when evidence is missing.',
@@ -298,7 +298,7 @@ export const crawlReports = [
     sources: ['ai-features', 'robots', 'robots-meta'],
   },
   {
-    id: 'get-crawl-report',
+    id: 'crawl-report',
     name: 'Get a saved crawl report',
     category: 'crawl',
     summary:
@@ -313,7 +313,7 @@ export const crawlReports = [
       'You need current evidence and the saved crawl is stale for the decision.',
     ],
     evidence: [
-      'Locally saved crawl metadata, summary, coverage, caveats, and optional bounded details.',
+      'Locally saved crawl metadata, summary, coverage, caveats, and optional limited details.',
     ],
     methodology: [
       'Resolves an exact report id or latest matching report, then keeps raw inventories opt-in.',
@@ -329,11 +329,11 @@ export const crawlReports = [
       'Run a focused report against the saved id.',
       'Start a new crawl when freshness changes the decision.',
     ],
-    related: ['list-crawl-reports', 'affected-urls', 'crawl-site'],
+    related: ['crawl-history', 'affected-urls', 'site-crawl'],
     sources: [],
   },
   {
-    id: 'list-crawl-reports',
+    id: 'crawl-history',
     name: 'List saved crawl reports',
     category: 'crawl',
     summary:
@@ -350,7 +350,7 @@ export const crawlReports = [
       'Locally stored crawl ids, sites, creation times, scope, and summary metadata.',
     ],
     methodology: [
-      'Filters saved metadata by site and returns a stable, bounded list.',
+      'Filters saved metadata by site and returns a stable, limited list.',
     ],
     exampleParams: { site: 'sc-domain:example.com', limit: 10 },
     interpretation: [
@@ -363,11 +363,11 @@ export const crawlReports = [
       'Open the chosen report.',
       'Compare two compatible snapshots when you need change evidence.',
     ],
-    related: ['get-crawl-report', 'compare-crawl-reports'],
+    related: ['crawl-report', 'compare-crawls'],
     sources: [],
   },
   {
-    id: 'list-rules',
+    id: 'crawler-rules',
     name: 'List crawler rules',
     category: 'crawl',
     summary:
@@ -395,7 +395,7 @@ export const crawlReports = [
       'Explain the selected rule.',
       'Fetch affected URLs from a saved crawl.',
     ],
-    related: ['explain-issue', 'affected-urls'],
+    related: ['explain-crawl-issue', 'affected-urls'],
     sources: [],
   },
   {
@@ -430,15 +430,15 @@ export const crawlReports = [
       'Generate a draft only if someone will own it.',
       'Keep normal crawl, index, and snippet controls correct.',
     ],
-    related: ['llms-txt-generate', 'ai-readiness', 'geo-gaps'],
+    related: ['generate-llms-txt', 'ai-readiness', 'geo-gaps'],
     sources: ['ai-features'],
   },
   {
-    id: 'llms-txt-generate',
+    id: 'generate-llms-txt',
     name: 'Generate llms.txt',
     category: 'crawl',
     summary:
-      'Create a bounded llms.txt draft from crawl evidence for a publisher who has decided to maintain the optional file.',
+      'Create a limited llms.txt draft from crawl evidence for a publisher who has decided to maintain the optional file.',
     question:
       'What would a concise llms.txt draft look like for these selected site pages?',
     useWhen: [
@@ -452,7 +452,7 @@ export const crawlReports = [
       'Saved crawl URLs, titles, descriptions, exclusions, output limit, and token budget.',
     ],
     methodology: [
-      'Selects bounded candidate pages deterministically and returns draft content plus generation metadata.',
+      'Selects limited candidate pages consistently and returns draft content plus generation metadata.',
     ],
     exampleParams: {
       reportId: 'crawl_example_20260710',
@@ -480,7 +480,7 @@ export const crawlReports = [
     summary:
       'Turn a saved crawl into a compact, cited site knowledge manifest for an agent to inspect locally.',
     question:
-      'Which crawled pages and relationships should form a bounded site knowledge pack?',
+      'Which crawled pages and relationships should form a limited site knowledge pack?',
     useWhen: [
       'An agent needs a local, reviewable site map with source citations.',
       'The crawl is current enough for the task.',
@@ -492,7 +492,7 @@ export const crawlReports = [
       'Crawl URLs, page metadata, internal links, extracted concepts, selection limits, and caveats.',
     ],
     methodology: [
-      'Selects concepts and pages within explicit limits, emits a manifest, and can include bounded Markdown files.',
+      'Selects concepts and pages within explicit limits, emits a manifest, and can include limited Markdown files.',
     ],
     exampleParams: {
       reportId: 'crawl_example_20260710',
@@ -510,7 +510,7 @@ export const crawlReports = [
       'Validate the generated files.',
       'Rebuild after meaningful information architecture changes.',
     ],
-    related: ['okf-validate', 'crawl-site'],
+    related: ['okf-validate', 'site-crawl'],
     sources: [],
   },
   {
@@ -531,7 +531,7 @@ export const crawlReports = [
       'The supplied file paths, frontmatter, headings, links, citations, and required manifest structure.',
     ],
     methodology: [
-      'Parses the bounded file set and returns deterministic errors and warnings for the supported format.',
+      'Parses the limited file set and returns repeatable errors and warnings for the supported format.',
     ],
     exampleParams: {
       files: [
@@ -547,9 +547,9 @@ export const crawlReports = [
     ],
     nextSteps: [
       'Correct invalid files and rerun validation.',
-      'Rebuild from a current crawl when provenance is unclear.',
+      'Rebuild from a current crawl when source details is unclear.',
     ],
-    related: ['okf-build', 'get-crawl-report'],
+    related: ['okf-build', 'crawl-report'],
     sources: [],
   },
   {
@@ -561,7 +561,7 @@ export const crawlReports = [
     question: 'Which supported technical findings should be reviewed first?',
     useWhen: [
       'A broad crawl is too large to act on directly.',
-      'You need a bounded queue by category or severity.',
+      'You need a limited queue by category or severity.',
     ],
     avoidWhen: [
       'You want an automatic change list that ignores page intent or business priority.',
@@ -570,7 +570,7 @@ export const crawlReports = [
       'Crawl issue instances, rule metadata, affected URL counts, severity, and selected category.',
     ],
     methodology: [
-      'Ranks eligible issue groups deterministically and returns a compact limit without discarding source references.',
+      'Ranks eligible issue groups consistently and returns a compact limit without discarding source references.',
     ],
     exampleParams: {
       reportId: 'crawl_example_20260710',
@@ -587,7 +587,7 @@ export const crawlReports = [
       'Explain the selected rule.',
       'Open its affected URLs and verify a fix with another crawl.',
     ],
-    related: ['explain-issue', 'affected-urls', 'compare-crawl-reports'],
+    related: ['explain-crawl-issue', 'affected-urls', 'compare-crawls'],
     sources: [],
   },
 ] as const satisfies readonly ReportEditorial[]

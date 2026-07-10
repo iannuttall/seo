@@ -84,6 +84,52 @@ site.
 The [crawler guide](/docs/crawler) covers limits, JavaScript rendering, robots
 handling, exports, and severity gates.
 
+## Reuse the same page or query group
+
+`seo content-groups` saves a page or query pattern on your machine. Use a group
+when the same set needs to appear in change measurement more than once. A group
+id is calmer and less error-prone than copying a long URL list into every
+command.
+
+Create a page group for one site:
+
+```sh
+seo content-groups add --site sc-domain:example.com --name "Blog pages" --dimension page --match contains --pattern "/blog/"
+seo content-groups list --site sc-domain:example.com
+seo content-groups --help
+```
+
+`--dimension` accepts `page` or `query`. `--match` accepts `equals`, `contains`,
+or `regex`. The command stores the site, name, dimension, match type, and
+pattern. It does not crawl the site or check whether every intended URL matches
+the pattern, so test a regex before you use it for measurement.
+
+The add command returns a reusable group id. List output shows each saved
+group and its filter. Add `--json` when an agent or script needs the complete
+record.
+
+Use that id as the target of a group-scoped change:
+
+```sh
+seo change-log add --site sc-domain:example.com --scope group --target <group-id> --title "Updated blog titles" --date 2026-05-12
+seo change-log measure --id <change-id> --json
+```
+
+Page groups can scope compatible Search Console and GA4 evidence. Query groups
+scope Search Console evidence and do not attach unfiltered sitewide GA4 data.
+The measurement still shows correlation around a recorded change, not proof
+that the change caused the movement.
+
+Delete a group only when later measurements no longer need it:
+
+```sh
+seo content-groups delete --id <group-id>
+```
+
+Deleting the local group does not change the site, Search Console, or GA4. The
+[change measurement report](/docs/reports/measure-change) explains finalized
+windows, control evidence, and confounders.
+
 ## Use JSON when nobody is watching the terminal
 
 JSON mode never prompts. Pass every selector a command needs:

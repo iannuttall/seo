@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cannibal exposure"
+  short_description: "Find queries exposed across multiple URLs"
+  default_prompt: "Use $cannibalisation to run the cannibalisation report and explain its evidence and limits."

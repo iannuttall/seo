@@ -1,0 +1,4 @@
+interface:
+  display_name: "Index coverage signals"
+  short_description: "Choose pages for URL Inspection from crawl and search evidence"
+  default_prompt: "Use $index-coverage to compare crawl, sitemap, and Search Console evidence, then choose representative URLs for URL Inspection."

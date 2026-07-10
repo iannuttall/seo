@@ -92,13 +92,13 @@ not hidden MCP side effects.
 
 Useful report ids include:
 
-- `workflow-diagnose-property` for the main diagnosis.
-- `workflow-refresh-priorities` for a ranked action queue.
-- `crawl-site`, then `top-fixes` or `affected-urls`, for technical work.
+- `search-performance-overview` to find where Google Search performance changed and what to inspect next.
+- `refresh-priorities` for a ranked action queue.
+- `site-crawl`, then `top-fixes` or `affected-urls`, for technical work.
 - `audit-page` and `performance-audit` for one URL.
 - `index-watch` for bounded Google URL Inspection evidence.
 - `pseo-audit` for repeated template families.
-- `report-narrative` and `monthly-report` for readable reporting.
+- `narrative-report` and `monthly-report` for readable reporting.
 
 Call `seo_list_reports` instead of treating this list as the complete catalog.
 

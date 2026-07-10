@@ -1,10 +1,14 @@
 ---
 import PageHeader from '@/components/PageHeader.astro'
 import {
+  editorialReports,
   legacyReportAliases,
+  reportSlugs,
   reports,
   reportsById,
 } from '@/content/reports'
+import { resolveReportGuide } from '@/content/reports/guides'
+import { humanReportCommand } from '@/content/reports/commands'
 import {
   categoryLabels,
   describeCommand,
@@ -20,8 +24,15 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 export function getStaticPaths() {
   return [
     ...reports.map((report) => ({
-      params: { slug: report.id },
+      params: {
+        slug:
+          reportSlugs[report.id as keyof typeof reportSlugs] ?? report.id,
+      },
       props: { report },
+    })),
+    ...Object.entries(reportSlugs).map(([id]) => ({
+      params: { slug: id },
+      props: { redirectTo: reportPath(id) },
     })),
     ...Object.entries(legacyReportAliases).map(([slug, target]) => ({
       params: { slug },
@@ -51,21 +62,38 @@ const relatedReports = report.related
   .map((id) => reportsById.get(id))
   .filter((item): item is ReportEditorial => item !== undefined)
 const sources = report.sources.map((key) => reportSources[key])
-const description = reportMetaDescription(report)
-const pageTitle = reportPageTitle(report)
-const reportIndex = reports.findIndex(({ id }) => id === report.id)
-const previousReport = reportIndex > 0 ? reports[reportIndex - 1] : undefined
+const guide = resolveReportGuide(report)
+const relatedGuides = relatedReports.map(resolveReportGuide)
+const description = reportMetaDescription(report, guide.seo)
+const pageTitle = reportPageTitle(report, guide.seo, guide.name)
+const reportIndex = editorialReports.findIndex(({ id }) => id === report.id)
+const previousReport =
+  reportIndex > 0 ? editorialReports[reportIndex - 1] : undefined
 const nextReport =
-  reportIndex >= 0 && reportIndex < reports.length - 1
-    ? reports[reportIndex + 1]
+  reportIndex >= 0 && reportIndex < editorialReports.length - 1
+    ? editorialReports[reportIndex + 1]
     : undefined
+const previousGuide = previousReport
+  ? resolveReportGuide(previousReport)
+  : undefined
+const nextGuide = nextReport ? resolveReportGuide(nextReport) : undefined
+const hasSeparateChecks = guide.checks !== report.methodology
+const humanCommand = humanReportCommand(report.id)
 const commands = [
+  ...(humanCommand
+    ? [
+        {
+          label: 'Run it from the CLI',
+          value: humanCommand.command,
+        },
+      ]
+    : []),
   {
-    label: 'Check the input schema',
+    label: 'Check the agent input schema',
     value: describeCommand(report),
   },
   {
-    label: 'Run the report',
+    label: 'Run it from an agent or script',
     value: reportCommand(report),
   },
 ]
@@ -106,51 +134,60 @@ const commands = [
           </a>
         </li>
         <li aria-hidden="true" class="text-border">/</li>
-        <li class="text-foreground">{report.name}</li>
+        <li class="text-foreground">{guide.name}</li>
       </ol>
     </nav>
 
     <PageHeader
-      title={report.name}
-      description={report.summary}
+      title={guide.seo?.heading ?? guide.name}
+      description={guide.lead}
       bordered={false}
     />
 
     <div class="docs-prose">
-      <p>
-        Run this report yourself in the CLI or let an agent call it through
-        MCP. Both receive the same URLs, dates, source limits, and structured
-        evidence.
-      </p>
-
-      <h2 id="what-this-report-answers">What this report answers</h2>
-      <p>{report.question}</p>
-
-      <h2 id="when-this-report-earns-its-place">
-        When this report earns its place
+      <h2 id="what-this-report-helps-you-decide">
+        What this report helps you decide
       </h2>
+      <p>{report.question}</p>
       <ul>
         {report.useWhen.map((item) => <li>{item}</li>)}
       </ul>
 
-      <h2 id="when-to-choose-another-report">
-        When to choose another report
-      </h2>
+      <h2 id="use-another-report-when">Use another report when</h2>
       <ul>
         {report.avoidWhen.map((item) => <li>{item}</li>)}
       </ul>
 
-      <h2 id="evidence-this-report-uses">Evidence this report uses</h2>
+      <h2 id="data-sources-and-inputs">Data sources and inputs</h2>
       <ul>
-        {report.evidence.map((item) => <li>{item}</li>)}
+        {
+          guide.inputs.map((input) => (
+            <li>
+              <strong>{input.label}</strong>
+              {input.role ? `. ${input.role}` : null}
+            </li>
+          ))
+        }
       </ul>
 
-      <h2 id="how-the-report-reaches-its-findings">
-        How the report reaches its findings
+      <h2 id="what-this-report-checks">
+        {hasSeparateChecks
+          ? 'What this report checks'
+          : 'What this report checks and how'}
       </h2>
       <ul>
-        {report.methodology.map((item) => <li>{item}</li>)}
+        {guide.checks.map((item) => <li>{item}</li>)}
       </ul>
+      {
+        hasSeparateChecks ? (
+          <>
+            <h2 id="how-it-works">How it works</h2>
+            <ul>
+              {report.methodology.map((item) => <li>{item}</li>)}
+            </ul>
+          </>
+        ) : null
+      }
       <p>
         The JSON result keeps dates, thresholds, limits, skipped work, and
         source completeness beside the finding. Missing, partial, capped,
@@ -159,8 +196,10 @@ const commands = [
 
       <h2 id="run-the-report-from-the-cli">Run the report from the CLI</h2>
       <p>
-        Describe the live input schema first when an agent has not used this
-        report before. The second command runs it with bounded example inputs.
+        {humanCommand
+          ? humanCommand.note
+          : 'This report currently uses the shared report runner in the CLI.'}
+        {' '}Agents and CI should inspect the live schema before their first run.
       </p>
 
       {
@@ -193,18 +232,19 @@ const commands = [
         design, so agents and CI jobs do not prompt or guess.
       </p>
 
-      <h2 id="how-to-read-the-result">How to read the result</h2>
+      <h2 id="what-comes-back">What comes back and how to read it</h2>
       <ul>
+        {guide.returns.map((item) => <li>{item}</li>)}
         {report.interpretation.map((item) => <li>{item}</li>)}
       </ul>
       <p>
-        Start with <code>dataStatus</code>, provenance, warnings, and caveats.
-        Then inspect the observed evidence before derived findings or suggested
-        actions.
+        Start with <code>dataStatus</code>, source details, warnings, and
+        caveats. Then inspect the observed evidence before derived findings or
+        suggested actions.
       </p>
 
-      <h2 id="limits-to-keep-with-the-result">
-        Limits to keep with the result
+      <h2 id="what-this-report-cannot-tell-you">
+        What this report cannot tell you
       </h2>
       <ul>
         {report.caveats.map((item) => <li>{item}</li>)}
@@ -218,7 +258,7 @@ const commands = [
       <h2 id="related-reports">Related reports</h2>
       <ul>
         {
-          relatedReports.map((related) => (
+          relatedGuides.map((related) => (
             <li>
               <a href={reportPath(related.id)}>{related.name}</a>.{' '}
               {related.summary}
@@ -269,7 +309,7 @@ const commands = [
             >
               <span class="text-sm text-foreground-muted">Previous</span>
               <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {previousReport.name}
+                {previousGuide?.name}
               </span>
             </a>
           ) : (
@@ -282,7 +322,7 @@ const commands = [
             >
               <span class="text-sm text-foreground-muted">Next</span>
               <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {nextReport.name}
+                {nextGuide?.name}
               </span>
             </a>
           ) : (

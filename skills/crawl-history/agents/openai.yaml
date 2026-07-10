@@ -1,0 +1,4 @@
+interface:
+  display_name: "List crawl reports"
+  short_description: "List saved crawl metadata"
+  default_prompt: "Use $crawl-history to run the crawl-history report and explain its evidence and limits."

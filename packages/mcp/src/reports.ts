@@ -27,7 +27,11 @@ export function describeReport(id: string) {
   return {
     id: report.id,
     category: report.category,
+    name: report.name,
     description: report.description,
+    useWhen: report.useWhen,
+    avoidWhen: report.avoidWhen,
+    outcome: report.outcome,
     inputSchema: z.toJSONSchema(report.inputSchema),
   }
 }

@@ -2,25 +2,25 @@ import type { ReportEditorial } from './types'
 
 export const workflowReports = [
   {
-    id: 'workflow-diagnose-property',
-    name: 'Property diagnosis workflow',
+    id: 'search-performance-overview',
+    name: 'Search performance overview',
     category: 'workflows',
     summary:
-      'Run the broad property diagnosis and return a short sequence of evidence-backed follow-up actions for an agent.',
+      'Find where Google Search performance changed, what explains the movement, and which focused check to run next.',
     question:
-      'What should an agent investigate first across this Search Console property?',
+      'Where did Google Search performance change, and what should I investigate next?',
     useWhen: [
-      'An agent is starting with little context.',
-      'You want discovery, diagnosis, and next actions in one bounded workflow.',
+      'Clicks or impressions changed, but you do not yet know which pages, queries, countries, or devices explain it.',
+      'You are starting an investigation and need the strongest supported leads before opening a focused report.',
     ],
     avoidWhen: [
-      'A known page or rule already defines the job. A focused report will use less data.',
+      'You already know the affected page, query, or technical issue. Run the focused report for that question instead.',
     ],
     evidence: [
-      'The property diagnosis sections, source coverage, skipped reasons, ranked findings, and generated follow-up commands.',
+      'Search performance sections, source coverage, skipped reasons, ranked findings, and generated follow-up commands.',
     ],
     methodology: [
-      'Runs the shared diagnosis, then selects a small number of follow-ups from supported structured findings.',
+      'Compares recent and earlier Search Console evidence, narrows the movement by segment, then recommends follow-ups supported by the returned findings.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -30,7 +30,7 @@ export const workflowReports = [
       includeBrand: false,
     },
     interpretation: [
-      'Check source completeness, then follow the first command whose evidence is strong enough to change the decision.',
+      'Check which data was available, then follow the first recommendation whose evidence matches the change you are investigating.',
     ],
     caveats: [
       'The workflow cannot recover unavailable provider data or explain a movement without supporting evidence.',
@@ -39,15 +39,15 @@ export const workflowReports = [
       'Run one recommended focused report.',
       'Use a crawl when live technical verification is required.',
     ],
-    related: ['diagnose-property', 'crawl-site', 'workflow-refresh-priorities'],
+    related: ['segment-impact', 'site-crawl', 'refresh-priorities'],
     sources: ['search-analytics'],
   },
   {
-    id: 'workflow-monthly-report',
+    id: 'monthly-action-plan',
     name: 'Monthly reporting workflow',
     category: 'workflows',
     summary:
-      'Produce the monthly report and a bounded action list so an agent can move from reporting to useful follow-up work.',
+      'Produce the monthly report and a limited action list so an agent can move from reporting to useful follow-up work.',
     question:
       'What happened this month and which supported actions should follow?',
     useWhen: [
@@ -79,11 +79,11 @@ export const workflowReports = [
       'Run the leading focused report.',
       'Store the output for a consistent comparison next month.',
     ],
-    related: ['monthly-report', 'report-narrative', 'measure-change'],
+    related: ['monthly-report', 'narrative-report', 'measure-change'],
     sources: ['search-analytics'],
   },
   {
-    id: 'workflow-refresh-priorities',
+    id: 'refresh-priorities',
     name: 'Refresh priorities workflow',
     category: 'workflows',
     summary:
@@ -98,10 +98,10 @@ export const workflowReports = [
       'You want publication age or word count to decide which pages get rewritten.',
     ],
     evidence: [
-      'Decay, striking-distance, quick-win, query-overlap, and property-diagnosis results with their individual provenance.',
+      'Decay, striking-distance, quick-win, query-overlap, and search-performance results with their individual source details.',
     ],
     methodology: [
-      'Normalizes supported candidates, preserves their source report and caveats, then ranks a bounded queue deterministically.',
+      'Normalizes supported candidates, preserves their source report and caveats, then ranks a limited queue consistently.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -126,7 +126,7 @@ export const workflowReports = [
     sources: ['search-analytics'],
   },
   {
-    id: 'workflow-technical-watch',
+    id: 'technical-watch',
     name: 'Technical watch workflow',
     category: 'workflows',
     summary:
@@ -135,13 +135,13 @@ export const workflowReports = [
       'Did important technical or indexed-state evidence regress since the last monitoring run?',
     useWhen: [
       'A scheduled technical check needs crawl and URL Inspection evidence in one workflow.',
-      'The crawl scope, sitemap, and quota are intentionally bounded.',
+      'The crawl scope, sitemap, and quota are intentionally limited.',
     ],
     avoidWhen: [
       'You do not have a comparable crawl baseline or enough URL Inspection quota for the selected sample.',
     ],
     evidence: [
-      'Crawl diff results, bounded URL Inspection monitoring, prior snapshots, optional link-recovery evidence, and operational failures.',
+      'Crawl diff results, limited URL Inspection monitoring, prior snapshots, optional link-recovery evidence, and operational failures.',
     ],
     methodology: [
       'Runs the shared monitoring reports independently, then merges supported regressions and follow-ups without turning one missing section into a failure.',
@@ -159,17 +159,17 @@ export const workflowReports = [
       'Start with operational failures, then distinguish live crawl changes from indexed-snapshot changes. Verify intent before fixing directives or canonicals.',
     ],
     caveats: [
-      'Neither a bounded crawl nor sampled URL Inspection provides complete site coverage.',
+      'Neither a limited crawl nor sampled URL Inspection provides complete site coverage.',
     ],
     nextSteps: [
       'Audit representative regressions directly.',
       'Compare the next run with the same scope.',
     ],
-    related: ['crawl-diff', 'index-watch', 'link-recover'],
+    related: ['crawl-diff', 'index-watch', 'link-recovery'],
     sources: ['url-inspection', 'sitemaps', 'robots'],
   },
   {
-    id: 'workflow-update-postmortem',
+    id: 'update-postmortem',
     name: 'Google update postmortem',
     category: 'workflows',
     summary:
@@ -187,7 +187,7 @@ export const workflowReports = [
       'Official update dates, property anomaly evidence, segment winners and losers, optional change log, page checks, and supplied confounders.',
     ],
     methodology: [
-      'Anchors analysis to the confirmed window, compares supported segments, keeps coincident site changes visible, and returns bounded investigation actions.',
+      'Anchors analysis to the confirmed window, compares supported segments, keeps coincident site changes visible, and returns limited investigation actions.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -208,7 +208,7 @@ export const workflowReports = [
       'Audit representative winner and loser pages.',
       'Record any deliberate response and measure it over a complete later window.',
     ],
-    related: ['update-correlate', 'segment-impact', 'measure-change'],
+    related: ['update-correlation', 'segment-impact', 'measure-change'],
     sources: ['google-updates', 'search-analytics'],
   },
 ] as const satisfies readonly ReportEditorial[]

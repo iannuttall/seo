@@ -1,4 +1,4 @@
 interface:
-  display_name: "SEO to AI prompts"
-  short_description: "Turn retained GSC queries into prompt ideas"
-  default_prompt: "Use $seo-to-ai-query to create AI monitoring prompt suggestions from retained GSC queries."
+  display_name: "Queries to AI prompts"
+  short_description: "Convert retained GSC wording into deterministic monitoring prompts"
+  default_prompt: "Use $seo-to-ai-query to run the seo-to-ai-query report and explain its evidence and limits."

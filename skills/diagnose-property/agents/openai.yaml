@@ -1,4 +1,0 @@
-interface:
-  display_name: "Diagnose property"
-  short_description: "Run the complete property diagnosis"
-  default_prompt: "Use $diagnose-property to run the diagnose-property report and explain its evidence and limits."

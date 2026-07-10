@@ -33,7 +33,7 @@ For each page, the crawler records:
 
 ## Rules
 
-The rule registry has more than 50 rules. Each rule includes:
+The rule registry has 50 rules. Each rule includes:
 
 - stable id
 - category

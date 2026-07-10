@@ -100,6 +100,79 @@ test('auditPage preserves case-sensitive URL path identity', async () => {
   assert.ok(report.issues.some((issue) => issue.code === 'canonical_mismatch'))
 })
 
+test('auditPage keeps title width while dropping count and word heuristics', async () => {
+  const result = fetched('https://example.com/foo')
+  result.html = `<!doctype html><html><head>
+    <title>${'i'.repeat(100)}</title>
+    <link rel="canonical" href="https://example.com/foo">
+  </head><body><main><h1>First</h1><h1>Second</h1><p>Short.</p></main></body></html>`
+
+  const report = await auditPage(
+    { url: 'https://example.com/foo', extractor: 'readability' },
+    dependencies(result),
+  )
+
+  assert.equal(
+    report.issues.some((issue) => issue.code === 'title_too_wide'),
+    false,
+  )
+  assert.equal(
+    report.issues.some((issue) => issue.code === 'h1_missing'),
+    false,
+  )
+  assert.equal(
+    report.recommendations.some((recommendation) =>
+      /expand|word/i.test(recommendation.action),
+    ),
+    false,
+  )
+})
+
+test('auditPage labels a glyph-aware title estimate as display evidence', async () => {
+  const result = fetched('https://example.com/foo')
+  result.html = `<!doctype html><html><head>
+    <title>${'W'.repeat(31)}</title>
+    <link rel="canonical" href="https://example.com/foo">
+  </head><body><main><h1>Wide title fixture</h1></main></body></html>`
+
+  const report = await auditPage(
+    { url: 'https://example.com/foo', extractor: 'readability' },
+    dependencies(result),
+  )
+  const issue = report.issues.find(
+    (candidate) => candidate.code === 'title_too_wide',
+  )
+
+  assert.equal(issue?.severity, 'low')
+  assert.match(issue?.detail ?? '', /review reference/)
+  assert.match(issue?.evidenceRef ?? '', /arial-20-v1 \(high confidence\)/)
+})
+
+test('auditPage reports a missing H1 without requiring exactly one', async () => {
+  const result = fetched('https://example.com/foo')
+  result.html = `<!doctype html><html><head>
+    <title>Missing heading fixture</title>
+    <link rel="canonical" href="https://example.com/foo">
+  </head><body><main><p>Useful content.</p></main></body></html>`
+
+  const report = await auditPage(
+    { url: 'https://example.com/foo', extractor: 'readability' },
+    dependencies(result),
+  )
+  const issue = report.issues.find(
+    (candidate) => candidate.code === 'h1_missing',
+  )
+
+  assert.equal(issue?.severity, 'low')
+  assert.ok(
+    report.recommendations.some(
+      (recommendation) =>
+        recommendation.evidenceRef ===
+        'The extracted document has no H1 heading.',
+    ),
+  )
+})
+
 test('auditPage does not hide Search Console provider errors', async () => {
   const deps = dependencies(fetched('https://example.com/foo'))
   deps.queryPageMetrics = async () => {

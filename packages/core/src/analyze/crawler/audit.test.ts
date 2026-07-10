@@ -1,54 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { listRules } from '../../rules.js'
-import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
-
-function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
-  const url = input.url ?? 'https://example.com/page'
-  const finalUrl = input.finalUrl ?? url
-  const canonical = 'canonical' in input ? input.canonical : finalUrl
-  return {
-    status: 200,
-    contentType: 'text/html',
-    title: 'A useful page title for search teams',
-    metaDescription:
-      'A useful page description that explains the page value for search teams.',
-    h1: 'Useful page',
-    h1Count: 1,
-    h2Count: 2,
-    h3Count: 1,
-    indexable: true,
-    wordCount: 500,
-    contentHash: 'hash',
-    hasViewport: true,
-    lang: 'en',
-    imagesTotal: 1,
-    imagesMissingAlt: 0,
-    outgoingInternalCount: 1,
-    schemaTypes: ['Article'],
-    invalidJsonLdCount: 0,
-    invalidJsonLdSamples: [],
-    openGraphTitle: 'A useful page title for search teams',
-    openGraphDescription:
-      'A useful page description that explains the page value for sharing.',
-    openGraphImage: 'https://example.com/share.jpg',
-    twitterCard: 'summary',
-    geo: {
-      semanticHtml: true,
-      structuredData: true,
-      hasAuthor: true,
-      hasDate: true,
-      questionHeadings: 1,
-      structuredBlocks: 1,
-      answerable: true,
-    },
-    ...input,
-    url,
-    finalUrl,
-    canonical,
-  }
-}
+import { crawlPage as page } from './audit.test-fixtures.js'
 
 test('auditCrawlRequests preserves failures and redirect request identity', () => {
   const issues = auditCrawlRequests([
@@ -606,7 +560,7 @@ test('auditCrawlPages flags heading issues', () => {
     issues
       .filter((issue) => issue.category === 'headings')
       .map((issue) => issue.ruleId),
-    ['h1_missing', 'multiple_h1'],
+    ['h1_missing'],
   )
 })
 
@@ -859,66 +813,6 @@ test('auditCrawlPages flags content issues', () => {
     issues.find((issue) => issue.ruleId === 'query_coverage_missing')?.evidence
       ?.missingTerms,
     ['plumber', 'london'],
-  )
-})
-
-test('auditCrawlPages flags metadata length and duplicate issues', () => {
-  const duplicateTitle = 'Evergreen Product Guide for Search Teams'
-  const duplicateDescription =
-    'A clear product guide for search teams that explains the exact page value and why someone should read it today.'
-  const issues = auditCrawlPages([
-    page({
-      url: 'https://example.com/short',
-      title: 'Short',
-      metaDescription: 'Too short.',
-      internalInlinkCount: 1,
-    }),
-    page({
-      url: 'https://example.com/long',
-      title:
-        'This is a very long page title that keeps going until it will almost certainly truncate in search results',
-      metaDescription:
-        'This description is intentionally long so the crawler can flag it as too long for a search snippet because it keeps adding details, caveats, context, and filler beyond the useful limit.',
-      internalInlinkCount: 1,
-    }),
-    page({
-      url: 'https://example.com/duplicate-a',
-      title: duplicateTitle,
-      metaDescription: duplicateDescription,
-      internalInlinkCount: 1,
-    }),
-    page({
-      url: 'https://example.com/duplicate-b',
-      title: duplicateTitle.toLowerCase(),
-      metaDescription: duplicateDescription.replace(/\s+/g, '  '),
-      internalInlinkCount: 1,
-    }),
-  ])
-  const metadataIssues = issues.filter((issue) => issue.category === 'metadata')
-
-  assert.deepEqual(
-    metadataIssues.map((issue) => issue.ruleId),
-    [
-      'title_too_short',
-      'meta_description_too_short',
-      'title_too_wide',
-      'meta_description_too_long',
-      'title_duplicate',
-      'meta_description_duplicate',
-      'title_duplicate',
-      'meta_description_duplicate',
-    ],
-  )
-  assert.equal(
-    metadataIssues.find((issue) => issue.ruleId === 'title_duplicate')?.evidence
-      ?.duplicateCount,
-    2,
-  )
-  assert.deepEqual(
-    metadataIssues.find(
-      (issue) => issue.ruleId === 'meta_description_duplicate',
-    )?.evidence?.sampleUrls,
-    ['https://example.com/duplicate-a', 'https://example.com/duplicate-b'],
   )
 })
 

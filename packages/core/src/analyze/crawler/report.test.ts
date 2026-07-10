@@ -113,8 +113,8 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
       url: 'https://example.com/b',
     },
     {
-      ruleId: 'h1_count',
-      title: 'H1 structure issue',
+      ruleId: 'h1_missing',
+      title: 'Missing H1',
       category: 'headings',
       severity: 'medium',
       url: 'https://example.com/b',
@@ -377,8 +377,8 @@ test('createCrawlReport redacts tenant-unsafe payload strings', () => {
 test('groupCrawlIssues ranks severity before count', () => {
   const groups = groupCrawlIssues([
     {
-      ruleId: 'h1_count',
-      title: 'H1 structure issue',
+      ruleId: 'h1_missing',
+      title: 'Missing H1',
       category: 'headings',
       severity: 'medium',
       url: 'https://example.com/a',

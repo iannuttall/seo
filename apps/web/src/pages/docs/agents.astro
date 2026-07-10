@@ -51,6 +51,11 @@ seo skills install --target project</code></pre>
     <code>--dir</code> for a custom skills directory. Add <code>--json</code> in
     unattended setup.
   </p>
+  <p>
+    Agent tooling can discover the full catalog at <code>/.well-known/agent-skills/index.json</code>.
+    Every entry points to the canonical skill instructions and includes a SHA-256
+    digest so clients can verify the downloaded file.
+  </p>
 
   <h2>Reason from evidence</h2>
   <p>

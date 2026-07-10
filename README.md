@@ -174,6 +174,10 @@ seo skills install --target claude
 seo skills install --target project
 ```
 
+Agents can also discover the complete skill catalog from
+`https://seoskills.dev/.well-known/agent-skills/index.json`. Each entry links to
+the canonical skill instructions and includes a content digest for verification.
+
 See [MCP and agents](https://seoskills.dev/docs/agents) for setup and tool
 details.
 

@@ -28,7 +28,7 @@ pnpm --filter @seo/web deploy:dry-run
 - Questions and ordinary support go to GitHub Issues. Vulnerabilities go to
   GitHub private vulnerability reporting. Do not add an email address.
 - Teach the published package path first: `npx seo start` or
-  `npm install --global seo`. Keep source-build instructions lower down.
+  `npm i -g seo`. Keep source-build instructions lower down.
 - Do not document a hosted service or remote MCP until it exists.
 - Use plain, human copy with sentence-case headings. Avoid hype, gradients,
   decorative cards, and oversized empty hero sections.

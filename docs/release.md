@@ -5,7 +5,7 @@ The repository publishes one unscoped package. Private `@seo/*` workspace packag
 ## Install from npm
 
 ```bash
-npm install --global seo
+npm i -g seo
 seo start
 ```
 

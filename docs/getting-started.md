@@ -16,7 +16,7 @@ seo technical-watch
 Install the `seo` package globally, then start the guided setup:
 
 ```bash
-npm install --global seo
+npm i -g seo
 seo start
 ```
 

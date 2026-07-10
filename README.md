@@ -1,7 +1,7 @@
-<h1 align="center">seo</h1>
+<h1 align="center">SEO Skills CLI</h1>
 
 <p align="center">
-  Local SEO reports, site crawling, Search Console, GA4, and MCP tools for people and agents.
+  Find technical SEO problems, rank fixes with real search data, and give people or agents the evidence to act.
 </p>
 
 <p align="center">
@@ -31,9 +31,9 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-`seo` finds technical problems, connects them to real search and analytics data,
-and tells you what to do next. It runs on your machine. Reports, project
-profiles, Google tokens, and caches stay local.
+`seo` turns crawls, Search Console, and analytics data into a ranked fix list.
+Every recommendation keeps the affected pages, queries, and supporting evidence
+close by, so you can act without guessing. It all runs on your machine.
 
 ## Quick start
 
@@ -49,7 +49,7 @@ npx seo report
 Or install the command once:
 
 ```sh
-npm install --global seo
+npm i -g seo
 seo start
 seo report
 ```

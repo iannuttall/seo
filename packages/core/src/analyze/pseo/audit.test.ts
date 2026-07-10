@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { GscRow } from '../../types.js'
+import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
 import {
   buildPseoAuditReportFromRows,
   pseoAuditReport,
@@ -255,12 +256,8 @@ test('pSEO runtime validates bounds and requests both GSC dimensions', async () 
     inspectUrl: async () => {
       throw new Error('not called')
     },
-    fetchSitemapUrls: async ({ sitemapUrl }: { sitemapUrl: string }) => ({
-      sitemapUrl,
-      urls: [],
-      nestedSitemaps: [],
-      warnings: [],
-    }),
+    fetchSitemapUrls: async ({ sitemapUrl }: { sitemapUrl: string }) =>
+      completeSitemapResult(sitemapUrl),
     searchAnalytics: async (
       _site: string,
       request: { dimensions?: string[]; maxRows?: number },

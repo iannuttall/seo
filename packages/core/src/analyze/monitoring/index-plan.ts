@@ -5,7 +5,7 @@ import {
   normalizeHttpUrl,
 } from '../../gsc/property-url.js'
 import { integerOption } from '../site-diagnostics/quick-wins-report-input.js'
-import { fetchSitemapUrls } from './sitemaps.js'
+import { boundedSitemapInventory, fetchSitemapUrls } from './sitemaps.js'
 
 export type IndexPlanProperty = {
   property: string
@@ -257,18 +257,12 @@ export async function indexCoveragePlan(input: {
       fetchSitemapUrls({ sitemapUrl, limit: maxUrls }),
     ),
   )
-  const urls = [
-    ...new Set(sitemapResults.flatMap((result) => result.urls)),
-  ].slice(0, maxUrls)
+  const inventory = boundedSitemapInventory(sitemapResults, maxUrls)
+  const urls = inventory.urls
   warnings.push(...sitemapResults.flatMap((result) => result.warnings))
-  if (
-    sitemapResults.some(
-      (result) =>
-        result.urls.length >= maxUrls || result.nestedSitemaps.length >= 50,
-    )
-  ) {
+  if (inventory.truncation.possiblyTruncated) {
     warnings.push(
-      'Sitemap discovery reached a configured URL or nested-sitemap boundary; coverage planning may be incomplete.',
+      'Sitemap discovery exceeded a configured URL or nested-sitemap boundary; coverage planning may be incomplete.',
     )
   }
 

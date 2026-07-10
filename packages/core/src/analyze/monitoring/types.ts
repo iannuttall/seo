@@ -395,6 +395,8 @@ export type IndexMonitorReport = {
     staleAfterDays: number
     failureRetryHours: number
     possiblyTruncated: boolean
+    inventoryLimitExceeded: boolean
+    omittedUrlsAtLeast: number
     discoveredUrls: number
     invalidUrls: number
   }

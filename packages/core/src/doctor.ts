@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { getAuthModeStatus } from './gsc/auth.js'
+import { getAuthModeStatus, getClientConfig } from './gsc/auth.js'
 import { getSeoCliPaths } from './paths.js'
 import { readConfig, readOauthClient, readTokens } from './storage/config.js'
 
@@ -26,6 +26,9 @@ export async function runDoctor(): Promise<{
   const authMode = getAuthModeStatus()
   const tokens = await readTokens()
   const oauthClient = readOauthClient()
+  const tokenClientConfigured = tokens
+    ? Boolean(getClientConfig(tokens.client_source))
+    : undefined
   const checks: DoctorCheck[] = []
 
   checks.push({
@@ -42,16 +45,27 @@ export async function runDoctor(): Promise<{
     id: 'oauth-client',
     label: 'OAuth client',
     status:
-      authMode.sharedConfigured || authMode.byoConfigured ? 'pass' : 'fail',
-    detail: authMode.sharedConfigured
-      ? 'Shared client configured.'
-      : authMode.byoConfigured
-        ? `BYO client configured at ${paths.oauthClientFile}.`
-        : 'No shared or BYO Google OAuth client configured.',
+      tokenClientConfigured === false
+        ? 'fail'
+        : authMode.sharedConfigured || authMode.byoConfigured
+          ? 'pass'
+          : 'fail',
+    detail:
+      tokenClientConfigured === false
+        ? `Stored Google login uses the ${tokens?.client_source === 'shared' ? 'shared seo app' : 'BYO client'}, but that client is not configured.`
+        : authMode.sharedConfigured
+          ? 'Shared client configured.'
+          : authMode.byoConfigured
+            ? `BYO client configured at ${paths.oauthClientFile}.`
+            : 'No shared or BYO Google OAuth client configured.',
     fix:
-      authMode.sharedConfigured || authMode.byoConfigured
-        ? undefined
-        : 'Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
+      tokenClientConfigured === false
+        ? tokens?.client_source === 'shared'
+          ? 'Reinstall `seo`. If the shared client is still missing, report it at https://github.com/iannuttall/seo/issues.'
+          : 'Restore the same client with `seo auth setup-client`, or run `seo auth logout` before signing in with a different client.'
+        : authMode.sharedConfigured || authMode.byoConfigured
+          ? undefined
+          : 'Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
   })
 
   checks.push({

@@ -2,7 +2,7 @@ import type { CrawlReport } from './report.js'
 
 export type EntityReadinessCheck = {
   id: string
-  status: 'pass' | 'warning' | 'fail'
+  status: 'info'
   title: string
   plainEnglish: string
   action: string
@@ -17,7 +17,7 @@ export type EntityReadinessReport = {
   dataStatus: 'complete' | 'partial'
   evaluatedPages: number
   crawlPages: number
-  score: number
+  assessment: 'evidence-only'
   headline: string
   caveats: string[]
   checks: EntityReadinessCheck[]
@@ -28,13 +28,6 @@ export type EntityReadinessReport = {
     socialProfiles: string[]
     authors: string[]
   }
-  topActions: EntityReadinessCheck[]
-}
-
-function status(score: number): EntityReadinessCheck['status'] {
-  if (score >= 80) return 'pass'
-  if (score >= 45) return 'warning'
-  return 'fail'
 }
 
 function unique(values: Array<string | undefined>): string[] {
@@ -89,9 +82,9 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
   const datePages = pages.filter((page) => page.hasDate || page.geo?.hasDate)
   const titlePages = pages.filter((page) => page.title && page.h1)
 
-  const scoredChecks = [
+  const evidenceChecks = [
     {
-      score: pct(entitySchemaPages.length, total),
+      coverage: pct(entitySchemaPages.length, total),
       check: {
         id: 'entity-schema',
         title: 'Entity schema is present',
@@ -106,7 +99,7 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       },
     },
     {
-      score: siteSameAsEvidence.length ? 100 : 0,
+      coverage: siteSameAsEvidence.length ? 100 : 0,
       check: {
         id: 'same-as',
         title: 'Site entity profiles are connected',
@@ -130,16 +123,15 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       },
     },
     {
-      score: Math.round(
+      coverage: Math.round(
         (pct(authorPages.length, total) + pct(datePages.length, total)) / 2,
       ),
       check: {
         id: 'authority-freshness',
-        title: 'Authors and dates are visible',
-        plainEnglish:
-          'AI systems need signs of who produced content and whether it is fresh.',
+        title: 'Author and date signals observed',
+        plainEnglish: `${pct(authorPages.length, total)}% of evaluated indexable pages expose an author signal and ${pct(datePages.length, total)}% expose a date signal.`,
         action:
-          'Add visible authors, reviewed dates, and updated dates to editorial or advisory content.',
+          'For editorial content, identify authors and show accurate published or modified dates when that information is useful to readers.',
         evidence: {
           authorCoverage: pct(authorPages.length, total),
           dateCoverage: pct(datePages.length, total),
@@ -148,25 +140,22 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       },
     },
     {
-      score: pct(titlePages.length, total),
+      coverage: pct(titlePages.length, total),
       check: {
         id: 'entity-naming',
-        title: 'Page names are clear and consistent',
+        title: 'Title and H1 coverage observed',
         plainEnglish: `${pct(titlePages.length, total)}% of evaluated indexable pages have both a title and H1.`,
         action:
-          'Use consistent brand, product, and person names in titles, H1s, schema, and profile links.',
+          'Review pages missing either signal. Keep brand, product, and person names accurate wherever they appear.',
       },
     },
   ]
 
-  const checks = scoredChecks.map(({ score, check }) => ({
+  const checks = evidenceChecks.map(({ coverage, check }) => ({
     ...check,
-    status: status(score),
+    status: 'info' as const,
+    evidence: { ...check.evidence, observedCoveragePercent: coverage },
   }))
-  const score = Math.round(
-    scoredChecks.reduce((sum, item) => sum + item.score, 0) /
-      scoredChecks.length,
-  )
   const dataStatus =
     report.status === 'completed' && pages.length > 0
       ? ('complete' as const)
@@ -179,15 +168,14 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
     dataStatus,
     evaluatedPages: pages.length,
     crawlPages: report.pages.length,
-    score,
+    assessment: 'evidence-only',
     headline:
       dataStatus === 'partial'
         ? 'Entity evidence is incomplete; treat these findings as scoped to the evaluated pages, not the whole site.'
-        : score >= 80
-          ? 'Entity signals are strong enough for agents to understand the site.'
-          : 'Entity signals need tightening so agents can connect the site to the right brand, people, products, and profiles.',
+        : 'Entity signals are reported as observations, not a ranking, visibility, or machine-understanding score.',
     caveats: [
       ...report.caveats,
+      'This report deliberately has no aggregate entity score. Add schema, authors, dates, and sameAs only where they accurately fit the page and a documented use case.',
       ...(dataStatus === 'partial'
         ? [
             `Entity coverage is based on ${pages.length} evaluated indexable page${pages.length === 1 ? '' : 's'} from a ${report.status} crawl.`,
@@ -207,6 +195,5 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       socialProfiles,
       authors,
     },
-    topActions: checks.filter((check) => check.status !== 'pass').slice(0, 5),
   }
 }

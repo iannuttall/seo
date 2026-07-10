@@ -291,7 +291,8 @@ test('entityReadiness summarizes schema and official profile signals', () => {
   assert.deepEqual(report.entities.sameAs, [
     'https://www.linkedin.com/company/example',
   ])
-  assert.ok(report.score > 0)
+  assert.equal(report.assessment, 'evidence-only')
+  assert.equal('score' in report, false)
   assert.equal(report.dataStatus, 'complete')
 })
 
@@ -316,7 +317,8 @@ test('entityReadiness scopes partial crawls and unclassified social links', () =
   assert.equal(report.evaluatedPages, 1)
   assert.match(report.headline, /not the whole site/i)
   assert.equal(report.entities.sameAs.length, 0)
-  assert.equal(sameAs?.status, 'fail')
+  assert.equal(sameAs?.status, 'info')
+  assert.equal(sameAs?.evidence?.observedCoveragePercent, 0)
   assert.match(sameAs?.plainEnglish ?? '', /not enough to prove/i)
   assert.match(report.caveats.join(' '), /not proof/i)
 })
@@ -342,7 +344,8 @@ test('entityReadiness does not use an author profile as site identity', () => {
   assert.deepEqual(report.entities.sameAsByType, {
     Person: ['https://example.net/jane'],
   })
-  assert.equal(check?.status, 'fail')
+  assert.equal(check?.status, 'info')
+  assert.equal(check?.evidence?.observedCoveragePercent, 0)
   assert.match(check?.plainEnglish ?? '', /Person sameAs links/)
 })
 

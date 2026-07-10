@@ -78,7 +78,7 @@ function renderKnowledgeMarkdown(report: CrawlReport): string {
     `- Technical score: ${report.summary.technicalScorePages ? `${report.summary.healthScore}/100 across ${report.summary.technicalScorePages} pages` : 'not available'}`,
     `- GEO score: ${report.summary.geoScorePages ? `${report.summary.geoReadinessScore}/100 across ${report.summary.geoScorePages} pages` : 'not available'}`,
     `- AI-search evidence: ${payload.aiReadiness.dataStatus} (${payload.aiReadiness.assessment})`,
-    `- Entity readiness: ${payload.entityReadiness.score}/100 (${payload.entityReadiness.dataStatus} evidence)`,
+    `- Entity evidence: ${payload.entityReadiness.dataStatus} (${payload.entityReadiness.assessment})`,
     '',
     '## Top AI Readiness Actions',
     '',

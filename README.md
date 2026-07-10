@@ -201,7 +201,7 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | AI Search eligibility evidence | No | Yes |
 | AI-search evidence report | No | Yes |
 | llms.txt generator | No | Yes |
-| Entity readiness | No | Yes |
+| Entity evidence report | No | Yes |
 | OKF/site knowledge export | No | Yes |
 | Rule guidance | Yes | Yes |
 | Rule count | 46 | 57 |

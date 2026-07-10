@@ -1,23 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { SeoError } from '@seo/core'
 import * as z from 'zod/v4'
-import {
-  getReportDefinition,
-  listReportDefinitions,
-  REPORT_CATEGORIES,
-} from './report-registry.js'
+import { REPORT_CATEGORIES } from './report-registry.js'
+import { describeReport, listReports, runReport } from './reports.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 const openOutputSchema = z.looseObject({})
-
-function validationMessage(error: z.ZodError): string {
-  return error.issues
-    .map((issue) => {
-      const path = issue.path.length > 0 ? issue.path.join('.') : 'input'
-      return `${path}: ${issue.message}`
-    })
-    .join('; ')
-}
 
 export function registerDiscoveryTools(server: McpServer): void {
   server.registerTool(
@@ -36,7 +23,7 @@ export function registerDiscoveryTools(server: McpServer): void {
       },
     },
     async ({ category }) => {
-      const reports = listReportDefinitions(category)
+      const reports = listReports(category)
       const categories = [...new Set(reports.map((report) => report.category))]
       return toolSuccess(
         `${reports.length} SEO reports available across ${categories.length} categories.`,
@@ -61,20 +48,12 @@ export function registerDiscoveryTools(server: McpServer): void {
       },
     },
     async ({ id }) => {
-      const report = getReportDefinition(id)
-      if (!report) {
-        return toolError(
-          new SeoError('INVALID_INPUT', `Unknown report: ${id}.`),
-        )
+      try {
+        const report = describeReport(id)
+        return toolSuccess(`${report.id}: ${report.description}`, { report })
+      } catch (error) {
+        return toolError(error)
       }
-      return toolSuccess(`${report.id}: ${report.description}`, {
-        report: {
-          id: report.id,
-          category: report.category,
-          description: report.description,
-          inputSchema: z.toJSONSchema(report.inputSchema),
-        },
-      })
     },
   )
 
@@ -93,28 +72,7 @@ export function registerDiscoveryTools(server: McpServer): void {
       },
     },
     async ({ id, params }) => {
-      const report = getReportDefinition(id)
-      if (!report) {
-        return toolError(
-          new SeoError('INVALID_INPUT', `Unknown report: ${id}.`),
-        )
-      }
-
-      const parsed = report.inputSchema.safeParse(params ?? {})
-      if (!parsed.success) {
-        return toolError(
-          new SeoError(
-            'INVALID_INPUT',
-            `Invalid parameters for ${id}: ${validationMessage(parsed.error)}`,
-          ),
-        )
-      }
-
-      try {
-        return await report.handler(parsed.data)
-      } catch (error) {
-        return toolError(error)
-      }
+      return runReport(id, params)
     },
   )
 }

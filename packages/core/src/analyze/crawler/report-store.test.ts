@@ -175,9 +175,9 @@ test('crawl report store recomputes derived fields on load', () => {
   const loaded = loadCrawlReport(report.id)
 
   assert.equal(loaded?.summary.healthScore, 70)
-  assert.equal(loaded?.summary.geoReadinessScore, 40)
+  assert.equal(loaded?.summary.geoReadinessScore, 65)
   assert.equal(loaded?.pages[0]?.seoScore, 70)
-  assert.equal(loaded?.pages[0]?.geoScore, 40)
+  assert.equal(loaded?.pages[0]?.geoScore, 65)
   assert.equal(loaded?.requestEvidenceStatus, 'unavailable')
   assert.equal(loaded?.summary.attemptedRequests, 0)
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')

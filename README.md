@@ -163,9 +163,9 @@ seo perf audit --project keep --strategy desktop
 
 `seo perf audit` uses its bundled Lighthouse with a compatible local Chrome installation. If the lab run is unavailable, it returns an unscored HTTP transport diagnostic and says what it could not measure. Set `SEO_CRUX_API_KEY` (preferred) or pass `--crux-key` when you want device-specific Chrome UX Report field data too.
 
-## GEO and AI-search readiness
+## AI-search evidence
 
-The crawler checks whether pages and sites are easy for AI systems to understand and cite:
+The crawler separates Google Search eligibility evidence from optional page and agent-protocol observations. It does not predict citations:
 
 - structured data
 - AI crawler access in robots.txt
@@ -173,11 +173,9 @@ The crawler checks whether pages and sites are easy for AI systems to understand
 - semantic HTML
 - authorship
 - dates
-- direct answers under clear headings
 - tables, lists, and other extractable blocks
 - `/llms.txt`
 - entity signals such as Organization, Person, Product, sameAs, and official social profiles
-- thin pages that are unlikely to be cited
 
 There are also focused AI-search support reports:
 

@@ -253,6 +253,7 @@ test('auditCrawlPages has issue-producing coverage for every rule family', () =>
         indexable: false,
         indexability: 'Meta robots noindex',
         wordCount: 80,
+        mainContentHash: 'duplicate-template',
         textRatio: 0.03,
         imagesTotal: 1,
         imagesMissingAlt: 1,
@@ -277,6 +278,12 @@ test('auditCrawlPages has issue-producing coverage for every rule family', () =>
           llmsTxtUrl: 'https://example.com/llms.txt',
           llmsTxtStatus: 404,
         },
+      }),
+      page({
+        url: 'http://example.com/duplicate-template',
+        finalUrl: 'http://example.com/duplicate-template',
+        canonical: 'http://example.com/duplicate-template',
+        mainContentHash: 'duplicate-template',
       }),
     ],
     { startUrl: 'http://example.com/bad-template' },
@@ -511,7 +518,6 @@ test('auditCrawlPages flags high-value on-page issues', () => {
       'h1_missing',
       'canonical_missing',
       'noindex',
-      'thin_content',
       'image_missing_alt',
       'image_oversized_candidate',
       'viewport_missing',
@@ -840,13 +846,7 @@ test('auditCrawlPages flags content issues', () => {
     issues
       .filter((issue) => issue.category === 'content')
       .map((issue) => issue.ruleId),
-    [
-      'thin_content',
-      'low_text_ratio',
-      'duplicate_content',
-      'duplicate_content',
-      'query_coverage_missing',
-    ],
+    ['duplicate_content', 'duplicate_content', 'query_coverage_missing'],
   )
   assert.deepEqual(
     issues.find((issue) => issue.ruleId === 'query_coverage_missing')?.evidence
@@ -951,7 +951,6 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
       'og_description_missing',
       'og_image_missing',
       'twitter_card_missing',
-      'geo_not_answerable',
       'geo_no_author',
       'geo_no_date',
       'geo_no_semantic_html',
@@ -964,7 +963,7 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
   )
 })
 
-test('auditCrawlPages does not treat missing llms.txt as an SEO issue', () => {
+test('auditCrawlPages does not turn word count or llms.txt into SEO issues', () => {
   const issues = auditCrawlPages(
     [
       page({
@@ -1004,15 +1003,7 @@ test('auditCrawlPages does not treat missing llms.txt as an SEO issue', () => {
   )
   const geoIssues = issues.filter((issue) => issue.category === 'geo')
 
-  assert.deepEqual(
-    geoIssues.map((issue) => issue.ruleId),
-    ['geo_thin_to_cite', 'geo_thin_to_cite'],
-  )
-  assert.equal(
-    geoIssues.find((issue) => issue.ruleId === 'geo_thin_to_cite')?.evidence
-      ?.threshold,
-    300,
-  )
+  assert.deepEqual(geoIssues, [])
 })
 
 test('auditCrawlPages copies search metrics onto issues', () => {

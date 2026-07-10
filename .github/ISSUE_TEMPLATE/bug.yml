@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a reproducible problem with the CLI, library, reports, or MCP server.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include tokens, API keys, analytics data, private URLs, or client data. Report security problems through GitHub's private vulnerability reporting flow.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the command, expected result, and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Give the smallest safe example that reproduces the problem.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: seo version
+      description: Output from `seo --version`.
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Node version and operating system.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Add a minimal JSON excerpt or fixture only if it contains no private data.

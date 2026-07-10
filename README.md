@@ -11,7 +11,11 @@
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
+  <a href="https://github.com/iannuttall/seo/issues">Questions</a>
+  ·
   <a href="PRIVACY.md">Privacy</a>
+  ·
+  <a href="SECURITY.md">Security</a>
   ·
   <a href="LICENSE">License</a>
   ·
@@ -161,6 +165,15 @@ The package also ships focused skills under `skills/`. They teach agents when
 to discover reports, run an analysis, inspect evidence, and request a smaller
 follow-up instead of loading a giant report into context.
 
+List or install them without finding the npm package directory yourself:
+
+```sh
+seo skills list
+seo skills install --target codex
+seo skills install --target claude
+seo skills install --target project
+```
+
 See [MCP and agents](docs/mcp.md) for setup and tool details.
 
 ## Use it as a library
@@ -197,6 +210,10 @@ Power users can bring their own Google OAuth client. See
 
 ## Documentation
 
+Questions, bug reports, and feature requests go through
+[GitHub Issues](https://github.com/iannuttall/seo/issues). Report suspected
+vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
+
 - [Getting started](docs/getting-started.md)
 - [CLI commands](docs/cli.md)
 - [Crawler](docs/crawler.md)
@@ -204,6 +221,9 @@ Power users can bring their own Google OAuth client. See
 - [AI-search evidence](docs/geo.md)
 - [Privacy policy](PRIVACY.md)
 - [Terms of use](TERMS.md)
+- [Security policy](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Trademark and brand policy](TRADEMARKS.md)
 
 ## Develop locally
 
@@ -231,4 +251,5 @@ Contributor architecture and report-quality rules live in [AGENTS.md](AGENTS.md)
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+The code is available under [Apache-2.0](LICENSE). Project names and artwork are
+covered separately by the [trademark and brand policy](TRADEMARKS.md).

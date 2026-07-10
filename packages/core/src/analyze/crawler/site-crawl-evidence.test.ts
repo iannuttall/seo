@@ -553,10 +553,6 @@ test('crawlSite recognizes supported Microdata without JSON-LD', async () => {
     assert.deepEqual(report.pages[0]?.schemaTypes, ['Product'])
     assert.deepEqual(report.pages[0]?.structuredDataFormats, ['microdata'])
     assert.equal(report.pages[0]?.geo?.structuredData, true)
-    assert.equal(
-      report.issues.some((issue) => issue.ruleId === 'structured_data_missing'),
-      false,
-    )
   } finally {
     await fixture.close()
   }

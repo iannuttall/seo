@@ -600,25 +600,32 @@ test('auditCrawlPages flags heading issues', () => {
       h3Count: 1,
       internalInlinkCount: 1,
     }),
-    page({
-      url: 'https://example.com/weak-outline',
-      h2Count: 0,
-      h3Count: 0,
-      wordCount: 600,
-      internalInlinkCount: 1,
-    }),
   ])
 
   assert.deepEqual(
     issues
       .filter((issue) => issue.category === 'headings')
       .map((issue) => issue.ruleId),
-    ['h1_missing', 'multiple_h1', 'heading_structure_weak'],
+    ['h1_missing', 'multiple_h1'],
   )
+})
+
+test('auditCrawlPages does not invent a heading-count threshold', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/long-unsectioned-page',
+      h1: 'A long page',
+      h1Count: 1,
+      h2Count: 0,
+      h3Count: 0,
+      wordCount: 10_000,
+      internalInlinkCount: 1,
+    }),
+  ])
+
   assert.deepEqual(
-    issues.find((issue) => issue.ruleId === 'heading_structure_weak')?.evidence
-      ?.minWords,
-    300,
+    issues.filter((item) => item.category === 'headings'),
+    [],
   )
 })
 

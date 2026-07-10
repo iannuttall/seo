@@ -9,7 +9,7 @@ This is local first today. The same core is shaped so it can later run as a host
 ## What it does
 
 - Crawls sites for technical SEO and GEO issues.
-- Checks 61 rules across metadata, links, indexability, canonicals, content, schema, performance, security, mobile, international, social, and AI-search readiness.
+- Checks 50+ rules across metadata, links, indexability, canonicals, content, schema, performance, security, mobile, international, and social previews.
 - Joins crawled URLs with GSC clicks, impressions, CTR, position, and top query data.
 - Joins GA4 landing-page sessions and conversions when a project profile has a GA4 property.
 - Ranks fixes by severity, affected URLs, search visibility, analytics value, and effort.
@@ -204,7 +204,7 @@ Crawlie is a strong open-source crawler. This project goes wider.
 | Entity evidence report | No | Yes |
 | OKF/site knowledge export | No | Yes |
 | Rule guidance | Yes | Yes |
-| Rule count | 46 | 57 |
+| Rule count | 46 | 50+ |
 | GSC joins | No | Yes |
 | GA4 joins | No | Yes |
 | URL Inspection | No | Yes |

@@ -275,6 +275,8 @@ test('long help and crawler command help are available', async () => {
     ['report', '--help'],
     ['projects', '--help'],
     ['start', '--help'],
+    ['skills', '--help'],
+    ['skills', 'install', '--help'],
     ['crawl', '--help'],
     ['crawl-reports', '--help'],
     ['internal-links', '--help'],

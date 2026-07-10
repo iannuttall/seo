@@ -1,4 +1,4 @@
-import { seoErrorEnvelope, toSeoError } from '@seo/core'
+import { SEO_VERSION, seoErrorEnvelope, toSeoError } from '@seo/core'
 import { defineCommand, runCommand, runMain } from 'citty'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
@@ -64,6 +64,7 @@ import {
 import { explainCommand, rulesCommand } from './commands/rules.js'
 import { scheduleCommand } from './commands/schedule.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
+import { skillsCommand } from './commands/skills.js'
 import {
   privacyCommand,
   resetCommand,
@@ -81,8 +82,8 @@ import {
 import { maybeCheckForUpdates } from './utils.js'
 
 const pkg = {
-  name: '@seo/cli',
-  version: '0.1.0',
+  name: 'seo',
+  version: SEO_VERSION,
 }
 
 type HelpSection = {
@@ -123,6 +124,7 @@ const helpSections: HelpSection[] = [
       ['seo diagnose-property --json', 'Full diagnosis for agents'],
       ['seo export diagnose', 'Export report data to CSV'],
       ['seo mcp install', 'Install SEO tools into MCP clients'],
+      ['seo skills list', 'List packaged skills for agents'],
     ],
   },
 ]
@@ -251,6 +253,7 @@ const main = defineCommand({
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,
+    skills: skillsCommand,
     start: startCommand,
     setup: setupCommand,
     report: mainReportCommand,

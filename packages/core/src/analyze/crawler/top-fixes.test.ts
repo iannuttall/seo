@@ -152,3 +152,41 @@ test('topFixes keeps medium fixes above low sitewide noise', () => {
   assert.equal(fixes[0]?.ruleId, 'geo_no_structured_data')
   assert.equal(fixes[1]?.ruleId, 'twitter_card_missing')
 })
+
+test('topFixes does not turn partial GSC evidence into zero visibility', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    issues: [
+      {
+        ruleId: 'client_error',
+        title: 'Client error',
+        category: 'response',
+        severity: 'high',
+        url: 'https://example.com/broken',
+      },
+    ],
+    dataSources: {
+      searchConsole: {
+        status: 'partial',
+        totalPages: 1,
+        queriedPages: 1,
+        joinedMetricPages: 0,
+        joinedQueryPages: 0,
+        pageLimit: 5000,
+        pageLimitReached: false,
+        retainedRowLimit: 25_000,
+        retainedRowLimitReached: true,
+      },
+      analytics: {
+        status: 'skipped',
+        totalPages: 1,
+        queriedPages: 0,
+        joinedPages: 0,
+      },
+    },
+  })
+
+  const reason = topFixes(report)[0]?.whyThisRanks ?? ''
+  assert.match(reason, /evidence is partial/)
+  assert.doesNotMatch(reason, /No affected URL has joined/)
+})

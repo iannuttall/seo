@@ -3,7 +3,12 @@ import {
   type RuleCategory,
   type RuleSeverity,
 } from '../../rules.js'
-import type { CrawlIssue, CrawlIssueGroup, CrawlReport } from './report.js'
+import type {
+  CrawlDataSourceStatus,
+  CrawlIssue,
+  CrawlIssueGroup,
+  CrawlReport,
+} from './report.js'
 
 export type TopFixFilters = {
   category?: RuleCategory | string
@@ -159,10 +164,15 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
   }
 }
 
-function whyThisRanks(input: TopFix['scoreFactors']): string {
+function whyThisRanks(
+  input: TopFix['scoreFactors'],
+  searchStatus?: CrawlDataSourceStatus,
+): string {
   const visibility = input.searchVisibleUrls
     ? `${input.searchVisibleUrls} affected URLs have GSC visibility (${input.clicks} clicks, ${input.impressions} impressions).`
-    : 'No affected URL has joined GSC visibility yet.'
+    : searchStatus && !['joined', 'none'].includes(searchStatus)
+      ? `No joined GSC visibility is available for these affected URLs; Search Console evidence is ${searchStatus}.`
+      : 'No affected URL has joined GSC visibility yet.'
   const analytics = input.sessions
     ? ` GA4 adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
     : ''
@@ -212,7 +222,10 @@ export function topFixes(
       ...group,
       score: Math.round(score),
       scoreFactors,
-      whyThisRanks: whyThisRanks(scoreFactors),
+      whyThisRanks: whyThisRanks(
+        scoreFactors,
+        report.dataSources?.searchConsole.status,
+      ),
       howToFix: rule?.howToFix ?? '',
       howToVerify: rule?.howToVerify ?? '',
       verification: {

@@ -41,10 +41,38 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
         url: 'https://example.com/',
       },
     ],
+    dataSources: {
+      searchConsole: {
+        status: 'partial',
+        window: {
+          startDate: '2026-05-19',
+          endDate: '2026-06-15',
+          days: 28,
+        },
+        totalPages: 1,
+        queriedPages: 1,
+        joinedMetricPages: 0,
+        joinedQueryPages: 0,
+        pageLimit: 5000,
+        pageLimitReached: false,
+        retainedRowLimit: 25_000,
+        retainedRowLimitReached: true,
+      },
+      analytics: {
+        status: 'skipped',
+        totalPages: 1,
+        queriedPages: 0,
+        joinedPages: 0,
+      },
+    },
   })
   const fix = topFixes(report)[0]
 
   assert.doesNotThrow(() => crawlReportSchema.parse(report))
+  assert.equal(
+    crawlReportSchema.parse(report).dataSources?.searchConsole.status,
+    'partial',
+  )
   assert.doesNotThrow(() => crawlerSchemas.pageSnapshot.parse(report.pages[0]))
   assert.equal(
     crawlerSchemas.pageSnapshot.parse(report.pages[0]).contentExtraction?.used,
@@ -99,6 +127,10 @@ test('crawler JSON schemas expose deterministic object contracts', () => {
     reportVariants.every(
       (variant) => variant.type === 'object' && variant.properties?.summary,
     ),
+    true,
+  )
+  assert.equal(
+    reportVariants.every((variant) => variant.properties?.dataSources),
     true,
   )
   assert.equal(crawlerJsonSchemas.pageSnapshot.type, 'object')

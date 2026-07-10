@@ -435,6 +435,54 @@ export const crawlReportSummarySchema = z.object({
   byCategory: z.record(z.string(), z.number().int()),
 })
 
+const crawlDataSourceStatusSchema = z.enum([
+  'joined',
+  'partial',
+  'none',
+  'skipped',
+  'unavailable',
+])
+
+const crawlDataSourceWindowSchema = z.object({
+  startDate: z.string().date(),
+  endDate: z.string().date(),
+  days: z.number().int().positive(),
+})
+
+const crawlSearchDataSourceSchema = z.object({
+  status: crawlDataSourceStatusSchema,
+  window: crawlDataSourceWindowSchema.optional(),
+  totalPages: z.number().int().nonnegative(),
+  queriedPages: z.number().int().nonnegative(),
+  joinedMetricPages: z.number().int().nonnegative(),
+  joinedQueryPages: z.number().int().nonnegative(),
+  pageLimit: z.number().int().positive(),
+  pageLimitReached: z.boolean(),
+  metricRowsReturned: z.number().int().nonnegative().optional(),
+  queryRowsReturned: z.number().int().nonnegative().optional(),
+  retainedRowLimit: z.number().int().positive().optional(),
+  retainedRowLimitReached: z.boolean().optional(),
+  warning: z.string().optional(),
+})
+
+const crawlAnalyticsDataSourceSchema = z.object({
+  status: crawlDataSourceStatusSchema,
+  window: crawlDataSourceWindowSchema.optional(),
+  totalPages: z.number().int().nonnegative(),
+  queriedPages: z.number().int().nonnegative(),
+  joinedPages: z.number().int().nonnegative(),
+  returnedRows: z.number().int().nonnegative().optional(),
+  availableRows: z.number().int().nonnegative().optional(),
+  retainedRowLimit: z.number().int().positive().optional(),
+  retainedRowLimitReached: z.boolean().optional(),
+  warning: z.string().optional(),
+})
+
+const crawlReportDataSourcesSchema = z.object({
+  searchConsole: crawlSearchDataSourceSchema,
+  analytics: crawlAnalyticsDataSourceSchema,
+})
+
 const crawlReportBaseSchema = z.object({
   id: z.string(),
   definitionId: z.string(),
@@ -449,6 +497,7 @@ const crawlReportBaseSchema = z.object({
   pages: z.array(crawlPageSnapshotSchema),
   issues: z.array(crawlIssueSchema),
   issueGroups: z.array(crawlIssueGroupSchema),
+  dataSources: crawlReportDataSourcesSchema.optional(),
   ai: crawlAiSignalsSchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),

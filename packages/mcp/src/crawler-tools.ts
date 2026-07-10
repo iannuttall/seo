@@ -41,6 +41,7 @@ function compactCrawlResult(
     requestEvidenceStatus: report.requestEvidenceStatus,
     configHash: report.configHash,
     summary: report.summary,
+    dataSources: report.dataSources,
     topFixes: topFixes(report, { limit: 10 }),
     warnings: report.warnings,
     caveats: report.caveats,
@@ -268,6 +269,7 @@ export function registerCrawlerTools(server: McpServer): void {
             url: report.config.url,
             reportId: report.id,
             summary: report.summary,
+            dataSources: report.dataSources,
             topFixes: groups,
             warnings: report.warnings,
             caveats: report.caveats,
@@ -379,7 +381,10 @@ export function registerCrawlerTools(server: McpServer): void {
           {
             url: report.config.url,
             reportId: report.id,
+            dataSources: report.dataSources,
             affectedUrls: urls,
+            warnings: report.warnings,
+            caveats: report.caveats,
           },
         )
       } catch (error) {

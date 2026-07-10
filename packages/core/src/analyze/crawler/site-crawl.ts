@@ -1,17 +1,7 @@
 import robotsParserModule from 'robots-parser'
-import { publicHttpFetch } from '../../fetch/http-client.js'
-import {
-  queryPageMetrics,
-  queryPagesMetrics,
-  queryPagesTopQueries,
-  queryPageTopQuery,
-} from '../../gsc/client.js'
-import { crawlOne } from '../monitoring/crawl-page.js'
-import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
-import {
-  fetchLandingPageValues,
-  landingValueForUrl,
-} from '../workflows/analytics-value.js'
+import type { publicHttpFetch } from '../../fetch/http-client.js'
+import type { crawlOne } from '../monitoring/crawl-page.js'
+import type { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import {
   abortController,
   CRAWL_CANCELLED,
@@ -25,7 +15,14 @@ import type {
 } from './report.js'
 import { createCrawlReport, normalizeCrawlConfig } from './report.js'
 import { observationFromPage } from './request-evidence.js'
-import { joinAnalytics, joinSearchMetrics } from './site-crawl-providers.js'
+import {
+  crawlDataSources,
+  crawlProviderLimits,
+} from './site-crawl-data-sources.js'
+import {
+  type CrawlSiteDependencies,
+  resolveCrawlSiteDependencies,
+} from './site-crawl-dependencies.js'
 
 type QueueItem = {
   url: string
@@ -38,8 +35,6 @@ type CrawlTask = QueueItem & {
     result: Awaited<ReturnType<typeof crawlOne>>
   }>
 }
-
-const DEFAULT_SEARCH_METRICS_LIMIT = 5000
 
 type LlmsTxtSignal = {
   url: string
@@ -74,45 +69,7 @@ type ExternalLinkCheck = {
   error?: string
 }
 
-type ResolvedCrawlSiteDependencies = {
-  fetchPage: typeof crawlOne
-  fetchSitemapUrls: typeof fetchSitemapUrls
-  fetch: typeof publicHttpFetch
-  queryPageMetrics: typeof queryPageMetrics
-  queryPageTopQuery: typeof queryPageTopQuery
-  queryPagesMetrics?: typeof queryPagesMetrics
-  queryPagesTopQueries?: typeof queryPagesTopQueries
-  fetchLandingPageValues: typeof fetchLandingPageValues
-  landingValueForUrl: typeof landingValueForUrl
-  now: () => Date
-}
-
-export type CrawlSiteDependencies = Partial<ResolvedCrawlSiteDependencies>
-
-function resolveCrawlSiteDependencies(
-  dependencies: CrawlSiteDependencies = {},
-): ResolvedCrawlSiteDependencies {
-  const hasInjectedPerPageSearchProvider = Boolean(
-    dependencies.queryPageMetrics || dependencies.queryPageTopQuery,
-  )
-  return {
-    fetchPage: dependencies.fetchPage ?? crawlOne,
-    fetchSitemapUrls: dependencies.fetchSitemapUrls ?? fetchSitemapUrls,
-    fetch: dependencies.fetch ?? publicHttpFetch,
-    queryPageMetrics: dependencies.queryPageMetrics ?? queryPageMetrics,
-    queryPageTopQuery: dependencies.queryPageTopQuery ?? queryPageTopQuery,
-    queryPagesMetrics:
-      dependencies.queryPagesMetrics ??
-      (hasInjectedPerPageSearchProvider ? undefined : queryPagesMetrics),
-    queryPagesTopQueries:
-      dependencies.queryPagesTopQueries ??
-      (hasInjectedPerPageSearchProvider ? undefined : queryPagesTopQueries),
-    fetchLandingPageValues:
-      dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
-    landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
-    now: dependencies.now ?? (() => new Date()),
-  }
-}
+export type { CrawlSiteDependencies } from './site-crawl-dependencies.js'
 
 function normalizeUrl(value: string, base?: string): string | undefined {
   try {
@@ -446,6 +403,7 @@ export async function crawlSite(
 ): Promise<CrawlReport> {
   const deps = resolveCrawlSiteDependencies(dependencies)
   const config = normalizeCrawlConfig(input)
+  const { searchMetricsLimit, analyticsLimit } = crawlProviderLimits(input)
   const signal = input.signal
   let cancelled = Boolean(signal?.aborted)
   const isCancelled = (): boolean => cancelled || Boolean(signal?.aborted)
@@ -900,29 +858,33 @@ export async function crawlSite(
   const requestEvidenceStatus =
     cancelled && inFlight.size > 0 ? 'partial' : 'available'
 
-  if (!cancelled && site) {
-    await joinSearchMetrics({
-      site,
-      pages,
-      warnings,
-      limit: input.searchMetricsLimit ?? DEFAULT_SEARCH_METRICS_LIMIT,
-      queryPageMetrics: deps.queryPageMetrics,
-      queryPageTopQuery: deps.queryPageTopQuery,
-      queryPagesMetrics: deps.queryPagesMetrics,
-      queryPagesTopQueries: deps.queryPagesTopQueries,
-    })
-  }
-  if (!cancelled && input.ga4PropertyId) {
-    await joinAnalytics({
-      propertyId: input.ga4PropertyId,
-      pages,
-      warnings,
-      limit: input.analyticsLimit ?? 5000,
-      fetchLandingPageValues: deps.fetchLandingPageValues,
-      landingValueForUrl: deps.landingValueForUrl,
-      now: deps.now,
-    })
-  }
+  const dataSources = await crawlDataSources({
+    cancelled,
+    site,
+    ga4PropertyId: input.ga4PropertyId,
+    pages,
+    warnings,
+    searchMetricsLimit,
+    analyticsLimit,
+    now: deps.now,
+    queryPageMetrics: deps.queryPageMetrics,
+    queryPageTopQuery: deps.queryPageTopQuery,
+    queryPagesMetrics: deps.queryPagesMetrics,
+    queryPagesTopQueries: deps.queryPagesTopQueries,
+    queryPagesMetricsBatch: deps.queryPagesMetricsBatch,
+    queryPagesTopQueriesBatch: deps.queryPagesTopQueriesBatch,
+    fetchLandingPageValues: deps.fetchLandingPageValues,
+    landingValueForUrl: deps.landingValueForUrl,
+  })
+  const sourceEvidencePartial = [
+    dataSources.searchConsole.status,
+    dataSources.analytics.status,
+  ].some((status) => status === 'partial' || status === 'unavailable')
+  const reportStatus = failed
+    ? 'failed'
+    : partial || sourceEvidencePartial
+      ? 'partial'
+      : 'completed'
   if (!cancelled && config.checkExternal) {
     emitStatus('external_links_started', {
       url: config.url,
@@ -955,6 +917,7 @@ export async function crawlSite(
     projectId: input.projectId,
     site,
     ga4PropertyId: input.ga4PropertyId,
+    dataSources,
     pages,
     requests,
     requestEvidenceStatus,
@@ -964,7 +927,7 @@ export async function crawlSite(
       ...(robotsTxt ? { robotsTxt } : {}),
       ...(agentResources ? { agentResources } : {}),
     },
-    status: failed ? 'failed' : partial ? 'partial' : 'completed',
+    status: reportStatus,
     warnings,
     caveats: cancelled
       ? ['Crawl cancelled before all queued URLs finished.']

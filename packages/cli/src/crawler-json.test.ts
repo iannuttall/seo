@@ -61,11 +61,15 @@ function crawlerJsonKeySnapshot(payload: JsonRecord) {
   const firstIssue = firstRecord(payload.issues)
   const firstGroup = firstRecord(payload.issueGroups)
   const firstFix = firstRecord(payload.topFixes)
+  const dataSources = payload.dataSources as JsonRecord
   return {
     root: keys(payload),
     config: keys(payload.config),
     fetchRate: keys((payload.config as JsonRecord).fetchRate),
     summary: keys(payload.summary),
+    dataSources: keys(dataSources),
+    searchConsole: keys(dataSources.searchConsole),
+    analytics: keys(dataSources.analytics),
     issue: keys(firstIssue),
     issueGroup: keys(firstGroup),
     topFix: keys(firstFix),
@@ -111,6 +115,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'caveats',
         'config',
         'configHash',
+        'dataSources',
         'definitionId',
         'generatedAt',
         'id',
@@ -123,6 +128,27 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'summary',
         'topFixes',
         'warnings',
+      ],
+      dataSources: ['analytics', 'searchConsole'],
+      searchConsole: [
+        'joinedMetricPages',
+        'joinedQueryPages',
+        'pageLimit',
+        'pageLimitReached',
+        'queriedPages',
+        'retainedRowLimitReached',
+        'status',
+        'totalPages',
+        'warning',
+      ],
+      analytics: [
+        'joinedPages',
+        'queriedPages',
+        'retainedRowLimit',
+        'retainedRowLimitReached',
+        'status',
+        'totalPages',
+        'warning',
       ],
       config: [
         'checkExternal',

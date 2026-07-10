@@ -11,6 +11,8 @@ const { title, description } = Astro.props
 
 <SiteLayout title={title} description={description} noindex>
   <article class="shell prose policy-page">
-    <slot />
+    <div class="policy-content">
+      <slot />
+    </div>
   </article>
 </SiteLayout>

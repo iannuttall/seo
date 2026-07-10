@@ -1,0 +1,66 @@
+---
+title: Crawler
+description: Inspect technical SEO evidence page by page, save the result locally, and compare it after a deploy.
+---
+
+import { productFacts } from '@/lib/facts'
+
+## Run a crawl
+
+```sh
+seo crawl https://example.com --format pretty
+```
+
+Use a project profile when you have one:
+
+```sh
+seo crawl --project example --max-pages 500
+```
+
+## What it records
+
+The crawler records response and redirect data, indexability, canonicals,
+titles, descriptions, headings, links, images, structured data, hreflang,
+mobile configuration, security headers, social previews, and performance
+observations. Its {productFacts.crawlerRules} documented rules have stable
+IDs, severity, evidence fields, repair guidance, and verification steps.
+
+```sh
+seo rules
+seo explain --rule missing_meta_description
+```
+
+## Control the work
+
+Useful limits include `--max-pages`, `--max-depth`, `--include`, `--exclude`,
+`--no-sitemap`, and `--no-external`. Robots.txt is respected by default.
+
+## Save and compare
+
+```sh
+seo crawl --project example --save
+seo crawl-reports
+seo crawl-reports --compare latest --against previous
+```
+
+Comparisons show added, removed, fixed, and changed pages, plus rule and
+health movement. Reusing a saved report also lets an agent inspect affected
+URLs or top fixes without crawling again.
+
+## Choose an output
+
+```sh
+seo crawl https://example.com --format json
+seo crawl https://example.com --format csv --csv issues
+seo crawl https://example.com --format html --output report.html
+seo crawl https://example.com --format markdown --output tickets.md
+```
+
+## Gate a deployment
+
+```sh
+seo crawl https://example.com --fail-on high --json
+```
+
+The command exits unsuccessfully when findings meet the chosen severity,
+while the JSON output preserves the evidence that caused the gate to fail.

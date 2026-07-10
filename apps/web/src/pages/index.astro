@@ -1,4 +1,5 @@
 ---
+import AgentDemo from '@/components/AgentDemo.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import Logo from '@/components/Logo.astro'
 import SiteLayout from '@/layouts/SiteLayout.astro'
@@ -9,15 +10,15 @@ import { site } from '@/lib/site'
 <SiteLayout>
   <div class="shell home-shell">
     <section class="home-hero">
-      <Logo title="SEO Skills CLI" />
       <h1>
-        <span class="scramble-text" data-scramble="TECHNICAL SEO SKILLS" aria-hidden="true">TECHNICAL SEO SKILLS</span>
-        <span class="visually-hidden">Technical SEO skills</span>
-        <em>for AI agents.</em>
+        Technical SEO skills
+        <em class="scramble-text" data-scramble="for AI agents." aria-hidden="true">for AI agents.</em>
+        <span class="visually-hidden">for AI agents.</span>
       </h1>
       <p class="lead">
-        Crawl sites, connect real search data, and turn technical evidence into
-        prioritised fixes. One local CLI for agents, developers, and CI.
+        Your agent crawls the site, reads your Search Console and GA4 data,
+        and hands back specific fixes. One local CLI for agents, developers,
+        and CI.
       </p>
       <InstallPicker />
       <p class="install-note">Open source / Apache-2.0 / Working data stays local</p>
@@ -29,7 +30,7 @@ import { site } from '@/lib/site'
 
     <section class="home-section intro-section" aria-labelledby="what-it-does">
       <div class="home-intro">
-        <h2 id="what-it-does">Give agents evidence, not SEO folklore.</h2>
+        <h2 id="what-it-does">Built on evidence from your own site.</h2>
         <p>
           SEO Skills combines live crawls with Search Console and GA4 data. It
           finds technical problems, shows the pages and queries they affect,
@@ -39,19 +40,19 @@ import { site } from '@/lib/site'
       <ul class="feature-list">
         <li>
           <h3>Deterministic reports</h3>
-          <p>Stable schemas, rule IDs, date ranges, and bounded evidence.</p>
+          <p>Same input, same output. Stable schemas, rule ids, and date ranges an agent can rely on run after run.</p>
         </li>
         <li>
           <h3>Real priorities</h3>
-          <p>Fixes ranked by technical severity, affected URLs, and search value.</p>
+          <p>Fixes ranked by technical severity, the URLs they touch, and the search value at stake.</p>
         </li>
         <li>
           <h3>Agent-ready context</h3>
-          <p>Compact JSON and Markdown that explain findings, caveats, and next steps.</p>
+          <p>Compact JSON and Markdown that explain the finding, the caveats, and the next command to run.</p>
         </li>
         <li>
           <h3>Local by default</h3>
-          <p>No hosted report backend, job queue, or account full of client data.</p>
+          <p>No hosted backend, job queue, or account full of client data. Reports and tokens stay on your machine.</p>
         </li>
       </ul>
       <p class="scope-note">
@@ -63,24 +64,13 @@ import { site } from '@/lib/site'
       <div class="home-intro">
         <h2 id="show-working">Reports that show their working.</h2>
         <p>
-          Every recommendation stays connected to observed data. Sparse inputs
-          become explicit caveats, not false certainty, and follow-up commands
-          keep the next request small enough for an agent context window.
+          Every recommendation stays connected to observed data. When the data
+          is too sparse for a verdict, the report says so and skips the
+          section, and follow-up commands keep the next request small enough
+          for an agent context window.
         </p>
       </div>
-      <div class="report-demo" aria-label="Example SEO report output">
-        <div class="report-demo-header">
-          <span>seo report --project example</span>
-          <span>local / read-only</span>
-        </div>
-        <div class="report-demo-body">
-          <p><span class="report-status high">high</span><strong>17 valuable URLs are not indexable</strong></p>
-          <p class="report-evidence">Search Console clicks: 8,421 / affected templates: 2 / source: crawl + GSC</p>
-          <p class="report-action"><span>$</span> seo affected-urls --rule noindex_page --project example</p>
-          <p><span class="report-status watch">watch</span><strong>CTR evidence is too sparse for a safe verdict</strong></p>
-          <p class="report-evidence">Section skipped / reason retained in JSON / no zero-value substitution</p>
-        </div>
-      </div>
+      <AgentDemo />
     </section>
 
     <section class="home-section local-section" aria-labelledby="local-data">

@@ -1,0 +1,119 @@
+---
+title: Agents and MCP
+description: Give an agent a compact local tool surface, deterministic output, and focused instructions without loading every report schema into context.
+---
+
+import { productFacts } from '@/lib/facts'
+
+## Use JSON from the CLI
+
+```sh
+seo report --project example --json
+seo crawl https://example.com --json --output crawl.json
+```
+
+JSON mode never prompts. Agents should pass explicit selectors, inspect data
+status and caveats, and reuse saved crawl IDs for follow-up questions.
+
+## Install the local MCP server
+
+Humans can choose a detected client interactively:
+
+```sh
+seo mcp install
+```
+
+Agents and setup scripts choose the destination explicitly:
+
+```sh
+seo mcp install --claude-desktop --json
+seo mcp install --claude-code --json
+seo mcp install --codex --json
+seo mcp install --cursor --json
+seo mcp install --all --json
+```
+
+The installer preserves unrelated settings and refuses to replace an
+unmanaged server named `seo`.
+
+## Use native client commands
+
+### Codex
+
+```sh
+codex mcp add seo -- npx -y seo mcp serve
+codex mcp get seo
+```
+
+One setup covers the Codex CLI, desktop app, and IDE extension.
+
+### Claude Code
+
+```sh
+claude mcp add --scope user seo -- npx -y seo mcp serve
+claude mcp get seo
+```
+
+### Cursor and Claude Desktop
+
+```sh
+seo mcp install --cursor
+seo mcp install --claude-desktop
+```
+
+Restart desktop clients after installation. Cursor shows the server in its
+MCP settings. Claude Desktop and Claude Code use separate config files.
+
+Your client normally starts the server. Run it directly for testing:
+
+```sh
+seo mcp serve
+seo mcp serve --test
+```
+
+## Three tools cover the report suite
+
+1. Call `seo_list_reports` to find the smallest relevant report.
+2. Call `seo_describe_report` to get that report's input schema.
+3. Call `seo_run_report` with the accepted parameters.
+
+The compact surface keeps dozens of schemas out of the initial context.
+Report results still return structured content and a readable display layer.
+
+## Use the same catalog without MCP
+
+```sh
+seo reports list --category opportunities --json
+seo reports describe quick-wins --json
+seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
+```
+
+These commands read the same registry and run the same handlers as MCP. Use
+`describe` first instead of guessing parameter names, then keep the result in
+JSON mode for scripts and agent context.
+
+## Install focused skills
+
+The npm package ships {productFacts.skills} skills:
+
+```sh
+seo skills list
+seo skills install --target agents
+seo skills install --target codex
+seo skills install --target claude
+seo skills install --target project
+```
+
+Pass a skill name after `install` to copy one skill, or use `--dir` for a
+custom skills directory. Add `--json` in unattended setup.
+
+Agent tooling can discover the full catalog at
+`/.well-known/agent-skills/index.json`. Every entry points to the canonical
+skill instructions and includes a SHA-256 digest so clients can verify the
+downloaded file.
+
+## Reason from evidence
+
+Check `dataStatus`, source completeness, row caps, warnings, and caveats
+before reaching a conclusion. Use structured errors instead of parsing error
+text when `structuredContent.error` is available.

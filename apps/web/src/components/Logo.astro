@@ -8,12 +8,12 @@ const { title } = Astro.props
 
 <svg
   class="logo-mark"
-  viewBox="0 0 32 32"
+  viewBox="0 0 112 112"
   role={title ? 'img' : undefined}
   aria-label={title}
   aria-hidden={title ? undefined : 'true'}
   xmlns="http://www.w3.org/2000/svg"
 >
-  <path d="M4 4h24v6H10v3h18v15H4v-6h18v-3H4z" fill="currentColor"></path>
-  <path class="logo-accent" d="M4 13h6v6H4z"></path>
+  <rect class="logo-tile" width="112" height="112"></rect>
+  <path class="logo-glyph" d="M10 10h92v24H48v10h54v58H10V78h54V68H10z"></path>
 </svg>

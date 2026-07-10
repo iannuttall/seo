@@ -9,6 +9,10 @@ import {
   extractMainContent,
   type MainContentDependencies,
 } from './main-content.js'
+import {
+  extractStructuredData,
+  isValidStructuredDate,
+} from './structured-data.js'
 
 function safeText(value?: string | null): string | undefined {
   const trimmed = value?.replace(/\s+/g, ' ').trim()
@@ -23,76 +27,6 @@ function headerValue(
   return Object.entries(headers).find(
     ([key]) => key.toLowerCase() === target,
   )?.[1]
-}
-
-function parseJsonLdBlocks(blocks: string[]): {
-  jsonLd: unknown[]
-  invalidJsonLdSamples: Array<{ snippet: string; error: string }>
-} {
-  const jsonLd: unknown[] = []
-  const invalidJsonLdSamples: Array<{ snippet: string; error: string }> = []
-
-  for (const block of blocks) {
-    try {
-      const parsed = JSON.parse(block)
-      if (Array.isArray(parsed)) {
-        jsonLd.push(...parsed)
-      } else if (
-        parsed &&
-        typeof parsed === 'object' &&
-        '@graph' in parsed &&
-        Array.isArray(parsed['@graph'])
-      ) {
-        jsonLd.push(...parsed['@graph'])
-      } else {
-        jsonLd.push(parsed)
-      }
-    } catch (error) {
-      invalidJsonLdSamples.push({
-        snippet: block.replace(/\s+/g, ' ').trim().slice(0, 200),
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
-
-  return { jsonLd, invalidJsonLdSamples }
-}
-
-function schemaTypesFrom(value: unknown): string[] {
-  const types = new Set<string>()
-  const visit = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      for (const item of node) visit(item)
-      return
-    }
-    if (!node || typeof node !== 'object') return
-    const record = node as Record<string, unknown>
-    const type = record['@type']
-    if (typeof type === 'string') {
-      types.add(type)
-    } else if (Array.isArray(type)) {
-      for (const item of type) {
-        if (typeof item === 'string') types.add(item)
-      }
-    }
-    for (const value of Object.values(record)) {
-      visit(value)
-    }
-  }
-
-  visit(value)
-  return [...types]
-}
-
-function hasSchemaKey(value: unknown, keys: string[]): boolean {
-  if (Array.isArray(value))
-    return value.some((item) => hasSchemaKey(item, keys))
-  if (!value || typeof value !== 'object') return false
-  const record = value as Record<string, unknown>
-  return Object.entries(record).some(
-    ([key, item]) =>
-      keys.includes(key.toLowerCase()) || hasSchemaKey(item, keys),
-  )
 }
 
 function absoluteUrl(
@@ -245,23 +179,25 @@ export async function extractPage(
       .filter(([key, value]) => key && value),
   )
 
-  const { jsonLd, invalidJsonLdSamples } = parseJsonLdBlocks(
-    $('script[type="application/ld+json"]')
-      .toArray()
-      .map((element) => $(element).html() ?? ''),
-  )
-  const schemaTypes = schemaTypesFrom(jsonLd)
-  const lowerSchemaKeys = ['datepublished', 'datemodified']
+  const structuredData = extractStructuredData($, fetchResult.finalUrl)
   const hasDate =
-    hasSchemaKey(jsonLd, lowerSchemaKeys) ||
-    Boolean($('meta[property="article:published_time"]').attr('content')) ||
-    Boolean($('meta[property="article:modified_time"]').attr('content')) ||
-    $('time[datetime]').length > 0
+    structuredData.hasDate ||
+    isValidStructuredDate(
+      $('meta[property="article:published_time"]').attr('content'),
+    ) ||
+    isValidStructuredDate(
+      $('meta[property="article:modified_time"]').attr('content'),
+    ) ||
+    $('article time[datetime], main time[datetime]')
+      .toArray()
+      .some((element) => isValidStructuredDate($(element).attr('datetime')))
   const author = safeText($('meta[name="author"]').attr('content'))
   const hasAuthor =
     Boolean(author) ||
-    hasSchemaKey(jsonLd, ['author']) ||
-    $('[rel~=author], .author, .byline').length > 0
+    structuredData.hasAuthor ||
+    $('[rel~=author], .author, .byline')
+      .toArray()
+      .some((element) => Boolean(safeText($(element).text())))
   const semanticHtml = $('main, article').length > 0
   const questionHeadings = headings.filter((heading) =>
     heading.text.trimEnd().endsWith('?'),
@@ -373,10 +309,17 @@ export async function extractPage(
     headings,
     links,
     hreflang,
-    jsonLd,
-    invalidJsonLdCount: invalidJsonLdSamples.length,
-    invalidJsonLdSamples: invalidJsonLdSamples.slice(0, 10),
-    schemaTypes,
+    jsonLd: structuredData.jsonLd,
+    invalidJsonLdCount: structuredData.invalidJsonLdSamples.length,
+    invalidJsonLdSamples: structuredData.invalidJsonLdSamples.slice(0, 10),
+    unrecognizedJsonLdTypes: structuredData.unrecognizedJsonLdTypes.slice(
+      0,
+      25,
+    ),
+    structuredDataFormats: structuredData.formats,
+    schemaSameAsEvidence: structuredData.sameAs,
+    invalidSchemaSameAs: structuredData.invalidSameAs,
+    schemaTypes: structuredData.schemaTypes,
     openGraph,
     twitter,
     author,
@@ -402,6 +345,16 @@ export async function extractPage(
     warnings: [
       ...fetchResult.warnings,
       ...content.warnings,
+      ...(structuredData.unrecognizedJsonLdTypes.length
+        ? [
+            `Ignored ${structuredData.unrecognizedJsonLdTypes.length} JSON-LD @type value${structuredData.unrecognizedJsonLdTypes.length === 1 ? '' : 's'} that did not resolve to Schema.org.`,
+          ]
+        : []),
+      ...(structuredData.invalidSameAs.length
+        ? [
+            `Found ${structuredData.invalidSameAs.length} invalid or non-HTTP Schema.org sameAs value${structuredData.invalidSameAs.length === 1 ? '' : 's'}.`,
+          ]
+        : []),
       ...(invalidLinkCount
         ? [
             `Skipped ${invalidLinkCount} malformed link URL${invalidLinkCount === 1 ? '' : 's'}.`,

@@ -213,6 +213,104 @@ test('extractPage skips malformed links without discarding page evidence', async
   )
 })
 
+test('structured data preserves graph context and subject provenance', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head>
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@id": "/#page",
+          "@type": "WebPage",
+          "sameAs": ["/about", "mailto:wrong@example.com"],
+          "@graph": [{"@id":"/#article","@type":"https://schema.org/Article"}]
+        }
+      </script>
+    </head><body><main><h1>Graph fixture</h1></main></body></html>`),
+    'readability',
+  )
+
+  assert.equal(page.jsonLd.length, 1)
+  assert.equal((page.jsonLd[0] as Record<string, unknown>)['@type'], 'WebPage')
+  assert.deepEqual(page.schemaTypes.sort(), ['Article', 'WebPage'])
+  assert.deepEqual(page.structuredDataFormats, ['json-ld'])
+  assert.deepEqual(page.schemaSameAsEvidence, [
+    {
+      url: 'https://example.com/about',
+      block: 0,
+      path: '$.sameAs[0]',
+      subjectId: 'https://example.com/#page',
+      subjectTypes: ['WebPage'],
+    },
+  ])
+  assert.deepEqual(page.invalidSchemaSameAs, [
+    {
+      block: 0,
+      path: '$.sameAs[1]',
+      value: 'mailto:wrong@example.com',
+    },
+  ])
+})
+
+test('structured data ignores contextless and non-Schema.org type claims', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head>
+      <script type="application/ld+json">{"@type":"Product"}</script>
+      <script type="application/ld+json">{"@context":"https://example.org/vocab/","@type":"Article"}</script>
+      <script type="application/ld+json">{"@type":"https://schema.org/Organization"}</script>
+    </head><body><main><h1>Context fixture</h1></main></body></html>`),
+    'readability',
+  )
+
+  assert.deepEqual(page.schemaTypes, ['Organization'])
+  assert.deepEqual(page.structuredDataFormats, ['json-ld'])
+  assert.deepEqual(
+    page.unrecognizedJsonLdTypes?.map(({ value, reason }) => ({
+      value,
+      reason,
+    })),
+    [
+      { value: 'Product', reason: 'missing-schema-context' },
+      { value: 'Article', reason: 'unresolved-context' },
+    ],
+  )
+  assert.match(page.warnings.join(' '), /Ignored 2 JSON-LD @type values/)
+})
+
+test('structured data supports Microdata and RDFa without inventing trust fields', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html vocab="https://schema.org/"><head>
+      <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"Article","author":null,"datePublished":""}
+      </script>
+    </head><body><main>
+      <div class="author"></div>
+      <time datetime="not-a-date"></time>
+      <section itemscope itemtype="https://schema.org/Product">
+        <span itemprop="author">Jane Editor</span>
+        <meta itemprop="datePublished" content="2026-06-18">
+      </section>
+      <section typeof="Article"><span property="author">RDFa Editor</span></section>
+    </main></body></html>`),
+    'readability',
+  )
+
+  assert.deepEqual(page.schemaTypes.sort(), ['Article', 'Product'])
+  assert.deepEqual(page.structuredDataFormats, ['json-ld', 'microdata', 'rdfa'])
+  assert.equal(page.hasAuthor, true)
+  assert.equal(page.hasDate, true)
+
+  const empty = await extractPage(
+    fetchResult(`<!doctype html><html><head>
+      <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"Article","author":null,"datePublished":"2026-02-30"}
+      </script>
+    </head><body><main><div class="author"></div><time datetime="bad"></time></main></body></html>`),
+    'readability',
+  )
+  assert.equal(empty.hasAuthor, false)
+  assert.equal(empty.hasDate, false)
+})
+
 test('Defuddle receives the final URL and preserves its metadata and word count', async () => {
   const fetched = {
     ...fetchResult('<main><p>Original page body</p></main>'),

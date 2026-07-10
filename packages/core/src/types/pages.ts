@@ -170,6 +170,24 @@ export interface ExtractedPage {
   jsonLd: unknown[]
   invalidJsonLdCount: number
   invalidJsonLdSamples: Array<{ snippet: string; error: string }>
+  unrecognizedJsonLdTypes?: Array<{
+    block: number
+    path: string
+    value: string
+    reason:
+      | 'missing-schema-context'
+      | 'unresolved-context'
+      | 'unsupported-vocabulary'
+  }>
+  structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
+  schemaSameAsEvidence?: Array<{
+    url: string
+    block: number
+    path: string
+    subjectId?: string
+    subjectTypes: string[]
+  }>
+  invalidSchemaSameAs?: Array<{ block: number; path: string; value: string }>
   schemaTypes: string[]
   openGraph: Record<string, string>
   twitter: Record<string, string>

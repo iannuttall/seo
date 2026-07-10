@@ -246,7 +246,30 @@ export const crawlPageSnapshotSchema = z.object({
     )
     .optional(),
   schemaTypes: z.array(z.string()).optional(),
+  structuredDataFormats: z
+    .array(z.enum(['json-ld', 'microdata', 'rdfa']))
+    .optional(),
   schemaSameAs: z.array(z.string().url()).optional(),
+  schemaSameAsEvidence: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        block: z.number().int().nonnegative(),
+        path: z.string(),
+        subjectId: z.string().url().optional(),
+        subjectTypes: z.array(z.string()),
+      }),
+    )
+    .optional(),
+  invalidSchemaSameAs: z
+    .array(
+      z.object({
+        block: z.number().int().nonnegative(),
+        path: z.string(),
+        value: z.string(),
+      }),
+    )
+    .optional(),
   socialProfileLinks: z.array(z.string().url()).optional(),
   invalidJsonLdCount: z.number().int().optional(),
   invalidJsonLdSamples: z
@@ -279,6 +302,20 @@ const crawlResponseObservationBaseSchema = z.object({
         url: z.string().url(),
         status: z.number().int(),
         location: z.string().url().optional(),
+      }),
+    )
+    .optional(),
+  unrecognizedJsonLdTypes: z
+    .array(
+      z.object({
+        block: z.number().int().nonnegative(),
+        path: z.string(),
+        value: z.string(),
+        reason: z.enum([
+          'missing-schema-context',
+          'unresolved-context',
+          'unsupported-vocabulary',
+        ]),
       }),
     )
     .optional(),

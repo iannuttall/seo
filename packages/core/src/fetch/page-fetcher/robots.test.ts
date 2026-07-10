@@ -74,7 +74,7 @@ test('transient robots failures do not overwrite a last good cache entry', async
 
   try {
     const target = `${fixture.origin}/page`
-    const available = await fetchRobots(fixture.origin, target, false)
+    const available = await fetchRobots(fixture.origin, target, true)
     assert.equal(available.availability, 'available')
     status = 503
     const failure = await fetchRobots(fixture.origin, target, true)

@@ -13,12 +13,18 @@ export type EntityReadinessCheck = {
 export type EntityReadinessReport = {
   reportId: string
   url: string
+  generatedAt: string
+  dataStatus: 'complete' | 'partial'
+  evaluatedPages: number
+  crawlPages: number
   score: number
   headline: string
+  caveats: string[]
   checks: EntityReadinessCheck[]
   entities: {
     schemaTypes: Record<string, number>
     sameAs: string[]
+    sameAsByType: Record<string, string[]>
     socialProfiles: string[]
     authors: string[]
   }
@@ -55,7 +61,26 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       /^(Organization|LocalBusiness|Person|Product|WebSite)$/i.test(type),
     ),
   )
-  const sameAs = unique(pages.flatMap((page) => page.schemaSameAs ?? []))
+  const sameAsEvidence = pages
+    .flatMap((page) => page.schemaSameAsEvidence ?? [])
+    .filter((evidence) =>
+      evidence.subjectTypes.some((type) =>
+        /^(Organization|LocalBusiness|Person)$/i.test(type),
+      ),
+    )
+  const siteSameAsEvidence = sameAsEvidence.filter((evidence) =>
+    evidence.subjectTypes.some((type) =>
+      /^(Organization|LocalBusiness)$/i.test(type),
+    ),
+  )
+  const sameAs = unique(sameAsEvidence.map((evidence) => evidence.url))
+  const sameAsByType: Record<string, string[]> = {}
+  for (const evidence of sameAsEvidence) {
+    for (const type of evidence.subjectTypes) {
+      if (!/^(Organization|LocalBusiness|Person)$/i.test(type)) continue
+      sameAsByType[type] = unique([...(sameAsByType[type] ?? []), evidence.url])
+    }
+  }
   const socialProfiles = unique(
     pages.flatMap((page) => page.socialProfileLinks ?? []),
   )
@@ -70,7 +95,7 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       check: {
         id: 'entity-schema',
         title: 'Entity schema is present',
-        plainEnglish: `${pct(entitySchemaPages.length, total)}% of indexable pages include Organization, LocalBusiness, Person, Product, or WebSite schema.`,
+        plainEnglish: `${pct(entitySchemaPages.length, total)}% of evaluated indexable pages include Organization, LocalBusiness, Person, Product, or WebSite schema.`,
         action:
           'Add accurate entity schema to the homepage and key product, author, organization, and local pages.',
         evidence: { schemaTypes },
@@ -81,18 +106,27 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       },
     },
     {
-      score: sameAs.length ? 100 : socialProfiles.length ? 60 : 0,
+      score: siteSameAsEvidence.length ? 100 : 0,
       check: {
         id: 'same-as',
-        title: 'Official profiles are connected',
-        plainEnglish: sameAs.length
-          ? 'The crawl found sameAs links in structured data.'
-          : socialProfiles.length
-            ? 'The crawl found social profile links, but not sameAs schema.'
-            : 'The crawl did not find sameAs schema or obvious official social profiles.',
+        title: 'Site entity profiles are connected',
+        plainEnglish: siteSameAsEvidence.length
+          ? 'The crawl found sameAs links attached to Organization or LocalBusiness structured data.'
+          : sameAs.length
+            ? 'The crawl found Person sameAs links, but no Organization or LocalBusiness profile evidence for the site entity.'
+            : socialProfiles.length
+              ? 'The crawl found social-domain links, but they are not enough to prove official profile ownership.'
+              : 'The crawl did not find entity-scoped sameAs evidence.',
         action:
           'Connect official profiles with sameAs on Organization, Person, or LocalBusiness schema. Use only profiles you control.',
-        evidence: { sameAs, socialProfiles },
+        evidence: {
+          sameAs,
+          siteSameAs: unique(
+            siteSameAsEvidence.map((evidence) => evidence.url),
+          ),
+          sameAsEvidence,
+          unclassifiedSocialLinks: socialProfiles,
+        },
       },
     },
     {
@@ -118,7 +152,7 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       check: {
         id: 'entity-naming',
         title: 'Page names are clear and consistent',
-        plainEnglish: `${pct(titlePages.length, total)}% of indexable pages have both a title and H1.`,
+        plainEnglish: `${pct(titlePages.length, total)}% of evaluated indexable pages have both a title and H1.`,
         action:
           'Use consistent brand, product, and person names in titles, H1s, schema, and profile links.',
       },
@@ -133,19 +167,43 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
     scoredChecks.reduce((sum, item) => sum + item.score, 0) /
       scoredChecks.length,
   )
+  const dataStatus =
+    report.status === 'completed' && pages.length > 0
+      ? ('complete' as const)
+      : ('partial' as const)
 
   return {
     reportId: report.id,
     url: report.config.url,
+    generatedAt: report.generatedAt,
+    dataStatus,
+    evaluatedPages: pages.length,
+    crawlPages: report.pages.length,
     score,
     headline:
-      score >= 80
-        ? 'Entity signals are strong enough for agents to understand the site.'
-        : 'Entity signals need tightening so agents can connect the site to the right brand, people, products, and profiles.',
+      dataStatus === 'partial'
+        ? 'Entity evidence is incomplete; treat these findings as scoped to the evaluated pages, not the whole site.'
+        : score >= 80
+          ? 'Entity signals are strong enough for agents to understand the site.'
+          : 'Entity signals need tightening so agents can connect the site to the right brand, people, products, and profiles.',
+    caveats: [
+      ...report.caveats,
+      ...(dataStatus === 'partial'
+        ? [
+            `Entity coverage is based on ${pages.length} evaluated indexable page${pages.length === 1 ? '' : 's'} from a ${report.status} crawl.`,
+          ]
+        : []),
+      ...(socialProfiles.length && !sameAs.length
+        ? [
+            'Social-domain links are unclassified navigation evidence, not proof that the linked profiles are official.',
+          ]
+        : []),
+    ],
     checks,
     entities: {
       schemaTypes,
       sameAs,
+      sameAsByType,
       socialProfiles,
       authors,
     },

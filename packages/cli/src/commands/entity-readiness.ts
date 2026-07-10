@@ -9,6 +9,8 @@ function printEntityReadiness(report: EntityReadinessReport): void {
   process.stdout.write(`Entity readiness for ${report.url}\n\n`)
   printKeyValue([
     ['Score', `${report.score}/100`],
+    ['Data', report.dataStatus],
+    ['Evaluated pages', `${report.evaluatedPages}/${report.crawlPages}`],
     ['Report', report.reportId],
     ['sameAs profiles', String(report.entities.sameAs.length)],
     ['Social profiles', String(report.entities.socialProfiles.length)],

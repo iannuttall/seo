@@ -515,3 +515,46 @@ test('crawlSite exposes live non-self canonical state once', async () => {
     await fixture.close()
   }
 })
+
+test('crawlSite recognizes supported Microdata without JSON-LD', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(`<!doctype html><html><head>
+      <title>Microdata product</title>
+      <meta name="description" content="A useful product description for the Microdata fixture.">
+      <link rel="canonical" href="${fixture.baseUrl}/microdata">
+    </head><body><main itemscope itemtype="https://schema.org/Product">
+      <h1 itemprop="name">Microdata product</h1>
+      <p itemprop="description">A useful product description with enough visible content for the crawler.</p>
+    </main></body></html>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/microdata`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+      refresh: true,
+    })
+
+    assert.deepEqual(report.pages[0]?.schemaTypes, ['Product'])
+    assert.deepEqual(report.pages[0]?.structuredDataFormats, ['microdata'])
+    assert.equal(report.pages[0]?.geo?.structuredData, true)
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'structured_data_missing'),
+      false,
+    )
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'geo_no_structured_data'),
+      false,
+    )
+  } finally {
+    await fixture.close()
+  }
+})

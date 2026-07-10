@@ -5,9 +5,10 @@ description: Audit and interpret one URL's Lighthouse lab performance and device
 
 # Performance
 
-Use `seo_performance_audit` for structured agent output. Pass `url`, choose
-`strategy` as `mobile` or `desktop`, and use `refresh: true` only when a fresh
-measurement is required.
+Run report id `performance-audit` through `seo_run_report` for structured agent
+output. Call `seo_describe_report` first when its parameters are not already
+known. Pass `url`, choose `strategy` as `mobile` or `desktop`, and use
+`refresh: true` only when a fresh measurement is required.
 
 CLI equivalents:
 

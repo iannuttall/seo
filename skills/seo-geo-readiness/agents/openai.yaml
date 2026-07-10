@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO GEO readiness"
+  short_description: "Review local AI-search readiness evidence"
+  default_prompt: "Use $seo-geo-readiness to review this site's AI-search readiness without overstating citations or visibility."

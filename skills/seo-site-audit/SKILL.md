@@ -1,67 +1,59 @@
 ---
 name: seo-site-audit
-description: Run a complete technical SEO and GEO audit with the seo CLI or MCP server. Use when the user asks to crawl, audit, or check a website for broken links, redirects, metadata, indexability, schema, content, internal linking, performance, security, or AI-search readiness issues.
+description: Run an evidence-backed site audit with the seo main report, crawler, and focused follow-up reports. Use when the user asks to audit or diagnose a website across Search Console performance, technical SEO, indexability, metadata, schema, internal linking, security, performance, or AI-search readiness.
 ---
 
 # SEO site audit
 
-Use `seo` to produce a short, useful audit. Do not paste raw crawl JSON into the answer unless the user asks for it.
+Start with the main report. It joins the available first-party evidence and
+returns a small set of follow-up commands.
 
-## Pick the best interface
-
-1. If `seo_*` MCP tools are available, prefer them.
-2. Otherwise use the local CLI.
-3. If neither works, tell the user to run `pnpm build` in the repo or install the published package once it exists.
-
-CLI examples use `seo`. In a source checkout, use `node packages/cli/dist/index.js` if the binary is not linked.
-
-## Workflow
-
-1. Identify the site or project profile.
-2. Run a crawl.
+Through MCP, call `seo_run_report` with report id
+`workflow-diagnose-property`. Call `seo_describe_report` first when its
+parameters are not already known. Use the CLI when MCP is not available:
 
 ```bash
-seo crawl --project <project> --max-pages 500 --json
+seo report --project <project> --json
+seo report --site sc-domain:example.com --json
 ```
 
-For a raw URL:
+## Read the main report
+
+1. Check `dataStatus`, source completeness, skipped sections, warnings, and
+   caveats before interpreting findings.
+2. Read the narrative and priority queue against their evidence references.
+3. Use `nextCommands` to choose a small number of follow-ups. Do not run every
+   report by default.
+4. Keep missing, unavailable, filtered, partial, capped, and complete evidence
+   separate. A partial source cannot support an all-clear.
+
+## Add technical crawl evidence
+
+Run a crawl when the user asks for technical coverage or the main report
+identifies a technical evidence gap:
 
 ```bash
-seo crawl https://example.com --max-pages 500 --json
+seo crawl --project <project> --max-pages 500 --save --json
+seo crawl https://example.com --max-pages 500 --save --json
 ```
 
-3. Read `summary`, `topFixes`, `warnings`, and `caveats` first.
-4. Use `seo explain --rule <rule>` or `seo_explain_issue` for unfamiliar rule ids.
-5. Use affected URLs for exact implementation work.
+Read `summary`, `topFixes`, `warnings`, and `caveats` first. Check
+`summary.pageLimitReached` before making sitewide claims. Reuse the saved report
+for detail instead of crawling again:
 
-```bash
-seo crawl-reports --latest --json
-```
+- Report id `top-fixes` returns a bounded queue.
+- Report id `affected-urls` returns URLs for one rule.
+- Report id `explain-issue` explains an unfamiliar rule.
+- Report id `get-crawl-report` returns requested report detail.
 
-If using MCP, prefer:
+Use report id `performance-audit` for a selected URL when performance evidence
+is needed. A crawl does not replace Lighthouse lab data or CrUX field data.
 
-- `seo_crawl_site`
-- `seo_top_fixes`
-- `seo_affected_urls`
-- `seo_explain_issue`
-- `seo_get_crawl_report`
+## Present the result
 
-## Output shape
+Give the user the top three to five evidence-backed actions, affected areas,
+and a verification command for each action. Name every material gap or cap.
 
-Give the user:
-
-- one sentence on overall health
-- the top 3 to 5 fixes
-- why each fix matters
-- where to start
-- how to verify the fix
-- warnings or caveats if data was sparse
-
-Mention GSC or GA4 joins only when they materially affect priority.
-
-## Guardrails
-
-- Do not invent clicks, sessions, rankings, or issue counts.
-- If a section is sparse, say so plainly.
-- Keep advice structural and diagnostic unless the user asks for copy.
-- Use rule ids when the user or agent needs exact implementation work.
+Never invent clicks, sessions, rankings, issue counts, indexing state, or
+sitewide health. Keep advice structural and diagnostic unless the user asks
+for copy.

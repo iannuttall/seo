@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit llms.txt"
+  short_description: "Inspect optional llms.txt evidence from a crawl"
+  default_prompt: "Use $llms-txt-audit to run the llms-txt-audit report and explain its evidence and limits."

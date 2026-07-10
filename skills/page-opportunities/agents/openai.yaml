@@ -1,0 +1,4 @@
+interface:
+  display_name: "Page opportunities"
+  short_description: "Find first-party opportunities for one URL"
+  default_prompt: "Use $page-opportunities to run the page-opportunities report and explain its evidence and limits."

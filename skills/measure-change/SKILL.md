@@ -5,7 +5,10 @@ description: Measure the before-and-after impact of a saved or ad hoc SEO change
 
 # Measure SEO change
 
-Use `seo_measure_change` through MCP when available. Use the CLI for CI, saved JSON, or environments without MCP.
+Call `seo_list_reports` with category `experiments` when discovery is needed.
+Call `seo_describe_report` with id `measure-change`, then call `seo_run_report`
+with that id and only the described parameters. Read `structuredContent` as the
+machine contract. Use the CLI for CI, saved JSON, or environments without MCP.
 
 ```bash
 seo tests report \

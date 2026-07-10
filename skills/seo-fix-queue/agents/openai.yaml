@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO fix queue"
+  short_description: "Build a bounded evidence-backed SEO backlog"
+  default_prompt: "Use $seo-fix-queue to turn this site's crawl evidence into a prioritized implementation queue."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit page"
+  short_description: "Audit one fetched page"
+  default_prompt: "Use $audit-page to run the audit-page report and explain its evidence and limits."

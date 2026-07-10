@@ -1,68 +1,50 @@
 ---
 name: seo-fix-queue
-description: Turn seo crawl and report data into a prioritized implementation queue. Use when the user wants exact SEO fixes to work through, implementation tickets, affected URLs, verification steps, or a ranked technical SEO and GEO backlog.
+description: Turn seo crawl and report evidence into a prioritized implementation queue. Use when the user wants exact SEO fixes, implementation tickets, affected URLs, verification steps, or a ranked technical SEO and GEO backlog.
 ---
 
 # SEO fix queue
 
-Use `seo` to turn audit data into work someone can actually do.
-
-## Workflow
-
-1. Prefer a saved project profile.
+Run the bounded queue directly:
 
 ```bash
 seo crawl-queue --project <project> --json
+seo crawl-queue https://example.com --json
 ```
 
-2. If there is no queue command available, run a saved crawl and inspect top fixes.
+Through MCP, use `seo_run_report` with report id `crawl-site` and
+`saveReport: true`. Pass its `reportId` to report ids `top-fixes` and
+`affected-urls`. Reuse that report instead of crawling again. Call
+`seo_describe_report` before a report when its parameters are not already
+known.
+
+## Check the evidence before ranking work
+
+1. Read `dataStatus`, source joins, selection counts, warnings, and caveats.
+2. Check `summary.pageLimitReached`. A capped crawl cannot support an
+   inventory-wide zero or all-clear.
+3. Preserve the returned priority order unless stronger evidence supports a
+   change.
+4. Use GSC or GA4 evidence only when the source join is available. Do not call a
+   page search-visible or valuable from crawl evidence alone.
+5. Keep failed fetches, missing provider data, and filtered rows separate from
+   observed zeros.
+
+Each queue item should retain its rule id, priority, evidence, affected count,
+bounded URL sample, fix, and verification step. Explain unfamiliar rules with
+structured output:
 
 ```bash
-seo crawl --project <project> --save --json
+seo explain --rule <rule-id> --json
 ```
 
-3. For each top fix, gather affected URLs.
+Use report id `explain-issue` through `seo_run_report`.
 
-With MCP:
-
-- `seo_top_fixes`
-- `seo_affected_urls`
-- `seo_explain_issue`
-
-With CLI:
+Write Markdown implementation tickets only when the user wants a handoff file:
 
 ```bash
-seo explain --rule <rule-id>
+seo crawl --project <project> --format markdown --output seo-fixes.md
 ```
 
-4. Produce a queue, not a generic audit.
-
-Each item should include:
-
-- priority
-- rule id
-- plain-English title
-- why it matters
-- affected URL count
-- first few URLs
-- exact fix
-- verification command
-
-## Ranking rules
-
-Prioritize:
-
-1. high severity issues on search-visible pages
-2. broken or blocked pages with GSC clicks or impressions
-3. medium issues affecting many indexable pages
-4. GEO issues on pages with traffic or strategic value
-5. low-severity sitewide cleanup after material fixes
-
-Do not let low-severity sitewide noise bury important medium fixes.
-
-## Output style
-
-Be direct. Use short sections. Do not tell the user every rule the crawler checked.
-
-End with the next command to verify the work.
-
+Keep the final answer short. Show the top material fixes and end with the next
+verification command. Do not dump every rule the crawler checked.

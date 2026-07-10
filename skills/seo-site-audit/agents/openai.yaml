@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO site audit"
+  short_description: "Audit a site with report and crawl evidence"
+  default_prompt: "Use $seo-site-audit to audit this site and return a bounded evidence-backed action plan."

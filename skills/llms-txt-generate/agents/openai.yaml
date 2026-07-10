@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate llms.txt"
+  short_description: "Generate an llms.txt draft from crawl evidence"
+  default_prompt: "Use $llms-txt-generate to run the llms-txt-generate report and explain its evidence and limits."

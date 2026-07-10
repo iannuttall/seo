@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crawl site"
+  short_description: "Crawl a site for technical SEO evidence"
+  default_prompt: "Use $crawl-site to run the crawl-site report and explain its evidence and limits."

@@ -1,59 +1,67 @@
 ---
 name: seo
-description: Use the local SEO CLI and MCP server to run deterministic technical SEO, Search Console, GA4, crawl, opportunity, monitoring, and reporting workflows. Use when an agent needs to diagnose a site, inspect report evidence, choose an SEO tool, or turn measured findings into next actions.
+description: Route SEO work across the local seo CLI and MCP server. Use when an agent needs to choose between technical SEO, Search Console, GA4, crawl, opportunity, monitoring, and reporting workflows or inspect evidence returned by several reports.
 ---
 
 # seo
 
 Use the `seo` MCP server exposed by the repository or installed package.
 
-## When to call which tool
+Reason from MCP `structuredContent`. Treat text or Markdown content as the
+display layer. When MCP is unavailable use explicit CLI selectors and `--json`:
 
-- Use `seo_doctor` first when setup/auth might be broken.
-- Use `seo_clients` to discover saved client profiles before asking for a raw GSC property.
-- Use `seo_client` to show, save, default, or delete a client profile.
-- Use `seo_diagnose_property` when the user asks "what is going on?" for a property.
-- Use `seo_report_narrative` when the user wants a client-ready "what changed, why, what next" writeup.
-- Use `seo_monthly_report` when the user wants a monthly client or stakeholder report.
-- Use `seo_workflow_diagnose_property` when the user wants the whole diagnosis process run end-to-end.
-- Use `seo_workflow_monthly_report` when the user wants monthly reporting plus explicit next actions.
-- Use `seo_workflow_update_postmortem` after a suspected or confirmed Google update.
-- Use `seo_workflow_technical_watch` for scheduled crawl/index monitoring.
-- Use `seo_workflow_refresh_priorities` to turn all opportunity signals into a ranked work queue.
-- Use `seo_segment_impact` to explain which pages, queries, devices, or countries drove movement.
-- Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
-- Use `seo_content_groups` to create reusable page/query sets for tests and reports.
-- Use `seo_change_log` to record annotations for site, page, query, or group changes.
-- Use `seo_measure_change` to measure equal finalized before/after windows for a saved or ad hoc change. If the requested after window is incomplete, treat its partial metrics as provisional and do not assign a direction.
-- Use `seo_crawl_diff` to detect changed titles/meta/canonicals/status/indexability between crawls.
-- Use `seo_index_watch` to separate current URL Inspection reviews, regressions, recoveries, failed checks, and quota-deferred work. Treat the result as Google's indexed snapshot, not a live test.
-- Use `seo_audit_page` for one URL.
-- Use `seo_second_page` when the user wants opportunities with evidence.
-- Use `seo_quick_wins` for high-impression pages already ranking 4-10.
-- Use `seo_cannibal` to find multi-URL query exposure candidates that need intent and technical review.
-- Use `seo_decaying` to find query/page click declines observed in both retained GSC windows and the signals to investigate. Do not treat its signals as proven causes.
-- Use `seo_pseo_audit` to find repeated URL template families and review retained page metrics, query patterns, bounded crawl samples, and exact URL Inspection verdicts.
-- Use `seo_traffic_anomaly` when the user asks whether movement is statistically unusual.
-- Use `seo_update_correlate` to compare a traffic movement with official Google update windows.
-- Use `seo_internal_links` to find contextual internal-link candidates for one target URL.
-- Use `seo_performance_audit` for one URL's Lighthouse lab diagnostics and device-specific CrUX field Core Web Vitals. Treat fallback fetch evidence as unscored and never call TBT field INP.
-- Use `seo_ctr_underperformers` when the page ranks but click-through rate is weak.
-- Use `seo_query_cluster` when the user wants explainable clustering with no embeddings.
-- Use `seo_community_intent` to find explicit intent language in retained GSC queries. Treat every match as a low-confidence review hypothesis, not a verified page gap.
-- Use `seo_to_ai_query` to create deterministic monitoring-prompt suggestions from retained GSC wording. Do not describe the suggestions as observed AI demand.
-- Use `gsc_query` only when the user explicitly wants raw Search Console rows.
-- Use `gsc_url_inspect` when the user asks what Google sees for one URL.
-- Use `ga4_run_report` for GA4 landing-page/session/event reports.
-- Use `ga4_properties` to discover the signed-in user's GA4 property IDs.
-- Use `search_updates` for official Google Search Status updates.
-- Use `semrush_call` only when the user explicitly wants direct provider enrichment.
+```bash
+seo report --project <project> --json
+seo report --site sc-domain:example.com --json
+```
+
+Use the default Markdown output from `seo report-narrative` or
+`seo monthly-report` only when the user wants a readable report rather than a
+machine contract.
+
+## MCP flow
+
+The default MCP server exposes three tools:
+
+1. Call `seo_list_reports` to discover compact report ids, optionally by
+   category.
+2. Call `seo_describe_report` once for the selected id to load its exact JSON
+   Schema.
+3. Call `seo_run_report` with that id and a bounded `params` object.
+
+Do not guess parameters or ask for every report schema up front. Reuse a schema
+for repeated runs in the same session.
+
+## Which report id to use
+
+- Diagnosis: `workflow-diagnose-property`, `diagnose-property`,
+  `segment-impact`, `striking-distance`, `traffic-anomaly`, and
+  `update-correlate`.
+- Main follow-ups: `workflow-refresh-priorities`, `quick-wins`, `second-page`,
+  `decaying`, `cannibal`, `ctr-underperformers`, and `query-cluster`.
+- Page work: `audit-page`, `page-opportunities`, `content-optimization`,
+  `internal-links`, and `performance-audit`.
+- Technical crawling: `crawl-site`, `top-fixes`, `affected-urls`,
+  `explain-issue`, `get-crawl-report`, and `compare-crawl-reports`.
+- Indexing and monitoring: `index-watch`, `index-monitor`,
+  `index-coverage-plan`, `crawl-diff`, `redirect-trace`, and `link-recover`.
+- AI-search evidence: `ai-readiness`, `geo-gaps`, `community-intent`,
+  `to-ai-query`, and `ai-referrals`.
+- Reporting and measurement: `report-narrative`, `monthly-report`,
+  `measure-change`, `pseo-audit`, `workflow-update-postmortem`, and
+  `workflow-technical-watch`.
+- Local setup health: `doctor`.
+
+Use the CLI for project-profile administration and intentionally raw provider
+queries. Useful commands include `seo projects list --json`, `seo gsc-query`,
+`seo url-inspect`, `seo ga4-properties`, `seo ga4-report`, and `seo updates`.
 
 ## Rules
 
 - Treat observations as evidence within the report's methodology and data limits. Do not invent metrics.
 - Check `dataStatus`, source completeness, selection counts, warnings, and caveats before summarising a report.
 - In diagnosis output, check `summary.updateAttributionStatus` first and treat `summary.updateAttribution` as update-correlation context, not the site's overall diagnosis.
-- If `dataStatus` is `partial` or `unavailable`, name the skipped or incomplete evidence before describing findings. Never turn an unavailable section into a zero-result claim.
+- If `dataStatus` is `partial` or `unavailable`, name the skipped or incomplete evidence before describing findings. Treat capped sources the same way. Never turn unavailable or capped evidence into a zero-result claim.
 - Treat quick-win CTR targets and calculated shortfalls as deterministic prioritisation heuristics, not traffic forecasts.
 - Quote `principle` and `evidenceRef` when explaining recommendations.
 - Do not generate titles, metas, or copy. Keep advice structural and diagnostic.

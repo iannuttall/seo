@@ -1,20 +1,34 @@
 ---
 name: list-rules
-description: List crawler rule ids and guidance metadata. Use when an agent needs to discover a valid rule before requesting an explanation or affected URLs.
+description: Discover stable crawler rule ids with their categories and guidance metadata before querying findings. Use when an agent needs a valid filter for explanations or affected-URL reports.
 ---
 
-# List rules
+# Discover crawler rules
 
-Use the compact MCP report flow:
+Rules are the stable vocabulary connecting crawl issues, summaries, affected URLs, and remediation guidance. Listing them answers "which checks exist?" It does not say that a site triggered those checks or that every listed convention is a search-engine requirement.
 
-1. Call `seo_list_reports` with category `crawl` when discovery is needed.
-2. Call `seo_describe_report` with id `list-rules` before supplying parameters.
-3. Call `seo_run_report` with id `list-rules` and only the described parameters.
+## Run it
 
-Read MCP `structuredContent` as the machine contract. Keep returned Markdown or
-text for the user-facing explanation.
+For MCP, use `seo_list_reports` with category `crawl` only if report discovery is needed. Call `seo_describe_report` with `{ "id": "list-rules" }`, then `seo_run_report` with:
 
-## Evidence rules
+```json
+{
+  "id": "list-rules",
+  "params": { "category": "metadata" }
+}
+```
 
-- Rule availability does not mean the current site triggered the rule.
-- Filter by category when possible and request detail for one rule at a time.
+Read `structuredContent` after checking `isError`. CLI parity is:
+
+```sh
+seo reports describe list-rules --json
+seo reports run list-rules --params '{"category":"metadata"}' --json
+```
+
+Omit `category` to discover the full inventory. Useful categories include response, indexability, canonical, metadata, headings, content, links, images, structured-data, international, performance, mobile, security, social, and geo.
+
+## Use ids, not prose
+
+Read the returned id, title, category, default severity, and guidance metadata. Pass the exact id to `explain-issue` for the rule contract or to `affected-urls` for crawl evidence. Do not infer that similarly named rules have identical source semantics, and do not create implementation work from the catalog alone.
+
+The category input is currently an unconstrained exact string. An unknown or misspelled category can return an empty list instead of an explicit validation error. If zero rules are returned unexpectedly, rerun without the filter and choose a returned category. Treat default severity as general triage metadata; actual priority comes from affected pages, observed evidence, scope, intent, and available demand data.

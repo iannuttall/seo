@@ -1,20 +1,37 @@
 ---
 name: llms-txt-generate
-description: Generate an llms.txt draft from crawl evidence. Use when an agent needs a bounded agent-readable site summary for human review.
+description: Generate a bounded llms.txt draft from eligible crawl pages while exposing its URL and token budgets. Use when an agent needs a reviewable starting point rather than an automatically publishable file.
 ---
 
-# Generate llms.txt
+# Generate an llms.txt draft
 
-Use the compact MCP report flow:
+This report turns crawl evidence into concise agent-facing navigation. It selects successfully fetched, indexable pages, removes common utility paths, groups suitable URLs, and stops at explicit URL and token budgets. The output is a draft: the crawler cannot determine publisher intent or guarantee factual summaries.
 
-1. Call `seo_list_reports` with category `crawl` when discovery is needed.
-2. Call `seo_describe_report` with id `llms-txt-generate` before supplying parameters.
-3. Call `seo_run_report` with id `llms-txt-generate` and only the described parameters.
+## Run it
 
-Read MCP `structuredContent` as the machine contract. Keep returned Markdown or
-text for the user-facing explanation.
+For MCP, call `seo_list_reports` with category `crawl` only if discovery is needed. Call `seo_describe_report` with `{ "id": "llms-txt-generate" }`, then call `seo_run_report` with:
 
-## Evidence rules
+```json
+{
+  "id": "llms-txt-generate",
+  "params": {
+    "reportId": "crawl_example_20260710",
+    "maxUrls": 50,
+    "tokenBudget": 4000,
+    "exclude": ["/account/*", "/search"]
+  }
+}
+```
 
-- Respect URL and token budgets and disclose omitted candidates from a capped crawl.
-- The draft must be checked for factual accuracy, current URLs, access controls, and publisher intent before publication.
+Check `isError` and consume `structuredContent`. CLI parity is:
+
+```sh
+seo reports describe llms-txt-generate --json
+seo reports run llms-txt-generate --params '{"reportId":"crawl_example_20260710","maxUrls":50,"tokenBudget":4000,"exclude":["/account/*","/search"]}' --json
+```
+
+## Review before publishing
+
+Inspect `content`, `includedUrls`, `estimatedTokens`, and `sections`. Confirm every URL is canonical, public, current, useful to an agent, and safe to promote. Review generated titles and descriptions against the pages themselves. Use exclusions for private, transactional, faceted, search, or low-value routes, and keep the file deliberately small.
+
+Load the source with `get-crawl-report` to check its date, page cap, failures, and caveats. The generator currently does not return a separate candidate count, omitted count, source metadata block, or explicit truncation flag. Reaching `maxUrls` or the token budget should therefore be treated as possible truncation, not a complete inventory. A technically valid draft does not prove search or AI benefit, selection, indexing, visibility, or citations. Publish only after human review, then fetch the final file and validate its links.

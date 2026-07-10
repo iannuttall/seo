@@ -150,6 +150,19 @@ Reports keep observed data, derived findings, skipped sections, limits, and
 provider errors separate so automation can make decisions without parsing
 terminal prose.
 
+Agents can discover and run the same report catalog as MCP without starting a
+server:
+
+```sh
+seo reports list --category crawl --json
+seo reports describe audit-page --json
+seo reports run audit-page --params '{"url":"https://example.com"}' --json
+```
+
+Always describe a report before constructing its parameters. The CLI and MCP
+surfaces read from the same registry, so their ids and JSON Schemas cannot
+drift.
+
 ## Use it with AI agents
 
 Install the local stdio MCP server into a supported client:

@@ -61,6 +61,16 @@ seo mcp serve --test</code></pre>
     Report results still return structured content and a readable display layer.
   </p>
 
+  <h2>Use the same catalog without MCP</h2>
+  <pre><code>seo reports list --category opportunities --json
+seo reports describe quick-wins --json
+seo reports run quick-wins --params '&#123;"site":"sc-domain:example.com"&#125;' --json</code></pre>
+  <p>
+    These commands read the same registry and run the same handlers as MCP. Use
+    <code>describe</code> first instead of guessing parameter names, then keep the
+    result in JSON mode for scripts and agent context.
+  </p>
+
   <h2>Install focused skills</h2>
   <p>The npm package ships {productFacts.skills} skills:</p>
   <pre><code>seo skills list

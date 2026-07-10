@@ -82,12 +82,12 @@ Useful CLI areas:
 - `packages/cli/src/commands/setup`: `seo start` and guided onboarding.
 - `packages/cli/src/commands/mcp-clients.ts`: MCP client paths and detection.
 - `packages/cli/src/commands/mcp-config.ts`: safe MCP install and removal.
+- `packages/cli/src/commands/report-catalog.ts`: schema-driven report discovery and execution.
 - `packages/cli/src/commands/workflows/diagnose-property.ts`: `seo report`.
 - `packages/cli/src/commands/report-options.ts`: shared report flags.
 
 Useful core areas:
 
-- `packages/core/src/analyze/diagnose-property.ts`: main diagnosis primitives.
 - `packages/core/src/analyze/reports`: narrative report assembly.
 - `packages/core/src/analyze/workflows`: focused agent workflow reports.
 - `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.
@@ -183,6 +183,7 @@ Every report must be technically defensible and useful to another program.
 
 - TypeScript ESM only.
 - Keep CLI and MCP wrappers thin. Reusable behavior belongs in `packages/core`.
+- Register structured reports once so CLI discovery, MCP discovery, and skills stay in sync.
 - Prefer structured APIs and schemas over string parsing.
 - Prefer small modules with one clear responsibility. Split files when a real
   boundary appears; do not create abstract layers that only rename calls.

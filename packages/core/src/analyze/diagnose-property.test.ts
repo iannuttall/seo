@@ -31,7 +31,7 @@ test('diagnoseProperty reports unavailable sections without false zero evidence'
   assert.equal(report.skippedSections?.length, 10)
   assert.equal(report.summary.updateAttribution, 'unavailable')
   assert.equal(report.summary.updateAttributionStatus, 'unavailable')
-  assert.equal(report.summary.classification, 'not-enough-evidence')
+  assert.equal(report.summary.classification, 'insufficient-data')
   assert.match(
     report.updateCorrelation.actions.join('\n'),
     /Restore traffic anomaly evidence/,
@@ -46,7 +46,7 @@ test('diagnoseProperty reports unavailable sections without false zero evidence'
   )
 })
 
-test('diagnoseProperty distinguishes an unavailable update provider from weak attribution', async () => {
+test('diagnoseProperty distinguishes an unavailable update provider from no overlap evidence', async () => {
   const report = await diagnoseProperty(
     { site },
     {
@@ -74,7 +74,7 @@ test('diagnoseProperty distinguishes an unavailable update provider from weak at
 
   assert.equal(report.summary.updateAttribution, 'unavailable')
   assert.equal(report.summary.updateAttributionStatus, 'unavailable')
-  assert.equal(report.summary.classification, 'not-enough-evidence')
+  assert.equal(report.summary.classification, 'insufficient-data')
   assert.match(report.updateCorrelation.summary, /unavailable for this run/)
   assert.match(
     report.updateCorrelation.evidence.join('\n'),
@@ -86,7 +86,7 @@ test('diagnoseProperty distinguishes an unavailable update provider from weak at
   )
   assert.match(
     report.updateCorrelation.actions.join('\n'),
-    /Retry update attribution when the Search Status provider is available/,
+    /Retry update correlation when the Search Status provider is available/,
   )
   assert.doesNotMatch(
     report.updateCorrelation.actions.join('\n'),

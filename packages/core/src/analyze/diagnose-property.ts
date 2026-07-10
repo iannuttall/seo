@@ -136,27 +136,27 @@ function emptyUpdateCorrelation(
     generatedAt: new Date().toISOString(),
     anomalies: [],
     overlappingUpdates: [],
-    classification: 'not-enough-evidence',
-    attribution: 'weak-or-no-overlap',
-    confidence: 'low',
+    classification: 'insufficient-data',
+    attribution: 'not-established',
+    confidence: 'none',
     confounders: [],
     summary: unavailable
-      ? `${input.site} update attribution was unavailable for this run.`
+      ? `${input.site} update correlation was unavailable for this run.`
       : `${input.site} does not have enough daily GSC data for update correlation yet.`,
     evidence: [reason],
     caveats: [
       `GSC window: ${input.days ?? 90} days; recent comparison window: ${input.recentDays ?? 7} days.`,
       ...(unavailable
-        ? ['No update-attribution conclusion was produced.']
+        ? ['No update-correlation conclusion was produced.']
         : [
-            'New or sparse properties need more daily GSC data before update attribution is useful.',
+            'New or sparse properties need more daily GSC data before update correlation is useful.',
           ]),
     ],
     actions: [
       unavailable?.source === 'search-status'
-        ? 'Retry update attribution when the Search Status provider is available; use the canonical traffic anomalies and other report evidence in the meantime.'
+        ? 'Retry update correlation when the Search Status provider is available; use the canonical traffic anomalies and other report evidence in the meantime.'
         : unavailable?.source === 'traffic-anomaly'
-          ? 'Restore traffic anomaly evidence, then retry update attribution; use other report evidence in the meantime.'
+          ? 'Restore traffic anomaly evidence, then retry update correlation; use other report evidence in the meantime.'
           : 'Use quick wins, second-page opportunities, page audit, and technical checks until enough daily GSC data exists.',
     ],
     source: {
@@ -718,6 +718,7 @@ export async function diagnoseProperty(
   })
 
   const partialReasons = diagnosisPartialReasons({
+    anomaly,
     segments: { page, query, device, country },
     decay,
     cannibalization: cannibal,

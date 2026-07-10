@@ -144,7 +144,7 @@ function buildSummary(input: {
           ? `top query lost ${formatMagnitude(query.loser.clickDelta)} clicks`
           : 'no material query movement found'
 
-  return `${input.update.attribution} (${input.update.confidence} confidence); ${pageMovement}; ${queryMovement}.`
+  return `Cause not established; ${pageMovement}; ${queryMovement}.`
 }
 
 function buildActions(input: {
@@ -171,26 +171,28 @@ function buildActions(input: {
     })
   }
 
-  if (input.update.attribution === 'confounded') {
+  if (input.update.confounders.length > 0) {
     actions.push({
-      title: 'Separate update movement from site changes',
+      title: 'Test overlapping site changes first',
       action:
-        'Start with the known overlapping changes, then compare changed sections against unchanged sections. Do not call this an update hit until unchanged sections moved the same way.',
-      confidence: 'high',
+        'Start with the known overlapping changes, then compare changed sections against unchanged sections. Keep the Google update window as timing context, not a cause.',
+      confidence: 'medium',
     })
-  } else if (input.update.attribution === 'very-likely-update-related') {
+  } else if (
+    input.update.classification === 'significant-movement-with-update-overlap'
+  ) {
     actions.push({
-      title: 'Map update winners and losers by template',
+      title: 'Map movement by template',
       action:
-        'Group the top page and query movers into templates or content types. Preserve the winning pattern and only fix losing templates after checking indexability, intent, and SERP changes.',
-      confidence: 'high',
+        'Group the top page and query movers into templates or content types. Preserve winning patterns and investigate losing templates, but do not treat timing overlap as proof of an update effect.',
+      confidence: 'medium',
     })
   } else {
     actions.push({
       title: 'Treat this as exploratory',
       action:
         'Use the segment splits as a triage view, but do not over-attribute the movement to a Google update yet.',
-      confidence: input.update.confidence,
+      confidence: 'low',
     })
   }
 
@@ -425,7 +427,7 @@ export async function updatePostmortemWorkflow(
       {
         tool: 'seo_update_correlate',
         status: 'completed',
-        summary: `${update.attribution}; ${update.confidence} confidence. ${update.summary}`,
+        summary: `Cause not established. ${update.summary}`,
       },
       {
         tool: 'seo_segment_impact',

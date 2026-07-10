@@ -40,7 +40,7 @@ export function movementLine(report: DiagnosePropertyReport): string {
   }
   const anomaly = report.anomaly.anomalies.find((item) => item.significant)
   if (!anomaly) {
-    return 'No statistically significant traffic anomaly was detected.'
+    return 'No significant traffic anomaly signal was detected.'
   }
   const direction =
     anomaly.direction === 'spike'
@@ -129,7 +129,7 @@ export function topSegmentLine(report: DiagnosePropertyReport): string {
 
 export function updateAttributionLine(report: DiagnosePropertyReport): string {
   if (report.summary.updateAttributionStatus === 'unavailable') {
-    return 'Update attribution was not available for this run.'
+    return 'Update correlation was not available for this run.'
   }
 
   const overlapCount = report.updateCorrelation.overlappingUpdates.length
@@ -140,9 +140,9 @@ export function updateAttributionLine(report: DiagnosePropertyReport): string {
     return 'No official Google update window overlapped the comparison window.'
   }
   if (!significant) {
-    return `${countLabel(overlapCount, 'official Google update window')} overlapped the comparison window, but no statistically significant movement was detected.`
+    return `${countLabel(overlapCount, 'official Google update window')} overlapped the comparison window, but no significant movement was detected.`
   }
-  return `${countLabel(overlapCount, 'official Google update window')} overlapped the significant movement comparison window; attribution is ${report.summary.updateAttribution}.`
+  return `${countLabel(overlapCount, 'official Google update window')} overlapped the significant movement comparison window. This timing does not establish that the update caused the movement.`
 }
 
 export function changeLine(measurement: ChangeMeasurement): string {

@@ -14,10 +14,10 @@ import {
 
 function updateFixture(): UpdateCorrelationReport {
   return {
-    attribution: 'weak-or-no-overlap',
-    confidence: 'low',
-    classification: 'not-enough-evidence',
-    summary: 'No update attribution evidence.',
+    attribution: 'not-established',
+    confidence: 'none',
+    classification: 'no-update-overlap',
+    summary: 'No update overlap evidence.',
     overlappingUpdates: [],
     evidence: [],
     confounders: [],

@@ -31,14 +31,11 @@ export function buildDiagnosisPriorities(
   )
   if (hasSignificantAnomaly && input.update.overlappingUpdates.length) {
     priorities.push({
-      label: 'Review update exposure',
+      label: 'Review movement during update overlap',
       reason: `${countLabel(input.update.overlappingUpdates.length, 'official update window')} ${input.update.overlappingUpdates.length === 1 ? 'overlaps' : 'overlap'} the significant movement comparison window.`,
       action:
-        'Do not edit individual pages yet. First compare winning and losing templates so you know which page type was affected by the update.',
-      confidence:
-        input.update.classification === 'likely-update-related'
-          ? 'medium'
-          : 'low',
+        'Do not assume the update caused the movement. First compare winning and losing templates, then test site changes, indexability, intent, and SERP changes as separate explanations.',
+      confidence: 'low',
     })
   }
 

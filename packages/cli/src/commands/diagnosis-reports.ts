@@ -18,7 +18,8 @@ function formatNumber(value: number): string {
   })
 }
 
-function formatChange(value: number): string {
+function formatChange(value: number | null): string {
+  if (value === null) return 'n/a'
   const rounded = Math.abs(value) >= 10 ? value.toFixed(0) : value.toFixed(1)
   return `${value > 0 ? '+' : ''}${rounded}%`
 }
@@ -26,7 +27,7 @@ function formatChange(value: number): string {
 export const trafficAnomalyCommand = defineCommand({
   meta: {
     name: 'traffic-anomaly',
-    description: 'Detect statistically unusual recent GSC traffic movement',
+    description: 'Detect unusual recent GSC traffic movement',
   },
   args: {
     site: { type: 'string' },
@@ -81,10 +82,16 @@ export const trafficAnomalyCommand = defineCommand({
         formatNumber(anomaly.baselineMean),
         formatNumber(anomaly.comparisonMean),
         formatChange(anomaly.percentChange),
-        anomaly.zScore,
+        anomaly.zScore ?? 'n/a',
         anomaly.significant ? 'yes' : 'no',
       ]),
     )
+    if (report.coverage) {
+      printNotes('Evidence coverage', [
+        `${report.coverage.observedDays} of ${report.coverage.expectedDays} requested calendar days returned date aggregates.`,
+        ...report.coverage.caveats,
+      ])
+    }
   },
 })
 
@@ -152,9 +159,9 @@ export const updateCorrelateCommand = defineCommand({
       return
     }
     printKeyValue([
-      ['Classification', report.classification],
-      ['Attribution', report.attribution],
-      ['Confidence', report.confidence],
+      ['Classification', report.classification.replaceAll('-', ' ')],
+      ['Causal attribution', report.attribution.replaceAll('-', ' ')],
+      ['Causal confidence', report.confidence],
       ['Updates matched', String(report.overlappingUpdates.length)],
       ['Known confounders', String(report.confounders.length)],
       ['Source', report.source.name],
@@ -171,7 +178,7 @@ export const updateCorrelateCommand = defineCommand({
         formatNumber(anomaly.baselineMean),
         formatNumber(anomaly.comparisonMean),
         formatChange(anomaly.percentChange),
-        anomaly.zScore,
+        anomaly.zScore ?? 'n/a',
       ]),
     )
     if (report.overlappingUpdates.length) {

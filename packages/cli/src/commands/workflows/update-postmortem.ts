@@ -152,7 +152,10 @@ export const updatePostmortemCommand = defineCommand({
       ['Workflow', report.workflow],
       ['Property', report.site],
       ['Summary', report.summary],
-      ['Attribution', report.output.update.attribution],
+      [
+        'Causal attribution',
+        report.output.update.attribution.replaceAll('-', ' '),
+      ],
       ['Confidence', report.output.update.confidence],
       ['Known confounders', String(report.output.update.confounders.length)],
     ])

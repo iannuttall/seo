@@ -1,0 +1,4 @@
+interface:
+  display_name: "Measure SEO Change"
+  short_description: "Measure equal-window GSC and GA4 change evidence"
+  default_prompt: "Use $measure-change to measure this SEO change with equal finalized before and after evidence."

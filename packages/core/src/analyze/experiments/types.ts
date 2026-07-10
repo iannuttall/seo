@@ -39,12 +39,12 @@ export type AnalyticsTestMetrics = {
 }
 
 export type MetricDelta = {
-  clicks: number
+  clicks: number | null
   clickPct: number | null
-  impressions: number
+  impressions: number | null
   impressionPct: number | null
-  ctr: number
-  position: number
+  ctr: number | null
+  position: number | null
 }
 
 export type AnalyticsMetricDelta = {
@@ -59,9 +59,68 @@ export type AnalyticsMetricDelta = {
 }
 
 export type ChangeMeasurement = {
+  schemaVersion: 1
+  methodology: 'equal-finalized-calendar-windows-v1'
+  dataStatus: 'complete' | 'partial'
   change: SeoChange
-  before: { startDate: string; endDate: string; metrics: TestMetrics }
-  after: { startDate: string; endDate: string; metrics: TestMetrics }
+  window: {
+    requestedDays: number
+    effectiveDays: number
+    afterWindowTruncated: boolean
+    gscTimezone: 'America/Los_Angeles'
+    availableDateWindow: {
+      earliestDate: string
+      latestFinalDate: string
+    }
+  }
+  source: {
+    searchAnalytics: {
+      status: 'complete' | 'partial'
+      completeness: 'date-aggregates' | 'retained-query-date-aggregates'
+      dimensions: ['date']
+      searchType: 'web'
+      dataState: 'final'
+      before: {
+        calls: number
+        rowsFetched: number
+        returnedRows: number
+        invalidRows: number
+        duplicateRows: number
+      }
+      after: {
+        calls: number
+        rowsFetched: number
+        returnedRows: number
+        invalidRows: number
+        duplicateRows: number
+      }
+      control?: {
+        status: 'complete' | 'partial'
+        completeness: 'date-aggregates' | 'retained-query-date-aggregates'
+        before: ChangeMeasurement['source']['searchAnalytics']['before']
+        after: ChangeMeasurement['source']['searchAnalytics']['after']
+      }
+      warnings: string[]
+    }
+    analytics?: {
+      status: 'complete' | 'partial'
+      before: {
+        rows: number
+        rowCount: number
+        timeZone?: string
+        currencyCode?: string
+      }
+      after: {
+        rows: number
+        rowCount: number
+        timeZone?: string
+        currencyCode?: string
+      }
+      warnings: string[]
+    }
+  }
+  before: { startDate: string; endDate: string; metrics: TestMetrics | null }
+  after: { startDate: string; endDate: string; metrics: TestMetrics | null }
   delta: MetricDelta
   analytics?: {
     propertyId: string
@@ -80,13 +139,18 @@ export type ChangeMeasurement = {
   }
   control?: {
     change: SeoChange
-    before: { startDate: string; endDate: string; metrics: TestMetrics }
-    after: { startDate: string; endDate: string; metrics: TestMetrics }
+    before: {
+      startDate: string
+      endDate: string
+      metrics: TestMetrics | null
+    }
+    after: { startDate: string; endDate: string; metrics: TestMetrics | null }
     delta: MetricDelta
     adjusted: {
-      clickDelta: number
+      methodology: 'control-ratio-counterfactual-v1'
+      clickDelta: number | null
       clickPctPoints: number | null
-      impressionDelta: number
+      impressionDelta: number | null
       impressionPctPoints: number | null
     }
     note: string
@@ -94,6 +158,8 @@ export type ChangeMeasurement = {
   verdict: 'positive' | 'negative' | 'mixed' | 'flat' | 'not-enough-data'
   confidence: 'high' | 'medium' | 'low'
   note: string
+  warnings: string[]
+  caveats: string[]
 }
 
 export type ContentGroupRow = {

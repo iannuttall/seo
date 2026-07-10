@@ -242,6 +242,31 @@ test('segment impact JSON rejects malformed bounds before auth', async () => {
   }
 })
 
+test('change measurement rejects malformed windows before auth', async () => {
+  const result = await runSeoResult([
+    'tests',
+    'report',
+    '--site',
+    'sc-domain:example.com',
+    '--scope',
+    'site',
+    '--target',
+    'sitewide',
+    '--date',
+    '2026-06-01',
+    '--before',
+    'nope',
+    '--json',
+  ])
+
+  assert.notEqual(result.exitCode, 0)
+  assert.match(`${result.stdout}${result.stderr}`, /--before must be a number/i)
+  assert.doesNotMatch(
+    `${result.stdout}${result.stderr}`,
+    /auth login|Google OAuth/i,
+  )
+})
+
 test('cannibal help exposes bounded discovery controls', async () => {
   const output = await runSeo(['cannibal', '--help'])
 

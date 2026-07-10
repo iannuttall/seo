@@ -24,7 +24,7 @@ Use the `seo` MCP server exposed by the repository or installed package.
 - Use `seo_striking_distance` for position 11-20 opportunities with real impressions.
 - Use `seo_content_groups` to create reusable page/query sets for tests and reports.
 - Use `seo_change_log` to record annotations for site, page, query, or group changes.
-- Use `seo_measure_change` to measure before/after impact of a saved or ad hoc change.
+- Use `seo_measure_change` to measure equal finalized before/after windows for a saved or ad hoc change. If the requested after window is incomplete, treat its partial metrics as provisional and do not assign a direction.
 - Use `seo_crawl_diff` to detect changed titles/meta/canonicals/status/indexability between crawls.
 - Use `seo_index_watch` to separate current URL Inspection reviews, regressions, recoveries, failed checks, and quota-deferred work. Treat the result as Google's indexed snapshot, not a live test.
 - Use `seo_audit_page` for one URL.

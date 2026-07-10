@@ -1,142 +1,82 @@
-import { ga4RowsToObjects, runGa4Report } from '../../ga4/client.js'
-import {
-  querySearchAnalytics,
-  type SearchAnalyticsRequest,
-} from '../../gsc/client.js'
+import { SeoError } from '../../errors.js'
+import { runGa4Report } from '../../ga4/client.js'
+import { querySearchAnalytics } from '../../gsc/client.js'
 import { getChange } from './change-log.js'
 import { getContentGroup } from './content-groups.js'
-import {
-  analyticsDelta,
-  ga4LandingPageFilterForChange,
-  summarizeGa4Rows,
-} from './measurement/analytics.js'
+import { ga4LandingPageFilterForChange } from './measurement/analytics.js'
 import { classify } from './measurement/classify.js'
-import { dateShift, latestGscDate } from './measurement/dates.js'
-import { filterForChange } from './measurement/filters.js'
-import { fixed, pct, summarizeRows } from './measurement/math.js'
-import type {
-  AnalyticsTestMetrics,
-  ChangeMeasurement,
-  ChangeScope,
-  MetricDelta,
-  SeoChange,
-  TestMetrics,
-} from './types.js'
+import { queryGa4ChangeWindows } from './measurement/ga4-change-provider.js'
+import { queryGscChangeWindows } from './measurement/gsc-change-provider.js'
+import { fixed } from './measurement/math.js'
+import { measurementWindow } from './measurement/window.js'
+import type { ChangeMeasurement, ChangeScope, SeoChange } from './types.js'
 
-async function queryMetrics(input: {
-  site: string
-  startDate: string
-  endDate: string
-  filters?: SearchAnalyticsRequest['dimensionFilterGroups']
-  refresh?: boolean
-}): Promise<TestMetrics> {
-  const result = await querySearchAnalytics(
-    input.site,
-    {
-      startDate: input.startDate,
-      endDate: input.endDate,
-      dimensions: ['date'],
-      type: 'web',
-      dataState: 'final',
-      dimensionFilterGroups: input.filters,
-    },
-    { refresh: input.refresh },
-  )
-  return summarizeRows(result.rows)
+export type MeasureChangeDependencies = {
+  searchAnalytics: typeof querySearchAnalytics
+  ga4Report: typeof runGa4Report
+  contentGroup: typeof getContentGroup
+  now: () => Date
 }
 
-async function queryAnalyticsMetrics(input: {
-  propertyId: string
-  startDate: string
-  endDate: string
-  filter?: unknown
-  refresh?: boolean
-}): Promise<AnalyticsTestMetrics> {
-  const result = await runGa4Report(
-    input.propertyId,
-    {
-      dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
-      dimensions: [{ name: 'date' }],
-      metrics: [
-        { name: 'sessions' },
-        { name: 'engagedSessions' },
-        { name: 'conversions' },
-        { name: 'totalRevenue' },
-      ],
-      ...(input.filter ? { dimensionFilter: input.filter } : {}),
-      limit: 10_000,
-    },
-    { refresh: input.refresh },
-  )
-  return summarizeGa4Rows(ga4RowsToObjects(result))
+const defaultDependencies: MeasureChangeDependencies = {
+  searchAnalytics: querySearchAnalytics,
+  ga4Report: runGa4Report,
+  contentGroup: getContentGroup,
+  now: () => new Date(),
 }
 
-function metricDelta(input: {
-  before: TestMetrics
-  after: TestMetrics
-}): MetricDelta {
-  return {
-    clicks: fixed(input.after.clicks - input.before.clicks),
-    clickPct: pct(input.after.clicks, input.before.clicks),
-    impressions: fixed(input.after.impressions - input.before.impressions),
-    impressionPct: pct(input.after.impressions, input.before.impressions),
-    ctr: fixed(input.after.ctr - input.before.ctr, 4),
-    position: fixed(input.after.position - input.before.position),
+function resolveContentGroup(
+  change: SeoChange,
+  contentGroup: typeof getContentGroup,
+) {
+  if (change.scope !== 'group') return undefined
+  const group = contentGroup(change.target)
+  if (!group) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Content group ${change.target} was not found.`,
+    )
   }
+  if (group.site !== change.site) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Content group ${change.target} belongs to ${group.site}, not ${change.site}.`,
+    )
+  }
+  return group
 }
 
-async function queryGscWindow(input: {
-  change: SeoChange
-  before: { startDate: string; endDate: string }
-  after: { startDate: string; endDate: string }
-  refresh?: boolean
-}): Promise<Pick<ChangeMeasurement, 'before' | 'after' | 'delta'>> {
-  const group =
-    input.change.scope === 'group'
-      ? getContentGroup(input.change.target)
-      : undefined
-  if (input.change.scope === 'group' && !group) {
-    throw new Error(`Content group ${input.change.target} was not found.`)
-  }
-
-  const filters = filterForChange(input.change, group)
-  const [beforeMetrics, afterMetrics] = await Promise.all([
-    queryMetrics({
-      site: input.change.site,
-      ...input.before,
-      filters,
-      refresh: input.refresh,
-    }),
-    queryMetrics({
-      site: input.change.site,
-      ...input.after,
-      filters,
-      refresh: input.refresh,
-    }),
-  ])
-
-  return {
-    before: { ...input.before, metrics: beforeMetrics },
-    after: { ...input.after, metrics: afterMetrics },
-    delta: metricDelta({ before: beforeMetrics, after: afterMetrics }),
-  }
+function counterfactualDelta(input: {
+  treatmentBefore: number
+  treatmentAfter: number
+  controlBefore: number
+  controlAfter: number
+}): number | null {
+  if (input.controlBefore <= 0) return null
+  const expectedAfter =
+    input.treatmentBefore * (input.controlAfter / input.controlBefore)
+  return fixed(input.treatmentAfter - expectedAfter)
 }
 
-export async function measureChange(input: {
-  id?: string
-  site?: string
-  scope?: ChangeScope
-  target?: string
-  title?: string
-  changedAt?: string
-  ga4PropertyId?: string
-  controlScope?: ChangeScope
-  controlTarget?: string
-  controlTitle?: string
-  beforeDays?: number
-  afterDays?: number
-  refresh?: boolean
-}): Promise<ChangeMeasurement> {
+export async function measureChange(
+  input: {
+    id?: string
+    site?: string
+    scope?: ChangeScope
+    target?: string
+    title?: string
+    changedAt?: string
+    ga4PropertyId?: string
+    controlScope?: ChangeScope
+    controlTarget?: string
+    controlTitle?: string
+    beforeDays?: number
+    afterDays?: number
+    refresh?: boolean
+  },
+  dependencies: MeasureChangeDependencies = defaultDependencies,
+): Promise<ChangeMeasurement> {
+  const now = dependencies.now()
   const stored = input.id ? getChange(input.id) : undefined
   const change =
     stored ??
@@ -147,34 +87,35 @@ export async function measureChange(input: {
       target: input.target,
       title: input.title ?? 'Ad hoc change measurement',
       changedAt: input.changedAt,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
     } as SeoChange)
 
-  if (!change.site || !change.scope || !change.target || !change.changedAt) {
-    throw new Error(
+  if (
+    !change.site?.trim() ||
+    !change.scope ||
+    !change.target?.trim() ||
+    !change.changedAt
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
       'Pass a change id, or provide site, scope, target, and changedAt.',
     )
   }
-
-  const beforeDays = input.beforeDays ?? 28
-  const afterDays = input.afterDays ?? beforeDays
-  const before = {
-    startDate: dateShift(change.changedAt, -beforeDays),
-    endDate: dateShift(change.changedAt, -1),
-  }
-  const desiredAfterEnd = dateShift(change.changedAt, afterDays - 1)
-  const after = {
-    startDate: change.changedAt,
-    endDate:
-      desiredAfterEnd > latestGscDate() ? latestGscDate() : desiredAfterEnd,
+  if (Boolean(input.controlScope) !== Boolean(input.controlTarget?.trim())) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'controlScope and controlTarget must be provided together.',
+    )
   }
 
-  const measured = await queryGscWindow({
-    change,
-    before,
-    after,
-    refresh: input.refresh,
+  const window = measurementWindow({
+    changedAt: change.changedAt,
+    beforeDays: input.beforeDays,
+    afterDays: input.afterDays,
+    now,
   })
+  const { before, after } = window
+  const group = resolveContentGroup(change, dependencies.contentGroup)
   const controlChange =
     input.controlScope && input.controlTarget
       ? ({
@@ -184,79 +125,190 @@ export async function measureChange(input: {
           target: input.controlTarget,
           title: input.controlTitle ?? 'Control group',
           changedAt: change.changedAt,
-          createdAt: new Date().toISOString(),
+          createdAt: now.toISOString(),
         } satisfies SeoChange)
       : undefined
+  const controlGroup = controlChange
+    ? resolveContentGroup(controlChange, dependencies.contentGroup)
+    : undefined
+  const measured = await queryGscChangeWindows({
+    change,
+    before,
+    after,
+    group,
+    refresh: input.refresh,
+    searchAnalytics: dependencies.searchAnalytics,
+  })
   const control = controlChange
-    ? await queryGscWindow({
+    ? await queryGscChangeWindows({
         change: controlChange,
         before,
         after,
+        group: controlGroup,
         refresh: input.refresh,
+        searchAnalytics: dependencies.searchAnalytics,
       })
     : undefined
   const clickPct = measured.delta.clickPct
-  const verdict = classify({
-    before: measured.before.metrics,
-    after: measured.after.metrics,
-    clickPct,
-    clickDelta: measured.delta.clicks,
-    positionDelta: measured.delta.position,
-  })
-  const group =
-    change.scope === 'group' ? getContentGroup(change.target) : undefined
+  const shortWindow = window.effectiveDays < 7
+  const unavailableReason = window.afterWindowTruncated
+    ? `Only ${window.effectiveDays} of ${window.requestedDays} requested finalized after-days are available.`
+    : !measured.comparable
+      ? 'A Search Console window has no comparable metrics.'
+      : shortWindow
+        ? `Only ${window.effectiveDays} finalized day${window.effectiveDays === 1 ? '' : 's'} are available in each window.`
+        : undefined
+  const classified =
+    measured.before.metrics &&
+    measured.after.metrics &&
+    measured.delta.clicks !== null &&
+    measured.delta.position !== null
+      ? classify({
+          before: measured.before.metrics,
+          after: measured.after.metrics,
+          clickPct,
+          clickDelta: measured.delta.clicks,
+          positionDelta: measured.delta.position,
+        })
+      : {
+          verdict: 'not-enough-data' as const,
+          confidence: 'low' as const,
+          note: 'Comparable Search Console metrics are unavailable.',
+        }
+  const verdict = unavailableReason
+    ? {
+        verdict: 'not-enough-data' as const,
+        confidence: 'low' as const,
+        note: `${unavailableReason} The equal-window metrics are provisional and no directional verdict was assigned.`,
+      }
+    : measured.status === 'partial' && classified.confidence === 'high'
+      ? {
+          ...classified,
+          confidence: 'medium' as const,
+          note: `${classified.note} Confidence is capped because Search Console evidence is partial.`,
+        }
+      : classified
   const ga4Filter = ga4LandingPageFilterForChange(change, group)
+  const queryDimension =
+    change.scope === 'query' || group?.dimension === 'query'
   const analytics =
-    input.ga4PropertyId && change.scope !== 'query'
-      ? await (async () => {
-          const [beforeMetrics, afterMetrics] = await Promise.all([
-            queryAnalyticsMetrics({
-              propertyId: input.ga4PropertyId ?? '',
-              ...before,
-              filter: ga4Filter,
-              refresh: input.refresh,
-            }),
-            queryAnalyticsMetrics({
-              propertyId: input.ga4PropertyId ?? '',
-              ...after,
-              filter: ga4Filter,
-              refresh: input.refresh,
-            }),
-          ])
-          return {
-            propertyId: input.ga4PropertyId ?? '',
-            before: { ...before, metrics: beforeMetrics },
-            after: { ...after, metrics: afterMetrics },
-            delta: analyticsDelta({
-              before: beforeMetrics,
-              after: afterMetrics,
-            }),
-            note: 'GA4 attribution is landing-page based. Query-level tests use GSC only.',
-          }
-        })()
+    input.ga4PropertyId && !queryDimension
+      ? await queryGa4ChangeWindows({
+          propertyId: input.ga4PropertyId,
+          before,
+          after,
+          filter: ga4Filter,
+          refresh: input.refresh,
+          ga4Report: dependencies.ga4Report,
+        })
       : undefined
 
+  const warnings = [
+    ...measured.warnings,
+    ...(control?.warnings.map((warning) => `Control: ${warning}`) ?? []),
+    ...(analytics?.warnings ?? []),
+  ]
+  const dataStatus =
+    window.afterWindowTruncated ||
+    measured.status === 'partial' ||
+    control?.status === 'partial' ||
+    analytics?.warnings.length
+      ? 'partial'
+      : 'complete'
+
   return {
+    schemaVersion: 1,
+    methodology: 'equal-finalized-calendar-windows-v1',
+    dataStatus,
     change,
+    window: {
+      requestedDays: window.requestedDays,
+      effectiveDays: window.effectiveDays,
+      afterWindowTruncated: window.afterWindowTruncated,
+      gscTimezone: 'America/Los_Angeles',
+      availableDateWindow: window.availableDateWindow,
+    },
+    source: {
+      searchAnalytics: {
+        status: measured.status,
+        completeness: measured.completeness,
+        dimensions: ['date'],
+        searchType: 'web',
+        dataState: 'final',
+        before: measured.source.before,
+        after: measured.source.after,
+        ...(control
+          ? {
+              control: {
+                status: control.status,
+                completeness: control.completeness,
+                before: control.source.before,
+                after: control.source.after,
+              },
+            }
+          : {}),
+        warnings: [
+          ...measured.warnings,
+          ...(control?.warnings.map((warning) => `Control: ${warning}`) ?? []),
+        ],
+      },
+      ...(analytics
+        ? {
+            analytics: {
+              status: analytics.warnings.length
+                ? ('partial' as const)
+                : ('complete' as const),
+              before: analytics.source.before,
+              after: analytics.source.after,
+              warnings: analytics.warnings,
+            },
+          }
+        : {}),
+    },
     before: measured.before,
     after: measured.after,
     delta: measured.delta,
-    ...(analytics ? { analytics } : {}),
+    ...(analytics ? { analytics: analytics.report } : {}),
     ...(control && controlChange
       ? {
           control: {
             change: controlChange,
-            ...control,
+            before: control.before,
+            after: control.after,
+            delta: control.delta,
             adjusted: {
-              clickDelta: fixed(measured.delta.clicks - control.delta.clicks),
+              methodology: 'control-ratio-counterfactual-v1' as const,
+              clickDelta:
+                control.comparable &&
+                measured.before.metrics &&
+                measured.after.metrics &&
+                control.before.metrics &&
+                control.after.metrics
+                  ? counterfactualDelta({
+                      treatmentBefore: measured.before.metrics.clicks,
+                      treatmentAfter: measured.after.metrics.clicks,
+                      controlBefore: control.before.metrics.clicks,
+                      controlAfter: control.after.metrics.clicks,
+                    })
+                  : null,
               clickPctPoints:
                 measured.delta.clickPct === null ||
                 control.delta.clickPct === null
                   ? null
                   : fixed(measured.delta.clickPct - control.delta.clickPct),
-              impressionDelta: fixed(
-                measured.delta.impressions - control.delta.impressions,
-              ),
+              impressionDelta:
+                control.comparable &&
+                measured.before.metrics &&
+                measured.after.metrics &&
+                control.before.metrics &&
+                control.after.metrics
+                  ? counterfactualDelta({
+                      treatmentBefore: measured.before.metrics.impressions,
+                      treatmentAfter: measured.after.metrics.impressions,
+                      controlBefore: control.before.metrics.impressions,
+                      controlAfter: control.after.metrics.impressions,
+                    })
+                  : null,
               impressionPctPoints:
                 measured.delta.impressionPct === null ||
                 control.delta.impressionPct === null
@@ -266,10 +318,35 @@ export async function measureChange(input: {
                         control.delta.impressionPct,
                     ),
             },
-            note: 'Control groups reduce seasonality noise but do not prove causality on their own.',
+            note: 'Adjusted deltas compare the observed treatment result with a control-ratio counterfactual. Controls reduce some shared noise but do not prove causality.',
           },
         }
       : {}),
     ...verdict,
+    warnings,
+    caveats: [
+      `Compared ${window.effectiveDays} finalized Search Console calendar days before and after the change in America/Los_Angeles time.`,
+      'Search Console position is impression-weighted average position; before/after timing and controls do not prove causality.',
+      ...(window.afterWindowTruncated
+        ? [
+            `The requested ${window.requestedDays}-day after window is incomplete, so this run is partial and has no directional verdict.`,
+          ]
+        : []),
+      ...(shortWindow
+        ? [
+            'Fewer than 7 finalized days per window is too short for a directional verdict.',
+          ]
+        : []),
+      ...(measured.completeness === 'retained-query-date-aggregates'
+        ? [
+            'Query-scoped Search Console data can omit anonymized queries; an absent retained row is not zero traffic.',
+          ]
+        : []),
+      ...(analytics
+        ? [
+            `GA4 attribution uses landing pages and the GA4 property timezone${analytics.source.before.timeZone ? ` (${analytics.source.before.timeZone})` : ''}; its day boundaries may differ from Search Console Pacific dates.`,
+          ]
+        : []),
+    ],
   }
 }

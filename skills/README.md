@@ -20,5 +20,6 @@ They can also call the CLI directly when the MCP tools are not available.
 - `performance`: separate Lighthouse lab diagnostics, CrUX field Core Web Vitals, and unscored fallback evidence.
 - `community-intent`: review explicit intent language in retained GSC queries without claiming a page gap.
 - `seo-to-ai-query`: create deterministic monitoring-prompt suggestions from retained GSC queries.
+- `measure-change`: compare equal finalized GSC windows without turning an incomplete after-period into a directional verdict.
 
 The existing `seo` skill is the broad tool-routing guide for the full MCP server.

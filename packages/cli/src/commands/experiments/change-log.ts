@@ -6,9 +6,16 @@ import {
   recordChange,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import {
+  booleanArg,
+  jsonFlag,
+  numberArg,
+  strictNumberArg,
+  stringArg,
+} from '../../args.js'
 import { resolveSite } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { printNotes } from '../output.js'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -128,7 +135,8 @@ export const changeLogCommand = defineCommand({
     measure: defineCommand({
       meta: {
         name: 'measure',
-        description: 'Measure before/after impact for a change',
+        description:
+          'Measure a change with equal finalized before/after windows',
       },
       args: {
         id: { type: 'string' },
@@ -168,8 +176,8 @@ export const changeLogCommand = defineCommand({
           target: id ? undefined : stringArg(args.target),
           title: stringArg(args.title),
           changedAt: id ? undefined : stringArg(args.date),
-          beforeDays: numberArg(args.before),
-          afterDays: numberArg(args.after),
+          beforeDays: strictNumberArg(args.before, '--before'),
+          afterDays: strictNumberArg(args.after, '--after'),
           refresh: booleanArg(args.refresh),
         })
         if (json) {
@@ -178,10 +186,15 @@ export const changeLogCommand = defineCommand({
         }
         printKeyValue([
           ['Change', report.change.title],
+          ['Data status', report.dataStatus],
           ['Verdict', report.verdict],
           ['Confidence', report.confidence],
           ['Before', `${report.before.startDate} to ${report.before.endDate}`],
           ['After', `${report.after.startDate} to ${report.after.endDate}`],
+          [
+            'Window',
+            `${report.window.effectiveDays}/${report.window.requestedDays} finalized days`,
+          ],
           ['Note', report.note],
         ])
         printTable(
@@ -189,34 +202,40 @@ export const changeLogCommand = defineCommand({
           [
             [
               'Clicks',
-              report.before.metrics.clicks,
-              report.after.metrics.clicks,
-              report.delta.clickPct === null
-                ? `${report.delta.clicks}`
-                : `${report.delta.clicks} (${report.delta.clickPct}%)`,
+              report.before.metrics?.clicks ?? 'unavailable',
+              report.after.metrics?.clicks ?? 'unavailable',
+              report.delta.clicks === null
+                ? 'unavailable'
+                : report.delta.clickPct === null
+                  ? `${report.delta.clicks}`
+                  : `${report.delta.clicks} (${report.delta.clickPct}%)`,
             ],
             [
               'Impressions',
-              report.before.metrics.impressions,
-              report.after.metrics.impressions,
-              report.delta.impressionPct === null
-                ? `${report.delta.impressions}`
-                : `${report.delta.impressions} (${report.delta.impressionPct}%)`,
+              report.before.metrics?.impressions ?? 'unavailable',
+              report.after.metrics?.impressions ?? 'unavailable',
+              report.delta.impressions === null
+                ? 'unavailable'
+                : report.delta.impressionPct === null
+                  ? `${report.delta.impressions}`
+                  : `${report.delta.impressions} (${report.delta.impressionPct}%)`,
             ],
             [
               'CTR',
-              report.before.metrics.ctr,
-              report.after.metrics.ctr,
-              report.delta.ctr,
+              report.before.metrics?.ctr ?? 'unavailable',
+              report.after.metrics?.ctr ?? 'unavailable',
+              report.delta.ctr ?? 'unavailable',
             ],
             [
               'Position',
-              report.before.metrics.position,
-              report.after.metrics.position,
-              report.delta.position,
+              report.before.metrics?.position ?? 'unavailable',
+              report.after.metrics?.position ?? 'unavailable',
+              report.delta.position ?? 'unavailable',
             ],
           ],
         )
+        printNotes('Warnings', report.warnings)
+        printNotes('Caveats', report.caveats)
       },
     }),
   },

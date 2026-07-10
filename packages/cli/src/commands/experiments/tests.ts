@@ -11,11 +11,12 @@ import {
   jsonFlag,
   numberArg,
   projectArg,
+  strictNumberArg,
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { formatCount } from '../output.js'
+import { formatCount, printNotes } from '../output.js'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -42,13 +43,36 @@ function pct(value: number | null): string {
   return value === null ? 'n/a' : `${value.toFixed(1)}%`
 }
 
+function countMetric(value: number | null | undefined): string {
+  return value === null || value === undefined
+    ? 'unavailable'
+    : formatCount(value)
+}
+
+function countDelta(value: number | null, percentage: number | null): string {
+  return value === null
+    ? 'unavailable'
+    : `${formatCount(value)} (${pct(percentage)})`
+}
+
+function decimalMetric(value: number | null | undefined, digits = 1): string {
+  return value === null || value === undefined
+    ? 'unavailable'
+    : value.toFixed(digits)
+}
+
 function printMeasurement(report: ChangeMeasurement): void {
   printKeyValue([
     ['Test', report.change.title],
+    ['Data status', report.dataStatus],
     ['Verdict', report.verdict],
     ['Confidence', report.confidence],
     ['Before', `${report.before.startDate} to ${report.before.endDate}`],
     ['After', `${report.after.startDate} to ${report.after.endDate}`],
+    [
+      'Window',
+      `${report.window.effectiveDays}/${report.window.requestedDays} finalized days`,
+    ],
     ['Note', report.note],
   ])
   printTable(
@@ -56,27 +80,33 @@ function printMeasurement(report: ChangeMeasurement): void {
     [
       [
         'GSC clicks',
-        formatCount(report.before.metrics.clicks),
-        formatCount(report.after.metrics.clicks),
-        `${formatCount(report.delta.clicks)} (${pct(report.delta.clickPct)})`,
+        countMetric(report.before.metrics?.clicks),
+        countMetric(report.after.metrics?.clicks),
+        countDelta(report.delta.clicks, report.delta.clickPct),
       ],
       [
         'GSC impressions',
-        formatCount(report.before.metrics.impressions),
-        formatCount(report.after.metrics.impressions),
-        `${formatCount(report.delta.impressions)} (${pct(report.delta.impressionPct)})`,
+        countMetric(report.before.metrics?.impressions),
+        countMetric(report.after.metrics?.impressions),
+        countDelta(report.delta.impressions, report.delta.impressionPct),
       ],
       [
         'GSC CTR',
-        `${(report.before.metrics.ctr * 100).toFixed(1)}%`,
-        `${(report.after.metrics.ctr * 100).toFixed(1)}%`,
-        `${(report.delta.ctr * 100).toFixed(1)} pts`,
+        report.before.metrics
+          ? `${(report.before.metrics.ctr * 100).toFixed(1)}%`
+          : 'unavailable',
+        report.after.metrics
+          ? `${(report.after.metrics.ctr * 100).toFixed(1)}%`
+          : 'unavailable',
+        report.delta.ctr === null
+          ? 'unavailable'
+          : `${(report.delta.ctr * 100).toFixed(1)} pts`,
       ],
       [
         'GSC position',
-        report.before.metrics.position.toFixed(1),
-        report.after.metrics.position.toFixed(1),
-        report.delta.position.toFixed(1),
+        decimalMetric(report.before.metrics?.position),
+        decimalMetric(report.after.metrics?.position),
+        decimalMetric(report.delta.position),
       ],
     ],
   )
@@ -112,7 +142,12 @@ function printMeasurement(report: ChangeMeasurement): void {
     process.stdout.write('\nControl comparison\n')
     printKeyValue([
       ['Control', report.control.change.title],
-      ['Adjusted clicks', formatCount(report.control.adjusted.clickDelta)],
+      [
+        'Adjusted clicks',
+        report.control.adjusted.clickDelta === null
+          ? 'n/a'
+          : formatCount(report.control.adjusted.clickDelta),
+      ],
       [
         'Adjusted click %',
         report.control.adjusted.clickPctPoints === null
@@ -122,6 +157,8 @@ function printMeasurement(report: ChangeMeasurement): void {
       ['Note', report.control.note],
     ])
   }
+  printNotes('Warnings', report.warnings)
+  printNotes('Caveats', report.caveats)
 }
 
 export const testsCommand = defineCommand({
@@ -244,7 +281,8 @@ export const testsCommand = defineCommand({
     report: defineCommand({
       meta: {
         name: 'report',
-        description: 'Report before/after SEO test impact',
+        description:
+          'Report an SEO test with equal finalized before/after windows',
       },
       args: {
         id: { type: 'string', description: 'Saved SEO test id.' },
@@ -321,8 +359,8 @@ export const testsCommand = defineCommand({
           controlScope: maybeScope(args['control-scope']),
           controlTarget: stringArg(args['control-target']),
           controlTitle: stringArg(args['control-title']),
-          beforeDays: numberArg(args.before),
-          afterDays: numberArg(args.after),
+          beforeDays: strictNumberArg(args.before, '--before'),
+          afterDays: strictNumberArg(args.after, '--after'),
           refresh: booleanArg(args.refresh),
         })
         if (json) {

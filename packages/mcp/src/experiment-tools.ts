@@ -128,20 +128,23 @@ export function registerExperimentTools(server: McpServer): void {
     'seo_measure_change',
     {
       description:
-        'Measure before/after GSC impact for a saved or ad hoc SEO change',
+        'Measure a saved or ad hoc SEO change with equal finalized GSC windows and optional GA4/control evidence',
       inputSchema: {
-        id: z.string().optional(),
-        site: z.string().optional(),
+        id: z.string().min(1).optional(),
+        site: z.string().min(1).optional(),
         scope: z.enum(['site', 'page', 'query', 'group']).optional(),
-        target: z.string().optional(),
-        title: z.string().optional(),
-        changedAt: z.string().optional(),
-        ga4PropertyId: z.string().optional(),
+        target: z.string().min(1).optional(),
+        title: z.string().min(1).optional(),
+        changedAt: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        ga4PropertyId: z.string().min(1).optional(),
         controlScope: z.enum(['site', 'page', 'query', 'group']).optional(),
-        controlTarget: z.string().optional(),
-        controlTitle: z.string().optional(),
-        beforeDays: z.number().optional(),
-        afterDays: z.number().optional(),
+        controlTarget: z.string().min(1).optional(),
+        controlTitle: z.string().min(1).optional(),
+        beforeDays: z.number().int().min(1).max(548).optional(),
+        afterDays: z.number().int().min(1).max(548).optional(),
         refresh: z.boolean().optional(),
       },
     },
@@ -177,7 +180,7 @@ export function registerExperimentTools(server: McpServer): void {
           refresh,
         })
         return toolSuccess(
-          `Measurement complete. Verdict: ${result.verdict}.`,
+          `Measurement ${result.dataStatus}. Verdict: ${result.verdict}. Compared ${result.window.effectiveDays}/${result.window.requestedDays} finalized days.`,
           result,
         )
       } catch (error) {

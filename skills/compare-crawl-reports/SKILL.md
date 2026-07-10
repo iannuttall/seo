@@ -1,6 +1,6 @@
 ---
 name: compare-crawl-reports
-description: Compare two saved crawl snapshots and separate real page changes from crawl-scope noise. Use when verifying a release, remediation batch, migration, or technical regression.
+description: Compare two saved crawl snapshots with explicit provenance and completeness. Use it to separate observed page changes from crawl-scope, cap, configuration, or source noise.
 ---
 
 # Compare crawl snapshots
@@ -33,6 +33,8 @@ Use explicit report ids for a release decision so "latest" cannot move between r
 
 ## Establish comparability first
 
-Before interpreting deltas, load both snapshots with `get-crawl-report`. Compare URL, site, configuration hash, page cap, filters, rendering mode, request evidence, failed fetches, warnings, and whether either crawl was partial. The diff output does not prove that its two crawl scopes match. A page absent from a capped or failed crawl is not proven removed.
+Read `comparability.status` before interpreting any delta. The accompanying flags show whether the definition ids, config hashes, sites, start URLs, modes, request scopes, and caps match. `before` and `after` preserve each report id, status, normalized `config`, explicit `requestScope`, `caps`, request-evidence status, joined data-source status, warnings, caveats, and completeness. This is enough to assess the inputs without loading two separate reports.
 
-Then inspect summary deltas and the underlying `pageChanges` and `issueChanges`. Treat health-score movement as a derived summary, not ranking evidence. Prioritize new response failures and unintended indexability flips, then verify changed titles, content, and issue groups against the affected URLs. Confirm fixes by repeating the same configuration after deployment. Report uncertain changes as "observed between snapshots" and name the scope difference instead of attributing them to the site or release.
+Next inspect top-level `completeness`. If `truncated` is true, or either input is partial or failed, read its stable reason codes and the report-level `caveats`. An absent page from a capped, skipped, failed, or differently scoped crawl is not proven removed. Source row caps also limit joined GSC or GA4 evidence even when the document crawl completed.
+
+Only then inspect `summary`, `pageChanges`, and `issueChanges`. These fields describe retained observations between the named snapshots. Health and GEO score deltas are derived summaries, not ranking or AI-visibility evidence. Prioritize newly observed response failures and unintended indexability flips, then verify titles, content, and issue groups on the affected URLs. Confirm fixes with the same definition and request scope after deployment. When comparability requires review, describe the change as observed between snapshots and name the differing scope, cap, configuration, or incomplete source instead of attributing it to the release.

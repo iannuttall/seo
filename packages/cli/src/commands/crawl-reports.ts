@@ -96,6 +96,9 @@ function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
   printKeyValue([
     ['Before', `${report.before.id} (${report.before.generatedAt})`],
     ['After', `${report.after.id} (${report.after.generatedAt})`],
+    ['Comparability', report.comparability.status],
+    ['Completeness', report.completeness.status],
+    ['Truncated', report.completeness.truncated ? 'yes' : 'no'],
     ['Headline', report.headline],
     [
       'Pages',
@@ -155,6 +158,8 @@ function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
         ]),
     )
   }
+
+  printNotes('Caveats', report.caveats)
 }
 
 function selectReportAliasMeta(

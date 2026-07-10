@@ -1,4 +1,3 @@
-import { OAuth2Client } from 'google-auth-library'
 import { SeoError } from '../../errors.js'
 import { getSeoCliPaths } from '../../paths.js'
 import { deleteTokens, readTokens, writeTokens } from '../../storage/config.js'
@@ -9,107 +8,133 @@ import {
   getClientConfig,
   missingOAuthClientMessage,
 } from './client-config.js'
+import {
+  GoogleTokenEndpointError,
+  requestGoogleAccessToken,
+} from './token-endpoint.js'
+import type { OAuthClientConfig } from './types.js'
 
-export async function createAuthorizedClient(): Promise<{
-  client: OAuth2Client
-  tokens: StoredTokens
-}> {
-  const stored = await readTokens()
-  if (!stored) {
-    throw new SeoError(
-      'AUTH_REQUIRED',
-      'Not logged in. Run `seo auth login` first.',
-    )
-  }
+const REFRESH_BUFFER_MS = 60_000
 
-  const clientConfig = getClientConfig(stored.client_source)
+export interface GoogleAccessTokenClient {
+  getAccessToken(): Promise<string>
+}
+
+function authRequired(): SeoError {
+  return new SeoError(
+    'AUTH_REQUIRED',
+    'Not logged in. Run `seo auth login` first.',
+  )
+}
+
+function authExpired(): SeoError {
+  return new SeoError(
+    'AUTH_EXPIRED',
+    'Google refresh token is no longer valid. Run `seo auth login` again.',
+  )
+}
+
+function needsRefresh(tokens: StoredTokens, now: number): boolean {
+  return !tokens.access_token || tokens.expires_at - now < REFRESH_BUFFER_MS
+}
+
+function requireClientConfig(tokens: StoredTokens): OAuthClientConfig {
+  const clientConfig = getClientConfig(tokens.client_source)
   if (!clientConfig) {
     throw new SeoError(
       'AUTH_CONFIG_REQUIRED',
-      missingOAuthClientMessage(stored.client_source),
+      missingOAuthClientMessage(tokens.client_source),
     )
   }
-
-  const client = new OAuth2Client(
-    clientConfig.clientId,
-    clientConfig.clientSecret,
-  )
-  client.setCredentials({
-    access_token: stored.access_token,
-    refresh_token: stored.refresh_token,
-    expiry_date: stored.expires_at,
-  })
-
-  client.on('tokens', async (tokens) => {
-    await withFileLock(getSeoCliPaths().tokensFile, async () => {
-      const latest = (await readTokens()) ?? stored
-      await writeTokens({
-        ...latest,
-        access_token: tokens.access_token ?? latest.access_token,
-        expires_at: tokens.expiry_date ?? latest.expires_at,
-        refresh_token: tokens.refresh_token ?? latest.refresh_token,
-      })
-    })
-  })
-
-  if (stored.expires_at - Date.now() < 60_000) {
-    await refreshAuthToken(client)
-  }
-
-  return { client, tokens: (await readTokens()) ?? stored }
+  return clientConfig
 }
 
-export async function refreshAuthToken(
-  client?: OAuth2Client,
-): Promise<StoredTokens> {
+function refreshRejected(error: unknown): boolean {
+  return (
+    (error instanceof GoogleTokenEndpointError &&
+      (error.status === 401 || error.oauthError === 'invalid_grant')) ||
+    /invalid_grant|401/.test(
+      error instanceof Error ? error.message : String(error),
+    )
+  )
+}
+
+async function refreshStoredToken(input: {
+  onlyIfExpiring: boolean
+}): Promise<StoredTokens> {
   return withFileLock(getSeoCliPaths().tokensFile, async () => {
     const current = await readTokens()
-    if (!current) {
-      throw new SeoError(
-        'AUTH_REQUIRED',
-        'Not logged in. Run `seo auth login` first.',
-      )
-    }
+    if (!current) throw authRequired()
 
-    const clientConfig = getClientConfig(current.client_source)
-    if (!clientConfig) {
-      throw new SeoError(
-        'AUTH_CONFIG_REQUIRED',
-        missingOAuthClientMessage(current.client_source),
-      )
+    const clientConfig = requireClientConfig(current)
+    const now = Date.now()
+    if (input.onlyIfExpiring && !needsRefresh(current, now)) {
+      return current
     }
-
-    const oauth =
-      client ??
-      new OAuth2Client(clientConfig.clientId, clientConfig.clientSecret)
-    oauth.setCredentials({
-      access_token: current.access_token,
-      refresh_token: current.refresh_token,
-      expiry_date: current.expires_at,
-    })
+    if (!current.refresh_token) {
+      await deleteTokens()
+      throw authExpired()
+    }
 
     try {
-      const { credentials } = await oauth.refreshAccessToken()
+      const refreshed = await requestGoogleAccessToken({
+        clientConfig,
+        refreshToken: current.refresh_token,
+      })
       const next: StoredTokens = {
         ...current,
-        access_token: credentials.access_token ?? current.access_token,
-        refresh_token: credentials.refresh_token ?? current.refresh_token,
-        expires_at: credentials.expiry_date ?? current.expires_at,
+        access_token: refreshed.accessToken,
+        refresh_token: refreshed.refreshToken ?? current.refresh_token,
+        expires_at: now + refreshed.expiresIn * 1_000,
       }
       await writeTokens(next)
       return next
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      if (/invalid_grant|401/.test(message)) {
+      if (refreshRejected(error)) {
         await deleteTokens()
-        throw new SeoError(
-          'AUTH_EXPIRED',
-          'Google refresh token is no longer valid. Run `seo auth login` again.',
-        )
+        throw authExpired()
       }
       throw error
     }
   })
+}
+
+class LocalGoogleAccessTokenClient implements GoogleAccessTokenClient {
+  constructor(private tokens: StoredTokens) {}
+
+  async getAccessToken(): Promise<string> {
+    if (needsRefresh(this.tokens, Date.now())) {
+      this.tokens = await refreshStoredToken({
+        onlyIfExpiring: true,
+      })
+    }
+    if (!this.tokens.access_token) throw authExpired()
+    return this.tokens.access_token
+  }
+}
+
+export async function createAuthorizedClient(): Promise<{
+  client: GoogleAccessTokenClient
+  tokens: StoredTokens
+}> {
+  let tokens = await readTokens()
+  if (!tokens) throw authRequired()
+
+  requireClientConfig(tokens)
+  if (needsRefresh(tokens, Date.now())) {
+    tokens = await refreshStoredToken({
+      onlyIfExpiring: true,
+    })
+  }
+
+  return {
+    client: new LocalGoogleAccessTokenClient(tokens),
+    tokens,
+  }
+}
+
+export async function refreshAuthToken(): Promise<StoredTokens> {
+  return refreshStoredToken({ onlyIfExpiring: false })
 }
 
 export async function authStatus(): Promise<{

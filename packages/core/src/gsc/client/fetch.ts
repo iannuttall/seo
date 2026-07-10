@@ -1,15 +1,16 @@
-import type { OAuth2Client } from 'google-auth-library'
 import { fetch, type RequestInit } from 'undici'
 import { SeoError } from '../../errors.js'
-import { createAuthorizedClient } from '../auth.js'
+import {
+  createAuthorizedClient,
+  type GoogleAccessTokenClient,
+} from '../auth.js'
 
 export async function authedFetch(
-  client: OAuth2Client,
+  client: GoogleAccessTokenClient,
   url: string,
   init?: RequestInit,
 ) {
-  const token = await client.getAccessToken()
-  const accessToken = typeof token === 'string' ? token : token.token
+  const accessToken = await client.getAccessToken()
   if (!accessToken) {
     throw new SeoError(
       'AUTH_EXPIRED',

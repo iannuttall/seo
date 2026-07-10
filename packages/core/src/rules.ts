@@ -580,7 +580,7 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'The page cannot earn organic search traffic while the noindex directive remains.',
     howToVerify:
-      'Re-run the crawl or URL Inspection and confirm no meta robots or X-Robots-Tag noindex remains.',
+      'Re-run the crawl or URL Inspection and confirm no effective meta robots or X-Robots-Tag noindex remains, including the equivalent none directive.',
   },
   {
     id: 'nofollow',
@@ -594,7 +594,7 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'Internal links on the page may pass weaker discovery and authority signals.',
     howToVerify:
-      'Re-run the crawl and confirm metaRobots and xRobotsTag no longer contain nofollow.',
+      'Re-run the crawl and confirm the effective meta robots and X-Robots-Tag rules no longer block following, including through the equivalent none directive.',
     agentHints: {
       evidenceFields: ['page.metaRobots', 'page.xRobotsTag'],
       suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
@@ -612,7 +612,7 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'The page remains excluded from search results while the header is present.',
     howToVerify:
-      'Re-run the crawl and confirm xRobotsTag no longer contains noindex.',
+      'Re-run the crawl and confirm the effective X-Robots-Tag rules no longer block indexing, including through the equivalent none directive.',
     agentHints: {
       evidenceFields: ['page.xRobotsTag', 'page.responseHeaders'],
       suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],

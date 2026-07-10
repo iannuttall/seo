@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto'
 import { extractPage } from '../../extract/page-extractor.js'
 import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../../robots-directives.js'
 import type { PageFetchResult } from '../../types.js'
 import type {
   CrawlPageSnapshot,
@@ -130,10 +134,6 @@ function socialProfileLinks(
   return [...profiles].slice(0, 50)
 }
 
-function hasNoIndex(value?: string): boolean {
-  return /\bnoindex\b/i.test(value ?? '')
-}
-
 function sameDocumentUrl(left?: string, right?: string): boolean {
   if (!left || !right) return false
   try {
@@ -218,7 +218,7 @@ function unextractedPage(
   contentType?: string,
 ): CrawlPageSnapshot {
   const xRobotsTag = headerValue(fetched.headers, 'x-robots-tag')
-  const noindex = hasNoIndex(xRobotsTag)
+  const noindex = hasXRobotsDirective(xRobotsTag, 'noindex')
   const knownNonHtml = Boolean(contentType)
   return {
     url: fetched.finalUrl,
@@ -259,8 +259,12 @@ function unextractedPage(
 
 function indexabilityReason(page: CrawlPageSnapshot): string | undefined {
   if (page.status < 200 || page.status >= 300) return `Status ${page.status}`
-  if (hasNoIndex(page.metaRobots)) return 'Meta robots noindex'
-  if (hasNoIndex(page.xRobotsTag)) return 'X-Robots-Tag noindex'
+  if (hasMetaRobotsDirective(page.metaRobots, 'noindex')) {
+    return 'Meta robots noindex'
+  }
+  if (hasXRobotsDirective(page.xRobotsTag, 'noindex')) {
+    return 'X-Robots-Tag noindex'
+  }
   return undefined
 }
 
@@ -415,7 +419,8 @@ export async function crawlOne(
     page.indexability = indexabilityReason(page)
     page.indexable = !page.indexability
     page.declaredIndexability =
-      hasNoIndex(page.metaRobots) || hasNoIndex(page.xRobotsTag)
+      hasMetaRobotsDirective(page.metaRobots, 'noindex') ||
+      hasXRobotsDirective(page.xRobotsTag, 'noindex')
         ? 'noindex'
         : page.robotsTxt?.allowed === false
           ? 'robots-blocked'

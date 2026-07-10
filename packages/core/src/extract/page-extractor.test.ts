@@ -154,6 +154,27 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.deepEqual(page.warnings, ['fixture warning'])
 })
 
+test('extractPage combines effective Googlebot meta directives across the document', async () => {
+  const result = fetchResult(`<!doctype html>
+      <html>
+        <head>
+          <title>Robots fixture</title>
+          <meta NAME="ROBOTS" content="index, follow">
+          <meta name="robots" content="nofollow">
+          <meta name="GoogleBot" content="NONE">
+        </head>
+        <body>
+          <meta name="robots" content="index">
+          <main><h1>Robots fixture</h1><p>Useful page content.</p></main>
+        </body>
+      </html>`)
+  result.headers = { 'Content-Type': 'text/html', 'X-Robots-Tag': 'NONE' }
+  const page = await extractPage(result, 'readability')
+
+  assert.equal(page.metaRobots, 'index, follow, nofollow, NONE, index')
+  assert.equal(page.xRobotsTag, 'NONE')
+})
+
 test('Defuddle receives the final URL and preserves its metadata and word count', async () => {
   const fetched = {
     ...fetchResult('<main><p>Original page body</p></main>'),

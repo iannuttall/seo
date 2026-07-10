@@ -203,6 +203,28 @@ test('noindex and non-self canonical remain separate observed signals', () => {
   )
 })
 
+test('none creates noindex and nofollow findings while other-bot headers do not', () => {
+  const metaIssues = auditCrawlPages([
+    page({ metaRobots: 'index, NONE', indexable: false }),
+  ])
+  assert.deepEqual(
+    metaIssues
+      .filter((issue) => ['noindex', 'nofollow'].includes(issue.ruleId))
+      .map((issue) => issue.ruleId),
+    ['noindex', 'nofollow'],
+  )
+
+  const unrelatedHeaderIssues = auditCrawlPages([
+    page({ xRobotsTag: 'otherbot: none' }),
+  ])
+  assert.equal(
+    unrelatedHeaderIssues.some((issue) =>
+      ['x_robots_noindex', 'nofollow'].includes(issue.ruleId),
+    ),
+    false,
+  )
+})
+
 test('auditCrawlPages has issue-producing coverage for every rule family', () => {
   const registryFamilies = [
     ...new Set(listRules().map((rule) => rule.category)),

@@ -49,6 +49,15 @@ seo crawl https://example.com --fail-on high --json</code></pre>
     limits, and provider errors without parsing terminal prose.
   </p>
 
+  <h2>Discover every report</h2>
+  <pre><code>seo reports list --json
+seo reports describe audit-page --json
+seo reports run audit-page --params '&#123;"url":"https://example.com"&#125;' --json</code></pre>
+  <p>
+    The generic report runner is the low-level path for agents and scripts. It
+    shares ids, schemas, and implementations with the compact MCP catalog.
+  </p>
+
   <h2>Find the rest</h2>
   <p>
     Run <code>seo help</code> for the curated path, <code>seo help all</code> for

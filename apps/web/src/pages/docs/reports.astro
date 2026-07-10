@@ -34,12 +34,15 @@ seo technical-watch --project example</code></pre>
     opportunities, crawling, monitoring, experiments, reporting, AI search
     evidence, and multi-report workflows.
   </p>
-  <p>Ask the installed package for the live catalog:</p>
-  <pre><code>seo mcp serve --test
-seo skills list</code></pre>
+  <p>Ask the installed package for the live catalog and exact input schema:</p>
+  <pre><code>seo reports list --json
+seo reports list --category crawl --json
+seo reports describe audit-page --json
+seo reports run audit-page --params '&#123;"url":"https://example.com"&#125;' --json</code></pre>
   <p>
-    Agents should call <code>seo_list_reports</code>, optionally with a category,
-    rather than treating a copied list as permanent.
+    The CLI and MCP server use one report registry. Agents using MCP should call
+    <code>seo_list_reports</code>, <code>seo_describe_report</code>, and then
+    <code>seo_run_report</code> rather than treating a copied schema as permanent.
   </p>
 
   <h2>Report accuracy</h2>

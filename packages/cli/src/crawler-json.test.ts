@@ -189,6 +189,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'lowIssues',
         'mediumIssues',
         'nonIndexablePages',
+        'pageLimitReached',
         'queuedUrls',
         'requestByStatus',
         'responseRequests',

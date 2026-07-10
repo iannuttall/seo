@@ -2,24 +2,26 @@
   <title>SEO Skills CLI, technical SEO skills for AI agents</title>
   <defs>
     <pattern id="minor-grid" width="16" height="16" patternUnits="userSpaceOnUse">
-      <path d="M16 0H0v16" fill="none" stroke="#4b4162" stroke-opacity=".035"/>
+      <path d="M16 0H0v16" fill="none" stroke="#6656c7" stroke-opacity=".045"/>
     </pattern>
     <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
       <rect width="64" height="64" fill="url(#minor-grid)"/>
-      <path d="M64 0H0v64" fill="none" stroke="#4b4162" stroke-opacity=".11"/>
+      <path d="M64 0H0v64" fill="none" stroke="#5143a6" stroke-opacity=".14"/>
     </pattern>
   </defs>
-  <rect width="1200" height="630" fill="#f4f2f8"/>
+  <rect width="1200" height="630" fill="#efecf7"/>
   <rect width="1200" height="630" fill="url(#grid)"/>
-  <rect x="68" y="48" width="1064" height="534" fill="#faf9fc" fill-opacity=".94" stroke="#81798f"/>
-  <path d="M108 88h64v16h-48v8h48v40h-64v-16h48v-8h-48z" fill="#17151d"/>
-  <path d="M108 112h16v16h-16z" fill="#6657d9"/>
-  <text x="192" y="127" fill="#17151d" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="25" letter-spacing="1">SEO_SKILLS</text>
-  <text x="108" y="286" fill="#17151d" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="70">TECHNICAL SEO SKILLS</text>
-  <text x="108" y="372" fill="#6657d9" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="70">FOR AI AGENTS.</text>
-  <rect x="108" y="424" width="820" height="86" fill="#fdfcff" stroke="#81798f"/>
-  <text x="138" y="477" fill="#6657d9" font-family="JetBrains Mono, Menlo, monospace" font-size="22">$</text>
+  <rect x="68" y="48" width="1064" height="534" fill="#f9f8fd" fill-opacity=".96" stroke="#382a98"/>
+  <rect x="68" y="48" width="1064" height="104" fill="#5b4bd0"/>
+  <path d="M108 68h64v16h-48v8h48v40h-64v-16h48v-8h-48z" fill="#fff"/>
+  <path d="M108 92h16v16h-16z" fill="#211760"/>
+  <text x="192" y="107" fill="#fff" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="25" letter-spacing="1">SEO_SKILLS</text>
+  <text x="108" y="286" fill="#181522" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="70">TECHNICAL SEO SKILLS</text>
+  <text x="108" y="372" fill="#6556df" font-family="Departure Mono, JetBrains Mono, Menlo, monospace" font-size="70">FOR AI AGENTS.</text>
+  <rect x="108" y="424" width="820" height="86" fill="#fdfcff" stroke="#4637b7"/>
+  <rect x="108" y="424" width="20" height="86" fill="#6556df"/>
+  <text x="150" y="477" fill="#6556df" font-family="JetBrains Mono, Menlo, monospace" font-size="22">$</text>
   <text x="168" y="477" fill="#17151d" font-family="JetBrains Mono, Menlo, monospace" font-size="22">npx skills add iannuttall/seo</text>
-  <text x="964" y="461" fill="#676270" font-family="JetBrains Mono, Menlo, monospace" font-size="15" letter-spacing="1">LOCAL</text>
-  <text x="964" y="489" fill="#676270" font-family="JetBrains Mono, Menlo, monospace" font-size="15" letter-spacing="1">OPEN SOURCE</text>
+  <text x="964" y="461" fill="#625d70" font-family="JetBrains Mono, Menlo, monospace" font-size="15" letter-spacing="1">LOCAL</text>
+  <text x="964" y="489" fill="#625d70" font-family="JetBrains Mono, Menlo, monospace" font-size="15" letter-spacing="1">OPEN SOURCE</text>
 </svg>

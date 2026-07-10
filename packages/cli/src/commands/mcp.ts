@@ -5,27 +5,29 @@ import { booleanArg, jsonFlag } from '../args.js'
 import { canPrompt, maybeExitCancelled, printJson } from '../utils.js'
 import {
   detectMcpClients,
-  installMcpConfig,
+  mcpClientTargets,
   type SupportedClient,
-  uninstallMcpConfig,
-} from './mcp-config.js'
+} from './mcp-clients.js'
+import { installMcpConfig, uninstallMcpConfig } from './mcp-config.js'
 
 const targetFlags: Array<{
   client: SupportedClient
-  flag: 'claude-desktop' | 'cursor' | 'claude-code'
-  label: string
+  flag: 'claude-desktop' | 'claude-code' | 'codex' | 'cursor'
 }> = [
   {
     client: 'claude-desktop',
     flag: 'claude-desktop',
-    label: 'Claude Desktop',
   },
-  { client: 'cursor', flag: 'cursor', label: 'Cursor' },
-  { client: 'claude-code', flag: 'claude-code', label: 'Claude Code' },
+  { client: 'claude-code', flag: 'claude-code' },
+  { client: 'codex', flag: 'codex' },
+  { client: 'cursor', flag: 'cursor' },
 ]
 
-function selectedClients(args: Record<string, unknown>): SupportedClient[] {
-  if (booleanArg(args.all)) return targetFlags.map(({ client }) => client)
+function selectedClients(
+  args: Record<string, unknown>,
+  available: SupportedClient[],
+): SupportedClient[] {
+  if (booleanArg(args.all)) return available
   return targetFlags
     .filter(({ flag }) => booleanArg(args[flag]))
     .map(({ client }) => client)
@@ -67,20 +69,25 @@ export const mcpCommand = defineCommand({
           default: false,
           description: 'Update Claude Desktop',
         },
-        cursor: {
-          type: 'boolean',
-          default: false,
-          description: 'Update Cursor',
-        },
         'claude-code': {
           type: 'boolean',
           default: false,
           description: 'Update Claude Code',
         },
+        codex: {
+          type: 'boolean',
+          default: false,
+          description: 'Update Codex CLI, app, and IDE extension',
+        },
+        cursor: {
+          type: 'boolean',
+          default: false,
+          description: 'Update Cursor',
+        },
         all: {
           type: 'boolean',
           default: false,
-          description: 'Update every supported MCP client',
+          description: 'Update every detected MCP client',
         },
         json: {
           type: 'boolean',
@@ -89,27 +96,30 @@ export const mcpCommand = defineCommand({
         },
       },
       run: async ({ args }) => {
-        const detected = detectMcpClients()
+        const targets = mcpClientTargets()
+        const detected = detectMcpClients({ targets })
         const json = jsonFlag(args)
-        let selected = selectedClients(args)
+        let selected = selectedClients(
+          args,
+          detected.map((target) => target.client),
+        )
 
         if (selected.length === 0) {
           if (!canPrompt({ json })) {
             throw new SeoError(
               'INVALID_INPUT',
-              'Choose an MCP client with --claude-desktop, --cursor, --claude-code, or --all.',
+              'Choose an MCP client with --claude-desktop, --claude-code, --codex, --cursor, or --all.',
             )
           }
+          const choices = detected.length > 0 ? detected : targets
           selected = maybeExitCancelled(
             await multiselect({
               message: args.uninstall
                 ? 'Remove seo from which MCP clients?'
                 : 'Install seo into which MCP clients?',
-              options: detected.map((target) => ({
+              options: choices.map((target) => ({
                 value: target.client,
-                label:
-                  targetFlags.find(({ client }) => client === target.client)
-                    ?.label ?? target.client,
+                label: target.label,
                 hint: target.path,
               })),
               initialValues: detected.map((target) => target.client),
@@ -118,7 +128,17 @@ export const mcpCommand = defineCommand({
           )
         }
 
-        const results = detected
+        const unavailable = selected.filter(
+          (client) => !targets.some((target) => target.client === client),
+        )
+        if (unavailable.length > 0) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            `MCP setup is not supported for ${unavailable.join(', ')} on ${process.platform}.`,
+          )
+        }
+
+        const results = targets
           .filter((entry) => selected.includes(entry.client))
           .map((target) =>
             booleanArg(args.uninstall)

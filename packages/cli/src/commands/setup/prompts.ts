@@ -8,7 +8,8 @@ import {
   writeOauthClient,
 } from '@seo/core'
 import { canPrompt, maybeExitCancelled } from '../../utils.js'
-import { detectMcpClients, installMcpConfig } from '../mcp-config.js'
+import { detectMcpClients } from '../mcp-clients.js'
+import { installMcpConfig } from '../mcp-config.js'
 
 export type SetupAuthStatus = 'connected' | 'already-connected' | 'skipped'
 export type SetupMcpInstall = { client: string; path: string; changed: boolean }
@@ -105,6 +106,8 @@ export async function maybeInstallMcp(
   args: Record<string, unknown>,
 ): Promise<SetupMcpInstall[]> {
   if (args['skip-mcp'] || !canPrompt({ json: args.json === true })) return []
+  const detected = detectMcpClients()
+  if (detected.length === 0) return []
   const shouldInstall = maybeExitCancelled(
     await confirm({
       message: 'Install seo as an MCP server too?',
@@ -113,13 +116,12 @@ export async function maybeInstallMcp(
   )
   if (!shouldInstall) return []
 
-  const detected = detectMcpClients()
   const selected = maybeExitCancelled(
     await multiselect({
       message: 'Which MCP clients?',
       options: detected.map((target) => ({
         value: target.client,
-        label: target.client,
+        label: target.label,
         hint: target.path,
       })),
       initialValues: detected.map((target) => target.client),

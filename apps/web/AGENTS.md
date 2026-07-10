@@ -30,6 +30,8 @@ pnpm --filter @seo/web deploy:dry-run
 - Teach the published package path first: `npx seo start` or
   `npm i -g seo`. Keep source-build instructions lower down.
 - Do not document a hosted service or remote MCP until it exists.
+- Generate `/.well-known/agent-skills/` from the root `skills/` directory.
+  Never hand-edit or commit the generated files.
 - Use plain, human copy with sentence-case headings. Avoid hype, gradients,
   decorative cards, and oversized empty hero sections.
 - Keep the site free of client-side JavaScript unless a real interaction needs

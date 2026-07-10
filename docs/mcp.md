@@ -16,16 +16,55 @@ Agents and setup scripts must choose targets explicitly:
 ```bash
 seo mcp install --claude-desktop --json
 seo mcp install --claude-code --json
+seo mcp install --codex --json
 seo mcp install --cursor --json
 seo mcp install --all --json
 ```
 
-Run or test the server directly:
+The installer preserves unrelated JSONC settings, backs up changed config files,
+and refuses to replace an unmanaged server named `seo`. Codex is installed
+through its own CLI so existing TOML comments and settings remain intact.
+
+Your client launches the stdio process when it needs SEO tools. Run or test the
+server directly only when configuring a client manually:
 
 ```bash
 seo mcp serve
 seo mcp serve --test
 ```
+
+## Client setup
+
+### Codex
+
+`seo mcp install --codex` configures Codex CLI, the desktop app, and the IDE
+extension through their shared config. The equivalent native command is:
+
+```bash
+codex mcp add seo -- npx -y seo mcp serve
+codex mcp get seo
+```
+
+### Claude Code
+
+`seo mcp install --claude-code` updates the user config. The equivalent native
+command is:
+
+```bash
+claude mcp add --scope user seo -- npx -y seo mcp serve
+claude mcp get seo
+```
+
+### Cursor
+
+`seo mcp install --cursor` updates `~/.cursor/mcp.json`. Restart Cursor, then
+open its MCP settings to check that `seo` is enabled.
+
+### Claude Desktop
+
+`seo mcp install --claude-desktop` updates the desktop config on macOS or
+Windows. Restart Claude Desktop, then check the MCP indicator in a new chat.
+Claude Code uses a separate config, so install both targets if you use both.
 
 ## Compact tool surface
 

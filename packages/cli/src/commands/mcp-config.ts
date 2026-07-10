@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import {
   constants,
   copyFileSync,
@@ -8,8 +9,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
-import { homedir } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { dirname } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { getSeoCliPaths } from '@seo/core'
 import {
@@ -19,13 +19,21 @@ import {
   parse,
   printParseErrorCode,
 } from 'jsonc-parser'
+import type {
+  ClientConfigTarget,
+  JsonClientConfigTarget,
+  NativeClientConfigTarget,
+  SupportedClient,
+} from './mcp-clients.js'
 
-export type SupportedClient = 'claude-desktop' | 'cursor' | 'claude-code'
-
-export interface ClientConfigTarget {
-  client: SupportedClient
-  path: string
+interface CommandResult {
+  status: number | null
+  stdout: string
+  stderr: string
+  error?: Error
 }
+
+type CommandRunner = (command: string, args: string[]) => CommandResult
 
 const formattingOptions = {
   insertSpaces: true,
@@ -60,7 +68,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function readConfig(target: ClientConfigTarget): {
+function readConfig(target: JsonClientConfigTarget): {
   source: string
   config: Record<string, unknown>
 } {
@@ -99,7 +107,7 @@ function managedServer(value: unknown): boolean {
 }
 
 function writeConfigEdit(input: {
-  target: ClientConfigTarget
+  target: JsonClientConfigTarget
   source: string
   value: unknown
 }): void {
@@ -113,51 +121,102 @@ function writeConfigEdit(input: {
   writeAtomic(input.target.path, next)
 }
 
-export function detectMcpClients(): ClientConfigTarget[] {
-  const home = homedir()
-  const targets: ClientConfigTarget[] = [
-    {
-      client: 'claude-desktop',
-      path:
-        process.platform === 'darwin'
-          ? resolve(
-              home,
-              'Library/Application Support/Claude/claude_desktop_config.json',
-            )
-          : resolve(home, '.config/Claude/claude_desktop_config.json'),
-    },
-    { client: 'cursor', path: resolve(home, '.cursor/mcp.json') },
-    { client: 'claude-code', path: resolve(home, '.claude.json') },
-  ]
-  return targets
-}
-
-function serverConfig(): Record<string, unknown> {
-  const paths = getSeoCliPaths()
-  if (process.platform === 'win32') {
-    return {
-      command: 'cmd',
-      args: ['/c', 'npx', '-y', 'seo', 'mcp', 'serve'],
-      env: { SEO_CONFIG_DIR: paths.configDir },
-    }
-  }
-
+function defaultCommandRunner(command: string, args: string[]): CommandResult {
+  const result = spawnSync(command, args, { encoding: 'utf8' })
   return {
-    command: 'npx',
-    args: ['-y', 'seo', 'mcp', 'serve'],
-    env: { SEO_CONFIG_DIR: paths.configDir },
+    status: result.status,
+    stdout: result.stdout ?? '',
+    stderr: result.stderr ?? '',
+    error: result.error,
   }
 }
 
-export function installMcpConfig(target: ClientConfigTarget): {
-  client: SupportedClient
-  path: string
-  changed: boolean
-} {
+function serverConfig(includeType = false): Record<string, unknown> {
+  const paths = getSeoCliPaths()
+  const config: Record<string, unknown> =
+    process.platform === 'win32'
+      ? {
+          command: 'cmd',
+          args: ['/c', 'npx', '-y', 'seo', 'mcp', 'serve'],
+          env: { SEO_CONFIG_DIR: paths.configDir },
+        }
+      : {
+          command: 'npx',
+          args: ['-y', 'seo', 'mcp', 'serve'],
+          env: { SEO_CONFIG_DIR: paths.configDir },
+        }
+  if (includeType) config.type = 'stdio'
+  return config
+}
+
+function codexManaged(output: string): boolean {
+  return (
+    /command:\s+npx\b/.test(output) &&
+    /args:\s+-y\s+seo\s+mcp\s+serve\b/.test(output)
+  )
+}
+
+function codexCommand(
+  target: NativeClientConfigTarget,
+  operation: 'install' | 'uninstall',
+  runCommand: CommandRunner,
+): { client: SupportedClient; path: string; changed: boolean } {
+  const current = runCommand(target.executable, ['mcp', 'get', 'seo'])
+  const exists = current.status === 0
+  if (exists && !codexManaged(current.stdout)) {
+    throw new Error(
+      `Cannot ${operation} SEO MCP: ${target.path} already has an unmanaged mcp_servers.seo entry.`,
+    )
+  }
+  if (operation === 'install' && exists) {
+    return { client: target.client, path: target.path, changed: false }
+  }
+  if (operation === 'uninstall' && !exists) {
+    return { client: target.client, path: target.path, changed: false }
+  }
+
+  const paths = getSeoCliPaths()
+  const args =
+    operation === 'install'
+      ? [
+          'mcp',
+          'add',
+          'seo',
+          '--env',
+          `SEO_CONFIG_DIR=${paths.configDir}`,
+          '--',
+          'npx',
+          '-y',
+          'seo',
+          'mcp',
+          'serve',
+        ]
+      : ['mcp', 'remove', 'seo']
+  const result = runCommand(target.executable, args)
+  if (result.error || result.status !== 0) {
+    const detail =
+      result.error?.message ?? result.stderr.trim() ?? 'unknown error'
+    throw new Error(`Cannot ${operation} SEO MCP for Codex: ${detail}`)
+  }
+  return { client: target.client, path: target.path, changed: true }
+}
+
+export function installMcpConfig(
+  target: ClientConfigTarget,
+  options: { runCommand?: CommandRunner } = {},
+): { client: SupportedClient; path: string; changed: boolean } {
+  if (target.kind === 'native') {
+    return codexCommand(
+      target,
+      'install',
+      options.runCommand ?? defaultCommandRunner,
+    )
+  }
+
   const { source, config } = readConfig(target)
   const servers = config.mcpServers as Record<string, unknown> | undefined
   const current = servers?.seo
-  const desired = serverConfig()
+  const desired = serverConfig(target.includeType)
   if (isDeepStrictEqual(current, desired)) {
     return { client: target.client, path: target.path, changed: false }
   }
@@ -171,11 +230,17 @@ export function installMcpConfig(target: ClientConfigTarget): {
   return { client: target.client, path: target.path, changed: true }
 }
 
-export function uninstallMcpConfig(target: ClientConfigTarget): {
-  client: SupportedClient
-  path: string
-  changed: boolean
-} {
+export function uninstallMcpConfig(
+  target: ClientConfigTarget,
+  options: { runCommand?: CommandRunner } = {},
+): { client: SupportedClient; path: string; changed: boolean } {
+  if (target.kind === 'native') {
+    return codexCommand(
+      target,
+      'uninstall',
+      options.runCommand ?? defaultCommandRunner,
+    )
+  }
   if (!existsSync(target.path)) {
     return { client: target.client, path: target.path, changed: false }
   }

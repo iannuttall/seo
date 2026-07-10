@@ -155,7 +155,17 @@ Install the local stdio MCP server into a supported client:
 seo mcp install
 ```
 
-Or run it directly:
+The prompt detects installed clients. Scripts can choose one or more explicitly:
+
+```sh
+seo mcp install --codex
+seo mcp install --claude-code
+seo mcp install --cursor
+seo mcp install --claude-desktop
+```
+
+Your client starts the server when it needs it. Run it directly only for manual
+configuration or testing:
 
 ```sh
 seo mcp serve

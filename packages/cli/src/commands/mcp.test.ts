@@ -49,7 +49,7 @@ test('mcp install requires an explicit target outside an interactive terminal', 
     assert.equal(terminalResult.stdout, '')
     assert.equal(
       terminalResult.stderr,
-      'Error: Choose an MCP client with --claude-desktop, --cursor, --claude-code, or --all.\n',
+      'Error: Choose an MCP client with --claude-desktop, --claude-code, --codex, --cursor, or --all.\n',
     )
 
     const jsonResult = await runSeo(['mcp', 'install', '--json'], {
@@ -63,7 +63,7 @@ test('mcp install requires an explicit target outside an interactive terminal', 
       error: {
         code: 'INVALID_INPUT',
         message:
-          'Choose an MCP client with --claude-desktop, --cursor, --claude-code, or --all.',
+          'Choose an MCP client with --claude-desktop, --claude-code, --codex, --cursor, or --all.',
         retryable: false,
       },
     })
@@ -92,6 +92,7 @@ test('mcp install and uninstall return clean JSON without prompting', async () =
 
     const config = JSON.parse(await readFile(configPath, 'utf8'))
     assert.deepEqual(config.mcpServers.seo, {
+      type: 'stdio',
       command: 'npx',
       args: ['-y', 'seo', 'mcp', 'serve'],
       env: { SEO_CONFIG_DIR: configDir },
@@ -135,7 +136,7 @@ test('mcp install accepts multiple explicit client flags', async () => {
     const output = JSON.parse(result.stdout)
     assert.deepEqual(
       output.results.map((entry: { client: string }) => entry.client),
-      ['cursor', 'claude-code'],
+      ['claude-code', 'cursor'],
     )
   } finally {
     await rm(home, { recursive: true, force: true })

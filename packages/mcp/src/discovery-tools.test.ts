@@ -151,6 +151,33 @@ test('list and describe return compact ordered metadata and parameter schema', a
     assert.deepEqual(inputSchema.required, ['url'])
     assert.equal((properties.url as JsonRecord).format, 'uri')
     assert.equal(inputSchema.additionalProperties, false)
+
+    const listedRules = structured(
+      await client.callTool({
+        name: 'seo_describe_report',
+        arguments: { id: 'list-rules' },
+      }),
+    )
+    const ruleReport = listedRules.report as JsonRecord
+    const ruleInputSchema = ruleReport.inputSchema as JsonRecord
+    const ruleProperties = ruleInputSchema.properties as JsonRecord
+    assert.deepEqual((ruleProperties.category as JsonRecord).enum, [
+      'canonical',
+      'content',
+      'response',
+      'headings',
+      'images',
+      'indexability',
+      'international',
+      'links',
+      'metadata',
+      'mobile',
+      'performance',
+      'security',
+      'social',
+      'structured-data',
+      'geo',
+    ])
   })
 })
 
@@ -185,14 +212,34 @@ test('run validates the selected report and returns structured errors', async ()
       /Invalid parameters for audit-page/,
     )
 
+    const invalidRuleCategory = await client.callTool({
+      name: 'seo_run_report',
+      arguments: {
+        id: 'list-rules',
+        params: { category: 'not-a-category' },
+      },
+    })
+    assert.equal(resultRecord(invalidRuleCategory).isError, true)
+    const invalidRuleError = structured(invalidRuleCategory).error as JsonRecord
+    assert.equal(invalidRuleError.code, 'INVALID_INPUT')
+    assert.match(
+      String(invalidRuleError.message),
+      /Invalid parameters for list-rules/,
+    )
+
     const success = await client.callTool({
       name: 'seo_run_report',
-      arguments: { id: 'list-rules', params: {} },
+      arguments: { id: 'list-rules', params: { category: 'metadata' } },
     })
     const successResult = resultRecord(success)
     assert.equal(successResult.isError, undefined)
     const successData = structured(success)
     assert.ok(Array.isArray(successData.rules))
+    assert.ok(
+      (successData.rules as JsonRecord[]).every(
+        (rule) => rule.category === 'metadata',
+      ),
+    )
     const content = successResult.content as Array<{
       type: string
       text?: string

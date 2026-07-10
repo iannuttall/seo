@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import { affectedUrls } from './affected-urls.js'
+import { affectedUrls, selectAffectedUrls } from './affected-urls.js'
 import { createCrawlReport } from './report.js'
 
 test('affectedUrls slices issues by rule and ranks visible pages first', () => {
@@ -43,6 +43,21 @@ test('affectedUrls slices issues by rule and ranks visible pages first', () => {
     ['https://example.com/b', 'https://example.com/a'],
   )
   assert.equal(urls[0]?.clicks, 100)
+
+  const selected = selectAffectedUrls(report, {
+    ruleId: 'missing_title',
+    limit: 1,
+  })
+  assert.deepEqual(
+    selected.affectedUrls.map((item) => item.url),
+    ['https://example.com/b'],
+  )
+  assert.deepEqual(selected.selection, {
+    totalMatchedRows: 2,
+    returnedRows: 1,
+    limit: 1,
+    truncated: true,
+  })
 })
 
 function page(

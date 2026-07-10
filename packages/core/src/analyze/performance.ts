@@ -38,8 +38,9 @@ function cacheGet(id: string, now: number): PerformanceAuditReport | undefined {
     .get(id, now) as { report_json?: string } | undefined
   if (!row?.report_json) return undefined
   try {
-    const report = JSON.parse(row.report_json) as PerformanceAuditReport
-    return report.methodology === 'performance-v2' && report.fieldDataStatus
+    const report = JSON.parse(row.report_json) as unknown
+    return isStoredPerformanceReport(report) &&
+      performanceReportIsCacheable({ report })
       ? report
       : undefined
   } catch {
@@ -144,19 +145,65 @@ function fieldHeadline(report: PerformanceAuditReport): string {
   return `CrUX ${scope} Core Web Vitals are ${field.assessment.status}; ${report.headline}`
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isStoredPerformanceReport(
+  value: unknown,
+): value is PerformanceAuditReport {
+  if (!isRecord(value)) return false
+  const cache = value.cache
+  const fieldDataStatus = value.fieldDataStatus
+  const labDataStatus = value.labDataStatus
+  return (
+    value.schemaVersion === 1 &&
+    value.methodology === 'performance-v2' &&
+    (value.dataStatus === 'complete' || value.dataStatus === 'partial') &&
+    typeof value.id === 'string' &&
+    typeof value.url === 'string' &&
+    (value.strategy === 'mobile' || value.strategy === 'desktop') &&
+    typeof value.generatedAt === 'string' &&
+    isRecord(cache) &&
+    typeof cache.ttlHours === 'number' &&
+    (value.source === 'lighthouse' || value.source === 'fetch-fallback') &&
+    typeof value.headline === 'string' &&
+    isRecord(value.metrics) &&
+    Array.isArray(value.labInsights) &&
+    isRecord(labDataStatus) &&
+    (labDataStatus.status === 'available' ||
+      labDataStatus.status === 'unavailable') &&
+    isRecord(fieldDataStatus) &&
+    [
+      'not_configured',
+      'available',
+      'unavailable_no_coverage',
+      'request_failed',
+    ].includes(String(fieldDataStatus.status)) &&
+    Array.isArray(value.topActions) &&
+    Array.isArray(value.caveats)
+  )
+}
+
 export function performanceReportIsCacheable(input: {
-  customLighthouse: boolean
-  dataStatus: PerformanceAuditReport['dataStatus']
-  fieldDataStatus: PerformanceAuditReport['fieldDataStatus']['status']
-  includeRaw: boolean
-  source: PerformanceAuditReport['source']
+  report: PerformanceAuditReport
+  customCrux?: boolean
+  customLighthouse?: boolean
+  includeRaw?: boolean
 }): boolean {
+  const { report } = input
   return (
     !input.includeRaw &&
     !input.customLighthouse &&
-    input.dataStatus === 'complete' &&
-    input.source === 'lighthouse' &&
-    input.fieldDataStatus !== 'request_failed'
+    !input.customCrux &&
+    report.dataStatus === 'complete' &&
+    report.source === 'lighthouse' &&
+    report.labDataStatus.status === 'available' &&
+    report.fieldDataStatus.status !== 'request_failed' &&
+    (report.fieldDataStatus.status !== 'available' ||
+      (report.fieldData?.status === 'available' &&
+        report.fieldData.assessment.status !== 'incomplete')) &&
+    report.raw === undefined
   )
 }
 
@@ -183,7 +230,7 @@ export async function performanceAudit(input: {
   })
   const now = input.now?.() ?? new Date()
   const bypassCache = Boolean(
-    input.refresh || input.includeRaw || input.lighthouseBin,
+    input.refresh || input.includeRaw || input.lighthouseBin || input.cruxFetch,
   )
   if (!bypassCache) {
     const cached = cacheGet(id, now.getTime())
@@ -242,11 +289,10 @@ export async function performanceAudit(input: {
     topActions: performanceActions(report),
   }
   const cacheable = performanceReportIsCacheable({
+    report,
+    customCrux: Boolean(input.cruxFetch),
     customLighthouse: Boolean(input.lighthouseBin),
-    dataStatus: report.dataStatus,
-    fieldDataStatus: report.fieldDataStatus.status,
     includeRaw: Boolean(input.includeRaw),
-    source: report.source,
   })
   if (cacheable) cacheSet(report, now.getTime())
   return report

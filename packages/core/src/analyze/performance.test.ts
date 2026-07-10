@@ -11,6 +11,7 @@ import {
   performanceAudit,
   performanceReportIsCacheable,
 } from './performance.js'
+import type { PerformanceAuditReport } from './performance-types.js'
 
 function listen(server: ReturnType<typeof createServer>): Promise<number> {
   return new Promise((resolve) => {
@@ -112,37 +113,185 @@ test('performanceAudit falls back when Lighthouse is unavailable', async () => {
 })
 
 test('performance cache excludes operational and custom results', () => {
-  const base = {
-    customLighthouse: false,
+  const report: PerformanceAuditReport = {
+    schemaVersion: 1,
+    methodology: 'performance-v2',
     dataStatus: 'complete' as const,
-    fieldDataStatus: 'available' as const,
-    includeRaw: false,
+    id: 'perf_test',
+    url: 'https://example.com/',
+    strategy: 'mobile',
+    generatedAt: '2026-07-09T00:00:00.000Z',
+    cache: { status: 'miss', ttlHours: 24 },
     source: 'lighthouse' as const,
+    score: 90,
+    grade: 'good',
+    headline: 'Complete Lighthouse evidence.',
+    metrics: {},
+    labInsights: [],
+    labDataStatus: {
+      provider: 'lighthouse',
+      status: 'available',
+      reason: 'Lighthouse completed.',
+    },
+    fieldDataStatus: {
+      provider: 'crux',
+      status: 'not_configured',
+      reason: 'Not configured.',
+      checkedUrl: 'https://example.com/',
+      checkedOrigin: 'https://example.com',
+      formFactor: 'PHONE',
+    },
+    topActions: [],
+    caveats: [],
   }
-  assert.equal(performanceReportIsCacheable(base), true)
-  assert.equal(
-    performanceReportIsCacheable({ ...base, source: 'fetch-fallback' }),
-    false,
-  )
+  assert.equal(performanceReportIsCacheable({ report }), true)
   assert.equal(
     performanceReportIsCacheable({
-      ...base,
-      fieldDataStatus: 'request_failed',
+      report: { ...report, source: 'fetch-fallback' },
     }),
     false,
   )
   assert.equal(
-    performanceReportIsCacheable({ ...base, customLighthouse: true }),
+    performanceReportIsCacheable({
+      report: {
+        ...report,
+        fieldDataStatus: {
+          ...report.fieldDataStatus,
+          status: 'request_failed',
+        },
+      },
+    }),
     false,
   )
   assert.equal(
-    performanceReportIsCacheable({ ...base, includeRaw: true }),
+    performanceReportIsCacheable({ report, customLighthouse: true }),
     false,
   )
   assert.equal(
-    performanceReportIsCacheable({ ...base, dataStatus: 'partial' }),
+    performanceReportIsCacheable({ report, customCrux: true }),
     false,
   )
+  assert.equal(
+    performanceReportIsCacheable({ report, includeRaw: true }),
+    false,
+  )
+  assert.equal(
+    performanceReportIsCacheable({
+      report: { ...report, dataStatus: 'partial' },
+    }),
+    false,
+  )
+  assert.equal(
+    performanceReportIsCacheable({
+      report: {
+        ...report,
+        labDataStatus: { ...report.labDataStatus, status: 'unavailable' },
+      },
+    }),
+    false,
+  )
+})
+
+test('performance cache rejects stale partial reports on read', async () => {
+  const server = createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' })
+    res.end('<!doctype html><title>Cache boundary</title>')
+  })
+  const port = await listen(server)
+  const url = `http://127.0.0.1:${port}/stale-partial`
+  const { bin, dir } = await fakeLighthouseBin()
+  try {
+    const seed = await performanceAudit({ url, lighthouseBin: bin })
+    const stale = {
+      ...seed,
+      dataStatus: 'partial',
+      headline: 'Stale partial cache entry.',
+    }
+    getDb()
+      .prepare(
+        `INSERT OR REPLACE INTO performance_reports
+        (id, url, strategy, report_json, created_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        seed.id,
+        url,
+        'mobile',
+        JSON.stringify(stale),
+        Date.now(),
+        Date.now() + 60_000,
+      )
+
+    const report = await performanceAudit({ url, timeoutMs: 1 })
+
+    assert.equal(report.cache.status, 'miss')
+    assert.equal(report.source, 'fetch-fallback')
+    assert.notEqual(report.headline, stale.headline)
+  } finally {
+    getDb().prepare('DELETE FROM performance_reports WHERE url = ?').run(url)
+    await rm(dir, { recursive: true, force: true })
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+  }
+})
+
+test('custom CrUX providers bypass reads and cannot replace production cache', async () => {
+  const server = createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' })
+    res.end('<!doctype html><title>Custom CrUX boundary</title>')
+  })
+  const port = await listen(server)
+  const url = `http://127.0.0.1:${port}/custom-crux`
+  const { bin, dir } = await fakeLighthouseBin()
+  try {
+    const noCoverage = async () =>
+      new Response('{}', {
+        status: 404,
+        headers: { 'content-type': 'application/json' },
+      })
+    const seed = await performanceAudit({
+      url,
+      lighthouseBin: bin,
+      cruxApiKey: 'test-key',
+      cruxFetch: noCoverage,
+    })
+    getDb()
+      .prepare(
+        `INSERT OR REPLACE INTO performance_reports
+        (id, url, strategy, report_json, created_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        seed.id,
+        url,
+        'mobile',
+        JSON.stringify(seed),
+        Date.now(),
+        Date.now() + 60_000,
+      )
+    let cruxCalls = 0
+
+    const report = await performanceAudit({
+      url,
+      cruxApiKey: 'test-key',
+      cruxFetch: async () => {
+        cruxCalls += 1
+        return noCoverage()
+      },
+      timeoutMs: 1,
+    })
+    const stored = getDb()
+      .prepare('SELECT report_json FROM performance_reports WHERE id = ?')
+      .get(seed.id) as { report_json: string }
+
+    assert.equal(report.cache.status, 'bypass')
+    assert.equal(report.id, seed.id)
+    assert.equal(cruxCalls, 2)
+    assert.equal(stored.report_json, JSON.stringify(seed))
+  } finally {
+    getDb().prepare('DELETE FROM performance_reports WHERE url = ?').run(url)
+    await rm(dir, { recursive: true, force: true })
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+  }
 })
 
 test('CrUX lookup reports no coverage after URL and origin attempts', async () => {

@@ -1,6 +1,8 @@
-import type { OAuth2Client } from 'google-auth-library'
 import { fetch, type RequestInit } from 'undici'
-import { createAuthorizedClient } from '../gsc/auth.js'
+import {
+  createAuthorizedClient,
+  type GoogleAccessTokenClient,
+} from '../gsc/auth.js'
 import { getDb, hashKey } from '../storage/database.js'
 
 export interface Ga4ReportRequest {
@@ -58,12 +60,11 @@ export function ga4RequestCanUseCache(body: Ga4ReportRequest): boolean {
 }
 
 async function authedFetch(
-  client: OAuth2Client,
+  client: GoogleAccessTokenClient,
   url: string,
   init?: RequestInit,
 ) {
-  const token = await client.getAccessToken()
-  const accessToken = typeof token === 'string' ? token : token.token
+  const accessToken = await client.getAccessToken()
   if (!accessToken) {
     throw new Error('Could not obtain Google access token.')
   }

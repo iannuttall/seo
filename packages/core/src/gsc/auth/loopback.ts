@@ -4,6 +4,7 @@ import open from 'open'
 import { writeTokens } from '../../storage/config.js'
 import type { StoredTokens } from '../../types.js'
 import { getAuthModeStatus, getClientConfig } from './client-config.js'
+import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
 import { GOOGLE_SCOPE, type OAuthClientConfig } from './types.js'
 import { decodeJwtEmail, fetchUserEmail } from './user-email.js'
 
@@ -149,7 +150,7 @@ async function exchangeCode(input: {
     code_verifier: input.verifier,
   })
 
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+  const tokenResponse = await fetch(GOOGLE_TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body,

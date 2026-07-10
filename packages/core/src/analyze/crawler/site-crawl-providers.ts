@@ -99,19 +99,22 @@ export async function joinAnalytics(input: {
     page.analytics = value
     joinedPages += 1
   }
-  const retentionKnown = Boolean(analytics.source)
+  const sourceQualityKnown = analytics.source?.dataStatus !== undefined
   const retainedRowLimitReached = analytics.source?.retainedRowLimitReached
-  const warning = !retentionKnown
+  const qualityWarnings = analytics.source?.qualityWarnings ?? []
+  const warning = !sourceQualityKnown
     ? `GA4 metrics joined for ${joinedPages} of ${input.pages.length} crawled pages, but the provider did not expose row completeness; missing page metrics are not reliable zero-traffic evidence.`
     : retainedRowLimitReached
       ? `GA4 retained-row limit reached; missing page metrics are not reliable zero-traffic evidence.`
-      : input.pages.length && joinedPages === 0
-        ? 'GA4 metrics joined for 0 crawled pages.'
-        : undefined
+      : qualityWarnings.length
+        ? `${qualityWarnings.join(' ')} Missing page metrics and relative analytics value are partial evidence.`
+        : input.pages.length && joinedPages === 0
+          ? 'GA4 metrics joined for 0 crawled pages.'
+          : undefined
   if (warning) input.warnings.push(warning)
   return {
     status:
-      !retentionKnown || retainedRowLimitReached
+      !sourceQualityKnown || analytics.source?.dataStatus === 'partial'
         ? 'partial'
         : joinedPages
           ? 'joined'

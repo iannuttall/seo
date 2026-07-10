@@ -8,20 +8,24 @@
 
 :root {
   color-scheme: light dark;
-  --background: #f4f2f8;
-  --panel: rgb(250 249 252 / 94%);
+  --background: #efecf7;
+  --panel: rgb(249 248 253 / 95%);
   --surface: #fdfcff;
-  --surface-strong: #e9e5f2;
-  --text: #17151d;
-  --muted: #676270;
-  --line: #cbc5d6;
-  --line-strong: #81798f;
-  --accent: #6657d9;
-  --accent-strong: #493bb9;
-  --accent-soft: #ded9ff;
-  --code: #17151d;
-  --code-text: #f8f6fc;
-  --focus: #7566e8;
+  --surface-strong: #e7e2f4;
+  --text: #181522;
+  --muted: #625d70;
+  --line: #c3bcd3;
+  --line-strong: #746a8d;
+  --accent: #6556df;
+  --accent-strong: #4637b7;
+  --accent-bright: #8c7fff;
+  --accent-soft: #dcd6ff;
+  --chrome: #5b4bd0;
+  --chrome-strong: #382a98;
+  --chrome-text: #fff;
+  --code: #17131f;
+  --code-text: #faf8ff;
+  --focus: #7363ee;
   --grid-image: url('/grid-light.svg');
   font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
@@ -115,13 +119,16 @@ pre,
 .header-inner {
   min-height: 70px;
   padding-inline: 24px;
+  border-color: var(--chrome-strong);
+  background: var(--chrome);
+  box-shadow: 6px 6px 0 var(--accent-soft);
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: var(--chrome-text);
   font-family: 'Departure Mono', 'JetBrains Mono Variable', monospace;
   font-size: 0.95rem;
   font-weight: 400;
@@ -137,7 +144,15 @@ pre,
 }
 
 .logo-accent {
-  fill: var(--accent);
+  fill: var(--accent-bright);
+}
+
+.site-header .logo-mark {
+  color: var(--chrome-text);
+}
+
+.site-header .logo-accent {
+  fill: #211760;
 }
 
 .visually-hidden {
@@ -161,7 +176,7 @@ pre,
 
 .site-header nav a,
 .site-footer nav a {
-  color: var(--muted);
+  color: rgb(255 255 255 / 76%);
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-decoration: none;
@@ -170,6 +185,14 @@ pre,
 
 .site-header nav a:hover,
 .site-header nav a[aria-current='page'],
+.site-footer nav a:hover {
+  color: var(--chrome-text);
+}
+
+.site-footer nav a {
+  color: var(--muted);
+}
+
 .site-footer nav a:hover {
   color: var(--text);
 }
@@ -200,6 +223,7 @@ pre,
   align-items: center;
   flex-direction: column;
   padding: 90px 40px 82px;
+  background: color-mix(in srgb, var(--accent-soft) 23%, var(--panel));
   text-align: center;
 }
 
@@ -207,6 +231,11 @@ pre,
   width: 68px;
   height: 68px;
   margin-bottom: 42px;
+  color: var(--accent-strong);
+}
+
+.home-hero > .logo-mark .logo-accent {
+  fill: var(--accent-bright);
 }
 
 .home-hero h1 {
@@ -248,9 +277,9 @@ pre,
   align-items: center;
   min-height: 44px;
   padding: 9px 17px;
-  border: 1px solid var(--text);
-  background: var(--text);
-  color: var(--surface);
+  border: 1px solid var(--accent-strong);
+  background: var(--accent);
+  color: #fff;
   font-weight: 680;
   text-decoration: none;
 }
@@ -274,22 +303,24 @@ pre,
 .install-picker {
   width: min(860px, 100%);
   margin-top: 42px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--accent-strong);
   background: var(--surface);
+  box-shadow: 8px 8px 0 var(--accent-soft);
   text-align: left;
 }
 
 .install-tabs {
   display: flex;
   overflow-x: auto;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--accent-strong);
+  background: var(--accent-soft);
 }
 
 .install-tabs button {
   min-height: 46px;
   padding: 0 20px;
   border: 0;
-  border-right: 1px solid var(--line);
+  border-right: 1px solid color-mix(in srgb, var(--accent-strong) 42%, transparent);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -300,8 +331,9 @@ pre,
 }
 
 .install-tabs button[aria-selected='true'] {
-  box-shadow: inset 0 -3px var(--accent);
-  color: var(--text);
+  background: var(--accent);
+  box-shadow: none;
+  color: #fff;
 }
 
 .install-command {
@@ -320,7 +352,7 @@ pre,
 }
 
 .install-command:hover {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent-soft) 64%, var(--surface));
 }
 
 .install-command code {
@@ -556,7 +588,7 @@ pre,
   display: flex;
   align-items: center;
   flex-direction: column;
-  background: var(--accent);
+  background: var(--chrome);
   color: #fff;
   text-align: center;
 }
@@ -766,20 +798,24 @@ pre,
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e0c13;
-    --panel: rgb(19 16 25 / 94%);
-    --surface: #191620;
-    --surface-strong: #282332;
-    --text: #f5f2fa;
-    --muted: #aaa3b4;
-    --line: #393240;
-    --line-strong: #746b80;
-    --accent: #9184ff;
-    --accent-strong: #b4aaff;
-    --accent-soft: #2d2750;
-    --code: #09080c;
-    --code-text: #f6f3fa;
-    --focus: #9184ff;
+    --background: #0b0814;
+    --panel: rgb(16 12 27 / 95%);
+    --surface: #181329;
+    --surface-strong: #241c3d;
+    --text: #f6f2ff;
+    --muted: #aaa2bd;
+    --line: #372e50;
+    --line-strong: #71659b;
+    --accent: #8070f4;
+    --accent-strong: #b7aeff;
+    --accent-bright: #9f94ff;
+    --accent-soft: #2d2557;
+    --chrome: #4938ad;
+    --chrome-strong: #8b7df2;
+    --chrome-text: #fff;
+    --code: #08060d;
+    --code-text: #f8f4ff;
+    --focus: #9689ff;
     --grid-image: url('/grid-dark.svg');
   }
 }

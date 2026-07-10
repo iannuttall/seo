@@ -27,11 +27,18 @@ function compactCrawlResult(
   report: Awaited<ReturnType<typeof crawlSite>>,
   opts: { includePages?: boolean; includeIssues?: boolean } = {},
 ) {
+  const requestHeadline =
+    report.requestEvidenceStatus === 'available'
+      ? `Processed ${report.requests.length} URL requests into ${report.summary.totalPages} unique documents.`
+      : report.requestEvidenceStatus === 'partial'
+        ? `Observed ${report.requests.length} URL requests and retained ${report.summary.totalPages} unique documents; some started requests were still in flight when the crawl stopped.`
+        : `Loaded ${report.summary.totalPages} unique documents; request evidence is unavailable for this legacy report.`
   const payload: Record<string, unknown> = {
     id: report.id,
     definitionId: report.definitionId,
-    headline: `Crawled ${report.summary.totalPages} pages. Found ${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, and ${report.summary.lowIssues} low issues.`,
+    headline: `${requestHeadline} Found ${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, and ${report.summary.lowIssues} low issues.`,
     status: report.status,
+    requestEvidenceStatus: report.requestEvidenceStatus,
     configHash: report.configHash,
     summary: report.summary,
     topFixes: topFixes(report, { limit: 10 }),
@@ -39,7 +46,10 @@ function compactCrawlResult(
     caveats: report.caveats,
   }
   if (opts.includeIssues) payload.issues = report.issues
-  if (opts.includePages) payload.pages = report.pages
+  if (opts.includePages) {
+    payload.requests = report.requests
+    payload.pages = report.pages
+  }
   return payload
 }
 

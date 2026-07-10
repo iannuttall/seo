@@ -1,7 +1,7 @@
 import { getDb } from '../../storage/database.js'
 import { type CrawlReport, normalizeLoadedCrawlReport } from './report.js'
 
-export const CRAWL_REPORT_STORAGE_VERSION = 2
+export const CRAWL_REPORT_STORAGE_VERSION = 3
 
 export type CrawlReportMeta = {
   id: string

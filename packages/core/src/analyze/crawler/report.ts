@@ -1,8 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
-import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import { auditCrawlPages } from './audit.js'
+import type {
+  CrawlPageSnapshot,
+  CrawlRequestObservation,
+} from '../monitoring/types.js'
+import { auditCrawlPages, auditCrawlRequests } from './audit.js'
+import { isAuditableHtmlPage } from './page-eligibility.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 
@@ -149,8 +153,17 @@ export type CrawlReportSummary = {
   skippedUrls: number
   failedUrls: number
   verifiedLinks: number
+  attemptedRequests: number
+  responseRequests: number
+  failedRequests: number
+  abortedRequests: number
+  extractionFailures: number
+  requestByStatus: Record<string, number>
+  avgRequestMs?: number
   healthScore: number
+  technicalScorePages: number
   geoReadinessScore: number
+  geoScorePages: number
   highIssues: number
   mediumIssues: number
   lowIssues: number
@@ -170,6 +183,8 @@ export type CrawlReport = {
   configHash: string
   config: CrawlConfig
   summary: CrawlReportSummary
+  requestEvidenceStatus: 'available' | 'partial' | 'unavailable'
+  requests: CrawlRequestObservation[]
   pages: CrawlPageSnapshot[]
   issues: CrawlIssue[]
   issueGroups: CrawlIssueGroup[]
@@ -352,12 +367,43 @@ function sanitizeMessages(values: string[] = []): string[] {
   return values.map((value) => sanitizeTenantString(value))
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
+function sortPages(pages: CrawlPageSnapshot[]): CrawlPageSnapshot[] {
+  return [...pages].sort((left, right) => compareText(left.url, right.url))
+}
+
+function sortRequests(
+  requests: CrawlRequestObservation[],
+): CrawlRequestObservation[] {
+  return [...requests].sort((left, right) => {
+    const byUrl = compareText(left.requestedUrl, right.requestedUrl)
+    if (byUrl) return byUrl
+    const byOutcome = compareText(left.outcome, right.outcome)
+    if (byOutcome) return byOutcome
+    const leftDetail =
+      left.outcome === 'response'
+        ? `${left.status}:${left.finalUrl}`
+        : `${left.failureKind}:${left.error}`
+    const rightDetail =
+      right.outcome === 'response'
+        ? `${right.status}:${right.finalUrl}`
+        : `${right.failureKind}:${right.error}`
+    return compareText(leftDetail, rightDetail)
+  })
+}
+
 export function summarizeCrawlReport(input: {
   pages: CrawlPageSnapshot[]
+  requests?: CrawlRequestObservation[]
+  requestEvidenceStatus?: CrawlReport['requestEvidenceStatus']
   issues: CrawlIssue[]
   stats?: Partial<CrawlRunStats>
 }): CrawlReportSummary {
   const byStatus: Record<string, number> = {}
+  const requestByStatus: Record<string, number> = {}
   const byCategory: Record<string, number> = {}
   let responseMs = 0
   let responseCount = 0
@@ -369,6 +415,30 @@ export function summarizeCrawlReport(input: {
       responseCount += 1
     }
   }
+  const requests = input.requests ?? []
+  const failedRequests = requests.filter(
+    (request) =>
+      request.outcome === 'failure' && request.failureKind !== 'aborted',
+  )
+  const abortedRequests = requests.filter(
+    (request) =>
+      request.outcome === 'failure' && request.failureKind === 'aborted',
+  )
+  let requestMs = 0
+  let requestMsCount = 0
+  for (const request of requests) {
+    const status =
+      request.outcome === 'response'
+        ? String(request.status)
+        : request.failureKind === 'aborted'
+          ? 'aborted'
+          : 'no-response'
+    requestByStatus[status] = (requestByStatus[status] ?? 0) + 1
+    if (typeof request.durationMs === 'number') {
+      requestMs += request.durationMs
+      requestMsCount += 1
+    }
+  }
   for (const issue of input.issues) {
     byCategory[issue.category] = (byCategory[issue.category] ?? 0) + 1
   }
@@ -377,10 +447,32 @@ export function summarizeCrawlReport(input: {
     totalPages: input.pages.length,
     indexablePages: input.pages.filter((page) => page.indexable).length,
     nonIndexablePages: input.pages.filter((page) => !page.indexable).length,
-    statusErrors: input.pages.filter((page) => page.status >= 400).length,
+    statusErrors: input.pages.filter(
+      (page) => page.status === 0 || page.status >= 400,
+    ).length,
     ...crawlRunStats(input.pages, input.stats),
+    attemptedRequests:
+      input.requestEvidenceStatus === 'unavailable' ? 0 : requests.length,
+    responseRequests: requests.filter(
+      (request) => request.outcome === 'response',
+    ).length,
+    failedRequests: failedRequests.length,
+    abortedRequests: abortedRequests.length,
+    extractionFailures: requests.filter(
+      (request) =>
+        request.outcome === 'response' && request.extraction === 'failed',
+    ).length,
+    requestByStatus,
+    avgRequestMs: requestMsCount
+      ? Math.round(requestMs / requestMsCount)
+      : undefined,
     healthScore: averageScore(input.pages.map((page) => page.seoScore)),
+    technicalScorePages: input.pages.filter(
+      (page) => page.seoScore !== undefined,
+    ).length,
     geoReadinessScore: averageScore(input.pages.map((page) => page.geoScore)),
+    geoScorePages: input.pages.filter((page) => page.geoScore !== undefined)
+      .length,
     highIssues: input.issues.filter((issue) => issue.severity === 'high')
       .length,
     mediumIssues: input.issues.filter((issue) => issue.severity === 'medium')
@@ -413,7 +505,8 @@ function crawlRunStats(
     crawledUrls: stats.crawledUrls ?? pages.length,
     skippedUrls: stats.skippedUrls ?? 0,
     failedUrls:
-      stats.failedUrls ?? pages.filter((page) => page.status >= 400).length,
+      stats.failedUrls ??
+      pages.filter((page) => page.status === 0 || page.status >= 400).length,
     verifiedLinks: stats.verifiedLinks ?? verifiedLinks,
   }
 }
@@ -432,16 +525,24 @@ function severityPenalty(issue: CrawlIssue): number {
   return 5
 }
 
-function pageSeoScore(page: CrawlPageSnapshot, issues: CrawlIssue[]): number {
-  if (page.status >= 500) return 0
+function pageSeoScore(
+  page: CrawlPageSnapshot,
+  issues: CrawlIssue[],
+): number | undefined {
+  if (page.status === 0 || page.status >= 500) return 0
   if (page.status >= 400) return 10
+  if (!isAuditableHtmlPage(page)) return undefined
   const penalty = issues
     .filter((issue) => issue.category !== 'geo')
     .reduce((sum, issue) => sum + severityPenalty(issue), 0)
   return Math.max(0, Math.min(100, 100 - penalty))
 }
 
-function pageGeoScore(page: CrawlPageSnapshot, issues: CrawlIssue[]): number {
+function pageGeoScore(
+  page: CrawlPageSnapshot,
+  issues: CrawlIssue[],
+): number | undefined {
+  if (!isAuditableHtmlPage(page)) return undefined
   const geo = page.geo
   let score = 100
   if (!geo?.semanticHtml) score -= 15
@@ -459,6 +560,7 @@ function pageGeoScore(page: CrawlPageSnapshot, issues: CrawlIssue[]): number {
 function scorePages(
   pages: CrawlPageSnapshot[],
   issues: CrawlIssue[],
+  opts: { preserveUnknownEligibilityScores?: boolean } = {},
 ): CrawlPageSnapshot[] {
   const issuesByUrl = new Map<string, CrawlIssue[]>()
   for (const issue of issues) {
@@ -466,10 +568,16 @@ function scorePages(
   }
   return pages.map((page) => {
     const pageIssues = issuesByUrl.get(page.url) ?? []
+    const preserveStoredScores =
+      opts.preserveUnknownEligibilityScores && !page.contentType
     return {
       ...page,
-      seoScore: pageSeoScore(page, pageIssues),
-      geoScore: pageGeoScore(page, pageIssues),
+      seoScore: preserveStoredScores
+        ? page.seoScore
+        : pageSeoScore(page, pageIssues),
+      geoScore: preserveStoredScores
+        ? page.geoScore
+        : pageGeoScore(page, pageIssues),
     }
   })
 }
@@ -546,6 +654,8 @@ export function createCrawlReport(input: {
   id?: string
   config: CrawlConfigInput
   pages?: CrawlPageSnapshot[]
+  requests?: CrawlRequestObservation[]
+  requestEvidenceStatus?: CrawlReport['requestEvidenceStatus']
   issues?: CrawlIssue[]
   linkGraph?: CrawlLinkGraph
   ai?: CrawlAiSignals
@@ -568,10 +678,22 @@ export function createCrawlReport(input: {
     input.pages ?? [],
     input.linkGraph,
   )
-  const safePagesWithLinks = sanitizePages(pagesWithLinks)
-  const issues =
-    input.issues ??
-    auditCrawlPages(safePagesWithLinks, { startUrl: config.url })
+  const safePagesWithLinks = sortPages(sanitizePages(pagesWithLinks))
+  const requests = sortRequests(
+    sanitizeTenantValue(input.requests ?? []) as CrawlRequestObservation[],
+  )
+  const requestEvidenceStatus =
+    input.requestEvidenceStatus ??
+    (input.requests ? 'available' : 'unavailable')
+  if (requestEvidenceStatus === 'unavailable' && requests.length > 0) {
+    throw new Error(
+      'Unavailable request evidence cannot include request observations.',
+    )
+  }
+  const issues = input.issues ?? [
+    ...auditCrawlRequests(requests),
+    ...auditCrawlPages(safePagesWithLinks, { startUrl: config.url }),
+  ]
   const safeIssues = sanitizeIssues(issues)
   const pages = scorePages(safePagesWithLinks, safeIssues)
   return {
@@ -586,28 +708,42 @@ export function createCrawlReport(input: {
     config,
     summary: summarizeCrawlReport({
       pages,
+      requests,
+      requestEvidenceStatus,
       issues: safeIssues,
       stats: input.stats,
     }),
+    requestEvidenceStatus,
+    requests,
     pages,
     issues: safeIssues,
     issueGroups: groupCrawlIssues(safeIssues),
     ...(input.ai
       ? { ai: sanitizeTenantValue(input.ai) as CrawlAiSignals }
       : {}),
-    warnings: sanitizeMessages(input.warnings),
-    caveats: sanitizeMessages(input.caveats),
+    warnings: sanitizeMessages(input.warnings).sort(compareText),
+    caveats: sanitizeMessages(input.caveats).sort(compareText),
   }
 }
 
 export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
+  const requestEvidenceStatus =
+    report.requestEvidenceStatus ??
+    (Object.hasOwn(report as object, 'requests') ? 'available' : 'unavailable')
   const issues = sanitizeIssues(report.issues ?? [])
+  const requests = sortRequests(
+    (sanitizeTenantValue(report.requests ?? []) ??
+      []) as CrawlRequestObservation[],
+  )
   const pages = scorePages(
-    sanitizePages(deriveInternalLinkAuthority(report.pages ?? [])),
+    sortPages(sanitizePages(deriveInternalLinkAuthority(report.pages ?? []))),
     issues,
+    { preserveUnknownEligibilityScores: true },
   )
   return {
     ...(sanitizeTenantValue(report) as CrawlReport),
+    requestEvidenceStatus,
+    requests,
     definitionId:
       report.definitionId ??
       crawlDefinitionId({
@@ -615,11 +751,17 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
         site: report.site,
         ga4PropertyId: report.ga4PropertyId,
       }),
-    summary: summarizeCrawlReport({ pages, issues, stats: report.summary }),
+    summary: summarizeCrawlReport({
+      pages,
+      requests,
+      requestEvidenceStatus,
+      issues,
+      stats: report.summary,
+    }),
     pages,
     issues,
     issueGroups: groupCrawlIssues(issues),
-    warnings: sanitizeMessages(report.warnings),
-    caveats: sanitizeMessages(report.caveats),
+    warnings: sanitizeMessages(report.warnings).sort(compareText),
+    caveats: sanitizeMessages(report.caveats).sort(compareText),
   }
 }

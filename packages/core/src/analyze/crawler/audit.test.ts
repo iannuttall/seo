@@ -2,17 +2,18 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { listRules } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import { auditCrawlPages } from './audit.js'
+import { auditCrawlPages, auditCrawlRequests } from './audit.js'
 
 function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
+  const url = input.url ?? 'https://example.com/page'
+  const finalUrl = input.finalUrl ?? url
+  const canonical = 'canonical' in input ? input.canonical : finalUrl
   return {
-    url: 'https://example.com/page',
-    finalUrl: 'https://example.com/page',
     status: 200,
+    contentType: 'text/html',
     title: 'A useful page title for search teams',
     metaDescription:
       'A useful page description that explains the page value for search teams.',
-    canonical: 'https://example.com/page',
     h1: 'Useful page',
     h1Count: 1,
     h2Count: 2,
@@ -43,8 +44,164 @@ function page(input: Partial<CrawlPageSnapshot> = {}): CrawlPageSnapshot {
       answerable: true,
     },
     ...input,
+    url,
+    finalUrl,
+    canonical,
   }
 }
+
+test('auditCrawlRequests preserves failures and redirect request identity', () => {
+  const issues = auditCrawlRequests([
+    {
+      requestedUrl: 'https://missing.example/',
+      outcome: 'failure',
+      durationMs: 250,
+      failureKind: 'dns',
+      error: 'getaddrinfo ENOTFOUND missing.example',
+      extraction: 'not-applicable',
+    },
+    {
+      requestedUrl: 'https://example.com/old',
+      outcome: 'response',
+      finalUrl: 'https://example.com/new',
+      status: 200,
+      redirectChain: [
+        {
+          url: 'https://example.com/old',
+          status: 301,
+          location: 'https://example.com/new',
+        },
+      ],
+      extraction: 'complete',
+    },
+    {
+      requestedUrl: 'https://example.com/missing',
+      outcome: 'response',
+      finalUrl: 'https://example.com/missing',
+      status: 404,
+      extraction: 'complete',
+    },
+    {
+      requestedUrl: 'https://example.com/error',
+      outcome: 'response',
+      finalUrl: 'https://example.com/error',
+      status: 500,
+      extraction: 'complete',
+    },
+    {
+      requestedUrl: 'https://example.com/cancelled',
+      outcome: 'failure',
+      failureKind: 'aborted',
+      error: 'The operation was aborted.',
+      extraction: 'not-applicable',
+    },
+  ])
+
+  assert.deepEqual(
+    issues.map((issue) => [issue.ruleId, issue.url]),
+    [
+      ['connection_error', 'https://missing.example/'],
+      ['redirected_url', 'https://example.com/old'],
+    ],
+  )
+  assert.equal(issues[0]?.evidence?.failureKind, 'dns')
+  assert.equal(issues[1]?.evidence?.status, 301)
+  assert.equal(issues[1]?.evidence?.finalStatus, 200)
+})
+
+test('non-HTML responses skip HTML-only findings', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/api',
+      finalUrl: 'https://example.com/api',
+      contentType: 'application/json',
+      title: undefined,
+      metaDescription: undefined,
+      canonical: undefined,
+      h1: undefined,
+      h1Count: 0,
+      wordCount: 0,
+      hasViewport: false,
+      lang: undefined,
+      schemaTypes: [],
+      openGraphTitle: undefined,
+      openGraphDescription: undefined,
+      openGraphImage: undefined,
+      twitterCard: undefined,
+      xRobotsTag: 'noindex',
+      indexable: false,
+      indexability: 'X-Robots-Tag noindex',
+      declaredIndexability: 'not-html',
+      extractionStatus: 'not-applicable',
+    }),
+  ])
+
+  assert.deepEqual(
+    issues.map((issue) => issue.ruleId),
+    ['x_robots_noindex'],
+  )
+})
+
+test('unknown response media types do not invent HTML findings', () => {
+  const issues = auditCrawlPages([
+    page({
+      contentType: undefined,
+      canonical: undefined,
+      title: undefined,
+      metaDescription: undefined,
+      h1: undefined,
+      h1Count: 0,
+      indexable: false,
+      wordCount: 0,
+      extractionStatus: 'not-applicable',
+    }),
+  ])
+
+  assert.deepEqual(issues, [])
+})
+
+test('redirect aliases are not audited as destination documents', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/old',
+      finalUrl: 'https://example.com/new',
+      title: undefined,
+      metaDescription: undefined,
+      canonical: undefined,
+      h1: undefined,
+      h1Count: 0,
+      wordCount: 0,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues.map((issue) => issue.ruleId),
+    ['redirected_url'],
+  )
+})
+
+test('noindex and non-self canonical remain separate observed signals', () => {
+  const issues = auditCrawlPages([
+    page({
+      canonical: 'https://example.com/preferred',
+      metaRobots: 'noindex',
+      indexable: false,
+      indexability: 'Meta robots noindex',
+      declaredIndexability: 'noindex',
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) =>
+        ['noindex', 'canonicalized_page', 'canonical_mismatch'].includes(
+          issue.ruleId,
+        ),
+      )
+      .map((issue) => issue.ruleId),
+    ['noindex', 'canonical_mismatch'],
+  )
+})
 
 test('auditCrawlPages has issue-producing coverage for every rule family', () => {
   const registryFamilies = [

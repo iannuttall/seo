@@ -80,7 +80,10 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
 
   const pretty = renderCrawlPretty(report)
   assert.match(pretty, /Crawl report for https:\/\/example.com\//)
-  assert.match(pretty, /Pages: 1 crawled, 1 discovered, 0 skipped/)
+  assert.match(
+    pretty,
+    /Documents: 1 retained; request evidence unavailable for this legacy report, 1 URLs discovered, 0 failed, 0 skipped/,
+  )
   assert.match(pretty, /Scores: /)
   assert.match(pretty, /Next commands/)
   assert.match(pretty, /- seo crawl https:\/\/example.com\/ --json/)

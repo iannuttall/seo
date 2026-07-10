@@ -117,6 +117,8 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'issueGroups',
         'issues',
         'pages',
+        'requestEvidenceStatus',
+        'requests',
         'status',
         'summary',
         'topFixes',
@@ -141,13 +143,19 @@ test('crawler CLI JSON output schema stays stable', async () => {
       ],
       fetchRate: ['concurrency'],
       summary: [
+        'abortedRequests',
+        'attemptedRequests',
+        'avgRequestMs',
         'avgResponseMs',
         'byCategory',
         'byStatus',
         'crawledUrls',
         'discoveredUrls',
+        'extractionFailures',
+        'failedRequests',
         'failedUrls',
         'geoReadinessScore',
+        'geoScorePages',
         'healthScore',
         'highIssues',
         'indexablePages',
@@ -155,8 +163,11 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'mediumIssues',
         'nonIndexablePages',
         'queuedUrls',
+        'requestByStatus',
+        'responseRequests',
         'skippedUrls',
         'statusErrors',
+        'technicalScorePages',
         'totalPages',
         'verifiedLinks',
       ],
@@ -197,6 +208,48 @@ test('crawler CLI JSON output schema stays stable', async () => {
       ],
       topFixVerification: ['command', 'expected'],
     })
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawler CLI exits unsuccessfully when no document can be fetched', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/broken') {
+      res.destroy()
+      return
+    }
+    res.statusCode = 404
+    res.setHeader('content-type', 'text/plain')
+    res.end('missing')
+  })
+
+  try {
+    let failure: unknown
+    try {
+      await runSeo([
+        'crawl',
+        `${fixture.baseUrl}/broken`,
+        '--max-pages',
+        '1',
+        '--no-sitemap',
+        '--no-external',
+        '--json',
+      ])
+    } catch (error) {
+      failure = error
+    }
+
+    const result = failure as { code?: number; stdout?: string }
+    assert.equal(result.code, 1)
+    const payload = JSON.parse(result.stdout ?? '') as JsonRecord
+    assert.equal(payload.status, 'failed')
+    assert.equal((payload.pages as unknown[]).length, 0)
   } finally {
     await fixture.close()
   }

@@ -102,6 +102,7 @@ test('crawl report store recomputes derived fields on load', () => {
     url: `https://${site.slice('sc-domain:'.length)}/`,
     finalUrl: `https://${site.slice('sc-domain:'.length)}/`,
     status: 200,
+    contentType: 'text/html',
     indexable: true,
     wordCount: 120,
     contentHash: 'legacy',
@@ -136,6 +137,8 @@ test('crawl report store recomputes derived fields on load', () => {
   delete legacySummary.healthScore
   delete legacySummary.geoReadinessScore
   delete legacyJson.definitionId
+  delete legacyJson.requests
+  delete legacyJson.requestEvidenceStatus
   legacyJson.issueGroups = []
 
   getDb()
@@ -148,6 +151,8 @@ test('crawl report store recomputes derived fields on load', () => {
   assert.equal(loaded?.summary.geoReadinessScore, 15)
   assert.equal(loaded?.pages[0]?.seoScore, 70)
   assert.equal(loaded?.pages[0]?.geoScore, 15)
+  assert.equal(loaded?.requestEvidenceStatus, 'unavailable')
+  assert.equal(loaded?.summary.attemptedRequests, 0)
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
   assert.equal(loaded?.definitionId, report.definitionId)
 })

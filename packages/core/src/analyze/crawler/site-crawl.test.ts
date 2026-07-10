@@ -238,15 +238,15 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
 
     assert.deepEqual(
       report.pages.map((page) => new URL(page.url).pathname),
-      ['/sitemap-only', '/blocked'],
+      ['/blocked', '/sitemap-only'],
     )
     assert.equal(report.summary.discoveredUrls, 2)
     assert.equal(report.summary.queuedUrls, 2)
     assert.equal(report.summary.crawledUrls, 2)
     assert.equal(report.summary.skippedUrls, 1)
     assert.equal(report.summary.failedUrls, 0)
-    assert.equal(report.pages[1]?.blocked, true)
-    assert.equal(report.pages[1]?.indexability, 'Robots.txt disallowed')
+    assert.equal(report.pages[0]?.blocked, true)
+    assert.equal(report.pages[0]?.indexability, 'Robots.txt disallowed')
     assert.equal(
       report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
       true,
@@ -258,59 +258,46 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
   }
 })
 
-test('crawlSite reports redirected URLs with final target evidence', async () => {
-  const fixture = await withServer((req, res) => {
-    if (req.url === '/robots.txt') {
-      res.setHeader('content-type', 'text/plain')
-      res.end('User-agent: *\nAllow: /\n')
-      return
-    }
-    if (req.url === '/old') {
-      res.statusCode = 301
-      res.setHeader('location', '/new')
-      res.setHeader('set-cookie', 'session=secret')
-      res.end()
-      return
-    }
-    res.setHeader('strict-transport-security', 'max-age=31536000')
-    res.setHeader('x-test-header', 'visible')
-    res.setHeader('content-type', 'text/html')
-    res.end(
-      `<title>New</title><link rel="canonical" href="/new"><link rel="alternate" hreflang="en" href="/new"><h1>New</h1>`,
-    )
-  })
-
-  try {
-    const report = await crawlSite({
-      url: `${fixture.baseUrl}/old`,
+test('crawlSite audits fetched HTML when robots enforcement is disabled', async () => {
+  const url = 'https://example.com/blocked'
+  const report = await crawlSite(
+    {
+      url,
       mode: 'page',
       useSitemap: false,
+      respectRobots: false,
       maxPages: 1,
-      concurrency: 1,
-    })
+    },
+    {
+      fetch: async () =>
+        new Response('not found', {
+          status: 404,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async () => ({
+        urls: [],
+        page: crawlPageSnapshot(url, {
+          blocked: true,
+          robotsTxt: {
+            url: 'https://example.com/robots.txt',
+            allowed: false,
+            matchedLine: 'Disallow: /blocked',
+          },
+          title: undefined,
+        }),
+      }),
+    },
+  )
 
-    const issue = report.issues.find((item) => item.ruleId === 'redirected_url')
-
-    assert.equal(report.pages[0]?.finalUrl, `${fixture.baseUrl}/new`)
-    assert.equal(report.pages[0]?.canonicalRaw, '/new')
-    assert.deepEqual(report.pages[0]?.fetchDiagnostics?.redirectChain, [
-      {
-        url: `${fixture.baseUrl}/old`,
-        status: 301,
-        location: `${fixture.baseUrl}/new`,
-      },
-    ])
-    assert.equal(report.pages[0]?.responseHeaders?.['x-test-header'], 'visible')
-    assert.equal(report.pages[0]?.responseHeaders?.['set-cookie'], undefined)
-    assert.equal(report.pages[0]?.hasHsts, true)
-    assert.equal(report.pages[0]?.isHttps, false)
-    assert.deepEqual(report.pages[0]?.hreflang, [
-      { hreflang: 'en', href: `${fixture.baseUrl}/new` },
-    ])
-    assert.equal(issue?.evidence?.finalUrl, `${fixture.baseUrl}/new`)
-  } finally {
-    await fixture.close()
-  }
+  assert.equal(report.pages[0]?.contentAuditAllowed, true)
+  assert.equal(
+    report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
+    true,
+  )
+  assert.equal(
+    report.issues.some((issue) => issue.ruleId === 'missing_title'),
+    true,
+  )
 })
 
 test('crawlSite captures content types and reports broken internal links', async () => {
@@ -499,6 +486,8 @@ test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async 
   )
 
   assert.equal(report.status, 'partial')
+  assert.equal(report.requestEvidenceStatus, 'available')
+  assert.equal(report.summary.attemptedRequests, 3)
   assert.equal(report.summary.totalPages, 3)
   assert.equal(report.summary.crawledUrls, 3)
   assert.equal(report.summary.queuedUrls, 15)
@@ -582,6 +571,8 @@ test('crawlSite keeps large-site cancellation bounded', async () => {
 
   assert.equal(report.status, 'partial')
   assert.equal(report.summary.totalPages, 1)
+  assert.equal(report.requestEvidenceStatus, 'partial')
+  assert.equal(report.summary.attemptedRequests, 1)
   assert.equal(report.summary.queuedUrls, 101)
   assert.equal(report.summary.skippedUrls, 0)
   assert.equal(maxActiveFetches <= 4, true)
@@ -896,6 +887,7 @@ test('crawlSite returns a partial report when cancelled before work starts', asy
   assert.equal(fetchPageCalls, 0)
   assert.equal(report.status, 'partial')
   assert.equal(report.summary.totalPages, 0)
+  assert.equal(report.requestEvidenceStatus, 'available')
   assert.match(report.warnings.join('\n'), /cancelled/)
   assert.match(report.caveats.join('\n'), /cancelled/)
 })
@@ -987,6 +979,7 @@ test('crawlSite returns completed pages and skips joins after cancellation', asy
   assert.equal(calls.analytics, 0)
   assert.equal(report.status, 'partial')
   assert.equal(report.summary.totalPages, 1)
+  assert.equal(report.requestEvidenceStatus, 'partial')
   assert.match(report.warnings.join('\n'), /cancelled/)
   assert.match(report.caveats.join('\n'), /cancelled/)
 })

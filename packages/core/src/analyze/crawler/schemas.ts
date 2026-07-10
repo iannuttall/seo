@@ -130,6 +130,7 @@ export const crawlPageSnapshotSchema = z.object({
     })
     .optional(),
   blocked: z.boolean().optional(),
+  contentAuditAllowed: z.boolean().optional(),
   crawlDepth: z.number().int().optional(),
   error: z.string().optional(),
   robotsTxt: z
@@ -151,6 +152,20 @@ export const crawlPageSnapshotSchema = z.object({
   h3Count: z.number().int().optional(),
   indexable: z.boolean(),
   indexability: z.string().optional(),
+  declaredIndexability: z
+    .enum([
+      'indexable-candidate',
+      'noindex',
+      'robots-blocked',
+      'canonical-hint-other',
+      'not-html',
+      'unknown',
+    ])
+    .optional(),
+  extractionStatus: z
+    .enum(['complete', 'failed', 'not-applicable', 'unknown-media-type'])
+    .optional(),
+  extractionError: z.string().optional(),
   wordCount: z.number().int(),
   contentExtraction: z
     .object({
@@ -232,6 +247,49 @@ export const crawlPageSnapshotSchema = z.object({
   geoScore: z.number().int().min(0).max(100).optional(),
   analytics: analyticsSchema.optional(),
 })
+
+const crawlResponseObservationBaseSchema = z.object({
+  requestedUrl: z.string().url(),
+  outcome: z.literal('response'),
+  finalUrl: z.string().url(),
+  status: z.number().int(),
+  contentType: z.string().optional(),
+  durationMs: z.number().optional(),
+  redirectChain: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        status: z.number().int(),
+        location: z.string().url().optional(),
+      }),
+    )
+    .optional(),
+})
+
+export const crawlRequestObservationSchema = z.union([
+  crawlResponseObservationBaseSchema.extend({
+    extraction: z.enum(['complete', 'not-applicable', 'unknown-media-type']),
+  }),
+  crawlResponseObservationBaseSchema.extend({
+    extraction: z.literal('failed'),
+    extractionError: z.string(),
+  }),
+  z.object({
+    requestedUrl: z.string().url(),
+    outcome: z.literal('failure'),
+    durationMs: z.number().optional(),
+    failureKind: z.enum([
+      'dns',
+      'tls',
+      'timeout',
+      'redirect-limit',
+      'aborted',
+      'unknown',
+    ]),
+    error: z.string(),
+    extraction: z.literal('not-applicable'),
+  }),
+])
 
 export const crawlIssueSchema = z.object({
   ruleId: crawlerRuleIdSchema,
@@ -358,8 +416,17 @@ export const crawlReportSummarySchema = z.object({
   skippedUrls: z.number().int(),
   failedUrls: z.number().int(),
   verifiedLinks: z.number().int(),
+  attemptedRequests: z.number().int(),
+  responseRequests: z.number().int(),
+  failedRequests: z.number().int(),
+  abortedRequests: z.number().int(),
+  extractionFailures: z.number().int(),
+  requestByStatus: z.record(z.string(), z.number().int()),
+  avgRequestMs: z.number().int().optional(),
   healthScore: z.number().int().min(0).max(100),
+  technicalScorePages: z.number().int(),
   geoReadinessScore: z.number().int().min(0).max(100),
+  geoScorePages: z.number().int(),
   highIssues: z.number().int(),
   mediumIssues: z.number().int(),
   lowIssues: z.number().int(),
@@ -368,7 +435,7 @@ export const crawlReportSummarySchema = z.object({
   byCategory: z.record(z.string(), z.number().int()),
 })
 
-export const crawlReportSchema = z.object({
+const crawlReportBaseSchema = z.object({
   id: z.string(),
   definitionId: z.string(),
   projectId: z.string().optional(),
@@ -387,11 +454,27 @@ export const crawlReportSchema = z.object({
   caveats: z.array(z.string()),
 })
 
+export const crawlReportSchema = z.discriminatedUnion('requestEvidenceStatus', [
+  crawlReportBaseSchema.extend({
+    requestEvidenceStatus: z.literal('available'),
+    requests: z.array(crawlRequestObservationSchema),
+  }),
+  crawlReportBaseSchema.extend({
+    requestEvidenceStatus: z.literal('partial'),
+    requests: z.array(crawlRequestObservationSchema),
+  }),
+  crawlReportBaseSchema.extend({
+    requestEvidenceStatus: z.literal('unavailable'),
+    requests: z.array(crawlRequestObservationSchema).max(0),
+  }),
+])
+
 export const crawlerSchemas = {
   crawlReport: crawlReportSchema,
   issueGroup: crawlIssueGroupSchema,
   topFix: crawlTopFixSchema,
   ruleInfo: crawlerRuleInfoSchema,
+  requestObservation: crawlRequestObservationSchema,
   pageSnapshot: crawlPageSnapshotSchema,
 }
 
@@ -400,5 +483,6 @@ export const crawlerJsonSchemas = {
   issueGroup: z.toJSONSchema(crawlIssueGroupSchema),
   topFix: z.toJSONSchema(crawlTopFixSchema),
   ruleInfo: z.toJSONSchema(crawlerRuleInfoSchema),
+  requestObservation: z.toJSONSchema(crawlRequestObservationSchema),
   pageSnapshot: z.toJSONSchema(crawlPageSnapshotSchema),
 }

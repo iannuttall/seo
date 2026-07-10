@@ -86,4 +86,4 @@ This keeps the agent focused. It also avoids re-crawling when the user asks a se
 
 This repo now includes plugin metadata and standalone skills under `.claude-plugin` and `skills`.
 
-The plugin is not published to a marketplace yet. Use the files as the local packaging shape until the npm package name and public release path are final.
+The plugin is not published to a marketplace yet. The standalone skills ship inside the `seo` npm package and remain available directly from this repository.

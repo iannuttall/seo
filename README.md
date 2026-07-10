@@ -27,11 +27,11 @@ This is local first today. The same core is shaped so it can later run as a host
 From source:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/iannuttall/seo.git
 cd seo
 pnpm install
 pnpm build
-node packages/cli/dist/index.js start
+node dist/cli.js start
 ```
 
 If you already have a built checkout, the short path is:
@@ -42,14 +42,23 @@ seo report
 seo crawl https://example.com --format pretty
 ```
 
-The npm package name is not final yet. Once it is published, the intended install story is:
+Install the CLI from the unscoped `seo` package:
 
 ```bash
-npm i -g <package-name>
+npm install --global seo
 seo start
 ```
 
-Until then, use the built CLI from this repo or link it locally with your normal Node workflow.
+Developers can use the same package as a library:
+
+```bash
+npm install seo
+```
+
+```ts
+import { auditPage, crawlSite } from 'seo'
+import { createServer } from 'seo/mcp'
+```
 
 ## The human path
 

@@ -155,6 +155,49 @@ test('AI referrals JSON rejects invalid evidence controls before auth', async ()
   }
 })
 
+test('query opportunity help exposes bounded retained evidence', async () => {
+  for (const command of ['seo-to-ai-query', 'community-intent']) {
+    const output = await runSeo([command, '--help'])
+    for (const flag of [
+      '--days',
+      '--start-date',
+      '--end-date',
+      '--limit',
+      '--min-impressions',
+      '--max-rows',
+      '--brand-terms',
+      '--json',
+    ]) {
+      assert.match(output, new RegExp(flag), `${command} ${flag}`)
+    }
+  }
+})
+
+test('query opportunity JSON rejects malformed bounds before auth', async () => {
+  for (const command of ['seo-to-ai-query', 'community-intent']) {
+    for (const args of [
+      ['--days', 'nope'],
+      ['--days', '0'],
+      ['--limit', '1.5'],
+      ['--max-rows', '50001'],
+      ['--start-date', '2026-06-01'],
+    ]) {
+      const result = await runSeoResult([
+        command,
+        '--site',
+        'sc-domain:example.com',
+        ...args,
+        '--json',
+      ])
+      assert.notEqual(result.exitCode, 0, `${command} ${args.join(' ')}`)
+      assert.match(
+        `${result.stdout}${result.stderr}`,
+        /INVALID_INPUT|must|provided together/i,
+      )
+    }
+  }
+})
+
 test('segment impact help exposes bounded comparison evidence', async () => {
   const output = await runSeo(['segment-impact', '--help'])
 

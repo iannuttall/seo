@@ -19,10 +19,29 @@ const ga4DateSchema = z
     'Use YYYY-MM-DD or a GA4 relative date.',
   )
 
+const gscDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a YYYY-MM-DD date.')
+
+const queryOpportunitySchema = {
+  site: z.string().trim().min(1),
+  days: z.number().int().min(1).max(548).optional(),
+  startDate: gscDateSchema.optional(),
+  endDate: gscDateSchema.optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+  minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+  maxRows: z.number().int().min(1).max(50_000).optional(),
+  brandTerms: z.array(z.string().trim().min(1)).max(100).optional(),
+  includeBrand: z.boolean().optional(),
+  refresh: z.boolean().optional(),
+} as const
+
 export function registerAiOpportunityTools(
   server: McpServer,
   dependencies: {
     aiReferralsReport?: typeof aiReferralsReport
+    seoToAiQueryReport?: typeof seoToAiQueryReport
+    communityIntentReport?: typeof communityIntentReport
   } = {},
 ): void {
   server.registerTool(
@@ -194,30 +213,38 @@ export function registerAiOpportunityTools(
     'seo_to_ai_query',
     {
       description:
-        'Convert GSC search queries into natural-language AI monitoring prompts',
-      inputSchema: {
-        ...mcpReportInputSchema([
-          'site',
-          'days',
-          'limit',
-          'minImpressions',
-          'includeBrand',
-          'refresh',
-        ]),
-      },
+        'Convert retained GSC queries into deterministic AI monitoring-prompt suggestions with source completeness and heuristic caveats',
+      inputSchema: queryOpportunitySchema,
     },
-    async ({ site, days, limit, minImpressions, includeBrand, refresh }) => {
+    async ({
+      site,
+      days,
+      startDate,
+      endDate,
+      limit,
+      minImpressions,
+      maxRows,
+      brandTerms,
+      includeBrand,
+      refresh,
+    }) => {
       try {
-        const result = await seoToAiQueryReport({
+        const result = await (
+          dependencies.seoToAiQueryReport ?? seoToAiQueryReport
+        )({
           site,
           days,
+          startDate,
+          endDate,
           limit,
           minImpressions,
+          maxRows,
+          brandTerms,
           includeBrand,
           refresh,
         })
         return toolSuccess(
-          `${countLabel(result.summary.prompts, 'AI-style prompt')} generated from ${countLabel(result.summary.sourceQueries, 'GSC query')}.`,
+          `${countLabel(result.summary.prompts, 'monitoring-prompt suggestion')} generated from ${countLabel(result.summary.returnedQueries, 'retained GSC query')}; evidence is ${result.dataStatus}.`,
           result,
         )
       } catch (error) {
@@ -230,30 +257,38 @@ export function registerAiOpportunityTools(
     'seo_community_intent',
     {
       description:
-        'Find GSC queries with forum, review, comparison, and lived-experience intent',
-      inputSchema: {
-        ...mcpReportInputSchema([
-          'site',
-          'days',
-          'limit',
-          'minImpressions',
-          'includeBrand',
-          'refresh',
-        ]),
-      },
+        'Classify explicit forum, review, comparison, experience, and recommendation language in retained GSC queries as review hypotheses',
+      inputSchema: queryOpportunitySchema,
     },
-    async ({ site, days, limit, minImpressions, includeBrand, refresh }) => {
+    async ({
+      site,
+      days,
+      startDate,
+      endDate,
+      limit,
+      minImpressions,
+      maxRows,
+      brandTerms,
+      includeBrand,
+      refresh,
+    }) => {
       try {
-        const result = await communityIntentReport({
+        const result = await (
+          dependencies.communityIntentReport ?? communityIntentReport
+        )({
           site,
           days,
+          startDate,
+          endDate,
           limit,
           minImpressions,
+          maxRows,
+          brandTerms,
           includeBrand,
           refresh,
         })
         return toolSuccess(
-          `${result.summary.items} community-intent queries found.`,
+          `Evidence status: ${result.dataStatus}. ${result.summary.verdict}`,
           result,
         )
       } catch (error) {

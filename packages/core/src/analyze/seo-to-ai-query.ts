@@ -1,151 +1,135 @@
-import { shouldExcludeBrandQuery } from '../brand.js'
-import { querySearchAnalytics } from '../gsc/client.js'
-import { defaultDateRange, normalizeText, tokenize } from './shared.js'
+import { aiPromptsForQuery } from './ai-monitoring-prompts.js'
+import type {
+  QueryOpportunityDependencies,
+  QueryOpportunityInput,
+  QueryOpportunitySelection,
+} from './query-opportunity-source.js'
+import {
+  defaultQueryOpportunityDependencies,
+  queryOpportunityEvidence,
+} from './query-opportunity-source.js'
+
+export * from './ai-monitoring-prompts.js'
 
 export type SeoToAiQueryReport = {
+  schemaVersion: 2
   site: string
   generatedAt: string
   rangeDays: number
+  dateRange: { startDate: string; endDate: string }
+  dataStatus: 'empty' | 'filtered' | 'partial' | 'available'
+  source: Awaited<ReturnType<typeof queryOpportunityEvidence>>['source']
+  filters: Awaited<ReturnType<typeof queryOpportunityEvidence>>['filters'] & {
+    brandFiltering: 'included' | 'excluded'
+  }
+  methodology: {
+    id: 'gsc_query_to_ai_monitoring_prompt'
+    version: 2
+    sourceUnit: 'retained-query-row'
+    promptType: 'deterministic-template-heuristic'
+    observedAiPromptData: false
+    estimatedTrafficLift: false
+  }
+  selection: QueryOpportunitySelection & {
+    returnedRows: number
+    limitedRows: number
+  }
   summary: {
-    sourceQueries: number
+    eligibleQueries: number
+    returnedQueries: number
     prompts: number
+    verdict: string
   }
   items: Array<{
     query: string
     clicks: number
     impressions: number
+    ctr: number
     position: number
+    evidenceScope: 'retained-gsc-query'
     prompts: string[]
   }>
+  warnings: string[]
+  caveats: string[]
 }
 
-const QUESTION_STARTS = new Set([
-  'how',
-  'what',
-  'why',
-  'when',
-  'where',
-  'who',
-  'which',
-  'can',
-  'does',
-  'is',
-  'are',
-  'should',
-])
-
-function compactQuery(query: string): string {
-  return query.replace(/\s+/g, ' ').trim()
+function reportStatus(input: {
+  sourceRows: number
+  eligibleRows: number
+  partial: boolean
+}): SeoToAiQueryReport['dataStatus'] {
+  if (input.sourceRows === 0) return 'empty'
+  if (input.partial) return 'partial'
+  return input.eligibleRows === 0 ? 'filtered' : 'available'
 }
 
-function querySubject(query: string): string {
-  let subject = normalizeText(query)
-  subject = subject
-    .replace(
-      /^(how many|how much|how to choose|how to find|how to pick|how to|what is|what are|which is|which are|is|are|does|do|can|should)\s+/,
-      '',
-    )
-    .trim()
-  const tokens = tokenize(subject || query)
-  if (tokens.length <= 8) return compactQuery(subject || query)
-  return tokens.slice(0, 8).join(' ')
-}
-
-export function aiPromptsForQuery(query: string): string[] {
-  const normalized = normalizeText(query)
-  const first = normalized.split(' ')[0] ?? ''
-  const subject = querySubject(query)
-  const prompts = new Set<string>()
-
-  if (QUESTION_STARTS.has(first)) {
-    prompts.add(compactQuery(query).replace(/[?.!]*$/, '?'))
-  }
-  prompts.add(`What should someone know about ${subject}?`)
-  prompts.add(`Explain ${subject}, including key facts and caveats.`)
-
-  if (/\bbest\b/.test(normalized)) {
-    prompts.add(
-      `Which ${subject.replace(/\bbest\b/g, '').trim()} options are best and why?`,
-    )
-  }
-  if (/\bvs\b|\bversus\b/.test(normalized)) {
-    prompts.add(
-      `Compare ${subject} and explain which is better for different situations.`,
-    )
-  }
-  if (/\bprice|cost|salary|rate|fee\b/.test(normalized)) {
-    prompts.add(`What does ${subject} cost, and what affects the price?`)
-  }
-  if (/\breview|reviews|worth\b/.test(normalized)) {
-    prompts.add(`Is ${subject} worth it? Include pros, cons, and alternatives.`)
-  }
-  if (
-    /\bbest\b|\bvs\b|\bversus\b|\breview|reviews|worth|alternative|alternatives\b/.test(
-      normalized,
-    )
-  ) {
-    prompts.add(`How do I choose the best ${subject}?`)
-  } else {
-    prompts.add(`What evidence or data supports ${subject}?`)
-  }
-
-  return [...prompts].slice(0, 5)
-}
-
-export async function seoToAiQueryReport(input: {
-  site: string
-  days?: number
-  limit?: number
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  refresh?: boolean
-}): Promise<SeoToAiQueryReport> {
-  const days = input.days ?? 28
-  const range = defaultDateRange(days)
-  const { rows } = await querySearchAnalytics(
-    input.site,
-    {
-      ...range,
-      dimensions: ['query'],
-      type: 'web',
-      dataState: 'final',
-    },
-    { refresh: input.refresh },
-  )
-  const items = rows
-    .map((row) => ({
-      query: row.keys[0] ?? '',
-      clicks: row.clicks,
-      impressions: row.impressions,
-      position: row.position,
-    }))
-    .filter(
-      (item) =>
-        item.query &&
-        item.impressions >= (input.minImpressions ?? 20) &&
-        !shouldExcludeBrandQuery({
-          query: item.query,
-          siteUrl: input.site,
-          brandTerms: input.brandTerms,
-          includeBrand: input.includeBrand,
-        }),
-    )
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, input.limit ?? 25)
-    .map((item) => ({
-      ...item,
-      prompts: aiPromptsForQuery(item.query),
-    }))
+export async function seoToAiQueryReport(
+  input: QueryOpportunityInput,
+  dependencies: QueryOpportunityDependencies = defaultQueryOpportunityDependencies,
+): Promise<SeoToAiQueryReport> {
+  const evidence = await queryOpportunityEvidence(input, dependencies)
+  const rows = evidence.rows.slice(0, evidence.filters.limit)
+  const items = rows.map((row) => ({
+    ...row,
+    evidenceScope: 'retained-gsc-query' as const,
+    prompts: aiPromptsForQuery(row.query),
+  }))
+  const partial =
+    evidence.source.possiblyTruncated ||
+    evidence.selection.invalidRows > 0 ||
+    evidence.selection.conflictingRows > 0
+  const dataStatus = reportStatus({
+    sourceRows: evidence.selection.sourceRows,
+    eligibleRows: evidence.selection.eligibleRows,
+    partial,
+  })
+  const verdict =
+    dataStatus === 'empty'
+      ? 'GSC returned no retained query rows for this range.'
+      : dataStatus === 'partial' && items.length === 0
+        ? 'No prompt candidates survived the retained rows and filters, but incomplete source evidence makes that negative inconclusive.'
+        : dataStatus === 'partial'
+          ? `Partial evidence: ${items.length} retained GSC queries were converted into prompt suggestions, but incomplete source rows may omit other queries.`
+          : dataStatus === 'filtered'
+            ? `No retained ${input.includeBrand ? '' : 'non-brand '}queries met the minimum-impression threshold.`
+            : `${items.length} retained GSC queries were converted into deterministic monitoring-prompt suggestions; these are not observed AI prompts.`
 
   return {
-    site: input.site,
-    generatedAt: new Date().toISOString(),
-    rangeDays: days,
+    schemaVersion: 2,
+    site: evidence.site,
+    generatedAt: evidence.generatedAt,
+    rangeDays: evidence.rangeDays,
+    dateRange: evidence.dateRange,
+    dataStatus,
+    source: evidence.source,
+    filters: {
+      ...evidence.filters,
+      brandFiltering: input.includeBrand ? 'included' : 'excluded',
+    },
+    methodology: {
+      id: 'gsc_query_to_ai_monitoring_prompt',
+      version: 2,
+      sourceUnit: 'retained-query-row',
+      promptType: 'deterministic-template-heuristic',
+      observedAiPromptData: false,
+      estimatedTrafficLift: false,
+    },
+    selection: {
+      ...evidence.selection,
+      returnedRows: items.length,
+      limitedRows: evidence.selection.eligibleRows - items.length,
+    },
     summary: {
-      sourceQueries: items.length,
+      eligibleQueries: evidence.selection.eligibleRows,
+      returnedQueries: items.length,
       prompts: items.reduce((sum, item) => sum + item.prompts.length, 0),
+      verdict,
     },
     items,
+    warnings: evidence.warnings,
+    caveats: [
+      ...evidence.caveats,
+      'Generated prompts are deterministic monitoring suggestions derived from GSC query wording, not evidence of demand in any AI product.',
+    ],
   }
 }

@@ -2,14 +2,20 @@ import { seoToAiQueryReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  csvArg,
   jsonFlag,
-  numberArg,
   projectArg,
+  strictNumberArg,
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
-import { formatCount, printLimitedTable, truncate } from '../output.js'
+import {
+  formatCount,
+  printLimitedTable,
+  printNotes,
+  truncate,
+} from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 
 export const seoToAiQueryCommand = defineCommand({
@@ -21,9 +27,28 @@ export const seoToAiQueryCommand = defineCommand({
     site: { type: 'string' },
     project: { type: 'string', description: 'Saved project id or name.' },
     client: { type: 'string', description: 'Legacy alias for --project.' },
+    'start-date': {
+      type: 'string',
+      description: 'Exact GSC start date (YYYY-MM-DD). Use with --end-date.',
+    },
+    'end-date': {
+      type: 'string',
+      description: 'Exact GSC end date (YYYY-MM-DD). Use with --start-date.',
+    },
+    'max-rows': {
+      type: 'string',
+      description: 'Maximum retained GSC query rows. Defaults to 50000.',
+    },
+    'brand-terms': {
+      type: 'string',
+      description: 'Comma-separated brand terms to exclude.',
+    },
     ...cliReportArgs(
       ['days', 'limit', 'minImpressions', 'includeBrand', 'refresh'],
       {
+        days: {
+          description: 'GSC lookback within the current 16-month retention.',
+        },
         limit: {
           description: 'Maximum source queries to convert. Defaults to 25.',
         },
@@ -47,10 +72,19 @@ export const seoToAiQueryCommand = defineCommand({
     })
     const report = await seoToAiQueryReport({
       site: selection.site,
-      days: numberArg(args.days),
-      limit: numberArg(args.limit),
-      minImpressions: numberArg(args['min-impressions']),
-      brandTerms: selection.client?.brandTerms,
+      days: strictNumberArg(args.days, '--days'),
+      startDate: stringArg(args['start-date']),
+      endDate: stringArg(args['end-date']),
+      limit: strictNumberArg(args.limit, '--limit'),
+      minImpressions: strictNumberArg(
+        args['min-impressions'],
+        '--min-impressions',
+      ),
+      maxRows: strictNumberArg(args['max-rows'], '--max-rows'),
+      brandTerms: [
+        ...(selection.client?.brandTerms ?? []),
+        ...(csvArg(args['brand-terms']) ?? []),
+      ],
       includeBrand: booleanArg(args['include-brand']),
       refresh: booleanArg(args.refresh),
     })
@@ -62,8 +96,12 @@ export const seoToAiQueryCommand = defineCommand({
 
     printKeyValue([
       ['Property', report.site],
-      ['Source queries', formatCount(report.summary.sourceQueries)],
+      ['Status', report.dataStatus],
+      ['Verdict', report.summary.verdict],
+      ['Eligible queries', formatCount(report.summary.eligibleQueries)],
+      ['Returned queries', formatCount(report.summary.returnedQueries)],
       ['Prompts', formatCount(report.summary.prompts)],
+      ['GSC completeness', report.source.completeness],
     ])
 
     printLimitedTable(
@@ -76,5 +114,7 @@ export const seoToAiQueryCommand = defineCommand({
         ]),
       ),
     )
+    printNotes('Report caveats', report.caveats)
+    printNotes('Warnings', report.warnings)
   },
 })

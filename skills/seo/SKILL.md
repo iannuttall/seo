@@ -39,6 +39,8 @@ Use the `seo` MCP server exposed by the repository or installed package.
 - Use `seo_performance_audit` for one URL's Lighthouse lab diagnostics and device-specific CrUX field Core Web Vitals. Treat fallback fetch evidence as unscored and never call TBT field INP.
 - Use `seo_ctr_underperformers` when the page ranks but click-through rate is weak.
 - Use `seo_query_cluster` when the user wants explainable clustering with no embeddings.
+- Use `seo_community_intent` to find explicit intent language in retained GSC queries. Treat every match as a low-confidence review hypothesis, not a verified page gap.
+- Use `seo_to_ai_query` to create deterministic monitoring-prompt suggestions from retained GSC wording. Do not describe the suggestions as observed AI demand.
 - Use `gsc_query` only when the user explicitly wants raw Search Console rows.
 - Use `gsc_url_inspect` when the user asks what Google sees for one URL.
 - Use `ga4_run_report` for GA4 landing-page/session/event reports.

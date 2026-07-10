@@ -58,9 +58,8 @@ seo ai-referrals --project <project>
 seo explain --rule geo_no_llms_txt
 ```
 
-`seo-to-ai-query` creates AI-monitoring prompts from real GSC demand. `ai-referrals` checks GA4 for known AI referral sources.
+`seo-to-ai-query` turns retained GSC query wording into deterministic monitoring-prompt suggestions. These prompts are not observed AI demand. `ai-referrals` checks GA4 for known AI referral sources.
 
 ## Caveat to include
 
 If the user asks whether they appear in AI answers, say the truth: this tool checks readiness and referral evidence. It does not yet run scheduled prompts across AI engines or track citations.
-

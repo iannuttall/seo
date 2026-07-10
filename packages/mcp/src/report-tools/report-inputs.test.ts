@@ -61,6 +61,42 @@ test('AI referrals MCP bounds rows and validates agent inputs', () => {
   }
 })
 
+test('query opportunity MCP bounds retained evidence inputs', () => {
+  const tools = captureTools(registerAiOpportunityTools)
+  for (const name of ['seo_to_ai_query', 'seo_community_intent']) {
+    const schema = inputSchema(tools, name)
+    assert.equal(
+      schema.safeParse({
+        site: 'sc-domain:example.com',
+        startDate: '2026-06-01',
+        endDate: '2026-06-28',
+        limit: 100,
+        minImpressions: 0,
+        maxRows: 50_000,
+        brandTerms: ['Example'],
+        refresh: true,
+      }).success,
+      true,
+    )
+    for (const input of [
+      { site: '' },
+      { site: 'sc-domain:example.com', days: 0 },
+      { site: 'sc-domain:example.com', days: 1.5 },
+      { site: 'sc-domain:example.com', limit: 101 },
+      { site: 'sc-domain:example.com', minImpressions: -1 },
+      { site: 'sc-domain:example.com', maxRows: 50_001 },
+      { site: 'sc-domain:example.com', startDate: 'last month' },
+      { site: 'sc-domain:example.com', brandTerms: [''] },
+    ]) {
+      assert.equal(
+        schema.safeParse(input).success,
+        false,
+        `${name}: ${JSON.stringify(input)}`,
+      )
+    }
+  }
+})
+
 test('segment impact MCP bounds comparison and evidence inputs', () => {
   const schema = inputSchema(
     captureTools(registerDiagnosisTools),

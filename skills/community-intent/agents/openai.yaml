@@ -1,0 +1,4 @@
+interface:
+  display_name: "Community intent"
+  short_description: "Review explicit intent signals in GSC queries"
+  default_prompt: "Use $community-intent to find retained GSC queries that need an intent review."

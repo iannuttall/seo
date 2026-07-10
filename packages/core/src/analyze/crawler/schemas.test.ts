@@ -30,6 +30,29 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
         },
         contentHash: 'hash',
         outgoingInternalCount: 0,
+        googleRichResults: [
+          {
+            format: 'json-ld',
+            block: 0,
+            path: '$',
+            schemaType: 'Product',
+            feature: 'product-snippet',
+            status: 'missing-required-properties',
+            observedProperties: [],
+            missingRequiredProperties: ['name'],
+            limitations: ['Property presence only.'],
+            documentationUrl:
+              'https://developers.google.com/search/docs/appearance/structured-data/product-snippet',
+          },
+        ],
+        unrecognizedJsonLdTypes: [
+          {
+            block: 1,
+            path: '$.@type',
+            value: 'Product',
+            reason: 'missing-schema-context',
+          },
+        ],
       },
     ],
     issues: [
@@ -77,6 +100,16 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
   assert.equal(
     crawlerSchemas.pageSnapshot.parse(report.pages[0]).contentExtraction?.used,
     'defuddle',
+  )
+  assert.equal(
+    crawlerSchemas.pageSnapshot.parse(report.pages[0]).googleRichResults?.[0]
+      ?.status,
+    'missing-required-properties',
+  )
+  assert.equal(
+    crawlerSchemas.pageSnapshot.parse(report.pages[0])
+      .unrecognizedJsonLdTypes?.[0]?.reason,
+    'missing-schema-context',
   )
   assert.doesNotThrow(() =>
     crawlerSchemas.issueGroup.parse(report.issueGroups[0]),

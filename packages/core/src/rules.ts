@@ -955,6 +955,24 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'rich_result_required_fields_missing',
+    title: 'Required rich-result properties are missing',
+    category: 'structured-data',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Schema.org vocabulary and valid JSON syntax do not make markup eligible for a Google rich result when documented required properties are absent.',
+    howToFix:
+      'Add the missing properties only when they accurately represent visible page content. Follow the linked Google feature documentation and validate the result.',
+    impactIfIgnored:
+      'Google can understand some of the markup while still treating the item as ineligible for that enhanced Search feature.',
+    howToVerify:
+      'Re-run the crawl, review googleRichResults, and confirm no supported item reports missing-required-properties. Then use Google’s Rich Results Test.',
+    agentHints: {
+      evidenceFields: ['page.googleRichResults', 'issue.evidence.assessments'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'og_title_missing',
     title: 'Open Graph title missing',
     category: 'social',

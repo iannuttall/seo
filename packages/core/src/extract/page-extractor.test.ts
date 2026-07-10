@@ -276,6 +276,46 @@ test('structured data ignores contextless and non-Schema.org type claims', async
   assert.match(page.warnings.join(' '), /Ignored 2 JSON-LD @type values/)
 })
 
+test('structured data keeps Google property checks separate from syntax', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head>
+      <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"Product"}
+      </script>
+      <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"Article"}
+      </script>
+    </head><body><main><h1>Assessment fixture</h1></main></body></html>`),
+    'readability',
+  )
+
+  assert.equal(page.invalidJsonLdCount, 0)
+  assert.deepEqual(
+    page.googleRichResults?.map(
+      ({ schemaType, status, missingRequiredProperties }) => ({
+        schemaType,
+        status,
+        missingRequiredProperties,
+      }),
+    ),
+    [
+      {
+        schemaType: 'Product',
+        status: 'missing-required-properties',
+        missingRequiredProperties: [
+          'name',
+          'one of review, aggregateRating, or offers',
+        ],
+      },
+      {
+        schemaType: 'Article',
+        status: 'no-required-properties',
+        missingRequiredProperties: [],
+      },
+    ],
+  )
+})
+
 test('structured data supports Microdata and RDFa without inventing trust fields', async () => {
   const page = await extractPage(
     fetchResult(`<!doctype html><html vocab="https://schema.org/"><head>
@@ -296,6 +336,30 @@ test('structured data supports Microdata and RDFa without inventing trust fields
 
   assert.deepEqual(page.schemaTypes.sort(), ['Article', 'Product'])
   assert.deepEqual(page.structuredDataFormats, ['json-ld', 'microdata', 'rdfa'])
+  assert.deepEqual(
+    page.googleRichResults?.map(({ format, schemaType, status }) => ({
+      format,
+      schemaType,
+      status,
+    })),
+    [
+      {
+        format: 'json-ld',
+        schemaType: 'Article',
+        status: 'no-required-properties',
+      },
+      {
+        format: 'microdata',
+        schemaType: 'Product',
+        status: 'not-assessed',
+      },
+      {
+        format: 'rdfa',
+        schemaType: 'Article',
+        status: 'not-assessed',
+      },
+    ],
+  )
   assert.equal(page.hasAuthor, true)
   assert.equal(page.hasDate, true)
 

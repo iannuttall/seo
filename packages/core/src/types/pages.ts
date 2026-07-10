@@ -148,6 +148,30 @@ export type ExtractedLinkLocation =
   | 'footer'
   | 'other'
 
+export type GoogleRichResultAssessment = {
+  format: 'json-ld' | 'microdata' | 'rdfa'
+  block?: number
+  path: string
+  schemaType:
+    | 'Article'
+    | 'BlogPosting'
+    | 'NewsArticle'
+    | 'Product'
+    | 'BreadcrumbList'
+    | 'FAQPage'
+  feature: 'article' | 'product-snippet' | 'breadcrumb' | 'faq'
+  status:
+    | 'no-required-properties'
+    | 'required-properties-observed'
+    | 'missing-required-properties'
+    | 'retired'
+    | 'not-assessed'
+  observedProperties: string[]
+  missingRequiredProperties: string[]
+  limitations: string[]
+  documentationUrl: string
+}
+
 export interface ExtractedPage {
   url: string
   finalUrl: string
@@ -181,6 +205,7 @@ export interface ExtractedPage {
       | 'unsupported-vocabulary'
   }>
   structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
+  googleRichResults?: GoogleRichResultAssessment[]
   schemaSameAsEvidence?: Array<{
     url: string
     block: number

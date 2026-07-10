@@ -72,6 +72,32 @@ const geoSignalsSchema = z.object({
   llmsTxtStatus: z.number().int().optional(),
 })
 
+const googleRichResultAssessmentSchema = z.object({
+  format: z.enum(['json-ld', 'microdata', 'rdfa']),
+  block: z.number().int().nonnegative().optional(),
+  path: z.string(),
+  schemaType: z.enum([
+    'Article',
+    'BlogPosting',
+    'NewsArticle',
+    'Product',
+    'BreadcrumbList',
+    'FAQPage',
+  ]),
+  feature: z.enum(['article', 'product-snippet', 'breadcrumb', 'faq']),
+  status: z.enum([
+    'no-required-properties',
+    'required-properties-observed',
+    'missing-required-properties',
+    'retired',
+    'not-assessed',
+  ]),
+  observedProperties: z.array(z.string()),
+  missingRequiredProperties: z.array(z.string()),
+  limitations: z.array(z.string()),
+  documentationUrl: z.string().url(),
+})
+
 export const crawlPageSnapshotSchema = z.object({
   url: z.string().url(),
   finalUrl: z.string().url(),
@@ -278,6 +304,7 @@ export const crawlPageSnapshotSchema = z.object({
   structuredDataFormats: z
     .array(z.enum(['json-ld', 'microdata', 'rdfa']))
     .optional(),
+  googleRichResults: z.array(googleRichResultAssessmentSchema).optional(),
   schemaSameAs: z.array(z.string().url()).optional(),
   schemaSameAsEvidence: z
     .array(
@@ -303,6 +330,20 @@ export const crawlPageSnapshotSchema = z.object({
   invalidJsonLdCount: z.number().int().optional(),
   invalidJsonLdSamples: z
     .array(z.object({ snippet: z.string(), error: z.string() }))
+    .optional(),
+  unrecognizedJsonLdTypes: z
+    .array(
+      z.object({
+        block: z.number().int().nonnegative(),
+        path: z.string(),
+        value: z.string(),
+        reason: z.enum([
+          'missing-schema-context',
+          'unresolved-context',
+          'unsupported-vocabulary',
+        ]),
+      }),
+    )
     .optional(),
   openGraphTitle: z.string().optional(),
   openGraphDescription: z.string().optional(),
@@ -331,20 +372,6 @@ const crawlResponseObservationBaseSchema = z.object({
         url: z.string().url(),
         status: z.number().int(),
         location: z.string().url().optional(),
-      }),
-    )
-    .optional(),
-  unrecognizedJsonLdTypes: z
-    .array(
-      z.object({
-        block: z.number().int().nonnegative(),
-        path: z.string(),
-        value: z.string(),
-        reason: z.enum([
-          'missing-schema-context',
-          'unresolved-context',
-          'unsupported-vocabulary',
-        ]),
       }),
     )
     .optional(),

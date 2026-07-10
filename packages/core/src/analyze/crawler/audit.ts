@@ -874,6 +874,24 @@ export function auditCrawlPages(
         }),
       )
     }
+    const incompleteRichResults = (page.googleRichResults ?? []).filter(
+      (assessment) => assessment.status === 'missing-required-properties',
+    )
+    if (incompleteRichResults.length) {
+      issues.push(
+        issue(
+          'rich_result_required_fields_missing',
+          page,
+          incompleteRichResults
+            .map(
+              (assessment) =>
+                `${assessment.schemaType}: ${assessment.missingRequiredProperties.join(', ')}`,
+            )
+            .join('; '),
+          { assessments: incompleteRichResults },
+        ),
+      )
+    }
     if (!page.openGraphTitle) {
       issues.push(issue('og_title_missing', page))
     }

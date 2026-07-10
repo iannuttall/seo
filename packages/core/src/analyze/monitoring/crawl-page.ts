@@ -432,6 +432,7 @@ export async function crawlOne(
       externalAnchorSamples: anchorSamples(extracted.links, false),
       schemaTypes: extracted.schemaTypes,
       structuredDataFormats: extracted.structuredDataFormats ?? [],
+      googleRichResults: (extracted.googleRichResults ?? []).slice(0, 50),
       schemaSameAs: [
         ...new Set(
           (extracted.schemaSameAsEvidence ?? []).map(

@@ -1,4 +1,5 @@
 import { SeoError } from '../errors.js'
+import { finalGscDateRange } from '../gsc/dates.js'
 import type {
   InternalLinksReport,
   InternalLinksSelection,
@@ -57,14 +58,7 @@ export function internalLinksNumberOption(input: {
 }
 
 export function internalLinksReportRange(days: number, now: Date) {
-  const end = new Date(now)
-  end.setUTCDate(end.getUTCDate() - 4)
-  const start = new Date(end)
-  start.setUTCDate(start.getUTCDate() - (days - 1))
-  return {
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days, now)
 }
 
 export function completeInternalLinksSelection(

@@ -1,5 +1,6 @@
 import { isBrandQuery } from '../brand.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import { finalGscDateRange } from '../gsc/dates.js'
 import type { GscRow } from '../types.js'
 
 export const CTR_BASELINE: Record<number, number> = {
@@ -53,18 +54,14 @@ export function jaccard(a: string[], b: string[]): number {
   return union.size === 0 ? 0 : intersection.length / union.size
 }
 
-export function defaultDateRange(days = 28): {
+export function defaultDateRange(
+  days = 28,
+  now = new Date(),
+): {
   startDate: string
   endDate: string
 } {
-  const endDate = new Date()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days, now)
 }
 
 export function looksLikeBrand(

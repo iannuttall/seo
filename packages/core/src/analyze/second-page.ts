@@ -2,6 +2,7 @@ import { SeoError } from '../errors.js'
 import { extractPage } from '../extract/page-extractor.js'
 import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import { finalGscDateRange } from '../gsc/dates.js'
 import { SessionLedger } from '../storage/ledger.js'
 import type { QueryContentCoverage } from '../types/pages.js'
 import {
@@ -96,14 +97,7 @@ function reportDateRange(
   startDate: string
   endDate: string
 } {
-  const endDate = new Date(now)
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days, now)
 }
 
 function findingFor(coverage: QueryContentCoverage): SecondPageRecommendation {

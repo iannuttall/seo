@@ -1,4 +1,5 @@
 import { SeoError } from '../../errors.js'
+import { finalGscDateRange } from '../../gsc/dates.js'
 
 export function integerOption(input: {
   value: number | undefined
@@ -25,26 +26,7 @@ export function defaultDateRange(
   days: number,
   now: Date,
 ): { startDate: string; endDate: string } {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-      .formatToParts(now)
-      .map((part) => [part.type, part.value]),
-  )
-  const endDate = new Date(
-    Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)),
-  )
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days, now)
 }
 
 export function explicitDateRange(

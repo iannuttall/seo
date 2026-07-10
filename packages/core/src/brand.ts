@@ -1,4 +1,5 @@
 import { querySearchAnalytics } from './gsc/client.js'
+import { finalGscDateRange } from './gsc/dates.js'
 
 const COUNTRY_CODE_SECOND_LEVELS = new Set([
   'ac',
@@ -137,14 +138,7 @@ export type BrandTermCandidate = {
 }
 
 function defaultDateRange(days = 28): { startDate: string; endDate: string } {
-  const endDate = new Date()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days)
 }
 
 function addCandidate(

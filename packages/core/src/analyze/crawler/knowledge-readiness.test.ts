@@ -23,6 +23,7 @@ function fixtureReport() {
       robotsTxt: {
         url: 'https://example.com/robots.txt',
         exists: true,
+        availability: 'available',
         status: 200,
         sitemapUrls: ['https://example.com/sitemap.xml'],
         botAccess: [
@@ -141,6 +142,46 @@ test('aiReadiness returns scored checks, bot access, and actions', () => {
   assert.ok(
     report.checks.some((check) => check.plainEnglish.includes('llms.txt')),
   )
+})
+
+test('aiReadiness treats unavailable robots evidence as unknown, not blocked', () => {
+  const crawl = fixtureReport()
+  if (!crawl.ai) throw new Error('Expected AI fixture signals.')
+  crawl.ai.robotsTxt = {
+    url: 'https://example.com/robots.txt',
+    exists: false,
+    availability: 'unreachable',
+    status: 503,
+    error: 'robots.txt returned HTTP 503.',
+    sitemapUrls: [],
+    botAccess: [
+      {
+        userAgent: 'Googlebot',
+        allowed: null,
+        declared: false,
+        coveredByWildcard: false,
+      },
+    ],
+  }
+
+  const report = aiReadiness(crawl)
+  const access = report.checks.find((check) => check.id === 'robots-ai-bots')
+  const sitemap = report.checks.find((check) => check.id === 'robots-sitemap')
+
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(access?.status, 'unknown')
+  assert.equal(access?.evaluated, false)
+  assert.equal(sitemap?.status, 'unknown')
+  assert.match(access?.plainEnglish ?? '', /cannot say whether/)
+  assert.match(report.headline, /evidence is incomplete/i)
+  assert.equal(report.botAccess[0]?.allowed, null)
+})
+
+test('aiReadiness is deterministic for a saved crawl report', () => {
+  const report = fixtureReport()
+
+  assert.deepEqual(aiReadiness(report), aiReadiness(report))
+  assert.equal(aiReadiness(report).generatedAt, report.generatedAt)
 })
 
 test('llms audit and generator use crawl inventory', () => {

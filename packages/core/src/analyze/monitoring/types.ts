@@ -21,7 +21,15 @@ export type CrawlPageSnapshot = {
   error?: string
   robotsTxt?: {
     url: string
-    allowed: boolean
+    allowed: boolean | null
+    availability:
+      | 'available'
+      | 'absent'
+      | 'access-blocked'
+      | 'rate-limited'
+      | 'unreachable'
+    status?: number
+    error?: string
     matchedLine?: string
   }
   title?: string
@@ -145,6 +153,14 @@ export type CrawlResponseObservation = {
 
 export type CrawlRequestObservation =
   | CrawlResponseObservation
+  | {
+      requestedUrl: string
+      outcome: 'skipped'
+      durationMs?: number
+      reason: 'robots-disallowed' | 'robots-deferred'
+      robotsTxt: NonNullable<CrawlPageSnapshot['robotsTxt']>
+      extraction: 'not-applicable'
+    }
   | {
       requestedUrl: string
       outcome: 'failure'

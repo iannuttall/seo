@@ -5,12 +5,13 @@ import type {
   CrawlReport,
 } from './report.js'
 
-export type ReadinessStatus = 'pass' | 'warning' | 'fail'
+export type ReadinessStatus = 'pass' | 'warning' | 'fail' | 'unknown'
 
 export type ReadinessCheck = {
   id: string
   section: string
   status: ReadinessStatus
+  evaluated: boolean
   score: number
   maxScore: number
   title: string
@@ -32,6 +33,7 @@ export type AiReadinessReport = {
   reportId: string
   url: string
   generatedAt: string
+  dataStatus: 'complete' | 'partial'
   score: number
   grade: 'excellent' | 'strong' | 'needs-work' | 'blocked'
   headline: string
@@ -64,13 +66,28 @@ function section(
   title: string,
   checks: ReadinessCheck[],
 ): ReadinessSection {
-  const maxScore = checks.reduce((sum, check) => sum + check.maxScore, 0)
-  const score = checks.reduce((sum, check) => sum + check.score, 0)
+  const maxScore = checks.reduce(
+    (sum, check) => sum + (check.evaluated ? check.maxScore : 0),
+    0,
+  )
+  const score = checks.reduce(
+    (sum, check) => sum + (check.evaluated ? check.score : 0),
+    0,
+  )
   return { id, title, score, maxScore, checks }
 }
 
-function check(input: Omit<ReadinessCheck, 'status'>): ReadinessCheck {
-  return { ...input, status: status(input.score, input.maxScore) }
+function check(
+  input: Omit<ReadinessCheck, 'status' | 'evaluated'> & {
+    evaluated?: boolean
+  },
+): ReadinessCheck {
+  const evaluated = input.evaluated ?? true
+  return {
+    ...input,
+    evaluated,
+    status: evaluated ? status(input.score, input.maxScore) : 'unknown',
+  }
 }
 
 function indexablePages(report: CrawlReport): CrawlPageSnapshot[] {
@@ -98,7 +115,11 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const pages = indexablePages(report)
   const pageCount = pages.length || report.pages.length
   const botAccess = report.ai?.robotsTxt?.botAccess ?? []
-  const blockedBots = botAccess.filter((bot) => !bot.allowed)
+  const blockedBots = botAccess.filter((bot) => bot.allowed === false)
+  const unknownBots = botAccess.filter((bot) => bot.allowed === null)
+  const robotsUnavailable =
+    report.ai?.robotsTxt?.availability === 'rate-limited' ||
+    report.ai?.robotsTxt?.availability === 'unreachable'
   const declaredBots = botAccess.filter(
     (bot) => bot.declared || bot.coveredByWildcard,
   )
@@ -129,36 +150,60 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'robots-ai-bots',
         section: 'agent-access',
         maxScore: 20,
-        score: botAccess.length
-          ? blockedBots.length
-            ? scoreFromPercent(
-                pct(botAccess.length - blockedBots.length, botAccess.length),
-                20,
-              )
-            : 20
-          : 8,
-        title: 'AI crawlers can fetch the site',
-        plainEnglish: blockedBots.length
-          ? `${blockedBots.length} known AI crawler user agent is blocked in robots.txt.`
+        evaluated: !robotsUnavailable,
+        score: robotsUnavailable
+          ? 0
           : botAccess.length
-            ? 'Known AI crawler user agents are not blocked at the start URL.'
-            : 'This crawl does not include per-bot robots.txt data yet.',
-        action: blockedBots.length
-          ? 'Only block AI crawlers intentionally. If discovery matters, remove accidental Disallow rules for the blocked user agents.'
-          : 'Keep robots.txt explicit and intentional so humans and agents can see what is allowed.',
-        evidence: { blockedBots, declaredBots: declaredBots.length },
+            ? blockedBots.length
+              ? scoreFromPercent(
+                  pct(botAccess.length - blockedBots.length, botAccess.length),
+                  20,
+                )
+              : 20
+            : 8,
+        title: robotsUnavailable
+          ? 'robots.txt access evidence is unavailable'
+          : 'AI crawlers can fetch the site',
+        plainEnglish: robotsUnavailable
+          ? 'The robots.txt request failed, so this report cannot say whether known AI crawlers are allowed.'
+          : blockedBots.length
+            ? `${blockedBots.length} known AI crawler user agent is blocked in robots.txt.`
+            : botAccess.length
+              ? 'Known AI crawler user agents are not blocked at the start URL.'
+              : 'This crawl does not include per-bot robots.txt data yet.',
+        action: robotsUnavailable
+          ? 'Restore a stable robots.txt response, then rerun this report before making crawler-access claims.'
+          : blockedBots.length
+            ? 'Only block AI crawlers intentionally. If discovery matters, remove accidental Disallow rules for the blocked user agents.'
+            : 'Keep robots.txt explicit and intentional so humans and agents can see what is allowed.',
+        evidence: {
+          blockedBots,
+          unknownBots,
+          declaredBots: declaredBots.length,
+          availability: report.ai?.robotsTxt?.availability,
+          status: report.ai?.robotsTxt?.status,
+          error: report.ai?.robotsTxt?.error,
+        },
       }),
       check({
         id: 'robots-sitemap',
         section: 'agent-access',
         maxScore: 8,
-        score: report.ai?.robotsTxt?.sitemapUrls.length ? 8 : 3,
+        evaluated: !robotsUnavailable,
+        score: robotsUnavailable
+          ? 0
+          : report.ai?.robotsTxt?.sitemapUrls.length
+            ? 8
+            : 3,
         title: 'robots.txt points agents to sitemaps',
-        plainEnglish: report.ai?.robotsTxt?.sitemapUrls.length
-          ? 'robots.txt declares at least one sitemap URL.'
-          : 'robots.txt does not declare a sitemap URL.',
-        action:
-          'Add a Sitemap line to robots.txt so crawlers can discover the full index quickly.',
+        plainEnglish: robotsUnavailable
+          ? 'The robots.txt response was unavailable, so sitemap declarations could not be checked.'
+          : report.ai?.robotsTxt?.sitemapUrls.length
+            ? 'robots.txt declares at least one sitemap URL.'
+            : 'robots.txt does not declare a sitemap URL.',
+        action: robotsUnavailable
+          ? 'Restore robots.txt availability and rerun before evaluating sitemap declarations.'
+          : 'Add a Sitemap line to robots.txt so crawlers can discover the full index quickly.',
         evidence: { sitemapUrls: report.ai?.robotsTxt?.sitemapUrls ?? [] },
       }),
       check({
@@ -378,6 +423,10 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const maxScore = sections.reduce((sum, item) => sum + item.maxScore, 0)
   const rawScore = sections.reduce((sum, item) => sum + item.score, 0)
   const score = scoreFromPercent(pct(rawScore, maxScore), 100)
+  const dataStatus =
+    report.status === 'completed' && !robotsUnavailable
+      ? ('complete' as const)
+      : ('partial' as const)
   const topActions = checks
     .filter((item) => item.status !== 'pass')
     .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score))
@@ -386,13 +435,16 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   return {
     reportId: report.id,
     url: report.config.url,
-    generatedAt: new Date().toISOString(),
+    generatedAt: report.generatedAt,
+    dataStatus,
     score,
     grade: grade(score),
     headline:
-      score >= 75
-        ? 'The site has a solid foundation for AI discovery.'
-        : 'The site needs readiness fixes before AI discovery work will compound.',
+      dataStatus === 'partial'
+        ? 'Readiness evidence is incomplete; rerun after fixing the collection gaps before treating this as a site-wide verdict.'
+        : score >= 75
+          ? 'The site has a solid foundation for AI discovery.'
+          : 'The site needs readiness fixes before AI discovery work will compound.',
     sections,
     checks,
     topActions,
@@ -401,7 +453,11 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
     caveats: [
       ...report.caveats,
       ...(report.ai?.robotsTxt
-        ? []
+        ? robotsUnavailable
+          ? [
+              'robots.txt was unavailable, so crawler access and sitemap declaration checks are inconclusive.',
+            ]
+          : []
         : [
             'This crawl report does not include top-level robots.txt AI bot data.',
           ]),

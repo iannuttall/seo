@@ -115,7 +115,16 @@ export const crawlPageSnapshotSchema = z.object({
         .object({
           url: z.string().url(),
           cache: z.enum(['hit', 'miss', 'bypass']),
-          allowed: z.boolean(),
+          allowed: z.boolean().nullable(),
+          availability: z.enum([
+            'available',
+            'absent',
+            'access-blocked',
+            'rate-limited',
+            'unreachable',
+          ]),
+          status: z.number().int().optional(),
+          error: z.string().optional(),
         })
         .optional(),
       redirectChain: z
@@ -136,7 +145,16 @@ export const crawlPageSnapshotSchema = z.object({
   robotsTxt: z
     .object({
       url: z.string().url(),
-      allowed: z.boolean(),
+      allowed: z.boolean().nullable(),
+      availability: z.enum([
+        'available',
+        'absent',
+        'access-blocked',
+        'rate-limited',
+        'unreachable',
+      ]),
+      status: z.number().int().optional(),
+      error: z.string().optional(),
       matchedLine: z.string().optional(),
     })
     .optional(),
@@ -276,6 +294,27 @@ export const crawlRequestObservationSchema = z.union([
   }),
   z.object({
     requestedUrl: z.string().url(),
+    outcome: z.literal('skipped'),
+    durationMs: z.number().optional(),
+    reason: z.enum(['robots-disallowed', 'robots-deferred']),
+    robotsTxt: z.object({
+      url: z.string().url(),
+      allowed: z.boolean().nullable(),
+      availability: z.enum([
+        'available',
+        'absent',
+        'access-blocked',
+        'rate-limited',
+        'unreachable',
+      ]),
+      status: z.number().int().optional(),
+      error: z.string().optional(),
+      matchedLine: z.string().optional(),
+    }),
+    extraction: z.literal('not-applicable'),
+  }),
+  z.object({
+    requestedUrl: z.string().url(),
     outcome: z.literal('failure'),
     durationMs: z.number().optional(),
     failureKind: z.enum([
@@ -316,12 +355,20 @@ const crawlAiSignalsSchema = z.object({
     .object({
       url: z.string().url(),
       exists: z.boolean(),
+      availability: z.enum([
+        'available',
+        'absent',
+        'access-blocked',
+        'rate-limited',
+        'unreachable',
+      ]),
       status: z.number().int().optional(),
+      error: z.string().optional(),
       sitemapUrls: z.array(z.string().url()),
       botAccess: z.array(
         z.object({
           userAgent: z.string(),
-          allowed: z.boolean(),
+          allowed: z.boolean().nullable(),
           declared: z.boolean(),
           coveredByWildcard: z.boolean(),
         }),

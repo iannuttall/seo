@@ -8,6 +8,7 @@ import {
 import { test } from 'node:test'
 import { Response } from 'undici'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import { aiReadiness } from './ai-readiness.js'
 import { crawlSite } from './site-crawl.js'
 
 async function withServer(
@@ -375,6 +376,62 @@ test('crawlSite applies repeated robots and googlebot restrictions', async () =>
         .filter((issue) => ['noindex', 'nofollow'].includes(issue.ruleId))
         .map((issue) => issue.ruleId),
       ['noindex', 'nofollow'],
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite keeps robots server failures unknown', async () => {
+  let pageRequests = 0
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.statusCode = 503
+      res.setHeader('content-type', 'text/plain')
+      res.end('temporarily unavailable')
+      return
+    }
+    if (req.url === '/robots-outage') pageRequests += 1
+    res.setHeader('content-type', 'text/html')
+    res.end(
+      '<title>Robots outage fixture</title><h1>Robots outage</h1><p>Useful page content.</p>',
+    )
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/robots-outage`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+      refresh: true,
+    })
+
+    assert.equal(report.ai?.robotsTxt?.availability, 'unreachable')
+    assert.equal(report.ai?.robotsTxt?.status, 503)
+    assert.equal(pageRequests, 0)
+    assert.equal(report.pages.length, 0)
+    assert.equal(report.status, 'partial')
+    assert.equal(report.requests[0]?.outcome, 'skipped')
+    assert.equal(
+      report.requests[0]?.outcome === 'skipped'
+        ? report.requests[0].reason
+        : undefined,
+      'robots-deferred',
+    )
+    assert.match(report.warnings.join('\n'), /crawl deferred.*robots\.txt/i)
+    assert.ok(
+      report.ai?.robotsTxt?.botAccess.every((bot) => bot.allowed === null),
+    )
+    assert.equal(
+      report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
+      false,
+    )
+    const readiness = aiReadiness(report)
+    assert.equal(readiness.dataStatus, 'partial')
+    assert.equal(
+      readiness.checks.find((check) => check.id === 'robots-ai-bots')?.status,
+      'unknown',
     )
   } finally {
     await fixture.close()

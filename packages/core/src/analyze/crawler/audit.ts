@@ -269,6 +269,7 @@ export function auditCrawlRequests(
       )
       continue
     }
+    if (request.outcome === 'skipped') continue
 
     const redirectChain = request.redirectChain ?? []
     const redirected =

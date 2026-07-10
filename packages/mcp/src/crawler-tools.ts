@@ -1,10 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  affectedUrls,
   aiReadiness,
   auditLlmsTxt,
   buildOkfBundle,
   compareCrawlReports,
+  crawlerRuleCategorySchema,
   crawlSite,
   entityReadiness,
   explainOkfValidation,
@@ -16,6 +16,7 @@ import {
   listRules,
   loadCrawlReport,
   saveCrawlReport,
+  selectAffectedUrls,
   topFixes,
   validateOkfFiles,
 } from '@seo/core'
@@ -312,7 +313,7 @@ export function registerCrawlerTools(server: McpServer): void {
       description:
         'List crawler rule ids and guidance metadata. Use this before seo_explain_issue when you need valid rule ids.',
       inputSchema: {
-        category: z.string().optional(),
+        category: crawlerRuleCategorySchema.optional(),
       },
     },
     async ({ category }) => {
@@ -377,19 +378,20 @@ export function registerCrawlerTools(server: McpServer): void {
             'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
           )
         }
-        const urls = affectedUrls(report, {
+        const result = selectAffectedUrls(report, {
           ruleId,
           category,
           severity,
           limit,
         })
         return toolSuccess(
-          `Found ${urls.length} affected URLs for ${report.config.url}.`,
+          `Returned ${result.selection.returnedRows} of ${result.selection.totalMatchedRows} affected URLs for ${report.config.url}.`,
           {
             url: report.config.url,
             reportId: report.id,
             dataSources: report.dataSources,
-            affectedUrls: urls,
+            affectedUrls: result.affectedUrls,
+            selection: result.selection,
             warnings: report.warnings,
             caveats: report.caveats,
           },

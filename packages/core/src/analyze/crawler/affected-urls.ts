@@ -21,6 +21,18 @@ export type AffectedUrl = {
   sessions: number
 }
 
+export type AffectedUrlSelection = {
+  totalMatchedRows: number
+  returnedRows: number
+  limit: number
+  truncated: boolean
+}
+
+export type AffectedUrlResult = {
+  affectedUrls: AffectedUrl[]
+  selection: AffectedUrlSelection
+}
+
 const severityRank: Record<RuleSeverity, number> = {
   high: 3,
   medium: 2,
@@ -31,13 +43,20 @@ export function affectedUrls(
   report: CrawlReport,
   filters: AffectedUrlFilters = {},
 ): AffectedUrl[] {
+  return selectAffectedUrls(report, filters).affectedUrls
+}
+
+export function selectAffectedUrls(
+  report: CrawlReport,
+  filters: AffectedUrlFilters = {},
+): AffectedUrlResult {
   const pagesByUrl = new Map(
     report.pages.flatMap((page) => [
       [page.url, page],
       [page.finalUrl, page],
     ]),
   )
-  return report.issues
+  const matches = report.issues
     .filter((issue) => matchesFilters(issue, filters))
     .map((issue) => {
       const page = pagesByUrl.get(issue.url)
@@ -65,7 +84,17 @@ export function affectedUrls(
         b.sessions - a.sessions ||
         a.url.localeCompare(b.url),
     )
-    .slice(0, filters.limit ?? 100)
+  const limit = filters.limit ?? 100
+  const selected = matches.slice(0, limit)
+  return {
+    affectedUrls: selected,
+    selection: {
+      totalMatchedRows: matches.length,
+      returnedRows: selected.length,
+      limit,
+      truncated: selected.length < matches.length,
+    },
+  }
 }
 
 function matchesFilters(

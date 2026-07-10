@@ -239,6 +239,7 @@ test('crawler MCP structured output schema stays stable', async () => {
     const affectedResult = await affectedTool.handler({
       url: fixture.baseUrl,
       maxPages: 1,
+      limit: 1,
     })
     const topFixStructured = topFixResult.structuredContent as JsonRecord
     const affectedStructured = affectedResult.structuredContent as JsonRecord
@@ -251,9 +252,21 @@ test('crawler MCP structured output schema stays stable', async () => {
       'caveats',
       'dataSources',
       'reportId',
+      'selection',
       'url',
       'warnings',
     ])
+    const affectedSelection = affectedStructured.selection as JsonRecord
+    assert.deepEqual(keys(affectedSelection), [
+      'limit',
+      'returnedRows',
+      'totalMatchedRows',
+      'truncated',
+    ])
+    assert.equal(affectedSelection.returnedRows, 1)
+    assert.equal(affectedSelection.limit, 1)
+    assert.equal(affectedSelection.truncated, true)
+    assert.ok(Number(affectedSelection.totalMatchedRows) > 1)
 
     const okfTool = tools.get('seo_okf_build')
     assert.ok(okfTool)

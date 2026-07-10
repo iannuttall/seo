@@ -109,10 +109,6 @@ function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
       'Health',
       `${report.after.summary.healthScore}/100 (${report.summary.healthScoreDelta >= 0 ? '+' : ''}${report.summary.healthScoreDelta})`,
     ],
-    [
-      'GEO',
-      `${report.after.summary.geoReadinessScore}/100 (${report.summary.geoReadinessDelta >= 0 ? '+' : ''}${report.summary.geoReadinessDelta})`,
-    ],
     ['Changed pages', String(report.summary.changedPages)],
     ['Added pages', String(report.summary.addedPages)],
     ['Removed pages', String(report.summary.removedPages)],

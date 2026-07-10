@@ -103,7 +103,7 @@ seo crawl-reports --id <report-id>
 seo crawl-reports --compare latest --against previous
 ```
 
-Saved reports are useful because agents can ask for top fixes, affected URLs, and GEO gaps without re-crawling.
+Saved reports are useful because agents can ask for top fixes, affected URLs, and AI Search eligibility blockers without re-crawling.
 
 Comparisons are useful after deploys. They show which pages were added, removed, fixed, or changed, and which rules got better or worse. Agents get the same diff as structured JSON, including changed fields and issue counts by rule id.
 

@@ -17,7 +17,7 @@ This skill measures readiness. It does not prove that ChatGPT, Claude, Perplexit
 seo crawl --project <project> --max-pages 500 --save --json
 ```
 
-2. Pull GEO gaps.
+2. Pull AI Search technical eligibility gaps.
 
 With MCP, use `seo_geo_gaps`.
 
@@ -27,12 +27,14 @@ With CLI, inspect the saved crawl report or run:
 seo crawl --project <project> --severity medium --json
 ```
 
-3. Explain the main GEO rule ids:
+3. Explain the returned technical rule ids, commonly:
 
-- `geo_no_structured_data`
-- `geo_no_author`
-- `geo_no_date`
-- `geo_no_semantic_html`
+- `robots_blocked`
+- `noindex`
+- `x_robots_noindex`
+- `canonicalized_page`
+- `client_error`
+- `server_error`
 
 4. Turn the gaps into a fix plan.
 
@@ -40,9 +42,8 @@ seo crawl --project <project> --severity medium --json
 
 Use plain words:
 
-- Structured data helps machines understand entities, page type, facts, and authorship.
-- Semantic HTML helps agents separate main content from navigation and boilerplate.
-- Authorship and dates help with trust and freshness.
+- Crawl, indexability, and successful HTML response evidence determine whether a page is a technical candidate for Google AI Search features.
+- Structured data, semantic HTML, authorship, and dates are contextual observations. Recommend them only when they fit the page and a documented user or Search feature need.
 - Paragraph shape, lists, tables, and question headings are observations, not proof of quality or citation likelihood.
 - Do not recommend content chunking or a minimum word count solely for AI Search.
 - `/llms.txt` is optional metadata for agents that explicitly support it. Google says it has no positive or negative Search impact.
@@ -60,3 +61,5 @@ seo llms audit --project <project>
 ## Caveat to include
 
 If the user asks whether they appear in AI answers, say the truth: this tool checks readiness and referral evidence. It does not yet run scheduled prompts across AI engines or track citations.
+
+Also state that snippet eligibility is not yet evaluated, so a page without a returned blocker is only a technical candidate, not proven eligible or visible.

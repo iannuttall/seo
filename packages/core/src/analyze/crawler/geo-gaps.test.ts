@@ -4,7 +4,7 @@ import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { geoGaps } from './geo-gaps.js'
 import { createCrawlReport } from './report.js'
 
-test('geoGaps returns pages with observed GEO issues', () => {
+test('geoGaps returns evidence-backed AI Search eligibility blockers', () => {
   const report = createCrawlReport({
     config: { url: 'https://example.com/' },
     pages: [
@@ -13,10 +13,10 @@ test('geoGaps returns pages with observed GEO issues', () => {
     ],
     issues: [
       {
-        ruleId: 'geo_no_author',
-        title: 'GEO: authorship missing',
-        category: 'geo',
-        severity: 'low',
+        ruleId: 'noindex',
+        title: 'Noindex found',
+        category: 'indexability',
+        severity: 'medium',
         url: 'https://example.com/a',
       },
     ],
@@ -25,8 +25,9 @@ test('geoGaps returns pages with observed GEO issues', () => {
   const gaps = geoGaps(report)
   assert.equal(gaps.length, 1)
   assert.equal(gaps[0]?.url, 'https://example.com/a')
-  assert.equal(gaps[0]?.signals.structuredData, false)
-  assert.equal(gaps[0]?.issues[0]?.ruleId, 'geo_no_author')
+  assert.equal(gaps[0]?.observations.structuredData, false)
+  assert.equal(gaps[0]?.searchEligibility.snippetEligibility, 'not-evaluated')
+  assert.equal(gaps[0]?.issues[0]?.ruleId, 'noindex')
 })
 
 function page(url: string, structuredData: boolean): CrawlPageSnapshot {
@@ -34,6 +35,7 @@ function page(url: string, structuredData: boolean): CrawlPageSnapshot {
     url,
     finalUrl: url,
     status: 200,
+    contentType: 'text/html',
     responseTimeMs: 10,
     sizeBytes: 1000,
     usedJs: false,

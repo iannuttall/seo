@@ -37,7 +37,7 @@ const severityRank: Record<Severity, number> = {
 export const crawlCommand = defineCommand({
   meta: {
     name: 'crawl',
-    description: 'Crawl a site and run technical SEO/GEO checks',
+    description: 'Crawl a site and run technical SEO checks',
   },
   args: {
     crawlUrl: {

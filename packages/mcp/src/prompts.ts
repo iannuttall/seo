@@ -50,7 +50,7 @@ export function registerPrompts(server: McpServer): void {
     'seo-crawl-site-audit',
     {
       description:
-        'Run a technical SEO/GEO crawl and return a concise human audit with structured follow-up data',
+        'Run a technical SEO crawl and return a concise human audit with structured follow-up data',
       argsSchema: {
         url: z.string(),
         site: z.string().optional(),
@@ -126,7 +126,7 @@ export function registerPrompts(server: McpServer): void {
           content: {
             type: 'text',
             text: [
-              `Use seo://crawler/workflows and audit GEO readiness for ${url}.`,
+              `Use seo://crawler/workflows and audit AI Search technical eligibility for ${url}.`,
               `Call seo_crawl_site with url=${url}, saveReport=true, maxPages=${maxPages ?? '50'}${site ? `, site=${site}` : ''}.`,
               `Call seo_geo_gaps with the saved reportId and limit=${limit ?? '10'}.`,
               'Explain the main GEO rule ids with seo_explain_issue.',

@@ -20,12 +20,12 @@ Use these workflows when an agent needs technical SEO and GEO crawl data without
 4. Convert each fix into a queue item with: rank, rule id, severity, affected count, sample URLs, action, verification command, and caveats.
 5. Keep plain English in \`action\`; keep exact URLs, counts, rule ids, scores, and commands as structured data for agents.
 
-## GEO readiness
+## AI Search technical eligibility
 
 1. Run \`seo_crawl_site\` or reuse the latest saved report.
-2. Call \`seo_geo_gaps\` with \`reportId\` and a page limit.
-3. Explain the major GEO rule ids with \`seo_explain_issue\`.
-4. Separate technical eligibility from optional page observations. Do not infer citation likelihood from paragraph shape, word count, structured data, or \`/llms.txt\`.
+2. Call \`seo_geo_gaps\` with \`reportId\` and a page limit to find crawl and indexability blockers.
+3. Explain the returned technical rule ids with \`seo_explain_issue\`.
+4. Keep optional page observations separate. Snippet eligibility is not yet evaluated, and citation likelihood cannot be inferred from paragraph shape, word count, structured data, or \`/llms.txt\`.
 
 ## Focused URL audit
 
@@ -65,7 +65,7 @@ export const crawlerToolGuide = {
   workflows: [
     {
       id: 'site-audit',
-      goal: 'Crawl a site, summarize health and GEO readiness, and produce a fix plan.',
+      goal: 'Crawl a site, summarize technical health and AI Search eligibility blockers, and produce a fix plan.',
       tools: [
         'seo_crawl_site',
         'seo_top_fixes',
@@ -85,7 +85,7 @@ export const crawlerToolGuide = {
     },
     {
       id: 'geo-readiness',
-      goal: 'Find pages that are weak for AI-search and citation readiness.',
+      goal: 'Find pages with crawl or indexability blockers for Google AI Search features.',
       tools: ['seo_crawl_site', 'seo_geo_gaps', 'seo_explain_issue'],
     },
     {
@@ -122,7 +122,7 @@ export const crawlerToolGuide = {
     {
       name: 'seo_geo_gaps',
       useFor: 'List pages with AI-search readiness gaps.',
-      outputToReadFirst: ['geoGaps'],
+      outputToReadFirst: ['eligibilityGaps'],
       followUps: ['seo_explain_issue'],
     },
     {

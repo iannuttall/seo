@@ -183,6 +183,7 @@ test('crawler MCP structured output schema stays stable', async () => {
         'lowIssues',
         'mediumIssues',
         'nonIndexablePages',
+        'pageLimitReached',
         'queuedUrls',
         'requestByStatus',
         'responseRequests',

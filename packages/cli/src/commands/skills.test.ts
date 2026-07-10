@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -61,67 +59,4 @@ test('skills list and path expose packaged skill metadata', async () => {
 
   const path = await runSeo(['skills', 'path', 'performance', '--json'])
   assert.equal(JSON.parse(path.stdout).path, join(sourceSkills, 'performance'))
-})
-
-test('skills install copies one skill and preserves existing files by default', async () => {
-  const destination = await mkdtemp(join(tmpdir(), 'seo-skills-'))
-  try {
-    const installed = await runSeo([
-      'skills',
-      'install',
-      'performance',
-      '--dir',
-      destination,
-      '--json',
-    ])
-    assert.equal(installed.exitCode, 0)
-    assert.equal(installed.stderr, '')
-    assert.deepEqual(JSON.parse(installed.stdout), {
-      destination,
-      results: [
-        {
-          name: 'performance',
-          path: join(destination, 'performance'),
-          changed: true,
-        },
-      ],
-    })
-    assert.match(
-      await readFile(join(destination, 'performance', 'SKILL.md'), 'utf8'),
-      /^---\nname: performance\n/,
-    )
-
-    const repeated = await runSeo([
-      'skills',
-      'install',
-      'performance',
-      '--dir',
-      destination,
-      '--json',
-    ])
-    assert.equal(JSON.parse(repeated.stdout).results[0].changed, false)
-  } finally {
-    await rm(destination, { recursive: true, force: true })
-  }
-})
-
-test('skills install never prompts in JSON or CI mode', async () => {
-  const missingTarget = await runSeo(['skills', 'install', '--json'])
-  assert.equal(missingTarget.exitCode, 2)
-  assert.equal(missingTarget.stderr, '')
-  assert.equal(JSON.parse(missingTarget.stdout).error.code, 'INVALID_INPUT')
-
-  const unknown = await runSeo([
-    'skills',
-    'install',
-    'not-a-skill',
-    '--target',
-    'agents',
-    '--json',
-  ])
-  assert.equal(unknown.exitCode, 2)
-  assert.equal(
-    JSON.parse(unknown.stdout).error.message,
-    'Unknown skill: not-a-skill.',
-  )
 })

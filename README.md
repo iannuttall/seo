@@ -5,7 +5,7 @@
 <h1 align="center">SEO Skills CLI</h1>
 
 <p align="center">
-  Technical SEO skills for AI agents and developers. Crawl sites, connect search data, and turn local evidence into prioritised fixes.
+  Find what is costing you traffic, which pages are closest to more clicks, and what to fix first. Local SEO tools and skills for people, AI agents, and CI.
 </p>
 
 <p align="center">
@@ -35,9 +35,9 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-`seo` finds technical problems, ties them to the pages and queries they affect,
-and shows what is worth fixing first. The reports run on your machine and keep
-their supporting evidence close by, so you can act without guessing.
+`seo` turns a local crawl and your own search data into work you can inspect
+and ship. Find technical blockers, recover search demand, improve pages already
+close to more clicks, and catch regressions after a release.
 
 ## Quick start
 
@@ -165,7 +165,16 @@ drift.
 
 ## Use it with AI agents
 
-Install the local stdio MCP server into a supported client:
+Agents work best with both parts of the project. The `seo` package runs the
+reports. The skills teach an agent which report to choose, how to read it, and
+what to verify before changing a site.
+
+```sh
+npm i -g seo
+npx skills add iannuttall/seo
+```
+
+Then install the local stdio MCP server into a supported client:
 
 ```sh
 seo mcp install
@@ -187,17 +196,15 @@ configuration or testing:
 seo mcp serve
 ```
 
-The package also ships focused skills under `skills/`. They teach agents when
-to discover reports, run an analysis, inspect evidence, and request a smaller
-follow-up instead of loading a giant report into context.
+The repository ships the focused instructions under `skills/`. They teach
+agents when to discover reports, inspect evidence, and request a smaller
+follow-up instead of loading a giant result into context.
 
-List or install them without finding the npm package directory yourself:
+The npm package includes the same files for local inspection:
 
 ```sh
 seo skills list
-seo skills install --target codex
-seo skills install --target claude
-seo skills install --target project
+seo skills path quick-wins
 ```
 
 Agents can also discover the complete skill catalog from

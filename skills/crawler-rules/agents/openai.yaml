@@ -1,0 +1,4 @@
+interface:
+  display_name: "List rules"
+  short_description: "List crawler rule ids and guidance metadata"
+  default_prompt: "Use $crawler-rules to run the crawler-rules report and explain its evidence and limits."

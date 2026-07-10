@@ -112,9 +112,12 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
   const { listReportDefinitions } = await import(
     resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
   )
+  const { reportSlugs } = await import(
+    resolve(appRoot, 'src/content/reports/manifest.mjs')
+  )
   indexable.push(
     ...listReportDefinitions().map(
-      ({ id }) => `https://seoskills.dev/docs/reports/${id}`,
+      ({ id }) => `https://seoskills.dev/docs/reports/${reportSlugs[id] ?? id}`,
     ),
   )
 
@@ -129,7 +132,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
   const { getReportDefinition, listReportDefinitions } = await import(
     resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
   )
-  const { legacyReportAliases, reportIds } = await import(
+  const { legacyReportAliases, reportIds, reportSlugs } = await import(
     resolve(appRoot, 'src/content/reports/manifest.mjs')
   )
   const liveIds = listReportDefinitions()
@@ -143,7 +146,8 @@ test('report library covers the live registry and keeps legacy routes', async ()
   assert.deepEqual([...reportIds].sort(), liveIds)
 
   for (const id of liveIds) {
-    const relativePath = `docs/reports/${id}/index.html`
+    const slug = reportSlugs[id] ?? id
+    const relativePath = `docs/reports/${slug}/index.html`
     const html = readFileSync(resolve(dist, relativePath), 'utf8')
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
     const description = html.match(
@@ -155,23 +159,28 @@ test('report library covers the live registry and keeps legacy routes', async ()
       description && description.length >= 140 && description.length <= 160,
       id,
     )
-    assert.match(catalogHtml, new RegExp(`href="/docs/reports/${id}"`))
+    assert.match(catalogHtml, new RegExp(`href="/docs/reports/${slug}"`))
     assert.match(
       html,
       new RegExp(
-        `<link rel="canonical" href="https://seoskills\\.dev/docs/reports/${id}"\\s*/?>`,
+        `<link rel="canonical" href="https://seoskills\\.dev/docs/reports/${slug}"\\s*/?>`,
       ),
     )
     assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)
-    assert.match(html, /What this report answers/)
-    assert.match(html, /Evidence this report uses/)
+    assert.match(html, /What this report helps you decide/)
+    assert.match(html, /Data sources and inputs/)
+    assert.match(html, /What this report checks/)
     assert.match(html, /Run the report from the CLI/)
-    assert.match(html, /How to read the result/)
-    assert.match(html, /Limits to keep with the result/)
+    assert.match(html, /What comes back/)
+    assert.match(html, /What comes back and how to read it/)
+    assert.match(html, /What this report cannot tell you/)
     assert.match(html, /What to do next/)
     assert.match(html, new RegExp(`seo reports describe ${id}`))
     assert.match(html, new RegExp(`seo reports run ${id}`))
-    assert.doesNotMatch(html, /noindex/)
+    assert.doesNotMatch(
+      html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? '',
+      /<meta name="robots" content="noindex/,
+    )
 
     const commandStart = `seo reports run ${id} --params &#39;`
     const paramsStart = html.indexOf(commandStart)
@@ -193,6 +202,14 @@ test('report library covers the live registry and keeps legacy routes', async ()
     const definition = getReportDefinition(id)
     assert.ok(definition)
     assert.equal(definition.inputSchema.safeParse(params).success, true, id)
+  }
+
+  for (const [id, slug] of Object.entries(reportSlugs)) {
+    const html = readFileSync(
+      resolve(dist, 'docs/reports', id, 'index.html'),
+      'utf8',
+    )
+    assert.match(html, new RegExp(`/docs/reports/${slug}`))
   }
 
   for (const [alias, target] of Object.entries(legacyReportAliases)) {

@@ -16,7 +16,7 @@ import { cliReportArgs } from '../report-options.js'
 export const diagnoseCommand = defineCommand({
   meta: {
     name: 'diagnose',
-    description: 'Run end-to-end property diagnosis across GSC signals',
+    description: 'Find where Google Search performance changed',
   },
   args: {
     site: {

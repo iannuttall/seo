@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { createServer, startMcpServer } from './index.js'
+import { REPORT_GUIDANCE } from './report-guidance.js'
 import { listReportDefinitions } from './report-registry.js'
 
 type JsonRecord = Record<string, unknown>
@@ -54,52 +55,52 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'ai-referrals',
     'audit-page',
     'audit-urls',
-    'cannibal',
+    'cannibalisation',
     'community-intent',
-    'compare-crawl-reports',
+    'compare-crawls',
     'content-optimization',
     'crawl-diff',
-    'crawl-site',
+    'crawl-history',
+    'crawl-report',
+    'crawler-rules',
     'ctr-underperformers',
-    'decaying',
-    'diagnose-property',
-    'doctor',
+    'decaying-pages',
     'entity-readiness',
-    'explain-issue',
+    'explain-crawl-issue',
+    'generate-llms-txt',
     'geo-gaps',
-    'get-crawl-report',
+    'index-coverage',
     'index-coverage-plan',
     'index-monitor',
     'index-watch',
     'internal-links',
-    'link-recover',
-    'list-crawl-reports',
-    'list-rules',
+    'link-recovery',
     'llms-txt-audit',
-    'llms-txt-generate',
     'measure-change',
+    'monthly-action-plan',
     'monthly-report',
+    'narrative-report',
     'okf-build',
     'okf-validate',
     'page-opportunities',
     'performance-audit',
     'pseo-audit',
-    'query-cluster',
+    'query-clusters',
     'quick-wins',
     'redirect-trace',
-    'report-narrative',
+    'refresh-priorities',
+    'search-performance-overview',
     'second-page',
     'segment-impact',
+    'seo-to-ai-query',
+    'setup-check',
+    'site-crawl',
     'striking-distance',
-    'to-ai-query',
+    'technical-watch',
     'top-fixes',
     'traffic-anomaly',
-    'update-correlate',
-    'workflow-diagnose-property',
-    'workflow-monthly-report',
-    'workflow-refresh-priorities',
-    'workflow-technical-watch',
-    'workflow-update-postmortem',
+    'update-correlation',
+    'update-postmortem',
   ])
   for (const excluded of [
     'client',
@@ -113,6 +114,19 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     assert.equal(ids.includes(excluded), false, excluded)
   }
   assert.equal(new Set(ids).size, ids.length)
+  assert.deepEqual(Object.keys(REPORT_GUIDANCE).sort(), ids)
+  for (const report of reports) {
+    assert.ok(report.name.length > 0, report.id)
+    assert.ok(report.description.length > 0, report.id)
+  }
+  for (const [id, guidance] of Object.entries(REPORT_GUIDANCE)) {
+    assert.ok(guidance.useWhen.length >= 1 && guidance.useWhen.length <= 3, id)
+    assert.ok(
+      guidance.avoidWhen.length >= 1 && guidance.avoidWhen.length <= 2,
+      id,
+    )
+    assert.ok(guidance.outcome.length > 0, id)
+  }
 })
 
 test('list and describe return compact ordered metadata and parameter schema', async () => {
@@ -133,7 +147,12 @@ test('list and describe return compact ordered metadata and parameter schema', a
       reports.every(
         (report) =>
           typeof report.description === 'string' &&
-          report.description.length > 0,
+          report.description.length > 0 &&
+          typeof report.name === 'string' &&
+          report.name.length > 0 &&
+          !('useWhen' in report) &&
+          !('avoidWhen' in report) &&
+          !('outcome' in report),
       ),
     )
 
@@ -148,6 +167,23 @@ test('list and describe return compact ordered metadata and parameter schema', a
     const properties = inputSchema.properties as JsonRecord
     assert.equal(report.id, 'audit-page')
     assert.equal(report.category, 'reporting')
+    assert.equal(report.name, 'Single-page SEO audit')
+    assert.equal(
+      report.description,
+      'Check one URL for response, indexability, metadata, headings, links, and page content evidence.',
+    )
+    assert.deepEqual(report.useWhen, [
+      'One page needs a technical review before you change it.',
+      'A broader report points to a specific URL.',
+    ])
+    assert.deepEqual(report.avoidWhen, [
+      'You need to discover issues across a whole site.',
+      'The page requires a logged-in browser session.',
+    ])
+    assert.equal(
+      report.outcome,
+      'A page-level audit that separates observed evidence from review advice.',
+    )
     assert.deepEqual(inputSchema.required, ['url'])
     assert.equal((properties.url as JsonRecord).format, 'uri')
     assert.equal(inputSchema.additionalProperties, false)
@@ -155,7 +191,7 @@ test('list and describe return compact ordered metadata and parameter schema', a
     const listedRules = structured(
       await client.callTool({
         name: 'seo_describe_report',
-        arguments: { id: 'list-rules' },
+        arguments: { id: 'crawler-rules' },
       }),
     )
     const ruleReport = listedRules.report as JsonRecord
@@ -215,7 +251,7 @@ test('run validates the selected report and returns structured errors', async ()
     const invalidRuleCategory = await client.callTool({
       name: 'seo_run_report',
       arguments: {
-        id: 'list-rules',
+        id: 'crawler-rules',
         params: { category: 'not-a-category' },
       },
     })
@@ -224,12 +260,12 @@ test('run validates the selected report and returns structured errors', async ()
     assert.equal(invalidRuleError.code, 'INVALID_INPUT')
     assert.match(
       String(invalidRuleError.message),
-      /Invalid parameters for list-rules/,
+      /Invalid parameters for crawler-rules/,
     )
 
     const success = await client.callTool({
       name: 'seo_run_report',
-      arguments: { id: 'list-rules', params: { category: 'metadata' } },
+      arguments: { id: 'crawler-rules', params: { category: 'metadata' } },
     })
     const successResult = resultRecord(success)
     assert.equal(successResult.isError, undefined)

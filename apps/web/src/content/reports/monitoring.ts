@@ -6,7 +6,7 @@ export const monitoringReports = [
     name: 'Crawl diff',
     category: 'monitoring',
     summary:
-      'Crawl a bounded same-origin set and compare it with the previous run so technical regressions stand out quickly.',
+      'Crawl a limited same-origin set and compare it with the previous run so technical regressions stand out quickly.',
     question:
       'What technical or page evidence changed since the previous comparable crawl?',
     useWhen: [
@@ -18,7 +18,7 @@ export const monitoringReports = [
       'Current fetched crawl evidence and the previous compatible locally saved run.',
     ],
     methodology: [
-      'Runs the bounded crawl, matches pages and findings deterministically, then separates regressions, recoveries, additions, and removals.',
+      'Runs the limited crawl, matches pages and findings consistently, then separates regressions, recoveries, additions, and removals.',
     ],
     exampleParams: {
       startUrl: 'https://example.com/',
@@ -36,8 +36,52 @@ export const monitoringReports = [
       'Audit representative regressions.',
       'Use affected URLs for repeated rule changes.',
     ],
-    related: ['compare-crawl-reports', 'audit-page', 'affected-urls'],
+    related: ['compare-crawls', 'audit-page', 'affected-urls'],
     sources: ['robots', 'javascript'],
+  },
+  {
+    id: 'index-coverage',
+    name: 'Index coverage signals',
+    category: 'monitoring',
+    summary:
+      'Find crawlable pages missing from the Search Console results returned for the period, then choose representative URLs to inspect.',
+    question:
+      'Which pages deserve URL Inspection because crawl, sitemap, and Search Console evidence do not line up?',
+    useWhen: [
+      'You need an evidence-based sample for an index coverage investigation.',
+      'A current saved crawl and Search Console page data are available for the same site.',
+    ],
+    avoidWhen: [
+      'You need a definitive current index verdict for one URL. Use URL Inspection instead.',
+      'The saved crawl covers the wrong section or is too old for the question.',
+    ],
+    evidence: [
+      'A saved local crawl, an optional sitemap inventory, and finalized Search Console page rows for an explicit date range and row limit.',
+    ],
+    methodology: [
+      'Normalizes URLs across the available sources, keeps crawl controls separate, and groups crawlable pages missing from the returned Search Console data for review.',
+      'Groups repeated URL templates to help choose representative checks without diagnosing the template or its index state.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      crawlReportId: 'crawl_saved',
+      sitemaps: ['https://example.com/sitemap.xml'],
+      days: 90,
+      rowLimit: 100000,
+    },
+    interpretation: [
+      'Start with source completeness. A crawlable page missing from returned Search Console rows is a review candidate, not proof that the page is unindexed.',
+    ],
+    caveats: [
+      'Search Analytics is not an index inventory. Missing rows can mean no impressions in the returned data, a row cap, privacy filtering, or a URL that needs direct inspection.',
+      'Saved crawl reports do not retain a full sitemap inventory. The report can fetch sitemap documents declared in captured robots.txt evidence, or use sitemap URLs supplied explicitly.',
+    ],
+    nextSteps: [
+      'Choose representative URLs from important page types and template groups.',
+      'Run URL Inspection for that limited sample and keep provider failures separate from page findings.',
+    ],
+    related: ['index-watch', 'index-monitor', 'index-coverage-plan'],
+    sources: ['search-analytics', 'sitemaps', 'url-inspection'],
   },
   {
     id: 'index-coverage-plan',
@@ -48,7 +92,7 @@ export const monitoringReports = [
     question:
       'How should these URLs be allocated across properties and daily URL Inspection capacity?',
     useWhen: [
-      'A large site needs bounded, repeatable index monitoring.',
+      'A large site needs limited, repeatable index monitoring.',
       'You need to see whether extra URL-prefix properties would improve ownership coverage.',
     ],
     avoidWhen: [
@@ -74,7 +118,7 @@ export const monitoringReports = [
       'A sitemap is a discovery hint, not proof that every listed URL is indexed or should be indexed.',
     ],
     nextSteps: [
-      'Run index monitor with a bounded daily sample.',
+      'Run index monitor with a limited daily sample.',
       'Add appropriate URL-prefix property access if important URLs cannot be inspected.',
     ],
     related: ['index-monitor', 'index-watch'],
@@ -85,7 +129,7 @@ export const monitoringReports = [
     name: 'Index monitor',
     category: 'monitoring',
     summary:
-      'Inspect a quota-bounded sitemap sample and store Google’s indexed snapshots for later comparison.',
+      'Inspect a quota-limited sitemap sample and store Google’s indexed snapshots for later comparison.',
     question:
       'What indexed-state evidence did Google return for today’s monitored URL sample?',
     useWhen: [
@@ -99,7 +143,7 @@ export const monitoringReports = [
       'Sitemap discovery, local quota state, and URL Inspection indexed snapshots returned by Google.',
     ],
     methodology: [
-      'Selects a bounded deterministic sample, enforces local daily capacity, stores individual results, and records operational failures separately.',
+      'Selects a limited repeatable sample, enforces local daily capacity, stores individual results, and records operational failures separately.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -127,7 +171,7 @@ export const monitoringReports = [
     name: 'Index watch',
     category: 'monitoring',
     summary:
-      'Separate current indexed-state issues, regressions, recoveries, and provider failures for a bounded URL set.',
+      'Separate current indexed-state issues, regressions, recoveries, and provider failures for a limited URL set.',
     question:
       'Which monitored URLs changed indexed state or need verification?',
     useWhen: [
@@ -162,11 +206,11 @@ export const monitoringReports = [
     sources: ['url-inspection'],
   },
   {
-    id: 'link-recover',
+    id: 'link-recovery',
     name: 'Recover search-value URLs',
     category: 'monitoring',
     summary:
-      'Find URLs with retained search value that now fail, block access, or redirect poorly.',
+      'Find URLs with returned search value that now fail, block access, or redirect poorly.',
     question:
       'Which search-visible URLs now lead users and crawlers to a broken or unsuitable destination?',
     useWhen: [
@@ -177,10 +221,10 @@ export const monitoringReports = [
       'You want to redirect every historical URL without checking relevance and user value.',
     ],
     evidence: [
-      'Retained Search Console page metrics plus fresh response, redirect, robots, indexability, and canonical evidence.',
+      'Returned Search Console page metrics plus fresh response, redirect, robots, indexability, and canonical evidence.',
     ],
     methodology: [
-      'Ranks eligible search-value URLs, fetches a bounded set, traces outcomes, and keeps failed verification separate.',
+      'Ranks eligible search-value URLs, fetches a limited set, traces outcomes, and keeps failed verification separate.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -194,7 +238,7 @@ export const monitoringReports = [
       'Restore a useful page or redirect to the closest genuinely equivalent destination. A 200 response alone does not make the destination appropriate.',
     ],
     caveats: [
-      'Retained Search Console rows are not a complete historical URL inventory, and fetched behavior can differ by user agent.',
+      'Returned Search Console rows are not a complete historical URL inventory, and fetched behavior can differ by user agent.',
     ],
     nextSteps: [
       'Trace the specific redirect chain.',
@@ -239,7 +283,7 @@ export const monitoringReports = [
       'Update internal links to the final destination.',
       'Use link recovery to find other search-visible broken URLs.',
     ],
-    related: ['link-recover', 'audit-page', 'crawl-site'],
+    related: ['link-recovery', 'audit-page', 'site-crawl'],
     sources: ['redirects', 'canonical'],
   },
 ] as const satisfies readonly ReportEditorial[]

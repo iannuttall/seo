@@ -1,8 +1,9 @@
 import { aiSearchReports } from './ai-search'
+import { orderReportsForReaders } from './categories'
 import { crawlReports } from './crawl'
 import { diagnosisReports } from './diagnosis'
 import { experimentReports } from './experiments'
-import { legacyReportAliases, reportIds } from './manifest.mjs'
+import { legacyReportAliases, reportIds, reportSlugs } from './manifest.mjs'
 import { monitoringReports } from './monitoring'
 import { opportunityReports } from './opportunities'
 import { reportingReports } from './reporting'
@@ -25,10 +26,11 @@ const catalog = [
 export const reports: ReportEditorial[] = [...catalog].sort((a, b) =>
   a.id.localeCompare(b.id),
 )
+export const editorialReports = orderReportsForReaders(catalog)
 export const reportsById = new Map<string, ReportEditorial>(
   reports.map((report) => [report.id, report]),
 )
-export { legacyReportAliases, reportIds }
+export { legacyReportAliases, reportIds, reportSlugs }
 
 const catalogIds = reports.map((report) => report.id)
 if (new Set(catalogIds).size !== catalogIds.length) {
@@ -53,5 +55,11 @@ for (const [alias, target] of Object.entries(legacyReportAliases)) {
   const validTarget = target.startsWith('/') || reportsById.has(target)
   if (reportsById.has(alias) || !validTarget) {
     throw new Error(`Invalid legacy report alias ${alias} -> ${target}.`)
+  }
+}
+
+for (const [id, slug] of Object.entries(reportSlugs)) {
+  if (!reportsById.has(id) || reportsById.has(slug)) {
+    throw new Error(`Invalid public report slug ${id} -> ${slug}.`)
   }
 }

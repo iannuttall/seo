@@ -9,22 +9,21 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { reports } from '@/content/reports'
-import { categoryLabels, reportPath } from '@/content/reports/helpers'
-import type { ReportCategory } from '@/content/reports/types'
+import {
+  reportCollectionIds,
+  reportCollections,
+} from '@/content/reports/collections'
+import { reportPath } from '@/content/reports/helpers'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { site } from '@/lib/site'
 
-const categoryOrder: readonly ReportCategory[] = [
-  'setup',
-  'diagnosis',
-  'opportunities',
-  'crawl',
-  'monitoring',
-  'reporting',
-  'experiments',
-  'ai-search',
-  'workflows',
-]
+const catalogIds = reports.map((report) => report.id)
+if (
+  new Set(reportCollectionIds).size !== reportCollectionIds.length ||
+  [...reportCollectionIds].sort().join('\n') !== [...catalogIds].sort().join('\n')
+) {
+  throw new Error('Home report groups do not match the live report catalog.')
+}
 
 const faqs = [
   {
@@ -35,7 +34,7 @@ const faqs = [
   {
     question: 'Why connect Search Console?',
     answer:
-      'Search Console adds the queries, pages, clicks, impressions, CTR, position, and index evidence needed to find real opportunities on a site you can access. The CLI requests read-only access.',
+      'Search Console adds the queries, pages, clicks, impressions, CTR, and average position needed to find real opportunities on a site you can access. URL Inspection can add Google index evidence for selected pages. The CLI requests read-only access.',
   },
   {
     question: 'Is GA4 required?',
@@ -135,24 +134,22 @@ const faqs = [
 
       <section class="site-frame">
         <SectionHeading
-          eyebrow="Everything a technical SEO investigation needs"
-          text={`${reports.length} reports across crawl health, search opportunities, monitoring, AI search evidence, experiments, and reporting.`}
+          eyebrow="Everything an SEO audit needs to cover"
+          text={`${reports.length} reports and tools across crawl health, Search Console and GA4, opportunities, AI readiness, and monitoring.`}
         />
         <div class="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {
-            categoryOrder.map((category) => (
+            reportCollections.map((group) => (
               <div>
-                <h3 class="text-lg font-medium text-foreground">{categoryLabels[category]}</h3>
+                <h3 class="text-lg font-medium text-foreground">{group.title}</h3>
                 <ul class="mt-3 flex flex-col gap-1.5 text-base text-foreground-muted">
-                  {reports
-                    .filter((report) => report.category === category)
-                    .map((report) => (
-                      <li>
-                        <a class="body-link" href={reportPath(report.id)}>
-                          {report.name}
-                        </a>
-                      </li>
-                    ))}
+                  {group.reports.map(([id, label]) => (
+                    <li>
+                      <a class="body-link" href={reportPath(id)}>
+                        {label}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))

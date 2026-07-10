@@ -1,16 +1,11 @@
+import { reportCategoryById } from './categories'
+import type { ReportGuideSeo } from './guides'
+import { reportSlugs } from './manifest.mjs'
 import type { ReportCategory, ReportEditorial } from './types'
 
-export const categoryLabels: Record<ReportCategory, string> = {
-  'ai-search': 'AI search evidence',
-  crawl: 'Crawling and technical checks',
-  diagnosis: 'Property diagnosis',
-  experiments: 'Change measurement',
-  monitoring: 'Technical monitoring',
-  opportunities: 'Search opportunities',
-  reporting: 'Reporting',
-  setup: 'Setup',
-  workflows: 'Multi-report workflows',
-}
+export const categoryLabels = Object.fromEntries(
+  [...reportCategoryById].map(([id, category]) => [id, category.label]),
+) as Record<ReportCategory, string>
 
 export function reportCommand(report: ReportEditorial): string {
   return `seo reports run ${report.id} --params '${JSON.stringify(report.exampleParams)}' --json`
@@ -21,10 +16,16 @@ export function describeCommand(report: ReportEditorial): string {
 }
 
 export function reportPath(id: string): string {
-  return `/docs/reports/${id}`
+  const slug = reportSlugs[id as keyof typeof reportSlugs] ?? id
+  return `/docs/reports/${slug}`
 }
 
-export function reportMetaDescription(report: ReportEditorial): string {
+export function reportMetaDescription(
+  report: ReportEditorial,
+  seo?: ReportGuideSeo,
+): string {
+  if (seo) return seo.description
+
   const suffixes = [
     ' See when to use it, how to read the evidence, and the exact local CLI command.',
     ' See when to use it, read the evidence, and run the exact local CLI command.',
@@ -46,16 +47,35 @@ export function reportMetaDescription(report: ReportEditorial): string {
   )
 }
 
-export function reportPageTitle(report: ReportEditorial): string {
+export function reportPageTitle(
+  report: ReportEditorial,
+  seo?: ReportGuideSeo,
+  displayName = report.name,
+): string {
+  if (seo?.title.includes('SEO Skills CLI')) return seo.title
+
+  const customCandidates = seo
+    ? [
+        seo.title,
+        `${displayName}: evidence and CLI guide`,
+        `${displayName}: SEO report guide`,
+        displayName,
+      ]
+    : []
+  const fittedCustomTitle = customCandidates.find(
+    (title) => title.length >= 38 && title.length <= 53,
+  )
+  if (fittedCustomTitle) return fittedCustomTitle
+
   const candidates = [
-    `${report.name}: SEO report evidence and local CLI guide | SEO Skills CLI`,
-    `${report.name}: SEO report and local CLI guide | SEO Skills CLI`,
-    `${report.name}: local CLI report guide | SEO Skills CLI`,
-    `${report.name} report guide | SEO Skills CLI`,
+    `${displayName}: SEO report evidence and local CLI guide | SEO Skills CLI`,
+    `${displayName}: SEO report and local CLI guide | SEO Skills CLI`,
+    `${displayName}: local CLI report guide | SEO Skills CLI`,
+    `${displayName} report guide | SEO Skills CLI`,
   ]
   return (
     candidates.find((title) => title.length >= 55 && title.length <= 70) ??
     candidates.at(-1) ??
-    report.name
+    displayName
   )
 }

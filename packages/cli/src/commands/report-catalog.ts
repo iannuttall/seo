@@ -88,8 +88,13 @@ const listCommand = defineCommand({
       return
     }
     printTable(
-      ['ID', 'Category', 'Description'],
-      reports.map((report) => [report.id, report.category, report.description]),
+      ['ID', 'Category', 'Name', 'Description'],
+      reports.map((report) => [
+        report.id,
+        report.category,
+        report.name,
+        report.description,
+      ]),
     )
   },
 })
@@ -120,8 +125,14 @@ const describeCommand = defineCommand({
     printKeyValue([
       ['ID', report.id],
       ['Category', report.category],
+      ['Name', report.name],
       ['Description', report.description],
+      ['Outcome', report.outcome],
     ])
+    process.stdout.write('\nUse when\n')
+    for (const reason of report.useWhen) process.stdout.write(`- ${reason}\n`)
+    process.stdout.write('\nAvoid when\n')
+    for (const reason of report.avoidWhen) process.stdout.write(`- ${reason}\n`)
     process.stdout.write('\nParameters (JSON Schema)\n')
     printJson(report.inputSchema)
   },

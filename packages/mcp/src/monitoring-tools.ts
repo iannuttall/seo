@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   crawlDiff,
   indexCoveragePlan,
+  indexCoverageSignals,
   indexMonitor,
   indexWatch,
   linkRecover,
@@ -108,6 +109,59 @@ export function registerMonitoringTools(server: McpServer): void {
         })
         return toolSuccess(
           `Planned ${result.summary.urlCount} sitemap URLs across ${result.summary.properties} properties. ${result.summary.suggestedProperties} suggested properties.`,
+          result,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_index_coverage',
+    {
+      description:
+        'Compare a saved crawl and sitemap with Search Console page results, then choose representative URLs for URL Inspection',
+      inputSchema: {
+        site: z.string().min(1),
+        crawlReportId: z.string().min(1).optional(),
+        sitemaps: z.array(z.string().url()).min(1).max(20).optional(),
+        days: z.number().int().min(1).max(548).optional(),
+        rowLimit: z.number().int().min(1).max(250_000).optional(),
+        maxSitemapUrls: z.number().int().min(1).max(250_000).optional(),
+        itemsPerSection: z.number().int().min(1).max(1_000).optional(),
+        templateClusters: z.number().int().min(1).max(200).optional(),
+        templateSamples: z.number().int().min(1).max(25).optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      site,
+      crawlReportId,
+      sitemaps,
+      days,
+      rowLimit,
+      maxSitemapUrls,
+      itemsPerSection,
+      templateClusters,
+      templateSamples,
+      refresh,
+    }) => {
+      try {
+        const result = await indexCoverageSignals({
+          site,
+          crawlReportId,
+          sitemaps,
+          days,
+          rowLimit,
+          maxSitemapUrls,
+          itemsPerSection,
+          templateClusters,
+          templateSamples,
+          refresh,
+        })
+        return toolSuccess(
+          `${result.summary.retainedSearchVisibleUrls} URLs appeared in the returned Search Console data. ${result.summary.crawlableCandidatesWithoutRetainedSearchVisibility} crawlable URLs need evidence review before choosing representative URL Inspection checks.`,
           result,
         )
       } catch (error) {

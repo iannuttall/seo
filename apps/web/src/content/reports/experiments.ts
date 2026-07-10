@@ -38,13 +38,13 @@ export const experimentReports = [
     ],
     caveats: [
       'Seasonality, ranking updates, releases, demand shifts, and attribution changes can all move the same metrics.',
-      'Rows absent from one retained window are not silently converted to zero.',
+      'Rows absent from one returned window are not silently converted to zero.',
     ],
     nextSteps: [
       'Keep the change if the evidence and page quality support it, or plan a measured reversal.',
       'Use segment impact when you need to locate which pages or queries moved.',
     ],
-    related: ['segment-impact', 'traffic-anomaly', 'report-narrative'],
+    related: ['segment-impact', 'traffic-anomaly', 'narrative-report'],
     sources: ['search-analytics'],
   },
 ] as const satisfies readonly ReportEditorial[]

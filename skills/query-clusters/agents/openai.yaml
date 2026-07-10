@@ -1,0 +1,4 @@
+interface:
+  display_name: "Query cluster"
+  short_description: "Cluster retained GSC queries by token overlap"
+  default_prompt: "Use $query-clusters to run the query-clusters report and explain its evidence and limits."

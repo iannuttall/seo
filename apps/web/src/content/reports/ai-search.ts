@@ -20,7 +20,7 @@ export const aiSearchReports = [
       'GA4 session-scoped traffic source dimensions and metrics matched to documented AI referral source definitions.',
     ],
     methodology: [
-      'Filters retained acquisition rows by explicit source rules, aggregates matches, and keeps unclassified traffic out of the AI total.',
+      'Filters returned acquisition rows by explicit source rules, aggregates matches, and keeps unclassified traffic out of the AI total.',
     ],
     exampleParams: {
       property: '123456789',
@@ -38,7 +38,7 @@ export const aiSearchReports = [
       'Inspect the landing pages receiving useful referral traffic.',
       'Use a stable prompt corpus if you separately monitor citations or answers.',
     ],
-    related: ['page-opportunities', 'to-ai-query', 'ai-readiness'],
+    related: ['page-opportunities', 'seo-to-ai-query', 'ai-readiness'],
     sources: ['ga4-acquisition'],
   },
   {
@@ -46,21 +46,21 @@ export const aiSearchReports = [
     name: 'Community-intent queries',
     category: 'ai-search',
     summary:
-      'Surface retained searches containing explicit review, comparison, forum, recommendation, or experience wording.',
+      'Surface returned searches containing explicit review, comparison, forum, recommendation, or experience wording.',
     question:
       'Which observed search queries suggest that people want opinions, comparisons, or lived experience?',
     useWhen: [
       'You need first-party wording to review community or evidence-led content opportunities.',
-      'A deterministic phrase classifier is useful as a starting filter.',
+      'A repeatable phrase classifier is useful as a starting filter.',
     ],
     avoidWhen: [
       'You need proof of intent from every query or evidence of demand inside an AI product.',
     ],
     evidence: [
-      'Retained Search Console queries and metrics that match the report’s explicit phrase categories.',
+      'Returned Search Console queries and metrics that match the report’s explicit phrase categories.',
     ],
     methodology: [
-      'Classifies query text with documented rules, preserves unmatched rows outside the result, and ranks eligible evidence deterministically.',
+      'Classifies query text with documented rules, preserves unmatched rows outside the result, and ranks eligible evidence consistently.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -78,7 +78,7 @@ export const aiSearchReports = [
       'Decide whether an existing page already answers the need with credible first-hand evidence.',
       'Use content optimization for a supported page brief.',
     ],
-    related: ['content-optimization', 'query-cluster', 'page-opportunities'],
+    related: ['content-optimization', 'query-clusters', 'page-opportunities'],
     sources: ['search-analytics'],
   },
   {
@@ -100,7 +100,7 @@ export const aiSearchReports = [
       'Exact-URL Search Console query rows, fetched metadata and headings, page text, links, and technical observations.',
     ],
     methodology: [
-      'Classifies retained query wording with broad heuristics, verifies the live page when requested, and turns supported gaps into bounded review actions.',
+      'Classifies returned query wording with broad heuristics, verifies the live page when requested, and turns supported gaps into limited review actions.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -130,7 +130,7 @@ export const aiSearchReports = [
     summary:
       'Show the first-party search opportunities attached to one URL, then verify the page before recommending work.',
     question:
-      'Which retained query opportunities are associated with this page?',
+      'Which returned query opportunities are associated with this page?',
     useWhen: [
       'A specific URL needs a compact opportunity view before deeper editing.',
       'You need the query evidence and page verification state together.',
@@ -142,7 +142,7 @@ export const aiSearchReports = [
       'Exact-page Search Console rows with optional fetched content and technical checks.',
     ],
     methodology: [
-      'Filters and ranks retained query rows for the target URL, records source completeness, and keeps unverified content conclusions out of the result.',
+      'Filters and ranks returned query rows for the target URL, records source completeness, and keeps unverified content conclusions out of the result.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -156,7 +156,7 @@ export const aiSearchReports = [
       'Read query metrics alongside verification and technical state. A high-impression row can still be the wrong intent for the page.',
     ],
     caveats: [
-      'The report only sees retained Search Console rows for the exact page scope and selected dates.',
+      'The report only sees returned Search Console rows for the exact page scope and selected dates.',
     ],
     nextSteps: [
       'Use content optimization when the page needs a fuller brief.',
@@ -201,11 +201,11 @@ export const aiSearchReports = [
       'Fix the returned bottleneck with the strongest evidence and rerun under the same conditions.',
       'Check representative templates rather than assuming one page describes the whole site.',
     ],
-    related: ['audit-page', 'crawl-site', 'measure-change'],
+    related: ['audit-page', 'site-crawl', 'measure-change'],
     sources: ['core-web-vitals'],
   },
   {
-    id: 'to-ai-query',
+    id: 'seo-to-ai-query',
     name: 'Search queries to AI prompts',
     category: 'ai-search',
     summary:
@@ -213,14 +213,14 @@ export const aiSearchReports = [
     question:
       'Which reproducible prompts can be derived from the searches already associated with this site?',
     useWhen: [
-      'You need a bounded prompt corpus whose source queries and dates remain attached.',
-      'Deterministic templates matter more than creative prompt generation.',
+      'You need a limited prompt corpus whose source queries and dates remain attached.',
+      'Repeatable templates matter more than creative prompt generation.',
     ],
     avoidWhen: [
       'You need evidence that people use those prompts in AI products or that the site appears in answers.',
     ],
     evidence: [
-      'Retained Search Console query wording and metrics from the selected property and date range.',
+      'Returned Search Console query wording and metrics from the selected property and date range.',
     ],
     methodology: [
       'Applies stable prompt templates to eligible source queries, preserves source completeness, and bounds both retrieval and output.',

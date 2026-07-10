@@ -7,6 +7,7 @@ import { registerExperimentTools } from './experiment-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerPseoTools } from './pseo-tools.js'
+import { getReportGuidance, REPORT_GUIDANCE } from './report-guidance.js'
 import { registerReportTools } from './report-tools.js'
 import type { ToolResult } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
@@ -30,7 +31,6 @@ type ReportHandler = (
 ) => ToolResult | Promise<ToolResult>
 
 type CapturedTool = {
-  description?: string
   inputSchema?: z.ZodRawShape | z.ZodObject<z.ZodRawShape>
   handler: ReportHandler
 }
@@ -51,7 +51,6 @@ const reportGroups: readonly ReportGroup[] = [
     category: 'diagnosis',
     register: registerDiagnosisTools,
     names: [
-      'seo_diagnose_property',
       'seo_segment_impact',
       'seo_striking_distance',
       'seo_traffic_anomaly',
@@ -109,6 +108,7 @@ const reportGroups: readonly ReportGroup[] = [
     register: registerMonitoringTools,
     names: [
       'seo_crawl_diff',
+      'seo_index_coverage',
       'seo_index_coverage_plan',
       'seo_index_monitor',
       'seo_index_watch',
@@ -152,16 +152,47 @@ const reportGroups: readonly ReportGroup[] = [
 export type ReportSummary = {
   id: string
   category: ReportCategory
+  name: string
   description: string
 }
 
 export type ReportDefinition = ReportSummary & {
+  useWhen: readonly string[]
+  avoidWhen: readonly string[]
+  outcome: string
   inputSchema: z.ZodObject<z.ZodRawShape>
   handler: ReportHandler
 }
 
+const REPORT_ID_OVERRIDES = {
+  cannibal: 'cannibalisation',
+  decaying: 'decaying-pages',
+  'crawl-site': 'site-crawl',
+  'link-recover': 'link-recovery',
+  'llms-txt-generate': 'generate-llms-txt',
+  'query-cluster': 'query-clusters',
+  'report-narrative': 'narrative-report',
+  'to-ai-query': 'seo-to-ai-query',
+  'workflow-refresh-priorities': 'refresh-priorities',
+  'workflow-technical-watch': 'technical-watch',
+  'workflow-update-postmortem': 'update-postmortem',
+  'workflow-diagnose-property': 'search-performance-overview',
+  'workflow-monthly-report': 'monthly-action-plan',
+  doctor: 'setup-check',
+  'update-correlate': 'update-correlation',
+  'compare-crawl-reports': 'compare-crawls',
+  'list-crawl-reports': 'crawl-history',
+  'list-rules': 'crawler-rules',
+  'get-crawl-report': 'crawl-report',
+  'explain-issue': 'explain-crawl-issue',
+} as const satisfies Record<string, string>
+
 function reportId(toolName: string): string {
-  return toolName.replace(/^seo_/, '').replaceAll('_', '-')
+  const internalId = toolName.replace(/^seo_/, '').replaceAll('_', '-')
+  return (
+    REPORT_ID_OVERRIDES[internalId as keyof typeof REPORT_ID_OVERRIDES] ??
+    internalId
+  )
 }
 
 function compareIds(a: ReportSummary, b: ReportSummary): number {
@@ -179,7 +210,7 @@ function captureTools(register: (server: McpServer) => void) {
       },
       handler: ReportHandler,
     ) {
-      tools.set(name, { ...config, handler })
+      tools.set(name, { inputSchema: config.inputSchema, handler })
     },
   } as never)
   return tools
@@ -212,10 +243,15 @@ function createDefinitions(): ReportDefinition[] {
       if (!tool) {
         throw new Error(`MCP report registry references missing tool ${name}.`)
       }
+      const id = reportId(name)
+      const guidance = getReportGuidance(id)
+      if (!guidance) {
+        throw new Error(`MCP report registry is missing guidance for ${id}.`)
+      }
       definitions.push({
-        id: reportId(name),
+        id,
         category: group.category,
-        description: tool.description ?? `Run the ${reportId(name)} report.`,
+        ...guidance,
         inputSchema: normalizeInputSchema(tool.inputSchema),
         handler: tool.handler,
       })
@@ -226,6 +262,15 @@ function createDefinitions(): ReportDefinition[] {
 }
 
 const definitions = createDefinitions()
+const definitionIds = new Set(definitions.map((report) => report.id))
+const extraGuidanceIds = Object.keys(REPORT_GUIDANCE).filter(
+  (id) => !definitionIds.has(id),
+)
+if (extraGuidanceIds.length > 0) {
+  throw new Error(
+    `MCP report guidance references unknown reports: ${extraGuidanceIds.join(', ')}.`,
+  )
+}
 const definitionsById = new Map(
   definitions.map((report) => [report.id, report]),
 )
@@ -235,9 +280,10 @@ export function listReportDefinitions(
 ): ReportSummary[] {
   return definitions
     .filter((report) => !category || report.category === category)
-    .map(({ id, description, category: reportCategory }) => ({
+    .map(({ id, name, description, category: reportCategory }) => ({
       id,
       category: reportCategory,
+      name,
       description,
     }))
 }

@@ -10,7 +10,7 @@ function reportSchema(id: string) {
 }
 
 test('calendar-month report inputs require a valid YYYY-MM value', () => {
-  for (const id of ['monthly-report', 'workflow-monthly-report']) {
+  for (const id of ['monthly-report', 'monthly-action-plan']) {
     const schema = reportSchema(id)
     assert.equal(
       schema.safeParse({ site: 'sc-domain:example.com', month: '2026-05' })
@@ -42,7 +42,7 @@ test('calendar-date report inputs reject malformed and impossible dates', () => 
       required: { site: 'sc-domain:example.com' },
     },
     {
-      id: 'report-narrative',
+      id: 'narrative-report',
       field: 'endDate',
       required: { site: 'sc-domain:example.com' },
     },
@@ -52,7 +52,7 @@ test('calendar-date report inputs reject malformed and impossible dates', () => 
       required: { site: 'sc-domain:example.com' },
     },
     {
-      id: 'to-ai-query',
+      id: 'seo-to-ai-query',
       field: 'endDate',
       required: { site: 'sc-domain:example.com' },
     },
@@ -78,7 +78,7 @@ test('calendar-date report inputs reject malformed and impossible dates', () => 
 })
 
 test('technical-watch accepts active components and rejects a true no-op', async () => {
-  const schema = reportSchema('workflow-technical-watch')
+  const schema = reportSchema('technical-watch')
   for (const input of [
     { site: 'sc-domain:example.com' },
     {
@@ -103,21 +103,21 @@ test('technical-watch accepts active components and rejects a true no-op', async
   const noOp = { site: 'sc-domain:example.com', recoverLinks: false }
   assert.equal(schema.safeParse(noOp).success, false)
 
-  const result = await runReport('workflow-technical-watch', noOp)
+  const result = await runReport('technical-watch', noOp)
   assert.equal(result.isError, true)
   assert.deepEqual(result.structuredContent, {
     ok: false,
     error: {
       code: 'INVALID_INPUT',
       message:
-        'Invalid parameters for workflow-technical-watch: recoverLinks: Pass startUrl, urls, sitemaps, or enable link recovery for technical-watch.',
+        'Invalid parameters for technical-watch: recoverLinks: Pass startUrl, urls, sitemaps, or enable link recovery for technical-watch.',
       retryable: false,
     },
   })
 })
 
 test('technical-watch bounds nonblank strings, arrays, and counts', () => {
-  const schema = reportSchema('workflow-technical-watch')
+  const schema = reportSchema('technical-watch')
   const invalid = [
     { site: '' },
     { site: 'sc-domain:example.com', urls: [] },
@@ -142,6 +142,43 @@ test('technical-watch bounds nonblank strings, arrays, and counts', () => {
   ]
 
   for (const input of invalid) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('index coverage requires a site and bounds crawl, sitemap, and output inputs', () => {
+  const schema = reportSchema('index-coverage')
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      crawlReportId: 'crawl_saved',
+      sitemaps: ['https://example.com/sitemap.xml'],
+      days: 90,
+      rowLimit: 100_000,
+      maxSitemapUrls: 100_000,
+      itemsPerSection: 100,
+      templateClusters: 50,
+      templateSamples: 5,
+    }).success,
+    true,
+  )
+
+  for (const input of [
+    {},
+    { site: '' },
+    { site: 'sc-domain:example.com', crawlReportId: '' },
+    { site: 'sc-domain:example.com', sitemaps: [] },
+    {
+      site: 'sc-domain:example.com',
+      sitemaps: Array(21).fill('https://example.com/sitemap.xml'),
+    },
+    { site: 'sc-domain:example.com', days: 549 },
+    { site: 'sc-domain:example.com', rowLimit: 250_001 },
+    { site: 'sc-domain:example.com', maxSitemapUrls: 0 },
+    { site: 'sc-domain:example.com', itemsPerSection: 1_001 },
+    { site: 'sc-domain:example.com', templateClusters: 201 },
+    { site: 'sc-domain:example.com', templateSamples: 26 },
+  ]) {
     assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
   }
 })

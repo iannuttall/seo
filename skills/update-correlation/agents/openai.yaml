@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update correlation"
+  short_description: "Compare recent GSC movement with official Google ranking update windows"
+  default_prompt: "Use $update-correlation to run the update-correlation report and explain its evidence and limits."

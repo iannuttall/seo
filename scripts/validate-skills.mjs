@@ -87,10 +87,21 @@ if (
 
 const cliCommands = rootCommands(await text('packages/cli/src/index.ts'))
 const reportRegistrySource = await text('packages/mcp/src/report-registry.ts')
+const overrideSource = reportRegistrySource.match(
+  /const REPORT_ID_OVERRIDES = \{([\s\S]*?)\n\} as const/,
+)?.[1]
+const reportIdOverrides = new Map(
+  [
+    ...(overrideSource ?? '').matchAll(
+      /(?:'([^']+)'|([a-z][a-z0-9-]*)):\s*'([^']+)'/g,
+    ),
+  ].map((match) => [match[1] ?? match[2], match[3]]),
+)
 const reportIds = new Set(
-  [...reportRegistrySource.matchAll(/'seo_([a-z0-9_]+)'/g)].map((match) =>
-    match[1].replaceAll('_', '-'),
-  ),
+  [...reportRegistrySource.matchAll(/'seo_([a-z0-9_]+)'/g)].map((match) => {
+    const internalId = match[1].replaceAll('_', '-')
+    return reportIdOverrides.get(internalId) ?? internalId
+  }),
 )
 const mcpSource = await text('packages/mcp/src/discovery-tools.ts')
 const mcpTools = new Set(

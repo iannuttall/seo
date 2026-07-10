@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { SEO_VERSION } from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
 
+export type { ReportGuidance } from './report-guidance.js'
 export {
   REPORT_CATEGORIES,
   type ReportCategory,

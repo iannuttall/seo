@@ -70,12 +70,12 @@ The `seo` skill routes requests that span several focused workflows.
 Every compact MCP report id has a same-name skill. Each skill teaches the
 discovery flow and the evidence limits that matter for that report.
 
-- Setup: `doctor`.
-- Diagnosis: `diagnose-property`, `segment-impact`, `striking-distance`, `traffic-anomaly`, `update-correlate`.
-- Opportunities: `cannibal`, `ctr-underperformers`, `decaying`, `internal-links`, `query-cluster`, `quick-wins`.
-- AI search: `ai-referrals`, `community-intent`, `content-optimization`, `page-opportunities`, `performance-audit`, `to-ai-query`.
-- Crawl: `affected-urls`, `ai-readiness`, `audit-urls`, `compare-crawl-reports`, `crawl-site`, `entity-readiness`, `explain-issue`, `geo-gaps`, `get-crawl-report`, `list-crawl-reports`, `list-rules`, `llms-txt-audit`, `llms-txt-generate`, `okf-build`, `okf-validate`, `top-fixes`.
-- Monitoring: `crawl-diff`, `index-coverage-plan`, `index-monitor`, `index-watch`, `link-recover`, `redirect-trace`.
-- Reporting: `audit-page`, `monthly-report`, `pseo-audit`, `report-narrative`, `second-page`.
+- Setup: `setup-check`.
+- Diagnosis: `search-performance-overview`, `segment-impact`, `striking-distance`, `traffic-anomaly`, `update-correlation`.
+- Opportunities: `cannibalisation`, `ctr-underperformers`, `decaying-pages`, `internal-links`, `query-clusters`, `quick-wins`.
+- AI search: `ai-referrals`, `community-intent`, `content-optimization`, `page-opportunities`, `performance-audit`, `seo-to-ai-query`.
+- Crawl: `affected-urls`, `ai-readiness`, `audit-urls`, `compare-crawls`, `site-crawl`, `entity-readiness`, `explain-crawl-issue`, `geo-gaps`, `crawl-report`, `crawl-history`, `crawler-rules`, `llms-txt-audit`, `generate-llms-txt`, `okf-build`, `okf-validate`, `top-fixes`.
+- Monitoring: `crawl-diff`, `index-coverage`, `index-coverage-plan`, `index-monitor`, `index-watch`, `link-recovery`, `redirect-trace`.
+- Reporting: `audit-page`, `monthly-report`, `pseo-audit`, `narrative-report`, `second-page`.
 - Experiments: `measure-change`.
-- Workflows: `workflow-diagnose-property`, `workflow-monthly-report`, `workflow-refresh-priorities`, `workflow-technical-watch`, `workflow-update-postmortem`.
+- Workflows: `monthly-action-plan`, `refresh-priorities`, `technical-watch`, `update-postmortem`.

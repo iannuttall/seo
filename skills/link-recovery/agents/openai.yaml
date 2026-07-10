@@ -1,0 +1,4 @@
+interface:
+  display_name: "Link recovery"
+  short_description: "Find search-value URLs that now fail technical checks"
+  default_prompt: "Use $link-recovery to run the link-recovery report and explain its evidence and limits."

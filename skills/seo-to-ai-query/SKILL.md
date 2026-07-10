@@ -1,31 +1,31 @@
 ---
 name: seo-to-ai-query
-description: Convert retained Google Search Console queries into deterministic AI monitoring-prompt suggestions. Use when an agent needs a bounded prompt set based on first-party search wording for manual or external AI visibility monitoring.
+description: Convert retained GSC query wording into deterministic AI monitoring prompts; use when an agent needs a reproducible prompt seed set without claiming observed AI demand or visibility.
 ---
 
-# SEO to AI query prompts
+# Queries to AI prompts
 
-Run report id `to-ai-query` through `seo_run_report`. Call
-`seo_describe_report` first when its parameters are not already known. Use the
-CLI when MCP is unavailable:
+Use this report to turn first-party GSC query wording into a bounded set of prompts for later manual or automated monitoring. Each source query keeps its clicks, impressions, CTR, and average position, while deterministic templates produce stable prompt suggestions. The output is useful for designing a monitoring corpus. It is not evidence that anyone entered those prompts into an AI product, that an answer mentioned the site, or that the source query has equivalent AI demand.
 
-```bash
-seo seo-to-ai-query --project <project> --json
+## Run the report
+
+Use the compact MCP flow:
+
+1. Call `seo_list_reports` with `{"category":"ai-search"}`.
+2. Call `seo_describe_report` with `{"id":"seo-to-ai-query"}`.
+3. Call `seo_run_report` with `{"id":"seo-to-ai-query","params":{"site":"sc-domain:example.com","days":90,"limit":20,"minImpressions":100,"maxRows":10000}}`.
+
+The CLI uses the same registry entry:
+
+```sh
+seo reports describe seo-to-ai-query --json
+seo reports run seo-to-ai-query --params '{"site":"sc-domain:example.com","days":90,"limit":20,"minImpressions":100,"maxRows":10000}' --json
 ```
 
-For a reproducible prompt set pass `startDate` and `endDate` to MCP or use `--start-date` and `--end-date` in the CLI. Keep the range inside `source.availableDateWindow`. Do not combine an exact range with `days`.
+`site` is required. Use either `days` or an explicit `startDate` and `endDate` pair. `maxRows` bounds source retrieval and `limit` bounds returned queries. Supply `brandTerms` or `includeBrand:true` only when brand handling is intentional.
 
-## Build the prompt set
+## Interpret and act
 
-1. Check `dataStatus`, `source.completeness`, `warnings`, and `caveats`.
-2. Use `summary.eligibleQueries` for the retained candidates after filters. Use `summary.returnedQueries` for the limited set converted to prompts.
-3. Keep the prompt wording unchanged when repeatable monitoring matters.
-4. Store the source query and date range beside every prompt result collected elsewhere.
+Check `dataStatus` before reading `items`: `empty`, `filtered`, `partial`, and `available` mean different things. Preserve `dateRange`, `source.possiblyTruncated`, filters, `selection.invalidRows`, `selection.conflictingRows`, limited rows, warnings, and caveats. `methodology.observedAiPromptData` and `estimatedTrafficLift` are explicitly false. Each item has `evidenceScope: retained-gsc-query`; its prompts inherit that narrow scope.
 
-Generated prompts are deterministic suggestions. They are not queries observed in ChatGPT, Gemini, Copilot, or another AI product. They do not prove AI demand, visibility, citations, or referral traffic.
-
-Use report id `ai-referrals` for GA4 referral evidence. Use a separate
-prompt-monitoring provider or manual checks to measure AI answers and
-citations.
-
-Use explicit `brandTerms` when the brand cannot be derived reliably from the property. Keep `includeBrand` false unless branded prompts are required.
+Safe actions are to select representative prompt variants, store the source query and date range beside later observations, and refresh the corpus on a controlled schedule. Do not report generated prompt count as AI demand, fill missing prompts with guessed traffic, or interpret no returned rows as an all-clear when the source is partial or filtering removed candidates.

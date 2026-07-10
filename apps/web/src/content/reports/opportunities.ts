@@ -2,13 +2,13 @@ import type { ReportEditorial } from './types'
 
 export const opportunityReports = [
   {
-    id: 'cannibal',
+    id: 'cannibalisation',
     name: 'Query overlap',
     category: 'opportunities',
     summary:
       'Find queries associated with multiple URLs so you can separate healthy coverage from genuine intent or canonical conflicts.',
     question:
-      'Which retained queries surface more than one URL and deserve a closer intent review?',
+      'Which returned queries surface more than one URL and deserve a closer intent review?',
     useWhen: [
       'Several pages appear to compete for the same search topic.',
       'A migration or template change may have split signals across URLs.',
@@ -17,7 +17,7 @@ export const opportunityReports = [
       'You plan to merge pages solely because they share a query. Multiple URLs can be appropriate for different intents.',
     ],
     evidence: [
-      'Retained Search Console query and page rows, grouped by normalized query with clicks, impressions, CTR, and average position.',
+      'Returned Search Console query and page rows, grouped by normalized query with clicks, impressions, CTR, and average position.',
     ],
     methodology: [
       'Aggregates duplicate provider rows, filters low-evidence groups, and ranks multi-URL exposure candidates with stable tie-breakers.',
@@ -33,7 +33,7 @@ export const opportunityReports = [
       'Compare each URL’s purpose, canonical target, content, and search-result history. Query overlap is the observation; cannibalisation is a hypothesis to verify.',
     ],
     caveats: [
-      'Anonymised queries and retained row limits can hide additional URLs or make a group incomplete.',
+      'Anonymised queries and returned row limits can hide additional URLs or make a group incomplete.',
     ],
     nextSteps: [
       'Audit the competing URLs and decide whether to differentiate, consolidate, redirect, or leave them alone.',
@@ -47,18 +47,18 @@ export const opportunityReports = [
     name: 'CTR underperformers',
     category: 'opportunities',
     summary:
-      'Find high-impression retained queries whose CTR trails a documented expectation, then review the live result before changing anything.',
+      'Find high-impression returned queries whose CTR trails a documented expectation, then review the live result before changing anything.',
     question:
       'Which visible query rows may warrant a search-result presentation review?',
     useWhen: [
-      'You need a bounded list of high-impression rows for title and snippet investigation.',
+      'You need a limited list of high-impression rows for title and snippet investigation.',
       'Brand filtering and the selected impression floor match the task.',
     ],
     avoidWhen: [
       'You expect one universal CTR curve to describe every query, device, feature, and result type.',
     ],
     evidence: [
-      'Retained Search Console query metrics and the report’s stated CTR expectation.',
+      'Returned Search Console query metrics and the report’s stated CTR expectation.',
     ],
     methodology: [
       'Filters by evidence and compares each eligible row with an explicit benchmark while preserving source limits.',
@@ -82,13 +82,13 @@ export const opportunityReports = [
     sources: ['search-analytics'],
   },
   {
-    id: 'decaying',
+    id: 'decaying-pages',
     name: 'Decaying search visibility',
     category: 'opportunities',
     summary:
       'Find query and page rows with supported click declines across matched Search Console windows.',
     question:
-      'Which retained search segments lost meaningful clicks in the comparison period?',
+      'Which returned search segments lost meaningful clicks in the comparison period?',
     useWhen: [
       'You need a repeatable refresh or investigation queue based on observed losses.',
       'Both comparison windows contain enough finalised evidence.',
@@ -97,10 +97,10 @@ export const opportunityReports = [
       'You plan to label an old page stale from its publication date or word count alone.',
     ],
     evidence: [
-      'Retained query and page rows from adjacent Search Console periods with absolute and percentage click change.',
+      'Returned query and page rows from adjacent Search Console periods with absolute and percentage click change.',
     ],
     methodology: [
-      'Requires evidence in both windows, applies explicit loss thresholds, and ranks supported declines deterministically.',
+      'Requires evidence in both windows, applies explicit loss thresholds, and ranks supported declines consistently.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -121,7 +121,7 @@ export const opportunityReports = [
       'Audit affected pages and inspect their query mix before refreshing content.',
       'Use update correlation or segment impact when the decline is broad.',
     ],
-    related: ['audit-page', 'segment-impact', 'update-correlate'],
+    related: ['audit-page', 'segment-impact', 'update-correlation'],
     sources: ['search-analytics'],
   },
   {
@@ -140,10 +140,10 @@ export const opportunityReports = [
       'The target is technically unsuitable, off-intent, or already linked appropriately.',
     ],
     evidence: [
-      'Retained Search Console query overlap, fetched source content, target aliases, technical state, and observed link placement.',
+      'Returned Search Console query overlap, fetched source content, target aliases, technical state, and observed link placement.',
     ],
     methodology: [
-      'Ranks exact and lexical relevance, fetches a bounded candidate set, excludes unsuitable pages, then verifies whether a contextual link exists.',
+      'Ranks exact and lexical relevance, fetches a limited candidate set, excludes unsuitable pages, then verifies whether a contextual link exists.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -163,26 +163,26 @@ export const opportunityReports = [
       'Add one useful contextual link and recrawl the source page.',
       'Use audit page to verify the target remains indexable and canonical as intended.',
     ],
-    related: ['audit-page', 'crawl-site', 'measure-change'],
+    related: ['audit-page', 'site-crawl', 'measure-change'],
     sources: ['search-analytics', 'crawlable-links'],
   },
   {
-    id: 'query-cluster',
+    id: 'query-clusters',
     name: 'Query clusters',
     category: 'opportunities',
     summary:
-      'Group retained queries by reproducible token overlap so a large query export becomes easier to review.',
+      'Group returned queries by reproducible token overlap so a large query export becomes easier to review.',
     question:
       'Which query rows share enough wording to review as a topic group?',
     useWhen: [
       'You need compact themes for research, page review, or reporting.',
-      'A deterministic lexical grouping is more useful than a model-generated label.',
+      'A repeatable lexical grouping is more useful than a model-generated label.',
     ],
     avoidWhen: [
       'You need a definitive search-intent taxonomy. Similar words can express different needs.',
     ],
     evidence: [
-      'Retained Search Console queries and their metrics within the selected site or path scope.',
+      'Returned Search Console queries and their metrics within the selected site or path scope.',
     ],
     methodology: [
       'Normalizes query tokens, applies a documented overlap rule, aggregates metrics, and uses stable ordering.',
@@ -204,7 +204,7 @@ export const opportunityReports = [
       'Inspect the pages receiving impressions for each useful cluster.',
       'Run query overlap when several URLs appear for the same group.',
     ],
-    related: ['cannibal', 'page-opportunities', 'content-optimization'],
+    related: ['cannibalisation', 'page-opportunities', 'content-optimization'],
     sources: ['search-analytics'],
   },
   {
@@ -216,17 +216,17 @@ export const opportunityReports = [
     question:
       'Which already-visible search rows deserve a focused CTR or content review?',
     useWhen: [
-      'You want a small queue from retained positions 4 to 10 with meaningful impressions.',
+      'You want a small queue from returned positions 4 to 10 with meaningful impressions.',
       'You can verify the live result and page before proposing work.',
     ],
     avoidWhen: [
       'You need guaranteed easy wins. The name describes the queue, not effort or expected lift.',
     ],
     evidence: [
-      'Retained Search Console query and page rows, a leave-target-out site benchmark or documented fallback, and optional page verification.',
+      'Returned Search Console query and page rows, a leave-target-out site benchmark or documented fallback, and optional page verification.',
     ],
     methodology: [
-      'Filters positions 4 to 10, compares CTR with the stated benchmark, ranks deterministically, and bounds optional page fetches.',
+      'Filters positions 4 to 10, compares CTR with the stated benchmark, ranks consistently, and bounds optional page fetches.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',

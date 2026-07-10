@@ -27,6 +27,7 @@ import { llmsCommand } from './commands/llms.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
   crawlDiffCommand,
+  indexCoverageCommand,
   indexWatchCommand,
   linkRecoverCommand,
   monitoringCommand,
@@ -122,7 +123,7 @@ const helpSections: HelpSection[] = [
   {
     title: 'Agent and power tools',
     commands: [
-      ['seo diagnose-property --json', 'Full diagnosis for agents'],
+      ['seo report --json', 'Run the main report as structured JSON'],
       ['seo export diagnose', 'Export report data to CSV'],
       ['seo mcp install', 'Install SEO tools into MCP clients'],
       ['seo skills list', 'List packaged skills for agents'],
@@ -136,7 +137,6 @@ const allHelpSections: HelpSection[] = [
   {
     title: 'Deeper analysis',
     commands: [
-      ['seo diagnose', 'Run raw end-to-end diagnosis'],
       ['seo decaying', 'Find pages and queries losing clicks'],
       ['seo cannibal', 'Review queries exposed across multiple URLs'],
       ['seo ctr-underperformers', 'Find weak CTR by ranking position'],
@@ -164,6 +164,7 @@ const allHelpSections: HelpSection[] = [
       ['seo rules', 'List crawler rule ids'],
       ['seo explain --rule missing_title', 'Explain a crawler rule'],
       ['seo crawl-diff', 'Compare crawl changes'],
+      ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo index-watch', 'Check URL Inspection status'],
       ['seo link-recover', 'Find broken search-value URLs'],
       ['seo redirect-trace', 'Trace redirects'],
@@ -245,6 +246,7 @@ const main = defineCommand({
     diagnose: diagnoseCommand,
     'diagnose-property': diagnosePropertyWorkflowCommand,
     export: exportCommand,
+    'index-coverage': indexCoverageCommand,
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
     'monthly-report': monthlyReportCommand,

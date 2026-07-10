@@ -12,8 +12,8 @@ importers:
         specifier: ^0.11.0
         version: 0.11.0
       '@googleapis/searchconsole':
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
@@ -167,8 +167,8 @@ importers:
   packages/core:
     dependencies:
       '@googleapis/searchconsole':
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
@@ -759,8 +759,8 @@ packages:
   '@formatjs/intl-localematcher@0.6.2':
     resolution: {integrity: sha512-XOMO2Hupl0wdd172Y06h6kLpBz6Dv+J4okPLl4LPtzbr8f66WbIoy4ev98EBuZ6ZK4h5ydTN6XneT4QVpD7cdA==}
 
-  '@googleapis/searchconsole@3.1.0':
-    resolution: {integrity: sha512-6Yoy4DAw+zbSnqgFseu6RzrddRq2PzNTjgIdrYmDQfilQc7JjDjvmsy7/U9mvE+DoOTqJupnMOWNdo+zKmAP6A==}
+  '@googleapis/searchconsole@6.0.1':
+    resolution: {integrity: sha512-aSBv0yp9HV9BgqX3bUj2DRY2kaIwcoN6ift+fKwPXj8eMoccJZzceQNshxt44V2ECkqwn7gvVEXVYTkw6zaTeQ==}
     engines: {node: '>=12.0.0'}
 
   '@hono/node-server@1.19.14':
@@ -3818,7 +3818,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@googleapis/searchconsole@3.1.0':
+  '@googleapis/searchconsole@6.0.1':
     dependencies:
       googleapis-common: 8.0.2
     transitivePeerDependencies:

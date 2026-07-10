@@ -26,6 +26,8 @@ seo entity-readiness --project keep
 seo llms audit --project keep
 ```
 
+`entity-readiness` reports the exact entity evidence found in the crawl. It does not assume that missing schema, authors, dates, or profile links are ranking failures, and it does not produce an aggregate score.
+
 For agent workflows, use MCP tools `seo_ai_readiness`, `seo_entity_readiness`, `seo_llms_txt_audit`, and `seo_geo_gaps`.
 
 ## Site knowledge exports

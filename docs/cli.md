@@ -117,7 +117,7 @@ seo ai-referrals --project keep
 
 `ai-readiness` returns crawl and technical evidence from a saved crawl without inventing an aggregate score. It reports paragraph shape, structured data, entity signals, agent resource files, and llms.txt as contextual observations rather than ranking or citation factors.
 
-`entity-readiness` focuses on whether agents can connect the site to the right brand, people, products, and official profiles.
+`entity-readiness` returns observed schema types, entity-scoped `sameAs` links, unclassified social links, authors, dates, titles, and H1 coverage. It does not turn those signals into a ranking or machine-understanding score.
 
 `llms audit` reports whether optional `/llms.txt` exists and whether the crawl has enough candidate pages to generate one. Missing llms.txt is not an SEO issue. `llms generate` drafts a focused file for services that explicitly consume it.
 

@@ -2,13 +2,13 @@ import { type EntityReadinessReport, entityReadiness } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag } from '../args.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printNotes, truncate } from './output.js'
+import { printNotes } from './output.js'
 import { resolveSavedCrawlReport } from './readiness.js'
 
 function printEntityReadiness(report: EntityReadinessReport): void {
-  process.stdout.write(`Entity readiness for ${report.url}\n\n`)
+  process.stdout.write(`Entity evidence for ${report.url}\n\n`)
   printKeyValue([
-    ['Score', `${report.score}/100`],
+    ['Assessment', 'evidence only'],
     ['Data', report.dataStatus],
     ['Evaluated pages', `${report.evaluatedPages}/${report.crawlPages}`],
     ['Report', report.reportId],
@@ -17,18 +17,6 @@ function printEntityReadiness(report: EntityReadinessReport): void {
     ['Authors', String(report.entities.authors.length)],
   ])
   process.stdout.write(`\n${report.headline}\n`)
-
-  if (report.topActions.length) {
-    process.stdout.write('\nTop actions\n')
-    printTable(
-      ['Status', 'Check', 'Action'],
-      report.topActions.map((action) => [
-        action.status,
-        action.title,
-        truncate(action.action, 96),
-      ]),
-    )
-  }
 
   const schemaRows = Object.entries(report.entities.schemaTypes)
     .sort((a, b) => b[1] - a[1])

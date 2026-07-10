@@ -7,10 +7,12 @@ import {
   getSeoCliPaths,
   listSearchUpdates,
   listSites,
+  SeoError,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
 import {
+  canPrompt,
   formatBytes,
   maybeExitCancelled,
   printJson,
@@ -45,18 +47,34 @@ export const resetCommand = defineCommand({
     description: 'Delete local seo config, tokens, cache, and logs',
   },
   args: {
-    yes: { type: 'boolean', default: false },
+    yes: {
+      type: 'boolean',
+      default: false,
+      description: 'Confirm deletion without prompting.',
+    },
+    json: {
+      type: 'boolean',
+      default: false,
+      description: 'Print machine-readable JSON.',
+    },
   },
   run: async ({ args }) => {
     const paths = getSeoCliPaths()
-    const approved =
-      args.yes ||
-      maybeExitCancelled(
-        await confirm({
-          message: 'Delete config, tokens, cache, and logs?',
-          initialValue: false,
-        }),
+    const json = jsonFlag(args)
+    if (!args.yes && !canPrompt({ json })) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Cannot prompt here. Pass --yes to confirm reset.',
       )
+    }
+    const approved = args.yes
+      ? true
+      : maybeExitCancelled(
+          await confirm({
+            message: 'Delete config, tokens, cache, and logs?',
+            initialValue: false,
+          }),
+        )
     if (!approved) {
       cancel('Reset aborted.')
       return
@@ -65,7 +83,11 @@ export const resetCommand = defineCommand({
     rmSync(paths.configDir, { recursive: true, force: true })
     rmSync(paths.cacheDir, { recursive: true, force: true })
     rmSync(paths.logDir, { recursive: true, force: true })
-    process.stdout.write('Reset complete.\n')
+    if (json) {
+      printJson({ reset: true })
+    } else {
+      process.stdout.write('Reset complete.\n')
+    }
   },
 })
 

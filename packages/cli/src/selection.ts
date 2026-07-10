@@ -7,8 +7,9 @@ import {
   listGa4AccountSummaries,
   listSites,
   readConfig,
+  SeoError,
 } from '@seo/core'
-import { maybeExitCancelled } from './utils.js'
+import { canPrompt, maybeExitCancelled } from './utils.js'
 
 type ResolveOptions = {
   json?: boolean
@@ -29,10 +30,6 @@ type Ga4Choice = {
 export type ClientSelection = {
   client?: ClientProfile
   site: string
-}
-
-function canPrompt(): boolean {
-  return Boolean(process.stdin.isTTY && process.stdout.isTTY && !process.env.CI)
 }
 
 function includesQuery(values: string[], query: string): boolean {
@@ -64,7 +61,7 @@ async function chooseFromSearch<T>(input: {
     )
 
     if (!visible.length) {
-      throw new Error(input.emptyMessage)
+      throw new SeoError('INVALID_INPUT', input.emptyMessage)
     }
   }
 
@@ -93,14 +90,18 @@ export async function resolveSite(input: {
   if (config.defaultSite) return config.defaultSite
 
   if (input.options?.json || !canPrompt()) {
-    throw new Error(
-      'No site selected. Pass --site, run `seo init`, or run this command in a terminal to choose one.',
+    throw new SeoError(
+      'INVALID_INPUT',
+      'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
     )
   }
 
   const sites = await listSites(input.options?.refresh)
   if (!sites.length) {
-    throw new Error('No Search Console properties found for this Google login.')
+    throw new SeoError(
+      'PROPERTY_NOT_FOUND',
+      'No Search Console properties found for this Google login.',
+    )
   }
   if (sites.length === 1) {
     return sites[0]?.siteUrl ?? ''
@@ -126,12 +127,17 @@ export async function resolveClientSelection(input: {
   options?: ResolveOptions
 }): Promise<ClientSelection> {
   if (input.client && input.project && input.client !== input.project) {
-    throw new Error('Use either --project or --client, not both.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use either --project or --client, not both.',
+    )
   }
   const project = input.project ?? input.client
   if (project) {
     const client = getClient(project)
-    if (!client) throw new Error(`Project not found: ${project}`)
+    if (!client) {
+      throw new SeoError('INVALID_INPUT', `Project not found: ${project}`)
+    }
     return { client, site: client.siteUrl }
   }
 
@@ -151,12 +157,17 @@ export async function resolveClient(input: {
   options?: ResolveOptions
 }): Promise<ClientProfile | undefined> {
   if (input.client && input.project && input.client !== input.project) {
-    throw new Error('Use either --project or --client, not both.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use either --project or --client, not both.',
+    )
   }
   const project = input.project ?? input.client
   if (project) {
     const client = getClient(project)
-    if (!client) throw new Error(`Project not found: ${project}`)
+    if (!client) {
+      throw new SeoError('INVALID_INPUT', `Project not found: ${project}`)
+    }
     return client
   }
 
@@ -190,7 +201,8 @@ export async function resolveGa4Property(input: {
   }
 
   if (input.options?.json || !canPrompt()) {
-    throw new Error(
+    throw new SeoError(
+      'INVALID_INPUT',
       'No GA4 property selected. Pass --property or run this command in a terminal to choose one.',
     )
   }
@@ -205,7 +217,10 @@ export async function resolveGa4Property(input: {
   )
 
   if (!choices.length) {
-    throw new Error('No GA4 properties found for this Google login.')
+    throw new SeoError(
+      'PROPERTY_NOT_FOUND',
+      'No GA4 properties found for this Google login.',
+    )
   }
   if (choices.length === 1) {
     return choices[0]?.property ?? ''

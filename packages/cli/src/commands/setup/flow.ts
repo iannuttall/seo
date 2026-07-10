@@ -13,10 +13,14 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveSite } from '../../selection.js'
-import { maybeExitCancelled, printJson, printKeyValue } from '../../utils.js'
-import { slugId, startUrlForSite, suggestedClientName } from '../shared.js'
 import {
   canPrompt,
+  maybeExitCancelled,
+  printJson,
+  printKeyValue,
+} from '../../utils.js'
+import { slugId, startUrlForSite, suggestedClientName } from '../shared.js'
+import {
   chooseGa4Property,
   maybeConnectAuth,
   maybeInstallMcp,
@@ -42,7 +46,6 @@ function shellArg(value: string): string {
 export async function runGuidedSetup(
   args: Record<string, unknown>,
 ): Promise<void> {
-  ensureSeoCliDirs()
   const json = jsonFlag(args)
   if (!json) intro(process.argv[2] === 'start' ? 'seo start' : 'seo setup')
 
@@ -64,16 +67,25 @@ export async function runGuidedSetup(
     return
   }
 
-  const auth = await maybeConnectAuth(args)
-  const site = await resolveSite({
+  ensureSeoCliDirs()
+  const siteInput = {
     site: stringArg(args.site),
     options: { json, refresh: booleanArg(args.refresh) },
-  })
+  }
+  const selectedSite = json ? await resolveSite(siteInput) : undefined
+  const auth = await maybeConnectAuth(args)
+  const site = selectedSite ?? (await resolveSite(siteInput))
   const defaultName = suggestedClientName(site)
+  if (canPrompt({ json })) {
+    note(
+      'A project profile remembers the site and report defaults so future commands stay short.',
+      'Project profile',
+    )
+  }
   const shouldSaveProfile =
     booleanArg(args['skip-profile']) === true
       ? false
-      : canPrompt()
+      : canPrompt({ json })
         ? maybeExitCancelled(
             await confirm({
               message: 'Save this site as a project profile?',
@@ -108,20 +120,9 @@ export async function runGuidedSetup(
     return
   }
 
-  if (!json && canPrompt()) {
-    note(
-      [
-        'A project profile stores the defaults humans hate retyping:',
-        'GSC property, crawl URL, brand terms, GA4 property, and watch URLs.',
-        'You can still run every command with --site/--url instead.',
-      ].join('\n'),
-      'Project profile',
-    )
-  }
-
   const name =
     stringArg(args.name) ??
-    (canPrompt()
+    (canPrompt({ json })
       ? maybeExitCancelled(
           await text({
             message: 'Project name',
@@ -134,7 +135,7 @@ export async function runGuidedSetup(
   const defaultStartUrl = startUrlForSite(site) ?? ''
   const startUrl =
     stringArg(args.url) ??
-    (canPrompt()
+    (canPrompt({ json })
       ? maybeExitCancelled(
           await text({
             message: 'Website URL to crawl',
@@ -143,47 +144,17 @@ export async function runGuidedSetup(
           }),
         )
       : defaultStartUrl || undefined)
-  const watchUrls =
-    listArg(args.urls).length > 0
-      ? listArg(args.urls)
-      : canPrompt()
-        ? listArg(
-            maybeExitCancelled(
-              await text({
-                message: 'Important URLs to monitor',
-                placeholder: startUrl ? `${startUrl}` : 'comma-separated URLs',
-              }),
-            ),
-          )
-        : []
-  const ga4PropertyId = await chooseGa4Property(stringArg(args.ga4))
+  const watchUrls = listArg(args.urls).length > 0 ? listArg(args.urls) : []
+  const ga4PropertyId = await chooseGa4Property(
+    stringArg(args.ga4),
+    canPrompt({ json }),
+  )
   const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
-    listArg(args.brand).length > 0
-      ? listArg(args.brand)
-      : canPrompt()
-        ? listArg(
-            maybeExitCancelled(
-              await text({
-                message: 'Brand terms to exclude from opportunity reports',
-                placeholder: derivedBrandTerms.join(', '),
-                defaultValue: derivedBrandTerms.join(', '),
-              }),
-            ),
-          )
-        : derivedBrandTerms
+    listArg(args.brand).length > 0 ? listArg(args.brand) : derivedBrandTerms
   const reportDay = numberArg(args['report-day']) ?? 1
   const technicalWeekday = numberArg(args.weekday) ?? 1
-  const isDefault =
-    booleanArg(args.default) ??
-    (canPrompt()
-      ? maybeExitCancelled(
-          await confirm({
-            message: 'Use this project by default?',
-            initialValue: true,
-          }),
-        )
-      : true)
+  const isDefault = booleanArg(args.default) ?? true
 
   const client = saveClient({
     id,

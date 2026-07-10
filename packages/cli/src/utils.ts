@@ -10,6 +10,15 @@ export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
   updateNotifier({ pkg, shouldNotifyInNpmScript: false }).notify()
 }
 
+export function canPrompt(options: { json?: boolean } = {}): boolean {
+  return Boolean(
+    !options.json &&
+      process.stdin.isTTY &&
+      process.stdout.isTTY &&
+      !process.env.CI,
+  )
+}
+
 export function printJson(data: unknown): void {
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
 }

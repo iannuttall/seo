@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { access, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import {
   createServer,
   type IncomingMessage,
@@ -94,6 +94,176 @@ test('root help stays curated and useful', async () => {
   assert.match(output, /seo technical-watch/)
   assert.doesNotMatch(output, /Unknown command help/)
   assert.doesNotMatch(output, /seo crawl\s/)
+})
+
+test('start JSON never prompts and requires an explicit site on first run', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
+
+  try {
+    const result = await runSeoResult(['start', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(output, {
+      ok: false,
+      error: {
+        code: 'INVALID_INPUT',
+        message:
+          'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
+        retryable: false,
+      },
+    })
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('start JSON creates a usable project without interactive output', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
+
+  try {
+    const result = await runSeoResult(
+      [
+        'start',
+        '--site',
+        'sc-domain:example.com',
+        '--skip-auth',
+        '--skip-mcp',
+        '--json',
+      ],
+      { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir },
+    )
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stderr, '')
+    assert.equal(output.auth, 'skipped')
+    assert.equal(output.client.id, 'example-com')
+    assert.equal(output.client.siteUrl, 'sc-domain:example.com')
+    assert.equal(output.client.startUrl, 'https://example.com/')
+    assert.deepEqual(output.next, [
+      'seo report --project example-com',
+      'seo refresh-priorities --project example-com --verify-content',
+      'seo technical-watch --project example-com',
+      'seo schedule cron --project example-com',
+    ])
+    assert.doesNotMatch(result.stdout, /seo start|Setup complete|[┌◇└]/)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('start JSON does not silently skip missing authentication', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
+
+  try {
+    const result = await runSeoResult(
+      ['start', '--site', 'sc-domain:example.com', '--json'],
+      { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir },
+    )
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 3)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(output, {
+      ok: false,
+      error: {
+        code: 'AUTH_REQUIRED',
+        message:
+          'Not logged in. Run `seo auth login`, or pass --skip-auth to save a project profile without connecting Google.',
+        retryable: false,
+      },
+    })
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('start dry-run does not create local data directories', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'seo-start-dry-run-'))
+  const configDir = join(root, 'config')
+  const cacheDir = join(root, 'cache')
+  const logDir = join(root, 'logs')
+
+  try {
+    const result = await runSeoResult(['start', '--dry-run', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+      SEO_LOG_DIR: logDir,
+    })
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(JSON.parse(result.stdout).dryRun, true)
+    await Promise.all(
+      [configDir, cacheDir, logDir].map((path) => assert.rejects(access(path))),
+    )
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('reset refuses to prompt outside a terminal without --yes', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-reset-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-reset-cache-'))
+  const marker = join(configDir, 'keep.txt')
+  await writeFile(marker, 'keep')
+
+  try {
+    const result = await runSeoResult(['reset'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+
+    assert.equal(result.exitCode, 2)
+    assert.match(
+      `${result.stdout}${result.stderr}`,
+      /Cannot prompt here\. Pass --yes to confirm reset\./,
+    )
+    await access(marker)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('auth status and interactive-only setup stay structured in JSON mode', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-auth-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-auth-cache-'))
+
+  try {
+    const status = await runSeoResult(['auth', 'status', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+    assert.equal(status.exitCode, 0)
+    assert.deepEqual(JSON.parse(status.stdout), {
+      authenticated: false,
+      sharedConfigured: false,
+      byoConfigured: false,
+    })
+
+    const setup = await runSeoResult(['auth', 'setup-client', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+    assert.equal(setup.exitCode, 2)
+    assert.equal(setup.stderr, '')
+    assert.equal(JSON.parse(setup.stdout).error.code, 'INVALID_INPUT')
+    assert.doesNotMatch(setup.stdout, /Google Desktop OAuth client ID|[◆◇]/)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
 })
 
 test('long help and crawler command help are available', async () => {
@@ -454,7 +624,7 @@ test('unknown commands emit one error and exit with failure', async () => {
   const result = await runSeoResult(['definitely-not-a-command'])
   const output = `${result.stdout}${result.stderr}`
 
-  assert.equal(result.exitCode, 1)
+  assert.equal(result.exitCode, 2)
   assert.equal(output.match(/Unknown command/g)?.length, 1)
 })
 

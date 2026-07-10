@@ -48,6 +48,7 @@ test('AI referrals MCP bounds rows and validates agent inputs', () => {
       property: '123',
       startDate: '28daysAgo',
       endDate: 'yesterday',
+      limit: 25_000,
     }).success,
     true,
   )
@@ -57,6 +58,76 @@ test('AI referrals MCP bounds rows and validates agent inputs', () => {
     { property: '123', maxRows: 1.5 },
     { property: '123', maxRows: 100_001 },
     { property: '123', startDate: 'last month' },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+
+  const jsonSchema = z.toJSONSchema(schema) as {
+    properties?: Record<string, { description?: string }>
+  }
+  assert.match(jsonSchema.properties?.maxRows?.description ?? '', /Maximum/)
+  assert.match(jsonSchema.properties?.limit?.description ?? '', /Legacy alias/)
+})
+
+test('CTR underperformers MCP bounds and exposes core report controls', () => {
+  const schema = inputSchema(
+    captureTools(registerOpportunityTools),
+    'seo_ctr_underperformers',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      minImpressions: 1_000_000_000,
+      limit: 100,
+      brandTerms: ['Example'],
+      includeBrand: false,
+      refresh: true,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: '' },
+    { site: 'sc-domain:example.com', minImpressions: 0 },
+    { site: 'sc-domain:example.com', minImpressions: 1.5 },
+    { site: 'sc-domain:example.com', minImpressions: 1_000_000_001 },
+    { site: 'sc-domain:example.com', limit: 0 },
+    { site: 'sc-domain:example.com', limit: 1.5 },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', brandTerms: [''] },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false)
+  }
+})
+
+test('query cluster MCP bounds and exposes core report controls', () => {
+  const schema = inputSchema(
+    captureTools(registerOpportunityTools),
+    'seo_query_cluster',
+  )
+
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      scope: '/guides/',
+      minImpressions: 1_000_000_000,
+      limit: 100,
+      brandTerms: ['Example'],
+      includeBrand: false,
+      refresh: true,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: '' },
+    { site: 'sc-domain:example.com', scope: '' },
+    { site: 'sc-domain:example.com', scope: 'x'.repeat(2_001) },
+    { site: 'sc-domain:example.com', minImpressions: 0 },
+    { site: 'sc-domain:example.com', minImpressions: 1.5 },
+    { site: 'sc-domain:example.com', limit: 0 },
+    { site: 'sc-domain:example.com', limit: 1.5 },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', brandTerms: [''] },
   ]) {
     assert.equal(schema.safeParse(input).success, false)
   }

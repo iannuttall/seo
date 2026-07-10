@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { monthlyReport, reportPresentation } from '@seo/core'
-import * as z from 'zod/v4'
+import { calendarMonthSchema } from '../input-schemas.js'
 import { mcpReportInputSchema } from '../report-options.js'
 import { toolError, toolSuccess } from '../tool-result.js'
 import {
@@ -23,7 +23,7 @@ export function registerMonthlyReportTool(server: McpServer): void {
       description: 'Generate a monthly SEO report narrative',
       inputSchema: {
         ...mcpReportInputSchema(['site', 'limit', 'includeBrand']),
-        month: z.string().optional(),
+        month: calendarMonthSchema.optional(),
         ...reportFetchInputSchema,
       },
     },

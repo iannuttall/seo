@@ -6,28 +6,26 @@ import {
   countLabel,
   pageOpportunitiesReport,
   performanceAudit,
+  SeoError,
   seoToAiQueryReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { calendarDateSchema } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 const ga4DateSchema = z
-  .string()
-  .regex(
-    /^(?:\d{4}-\d{2}-\d{2}|today|yesterday|\d+daysAgo)$/,
-    'Use YYYY-MM-DD or a GA4 relative date.',
-  )
-
-const gscDateSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a YYYY-MM-DD date.')
+  .union([
+    calendarDateSchema,
+    z.string().regex(/^(?:today|yesterday|\d+daysAgo)$/),
+  ])
+  .describe('Use YYYY-MM-DD or a GA4 relative date.')
 
 const queryOpportunitySchema = {
   site: z.string().trim().min(1),
   days: z.number().int().min(1).max(548).optional(),
-  startDate: gscDateSchema.optional(),
-  endDate: gscDateSchema.optional(),
+  startDate: calendarDateSchema.optional(),
+  endDate: calendarDateSchema.optional(),
   limit: z.number().int().min(1).max(100).optional(),
   minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
   maxRows: z.number().int().min(1).max(50_000).optional(),
@@ -48,18 +46,40 @@ export function registerAiOpportunityTools(
     'seo_ai_referrals',
     {
       description:
-        'Find AI referral traffic detected in GA4. Returns the explicit ai-referrals schema v2 contract.',
+        'Find AI referral traffic detected in GA4. Use maxRows to bound retained rows; limit remains a legacy alias and must not conflict with maxRows.',
       inputSchema: {
         property: z.string().trim().min(1),
         startDate: ga4DateSchema.optional(),
         endDate: ga4DateSchema.optional(),
-        maxRows: z.number().int().min(1).max(100_000).optional(),
-        limit: z.number().int().min(1).max(100_000).optional(),
+        maxRows: z
+          .number()
+          .int()
+          .min(1)
+          .max(100_000)
+          .describe(
+            'Maximum retained GA4 rows. If limit is also supplied, both values must match.',
+          )
+          .optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100_000)
+          .describe(
+            'Legacy alias for maxRows. If maxRows is also supplied, both values must match.',
+          )
+          .optional(),
         refresh: z.boolean().optional(),
       },
     },
     async ({ property, startDate, endDate, maxRows, limit, refresh }) => {
       try {
+        if (maxRows !== undefined && limit !== undefined && maxRows !== limit) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'maxRows and the legacy limit option must match when both are provided.',
+          )
+        }
         const result = await (
           dependencies.aiReferralsReport ?? aiReferralsReport
         )({

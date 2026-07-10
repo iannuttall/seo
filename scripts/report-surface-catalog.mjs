@@ -157,8 +157,12 @@ export const reportSurfaces = [
     options: [
       common.site,
       common.days,
-      opt('startDate', "'start-date':", 'startDate: gscDateSchema.optional()'),
-      opt('endDate', "'end-date':", 'endDate: gscDateSchema.optional()'),
+      opt(
+        'startDate',
+        "'start-date':",
+        'startDate: calendarDateSchema.optional()',
+      ),
+      opt('endDate', "'end-date':", 'endDate: calendarDateSchema.optional()'),
       common.limit,
       common.minImpressions,
       opt('maxRows', "'max-rows':", 'maxRows: z.number().int()'),
@@ -197,7 +201,12 @@ export const reportSurfaces = [
       file: 'packages/mcp/src/opportunity-tools.ts',
       marker: "'seo_ctr_underperformers'",
     },
-    options: [common.site, common.minImpressions, common.includeBrand],
+    options: [
+      common.site,
+      common.minImpressions,
+      common.includeBrand,
+      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
+    ],
   },
   {
     id: 'decaying',
@@ -446,7 +455,7 @@ export const reportSurfaces = [
     },
     options: [
       common.site,
-      opt('month', 'month:', 'month: z.string().optional()'),
+      opt('month', 'month:', 'month: calendarMonthSchema.optional()'),
       common.limit,
       common.includeBrand,
       common.verifyContent,
@@ -563,7 +572,11 @@ export const reportSurfaces = [
     },
     options: [
       common.site,
-      opt('scope', 'scope:', 'scope: z.string().optional()'),
+      opt('scope', 'scope:', 'scope: z.string()'),
+      common.includeBrand,
+      common.minImpressions,
+      common.limit,
+      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
     ],
   },
   {
@@ -648,8 +661,12 @@ export const reportSurfaces = [
       common.site,
       common.days,
       common.recentDays,
-      opt('startDate', "'start-date':", 'startDate: z.string().optional()'),
-      opt('endDate', "'end-date':", 'endDate: z.string().optional()'),
+      opt(
+        'startDate',
+        "'start-date':",
+        'startDate: calendarDateSchema.optional()',
+      ),
+      opt('endDate', "'end-date':", 'endDate: calendarDateSchema.optional()'),
       common.limit,
       opt(
         'changeLimit',
@@ -703,8 +720,12 @@ export const reportSurfaces = [
       ),
       opt('days', 'days:', 'days: z.number().int()'),
       opt('compareDays', 'compare:', 'compareDays: z.number().int()'),
-      opt('startDate', "'start-date':", 'startDate: z'),
-      opt('endDate', "'end-date':", 'endDate: z'),
+      opt(
+        'startDate',
+        "'start-date':",
+        'startDate: calendarDateSchema.optional()',
+      ),
+      opt('endDate', "'end-date':", 'endDate: calendarDateSchema.optional()'),
       opt('limit', 'limit:', 'limit: z.number().int()'),
       opt('maxRows', "'max-rows':", 'maxRows: z.number().int()'),
       opt(
@@ -729,8 +750,12 @@ export const reportSurfaces = [
     options: [
       common.site,
       common.days,
-      opt('startDate', "'start-date':", 'startDate: gscDateSchema.optional()'),
-      opt('endDate', "'end-date':", 'endDate: gscDateSchema.optional()'),
+      opt(
+        'startDate',
+        "'start-date':",
+        'startDate: calendarDateSchema.optional()',
+      ),
+      opt('endDate', "'end-date':", 'endDate: calendarDateSchema.optional()'),
       common.limit,
       common.minImpressions,
       opt('maxRows', "'max-rows':", 'maxRows: z.number().int()'),
@@ -772,9 +797,9 @@ export const reportSurfaces = [
     options: [
       common.site,
       opt('startUrl', 'url:', 'startUrl: z.string().url().optional()'),
-      opt('urls', 'urls:', 'urls: z.array(z.string().url()).optional()'),
+      opt('urls', 'urls:', 'urls: z.array(z.string().url()).min(1)'),
       common.sitemaps,
-      common.properties,
+      opt('properties', 'properties:', 'properties: z'),
       common.limit,
       common.refresh,
       common.js,
@@ -787,25 +812,17 @@ export const reportSurfaces = [
         "'recover-links':",
         'recoverLinks: z.boolean().optional()',
       ),
-      opt(
-        'recoverDays',
-        "'recover-days':",
-        'recoverDays: z.number().optional()',
-      ),
-      opt(
-        'recoverLimit',
-        "'recover-limit':",
-        'recoverLimit: z.number().optional()',
-      ),
+      opt('recoverDays', "'recover-days':", 'recoverDays: z.number().int()'),
+      opt('recoverLimit', "'recover-limit':", 'recoverLimit: z.number().int()'),
       opt(
         'recoverMinClicks',
         "'recover-min-clicks':",
-        'recoverMinClicks: z.number().optional()',
+        'recoverMinClicks: z.number().int()',
       ),
       opt(
         'recoverMinImpressions',
         "'recover-min-impressions':",
-        'recoverMinImpressions: z.number().optional()',
+        'recoverMinImpressions: z',
       ),
     ],
   },

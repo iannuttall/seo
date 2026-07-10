@@ -45,7 +45,13 @@ type InternalLinksToolInput = {
   refresh?: boolean
 }
 
-export function registerOpportunityTools(server: McpServer): void {
+export function registerOpportunityTools(
+  server: McpServer,
+  dependencies: {
+    ctrUnderperformersReport?: typeof ctrUnderperformersReport
+    queryClusterReport?: typeof queryClusterReport
+  } = {},
+): void {
   server.registerTool(
     'seo_cannibal',
     {
@@ -306,15 +312,40 @@ export function registerOpportunityTools(server: McpServer): void {
       description:
         'Find high-impression queries underperforming CTR expectations',
       inputSchema: {
-        ...mcpReportInputSchema(['site', 'minImpressions', 'includeBrand']),
+        ...mcpReportInputSchema([
+          'site',
+          'minImpressions',
+          'limit',
+          'includeBrand',
+          'refresh',
+        ]),
+        site: z.string().trim().min(1),
+        minImpressions: z.number().int().min(1).max(1_000_000_000).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
       },
     },
-    async ({ site, minImpressions, includeBrand }) => {
+    async ({
+      site,
+      minImpressions,
+      limit,
+      brandTerms,
+      includeBrand,
+      refresh,
+    }) => {
       try {
-        const result = await ctrUnderperformersReport({
+        const result = await (
+          dependencies.ctrUnderperformersReport ?? ctrUnderperformersReport
+        )({
           site,
           minImpressions,
+          limit,
+          brandTerms,
           includeBrand,
+          refresh,
         })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
@@ -333,18 +364,39 @@ export function registerOpportunityTools(server: McpServer): void {
           'includeBrand',
           'minImpressions',
           'limit',
+          'refresh',
         ]),
-        scope: z.string().optional(),
+        site: z.string().trim().min(1),
+        scope: z.string().trim().min(1).max(2_000).optional(),
+        minImpressions: z.number().int().min(1).max(1_000_000_000).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        brandTerms: z
+          .array(z.string().trim().min(1).max(200))
+          .max(20)
+          .optional(),
       },
     },
-    async ({ site, scope, includeBrand, minImpressions, limit }) => {
+    async ({
+      site,
+      scope,
+      brandTerms,
+      includeBrand,
+      minImpressions,
+      limit,
+      refresh,
+    }) => {
       try {
-        const result = await queryClusterReport({
+        const result = await (
+          dependencies.queryClusterReport ?? queryClusterReport
+        )({
           site,
           scope,
+          brand: brandTerms?.[0],
+          brandTerms,
           includeBrand,
           minImpressions,
           limit,
+          refresh,
         })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {

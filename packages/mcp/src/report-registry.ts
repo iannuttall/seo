@@ -31,7 +31,7 @@ type ReportHandler = (
 
 type CapturedTool = {
   description?: string
-  inputSchema?: z.ZodRawShape
+  inputSchema?: z.ZodRawShape | z.ZodObject<z.ZodRawShape>
   handler: ReportHandler
 }
 
@@ -173,13 +173,24 @@ function captureTools(register: (server: McpServer) => void) {
   register({
     registerTool(
       name: string,
-      config: { description?: string; inputSchema?: z.ZodRawShape },
+      config: {
+        description?: string
+        inputSchema?: z.ZodRawShape | z.ZodObject<z.ZodRawShape>
+      },
       handler: ReportHandler,
     ) {
       tools.set(name, { ...config, handler })
     },
   } as never)
   return tools
+}
+
+function normalizeInputSchema(
+  inputSchema?: z.ZodRawShape | z.ZodObject<z.ZodRawShape>,
+): z.ZodObject<z.ZodRawShape> {
+  return inputSchema instanceof z.ZodObject
+    ? inputSchema
+    : z.strictObject(inputSchema ?? {})
 }
 
 function createDefinitions(): ReportDefinition[] {
@@ -205,7 +216,7 @@ function createDefinitions(): ReportDefinition[] {
         id: reportId(name),
         category: group.category,
         description: tool.description ?? `Run the ${reportId(name)} report.`,
-        inputSchema: z.strictObject(tool.inputSchema ?? {}),
+        inputSchema: normalizeInputSchema(tool.inputSchema),
         handler: tool.handler,
       })
     }

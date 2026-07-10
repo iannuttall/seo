@@ -9,6 +9,7 @@ import {
   recordChange,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { calendarDateSchema } from './input-schemas.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerExperimentTools(server: McpServer): void {
@@ -135,10 +136,7 @@ export function registerExperimentTools(server: McpServer): void {
         scope: z.enum(['site', 'page', 'query', 'group']).optional(),
         target: z.string().min(1).optional(),
         title: z.string().min(1).optional(),
-        changedAt: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .optional(),
+        changedAt: calendarDateSchema.optional(),
         ga4PropertyId: z.string().min(1).optional(),
         controlScope: z.enum(['site', 'page', 'query', 'group']).optional(),
         controlTarget: z.string().min(1).optional(),

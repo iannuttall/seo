@@ -511,6 +511,37 @@ test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async 
   assert.equal(maxActiveFetches, 2)
   assert.equal(calls.length, 3)
   assert.match(report.caveats.join('\n'), /maxPages \(3\)/)
+  assert.equal(report.summary.pageLimitReached, true)
+})
+
+test('crawlSite does not mark an exact-size crawl as page-limit truncated', async () => {
+  const url = 'https://example.com/'
+  const report = await crawlSite(
+    {
+      url,
+      mode: 'page',
+      useSitemap: false,
+      respectRobots: false,
+      maxPages: 1,
+      concurrency: 1,
+    },
+    {
+      fetch: async () =>
+        new Response('not found', {
+          status: 404,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async () => ({
+        urls: [],
+        page: crawlPageSnapshot(url),
+      }),
+    },
+  )
+
+  assert.equal(report.status, 'completed')
+  assert.equal(report.summary.totalPages, 1)
+  assert.equal(report.summary.pageLimitReached, false)
+  assert.doesNotMatch(report.caveats.join('\n'), /maxPages/)
 })
 
 test('crawlSite keeps large-site cancellation bounded', async () => {

@@ -578,6 +578,7 @@ export const crawlReportSummarySchema = z.object({
   skippedUrls: z.number().int(),
   failedUrls: z.number().int(),
   verifiedLinks: z.number().int(),
+  pageLimitReached: z.boolean().default(false),
   attemptedRequests: z.number().int(),
   responseRequests: z.number().int(),
   failedRequests: z.number().int(),

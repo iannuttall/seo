@@ -880,10 +880,12 @@ export async function crawlSite(
     })
   }
 
+  const pageLimitReached =
+    pages.length >= config.maxPages && (queue.length > 0 || inFlight.size > 0)
   const partial =
     cancelled ||
     failedUrls > 0 ||
-    pages.length >= config.maxPages ||
+    pageLimitReached ||
     queue.length > 0 ||
     inFlight.size > 0 ||
     warnings.length > 0
@@ -968,7 +970,7 @@ export async function crawlSite(
     warnings,
     caveats: cancelled
       ? ['Crawl cancelled before all queued URLs finished.']
-      : pages.length >= config.maxPages
+      : pageLimitReached
         ? [`Stopped after reaching maxPages (${config.maxPages}).`]
         : [],
     stats: {
@@ -978,6 +980,7 @@ export async function crawlSite(
       skippedUrls,
       failedUrls,
       verifiedLinks,
+      pageLimitReached,
     },
   })
   emitStatus('completed', {

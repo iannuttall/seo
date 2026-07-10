@@ -98,7 +98,9 @@ function sampleUrls(
 
 export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const pages = indexablePages(report)
-  const pageCount = pages.length || report.pages.length
+  const pageCount = pages.length
+  const hasIndexablePages = pageCount > 0
+  const pageLimitReached = report.summary.pageLimitReached
   const robotsTxt = report.ai?.robotsTxt
   const botAccess = robotsTxt?.botAccess ?? []
   const blockedBots = botAccess.filter((bot) => bot.allowed === false)
@@ -285,9 +287,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'answerable-content',
         section: 'content-clarity',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
         title: 'Short opening paragraphs are an unscored observation',
-        plainEnglish: `${pct(answerablePages.length, pageCount)}% of indexable pages have at least one 25-word paragraph near the start. This does not establish content quality, citation likelihood, or Google AI eligibility.`,
+        plainEnglish: hasIndexablePages
+          ? `${pct(answerablePages.length, pageCount)}% of indexable pages have at least one 25-word paragraph near the start. This does not establish content quality, citation likelihood, or Google AI eligibility.`
+          : 'No indexable 2xx pages were available, so opening-paragraph coverage was not evaluated.',
         action:
           'Write for the reader and the page intent. Do not create artificial answer blocks or chunk content solely for AI Search.',
         urls: sampleUrls(pages, (page) => !page.geo?.answerable),
@@ -304,9 +309,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'semantic-html',
         section: 'content-clarity',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
-        title: 'Pages use semantic HTML',
-        plainEnglish: `${pct(semanticPages.length, pageCount)}% of indexable pages use semantic structure.`,
+        title: 'Semantic HTML coverage observed',
+        plainEnglish: hasIndexablePages
+          ? `${pct(semanticPages.length, pageCount)}% of indexable pages use semantic structure.`
+          : 'No indexable 2xx pages were available, so semantic HTML coverage was not evaluated.',
         action:
           'Use real headings, lists, tables, nav, main, article, and section elements instead of layout-only divs.',
       }),
@@ -314,9 +322,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'titles-headings-meta',
         section: 'content-clarity',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
         title: 'Title, H1, and description coverage observed',
-        plainEnglish: `${pct(titlePages.length, pageCount)}% of indexable pages have title/H1 coverage and ${pct(metaPages.length, pageCount)}% have meta descriptions.`,
+        plainEnglish: hasIndexablePages
+          ? `${pct(titlePages.length, pageCount)}% of indexable pages have title/H1 coverage and ${pct(metaPages.length, pageCount)}% have meta descriptions.`
+          : 'No indexable 2xx pages were available, so title, H1, and description coverage was not evaluated.',
         action:
           'Write a unique title and descriptive H1. Add a useful meta description when a summary would help searchers understand the page.',
       }),
@@ -324,9 +335,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'language',
         section: 'content-clarity',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
-        title: 'HTML language is declared',
-        plainEnglish: `${pct(langPages.length, pageCount)}% of indexable pages declare a language.`,
+        title: 'HTML language declaration coverage observed',
+        plainEnglish: hasIndexablePages
+          ? `${pct(langPages.length, pageCount)}% of indexable pages declare a language.`
+          : 'No indexable 2xx pages were available, so language declaration coverage was not evaluated.',
         action:
           'Set the html lang attribute so crawlers and assistive tech understand the page language.',
       }),
@@ -336,9 +350,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'entity-schema',
         section: 'entity-signals',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
-        title: 'The site states who or what it represents',
-        plainEnglish: `${pct(entityPages.length, pageCount)}% of indexable pages include entity signals such as Organization, Person, Product, sameAs, or social profile links.`,
+        title: 'Entity-signal coverage observed',
+        plainEnglish: hasIndexablePages
+          ? `${pct(entityPages.length, pageCount)}% of indexable pages include entity signals such as Organization, Person, Product, sameAs, or social profile links.`
+          : 'No indexable 2xx pages were available, so entity-signal coverage was not evaluated.',
         action:
           'Make the homepage and key pages explicit about the brand, product, people, and official profiles using accurate schema and links.',
         urls: sampleUrls(pages, (page) => !entityPages.includes(page)),
@@ -360,13 +377,18 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'snippet-controls',
         section: 'technical-ux',
         maxScore: 0,
+        evaluated: hasIndexablePages,
         score: 0,
-        title: restrictedSnippets.length
-          ? 'Page-level snippet restrictions observed'
-          : 'No page-level snippet restriction detected',
-        plainEnglish: restrictedSnippets.length
-          ? `${blockedSnippets.length} indexable ${blockedSnippets.length === 1 ? 'page has' : 'pages have'} snippets blocked and ${limitedSnippets.length} ${limitedSnippets.length === 1 ? 'has' : 'have'} a positive max-snippet limit.`
-          : 'No nosnippet or restrictive max-snippet directive was detected on the evaluated indexable pages.',
+        title: !hasIndexablePages
+          ? 'Snippet controls were not evaluated'
+          : restrictedSnippets.length
+            ? 'Page-level snippet restrictions observed'
+            : 'No page-level snippet restriction detected',
+        plainEnglish: !hasIndexablePages
+          ? 'No indexable 2xx pages were available, so snippet controls were not evaluated.'
+          : restrictedSnippets.length
+            ? `${blockedSnippets.length} indexable ${blockedSnippets.length === 1 ? 'page has' : 'pages have'} snippets blocked and ${limitedSnippets.length} ${limitedSnippets.length === 1 ? 'has' : 'have'} a positive max-snippet limit.`
+            : 'No nosnippet or restrictive max-snippet directive was detected on the evaluated indexable pages.',
         action: restrictedSnippets.length
           ? 'Confirm each restriction is intentional. Do not remove publisher controls solely to satisfy this report.'
           : 'No action is required. This observation does not guarantee that Google will select or show a snippet.',
@@ -398,8 +420,12 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
           pct(pages.length, report.pages.length || 1),
           12,
         ),
-        title: 'Crawled pages are indexable and error-free',
-        plainEnglish: `${pct(pages.length, report.pages.length || 1)}% of crawled pages are indexable 2xx pages.`,
+        title: report.pages.length
+          ? 'Crawled-page indexability observed'
+          : 'Crawled-page indexability was not evaluated',
+        plainEnglish: report.pages.length
+          ? `${pct(pages.length, report.pages.length)}% of crawled pages are indexable 2xx pages.`
+          : 'No crawled pages were available, so status and indexability were not evaluated.',
         action:
           'Fix 4xx/5xx pages, accidental noindex, and blocked internal URLs before expanding AI discovery work.',
       }),
@@ -409,15 +435,13 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         id: 'crawl-depth',
         section: 'crawl-completeness',
         maxScore: 8,
-        score: report.summary.totalPages >= report.config.maxPages ? 3 : 8,
-        title:
-          report.summary.totalPages >= report.config.maxPages
-            ? 'The crawl hit the page cap'
-            : 'The crawl finished without hitting the page cap',
-        plainEnglish:
-          report.summary.totalPages >= report.config.maxPages
-            ? `The crawl stopped at maxPages (${report.config.maxPages}), so the readiness score may under-sample the site.`
-            : 'The crawl did not hit the configured page cap.',
+        score: pageLimitReached ? 3 : 8,
+        title: pageLimitReached
+          ? 'The crawl hit the page cap'
+          : 'The crawl finished without hitting the page cap',
+        plainEnglish: pageLimitReached
+          ? `The crawl stopped at maxPages (${report.config.maxPages}), so the report may under-sample the site.`
+          : 'The crawl did not hit the configured page cap.',
         action:
           'Raise --max-pages or crawl from sitemap mode when you need a complete site inventory.',
       }),

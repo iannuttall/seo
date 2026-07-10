@@ -179,6 +179,28 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'canonical_invalid',
+    title: 'Canonical URL is invalid',
+    category: 'canonical',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'A malformed or non-HTTP canonical cannot identify a valid preferred page and may be ignored by search engines.',
+    howToFix:
+      'Replace it with one absolute HTTP or HTTPS URL for the intended preferred page.',
+    impactIfIgnored:
+      'Search engines receive unusable consolidation evidence and may choose a different canonical on their own.',
+    howToVerify:
+      'Re-run the page audit and confirm the canonical resolves to the intended HTTP or HTTPS URL.',
+    agentHints: {
+      evidenceFields: [
+        'page.canonical',
+        'page.canonicalRaw',
+        'issue.evidence.canonicalRaw',
+      ],
+      suggestedCommands: ['seo audit-page --url <url> --json'],
+    },
+  },
+  {
     id: 'canonical_mismatch',
     title: 'Canonical differs from final URL',
     category: 'canonical',

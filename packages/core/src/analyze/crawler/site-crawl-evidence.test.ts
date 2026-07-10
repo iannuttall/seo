@@ -381,6 +381,48 @@ test('crawlSite applies repeated robots and googlebot restrictions', async () =>
   }
 })
 
+test('crawlSite keeps page evidence when link and canonical URLs are malformed', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(`<!doctype html><html><head>
+      <title>Malformed URL fixture page</title>
+      <meta name="description" content="A valid description that must survive malformed URL attributes.">
+      <link rel="canonical" href="http://[::1">
+    </head><body><main>
+      <h1>Malformed URL fixture</h1>
+      <a href="http://[::1">Broken link</a>
+      <a href="/working">Working link</a>
+      <p>Useful content that should remain in the crawl evidence.</p>
+    </main></body></html>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/malformed`,
+      mode: 'page',
+      useSitemap: false,
+      maxPages: 1,
+    })
+
+    const page = report.pages[0]
+    assert.equal(page?.extractionStatus, 'complete')
+    assert.equal(page?.title, 'Malformed URL fixture page')
+    assert.equal(page?.h1, 'Malformed URL fixture')
+    assert.equal(page?.canonical, undefined)
+    assert.equal(page?.canonicalRaw, 'http://[::1')
+    assert.deepEqual(page?.sampleInternalLinks, [`${fixture.baseUrl}/working`])
+    assert.match(page?.warnings?.join(' ') ?? '', /malformed link URL/)
+    assert.match(page?.warnings?.join(' ') ?? '', /malformed canonical URL/)
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('crawlSite exposes live non-self canonical state once', async () => {
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {

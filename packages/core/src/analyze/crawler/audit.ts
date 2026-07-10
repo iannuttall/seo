@@ -651,7 +651,13 @@ export function auditCrawlPages(
     }
 
     if (!page.canonical) {
-      issues.push(issue('canonical_missing', page))
+      issues.push(
+        page.canonicalRaw
+          ? issue('canonical_invalid', page, page.canonicalRaw, {
+              canonicalRaw: page.canonicalRaw,
+            })
+          : issue('canonical_missing', page),
+      )
     } else {
       if (page.canonicalRaw && !absoluteHttpUrl(page.canonicalRaw)) {
         issues.push(

@@ -3,14 +3,27 @@ import { fetchPage } from '../fetch/page-fetcher.js'
 import { queryPageMetrics } from '../gsc/client.js'
 import type { RuleId } from '../rules.js'
 import type { AuditPageReport, Recommendation } from '../types.js'
-import { normalizeText } from './shared.js'
+import { samePageUrl } from './page-technical-signals.js'
 
 export const AUDIT_PAGE_RULE_IDS = [
   'missing_title',
   'title_too_wide',
   'h1_count',
+  'canonical_invalid',
   'canonical_mismatch',
 ] as const satisfies readonly RuleId[]
+
+export type AuditPageDependencies = {
+  fetchPage: typeof fetchPage
+  queryPageMetrics: typeof queryPageMetrics
+  now: () => Date
+}
+
+const defaultDependencies: AuditPageDependencies = {
+  fetchPage,
+  queryPageMetrics,
+  now: () => new Date(),
+}
 
 function titlePixelWidth(title?: string): number {
   return Math.round((title ?? '').length * 9.2)
@@ -60,14 +73,17 @@ function buildRecommendations(report: AuditPageReport): Recommendation[] {
   return recommendations
 }
 
-export async function auditPage(input: {
-  url: string
-  site?: string
-  js?: boolean | 'auto'
-  refresh?: boolean
-  extractor?: 'defuddle' | 'readability'
-}): Promise<AuditPageReport> {
-  const fetched = await fetchPage(input.url, {
+export async function auditPage(
+  input: {
+    url: string
+    site?: string
+    js?: boolean | 'auto'
+    refresh?: boolean
+    extractor?: 'defuddle' | 'readability'
+  },
+  dependencies: AuditPageDependencies = defaultDependencies,
+): Promise<AuditPageReport> {
+  const fetched = await dependencies.fetchPage(input.url, {
     js: input.js,
     refresh: input.refresh,
   })
@@ -109,8 +125,25 @@ export async function auditPage(input: {
   }
 
   if (page.canonical) {
-    const canonicalUrl = new URL(page.canonical, page.finalUrl).toString()
-    if (normalizeText(canonicalUrl) !== normalizeText(page.finalUrl)) {
+    let canonicalUrl: string | undefined
+    try {
+      const resolved = new URL(page.canonical, page.finalUrl)
+      if (['http:', 'https:'].includes(resolved.protocol)) {
+        canonicalUrl = resolved.toString()
+      }
+    } catch {
+      // Report invalid canonical evidence below.
+    }
+    if (!canonicalUrl) {
+      issues.push({
+        code: 'canonical_invalid',
+        title: 'Canonical URL is invalid',
+        detail: 'The canonical link does not resolve to an HTTP or HTTPS URL.',
+        principle: 'C.7',
+        evidenceRef: `Canonical value ${page.canonical} is not a valid HTTP or HTTPS URL.`,
+        severity: 'high',
+      })
+    } else if (!samePageUrl(canonicalUrl, page.finalUrl)) {
       issues.push({
         code: 'canonical_mismatch',
         title: 'Canonical differs from final URL',
@@ -123,12 +156,12 @@ export async function auditPage(input: {
   }
 
   const metrics = input.site
-    ? await queryPageMetrics(input.site, input.url).catch(() => undefined)
+    ? await dependencies.queryPageMetrics(input.site, input.url)
     : undefined
 
   const report: AuditPageReport = {
     url: input.url,
-    fetchedAt: new Date().toISOString(),
+    fetchedAt: dependencies.now().toISOString(),
     page,
     fetchDiagnostics: fetched.diagnostics,
     metrics,

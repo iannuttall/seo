@@ -1,9 +1,9 @@
 export const site = {
-  name: 'SEO Skills',
+  name: 'SEO Skills CLI',
   packageName: 'seo',
   url: 'https://seoskills.dev',
   description:
-    'Local technical SEO reports, crawling, Search Console, GA4, and MCP tools for people and agents.',
+    'Find technical SEO problems, rank fixes with real search data, and give reliable local reports to people, agents, or CI.',
   repository: 'https://github.com/iannuttall/seo',
   issues: 'https://github.com/iannuttall/seo/issues',
   advisory: 'https://github.com/iannuttall/seo/security/advisories/new',

@@ -4,10 +4,9 @@ import SiteLayout from './SiteLayout.astro'
 interface Props {
   title: string
   description: string
-  section?: string
 }
 
-const { title, description, section } = Astro.props
+const { title, description } = Astro.props
 const path = Astro.url.pathname
 const pages = [
   ['/docs', 'Docs home'],
@@ -30,7 +29,6 @@ const pages = [
       </nav>
     </aside>
     <article class="prose docs-content">
-      {section && <p class="page-context">{section}</p>}
       <h1>{title}</h1>
       <p class="lead">{description}</p>
       <slot />

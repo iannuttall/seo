@@ -1,7 +1,11 @@
+<p align="center">
+  <img src="apps/web/public/favicon.svg" alt="SEO Skills CLI" width="72" height="72">
+</p>
+
 <h1 align="center">SEO Skills CLI</h1>
 
 <p align="center">
-  Find technical SEO problems, rank fixes with real search data, and give people or agents the evidence to act.
+  Find the SEO work worth doing. Crawl your site, rank fixes with real search data, and give people or agents the evidence to act.
 </p>
 
 <p align="center">
@@ -31,9 +35,9 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-`seo` turns crawls, Search Console, and analytics data into a ranked fix list.
-Every recommendation keeps the affected pages, queries, and supporting evidence
-close by, so you can act without guessing. It all runs on your machine.
+`seo` finds technical problems, ties them to the pages and queries they affect,
+and shows what is worth fixing first. The reports run on your machine and keep
+their supporting evidence close by, so you can act without guessing.
 
 ## Quick start
 
@@ -66,20 +70,19 @@ The main report uses whatever evidence is available,
 explains anything it could not check, and recommends a short list of follow-up
 commands.
 
-## What it does
+## What you get
 
-- Crawls sites for technical SEO problems across metadata, links,
-  indexability, canonicals, structured data, performance, security, mobile,
-  international SEO, and social previews.
-- Reads Google Search Console and GA4 when you connect them.
-- Ranks work using rule severity, affected URLs, search visibility, and
-  analytics value.
-- Explains why each finding matters, how to fix it, and how to verify the fix.
-- Saves crawl reports locally so you can inspect or compare them without
-  crawling again.
-- Measures SEO changes with before and after Search Console data.
-- Produces deterministic JSON and Markdown for scripts and AI agents.
-- Runs the same analysis through a local stdio MCP server.
+- Find technical blockers across metadata, links, indexability, canonicals,
+  structured data, performance, security, mobile, international SEO, and
+  social previews.
+- Rank the work using affected URLs, rule severity, search visibility, and
+  analytics value instead of treating every warning equally.
+- See why a finding matters, what evidence supports it, how to fix it, and how
+  to verify the change.
+- Save and compare crawl reports without running the same crawl again.
+- Measure SEO changes with matched before and after Search Console windows.
+- Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
+  compact local MCP surface.
 
 ## Everyday use
 

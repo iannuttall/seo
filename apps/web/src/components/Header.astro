@@ -1,5 +1,6 @@
 ---
 import { site } from '@/lib/site'
+import Logo from './Logo.astro'
 
 const path = Astro.url.pathname
 const inDocs = path === '/docs' || path.startsWith('/docs/')
@@ -8,8 +9,8 @@ const inDocs = path === '/docs' || path.startsWith('/docs/')
 <header class="site-header">
   <div class="shell header-inner">
     <a class="brand" href="/" aria-label={`${site.name} home`}>
-      <span class="brand-mark" aria-hidden="true">&gt;_</span>
-      <span>seo</span>
+      <Logo />
+      <span>SEO Skills CLI</span>
     </a>
     <nav aria-label="Main navigation">
       <a href="/docs" aria-current={inDocs ? 'page' : undefined}>Docs</a>

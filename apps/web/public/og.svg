@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <title>SEO Skills CLI, find the SEO work worth doing</title>
+  <defs>
+    <pattern id="minor-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0v16" fill="none" stroke="#34363c" stroke-opacity=".035"/>
+    </pattern>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <rect width="64" height="64" fill="url(#minor-grid)"/>
+      <path d="M64 0H0v64" fill="none" stroke="#34363c" stroke-opacity=".1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#f3f0e8"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect x="68" y="48" width="1064" height="534" fill="#f9f7f1" fill-opacity=".94" stroke="#8d887f"/>
+  <path d="M108 88h64v17h-44v8h36v39h-56v-17h36v-8h-36z" fill="#18191d"/>
+  <text x="192" y="127" fill="#18191d" font-family="JetBrains Mono, Menlo, monospace" font-size="24" font-weight="700" letter-spacing="1">SEO SKILLS CLI</text>
+  <text x="108" y="281" fill="#18191d" font-family="Arial, sans-serif" font-size="76" font-weight="700">Find the SEO work</text>
+  <text x="108" y="365" fill="#d94722" font-family="Arial, sans-serif" font-size="76" font-style="italic" font-weight="600">worth doing.</text>
+  <rect x="108" y="424" width="760" height="86" fill="#fbfaf6" stroke="#8d887f"/>
+  <text x="138" y="477" fill="#d94722" font-family="JetBrains Mono, Menlo, monospace" font-size="22" font-weight="700">$</text>
+  <text x="168" y="477" fill="#18191d" font-family="JetBrains Mono, Menlo, monospace" font-size="22">npx seo start</text>
+  <text x="914" y="461" fill="#63636a" font-family="JetBrains Mono, Menlo, monospace" font-size="16" font-weight="700" letter-spacing="1">LOCAL FIRST</text>
+  <text x="914" y="489" fill="#63636a" font-family="JetBrains Mono, Menlo, monospace" font-size="16" font-weight="700" letter-spacing="1">APACHE-2.0</text>
+</svg>

@@ -1,0 +1,31 @@
+---
+const commands = [
+  { id: 'npx', label: 'npx', command: 'npx seo start' },
+  { id: 'npm', label: 'npm global', command: 'npm i -g seo && seo start' },
+] as const
+const initial = commands[0]
+---
+
+<div class="install-picker" data-install-picker>
+  <div class="install-tabs" role="tablist" aria-label="Install method">
+    {commands.map((entry, index) => (
+      <button
+        type="button"
+        role="tab"
+        id={`install-tab-${entry.id}`}
+        aria-controls="install-command"
+        aria-selected={index === 0 ? 'true' : 'false'}
+        data-install-option
+        data-command={entry.command}
+      >
+        {entry.label}
+      </button>
+    ))}
+  </div>
+  <div class="install-command" id="install-command" role="tabpanel" aria-labelledby="install-tab-npx">
+    <code><span aria-hidden="true">$ </span><span data-install-output>{initial.command}</span></code>
+    <button class="copy-button" type="button" data-copy-button data-copy-value={initial.command}>
+      <span aria-hidden="true">[ </span><span data-copy-label>copy</span><span aria-hidden="true"> ]</span>
+    </button>
+  </div>
+</div>

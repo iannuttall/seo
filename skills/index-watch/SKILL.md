@@ -12,6 +12,17 @@ machine contract. Use report id `index-monitor` for a bounded oldest-first
 sitemap sample. Use report id `index-coverage-plan` before monitoring a large
 inventory across multiple Search Console properties.
 
+For the shared schema-backed CLI path:
+
+```bash
+seo reports describe index-watch --json
+seo reports run index-watch --params '{"site":"sc-domain:example.com","urls":["https://example.com/a","https://example.com/b"],"dailyLimit":25}' --json
+```
+
+This validates the same parameters used by MCP. The focused commands below add
+saved monitoring state, sitemap selection, and friendlier flags for recurring
+human workflows.
+
 ## Run the report
 
 1. Pass the selected Search Console property as `site`.

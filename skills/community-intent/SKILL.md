@@ -12,8 +12,14 @@ Call `seo_describe_report` with id `community-intent`, then call
 unavailable:
 
 ```bash
+seo reports describe community-intent --json
+seo reports run community-intent --params '{"site":"sc-domain:example.com","days":90,"minImpressions":20,"limit":25}' --json
 seo community-intent --project <project> --json
 ```
+
+The generic runner validates the exact MCP schema before any provider call.
+Use the focused command when a human needs named flags and project-profile
+selection. Both paths execute the same report.
 
 For a reproducible report pass `startDate` and `endDate` to MCP or use `--start-date` and `--end-date` in the CLI. Keep the range inside `source.availableDateWindow`. Do not combine an exact range with `days`.
 

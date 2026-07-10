@@ -11,8 +11,15 @@ that id and only the described parameters. Read `structuredContent` as the
 machine contract. Use the CLI for CI, saved JSON, or environments without MCP.
 
 ```bash
+seo reports describe pseo-audit --json
+seo reports run pseo-audit --params '{"site":"sc-domain:example.com","detail":"summary"}' --json
+
 seo pseo audit --project <project> --json
 ```
+
+The catalog command is the portable agent path and rejects parameters outside
+the MCP schema. The focused pSEO command adds human-readable flags and project
+selection while calling the same implementation.
 
 Pass `--site sc-domain:example.com` instead of `--project` when no project profile exists.
 

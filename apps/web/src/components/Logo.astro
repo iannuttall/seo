@@ -1,0 +1,18 @@
+---
+interface Props {
+  title?: string
+}
+
+const { title } = Astro.props
+---
+
+<svg
+  class="logo-mark"
+  viewBox="0 0 32 32"
+  role={title ? 'img' : undefined}
+  aria-label={title}
+  aria-hidden={title ? undefined : 'true'}
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path d="M3 3h26v7H11v3h15v16H3v-7h15v-3H3z" fill="currentColor"></path>
+</svg>

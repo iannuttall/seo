@@ -1,11 +1,11 @@
 {
-  "name": "SEO Skills",
+  "name": "SEO Skills CLI",
   "short_name": "seo",
-  "description": "Local technical SEO reports for people and agents.",
+  "description": "Find technical SEO problems and rank fixes with local reports.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f7f5",
-  "theme_color": "#f7f7f5",
+  "background_color": "#f3f0e8",
+  "theme_color": "#f3f0e8",
   "icons": [
     {
       "src": "/favicon.svg",

@@ -125,17 +125,18 @@ test('published product counts stay tied to the implementation', async () => {
       existsSync(resolve(repoRoot, 'skills', entry.name, 'SKILL.md')),
   ).length
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
+  const homeText = home.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
 
   assert.equal(listRules().length, 50)
   assert.equal(listReportDefinitions().length, 51)
   assert.equal(REPORT_CATEGORIES.length, 9)
   assert.equal(skillCount, 57)
   assert.match(
-    home,
+    homeText,
     new RegExp(`${listReportDefinitions().length} discoverable reports`),
   )
-  assert.match(home, new RegExp(`${listRules().length} crawler rules`))
-  assert.match(home, new RegExp(`${skillCount} agent skills`))
+  assert.match(homeText, new RegExp(`${listRules().length} crawler rules`))
+  assert.match(homeText, new RegExp(`${skillCount} agent skills`))
 })
 
 test('well-known discovery publishes canonical skills with verified digests', () => {
@@ -231,4 +232,14 @@ test('site copy has no stale hosted product, email contact, or dash punctuation'
   assert.doesNotMatch(copy, /audits\.run/i)
   assert.doesNotMatch(copy, /mailto:|[\w.+-]+@[\w.-]+\.[a-z]{2,}/i)
   assert.doesNotMatch(copy, /[\u2013\u2014]/u)
+})
+
+test('site keeps square controls and copyable install choices', () => {
+  const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
+  const css = readFileSync(resolve(appRoot, 'src/styles/global.css'), 'utf8')
+
+  assert.match(home, /data-install-picker/)
+  assert.match(home, /data-copy-button/)
+  assert.match(home, /npm i -g seo/)
+  assert.doesNotMatch(css, /border-radius/)
 })

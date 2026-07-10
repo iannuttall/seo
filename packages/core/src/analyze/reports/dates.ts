@@ -1,3 +1,5 @@
+import { latestFinalGscDate } from '../../gsc/dates.js'
+
 export function rangeDays(range: {
   startDate: string
   endDate: string
@@ -7,13 +9,14 @@ export function rangeDays(range: {
   return Math.floor((end - start) / 86_400_000) + 1
 }
 
-export function finalGscDate(): string {
-  const date = new Date()
-  date.setUTCDate(date.getUTCDate() - 4)
-  return date.toISOString().slice(0, 10)
+export function finalGscDate(now = new Date()): string {
+  return latestFinalGscDate(now)
 }
 
-export function monthRange(month: string): {
+export function monthRange(
+  month: string,
+  now = new Date(),
+): {
   startDate: string
   endDate: string
 } {
@@ -28,7 +31,7 @@ export function monthRange(month: string): {
   end.setUTCMonth(end.getUTCMonth() + 1)
   end.setUTCDate(0)
   const endDate = end.toISOString().slice(0, 10)
-  const availableEndDate = finalGscDate()
+  const availableEndDate = finalGscDate(now)
   const cappedEndDate = endDate < availableEndDate ? endDate : availableEndDate
   const startDate = start.toISOString().slice(0, 10)
   if (cappedEndDate < startDate) {

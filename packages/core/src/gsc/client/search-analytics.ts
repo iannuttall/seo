@@ -1,6 +1,7 @@
 import { SeoError } from '../../errors.js'
 import { getDb, hashKey } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
+import { finalGscDateRange } from '../dates.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import type { SearchAnalyticsRequest } from './types.js'
 
@@ -25,14 +26,7 @@ export type SearchPageBatch<T> = {
 }
 
 function searchDateRange(days: number): SearchDateWindow {
-  const endDate = new Date()
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days)
 }
 
 function resolveSearchDateWindow(

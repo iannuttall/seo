@@ -1,6 +1,7 @@
 import { SeoError } from '../errors.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
+import { finalGscDateRange } from '../gsc/dates.js'
 import {
   contentCoverageRecommendation,
   type QueryContentCoverage,
@@ -116,14 +117,7 @@ function reportDays(value?: number): number {
 }
 
 function dateRange(days: number, now: Date): StrikingDistanceReport['range'] {
-  const endDate = new Date(now)
-  endDate.setUTCDate(endDate.getUTCDate() - 4)
-  const startDate = new Date(endDate)
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1))
-  return {
-    startDate: startDate.toISOString().slice(0, 10),
-    endDate: endDate.toISOString().slice(0, 10),
-  }
+  return finalGscDateRange(days, now)
 }
 
 function verifiedRecommendation(

@@ -4,7 +4,7 @@ import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { geoGaps } from './geo-gaps.js'
 import { createCrawlReport } from './report.js'
 
-test('geoGaps returns pages with GEO issues and missing machine-readable structure', () => {
+test('geoGaps returns pages with observed GEO issues', () => {
   const report = createCrawlReport({
     config: { url: 'https://example.com/' },
     pages: [

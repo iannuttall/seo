@@ -65,12 +65,7 @@ export function geoGaps(
         },
       }
     })
-    .filter((gap) => gap.issueCount > 0 || !gap.signals.structuredData)
-    .sort(
-      (a, b) =>
-        b.issueCount - a.issueCount ||
-        Number(a.signals.structuredData) - Number(b.signals.structuredData) ||
-        a.url.localeCompare(b.url),
-    )
+    .filter((gap) => gap.issueCount > 0)
+    .sort((a, b) => b.issueCount - a.issueCount || a.url.localeCompare(b.url))
     .slice(0, filters.limit ?? 50)
 }

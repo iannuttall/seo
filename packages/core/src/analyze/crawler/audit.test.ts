@@ -878,13 +878,11 @@ test('auditCrawlPages flags social, schema, and GEO gaps', () => {
   assert.deepEqual(
     issues.map((issue) => issue.ruleId),
     [
-      'structured_data_missing',
       'jsonld_invalid',
       'og_title_missing',
       'og_description_missing',
       'og_image_missing',
       'twitter_card_missing',
-      'geo_no_structured_data',
       'geo_not_answerable',
       'geo_no_author',
       'geo_no_date',

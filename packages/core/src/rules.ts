@@ -872,11 +872,11 @@ const RULE_DEFINITIONS = [
     category: 'structured-data',
     defaultSeverity: 'low',
     whyItMatters:
-      'Structured data helps search and AI systems understand entities, page type, authorship, and facts.',
+      'Applicable structured data can make a page eligible for specific Google Search features, but missing markup is not a universal technical defect.',
     howToFix:
-      'Add relevant JSON-LD such as Article, Product, FAQPage, BreadcrumbList, Organization, or WebPage.',
+      'Add only the supported type and properties that accurately describe the visible page. Do not add schema just to satisfy a score.',
     impactIfIgnored:
-      'The page has weaker machine-readable context and fewer rich-result opportunities.',
+      'The page may miss an applicable rich-result opportunity; ordinary indexing and ranking do not require structured data.',
     howToVerify:
       'Re-run the crawl and confirm schemaTypes includes the expected schema.',
   },
@@ -958,13 +958,13 @@ const RULE_DEFINITIONS = [
     id: 'geo_no_structured_data',
     title: 'GEO: no machine-readable structure',
     category: 'geo',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'Generative engines rely on clear structure to identify facts, entities, and source credibility.',
+      'Structured data can describe supported entities and page features, but it is not a general requirement for inclusion in AI search features.',
     howToFix:
-      'Add relevant JSON-LD and keep visible page content aligned with the structured data.',
+      'Do not add markup solely for AI visibility. Use an applicable supported type and keep it aligned with visible content.',
     impactIfIgnored:
-      'The page is harder for AI systems to understand and cite confidently.',
+      'There is no standalone penalty; only applicable structured-data search features may be unavailable.',
     howToVerify: 'Re-run the crawl and confirm geo.structuredData is true.',
   },
   {

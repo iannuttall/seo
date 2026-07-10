@@ -126,7 +126,14 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const detectedResources = report.ai?.agentResources?.filter(
     (resource) => resource.exists,
   )
-  const structuredPages = pages.filter((page) => page.geo?.structuredData)
+  const jsonLdPages = report.pages.filter(
+    (page) =>
+      page.structuredDataFormats?.includes('json-ld') ||
+      (page.invalidJsonLdCount ?? 0) > 0,
+  )
+  const invalidJsonLdPages = jsonLdPages.filter(
+    (page) => (page.invalidJsonLdCount ?? 0) > 0,
+  )
   const answerablePages = pages.filter((page) => page.geo?.answerable)
   const semanticPages = pages.filter((page) => page.geo?.semanticHtml)
   const titlePages = pages.filter((page) => page.title && page.h1)
@@ -235,35 +242,23 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         evidence: { llmsTxt: report.ai?.llmsTxt },
       }),
       check({
-        id: 'structured-data-coverage',
-        section: 'machine-readable',
-        maxScore: 15,
-        score: scoreFromPercent(pct(structuredPages.length, pageCount), 15),
-        title: 'Important pages have structured data',
-        plainEnglish: `${pct(structuredPages.length, pageCount)}% of indexable pages include structured data.`,
-        action:
-          'Add accurate JSON-LD to core pages: Organization, WebSite, Article, Product, FAQPage, or BreadcrumbList where appropriate.',
-        urls: sampleUrls(pages, (page) => !page.geo?.structuredData),
-      }),
-      check({
         id: 'valid-json-ld',
         section: 'machine-readable',
         maxScore: 8,
-        score: report.pages.some((page) => (page.invalidJsonLdCount ?? 0) > 0)
-          ? 3
-          : 8,
-        title: 'JSON-LD parses cleanly',
-        plainEnglish: report.pages.some(
-          (page) => (page.invalidJsonLdCount ?? 0) > 0,
-        )
-          ? 'Some pages contain invalid JSON-LD.'
-          : 'No invalid JSON-LD was detected in the crawl.',
-        action:
-          'Fix invalid JSON-LD first. Broken structured data is worse than missing structured data because agents cannot trust it.',
-        urls: sampleUrls(
-          report.pages,
-          (page) => (page.invalidJsonLdCount ?? 0) > 0,
-        ),
+        evaluated: jsonLdPages.length > 0,
+        score: invalidJsonLdPages.length ? 3 : 8,
+        title: jsonLdPages.length
+          ? 'Observed JSON-LD parses cleanly'
+          : 'JSON-LD syntax was not evaluated',
+        plainEnglish: jsonLdPages.length
+          ? invalidJsonLdPages.length
+            ? `${invalidJsonLdPages.length} evaluated page contains invalid JSON-LD.`
+            : 'The JSON-LD observed on evaluated pages parsed cleanly.'
+          : 'No JSON-LD was observed, so this report cannot make a syntax claim.',
+        action: invalidJsonLdPages.length
+          ? 'Fix invalid JSON-LD before relying on its structured-data claims.'
+          : 'Use structured data only where it accurately represents the visible page and a supported use case.',
+        urls: invalidJsonLdPages.slice(0, 10).map((page) => page.finalUrl),
       }),
     ]),
     section('content-clarity', 'Content clarity', [

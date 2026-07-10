@@ -114,6 +114,7 @@ test('validates rows, bounds output, and sorts deterministically', () => {
   const propertyRows = [
     propertyRow('beta audit', 100),
     propertyRow('alpha audit', 100),
+    { ...propertyRow('invalid property row', 100), ctr: 2 },
   ]
   const forward = analyzeCannibalRows({
     site: 'sc-domain:example.com',
@@ -129,6 +130,8 @@ test('validates rows, bounds output, and sorts deterministically', () => {
   })
 
   assert.equal(forward.selection.invalidRows, 1)
+  assert.equal(forward.selection.propertyInvalidRows, 1)
+  assert.equal(forward.selection.propertySourceRows, 3)
   assert.equal(forward.selection.eligibleClusters, 2)
   assert.equal(forward.selection.returnedClusters, 1)
   assert.equal(forward.selection.limitedClusters, 1)

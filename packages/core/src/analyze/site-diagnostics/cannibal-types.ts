@@ -94,6 +94,10 @@ export interface CannibalReport {
       dimensions: ['query', 'page']
       aggregationType: 'auto'
       rowsFetched: number
+      validation: {
+        retainedRows: number
+        invalidRows: number
+      }
       calls: number
       maxRows: number
       possiblyTruncated: boolean
@@ -102,11 +106,20 @@ export interface CannibalReport {
       dimensions: ['query']
       aggregationType: 'byProperty'
       rowsFetched: number
+      validation: {
+        retainedRows: number
+        invalidRows: number
+      }
       calls: number
       maxRows: number
       possiblyTruncated: boolean
     }
-    completeness: 'unavailable' | 'complete' | 'possibly-truncated'
+    completeness:
+      | 'unavailable'
+      | 'complete'
+      | 'partial'
+      | 'possibly-truncated'
+      | 'partial-and-possibly-truncated'
   }
   methodology: {
     id: 'gsc_url_overlap_v2'

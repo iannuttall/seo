@@ -84,18 +84,18 @@ export function monitoringStatus(input: {
         'Run monitoring with URLs or sitemaps to establish index status history.',
     })
   } else {
-    const attention = index.nonPass > 0 || index.blocked > 0
+    const attention = index.currentIssues > 0 || index.failed > 0
     checks.push({
       name: 'index',
       status: attention
         ? 'attention'
-        : isStale(index.latestInspectedAt, staleAfterDays)
+        : isStale(index.earliestInspectedAt, staleAfterDays)
           ? 'stale'
           : 'clear',
       lastRunAt: index.latestInspectedAt,
-      summary: `${countLabel(index.inspectedUrls, 'URL')} tracked, ${countLabel(index.nonPass, 'non-PASS verdict')}, ${countLabel(index.blocked, 'blocked signal')}.`,
+      summary: `${countLabel(index.inspectedUrls, 'URL')} tracked, ${countLabel(index.currentIssues, 'current indexing review')}, ${countLabel(index.failed, 'failed inspection')}, ${countLabel(index.blocked, 'exact blocked state')}.`,
       action: attention
-        ? 'Review non-PASS and blocked URL Inspection results before content changes.'
+        ? 'Review current URL Inspection issue codes and failed checks before content changes.'
         : undefined,
     })
   }

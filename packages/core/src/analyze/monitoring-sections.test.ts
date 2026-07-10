@@ -8,6 +8,8 @@ test('monitoringBullets includes saved link recovery summary', () => {
       crawlRuns: [],
       indexWatch: {
         inspectedUrls: 0,
+        currentIssues: 0,
+        failed: 0,
         nonPass: 0,
         blocked: 0,
       },
@@ -77,6 +79,8 @@ test('monitoringBullets includes saved crawl recommendations', () => {
       ],
       indexWatch: {
         inspectedUrls: 0,
+        currentIssues: 0,
+        failed: 0,
         nonPass: 0,
         blocked: 0,
       },

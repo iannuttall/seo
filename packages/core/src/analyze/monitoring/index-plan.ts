@@ -1,4 +1,10 @@
+import { SeoError } from '../../errors.js'
 import { listSites } from '../../gsc/client.js'
+import {
+  assertUrlMatchesGscProperty,
+  normalizeHttpUrl,
+} from '../../gsc/property-url.js'
+import { integerOption } from '../site-diagnostics/quick-wins-report-input.js'
 import { fetchSitemapUrls } from './sitemaps.js'
 
 export type IndexPlanProperty = {
@@ -65,40 +71,63 @@ function originFromSite(site: string): string | undefined {
   return parsed ? parsed.origin : undefined
 }
 
-function domainFromSite(site: string): string {
-  if (site.startsWith('sc-domain:')) return site.slice('sc-domain:'.length)
-  return parseUrl(site)?.hostname ?? site
-}
-
-function propertyMatchesUrl(property: string, url: string): boolean {
-  if (property.startsWith('sc-domain:')) {
-    const domain = property.slice('sc-domain:'.length)
-    const host = parseUrl(url)?.hostname ?? ''
-    return host === domain || host.endsWith(`.${domain}`)
+export function propertyMatchesUrl(property: string, url: string): boolean {
+  try {
+    assertUrlMatchesGscProperty(property, url)
+    return true
+  } catch {
+    return false
   }
-  return url.startsWith(property)
 }
 
-function mostSpecificProperty(url: string, properties: string[]): string {
+function mostSpecificProperty(
+  url: string,
+  properties: string[],
+): string | undefined {
   const matching = properties
     .filter((property) => propertyMatchesUrl(property, url))
-    .sort((a, b) => b.length - a.length)
-  return matching[0] ?? properties[0] ?? ''
+    .sort((a, b) => {
+      if (a.startsWith('sc-domain:') && !b.startsWith('sc-domain:')) return 1
+      if (!a.startsWith('sc-domain:') && b.startsWith('sc-domain:')) return -1
+      return b.length - a.length || a.localeCompare(b)
+    })
+  return matching[0]
+}
+
+function propertyBelongsToSite(property: string, site: string): boolean {
+  if (site.startsWith('sc-domain:')) {
+    const domain = site.slice('sc-domain:'.length).toLowerCase()
+    if (property.startsWith('sc-domain:')) {
+      const propertyDomain = property.slice('sc-domain:'.length).toLowerCase()
+      return propertyDomain === domain || propertyDomain.endsWith(`.${domain}`)
+    }
+    const host = parseUrl(property)?.hostname.toLowerCase()
+    return host === domain || Boolean(host?.endsWith(`.${domain}`))
+  }
+  if (property.startsWith('sc-domain:')) {
+    const root = parseUrl(site)
+    const domain = property.slice('sc-domain:'.length).toLowerCase()
+    return Boolean(
+      root &&
+        (root.hostname.toLowerCase() === domain ||
+          root.hostname.toLowerCase().endsWith(`.${domain}`)),
+    )
+  }
+  try {
+    const root = assertUrlMatchesGscProperty(site, property)
+    return root === new URL(property).toString()
+  } catch {
+    return false
+  }
 }
 
 function relevantPropertiesForSite(
   site: string,
   accountProperties: string[],
 ): string[] {
-  const domain = domainFromSite(site)
-  const relevantProperties = accountProperties.filter((property) =>
-    property.startsWith('sc-domain:')
-      ? property.slice('sc-domain:'.length) === domain
-      : property.includes(domain),
+  return [...new Set([site, ...accountProperties])].filter((property) =>
+    propertyBelongsToSite(property, site),
   )
-  return relevantProperties.length
-    ? relevantProperties
-    : [site, ...accountProperties]
 }
 
 export function allocateIndexUrlsToProperties(input: {
@@ -106,7 +135,11 @@ export function allocateIndexUrlsToProperties(input: {
   urls: string[]
   accountProperties: string[]
 }): IndexPropertyUrlAllocation[] {
-  const urls = [...new Set(input.urls)]
+  const urls = [
+    ...new Set(
+      input.urls.map((url) => assertUrlMatchesGscProperty(input.site, url)),
+    ),
+  ]
   const properties = relevantPropertiesForSite(
     input.site,
     input.accountProperties,
@@ -114,6 +147,7 @@ export function allocateIndexUrlsToProperties(input: {
   const urlsByProperty = new Map<string, string[]>()
   for (const url of urls) {
     const property = mostSpecificProperty(url, properties)
+    if (!property) continue
     const existing = urlsByProperty.get(property) ?? []
     existing.push(url)
     urlsByProperty.set(property, existing)
@@ -206,10 +240,20 @@ export async function indexCoveragePlan(input: {
   suggestionLimit?: number
   refresh?: boolean
 }): Promise<IndexCoveragePlan> {
-  const maxUrls = input.maxUrls ?? 50_000
+  if (!input.sitemaps.length || input.sitemaps.length > 20) {
+    throw new SeoError('INVALID_INPUT', 'Pass between 1 and 20 sitemap URLs.')
+  }
+  const maxUrls = integerOption({
+    value: input.maxUrls,
+    fallback: 50_000,
+    minimum: 1,
+    maximum: 250_000,
+    label: 'maxUrls',
+  })
   const warnings: string[] = []
+  const sitemaps = input.sitemaps.map(normalizeHttpUrl)
   const sitemapResults = await Promise.all(
-    input.sitemaps.map((sitemapUrl) =>
+    sitemaps.map((sitemapUrl) =>
       fetchSitemapUrls({ sitemapUrl, limit: maxUrls }),
     ),
   )
@@ -217,6 +261,16 @@ export async function indexCoveragePlan(input: {
     ...new Set(sitemapResults.flatMap((result) => result.urls)),
   ].slice(0, maxUrls)
   warnings.push(...sitemapResults.flatMap((result) => result.warnings))
+  if (
+    sitemapResults.some(
+      (result) =>
+        result.urls.length >= maxUrls || result.nestedSitemaps.length >= 50,
+    )
+  ) {
+    warnings.push(
+      'Sitemap discovery reached a configured URL or nested-sitemap boundary; coverage planning may be incomplete.',
+    )
+  }
 
   const accountProperties: string[] = input.properties
     ? [...input.properties]
@@ -227,7 +281,7 @@ export async function indexCoveragePlan(input: {
   return planIndexCoverageFromUrls({
     site: input.site,
     urls,
-    sitemaps: input.sitemaps ?? [],
+    sitemaps,
     accountProperties,
     dailyLimit: input.dailyLimit,
     targetCycleDays: input.targetCycleDays,
@@ -239,9 +293,36 @@ export async function indexCoveragePlan(input: {
 export function planIndexCoverageFromUrls(
   input: IndexCoveragePlanInput,
 ): IndexCoveragePlan {
-  const dailyLimit = input.dailyLimit ?? 2_000
-  const targetCycleDays = input.targetCycleDays ?? 1
-  const urls = [...new Set(input.urls)]
+  const dailyLimit = integerOption({
+    value: input.dailyLimit,
+    fallback: 2_000,
+    minimum: 1,
+    maximum: 2_000,
+    label: 'dailyLimit',
+  })
+  const targetCycleDays = integerOption({
+    value: input.targetCycleDays,
+    fallback: 1,
+    minimum: 1,
+    maximum: 365,
+    label: 'targetCycleDays',
+  })
+  const suggestionLimit = integerOption({
+    value: input.suggestionLimit,
+    fallback: 10,
+    minimum: 0,
+    maximum: 100,
+    label: 'suggestionLimit',
+  })
+  const warnings = [...(input.warnings ?? [])]
+  const urls: string[] = []
+  for (const value of [...new Set(input.urls)]) {
+    try {
+      urls.push(assertUrlMatchesGscProperty(input.site, value))
+    } catch (error) {
+      warnings.push(error instanceof Error ? error.message : String(error))
+    }
+  }
   const allocations = allocateIndexUrlsToProperties({
     site: input.site,
     urls,
@@ -270,7 +351,7 @@ export function planIndexCoverageFromUrls(
     site: input.site,
     dailyLimit,
     targetCycleDays,
-    limit: input.suggestionLimit ?? 10,
+    limit: suggestionLimit,
   })
 
   return {
@@ -287,6 +368,6 @@ export function planIndexCoverageFromUrls(
     },
     properties: propertyPlans,
     suggestions,
-    warnings: input.warnings ?? [],
+    warnings,
   }
 }

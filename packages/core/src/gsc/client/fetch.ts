@@ -28,7 +28,7 @@ export async function authedFetch(
   })
 }
 
-export async function getAuthorized(): Promise<{ client: OAuth2Client }> {
-  const { client } = await createAuthorizedClient()
-  return { client }
+export async function getAuthorized() {
+  const { client, tokens } = await createAuthorizedClient()
+  return { client, tokens }
 }

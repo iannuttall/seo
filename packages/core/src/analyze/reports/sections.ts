@@ -91,16 +91,12 @@ export function monitoringBullets(
 
   const watch = report.monitoring.indexWatch
   if (watch.inspectedUrls) {
-    const nonPassText =
-      watch.nonPass === 0
-        ? 'no URLs currently have'
-        : `${countLabel(watch.nonPass, 'URL')} currently ${watch.nonPass === 1 ? 'has' : 'have'}`
     bullets.push(
-      `Index watch tracks ${countLabel(watch.inspectedUrls, 'URL')}; ${nonPassText} a non-PASS verdict.`,
+      `Index watch tracks ${countLabel(watch.inspectedUrls, 'URL')}; ${countLabel(watch.currentIssues, 'current indexing review')} and ${countLabel(watch.failed, 'failed inspection')}.`,
     )
-    if (watch.nonPass || watch.blocked) {
+    if (watch.currentIssues || watch.failed) {
       bullets.push(
-        `Index watch currently has ${countLabel(watch.blocked, 'blocked URL')}; inspect redirect, robots, canonical, and final-page state before changing copy.`,
+        `Index watch currently has ${countLabel(watch.blocked, 'exact blocked state')}; inspect stable verdict, robots, indexing, fetch, and canonical evidence before changing copy.`,
       )
     }
   } else {

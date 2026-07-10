@@ -28,6 +28,7 @@ export interface UrlInspectionRequest {
   siteUrl: string
   inspectionUrl: string
   languageCode?: string
+  quotaLimit?: number
 }
 
 export interface UrlInspectionResult {

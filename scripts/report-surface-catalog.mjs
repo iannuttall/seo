@@ -57,22 +57,14 @@ const common = {
     'properties:',
     'properties: z.array(z.string())',
   ),
-  dailyLimit: opt(
-    'dailyLimit',
-    "'daily-limit':",
-    'dailyLimit: z.number().optional()',
-  ),
+  dailyLimit: opt('dailyLimit', "'daily-limit':", 'dailyLimit: z.number()'),
   inspectLimit: opt(
     'inspectLimit',
     "'inspect-limit':",
-    'inspectLimit: z.number().optional()',
+    'inspectLimit: z.number()',
   ),
-  maxUrls: opt('maxUrls', "'max-urls':", 'maxUrls: z.number().optional()'),
-  languageCode: opt(
-    'languageCode',
-    'language:',
-    'languageCode: z.string().optional()',
-  ),
+  maxUrls: opt('maxUrls', "'max-urls':", 'maxUrls: z.number()'),
+  languageCode: opt('languageCode', 'language:', 'languageCode: z.string()'),
 }
 
 const fetchOptions = [
@@ -280,11 +272,7 @@ export const reportSurfaces = [
       common.sitemaps,
       common.properties,
       common.dailyLimit,
-      opt(
-        'targetCycleDays',
-        "'target-days':",
-        'targetCycleDays: z.number().optional()',
-      ),
+      opt('targetCycleDays', "'target-days':", 'targetCycleDays: z.number()'),
       common.maxUrls,
     ],
   },
@@ -323,6 +311,7 @@ export const reportSurfaces = [
     options: [
       common.site,
       opt('urls', 'urls:', 'urls: z.array(z.string().url())'),
+      common.dailyLimit,
       common.languageCode,
     ],
   },

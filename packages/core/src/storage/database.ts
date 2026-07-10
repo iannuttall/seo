@@ -145,6 +145,8 @@ CREATE INDEX IF NOT EXISTS idx_crawl_recommendations_run ON crawl_recommendation
 CREATE TABLE IF NOT EXISTS index_watch_snapshots (
   id TEXT PRIMARY KEY,
   site_url TEXT NOT NULL,
+  root_site_url TEXT NOT NULL,
+  property_site_url TEXT NOT NULL,
   url TEXT NOT NULL,
   verdict TEXT,
   coverage_state TEXT,
@@ -154,9 +156,47 @@ CREATE TABLE IF NOT EXISTS index_watch_snapshots (
   google_canonical TEXT,
   user_canonical TEXT,
   last_crawl_time TEXT,
+  inspection_status TEXT NOT NULL DEFAULT 'succeeded',
+  error_code TEXT,
+  error_message TEXT,
   inspected_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_index_watch_url ON index_watch_snapshots(site_url, url, inspected_at);
+
+CREATE TABLE IF NOT EXISTS url_inspection_quota_buckets (
+  credential_key TEXT NOT NULL,
+  property_site_url TEXT NOT NULL,
+  quota_date TEXT NOT NULL,
+  limit_count INTEGER NOT NULL,
+  used_count INTEGER NOT NULL DEFAULT 0,
+  reserved_count INTEGER NOT NULL DEFAULT 0,
+  minute_window_start INTEGER NOT NULL,
+  minute_count INTEGER NOT NULL DEFAULT 0,
+  blocked_until INTEGER,
+  last_429_at INTEGER,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY(credential_key, property_site_url, quota_date)
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS url_inspection_quota_reservations (
+  id TEXT PRIMARY KEY,
+  credential_key TEXT NOT NULL,
+  property_site_url TEXT NOT NULL,
+  quota_date TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  finalized_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_url_inspection_reservations_bucket
+  ON url_inspection_quota_reservations(
+    credential_key, property_site_url, quota_date, status, expires_at
+  );
+CREATE INDEX IF NOT EXISTS idx_url_inspection_reservations_minute
+  ON url_inspection_quota_reservations(
+    credential_key, property_site_url, created_at
+  );
 
 CREATE TABLE IF NOT EXISTS link_recover_runs (
   id TEXT PRIMARY KEY,
@@ -231,9 +271,32 @@ function initDb(database: Database.Database): void {
   database.pragma('temp_store = MEMORY')
   database.pragma('mmap_size = 268435456')
   database.pragma('busy_timeout = 5000')
-  database.exec(CREATE_SQL)
-  ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
-  ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
+  const migrate = database.transaction(() => {
+    database.exec(CREATE_SQL)
+    ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
+    ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
+    ensureColumn(database, 'index_watch_snapshots', 'root_site_url', 'TEXT')
+    ensureColumn(database, 'index_watch_snapshots', 'property_site_url', 'TEXT')
+    ensureColumn(database, 'index_watch_snapshots', 'error_code', 'TEXT')
+    ensureColumn(database, 'index_watch_snapshots', 'error_message', 'TEXT')
+    ensureColumn(
+      database,
+      'index_watch_snapshots',
+      'inspection_status',
+      "TEXT NOT NULL DEFAULT 'succeeded'",
+    )
+    database.exec(`
+      UPDATE index_watch_snapshots
+      SET root_site_url = COALESCE(root_site_url, site_url),
+          property_site_url = COALESCE(property_site_url, site_url)
+      WHERE root_site_url IS NULL OR property_site_url IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_index_watch_root_url
+        ON index_watch_snapshots(root_site_url, url, inspected_at DESC, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_index_watch_property_url
+        ON index_watch_snapshots(property_site_url, url, inspected_at DESC, id DESC);
+    `)
+  })
+  migrate.immediate()
 }
 
 export function getDb(): Database.Database {

@@ -1,0 +1,129 @@
+---
+import Command from '@/components/Command.astro'
+import SiteLayout from '@/layouts/SiteLayout.astro'
+import { productFacts } from '@/lib/facts'
+import { site } from '@/lib/site'
+---
+
+<SiteLayout>
+  <div class="shell">
+    <section class="home-hero">
+      <div>
+        <h1>Technical SEO from your terminal.</h1>
+        <p class="lead">
+          Crawl a site, connect read-only Search Console and GA4 data, and get
+          evidence that people, scripts, and agents can use.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="/docs/getting-started">Get started</a>
+          <a class="button secondary" href={site.repository}>View on GitHub</a>
+        </div>
+      </div>
+      <div class="hero-terminal">
+        <Command command="npx seo start" />
+        <Command command="npx seo report" label="Then run" />
+        <p class="terminal-note">Requires Node 22 or newer. No global install needed.</p>
+      </div>
+    </section>
+
+    <ul class="metric-list" aria-label="Project facts">
+      <li>{productFacts.reports} discoverable reports</li>
+      <li>{productFacts.crawlerRules} crawler rules</li>
+      <li>{productFacts.skills} agent skills</li>
+      <li>Apache-2.0</li>
+    </ul>
+
+    <section class="home-section" aria-labelledby="normal-path">
+      <div class="section-heading">
+        <h2 id="normal-path">The normal path is short</h2>
+        <p>
+          The guided setup handles Google sign-in, property selection, and a
+          local project profile. The main report checks the available data,
+          explains gaps, and points to the next useful command.
+        </p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Run <code>npx seo start</code></h3>
+          <p>Follow the prompts to connect Google and choose the site you want to work on.</p>
+        </li>
+        <li>
+          <h3>Run <code>npx seo report</code></h3>
+          <p>Get a prioritised report using the crawl, search, and analytics evidence available.</p>
+        </li>
+        <li>
+          <h3>Follow the evidence</h3>
+          <p>Use the suggested focused reports to inspect affected pages, queries, and fixes.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="home-section" aria-labelledby="same-analysis">
+      <div class="section-heading">
+        <h2 id="same-analysis">The same analysis everywhere</h2>
+        <p>
+          The core report code sits behind each interface. A terminal report and
+          an MCP report use the same rules, limits, caveats, and source data.
+        </p>
+      </div>
+      <div class="surface-list">
+        <div class="surface-row">
+          <h3>For people</h3>
+          <p>
+            Calm prompts, readable terminal output, saved project profiles, and
+            a main report that tells you where to look next.
+          </p>
+        </div>
+        <div class="surface-row">
+          <h3>For agents and CI</h3>
+          <p>
+            Deterministic JSON and Markdown, explicit flags, stable rule IDs,
+            packaged skills, and a three-tool local stdio MCP server.
+          </p>
+        </div>
+        <div class="surface-row">
+          <h3>For Node projects</h3>
+          <p>
+            Install the unscoped <code>seo</code> package and import the crawler,
+            reports, providers, rendering APIs, or MCP server directly.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section" aria-labelledby="local-data">
+      <div class="local-note">
+        <div>
+          <h2 id="local-data">Your working data stays local</h2>
+          <p>
+            Project profiles, OAuth tokens, caches, and saved reports live on
+            the machine running the command. Requests go directly to Google and
+            the public sites you ask the tool to inspect. No SEO account or
+            project-owned report backend is required.
+          </p>
+        </div>
+        <ul>
+          <li>Read-only Google scopes</li>
+          <li>Private local file permissions</li>
+          <li>Operating system keychain support</li>
+          <li>No project-controlled usage telemetry</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="home-section" aria-labelledby="inspect-data">
+      <div class="section-heading">
+        <h2 id="inspect-data">Reports show their working</h2>
+        <p>
+          Observed data, derived findings, skipped sections, provider errors,
+          and data limits stay separate. Sparse data reduces the conclusion; it
+          does not turn into invented certainty.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <a class="button" href="/docs/reports">Read about reports</a>
+        <a class="button secondary" href="/docs/agents">Set up an agent</a>
+      </div>
+    </section>
+  </div>
+</SiteLayout>

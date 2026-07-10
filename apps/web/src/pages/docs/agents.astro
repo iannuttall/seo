@@ -1,0 +1,61 @@
+---
+import DocLayout from '@/layouts/DocLayout.astro'
+import { productFacts } from '@/lib/facts'
+---
+
+<DocLayout
+  title="Agents and MCP"
+  description="Give an agent a compact local tool surface, deterministic output, and focused instructions without loading every report schema into context."
+  section="Automation"
+>
+  <h2>Use JSON from the CLI</h2>
+  <pre><code>seo report --project example --json
+seo crawl https://example.com --json --output crawl.json</code></pre>
+  <p>
+    JSON mode never prompts. Agents should pass explicit selectors, inspect
+    data status and caveats, and reuse saved crawl IDs for follow-up questions.
+  </p>
+
+  <h2>Install the local MCP server</h2>
+  <p>Humans can choose a detected client interactively:</p>
+  <pre><code>seo mcp install</code></pre>
+  <p>Agents and setup scripts choose the destination explicitly:</p>
+  <pre><code>seo mcp install --claude-desktop --json
+seo mcp install --claude-code --json
+seo mcp install --cursor --json
+seo mcp install --all --json</code></pre>
+  <p>Run or test the server directly:</p>
+  <pre><code>seo mcp serve
+seo mcp serve --test</code></pre>
+
+  <h2>Three tools cover the report suite</h2>
+  <ol>
+    <li>Call <code>seo_list_reports</code> to find the smallest relevant report.</li>
+    <li>Call <code>seo_describe_report</code> to get that report's input schema.</li>
+    <li>Call <code>seo_run_report</code> with the accepted parameters.</li>
+  </ol>
+  <p>
+    The compact surface keeps dozens of schemas out of the initial context.
+    Report results still return structured content and a readable display layer.
+  </p>
+
+  <h2>Install focused skills</h2>
+  <p>The npm package ships {productFacts.skills} skills:</p>
+  <pre><code>seo skills list
+seo skills install --target agents
+seo skills install --target codex
+seo skills install --target claude
+seo skills install --target project</code></pre>
+  <p>
+    Pass a skill name after <code>install</code> to copy one skill, or use
+    <code>--dir</code> for a custom skills directory. Add <code>--json</code> in
+    unattended setup.
+  </p>
+
+  <h2>Reason from evidence</h2>
+  <p>
+    Check <code>dataStatus</code>, source completeness, row caps, warnings, and
+    caveats before reaching a conclusion. Use structured errors instead of
+    parsing error text when <code>structuredContent.error</code> is available.
+  </p>
+</DocLayout>

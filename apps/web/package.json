@@ -4,19 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json --noEmit && mkdir -p dist && touch dist/.keep",
-    "clean": "rm -rf dist .wrangler",
-    "dev": "wrangler dev --local --port 8787",
-    "deploy": "wrangler deploy",
-    "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test dist/**/*.test.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "pnpm build:sitemap && astro build",
+    "build:sitemap": "node scripts/build-sitemap.mjs",
+    "clean": "rm -rf .astro dist .wrangler",
+    "deploy": "pnpm build && wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "dev": "astro dev",
+    "lint": "astro check",
+    "preview": "astro preview",
+    "test": "node --test scripts/site.test.mjs",
+    "typecheck": "astro check"
   },
   "dependencies": {
-    "hono": "^4.12.28"
+    "astro": "^7.0.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260702.1",
-    "wrangler": "4.107.1"
+    "@astrojs/check": "^0.9.9",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.110.0"
   }
 }

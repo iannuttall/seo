@@ -7,13 +7,13 @@
 <p align="center">
   <a href="#quick-start">Get started</a>
   ·
-  <a href="docs/README.md">Documentation</a>
+  <a href="https://seoskills.dev/docs">Documentation</a>
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
   <a href="https://github.com/iannuttall/seo/issues">Questions</a>
   ·
-  <a href="PRIVACY.md">Privacy</a>
+  <a href="https://seoskills.dev/privacy">Privacy</a>
   ·
   <a href="SECURITY.md">Security</a>
   ·
@@ -174,7 +174,8 @@ seo skills install --target claude
 seo skills install --target project
 ```
 
-See [MCP and agents](docs/mcp.md) for setup and tool details.
+See [MCP and agents](https://seoskills.dev/docs/agents) for setup and tool
+details.
 
 ## Use it as a library
 
@@ -206,7 +207,8 @@ seo reset
 ```
 
 Power users can bring their own Google OAuth client. See
-[getting started](docs/getting-started.md) for the available auth paths.
+[getting started](https://seoskills.dev/docs/getting-started) for the available
+auth paths.
 
 ## Documentation
 
@@ -214,14 +216,15 @@ Questions, bug reports, and feature requests go through
 [GitHub Issues](https://github.com/iannuttall/seo/issues). Report suspected
 vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
-- [Getting started](docs/getting-started.md)
-- [CLI commands](docs/cli.md)
-- [Crawler](docs/crawler.md)
-- [MCP and agents](docs/mcp.md)
-- [AI-search evidence](docs/geo.md)
-- [Privacy policy](PRIVACY.md)
-- [Terms of use](TERMS.md)
-- [Security policy](SECURITY.md)
+- [Getting started](https://seoskills.dev/docs/getting-started)
+- [CLI commands](https://seoskills.dev/docs/cli)
+- [Crawler](https://seoskills.dev/docs/crawler)
+- [Reports and data](https://seoskills.dev/docs/reports)
+- [MCP and agents](https://seoskills.dev/docs/agents)
+- [AI-search evidence](https://seoskills.dev/docs/ai-search)
+- [Privacy policy](https://seoskills.dev/privacy)
+- [Terms of use](https://seoskills.dev/terms)
+- [Security policy](https://seoskills.dev/security)
 - [Contributing](CONTRIBUTING.md)
 - [Trademark and brand policy](TRADEMARKS.md)
 

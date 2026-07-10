@@ -109,8 +109,11 @@ test('the release workflow uses npm trusted publishing and release-only OAuth in
 
   assert.match(release, /contents: read/)
   assert.match(release, /id-token: write/)
-  assert.match(release, /actions\/checkout@v6/)
-  assert.match(release, /actions\/setup-node@v6/)
+  for (const workflow of [release, ci]) {
+    assert.match(workflow, /actions\/checkout@v7/)
+    assert.match(workflow, /pnpm\/action-setup@v6/)
+    assert.match(workflow, /actions\/setup-node@v6/)
+  }
   assert.match(release, /node-version: 24/)
   assert.match(release, /package-manager-cache: false/)
   assert.match(release, /npm publish --access public --provenance/)

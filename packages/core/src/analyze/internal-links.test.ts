@@ -184,7 +184,7 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
           return page({
             url: result.url,
             links: Array.from({ length: 25 }, (_, index) => ({
-              href: `${requested}/#details-${index}`,
+              href: `${requested}#details-${index}`,
               text: `Old target ${index}`,
               rel: [],
               internal: true,
@@ -217,13 +217,24 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
   assert.equal(report.summary.returnedSources, 2)
   assert.deepEqual(
     report.items.map((item) => item.actionType),
-    ['update-alias-link', 'add-contextual-link'],
+    ['review-alias-link', 'review-contextual-link'],
   )
   assert.equal(report.items[0]?.linkEvidence.status, 'alias-contextual')
   assert.equal(report.items[0]?.linkEvidence.observedCount, 25)
+  assert.equal(report.items[0]?.linkEvidence.observedLimit, 20)
+  assert.equal(report.items[0]?.linkEvidence.limitedCount, 5)
   assert.equal(report.items[0]?.linkEvidence.observed.length, 20)
   assert.equal(report.items[1]?.linkEvidence.status, 'missing')
   assert.equal(report.items[0]?.confidence, 'medium')
+  assert.equal(report.methodology.version, 3)
+  assert.equal(report.methodology.matchedQueryEvidenceLimit, 10)
+  assert.equal(report.methodology.observedLinkEvidenceLimit, 20)
+  assert.deepEqual(report.filters, {
+    minImpressions: 1,
+    resultLimit: 10,
+    checkLimit: 10,
+    maxGscRowsPerRequest: 100_000,
+  })
   assert.match(report.ledgerSummary, /GSC: 3 calls, 6 rows/)
 })
 
@@ -296,13 +307,158 @@ test('backfills failures until the check budget and reports unchecked sources', 
     },
   )
 
-  assert.equal(report.selection.checkedSources, 2)
+  assert.equal(report.selection.attemptedSources, 2)
+  assert.equal(report.selection.checkedSources, 1)
   assert.equal(report.selection.failedChecks, 1)
   assert.equal(report.selection.returnedSources, 1)
   assert.equal(report.selection.uncheckedCandidates, 1)
   assert.equal(report.dataStatus, 'partial')
   assert.equal(report.warnings[0]?.code, 'fetch-failed')
   assert.match(report.caveats.join('\n'), /not checked/)
+  assert.match(report.caveats.join('\n'), /not counted as checked/)
+})
+
+test('malformed retained source rows cannot become a filtered all-clear', async () => {
+  const targetUrl = 'https://example.com/target'
+  const invalidSource = {
+    ...row('technical crawl audit', 'https://example.com/source', 100),
+    ctr: 2,
+  }
+  const report = await internalLinksReport(
+    {
+      site: 'sc-domain:example.com',
+      targetUrl,
+      includeBrand: true,
+    },
+    {
+      searchAnalytics: async (_site, request) => {
+        const filter =
+          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
+        const rows = filter
+          ? [row('technical crawl audit', filter, 100)]
+          : [invalidSource]
+        return { rows, calls: 1, rowsFetched: rows.length }
+      },
+      fetch: async (url) => fetched(url),
+      extract: async (result) => page({ url: result.url }),
+      now: () => new Date('2026-07-09T12:00:00.000Z'),
+    },
+  )
+
+  assert.equal(report.selection.sourceInvalidRows, 1)
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(report.source.completeness, 'retained-rows-only')
+  assert.equal(report.summary.checkedSources, 0)
+  assert.match(report.summary.verdict, /evidence was incomplete/)
+})
+
+test('keeps an empty retained source response distinct from filtered rows', async () => {
+  const targetUrl = 'https://example.com/target'
+  const report = await internalLinksReport(
+    {
+      site: 'sc-domain:example.com',
+      targetUrl,
+      includeBrand: true,
+    },
+    {
+      searchAnalytics: async (_site, request) => {
+        const filter =
+          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
+        const rows = filter ? [row('technical crawl audit', filter, 100)] : []
+        return { rows, calls: 1, rowsFetched: rows.length }
+      },
+      fetch: async (url) => fetched(url),
+      extract: async (result) => page({ url: result.url }),
+      now: () => new Date('2026-07-09T12:00:00.000Z'),
+    },
+  )
+
+  assert.equal(report.dataStatus, 'source-empty')
+  assert.equal(report.source.candidates.queried, true)
+  assert.equal(report.source.completeness, 'retained-rows-only')
+  assert.equal(report.selection.sourceRows, 0)
+  assert.match(report.summary.verdict, /no retained source query\/page rows/i)
+  assert.match(report.summary.verdict, /does not prove/i)
+})
+
+test('a reached provider row cap keeps returned candidates partial', async () => {
+  const targetUrl = 'https://example.com/target'
+  const sourceUrl = 'https://example.com/source'
+  const report = await internalLinksReport(
+    {
+      site: 'sc-domain:example.com',
+      targetUrl,
+      includeBrand: true,
+    },
+    {
+      searchAnalytics: async (_site, request) => {
+        const filter =
+          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
+        const rows = filter
+          ? [row('technical crawl audit', filter, 100)]
+          : [row('technical crawl audit', sourceUrl, 100)]
+        return {
+          rows,
+          calls: 1,
+          rowsFetched: filter ? 100_000 : rows.length,
+        }
+      },
+      fetch: async (url) => fetched(url),
+      extract: async (result) => page({ url: result.url }),
+      now: () => new Date('2026-07-09T12:00:00.000Z'),
+    },
+  )
+
+  assert.equal(report.items.length, 1)
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(report.source.target.possiblyTruncated, true)
+  assert.equal(report.source.completeness, 'possibly-truncated')
+  assert.equal(report.filters.maxGscRowsPerRequest, 100_000)
+})
+
+test('does not collapse trailing-slash links without redirect evidence', async () => {
+  const targetUrl = 'https://example.com/target'
+  const sourceUrl = 'https://example.com/source'
+  const report = await internalLinksReport(
+    {
+      site: 'sc-domain:example.com',
+      targetUrl,
+      includeBrand: true,
+    },
+    {
+      searchAnalytics: async (_site, request) => {
+        const filter =
+          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
+        const rows = filter
+          ? [row('technical crawl audit', filter, 100)]
+          : [row('technical crawl audit', sourceUrl, 100)]
+        return { rows, calls: 1, rowsFetched: rows.length }
+      },
+      fetch: async (url) => fetched(url),
+      extract: async (result) =>
+        result.url === sourceUrl
+          ? page({
+              url: sourceUrl,
+              links: [
+                {
+                  href: `${targetUrl}/`,
+                  text: 'Different trailing-slash URL',
+                  rel: [],
+                  internal: true,
+                  location: 'main-content',
+                },
+              ],
+            })
+          : page({ url: result.url }),
+      now: () => new Date('2026-07-09T12:00:00.000Z'),
+    },
+  )
+
+  assert.equal(report.selection.attemptedSources, 1)
+  assert.equal(report.selection.checkedSources, 1)
+  assert.equal(report.selection.existingLinkExclusions, 0)
+  assert.equal(report.items[0]?.linkEvidence.status, 'missing')
+  assert.equal(report.items[0]?.actionType, 'review-contextual-link')
 })
 
 test('propagates Search Console provider failures', async () => {

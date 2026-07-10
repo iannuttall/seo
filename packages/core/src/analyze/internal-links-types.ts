@@ -28,10 +28,12 @@ export interface InternalLinkOpportunity extends InternalLinkCandidate {
   technicalSignals: PageTechnicalSignal[]
   fetchDiagnostics: PageFetchDiagnostics
   pageWarnings: string[]
-  actionType: 'add-contextual-link' | 'update-alias-link'
+  actionType: 'review-contextual-link' | 'review-alias-link'
   linkEvidence: {
     status: 'missing' | 'non-contextual-only' | 'alias-contextual'
     observedCount: number
+    observedLimit: number
+    limitedCount: number
     observed: Array<{
       href: string
       text: string
@@ -78,6 +80,7 @@ export interface InternalLinksSelection {
   sourceUnmatchedQueries: number
   candidateQueries: number
   candidateUrls: number
+  attemptedSources: number
   checkedSources: number
   returnedSources: number
   existingLinkExclusions: number
@@ -102,6 +105,7 @@ export interface InternalLinksReport {
   rangeDays: number
   dataStatus:
     | 'empty'
+    | 'source-empty'
     | 'filtered'
     | 'partial'
     | 'complete'
@@ -131,15 +135,23 @@ export interface InternalLinksReport {
       maxRows: number
       possiblyTruncated: boolean
     }
-    completeness: 'complete' | 'possibly-truncated' | 'not-queried'
+    completeness: 'retained-rows-only' | 'possibly-truncated' | 'not-queried'
   }
   methodology: {
     id: 'gsc_internal_link_candidates'
-    version: 2
+    version: 3
     lexicalTargetLimit: number
+    matchedQueryEvidenceLimit: number
+    observedLinkEvidenceLimit: number
     matching: 'pairwise_exact_then_precision_lexical'
     ranking: 'exact_matches_then_matched_query_impressions_then_relevance'
     contextualPlacementVerified: true
+  }
+  filters: {
+    minImpressions: number
+    resultLimit: number
+    checkLimit: number
+    maxGscRowsPerRequest: number
   }
   target: {
     requestedUrl: string
@@ -157,6 +169,7 @@ export interface InternalLinksReport {
   summary: {
     targetQueries: number
     candidateSources: number
+    attemptedSources: number
     checkedSources: number
     returnedSources: number
     existingLinksObserved: number

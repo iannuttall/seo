@@ -119,7 +119,7 @@ test('preserves Unicode distinctions and one-codepoint CJK terms', () => {
   )
 })
 
-test('validates metrics and excludes target URL variants from source candidates', () => {
+test('validates metrics and preserves target URL variant identity', () => {
   const invalid = [
     { ...row({ query: 'technical crawl audit' }), keys: ['missing-page'] },
     row({ query: 'technical crawl audit', page: 'ftp://example.com/source' }),
@@ -136,27 +136,41 @@ test('validates metrics and excludes target URL variants from source candidates'
         query: 'technical crawl audit',
         page: 'https://example.com/technical-audit#section',
       }),
+      row({
+        query: 'technical crawl audit',
+        page: 'https://example.com/technical-audit/#section',
+      }),
     ],
   )
 
   assert.equal(result.selection.sourceInvalidRows, invalid.length)
   assert.equal(result.selection.sourceTargetAliasRows, 1)
-  assert.equal(result.candidates.length, 0)
+  assert.equal(result.candidates.length, 1)
+  assert.equal(
+    result.candidates[0]?.sourceUrl,
+    'https://example.com/technical-audit',
+  )
 })
 
-test('aggregates duplicate query pages once and returns stable ordering', () => {
+test('aggregates fragments but preserves trailing-slash URL identity', () => {
   const sourceRows = [
     row({
       query: 'technical crawl audit',
-      page: 'https://example.com/b',
+      page: 'https://example.com/b#first',
       impressions: 20,
       clicks: 2,
     }),
     row({
       query: 'Technical crawl audit',
-      page: 'https://example.com/b/',
+      page: 'https://example.com/b#second',
       impressions: 30,
       clicks: 3,
+    }),
+    row({
+      query: 'technical crawl audit',
+      page: 'https://example.com/b/',
+      impressions: 40,
+      clicks: 4,
     }),
     row({
       query: 'technical crawl audit',
@@ -175,6 +189,8 @@ test('aggregates duplicate query pages once and returns stable ordering', () => 
   assert.equal(forward.candidates[0]?.sourceUrl, 'https://example.com/a')
   assert.equal(forward.candidates[1]?.matchedQueryImpressions, 50)
   assert.equal(forward.candidates[1]?.matchedQueries, 1)
+  assert.equal(forward.candidates[2]?.sourceUrl, 'https://example.com/b/')
+  assert.equal(forward.candidates[2]?.matchedQueryImpressions, 40)
 })
 
 test('applies brand filtering symmetrically', () => {

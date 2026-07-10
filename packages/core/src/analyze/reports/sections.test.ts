@@ -232,9 +232,9 @@ function emptyDiagnosis(): DiagnosePropertyReport {
     generatedAt: '2026-06-03T00:00:00.000Z',
     dataStatus: 'complete',
     summary: {
-      updateAttribution: 'not-enough-evidence',
+      updateAttribution: 'no-update-overlap',
       updateAttributionStatus: 'available',
-      classification: 'not-enough-evidence',
+      classification: 'no-update-overlap',
       significantAnomalies: 0,
       updateMatches: 0,
       largestPageMovements: 0,
@@ -255,9 +255,9 @@ function emptyDiagnosis(): DiagnosePropertyReport {
       generatedAt: '2026-06-03T00:00:00.000Z',
       anomalies: [],
       overlappingUpdates: [],
-      classification: 'not-enough-evidence',
-      attribution: 'weak-or-no-overlap',
-      confidence: 'low',
+      classification: 'no-update-overlap',
+      attribution: 'not-established',
+      confidence: 'none',
       confounders: [],
       summary: 'No official update overlap.',
       evidence: [],
@@ -346,6 +346,7 @@ function significantClickAnomaly(
     comparisonTotal: 840,
     percentChange: -40,
     zScore: -3,
+    significanceMethod: 'z-score',
     direction: 'drop',
     significant: true,
   }
@@ -422,7 +423,7 @@ test('skipped evidence is unavailable instead of a reassuring negative', () => {
   assert.match(topSegmentLine(report), /not available/)
   assert.equal(
     updateAttributionLine(report),
-    'Update attribution was not available for this run.',
+    'Update correlation was not available for this run.',
   )
   const opportunities = contentOpportunityBullets(report).join('\n')
   assert.match(opportunities, /Could not assess/)
@@ -628,13 +629,14 @@ test('update overlap without significant movement is context, not a priority', (
     },
   ]
   report.summary.updateMatches = 1
-  report.summary.updateAttribution = 'possibly-update-related'
-  report.summary.classification = 'possibly-update-related'
+  report.summary.updateAttribution =
+    'update-overlap-without-significant-movement'
+  report.summary.classification = 'update-overlap-without-significant-movement'
   report.updateCorrelation.anomalies = [significantClickAnomaly(report.site)]
 
   assert.match(
     updateAttributionLine(report),
-    /overlapped the comparison window, but no statistically significant movement/,
+    /overlapped the comparison window, but no significant movement/,
   )
   assert.equal(
     buildDiagnosisPriorities({
@@ -645,7 +647,9 @@ test('update overlap without significant movement is context, not a priority', (
       cannibal: report.cannibalization,
       striking: report.strikingDistance,
       quickWins: report.quickWins,
-    }).some((priority) => priority.label === 'Review update exposure'),
+    }).some(
+      (priority) => priority.label === 'Review movement during update overlap',
+    ),
     false,
   )
 })
@@ -678,9 +682,11 @@ test('update action requires both significant movement and an update overlap', (
   })
 
   assert.equal(priorities.length, 1)
-  assert.equal(priorities[0]?.label, 'Review update exposure')
+  assert.equal(priorities[0]?.label, 'Review movement during update overlap')
+  assert.equal(priorities[0]?.confidence, 'low')
   assert.match(priorities[0]?.reason ?? '', /significant movement comparison/)
   assert.match(updateAttributionLine(report), /significant movement comparison/)
+  assert.match(updateAttributionLine(report), /does not establish/)
 
   report.updateCorrelation.overlappingUpdates = []
   assert.equal(

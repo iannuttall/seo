@@ -7,7 +7,12 @@ import type {
 export function diagnosisPartialReasons(
   report: Pick<
     DiagnosePropertyReport,
-    'segments' | 'decay' | 'cannibalization' | 'strikingDistance' | 'quickWins'
+    | 'anomaly'
+    | 'segments'
+    | 'decay'
+    | 'cannibalization'
+    | 'strikingDistance'
+    | 'quickWins'
   >,
 ): PartialDiagnosisReason[] {
   const segmentReasons = (
@@ -25,6 +30,16 @@ export function diagnosisPartialReasons(
     ]
   })
   return [
+    ...(report.anomaly.coverage?.status === 'partial'
+      ? [
+          {
+            section: 'traffic anomaly',
+            reason:
+              report.anomaly.coverage.caveats.join(' ') ||
+              'The requested Search Console calendar window has incomplete daily evidence.',
+          },
+        ]
+      : []),
     ...segmentReasons,
     ...(report.decay.dataStatus === 'partial'
       ? [

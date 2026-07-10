@@ -72,7 +72,7 @@ export const diagnoseCommand = defineCommand({
     printKeyValue([
       ['Property', report.site],
       ['Data status', report.dataStatus],
-      ['Update attribution', report.summary.updateAttribution],
+      ['Update overlap', report.summary.updateAttribution.replaceAll('-', ' ')],
       ['Significant anomalies', String(report.summary.significantAnomalies)],
       ['Update matches', String(report.summary.updateMatches)],
       ['Decay items', String(report.summary.decayItems)],

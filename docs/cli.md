@@ -37,6 +37,9 @@ seo report --project keep --json
 
 `seo report` is the main human report. It runs first, explains sparse data, and recommends follow-up commands.
 
+With `--json`, it returns a compact summary, action queue, and bounded crawl
+evidence. Add `--full` only when a script needs every report section.
+
 ## Technical crawler
 
 ```bash

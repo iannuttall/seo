@@ -28,6 +28,41 @@ type DiagnoseWorkflowReport = Awaited<
   ReturnType<typeof diagnosePropertyWorkflow>
 >
 
+function compactMainReportJson(
+  report: DiagnoseWorkflowReport,
+  workflowName?: string,
+) {
+  const { narrative } = report.output
+  const { diagnosis } = narrative
+
+  return {
+    ...report,
+    ...(workflowName ? { workflow: workflowName } : {}),
+    output: {
+      narrative: {
+        site: narrative.site,
+        generatedAt: narrative.generatedAt,
+        dataStatus: narrative.dataStatus,
+        periodDays: narrative.periodDays,
+        period: narrative.period,
+        headline: narrative.headline,
+        caveats: narrative.caveats,
+        sections: narrative.sections,
+        priorities: narrative.priorities,
+        diagnosis: {
+          site: diagnosis.site,
+          generatedAt: diagnosis.generatedAt,
+          dataStatus: diagnosis.dataStatus,
+          summary: diagnosis.summary,
+          skippedSections: diagnosis.skippedSections,
+          partialReasons: diagnosis.partialReasons,
+          priorities: diagnosis.priorities,
+        },
+      },
+    },
+  }
+}
+
 function shellArg(value: string): string {
   if (/^[A-Za-z0-9_./:@-]+$/.test(value)) {
     return value
@@ -129,6 +164,34 @@ function technicalSection(baseline: TechnicalBaseline) {
     summary: report.summary,
     topFixes: topFixes(report, { limit: 5 }),
     reviewObservations: reviewObservations(report, { limit: 5 }),
+  }
+}
+
+function compactTechnicalFinding(finding: ReturnType<typeof topFixes>[number]) {
+  return {
+    ruleId: finding.ruleId,
+    title: finding.title,
+    category: finding.category,
+    severity: finding.severity,
+    recommendation: finding.recommendation,
+    count: finding.count,
+    sampleUrls: finding.sampleUrls.slice(0, 3),
+    score: finding.score,
+    scoreFactors: finding.scoreFactors,
+    whyThisRanks: finding.whyThisRanks,
+    detailsCommand: `seo explain --rule ${finding.ruleId}`,
+  }
+}
+
+function compactTechnicalSection(section: ReturnType<typeof technicalSection>) {
+  if (!('topFixes' in section)) return section
+
+  return {
+    ...section,
+    topFixes: section.topFixes.slice(0, 3).map(compactTechnicalFinding),
+    reviewObservations: section.reviewObservations
+      .slice(0, 3)
+      .map(compactTechnicalFinding),
   }
 }
 
@@ -408,6 +471,12 @@ function workflowCommandMeta(input: {
               description:
                 'Maximum link depth for the report crawl. Defaults to 4.',
             },
+            full: {
+              type: 'boolean' as const,
+              default: false,
+              description:
+                'Include the full report in JSON output. Default JSON is a compact summary for agents.',
+            },
           }
         : {}),
       json: {
@@ -418,6 +487,7 @@ function workflowCommandMeta(input: {
     },
     run: async ({ args }) => {
       const json = jsonFlag(args)
+      const full = input.printFollowups && booleanArg(args.full)
       const project = projectArg(args)
       const explicitSite = stringArg(args.site)
       const directUrl = input.printFollowups ? stringArg(args.url) : undefined
@@ -470,14 +540,28 @@ function workflowCommandMeta(input: {
           })
         : undefined
       if (json) {
+        const jsonReport =
+          input.printFollowups && !full
+            ? compactMainReportJson(report, input.workflowName)
+            : outputReport
         printJson(
           technicalCrawl || followups
             ? {
-                ...outputReport,
-                ...(technicalCrawl ? { technicalCrawl } : {}),
+                ...jsonReport,
+                ...(input.printFollowups
+                  ? { detail: full ? 'full' : 'summary' }
+                  : {}),
+                ...(technicalCrawl
+                  ? {
+                      technicalCrawl:
+                        input.printFollowups && !full
+                          ? compactTechnicalSection(technicalCrawl)
+                          : technicalCrawl,
+                    }
+                  : {}),
                 ...(followups ? { nextCommands: followups } : {}),
               }
-            : outputReport,
+            : jsonReport,
         )
         return
       }

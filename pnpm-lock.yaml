@@ -94,8 +94,8 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1
       user-agents:
-        specifier: 2.1.116
-        version: 2.1.116
+        specifier: 2.1.117
+        version: 2.1.117
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -264,8 +264,8 @@ importers:
         specifier: ^8.7.0
         version: 8.7.0
       user-agents:
-        specifier: 2.1.116
-        version: 2.1.116
+        specifier: 2.1.117
+        version: 2.1.117
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4730,8 +4730,8 @@ packages:
     resolution: {integrity: sha512-+dwUY4L35XFYEzE+OAL3sarJdUioVovq+8f7lcIJ7wnmnYQV5UD1Y/lcwaMSyaQ6Bj3JMj1XSTjZbNLHn/19yA==}
     engines: {node: '>=18'}
 
-  user-agents@2.1.116:
-    resolution: {integrity: sha512-7KnkUn2hQi+pA53EzIXao6XIs14kFoJtAb806AO00edCCpaYu+ThrDzj+OMStwD9PZj5hNSQslj7B2q6saFa+g==}
+  user-agents@2.1.117:
+    resolution: {integrity: sha512-xcPO6YyvH1IRemUvcPshwPNb1KFYnjeDtyydVvTNEVarlV+DjT+iOqjvttPTZCUZKvu7qjx9kk4F4Ulpy6ZlNg==}
     engines: {node: '>=18'}
 
   util-deprecate@1.0.2:
@@ -9853,7 +9853,7 @@ snapshots:
       semver: 7.8.5
       xdg-basedir: 5.1.0
 
-  user-agents@2.1.116: {}
+  user-agents@2.1.117: {}
 
   util-deprecate@1.0.2: {}
 

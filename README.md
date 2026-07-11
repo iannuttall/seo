@@ -149,6 +149,10 @@ Reports keep observed data, derived findings, skipped sections, limits, and
 provider errors separate so automation can make decisions without parsing
 terminal prose.
 
+`seo report --json` returns a compact summary, action queue, and bounded crawl
+evidence so an agent can choose its next call without loading every raw report.
+Use `--full` only when a script needs the complete report object.
+
 When a CI job needs Search Console or GA4 data, give it a Google service
 account JSON key through its secret store. The service account needs access to
 the exact properties it will query. This GitHub Actions step runs without a

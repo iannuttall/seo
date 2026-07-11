@@ -46,6 +46,9 @@ seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
 JSON mode never prompts. An unattended run must pass its project, property,
 URL, output path, and other required inputs explicitly.
 
+`seo report --json` returns a compact summary, action queue, and bounded crawl
+evidence. Add `--full` only when the agent needs every report section.
+
 Use `seo reports describe <id> --json` before constructing `params`. The schema
 is the current contract. A command copied from an old prompt is not.
 

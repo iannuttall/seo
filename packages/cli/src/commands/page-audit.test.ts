@@ -103,6 +103,7 @@ test('report runs a technical crawl when given only a URL', async () => {
       },
     )
     const report = JSON.parse(result.stdout) as {
+      detail: string
       output: {
         narrative: {
           diagnosis: {
@@ -121,6 +122,12 @@ test('report runs a technical crawl when given only a URL', async () => {
       nextCommands: Array<{ command: string }>
     }
 
+    assert.equal(report.detail, 'summary')
+    const compactBytes = Buffer.byteLength(result.stdout)
+    assert.ok(
+      compactBytes < 15_000,
+      `Expected compact JSON under 15 KB, got ${compactBytes} bytes.`,
+    )
     assert.equal(report.output.narrative.diagnosis.dataStatus, 'unavailable')
     assert.equal(report.technicalCrawl.status, 'created')
     assert.equal(
@@ -137,6 +144,38 @@ test('report runs a technical crawl when given only a URL', async () => {
       report.nextCommands.map((command) => command.command),
       [`seo audit-page --url http://127.0.0.1:${address.port}`, 'seo start'],
     )
+
+    const full = await execFileAsync(
+      process.execPath,
+      [
+        cliPath,
+        'report',
+        '--url',
+        `http://127.0.0.1:${address.port}`,
+        '--crawl-max-pages',
+        '1',
+        '--crawl-max-depth',
+        '1',
+        '--json',
+        '--full',
+      ],
+      {
+        env: {
+          ...process.env,
+          CI: '1',
+          NO_UPDATE_NOTIFIER: '1',
+          SEO_CACHE_DIR: cacheDir,
+          SEO_CONFIG_DIR: configDir,
+        },
+      },
+    )
+    const fullReport = JSON.parse(full.stdout) as {
+      detail: string
+      output: { narrative: { diagnosis: Record<string, unknown> } }
+    }
+    assert.equal(fullReport.detail, 'full')
+    assert.ok('quickWins' in fullReport.output.narrative.diagnosis)
+    assert.ok(Buffer.byteLength(full.stdout) > compactBytes)
 
     const human = await execFileAsync(
       process.execPath,

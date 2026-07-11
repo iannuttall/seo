@@ -23,6 +23,12 @@ When `robots.txt` declares same-origin sitemap files, the crawler tries those
 first. JSON records the sitemap sources and returned URL counts. If none return
 URLs, it also tries `/sitemap.xml`.
 
+Each `sitemapDiscovery.roots[].documents` entry records the HTTP status,
+content type, compression, byte counts, XML root, and any warning for a fetched
+sitemap. Gzip-compressed files work. A malformed document, a non-sitemap root,
+an unsuitable response, or a file over the 50 MiB sitemap limit remains
+explicitly partial or unavailable instead of being silently ignored.
+
 ## External-link checks
 
 External-link checks use a bounded sample spread across source pages. The JSON

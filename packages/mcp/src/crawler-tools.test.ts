@@ -90,6 +90,12 @@ test('crawler MCP structured output schema stays stable', async () => {
       res.end('missing')
       return
     }
+    if (req.url === '/sitemap.xml') {
+      res.statusCode = 404
+      res.setHeader('content-type', 'text/plain')
+      res.end('missing')
+      return
+    }
     res.setHeader('content-type', 'text/html')
     const robots =
       req.url === '/geo' ? '<meta name="robots" content="noindex">' : ''

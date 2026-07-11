@@ -1,3 +1,4 @@
+import { gunzipSync } from 'node:zlib'
 import { load } from 'cheerio'
 import { publicHttpFetch } from '../../fetch/http-client.js'
 
@@ -5,6 +6,18 @@ export type SitemapInvalidLoc = {
   sitemapUrl: string
   kind: 'url' | 'sitemap'
   value: string
+}
+
+export type SitemapDocument = {
+  url: string
+  dataStatus: 'complete' | 'partial' | 'unavailable'
+  status?: number
+  contentType?: string
+  compression: 'gzip' | 'none'
+  bytes?: number
+  uncompressedBytes?: number
+  root?: 'urlset' | 'sitemapindex'
+  warning?: string
 }
 
 export type SitemapFetchResult = {
@@ -22,6 +35,7 @@ export type SitemapFetchResult = {
       count: number
       samples: SitemapInvalidLoc[]
     }
+    documents: SitemapDocument[]
   }
   truncation: {
     possiblyTruncated: boolean
@@ -49,6 +63,7 @@ export type BoundedSitemapInventory = {
 }
 
 const INVALID_LOC_SAMPLE_LIMIT = 10
+const MAX_SITEMAP_BYTES = 52_428_800
 
 function normalizeUrl(value: string): string | undefined {
   try {
@@ -68,14 +83,241 @@ function positiveInteger(value: number, name: string): number {
   return value
 }
 
-async function fetchSitemapXml(sitemapUrl: string): Promise<string> {
-  const response = await publicHttpFetch(sitemapUrl, { profile: 'browser' })
-  if (!response.ok) {
+function isGzip(bytes: Uint8Array): boolean {
+  return bytes[0] === 0x1f && bytes[1] === 0x8b
+}
+
+function contentTypeLooksXml(
+  contentType: string | undefined,
+  compression: SitemapDocument['compression'],
+): boolean {
+  if (!contentType) return true
+  const mime = contentType.split(';', 1)[0]?.trim().toLowerCase()
+  return Boolean(
+    mime &&
+      (compression === 'gzip'
+        ? mime === 'application/gzip' || mime === 'application/x-gzip'
+        : mime === 'application/xml' ||
+          mime === 'text/xml' ||
+          mime.endsWith('+xml')),
+  )
+}
+
+async function responseBytes(
+  response: Awaited<ReturnType<typeof publicHttpFetch>>,
+): Promise<Uint8Array> {
+  const declaredLength = Number(response.headers.get('content-length'))
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_SITEMAP_BYTES) {
     throw new Error(
-      `Sitemap fetch failed for ${sitemapUrl}: ${response.status}`,
+      `The response exceeds the ${MAX_SITEMAP_BYTES}-byte sitemap limit.`,
     )
   }
-  return response.text()
+
+  const reader = response.body?.getReader()
+  if (!reader) return new Uint8Array()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > MAX_SITEMAP_BYTES) {
+        await reader.cancel()
+        throw new Error(
+          `The response exceeds the ${MAX_SITEMAP_BYTES}-byte sitemap limit.`,
+        )
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const bytes = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return bytes
+}
+
+function xmlRoot(
+  xml: string,
+): { root: 'urlset' | 'sitemapindex' } | { error: string } {
+  const tags: string[] = []
+  let rootName: string | undefined
+  let cursor = 0
+
+  while (cursor < xml.length) {
+    const start = xml.indexOf('<', cursor)
+    if (start === -1) break
+    if (xml.startsWith('<!--', start)) {
+      const end = xml.indexOf('-->', start + 4)
+      if (end === -1) return { error: 'an unclosed XML comment' }
+      cursor = end + 3
+      continue
+    }
+    if (xml.startsWith('<![CDATA[', start)) {
+      const end = xml.indexOf(']]>', start + 9)
+      if (end === -1) return { error: 'an unclosed CDATA section' }
+      cursor = end + 3
+      continue
+    }
+    if (xml.startsWith('<?', start)) {
+      const end = xml.indexOf('?>', start + 2)
+      if (end === -1) return { error: 'an unclosed processing instruction' }
+      cursor = end + 2
+      continue
+    }
+
+    let end = start + 1
+    let quote: '"' | "'" | undefined
+    while (end < xml.length) {
+      const character = xml[end]
+      if (quote) {
+        if (character === quote) quote = undefined
+      } else if (character === '"' || character === "'") {
+        quote = character
+      } else if (character === '>') {
+        break
+      }
+      end += 1
+    }
+    if (end >= xml.length || quote) return { error: 'an unclosed XML tag' }
+
+    const content = xml.slice(start + 1, end).trim()
+    cursor = end + 1
+    if (!content || content.startsWith('!')) continue
+    if (content.startsWith('/')) {
+      const name = content.slice(1).trim()
+      const expected = tags.pop()
+      if (!expected || name !== expected) {
+        return { error: `a mismatched closing tag </${name}>` }
+      }
+      continue
+    }
+
+    const name = content.match(/^([A-Za-z_][A-Za-z0-9_.:-]*)/)
+    if (!name?.[1]) return { error: 'an invalid XML tag name' }
+    if (tags.length === 0) {
+      if (rootName) return { error: 'more than one XML root element' }
+      rootName = name[1]
+    }
+    const selfClosing = /\/$/.test(content)
+    if (!selfClosing) tags.push(name[1])
+  }
+
+  if (tags.length > 0) {
+    return { error: `an unclosed <${tags.at(-1)}> tag` }
+  }
+  if (rootName === 'urlset' || rootName === 'sitemapindex') {
+    return { root: rootName }
+  }
+  return {
+    error: `expected a <urlset> or <sitemapindex> root${rootName ? `, found <${rootName}>` : ''}`,
+  }
+}
+
+async function fetchSitemapXml(sitemapUrl: string): Promise<{
+  document: SitemapDocument
+  xml?: string
+}> {
+  try {
+    const response = await publicHttpFetch(sitemapUrl, { profile: 'browser' })
+    const contentType = response.headers.get('content-type') ?? undefined
+    if (!response.ok) {
+      return {
+        document: {
+          url: sitemapUrl,
+          dataStatus: 'unavailable',
+          status: response.status,
+          contentType,
+          compression: 'none',
+          warning: `Sitemap fetch failed for ${sitemapUrl}: HTTP ${response.status}.`,
+        },
+      }
+    }
+
+    let bytes: Uint8Array
+    try {
+      bytes = await responseBytes(response)
+    } catch (error) {
+      return {
+        document: {
+          url: sitemapUrl,
+          dataStatus: 'partial',
+          status: response.status,
+          contentType,
+          compression: 'none',
+          warning: `Could not read sitemap data: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      }
+    }
+    const compression = isGzip(bytes) ? 'gzip' : 'none'
+    let xmlBytes = bytes
+    if (compression === 'gzip') {
+      try {
+        xmlBytes = gunzipSync(bytes, { maxOutputLength: MAX_SITEMAP_BYTES })
+      } catch (error) {
+        return {
+          document: {
+            url: sitemapUrl,
+            dataStatus: 'partial',
+            status: response.status,
+            contentType,
+            compression,
+            bytes: bytes.byteLength,
+            warning: `Could not decompress sitemap gzip data: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        }
+      }
+    }
+
+    const xml = new TextDecoder().decode(xmlBytes)
+    const validated = xmlRoot(xml)
+    const contentTypeWarning = contentTypeLooksXml(contentType, compression)
+      ? undefined
+      : `Sitemap returned content type ${contentType ?? 'unknown'}, not an XML type.`
+    if ('error' in validated) {
+      return {
+        document: {
+          url: sitemapUrl,
+          dataStatus: 'partial',
+          status: response.status,
+          contentType,
+          compression,
+          bytes: bytes.byteLength,
+          uncompressedBytes: xmlBytes.byteLength,
+          warning: `Sitemap XML is invalid: ${validated.error}.`,
+        },
+      }
+    }
+    return {
+      document: {
+        url: sitemapUrl,
+        dataStatus: contentTypeWarning ? 'partial' : 'complete',
+        status: response.status,
+        contentType,
+        compression,
+        bytes: bytes.byteLength,
+        uncompressedBytes: xmlBytes.byteLength,
+        root: validated.root,
+        ...(contentTypeWarning ? { warning: contentTypeWarning } : {}),
+      },
+      xml,
+    }
+  } catch (error) {
+    return {
+      document: {
+        url: sitemapUrl,
+        dataStatus: 'unavailable',
+        compression: 'none',
+        warning: `Sitemap fetch failed for ${sitemapUrl}: ${error instanceof Error ? error.message : String(error)}`,
+      },
+    }
+  }
 }
 
 export function boundedSitemapInventory(
@@ -112,6 +354,7 @@ export async function fetchSitemapUrls(input: {
   const discoveredSitemaps = new Set<string>()
   const scheduledSitemaps = new Set<string>()
   const invalidLocSamples: SitemapInvalidLoc[] = []
+  const documents: SitemapDocument[] = []
   const queue: string[] = []
   const limit = positiveInteger(input.limit ?? 50_000, 'limit')
   const maxNested = positiveInteger(input.maxNested ?? 50, 'maxNested')
@@ -143,17 +386,16 @@ export async function fetchSitemapUrls(input: {
     const sitemapUrl = queue.shift()
     if (!sitemapUrl) continue
 
-    let xml = ''
-    try {
-      xml = await fetchSitemapXml(sitemapUrl)
-      sitemapsFetched += 1
-    } catch (error) {
-      warnings.push(error instanceof Error ? error.message : String(error))
-      continue
-    }
+    const fetched = await fetchSitemapXml(sitemapUrl)
+    documents.push(fetched.document)
+    if (fetched.document.warning) warnings.push(fetched.document.warning)
+    if (fetched.document.dataStatus !== 'unavailable') sitemapsFetched += 1
+    if (!fetched.xml || !fetched.document.root) continue
 
-    const $ = load(xml, { xmlMode: true })
-    $('url > loc').each((_, element) => {
+    const $ = load(fetched.xml, { xmlMode: true })
+    const urlLocSelector =
+      fetched.document.root === 'urlset' ? 'urlset > url > loc' : ''
+    $(urlLocSelector).each((_, element) => {
       urlLocs += 1
       const value = $(element).text().trim()
       const url = normalizeUrl(value)
@@ -174,7 +416,11 @@ export async function fetchSitemapUrls(input: {
       omittedUrlsAtLeast += 1
     })
 
-    $('sitemap > loc').each((_, element) => {
+    const sitemapLocSelector =
+      fetched.document.root === 'sitemapindex'
+        ? 'sitemapindex > sitemap > loc'
+        : ''
+    $(sitemapLocSelector).each((_, element) => {
       sitemapLocs += 1
       const value = $(element).text().trim()
       const child = normalizeUrl(value)
@@ -231,6 +477,7 @@ export async function fetchSitemapUrls(input: {
         count: invalidLocCount,
         samples: invalidLocSamples,
       },
+      documents,
     },
     truncation: {
       possiblyTruncated,

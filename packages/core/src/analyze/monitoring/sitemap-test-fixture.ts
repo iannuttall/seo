@@ -16,6 +16,18 @@ export function completeSitemapResult(
       duplicateUrlLocs: 0,
       duplicateSitemapLocs: 0,
       invalidLocs: { count: 0, samples: [] },
+      documents: [
+        {
+          url: sitemapUrl,
+          dataStatus: 'complete',
+          status: 200,
+          contentType: 'application/xml',
+          compression: 'none',
+          bytes: 0,
+          uncompressedBytes: 0,
+          root: 'urlset',
+        },
+      ],
     },
     truncation: {
       possiblyTruncated: false,

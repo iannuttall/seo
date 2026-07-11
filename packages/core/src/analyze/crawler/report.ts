@@ -6,6 +6,7 @@ import {
   normalizeJavaScriptRenderingMode,
 } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
+import type { SitemapDocument } from '../monitoring/sitemaps.js'
 import type {
   CrawlPageSnapshot,
   CrawlRequestObservation,
@@ -164,6 +165,7 @@ export type CrawlSitemapDiscovery = {
     dataStatus: 'complete' | 'partial' | 'unavailable'
     urlsReturned: number
     sitemapsFetched: number
+    documents: SitemapDocument[]
     possiblyTruncated: boolean
     warnings: string[]
   }>

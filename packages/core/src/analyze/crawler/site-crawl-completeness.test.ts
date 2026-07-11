@@ -79,10 +79,11 @@ test('crawlSite seeds every same-origin sitemap declared in robots.txt', async (
       report.pages.map((page) => new URL(page.url).pathname),
       ['/from-a', '/from-b'],
     )
-    assert.deepEqual(report.sitemapDiscovery, {
-      dataStatus: 'complete',
-      urlsReturned: 2,
-      roots: [
+    assert.equal(report.sitemapDiscovery?.dataStatus, 'complete')
+    assert.equal(report.sitemapDiscovery?.urlsReturned, 2)
+    assert.deepEqual(
+      report.sitemapDiscovery?.roots.map(({ documents, ...root }) => root),
+      [
         {
           url: `${fixture.baseUrl}/content-a.xml`,
           source: 'robots-txt',
@@ -102,7 +103,37 @@ test('crawlSite seeds every same-origin sitemap declared in robots.txt', async (
           warnings: [],
         },
       ],
-    })
+    )
+    assert.deepEqual(
+      report.sitemapDiscovery?.roots.flatMap((root) =>
+        root.documents.map((document) => ({
+          url: document.url,
+          dataStatus: document.dataStatus,
+          status: document.status,
+          contentType: document.contentType,
+          compression: document.compression,
+          root: document.root,
+        })),
+      ),
+      [
+        {
+          url: `${fixture.baseUrl}/content-a.xml`,
+          dataStatus: 'complete',
+          status: 200,
+          contentType: 'application/xml',
+          compression: 'none',
+          root: 'urlset',
+        },
+        {
+          url: `${fixture.baseUrl}/content-b.xml`,
+          dataStatus: 'complete',
+          status: 200,
+          contentType: 'application/xml',
+          compression: 'none',
+          root: 'urlset',
+        },
+      ],
+    )
   } finally {
     await fixture.close()
   }
@@ -162,6 +193,49 @@ test('crawlSite falls back after declared sitemaps return no URLs', async () => 
       ],
     )
     assert.match(report.warnings.join('\n'), /also tried \/sitemap\.xml/)
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite keeps a missing optional default sitemap as unavailable evidence', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\\nAllow: /\\n')
+      return
+    }
+    if (req.url === '/sitemap.xml') {
+      res.statusCode = 404
+      res.setHeader('content-type', 'text/plain')
+      res.end('missing')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end('<title>Home</title><h1>Home</h1>')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      maxPages: 1,
+      concurrency: 1,
+      checkExternal: false,
+      refresh: true,
+    })
+
+    assert.equal(report.status, 'completed')
+    assert.equal(report.sitemapDiscovery?.dataStatus, 'unavailable')
+    assert.deepEqual(report.sitemapDiscovery?.roots[0]?.documents, [
+      {
+        url: `${fixture.baseUrl}/sitemap.xml`,
+        dataStatus: 'unavailable',
+        status: 404,
+        contentType: 'text/plain',
+        compression: 'none',
+        warning: `Sitemap fetch failed for ${fixture.baseUrl}/sitemap.xml: HTTP 404.`,
+      },
+    ])
   } finally {
     await fixture.close()
   }

@@ -83,6 +83,7 @@ function dependencies(
         duplicateUrlLocs: 0,
         duplicateSitemapLocs: 0,
         invalidLocs: { count: 0, samples: [] },
+        documents: [],
       },
       truncation: {
         possiblyTruncated: false,

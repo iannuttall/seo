@@ -82,6 +82,7 @@ export async function sitemapSeeds(input: {
         sitemap.source.sitemapsFetched > 0 ? sitemap.dataStatus : 'unavailable',
       urlsReturned: sitemap.urls.length,
       sitemapsFetched: sitemap.source.sitemapsFetched,
+      documents: sitemap.source.documents,
       possiblyTruncated: sitemap.truncation.possiblyTruncated,
       warnings: sitemap.warnings,
     })
@@ -111,6 +112,7 @@ export async function sitemapSeeds(input: {
             : 'unavailable',
         urlsReturned: sitemap.urls.length,
         sitemapsFetched: sitemap.source.sitemapsFetched,
+        documents: sitemap.source.documents,
         possiblyTruncated: sitemap.truncation.possiblyTruncated,
         warnings: sitemap.warnings,
       })

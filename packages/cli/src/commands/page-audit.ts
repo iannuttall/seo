@@ -1,8 +1,9 @@
 import { auditPage } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
+import { resolveClient } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
-import { formatFetchDiagnostics, selectedSiteOrThrow } from './shared.js'
+import { formatFetchDiagnostics } from './shared.js'
 
 export const auditPageCommand = defineCommand({
   meta: {
@@ -14,7 +15,8 @@ export const auditPageCommand = defineCommand({
     url: { type: 'string', required: true, description: 'URL to audit.' },
     site: {
       type: 'string',
-      description: 'GSC property URL, for example sc-domain:example.com.',
+      description:
+        'Optional GSC property for page search metrics, for example sc-domain:example.com.',
     },
     client: {
       type: 'string',
@@ -41,15 +43,18 @@ export const auditPageCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const project = projectArg(args)
+    const explicitSite = stringArg(args.site)
+    const selectedProject = project
+      ? await resolveClient({ project, options: { json: jsonFlag(args) } })
+      : undefined
+    const defaultProject =
+      project || explicitSite
+        ? undefined
+        : await resolveClient({ options: { json: jsonFlag(args) } })
     const report = await auditPage({
       url: stringArg(args.url) ?? '',
-      site: await selectedSiteOrThrow(
-        { client: projectArg(args), site: stringArg(args.site) },
-        {
-          json: jsonFlag(args),
-          refresh: booleanArg(args.refresh),
-        },
-      ),
+      site: selectedProject?.siteUrl ?? explicitSite ?? defaultProject?.siteUrl,
       js: booleanArg(args.js) ? true : 'auto',
       refresh: booleanArg(args.refresh),
     })

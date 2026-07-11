@@ -47,7 +47,7 @@ Install the command once, then add the skills when an agent will use it:
 
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo
+npx skills add iannuttall/seo --all
 seo start
 seo report
 ```
@@ -188,7 +188,7 @@ what to verify before changing a site.
 
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo
+npx skills add iannuttall/seo --all
 ```
 
 Then install the local stdio MCP server into a supported client:

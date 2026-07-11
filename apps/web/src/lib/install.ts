@@ -2,29 +2,14 @@ export const installCommands = [
   {
     id: 'recommended',
     label: 'CLI + skills',
-    command: 'npm i -g seo && npx skills add iannuttall/seo',
-    description:
-      'Install the report engine and the instructions that teach agents how to use it. Then run seo start.',
-  },
-  {
-    id: 'skills',
-    label: 'Skills only',
-    command: 'npx skills add iannuttall/seo',
-    description:
-      'Add the instruction layer to an agent that can already run the seo package.',
-  },
-  {
-    id: 'npm',
-    label: 'CLI only',
-    command: 'npm i -g seo',
-    description:
-      'Install the report engine for terminal use, scripts, CI, and local MCP.',
+    command: 'npm i -g seo && npx skills add iannuttall/seo --all',
+    description: 'Install the CLI and agent skills. Then run seo start.',
   },
   {
     id: 'mcp',
     label: 'MCP',
-    command: 'seo mcp install',
+    command: 'npm i -g seo && seo mcp install',
     description:
-      'Connect the installed report engine to a supported local AI client.',
+      'Install the CLI first, then connect its local MCP server to a supported AI client.',
   },
 ] as const

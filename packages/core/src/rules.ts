@@ -903,6 +903,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   nofollow: 'review',
   x_robots_noindex: 'review',
   robots_blocked: 'review',
+  orphan_page: 'review',
   redirected_url: 'review',
   slow_response: 'review',
   image_oversized_candidate: 'review',

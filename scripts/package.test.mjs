@@ -135,6 +135,9 @@ test('the release workflow uses npm trusted publishing and release-only OAuth in
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_ID/)
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_SECRET/)
   assert.doesNotMatch(ci, /SEO_GOOGLE_CLIENT_ID|SEO_GOOGLE_CLIENT_SECRET/)
+  for (const workflow of [release, ci]) {
+    assert.match(workflow, /pnpm test:package-install/)
+  }
 })
 
 test('root runtime dependencies cover or bundle workspace dependencies', async () => {

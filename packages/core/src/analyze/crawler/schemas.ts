@@ -548,6 +548,14 @@ export const crawlRequestObservationSchema = z.union([
   }),
   z.object({
     requestedUrl: z.string().url(),
+    outcome: z.literal('skipped'),
+    durationMs: z.number().optional(),
+    reason: z.literal('origin-backpressure'),
+    error: z.string(),
+    extraction: z.literal('not-applicable'),
+  }),
+  z.object({
+    requestedUrl: z.string().url(),
     outcome: z.literal('failure'),
     durationMs: z.number().optional(),
     failureKind: z.enum([

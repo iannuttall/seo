@@ -194,6 +194,14 @@ export type CrawlRequestObservation =
     }
   | {
       requestedUrl: string
+      outcome: 'skipped'
+      durationMs?: number
+      reason: 'origin-backpressure'
+      error: string
+      extraction: 'not-applicable'
+    }
+  | {
+      requestedUrl: string
       outcome: 'failure'
       durationMs?: number
       failureKind:

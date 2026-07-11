@@ -195,12 +195,11 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
     const blockedRequest = report.requests.find(
       (request) => request.requestedUrl === `${fixture.baseUrl}/blocked`,
     )
-    assert.equal(blockedRequest?.outcome, 'skipped')
-    assert.equal(
-      blockedRequest?.outcome === 'skipped' ? blockedRequest.reason : undefined,
-      'robots-disallowed',
+    assert.ok(
+      blockedRequest?.outcome === 'skipped' &&
+        blockedRequest.reason === 'robots-disallowed',
     )
-    assert.deepEqual(blockedRequest?.robotsTxt, {
+    assert.deepEqual(blockedRequest.robotsTxt, {
       url: `${fixture.baseUrl}/robots.txt`,
       allowed: false,
       availability: 'available',
@@ -469,6 +468,57 @@ test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async 
     /Left 26 eligible same-origin URLs unqueued to keep this crawl bounded/,
   )
   assert.equal(report.summary.pageLimitReached, true)
+})
+
+test('crawlSite treats origin backpressure as incomplete evidence, not a site error', async () => {
+  const root = 'https://example.com/'
+  const protectedUrl = 'https://example.com/slow'
+  const report = await crawlSite(
+    {
+      url: root,
+      useSitemap: false,
+      respectRobots: false,
+      maxPages: 10,
+      maxDepth: 1,
+      concurrency: 1,
+    },
+    {
+      fetch: async () =>
+        new Response('', {
+          status: 404,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async (url) =>
+        url === root
+          ? { urls: [protectedUrl], page: crawlPageSnapshot(url) }
+          : {
+              urls: [],
+              request: {
+                requestedUrl: url,
+                outcome: 'skipped',
+                reason: 'origin-backpressure',
+                error:
+                  'Origin backpressure stopped fetches for example.com: 4 consecutive slow responses',
+                extraction: 'not-applicable',
+              },
+            },
+    },
+  )
+
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.crawledUrls, 1)
+  assert.equal(report.summary.skippedUrls, 1)
+  assert.equal(report.summary.failedUrls, 0)
+  assert.equal(report.summary.failedRequests, 0)
+  assert.deepEqual(report.summary.requestByStatus, {
+    '200': 1,
+    'origin-backpressure': 1,
+  })
+  assert.equal(
+    report.issues.some((issue) => issue.ruleId === 'connection_error'),
+    false,
+  )
+  assert.match(report.caveats.join('\n'), /incomplete crawl evidence/)
 })
 
 test('crawlSite does not mark an exact-size crawl as page-limit truncated', async () => {

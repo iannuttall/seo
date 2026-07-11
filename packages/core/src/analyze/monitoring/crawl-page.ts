@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { extractHttpCanonicalEvidence } from '../../extract/canonical.js'
 import { selectGoogleRichResultAssessments } from '../../extract/google-rich-results.js'
 import { extractPage } from '../../extract/page-extractor.js'
+import { OriginBackpressureError } from '../../fetch/page-fetcher/rate-controls.js'
 import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
 import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
 import {
@@ -285,6 +286,18 @@ export async function crawlOne(
   try {
     fetched = await fetchPage(url, opts)
   } catch (error) {
+    if (error instanceof OriginBackpressureError) {
+      return {
+        request: {
+          requestedUrl: url,
+          outcome: 'skipped',
+          reason: 'origin-backpressure',
+          error: error.message,
+          extraction: 'not-applicable',
+        },
+        urls: [],
+      }
+    }
     if (error instanceof RobotsAccessError) {
       return {
         request: {

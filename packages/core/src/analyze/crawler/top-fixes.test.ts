@@ -187,11 +187,13 @@ test('topFixes keeps review observations out of implementation priorities', () =
 
   assert.deepEqual(
     topFixes(report).map((fix) => fix.ruleId),
-    ['orphan_page'],
+    [],
   )
   assert.deepEqual(
-    reviewObservations(report).map((observation) => observation.ruleId),
-    ['hsts_missing'],
+    reviewObservations(report)
+      .map((observation) => observation.ruleId)
+      .sort(),
+    ['hsts_missing', 'orphan_page'],
   )
   assert.equal(reviewObservations(report)[0]?.recommendation, 'review')
   assert.match(

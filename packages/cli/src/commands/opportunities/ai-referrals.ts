@@ -34,6 +34,10 @@ export const aiReferralsCommand = defineCommand({
       type: 'string',
       description: 'Maximum GA4 rows per query. Defaults to 100000.',
     },
+    'result-limit': {
+      type: 'string',
+      description: 'Maximum ranked landing pages returned. Defaults to 25.',
+    },
     limit: {
       type: 'string',
       description: 'Legacy alias for --max-rows.',
@@ -60,6 +64,7 @@ export const aiReferralsCommand = defineCommand({
       startDate: stringArg(args['start-date']),
       endDate: stringArg(args['end-date']),
       maxRows: strictNumberArg(args['max-rows'], '--max-rows'),
+      resultLimit: strictNumberArg(args['result-limit'], '--result-limit'),
       limit: strictNumberArg(args.limit, '--limit'),
       refresh: args.refresh === true,
     })
@@ -82,6 +87,10 @@ export const aiReferralsCommand = defineCommand({
       ],
       ['Sources', formatCount(report.summary.sources)],
       ['Landing pages', formatCount(report.summary.landingPages)],
+      [
+        'Landing-page output',
+        `${formatCount(report.selection.landingPages.returnedRows)} returned / ${formatCount(report.selection.landingPages.retainedRows)} retained`,
+      ],
       [
         'Source rows',
         formatCount(report.dataSource.sourceDiscovery.returnedRows),

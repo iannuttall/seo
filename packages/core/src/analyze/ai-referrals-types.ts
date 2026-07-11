@@ -33,7 +33,7 @@ export type AiReferralDataSource = {
 }
 
 export type AiReferralReport = {
-  schemaVersion: 2
+  schemaVersion: 3
   property: string
   generatedAt: string
   dataStatus: 'complete' | 'partial'
@@ -49,6 +49,14 @@ export type AiReferralReport = {
     sourceRulesVersion: 'ai-referral-sources@1'
   }
   dataSource: AiReferralDataSource
+  selection: {
+    landingPages: {
+      limit: number
+      retainedRows: number
+      returnedRows: number
+      omittedRows: number
+    }
+  }
   summary: AiReferralMetrics & {
     totalUsers: number | null
     totalUsersStatus: 'available' | 'not-reported'

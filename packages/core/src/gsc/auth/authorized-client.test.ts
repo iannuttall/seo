@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, afterEach, beforeEach, test } from 'node:test'
-import type { StoredTokens } from '../../types.js'
+import { configSchema, type StoredTokens } from '../../types.js'
 
 const configDir = mkdtempSync(join(tmpdir(), 'seo-token-refresh-'))
 const previousConfigDir = process.env.SEO_CONFIG_DIR
@@ -12,7 +12,7 @@ const originalFetch = globalThis.fetch
 process.env.SEO_CONFIG_DIR = configDir
 
 const { SeoError } = await import('../../errors.js')
-const { readTokens, writeOauthClient, writeTokens } = await import(
+const { readTokens, writeConfig, writeOauthClient, writeTokens } = await import(
   '../../storage/config.js'
 )
 const { createAuthorizedClient, refreshAuthToken } = await import(
@@ -39,6 +39,7 @@ function storedTokens(overrides: Partial<StoredTokens> = {}): StoredTokens {
 
 beforeEach(() => {
   rmSync(configDir, { recursive: true, force: true })
+  writeConfig(configSchema.parse({ security: { useKeychain: false } }))
   writeOauthClient({
     clientId: 'byo-client-id',
     clientSecret: 'byo-client-secret',

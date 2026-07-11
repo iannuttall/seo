@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
-import type { StoredTokens } from '../../types.js'
+import { configSchema, type StoredTokens } from '../../types.js'
 
 const configDir = mkdtempSync(join(tmpdir(), 'seo-auth-source-'))
 const previousConfigDir = process.env.SEO_CONFIG_DIR
@@ -21,7 +21,7 @@ process.env.SEO_CONFIG_DIR = configDir
 
 const { runDoctor } = await import('../../doctor.js')
 const { SeoError } = await import('../../errors.js')
-const { writeOauthClient, writeTokens } = await import(
+const { writeConfig, writeOauthClient, writeTokens } = await import(
   '../../storage/config.js'
 )
 const { authStatus, createAuthorizedClient } = await import(
@@ -53,6 +53,7 @@ function setSharedClient(): void {
 
 beforeEach(() => {
   rmSync(configDir, { recursive: true, force: true })
+  writeConfig(configSchema.parse({ security: { useKeychain: false } }))
   for (const name of sharedEnvironment) delete process.env[name]
 })
 

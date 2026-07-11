@@ -8,6 +8,10 @@ import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
 import { GOOGLE_SCOPE, type OAuthClientConfig } from './types.js'
 import { decodeJwtEmail, fetchUserEmail } from './user-email.js'
 
+export function missingSharedClientLoginMessage(): string {
+  return 'This build does not have the shared seo Google app configured. If this is an installed public package, report it at https://github.com/iannuttall/seo/issues. For local development, run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID / SEO_GOOGLE_CLIENT_SECRET. Legacy GSC_CLIENT_ID / GSC_CLIENT_SECRET also work.'
+}
+
 export async function loginWithLoopback(
   clientConfig = getClientConfig(),
 ): Promise<StoredTokens> {
@@ -18,9 +22,7 @@ export async function loginWithLoopback(
         'BYO OAuth client is configured but incomplete. Re-run `seo auth setup-client`.',
       )
     }
-    throw new Error(
-      'This build does not have the shared seo Google app configured. Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID / SEO_GOOGLE_CLIENT_SECRET for local testing. Legacy GSC_CLIENT_ID / GSC_CLIENT_SECRET also work.',
-    )
+    throw new Error(missingSharedClientLoginMessage())
   }
 
   const state = crypto.randomBytes(32).toString('base64url')

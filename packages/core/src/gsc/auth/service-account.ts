@@ -76,7 +76,7 @@ function parseServiceAccount(
   }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw authConfigError(
-      sourceLabel(source) + ' must contain a service account JSON object.',
+      `${sourceLabel(source)} must contain a service account JSON object.`,
     )
   }
 
@@ -103,7 +103,7 @@ function parseServiceAccount(
     typeof record.private_key_id !== 'string'
   ) {
     throw authConfigError(
-      sourceLabel(source) + ' has an invalid service account private_key_id.',
+      `${sourceLabel(source)} has an invalid service account private_key_id.`,
     )
   }
 
@@ -193,8 +193,7 @@ function signedAssertion(config: ServiceAccountConfig, now: number): string {
     iat: now,
     exp: now + 3_600,
   }
-  const unsigned =
-    base64Url(JSON.stringify(header)) + '.' + base64Url(JSON.stringify(payload))
+  const unsigned = `${base64Url(JSON.stringify(header))}.${base64Url(JSON.stringify(payload))}`
   try {
     return (
       unsigned +
@@ -229,7 +228,7 @@ async function requestServiceAccountToken(
       | { error?: unknown }
       | undefined
     const reason =
-      typeof payload?.error === 'string' ? ' (' + payload.error + ')' : ''
+      typeof payload?.error === 'string' ? ` (${payload.error})` : ''
     if (
       response.status === 400 ||
       response.status === 401 ||

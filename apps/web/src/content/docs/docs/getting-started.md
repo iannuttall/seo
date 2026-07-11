@@ -41,7 +41,7 @@ fits the job, how to interpret its limits, and what to verify next. Install
 both for the strongest agent setup:
 
 ```sh
-npx skills add iannuttall/seo
+npx skills add iannuttall/seo --all
 ```
 
 You only need the first command for direct terminal use, scripts, and CI. An

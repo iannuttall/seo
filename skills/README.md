@@ -14,7 +14,7 @@ package and repository contain the same skill folders. Install the collection
 with the standard agent skills installer:
 
 ```bash
-npx skills add iannuttall/seo
+npx skills add iannuttall/seo --all
 ```
 
 Use `seo skills list` or `seo skills path <name>` to inspect the copies bundled

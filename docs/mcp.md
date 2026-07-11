@@ -128,7 +128,7 @@ Focused agent skills ship under `skills/` in the npm package and repository.
 Install them through the standard agent skills installer:
 
 ```bash
-npx skills add iannuttall/seo
+npx skills add iannuttall/seo --all
 ```
 
 Use `seo skills list` or `seo skills path <name>` when you want to inspect the

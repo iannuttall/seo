@@ -693,6 +693,8 @@ const crawlSitemapDiscoverySchema = z.object({
       documents: z.array(
         z.object({
           url: z.string().url(),
+          finalUrl: z.string().url().optional(),
+          redirected: z.literal(true).optional(),
           dataStatus: z.enum(['complete', 'partial', 'unavailable']),
           status: z.number().int().optional(),
           contentType: z.string().optional(),

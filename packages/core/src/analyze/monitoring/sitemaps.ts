@@ -17,6 +17,8 @@ export type SitemapLastmodObservation = {
 
 export type SitemapDocument = {
   url: string
+  finalUrl?: string
+  redirected?: true
   dataStatus: 'complete' | 'partial' | 'unavailable'
   status?: number
   contentType?: string
@@ -297,10 +299,16 @@ async function fetchSitemapXml(sitemapUrl: string): Promise<{
   try {
     const response = await publicHttpFetch(sitemapUrl, { profile: 'browser' })
     const contentType = response.headers.get('content-type') ?? undefined
+    const finalUrl = normalizeUrl(response.url)
+    const redirectEvidence =
+      response.redirected && finalUrl
+        ? { finalUrl, redirected: true as const }
+        : {}
     if (!response.ok) {
       return {
         document: {
           url: sitemapUrl,
+          ...redirectEvidence,
           dataStatus: 'unavailable',
           status: response.status,
           contentType,
@@ -317,6 +325,7 @@ async function fetchSitemapXml(sitemapUrl: string): Promise<{
       return {
         document: {
           url: sitemapUrl,
+          ...redirectEvidence,
           dataStatus: 'partial',
           status: response.status,
           contentType,
@@ -334,6 +343,7 @@ async function fetchSitemapXml(sitemapUrl: string): Promise<{
         return {
           document: {
             url: sitemapUrl,
+            ...redirectEvidence,
             dataStatus: 'partial',
             status: response.status,
             contentType,
@@ -354,6 +364,7 @@ async function fetchSitemapXml(sitemapUrl: string): Promise<{
       return {
         document: {
           url: sitemapUrl,
+          ...redirectEvidence,
           dataStatus: 'partial',
           status: response.status,
           contentType,
@@ -367,6 +378,7 @@ async function fetchSitemapXml(sitemapUrl: string): Promise<{
     return {
       document: {
         url: sitemapUrl,
+        ...redirectEvidence,
         dataStatus: contentTypeWarning ? 'partial' : 'complete',
         status: response.status,
         contentType,

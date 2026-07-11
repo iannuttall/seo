@@ -29,6 +29,10 @@ sitemap. Gzip-compressed files work. A malformed document, a non-sitemap root,
 an unsuitable response, or a file over the 50 MiB sitemap limit remains
 explicitly partial or unavailable instead of being silently ignored.
 
+When a sitemap redirects, that document keeps both the requested URL and the
+final URL. The response status belongs to the final response. Treat a redirect
+as evidence to inspect, not proof that the sitemap is broken.
+
 `sitemapDiscovery.roots[].lastmods` records supplied `lastmod` values as
 unverified metadata. It counts values that parse, and keeps small samples of
 malformed or future dates so you can inspect the generating system. SEO never

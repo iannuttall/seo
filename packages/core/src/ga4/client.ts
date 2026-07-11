@@ -51,6 +51,16 @@ export interface Ga4AccountSummary {
   propertySummaries: Ga4PropertySummary[]
 }
 
+export interface Ga4DataStream {
+  name: string
+  displayName?: string
+  type?: string
+  webStreamData?: {
+    defaultUri?: string
+    measurementId?: string
+  }
+}
+
 export function ga4RequestCanUseCache(body: Ga4ReportRequest): boolean {
   return body.dateRanges.every(
     (range) =>
@@ -160,6 +170,51 @@ export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
     accountSummaries?: Ga4AccountSummary[]
   }
   return json.accountSummaries ?? []
+}
+
+export async function listGa4DataStreams(
+  propertyId: string,
+): Promise<Ga4DataStream[]> {
+  const { client } = await createGoogleAccessTokenClient()
+  const streams: Ga4DataStream[] = []
+  let pageToken: string | undefined
+  let pageCount = 0
+
+  do {
+    if (pageCount >= 20) {
+      throw new Error(
+        `GA4 data stream discovery exceeded 20 pages for property ${propertyId}.`,
+      )
+    }
+
+    const url = new URL(
+      `https://analyticsadmin.googleapis.com/v1beta/properties/${ga4PropertyIdFromName(propertyId)}/dataStreams`,
+    )
+    url.searchParams.set('pageSize', '200')
+    if (pageToken) url.searchParams.set('pageToken', pageToken)
+
+    const response = await authedFetch(client, url.toString())
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error(
+          `GA4 data stream fetch failed with 403 for property ${propertyId}. Check Analytics access.`,
+        )
+      }
+      throw new Error(
+        `GA4 data stream fetch failed with ${response.status} for property ${propertyId}.`,
+      )
+    }
+
+    const json = (await response.json()) as {
+      dataStreams?: Ga4DataStream[]
+      nextPageToken?: string
+    }
+    streams.push(...(json.dataStreams ?? []))
+    pageToken = json.nextPageToken
+    pageCount += 1
+  } while (pageToken)
+
+  return streams
 }
 
 export function ga4PropertyIdFromName(name: string): string {

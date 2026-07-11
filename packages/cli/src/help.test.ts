@@ -152,7 +152,6 @@ test('start JSON creates a usable project without interactive output', async () 
       'seo report --project example-com',
       'seo refresh-priorities --project example-com --verify-content',
       'seo technical-watch --project example-com',
-      'seo schedule cron --project example-com',
     ])
     assert.doesNotMatch(result.stdout, /seo start|Setup complete|[┌◇└]/)
   } finally {

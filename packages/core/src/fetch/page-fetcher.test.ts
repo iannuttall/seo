@@ -148,4 +148,16 @@ test('retains raw provenance alongside successful rendered evidence', async () =
     finalUrl: 'https://example.com/',
     status: 200,
   })
+  assert.deepEqual(result.diagnostics.rendering?.documentDifference?.changed, [
+    'title',
+    'content',
+  ])
+  assert.equal(
+    result.diagnostics.rendering?.documentDifference?.raw.title,
+    'SSR page',
+  )
+  assert.equal(
+    result.diagnostics.rendering?.documentDifference?.rendered.title,
+    'Rendered page',
+  )
 })

@@ -54,6 +54,56 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
               finalUrl: 'https://example.com/',
               status: 200,
             },
+            documentDifference: {
+              raw: {
+                title: 'Raw title',
+                canonical: { status: 'missing' },
+                robots: {},
+                headings: [{ level: 1, text: 'Raw heading' }],
+                links: {
+                  total: 1,
+                  internal: 1,
+                  external: 0,
+                  fingerprint: 'raw-links',
+                },
+                content: {
+                  characters: 8,
+                  wordCount: 2,
+                  fingerprint: 'raw-content',
+                },
+                structuredData: {
+                  blocks: 0,
+                  formats: [],
+                  schemaTypes: [],
+                },
+              },
+              rendered: {
+                title: 'Rendered title',
+                canonical: {
+                  status: 'single',
+                  url: 'https://example.com/',
+                },
+                robots: { meta: 'noindex' },
+                headings: [{ level: 1, text: 'Rendered heading' }],
+                links: {
+                  total: 2,
+                  internal: 1,
+                  external: 1,
+                  fingerprint: 'rendered-links',
+                },
+                content: {
+                  characters: 14,
+                  wordCount: 3,
+                  fingerprint: 'rendered-content',
+                },
+                structuredData: {
+                  blocks: 1,
+                  formats: ['json-ld'],
+                  schemaTypes: ['Article'],
+                },
+              },
+              changed: ['title', 'canonical', 'robots', 'headings'],
+            },
             browser: {
               source: 'system',
               product: 'Google Chrome',

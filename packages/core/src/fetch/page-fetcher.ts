@@ -9,6 +9,7 @@ import {
   JavaScriptRenderingError,
   looksLikeSpa,
 } from './page-fetcher/rendered.js'
+import { renderingDocumentDifference } from './page-fetcher/rendering-difference.js'
 import type {
   FetchPageOptions,
   JavaScriptRenderingInput,
@@ -147,6 +148,7 @@ export async function fetchPage(
             mode: renderingMode,
             status: 'rendered',
             raw: rawObservation(first),
+            documentDifference: renderingDocumentDifference(first, rendered),
           },
         },
         warnings: [...first.warnings, ...rendered.warnings],

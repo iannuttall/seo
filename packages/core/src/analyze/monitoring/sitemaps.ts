@@ -8,6 +8,13 @@ export type SitemapInvalidLoc = {
   value: string
 }
 
+export type SitemapLastmodObservation = {
+  sitemapUrl: string
+  kind: 'url' | 'sitemap'
+  loc: string
+  value: string
+}
+
 export type SitemapDocument = {
   url: string
   dataStatus: 'complete' | 'partial' | 'unavailable'
@@ -34,6 +41,19 @@ export type SitemapFetchResult = {
     invalidLocs: {
       count: number
       samples: SitemapInvalidLoc[]
+    }
+    lastmods: {
+      trust: 'unverified'
+      observed: number
+      parseable: number
+      malformed: {
+        count: number
+        samples: SitemapLastmodObservation[]
+      }
+      future: {
+        count: number
+        samples: SitemapLastmodObservation[]
+      }
     }
     documents: SitemapDocument[]
   }
@@ -63,7 +83,10 @@ export type BoundedSitemapInventory = {
 }
 
 const INVALID_LOC_SAMPLE_LIMIT = 10
+const LASTMOD_SAMPLE_LIMIT = 10
 const MAX_SITEMAP_BYTES = 52_428_800
+const LASTMOD_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/
 
 function normalizeUrl(value: string): string | undefined {
   try {
@@ -81,6 +104,53 @@ function positiveInteger(value: number, name: string): number {
     throw new Error(`${name} must be a positive integer.`)
   }
   return value
+}
+
+function parseSitemapLastmod(value: string): Date | undefined {
+  const match = LASTMOD_PATTERN.exec(value)
+  if (!match) return undefined
+
+  const [
+    ,
+    yearText,
+    monthText,
+    dayText,
+    hourText,
+    minuteText,
+    secondText,
+    timeZone,
+  ] = match
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  const hour = hourText === undefined ? 0 : Number(hourText)
+  const minute = minuteText === undefined ? 0 : Number(minuteText)
+  const second = secondText === undefined ? 0 : Number(secondText)
+  const daysInMonth =
+    month === 2
+      ? year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+        ? 29
+        : 28
+      : [4, 6, 9, 11].includes(month)
+        ? 30
+        : 31
+  const offset = timeZone?.match(/^([+-])(\d{2}):(\d{2})$/)
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    (offset && (Number(offset[2]) > 23 || Number(offset[3]) > 59))
+  ) {
+    return undefined
+  }
+
+  const parsed = hourText ? new Date(value) : new Date(`${value}T00:00:00Z`)
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed
 }
 
 function isGzip(bytes: Uint8Array): boolean {
@@ -354,6 +424,8 @@ export async function fetchSitemapUrls(input: {
   const discoveredSitemaps = new Set<string>()
   const scheduledSitemaps = new Set<string>()
   const invalidLocSamples: SitemapInvalidLoc[] = []
+  const malformedLastmodSamples: SitemapLastmodObservation[] = []
+  const futureLastmodSamples: SitemapLastmodObservation[] = []
   const documents: SitemapDocument[] = []
   const queue: string[] = []
   const limit = positiveInteger(input.limit ?? 50_000, 'limit')
@@ -371,6 +443,10 @@ export async function fetchSitemapUrls(input: {
   let duplicateUrlLocs = 0
   let duplicateSitemapLocs = 0
   let invalidLocCount = 0
+  let lastmodsObserved = 0
+  let parseableLastmods = 0
+  let malformedLastmodCount = 0
+  let futureLastmodCount = 0
   let omittedUrlsAtLeast = 0
   let urlLimitExceeded = false
   let nestedSitemapLimitExceeded = false
@@ -379,6 +455,26 @@ export async function fetchSitemapUrls(input: {
     invalidLocCount += 1
     if (invalidLocSamples.length < INVALID_LOC_SAMPLE_LIMIT) {
       invalidLocSamples.push(input)
+    }
+  }
+
+  function recordLastmod(input: SitemapLastmodObservation) {
+    lastmodsObserved += 1
+    const parsed = parseSitemapLastmod(input.value)
+    if (!parsed) {
+      malformedLastmodCount += 1
+      if (malformedLastmodSamples.length < LASTMOD_SAMPLE_LIMIT) {
+        malformedLastmodSamples.push(input)
+      }
+      return
+    }
+
+    parseableLastmods += 1
+    if (parsed.getTime() > Date.now()) {
+      futureLastmodCount += 1
+      if (futureLastmodSamples.length < LASTMOD_SAMPLE_LIMIT) {
+        futureLastmodSamples.push(input)
+      }
     }
   }
 
@@ -393,11 +489,21 @@ export async function fetchSitemapUrls(input: {
     if (!fetched.xml || !fetched.document.root) continue
 
     const $ = load(fetched.xml, { xmlMode: true })
-    const urlLocSelector =
-      fetched.document.root === 'urlset' ? 'urlset > url > loc' : ''
-    $(urlLocSelector).each((_, element) => {
+    const urlEntrySelector =
+      fetched.document.root === 'urlset' ? 'urlset > url' : ''
+    $(urlEntrySelector).each((_, element) => {
       urlLocs += 1
-      const value = $(element).text().trim()
+      const entry = $(element)
+      const value = entry.children('loc').first().text().trim()
+      const lastmod = entry.children('lastmod').first()
+      if (lastmod.length) {
+        recordLastmod({
+          sitemapUrl,
+          kind: 'url',
+          loc: value,
+          value: lastmod.text().trim(),
+        })
+      }
       const url = normalizeUrl(value)
       if (!url) {
         recordInvalidLoc({ sitemapUrl, kind: 'url', value })
@@ -416,13 +522,21 @@ export async function fetchSitemapUrls(input: {
       omittedUrlsAtLeast += 1
     })
 
-    const sitemapLocSelector =
-      fetched.document.root === 'sitemapindex'
-        ? 'sitemapindex > sitemap > loc'
-        : ''
-    $(sitemapLocSelector).each((_, element) => {
+    const sitemapEntrySelector =
+      fetched.document.root === 'sitemapindex' ? 'sitemapindex > sitemap' : ''
+    $(sitemapEntrySelector).each((_, element) => {
       sitemapLocs += 1
-      const value = $(element).text().trim()
+      const entry = $(element)
+      const value = entry.children('loc').first().text().trim()
+      const lastmod = entry.children('lastmod').first()
+      if (lastmod.length) {
+        recordLastmod({
+          sitemapUrl,
+          kind: 'sitemap',
+          loc: value,
+          value: lastmod.text().trim(),
+        })
+      }
       const child = normalizeUrl(value)
       if (!child) {
         recordInvalidLoc({ sitemapUrl, kind: 'sitemap', value })
@@ -476,6 +590,19 @@ export async function fetchSitemapUrls(input: {
       invalidLocs: {
         count: invalidLocCount,
         samples: invalidLocSamples,
+      },
+      lastmods: {
+        trust: 'unverified',
+        observed: lastmodsObserved,
+        parseable: parseableLastmods,
+        malformed: {
+          count: malformedLastmodCount,
+          samples: malformedLastmodSamples,
+        },
+        future: {
+          count: futureLastmodCount,
+          samples: futureLastmodSamples,
+        },
       },
       documents,
     },

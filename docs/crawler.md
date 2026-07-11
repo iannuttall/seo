@@ -29,6 +29,12 @@ sitemap. Gzip-compressed files work. A malformed document, a non-sitemap root,
 an unsuitable response, or a file over the 50 MiB sitemap limit remains
 explicitly partial or unavailable instead of being silently ignored.
 
+`sitemapDiscovery.roots[].lastmods` records supplied `lastmod` values as
+unverified metadata. It counts values that parse, and keeps small samples of
+malformed or future dates so you can inspect the generating system. SEO never
+uses them to order discovery or claim that a page changed. An index-level
+`lastmod` describes the sitemap file, not every page it lists.
+
 ## External-link checks
 
 External-link checks use a bounded sample spread across source pages. The JSON

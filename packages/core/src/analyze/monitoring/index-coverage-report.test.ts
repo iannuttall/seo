@@ -83,6 +83,13 @@ function dependencies(
         duplicateUrlLocs: 0,
         duplicateSitemapLocs: 0,
         invalidLocs: { count: 0, samples: [] },
+        lastmods: {
+          trust: 'unverified',
+          observed: 0,
+          parseable: 0,
+          malformed: { count: 0, samples: [] },
+          future: { count: 0, samples: [] },
+        },
         documents: [],
       },
       truncation: {

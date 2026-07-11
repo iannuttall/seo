@@ -164,6 +164,110 @@ test('reads gzip-compressed sitemaps and records the fetched document', async ()
   }
 })
 
+test('records sitemap lastmod observations without changing URL inventory or completeness', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    xml(
+      response,
+      `<urlset>
+        <url><loc>${origin}/valid-date</loc><lastmod>2024-02-29</lastmod></url>
+        <url><loc>${origin}/valid-minute</loc><lastmod>2024-01-01T12:00Z</lastmod></url>
+        <url><loc>${origin}/valid-time</loc><lastmod>2024-01-01T12:00:00+00:00</lastmod></url>
+        <url><loc>${origin}/malformed</loc><lastmod>2024-02-30</lastmod></url>
+        <url><loc>${origin}/future</loc><lastmod>2999-01-01</lastmod></url>
+      </urlset>`,
+    )
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/sitemap.xml`,
+    })
+
+    assert.deepEqual(result.urls, [
+      `${fixture.origin}/valid-date`,
+      `${fixture.origin}/valid-minute`,
+      `${fixture.origin}/valid-time`,
+      `${fixture.origin}/malformed`,
+      `${fixture.origin}/future`,
+    ])
+    assert.equal(result.dataStatus, 'complete')
+    assert.deepEqual(result.warnings, [])
+    assert.deepEqual(result.source.lastmods, {
+      trust: 'unverified',
+      observed: 5,
+      parseable: 4,
+      malformed: {
+        count: 1,
+        samples: [
+          {
+            sitemapUrl: `${fixture.origin}/sitemap.xml`,
+            kind: 'url',
+            loc: `${fixture.origin}/malformed`,
+            value: '2024-02-30',
+          },
+        ],
+      },
+      future: {
+        count: 1,
+        samples: [
+          {
+            sitemapUrl: `${fixture.origin}/sitemap.xml`,
+            kind: 'url',
+            loc: `${fixture.origin}/future`,
+            value: '2999-01-01',
+          },
+        ],
+      },
+    })
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('keeps sitemap-index lastmod observations separate from page lastmod values', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    if (request.url === '/index.xml') {
+      xml(
+        response,
+        `<sitemapindex>
+          <sitemap><loc>${origin}/child.xml</loc><lastmod>2024-01-01T12:00:00+00:00</lastmod></sitemap>
+          <sitemap><loc>${origin}/future.xml</loc><lastmod>2999-01-01</lastmod></sitemap>
+        </sitemapindex>`,
+      )
+      return
+    }
+    xml(response, urlset([]))
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/index.xml`,
+    })
+
+    assert.deepEqual(result.nestedSitemaps, [
+      `${fixture.origin}/child.xml`,
+      `${fixture.origin}/future.xml`,
+    ])
+    assert.equal(result.dataStatus, 'complete')
+    assert.equal(result.source.lastmods.observed, 2)
+    assert.equal(result.source.lastmods.parseable, 2)
+    assert.equal(result.source.lastmods.malformed.count, 0)
+    assert.deepEqual(result.source.lastmods.future, {
+      count: 1,
+      samples: [
+        {
+          sitemapUrl: `${fixture.origin}/index.xml`,
+          kind: 'sitemap',
+          loc: `${fixture.origin}/future.xml`,
+          value: '2999-01-01',
+        },
+      ],
+    })
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('records invalid sitemap XML with its HTTP response evidence', async () => {
   const fixture = await sitemapServer((_request, response) => {
     response.writeHead(200, { 'content-type': 'text/html' })

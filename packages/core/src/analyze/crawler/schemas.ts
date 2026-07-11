@@ -663,6 +663,33 @@ const crawlSitemapDiscoverySchema = z.object({
       dataStatus: z.enum(['complete', 'partial', 'unavailable']),
       urlsReturned: z.number().int().nonnegative(),
       sitemapsFetched: z.number().int().nonnegative(),
+      lastmods: z.object({
+        trust: z.literal('unverified'),
+        observed: z.number().int().nonnegative(),
+        parseable: z.number().int().nonnegative(),
+        malformed: z.object({
+          count: z.number().int().nonnegative(),
+          samples: z.array(
+            z.object({
+              sitemapUrl: z.string().url(),
+              kind: z.enum(['url', 'sitemap']),
+              loc: z.string(),
+              value: z.string(),
+            }),
+          ),
+        }),
+        future: z.object({
+          count: z.number().int().nonnegative(),
+          samples: z.array(
+            z.object({
+              sitemapUrl: z.string().url(),
+              kind: z.enum(['url', 'sitemap']),
+              loc: z.string(),
+              value: z.string(),
+            }),
+          ),
+        }),
+      }),
       documents: z.array(
         z.object({
           url: z.string().url(),

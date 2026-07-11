@@ -1,5 +1,3 @@
-import { CRAWLER_LIMIT_PROFILES } from '@seo/core'
-
 export const crawlerWorkflowMarkdown = `# SEO crawler MCP workflows
 
 Use these workflows when an agent needs technical SEO and GEO crawl data without dumping raw JSON on a human.
@@ -32,11 +30,9 @@ Use these workflows when an agent needs technical SEO and GEO crawl data without
 
 Use \`seo_audit_urls\` for a small set of explicit URLs. This is faster than a full crawl and is useful for launch gates, templates, and post-fix verification.
 
-## Hosted-ready limits
+## Crawl bounds
 
-Local mode is not a paid tier. It should only honor explicit crawl caps such as \`maxPages\`, \`js\`, and \`checkExternal\`.
-
-Future hosted/API tiers should enforce explicit limits for max pages, JavaScript-rendered pages, schedules, saved report history, and external link checks. Agents can read \`seo://crawler/tools\` for the structured limit profile list.
+Set \`maxPages\`, \`maxDepth\`, \`concurrency\`, rendering mode, and external-link checks for the question in front of you. These are local resource controls, not plan limits. The report makes a capped or cancelled crawl explicit so an agent does not mistake it for a complete site inventory.
 
 ## Queue status
 
@@ -46,13 +42,13 @@ Core crawls can emit typed status events for queue workers: started, URL queued/
 
 Partial reports are the current local contract. A crawl can return \`status: "partial"\` with warnings and caveats when it is cancelled, capped by \`maxPages\`, or otherwise incomplete.
 
-Do not invent resume tokens or hosted job state yet. Re-run the saved report config when fresh data is needed, and only add resumable crawl state once a local CLI/MCP workflow needs it.
+Do not invent resume tokens or remote job state. Re-run the saved report config when fresh data is needed, and only add resumable crawl state once a local CLI/MCP workflow needs it.
 
 ## Local-first scope
 
-Keep the crawler excellent locally before adding hosted-only behavior. CLI and MCP workflows should prefer local crawls, local saved reports, explicit rerun configs, compact outputs, and plain-English fix guidance.
+Keep the crawler excellent locally. CLI and MCP workflows should prefer local crawls, local saved reports, explicit rerun configs, compact outputs, and plain-English fix guidance.
 
-Hosted API concepts such as paid schedules, tenant billing, remote job queues, API keys, and hosted-only JavaScript render quotas stay design boundaries until the local crawler quality gates are complete.
+Keep remote jobs, tenant billing, API keys, schedules, and provider-specific rendering quotas out of the local crawler.
 
 ## Idempotency rules
 
@@ -164,9 +160,8 @@ export const crawlerToolGuide = {
       'Deferred until a local CLI/MCP workflow needs resume tokens or persisted crawl frontier state.',
   },
   localFirstGuardrails: [
-    'Prefer local CLI and MCP crawls before hosted/API-only workflows.',
+    'Prefer local CLI and MCP crawls.',
     'Keep saved reports, rerun configs, and compact slicing tools useful without remote services.',
-    'Defer paid schedules, tenant billing, remote job queues, API keys, and hosted-only JS quotas until crawler quality gates are complete.',
+    'Keep remote jobs, tenant billing, API keys, schedules, and provider-specific rendering quotas out of the local crawler.',
   ],
-  limits: CRAWLER_LIMIT_PROFILES,
 } as const

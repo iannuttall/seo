@@ -635,7 +635,7 @@ test('crawlSite keeps large-site cancellation bounded', async () => {
   assert.match(report.caveats.join('\n'), /cancelled/)
 })
 
-test('crawlSite accepts hosted-safe provider dependencies', async () => {
+test('crawlSite accepts injected provider dependencies', async () => {
   const calls = {
     fetchUrls: [] as string[],
     sitemap: 0,

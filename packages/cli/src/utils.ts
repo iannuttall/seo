@@ -2,6 +2,10 @@ import Table from 'cli-table3'
 import pc from 'picocolors'
 import updateNotifier from 'update-notifier'
 
+const terminalColors = pc.createColors(
+  Boolean(process.stdout.isTTY && !process.env.NO_COLOR),
+)
+
 export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
   if (process.env.CI || process.env.NO_UPDATE_NOTIFIER) {
     return
@@ -26,7 +30,9 @@ export function printJson(data: unknown): void {
 export function printKeyValue(rows: Array<[string, string]>): void {
   const width = Math.max(...rows.map(([label]) => label.length), 0)
   for (const [label, value] of rows) {
-    process.stdout.write(`${pc.bold(label.padEnd(width))}  ${value}\n`)
+    process.stdout.write(
+      `${terminalColors.bold(label.padEnd(width))}  ${value}\n`,
+    )
   }
 }
 

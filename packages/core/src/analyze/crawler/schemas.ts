@@ -653,6 +653,22 @@ export const crawlTopFixSchema = crawlIssueGroupSchema.extend({
   }),
 })
 
+const crawlSitemapDiscoverySchema = z.object({
+  dataStatus: z.enum(['complete', 'partial', 'unavailable']),
+  urlsReturned: z.number().int().nonnegative(),
+  roots: z.array(
+    z.object({
+      url: z.string().url(),
+      source: z.enum(['robots-txt', 'default-path']),
+      dataStatus: z.enum(['complete', 'partial', 'unavailable']),
+      urlsReturned: z.number().int().nonnegative(),
+      sitemapsFetched: z.number().int().nonnegative(),
+      possiblyTruncated: z.boolean(),
+      warnings: z.array(z.string()),
+    }),
+  ),
+})
+
 export const crawlConfigSchema = z.object({
   url: z.string().url(),
   mode: z.enum(['site', 'page', 'list', 'sitemap']),
@@ -777,6 +793,7 @@ const crawlReportBaseSchema = z.object({
   issueGroups: z.array(crawlIssueGroupSchema),
   dataSources: crawlReportDataSourcesSchema.optional(),
   ai: crawlAiSignalsSchema.optional(),
+  sitemapDiscovery: crawlSitemapDiscoverySchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),
 })

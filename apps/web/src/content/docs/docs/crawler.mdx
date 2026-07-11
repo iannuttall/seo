@@ -51,7 +51,9 @@ seo crawl --mode list --urls-file changed-urls.txt
 
 `site` mode discovers internal URLs from the start page and sitemap. `sitemap`
 mode starts from a sitemap. `page` fetches one page, while `list` keeps the run
-to URLs you provide.
+to URLs you provide. When `robots.txt` declares same-origin sitemap files, SEO
+tries those first and records which ones supplied URLs in JSON. If none return
+URLs, it also tries `/sitemap.xml`.
 
 Google describes a sitemap as a discovery signal rather than an indexing
 guarantee in its

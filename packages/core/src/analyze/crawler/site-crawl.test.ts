@@ -1,69 +1,10 @@
 import assert from 'node:assert/strict'
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http'
 import { test } from 'node:test'
 import { Response } from 'undici'
 import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
-import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type { CrawlStatusEvent } from './report.js'
 import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
-
-async function withServer(
-  handler: (req: IncomingMessage, res: ServerResponse) => void,
-): Promise<{ baseUrl: string; close: () => Promise<void> }> {
-  const server = createServer(handler)
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const address = server.address()
-  assert.ok(address && typeof address === 'object')
-  return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
-    close: () =>
-      new Promise<void>((resolve, reject) => {
-        ;(server as Server).close((error) => {
-          if (error) reject(error)
-          else resolve()
-        })
-      }),
-  }
-}
-
-function crawlPageSnapshot(
-  url: string,
-  input: Partial<CrawlPageSnapshot> = {},
-): CrawlPageSnapshot {
-  return {
-    url,
-    finalUrl: url,
-    status: 200,
-    contentType: 'text/html',
-    responseTimeMs: 20,
-    title: 'Large site fixture page',
-    metaDescription: 'Large site fixture page description.',
-    h1: 'Large site fixture page',
-    h1Count: 1,
-    h2Count: 1,
-    h3Count: 0,
-    indexable: true,
-    wordCount: 180,
-    contentHash: `hash-${url}`,
-    outgoingInternalCount: 0,
-    outgoingExternalCount: 0,
-    geo: {
-      semanticHtml: true,
-      structuredData: true,
-      hasAuthor: true,
-      hasDate: true,
-      questionHeadings: 1,
-      structuredBlocks: 1,
-      answerable: true,
-    },
-    ...input,
-  }
-}
+import { crawlPageSnapshot, withServer } from './site-crawl.test-fixtures.js'
 
 test('crawlSite follows same-origin links within depth and page limits', async () => {
   const fixture = await withServer((req, res) => {

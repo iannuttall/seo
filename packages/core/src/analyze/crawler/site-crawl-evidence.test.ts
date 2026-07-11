@@ -1,34 +1,10 @@
 import assert from 'node:assert/strict'
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http'
 import { test } from 'node:test'
 import { Response } from 'undici'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { aiReadiness } from './ai-readiness.js'
 import { crawlSite } from './site-crawl.js'
-
-async function withServer(
-  handler: (req: IncomingMessage, res: ServerResponse) => void,
-): Promise<{ baseUrl: string; close: () => Promise<void> }> {
-  const server = createServer(handler)
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const address = server.address()
-  assert.ok(address && typeof address === 'object')
-  return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
-    close: () =>
-      new Promise<void>((resolve, reject) => {
-        ;(server as Server).close((error) => {
-          if (error) reject(error)
-          else resolve()
-        })
-      }),
-  }
-}
+import { withServer } from './site-crawl.test-fixtures.js'
 
 function crawlPageSnapshot(
   url: string,

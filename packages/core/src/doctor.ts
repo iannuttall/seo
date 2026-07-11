@@ -59,7 +59,7 @@ export async function runDoctor(): Promise<{
             ? 'pass'
             : 'fail',
     detail: serviceAccount.configured
-      ? 'Service account configured for ' + serviceAccount.identity + '.'
+      ? `Service account configured for ${serviceAccount.identity}.`
       : tokenClientConfigured === false
         ? `Stored Google login uses the ${tokens?.client_source === 'shared' ? 'shared seo app' : 'BYO client'}, but that client is not configured.`
         : serviceAccount.error
@@ -96,7 +96,7 @@ export async function runDoctor(): Promise<{
     label: 'Google login',
     status: serviceAccount.configured || tokens ? 'pass' : 'fail',
     detail: serviceAccount.configured
-      ? 'Using service account ' + serviceAccount.identity + '.'
+      ? `Using service account ${serviceAccount.identity}.`
       : tokens
         ? `Signed in as ${tokens.account_email}.`
         : 'No Google token found.',
@@ -120,7 +120,7 @@ export async function runDoctor(): Promise<{
             ? 'fail'
             : 'warn',
       detail: serviceAccount.configured
-        ? scope + ' requested by the service account.'
+        ? `${scope} requested by the service account.`
         : tokens
           ? grantedScopes.has(scope)
             ? scope

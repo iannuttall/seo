@@ -368,6 +368,7 @@ export async function crawlSite(
   let queuedUrls = 0
   let skippedUrls = 0
   let robotsDeferredUrls = 0
+  let originBackpressureSkippedUrls = 0
   let queueSafetySkippedUrls = 0
   let failedUrls = 0
   let observedInternalLinks = 0
@@ -642,6 +643,9 @@ export async function crawlSite(
             `${task.url}: crawl deferred because robots.txt availability is unknown.`,
           )
         }
+        if (request.reason === 'origin-backpressure') {
+          originBackpressureSkippedUrls += 1
+        }
         emitStatus('page_skipped', {
           url: task.url,
           depth: task.depth,
@@ -829,6 +833,7 @@ export async function crawlSite(
       failedUrls > 0 ||
       pageLimitReached ||
       robotsDeferredUrls > 0 ||
+      originBackpressureSkippedUrls > 0 ||
       queueSafetySkippedUrls > 0 ||
       queue.length > 0 ||
       inFlight.size > 0 ||
@@ -920,6 +925,7 @@ export async function crawlSite(
         pageLimitReached,
         maxPages: config.maxPages,
         queueSafetySkippedUrls,
+        originBackpressureSkippedUrls,
       }),
       stats: {
         discoveredUrls: discovered.size,

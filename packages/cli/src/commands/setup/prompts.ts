@@ -1,4 +1,11 @@
-import { confirm, multiselect, password, select, text } from '@clack/prompts'
+import {
+  confirm,
+  multiselect,
+  note,
+  password,
+  select,
+  text,
+} from '@clack/prompts'
 import {
   authStatus,
   type Ga4WebStreamCandidate,
@@ -21,7 +28,12 @@ export type SetupAuthStatus =
   | 'already-connected'
   | 'service-account'
   | 'skipped'
-export type SetupMcpInstall = { client: string; path: string; changed: boolean }
+export type SetupMcpInstall = {
+  client: string
+  path: string
+  changed: boolean
+  error?: string
+}
 export type SetupGa4Selection = {
   propertyId: string
   selection: 'explicit' | 'matched' | 'manual'
@@ -94,16 +106,24 @@ export async function maybeConnectAuth(
     ? [{ value: 'skip' as const, label: 'Skip for now' }]
     : []
 
+  const hasOauthClient = status.sharedConfigured || status.byoConfigured
   const choice = maybeExitCancelled(
     await select({
       message: 'Connect Google now?',
-      options: status.sharedConfigured
-        ? [{ value: 'login', label: 'Open Google sign-in' }, ...skipOption]
+      options: hasOauthClient
+        ? [
+            {
+              value: 'login',
+              label: 'Connect Google',
+              hint: 'Opens your browser for read-only Search Console and GA4 access',
+            },
+            ...skipOption,
+          ]
         : [
             {
               value: 'setup',
-              label: 'Use my own Google OAuth client',
-              hint: 'Required in this checkout',
+              label: 'Set up Google login for local development',
+              hint: 'This source checkout does not include the public app credentials',
             },
             ...skipOption,
           ],
@@ -127,7 +147,11 @@ export async function maybeConnectAuth(
     writeOauthClient({ clientId, clientSecret })
   }
 
-  await loginWithLoopback()
+  const tokens = await loginWithLoopback()
+  note(
+    `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
+    'Google connected',
+  )
   return 'connected'
 }
 
@@ -246,5 +270,16 @@ export async function maybeInstallMcp(
 
   return detected
     .filter((target) => selected.includes(target.client))
-    .map((target) => installMcpConfig(target))
+    .map((target) => {
+      try {
+        return installMcpConfig(target)
+      } catch (error) {
+        return {
+          client: target.client,
+          path: target.path,
+          changed: false,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      }
+    })
 }

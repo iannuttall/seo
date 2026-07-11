@@ -43,17 +43,11 @@ close to more clicks, and catch regressions after a release.
 
 Requires Node 22 or newer.
 
-Run the guided setup without installing anything globally:
-
-```sh
-npx seo start
-npx seo report
-```
-
-Or install the command once:
+Install the command once, then add the skills when an agent will use it:
 
 ```sh
 npm i -g seo
+npx skills add iannuttall/seo
 seo start
 seo report
 ```
@@ -63,8 +57,8 @@ optional GA4 property, and a local project profile. Public releases can include
 the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
-That is the normal human path. Examples below use the global `seo` command. If
-you prefer not to install it, prefix the same commands with `npx`.
+That is the normal path. `seo` is then available in every terminal, script,
+CI job, and local MCP client on the machine.
 
 The main report uses whatever evidence is available,
 explains anything it could not check, and recommends a short list of follow-up

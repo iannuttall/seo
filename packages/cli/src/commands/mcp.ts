@@ -64,6 +64,11 @@ export const mcpCommand = defineCommand({
           default: false,
           description: 'Remove the SEO MCP config instead of adding it',
         },
+        reinstall: {
+          type: 'boolean',
+          default: false,
+          description: 'Rewrite an existing managed SEO MCP config',
+        },
         'claude-desktop': {
           type: 'boolean',
           default: false,
@@ -96,6 +101,12 @@ export const mcpCommand = defineCommand({
         },
       },
       run: async ({ args }) => {
+        if (booleanArg(args.uninstall) && booleanArg(args.reinstall)) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Use either --uninstall or --reinstall, not both.',
+          )
+        }
         const targets = mcpClientTargets()
         const detected = detectMcpClients({ targets })
         const json = jsonFlag(args)
@@ -143,7 +154,9 @@ export const mcpCommand = defineCommand({
           .map((target) =>
             booleanArg(args.uninstall)
               ? uninstallMcpConfig(target)
-              : installMcpConfig(target),
+              : installMcpConfig(target, {
+                  reinstall: booleanArg(args.reinstall),
+                }),
           )
 
         if (json) {

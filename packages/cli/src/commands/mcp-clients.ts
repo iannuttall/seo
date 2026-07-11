@@ -1,7 +1,6 @@
-import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { posix, win32 } from 'node:path'
+import { dirname, join, posix, win32 } from 'node:path'
 
 export type SupportedClient =
   | 'claude-desktop'
@@ -110,9 +109,42 @@ export function mcpClientTargets(
   return targets
 }
 
+export function resolveMcpClientExecutable(
+  command: string,
+  input: {
+    exists?: (path: string) => boolean
+    nodePath?: string
+    path?: string
+    platform?: NodeJS.Platform
+  } = {},
+): string {
+  const platform = input.platform ?? process.platform
+  const exists = input.exists ?? existsSync
+  const nodePath = input.nodePath ?? process.execPath
+  const names =
+    platform === 'win32'
+      ? [`${command}.cmd`, `${command}.exe`, command]
+      : [command]
+
+  const pathEntries = (input.path ?? process.env.PATH ?? '')
+    .split(platform === 'win32' ? ';' : ':')
+    .filter(Boolean)
+  for (const directory of pathEntries) {
+    for (const name of names) {
+      const candidate = join(directory, name)
+      if (exists(candidate)) return candidate
+    }
+  }
+
+  for (const name of names) {
+    const candidate = join(dirname(nodePath), name)
+    if (exists(candidate)) return candidate
+  }
+  return command
+}
+
 function commandExists(command: string): boolean {
-  const lookup = process.platform === 'win32' ? 'where' : 'which'
-  return spawnSync(lookup, [command], { stdio: 'ignore' }).status === 0
+  return resolveMcpClientExecutable(command) !== command
 }
 
 export function detectMcpClients(
@@ -125,10 +157,14 @@ export function detectMcpClients(
   const targets = input.targets ?? mcpClientTargets()
   const hasCommand = input.hasCommand ?? commandExists
   const hasPath = input.hasPath ?? existsSync
-  return targets.filter(
-    (target) =>
+  return targets.filter((target) => {
+    if (target.kind === 'native') {
+      return target.commandNames.some(hasCommand)
+    }
+    return (
       hasPath(target.path) ||
       target.detectionPaths.some(hasPath) ||
-      target.commandNames.some(hasCommand),
-  )
+      target.commandNames.some(hasCommand)
+    )
+  })
 }

@@ -6,12 +6,13 @@ description: Install SEO Skills CLI, connect Search Console, save a local projec
 You need Node 22 or newer and a Google account that can read the site's Search
 Console property. GA4 is optional.
 
-## Start without installing anything globally
+## Install SEO Skills CLI
 
-Run the guided setup through `npx`:
+Install the command once, then start setup:
 
 ```sh
-npx seo start
+npm i -g seo
+seo start
 ```
 
 Setup opens Google sign-in in your browser. After you approve read-only access,
@@ -29,17 +30,8 @@ need no flags.
 The [Google connection guide](/docs/google) explains the permissions and data
 limits before you sign in.
 
-## Install the command once for regular use
-
-The global package gives you the shorter `seo` command:
-
-```sh
-npm i -g seo
-seo start
-```
-
 Do not run the global install with `sudo`. If npm reports a permission error,
-fix npm's global install directory or keep using `npx seo`.
+fix npm's global install directory, then run the same command again.
 
 ## Add the skills when an agent will use it
 
@@ -48,7 +40,6 @@ fits the job, how to interpret its limits, and what to verify next. Install
 both for the strongest agent setup:
 
 ```sh
-npm i -g seo
 npx skills add iannuttall/seo
 ```
 

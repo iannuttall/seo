@@ -237,6 +237,7 @@ export async function setTokenStorageMode(
 export function readOauthClient():
   | { clientId: string; clientSecret: string }
   | undefined {
+  ensureSeoCliDirs()
   const raw = readJsonFile<{ clientId: string; clientSecret: string }>(
     getSeoCliPaths().oauthClientFile,
   )
@@ -247,6 +248,7 @@ export function writeOauthClient(client: {
   clientId: string
   clientSecret: string
 }): void {
+  ensureSeoCliDirs()
   writeJsonAtomic(getSeoCliPaths().oauthClientFile, client, 0o600)
 }
 

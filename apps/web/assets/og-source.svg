@@ -5,5 +5,5 @@
   <text x="126" y="164" fill="#7ee2ac" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="42" font-weight="700">&gt;_ seo</text>
   <text x="126" y="314" fill="#f5f7f2" font-family="Inter, Arial, sans-serif" font-size="76" font-weight="700">Technical SEO</text>
   <text x="126" y="404" fill="#f5f7f2" font-family="Inter, Arial, sans-serif" font-size="76" font-weight="700">from your terminal.</text>
-  <text x="126" y="492" fill="#aeb7aa" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="30">npx seo start</text>
+  <text x="126" y="492" fill="#aeb7aa" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="30">npm i -g seo</text>
 </svg>

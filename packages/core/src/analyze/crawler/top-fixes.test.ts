@@ -200,6 +200,79 @@ test('topFixes keeps review observations out of implementation priorities', () =
   )
 })
 
+test('topFixes keeps intentional index controls in the review queue', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    issues: [
+      {
+        ruleId: 'canonical_missing',
+        title: 'No canonical declared',
+        category: 'canonical',
+        severity: 'low',
+        url: 'https://example.com/no-canonical',
+      },
+      {
+        ruleId: 'canonical_mismatch',
+        title: 'Canonical differs from final URL',
+        category: 'canonical',
+        severity: 'medium',
+        url: 'https://example.com/alternate',
+      },
+      {
+        ruleId: 'canonicalized_page',
+        title: 'Canonicalized page',
+        category: 'indexability',
+        severity: 'low',
+        url: 'https://example.com/canonicalized',
+      },
+      {
+        ruleId: 'noindex',
+        title: 'Noindex found',
+        category: 'indexability',
+        severity: 'medium',
+        url: 'https://example.com/private',
+      },
+      {
+        ruleId: 'nofollow',
+        title: 'Nofollow found',
+        category: 'indexability',
+        severity: 'low',
+        url: 'https://example.com/isolated',
+      },
+      {
+        ruleId: 'x_robots_noindex',
+        title: 'X-Robots-Tag noindex',
+        category: 'indexability',
+        severity: 'medium',
+        url: 'https://example.com/header-control',
+      },
+      {
+        ruleId: 'robots_blocked',
+        title: 'Blocked by robots.txt',
+        category: 'indexability',
+        severity: 'medium',
+        url: 'https://example.com/blocked',
+      },
+    ],
+  })
+
+  assert.deepEqual(topFixes(report), [])
+  assert.deepEqual(
+    reviewObservations(report)
+      .map((observation) => observation.ruleId)
+      .sort(),
+    [
+      'canonical_mismatch',
+      'canonical_missing',
+      'canonicalized_page',
+      'nofollow',
+      'noindex',
+      'robots_blocked',
+      'x_robots_noindex',
+    ],
+  )
+})
+
 test('topFixes does not turn partial GSC evidence into zero visibility', () => {
   const report = createCrawlReport({
     config: { url: 'https://example.com/' },

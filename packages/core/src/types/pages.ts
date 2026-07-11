@@ -89,6 +89,7 @@ export interface PageFetchDiagnostics {
       finalUrl: string
       status: number
     }
+    documentDifference?: RenderingDocumentDifference
     browser?: {
       source: 'environment' | 'playwright-cache' | 'system'
       product: string
@@ -112,6 +113,59 @@ export interface PageFetchDiagnostics {
     }>
     error?: string
   }
+}
+
+export type RenderingDocumentField =
+  | 'title'
+  | 'metaDescription'
+  | 'canonical'
+  | 'robots'
+  | 'headings'
+  | 'links'
+  | 'content'
+  | 'structuredData'
+
+export type RenderingDocumentSnapshot = {
+  title?: string
+  metaDescription?: string
+  canonical: {
+    status:
+      | 'missing'
+      | 'single'
+      | 'duplicate'
+      | 'conflicting'
+      | 'outside-head-only'
+      | 'invalid'
+    url?: string
+  }
+  robots: {
+    meta?: string
+    googlebot?: string
+    http?: string
+  }
+  headings: Array<{ level: number; text: string }>
+  links: {
+    total: number
+    internal: number
+    external: number
+    fingerprint: string
+  }
+  content: {
+    characters: number
+    wordCount: number
+    fingerprint: string
+  }
+  structuredData: {
+    blocks: number
+    formats: Array<'json-ld' | 'microdata' | 'rdfa'>
+    schemaTypes: string[]
+  }
+}
+
+export type RenderingDocumentDifference = {
+  raw: RenderingDocumentSnapshot
+  rendered: RenderingDocumentSnapshot
+  changed: RenderingDocumentField[]
 }
 
 export interface CoverageField {

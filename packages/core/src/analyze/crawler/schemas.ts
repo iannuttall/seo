@@ -108,6 +108,63 @@ const googleRichResultAssessmentSchema = z.object({
   documentationUrl: z.string().url(),
 })
 
+const canonicalStatusSchema = z.enum([
+  'missing',
+  'single',
+  'duplicate',
+  'conflicting',
+  'outside-head-only',
+  'invalid',
+])
+
+const renderingDocumentSnapshotSchema = z.object({
+  title: z.string().optional(),
+  metaDescription: z.string().optional(),
+  canonical: z.object({
+    status: canonicalStatusSchema,
+    url: z.string().url().optional(),
+  }),
+  robots: z.object({
+    meta: z.string().optional(),
+    googlebot: z.string().optional(),
+    http: z.string().optional(),
+  }),
+  headings: z.array(z.object({ level: z.number().int(), text: z.string() })),
+  links: z.object({
+    total: z.number().int().nonnegative(),
+    internal: z.number().int().nonnegative(),
+    external: z.number().int().nonnegative(),
+    fingerprint: z.string(),
+  }),
+  content: z.object({
+    characters: z.number().int().nonnegative(),
+    wordCount: z.number().int().nonnegative(),
+    fingerprint: z.string(),
+  }),
+  structuredData: z.object({
+    blocks: z.number().int().nonnegative(),
+    formats: z.array(z.enum(['json-ld', 'microdata', 'rdfa'])),
+    schemaTypes: z.array(z.string()),
+  }),
+})
+
+const renderingDocumentDifferenceSchema = z.object({
+  raw: renderingDocumentSnapshotSchema,
+  rendered: renderingDocumentSnapshotSchema,
+  changed: z.array(
+    z.enum([
+      'title',
+      'metaDescription',
+      'canonical',
+      'robots',
+      'headings',
+      'links',
+      'content',
+      'structuredData',
+    ]),
+  ),
+})
+
 export const crawlPageSnapshotSchema = z.object({
   url: z.string().url(),
   finalUrl: z.string().url(),
@@ -192,6 +249,7 @@ export const crawlPageSnapshotSchema = z.object({
               status: z.number().int(),
             })
             .optional(),
+          documentDifference: renderingDocumentDifferenceSchema.optional(),
           browser: z
             .object({
               source: z.enum(['environment', 'playwright-cache', 'system']),

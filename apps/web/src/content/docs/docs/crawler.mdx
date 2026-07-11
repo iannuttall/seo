@@ -122,6 +122,12 @@ Install Chrome or Chromium in the usual way. For a Playwright-managed browser,
 run the exact command shown by the CLI. `--js` remains an alias for
 `--rendering on` while existing scripts move to the explicit mode.
 
+When a browser renders a page, JSON output includes
+`fetchDiagnostics.rendering.documentDifference`. It shows whether the title,
+description, canonical, robots directives, headings, links, visible content,
+or structured data changed from the raw response. Saved crawls keep compact
+snapshots and text or link fingerprints rather than a second complete DOM.
+
 Google's
 <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics" target="_blank" rel="noreferrer">JavaScript SEO guidance</a>
 explains how rendered HTML affects discovery and indexing. A local rendered

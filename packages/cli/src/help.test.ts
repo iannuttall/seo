@@ -192,6 +192,60 @@ test('start JSON creates a usable project without interactive output', async () 
   }
 })
 
+test('start reuses the existing project profile for the selected property', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-profile-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-profile-cache-'))
+  const env = { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir }
+
+  try {
+    const added = await runSeoResult(
+      [
+        'projects',
+        'add',
+        '--id',
+        'keep',
+        '--name',
+        'keep.md',
+        '--site',
+        'sc-domain:keep.md',
+        '--url',
+        'https://keep.md/',
+        '--json',
+      ],
+      env,
+    )
+    assert.equal(added.exitCode, 0)
+
+    const result = await runSeoResult(
+      [
+        'start',
+        '--site',
+        'sc-domain:keep.md',
+        '--skip-auth',
+        '--skip-mcp',
+        '--json',
+      ],
+      env,
+    )
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 0)
+    assert.equal(output.client.id, 'keep')
+    assert.deepEqual(output.next, [
+      'seo report --project keep',
+      'seo refresh-priorities --project keep --verify-content',
+      'seo technical-watch --project keep',
+    ])
+
+    const listed = await runSeoResult(['projects', 'list', '--json'], env)
+    assert.equal(listed.exitCode, 0)
+    assert.equal(JSON.parse(listed.stdout).clients.length, 1)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
 test('start JSON does not silently skip missing authentication', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))

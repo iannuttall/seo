@@ -3,6 +3,7 @@ import {
   type ClientProfile,
   deriveBrandTerms,
   ensureSeoCliDirs,
+  listClients,
   saveClient,
 } from '@seo/core'
 import {
@@ -63,6 +64,22 @@ function mcpFailureMessage(installs: SetupMcpInstall[]): string | undefined {
   return failures
     .map((install) => `${install.client}: ${install.error}`)
     .join('\n')
+}
+
+function existingProfileForSetup(
+  site: string,
+  name: string,
+  requestedId: string | undefined,
+): ClientProfile | undefined {
+  if (requestedId) return undefined
+  const matches = listClients().filter((client) => client.siteUrl === site)
+  if (matches.length === 1) return matches[0]
+  return (
+    matches.find((client) => client.isDefault) ??
+    matches.find(
+      (client) => client.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+    )
+  )
 }
 
 export async function runGuidedSetup(
@@ -154,7 +171,11 @@ export async function runGuidedSetup(
           }),
         )
       : defaultName)
-  const id = stringArg(args.id) ?? slugId(name)
+  const requestedId = stringArg(args.id)
+  const id =
+    requestedId ??
+    existingProfileForSetup(site, name, requestedId)?.id ??
+    slugId(name)
   const defaultStartUrl = startUrlForSite(site) ?? ''
   const startUrl =
     stringArg(args.url) ??

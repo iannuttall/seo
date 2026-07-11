@@ -126,6 +126,7 @@ test('creates and saves a bounded crawl when no compatible baseline exists', asy
   const baseline = await resolveTechnicalBaseline(
     {
       site: 'sc-domain:example.com',
+      searchSite: 'sc-domain:example.com',
       url: 'https://example.com/',
       projectId: 'example',
       ga4PropertyId: '123',
@@ -149,6 +150,19 @@ test('creates and saves a bounded crawl when no compatible baseline exists', asy
     js: false,
     refresh: false,
   })
+})
+
+test('does not join Google data for a direct-url technical baseline', async () => {
+  const created = crawlReport()
+  const { deps, crawlInputs } = dependencies({ result: created })
+
+  await resolveTechnicalBaseline(
+    { site: 'https://example.com', url: 'https://example.com/' },
+    deps,
+  )
+
+  assert.equal(crawlInputs[0]?.site, undefined)
+  assert.equal(crawlInputs[0]?.ga4PropertyId, undefined)
 })
 
 test('refreshes even when a compatible crawl is saved', async () => {

@@ -284,9 +284,10 @@ local Google access, and more examples.
 
 ## Local data and Google access
 
-Google OAuth tokens and project profiles are stored in your user config
-directory with private file permissions. Crawl reports and provider caches are
-also local. Use these commands to inspect or remove them:
+Google OAuth tokens use your system keychain when it is available. On a
+headless machine or a locked keychain, SEO Skills CLI falls back to a private
+`0600` file in your user config directory. Project profiles, crawl reports, and
+provider caches are also local. Use these commands to inspect or remove them:
 
 ```sh
 seo privacy
@@ -294,6 +295,9 @@ seo doctor
 seo auth logout
 seo reset
 ```
+
+`seo auth status` shows the active storage mode. Power users can choose it with
+`seo auth storage --keychain` or `seo auth storage --file`.
 
 Power users can bring their own Google OAuth client. See
 [getting started](https://seoskills.dev/docs/getting-started) for the available

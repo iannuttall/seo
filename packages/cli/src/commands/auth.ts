@@ -4,9 +4,11 @@ import {
   deleteTokens,
   formatRelativeExpiry,
   getSeoCliPaths,
+  getTokenStorageStatus,
   loginWithLoopback,
   refreshAuthToken,
   SeoError,
+  setTokenStorageMode,
   writeOauthClient,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -27,6 +29,17 @@ function serviceAccountSource(source?: string): string {
     return 'SEO_GOOGLE_SERVICE_ACCOUNT_FILE'
   }
   return 'GOOGLE_APPLICATION_CREDENTIALS'
+}
+
+function tokenStorageLabel(input: {
+  configured: 'keychain' | 'file'
+  active: 'keychain' | 'file'
+  reason?: string
+}): string {
+  if (input.active === 'keychain') return 'system keychain'
+  return input.configured === 'keychain'
+    ? 'private file fallback'
+    : 'private file'
 }
 
 export const authCommand = defineCommand({
@@ -108,6 +121,10 @@ export const authCommand = defineCommand({
       },
       run: async ({ args }) => {
         const status = await authStatus()
+        const storage =
+          status.activeMode === 'oauth'
+            ? await getTokenStorageStatus()
+            : undefined
         if (jsonFlag(args)) {
           printJson({
             authenticated:
@@ -138,6 +155,7 @@ export const authCommand = defineCommand({
               source: status.serviceAccount.source,
               error: status.serviceAccount.error,
             },
+            ...(storage ? { tokenStorage: storage } : {}),
           })
           return
         }
@@ -168,6 +186,7 @@ export const authCommand = defineCommand({
           )
           return
         }
+        const tokenStorage = storage ?? (await getTokenStorageStatus())
         printKeyValue([
           ['Account', status.tokens.account_email],
           ['Scopes', status.tokens.scope],
@@ -179,6 +198,10 @@ export const authCommand = defineCommand({
           ],
           ['Expires', formatRelativeExpiry(status.tokens.expires_at)],
           ['Tokens file', getSeoCliPaths().tokensFile],
+          ['Token storage', tokenStorageLabel(tokenStorage)],
+          ...(tokenStorage.reason
+            ? [['Storage note', tokenStorage.reason] as [string, string]]
+            : []),
           [
             'OAuth mode',
             status.sharedConfigured
@@ -188,6 +211,55 @@ export const authCommand = defineCommand({
                 : 'missing',
           ],
           ['Revoke at', 'https://myaccount.google.com/permissions'],
+        ])
+      },
+    }),
+    storage: defineCommand({
+      meta: {
+        name: 'storage',
+        description: 'Show or change local OAuth token storage',
+      },
+      args: {
+        keychain: {
+          type: 'boolean',
+          default: false,
+          description:
+            'Store OAuth tokens in the system keychain when available.',
+        },
+        file: {
+          type: 'boolean',
+          default: false,
+          description: 'Store OAuth tokens in the private local file.',
+        },
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
+      },
+      run: async ({ args }) => {
+        if (args.keychain && args.file) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Choose either --keychain or --file, not both.',
+          )
+        }
+        const storage =
+          args.keychain || args.file
+            ? await setTokenStorageMode(args.keychain ? 'keychain' : 'file')
+            : await getTokenStorageStatus()
+
+        if (jsonFlag(args)) {
+          printJson(storage)
+          return
+        }
+
+        printKeyValue([
+          ['Configured storage', storage.configured],
+          ['Active storage', tokenStorageLabel(storage)],
+          ...(storage.reason
+            ? [['Note', storage.reason] as [string, string]]
+            : []),
         ])
       },
     }),

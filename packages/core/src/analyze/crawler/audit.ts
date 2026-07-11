@@ -106,16 +106,11 @@ function isBrokenLinkStatus(status?: number): boolean {
   )
 }
 
-function hreflangPrimary(value?: string): string | undefined {
-  if (!value) return undefined
-  return value.trim().toLowerCase().split('-')[0] || undefined
-}
-
-function validHreflang(value: string): boolean {
+function hasRecognizableHreflangFormat(value: string): boolean {
   const normalized = value.trim().toLowerCase()
   return (
     normalized === 'x-default' ||
-    /^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/.test(normalized)
+    /^[a-z]{2}(?:-[a-z]{4})?(?:-[a-z]{2})?$/.test(normalized)
   )
 }
 
@@ -731,11 +726,13 @@ export function auditCrawlPages(
     }
     const hreflang = page.hreflang ?? []
     if (hreflang.length) {
-      const invalid = hreflang.filter((item) => !validHreflang(item.hreflang))
-      if (invalid.length) {
+      const malformed = hreflang.filter(
+        (item) => !hasRecognizableHreflangFormat(item.hreflang),
+      )
+      if (malformed.length) {
         issues.push(
-          issue('hreflang_invalid', page, `${invalid.length} invalid`, {
-            invalid,
+          issue('hreflang_invalid', page, `${malformed.length} malformed`, {
+            malformed,
           }),
         )
       }
@@ -753,15 +750,14 @@ export function auditCrawlPages(
           }),
         )
       }
-      const pageLang = hreflangPrimary(page.lang)
-      const hasSelfOrDefault = hreflang.some((item) => {
-        const code = item.hreflang.trim().toLowerCase()
-        return code === 'x-default' || hreflangPrimary(code) === pageLang
-      })
-      if (pageLang && !hasSelfOrDefault) {
+      const hasSelfReference = hreflang.some((item) =>
+        sameUrl(item.href, page.finalUrl),
+      )
+      if (!hasSelfReference) {
         issues.push(
           issue('hreflang_incomplete', page, page.lang, {
             lang: page.lang,
+            finalUrl: page.finalUrl,
             hreflang,
           }),
         )

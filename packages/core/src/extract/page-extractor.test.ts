@@ -77,6 +77,7 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
               <a href="https://other.example/review" rel="nofollow">External review</a>
               <img src="/ok.jpg" alt="Installed widget">
               <img src="/missing.jpg">
+              <img src="/decorative.jpg" alt="">
               <img src="http://cdn.example/insecure.jpg" alt="Mixed content">
               <img src="/hero-2400x1200.jpg" width="2400" height="1200" alt="Large hero">
               <img src="/gallery.jpg" srcset="/gallery-800.jpg 800w, /gallery-2600.jpg 2600w" alt="Gallery">
@@ -108,7 +109,7 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
       href: 'https://example.com/gb/widget-guide',
     },
   ])
-  assert.equal(page.imagesTotal, 5)
+  assert.equal(page.imagesTotal, 6)
   assert.equal(page.imagesMissingAlt, 1)
   assert.deepEqual(page.oversizedImageCandidates, [
     {

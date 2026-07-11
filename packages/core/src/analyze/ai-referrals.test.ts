@@ -201,6 +201,15 @@ test('AI referrals use source totals, exact detail filters, and unique users', a
     requests[0]?.dimensions?.map((dimension) => dimension.name),
     ['sessionSource'],
   )
+  assert.deepEqual(requests[0]?.dateRanges, [
+    { startDate: '2026-06-01', endDate: '2026-06-28' },
+  ])
+  assert.ok(
+    requests.every(
+      (request) =>
+        !request.dateRanges.some((range) => Object.hasOwn(range, 'kind')),
+    ),
+  )
   assert.deepEqual(
     requests[0]?.metrics.map((metric) => metric.name),
     ['sessions', 'eventCount'],

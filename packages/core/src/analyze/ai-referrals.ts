@@ -142,13 +142,17 @@ export async function aiReferralsReport(
   const property = input.property.trim()
   if (!property) throw new SeoError('INVALID_INPUT', 'property is required.')
   const range = reportRange(input)
+  const ga4Range = {
+    startDate: range.startDate,
+    endDate: range.endDate,
+  }
   const retainedRows = maxRows(input)
   const query = dependencies.runGa4Report ?? runGa4Report
 
   const sourceResult = await fetchAiReferralRows({
     property,
     request: {
-      dateRanges: [range],
+      dateRanges: [ga4Range],
       dimensions: [{ name: 'sessionSource' }],
       metrics: [{ name: 'sessions' }, { name: 'eventCount' }],
       orderBys: [
@@ -179,7 +183,7 @@ export async function aiReferralsReport(
       detailResult = await fetchAiReferralRows({
         property,
         request: {
-          dateRanges: [range],
+          dateRanges: [ga4Range],
           dimensions: [
             { name: 'date' },
             { name: 'sessionSource' },
@@ -211,7 +215,7 @@ export async function aiReferralsReport(
       usersResult = await fetchAiReferralRows({
         property,
         request: {
-          dateRanges: [range],
+          dateRanges: [ga4Range],
           metrics: [{ name: 'totalUsers' }],
           dimensionFilter,
         },

@@ -187,6 +187,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'lowIssues',
         'mediumIssues',
         'nonIndexablePages',
+        'observedInternalLinks',
         'pageLimitReached',
         'queuedUrls',
         'requestByStatus',
@@ -194,7 +195,6 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'skippedUrls',
         'statusErrors',
         'totalPages',
-        'verifiedLinks',
       ],
       issue: ['category', 'evidence', 'ruleId', 'severity', 'title', 'url'],
       issueGroup: [

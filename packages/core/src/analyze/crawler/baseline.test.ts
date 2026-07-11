@@ -49,7 +49,7 @@ function crawlReport(
       crawledUrls: 1,
       skippedUrls: 0,
       failedUrls: 0,
-      verifiedLinks: 0,
+      observedInternalLinks: 0,
       pageLimitReached: false,
       attemptedRequests: 1,
       responseRequests: 1,

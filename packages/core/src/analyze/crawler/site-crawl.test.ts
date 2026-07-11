@@ -48,7 +48,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.summary.crawledUrls, 2)
     assert.equal(report.summary.skippedUrls, 0)
     assert.equal(report.summary.failedUrls, 0)
-    assert.equal(report.summary.verifiedLinks, 2)
+    assert.equal(report.summary.observedInternalLinks, 2)
     assert.deepEqual(
       report.pages.map((page) => new URL(page.url).pathname),
       ['/', '/a'],
@@ -346,6 +346,17 @@ test('crawlSite checks broken external links when enabled', async () => {
     assert.deepEqual(report.pages[0]?.externalLinkChecks, [
       { url: `${external.baseUrl}/gone`, status: 404 },
     ])
+    assert.deepEqual(report.externalLinkVerification, {
+      dataStatus: 'complete',
+      discoveredLinkOccurrences: 1,
+      retainedUrls: 1,
+      selectedUrls: 1,
+      fetchedUrls: 1,
+      failedUrls: 0,
+      deferredUrls: 0,
+      limit: 200,
+      warnings: [],
+    })
     assert.equal(
       report.issues.some((issue) => issue.ruleId === 'broken_external_link'),
       true,

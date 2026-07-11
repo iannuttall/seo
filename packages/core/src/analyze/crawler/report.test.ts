@@ -176,7 +176,7 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.summary.crawledUrls, 2)
   assert.equal(report.summary.skippedUrls, 0)
   assert.equal(report.summary.failedUrls, 1)
-  assert.equal(report.summary.verifiedLinks, 1)
+  assert.equal(report.summary.observedInternalLinks, 1)
   assert.equal(report.summary.highIssues, 2)
   assert.equal(report.summary.mediumIssues, 1)
   assert.equal(report.summary.avgResponseMs, 200)

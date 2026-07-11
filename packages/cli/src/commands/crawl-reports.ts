@@ -55,7 +55,7 @@ function printReportList(reports: CrawlReportMeta[]): void {
 }
 
 function printReport(report: CrawlReport): void {
-  printKeyValue([
+  const rows: Array<[string, string]> = [
     ['ID', report.id],
     ['URL', report.config.url],
     ['Site', report.site ?? '-'],
@@ -66,13 +66,21 @@ function printReport(report: CrawlReport): void {
     ['Queued', String(report.summary.queuedUrls)],
     ['Skipped', String(report.summary.skippedUrls)],
     ['Failed fetches', String(report.summary.failedUrls)],
-    ['Verified links', String(report.summary.verifiedLinks)],
+    ['Observed internal links', String(report.summary.observedInternalLinks)],
     ['Indexable', String(report.summary.indexablePages)],
     ['Issues', String(report.issues.length)],
     ['High', String(report.summary.highIssues)],
     ['Medium', String(report.summary.mediumIssues)],
     ['Low', String(report.summary.lowIssues)],
-  ])
+  ]
+  if (report.externalLinkVerification) {
+    const external = report.externalLinkVerification
+    rows.push([
+      'External links',
+      `${external.fetchedUrls} fetched, ${external.failedUrls} failed, ${external.deferredUrls} deferred (${external.dataStatus})`,
+    ])
+  }
+  printKeyValue(rows)
 
   if (report.issueGroups.length) {
     process.stdout.write('\nTop issues\n')

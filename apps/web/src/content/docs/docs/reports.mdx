@@ -9,6 +9,7 @@ import { productFacts } from '@/lib/facts'
 
 ```sh
 seo report --project example
+seo report --url https://example.com
 seo refresh-priorities --project example
 seo quick-wins --project example
 seo technical-watch --project example
@@ -19,6 +20,10 @@ Use a focused report when you already know the problem: lost clicks, a broken
 URL, weak page-one CTR, page-two rankings, or a technical change after a
 release. You get the affected pages and queries without digging through an
 unrelated audit.
+
+`seo report --url` is the technical-only version. It saves a bounded crawl and
+labels every Search Console section as skipped until you add `--site` or a
+project profile. It does not turn missing search data into an empty result.
 
 ## Keep every recommendation tied to evidence you can check
 

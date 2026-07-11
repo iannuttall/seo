@@ -520,6 +520,7 @@ export async function diagnoseProperty(
     js?: boolean | 'auto'
     rate?: FetchRateControls
     refresh?: boolean
+    skipSearchData?: boolean
     progress?: ProgressReporter
   },
   dependencies: Partial<DiagnosePropertyDependencies> = {},
@@ -562,13 +563,35 @@ export async function diagnoseProperty(
     }
   }
 
-  const anomalyResult = await track(
+  const searchDataSkipReason = input.skipSearchData
+    ? 'Search Console data was skipped because no Search Console property was selected.'
+    : undefined
+  const searchDataTask = <T>(
+    label: string,
+    fallback: (error?: unknown) => T,
+    run: () => Promise<T>,
+  ): Promise<SectionResult<T>> =>
+    searchDataSkipReason
+      ? Promise.resolve(skipped(label, fallback(), searchDataSkipReason))
+      : track(label, run, fallback)
+
+  const anomalyResult = await searchDataTask(
     'traffic anomaly',
-    () => providers.trafficAnomaly(input),
     () => emptyAnomaly(input),
+    () => providers.trafficAnomaly(input),
   )
-  const updateTask =
-    anomalyResult.status === 'skipped'
+  const updateTask = searchDataSkipReason
+    ? Promise.resolve(
+        skipped(
+          'update correlation',
+          emptyUpdateCorrelation(input, {
+            reason: searchDataSkipReason,
+            source: 'traffic-anomaly',
+          }),
+          searchDataSkipReason,
+        ),
+      )
+    : anomalyResult.status === 'skipped'
       ? Promise.resolve(
           skipped(
             'update correlation',
@@ -597,19 +620,28 @@ export async function diagnoseProperty(
     label: string,
     dimension: SegmentImpactReport['dimension'],
   ): Promise<SectionResult<SegmentImpactReport>> =>
-    segmentUnavailable
+    searchDataSkipReason
       ? Promise.resolve(
           skipped(
             label,
-            emptySegment({ ...input, dimension }, segmentUnavailable),
-            segmentUnavailable,
+            emptySegment({ ...input, dimension }, searchDataSkipReason),
+            searchDataSkipReason,
           ),
         )
-      : track(
-          label,
-          () => providers.segmentImpact({ ...input, dimension, limit }),
-          (error) => emptySegment({ ...input, dimension }, errorReason(error)),
-        )
+      : segmentUnavailable
+        ? Promise.resolve(
+            skipped(
+              label,
+              emptySegment({ ...input, dimension }, segmentUnavailable),
+              segmentUnavailable,
+            ),
+          )
+        : searchDataTask(
+            label,
+            (error) =>
+              emptySegment({ ...input, dimension }, errorReason(error)),
+            () => providers.segmentImpact({ ...input, dimension, limit }),
+          )
   const [
     updateResult,
     pageResult,
@@ -626,8 +658,9 @@ export async function diagnoseProperty(
     segmentTask('query movement segments', 'query'),
     segmentTask('device movement segments', 'device'),
     segmentTask('country movement segments', 'country'),
-    track(
+    searchDataTask(
       'decay analysis',
+      () => emptyDecay({ ...input, limit }),
       () =>
         providers.decayingReport({
           site: input.site,
@@ -639,10 +672,10 @@ export async function diagnoseProperty(
           includeBrand: input.includeBrand,
           refresh: input.refresh,
         }),
-      () => emptyDecay({ ...input, limit }),
     ),
-    track(
+    searchDataTask(
       'cannibalisation analysis',
+      () => emptyCannibal(input),
       () =>
         providers.cannibalReport({
           site: input.site,
@@ -654,15 +687,15 @@ export async function diagnoseProperty(
           includeBrand: input.includeBrand,
           refresh: input.refresh,
         }),
-      () => emptyCannibal(input),
     ),
-    track(
+    searchDataTask(
       'striking-distance opportunities',
-      () => providers.strikingDistance({ ...input, limit }),
       () => emptyStriking(input),
+      () => providers.strikingDistance({ ...input, limit }),
     ),
-    track(
+    searchDataTask(
       'quick-win opportunities',
+      () => emptyQuickWins(input),
       () =>
         providers.quickWinsReport({
           site: input.site,
@@ -678,7 +711,6 @@ export async function diagnoseProperty(
           rate: input.rate,
           refresh: input.refresh,
         }),
-      () => emptyQuickWins(input),
     ),
   ])
   input.progress?.('Building priority list')
@@ -720,6 +752,7 @@ export async function diagnoseProperty(
   })
 
   const partialReasons = diagnosisPartialReasons({
+    skippedSections,
     anomaly,
     segments: { page, query, device, country },
     decay,

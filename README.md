@@ -60,9 +60,9 @@ through adding your own desktop OAuth client.
 That is the normal path. `seo` is then available in every terminal, script,
 CI job, and local MCP client on the machine.
 
-The main report uses whatever evidence is available,
-explains anything it could not check, and recommends a short list of follow-up
-commands.
+The main report uses the evidence you have, explains what it could not check,
+and recommends a short list of follow-up commands. You can start with a local
+technical report before connecting Google.
 
 ## What you get
 
@@ -103,9 +103,14 @@ You can also work without a saved profile:
 
 ```sh
 seo report --site sc-domain:example.com
+seo report --url https://example.com
 seo crawl https://example.com
 seo audit-page --url https://example.com/pricing
 ```
+
+`seo report --url` crawls the site and saves technical evidence. It does not
+pretend to know traffic, queries, or rankings until you add a Search Console
+property with `seo start`.
 
 Run `seo help` for the short path or `seo help all` for the full command list.
 

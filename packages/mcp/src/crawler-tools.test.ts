@@ -60,6 +60,7 @@ function captureCrawlerTools(): Map<string, CapturedTool> {
 function mcpCrawlerKeySnapshot(result: JsonRecord) {
   const structured = result.structuredContent as JsonRecord
   const firstFix = firstRecord(structured.topFixes)
+  const firstReview = firstRecord(structured.reviewObservations)
   const dataSources = structured.dataSources as JsonRecord
   return {
     root: keys(result),
@@ -70,6 +71,7 @@ function mcpCrawlerKeySnapshot(result: JsonRecord) {
     searchConsole: keys(dataSources.searchConsole),
     analytics: keys(dataSources.analytics),
     topFix: keys(firstFix),
+    reviewObservation: keys(firstReview),
     topFixScoreFactors: keys(firstFix.scoreFactors),
     topFixVerification: keys(firstFix.verification),
   }
@@ -139,6 +141,7 @@ test('crawler MCP structured output schema stays stable', async () => {
         'headline',
         'id',
         'requestEvidenceStatus',
+        'reviewObservations',
         'status',
         'summary',
         'topFixes',
@@ -196,6 +199,22 @@ test('crawler MCP structured output schema stays stable', async () => {
         'count',
         'howToFix',
         'howToVerify',
+        'recommendation',
+        'ruleId',
+        'sampleUrls',
+        'score',
+        'scoreFactors',
+        'severity',
+        'title',
+        'verification',
+        'whyThisRanks',
+      ],
+      reviewObservation: [
+        'category',
+        'count',
+        'howToFix',
+        'howToVerify',
+        'recommendation',
         'ruleId',
         'sampleUrls',
         'score',

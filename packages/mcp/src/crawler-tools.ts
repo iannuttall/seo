@@ -15,6 +15,7 @@ import {
   listCrawlReports,
   listRules,
   loadCrawlReport,
+  reviewObservations,
   saveCrawlReport,
   selectAffectedUrls,
   topFixes,
@@ -51,6 +52,7 @@ function compactCrawlResult(
         }
       : undefined,
     topFixes: topFixes(report, { limit: 10 }),
+    reviewObservations: reviewObservations(report, { limit: 10 }),
     warnings: report.warnings,
     caveats: report.caveats,
   }
@@ -82,7 +84,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_crawl_site',
     {
       description:
-        'Crawl a site and run technical SEO checks. Compact by default; set includePages/includeIssues for raw data.',
+        'Crawl a site and run technical SEO checks. The compact result separates prioritised fixes from review observations. Set includePages/includeIssues for raw data.',
       inputSchema: {
         url: z.string().url(),
         site: z.string().optional(),
@@ -160,7 +162,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_audit_urls',
     {
       description:
-        'Audit an explicit list of URLs with technical SEO checks. Compact by default; set includePages/includeIssues for raw data.',
+        'Audit an explicit list of URLs with technical SEO checks. The compact result separates prioritised fixes from review observations. Set includePages/includeIssues for raw data.',
       inputSchema: {
         urls: z.array(z.string().url()).min(1),
         site: z.string().optional(),

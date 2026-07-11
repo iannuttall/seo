@@ -88,7 +88,10 @@ not hidden MCP side effects.
    display layer.
 6. Check `dataStatus`, source completeness, caps, warnings, and caveats before
    making a conclusion.
-7. Reuse saved crawl report ids for follow-ups instead of crawling again.
+7. Treat `topFixes` as implementation candidates. Check `reviewObservations`
+   before turning optional metadata, hardening headers, or one slow response
+   into work.
+8. Reuse saved crawl report ids for follow-ups instead of crawling again.
 
 Useful report ids include:
 

@@ -1,7 +1,9 @@
 import {
   explainRule,
   type RuleCategory,
+  type RuleRecommendation,
   type RuleSeverity,
+  recommendationForRule,
 } from '../../rules.js'
 import type {
   CrawlDataSourceStatus,
@@ -16,9 +18,11 @@ export type TopFixFilters = {
   url?: string
   projectId?: string
   limit?: number
+  recommendation?: RuleRecommendation
 }
 
 export type TopFix = CrawlIssueGroup & {
+  recommendation: RuleRecommendation
   score: number
   scoreFactors: {
     severity: number
@@ -106,6 +110,11 @@ function filteredIssues(
     if (filters.category && issue.category !== filters.category) return false
     if (filters.severity && issue.severity !== filters.severity) return false
     if (filters.url && !matchesPattern(filters.url, issue.url)) return false
+    if (
+      (filters.recommendation ?? 'fix') !== recommendationForRule(issue.ruleId)
+    ) {
+      return false
+    }
     return true
   })
 }
@@ -166,6 +175,7 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
 
 function whyThisRanks(
   input: TopFix['scoreFactors'],
+  recommendation: RuleRecommendation,
   searchStatus?: CrawlDataSourceStatus,
 ): string {
   const visibility = input.searchVisibleUrls
@@ -176,7 +186,11 @@ function whyThisRanks(
   const analytics = input.sessions
     ? ` GA4 adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
     : ''
-  return `${visibility}${analytics} Severity contributes ${input.severity}; affected URL count contributes ${input.affectedUrls}; effort is ${input.effort}.`
+  const priority =
+    recommendation === 'review'
+      ? 'This is a review observation. Confirm it before scheduling implementation work.'
+      : `This ranks as a fix. Severity is ${input.severity}; ${input.affectedUrls} URL${input.affectedUrls === 1 ? ' is' : 's are'} affected; estimated effort is ${input.effort}.`
+  return `${visibility}${analytics} ${priority}`
 }
 
 function verificationCommand(
@@ -218,12 +232,15 @@ export function topFixes(
       scoreFactors.conversions * 100 * valueWeight +
       scoreFactors.effortScore
     const rule = explainRule(group.ruleId)
+    const recommendation = recommendationForRule(group.ruleId)
     return {
       ...group,
+      recommendation,
       score: Math.round(score),
       scoreFactors,
       whyThisRanks: whyThisRanks(
         scoreFactors,
+        recommendation,
         report.dataSources?.searchConsole.status,
       ),
       howToFix: rule?.howToFix ?? '',
@@ -244,4 +261,11 @@ export function topFixes(
         a.ruleId.localeCompare(b.ruleId),
     )
     .slice(0, filters.limit ?? 10)
+}
+
+export function reviewObservations(
+  report: CrawlReport,
+  filters: Omit<TopFixFilters, 'recommendation'> = {},
+): TopFix[] {
+  return topFixes(report, { ...filters, recommendation: 'review' })
 }

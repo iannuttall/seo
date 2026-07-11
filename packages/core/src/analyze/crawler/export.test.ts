@@ -55,6 +55,13 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
           position: 4.2,
         },
       },
+      {
+        ruleId: 'hsts_missing',
+        title: 'HSTS header missing',
+        category: 'security',
+        severity: 'low',
+        url: 'https://example.com/',
+      },
     ],
     warnings: ['External link checks were skipped.'],
     caveats: ['Stopped after reaching maxPages (1).'],
@@ -85,6 +92,9 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
     /Documents: 1 retained; request evidence unavailable for this legacy report, 1 URLs discovered, 0 failed, 0 skipped/,
   )
   assert.doesNotMatch(pretty, /Scores: /)
+  assert.match(pretty, /Prioritised fixes/)
+  assert.match(pretty, /Review observations \(check before scheduling work\)/)
+  assert.match(pretty, /HSTS header missing/)
   assert.match(pretty, /Next commands/)
   assert.match(pretty, /- seo crawl https:\/\/example.com\/ --json/)
 
@@ -102,4 +112,6 @@ test('crawl exporters render CSV, HTML, and plain text reports', () => {
   assert.match(markdown, /Stopped after reaching maxPages/)
   assert.match(markdown, /- \[ \] Fix 1 affected URL/)
   assert.match(markdown, /- Command: seo crawl https:\/\/example.com\//)
+  assert.match(markdown, /## Review observations/)
+  assert.match(markdown, /HSTS header missing/)
 })

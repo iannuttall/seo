@@ -30,6 +30,8 @@ type RuleDefinition = {
   }
 }
 
+export type RuleRecommendation = 'fix' | 'review'
+
 const RULE_DEFINITIONS = [
   {
     id: 'missing_title',
@@ -883,20 +885,47 @@ const RULE_DEFINITIONS = [
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']
-export type RuleInfo = (typeof RULE_DEFINITIONS)[number]
+type RawRuleInfo = (typeof RULE_DEFINITIONS)[number]
+export type RuleInfo = RawRuleInfo & {
+  recommendation: RuleRecommendation
+}
 export type RuleCategory = RuleDefinition['category']
 export type RuleSeverity = RuleDefinition['defaultSeverity']
 
+const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
+  title_too_wide: 'review',
+  canonical_multiple: 'review',
+  canonical_non_absolute: 'review',
+  redirected_url: 'review',
+  slow_response: 'review',
+  image_oversized_candidate: 'review',
+  hsts_missing: 'review',
+  og_title_missing: 'review',
+  og_description_missing: 'review',
+  og_image_missing: 'review',
+  twitter_card_missing: 'review',
+}
+
 const RULES_BY_ID = new Map<string, RuleInfo>(
-  RULE_DEFINITIONS.map((rule) => [rule.id, rule]),
+  RULE_DEFINITIONS.map((rule) => [
+    rule.id,
+    {
+      ...rule,
+      recommendation: RULE_RECOMMENDATIONS[rule.id] ?? 'fix',
+    } as RuleInfo,
+  ]),
 )
 
 export function listRules(): RuleInfo[] {
-  return [...RULE_DEFINITIONS]
+  return [...RULES_BY_ID.values()]
 }
 
 export function explainRule(ruleId: string): RuleInfo | undefined {
   return RULES_BY_ID.get(ruleId)
+}
+
+export function recommendationForRule(ruleId: string): RuleRecommendation {
+  return explainRule(ruleId)?.recommendation ?? 'fix'
 }
 
 export function hasRule(ruleId: string): ruleId is RuleId {

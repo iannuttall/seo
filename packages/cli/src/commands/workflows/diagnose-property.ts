@@ -1,6 +1,7 @@
 import {
   diagnosePropertyWorkflow,
   resolveTechnicalBaseline,
+  reviewObservations,
   SeoError,
   type TechnicalBaseline,
   topFixes,
@@ -73,6 +74,7 @@ function technicalSection(baseline: TechnicalBaseline) {
       (report.dataSources?.searchConsole.joinedQueryPages ?? 0) > 0,
     summary: report.summary,
     topFixes: topFixes(report, { limit: 5 }),
+    reviewObservations: reviewObservations(report, { limit: 5 }),
   }
 }
 
@@ -96,6 +98,11 @@ function printTechnicalSection(
   }
   if (!section.topFixes.length) {
     process.stdout.write('No prioritised technical fixes were found.\n')
+    if (section.reviewObservations.length) {
+      process.stdout.write(
+        `${section.reviewObservations.length} review observation${section.reviewObservations.length === 1 ? '' : 's'} need confirmation before they become implementation work.\n`,
+      )
+    }
     return
   }
   process.stdout.write(
@@ -114,18 +121,23 @@ function printTechnicalSection(
         truncate(fix.howToVerify, 72),
       ]),
     )
-    return
+  } else {
+    printTable(
+      ['Score', 'Rule', 'Severity', 'Search value', 'Verify'],
+      section.topFixes.map((fix) => [
+        fix.score,
+        fix.ruleId,
+        fix.severity,
+        `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.sessions} sessions / ${fix.scoreFactors.conversions} conv.`,
+        truncate(fix.howToVerify, 72),
+      ]),
+    )
   }
-  printTable(
-    ['Score', 'Rule', 'Severity', 'Search value', 'Verify'],
-    section.topFixes.map((fix) => [
-      fix.score,
-      fix.ruleId,
-      fix.severity,
-      `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.sessions} sessions / ${fix.scoreFactors.conversions} conv.`,
-      truncate(fix.howToVerify, 72),
-    ]),
-  )
+  if (section.reviewObservations.length) {
+    process.stdout.write(
+      `\n${section.reviewObservations.length} review observation${section.reviewObservations.length === 1 ? '' : 's'} were kept out of this action queue.\n`,
+    )
+  }
 }
 
 export function reportFollowups(

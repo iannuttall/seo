@@ -1,7 +1,7 @@
 import { renderCsv } from '../../export/csv.js'
 import { explainRule } from '../../rules.js'
 import type { CrawlReport } from './report.js'
-import { type TopFix, topFixes } from './top-fixes.js'
+import { reviewObservations, type TopFix, topFixes } from './top-fixes.js'
 
 export type CrawlOutputFormat = 'pretty' | 'json' | 'csv' | 'html' | 'markdown'
 
@@ -95,6 +95,7 @@ export function renderCrawlPretty(
   report: CrawlReport,
   fixes: TopFix[] = topFixes(report),
 ): string {
+  const reviews = reviewObservations(report)
   const requestSummary =
     report.requestEvidenceStatus === 'available'
       ? `${report.requests.length} requests`
@@ -110,12 +111,26 @@ export function renderCrawlPretty(
   ]
 
   if (fixes.length) {
-    lines.push('', 'Top fixes')
+    lines.push('', 'Prioritised fixes')
     for (const fix of fixes.slice(0, 5)) {
       lines.push(
         `- ${fix.title} (${fix.severity}, ${fix.count} URL${fix.count === 1 ? '' : 's'}): ${fix.howToFix}`,
       )
       if (fix.sampleUrls[0]) lines.push(`  First URL: ${fix.sampleUrls[0]}`)
+    }
+  } else {
+    lines.push('', 'No prioritised fixes found.')
+  }
+
+  if (reviews.length) {
+    lines.push('', 'Review observations (check before scheduling work)')
+    for (const observation of reviews.slice(0, 5)) {
+      lines.push(
+        `- ${observation.title} (${observation.severity}, ${observation.count} URL${observation.count === 1 ? '' : 's'}): ${observation.howToFix}`,
+      )
+      if (observation.sampleUrls[0]) {
+        lines.push(`  First URL: ${observation.sampleUrls[0]}`)
+      }
     }
   }
 
@@ -140,6 +155,7 @@ export function renderCrawlHtml(
   report: CrawlReport,
   fixes: TopFix[] = topFixes(report),
 ): string {
+  const reviews = reviewObservations(report)
   const issueRows = report.issueGroups
     .map((group) => {
       const rule = explainRule(group.ruleId)
@@ -151,6 +167,13 @@ export function renderCrawlHtml(
     .map(
       (fix) =>
         `<li><strong>${escapeHtml(fix.title)}</strong><br>${escapeHtml(fix.howToFix)}<br><span>Verify: ${escapeHtml(fix.howToVerify)}</span><br><code>${escapeHtml(fix.verification.command)}</code></li>`,
+    )
+    .join('\n')
+  const reviewItems = reviews
+    .slice(0, 10)
+    .map(
+      (observation) =>
+        `<li><strong>${escapeHtml(observation.title)}</strong><br>${escapeHtml(observation.howToFix)}<br><span>Check before scheduling work. ${escapeHtml(observation.howToVerify)}</span></li>`,
     )
     .join('\n')
   const caveatItems = report.caveats
@@ -194,8 +217,15 @@ export function renderCrawlHtml(
     <div class="metric"><span>Issues</span><strong>${report.issues.length}</strong></div>
     <div class="metric"><span>High</span><strong>${report.summary.highIssues}</strong></div>
   </section>
-  <h2>Top fixes</h2>
-  <ol>${fixItems}</ol>
+  <h2>Prioritised fixes</h2>
+  ${fixItems ? `<ol>${fixItems}</ol>` : '<p>No prioritised fixes found.</p>'}
+  ${
+    reviewItems
+      ? `<h2>Review observations</h2>
+  <p>Check these before scheduling implementation work.</p>
+  <ul>${reviewItems}</ul>`
+      : ''
+  }
   ${
     report.caveats.length
       ? `<h2>Caveats</h2>
@@ -222,6 +252,7 @@ export function renderCrawlMarkdownTickets(
   report: CrawlReport,
   fixes: TopFix[] = topFixes(report),
 ): string {
+  const reviews = reviewObservations(report)
   const lines = [
     `# Crawl Implementation Tickets`,
     '',
@@ -269,6 +300,22 @@ export function renderCrawlMarkdownTickets(
 
   if (!fixes.length) {
     lines.push('No implementation tickets were generated.')
+  }
+
+  if (reviews.length) {
+    lines.push(
+      '## Review observations',
+      '',
+      'These are not implementation tickets. Check the evidence before deciding whether to work on them.',
+      '',
+      ...reviews
+        .slice(0, 10)
+        .flatMap((observation) => [
+          `- ${observation.title} (${observation.severity}, ${observation.count} URL${observation.count === 1 ? '' : 's'}): ${observation.howToFix}`,
+          `  - First URL: ${observation.sampleUrls[0] ?? 'No sample URL recorded'}`,
+        ]),
+      '',
+    )
   }
 
   return `${lines.join('\n')}\n`

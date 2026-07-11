@@ -8,6 +8,7 @@ import {
   renderCrawlMarkdownTickets,
   renderCrawlPagesCsv,
   renderCrawlPretty,
+  reviewObservations,
   saveCrawlReport,
   topFixes,
 } from '@seo/core'
@@ -235,6 +236,7 @@ export const crawlCommand = defineCommand({
     const payload = {
       ...report,
       topFixes: rankedFixes,
+      reviewObservations: reviewObservations(report, { severity }),
       ...(failOn ? { failOn, failedThreshold } : {}),
       ...(saved ? { saved } : {}),
     }

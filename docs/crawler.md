@@ -84,7 +84,7 @@ seo crawl https://example.com --format html --output report.html
 seo crawl https://example.com --format markdown --output tickets.md
 ```
 
-Pretty output is for humans. JSON is for agents and scripts. HTML is for sharing.
+Pretty output is for humans. JSON is for agents and scripts. HTML is for sharing. Markdown creates tickets for prioritised fixes and keeps review observations in their own section.
 
 ## CI gates
 
@@ -103,7 +103,7 @@ seo crawl-reports --id <report-id>
 seo crawl-reports --compare latest --against previous
 ```
 
-Saved reports are useful because agents can ask for top fixes, affected URLs, and AI Search eligibility blockers without re-crawling.
+Saved reports are useful because agents can ask for prioritised fixes, review observations, affected URLs, and AI Search eligibility blockers without re-crawling. Review observations keep optional metadata, hardening headers, and one slow response visible without presenting them as proven implementation work.
 
 Comparisons are useful after deploys. They show which pages were added, removed, fixed, or changed, and which rules got better or worse. Agents get the same diff as structured JSON, including changed fields and issue counts by rule id.
 

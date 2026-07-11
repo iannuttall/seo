@@ -5,9 +5,10 @@ without loading dozens of tool schemas into an agent's context.
 
 ## Install it
 
-Humans can choose detected clients interactively:
+Install the CLI once, then choose detected clients interactively:
 
 ```bash
+npm i -g seo
 seo mcp install
 ```
 
@@ -38,20 +39,19 @@ seo mcp serve --test
 ### Codex
 
 `seo mcp install --codex` configures Codex CLI, the desktop app, and the IDE
-extension through their shared config. The equivalent native command is:
+extension through their shared config. It writes the installed CLI path, so
+Codex does not need to download the package when it starts.
 
 ```bash
-codex mcp add seo -- npx -y seo mcp serve
 codex mcp get seo
 ```
 
 ### Claude Code
 
-`seo mcp install --claude-code` updates the user config. The equivalent native
-command is:
+`seo mcp install --claude-code` updates the user config with the installed CLI
+path, so Claude Code starts the local server without downloading a package.
 
 ```bash
-claude mcp add --scope user seo -- npx -y seo mcp serve
 claude mcp get seo
 ```
 

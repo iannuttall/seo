@@ -409,6 +409,20 @@ test('site uses the shared visual system and copyable install choices', () => {
   assert.match(css, /prefers-color-scheme: dark/)
 })
 
+test('published guidance does not teach disposable npx CLI installs', () => {
+  const guides = [
+    resolve(repoRoot, 'README.md'),
+    resolve(repoRoot, 'docs/mcp.md'),
+    resolve(repoRoot, 'apps/web/AGENTS.md'),
+    resolve(repoRoot, 'AGENTS.md'),
+    resolve(appRoot, 'assets/og-source.svg'),
+  ]
+  const copy = guides.map((file) => readFileSync(file, 'utf8')).join('\n')
+
+  assert.doesNotMatch(copy, /npx(?: -y)? seo\b/)
+  assert.match(copy, /npm i -g seo/)
+})
+
 test('bundled fonts ship with their open font licenses', () => {
   const fonts = [
     ['InterVF.woff2', 'LICENSE-inter.txt'],

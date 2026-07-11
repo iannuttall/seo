@@ -36,8 +36,8 @@ pnpm --filter @seo/web deploy:dry-run
   repository Markdown files. Do not duplicate those policies in site pages.
 - Questions and ordinary support go to GitHub Issues. Vulnerabilities go to
   GitHub private vulnerability reporting. Do not add an email address.
-- Teach the published package path first: `npx seo start` or
-  `npm i -g seo`. Keep source-build instructions lower down.
+- Teach the published package path first: `npm i -g seo`, then `seo start`.
+  Keep source-build instructions lower down.
 - Do not document a hosted service or remote MCP until it exists.
 - Generate `/.well-known/agent-skills/` from the root `skills/` directory.
   Never hand-edit or commit the generated files.

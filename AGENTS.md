@@ -49,7 +49,7 @@ skills/         packaged agent skills
   deliberately migrated and verified.
 - Use SEO Skills CLI as the product name in human-facing copy and `seo` for the
   command and package.
-- `npx seo start` and `npm i -g seo` are the primary README paths.
+- Teach `npm i -g seo`, then `seo start`, as the primary README path.
 - Library and contributor setup belongs below normal CLI usage in the README.
 
 ## Repo Map

@@ -27,3 +27,9 @@ test('page audit issue codes are backed by rule guidance', () => {
     assert.ok(explainRule(ruleId), `${ruleId} has no rule guidance`)
   }
 })
+
+test('rule guidance marks observations that need confirmation', () => {
+  assert.equal(explainRule('hsts_missing')?.recommendation, 'review')
+  assert.equal(explainRule('twitter_card_missing')?.recommendation, 'review')
+  assert.equal(explainRule('missing_title')?.recommendation, 'fix')
+})

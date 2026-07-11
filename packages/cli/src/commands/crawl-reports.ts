@@ -7,6 +7,7 @@ import {
   latestCrawlReport,
   listCrawlReports,
   loadCrawlReport,
+  reviewObservations,
   saveCrawlReport,
   topFixes,
 } from '@seo/core'
@@ -298,6 +299,7 @@ export const crawlReportsCommand = defineCommand({
           rerunOf: previous.id,
           saved,
           topFixes: topFixes(report),
+          reviewObservations: reviewObservations(report),
         })
         return
       }

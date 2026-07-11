@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createCrawlReport } from './report.js'
-import { topFixes } from './top-fixes.js'
+import { reviewObservations, topFixes } from './top-fixes.js'
 
 test('topFixes ranks search-visible errors above generic notices', () => {
   const report = createCrawlReport({
@@ -150,7 +150,54 @@ test('topFixes keeps medium fixes above low sitewide noise', () => {
   const fixes = topFixes(report)
 
   assert.equal(fixes[0]?.ruleId, 'image_missing_alt')
-  assert.equal(fixes[1]?.ruleId, 'twitter_card_missing')
+  assert.equal(fixes.length, 1)
+  assert.equal(reviewObservations(report)[0]?.ruleId, 'twitter_card_missing')
+})
+
+test('topFixes keeps review observations out of implementation priorities', () => {
+  const pages = Array.from({ length: 30 }, (_, index) => ({
+    url: `https://example.com/page-${index}`,
+    finalUrl: `https://example.com/page-${index}`,
+    status: 200,
+    indexable: true,
+    wordCount: 500,
+    contentHash: `page-${index}`,
+    outgoingInternalCount: 2,
+  }))
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages,
+    issues: [
+      ...pages.map((page) => ({
+        ruleId: 'hsts_missing' as const,
+        title: 'HSTS header missing',
+        category: 'security' as const,
+        severity: 'low' as const,
+        url: page.url,
+      })),
+      {
+        ruleId: 'orphan_page',
+        title: 'Orphan page',
+        category: 'links' as const,
+        severity: 'low' as const,
+        url: pages[0]?.url ?? 'https://example.com/',
+      },
+    ],
+  })
+
+  assert.deepEqual(
+    topFixes(report).map((fix) => fix.ruleId),
+    ['orphan_page'],
+  )
+  assert.deepEqual(
+    reviewObservations(report).map((observation) => observation.ruleId),
+    ['hsts_missing'],
+  )
+  assert.equal(reviewObservations(report)[0]?.recommendation, 'review')
+  assert.match(
+    reviewObservations(report)[0]?.whyThisRanks ?? '',
+    /Confirm it before scheduling implementation work/,
+  )
 })
 
 test('topFixes does not turn partial GSC evidence into zero visibility', () => {

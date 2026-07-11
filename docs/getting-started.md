@@ -70,7 +70,7 @@ seo crawl-reports
 seo crawl-reports --compare latest --against previous
 ```
 
-Saved reports let you ask follow-up questions without re-crawling. Agents can pull top fixes, affected URLs, and AI Search eligibility blockers from the same report.
+Saved reports let you ask follow-up questions without re-crawling. Agents get prioritised fixes separately from review observations, so optional metadata, hardening headers, and one slow response do not become implementation work by accident. The full issue list still keeps every observed URL and rule.
 
 ## Check one change, page, or performance issue
 

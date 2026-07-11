@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { listRules } from '../../rules.js'
 
 export const crawlerRuleSeveritySchema = z.enum(['low', 'medium', 'high'])
+export const crawlerRuleRecommendationSchema = z.enum(['fix', 'review'])
 
 export const crawlerRuleCategorySchema = z.enum([
   'canonical',
@@ -30,6 +31,7 @@ export const crawlerRuleInfoSchema = z.object({
   title: z.string(),
   category: crawlerRuleCategorySchema,
   defaultSeverity: crawlerRuleSeveritySchema,
+  recommendation: crawlerRuleRecommendationSchema,
   whyItMatters: z.string(),
   howToFix: z.string(),
   impactIfIgnored: z.string(),
@@ -627,6 +629,7 @@ const crawlAiSignalsSchema = z.object({
 })
 
 export const crawlTopFixSchema = crawlIssueGroupSchema.extend({
+  recommendation: crawlerRuleRecommendationSchema,
   score: z.number(),
   scoreFactors: z.object({
     severity: z.number(),

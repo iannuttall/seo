@@ -512,6 +512,10 @@ test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async 
   assert.equal(maxActiveFetches, 2)
   assert.equal(calls.length, 3)
   assert.match(report.caveats.join('\n'), /maxPages \(3\)/)
+  assert.match(
+    report.caveats.join('\n'),
+    /Left 26 eligible same-origin URLs unqueued to keep this crawl bounded/,
+  )
   assert.equal(report.summary.pageLimitReached, true)
 })
 

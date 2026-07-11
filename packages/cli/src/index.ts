@@ -313,15 +313,16 @@ if (argv[0] === 'help' && argv[1] === 'all') {
   printHelpSections(allHelpSections)
   process.exit(0)
 }
-if (argv[0] === 'help' && argv.length > 1) {
+const commandArgs =
+  argv[0] === 'help' && argv.length > 1 ? [...argv.slice(1), '--help'] : argv
+if (commandArgs !== argv) {
   process.argv = [
     process.argv[0] ?? 'node',
     process.argv[1] ?? 'seo',
-    ...argv.slice(1),
-    '--help',
+    ...commandArgs,
   ]
 }
-const helpRequested = argv.some((arg) => ['--help', '-h'].includes(arg))
+const helpRequested = commandArgs.some((arg) => ['--help', '-h'].includes(arg))
 const versionRequested =
   argv.length === 1 && ['--version', '-v'].includes(argv[0] ?? '')
 
@@ -329,7 +330,7 @@ if (helpRequested || versionRequested) {
   await runMain(main)
 } else {
   try {
-    await runCommand(main, { rawArgs: argv })
+    await runCommand(main, { rawArgs: commandArgs })
   } catch (error) {
     const normalized = toSeoError(error)
     if (argv.includes('--json')) {

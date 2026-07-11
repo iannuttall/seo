@@ -1,6 +1,8 @@
 import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { chromium } from 'playwright-core'
+import { resolveBrowserExecutable } from '../fetch/page-fetcher/browser-path.js'
 import { labMetric, ratingAt } from './performance-analysis.js'
 import type {
   LighthouseFailureCode,
@@ -114,6 +116,12 @@ function defaultLighthouseCommand(): { bin: string; prefixArgs: string[] } {
   return { bin: process.execPath, prefixArgs: [cli] }
 }
 
+function lighthouseEnvironment(): NodeJS.ProcessEnv {
+  const resolution = resolveBrowserExecutable(chromium.executablePath())
+  if (resolution.status !== 'available') return process.env
+  return { ...process.env, CHROME_PATH: resolution.browser.path }
+}
+
 class LighthouseRunError extends Error {
   constructor(readonly failureCode: LighthouseFailureCode) {
     super(failureCode)
@@ -197,6 +205,7 @@ export async function runLighthouse(input: {
       '--chrome-flags=--headless=new',
     ],
     {
+      env: lighthouseEnvironment(),
       timeout: input.timeoutMs ?? 120_000,
       maxBuffer: 30 * 1024 * 1024,
     },

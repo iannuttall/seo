@@ -3,6 +3,7 @@ import http from 'node:http'
 import open from 'open'
 import { writeTokens } from '../../storage/config.js'
 import type { StoredTokens } from '../../types.js'
+import { oauthCallbackPage } from './callback-page.js'
 import { getAuthModeStatus, getClientConfig } from './client-config.js'
 import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
 import { GOOGLE_SCOPE, type OAuthClientConfig } from './types.js'
@@ -117,9 +118,7 @@ function waitForCode(input: {
         }
 
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-        res.end(
-          '<h1>seo connected.</h1><p>You can close this tab.</p><script>window.close()</script>',
-        )
+        res.end(oauthCallbackPage())
         clearTimeout(timer)
         resolve(incomingCode)
       } catch (error) {

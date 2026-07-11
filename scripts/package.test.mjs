@@ -148,10 +148,11 @@ test('the release workflow uses npm trusted publishing and release-only OAuth in
 test('the shared OAuth injector escapes values and requires both credentials', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'seo-shared-oauth-'))
   const output = join(directory, 'shared-client.generated.ts')
+  const padding = 'x'.repeat(100)
   const env = {
     ...process.env,
-    SEO_GOOGLE_CLIENT_ID: "test-client-'\\\u2028",
-    SEO_GOOGLE_CLIENT_SECRET: "test-secret-'\\\u2029",
+    SEO_GOOGLE_CLIENT_ID: `test-client-${padding}-'\\\u2028`,
+    SEO_GOOGLE_CLIENT_SECRET: `test-secret-${padding}-'\\\u2029`,
     SEO_SHARED_OAUTH_OUTPUT_PATH: output,
   }
 
@@ -164,8 +165,8 @@ test('the shared OAuth injector escapes values and requires both credentials', a
     const source = await readFile(output, 'utf8')
 
     assert.match(result.stdout, /Wrote shared OAuth client/)
-    assert.match(source, /clientId: 'test-client-\\'\\\\\\u2028'/)
-    assert.match(source, /clientSecret: 'test-secret-\\'\\\\\\u2029'/)
+    assert.match(source, /clientId:\n {4}'test-client-x+-\\'\\\\\\u2028'/)
+    assert.match(source, /clientSecret:\n {4}'test-secret-x+-\\'\\\\\\u2029'/)
 
     await assert.rejects(
       execFileAsync(

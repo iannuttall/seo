@@ -27,6 +27,13 @@ function singleQuotedString(value) {
   return `'${escaped}'`
 }
 
+function property(name, value) {
+  const literal = singleQuotedString(value)
+  const inline = `  ${name}: ${literal},`
+
+  return inline.length <= 80 ? inline : `  ${name}:\n    ${literal},`
+}
+
 if (!clientId || !clientSecret) {
   console.error(
     'SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET must both be set.',
@@ -35,8 +42,8 @@ if (!clientId || !clientSecret) {
 }
 
 const contents = `export const SHARED_OAUTH_CLIENT = {
-  clientId: ${singleQuotedString(clientId)},
-  clientSecret: ${singleQuotedString(clientSecret)},
+${property('clientId', clientId)}
+${property('clientSecret', clientSecret)}
 } as const
 `
 

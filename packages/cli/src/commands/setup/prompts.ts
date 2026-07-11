@@ -50,6 +50,41 @@ type Ga4SetupChoice = Ga4PropertyChoice & {
   match?: Ga4WebStreamMatch
 }
 
+type AuthSetupChoice = 'login' | 'setup' | 'skip'
+
+export function authSetupOptions(input: {
+  sharedConfigured: boolean
+  byoConfigured: boolean
+  canSkip: boolean
+}): Array<{
+  value: AuthSetupChoice
+  label: string
+  hint?: string
+}> {
+  const skipOption = input.canSkip
+    ? [{ value: 'skip' as const, label: 'Skip for now' }]
+    : []
+  const hasOauthClient = input.sharedConfigured || input.byoConfigured
+
+  return hasOauthClient
+    ? [
+        {
+          value: 'login',
+          label: 'Connect Google',
+          hint: 'Opens your browser for read-only Search Console and GA4 access',
+        },
+        ...skipOption,
+      ]
+    : [
+        {
+          value: 'setup',
+          label: 'Set up Google login for local development',
+          hint: 'This source checkout does not include the public app credentials',
+        },
+        ...skipOption,
+      ]
+}
+
 async function findGa4WebStreamCandidates(
   properties: Ga4PropertyChoice[],
 ): Promise<{ candidates: Ga4WebStreamCandidate[]; complete: boolean }> {
@@ -101,32 +136,14 @@ export async function maybeConnectAuth(
     )
   }
 
-  const canSkip = typeof args.site === 'string' && args.site.length > 0
-  const skipOption = canSkip
-    ? [{ value: 'skip' as const, label: 'Skip for now' }]
-    : []
-
-  const hasOauthClient = status.sharedConfigured || status.byoConfigured
   const choice = maybeExitCancelled(
-    await select({
+    await select<AuthSetupChoice>({
       message: 'Connect Google now?',
-      options: hasOauthClient
-        ? [
-            {
-              value: 'login',
-              label: 'Connect Google',
-              hint: 'Opens your browser for read-only Search Console and GA4 access',
-            },
-            ...skipOption,
-          ]
-        : [
-            {
-              value: 'setup',
-              label: 'Set up Google login for local development',
-              hint: 'This source checkout does not include the public app credentials',
-            },
-            ...skipOption,
-          ],
+      options: authSetupOptions({
+        sharedConfigured: status.sharedConfigured,
+        byoConfigured: status.byoConfigured,
+        canSkip: typeof args.site === 'string' && args.site.length > 0,
+      }),
     }),
   )
 

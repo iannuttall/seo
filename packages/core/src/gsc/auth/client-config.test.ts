@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
 import { configSchema, type StoredTokens } from '../../types.js'
+import { SHARED_OAUTH_CLIENT } from '../shared-client.generated.js'
 
 const configDir = mkdtempSync(join(tmpdir(), 'seo-auth-source-'))
 const previousConfigDir = process.env.SEO_CONFIG_DIR
@@ -49,6 +50,12 @@ function storedTokens(source: StoredTokens['client_source']): StoredTokens {
 function setSharedClient(): void {
   process.env.SEO_GOOGLE_CLIENT_ID = 'shared-client-id'
   process.env.SEO_GOOGLE_CLIENT_SECRET = 'shared-client-secret'
+}
+
+function hasEmbeddedSharedClient(): boolean {
+  return Boolean(
+    SHARED_OAUTH_CLIENT.clientId && SHARED_OAUTH_CLIENT.clientSecret,
+  )
 }
 
 beforeEach(() => {
@@ -97,7 +104,9 @@ test('OAuth client lookup never falls back across token sources', () => {
     clientId: 'byo-client-id',
     clientSecret: 'byo-client-secret',
   })
-  assert.equal(getClientConfig('shared'), undefined)
+  const shared = getClientConfig('shared')
+  assert.equal(Boolean(shared), hasEmbeddedSharedClient())
+  assert.equal(shared?.source, hasEmbeddedSharedClient() ? 'shared' : undefined)
 })
 
 test('auth status reports whether the stored token client is configured', async () => {
@@ -109,8 +118,8 @@ test('auth status reports whether the stored token client is configured', async 
 
   const status = await authStatus()
 
-  assert.equal(status.configured, false)
-  assert.equal(status.sharedConfigured, false)
+  assert.equal(status.configured, hasEmbeddedSharedClient())
+  assert.equal(status.sharedConfigured, hasEmbeddedSharedClient())
   assert.equal(status.byoConfigured, true)
 })
 
@@ -126,7 +135,7 @@ test('authorized clients reject a configured client from the wrong source', asyn
   })
 })
 
-test('doctor fails when the stored token client is not configured', async () => {
+test('doctor reports whether the stored token client is configured', async () => {
   writeOauthClient({
     clientId: 'byo-client-id',
     clientSecret: 'byo-client-secret',
@@ -136,8 +145,12 @@ test('doctor fails when the stored token client is not configured', async () => 
   const report = await runDoctor()
   const oauth = report.checks.find((check) => check.id === 'oauth-client')
 
-  assert.equal(report.ok, false)
-  assert.equal(oauth?.status, 'fail')
-  assert.match(oauth?.detail ?? '', /shared seo app.*not configured/i)
-  assert.match(oauth?.fix ?? '', /github\.com\/iannuttall\/seo\/issues/)
+  assert.equal(report.ok, hasEmbeddedSharedClient())
+  assert.equal(oauth?.status, hasEmbeddedSharedClient() ? 'pass' : 'fail')
+  if (hasEmbeddedSharedClient()) {
+    assert.match(oauth?.detail ?? '', /shared client configured/i)
+  } else {
+    assert.match(oauth?.detail ?? '', /shared seo app.*not configured/i)
+    assert.match(oauth?.fix ?? '', /github\.com\/iannuttall\/seo\/issues/)
+  }
 })

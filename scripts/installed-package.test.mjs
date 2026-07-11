@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
 import { promisify } from 'node:util'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const execFileAsync = promisify(execFile)
 const require = createRequire(import.meta.url)
@@ -29,6 +31,29 @@ function consumerEnv() {
     SEO_CACHE_DIR: cacheDirectory,
     SEO_CONFIG_DIR: configDirectory,
     NO_UPDATE_NOTIFIER: '1',
+  }
+}
+
+async function listInstalledMcpTools(seo) {
+  const transport = new StdioClientTransport({
+    command: seo,
+    args: ['mcp', 'serve'],
+    cwd: root,
+    env: {
+      ...consumerEnv(),
+      NPM_CONFIG_OFFLINE: 'true',
+    },
+    stderr: 'pipe',
+  })
+  const client = new Client({
+    name: 'seo-installed-package-test',
+    version: '1.0.0',
+  })
+  try {
+    await client.connect(transport)
+    return await client.listTools()
+  } finally {
+    await client.close()
   }
 }
 
@@ -80,6 +105,12 @@ test('the packed package installs globally into an isolated prefix', {
     env: consumerEnv(),
   })
   assert.equal(JSON.parse(start.stdout).dryRun, true)
+
+  const mcp = await listInstalledMcpTools(seo)
+  assert.deepEqual(
+    mcp.tools.map((tool) => tool.name),
+    ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
+  )
 })
 
 test('the packed package installs and runs without the workspace', {

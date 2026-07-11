@@ -42,7 +42,7 @@ export const REPORT_GUIDANCE = {
   'ai-referrals': {
     name: 'AI referral traffic',
     description:
-      'Find visits from known AI products in GA4 and see which landing pages received them.',
+      'Find visits from known AI products in GA4 and see a ranked, bounded set of landing pages that received them.',
     useWhen: [
       'You want measured AI referral traffic from GA4.',
       'You need the landing pages and sources behind those visits.',

@@ -48,7 +48,7 @@ export function registerAiOpportunityTools(
     'seo_ai_referrals',
     {
       description:
-        'Find AI referral traffic detected in GA4. Use maxRows to bound retained rows; limit remains a legacy alias and must not conflict with maxRows.',
+        'Find AI referral traffic detected in GA4. maxRows bounds retained provider rows; resultLimit bounds returned landing pages.',
       inputSchema: {
         property: z.string().trim().min(1),
         startDate: ga4DateSchema.optional(),
@@ -71,10 +71,25 @@ export function registerAiOpportunityTools(
             'Legacy alias for maxRows. If maxRows is also supplied, both values must match.',
           )
           .optional(),
+        resultLimit: z
+          .number()
+          .int()
+          .min(1)
+          .max(1_000)
+          .describe('Maximum ranked landing pages returned. Defaults to 25.')
+          .optional(),
         refresh: z.boolean().optional(),
       },
     },
-    async ({ property, startDate, endDate, maxRows, limit, refresh }) => {
+    async ({
+      property,
+      startDate,
+      endDate,
+      maxRows,
+      limit,
+      resultLimit,
+      refresh,
+    }) => {
       try {
         if (maxRows !== undefined && limit !== undefined && maxRows !== limit) {
           throw new SeoError(
@@ -90,6 +105,7 @@ export function registerAiOpportunityTools(
           endDate,
           maxRows,
           limit,
+          resultLimit,
           refresh,
         })
         return toolSuccess(

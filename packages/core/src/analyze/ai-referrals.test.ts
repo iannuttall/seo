@@ -134,12 +134,18 @@ test('AI referrals use source totals, exact detail filters, and unique users', a
     },
   )
 
-  assert.equal(report.schemaVersion, 2)
+  assert.equal(report.schemaVersion, 3)
   assert.equal(report.generatedAt, '2026-07-01T12:00:00.000Z')
   assert.equal(report.dataStatus, 'complete')
   assert.equal(report.summary.sessions, 6)
   assert.equal(report.summary.eventCount, 15)
   assert.equal(report.summary.totalUsers, 5)
+  assert.deepEqual(report.selection.landingPages, {
+    limit: 25,
+    retainedRows: 2,
+    returnedRows: 2,
+    omittedRows: 0,
+  })
   assert.deepEqual(report.sources, [
     {
       id: 'chatgpt',
@@ -233,6 +239,65 @@ test('AI referrals use source totals, exact detail filters, and unique users', a
     requests[2]?.metrics.map((metric) => metric.name),
     ['totalUsers'],
   )
+})
+
+test('AI referrals bound landing-page output without reducing provider evidence', async () => {
+  let calls = 0
+  const report = await aiReferralsReport(
+    { property: '123', maxRows: 100, resultLimit: 2 },
+    {
+      runGa4Report: async () => {
+        calls += 1
+        if (calls === 1) {
+          return sourceResult([
+            { source: 'chatgpt.com', sessions: '9', eventCount: '9' },
+          ])
+        }
+        if (calls === 2) {
+          return detailResult([
+            {
+              date: '20260601',
+              source: 'chatgpt.com',
+              landingPage: '/first',
+              sessions: '5',
+              eventCount: '5',
+            },
+            {
+              date: '20260602',
+              source: 'chatgpt.com',
+              landingPage: '/second',
+              sessions: '3',
+              eventCount: '3',
+            },
+            {
+              date: '20260603',
+              source: 'chatgpt.com',
+              landingPage: '/third',
+              sessions: '1',
+              eventCount: '1',
+            },
+          ])
+        }
+        return usersResult('7')
+      },
+    },
+  )
+
+  assert.equal(calls, 3)
+  assert.equal(report.dataStatus, 'complete')
+  assert.equal(report.dataSource.detail.returnedRows, 3)
+  assert.equal(report.summary.landingPages, 3)
+  assert.deepEqual(report.selection.landingPages, {
+    limit: 2,
+    retainedRows: 3,
+    returnedRows: 2,
+    omittedRows: 1,
+  })
+  assert.deepEqual(
+    report.landingPages.map((page) => page.landingPage),
+    ['/first', '/second'],
+  )
+  assert.match(report.caveats.join('\n'), /1 lower-ranked pages are omitted/)
 })
 
 test('landing-page and medium text never create AI referral false positives', async () => {
@@ -508,6 +573,13 @@ test('AI referral inputs reject unsafe bounds and mixed date syntax', async () =
       { runGa4Report },
     ),
     /maxRows or the legacy limit/,
+  )
+  await assert.rejects(
+    aiReferralsReport(
+      { property: '123', resultLimit: 1_001 },
+      { runGa4Report },
+    ),
+    /resultLimit must be a whole number between 1 and 1000/,
   )
   assert.equal(calls, 0)
 })

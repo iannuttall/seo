@@ -20,6 +20,7 @@ type AiReferralAnalysisInput = {
   generatedAt: string
   range: AiReferralReport['range']
   maxRows: number
+  resultLimit: number
   sourceRows: Array<Record<string, string>>
   detailRows: Array<Record<string, string>>
   totalUsers: number | null
@@ -173,8 +174,44 @@ export function analyzeAiReferralRows(
     input.detail.truncated ||
     input.totalUsersEvidence.truncated
 
+  const allLandingPages = [...pageTotals.entries()]
+    .map(([landingPage, metrics]) => {
+      const topSourceId = [...metrics.sources.entries()].sort(
+        (left, right) => right[1] - left[1] || compareText(left[0], right[0]),
+      )[0]?.[0]
+      const topSource = topSourceId
+        ? sourceTotals.get(topSourceId)?.definition
+        : undefined
+      if (!topSource) {
+        throw new SeoError(
+          'PROVIDER_UNAVAILABLE',
+          'Could not resolve the top AI referral source.',
+        )
+      }
+      return {
+        landingPage,
+        sessions: metrics.sessions,
+        eventCount: metrics.eventCount,
+        totalUsers: null,
+        topSource: topSource.label,
+        topSourceDetails: { id: topSource.id, label: topSource.label },
+      }
+    })
+    .sort(
+      (left, right) =>
+        right.sessions - left.sessions ||
+        compareText(left.landingPage, right.landingPage),
+    )
+  const landingPages = allLandingPages.slice(0, input.resultLimit)
+  const selection = {
+    limit: input.resultLimit,
+    retainedRows: allLandingPages.length,
+    returnedRows: landingPages.length,
+    omittedRows: Math.max(0, allLandingPages.length - landingPages.length),
+  }
+
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     property: input.property,
     generatedAt: input.generatedAt,
     dataStatus,
@@ -199,6 +236,7 @@ export function analyzeAiReferralRows(
       totalUsers: input.totalUsersEvidence,
       partialReasons,
     },
+    selection: { landingPages: selection },
     summary: {
       ...total,
       totalUsers: input.totalUsers,
@@ -235,34 +273,7 @@ export function analyzeAiReferralRows(
         (left, right) =>
           right.sessions - left.sessions || compareText(left.id, right.id),
       ),
-    landingPages: [...pageTotals.entries()]
-      .map(([landingPage, metrics]) => {
-        const topSourceId = [...metrics.sources.entries()].sort(
-          (left, right) => right[1] - left[1] || compareText(left[0], right[0]),
-        )[0]?.[0]
-        const topSource = topSourceId
-          ? sourceTotals.get(topSourceId)?.definition
-          : undefined
-        if (!topSource) {
-          throw new SeoError(
-            'PROVIDER_UNAVAILABLE',
-            'Could not resolve the top AI referral source.',
-          )
-        }
-        return {
-          landingPage,
-          sessions: metrics.sessions,
-          eventCount: metrics.eventCount,
-          totalUsers: null,
-          topSource: topSource.label,
-          topSourceDetails: { id: topSource.id, label: topSource.label },
-        }
-      })
-      .sort(
-        (left, right) =>
-          right.sessions - left.sessions ||
-          compareText(left.landingPage, right.landingPage),
-      ),
+    landingPages,
     daily: [...dailyTotals.entries()]
       .map(([date, metrics]) => ({ date, ...metrics, totalUsers: null }))
       .sort((left, right) => compareText(left.date, right.date)),
@@ -271,6 +282,11 @@ export function analyzeAiReferralRows(
       'Attribution uses GA4 sessionSource only; landing-page text, medium text, and event referrers are never treated as referral sources.',
       'Source totals come from a low-cardinality source query; landing-page and daily detail is queried separately for the exact observed source values.',
       'Total users come from a separate filtered aggregate when AI sources are observed and are never summed across report rows; complete zero-session evidence implies zero users without another query.',
+      ...(selection.omittedRows > 0
+        ? [
+            `Landing-page output returns the ${selection.returnedRows} highest-session pages from ${selection.retainedRows} retained detail rows; ${selection.omittedRows} lower-ranked pages are omitted. Increase resultLimit to inspect more.`,
+          ]
+        : []),
       ...partialReasons,
     ],
   }

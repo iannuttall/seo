@@ -23,6 +23,8 @@ export type * from './ai-referrals-types.js'
 
 const DEFAULT_MAX_ROWS = 100_000
 const MAX_ROWS = 100_000
+const DEFAULT_RESULT_LIMIT = 25
+const MAX_RESULT_LIMIT = 1_000
 
 type RunGa4Report = typeof runGa4Report
 
@@ -81,6 +83,17 @@ function maxRows(input: { maxRows?: number; limit?: number }): number {
   return value
 }
 
+function resultLimit(input: { resultLimit?: number }): number {
+  const value = input.resultLimit ?? DEFAULT_RESULT_LIMIT
+  if (!Number.isInteger(value) || value < 1 || value > MAX_RESULT_LIMIT) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `resultLimit must be a whole number between 1 and ${MAX_RESULT_LIMIT}.`,
+    )
+  }
+  return value
+}
+
 function evidence(result: AiReferralQueryResult): AiReferralQueryEvidence {
   return {
     status: result.truncated || result.warnings.length ? 'partial' : 'complete',
@@ -132,6 +145,7 @@ export async function aiReferralsReport(
     endDate?: string
     maxRows?: number
     limit?: number
+    resultLimit?: number
     refresh?: boolean
   },
   dependencies: {
@@ -147,6 +161,7 @@ export async function aiReferralsReport(
     endDate: range.endDate,
   }
   const retainedRows = maxRows(input)
+  const selectedResultLimit = resultLimit(input)
   const query = dependencies.runGa4Report ?? runGa4Report
 
   const sourceResult = await fetchAiReferralRows({
@@ -245,6 +260,7 @@ export async function aiReferralsReport(
     generatedAt: (dependencies.now ?? (() => new Date()))().toISOString(),
     range,
     maxRows: retainedRows,
+    resultLimit: selectedResultLimit,
     sourceRows: sourceResult.rows,
     detailRows: detailResult?.rows ?? [],
     totalUsers,

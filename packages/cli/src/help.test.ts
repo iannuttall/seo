@@ -493,6 +493,7 @@ test('AI referrals help exposes bounded evidence controls', async () => {
     '--start-date',
     '--end-date',
     '--max-rows',
+    '--result-limit',
     '--refresh',
     '--json',
   ]) {
@@ -504,6 +505,7 @@ test('AI referrals JSON rejects invalid evidence controls before auth', async ()
   for (const args of [
     ['--max-rows', 'nope'],
     ['--max-rows', '0'],
+    ['--result-limit', '1001'],
     ['--start-date', '2026-06-01', '--end-date', 'yesterday'],
   ]) {
     const result = await runSeoResult([

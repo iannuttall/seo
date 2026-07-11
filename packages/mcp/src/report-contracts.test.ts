@@ -77,6 +77,22 @@ test('calendar-date report inputs reject malformed and impossible dates', () => 
   }
 })
 
+test('AI referral output limits are bounded separately from provider rows', () => {
+  const schema = reportSchema('ai-referrals')
+  assert.equal(
+    schema.safeParse({ property: '123', maxRows: 100_000, resultLimit: 25 })
+      .success,
+    true,
+  )
+  for (const resultLimit of [0, 1.5, 1_001]) {
+    assert.equal(
+      schema.safeParse({ property: '123', resultLimit }).success,
+      false,
+      String(resultLimit),
+    )
+  }
+})
+
 test('technical-watch accepts active components and rejects a true no-op', async () => {
   const schema = reportSchema('technical-watch')
   for (const input of [

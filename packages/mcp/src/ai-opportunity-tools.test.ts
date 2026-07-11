@@ -7,9 +7,9 @@ import type {
 } from '@seo/core'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 
-test('AI referrals MCP preserves the schema v2 structured contract', async () => {
+test('AI referrals MCP preserves the schema v3 structured contract', async () => {
   const fixture = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     dataStatus: 'complete',
     summary: { sessions: 0, sources: 0 },
   } as unknown as AiReferralReport
@@ -43,11 +43,13 @@ test('AI referrals MCP preserves the schema v2 structured contract', async () =>
 
 test('AI referrals rejects conflicting row-limit aliases before provider work', async () => {
   let calls = 0
+  let receivedResultLimit: number | undefined
   let handler:
     | ((input: {
         property: string
         maxRows?: number
         limit?: number
+        resultLimit?: number
       }) => Promise<{
         isError?: boolean
         structuredContent?: Record<string, unknown>
@@ -65,8 +67,9 @@ test('AI referrals rejects conflicting row-limit aliases before provider work', 
       },
     } as never,
     {
-      aiReferralsReport: async () => {
+      aiReferralsReport: async (input) => {
         calls++
+        receivedResultLimit = input.resultLimit
         return {
           dataStatus: 'complete',
           summary: { sessions: 0, sources: 0 },
@@ -93,8 +96,10 @@ test('AI referrals rejects conflicting row-limit aliases before provider work', 
     property: '123',
     maxRows: 100,
     limit: 100,
+    resultLimit: 25,
   })
   assert.equal(calls, 1)
+  assert.equal(receivedResultLimit, 25)
   assert.equal(compatible.isError, undefined)
 })
 

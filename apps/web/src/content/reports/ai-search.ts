@@ -26,10 +26,10 @@ export const aiSearchReports = [
       property: '123456789',
       startDate: '28daysAgo',
       endDate: 'yesterday',
-      maxRows: 25,
+      resultLimit: 25,
     },
     interpretation: [
-      'Treat returned sessions as attributed referrals from the matched sources. Review landing pages and engagement in the same scope.',
+      'Treat returned sessions as attributed referrals from the matched sources. Check the landing-page selection before treating the ranked output as the full retained breakdown, then review those pages and engagement in the same scope.',
     ],
     caveats: [
       'Missing referrers, consent, redirects, attribution settings, and source changes can hide or reclassify visits.',

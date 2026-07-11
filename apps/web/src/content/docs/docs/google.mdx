@@ -253,6 +253,66 @@ seo auth setup-client
 
 This is an advanced fallback, not a normal onboarding step.
 
+## Use a service account in CI or a container
+
+Browser sign-in belongs on a person's machine. A GitHub Actions runner, a
+container, or a server needs a credential with no browser involved. SEO Skills
+CLI supports one Google service account JSON credential for that job.
+
+Create the service account in a Google Cloud project with the Search Console
+API, Google Analytics Data API, and Google Analytics Admin API enabled. Then
+grant the service account email access to the properties it needs:
+
+- In Search Console, a property owner adds the service account email under
+  Settings, then Users and permissions. Google explains the available
+  <a href="https://support.google.com/webmasters/answer/7687615" target="_blank" rel="noreferrer">Search Console roles and user setup</a>.
+- In GA4, grant the service account access to the property before expecting it
+  to appear in account summaries. Google's
+  <a href="https://developers.google.com/analytics/devguides/config/admin/v1/quickstart" target="_blank" rel="noreferrer">Admin API quickstart</a>
+  covers service-account property access and API setup.
+
+Keep the JSON key in your platform's secret store. Do not commit it, put it in
+a project profile, or copy a personal OAuth token into a deployment image.
+
+GitHub Actions can pass the whole JSON key as one secret:
+
+```yaml
+- name: Run the main SEO report
+  run: |
+    npm i -g seo
+    seo report --site sc-domain:example.com --json > seo-report.json
+  env:
+    SEO_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SEO_GOOGLE_SERVICE_ACCOUNT_JSON }}
+```
+
+The service account uses the same read-only Search Console and Analytics scopes
+as browser sign-in. Run these commands in the job log to confirm which
+credential source is active and which properties Google returned:
+
+```sh
+seo auth status
+seo sites
+```
+
+For a local container or server, prefer a mounted read-only file:
+
+```sh
+export SEO_GOOGLE_SERVICE_ACCOUNT_FILE=/run/secrets/seo-google-service-account.json
+seo auth status
+seo report --site sc-domain:example.com --json
+```
+
+`GOOGLE_APPLICATION_CREDENTIALS` is also accepted as a file-path alias. SEO
+Skills CLI does not search for local gcloud credentials or write a private key
+to disk. Set only one of the three variables. A configured service account
+takes precedence over a saved browser login, so unset it before running
+`seo auth login`.
+
+If Google denies a property, check that the service account email was granted
+access to that exact Search Console or GA4 property. `seo auth status` shows
+the active identity without printing the key. `seo doctor` also checks the
+credential configuration before a report runs.
+
 ## Remove access and local tokens
 
 ```sh

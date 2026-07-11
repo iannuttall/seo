@@ -5,7 +5,6 @@ import {
   formatRelativeExpiry,
   getSeoCliPaths,
   loginWithLoopback,
-  readTokens,
   refreshAuthToken,
   SeoError,
   writeOauthClient,
@@ -19,6 +18,17 @@ import {
   printKeyValue,
 } from '../utils.js'
 
+function serviceAccountSource(source?: string): string {
+  if (!source) return 'invalid or conflicting configuration'
+  if (source === 'environment-json') {
+    return 'SEO_GOOGLE_SERVICE_ACCOUNT_JSON'
+  }
+  if (source === 'environment-file') {
+    return 'SEO_GOOGLE_SERVICE_ACCOUNT_FILE'
+  }
+  return 'GOOGLE_APPLICATION_CREDENTIALS'
+}
+
 export const authCommand = defineCommand({
   meta: {
     name: 'auth',
@@ -28,6 +38,13 @@ export const authCommand = defineCommand({
     login: defineCommand({
       meta: { name: 'login', description: 'Run Google OAuth flow' },
       run: async () => {
+        const status = await authStatus()
+        if (status.activeMode === 'service-account') {
+          throw new SeoError(
+            'AUTH_CONFIG_REQUIRED',
+            'A service account is active from the environment. Unset its credential variable before running browser OAuth.',
+          )
+        }
         const tokens = await loginWithLoopback()
         process.stdout.write(
           `${tokens.account_email} · ${tokens.scope.replace('https://www.googleapis.com/auth/', '')} · ${tokens.client_source === 'shared' ? 'shared seo app' : 'BYO client'}\n`,
@@ -37,9 +54,16 @@ export const authCommand = defineCommand({
     logout: defineCommand({
       meta: { name: 'logout', description: 'Delete locally stored tokens' },
       run: async () => {
+        const status = await authStatus()
         await deleteTokens()
+        if (status.activeMode === 'service-account') {
+          process.stdout.write(
+            'Deleted local OAuth tokens. Service account credentials remain available through the environment.\n',
+          )
+          return
+        }
         process.stdout.write(
-          'Deleted local tokens.\nRevoke at https://myaccount.google.com/permissions if you also want Google to forget the grant.\n',
+          'Deleted local OAuth tokens.\nRevoke at https://myaccount.google.com/permissions if you also want Google to forget the grant.\n',
         )
       },
     }),
@@ -49,7 +73,18 @@ export const authCommand = defineCommand({
         description: 'Show the signed-in Google account',
       },
       run: async () => {
-        const tokens = await readTokens()
+        const status = await authStatus()
+        if (status.activeMode === 'service-account') {
+          process.stdout.write(
+            'service account · ' +
+              (status.identity ?? 'invalid configuration') +
+              ' · ' +
+              serviceAccountSource(status.serviceAccount.source) +
+              '\n',
+          )
+          return
+        }
+        const tokens = status.tokens
         if (!tokens) {
           process.stdout.write('Not logged in.\n')
           return
@@ -75,22 +110,59 @@ export const authCommand = defineCommand({
         const status = await authStatus()
         if (jsonFlag(args)) {
           printJson({
-            authenticated: Boolean(status.tokens),
-            account: status.tokens?.account_email,
-            scopes: status.tokens?.scope,
-            clientSource: status.tokens?.client_source,
-            expiresAt: status.tokens?.expires_at,
+            authenticated:
+              status.activeMode === 'oauth'
+                ? Boolean(status.tokens)
+                : status.serviceAccount.configured,
+            mode: status.activeMode,
+            identity: status.identity,
+            account:
+              status.activeMode === 'oauth'
+                ? status.tokens?.account_email
+                : undefined,
+            scopes:
+              status.activeMode === 'oauth' ? status.tokens?.scope : undefined,
+            clientSource:
+              status.activeMode === 'oauth'
+                ? status.tokens?.client_source
+                : undefined,
+            expiresAt:
+              status.activeMode === 'oauth'
+                ? status.tokens?.expires_at
+                : undefined,
             sharedConfigured: status.sharedConfigured,
             byoConfigured: status.byoConfigured,
+            serviceAccount: {
+              configured: status.serviceAccount.configured,
+              identity: status.serviceAccount.identity,
+              source: status.serviceAccount.source,
+              error: status.serviceAccount.error,
+            },
           })
           return
         }
+        if (status.activeMode === 'service-account') {
+          const rows: Array<[string, string]> = [
+            ['Mode', 'service account'],
+            ['Identity', status.identity ?? 'unavailable'],
+            ['Source', serviceAccountSource(status.serviceAccount.source)],
+            ['Scopes', 'Search Console readonly, GA4 readonly'],
+            ['Storage', 'credentials stay in the environment'],
+          ]
+          if (status.serviceAccount.error) {
+            rows.push(['Status', status.serviceAccount.error])
+          }
+          printKeyValue(rows)
+          return
+        }
         if (!status.tokens) {
-          const authMode = status.sharedConfigured
-            ? 'Shared seo app available'
-            : status.byoConfigured
-              ? 'BYO client configured'
-              : 'No OAuth client configured'
+          const authMode = status.serviceAccount.error
+            ? status.serviceAccount.error
+            : status.sharedConfigured
+              ? 'Shared seo app available'
+              : status.byoConfigured
+                ? 'BYO client configured'
+                : 'No OAuth client configured'
           process.stdout.write(
             `Not logged in. ${authMode}. Run \`seo auth login\` to connect Google.\n`,
           )
@@ -125,6 +197,13 @@ export const authCommand = defineCommand({
         description: 'Refresh the Google OAuth token',
       },
       run: async () => {
+        const status = await authStatus()
+        if (status.activeMode === 'service-account') {
+          process.stdout.write(
+            'Service accounts request short-lived Google tokens automatically. No local refresh token is stored.\n',
+          )
+          return
+        }
         const tokens = await refreshAuthToken()
         process.stdout.write(
           `Refreshed. New expiry ${new Date(tokens.expires_at).toISOString()}.\n`,

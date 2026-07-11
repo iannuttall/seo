@@ -1,5 +1,9 @@
 import { existsSync } from 'node:fs'
-import { getAuthModeStatus, getClientConfig } from './gsc/auth.js'
+import {
+  getAuthModeStatus,
+  getClientConfig,
+  getServiceAccountStatus,
+} from './gsc/auth.js'
 import { getSeoCliPaths } from './paths.js'
 import { readConfig, readOauthClient, readTokens } from './storage/config.js'
 
@@ -24,6 +28,7 @@ export async function runDoctor(): Promise<{
   const paths = getSeoCliPaths()
   const config = readConfig()
   const authMode = getAuthModeStatus()
+  const serviceAccount = getServiceAccountStatus()
   const tokens = await readTokens()
   const oauthClient = readOauthClient()
   const tokenClientConfigured = tokens
@@ -43,29 +48,38 @@ export async function runDoctor(): Promise<{
 
   checks.push({
     id: 'oauth-client',
-    label: 'OAuth client',
-    status:
-      tokenClientConfigured === false
+    label: 'Google credentials',
+    status: serviceAccount.configured
+      ? 'pass'
+      : tokenClientConfigured === false
         ? 'fail'
-        : authMode.sharedConfigured || authMode.byoConfigured
-          ? 'pass'
-          : 'fail',
-    detail:
-      tokenClientConfigured === false
+        : serviceAccount.error
+          ? 'fail'
+          : authMode.sharedConfigured || authMode.byoConfigured
+            ? 'pass'
+            : 'fail',
+    detail: serviceAccount.configured
+      ? 'Service account configured for ' + serviceAccount.identity + '.'
+      : tokenClientConfigured === false
         ? `Stored Google login uses the ${tokens?.client_source === 'shared' ? 'shared seo app' : 'BYO client'}, but that client is not configured.`
-        : authMode.sharedConfigured
-          ? 'Shared client configured.'
-          : authMode.byoConfigured
-            ? `BYO client configured at ${paths.oauthClientFile}.`
-            : 'No shared or BYO Google OAuth client configured.',
-    fix:
-      tokenClientConfigured === false
+        : serviceAccount.error
+          ? serviceAccount.error
+          : authMode.sharedConfigured
+            ? 'Shared client configured.'
+            : authMode.byoConfigured
+              ? `BYO client configured at ${paths.oauthClientFile}.`
+              : 'No shared or BYO Google OAuth client configured.',
+    fix: serviceAccount.configured
+      ? undefined
+      : tokenClientConfigured === false
         ? tokens?.client_source === 'shared'
           ? 'Reinstall `seo`. If the shared client is still missing, report it at https://github.com/iannuttall/seo/issues.'
           : 'Restore the same client with `seo auth setup-client`, or run `seo auth logout` before signing in with a different client.'
-        : authMode.sharedConfigured || authMode.byoConfigured
-          ? undefined
-          : 'Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
+        : serviceAccount.error
+          ? 'Set one valid service account credential source, then run `seo doctor` again.'
+          : authMode.sharedConfigured || authMode.byoConfigured
+            ? undefined
+            : 'Run `seo auth setup-client` or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
   })
 
   checks.push({
@@ -80,11 +94,16 @@ export async function runDoctor(): Promise<{
   checks.push({
     id: 'google-login',
     label: 'Google login',
-    status: tokens ? 'pass' : 'fail',
-    detail: tokens
-      ? `Signed in as ${tokens.account_email}.`
-      : 'No Google token found.',
-    fix: tokens ? undefined : 'Run `seo auth login`.',
+    status: serviceAccount.configured || tokens ? 'pass' : 'fail',
+    detail: serviceAccount.configured
+      ? 'Using service account ' + serviceAccount.identity + '.'
+      : tokens
+        ? `Signed in as ${tokens.account_email}.`
+        : 'No Google token found.',
+    fix:
+      serviceAccount.configured || tokens
+        ? undefined
+        : 'Run `seo auth login`, or configure a service account for CI.',
   })
 
   const grantedScopes = new Set(
@@ -95,14 +114,20 @@ export async function runDoctor(): Promise<{
       id: `scope:${scope}`,
       label: scope.endsWith('webmasters.readonly') ? 'GSC scope' : 'GA4 scope',
       status:
-        tokens && grantedScopes.has(scope) ? 'pass' : tokens ? 'fail' : 'warn',
-      detail: tokens
-        ? grantedScopes.has(scope)
-          ? scope
-          : `Missing ${scope}.`
-        : 'Cannot inspect scopes until login is complete.',
+        serviceAccount.configured || (tokens && grantedScopes.has(scope))
+          ? 'pass'
+          : tokens
+            ? 'fail'
+            : 'warn',
+      detail: serviceAccount.configured
+        ? scope + ' requested by the service account.'
+        : tokens
+          ? grantedScopes.has(scope)
+            ? scope
+            : `Missing ${scope}.`
+          : 'Cannot inspect scopes until login is complete.',
       fix:
-        tokens && !grantedScopes.has(scope)
+        !serviceAccount.configured && tokens && !grantedScopes.has(scope)
           ? 'Run `seo auth logout` then `seo auth login`.'
           : undefined,
     })

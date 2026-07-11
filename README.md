@@ -150,6 +150,24 @@ Reports keep observed data, derived findings, skipped sections, limits, and
 provider errors separate so automation can make decisions without parsing
 terminal prose.
 
+When a CI job needs Search Console or GA4 data, give it a Google service
+account JSON key through its secret store. The service account needs access to
+the exact properties it will query. This GitHub Actions step runs without a
+browser or a copied local token:
+
+```yaml
+- name: Run the SEO report
+  run: |
+    npm i -g seo
+    seo report --site sc-domain:example.com --json > seo-report.json
+  env:
+    SEO_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SEO_GOOGLE_SERVICE_ACCOUNT_JSON }}
+```
+
+The [Google data guide](https://seoskills.dev/docs/google) covers Search
+Console and GA4 permissions, mounted secret files, and how to check the active
+identity safely.
+
 Agents can discover and run the same report catalog as MCP without starting a
 server:
 

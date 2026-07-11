@@ -1,7 +1,7 @@
 import { fetch, type RequestInit } from 'undici'
 import { SeoError } from '../../errors.js'
 import {
-  createAuthorizedClient,
+  createGoogleAccessTokenClient,
   type GoogleAccessTokenClient,
 } from '../auth.js'
 
@@ -30,6 +30,5 @@ export async function authedFetch(
 }
 
 export async function getAuthorized() {
-  const { client, tokens } = await createAuthorizedClient()
-  return { client, tokens }
+  return createGoogleAccessTokenClient()
 }

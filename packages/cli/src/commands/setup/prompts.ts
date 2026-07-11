@@ -11,13 +11,18 @@ import { canPrompt, maybeExitCancelled } from '../../utils.js'
 import { detectMcpClients } from '../mcp-clients.js'
 import { installMcpConfig } from '../mcp-config.js'
 
-export type SetupAuthStatus = 'connected' | 'already-connected' | 'skipped'
+export type SetupAuthStatus =
+  | 'connected'
+  | 'already-connected'
+  | 'service-account'
+  | 'skipped'
 export type SetupMcpInstall = { client: string; path: string; changed: boolean }
 
 export async function maybeConnectAuth(
   args: Record<string, unknown>,
 ): Promise<SetupAuthStatus> {
   const status = await authStatus()
+  if (status.activeMode === 'service-account') return 'service-account'
   if (status.tokens) return 'already-connected'
   if (args['skip-auth']) return 'skipped'
   if (!canPrompt({ json: args.json === true })) {

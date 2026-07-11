@@ -248,8 +248,12 @@ test('auth status and interactive-only setup stay structured in JSON mode', asyn
     assert.equal(status.exitCode, 0)
     assert.deepEqual(JSON.parse(status.stdout), {
       authenticated: false,
+      mode: 'none',
       sharedConfigured: false,
       byoConfigured: false,
+      serviceAccount: {
+        configured: false,
+      },
     })
 
     const setup = await runSeoResult(['auth', 'setup-client', '--json'], {
@@ -260,6 +264,68 @@ test('auth status and interactive-only setup stay structured in JSON mode', asyn
     assert.equal(setup.stderr, '')
     assert.equal(JSON.parse(setup.stdout).error.code, 'INVALID_INPUT')
     assert.doesNotMatch(setup.stdout, /Google Desktop OAuth client ID|[◆◇]/)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('auth status reports a service account identity without printing the key', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-service-account-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-service-account-cache-'))
+  const privateKey = 'not-a-real-private-key'
+
+  try {
+    await writeFile(
+      join(configDir, 'tokens.json'),
+      JSON.stringify({
+        provider: 'google',
+        account_email: 'stored-account@example.com',
+        scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+        token_type: 'Bearer',
+        access_token: 'stored-access-token',
+        refresh_token: 'stored-refresh-token',
+        expires_at: Date.now() + 3_600_000,
+        obtained_at: Date.now(),
+        client_source: 'byo',
+      }),
+    )
+    const status = await runSeoResult(['auth', 'status', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+      SEO_GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        type: 'service_account',
+        client_email: 'seo-ci@example.iam.gserviceaccount.com',
+        private_key: privateKey,
+      }),
+    })
+    assert.equal(status.exitCode, 0)
+    assert.deepEqual(JSON.parse(status.stdout), {
+      authenticated: true,
+      mode: 'service-account',
+      identity: 'seo-ci@example.iam.gserviceaccount.com',
+      sharedConfigured: false,
+      byoConfigured: false,
+      serviceAccount: {
+        configured: true,
+        identity: 'seo-ci@example.iam.gserviceaccount.com',
+        source: 'environment-json',
+      },
+    })
+    assert.doesNotMatch(status.stdout, new RegExp(privateKey))
+
+    const whoami = await runSeoResult(['auth', 'whoami'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+      SEO_GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        type: 'service_account',
+        client_email: 'seo-ci@example.iam.gserviceaccount.com',
+        private_key: privateKey,
+      }),
+    })
+    assert.equal(whoami.exitCode, 0)
+    assert.match(whoami.stdout, /seo-ci@example\.iam\.gserviceaccount\.com/)
+    assert.doesNotMatch(whoami.stdout, new RegExp(privateKey))
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })

@@ -25,6 +25,7 @@ import {
   maybeConnectAuth,
   maybeInstallMcp,
   type SetupAuthStatus,
+  type SetupGa4Selection,
   type SetupMcpInstall,
 } from './prompts.js'
 
@@ -32,6 +33,7 @@ type SetupResult = {
   client?: ClientProfile
   site: string
   auth: SetupAuthStatus
+  ga4?: SetupGa4Selection
   mcp: SetupMcpInstall[]
   next: string[]
 }
@@ -56,7 +58,6 @@ export async function runGuidedSetup(
       'seo report --project acme',
       'seo refresh-priorities --project acme --verify-content',
       'seo technical-watch --project acme',
-      'seo schedule cron --project acme',
     ]
     if (json) {
       printJson({ dryRun: true, next })
@@ -145,10 +146,12 @@ export async function runGuidedSetup(
         )
       : defaultStartUrl || undefined)
   const watchUrls = listArg(args.urls).length > 0 ? listArg(args.urls) : []
-  const ga4PropertyId = await chooseGa4Property(
-    stringArg(args.ga4),
-    canPrompt({ json }),
-  )
+  const ga4 = await chooseGa4Property({
+    property: stringArg(args.ga4),
+    site,
+    interactive: canPrompt({ json }),
+  })
+  const ga4PropertyId = ga4?.propertyId
   const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
     listArg(args.brand).length > 0 ? listArg(args.brand) : derivedBrandTerms
@@ -173,9 +176,8 @@ export async function runGuidedSetup(
     `seo report --project ${client.id}`,
     `seo refresh-priorities --project ${client.id} --verify-content`,
     `seo technical-watch --project ${client.id}`,
-    `seo schedule cron --project ${client.id}`,
   ]
-  const result: SetupResult = { client, site, auth, mcp, next }
+  const result: SetupResult = { client, site, auth, ga4, mcp, next }
 
   if (json) {
     printJson(result)
@@ -188,7 +190,8 @@ export async function runGuidedSetup(
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', String(client.watchUrls.length)],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
-    ['GA4 property', client.ga4PropertyId ?? 'not set'],
+    ['GA4 property', client.ga4PropertyId ?? 'not connected (optional)'],
+    ...(ga4 ? [['GA4 selection', ga4.reason] as [string, string]] : []),
     ['Auth', auth],
     ['MCP installs', String(mcp.length)],
   ])

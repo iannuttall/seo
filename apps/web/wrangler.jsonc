@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "seo-skills-site",
+  "account_id": "6e426918d20366666af283a9a8cf3c92",
   "compatibility_date": "2026-07-10",
   "workers_dev": false,
   "preview_urls": false,

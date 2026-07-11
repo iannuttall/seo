@@ -1,13 +1,15 @@
 import {
   diagnosePropertyWorkflow,
-  latestCrawlReport,
-  latestCrawlSummaries,
+  resolveTechnicalBaseline,
+  type TechnicalBaseline,
   topFixes,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
+  defaultTrueBooleanArg,
   jsonFlag,
+  negatedBooleanArg,
   numberArg,
   projectArg,
   stringArg,
@@ -41,28 +43,49 @@ function addFollowup(
   commands.push({ command, why })
 }
 
-function hasTechnicalBaseline(site: string): boolean {
-  return Boolean(
-    latestCrawlReport(site) || latestCrawlSummaries(site, 1).length,
-  )
-}
-
-function savedTechnicalSection(site: string) {
-  const report = latestCrawlReport(site)
-  if (!report) return undefined
+function technicalSection(baseline: TechnicalBaseline) {
+  const report = baseline.report
+  if (!report) {
+    return {
+      status: baseline.status,
+      ...(baseline.reason ? { reason: baseline.reason } : {}),
+    }
+  }
   return {
+    status: baseline.status,
+    ...(baseline.reason ? { reason: baseline.reason } : {}),
     reportId: report.id,
     generatedAt: report.generatedAt,
-    status: report.status,
+    crawlStatus: report.status,
+    capped: report.summary.pageLimitReached,
+    maxPages: report.config.maxPages,
     summary: report.summary,
     topFixes: topFixes(report, { limit: 5 }),
   }
 }
 
 function printTechnicalSection(
-  section: ReturnType<typeof savedTechnicalSection>,
+  section: ReturnType<typeof technicalSection>,
 ): void {
-  if (!section?.topFixes.length) return
+  if (!('topFixes' in section)) {
+    process.stdout.write(
+      `\nTechnical crawl evidence: ${section.reason ?? section.status}\n`,
+    )
+    return
+  }
+
+  const coverage = section.status === 'reused' ? 'saved' : 'new'
+  process.stdout.write(`\nTechnical crawl evidence (${coverage})\n`)
+  if (section.reason) process.stdout.write(`${section.reason}\n`)
+  if (section.capped) {
+    process.stdout.write(
+      `Coverage is capped at ${section.maxPages} pages. Run \`seo crawl\` for a broader investigation.\n`,
+    )
+  }
+  if (!section.topFixes.length) {
+    process.stdout.write('No prioritised technical fixes were found.\n')
+    return
+  }
   process.stdout.write('\nTechnical fixes with search value\n')
   printTable(
     ['Score', 'Rule', 'Severity', 'Search value', 'Verify'],
@@ -78,7 +101,11 @@ function printTechnicalSection(
 
 export function reportFollowups(
   report: DiagnoseWorkflowReport,
-  input: { crawlStartUrl?: string; projectId?: string } = {},
+  input: {
+    crawlStartUrl?: string
+    projectId?: string
+    technicalBaselineStatus?: TechnicalBaseline['status']
+  } = {},
 ) {
   const identity = input.projectId
     ? `--project ${shellArg(input.projectId)}`
@@ -155,7 +182,12 @@ export function reportFollowups(
     )
   }
 
-  if (input.crawlStartUrl && !hasTechnicalBaseline(report.site)) {
+  if (
+    input.crawlStartUrl &&
+    input.technicalBaselineStatus !== 'created' &&
+    input.technicalBaselineStatus !== 'refreshed' &&
+    input.technicalBaselineStatus !== 'reused'
+  ) {
     addFollowup(
       commands,
       `seo crawl --url ${shellArg(input.crawlStartUrl)} ${identity} --save`,
@@ -217,6 +249,24 @@ function workflowCommandMeta(input: {
           },
         },
       ),
+      ...(input.printFollowups
+        ? {
+            crawl: defaultTrueBooleanArg(
+              'Create or reuse a bounded technical crawl before the report.',
+              'Skip technical crawl evidence for this report.',
+            ),
+            'crawl-max-pages': {
+              type: 'string' as const,
+              description:
+                'Maximum pages for the report crawl. Defaults to 100.',
+            },
+            'crawl-max-depth': {
+              type: 'string' as const,
+              description:
+                'Maximum link depth for the report crawl. Defaults to 4.',
+            },
+          }
+        : {}),
       json: {
         type: 'boolean',
         default: false,
@@ -242,14 +292,27 @@ function workflowCommandMeta(input: {
       const outputReport = input.workflowName
         ? { ...report, workflow: input.workflowName }
         : report
-      const technicalCrawl = input.printFollowups
-        ? savedTechnicalSection(selection.site)
+      const technicalBaseline = input.printFollowups
+        ? await resolveTechnicalBaseline({
+            site: selection.site,
+            url: selection.client?.startUrl ?? startUrlForSite(selection.site),
+            projectId: selection.client?.id,
+            ga4PropertyId: selection.client?.ga4PropertyId,
+            crawl: !negatedBooleanArg(args, 'crawl'),
+            refresh: booleanArg(args.refresh),
+            maxPages: numberArg(args['crawl-max-pages']),
+            maxDepth: numberArg(args['crawl-max-depth']),
+          })
+        : undefined
+      const technicalCrawl = technicalBaseline
+        ? technicalSection(technicalBaseline)
         : undefined
       const followups = input.printFollowups
         ? reportFollowups(outputReport, {
             crawlStartUrl:
               selection.client?.startUrl ?? startUrlForSite(selection.site),
             projectId: selection.client?.id,
+            technicalBaselineStatus: technicalBaseline?.status,
           })
         : undefined
       if (json) {
@@ -266,7 +329,7 @@ function workflowCommandMeta(input: {
       }
       process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
       printWorkflow(outputReport)
-      printTechnicalSection(technicalCrawl)
+      if (technicalCrawl) printTechnicalSection(technicalCrawl)
       if (followups) printReportFollowups(followups)
     },
   })

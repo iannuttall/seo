@@ -46,3 +46,14 @@ test('report follow-ups use the site without a project profile', () => {
   assert.ok(followups.every((item) => !item.command.includes('--project')))
   assert.match(followups[0]?.command ?? '', /--days 90/)
 })
+
+test('report follow-ups do not request a crawl that just ran', () => {
+  const followups = reportFollowups(reportFixture(), {
+    crawlStartUrl: 'https://example.com/',
+    technicalBaselineStatus: 'created',
+  })
+
+  assert.ok(
+    followups.every((item) => !item.command.startsWith('seo crawl --url')),
+  )
+})

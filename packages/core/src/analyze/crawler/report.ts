@@ -155,6 +155,20 @@ export type CrawlAiSignals = {
   agentResources?: CrawlAiResourceSignal[]
 }
 
+export type CrawlSitemapDiscovery = {
+  dataStatus: 'complete' | 'partial' | 'unavailable'
+  urlsReturned: number
+  roots: Array<{
+    url: string
+    source: 'robots-txt' | 'default-path'
+    dataStatus: 'complete' | 'partial' | 'unavailable'
+    urlsReturned: number
+    sitemapsFetched: number
+    possiblyTruncated: boolean
+    warnings: string[]
+  }>
+}
+
 export type CrawlDataSourceStatus =
   | 'joined'
   | 'partial'
@@ -247,6 +261,7 @@ export type CrawlReport = {
   issueGroups: CrawlIssueGroup[]
   dataSources?: CrawlReportDataSources
   ai?: CrawlAiSignals
+  sitemapDiscovery?: CrawlSitemapDiscovery
   warnings: string[]
   caveats: string[]
 }
@@ -654,6 +669,7 @@ export function createCrawlReport(input: {
   site?: string
   ga4PropertyId?: string
   dataSources?: CrawlReportDataSources
+  sitemapDiscovery?: CrawlSitemapDiscovery
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -719,6 +735,13 @@ export function createCrawlReport(input: {
       : {}),
     ...(input.ai
       ? { ai: sanitizeTenantValue(input.ai) as CrawlAiSignals }
+      : {}),
+    ...(input.sitemapDiscovery
+      ? {
+          sitemapDiscovery: sanitizeTenantValue(
+            input.sitemapDiscovery,
+          ) as CrawlSitemapDiscovery,
+        }
       : {}),
     warnings: sanitizeMessages(input.warnings).sort(compareText),
     caveats: sanitizeMessages(input.caveats).sort(compareText),

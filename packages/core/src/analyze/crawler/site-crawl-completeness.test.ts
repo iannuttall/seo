@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { Response } from 'undici'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { crawlSite } from './site-crawl.js'
+import { withServer } from './site-crawl.test-fixtures.js'
 
 function aliasedPage(url: string): CrawlPageSnapshot {
   return {
@@ -33,6 +34,138 @@ function aliasedPage(url: string): CrawlPageSnapshot {
     },
   }
 }
+
+test('crawlSite seeds every same-origin sitemap declared in robots.txt', async () => {
+  let defaultSitemapRequests = 0
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end(
+        `User-agent: *\nAllow: /\nSitemap: ${fixture.baseUrl}/content-a.xml\nSitemap: ${fixture.baseUrl}/content-b.xml\n`,
+      )
+      return
+    }
+    if (req.url === '/content-a.xml' || req.url === '/content-b.xml') {
+      const page = req.url === '/content-a.xml' ? 'from-a' : 'from-b'
+      res.setHeader('content-type', 'application/xml')
+      res.end(`<?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        <url><loc>${fixture.baseUrl}/${page}</loc></url>
+      </urlset>`)
+      return
+    }
+    if (req.url === '/sitemap.xml') {
+      defaultSitemapRequests += 1
+      res.statusCode = 500
+      res.end('The default sitemap must not be fetched.')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(`<title>${req.url}</title><h1>${req.url}</h1>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      mode: 'sitemap',
+      maxPages: 10,
+      concurrency: 1,
+      checkExternal: false,
+      refresh: true,
+    })
+
+    assert.equal(defaultSitemapRequests, 0)
+    assert.deepEqual(
+      report.pages.map((page) => new URL(page.url).pathname),
+      ['/from-a', '/from-b'],
+    )
+    assert.deepEqual(report.sitemapDiscovery, {
+      dataStatus: 'complete',
+      urlsReturned: 2,
+      roots: [
+        {
+          url: `${fixture.baseUrl}/content-a.xml`,
+          source: 'robots-txt',
+          dataStatus: 'complete',
+          urlsReturned: 1,
+          sitemapsFetched: 1,
+          possiblyTruncated: false,
+          warnings: [],
+        },
+        {
+          url: `${fixture.baseUrl}/content-b.xml`,
+          source: 'robots-txt',
+          dataStatus: 'complete',
+          urlsReturned: 1,
+          sitemapsFetched: 1,
+          possiblyTruncated: false,
+          warnings: [],
+        },
+      ],
+    })
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite falls back after declared sitemaps return no URLs', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end(
+        `User-agent: *\nAllow: /\nSitemap: ${fixture.baseUrl}/missing-sitemap.xml\n`,
+      )
+      return
+    }
+    if (req.url === '/missing-sitemap.xml') {
+      res.statusCode = 404
+      res.end('missing')
+      return
+    }
+    if (req.url === '/sitemap.xml') {
+      res.setHeader('content-type', 'application/xml')
+      res.end(`<?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        <url><loc>${fixture.baseUrl}/from-fallback</loc></url>
+      </urlset>`)
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(`<title>${req.url}</title><h1>${req.url}</h1>`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      mode: 'sitemap',
+      maxPages: 10,
+      concurrency: 1,
+      checkExternal: false,
+      refresh: true,
+    })
+
+    assert.equal(report.status, 'partial')
+    assert.deepEqual(
+      report.pages.map((page) => new URL(page.url).pathname),
+      ['/from-fallback'],
+    )
+    assert.equal(report.sitemapDiscovery?.dataStatus, 'partial')
+    assert.deepEqual(
+      report.sitemapDiscovery?.roots.map((root) => [
+        root.url,
+        root.source,
+        root.dataStatus,
+      ]),
+      [
+        [`${fixture.baseUrl}/missing-sitemap.xml`, 'robots-txt', 'unavailable'],
+        [`${fixture.baseUrl}/sitemap.xml`, 'default-path', 'complete'],
+      ],
+    )
+    assert.match(report.warnings.join('\n'), /also tried \/sitemap\.xml/)
+  } finally {
+    await fixture.close()
+  }
+})
 
 test('crawlSite stays partial when queue safety excludes URLs before the page limit', async () => {
   const root = 'https://example.com/'

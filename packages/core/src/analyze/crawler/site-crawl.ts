@@ -2,16 +2,18 @@ import robotsParserModule from 'robots-parser'
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { crawlOne } from '../monitoring/crawl-page.js'
-import type { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import { crawlCaveats } from './crawl-caveats.js'
 import {
   abortController,
   CRAWL_CANCELLED,
   cancellationRace,
 } from './crawl-control.js'
+import { verifyExternalLinks } from './external-link-checks.js'
+import { resolveLinkGraphAliases } from './link-graph.js'
 import type {
   CrawlConfigInput,
   CrawlReport,
+  CrawlSitemapDiscovery,
   CrawlStatusEvent,
   CrawlStatusPhase,
 } from './report.js'
@@ -25,6 +27,7 @@ import {
   type CrawlSiteDependencies,
   resolveCrawlSiteDependencies,
 } from './site-crawl-dependencies.js'
+import { sitemapSeeds } from './sitemap-discovery.js'
 
 type QueueItem = {
   url: string
@@ -65,12 +68,6 @@ const AGENT_RESOURCE_PATHS = [
   '/openapi.json',
 ]
 
-type ExternalLinkCheck = {
-  url: string
-  status?: number
-  error?: string
-}
-
 export type { CrawlSiteDependencies } from './site-crawl-dependencies.js'
 
 function normalizeUrl(value: string, base?: string): string | undefined {
@@ -82,47 +79,6 @@ function normalizeUrl(value: string, base?: string): string | undefined {
   } catch {
     return undefined
   }
-}
-
-function resolveFetchedAlias(
-  url: string,
-  aliases: ReadonlyMap<string, string>,
-): string {
-  const visited = new Set<string>()
-  let current = url
-  while (!visited.has(current)) {
-    visited.add(current)
-    const next = aliases.get(current)
-    if (!next) return current
-    current = next
-  }
-  return current
-}
-
-function resolveLinkGraphAliases(
-  linkGraph: Record<string, string[]>,
-  aliases: ReadonlyMap<string, string>,
-): Record<string, string[]> {
-  const resolved: Record<string, Set<string>> = {}
-  for (const [source, targets] of Object.entries(linkGraph)) {
-    const resolvedSource = resolveFetchedAlias(source, aliases)
-    let resolvedTargets = resolved[resolvedSource]
-    if (!resolvedTargets) {
-      resolvedTargets = new Set<string>()
-      resolved[resolvedSource] = resolvedTargets
-    }
-    for (const target of targets) {
-      resolvedTargets.add(resolveFetchedAlias(target, aliases))
-    }
-  }
-  return Object.fromEntries(
-    Object.entries(resolved).map(([source, targets]) => [
-      source,
-      [...targets].sort((left, right) =>
-        left < right ? -1 : left > right ? 1 : 0,
-      ),
-    ]),
-  )
 }
 
 function sameOrigin(url: string, origin: string): boolean {
@@ -162,21 +118,6 @@ function passesFilters(
     (!include.length || include.some((pattern) => globMatch(pattern, url))) &&
     !exclude.some((pattern) => globMatch(pattern, url))
   )
-}
-
-async function sitemapSeeds(input: {
-  url: string
-  maxPages: number
-  warnings: string[]
-  fetchSitemapUrls: typeof fetchSitemapUrls
-}): Promise<string[]> {
-  const sitemapUrl = new URL('/sitemap.xml', input.url).toString()
-  const sitemap = await input.fetchSitemapUrls({
-    sitemapUrl,
-    limit: input.maxPages,
-  })
-  input.warnings.push(...sitemap.warnings)
-  return sitemap.urls
 }
 
 async function checkLlmsTxt(input: {
@@ -391,69 +332,6 @@ async function checkAgentResources(input: {
   return resources
 }
 
-async function checkExternalLink(
-  url: string,
-  timeoutMs: number,
-  fetch: typeof publicHttpFetch,
-  signal?: AbortSignal,
-): Promise<ExternalLinkCheck> {
-  const controller = abortController({ timeoutMs, signal })
-
-  try {
-    const response = await fetch(url, {
-      method: 'HEAD',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    await response.body?.cancel().catch(() => undefined)
-    return { url, status: response.status }
-  } catch (error) {
-    return {
-      url,
-      status: 0,
-      error: error instanceof Error ? error.message : String(error),
-    }
-  } finally {
-    controller.cleanup()
-  }
-}
-
-async function verifyExternalLinks(input: {
-  pages: CrawlReport['pages']
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<void> {
-  if (input.signal?.aborted) return
-  const urls = [
-    ...new Set(
-      input.pages
-        .flatMap((page) => page.sampleExternalLinks ?? [])
-        .slice(0, 200),
-    ),
-  ]
-  if (!urls.length) return
-
-  const checks = new Map<string, ExternalLinkCheck>()
-  for (let index = 0; index < urls.length; index += 8) {
-    if (input.signal?.aborted) break
-    const batch = urls.slice(index, index + 8)
-    const results = await Promise.all(
-      batch.map((url) =>
-        checkExternalLink(url, input.timeoutMs, input.fetch, input.signal),
-      ),
-    )
-    for (const result of results) checks.set(result.url, result)
-  }
-
-  for (const page of input.pages) {
-    const pageChecks = (page.sampleExternalLinks ?? [])
-      .map((url) => checks.get(url))
-      .filter((value): value is ExternalLinkCheck => Boolean(value))
-    if (pageChecks.length) page.externalLinkChecks = pageChecks
-  }
-}
-
 export async function crawlSite(
   input: CrawlConfigInput,
   dependencies?: CrawlSiteDependencies,
@@ -492,6 +370,7 @@ export async function crawlSite(
   let queueSafetySkippedUrls = 0
   let failedUrls = 0
   let verifiedLinks = 0
+  let sitemapDiscovery: CrawlSitemapDiscovery | undefined
   let statusEventChain = Promise.resolve()
   const emitStatus = (
     phase: CrawlStatusPhase,
@@ -646,14 +525,17 @@ export async function crawlSite(
       config.useSitemap &&
       (config.mode === 'site' || config.mode === 'sitemap')
     ) {
-      for (const url of await sitemapSeeds({
+      const sitemap = await sitemapSeeds({
         url: config.url,
         maxPages: config.maxPages,
+        declaredSitemapUrls: robotsTxt?.sitemapUrls ?? [],
         warnings,
         fetchSitemapUrls: deps.fetchSitemapUrls,
-      })) {
+      })
+      for (const url of sitemap.urls) {
         enqueue(url, 0)
       }
+      sitemapDiscovery = sitemap.discovery
     }
 
     const nextQueueItem = (): QueueItem | undefined => {
@@ -1021,6 +903,7 @@ export async function crawlSite(
         ...(robotsTxt ? { robotsTxt } : {}),
         ...(agentResources ? { agentResources } : {}),
       },
+      ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
       status: reportStatus,
       warnings,
       caveats: crawlCaveats({

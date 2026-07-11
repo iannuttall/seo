@@ -19,6 +19,10 @@ Use a project profile when you have one:
 seo crawl --project keep --max-pages 500
 ```
 
+When `robots.txt` declares same-origin sitemap files, the crawler tries those
+first. JSON records the sitemap sources and returned URL counts. If none return
+URLs, it also tries `/sitemap.xml`.
+
 ## What it captures
 
 For each page, the crawler records:

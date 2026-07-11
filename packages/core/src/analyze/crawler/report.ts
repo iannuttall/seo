@@ -11,7 +11,6 @@ import type {
   CrawlRequestObservation,
 } from '../monitoring/types.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
-import { isAuditableHtmlPage } from './page-eligibility.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 
@@ -222,10 +221,6 @@ export type CrawlReportSummary = {
   extractionFailures: number
   requestByStatus: Record<string, number>
   avgRequestMs?: number
-  healthScore: number
-  technicalScorePages: number
-  geoReadinessScore: number
-  geoScorePages: number
   highIssues: number
   mediumIssues: number
   lowIssues: number
@@ -419,7 +414,11 @@ function sanitizeCrawlConfig(config: CrawlConfig): CrawlConfig {
 }
 
 function sanitizePages(pages: CrawlPageSnapshot[]): CrawlPageSnapshot[] {
-  return sanitizeTenantValue(pages) as CrawlPageSnapshot[]
+  return (
+    sanitizeTenantValue(pages) as Array<
+      CrawlPageSnapshot & { seoScore?: unknown; geoScore?: unknown }
+    >
+  ).map(({ seoScore: _seoScore, geoScore: _geoScore, ...page }) => page)
 }
 
 function sanitizeIssues(issues: CrawlIssue[]): CrawlIssue[] {
@@ -535,13 +534,6 @@ export function summarizeCrawlReport(input: {
     avgRequestMs: requestMsCount
       ? Math.round(requestMs / requestMsCount)
       : undefined,
-    healthScore: averageScore(input.pages.map((page) => page.seoScore)),
-    technicalScorePages: input.pages.filter(
-      (page) => page.seoScore !== undefined,
-    ).length,
-    geoReadinessScore: averageScore(input.pages.map((page) => page.geoScore)),
-    geoScorePages: input.pages.filter((page) => page.geoScore !== undefined)
-      .length,
     highIssues: input.issues.filter((issue) => issue.severity === 'high')
       .length,
     mediumIssues: input.issues.filter((issue) => issue.severity === 'medium')
@@ -579,56 +571,6 @@ function crawlRunStats(
     verifiedLinks: stats.verifiedLinks ?? verifiedLinks,
     pageLimitReached: stats.pageLimitReached ?? false,
   }
-}
-
-function averageScore(values: Array<number | undefined>): number {
-  const scores = values.filter((value): value is number => value !== undefined)
-  if (!scores.length) return 0
-  return Math.round(
-    scores.reduce((sum, value) => sum + value, 0) / scores.length,
-  )
-}
-
-function severityPenalty(issue: CrawlIssue): number {
-  if (issue.severity === 'high') return 30
-  if (issue.severity === 'medium') return 15
-  return 5
-}
-
-function pageSeoScore(
-  page: CrawlPageSnapshot,
-  issues: CrawlIssue[],
-): number | undefined {
-  if (page.status === 0 || page.status >= 500) return 0
-  if (page.status >= 400) return 10
-  if (!isAuditableHtmlPage(page)) return undefined
-  const penalty = issues
-    .filter((issue) => issue.category !== 'geo')
-    .reduce((sum, issue) => sum + severityPenalty(issue), 0)
-  return Math.max(0, Math.min(100, 100 - penalty))
-}
-
-function scorePages(
-  pages: CrawlPageSnapshot[],
-  issues: CrawlIssue[],
-  opts: { preserveUnknownEligibilityScores?: boolean } = {},
-): CrawlPageSnapshot[] {
-  const issuesByUrl = new Map<string, CrawlIssue[]>()
-  for (const issue of issues) {
-    issuesByUrl.set(issue.url, [...(issuesByUrl.get(issue.url) ?? []), issue])
-  }
-  return pages.map((page) => {
-    const pageIssues = issuesByUrl.get(page.url) ?? []
-    const preserveStoredScores =
-      opts.preserveUnknownEligibilityScores && !page.contentType
-    return {
-      ...page,
-      seoScore: preserveStoredScores
-        ? page.seoScore
-        : pageSeoScore(page, pageIssues),
-      geoScore: preserveStoredScores ? page.geoScore : undefined,
-    }
-  })
 }
 
 function normalizeLinkUrl(value: string): string | undefined {
@@ -745,7 +687,7 @@ export function createCrawlReport(input: {
     ...auditCrawlPages(safePagesWithLinks, { startUrl: config.url }),
   ]
   const safeIssues = sanitizeIssues(issues)
-  const pages = scorePages(safePagesWithLinks, safeIssues)
+  const pages = safePagesWithLinks
   return {
     id: input.id ?? crawlRunId(),
     definitionId,
@@ -792,10 +734,8 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
     (sanitizeTenantValue(report.requests ?? []) ??
       []) as CrawlRequestObservation[],
   )
-  const pages = scorePages(
-    sortPages(sanitizePages(deriveInternalLinkAuthority(report.pages ?? []))),
-    issues,
-    { preserveUnknownEligibilityScores: true },
+  const pages = sortPages(
+    sanitizePages(deriveInternalLinkAuthority(report.pages ?? [])),
   )
   return {
     ...(sanitizeTenantValue(report) as CrawlReport),

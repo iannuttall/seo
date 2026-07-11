@@ -494,8 +494,6 @@ export const crawlPageSnapshotSchema = z.object({
   geo: geoSignalsSchema.optional(),
   searchMetrics: searchMetricsSchema.optional(),
   topQuery: searchMetricsSchema.extend({ query: z.string() }).optional(),
-  seoScore: z.number().int().min(0).max(100).optional(),
-  geoScore: z.number().int().min(0).max(100).optional(),
   analytics: analyticsSchema.optional(),
 })
 
@@ -704,10 +702,6 @@ export const crawlReportSummarySchema = z.object({
   extractionFailures: z.number().int(),
   requestByStatus: z.record(z.string(), z.number().int()),
   avgRequestMs: z.number().int().optional(),
-  healthScore: z.number().int().min(0).max(100),
-  technicalScorePages: z.number().int(),
-  geoReadinessScore: z.number().int().min(0).max(100),
-  geoScorePages: z.number().int(),
   highIssues: z.number().int(),
   mediumIssues: z.number().int(),
   lowIssues: z.number().int(),

@@ -20,8 +20,6 @@ export type CrawlSnapshotPageChange = {
     | 'h1'
     | 'indexable'
     | 'wordCount'
-    | 'seoScore'
-    | 'geoScore'
   >
   after?: Pick<
     CrawlPageSnapshot,
@@ -34,8 +32,6 @@ export type CrawlSnapshotPageChange = {
     | 'h1'
     | 'indexable'
     | 'wordCount'
-    | 'seoScore'
-    | 'geoScore'
   >
 }
 
@@ -59,8 +55,6 @@ export type CrawlSnapshotDiffReport = {
   summary: {
     pageDelta: number
     issueDelta: number
-    healthScoreDelta: number
-    geoReadinessDelta: number
     addedPages: number
     removedPages: number
     changedPages: number
@@ -94,8 +88,6 @@ function pagePick(page: CrawlPageSnapshot): CrawlSnapshotPageChange['before'] {
     h1: page.h1,
     indexable: page.indexable,
     wordCount: page.wordCount,
-    seoScore: page.seoScore,
-    geoScore: page.geoScore,
   }
 }
 
@@ -126,8 +118,6 @@ function comparePage(
   if (before.indexable !== after.indexable) changes.push('indexability')
   if (before.contentHash !== after.contentHash) changes.push('content')
   if (before.wordCount !== after.wordCount) changes.push('word_count')
-  if (before.seoScore !== after.seoScore) changes.push('seo_score')
-  if (before.geoScore !== after.geoScore) changes.push('geo_score')
   return changes
 }
 
@@ -322,11 +312,6 @@ export function compareCrawlReports(input: {
   const summary = {
     pageDelta: input.after.summary.totalPages - input.before.summary.totalPages,
     issueDelta: input.after.issues.length - input.before.issues.length,
-    healthScoreDelta:
-      input.after.summary.healthScore - input.before.summary.healthScore,
-    geoReadinessDelta:
-      input.after.summary.geoReadinessScore -
-      input.before.summary.geoReadinessScore,
     addedPages: changes.filter((item) => item.kind === 'added').length,
     removedPages: changes.filter((item) => item.kind === 'removed').length,
     changedPages: changes.filter((item) => item.kind === 'changed').length,

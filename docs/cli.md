@@ -53,7 +53,7 @@ seo explain --rule robots_blocked
 
 The crawler supports site, page, list, and sitemap modes. It respects robots.txt by default.
 
-Saved crawl comparisons show new, fixed, and changed pages, plus issue movement and health score changes. Use JSON mode when an agent needs exact page and rule deltas.
+Saved crawl comparisons show pages and issues that are new, fixed, or changed. Use JSON mode when an agent needs exact page and rule deltas.
 
 ## Search opportunities
 

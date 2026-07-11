@@ -171,8 +171,6 @@ test('crawlSite preserves fetch failures as structured request evidence', async 
   assert.equal(report.summary.responseRequests, 0)
   assert.equal(report.summary.failedRequests, 1)
   assert.equal(report.summary.requestByStatus['no-response'], 1)
-  assert.equal(report.summary.technicalScorePages, 0)
-  assert.equal(report.summary.geoScorePages, 0)
   assert.equal(report.status, 'failed')
   assert.deepEqual(
     report.issues.map((item) => [item.ruleId, item.url]),
@@ -340,8 +338,6 @@ test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
     )
     assert.equal(report.pages[0]?.extractionStatus, 'not-applicable')
     assert.equal(report.requests[0]?.extraction, 'not-applicable')
-    assert.equal(report.summary.technicalScorePages, 0)
-    assert.equal(report.summary.geoScorePages, 0)
     assert.deepEqual(
       report.issues.map((item) => item.ruleId),
       ['http_not_secure', 'x_robots_noindex'],

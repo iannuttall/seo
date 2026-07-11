@@ -100,7 +100,7 @@ test('compareCrawlReports summarizes saved snapshot changes', () => {
       .map((item) => [item.url, item.changes]),
     [
       ['https://example.com/', ['title', 'content']],
-      ['https://example.com/gone', ['status', 'seo_score']],
+      ['https://example.com/gone', ['status']],
       ['https://example.com/noindex', ['indexability']],
     ],
   )

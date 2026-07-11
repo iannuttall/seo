@@ -41,7 +41,9 @@ export const initCommand = defineCommand({
       [
         'No data leaves your machine.',
         `Config: ${getSeoCliPaths().configDir}`,
-        `Tokens: ${getSeoCliPaths().tokensFile}`,
+        status.activeMode === 'service-account'
+          ? 'Credentials: service account from the environment'
+          : `Tokens: ${getSeoCliPaths().tokensFile}`,
         `Cache: ${getSeoCliPaths().cacheDbFile}`,
         'Scope: https://www.googleapis.com/auth/webmasters.readonly',
         status.sharedConfigured
@@ -56,7 +58,7 @@ export const initCommand = defineCommand({
       return
     }
 
-    if (!status.tokens) {
+    if (!status.tokens && status.activeMode !== 'service-account') {
       const loginChoice = args.yes
         ? status.sharedConfigured
           ? 'shared'

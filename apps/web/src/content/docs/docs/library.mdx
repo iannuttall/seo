@@ -102,11 +102,13 @@ npx seo start
 ```
 
 Search Console and GA4 access stays read-only. A server, container, or CI runner
-still needs its own supported credential setup. Do not copy a personal token
-file into a deployment image.
+needs its own service account credential. Set
+`SEO_GOOGLE_SERVICE_ACCOUNT_JSON` from the runtime secret store, or mount a
+key file and set `SEO_GOOGLE_SERVICE_ACCOUNT_FILE`. Do not copy a personal
+token file into a deployment image.
 
 The [Google data guide](/docs/google) covers local OAuth, service accounts,
-provider limits, and incomplete rows.
+property permissions, provider limits, and incomplete rows.
 
 ## Embed the local MCP server
 

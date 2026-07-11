@@ -52,6 +52,6 @@ export function missingOAuthClientMessage(
   source: OAuthClientConfig['source'],
 ): string {
   return source === 'shared'
-    ? 'The stored Google login uses the shared seo app, but this build does not include that OAuth client. Reinstall `seo`, then run `seo auth login` again.'
+    ? 'The stored Google login uses the shared seo app, but this build is missing that OAuth client. Report this package issue at https://github.com/iannuttall/seo/issues, or use `seo auth setup-client` with your own desktop OAuth client.'
     : 'The stored Google login uses a BYO OAuth client that is no longer configured. Restore the same client with `seo auth setup-client`, or run `seo auth logout` before signing in with a different client.'
 }

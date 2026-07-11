@@ -1,6 +1,6 @@
 import { fetch, type RequestInit } from 'undici'
 import {
-  createAuthorizedClient,
+  createGoogleAccessTokenClient,
   type GoogleAccessTokenClient,
 } from '../gsc/auth.js'
 import { getDb, hashKey } from '../storage/database.js'
@@ -102,7 +102,7 @@ export async function runGa4Report(
     return JSON.parse(cached.response_json) as Ga4RunReportResult
   }
 
-  const { client } = await createAuthorizedClient()
+  const { client } = await createGoogleAccessTokenClient()
   const response = await authedFetch(
     client,
     `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
@@ -141,7 +141,7 @@ export async function runGa4Report(
 }
 
 export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
-  const { client } = await createAuthorizedClient()
+  const { client } = await createGoogleAccessTokenClient()
   const response = await authedFetch(
     client,
     'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',

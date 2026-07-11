@@ -9,16 +9,18 @@ import {
   missingOAuthClientMessage,
 } from './client-config.js'
 import {
+  getServiceAccountConfig,
+  getServiceAccountStatus,
+  ServiceAccountAccessTokenClient,
+  type ServiceAccountStatus,
+} from './service-account.js'
+import {
   GoogleTokenEndpointError,
   requestGoogleAccessToken,
 } from './token-endpoint.js'
-import type { OAuthClientConfig } from './types.js'
+import type { GoogleAccessTokenClient, OAuthClientConfig } from './types.js'
 
 const REFRESH_BUFFER_MS = 60_000
-
-export interface GoogleAccessTokenClient {
-  getAccessToken(): Promise<string>
-}
 
 function authRequired(): SeoError {
   return new SeoError(
@@ -137,18 +139,75 @@ export async function refreshAuthToken(): Promise<StoredTokens> {
   return refreshStoredToken({ onlyIfExpiring: false })
 }
 
+export type AuthorizedGoogleClient = {
+  client: GoogleAccessTokenClient
+  mode: 'oauth' | 'service-account'
+  identity: string
+  quotaIdentity: {
+    clientId: string
+    accountEmail: string
+  }
+  tokens?: StoredTokens
+}
+
+export async function createGoogleAccessTokenClient(): Promise<AuthorizedGoogleClient> {
+  const serviceAccount = getServiceAccountConfig()
+  if (serviceAccount) {
+    return {
+      client: new ServiceAccountAccessTokenClient(serviceAccount),
+      mode: 'service-account',
+      identity: serviceAccount.clientEmail,
+      quotaIdentity: {
+        clientId: 'service-account',
+        accountEmail: serviceAccount.clientEmail,
+      },
+    }
+  }
+
+  const { client, tokens } = await createAuthorizedClient()
+  const clientConfig = requireClientConfig(tokens)
+  return {
+    client,
+    mode: 'oauth',
+    identity: tokens.account_email,
+    quotaIdentity: {
+      clientId: clientConfig.clientId,
+      accountEmail: tokens.account_email,
+    },
+    tokens,
+  }
+}
+
 export async function authStatus(): Promise<{
   tokens?: StoredTokens
   configured: boolean
   sharedConfigured: boolean
   byoConfigured: boolean
+  activeMode: 'oauth' | 'service-account' | 'none'
+  identity?: string
+  serviceAccount: ServiceAccountStatus
 }> {
   const status = getAuthModeStatus()
   const tokens = await readTokens()
+  const serviceAccount = getServiceAccountStatus()
+  if (serviceAccount.configured || serviceAccount.error) {
+    return {
+      tokens,
+      configured: serviceAccount.configured,
+      sharedConfigured: status.sharedConfigured,
+      byoConfigured: status.byoConfigured,
+      activeMode: 'service-account',
+      identity: serviceAccount.identity,
+      serviceAccount,
+    }
+  }
   return {
     tokens,
     configured: Boolean(getClientConfig(tokens?.client_source)),
     sharedConfigured: status.sharedConfigured,
     byoConfigured: status.byoConfigured,
+    activeMode: tokens ? 'oauth' : 'none',
+    identity: tokens?.account_email,
+    serviceAccount,
   }
 }

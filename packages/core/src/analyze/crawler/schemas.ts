@@ -172,6 +172,66 @@ export const crawlPageSnapshotSchema = z.object({
           }),
         )
         .optional(),
+      rendering: z
+        .object({
+          mode: z.enum(['auto', 'on', 'off']),
+          status: z.enum([
+            'not-requested',
+            'not-needed',
+            'skipped',
+            'rendered',
+            'unavailable',
+            'failed',
+          ]),
+          raw: z
+            .object({
+              source: z.enum(['cache', 'network']),
+              cache: z.enum(['hit', 'miss', 'bypass']),
+              url: z.string().url(),
+              finalUrl: z.string().url(),
+              status: z.number().int(),
+            })
+            .optional(),
+          browser: z
+            .object({
+              source: z.enum(['environment', 'playwright-cache', 'system']),
+              product: z.string(),
+              version: z.string().optional(),
+            })
+            .optional(),
+          navigation: z
+            .object({
+              waitUntil: z.literal('domcontentloaded'),
+              networkIdleTimeoutMs: z.number().int().nonnegative(),
+              networkIdleReached: z.boolean(),
+            })
+            .optional(),
+          consoleErrors: z.array(z.string()).optional(),
+          pageErrors: z.array(z.string()).optional(),
+          failedRequests: z
+            .array(
+              z.object({
+                url: z.string(),
+                resourceType: z.string(),
+                error: z.string(),
+              }),
+            )
+            .optional(),
+          securityObservations: z
+            .array(
+              z.object({
+                kind: z.enum([
+                  'content-security-policy',
+                  'cors',
+                  'mixed-content',
+                ]),
+                message: z.string(),
+              }),
+            )
+            .optional(),
+          error: z.string().optional(),
+        })
+        .optional(),
     })
     .optional(),
   blocked: z.boolean().optional(),
@@ -547,7 +607,7 @@ export const crawlConfigSchema = z.object({
   respectRobots: z.boolean(),
   useSitemap: z.boolean(),
   checkExternal: z.boolean(),
-  js: z.union([z.boolean(), z.literal('auto')]),
+  js: z.union([z.enum(['auto', 'on', 'off']), z.boolean()]),
   refresh: z.boolean(),
   fetchRate: z.object({
     concurrency: z.number().int(),

@@ -4,22 +4,108 @@ import {
   normalizeRateControls,
   queueForHost,
 } from './page-fetcher/rate-controls.js'
-import { fetchWithPlaywright, looksLikeSpa } from './page-fetcher/rendered.js'
-import type { FetchPageOptions } from './page-fetcher/types.js'
+import {
+  createPageRenderer,
+  JavaScriptRenderingError,
+  looksLikeSpa,
+} from './page-fetcher/rendered.js'
+import type {
+  FetchPageOptions,
+  JavaScriptRenderingInput,
+  JavaScriptRenderingMode,
+} from './page-fetcher/types.js'
 
+export { createPageRenderer } from './page-fetcher/rendered.js'
 export type {
   FetchPageOptions,
   FetchRateControls,
+  JavaScriptRenderingInput,
+  JavaScriptRenderingMode,
+  PageRenderer,
 } from './page-fetcher/types.js'
+
+export type FetchPageDependencies = {
+  fetchPlain?: typeof fetchPlain
+  createPageRenderer?: typeof createPageRenderer
+}
+
+export function normalizeJavaScriptRenderingMode(
+  input: JavaScriptRenderingInput | undefined,
+): JavaScriptRenderingMode {
+  if (input === true) return 'on'
+  if (input === false) return 'off'
+  return input ?? 'auto'
+}
+
+function rawObservation(result: PageFetchResult) {
+  return {
+    source: result.diagnostics.source === 'cache' ? 'cache' : 'network',
+    cache: result.diagnostics.cache,
+    url: result.url,
+    finalUrl: result.finalUrl,
+    status: result.status,
+  } as const
+}
+
+function withRenderingState(
+  result: PageFetchResult,
+  mode: JavaScriptRenderingMode,
+  status: NonNullable<PageFetchResult['diagnostics']['rendering']>['status'],
+  input: {
+    error?: string
+    warnings?: string[]
+  } = {},
+): PageFetchResult {
+  return {
+    ...result,
+    diagnostics: {
+      ...result.diagnostics,
+      rendering: {
+        mode,
+        status,
+        raw: rawObservation(result),
+        ...(input.error ? { error: input.error } : {}),
+      },
+    },
+    warnings: [...result.warnings, ...(input.warnings ?? [])],
+  }
+}
+
+function renderingFallback(
+  result: PageFetchResult,
+  mode: JavaScriptRenderingMode,
+  error: unknown,
+): PageFetchResult {
+  const unavailable =
+    error instanceof JavaScriptRenderingError &&
+    error.kind === 'browser-unavailable'
+  const message =
+    error instanceof Error ? error.message : 'JavaScript rendering failed.'
+  return withRenderingState(
+    result,
+    mode,
+    unavailable ? 'unavailable' : 'failed',
+    {
+      error: message,
+      warnings: [
+        `${mode === 'on' ? 'JavaScript rendering was requested' : 'JavaScript rendering was attempted'} but ${unavailable ? 'is unavailable' : 'failed'}. This result uses raw HTTP HTML only, so client-rendered content, metadata, and links may be incomplete. ${message}`,
+      ],
+    },
+  )
+}
 
 export async function fetchPage(
   url: string,
   opts: FetchPageOptions = {},
+  dependencies: FetchPageDependencies = {},
 ): Promise<PageFetchResult> {
+  const renderingMode = normalizeJavaScriptRenderingMode(opts.js)
+  const plainFetch = dependencies.fetchPlain ?? fetchPlain
+  const makeRenderer = dependencies.createPageRenderer ?? createPageRenderer
   const rate = normalizeRateControls(opts.rate)
   const queue = queueForHost(new URL(url).host, rate)
   return (await queue.add<PageFetchResult>(async () => {
-    const first = await fetchPlain(
+    const first = await plainFetch(
       url,
       opts.refresh,
       opts.timeoutMs,
@@ -27,34 +113,48 @@ export async function fetchPage(
       opts.signal,
       opts.respectRobots,
     )
-    const warnings = [...first.warnings]
-    const lowWordCount = first.html.split(/\s+/).length < 150
     const shouldRetryJs =
-      opts.js === true ||
-      (opts.js === 'auto' && (lowWordCount || looksLikeSpa(first.html)))
+      renderingMode === 'on' ||
+      (renderingMode === 'auto' && looksLikeSpa(first.html))
 
     if (!shouldRetryJs || opts.signal?.aborted) {
-      if (opts.js === 'auto' && (lowWordCount || looksLikeSpa(first.html))) {
-        warnings.push('Page looks like SPA - re-run with --js to render.')
-      }
-      return { ...first, warnings }
+      return withRenderingState(
+        first,
+        renderingMode,
+        opts.signal?.aborted
+          ? 'skipped'
+          : renderingMode === 'off'
+            ? 'not-requested'
+            : 'not-needed',
+      )
     }
 
+    const ownsRenderer = !opts.renderer
+    const renderer = opts.renderer ?? makeRenderer()
     try {
-      const rendered = await fetchWithPlaywright(url, rate)
+      const rendered = await renderer.render(url, rate, {
+        timeoutMs: opts.timeoutMs,
+        signal: opts.signal,
+      })
       return {
         ...rendered,
         diagnostics: {
           ...rendered.diagnostics,
           robotsTxt: first.diagnostics.robotsTxt,
+          redirectChain: first.diagnostics.redirectChain,
+          rendering: {
+            ...rendered.diagnostics.rendering,
+            mode: renderingMode,
+            status: 'rendered',
+            raw: rawObservation(first),
+          },
         },
-        warnings,
+        warnings: [...first.warnings, ...rendered.warnings],
       }
     } catch (error) {
-      warnings.push(
-        error instanceof Error ? error.message : 'JS rendering failed.',
-      )
-      return { ...first, warnings }
+      return renderingFallback(first, renderingMode, error)
+    } finally {
+      if (ownsRenderer) await renderer.close()
     }
   })) as PageFetchResult
 }

@@ -106,13 +106,21 @@ before opening a ticket.
 ## Render JavaScript when the source response is not enough
 
 ```sh
-seo crawl https://example.com --js --max-pages 50
+seo crawl https://example.com --rendering on --max-pages 50
 ```
 
-`--js` forces browser rendering when Playwright is installed. Use it for a
-client-rendered site whose links, canonicals, or main content are absent from
-the initial HTML. Browser rendering costs more time and memory, so a smaller
-first run is sensible.
+Use `--rendering on` when the links, canonicals, or main content are missing
+from the initial HTML. `auto` is the default. It only opens a browser when the
+response looks client-rendered. `off` keeps the raw HTTP response.
+
+SEO uses a local Chrome or Chromium browser. It reuses a browser process during
+a crawl and keeps each page in its own browser context. If no compatible
+browser is available, the report says that rendered evidence is unavailable and
+keeps the raw response separate. It does not pretend raw HTML was rendered.
+
+Install Chrome or Chromium in the usual way. For a Playwright-managed browser,
+run the exact command shown by the CLI. `--js` remains an alias for
+`--rendering on` while existing scripts move to the explicit mode.
 
 Google's
 <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics" target="_blank" rel="noreferrer">JavaScript SEO guidance</a>

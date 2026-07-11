@@ -17,7 +17,7 @@ export default defineConfig([
     clean: true,
     deps: {
       alwaysBundle: bundledPackages,
-      neverBundle: ['playwright'],
+      neverBundle: ['playwright-core'],
       onlyBundle: false,
     },
     banner: {
@@ -36,7 +36,7 @@ export default defineConfig([
     minify: true,
     deps: {
       alwaysBundle: bundledPackages,
-      neverBundle: ['playwright'],
+      neverBundle: ['playwright-core'],
       onlyBundle: false,
     },
     banner: {

@@ -50,6 +50,21 @@ test('normalizeCrawlConfig keeps fetch controls stable', () => {
   })
 })
 
+test('normalizeCrawlConfig writes explicit rendering modes', () => {
+  assert.equal(
+    normalizeCrawlConfig({ url: 'https://example.com', js: true }).js,
+    'on',
+  )
+  assert.equal(
+    normalizeCrawlConfig({ url: 'https://example.com', js: false }).js,
+    'off',
+  )
+  assert.equal(
+    normalizeCrawlConfig({ url: 'https://example.com', js: 'auto' }).js,
+    'auto',
+  )
+})
+
 test('crawlConfigHash is stable for equivalent configs', () => {
   const a = crawlConfigHash({
     url: 'https://example.com',

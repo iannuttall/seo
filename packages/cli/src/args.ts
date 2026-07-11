@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { SeoError } from '@seo/core'
+import { type JavaScriptRenderingMode, SeoError } from '@seo/core'
 import type { BooleanArgDef } from 'citty'
 
 export function defaultTrueBooleanArg(
@@ -29,6 +29,32 @@ export function projectArg(args: Record<string, unknown>): string | undefined {
 
 export function booleanArg(value: unknown): boolean | undefined {
   return typeof value === 'boolean' ? value : undefined
+}
+
+/**
+ * `--js` remains an alias for `--rendering on` while callers move to the
+ * explicit modes. A mode is returned even when neither flag was supplied so
+ * commands can pass it straight to the core API.
+ */
+export function renderingModeArg(
+  args: Record<string, unknown>,
+): JavaScriptRenderingMode {
+  const rendering = stringArg(args.rendering)
+  if (
+    rendering !== undefined &&
+    rendering !== 'auto' &&
+    rendering !== 'on' &&
+    rendering !== 'off'
+  ) {
+    throw new SeoError('INVALID_INPUT', '--rendering must be auto, on, or off.')
+  }
+  if (booleanArg(args.js) === true && rendering && rendering !== 'on') {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use either --js or --rendering on, not both with different modes.',
+    )
+  }
+  return rendering ?? (booleanArg(args.js) ? 'on' : 'auto')
 }
 
 export function negatedBooleanArg(

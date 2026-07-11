@@ -339,12 +339,12 @@ export const reportGuideOverridesAF: Partial<
   'compare-crawls': {
     name: 'Compare two saved crawls',
     summary:
-      'See which pages, issues, and technical scores appeared, disappeared, or changed between two saved crawl snapshots.',
+      'See which pages and technical issues appeared, disappeared, or changed between two saved crawl snapshots.',
     lead: 'Use this when both crawl snapshots already exist and you need a repeatable release or progress comparison. The report checks whether their scopes are comparable before presenting changes.',
     inputs: [
       {
         label: 'Earlier saved crawl report',
-        role: 'Provides the baseline pages, issues, scores, config, limits, and source status.',
+        role: 'Provides the baseline pages, issues, config, limits, and source status.',
       },
       {
         label: 'Later saved crawl report',
@@ -353,7 +353,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     checks: [
       'Compares crawl configuration, scope, completion, caps, and source status before treating totals as comparable.',
-      'Diffs pages, issue instances, grouped rules, scores, and summary counts with stable ordering.',
+      'Diffs pages, issue instances, grouped rules, and summary counts with stable ordering.',
     ],
     returns: [
       'New, resolved, and persistent page and issue changes with before and after summary values.',

@@ -38,8 +38,6 @@ const pageHeaders = [
   'images_missing_alt',
   'oversized_image_candidates',
   'schema_types',
-  'seo_score',
-  'geo_score',
   'clicks',
   'impressions',
   'sessions',
@@ -85,8 +83,6 @@ export function renderCrawlPagesCsv(report: CrawlReport): string {
       images_missing_alt: page.imagesMissingAlt,
       oversized_image_candidates: page.oversizedImageCandidates?.length ?? 0,
       schema_types: page.schemaTypes?.join('|'),
-      seo_score: page.seoScore,
-      geo_score: page.geoScore,
       clicks: page.searchMetrics?.clicks,
       impressions: page.searchMetrics?.impressions,
       sessions: page.analytics?.sessions,
@@ -111,7 +107,6 @@ export function renderCrawlPretty(
     `Status: ${report.status}`,
     `Documents: ${report.summary.totalPages} retained; ${requestSummary}, ${report.summary.discoveredUrls} URLs discovered, ${report.summary.failedUrls} failed, ${report.summary.skippedUrls} skipped`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
-    `Scores: ${report.summary.technicalScorePages ? `${report.summary.healthScore}/100 technical (${report.summary.technicalScorePages} pages)` : 'technical not available'}, ${report.summary.geoScorePages ? `${report.summary.geoReadinessScore}/100 GEO (${report.summary.geoScorePages} pages)` : 'GEO not available'}`,
   ]
 
   if (fixes.length) {

@@ -158,11 +158,13 @@ test('crawl report store recomputes derived fields on load', () => {
     unknown
   >
   const legacyPages = legacyJson.pages as Array<Record<string, unknown>>
-  delete legacyPages[0]?.seoScore
-  delete legacyPages[0]?.geoScore
   const legacySummary = legacyJson.summary as Record<string, unknown>
-  delete legacySummary.healthScore
-  delete legacySummary.geoReadinessScore
+  const legacyPage = legacyPages[0]
+  assert.ok(legacyPage)
+  legacyPage.seoScore = 70
+  legacyPage.geoScore = 20
+  legacySummary.healthScore = 70
+  legacySummary.geoReadinessScore = 20
   delete legacyJson.definitionId
   delete legacyJson.requests
   delete legacyJson.requestEvidenceStatus
@@ -174,10 +176,10 @@ test('crawl report store recomputes derived fields on load', () => {
 
   const loaded = loadCrawlReport(report.id)
 
-  assert.equal(loaded?.summary.healthScore, 70)
-  assert.equal(loaded?.summary.geoReadinessScore, 0)
-  assert.equal(loaded?.pages[0]?.seoScore, 70)
-  assert.equal(loaded?.pages[0]?.geoScore, undefined)
+  assert.equal('healthScore' in (loaded?.summary ?? {}), false)
+  assert.equal('geoReadinessScore' in (loaded?.summary ?? {}), false)
+  assert.equal('seoScore' in (loaded?.pages[0] ?? {}), false)
+  assert.equal('geoScore' in (loaded?.pages[0] ?? {}), false)
   assert.equal(loaded?.requestEvidenceStatus, 'unavailable')
   assert.equal(loaded?.summary.attemptedRequests, 0)
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')

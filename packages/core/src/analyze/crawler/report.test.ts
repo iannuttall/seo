@@ -177,10 +177,6 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.summary.skippedUrls, 0)
   assert.equal(report.summary.failedUrls, 1)
   assert.equal(report.summary.verifiedLinks, 1)
-  assert.equal(report.summary.healthScore, 40)
-  assert.equal(report.summary.technicalScorePages, 2)
-  assert.equal(report.summary.geoReadinessScore, 0)
-  assert.equal(report.summary.geoScorePages, 0)
   assert.equal(report.summary.highIssues, 2)
   assert.equal(report.summary.mediumIssues, 1)
   assert.equal(report.summary.avgResponseMs, 200)
@@ -191,9 +187,6 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.pages[0]?.internalLinkAuthorityScore, 0)
   assert.equal(report.pages[1]?.internalInlinkCount, 1)
   assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
-  assert.equal(report.pages[0]?.seoScore, 70)
-  assert.equal(report.pages[0]?.geoScore, undefined)
-  assert.equal(report.pages[1]?.seoScore, 10)
   assert.equal(report.issueGroups[0]?.ruleId, 'missing_title')
   assert.equal(report.issueGroups[0]?.count, 2)
 })
@@ -250,7 +243,7 @@ test('createCrawlReport keeps request outcomes separate from documents', () => {
   )
 })
 
-test('legacy report normalization preserves scores without media evidence', () => {
+test('legacy report normalization removes unsupported stored scores', () => {
   const report = createCrawlReport({
     config: { url: 'https://example.com/' },
     pages: [
@@ -266,21 +259,26 @@ test('legacy report normalization preserves scores without media evidence', () =
     ],
     issues: [],
   })
-  if (report.pages[0]) {
-    report.pages[0].seoScore = 82
-    report.pages[0].geoScore = 64
+  const legacy = JSON.parse(JSON.stringify(report)) as CrawlReport & {
+    summary: Record<string, unknown>
+    pages: Array<Record<string, unknown>>
   }
-  const legacy = JSON.parse(JSON.stringify(report)) as CrawlReport
+  const legacyPage = legacy.pages[0]
+  assert.ok(legacyPage)
+  legacyPage.seoScore = 82
+  legacyPage.geoScore = 64
+  legacy.summary.healthScore = 82
+  legacy.summary.geoReadinessScore = 64
   delete (legacy as Partial<CrawlReport>).requests
   delete (legacy as Partial<CrawlReport>).requestEvidenceStatus
 
   const normalized = normalizeLoadedCrawlReport(legacy)
 
   assert.equal(normalized.requestEvidenceStatus, 'unavailable')
-  assert.equal(normalized.pages[0]?.seoScore, 82)
-  assert.equal(normalized.pages[0]?.geoScore, 64)
-  assert.equal(normalized.summary.healthScore, 82)
-  assert.equal(normalized.summary.geoReadinessScore, 64)
+  assert.equal('seoScore' in (normalized.pages[0] ?? {}), false)
+  assert.equal('geoScore' in (normalized.pages[0] ?? {}), false)
+  assert.equal('healthScore' in normalized.summary, false)
+  assert.equal('geoReadinessScore' in normalized.summary, false)
 })
 
 test('createCrawlReport orders request and document evidence deterministically', () => {

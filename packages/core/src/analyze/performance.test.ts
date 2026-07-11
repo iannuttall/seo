@@ -53,18 +53,54 @@ async function fakeLighthouseBin(
       },
     },
   },
-): Promise<{ bin: string; dir: string }> {
+  options: { expectResolvedBrowser?: boolean } = {},
+): Promise<{ bin: string; browser?: string; dir: string }> {
   const dir = await mkdtemp(join(tmpdir(), 'seo-lighthouse-'))
   const bin = join(dir, 'lighthouse')
+  const browser = options.expectResolvedBrowser
+    ? join(dir, 'managed-chrome')
+    : undefined
+  if (browser) {
+    await writeFile(browser, '')
+    await chmod(browser, 0o755)
+  }
+  const browserCheck = browser
+    ? `if [ "$CHROME_PATH" != "${browser}" ]; then exit 12; fi\n`
+    : ''
   await writeFile(
     bin,
     `#!/bin/sh
+${browserCheck}
 printf '%s\\n' '${JSON.stringify(result)}'
 `,
   )
   await chmod(bin, 0o755)
-  return { bin, dir }
+  return { bin, browser, dir }
 }
+
+test('performanceAudit uses the resolved local browser for Lighthouse', async () => {
+  const { bin, browser, dir } = await fakeLighthouseBin(undefined, {
+    expectResolvedBrowser: true,
+  })
+  const previousBrowser = process.env.SEO_BROWSER_EXECUTABLE_PATH
+  process.env.SEO_BROWSER_EXECUTABLE_PATH = browser
+  try {
+    const report = await performanceAudit({
+      url: 'https://example.com/resolved-browser',
+      lighthouseBin: bin,
+      refresh: true,
+    })
+
+    assert.equal(report.source, 'lighthouse')
+  } finally {
+    if (previousBrowser === undefined) {
+      delete process.env.SEO_BROWSER_EXECUTABLE_PATH
+    } else {
+      process.env.SEO_BROWSER_EXECUTABLE_PATH = previousBrowser
+    }
+    await rm(dir, { recursive: true, force: true })
+  }
+})
 
 test('performanceAudit falls back when Lighthouse is unavailable', async () => {
   const server = createServer((_req, res) => {

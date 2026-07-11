@@ -3,6 +3,7 @@ import type { publicHttpFetch } from '../../fetch/http-client.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { crawlOne } from '../monitoring/crawl-page.js'
 import type { fetchSitemapUrls } from '../monitoring/sitemaps.js'
+import { crawlCaveats } from './crawl-caveats.js'
 import {
   abortController,
   CRAWL_CANCELLED,
@@ -157,13 +158,10 @@ function passesFilters(
   include: string[],
   exclude: string[],
 ): boolean {
-  if (include.length && !include.some((pattern) => globMatch(pattern, url))) {
-    return false
-  }
-  if (exclude.some((pattern) => globMatch(pattern, url))) {
-    return false
-  }
-  return true
+  return (
+    (!include.length || include.some((pattern) => globMatch(pattern, url))) &&
+    !exclude.some((pattern) => globMatch(pattern, url))
+  )
 }
 
 async function sitemapSeeds(input: {
@@ -491,6 +489,7 @@ export async function crawlSite(
   const followLinks = config.mode === 'site'
   let queuedUrls = 0
   let skippedUrls = 0
+  let queueSafetySkippedUrls = 0
   let failedUrls = 0
   let verifiedLinks = 0
   let statusEventChain = Promise.resolve()
@@ -616,6 +615,7 @@ export async function crawlSite(
       }
       if (queue.length + visited.size + inFlight.size >= config.maxPages * 5) {
         skippedUrls += 1
+        queueSafetySkippedUrls += 1
         emitStatus('url_skipped', {
           url: normalized,
           depth,
@@ -940,6 +940,7 @@ export async function crawlSite(
       cancelled ||
       failedUrls > 0 ||
       pageLimitReached ||
+      queueSafetySkippedUrls > 0 ||
       queue.length > 0 ||
       inFlight.size > 0 ||
       warnings.length > 0
@@ -1022,11 +1023,12 @@ export async function crawlSite(
       },
       status: reportStatus,
       warnings,
-      caveats: cancelled
-        ? ['Crawl cancelled before all queued URLs finished.']
-        : pageLimitReached
-          ? [`Stopped after reaching maxPages (${config.maxPages}).`]
-          : [],
+      caveats: crawlCaveats({
+        cancelled,
+        pageLimitReached,
+        maxPages: config.maxPages,
+        queueSafetySkippedUrls,
+      }),
       stats: {
         discoveredUrls: discovered.size,
         queuedUrls,

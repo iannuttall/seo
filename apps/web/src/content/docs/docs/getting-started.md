@@ -3,8 +3,9 @@ title: Set up SEO Skills CLI and run your first report
 description: Install SEO Skills CLI, connect Search Console, save a local project profile, and run a first report that points you to a clear next action.
 ---
 
-You need Node 22 or newer and a Google account that can read the site's Search
-Console property. GA4 is optional.
+You need Node 22 or newer. A Google account that can read the site's Search
+Console property adds traffic and query evidence. GA4 is optional. You can
+still start with a local technical report before connecting Google.
 
 ## Install SEO Skills CLI
 
@@ -57,6 +58,17 @@ seo report
 analytics, and technical evidence, then recommends focused reports that can
 answer the next question. Start there unless you already know the exact job.
 
+If you only have a URL, run the technical-only version of the report.
+
+```sh
+seo report --url https://example.com
+```
+
+This creates a bounded local crawl and saves the evidence. Search Console
+sections say that they were skipped. They do not become zeroes or guesses. Run
+`seo start` later when you want click, query, ranking, and GA4 data in the
+same investigation.
+
 Read the result in this order:
 
 1. Check the date range and data status.
@@ -85,6 +97,7 @@ profile when a command has enough explicit input:
 
 ```sh
 seo report --site sc-domain:example.com
+seo report --url https://example.com
 seo crawl https://example.com
 seo audit-page --url https://example.com/pricing
 ```

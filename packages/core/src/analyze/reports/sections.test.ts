@@ -432,6 +432,18 @@ test('skipped evidence is unavailable instead of a reassuring negative', () => {
   assert.doesNotMatch(opportunities, /No material content opportunity/)
 })
 
+test('repeated skip reasons are compact in narrative caveats', () => {
+  const report = emptyDiagnosis()
+  report.skippedSections = [
+    { section: 'traffic anomaly', reason: 'No property was selected.' },
+    { section: 'decay analysis', reason: 'No property was selected.' },
+  ]
+
+  assert.deepEqual(diagnosisAvailabilityCaveats(report), [
+    'Skipped 2 sections: No property was selected.',
+  ])
+})
+
 test('quick-win-only evidence is visible in the headline, content, and priorities', () => {
   const report = emptyDiagnosis()
   const analysis = analyzeQuickWinsFromRows({

@@ -1,6 +1,7 @@
 import {
   diagnosePropertyWorkflow,
   resolveTechnicalBaseline,
+  SeoError,
   type TechnicalBaseline,
   topFixes,
 } from '@seo/core'
@@ -32,6 +33,14 @@ function shellArg(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`
 }
 
+function siteForDirectUrl(url: string): string {
+  try {
+    return new URL(url).origin
+  } catch {
+    throw new SeoError('INVALID_INPUT', 'Pass a valid absolute URL with --url.')
+  }
+}
+
 function addFollowup(
   commands: Array<{ command: string; why: string }>,
   command: string,
@@ -59,6 +68,9 @@ function technicalSection(baseline: TechnicalBaseline) {
     crawlStatus: report.status,
     capped: report.summary.pageLimitReached,
     maxPages: report.config.maxPages,
+    searchDataJoined:
+      (report.dataSources?.searchConsole.joinedMetricPages ?? 0) > 0 ||
+      (report.dataSources?.searchConsole.joinedQueryPages ?? 0) > 0,
     summary: report.summary,
     topFixes: topFixes(report, { limit: 5 }),
   }
@@ -86,7 +98,24 @@ function printTechnicalSection(
     process.stdout.write('No prioritised technical fixes were found.\n')
     return
   }
-  process.stdout.write('\nTechnical fixes with search value\n')
+  process.stdout.write(
+    section.searchDataJoined
+      ? '\nTechnical fixes with search value\n'
+      : '\nTechnical fixes (no Search Console data joined)\n',
+  )
+  if (!section.searchDataJoined) {
+    printTable(
+      ['#', 'Rule', 'Severity', 'Affected URLs', 'Verify'],
+      section.topFixes.map((fix, index) => [
+        index + 1,
+        fix.ruleId,
+        fix.severity,
+        fix.count,
+        truncate(fix.howToVerify, 72),
+      ]),
+    )
+    return
+  }
   printTable(
     ['Score', 'Rule', 'Severity', 'Search value', 'Verify'],
     section.topFixes.map((fix) => [
@@ -105,8 +134,37 @@ export function reportFollowups(
     crawlStartUrl?: string
     projectId?: string
     technicalBaselineStatus?: TechnicalBaseline['status']
+    searchDataAvailable?: boolean
   } = {},
 ) {
+  if (input.searchDataAvailable === false) {
+    const commands: Array<{ command: string; why: string }> = []
+    if (
+      input.crawlStartUrl &&
+      input.technicalBaselineStatus !== 'created' &&
+      input.technicalBaselineStatus !== 'refreshed' &&
+      input.technicalBaselineStatus !== 'reused'
+    ) {
+      addFollowup(
+        commands,
+        `seo crawl --url ${shellArg(input.crawlStartUrl)} --save`,
+        'Create the technical crawl that this report needs before opening a page-level follow-up.',
+      )
+    } else if (input.crawlStartUrl) {
+      addFollowup(
+        commands,
+        `seo audit-page --url ${shellArg(input.crawlStartUrl)}`,
+        'Inspect one important page in detail after the site-level crawl.',
+      )
+    }
+    addFollowup(
+      commands,
+      'seo start',
+      'Connect Search Console when you want traffic, query, and ranking evidence alongside the crawl.',
+    )
+    return commands
+  }
+
   const identity = input.projectId
     ? `--project ${shellArg(input.projectId)}`
     : `--site ${shellArg(report.site)}`
@@ -217,6 +275,13 @@ function printReportFollowups(
   )
 }
 
+function printTechnicalOnlyIntro(site: string): void {
+  process.stdout.write(`# Technical SEO report: ${site}\n\n`)
+  process.stdout.write(
+    'Search Console is not connected for this run. The crawl below shows local technical evidence only. Run `seo start` when you want traffic, query, and ranking evidence in the same report.\n',
+  )
+}
+
 function workflowCommandMeta(input: {
   name: string
   description: string
@@ -230,6 +295,15 @@ function workflowCommandMeta(input: {
         type: 'string',
         description: 'GSC property URL, for example sc-domain:example.com.',
       },
+      ...(input.printFollowups
+        ? {
+            url: {
+              type: 'string' as const,
+              description:
+                'Crawl URL for a technical-only report. Search Console analyses are skipped unless you also pass --site or --project.',
+            },
+          }
+        : {}),
       client: {
         type: 'string',
         description: 'Legacy alias for --project.',
@@ -275,29 +349,38 @@ function workflowCommandMeta(input: {
     },
     run: async ({ args }) => {
       const json = jsonFlag(args)
-      const selection = await resolveClientSelection({
-        client: projectArg(args),
-        site: stringArg(args.site),
-        options: { json, refresh: booleanArg(args.refresh) },
-      })
+      const project = projectArg(args)
+      const explicitSite = stringArg(args.site)
+      const directUrl = input.printFollowups ? stringArg(args.url) : undefined
+      const useSearchData = Boolean(project || explicitSite || !directUrl)
+      const selection = useSearchData
+        ? await resolveClientSelection({
+            client: project,
+            site: explicitSite,
+            options: { json, refresh: booleanArg(args.refresh) },
+          })
+        : undefined
+      const site = selection?.site ?? siteForDirectUrl(directUrl ?? '')
       const report = await diagnosePropertyWorkflow({
-        site: selection.site,
+        site,
         days: numberArg(args.days),
         recentDays: numberArg(args.recent),
         limit: numberArg(args.limit),
-        brandTerms: selection.client?.brandTerms,
+        brandTerms: selection?.client?.brandTerms,
         includeBrand: booleanArg(args['include-brand']),
         refresh: booleanArg(args.refresh),
+        skipSearchData: !useSearchData,
       })
       const outputReport = input.workflowName
         ? { ...report, workflow: input.workflowName }
         : report
       const technicalBaseline = input.printFollowups
         ? await resolveTechnicalBaseline({
-            site: selection.site,
-            url: selection.client?.startUrl ?? startUrlForSite(selection.site),
-            projectId: selection.client?.id,
-            ga4PropertyId: selection.client?.ga4PropertyId,
+            site,
+            url:
+              directUrl ?? selection?.client?.startUrl ?? startUrlForSite(site),
+            projectId: selection?.client?.id,
+            ga4PropertyId: selection?.client?.ga4PropertyId,
             crawl: !negatedBooleanArg(args, 'crawl'),
             refresh: booleanArg(args.refresh),
             maxPages: numberArg(args['crawl-max-pages']),
@@ -310,9 +393,10 @@ function workflowCommandMeta(input: {
       const followups = input.printFollowups
         ? reportFollowups(outputReport, {
             crawlStartUrl:
-              selection.client?.startUrl ?? startUrlForSite(selection.site),
-            projectId: selection.client?.id,
+              directUrl ?? selection?.client?.startUrl ?? startUrlForSite(site),
+            projectId: selection?.client?.id,
             technicalBaselineStatus: technicalBaseline?.status,
+            searchDataAvailable: useSearchData,
           })
         : undefined
       if (json) {
@@ -327,8 +411,12 @@ function workflowCommandMeta(input: {
         )
         return
       }
-      process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
-      printWorkflow(outputReport)
+      if (useSearchData) {
+        process.stdout.write(`${outputReport.output.narrative.markdown}\n\n`)
+        printWorkflow(outputReport)
+      } else {
+        printTechnicalOnlyIntro(site)
+      }
       if (technicalCrawl) printTechnicalSection(technicalCrawl)
       if (followups) printReportFollowups(followups)
     },

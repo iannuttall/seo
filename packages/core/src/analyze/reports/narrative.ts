@@ -36,6 +36,7 @@ function reportCaveats(input: {
   verifyLimit?: number
   verified: number
   quickWinCount: number
+  skipSearchData?: boolean
 }): string[] {
   return [
     `Date window: ${input.period.startDate} to ${input.period.endDate}.`,
@@ -47,10 +48,15 @@ function reportCaveats(input: {
           : 'no saved brand terms, so no brand filter was applied'
     }.`,
     `Data freshness: ${input.refresh ? 'fresh fetch requested; local cache bypassed where supported' : 'local cache allowed; rerun with --refresh to bypass cached GSC/HTTP data'}.`,
+    input.skipSearchData
+      ? 'Search Console: skipped because no property was selected. Run `seo start` to add performance evidence.'
+      : 'Search Console: included where the selected property returned usable data.',
     'GA4: not included in this narrative; use refresh-priorities when GA4 value should influence prioritisation.',
-    input.verifyContent
-      ? `Content verification: checked ${input.verified} of ${countLabel(input.quickWinCount, 'quick-win candidate')}, limit ${input.verifyLimit ?? 3}.`
-      : 'Content verification: not run; recommendations are based on GSC/query data unless stated otherwise.',
+    input.skipSearchData
+      ? 'Content verification: not run because Search Console did not provide page candidates for this report.'
+      : input.verifyContent
+        ? `Content verification: checked ${input.verified} of ${countLabel(input.quickWinCount, 'quick-win candidate')}, limit ${input.verifyLimit ?? 3}.`
+        : 'Content verification: not run; recommendations are based on GSC/query data unless stated otherwise.',
   ]
 }
 
@@ -69,6 +75,7 @@ export async function reportNarrative(input: {
   js?: boolean | 'auto'
   rate?: FetchRateControls
   refresh?: boolean
+  skipSearchData?: boolean
   progress?: ProgressReporter
 }): Promise<ReportNarrative & { markdown: string }> {
   const periodDays = input.days ?? 90
@@ -97,6 +104,7 @@ export async function reportNarrative(input: {
     js: input.js,
     rate: input.rate,
     refresh: input.refresh,
+    skipSearchData: input.skipSearchData,
     progress: input.progress,
   })
   input.progress?.('Measuring saved changes')
@@ -145,6 +153,7 @@ export async function reportNarrative(input: {
         verifyLimit: input.verifyLimit,
         verified: diagnosis.quickWins.verification.verified,
         quickWinCount: diagnosis.quickWins.items.length,
+        skipSearchData: input.skipSearchData,
       }),
       ...diagnosisAvailabilityCaveats(diagnosis),
       ...changeMeasurementCaveats(changeMeasurementAttempts),

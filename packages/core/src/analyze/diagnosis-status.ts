@@ -13,13 +13,20 @@ export function diagnosisPartialReasons(
     | 'cannibalization'
     | 'strikingDistance'
     | 'quickWins'
+    | 'skippedSections'
   >,
 ): PartialDiagnosisReason[] {
+  const skippedSections = new Set(
+    report.skippedSections?.map((section) => section.section),
+  )
   const segmentReasons = (
     ['page', 'query', 'device', 'country'] as const
   ).flatMap((dimension) => {
     const segment = report.segments[dimension]
-    if (segment.dataStatus === 'complete') {
+    if (
+      segment.dataStatus === 'complete' ||
+      skippedSections.has(`${dimension} movement segments`)
+    ) {
       return []
     }
     return [

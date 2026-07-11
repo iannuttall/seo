@@ -12,6 +12,7 @@ answer.
 | Job | Start with |
 | --- | --- |
 | Broad review with recommended next steps | `seo report` |
+| Broad technical review before connecting Google | `seo report --url <url>` |
 | Rank the next search and technical actions | `seo refresh-priorities` |
 | Find page-one rankings with weak CTR evidence | `seo quick-wins` |
 | Review rankings averaging positions 10 to 20 | `seo second-page` |
@@ -43,9 +44,15 @@ or URL:
 
 ```sh
 seo report --site sc-domain:example.com
+seo report --url https://example.com
 seo crawl https://example.com
 seo redirect-trace --url https://example.com/old-page
 ```
+
+`seo report --url` creates a bounded local crawl and skips Search Console
+analysis on purpose. It is the right first run for a site you have not
+connected yet. Add `--site` or `--project` when the report should join search
+performance data.
 
 Use `seo start` to create the first profile. The [setup guide](/docs/getting-started)
 covers multiple sites and local storage.

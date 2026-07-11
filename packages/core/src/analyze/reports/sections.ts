@@ -22,15 +22,26 @@ function unavailablePhrase(
 export function diagnosisAvailabilityCaveats(
   report: DiagnosePropertyReport,
 ): string[] {
+  const groupedCaveats = (
+    prefix: 'Skipped' | 'Partial',
+    sections: Array<{ section: string; reason: string }>,
+  ): string[] => {
+    const byReason = new Map<string, string[]>()
+    for (const section of sections) {
+      const items = byReason.get(section.reason) ?? []
+      items.push(section.section)
+      byReason.set(section.reason, items)
+    }
+    return [...byReason.entries()].map(([reason, items]) =>
+      items.length === 1
+        ? `${prefix} ${items[0]}: ${reason.replace(/[.!?]+$/, '')}.`
+        : `${prefix} ${items.length} sections: ${reason.replace(/[.!?]+$/, '')}.`,
+    )
+  }
+
   return [
-    ...(report.skippedSections ?? []).map(
-      (section) =>
-        `Skipped ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
-    ),
-    ...(report.partialReasons ?? []).map(
-      (section) =>
-        `Partial ${section.section}: ${section.reason.replace(/[.!?]+$/, '')}.`,
-    ),
+    ...groupedCaveats('Skipped', report.skippedSections ?? []),
+    ...groupedCaveats('Partial', report.partialReasons ?? []),
   ]
 }
 

@@ -57,3 +57,29 @@ test('report follow-ups do not request a crawl that just ran', () => {
     followups.every((item) => !item.command.startsWith('seo crawl --url')),
   )
 })
+
+test('technical-only report follow-ups do not require a Search Console property', () => {
+  const followups = reportFollowups(reportFixture(), {
+    crawlStartUrl: 'https://example.com/',
+    technicalBaselineStatus: 'created',
+    searchDataAvailable: false,
+  })
+
+  assert.deepEqual(
+    followups.map((item) => item.command),
+    ['seo audit-page --url https://example.com/', 'seo start'],
+  )
+})
+
+test('technical-only report asks for a crawl before a page follow-up', () => {
+  const followups = reportFollowups(reportFixture(), {
+    crawlStartUrl: 'https://example.com/',
+    technicalBaselineStatus: 'skipped',
+    searchDataAvailable: false,
+  })
+
+  assert.deepEqual(
+    followups.map((item) => item.command),
+    ['seo crawl --url https://example.com/ --save', 'seo start'],
+  )
+})

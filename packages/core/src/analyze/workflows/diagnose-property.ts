@@ -10,6 +10,7 @@ export async function diagnosePropertyWorkflow(input: {
   brandTerms?: string[]
   includeBrand?: boolean
   refresh?: boolean
+  skipSearchData?: boolean
 }): Promise<
   WorkflowReport<{
     narrative: Awaited<ReturnType<typeof reportNarrative>>

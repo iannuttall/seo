@@ -29,6 +29,7 @@ test('diagnoseProperty reports unavailable sections without false zero evidence'
 
   assert.equal(report.dataStatus, 'unavailable')
   assert.equal(report.skippedSections?.length, 10)
+  assert.deepEqual(report.partialReasons, [])
   assert.equal(report.summary.updateAttribution, 'unavailable')
   assert.equal(report.summary.updateAttributionStatus, 'unavailable')
   assert.equal(report.summary.classification, 'insufficient-data')
@@ -43,6 +44,33 @@ test('diagnoseProperty reports unavailable sections without false zero evidence'
   assert.equal(
     progress.filter((message) => message === 'Running traffic anomaly').length,
     1,
+  )
+})
+
+test('diagnoseProperty skips Search Console work when no property was selected', async () => {
+  const neverCall = () => {
+    assert.fail('Search Console analysis should not run without a property.')
+  }
+  const report = await diagnoseProperty(
+    { site: 'https://example.com', skipSearchData: true },
+    {
+      trafficAnomaly: neverCall,
+      updateCorrelation: neverCall,
+      segmentImpact: neverCall,
+      decayingReport: neverCall,
+      cannibalReport: neverCall,
+      strikingDistance: neverCall,
+      quickWinsReport: neverCall,
+    },
+  )
+
+  assert.equal(report.dataStatus, 'unavailable')
+  assert.equal(report.skippedSections?.length, 10)
+  assert.deepEqual(report.partialReasons, [])
+  assert.ok(
+    report.skippedSections?.every((section) =>
+      section.reason.includes('no Search Console property'),
+    ),
   )
 })
 

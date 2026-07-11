@@ -100,6 +100,10 @@ const helpSections: HelpSection[] = [
       ['seo start', 'Connect Google and save a project profile'],
       ['seo report', 'Run the main SEO report for the default project'],
       ['seo report --site sc-domain:example.com', 'Run without a profile'],
+      [
+        'seo report --url https://example.com',
+        'Start with a local technical report',
+      ],
     ],
   },
   {

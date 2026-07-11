@@ -6,7 +6,8 @@
     "LOC_TOP",
     "SEO_CRUX_API_KEY",
     "SEO_GOOGLE_CLIENT_ID",
-    "SEO_GOOGLE_CLIENT_SECRET"
+    "SEO_GOOGLE_CLIENT_SECRET",
+    "SEO_SHARED_OAUTH_OUTPUT_PATH"
   ],
   "tasks": {
     "build": {

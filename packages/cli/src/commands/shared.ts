@@ -52,6 +52,12 @@ export function formatFetchDiagnostics(
   if (diagnostics.backpressure?.status === 'slowed') {
     return `slowed ${diagnostics.backpressure.delayMs}ms`
   }
+  if (diagnostics.rendering?.status === 'unavailable') {
+    return 'raw HTML; rendering unavailable'
+  }
+  if (diagnostics.rendering?.status === 'failed') {
+    return 'raw HTML; rendering failed'
+  }
   if (diagnostics.blocked) return 'blocked'
   if (diagnostics.rendered) return 'rendered'
   if (diagnostics.cache === 'hit') return 'cached'

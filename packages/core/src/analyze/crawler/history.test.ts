@@ -113,7 +113,7 @@ test('compareCrawlReports marks complete matching inputs as comparable', () => {
     maxDepth: 4,
     include: ['/docs/'],
     exclude: ['/private/'],
-    js: true,
+    js: 'on' as const,
   }
   const before = createCrawlReport({
     id: 'crawl_before',
@@ -151,7 +151,7 @@ test('compareCrawlReports marks complete matching inputs as comparable', () => {
     respectRobots: true,
     useSitemap: true,
     checkExternal: true,
-    js: true,
+    js: 'on',
   })
   assert.equal(diff.before.definitionId, before.definitionId)
   assert.equal(diff.before.status, 'completed')

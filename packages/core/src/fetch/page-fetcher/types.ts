@@ -1,3 +1,5 @@
+import type { PageFetchResult } from '../../types.js'
+
 export interface FetchRateControls {
   concurrency?: number
   intervalCap?: number
@@ -16,12 +18,32 @@ export interface FetchBackpressureControls {
 }
 
 export interface FetchPageOptions {
-  js?: boolean | 'auto'
+  /**
+   * `auto` renders only pages that look client-rendered. `on` always attempts
+   * rendering. `off` keeps the raw HTTP response. Boolean values are retained
+   * for callers written before the explicit modes were introduced.
+   */
+  js?: JavaScriptRenderingInput
   refresh?: boolean
   timeoutMs?: number
   rate?: FetchRateControls
   signal?: AbortSignal
   respectRobots?: boolean
+  /** Reuse one browser process across related fetches, such as a site crawl. */
+  renderer?: PageRenderer
+}
+
+export type JavaScriptRenderingMode = 'auto' | 'on' | 'off'
+
+export type JavaScriptRenderingInput = JavaScriptRenderingMode | boolean
+
+export type PageRenderer = {
+  render: (
+    url: string,
+    rate: NormalizedFetchRateControls,
+    options: { timeoutMs?: number; signal?: AbortSignal },
+  ) => Promise<PageFetchResult>
+  close: () => Promise<void>
 }
 
 export type NormalizedFetchRateControls = {

@@ -20,6 +20,7 @@ import {
   negatedBooleanArg,
   numberArg,
   projectArg,
+  renderingModeArg,
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
@@ -132,7 +133,12 @@ export const crawlCommand = defineCommand({
     js: {
       type: 'boolean',
       default: false,
-      description: 'Force JavaScript rendering when Playwright is installed.',
+      description: 'Legacy alias for --rendering on.',
+    },
+    rendering: {
+      type: 'string',
+      description:
+        'JavaScript rendering mode: auto, on, or off. Defaults to auto.',
     },
     json: {
       type: 'boolean',
@@ -215,7 +221,7 @@ export const crawlCommand = defineCommand({
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),
-      js: Boolean(booleanArg(args.js)),
+      js: renderingModeArg(args),
     })
     const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
     const rankedFixes = topFixes(report, { severity })

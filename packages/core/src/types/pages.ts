@@ -73,6 +73,45 @@ export interface PageFetchDiagnostics {
     status: number
     location?: string
   }>
+  rendering?: {
+    mode: 'auto' | 'on' | 'off'
+    status:
+      | 'not-requested'
+      | 'not-needed'
+      | 'skipped'
+      | 'rendered'
+      | 'unavailable'
+      | 'failed'
+    raw?: {
+      source: 'cache' | 'network'
+      cache: 'hit' | 'miss' | 'bypass'
+      url: string
+      finalUrl: string
+      status: number
+    }
+    browser?: {
+      source: 'environment' | 'playwright-cache' | 'system'
+      product: string
+      version?: string
+    }
+    navigation?: {
+      waitUntil: 'domcontentloaded'
+      networkIdleTimeoutMs: number
+      networkIdleReached: boolean
+    }
+    consoleErrors?: string[]
+    pageErrors?: string[]
+    failedRequests?: Array<{
+      url: string
+      resourceType: string
+      error: string
+    }>
+    securityObservations?: Array<{
+      kind: 'content-security-policy' | 'cors' | 'mixed-content'
+      message: string
+    }>
+    error?: string
+  }
 }
 
 export interface CoverageField {

@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { parseArgs } from 'citty'
 import {
   defaultTrueBooleanArg,
+  renderingModeArg,
   strictFetchRateArg,
   strictNumberArg,
 } from './args.js'
@@ -37,5 +38,20 @@ test('strict numeric flags reject invalid values instead of using defaults', () 
   assert.throws(
     () => strictFetchRateArg({ 'fetch-concurrency': 'many' }),
     /--fetch-concurrency must be a number/,
+  )
+})
+
+test('rendering modes keep --js as the on alias', () => {
+  assert.equal(renderingModeArg({}), 'auto')
+  assert.equal(renderingModeArg({ rendering: 'off' }), 'off')
+  assert.equal(renderingModeArg({ rendering: 'on' }), 'on')
+  assert.equal(renderingModeArg({ js: true }), 'on')
+  assert.throws(
+    () => renderingModeArg({ rendering: 'off', js: true }),
+    /Use either --js or --rendering on/,
+  )
+  assert.throws(
+    () => renderingModeArg({ rendering: 'sometimes' }),
+    /--rendering must be auto, on, or off/,
   )
 })

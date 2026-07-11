@@ -23,7 +23,7 @@ export type CrawlSnapshotRequestScope = {
   respectRobots: boolean
   useSitemap: boolean
   checkExternal: boolean
-  js: boolean | 'auto'
+  js: CrawlConfig['js']
 }
 
 export type CrawlSnapshotCompleteness = {

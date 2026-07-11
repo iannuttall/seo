@@ -1,5 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto'
-import type { FetchRateControls } from '../../fetch/page-fetcher.js'
+import {
+  type FetchRateControls,
+  type JavaScriptRenderingInput,
+  type JavaScriptRenderingMode,
+  normalizeJavaScriptRenderingMode,
+} from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
 import type {
   CrawlPageSnapshot,
@@ -25,13 +30,14 @@ export type CrawlConfig = {
   respectRobots: boolean
   useSitemap: boolean
   checkExternal: boolean
-  js: boolean | 'auto'
+  js: JavaScriptRenderingMode
   refresh: boolean
   fetchRate: CrawlFetchRateConfig
 }
 
-export type CrawlConfigInput = Partial<CrawlConfig> & {
+export type CrawlConfigInput = Omit<Partial<CrawlConfig>, 'url' | 'js'> & {
   url: string
+  js?: JavaScriptRenderingInput
   projectId?: string
   site?: string
   searchMetricsLimit?: number
@@ -298,7 +304,7 @@ export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
     respectRobots: input.respectRobots ?? true,
     useSitemap: input.useSitemap ?? true,
     checkExternal: input.checkExternal ?? true,
-    js: input.js ?? 'auto',
+    js: normalizeJavaScriptRenderingMode(input.js),
     refresh: input.refresh ?? false,
     fetchRate: normalizeFetchRate(input),
   }

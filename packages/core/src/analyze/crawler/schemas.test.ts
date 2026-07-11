@@ -30,6 +30,49 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
         },
         contentHash: 'hash',
         outgoingInternalCount: 0,
+        fetchDiagnostics: {
+          source: 'rendered',
+          cache: 'bypass',
+          fetched: true,
+          rendered: true,
+          blocked: false,
+          durationMs: 120,
+          retries: 0,
+          rateLimit: {
+            host: 'example.com',
+            concurrency: 4,
+            intervalCap: 4,
+            intervalMs: 1_000,
+          },
+          rendering: {
+            mode: 'on',
+            status: 'rendered',
+            raw: {
+              source: 'network',
+              cache: 'miss',
+              url: 'https://example.com/',
+              finalUrl: 'https://example.com/',
+              status: 200,
+            },
+            browser: {
+              source: 'system',
+              product: 'Google Chrome',
+              version: '123.0.0.0',
+            },
+            navigation: {
+              waitUntil: 'domcontentloaded',
+              networkIdleTimeoutMs: 3_000,
+              networkIdleReached: true,
+            },
+            consoleErrors: ['Blocked by Content Security Policy'],
+            securityObservations: [
+              {
+                kind: 'content-security-policy',
+                message: 'Blocked by Content Security Policy',
+              },
+            ],
+          },
+        },
         googleRichResults: [
           {
             format: 'json-ld',
@@ -128,6 +171,11 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
   assert.equal(
     crawlerSchemas.pageSnapshot.parse(report.pages[0]).contentExtraction?.used,
     'defuddle',
+  )
+  assert.equal(
+    crawlerSchemas.pageSnapshot.parse(report.pages[0]).fetchDiagnostics
+      ?.rendering?.browser?.product,
+    'Google Chrome',
   )
   assert.equal(
     crawlerSchemas.pageSnapshot.parse(report.pages[0]).googleRichResults?.[0]

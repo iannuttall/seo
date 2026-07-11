@@ -103,6 +103,7 @@ test('reports describe explains when the report is useful', async () => {
 
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
+  assert.ok(!result.stdout.includes(String.fromCharCode(27)))
   assert.match(result.stdout, /Name\s+Single-page SEO audit/)
   assert.match(result.stdout, /Outcome\s+A page-level audit/)
   assert.match(result.stdout, /Use when/)

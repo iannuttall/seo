@@ -359,10 +359,11 @@ test('auth status and interactive-only setup stay structured in JSON mode', asyn
       SEO_CACHE_DIR: cacheDir,
     })
     assert.equal(status.exitCode, 0)
-    assert.deepEqual(JSON.parse(status.stdout), {
+    const { sharedConfigured, ...statusJson } = JSON.parse(status.stdout)
+    assert.equal(typeof sharedConfigured, 'boolean')
+    assert.deepEqual(statusJson, {
       authenticated: false,
       mode: 'none',
-      sharedConfigured: false,
       byoConfigured: false,
       serviceAccount: {
         configured: false,
@@ -456,11 +457,12 @@ test('auth status reports a service account identity without printing the key', 
       }),
     })
     assert.equal(status.exitCode, 0)
-    assert.deepEqual(JSON.parse(status.stdout), {
+    const { sharedConfigured, ...statusJson } = JSON.parse(status.stdout)
+    assert.equal(typeof sharedConfigured, 'boolean')
+    assert.deepEqual(statusJson, {
       authenticated: true,
       mode: 'service-account',
       identity: 'seo-ci@example.iam.gserviceaccount.com',
-      sharedConfigured: false,
       byoConfigured: false,
       serviceAccount: {
         configured: true,

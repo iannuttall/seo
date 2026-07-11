@@ -894,8 +894,15 @@ export type RuleSeverity = RuleDefinition['defaultSeverity']
 
 const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   title_too_wide: 'review',
+  canonical_missing: 'review',
   canonical_multiple: 'review',
+  canonical_mismatch: 'review',
   canonical_non_absolute: 'review',
+  canonicalized_page: 'review',
+  noindex: 'review',
+  nofollow: 'review',
+  x_robots_noindex: 'review',
+  robots_blocked: 'review',
   redirected_url: 'review',
   slow_response: 'review',
   image_oversized_candidate: 'review',

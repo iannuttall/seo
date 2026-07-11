@@ -43,7 +43,7 @@ export async function runDoctor(): Promise<{
     detail: paths.configDir,
     fix: existsSync(paths.configDir)
       ? undefined
-      : 'Run `seo init` or `seo auth setup-client`.',
+      : 'Run `seo start` or `seo auth setup-client`.',
   })
 
   checks.push({

@@ -96,6 +96,14 @@ test('root help stays curated and useful', async () => {
   assert.doesNotMatch(output, /seo crawl\s/)
 })
 
+test('command help works through the short help alias', async () => {
+  const output = await runSeo(['help', 'init'])
+
+  assert.match(output, /Legacy alias for `seo start`/)
+  assert.match(output, /--skip-auth/)
+  assert.doesNotMatch(output, /Unknown command help/)
+})
+
 test('start JSON never prompts and requires an explicit site on first run', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
@@ -118,6 +126,30 @@ test('start JSON never prompts and requires an explicit site on first run', asyn
         retryable: false,
       },
     })
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('init is a compatibility alias for the guided start flow', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-init-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-init-cache-'))
+
+  try {
+    const result = await runSeoResult(
+      ['init', '--site', 'sc-domain:example.com', '--skip-auth', '--json'],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+      },
+    )
+
+    assert.equal(result.exitCode, 0)
+    const output = JSON.parse(result.stdout)
+    assert.equal(output.site, 'sc-domain:example.com')
+    assert.equal(output.auth, 'skipped')
+    assert.doesNotMatch(result.stdout, /Semrush|DataForSEO|Google OAuth client/)
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })

@@ -164,6 +164,44 @@ test('reads gzip-compressed sitemaps and records the fetched document', async ()
   }
 })
 
+test('records the final sitemap URL after an HTTP redirect', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    if (request.url === '/legacy-sitemap.xml') {
+      response.writeHead(308, { location: `${origin}/sitemap.xml` })
+      response.end()
+      return
+    }
+    xml(response, urlset([`${origin}/from-redirect`]))
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/legacy-sitemap.xml`,
+    })
+
+    assert.deepEqual(result.urls, [`${fixture.origin}/from-redirect`])
+    assert.equal(result.dataStatus, 'complete')
+    assert.deepEqual(
+      {
+        url: result.source.documents[0]?.url,
+        finalUrl: result.source.documents[0]?.finalUrl,
+        redirected: result.source.documents[0]?.redirected,
+        status: result.source.documents[0]?.status,
+        root: result.source.documents[0]?.root,
+      },
+      {
+        url: `${fixture.origin}/legacy-sitemap.xml`,
+        finalUrl: `${fixture.origin}/sitemap.xml`,
+        redirected: true,
+        status: 200,
+        root: 'urlset',
+      },
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('records sitemap lastmod observations without changing URL inventory or completeness', async () => {
   const fixture = await sitemapServer((request, response) => {
     const origin = `http://${request.headers.host}`

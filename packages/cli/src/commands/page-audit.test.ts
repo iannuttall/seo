@@ -111,12 +111,23 @@ test('report runs a technical crawl when given only a URL', async () => {
           }
         }
       }
-      technicalCrawl: { status: string }
+      technicalCrawl: {
+        status: string
+        dataSources?: {
+          searchConsole: { status: string }
+          analytics: { status: string }
+        }
+      }
       nextCommands: Array<{ command: string }>
     }
 
     assert.equal(report.output.narrative.diagnosis.dataStatus, 'unavailable')
     assert.equal(report.technicalCrawl.status, 'created')
+    assert.equal(
+      report.technicalCrawl.dataSources?.searchConsole.status,
+      'skipped',
+    )
+    assert.equal(report.technicalCrawl.dataSources?.analytics.status, 'skipped')
     assert.ok(
       report.output.narrative.diagnosis.skippedSections?.every((section) =>
         section.reason.includes('no Search Console property'),
@@ -154,6 +165,8 @@ test('report runs a technical crawl when given only a URL', async () => {
       human.stdout,
       /Technical fixes \(no Search Console data joined\)/,
     )
+    assert.match(human.stdout, /Search Console: not connected\./)
+    assert.match(human.stdout, /GA4: not connected\./)
     assert.doesNotMatch(human.stdout, /Diagnosis unavailable/)
   } finally {
     await new Promise<void>((resolve, reject) => {

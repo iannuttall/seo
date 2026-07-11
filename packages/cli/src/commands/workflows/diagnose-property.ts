@@ -1,4 +1,5 @@
 import {
+  type CrawlReport,
   diagnosePropertyWorkflow,
   resolveTechnicalBaseline,
   reviewObservations,
@@ -53,6 +54,58 @@ function addFollowup(
   commands.push({ command, why })
 }
 
+function crawlDataSourceLines(
+  dataSources: CrawlReport['dataSources'],
+): string[] {
+  if (!dataSources) return []
+
+  const sourceLine = (input: {
+    label: string
+    status: string
+    joinedPages: number
+    totalPages: number
+    window?: { days: number }
+    warning?: string
+  }): string => {
+    const range = input.window ? ` in the last ${input.window.days} days` : ''
+    const coverage = `for ${input.joinedPages} of ${input.totalPages} crawled URLs`
+
+    if (input.status === 'skipped') return `${input.label}: not connected.`
+    if (input.status === 'unavailable') {
+      return `${input.label}: unavailable. ${input.warning ?? 'No data was joined.'}`
+    }
+    if (input.status === 'partial') {
+      return `${input.label}: partial data ${coverage}${range}. ${input.warning ?? ''}`.trim()
+    }
+    if (input.status === 'none') {
+      return `${input.label}: no matching crawled URLs${range}.`
+    }
+    return `${input.label}: joined ${coverage}${range}.`
+  }
+
+  return [
+    sourceLine({
+      label: 'Search Console',
+      status: dataSources.searchConsole.status,
+      joinedPages: Math.max(
+        dataSources.searchConsole.joinedMetricPages,
+        dataSources.searchConsole.joinedQueryPages,
+      ),
+      totalPages: dataSources.searchConsole.totalPages,
+      window: dataSources.searchConsole.window,
+      warning: dataSources.searchConsole.warning,
+    }),
+    sourceLine({
+      label: 'GA4',
+      status: dataSources.analytics.status,
+      joinedPages: dataSources.analytics.joinedPages,
+      totalPages: dataSources.analytics.totalPages,
+      window: dataSources.analytics.window,
+      warning: dataSources.analytics.warning,
+    }),
+  ]
+}
+
 function technicalSection(baseline: TechnicalBaseline) {
   const report = baseline.report
   if (!report) {
@@ -72,6 +125,7 @@ function technicalSection(baseline: TechnicalBaseline) {
     searchDataJoined:
       (report.dataSources?.searchConsole.joinedMetricPages ?? 0) > 0 ||
       (report.dataSources?.searchConsole.joinedQueryPages ?? 0) > 0,
+    dataSources: report.dataSources,
     summary: report.summary,
     topFixes: topFixes(report, { limit: 5 }),
     reviewObservations: reviewObservations(report, { limit: 5 }),
@@ -95,6 +149,9 @@ function printTechnicalSection(
     process.stdout.write(
       `Coverage is capped at ${section.maxPages} pages. Run \`seo crawl\` for a broader investigation.\n`,
     )
+  }
+  for (const line of crawlDataSourceLines(section.dataSources)) {
+    process.stdout.write(`${line}\n`)
   }
   if (!section.topFixes.length) {
     process.stdout.write('No prioritised technical fixes were found.\n')
@@ -389,6 +446,7 @@ function workflowCommandMeta(input: {
       const technicalBaseline = input.printFollowups
         ? await resolveTechnicalBaseline({
             site,
+            searchSite: selection?.site,
             url:
               directUrl ?? selection?.client?.startUrl ?? startUrlForSite(site),
             projectId: selection?.client?.id,

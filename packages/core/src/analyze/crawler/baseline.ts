@@ -20,7 +20,10 @@ export type TechnicalBaseline = {
 }
 
 export type ResolveTechnicalBaselineInput = {
+  /** Stable local identity used to find and save the crawl baseline. */
   site: string
+  /** Optional verified Search Console property used for Google data joins. */
+  searchSite?: string
   url?: string
   projectId?: string
   ga4PropertyId?: string
@@ -110,12 +113,12 @@ function crawlInput(
   > &
     Pick<
       ResolveTechnicalBaselineInput,
-      'projectId' | 'ga4PropertyId' | 'refresh'
+      'projectId' | 'ga4PropertyId' | 'refresh' | 'searchSite'
     >,
 ): CrawlConfigInput {
   return {
     url: input.url,
-    site: input.site,
+    ...(input.searchSite ? { site: input.searchSite } : {}),
     projectId: input.projectId,
     ga4PropertyId: input.ga4PropertyId,
     mode: 'site',

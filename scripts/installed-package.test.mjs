@@ -15,7 +15,9 @@ const archiveDirectory = join(tempRoot, 'archive')
 const consumerDirectory = join(tempRoot, 'consumer')
 const configDirectory = join(tempRoot, 'config')
 const cacheDirectory = join(tempRoot, 'cache')
+const globalPrefix = join(tempRoot, 'global')
 const tsc = require.resolve('typescript/bin/tsc')
+let archivePath
 
 after(async () => {
   await rm(tempRoot, { recursive: true, force: true })
@@ -31,7 +33,8 @@ function consumerEnv() {
 }
 
 async function packedTarball() {
-  await mkdir(archiveDirectory)
+  if (archivePath) return archivePath
+  await mkdir(archiveDirectory, { recursive: true })
   await execFileAsync(
     'npm',
     ['pack', '--ignore-scripts', '--pack-destination', archiveDirectory],
@@ -41,8 +44,43 @@ async function packedTarball() {
     /^seo-[\d.]+\.tgz$/.test(file),
   )
   assert.ok(archive, 'npm pack should create an seo tarball')
-  return join(archiveDirectory, archive)
+  archivePath = join(archiveDirectory, archive)
+  return archivePath
 }
+
+test('the packed package installs globally into an isolated prefix', {
+  timeout: 120_000,
+}, async () => {
+  const tarball = await packedTarball()
+  await execFileAsync(
+    'npm',
+    [
+      'install',
+      '--global',
+      '--prefix',
+      globalPrefix,
+      '--no-audit',
+      '--no-fund',
+      tarball,
+    ],
+    { cwd: root, env: consumerEnv(), maxBuffer: 1024 * 1024 },
+  )
+
+  if (process.platform === 'win32') return
+
+  const seo = join(globalPrefix, 'bin', 'seo')
+  const version = await execFileAsync(seo, ['--version'], {
+    cwd: root,
+    env: consumerEnv(),
+  })
+  assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+$/)
+
+  const start = await execFileAsync(seo, ['start', '--dry-run', '--json'], {
+    cwd: root,
+    env: consumerEnv(),
+  })
+  assert.equal(JSON.parse(start.stdout).dryRun, true)
+})
 
 test('the packed package installs and runs without the workspace', {
   timeout: 120_000,

@@ -55,9 +55,18 @@ to URLs you provide. When `robots.txt` declares same-origin sitemap files, SEO
 tries those first and records which ones supplied URLs in JSON. If none return
 URLs, it also tries `/sitemap.xml`.
 
+`sitemapDiscovery.roots[].documents` keeps the response evidence for each
+fetched sitemap: HTTP status, content type, compression, byte counts, XML root,
+and any warning. Gzip-compressed sitemaps work. Malformed XML, a non-sitemap
+root, an unsuitable response, or a file over the 50 MiB protocol limit stays
+visible as partial or unavailable evidence rather than disappearing from the
+result.
+
 Google describes a sitemap as a discovery signal rather than an indexing
 guarantee in its
 <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview" target="_blank" rel="noreferrer">sitemap guidance</a>.
+Google limits each sitemap to 50 MB uncompressed or 50,000 URLs in its
+<a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap build guide</a>.
 Treat sitemap membership the same way in a crawl report. A listed URL deserves
 inspection, but its presence does not prove that Google indexed it.
 

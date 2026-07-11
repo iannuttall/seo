@@ -367,6 +367,7 @@ export async function crawlSite(
   const followLinks = config.mode === 'site'
   let queuedUrls = 0
   let skippedUrls = 0
+  let robotsDeferredUrls = 0
   let queueSafetySkippedUrls = 0
   let failedUrls = 0
   let observedInternalLinks = 0
@@ -636,6 +637,7 @@ export async function crawlSite(
       if (request.outcome === 'skipped') {
         skippedUrls += 1
         if (request.reason === 'robots-deferred') {
+          robotsDeferredUrls += 1
           warnings.push(
             `${task.url}: crawl deferred because robots.txt availability is unknown.`,
           )
@@ -821,14 +823,16 @@ export async function crawlSite(
 
     const pageLimitReached =
       pages.length >= config.maxPages && (queue.length > 0 || inFlight.size > 0)
+    const sitemapEvidencePartial = sitemapDiscovery?.dataStatus === 'partial'
     const partial =
       cancelled ||
       failedUrls > 0 ||
       pageLimitReached ||
+      robotsDeferredUrls > 0 ||
       queueSafetySkippedUrls > 0 ||
       queue.length > 0 ||
       inFlight.size > 0 ||
-      warnings.length > 0
+      sitemapEvidencePartial
     const failed =
       !cancelled &&
       pages.length === 0 &&

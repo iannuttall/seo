@@ -5,6 +5,7 @@ import {
   type ServerResponse,
 } from 'node:http'
 import test from 'node:test'
+import { gzipSync } from 'node:zlib'
 import { boundedSitemapInventory, fetchSitemapUrls } from './sitemaps.js'
 
 async function sitemapServer(
@@ -129,6 +130,151 @@ test('a URL cap is partial only when another unique loc is omitted', async () =>
   }
 })
 
+test('reads gzip-compressed sitemaps and records the fetched document', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    const body = gzipSync(urlset([`${origin}/from-gzip`]))
+    response.writeHead(200, {
+      'content-type': 'application/gzip',
+      'content-length': body.byteLength,
+    })
+    response.end(body)
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/sitemap.xml.gz`,
+    })
+
+    assert.deepEqual(result.urls, [`${fixture.origin}/from-gzip`])
+    assert.equal(result.dataStatus, 'complete')
+    assert.deepEqual(result.source.documents[0], {
+      url: `${fixture.origin}/sitemap.xml.gz`,
+      dataStatus: 'complete',
+      status: 200,
+      contentType: 'application/gzip',
+      compression: 'gzip',
+      bytes: result.source.documents[0]?.bytes,
+      uncompressedBytes: result.source.documents[0]?.uncompressedBytes,
+      root: 'urlset',
+    })
+    assert.ok((result.source.documents[0]?.bytes ?? 0) > 0)
+    assert.ok((result.source.documents[0]?.uncompressedBytes ?? 0) > 0)
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('records invalid sitemap XML with its HTTP response evidence', async () => {
+  const fixture = await sitemapServer((_request, response) => {
+    response.writeHead(200, { 'content-type': 'text/html' })
+    response.end('<html><body>Not a sitemap</body>')
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/not-a-sitemap.xml`,
+    })
+
+    assert.deepEqual(result.urls, [])
+    assert.equal(result.dataStatus, 'partial')
+    assert.equal(result.source.sitemapsFetched, 1)
+    assert.deepEqual(result.source.documents[0], {
+      url: `${fixture.origin}/not-a-sitemap.xml`,
+      dataStatus: 'partial',
+      status: 200,
+      contentType: 'text/html',
+      compression: 'none',
+      bytes: 32,
+      uncompressedBytes: 32,
+      warning: 'Sitemap XML is invalid: an unclosed <html> tag.',
+    })
+    assert.match(result.warnings.join('\n'), /Sitemap XML is invalid/)
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('keeps valid sitemap XML when the content type is unexpected', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    response.writeHead(200, { 'content-type': 'text/html' })
+    response.end(urlset([`${origin}/still-listed`]))
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/wrong-content-type.xml`,
+    })
+
+    assert.deepEqual(result.urls, [`${fixture.origin}/still-listed`])
+    assert.equal(result.dataStatus, 'partial')
+    assert.deepEqual(
+      {
+        dataStatus: result.source.documents[0]?.dataStatus,
+        contentType: result.source.documents[0]?.contentType,
+        root: result.source.documents[0]?.root,
+        warning: result.source.documents[0]?.warning,
+      },
+      {
+        dataStatus: 'partial',
+        contentType: 'text/html',
+        root: 'urlset',
+        warning: 'Sitemap returned content type text/html, not an XML type.',
+      },
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('does not merge URL sets and sitemap indexes from invalid multi-root XML', async () => {
+  const fixture = await sitemapServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    xml(response, `${urlset([`${origin}/ignored`])}${sitemapIndex([])}`)
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/multi-root.xml`,
+    })
+
+    assert.deepEqual(result.urls, [])
+    assert.equal(result.dataStatus, 'partial')
+    assert.match(
+      result.source.documents[0]?.warning ?? '',
+      /more than one XML root element/,
+    )
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('records an explicit byte-limit failure without reading the response body', async () => {
+  const fixture = await sitemapServer((_request, response) => {
+    response.writeHead(200, {
+      'content-type': 'application/xml',
+      'content-length': 52_428_801,
+    })
+    response.end('<urlset/>')
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/too-large.xml`,
+    })
+
+    assert.equal(result.dataStatus, 'partial')
+    assert.deepEqual(result.source.documents[0], {
+      url: `${fixture.origin}/too-large.xml`,
+      dataStatus: 'partial',
+      status: 200,
+      contentType: 'application/xml',
+      compression: 'none',
+      warning:
+        'Could not read sitemap data: The response exceeds the 52428800-byte sitemap limit.',
+    })
+    assert.match(result.warnings.join('\n'), /52428800-byte sitemap limit/)
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('duplicate nested locs do not exhaust scheduling and an exact sitemap boundary is complete', async () => {
   const calls: string[] = []
   const fixture = await sitemapServer((request, response) => {
@@ -187,10 +333,12 @@ test('unscheduled nested sitemaps and invalid locs have structured evidence', as
     if (path === '/root.xml') {
       xml(
         response,
-        `${urlset([`${origin}/valid`, 'mailto:invalid@example.com'])}${sitemapIndex(
-          [`${origin}/a.xml`, 'not a URL', `${origin}/b.xml`],
-        )}`,
+        sitemapIndex([`${origin}/a.xml`, 'not a URL', `${origin}/b.xml`]),
       )
+      return
+    }
+    if (path === '/a.xml') {
+      xml(response, urlset([`${origin}/valid`, 'mailto:invalid@example.com']))
       return
     }
     xml(response, urlset([]))
@@ -210,8 +358,8 @@ test('unscheduled nested sitemaps and invalid locs have structured evidence', as
         sample.value,
       ]),
       [
-        ['url', 'mailto:invalid@example.com'],
         ['sitemap', 'not a URL'],
+        ['url', 'mailto:invalid@example.com'],
       ],
     )
     assert.equal(result.truncation.nestedSitemapLimitExceeded, true)

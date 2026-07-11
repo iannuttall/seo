@@ -91,11 +91,16 @@ test('mcp install and uninstall return clean JSON without prompting', async () =
     })
 
     const config = JSON.parse(await readFile(configPath, 'utf8'))
-    assert.deepEqual(config.mcpServers.seo, {
-      type: 'stdio',
-      command: 'npx',
-      args: ['-y', 'seo', 'mcp', 'serve'],
-      env: { SEO_CONFIG_DIR: configDir },
+    assert.equal(config.mcpServers.seo.type, 'stdio')
+    assert.equal(config.mcpServers.seo.command, process.execPath)
+    assert.deepEqual(config.mcpServers.seo.args.slice(-2), ['mcp', 'serve'])
+    assert.match(
+      config.mcpServers.seo.args[0],
+      /packages\/cli\/dist\/index\.js$/,
+    )
+    assert.deepEqual(config.mcpServers.seo.env, {
+      SEO_CONFIG_DIR: configDir,
+      SEO_MCP_CONFIGURED_BY: 'seo',
     })
 
     const repeated = await runSeo(

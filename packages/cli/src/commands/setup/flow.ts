@@ -45,6 +45,26 @@ function shellArg(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`
 }
 
+function mcpInstallLabel(installs: SetupMcpInstall[]): string {
+  const failed = installs.filter((install) => install.error).length
+  const installed = installs.length - failed
+  if (installs.length === 0) return 'not installed'
+  if (failed === 0) return `${installed} installed`
+  if (installed === 0) return `${failed} skipped`
+  return `${installed} installed, ${failed} skipped`
+}
+
+function mcpFailureMessage(installs: SetupMcpInstall[]): string | undefined {
+  const failures = installs.filter(
+    (install): install is SetupMcpInstall & { error: string } =>
+      Boolean(install.error),
+  )
+  if (failures.length === 0) return undefined
+  return failures
+    .map((install) => `${install.client}: ${install.error}`)
+    .join('\n')
+}
+
 export async function runGuidedSetup(
   args: Record<string, unknown>,
 ): Promise<void> {
@@ -114,8 +134,10 @@ export async function runGuidedSetup(
       ['Project profile', 'not saved'],
       ['GSC property', site],
       ['Auth', auth],
-      ['MCP installs', String(mcp.length)],
+      ['MCP', mcpInstallLabel(mcp)],
     ])
+    const mcpFailure = mcpFailureMessage(mcp)
+    if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
     note(next.join('\n'), 'Try next')
     outro('Setup complete.')
     return
@@ -193,8 +215,10 @@ export async function runGuidedSetup(
     ['GA4 property', client.ga4PropertyId ?? 'not connected (optional)'],
     ...(ga4 ? [['GA4 selection', ga4.reason] as [string, string]] : []),
     ['Auth', auth],
-    ['MCP installs', String(mcp.length)],
+    ['MCP', mcpInstallLabel(mcp)],
   ])
+  const mcpFailure = mcpFailureMessage(mcp)
+  if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
   note(next.join('\n'), 'Try next')
   outro('Setup complete.')
 }

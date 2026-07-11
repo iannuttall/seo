@@ -83,7 +83,6 @@
     "consola": "^3.4.2",
     "debug": "^4.4.3",
     "defuddle": "^0.19.1",
-    "env-paths": "^4.0.0",
     "jsonc-parser": "^3.3.1",
     "lighthouse": "13.4.0",
     "linkedom": "^0.18.13",

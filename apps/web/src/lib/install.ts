@@ -14,13 +14,6 @@ export const installCommands = [
       'Add the instruction layer to an agent that can already run the seo package.',
   },
   {
-    id: 'npx',
-    label: 'Try with npx',
-    command: 'npx seo start',
-    description:
-      'Run the guided setup without installing the CLI or agent skills globally.',
-  },
-  {
     id: 'npm',
     label: 'CLI only',
     command: 'npm i -g seo',

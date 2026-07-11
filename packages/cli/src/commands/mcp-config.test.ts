@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -7,15 +8,36 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { test } from 'node:test'
+import { getSeoCliPaths } from '@seo/core'
 import { parse } from 'jsonc-parser'
 import {
   detectMcpClients,
   type JsonClientConfigTarget,
   mcpClientTargets,
+  resolveMcpClientExecutable,
 } from './mcp-clients.js'
-import { installMcpConfig, uninstallMcpConfig } from './mcp-config.js'
+import {
+  installMcpConfig,
+  resolveMcpServerCommand,
+  uninstallMcpConfig,
+} from './mcp-config.js'
+
+const localServerCommand = {
+  command: '/usr/local/bin/node',
+  args: ['/Applications/SEO Skills/seo.js', 'mcp', 'serve'],
+}
+
+function install(
+  target: JsonClientConfigTarget,
+  options: Parameters<typeof installMcpConfig>[1] = {},
+) {
+  return installMcpConfig(target, {
+    serverCommand: localServerCommand,
+    ...options,
+  })
+}
 
 function fixture(source?: string): {
   dir: string
@@ -47,7 +69,7 @@ test('MCP install preserves JSONC and is idempotent', () => {
   },
 }\n`)
 
-  const installed = installMcpConfig(target)
+  const installed = install(target)
   const firstSource = readFileSync(target.path, 'utf8')
   const config = parse(firstSource) as Record<string, unknown>
   const servers = config.mcpServers as Record<string, Record<string, unknown>>
@@ -56,10 +78,19 @@ test('MCP install preserves JSONC and is idempotent', () => {
   assert.match(firstSource, /keep this client setting/)
   assert.equal(config.theme, 'dark')
   assert.equal(servers.other?.command, 'other-command')
-  assert.deepEqual(servers.seo?.args, ['-y', 'seo', 'mcp', 'serve'])
+  assert.equal(servers.seo?.command, '/usr/local/bin/node')
+  assert.deepEqual(servers.seo?.args, [
+    '/Applications/SEO Skills/seo.js',
+    'mcp',
+    'serve',
+  ])
+  assert.deepEqual(servers.seo?.env, {
+    SEO_CONFIG_DIR: getSeoCliPaths().configDir,
+    SEO_MCP_CONFIGURED_BY: 'seo',
+  })
   assert.equal(backups(dir).length, 1)
 
-  const repeated = installMcpConfig(target)
+  const repeated = install(target)
 
   assert.equal(repeated.changed, false)
   assert.equal(readFileSync(target.path, 'utf8'), firstSource)
@@ -76,20 +107,20 @@ test('MCP install migrates the managed legacy package config', () => {
   }
 }\n`)
 
-  const installed = installMcpConfig(target)
+  const installed = install(target)
   const config = parse(readFileSync(target.path, 'utf8')) as {
     mcpServers: { seo: { args: string[] } }
   }
 
   assert.equal(installed.changed, true)
-  assert.deepEqual(config.mcpServers.seo.args, ['-y', 'seo', 'mcp', 'serve'])
+  assert.deepEqual(config.mcpServers.seo.args, localServerCommand.args)
 })
 
 test('MCP install refuses malformed and unmanaged config', () => {
   const malformed = fixture('{ "mcpServers": {')
   const malformedBefore = readFileSync(malformed.target.path, 'utf8')
 
-  assert.throws(() => installMcpConfig(malformed.target), /invalid JSONC/)
+  assert.throws(() => install(malformed.target), /invalid JSONC/)
   assert.equal(readFileSync(malformed.target.path, 'utf8'), malformedBefore)
   assert.equal(backups(malformed.dir).length, 0)
 
@@ -100,7 +131,7 @@ test('MCP install refuses malformed and unmanaged config', () => {
 }\n`)
   const unmanagedBefore = readFileSync(unmanaged.target.path, 'utf8')
 
-  assert.throws(() => installMcpConfig(unmanaged.target), /unmanaged/)
+  assert.throws(() => install(unmanaged.target), /unmanaged/)
   assert.equal(readFileSync(unmanaged.target.path, 'utf8'), unmanagedBefore)
   assert.equal(backups(unmanaged.dir).length, 0)
 })
@@ -139,7 +170,7 @@ test('MCP uninstall removes only a managed entry and is idempotent', () => {
 test('MCP install creates private config files', () => {
   const { target } = fixture()
 
-  installMcpConfig(target)
+  install(target)
 
   if (process.platform !== 'win32') {
     assert.equal(statSync(target.path).mode & 0o777, 0o600)
@@ -180,7 +211,7 @@ test('Claude Code config matches its native stdio schema', () => {
   if (target.kind !== 'json') return
 
   const { target: fixtureTarget } = fixture()
-  installMcpConfig({ ...fixtureTarget, includeType: target.includeType })
+  install({ ...fixtureTarget, includeType: target.includeType })
   const config = parse(readFileSync(fixtureTarget.path, 'utf8')) as {
     mcpServers: { seo: Record<string, unknown> }
   }
@@ -205,6 +236,71 @@ test('MCP detection returns only clients present on the machine', () => {
   )
 })
 
+test('MCP detection does not offer Codex only because its config directory exists', () => {
+  const targets = mcpClientTargets({
+    home: '/tmp/seo-home',
+    platform: 'linux',
+    env: {},
+  })
+  const detected = detectMcpClients({
+    targets,
+    hasPath: (path) => path.includes('.codex'),
+    hasCommand: () => false,
+  })
+
+  assert.deepEqual(
+    detected.map((target) => target.client),
+    [],
+  )
+})
+
+test('Codex resolves beside the active Node runtime when PATH does not expose it', () => {
+  const executable = resolveMcpClientExecutable('codex', {
+    platform: 'darwin',
+    path: '',
+    nodePath: '/Users/example/.nvm/versions/node/v24/bin/node',
+    exists: (path) => path.endsWith('/bin/codex'),
+  })
+
+  assert.equal(executable, '/Users/example/.nvm/versions/node/v24/bin/codex')
+})
+
+test('Codex install explains when its CLI is unavailable', () => {
+  const target = mcpClientTargets({
+    home: '/tmp/seo-home',
+    platform: 'linux',
+    env: {},
+  }).find((entry) => entry.client === 'codex')
+  assert.ok(target)
+
+  assert.throws(
+    () =>
+      installMcpConfig(target, {
+        runCommand: () => ({
+          status: null,
+          stdout: '',
+          stderr: '',
+          error: Object.assign(new Error('spawn codex ENOENT'), {
+            code: 'ENOENT',
+          }),
+        }),
+        serverCommand: localServerCommand,
+      }),
+    /codex.*not available on PATH/i,
+  )
+})
+
+test('Codex resolves the absolute PATH entry without calling a shell helper', () => {
+  const executable = resolveMcpClientExecutable('codex', {
+    platform: 'darwin',
+    path: '/Users/example/.local/bin:/usr/bin',
+    nodePath: '/opt/homebrew/bin/node',
+    exists: (path) => path === '/Users/example/.local/bin/codex',
+  })
+
+  assert.equal(executable, '/Users/example/.local/bin/codex')
+})
+
 test('Codex MCP install uses the native CLI and stays idempotent', () => {
   const target = mcpClientTargets({
     home: '/tmp/seo-home',
@@ -221,7 +317,8 @@ test('Codex MCP install uses the native CLI and stays idempotent', () => {
       return installed
         ? {
             status: 0,
-            stdout: 'seo\n  command: npx\n  args: -y seo mcp serve\n',
+            stdout:
+              'seo\n  command: /usr/local/bin/node\n  args: /Applications/SEO Skills/seo.js mcp serve\n  SEO_MCP_CONFIGURED_BY=seo\n',
             stderr: '',
           }
         : { status: 1, stdout: '', stderr: 'not found' }
@@ -231,10 +328,78 @@ test('Codex MCP install uses the native CLI and stays idempotent', () => {
     return { status: 0, stdout: '', stderr: '' }
   }
 
-  assert.equal(installMcpConfig(target, { runCommand }).changed, true)
-  assert.equal(installMcpConfig(target, { runCommand }).changed, false)
+  assert.equal(
+    installMcpConfig(target, { runCommand, serverCommand: localServerCommand })
+      .changed,
+    true,
+  )
+  assert.equal(
+    installMcpConfig(target, { runCommand, serverCommand: localServerCommand })
+      .changed,
+    false,
+  )
   assert.equal(uninstallMcpConfig(target, { runCommand }).changed, true)
   assert.equal(uninstallMcpConfig(target, { runCommand }).changed, false)
   assert.ok(calls.some((args) => args.join(' ').includes('mcp add seo --env')))
+  assert.ok(
+    calls.some((args) =>
+      args
+        .join(' ')
+        .includes(
+          '/usr/local/bin/node /Applications/SEO Skills/seo.js mcp serve',
+        ),
+    ),
+  )
   assert.ok(calls.some((args) => args.join(' ') === 'mcp remove seo'))
+})
+
+test('MCP install can rewrite an existing managed config', () => {
+  const { dir, target } = fixture()
+
+  install(target)
+  const repeated = install(target, { reinstall: true })
+
+  assert.equal(repeated.changed, true)
+  assert.equal(backups(dir).length, 1)
+})
+
+test('MCP command uses the installed CLI without npm or PATH lookup', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'SEO Skills '))
+  const cliPath = join(dir, 'seo cli.js')
+  writeFileSync(cliPath, '', 'utf8')
+
+  const command = resolveMcpServerCommand({
+    cliPath,
+    nodePath: '/usr/local/bin/node',
+    version: '1.2.3',
+  })
+
+  assert.equal(command.command, '/usr/local/bin/node')
+  assert.deepEqual(command.args.slice(-2), ['mcp', 'serve'])
+  assert.match(command.args[0] ?? '', /SEO Skills .+\/seo cli\.js$/)
+})
+
+test('MCP command pins the package only for a disposable npx CLI', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'seo-mcp-npx-'))
+  const cliPath = join(
+    dir,
+    '_npx',
+    'temporary',
+    'node_modules',
+    'seo',
+    'cli.js',
+  )
+  mkdirSync(dirname(cliPath), { recursive: true })
+  writeFileSync(cliPath, '', 'utf8')
+
+  const command = resolveMcpServerCommand({
+    cliPath,
+    nodePath: '/usr/local/bin/node',
+    version: '1.2.3',
+  })
+
+  assert.deepEqual(command, {
+    command: 'npx',
+    args: ['-y', 'seo@1.2.3', 'mcp', 'serve'],
+  })
 })

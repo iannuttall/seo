@@ -3,9 +3,10 @@ title: Connect the local SEO MCP server to your AI client
 description: Install the local SEO MCP server in Codex, Claude Code, Claude Desktop, or Cursor, then give agents compact access to every structured report.
 ---
 
-The MCP server runs as a local process on your computer. Your client starts
-`npx -y seo mcp serve`, sends tool calls over standard input and output, and
-receives the same structured reports as the CLI.
+The MCP server runs as a local process on your computer. The installer points
+your client at the installed CLI, sends tool calls over standard input and
+output, and receives the same structured reports as the CLI. It does not fetch
+the package from npm when the client starts.
 
 MCP supplies the tools. The packaged [SEO skills](/docs/skills) supply the
 report-specific instructions that help an agent choose the right tool, read
@@ -16,11 +17,12 @@ profiles, caches, and saved crawls remain in the local SEO config directory.
 
 ## Set up the CLI before connecting an agent
 
-Run the human setup and confirm the main report works:
+Install the CLI, run the human setup, and confirm the main report works:
 
 ```sh
-npx seo start
-npx seo report
+npm i -g seo
+seo start
+seo report
 ```
 
 This separates Google or property-selection problems from MCP configuration
@@ -64,12 +66,6 @@ CLI, the desktop app, and its IDE extension share that MCP configuration on the
 same host. OpenAI documents this behavior in the
 <a href="https://developers.openai.com/codex/mcp/" target="_blank" rel="noreferrer">Codex MCP guide</a>.
 
-You can also add the process with the native command:
-
-```sh
-codex mcp add seo -- npx -y seo mcp serve
-```
-
 ## Connect Claude Code
 
 ```sh
@@ -77,13 +73,7 @@ seo mcp install --claude-code
 claude mcp get seo
 ```
 
-The equivalent native command installs it for your user account:
-
-```sh
-claude mcp add --scope user seo -- npx -y seo mcp serve
-```
-
-The `--` separates Claude's own flags from the local server command. Anthropic's
+Anthropic's
 <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noreferrer">Claude Code MCP documentation</a>
 covers scopes, server management, and the `/mcp` status view.
 
@@ -130,12 +120,12 @@ If the client cannot start it, check:
 
 ```sh
 node --version
-npx -y seo mcp serve --test
+seo mcp serve --test
 seo doctor
 seo auth status
 ```
 
-A missing Node runtime, broken npm install, expired Google login, and wrong
+A missing Node runtime, broken global install, expired Google login, and wrong
 project are separate failures. Check them in that order.
 
 ## Keep tool selection fast with three MCP tools

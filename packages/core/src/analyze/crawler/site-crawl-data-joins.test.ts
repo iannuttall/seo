@@ -174,7 +174,7 @@ test('crawlSite contains a throwing custom GA4 adapter', async () => {
         page: crawlPageSnapshot(url),
       }),
       fetchLandingPageValues: async () => {
-        throw new Error('hosted adapter failed')
+        throw new Error('custom adapter failed')
       },
     },
   )
@@ -183,7 +183,7 @@ test('crawlSite contains a throwing custom GA4 adapter', async () => {
   assert.equal(report.dataSources?.analytics.status, 'unavailable')
   assert.equal(report.dataSources?.analytics.joinedPages, 0)
   assert.match(report.warnings.join('\n'), /GA4 metrics unavailable/)
-  assert.match(report.warnings.join('\n'), /hosted adapter failed/)
+  assert.match(report.warnings.join('\n'), /custom adapter failed/)
 })
 
 test('crawlSite reports sparse GSC and missing GA4 joins', async () => {

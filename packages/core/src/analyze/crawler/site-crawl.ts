@@ -369,8 +369,11 @@ export async function crawlSite(
   let skippedUrls = 0
   let queueSafetySkippedUrls = 0
   let failedUrls = 0
-  let verifiedLinks = 0
+  let observedInternalLinks = 0
   let sitemapDiscovery: CrawlSitemapDiscovery | undefined
+  let externalLinkVerification:
+    | CrawlReport['externalLinkVerification']
+    | undefined
   let statusEventChain = Promise.resolve()
   const emitStatus = (
     phase: CrawlStatusPhase,
@@ -388,7 +391,7 @@ export async function crawlSite(
       crawledUrls: pages.length,
       skippedUrls,
       failedUrls,
-      verifiedLinks,
+      observedInternalLinks,
       maxPages: config.maxPages,
       ...event,
     }
@@ -719,7 +722,7 @@ export async function crawlSite(
           }
           const retainedPage = pages[existing.index]
           if (retainedPage) syncLinkEvidence(retainedPage, links)
-          verifiedLinks += links.size - existing.links.size
+          observedInternalLinks += links.size - existing.links.size
           documentIndexes.set(finalUrl, {
             ...existing,
             directlyRequested: existing.directlyRequested || directlyRequested,
@@ -734,7 +737,7 @@ export async function crawlSite(
           const links = new Set(normalizedLinks)
           syncLinkEvidence(page, links)
           pages.push(page)
-          verifiedLinks += links.size
+          observedInternalLinks += links.size
           documentIndexes.set(finalUrl, {
             index: pages.length - 1,
             directlyRequested,
@@ -866,12 +869,13 @@ export async function crawlSite(
         url: config.url,
         message: 'Started external link checks.',
       })
-      await verifyExternalLinks({
+      externalLinkVerification = await verifyExternalLinks({
         pages,
         timeoutMs: config.timeoutMs,
         fetch: deps.fetch,
         signal,
       })
+      warnings.push(...externalLinkVerification.warnings)
       emitStatus('external_links_completed', {
         url: config.url,
         message: 'Finished external link checks.',
@@ -904,6 +908,7 @@ export async function crawlSite(
         ...(agentResources ? { agentResources } : {}),
       },
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
+      ...(externalLinkVerification ? { externalLinkVerification } : {}),
       status: reportStatus,
       warnings,
       caveats: crawlCaveats({
@@ -918,7 +923,7 @@ export async function crawlSite(
         crawledUrls: pages.length,
         skippedUrls,
         failedUrls,
-        verifiedLinks,
+        observedInternalLinks,
         pageLimitReached,
       },
     })

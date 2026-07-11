@@ -669,6 +669,18 @@ const crawlSitemapDiscoverySchema = z.object({
   ),
 })
 
+const crawlExternalLinkVerificationSchema = z.object({
+  dataStatus: z.enum(['complete', 'partial', 'unavailable']),
+  discoveredLinkOccurrences: z.number().int().nonnegative(),
+  retainedUrls: z.number().int().nonnegative(),
+  selectedUrls: z.number().int().nonnegative(),
+  fetchedUrls: z.number().int().nonnegative(),
+  failedUrls: z.number().int().nonnegative(),
+  deferredUrls: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  warnings: z.array(z.string()),
+})
+
 export const crawlConfigSchema = z.object({
   url: z.string().url(),
   mode: z.enum(['site', 'page', 'list', 'sitemap']),
@@ -712,7 +724,7 @@ export const crawlReportSummarySchema = z.object({
   crawledUrls: z.number().int(),
   skippedUrls: z.number().int(),
   failedUrls: z.number().int(),
-  verifiedLinks: z.number().int(),
+  observedInternalLinks: z.number().int(),
   pageLimitReached: z.boolean().default(false),
   attemptedRequests: z.number().int(),
   responseRequests: z.number().int(),
@@ -794,6 +806,7 @@ const crawlReportBaseSchema = z.object({
   dataSources: crawlReportDataSourcesSchema.optional(),
   ai: crawlAiSignalsSchema.optional(),
   sitemapDiscovery: crawlSitemapDiscoverySchema.optional(),
+  externalLinkVerification: crawlExternalLinkVerificationSchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),
 })

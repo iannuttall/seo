@@ -61,6 +61,15 @@ guarantee in its
 Treat sitemap membership the same way in a crawl report. A listed URL deserves
 inspection, but its presence does not prove that Google indexed it.
 
+## External-link checks stay bounded
+
+External-link checks run against a bounded sample of the URLs retained by the
+crawl. SEO spreads that sample across source pages, keeps each selected check
+on the page that linked to it, and records the limits, deferred URLs, and
+request failures in `externalLinkVerification` JSON. A 404 is evidence about
+the external target. It does not mean the page containing that link failed to
+crawl.
+
 ## Robots.txt controls crawling, not indexing
 
 The crawler skips disallowed URLs by default. That matches the site's stated

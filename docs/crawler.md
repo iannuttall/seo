@@ -23,6 +23,13 @@ When `robots.txt` declares same-origin sitemap files, the crawler tries those
 first. JSON records the sitemap sources and returned URL counts. If none return
 URLs, it also tries `/sitemap.xml`.
 
+## External-link checks
+
+External-link checks use a bounded sample spread across source pages. The JSON
+report keeps each selected result on the page that linked to it and records
+retained, selected, fetched, failed, and deferred URLs. A 404 is evidence that
+the external target is unavailable. It does not mean the source page failed.
+
 ## What it captures
 
 For each page, the crawler records:

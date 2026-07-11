@@ -263,7 +263,7 @@ test('crawlSite merges redirect aliases independently of completion order', asyn
       links: page.sampleInternalLinks,
     })),
     requests: report.requests.map((request) => request.requestedUrl),
-    verifiedLinks: report.summary.verifiedLinks,
+    observedInternalLinks: report.summary.observedInternalLinks,
     discoveredUrls: report.summary.discoveredUrls,
   })
 
@@ -281,7 +281,7 @@ test('crawlSite merges redirect aliases independently of completion order', asyn
       ?.sampleInternalLinks,
     ['https://example.com/child-a', 'https://example.com/child-b'],
   )
-  assert.equal(oldFirst.summary.verifiedLinks, 4)
+  assert.equal(oldFirst.summary.observedInternalLinks, 4)
 })
 
 test('crawlSite counts links to a fetched redirect destination', async () => {

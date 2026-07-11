@@ -185,6 +185,7 @@ test('crawler MCP structured output schema stays stable', async () => {
         'lowIssues',
         'mediumIssues',
         'nonIndexablePages',
+        'observedInternalLinks',
         'pageLimitReached',
         'queuedUrls',
         'requestByStatus',
@@ -192,7 +193,6 @@ test('crawler MCP structured output schema stays stable', async () => {
         'skippedUrls',
         'statusErrors',
         'totalPages',
-        'verifiedLinks',
       ],
       topFix: [
         'category',

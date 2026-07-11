@@ -109,6 +109,12 @@ export function renderCrawlPretty(
     `Documents: ${report.summary.totalPages} retained; ${requestSummary}, ${report.summary.discoveredUrls} URLs discovered, ${report.summary.failedUrls} failed, ${report.summary.skippedUrls} skipped`,
     `Issues: ${report.issues.length} (${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, ${report.summary.lowIssues} low)`,
   ]
+  if (report.externalLinkVerification) {
+    const external = report.externalLinkVerification
+    lines.push(
+      `External links: ${external.fetchedUrls} fetched, ${external.failedUrls} request failure${external.failedUrls === 1 ? '' : 's'}, ${external.deferredUrls} deferred (${external.dataStatus})`,
+    )
+  }
 
   if (fixes.length) {
     lines.push('', 'Prioritised fixes')
@@ -213,7 +219,7 @@ export function renderCrawlHtml(
     <div class="metric"><span>Queued</span><strong>${report.summary.queuedUrls}</strong></div>
     <div class="metric"><span>Skipped</span><strong>${report.summary.skippedUrls}</strong></div>
     <div class="metric"><span>Failed fetches</span><strong>${report.summary.failedUrls}</strong></div>
-    <div class="metric"><span>Verified links</span><strong>${report.summary.verifiedLinks}</strong></div>
+    <div class="metric"><span>Observed internal links</span><strong>${report.summary.observedInternalLinks}</strong></div>
     <div class="metric"><span>Issues</span><strong>${report.issues.length}</strong></div>
     <div class="metric"><span>High</span><strong>${report.summary.highIssues}</strong></div>
   </section>

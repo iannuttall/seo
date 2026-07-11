@@ -77,7 +77,7 @@ export type CrawlStatusEvent = {
   crawledUrls: number
   skippedUrls: number
   failedUrls: number
-  verifiedLinks: number
+  observedInternalLinks: number
   maxPages: number
 }
 
@@ -111,7 +111,7 @@ export type CrawlRunStats = {
   crawledUrls: number
   skippedUrls: number
   failedUrls: number
-  verifiedLinks: number
+  observedInternalLinks: number
   pageLimitReached: boolean
 }
 
@@ -167,6 +167,18 @@ export type CrawlSitemapDiscovery = {
     possiblyTruncated: boolean
     warnings: string[]
   }>
+}
+
+export type CrawlExternalLinkVerification = {
+  dataStatus: 'complete' | 'partial' | 'unavailable'
+  discoveredLinkOccurrences: number
+  retainedUrls: number
+  selectedUrls: number
+  fetchedUrls: number
+  failedUrls: number
+  deferredUrls: number
+  limit: number
+  warnings: string[]
 }
 
 export type CrawlDataSourceStatus =
@@ -226,7 +238,7 @@ export type CrawlReportSummary = {
   crawledUrls: number
   skippedUrls: number
   failedUrls: number
-  verifiedLinks: number
+  observedInternalLinks: number
   pageLimitReached: boolean
   attemptedRequests: number
   responseRequests: number
@@ -262,6 +274,7 @@ export type CrawlReport = {
   dataSources?: CrawlReportDataSources
   ai?: CrawlAiSignals
   sitemapDiscovery?: CrawlSitemapDiscovery
+  externalLinkVerification?: CrawlExternalLinkVerification
   warnings: string[]
   caveats: string[]
 }
@@ -567,13 +580,12 @@ function crawlRunStats(
   stats: Partial<CrawlRunStats> = {},
 ): CrawlRunStats {
   const discovered = new Set<string>()
-  let verifiedLinks = 0
+  let observedInternalLinks = 0
   for (const page of pages) {
     discovered.add(page.url)
     for (const url of page.sampleInternalLinks ?? []) discovered.add(url)
     for (const url of page.sampleExternalLinks ?? []) discovered.add(url)
-    verifiedLinks +=
-      page.outgoingInternalCount + (page.outgoingExternalCount ?? 0)
+    observedInternalLinks += page.outgoingInternalCount
   }
   return {
     discoveredUrls: stats.discoveredUrls ?? discovered.size,
@@ -583,7 +595,7 @@ function crawlRunStats(
     failedUrls:
       stats.failedUrls ??
       pages.filter((page) => page.status === 0 || page.status >= 400).length,
-    verifiedLinks: stats.verifiedLinks ?? verifiedLinks,
+    observedInternalLinks: stats.observedInternalLinks ?? observedInternalLinks,
     pageLimitReached: stats.pageLimitReached ?? false,
   }
 }
@@ -670,6 +682,7 @@ export function createCrawlReport(input: {
   ga4PropertyId?: string
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
+  externalLinkVerification?: CrawlExternalLinkVerification
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -741,6 +754,13 @@ export function createCrawlReport(input: {
           sitemapDiscovery: sanitizeTenantValue(
             input.sitemapDiscovery,
           ) as CrawlSitemapDiscovery,
+        }
+      : {}),
+    ...(input.externalLinkVerification
+      ? {
+          externalLinkVerification: sanitizeTenantValue(
+            input.externalLinkVerification,
+          ) as CrawlExternalLinkVerification,
         }
       : {}),
     warnings: sanitizeMessages(input.warnings).sort(compareText),

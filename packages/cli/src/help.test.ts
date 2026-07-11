@@ -269,6 +269,49 @@ test('auth status and interactive-only setup stay structured in JSON mode', asyn
   }
 })
 
+test('auth storage reports and changes the local preference in JSON mode', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-auth-storage-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-auth-storage-cache-'))
+
+  try {
+    const defaultStorage = await runSeoResult(['auth', 'storage', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+    assert.equal(defaultStorage.exitCode, 0)
+    assert.deepEqual(JSON.parse(defaultStorage.stdout), {
+      configured: 'keychain',
+      active: 'keychain',
+    })
+
+    const fileStorage = await runSeoResult(
+      ['auth', 'storage', '--file', '--json'],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+      },
+    )
+    assert.equal(fileStorage.exitCode, 0)
+    assert.deepEqual(JSON.parse(fileStorage.stdout), {
+      configured: 'file',
+      active: 'file',
+    })
+
+    const conflict = await runSeoResult(
+      ['auth', 'storage', '--keychain', '--file', '--json'],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+      },
+    )
+    assert.equal(conflict.exitCode, 2)
+    assert.equal(JSON.parse(conflict.stdout).error.code, 'INVALID_INPUT')
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
 test('auth status reports a service account identity without printing the key', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-service-account-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-service-account-cache-'))

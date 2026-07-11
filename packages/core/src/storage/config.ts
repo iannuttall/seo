@@ -1,5 +1,4 @@
 import { chmodSync, statSync } from 'node:fs'
-import * as KeytarCompat from '@napi-rs/keyring/keytar.js'
 import { ensureSeoCliDirs, getSeoCliPaths } from '../paths.js'
 import {
   type AppConfig,
@@ -8,9 +7,21 @@ import {
   tokenSchema,
 } from '../types.js'
 import { fileMode, readJsonFile, safeRemove, writeJsonAtomic } from './files.js'
+import {
+  deleteKeyringPassword,
+  getKeyringPassword,
+  setKeyringPassword,
+} from './keyring.js'
 
 const KEYRING_SERVICE = 'seo'
 const PRIVATE_FILE_MODE = 0o600
+
+export type TokenStorageMode = 'keychain' | 'file'
+export type TokenStorageStatus = {
+  configured: TokenStorageMode
+  active: TokenStorageMode
+  reason?: string
+}
 
 function tightenConfigPermissions(path: string): void {
   try {
@@ -43,6 +54,67 @@ function getKeyringAccount(tokens: StoredTokens): string {
   return `google:${tokens.account_email}`
 }
 
+function tokenStorageMode(config: AppConfig): TokenStorageMode {
+  return config.security.useKeychain ? 'keychain' : 'file'
+}
+
+function hasTokenSecrets(tokens: StoredTokens): boolean {
+  return Boolean(tokens.access_token || tokens.refresh_token)
+}
+
+function tokenMetadata(tokens: StoredTokens): StoredTokens {
+  return {
+    ...tokens,
+    access_token: undefined,
+    refresh_token: undefined,
+  }
+}
+
+async function readKeyringTokens(tokens: StoredTokens): Promise<{
+  accessToken?: string
+  refreshToken?: string
+}> {
+  const account = getKeyringAccount(tokens)
+  const [accessToken, refreshToken] = await Promise.all([
+    getKeyringPassword(KEYRING_SERVICE, `${account}:access`),
+    getKeyringPassword(KEYRING_SERVICE, `${account}:refresh`),
+  ])
+  return {
+    accessToken: accessToken ?? undefined,
+    refreshToken: refreshToken ?? undefined,
+  }
+}
+
+async function writeKeyringTokens(tokens: StoredTokens): Promise<void> {
+  const account = getKeyringAccount(tokens)
+  if (tokens.access_token) {
+    await setKeyringPassword(
+      KEYRING_SERVICE,
+      `${account}:access`,
+      tokens.access_token,
+    )
+  } else {
+    await deleteKeyringPassword(KEYRING_SERVICE, `${account}:access`)
+  }
+  if (tokens.refresh_token) {
+    await setKeyringPassword(
+      KEYRING_SERVICE,
+      `${account}:refresh`,
+      tokens.refresh_token,
+    )
+  } else {
+    await deleteKeyringPassword(KEYRING_SERVICE, `${account}:refresh`)
+  }
+}
+
+async function deleteKeyringTokens(tokens: StoredTokens): Promise<void> {
+  const account = getKeyringAccount(tokens)
+  await Promise.all([
+    deleteKeyringPassword(KEYRING_SERVICE, `${account}:access`),
+    deleteKeyringPassword(KEYRING_SERVICE, `${account}:refresh`),
+  ])
+}
+
 export async function readTokens(): Promise<StoredTokens | undefined> {
   ensureSeoCliDirs()
   const raw = readJsonFile<StoredTokens>(getSeoCliPaths().tokensFile)
@@ -56,20 +128,24 @@ export async function readTokens(): Promise<StoredTokens | undefined> {
     return parsed
   }
 
-  const account = getKeyringAccount(parsed)
-  const accessToken = await KeytarCompat.getPassword(
-    KEYRING_SERVICE,
-    `${account}:access`,
-  )
-  const refreshToken = await KeytarCompat.getPassword(
-    KEYRING_SERVICE,
-    `${account}:refresh`,
-  )
-
-  return {
-    ...parsed,
-    access_token: accessToken ?? undefined,
-    refresh_token: refreshToken ?? undefined,
+  try {
+    const keyringTokens = await readKeyringTokens(parsed)
+    if (hasTokenSecrets(parsed)) {
+      await writeKeyringTokens(parsed)
+      writeJsonAtomic(
+        getSeoCliPaths().tokensFile,
+        tokenMetadata(parsed),
+        PRIVATE_FILE_MODE,
+      )
+      return parsed
+    }
+    return {
+      ...parsed,
+      access_token: keyringTokens.accessToken,
+      refresh_token: keyringTokens.refreshToken,
+    }
+  } catch {
+    return parsed
   }
 }
 
@@ -79,47 +155,83 @@ export async function writeTokens(tokens: StoredTokens): Promise<void> {
   const config = readConfig()
 
   if (config.security.useKeychain) {
-    const account = getKeyringAccount(parsed)
-    if (parsed.access_token) {
-      await KeytarCompat.setPassword(
-        KEYRING_SERVICE,
-        `${account}:access`,
-        parsed.access_token,
+    try {
+      await writeKeyringTokens(parsed)
+      writeJsonAtomic(
+        getSeoCliPaths().tokensFile,
+        tokenMetadata(parsed),
+        PRIVATE_FILE_MODE,
       )
+      return
+    } catch {
+      // A headless Linux host or a locked desktop keychain should not prevent
+      // local OAuth from working. The private file remains the fallback.
     }
-    if (parsed.refresh_token) {
-      await KeytarCompat.setPassword(
-        KEYRING_SERVICE,
-        `${account}:refresh`,
-        parsed.refresh_token,
-      )
-    }
-    writeJsonAtomic(
-      getSeoCliPaths().tokensFile,
-      { ...parsed, access_token: undefined, refresh_token: undefined },
-      0o600,
-    )
-    return
   }
 
-  writeJsonAtomic(getSeoCliPaths().tokensFile, parsed, 0o600)
+  writeJsonAtomic(getSeoCliPaths().tokensFile, parsed, PRIVATE_FILE_MODE)
 }
 
 export async function deleteTokens(): Promise<void> {
   const tokens = await readTokens()
   if (tokens) {
-    const account = getKeyringAccount(tokens)
-    await KeytarCompat.deletePassword(
-      KEYRING_SERVICE,
-      `${account}:access`,
-    ).catch(() => undefined)
-    await KeytarCompat.deletePassword(
-      KEYRING_SERVICE,
-      `${account}:refresh`,
-    ).catch(() => undefined)
+    await deleteKeyringTokens(tokens).catch(() => undefined)
   }
 
   safeRemove(getSeoCliPaths().tokensFile)
+}
+
+export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {
+  ensureSeoCliDirs()
+  const config = readConfig()
+  const configured = tokenStorageMode(config)
+  if (configured === 'file') {
+    return { configured, active: 'file' }
+  }
+
+  const raw = readJsonFile<StoredTokens>(getSeoCliPaths().tokensFile)
+  if (!raw) return { configured, active: 'keychain' }
+  const tokens = tokenSchema.parse(raw)
+  if (hasTokenSecrets(tokens)) {
+    return {
+      configured,
+      active: 'file',
+      reason:
+        'Private token file will move to the keychain when it is available.',
+    }
+  }
+
+  try {
+    await readKeyringTokens(tokens)
+    return { configured, active: 'keychain' }
+  } catch {
+    return {
+      configured,
+      active: 'file',
+      reason:
+        'The system keychain is unavailable, so seo is using its private file fallback.',
+    }
+  }
+}
+
+export async function setTokenStorageMode(
+  mode: TokenStorageMode,
+): Promise<TokenStorageStatus> {
+  const tokens = await readTokens()
+  const config = readConfig()
+  writeConfig({
+    ...config,
+    security: { ...config.security, useKeychain: mode === 'keychain' },
+  })
+
+  if (tokens) {
+    await writeTokens(tokens)
+    if (mode === 'file') {
+      await deleteKeyringTokens(tokens).catch(() => undefined)
+    }
+  }
+
+  return getTokenStorageStatus()
 }
 
 export function readOauthClient():

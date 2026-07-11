@@ -53,9 +53,9 @@ export const configSchema = z.object({
     .default({ prefer: 'cheap' }),
   security: z
     .object({
-      useKeychain: z.boolean().default(false),
+      useKeychain: z.boolean().default(true),
     })
-    .default({ useKeychain: false }),
+    .default({ useKeychain: true }),
   auth: z
     .object({
       sharedClientId: z.string().optional(),

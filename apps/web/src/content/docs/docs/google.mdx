@@ -241,7 +241,9 @@ thresholded, use it for bounded direction rather than an exact all-site total.
 The public package can include the project's Google desktop OAuth client. The
 CLI opens the Google authorization page, listens on a temporary loopback
 address for the response, exchanges the code, then stores the resulting tokens
-in your local config directory with private file permissions.
+in your system keychain when it is available. A private local file with `0600`
+permissions is the fallback for headless machines, locked keychains, and any
+machine where you choose file storage.
 
 Google recommends loopback redirects for installed desktop apps on macOS,
 Linux, and Windows in its
@@ -257,6 +259,18 @@ seo auth setup-client
 ```
 
 This is an advanced fallback, not a normal onboarding step.
+
+Use `seo auth status` to see where the active tokens are stored. You can make
+the choice yourself when a local setup needs it:
+
+```sh
+seo auth storage --keychain
+seo auth storage --file
+```
+
+Changing storage carries an existing local login across. A file fallback does
+not make the CLI less private. It keeps the token file readable only by your
+user account.
 
 ## Use a service account in CI or a container
 

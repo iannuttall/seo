@@ -132,6 +132,34 @@ test('start JSON never prompts and requires an explicit site on first run', asyn
   }
 })
 
+test('report JSON never prompts without a selector', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-report-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-report-cache-'))
+
+  try {
+    const result = await runSeoResult(['report', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
+    const output = JSON.parse(result.stdout)
+
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stderr, '')
+    assert.deepEqual(output, {
+      ok: false,
+      error: {
+        code: 'INVALID_INPUT',
+        message:
+          'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
+        retryable: false,
+      },
+    })
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
 test('init is a compatibility alias for the guided start flow', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-init-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-init-cache-'))

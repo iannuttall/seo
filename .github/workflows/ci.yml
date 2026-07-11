@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -15,6 +18,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
       - uses: pnpm/action-setup@v6
         with:
           version: 11.10.0
@@ -28,4 +37,4 @@ jobs:
       - run: pnpm test
       - run: pnpm test:package-install
       - run: pnpm lint
-      - run: pnpm security:audit
+      - run: pnpm security:check

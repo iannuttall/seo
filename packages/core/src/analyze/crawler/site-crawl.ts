@@ -83,6 +83,47 @@ function normalizeUrl(value: string, base?: string): string | undefined {
   }
 }
 
+function resolveFetchedAlias(
+  url: string,
+  aliases: ReadonlyMap<string, string>,
+): string {
+  const visited = new Set<string>()
+  let current = url
+  while (!visited.has(current)) {
+    visited.add(current)
+    const next = aliases.get(current)
+    if (!next) return current
+    current = next
+  }
+  return current
+}
+
+function resolveLinkGraphAliases(
+  linkGraph: Record<string, string[]>,
+  aliases: ReadonlyMap<string, string>,
+): Record<string, string[]> {
+  const resolved: Record<string, Set<string>> = {}
+  for (const [source, targets] of Object.entries(linkGraph)) {
+    const resolvedSource = resolveFetchedAlias(source, aliases)
+    let resolvedTargets = resolved[resolvedSource]
+    if (!resolvedTargets) {
+      resolvedTargets = new Set<string>()
+      resolved[resolvedSource] = resolvedTargets
+    }
+    for (const target of targets) {
+      resolvedTargets.add(resolveFetchedAlias(target, aliases))
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(resolved).map(([source, targets]) => [
+      source,
+      [...targets].sort((left, right) =>
+        left < right ? -1 : left > right ? 1 : 0,
+      ),
+    ]),
+  )
+}
+
 function sameOrigin(url: string, origin: string): boolean {
   try {
     return new URL(url).origin === origin
@@ -433,6 +474,7 @@ export async function crawlSite(
   const queued = new Set<string>()
   const discovered = new Set<string>()
   const linkGraph: Record<string, string[]> = {}
+  const fetchedAliases = new Map<string, string>()
   const pages: CrawlReport['pages'] = []
   const requests: CrawlReport['requests'] = []
   const documentIndexes = new Map<
@@ -755,6 +797,10 @@ export async function crawlSite(
       page.url = finalUrl
       page.finalUrl = finalUrl
       page.crawlDepth = task.depth
+      const requestedUrl = normalizeUrl(task.url, config.url)
+      if (requestedUrl && requestedUrl !== finalUrl) {
+        fetchedAliases.set(requestedUrl, finalUrl)
+      }
       page.contentAuditAllowed =
         !config.respectRobots || page.robotsTxt?.allowed !== false
 
@@ -852,13 +898,14 @@ export async function crawlSite(
       }
     }
 
+    const resolvedLinkGraph = resolveLinkGraphAliases(linkGraph, fetchedAliases)
     const pageIndexes = new Map(
       pages.map((page, index) => [page.url, index] as const),
     )
     const depths = pages.map((page) => page.crawlDepth ?? 0)
     for (let pass = 0; pass < pages.length; pass += 1) {
       let changed = false
-      for (const [sourceUrl, targets] of Object.entries(linkGraph)) {
+      for (const [sourceUrl, targets] of Object.entries(resolvedLinkGraph)) {
         const sourceIndex = pageIndexes.get(sourceUrl)
         if (sourceIndex === undefined) continue
         for (const target of targets) {
@@ -967,7 +1014,7 @@ export async function crawlSite(
       pages,
       requests,
       requestEvidenceStatus,
-      linkGraph,
+      linkGraph: resolvedLinkGraph,
       ai: {
         llmsTxt,
         ...(robotsTxt ? { robotsTxt } : {}),

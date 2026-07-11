@@ -308,6 +308,50 @@ test('crawlSite merges redirect aliases independently of completion order', asyn
   assert.equal(oldFirst.summary.verifiedLinks, 4)
 })
 
+test('crawlSite counts links to a fetched redirect destination', async () => {
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      mode: 'site',
+      useSitemap: false,
+      maxDepth: 2,
+      maxPages: 10,
+      concurrency: 2,
+    },
+    {
+      fetch: async () =>
+        new Response('not found', {
+          status: 404,
+          headers: { 'content-type': 'text/plain' },
+        }),
+      fetchPage: async (url) => {
+        if (new URL(url).pathname === '/') {
+          return {
+            page: crawlPageSnapshot(url),
+            urls: ['https://example.com/old'],
+          }
+        }
+        return {
+          page: crawlPageSnapshot('https://example.com/new'),
+          urls: [],
+        }
+      },
+    },
+  )
+
+  const destination = report.pages.find((page) => page.url.endsWith('/new'))
+  assert.equal(destination?.crawlDepth, 1)
+  assert.equal(destination?.internalInlinkCount, 1)
+  assert.equal(
+    report.issues.some(
+      (issue) =>
+        issue.ruleId === 'orphan_page' &&
+        issue.url === 'https://example.com/new',
+    ),
+    false,
+  )
+})
+
 test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {

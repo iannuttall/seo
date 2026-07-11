@@ -336,7 +336,7 @@ export async function extractPage(
     imagesTotal: imageElements.length,
     imagesMissingAlt: imageElements.filter((element) => {
       const alt = $(element).attr('alt')
-      return alt === undefined || alt.trim() === ''
+      return alt === undefined
     }).length,
     oversizedImageCandidates: oversizedImageCandidates.slice(0, 25),
     mixedContentUrls,

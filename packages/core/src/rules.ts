@@ -208,7 +208,7 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'canonical_non_absolute',
-    title: 'Canonical is not absolute',
+    title: 'Canonical uses a relative URL',
     category: 'canonical',
     defaultSeverity: 'low',
     whyItMatters:
@@ -292,13 +292,13 @@ const RULE_DEFINITIONS = [
     id: 'redirected_url',
     title: 'URL redirects',
     category: 'response',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'Redirects are sometimes intentional, but unnecessary redirects slow users, dilute crawl clarity, and can hide broken migration paths.',
+      'This crawl reached the page through a redirect. A direct redirect can be intentional. It becomes worth fixing when internal links, canonicals, or sitemap entries still point to the old URL.',
     howToFix:
-      'Update internal links, canonicals, and sitemap entries to the final URL. Keep one direct 301 only when the old URL must remain supported.',
+      'Check why the old URL was requested. Update internal links, canonicals, and sitemap entries to the final URL when appropriate. Keep one direct 301 when the old URL must remain supported.',
     impactIfIgnored:
-      'Search engines and users keep passing through an avoidable hop, and future redirects can become chains or loops.',
+      'An avoidable redirect adds a request and can turn into a chain later. An intentional direct redirect needs no change.',
     howToVerify:
       'Re-run the crawl and confirm the requested URL is the same as the final URL, or that the redirect is intentional.',
     agentHints: {
@@ -322,17 +322,17 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'slow_response',
-    title: 'Slow response',
+    title: 'Slow response in this crawl',
     category: 'response',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'Slow HTML responses delay every user and crawler before rendering or assets even begin.',
+      'The crawler observed a slow HTML response. One request is a diagnostic sample, not a field performance verdict, but repeated slow responses are worth investigating.',
     howToFix:
-      'Check server timing, cache headers, database queries, CDN caching, and origin health. Aim for fast, cacheable HTML for public pages.',
+      'Repeat the check and use the performance report before changing anything. If the delay persists, check server timing, cache headers, database queries, CDN caching, and origin health.',
     impactIfIgnored:
-      'Users wait longer, crawlers spend more time per URL, and important pages may feel unreliable.',
+      'Persistent slow HTML can delay users and crawlers. A one-off slow sample may be network or origin variance.',
     howToVerify:
-      'Re-run the crawl and confirm responseTimeMs is under the slow-response threshold.',
+      'Re-run the crawl and compare repeated response times. Use field data where available for a user-experience decision.',
   },
   {
     id: 'large_html',
@@ -452,45 +452,45 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'orphan_page',
-    title: 'Orphan page',
-    category: 'links',
-    defaultSeverity: 'medium',
-    whyItMatters:
-      'A page with no internal links is hard for users and crawlers to discover, even if it appears in a sitemap.',
-    howToFix:
-      'Add relevant internal links from hubs, navigation, related pages, or templates that naturally point to this page.',
-    impactIfIgnored:
-      'The page can stay isolated, receive less authority, and be crawled less consistently.',
-    howToVerify:
-      'Re-run the crawl and confirm internalInlinkCount is greater than zero.',
-  },
-  {
-    id: 'deep_page',
-    title: 'Deep page',
+    title: 'No observed internal links',
     category: 'links',
     defaultSeverity: 'low',
     whyItMatters:
-      'Important pages buried many clicks deep are harder for users and crawlers to reach.',
+      'This crawl did not find an internal link to the page. That is worth checking, but a partial crawl cannot prove that the page is a true sitewide orphan.',
     howToFix:
-      'Link the page from a closer hub, category page, related content block, or navigation path.',
+      'Check the page in a complete crawl and in the sitemap. If it is meant to be discovered, add a relevant link from a hub, navigation path, related page, or template.',
     impactIfIgnored:
-      'The page may receive weaker internal authority and be discovered later during crawls.',
+      'A genuinely unlinked page can be hard for users and crawlers to find. A page omitted by the crawl needs no change yet.',
     howToVerify:
-      'Re-run the crawl and confirm crawlDepth is closer to the homepage.',
+      'Re-run a complete crawl from the same site entry point and confirm an observed internal link reaches the page.',
+  },
+  {
+    id: 'deep_page',
+    title: 'Deep crawl path',
+    category: 'links',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'This crawl reached the page several links away from its start URL. A capped crawl or a non-homepage start URL does not prove the shortest sitewide path.',
+    howToFix:
+      'Check whether the page is important and whether a shorter user path makes sense. Add a link from a closer hub, category page, related content block, or navigation path only when it helps users.',
+    impactIfIgnored:
+      'A genuinely deep important page can be harder to reach. Treat this as a crawl-path review, not a sitewide architecture verdict.',
+    howToVerify:
+      'Re-run a complete crawl from the same start URL and confirm crawlDepth changed after a justified link update.',
   },
   {
     id: 'weak_internal_links_to_valuable_page',
-    title: 'Valuable page has weak internal links',
+    title: 'Review internal links to a valuable page',
     category: 'links',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'Pages already earning search or analytics value should be easy to reach and strongly linked from relevant parts of the site.',
+      'The page has observed search or analytics value but few inlinks within this crawl. It is a review cue, not proof that the page lacks enough internal authority.',
     howToFix:
-      'Add contextual internal links from high-level pages, related templates, and pages that share the same intent.',
+      "Check the page's role and current navigation first. Add contextual links from relevant hubs, templates, or related pages only when they help users reach it.",
     impactIfIgnored:
-      'Useful pages may keep underperforming because the site does not pass enough internal authority to them.',
+      'A valuable page may be harder to find if it is genuinely underlinked. Do not treat the observed count as a ranking forecast.',
     howToVerify:
-      'Re-run the crawl and confirm internalInlinkCount or internalLinkAuthorityScore improved for the page.',
+      'Re-run the same crawl after a justified link change and confirm the observed inlink count changed.',
   },
   {
     id: 'missing_meta_description',
@@ -530,15 +530,15 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'canonical_missing',
-    title: 'Canonical missing',
+    title: 'No canonical declared',
     category: 'canonical',
     defaultSeverity: 'low',
     whyItMatters:
-      'A canonical can clarify the preferred URL when duplicate or parameter variants exist, though Google does not require one on every page.',
+      'The page did not declare a canonical. That is often fine for a unique URL. It matters when parameter, protocol, pagination, or duplicate-content variants need a preferred URL.',
     howToFix:
-      'Add a self-referencing canonical when the site uses canonical tags as part of a deliberate duplicate-URL strategy.',
+      'First check whether equivalent URL variants exist. Add a self-referencing canonical only when the site uses canonical tags as part of a deliberate duplicate-URL strategy.',
     impactIfIgnored:
-      'When duplicate variants exist, search engines may choose a different preferred URL. Unique pages without duplicates may need no action.',
+      'A unique page may need no action. If duplicate variants exist, search engines can choose a different preferred URL.',
     howToVerify:
       'Re-run the crawl and confirm the canonical field is present and points to the preferred URL.',
   },
@@ -652,17 +652,17 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'query_coverage_missing',
-    title: 'Top query weakly covered',
+    title: 'Review top-query text coverage',
     category: 'content',
-    defaultSeverity: 'medium',
+    defaultSeverity: 'low',
     whyItMatters:
-      'When GSC shows impressions for a query, the page should visibly cover the important query terms in headings, snippets, and body copy.',
+      'The top reported query has terms that were not found in the title, description, H1, or retained content sample. Exact terms alone do not prove relevance, and the sample cannot assess every section or useful synonym.',
     howToFix:
-      'Work the missing query terms into the title, H1, description, and relevant body section only where they are genuinely useful.',
+      'Read the page and the search results before changing copy. Add or clarify wording only when it makes the page answer the query better. Do not force exact terms into a page that already serves the intent.',
     impactIfIgnored:
-      'The page can keep earning impressions without enough relevance to improve rank or clicks.',
+      'Use this as a review prompt. It does not predict rankings, clicks, or a need to rewrite the page.',
     howToVerify:
-      'Re-run the crawl with the same GSC property and confirm missingTerms is empty or coverage is above the threshold.',
+      'Re-run the crawl with the same GSC property and review the query, sampled text, and any deliberate wording changes together.',
     agentHints: {
       evidenceFields: [
         'page.topQuery',
@@ -674,17 +674,17 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'image_missing_alt',
-    title: 'Images missing alt text',
+    title: 'Images lack alt attributes',
     category: 'images',
     defaultSeverity: 'medium',
     whyItMatters:
-      'Alt text helps screen-reader users and gives search engines context for meaningful images.',
+      'An image with no alt attribute gives screen readers no declared text alternative. A deliberately empty alt attribute is valid for decorative images and is not included here.',
     howToFix:
-      'Add concise alt text for meaningful images. Use empty alt text only for decorative images.',
+      'Add concise alt text to meaningful images that currently have no alt attribute. Keep alt="" on decorative images.',
     impactIfIgnored:
-      'The page has accessibility gaps and weaker image-search context.',
+      'People using screen readers may miss the purpose of a meaningful image, and search engines have less image context.',
     howToVerify:
-      'Re-run the crawl and confirm imagesMissingAlt is zero or only decorative images are empty.',
+      'Re-run the crawl and confirm imagesMissingAlt is zero. Decorative images can keep an empty alt attribute.',
   },
   {
     id: 'image_oversized_candidate',
@@ -735,32 +735,33 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'hreflang_invalid',
-    title: 'Invalid hreflang values',
+    title: 'Malformed hreflang values',
     category: 'international',
     defaultSeverity: 'low',
     whyItMatters:
-      'Invalid hreflang codes can be ignored by search engines, which weakens language and region targeting.',
+      'These hreflang values do not match the basic language or language-region shape. This check does not validate every officially supported language or region code.',
     howToFix:
-      'Use valid language or language-region codes such as en, en-gb, fr-ca, or x-default.',
+      'Use a supported language or language-region code such as en, en-gb, fr-ca, or x-default. Check the current Google hreflang documentation before changing a locale set.',
     impactIfIgnored:
-      'Search engines may ignore the annotation and show the wrong regional page.',
-    howToVerify: 'Re-run the crawl and confirm every hreflang value is valid.',
+      'Search engines may ignore malformed annotations and show a less relevant regional page.',
+    howToVerify:
+      'Re-run the crawl and confirm no hreflang values are marked malformed. Validate the full locale set against Google documentation.',
     agentHints: {
-      evidenceFields: ['page.hreflang', 'issue.evidence.invalid'],
+      evidenceFields: ['page.hreflang', 'issue.evidence.malformed'],
       suggestedCommands: ['seo crawl <url> --json'],
     },
   },
   {
     id: 'hreflang_duplicate',
-    title: 'Duplicate hreflang values',
+    title: 'Repeated hreflang values',
     category: 'international',
     defaultSeverity: 'low',
     whyItMatters:
-      'Duplicate hreflang declarations create conflicting signals when one language code points to more than one URL.',
+      'Repeated hreflang declarations make a locale set harder to review. They only conflict when the same language code points to different URLs.',
     howToFix:
-      'Keep one URL per hreflang value on each page and remove duplicated alternates.',
+      'Keep one hreflang declaration per language code. If repeated codes point to different URLs, decide which page is the intended locale target.',
     impactIfIgnored:
-      'Search engines may ignore the duplicate annotations or pick the wrong regional URL.',
+      'Conflicting duplicate targets may be ignored. Identical repeats are usually cleanup work, not a search emergency.',
     howToVerify:
       'Re-run the crawl and confirm each hreflang code appears only once per page.',
     agentHints: {
@@ -774,13 +775,13 @@ const RULE_DEFINITIONS = [
     category: 'international',
     defaultSeverity: 'low',
     whyItMatters:
-      'Hreflang clusters should include the current page language or x-default so engines can trust the set.',
+      'A page that declares hreflang should include an alternate that points back to its own final URL. An x-default entry does not replace that self reference.',
     howToFix:
-      'Add a self-referencing hreflang entry, or include x-default when the page is part of an international cluster.',
+      "Add one hreflang entry that points to this page's final URL. Keep x-default as an additional fallback only where it is useful.",
     impactIfIgnored:
-      'Search engines may treat the hreflang set as incomplete and show less relevant language variants.',
+      'Search engines may treat the hreflang set as incomplete and show a less relevant language variant.',
     howToVerify:
-      'Re-run the crawl and confirm hreflang includes the page language or x-default.',
+      'Re-run the crawl and confirm one hreflang href matches the fetched final URL.',
     agentHints: {
       evidenceFields: ['page.lang', 'page.hreflang'],
       suggestedCommands: ['seo crawl <url> --json'],
@@ -867,16 +868,17 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'twitter_card_missing',
-    title: 'Twitter card missing',
+    title: 'No Twitter card declared',
     category: 'social',
     defaultSeverity: 'low',
     whyItMatters:
-      'Twitter/X card tags help shared links render as rich previews instead of plain URLs.',
+      'A Twitter card tells X which preview format to use. X can sometimes fall back to Open Graph metadata, so this is a sharing observation, not a search issue.',
     howToFix:
-      'Add twitter:card and matching title, description, and image tags where useful.',
+      'Add twitter:card and matching metadata only when you need a specific X preview. Keep Open Graph metadata accurate either way.',
     impactIfIgnored:
-      'Links shared on Twitter/X may earn fewer clicks because the preview is weaker.',
-    howToVerify: 'Re-run the crawl and confirm twitterCard is present.',
+      'X may use fallback metadata or a simple link preview. Organic rankings are not affected.',
+    howToVerify:
+      'Re-run the crawl and confirm twitterCard is present if a specific X preview is required.',
   },
 ] as const satisfies readonly RuleDefinition[]
 

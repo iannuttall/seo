@@ -505,7 +505,7 @@ test('auditCrawlPages flags mobile and international issues', () => {
       hreflang: [
         { hreflang: 'fr-ca', href: 'https://example.com/ca-fr' },
         { hreflang: 'fr-ca', href: 'https://example.com/ca-fr-copy' },
-        { hreflang: 'english-uk', href: 'https://example.com/uk' },
+        { hreflang: 'english-uk', href: 'https://example.com/not-uk' },
       ],
     }),
   ])
@@ -527,13 +527,69 @@ test('auditCrawlPages flags mobile and international issues', () => {
   )
   assert.deepEqual(
     issues.find((issue) => issue.ruleId === 'hreflang_invalid')?.evidence
-      ?.invalid,
-    [{ hreflang: 'english-uk', href: 'https://example.com/uk' }],
+      ?.malformed,
+    [{ hreflang: 'english-uk', href: 'https://example.com/not-uk' }],
   )
   assert.deepEqual(
     issues.find((issue) => issue.ruleId === 'hreflang_duplicate')?.evidence
       ?.duplicateCodes,
     ['fr-ca'],
+  )
+})
+
+test('hreflang requires a self target rather than a language label or x-default', () => {
+  const missingSelfReference = auditCrawlPages([
+    page({
+      url: 'https://example.com/gb',
+      finalUrl: 'https://example.com/gb',
+      lang: 'en-gb',
+      hreflang: [
+        { hreflang: 'en-gb', href: 'https://example.com/en' },
+        { hreflang: 'x-default', href: 'https://example.com/' },
+      ],
+    }),
+  ])
+  const selfReference = auditCrawlPages([
+    page({
+      url: 'https://example.com/gb',
+      finalUrl: 'https://example.com/gb',
+      lang: 'en-gb',
+      hreflang: [
+        { hreflang: 'en-gb', href: 'https://example.com/gb' },
+        { hreflang: 'x-default', href: 'https://example.com/' },
+      ],
+    }),
+  ])
+
+  assert.equal(
+    missingSelfReference.some(
+      (issue) => issue.ruleId === 'hreflang_incomplete',
+    ),
+    true,
+  )
+  assert.equal(
+    selfReference.some((issue) => issue.ruleId === 'hreflang_incomplete'),
+    false,
+  )
+})
+
+test('hreflang format accepts a language, script, and region', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/zh-hant-us',
+      finalUrl: 'https://example.com/zh-hant-us',
+      hreflang: [
+        {
+          hreflang: 'zh-Hant-US',
+          href: 'https://example.com/zh-hant-us',
+        },
+      ],
+    }),
+  ])
+
+  assert.equal(
+    issues.some((issue) => issue.ruleId === 'hreflang_invalid'),
+    false,
   )
 })
 

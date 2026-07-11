@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { readdir, readFile } from 'node:fs/promises'
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
 import { promisify } from 'node:util'
 
@@ -140,6 +142,48 @@ test('the release workflow uses npm trusted publishing and release-only OAuth in
     assert.match(workflow, /gitleaks\/gitleaks-action@v2/)
     assert.match(workflow, /pnpm security:check/)
     assert.doesNotMatch(workflow, /pnpm security:audit/)
+  }
+})
+
+test('the shared OAuth injector escapes values and requires both credentials', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'seo-shared-oauth-'))
+  const output = join(directory, 'shared-client.generated.ts')
+  const env = {
+    ...process.env,
+    SEO_GOOGLE_CLIENT_ID: "test-client-'\\\u2028",
+    SEO_GOOGLE_CLIENT_SECRET: "test-secret-'\\\u2029",
+    SEO_SHARED_OAUTH_OUTPUT_PATH: output,
+  }
+
+  try {
+    const result = await execFileAsync(
+      process.execPath,
+      ['scripts/inject-shared-oauth-client.mjs'],
+      { env },
+    )
+    const source = await readFile(output, 'utf8')
+
+    assert.match(result.stdout, /Wrote shared OAuth client/)
+    assert.match(source, /clientId: 'test-client-\\'\\\\\\u2028'/)
+    assert.match(source, /clientSecret: 'test-secret-\\'\\\\\\u2029'/)
+
+    await assert.rejects(
+      execFileAsync(
+        process.execPath,
+        ['scripts/inject-shared-oauth-client.mjs'],
+        {
+          env: {
+            ...process.env,
+            SEO_GOOGLE_CLIENT_ID: '',
+            SEO_GOOGLE_CLIENT_SECRET: '',
+            SEO_SHARED_OAUTH_OUTPUT_PATH: output,
+          },
+        },
+      ),
+      /SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET must both be set/,
+    )
+  } finally {
+    await rm(directory, { recursive: true, force: true })
   }
 })
 

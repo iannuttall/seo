@@ -2,8 +2,8 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 const target = resolve(
-  process.cwd(),
-  'packages/core/src/gsc/shared-client.generated.ts',
+  process.env.SEO_SHARED_OAUTH_OUTPUT_PATH ??
+    'packages/core/src/gsc/shared-client.generated.ts',
 )
 const clientId = process.env.SEO_GOOGLE_CLIENT_ID
 const clientSecret = process.env.SEO_GOOGLE_CLIENT_SECRET

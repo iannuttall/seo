@@ -1,6 +1,6 @@
 ---
-title: Set up the seo CLI and run your first report
-description: Install the seo CLI, connect Search Console, save a local project profile, and run your first report that points you to a clear next action.
+title: Set up the seo CLI and run your first SEO audit
+description: Install the seo CLI, connect Search Console, save a local project profile, and run your first SEO audit that points you to a clear next action.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search

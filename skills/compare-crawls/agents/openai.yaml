@@ -1,4 +1,0 @@
-interface:
-  display_name: "Compare crawl reports"
-  short_description: "Compare two saved crawls"
-  default_prompt: "Use $compare-crawls to run the compare-crawls report and explain its evidence and limits."

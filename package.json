@@ -42,6 +42,7 @@
   "files": [
     "dist",
     "skills",
+    "evals",
     "PRIVACY.md",
     "SECURITY.md",
     "TERMS.md",

@@ -1,30 +1,41 @@
 # Agent skills
 
-These skills teach an agent how to use `seo` without reading the whole repo.
+This package ships one skill: `seo`. It teaches an agent how to use `seo`
+without reading the whole repo.
 
-They work best with the MCP server installed. This command is an interactive
-setup flow for a human:
+The skill is a router, not a manual. It explains the discover, describe, run
+flow, names the report ids for common jobs, and states the evidence rules that
+apply to every report. It does not memorise each report. Per-report depth, when
+to use a report, when to avoid it, its schema, the order to read its output,
+what its evidence cannot support, and one verification step, is fetched at
+runtime with `describe`. This keeps the skill small and always in sync with the
+registry.
+
+## Install
+
+The skill works best with the MCP server installed. This command is an
+interactive setup flow for a human:
 
 ```bash
 seo mcp install
 ```
 
-They can also call the CLI directly when MCP tools are not available. The npm
-package and repository contain the same skill folders. Install the collection
+The skill also works by calling the CLI directly when MCP tools are not
+available. The npm package and repository contain the same skill. Install it
 with the standard agent skills installer:
 
 ```bash
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
-Use `seo skills list` or `seo skills path <name>` to inspect the copies bundled
-with the npm package.
+Use `seo skills list` or `seo skills path seo` to inspect the copy bundled with
+the npm package.
+
+## Discover, describe, run
 
 The MCP path is deliberately small: discover ids with `seo_list_reports`, load
-one schema with `seo_describe_report`, then execute it with `seo_run_report`.
-The skills name the report ids for their workflow.
-
-The same catalog is available without MCP:
+one report's full depth with `seo_describe_report`, then execute it with
+`seo_run_report`. The same catalog is available without MCP:
 
 ```bash
 seo reports list --json
@@ -32,99 +43,26 @@ seo reports describe <report-id> --json
 seo reports run <report-id> --params '<json>' --json
 ```
 
-## Adding a report skill
+Always describe a report before its first run. The describe response is the
+per-report manual: its `readOrder`, `doNotClaim` limits, `verify` step, and
+`related` ids come straight from the registry.
 
-Register a structured report once in `packages/mcp/src/report-registry.ts`.
-CLI and MCP discovery will then share its id, description, input schema, and
-handler. Add the same-name skill only after that contract exists.
+## Adding a report
 
-Every report skill must:
+Register the report once in `packages/mcp/src/report-registry.ts`, including its
+depth guidance in `packages/mcp/src/report-guidance.ts` and
+`packages/mcp/src/report-depth.ts` (`readOrder`, `doNotClaim`, `verify`,
+`related`). CLI discovery, MCP discovery, and the skill then share its id,
+description, input schema, handler, and depth automatically. No new skill file
+is needed. The router only lists report ids for common jobs; a report earns a
+mention there when it belongs in one of those chains.
 
-- explain the technical SEO question and why it is useful;
-- show `seo_list_reports`, `seo_describe_report`, and `seo_run_report` usage;
-- show schema discovery and one valid `seo reports run` CLI example;
-- explain the evidence fields, partial-data states, and important caveats;
-- turn findings into bounded actions and verification steps; and
-- avoid turning estimates, conventions, or samples into search-engine rules.
-
-Run `pnpm skills:validate` after adding or changing a skill. The validator
-checks registry parity, command and tool names, frontmatter, package metadata,
-and minimum report guidance depth.
-
-## Curated workflow skills
-
-- `seo-site-audit`: start with the main report, then add bounded technical evidence.
-- `seo-geo-readiness`: check AI-search readiness and citation gaps.
-- `seo-fix-queue`: turn crawl results into an implementation queue.
-- `pseo-audit`: audit repeated URL templates with GSC, crawl, and URL Inspection evidence.
-- `index-watch`: monitor exact indexed-state evidence, transitions, failures, and quota-deferred checks.
-- `performance`: separate Lighthouse lab diagnostics, CrUX field Core Web Vitals, and unscored fallback evidence.
-- `community-intent`: review explicit intent language in retained GSC queries without claiming a page gap.
-- `seo-to-ai-query`: create deterministic monitoring-prompt suggestions from retained GSC queries.
-- `measure-change`: compare equal finalized GSC windows without turning an incomplete after-period into a directional verdict.
-
-The `seo` skill routes requests that span several focused workflows.
-
-## Report skills
-
-Every compact MCP report id has a same-name skill. Each skill teaches the
-discovery flow and the evidence limits that matter for that report.
-
-- Setup: `setup-check`.
-- Diagnosis: `search-performance-overview`, `segment-impact`, `striking-distance`, `traffic-anomaly`, `update-correlation`.
-- Opportunities: `cannibalisation`, `ctr-underperformers`, `decaying-pages`, `internal-links`, `query-clusters`, `quick-wins`.
-- AI search: `ai-referrals`, `ai-search-scorecard`, `community-intent`, `content-optimization`, `page-opportunities`, `performance-audit`, `seo-to-ai-query`.
-- Crawl: `affected-urls`, `ai-readiness`, `audit-urls`, `compare-crawls`, `site-crawl`, `entity-readiness`, `explain-crawl-issue`, `geo-gaps`, `crawl-report`, `crawl-history`, `crawler-rules`, `llms-txt-audit`, `generate-llms-txt`, `okf-build`, `okf-validate`, `top-fixes`.
-- Monitoring: `crawl-diff`, `index-coverage`, `index-coverage-plan`, `index-monitor`, `index-watch`, `link-recovery`, `redirect-trace`.
-- Reporting: `audit-page`, `monthly-report`, `pseo-audit`, `narrative-report`, `second-page`.
-- Experiments: `measure-change`.
-- Workflows: `monthly-action-plan`, `refresh-priorities`, `technical-watch`, `update-postmortem`.
+Run `pnpm skills:validate` after changing the skill or the registry. The
+validator checks the skill frontmatter and word count, that every command and
+report id the skill names resolves, that the MCP tool names are real, and that
+every `evals/*.json` is well formed.
 
 ## Evals
 
-Evals are behaviour tests for a skill. Each one pairs a realistic user request
-with a description of the correct agent behaviour and a list of checkable
-assertions. They exist to catch a skill that stops selecting the right report
-id, builds bad parameters, skips the evidence checks, or breaks a report truth
-rule such as calling capped data an all-clear or promising traffic from a
-heuristic.
-
-Evals are optional per skill. The flagship skills ship them today. A skill
-without them is still valid.
-
-The file lives at `skills/<name>/evals/evals.json` and has this shape:
-
-```json
-{
-  "skill_name": "quick-wins",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "Where can we get some easy SEO wins without new content?",
-      "expected_output": "Prose describing what a correct agent does.",
-      "assertions": [
-        "Uses report id quick-wins for the opportunity queue",
-        "Clarifies quick win names the review queue, not expected traffic"
-      ],
-      "files": []
-    }
-  ]
-}
-```
-
-`skill_name` must match the folder name. Every `id` is a unique integer.
-`prompt`, `expected_output`, and each `assertions` entry are non-empty. Each
-assertion is one behaviour a judge can check on its own. Vary the prompts across
-a vague human ask, a precise agent ask, and an adversarial ask where the correct
-move is to refuse a claim or surface partial data.
-
-To run an eval, load the skill in an agent and feed it one prompt at a time. For
-example, use `claude -p` with the skill available, send the `prompt`, then judge
-the reply against each assertion. Score an eval as a pass only when every
-assertion holds.
-
-`node scripts/validate-skills.mjs` checks the structure of any `evals.json` it
-finds. It confirms the JSON parses, `skill_name` matches the folder, ids are
-unique integers, the prompt, expected output, and assertions are non-empty, and
-every backtick-quoted `seo` command and every referenced report id resolves to a
-real command and report. It does not run the evals or judge agent output.
+Behaviour tests for the skill live in the top-level `evals/` directory. See
+[../evals/README.md](../evals/README.md) for the file shape and how to run them.

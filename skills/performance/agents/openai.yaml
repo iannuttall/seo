@@ -1,4 +1,0 @@
-interface:
-  display_name: "SEO Performance"
-  short_description: "Interpret lab and field performance evidence"
-  default_prompt: "Use $performance to audit this URL and explain the lab and field performance evidence."

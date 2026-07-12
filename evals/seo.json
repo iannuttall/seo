@@ -1,0 +1,87 @@
+{
+  "subject": "seo",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Something feels off with our Google traffic lately but I can't tell what. Can you dig into it?",
+      "expected_output": "Should recognize this as an open diagnosis with no known cause and route to the main search performance baseline before any focused report. Should follow the compact MCP flow: seo_list_reports to find ids, seo_describe_report once for the chosen id, then seo_run_report with bounded params. Should name search-performance-overview as the right first report and offer the CLI fallback `seo report --project <project> --json` when MCP is unavailable. Should check dataStatus, source completeness, warnings, and caveats before summarizing, and should not invent clicks, sessions, or rankings.",
+      "assertions": [
+        "Routes to search-performance-overview as the first report for an unknown-cause drop",
+        "Uses the seo_list_reports then seo_describe_report then seo_run_report discovery order",
+        "Does not call seo_describe_report for every report up front",
+        "Offers the CLI fallback `seo report --project <project> --json` for the no-MCP case",
+        "Says it will check dataStatus, source completeness, warnings, and caveats before summarizing",
+        "Does not invent clicks, sessions, or ranking numbers"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: return a machine-readable diagnosis for sc-domain:example.com. I need the structured result, not a written report.",
+      "expected_output": "Should reason from MCP structuredContent and treat text or Markdown as the display layer only. Should run report id search-performance-overview through seo_run_report for the property. Should check summary.updateAttributionStatus first and treat summary.updateAttribution as update-correlation context rather than the site's overall diagnosis. Should surface dataStatus, selection counts, and caveats in the structured handoff. Should not switch to the narrative Markdown surface when the caller asked for the machine contract.",
+      "assertions": [
+        "Reasons from structuredContent rather than the Markdown or text display layer",
+        "Runs report id search-performance-overview via seo_run_report",
+        "Checks summary.updateAttributionStatus before describing the diagnosis",
+        "Treats summary.updateAttribution as update-correlation context, not the overall verdict",
+        "Preserves dataStatus, selection counts, and caveats in the structured output",
+        "Does not substitute report-narrative or monthly-report Markdown for the machine contract"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The quick-wins run shows an estimatedCtrClickShortfall of about 2,400. So if we fix those titles we get roughly 2,400 more clicks a month, right?",
+      "expected_output": "Should decline to confirm the number as a forecast. Should explain that quick-win CTR targets and estimatedCtrClickShortfall are deterministic prioritisation heuristics computed against a site-aware CTR benchmark, not estimated lift or promised traffic. Should note that average position is not a stable rank and that a title change does not guarantee CTR movement. Should reframe the shortfall as a way to rank review candidates and recommend measuring a later complete window to see the real effect.",
+      "assertions": [
+        "Refuses to present estimatedCtrClickShortfall as expected or guaranteed clicks",
+        "Labels the CTR target and shortfall as prioritisation heuristics, not lift",
+        "Notes that average position is not a stable daily rank",
+        "Explains the shortfall only ranks review candidates",
+        "Recommends comparing a later complete window to measure the real change",
+        "Does not restate 2,400 clicks as a projected gain"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Pull the query totals grouped by page for last month so I can report exact monthly click counts per URL to my boss.",
+      "expected_output": "Should warn that grouped GSC query totals can undercount because anonymised query rows are dropped from grouped sums, so the grouped total is not a guaranteed property total. Should keep zero, missing, capped, and complete states distinct and never turn an anonymised or capped subset into a definitive count or zero. Should point the caller at page-dimension totals when a fuller per-URL number is needed and label any grouped figure as a retained subset. Should not present the grouped sum as the exact monthly clicks.",
+      "assertions": [
+        "Warns that grouped GSC query totals can undercount from anonymised rows",
+        "States the grouped sum is a retained subset, not a guaranteed property total",
+        "Keeps capped, missing, and complete states distinct",
+        "Does not present the grouped total as an exact per-URL count",
+        "Suggests the page-dimension total when a fuller number is required"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I don't care about Search Console right now. I just want the technical issues on the site itself, like broken tags and crawl problems.",
+      "expected_output": "Should route away from the Search Console diagnosis reports and toward technical crawling. Should name report id site-crawl to build a saved baseline and report id top-fixes for a bounded queue, with the CLI path seo crawl --project <project> --max-pages 500 --save --json. Should keep advice structural and diagnostic and not claim search visibility or value from crawl evidence alone. Should offer report id explain-crawl-issue for an unfamiliar rule.",
+      "assertions": [
+        "Routes to technical crawling instead of Search Console diagnosis reports",
+        "Names report id site-crawl for the saved baseline",
+        "Names report id top-fixes for the bounded fix queue",
+        "Shows a seo crawl command with a page cap and --save",
+        "Does not claim search visibility or page value from crawl evidence alone",
+        "Offers report id explain-crawl-issue for unfamiliar rules"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Just read the report and tell me exactly what position we rank at for 'invoice software' so I can put it in a slide.",
+      "expected_output": "Should explain that GSC average position is an averaged, sampled metric that varies by search, device, country, and day, so it is not a fixed live rank for a single keyword. Should present the observed average position with its window and source rather than a single exact rank, and should flag if the row is capped, filtered, or anonymised. Should offer to confirm current placement with a bounded live check rather than asserting a literal rank from retained data.",
+      "assertions": [
+        "Explains average position is averaged and sampled, not a live rank",
+        "Notes it varies by search, device, country, and day",
+        "Reports the value with its window and source instead of a single exact rank",
+        "Flags capped, filtered, or anonymised rows if present",
+        "Offers a bounded live verification instead of asserting the rank"
+      ],
+      "files": []
+    }
+  ]
+}

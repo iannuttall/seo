@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI search scorecard"
-  short_description: "Score AI-search readiness 0-100 from crawl evidence"
-  default_prompt: "Use $ai-search-scorecard to run the ai-search-scorecard report and explain the score, its checks, and its limits."

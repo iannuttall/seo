@@ -1,4 +1,0 @@
-interface:
-  display_name: "Crawl diff"
-  short_description: "Compare a bounded live crawl with its previous snapshot"
-  default_prompt: "Use $crawl-diff to run the crawl-diff report and explain its evidence and limits."

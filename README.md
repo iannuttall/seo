@@ -242,12 +242,12 @@ drift.
 ## Use it with AI agents
 
 Agents work best with both parts of the project. The `seo` package runs the
-reports. The skills teach an agent which report to choose, how to read it, and
-what to verify before changing a site.
+reports. The `seo` skill teaches an agent which report to choose, how to read
+it, and what to verify before changing a site.
 
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
 Then install the local stdio MCP server into a supported client:
@@ -272,19 +272,21 @@ configuration or testing:
 seo mcp serve
 ```
 
-The repository ships the focused instructions under `skills/`. They teach
-agents when to discover reports, inspect evidence, and request a smaller
-follow-up instead of loading a giant result into context.
+The repository ships one skill under `skills/seo`. It is a router: it teaches an
+agent to discover reports, describe one to load its depth at runtime, inspect
+the evidence, and request a smaller follow-up instead of loading a giant result
+into context. Per-report guidance lives in the registry and is fetched with
+`seo reports describe <id> --json`, so it never drifts from the skill.
 
-The npm package includes the same files for local inspection:
+The npm package includes the same file for local inspection:
 
 ```sh
 seo skills list
-seo skills path quick-wins
+seo skills path seo
 ```
 
-Agents can also discover the complete skill catalog from
-`https://seoskills.dev/.well-known/agent-skills/index.json`. Each entry links to
+Agents can also discover the canonical skill from
+`https://seoskills.dev/.well-known/agent-skills/index.json`. The entry links to
 the canonical skill instructions and includes a content digest for verification.
 
 See [MCP and agents](https://seoskills.dev/docs/agents) for setup and tool

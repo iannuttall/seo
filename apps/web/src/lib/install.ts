@@ -2,8 +2,8 @@ export const installCommands = [
   {
     id: 'recommended',
     label: 'CLI + skills',
-    command: 'npm i -g seo && npx skills add iannuttall/seo --all',
-    description: 'Install the CLI and agent skills. Then run seo start.',
+    command: 'npm i -g seo && npx skills add iannuttall/seo',
+    description: 'Install the CLI and the seo skill. Then run seo start.',
   },
   {
     id: 'mcp',

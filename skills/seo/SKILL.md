@@ -1,74 +1,99 @@
 ---
 name: seo
-description: Route SEO work across the local seo CLI and MCP server. Use when an agent needs to choose between technical SEO, Search Console, GA4, crawl, opportunity, monitoring, and reporting workflows or inspect evidence returned by several reports.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 52 evidence-backed local reports through the seo CLI and MCP server.
 ---
 
 # seo
 
-Use the `seo` MCP server exposed by the repository or installed package.
+`seo` is a local CLI, MCP server, and report engine. It answers SEO questions
+with evidence from three sources: its own crawl of the site, Google Search
+Console, and GA4. Every report returns structured JSON with the observed
+evidence, derived findings, caveats, and provenance kept separate. Nothing is
+hosted; data stays on the machine.
 
-Reason from MCP `structuredContent`. Treat text or Markdown content as the
-display layer. When MCP is unavailable use explicit CLI selectors and `--json`:
+You do not need to memorise reports. Discover them at runtime.
+
+## Discover, describe, run
+
+With the MCP server (preferred):
+
+1. `seo_list_reports` returns every report id with a one-line purpose,
+   optionally by category.
+2. `seo_describe_report` with one id returns when to use it, when to avoid it,
+   its exact JSON Schema, the order to read its output in, what its evidence
+   cannot support, one verification step, and related report ids.
+3. `seo_run_report` with the id and a bounded `params` object. Read
+   `structuredContent`, not the display text.
+
+The same catalog exists without MCP:
 
 ```bash
-seo report --project <project> --json
-seo report --site sc-domain:example.com --json
+seo reports list --json
+seo reports describe <report-id> --json
+seo reports run <report-id> --params '<json>' --json
 ```
 
-Use the default Markdown output from `seo report-narrative` or
-`seo monthly-report` only when the user wants a readable report rather than a
-machine contract.
+Always describe a report before its first run in a session. The describe
+response is the per-report manual: follow its `readOrder`, respect its
+`doNotClaim` limits, and use its `related` ids to decide what to run next.
+Reuse the schema for repeated runs. Do not guess parameters.
 
-## MCP flow
+## Setup and selection
 
-The default MCP server exposes three tools:
+Run the `setup-check` report (or `seo doctor`) if auth state is unknown.
+Saved project profiles are selected with `--project <id>`; list them with
+`seo projects list --json`. Without a profile, pass `--site sc-domain:example.com`
+for Search Console reports or `--url https://example.com` for crawl-only
+reports. Crawl and page audits work with no Google connection at all. Always
+pass `--json`; JSON mode never prompts.
 
-1. Call `seo_list_reports` to discover compact report ids, optionally by
-   category.
-2. Call `seo_describe_report` once for the selected id to load its exact JSON
-   Schema.
-3. Call `seo_run_report` with that id and a bounded `params` object.
+## Common jobs
 
-Do not guess parameters or ask for every report schema up front. Reuse a schema
-for repeated runs in the same session.
+Each job lists report ids in a sensible starting order. Run the first, read
+its evidence, then decide; do not run a whole chain blindly.
 
-## Which report id to use
+| Job | Reports |
+|---|---|
+| Page not indexed or missing from Google | `index-coverage`, `index-monitor` (URL Inspection), `audit-page`, `redirect-trace` |
+| Traffic or clicks dropped | `search-performance-overview`, `traffic-anomaly`, `update-correlation`, `segment-impact`, `decaying-pages`, `link-recovery` |
+| Audit a whole site | `report` command (main report), `site-crawl`, `top-fixes`, `ai-search-scorecard` |
+| More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
+| AI search visibility and readiness | `ai-search-scorecard`, `ai-readiness`, `geo-gaps`, `entity-readiness`, `llms-txt-audit`, `ai-referrals` |
+| Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
+| Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
+| Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
+| Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
 
-- Diagnosis: `search-performance-overview`,
-  `segment-impact`, `striking-distance`, `traffic-anomaly`, and
-  `update-correlation`.
-- Main follow-ups: `refresh-priorities`, `quick-wins`, `second-page`,
-  `decaying-pages`, `cannibalisation`, `ctr-underperformers`, and `query-clusters`.
-- Page work: `audit-page`, `page-opportunities`, `content-optimization`,
-  `internal-links`, and `performance-audit`.
-- Technical crawling: `site-crawl`, `top-fixes`, `affected-urls`,
-  `explain-crawl-issue`, `crawl-report`, and `compare-crawls`.
-- Indexing and monitoring: `index-coverage`, `index-watch`, `index-monitor`,
-  `index-coverage-plan`, `crawl-diff`, `redirect-trace`, and `link-recovery`.
-- AI-search evidence: `ai-readiness`, `geo-gaps`, `community-intent`,
-  `seo-to-ai-query`, and `ai-referrals`.
-- Reporting and measurement: `narrative-report`, `monthly-report`,
-  `measure-change`, `pseo-audit`, `update-postmortem`, and
-  `technical-watch`.
-- Local setup health: `setup-check`.
+A single page complaint usually needs both angles: the index evidence for that
+URL and an `audit-page` pass for content or technical problems on the page
+itself.
 
-Use the CLI for project-profile administration and intentionally raw provider
-queries. Useful commands include `seo projects list --json`, `seo gsc-query`,
-`seo url-inspect`, `seo ga4-properties`, `seo ga4-report`, and `seo updates`.
+The main human report is the `seo report` command. It is the right first move
+when the user asks a broad "how is my site doing" question; the focused
+reports above are for specific symptoms.
 
-## Rules
+## Evidence rules
 
-- Treat observations as evidence within the report's methodology and data limits. Do not invent metrics.
-- Check `dataStatus`, source completeness, selection counts, warnings, and caveats before summarising a report.
-- In diagnosis output, check `summary.updateAttributionStatus` first and treat `summary.updateAttribution` as update-correlation context, not the site's overall diagnosis.
-- If `dataStatus` is `partial` or `unavailable`, name the skipped or incomplete evidence before describing findings. Treat capped sources the same way. Never turn unavailable or capped evidence into a zero-result claim.
-- Treat quick-win CTR targets and calculated shortfalls as deterministic prioritisation heuristics, not traffic forecasts.
-- Quote `principle` and `evidenceRef` when explaining recommendations.
-- Do not generate titles, metas, or copy. Keep advice structural and diagnostic.
-- If the tool returns no rows, say that clearly instead of padding the answer.
-- Remember that grouped GSC query totals can undercount due to anonymised rows.
+- Check `dataStatus`, selection counts, `caveats`, and `warnings` before
+  summarising any report. Name skipped or incomplete evidence first.
+- Partial, capped, filtered, or sampled sources never support a zero or an
+  all-clear. Grouped Search Console totals undercount because anonymised query
+  rows are withheld.
+- Values marked heuristic are prioritisation aids, not forecasts. Never
+  promise clicks, rankings, indexing, or AI citations from any report.
+- Quote `principle` and `evidenceRef` when explaining a recommendation, and
+  give the user the report's verification step alongside any suggested change.
+- If a report returns no rows, say so plainly.
+- Intentional controls such as `noindex`, canonicals, and robots rules are
+  observations until the user confirms they are unintended.
 
-## Refresh behaviour
+## Beyond the report catalog
 
-- Tool output is cached locally.
-- Pass `refresh: true` when the user explicitly wants a fresh fetch.
+The CLI also has direct commands for raw provider access and administration:
+`seo gsc-query`, `seo url-inspect`, `seo ga4-report`, `seo updates`,
+`seo crawl`, `seo export`, and `seo projects`. Use `seo help all` to list
+everything. Prefer a registered report when one covers the question, because
+reports carry provenance and caveats that raw queries do not.
+
+Report output is cached locally. Pass `refresh: true` (or `--refresh`) only
+when the user explicitly wants a fresh fetch.

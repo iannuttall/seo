@@ -1,24 +1,25 @@
 ---
-title: Install SEO skills that teach agents how to use reports
-description: Add focused SEO skills to Codex, Claude Code, or a project so agents can choose the right report, read its evidence, and verify each change.
+title: Install the SEO skill that teaches agents how to use reports
+description: Add the seo skill to Codex, Claude Code, or a project so agents can choose the right report, fetch its depth at runtime, read the evidence, and verify each change.
 ---
 
-An SEO skill is a focused instruction file for an agent. It explains the
-technical question a report answers, when the evidence is useful, which command
-or MCP tool to call, how to read partial data, and what to verify after a fix.
+The `seo` skill is a focused instruction file for an agent. It is a router. It
+explains the discover, describe, run flow, names the report ids for common jobs,
+and states the evidence rules that apply to every report. It does not memorise
+each report or contain a second report implementation. It teaches the agent to
+call SEO Skills CLI.
 
-The skill does not contain a second report implementation. It teaches the agent
-to call SEO Skills CLI. The skills and runtime are designed to be installed
-together: the `seo` package does the work, while the skills teach the agent how
-to use it well.
+There is one skill. Per-report depth, when to use a report, when to avoid it, its
+schema, the order to read its output, what its evidence cannot support, and one
+verification step, is fetched at runtime with `describe`. This progressive
+disclosure keeps the skill small and always in sync with the report registry.
 
-## Install the collection with the standard skills installer
+## Install the skill with the standard skills installer
 
-Install the repository collection with the command used across the agent
-skills ecosystem:
+Install the skill with the command used across the agent skills ecosystem:
 
 ```sh
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
 The installer handles the supported agent destinations. The repository remains
@@ -28,30 +29,33 @@ For the recommended setup, install both parts:
 
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
-## Inspect the copies inside the SEO package
+## Inspect the copy inside the SEO package
 
-The published package includes the same skill files so the CLI, MCP server,
-and release checks can inspect them locally:
+The published package includes the same skill file so the CLI, MCP server, and
+release checks can inspect it locally:
 
 ```sh
 seo skills list
-seo skills path quick-wins
+seo skills path seo
 seo skills path
 ```
 
-## Skills teach the part a schema cannot
+## Fetch per-report depth at runtime
 
-`seo reports describe quick-wins --json` can tell an agent which parameters
-are valid. It cannot explain why positions 4 to 10 are a useful review set, why
-CTR should be compared in context, or why the retained rows are not the whole
-Search Console universe.
+`seo reports describe quick-wins --json` returns the report's schema plus its
+depth: the order to read its output, what its evidence cannot support, one
+verification step, and related report ids. The skill points the agent at this
+call so it always reads the current guidance for the exact report it runs,
+rather than a copy that can drift.
 
-A report skill fills that gap. Each focused skill should teach the agent to:
+The describe response is where the agent learns why positions 4 to 10 are a
+useful review set, why CTR should be compared in context, and why the retained
+rows are not the whole Search Console universe. The skill teaches the agent to:
 
-- discover and describe the report before running it;
+- discover ids, describe one report, then run it;
 - start with compact output and request a smaller follow-up;
 - keep observations separate from heuristics and actions;
 - inspect date ranges, row caps, partial states, and caveats;
@@ -61,13 +65,13 @@ A report skill fills that gap. Each focused skill should teach the agent to:
 That last point matters. A tool can find a title conflict or an underperforming
 query. It cannot promise what a search system will do after the edit.
 
-## Use skills and MCP together
+## Use the skill and MCP together
 
 The [local MCP server](/docs/mcp) gives an agent three compact tools for report
-discovery and execution. Skills tell the agent which report fits the request
+discovery and execution. The skill tells the agent which report fits the request
 and how to interpret the result.
 
-Without MCP, the same skill can call:
+Without MCP, the skill calls the same catalog:
 
 ```sh
 seo reports list --json
@@ -77,28 +81,28 @@ seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
 
 Both routes share the same report registry and core analysis.
 
-## Discover canonical skills from the site
+## Discover the canonical skill from the site
 
 Compatible tooling can read the
-<a href="/.well-known/agent-skills/index.json" target="_blank" rel="noreferrer">machine-readable SEO skill catalog</a>.
-Each entry points to the canonical `SKILL.md` file and includes a SHA-256 digest
+<a href="/.well-known/agent-skills/index.json" target="_blank" rel="noreferrer">machine-readable SEO skill index</a>.
+The entry points to the canonical `SKILL.md` file and includes a SHA-256 digest
 for content verification.
 
-The catalog is useful for discovery. The `seo` npm package remains the runtime
-an agent needs to execute reports locally.
+The index is useful for discovery. The `seo` npm package remains the runtime an
+agent needs to execute reports locally.
 
-## Update installed copies deliberately
+## Update the installed copy deliberately
 
-Skills are copied files, so they do not update themselves when the repository
+The skill is a copied file, so it does not update itself when the repository
 changes. Review local edits before running the standard installer again:
 
 ```sh
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
-Project-specific instructions may be worth keeping. A blind overwrite is a
-poor update strategy when someone has taught the skill about a release process,
-CMS, or definition used only by that project.
+Project-specific instructions may be worth keeping. A blind overwrite is a poor
+update strategy when someone has taught the skill about a release process, CMS,
+or definition used only by that project.
 
 The [agent workflow guide](/docs/agents) covers report selection and evidence
 handling after installation.

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Segment impact"
-  short_description: "Compare retained GSC movement by page, query, device, or country"
-  default_prompt: "Use $segment-impact to run the segment-impact report and explain its evidence and limits."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Entity readiness"
-  short_description: "Review entity-related site observations"
-  default_prompt: "Use $entity-readiness to run the entity-readiness report and explain its evidence and limits."

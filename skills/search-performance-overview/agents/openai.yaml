@@ -1,4 +1,0 @@
-interface:
-  display_name: "Search performance overview"
-  short_description: "Find where Google Search performance changed"
-  default_prompt: "Use $search-performance-overview to find where Google Search performance changed, explain the pages or queries behind it, and choose the next focused report."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Index monitor"
-  short_description: "Run bounded sitemap-driven URL Inspection monitoring"
-  default_prompt: "Use $index-monitor to run the index-monitor report and explain its evidence and limits."

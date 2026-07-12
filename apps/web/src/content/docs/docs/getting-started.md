@@ -36,16 +36,16 @@ fix npm's global install directory, then run the same command again.
 
 ## Add the skills when an agent will use it
 
-The CLI and MCP server run the reports. The skills teach an agent which report
-fits the job, how to interpret its limits, and what to verify next. Install
-both for the strongest agent setup:
+The CLI and MCP server run the reports. The skill teaches an agent which report
+fits the job, how to interpret its limits, and what to verify next. Install both
+for the strongest agent setup:
 
 ```sh
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
 You only need the first command for direct terminal use, scripts, and CI. An
-agent can call the CLI without the skills, but it loses the report-specific SEO
+agent can call the CLI without the skill, but it loses the report-specific SEO
 guidance that keeps the analysis focused and honest.
 
 ## Run the main report first

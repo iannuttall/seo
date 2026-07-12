@@ -1,4 +1,0 @@
-interface:
-  display_name: "Report narrative"
-  short_description: "Generate a readable SEO narrative from diagnosis, changes, and monitoring evi..."
-  default_prompt: "Use $narrative-report to run the narrative-report report and explain its evidence and limits."

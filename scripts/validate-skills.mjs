@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseSkillFrontmatter } from './skill-frontmatter.mjs'
 
@@ -40,6 +40,10 @@ function rootCommands(source) {
   )) {
     commands.add(match[1] ?? match[2])
   }
+  // `help` is handled directly in index.ts, not the subCommands registry, but
+  // the CLAUDE.md contract requires `seo help`, `seo help all`, and
+  // `seo help <command>` to work, so it is a real command for validation.
+  commands.add('help')
   return commands
 }
 
@@ -62,9 +66,25 @@ function documentedMcpTools(source) {
   )
 }
 
+function jobsTableReportTokens(source) {
+  const start = source.indexOf('## Common jobs')
+  if (start < 0) return new Set()
+  const rest = source.slice(start + '## Common jobs'.length)
+  const nextHeading = rest.search(/\n## /)
+  const section = nextHeading < 0 ? rest : rest.slice(0, nextHeading)
+  const tokens = new Set()
+  for (const match of section.matchAll(/`([a-z][a-z0-9-]+)`/g)) {
+    tokens.add(match[1])
+  }
+  return tokens
+}
+
 const packageJson = JSON.parse(await text('package.json'))
 if (!packageJson.files?.includes('skills')) {
   fail('package.json: files must include skills')
+}
+if (!packageJson.files?.includes('evals')) {
+  fail('package.json: files must include evals')
 }
 
 const plugin = JSON.parse(await text('.claude-plugin/plugin.json'))
@@ -110,126 +130,95 @@ const mcpTools = new Set(
   ),
 )
 
-const skillEntries = (
-  await readdir(resolve(root, 'skills'), {
-    withFileTypes: true,
-  })
-)
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .sort()
-const readme = await text('skills/README.md')
-const forbidden = [
-  { pattern: /audits\.run/i, label: 'Audits.run reference' },
-  {
-    pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
-    label: 'email address',
-  },
-  { pattern: /<package-name>/i, label: 'package placeholder' },
-  { pattern: /@seo\//, label: 'private package reference' },
-]
+// The package ships exactly one skill: skills/seo. It is a router that names
+// report ids for common jobs; per-report depth lives in the registry and is
+// fetched at runtime through describe, so there is no per-report skill folder.
+const skillName = 'seo'
+const skillPath = `skills/${skillName}/SKILL.md`
+const skillSource = await text(skillPath)
 
-for (const reportId of reportIds) {
-  if (!skillEntries.includes(reportId)) {
-    fail(`skills/${reportId}: missing skill for report registry id`)
-    continue
+let metadata = {}
+try {
+  metadata = parseSkillFrontmatter(skillSource, skillPath)
+} catch (error) {
+  fail(
+    error instanceof Error
+      ? error.message
+      : `${skillPath}: invalid frontmatter`,
+  )
+}
+if (metadata.name !== skillName) {
+  fail(`${skillPath}: name must be ${skillName}`)
+}
+if (!metadata.description || metadata.description.length < 40) {
+  fail(`${skillPath}: description must explain the skill and its trigger`)
+}
+
+const skillWords = skillSource.match(/[A-Za-z0-9][A-Za-z0-9'/-]*/g)?.length ?? 0
+if (skillWords < 300) {
+  fail(
+    `${skillPath}: the router skill needs at least 300 words of guidance; found ${skillWords}`,
+  )
+}
+
+for (const tool of [
+  'seo_list_reports',
+  'seo_describe_report',
+  'seo_run_report',
+]) {
+  if (!skillSource.includes(`\`${tool}\``)) {
+    fail(`${skillPath}: missing MCP discovery tool ${tool}`)
   }
-  const source = await text(`skills/${reportId}/SKILL.md`)
-  for (const tool of [
-    'seo_list_reports',
-    'seo_describe_report',
-    'seo_run_report',
-  ]) {
-    if (!source.includes(`\`${tool}\``)) {
-      fail(`skills/${reportId}/SKILL.md: missing compact MCP tool ${tool}`)
-    }
+}
+
+for (const command of documentedCliCommands(skillSource)) {
+  if (!cliCommands.has(command)) {
+    fail(`${skillPath}: unknown seo root command ${command}`)
   }
-  const words = source.match(/[A-Za-z0-9][A-Za-z0-9'/-]*/g)?.length ?? 0
-  if (words < 200) {
+}
+for (const tool of documentedMcpTools(skillSource)) {
+  if (!mcpTools.has(tool)) {
+    fail(`${skillPath}: unknown MCP tool ${tool}`)
+  }
+}
+// Every backtick token in the Common jobs table must resolve to a registered
+// report id or a real root command (the table mixes report ids with the `report`
+// command). An unknown token means the jobs table drifted from the registry.
+for (const token of jobsTableReportTokens(skillSource)) {
+  if (!reportIds.has(token) && !cliCommands.has(token)) {
     fail(
-      `skills/${reportId}/SKILL.md: report skills need at least 200 words of specific guidance; found ${words}`,
-    )
-  }
-  if (!source.includes(`seo reports describe ${reportId} --json`)) {
-    fail(
-      `skills/${reportId}/SKILL.md: missing schema discovery command for ${reportId}`,
-    )
-  }
-  if (!source.includes(`seo reports run ${reportId} --params`)) {
-    fail(
-      `skills/${reportId}/SKILL.md: missing schema-backed run command for ${reportId}`,
+      `${skillPath}: jobs table references unknown report id or command ${token}`,
     )
   }
 }
 
-for (const skillName of skillEntries) {
-  const path = `skills/${skillName}/SKILL.md`
-  const source = await text(path)
-  let metadata = {}
-  try {
-    metadata = parseSkillFrontmatter(source, path)
-  } catch (error) {
-    fail(
-      error instanceof Error ? error.message : `${path}: invalid frontmatter`,
-    )
-  }
-
-  if (metadata.name !== skillName) {
-    fail(`${path}: name must match its folder`)
-  }
-  if (!metadata.description || metadata.description.length < 40) {
-    fail(`${path}: description must explain the workflow and its trigger`)
-  }
-  if (source.split('\n').length > 500) {
-    fail(`${path}: keep SKILL.md under 500 lines`)
-  }
-  if (!readme.includes(`\`${skillName}\``)) {
-    fail(`skills/README.md: missing ${skillName} from the inventory`)
-  }
-
-  const agentPath = `skills/${skillName}/agents/openai.yaml`
-  let agentSource
-  try {
-    agentSource = await text(agentPath)
-  } catch {
-    fail(`${agentPath}: missing agent interface metadata`)
-  }
-  if (agentSource) {
-    for (const field of [
-      'display_name',
-      'short_description',
-      'default_prompt',
-    ]) {
-      if (!new RegExp(`^\\s+${field}:\\s+"[^"]+"$`, 'm').test(agentSource)) {
-        fail(`${agentPath}: missing quoted ${field}`)
-      }
-    }
-    if (!agentSource.includes(`$${skillName}`)) {
-      fail(`${agentPath}: default_prompt must invoke $${skillName}`)
+const agentPath = `skills/${skillName}/agents/openai.yaml`
+let agentSource
+try {
+  agentSource = await text(agentPath)
+} catch {
+  fail(`${agentPath}: missing agent interface metadata`)
+}
+if (agentSource) {
+  for (const field of ['display_name', 'short_description', 'default_prompt']) {
+    if (!new RegExp(`^\\s+${field}:\\s+"[^"]+"$`, 'm').test(agentSource)) {
+      fail(`${agentPath}: missing quoted ${field}`)
     }
   }
-
-  for (const command of documentedCliCommands(source)) {
-    if (!cliCommands.has(command)) {
-      fail(`${path}: unknown seo root command ${command}`)
-    }
-  }
-  for (const tool of documentedMcpTools(source)) {
-    if (!mcpTools.has(tool)) {
-      fail(`${path}: unknown MCP tool ${tool}`)
-    }
+  if (!agentSource.includes(`$${skillName}`)) {
+    fail(`${agentPath}: default_prompt must invoke $${skillName}`)
   }
 }
 
-function evalBacktickCommands(text) {
+function evalBacktickCommands(source) {
   const commands = new Set()
-  for (const match of text.matchAll(/`seo\s+([a-z][a-z0-9-]*)[^`]*`/g)) {
+  for (const match of source.matchAll(/`seo\s+([a-z][a-z0-9-]*)[^`]*`/g)) {
     commands.add(match[1])
   }
   return commands
 }
 
-function evalReportIds(text) {
+function evalReportIds(source) {
   const ids = new Set()
   const patterns = [
     /reports (?:run|describe) ([a-z][a-z0-9-]+)/g,
@@ -238,26 +227,25 @@ function evalReportIds(text) {
     /"id"\s*:\s*"([a-z][a-z0-9-]+)"/g,
   ]
   for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) ids.add(match[1])
+    for (const match of source.matchAll(pattern)) ids.add(match[1])
   }
   return ids
 }
 
-// Evals are optional per skill. Only flagship skills ship them today, but any
-// evals.json that exists must be structurally valid and cite real commands and
-// report ids so a stale example fails the gate.
-for (const skillName of skillEntries) {
-  const evalPath = `skills/${skillName}/evals/evals.json`
-  let raw
-  try {
-    raw = await text(evalPath)
-  } catch {
-    continue
-  }
-
+// Evals live at the top level, one file per report id or job. Each targets a
+// router-level behaviour, so `subject` names the report or job, not a skill.
+const evalFiles = (await readdir(resolve(root, 'evals')))
+  .filter((name) => name.endsWith('.json'))
+  .sort()
+if (evalFiles.length === 0) {
+  fail('evals: no evals/*.json files found')
+}
+for (const file of evalFiles) {
+  const evalPath = `evals/${file}`
+  const subject = basename(file, '.json')
   let doc
   try {
-    doc = JSON.parse(raw)
+    doc = JSON.parse(await text(evalPath))
   } catch (error) {
     fail(
       `${evalPath}: invalid JSON (${error instanceof Error ? error.message : 'parse error'})`,
@@ -265,8 +253,8 @@ for (const skillName of skillEntries) {
     continue
   }
 
-  if (doc.skill_name !== skillName) {
-    fail(`${evalPath}: skill_name must match its folder`)
+  if (doc.subject !== subject) {
+    fail(`${evalPath}: subject must match its filename`)
   }
   if (!Array.isArray(doc.evals) || doc.evals.length === 0) {
     fail(`${evalPath}: evals must be a non-empty array`)
@@ -325,14 +313,25 @@ for (const skillName of skillEntries) {
   }
 }
 
-const publicSkillFiles = [
+const forbidden = [
+  { pattern: /audits\.run/i, label: 'Audits.run reference' },
+  {
+    pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
+    label: 'email address',
+  },
+  { pattern: /<package-name>/i, label: 'package placeholder' },
+  { pattern: /@seo\//, label: 'private package reference' },
+]
+const publicFiles = [
   'skills/README.md',
+  'evals/README.md',
   '.claude-plugin/plugin.json',
   ...(await sourceFiles(resolve(root, 'skills'))).map((path) =>
     relative(root, path),
   ),
+  ...evalFiles.map((file) => `evals/${file}`),
 ]
-for (const path of publicSkillFiles) {
+for (const path of publicFiles) {
   const source = await text(path)
   for (const rule of forbidden) {
     if (rule.pattern.test(source)) fail(`${path}: remove ${rule.label}`)
@@ -345,5 +344,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  `Skill validation passed for ${skillEntries.length} packaged skills and ${reportIds.size} report ids.\n`,
+  `Skill validation passed for the seo skill, ${evalFiles.length} eval files, and ${reportIds.size} report ids.\n`,
 )

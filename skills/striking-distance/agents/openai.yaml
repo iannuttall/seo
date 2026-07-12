@@ -1,4 +1,0 @@
-interface:
-  display_name: "Striking distance"
-  short_description: "Find retained GSC query and page rows averaging positions 11 through 20"
-  default_prompt: "Use $striking-distance to run the striking-distance report and explain its evidence and limits."

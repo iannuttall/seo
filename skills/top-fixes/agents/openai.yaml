@@ -1,4 +1,0 @@
-interface:
-  display_name: "Top fixes"
-  short_description: "Return a bounded technical fix queue from crawl evidence"
-  default_prompt: "Use $top-fixes to run the top-fixes report and explain its evidence and limits."

@@ -51,17 +51,31 @@ test('public runtime bundles do not depend on private workspace packages', async
   }
 })
 
-test('the CLI bundle is executable and skills ship in the package', async () => {
+test('the CLI bundle is executable and the seo skill ships in the package', async () => {
   const cli = await readFile('dist/cli.js', 'utf8')
   assert.match(cli, /^#!\/usr\/bin\/env node\n/)
   assert.ok(packageJson.files.includes('skills'))
 
   const skillFolders = await readdir('skills', { withFileTypes: true })
-  const skills = skillFolders.filter((entry) => entry.isDirectory())
-  assert.ok(skills.length > 0)
-  for (const skill of skills) {
-    const source = await readFile(`skills/${skill.name}/SKILL.md`, 'utf8')
-    assert.match(source, /^---\nname: /)
+  const skills = skillFolders
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+  assert.deepEqual(skills, ['seo'])
+  const source = await readFile('skills/seo/SKILL.md', 'utf8')
+  assert.match(source, /^---\nname: seo\n/)
+})
+
+test('the evals directory ships in the package', async () => {
+  assert.ok(packageJson.files.includes('evals'))
+
+  const evalFiles = (await readdir('evals')).filter((file) =>
+    file.endsWith('.json'),
+  )
+  assert.ok(evalFiles.length > 0)
+  for (const file of evalFiles) {
+    const doc = JSON.parse(await readFile(`evals/${file}`, 'utf8'))
+    assert.equal(doc.subject, file.replace(/\.json$/, ''))
+    assert.ok(Array.isArray(doc.evals) && doc.evals.length > 0)
   }
 })
 

@@ -1,0 +1,84 @@
+{
+  "subject": "ai-readiness",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Are our pages technically ready to show up in AI search? Not asking for guesses, just the technical blockers.",
+      "expected_output": "Should use report id ai-readiness to check access, indexability, snippet controls, content observations, bot policy, and agent resources as separate evidence, and should say it returns an evidence-only assessment rather than an aggregate score. Should follow the discovery flow, calling seo_describe_report with id ai-readiness, then seo_run_report. Should start with dataStatus, the crawl caveats, and each check's evaluated flag. Should explain technical eligibility is not selection.",
+      "assertions": [
+        "Uses report id ai-readiness for the technical blocker assessment",
+        "Keeps access, indexability, snippet, structure, bot policy, and resources separate",
+        "States the report returns an evidence-only assessment, not an aggregate score",
+        "Calls seo_describe_report with id ai-readiness then seo_run_report",
+        "Starts with dataStatus, crawl caveats, and each check's evaluated flag",
+        "Explains technical eligibility is not selection"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We already have a saved crawl from this morning, reportId crawl_example_20260710. Run the AI readiness check against it, don't recrawl.",
+      "expected_output": "Should run report id ai-readiness with reportId crawl_example_20260710 rather than passing url, since reusing a saved report makes the assessment comparable and avoids a fresh crawl. Should confirm isError is false before reading structuredContent. Should prioritize hard technical conflicts first, such as failed responses, blocked crawling, explicit non-indexing, or restrictive snippet directives that contradict publisher intent, then treat semantic structure as observations.",
+      "assertions": [
+        "Runs report id ai-readiness with reportId rather than url",
+        "Does not start a fresh crawl when a saved report exists",
+        "Confirms isError is false before reading structuredContent",
+        "Prioritizes failed responses, blocked crawling, non-indexing, and restrictive snippets first",
+        "Treats semantic structure and answerable content as observations, not requirements"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The readiness report is clean. So we're going to get cited in ChatGPT and show up in Google AI Overviews now, right?",
+      "expected_output": "Should refuse to translate a clean report into visibility outcomes. Should state that a clean report never supports claims about indexing, rankings, AI visibility, selection, citations, or traffic, and that those outcomes require separate evidence. Should reaffirm that technical eligibility is not selection. Should recommend verifying with a fresh crawl using the same scope and monitoring for actual referral or citation evidence rather than asserting it.",
+      "assertions": [
+        "Refuses to infer citations or AI Overview visibility from a clean report",
+        "States a clean report does not support indexing, ranking, selection, or citation claims",
+        "Reaffirms technical eligibility is not selection",
+        "Notes those outcomes require separate evidence",
+        "Recommends verifying with a fresh same-scope crawl and monitoring instead"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Several checks came back as unknown and our JSON-LD is valid. Count unknown as passing and tell me valid JSON-LD means Google will show us as a rich result.",
+      "expected_output": "Should refuse both moves. Should explain unknown means the necessary evidence was unavailable and is not a failure or a pass, using each check's evaluated flag. Should state valid JSON-LD is syntax evidence only and is not proof of entity recognition or rich-result eligibility. Should keep unknown, pass, and fail states distinct and recommend gathering the missing evidence before scoring the checks.",
+      "assertions": [
+        "Refuses to count unknown checks as passing",
+        "States unknown means evidence was unavailable, not a pass or a failure",
+        "Uses each check's evaluated flag to classify the state",
+        "States valid JSON-LD is syntax evidence, not entity recognition or rich-result eligibility",
+        "Keeps unknown, pass, and fail states distinct"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "The bot access check passed on the homepage. That means GPTBot and other AI crawlers can reach every page on the site, correct?",
+      "expected_output": "Should not generalize entry-point bot access to the whole site. Should explain bot access describes the observed policy for the crawl entry point, not proven access to every URL. Should recommend checking robots rules and per-section directives before claiming sitewide access, and should keep the observation scoped to what was evaluated. Should not assert every page is reachable by AI crawlers.",
+      "assertions": [
+        "Refuses to generalize entry-point bot access to the whole site",
+        "States bot access describes the observed policy at the crawl entry point",
+        "Notes it does not prove access to every URL",
+        "Recommends checking robots rules and per-section directives before a sitewide claim",
+        "Keeps the observation scoped to what was evaluated"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "We don't have an llms.txt file. Flag that as a failure and then confirm our fixes worked without recrawling.",
+      "expected_output": "Should explain that an optional protocol file such as llms.txt can aid machine discovery but its absence is not a search defect, so it should not be flagged as a failure. Should say verifying fixes requires a fresh crawl using the same scope, so the change cannot be confirmed without recrawling. Should keep the missing file as an observation rather than a defect.",
+      "assertions": [
+        "Refuses to flag a missing llms.txt as a failure",
+        "States an optional protocol file's absence is not a search defect",
+        "Treats the missing file as an observation, not a defect",
+        "States verifying fixes needs a fresh crawl using the same scope",
+        "Does not confirm the fixes worked without recrawling"
+      ],
+      "files": []
+    }
+  ]
+}

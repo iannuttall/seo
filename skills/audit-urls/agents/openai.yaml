@@ -1,4 +1,0 @@
-interface:
-  display_name: "Audit URLs"
-  short_description: "Audit an explicit bounded URL list"
-  default_prompt: "Use $audit-urls to run the audit-urls report and explain its evidence and limits."

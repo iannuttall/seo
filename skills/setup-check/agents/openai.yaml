@@ -1,4 +1,0 @@
-interface:
-  display_name: "Doctor"
-  short_description: "Check local seo auth and configuration"
-  default_prompt: "Use $setup-check to run the setup-check report and explain its evidence and limits."

@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   aiReadiness,
+  aiSearchScorecard,
   auditLlmsTxt,
   buildOkfBundle,
   compareCrawlReports,
@@ -511,6 +512,58 @@ export function registerCrawlerTools(server: McpServer): void {
         }
         const readiness = aiReadiness(report)
         return toolSuccess(readiness.headline, readiness)
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_ai_search_scorecard',
+    {
+      description:
+        "Score AI-search technical readiness 0-100 from one crawl using this tool's own weighted checks. The score is a heuristic summary, not a Google or AI-engine requirement, eligibility verdict, or ranking predictor. Unknown checks are excluded and a partial crawl cannot reach 100.",
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const scorecard = aiSearchScorecard(report)
+        return toolSuccess(scorecard.headline, scorecard)
       } catch (error) {
         return toolError(error)
       }

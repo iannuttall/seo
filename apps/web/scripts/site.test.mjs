@@ -285,7 +285,7 @@ test('published report count stays tied to the implementation', async () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const homeText = home.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
 
-  assert.equal(listReportDefinitions().length, 51)
+  assert.equal(listReportDefinitions().length, 52)
   assert.match(
     homeText,
     new RegExp(`${listReportDefinitions().length} reports`),

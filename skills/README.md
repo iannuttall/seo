@@ -73,7 +73,7 @@ discovery flow and the evidence limits that matter for that report.
 - Setup: `setup-check`.
 - Diagnosis: `search-performance-overview`, `segment-impact`, `striking-distance`, `traffic-anomaly`, `update-correlation`.
 - Opportunities: `cannibalisation`, `ctr-underperformers`, `decaying-pages`, `internal-links`, `query-clusters`, `quick-wins`.
-- AI search: `ai-referrals`, `community-intent`, `content-optimization`, `page-opportunities`, `performance-audit`, `seo-to-ai-query`.
+- AI search: `ai-referrals`, `ai-search-scorecard`, `community-intent`, `content-optimization`, `page-opportunities`, `performance-audit`, `seo-to-ai-query`.
 - Crawl: `affected-urls`, `ai-readiness`, `audit-urls`, `compare-crawls`, `site-crawl`, `entity-readiness`, `explain-crawl-issue`, `geo-gaps`, `crawl-report`, `crawl-history`, `crawler-rules`, `llms-txt-audit`, `generate-llms-txt`, `okf-build`, `okf-validate`, `top-fixes`.
 - Monitoring: `crawl-diff`, `index-coverage`, `index-coverage-plan`, `index-monitor`, `index-watch`, `link-recovery`, `redirect-trace`.
 - Reporting: `audit-page`, `monthly-report`, `pseo-audit`, `narrative-report`, `second-page`.

@@ -2,6 +2,7 @@ export const reportIds = [
   'affected-urls',
   'ai-readiness',
   'ai-referrals',
+  'ai-search-scorecard',
   'audit-page',
   'audit-urls',
   'cannibalisation',

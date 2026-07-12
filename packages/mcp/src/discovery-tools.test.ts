@@ -53,6 +53,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'affected-urls',
     'ai-readiness',
     'ai-referrals',
+    'ai-search-scorecard',
     'audit-page',
     'audit-urls',
     'cannibalisation',

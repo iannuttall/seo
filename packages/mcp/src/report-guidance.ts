@@ -54,6 +54,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A source and landing-page breakdown of identifiable AI referrals.',
   },
+  'ai-search-scorecard': {
+    name: 'AI search scorecard',
+    description:
+      "Score AI-search technical readiness 0-100 from one crawl using this tool's own weighted checks, with observed evidence kept separate.",
+    useWhen: [
+      'You want a single scored summary of the AI-search technical evidence this tool already collects.',
+      'You need per-check pass, warn, fail, or unknown states with the exact weights and formula.',
+    ],
+    avoidWhen: [
+      'You want a Google or AI-engine eligibility verdict, a ranking prediction, or proof of citations.',
+      'You need per-page fixes rather than a scored overview.',
+    ],
+    outcome:
+      'A 0-100 heuristic score with per-check evidence, unknown exclusions, and a partial flag.',
+  },
   'audit-page': {
     name: 'Single-page SEO audit',
     description:

@@ -42,6 +42,42 @@ export const aiSearchReports = [
     sources: ['ga4-acquisition'],
   },
   {
+    id: 'ai-search-scorecard',
+    name: 'AI search scorecard',
+    category: 'ai-search',
+    summary:
+      "Turn one crawl into a 0-100 heuristic score over this tool's own AI-search checks, with observed evidence, unknown states, and a partial flag kept separate.",
+    question:
+      "How do this tool's own AI-search technical checks summarise into a single scored read of one crawl?",
+    useWhen: [
+      'You want a compact scored summary of the AI-search evidence the crawler already collects.',
+      'You need per-check pass, warn, fail, or unknown states with the exact weights and formula.',
+    ],
+    avoidWhen: [
+      'You want a Google or AI-engine eligibility verdict, a ranking prediction, or proof of citations.',
+      'You need per-page fixes rather than a scored overview.',
+    ],
+    evidence: [
+      'Crawl responses, start-URL robots policy for AI crawler tokens, indexability, HTTPS, structured data and JSON-LD validity, entity and sameAs signals, and opening-content structure.',
+    ],
+    methodology: [
+      'Scores only the checks with known evidence, weights them, and normalises to 0-100, so unknown checks are excluded rather than counted as failures, and a partial or incomplete crawl cannot reach a clean 100.',
+    ],
+    exampleParams: { reportId: 'crawl_example_20260710' },
+    interpretation: [
+      "Read the partial flag, the excluded list, and each check before the number. The score is this tool's own heuristic summary, not a search-engine requirement or a visibility verdict.",
+    ],
+    caveats: [
+      'A blocked AI crawler token can be an intentional publisher choice, and the score never proves indexing, selection, citation, ranking, or traffic.',
+    ],
+    nextSteps: [
+      'Open AI search readiness for the underlying access and structure evidence.',
+      'Use entity readiness or Google AI search controls for focused follow-up.',
+    ],
+    related: ['ai-readiness', 'geo-gaps', 'entity-readiness'],
+    sources: ['ai-features', 'robots', 'robots-meta', 'structured-data'],
+  },
+  {
     id: 'community-intent',
     name: 'Community-intent queries',
     category: 'ai-search',

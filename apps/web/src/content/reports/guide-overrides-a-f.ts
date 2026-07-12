@@ -142,6 +142,53 @@ export const reportGuideOverridesAF: Partial<
       supportingKeywords: ['ga4 report', 'ai search optimization'],
     },
   },
+  'ai-search-scorecard': {
+    name: 'Score AI search readiness',
+    summary:
+      "Turn one crawl into a 0-100 heuristic score over this tool's own AI-search checks, with observed evidence and unknown states kept separate.",
+    lead: "Use this to summarise the AI-search technical evidence the crawler already collects into a single scored read. The score is this tool's own heuristic, not a Google or AI-engine requirement, an eligibility verdict, a ranking predictor, or proof of citations.",
+    inputs: [
+      {
+        label: 'Saved or fresh crawl report',
+        source: 'ai-features',
+        role: 'Provides response, robots, indexability, structured data, entity, and page-structure evidence for each check.',
+      },
+      {
+        label: 'Fixed check weights and status credit',
+        role: "Define this tool's own scoring, published in the output as an id, version, weight map, and formula.",
+      },
+    ],
+    checks: [
+      'Scores the start-URL AI crawler policy, HTTPS, indexable share, structured data, JSON-LD validity, entity sameAs, and opening-content structure.',
+      'Records each check as pass, warn, fail, or unknown, and excludes unknown checks from the score instead of counting them as failures.',
+    ],
+    returns: [
+      'A 0-100 heuristic score with per-check observed evidence, a derived finding, and a bounded verification step.',
+      'A partial flag, an excluded list, and the methodology id, version, weights, and formula for reproduction.',
+    ],
+    alternatives: [
+      {
+        when: 'You want the underlying access, indexability, and snippet evidence rather than a single number.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI search readiness. It returns the evidence-only assessment this scorecard summarises, with no aggregate score.',
+      },
+      {
+        when: 'You need Google-specific crawl, index, canonical, and snippet controls for AI feature eligibility.',
+        reportId: 'geo-gaps',
+        doInstead:
+          'Run Google AI search controls. It narrows the evidence to supported technical eligibility controls per page.',
+      },
+    ],
+    seo: {
+      title: 'AI Search Scorecard: Score Crawl Readiness 0 to 100',
+      description:
+        "Score AI-search technical readiness from one crawl. This tool's own weighted checks summarise into a 0 to 100 heuristic, not a search-engine verdict.",
+      heading: 'AI search scorecard for crawl-based readiness scoring.',
+      primaryKeyword: 'ai search scorecard',
+      supportingKeywords: ['ai search readiness', 'ai search optimization'],
+    },
+  },
   'audit-page': {
     name: 'Audit one page',
     summary:

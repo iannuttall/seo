@@ -1,15 +1,9 @@
 export const installCommands = [
   {
     id: 'recommended',
-    label: 'CLI + skills',
-    command: 'npm i -g seo && npx skills add iannuttall/seo',
-    description: 'Install the CLI and the SEO skill. Then run seo start.',
-  },
-  {
-    id: 'mcp',
-    label: 'MCP',
-    command: 'npm i -g seo && seo mcp install',
+    label: 'Install',
+    command: 'npm i -g seo',
     description:
-      'Install the CLI first, then connect its local MCP server to a supported AI client.',
+      'One command installs everything. Then run seo start to sign in, save a project, and add the SEO skill and MCP server to your agents.',
   },
 ] as const

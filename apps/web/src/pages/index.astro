@@ -27,7 +27,7 @@ if (
 
 const faqs = [
   {
-    question: 'Does the SEO CLI include an AI agent?',
+    question: 'Does the SEO skill include an AI agent?',
     answer:
       'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work, and the CLI provides the crawl data, Search Console data, GA4 data, and report evidence.',
   },
@@ -67,9 +67,9 @@ const faqs = [
       'No. Use the CLI directly, import the package in TypeScript, or run it in CI. MCP is the easiest way to give a compatible agent the same local report engine.',
   },
   {
-    question: 'Why install both the CLI and the skills?',
+    question: 'Why one skill instead of a skill per report?',
     answer:
-      'The CLI does the work. The skills teach an agent which report to choose, how to run it, what the result means, and which follow-up is worth the context. Agents work best with both.',
+      'Fifty skill files would sit in your agent context window on every session, whether or not you are doing SEO work. This is one short skill that teaches your agent to discover the tools at runtime. The agent asks the CLI to describe a report only when it is about to run it, so it gets the full detail at the moment it matters and nothing before that.',
   },
   {
     question: 'Which report should I run first?',
@@ -82,7 +82,7 @@ const faqs = [
       'Generic advice guesses from best practices, but your agent works from the site, crawl, queries, search demand, and analytics data in front of it. It can inspect the evidence behind each finding instead of trusting a generic score.',
   },
   {
-    question: 'Who is the SEO CLI for?',
+    question: 'Who is the SEO skill for?',
     answer:
       'Developers, founders, SEO consultants, agencies, and technical teams who want their agents to work from clean SEO evidence instead of screenshots or copied dashboard rows.',
   },
@@ -100,11 +100,11 @@ const faqs = [
         <div class="flex flex-col gap-8 pt-16 sm:pt-24">
           <div class="flex max-w-2xl flex-col gap-4">
             <h1 class="text-pretty text-3xl font-medium -tracking-[0.5px] xl:text-4xl xl:-tracking-[0.7px]">
-              Turn your agents into an SEO team that grows your organic and AI search visibility.
+              The only SEO skill your agent needs to grow organic and AI search visibility.
             </h1>
             <p class="text-pretty text-2xl/8 font-medium -tracking-[0.2px] text-foreground-muted xl:text-3xl/10 xl:-tracking-[0.4px]">
-              Your agents crawl a site, read your Search Console and GA4 data, and run {reports.length} evidence-backed
-              reports, all on your machine and inside the tools you already use.
+              Give your agent 50+ SEO audit tools to find and fix issues, measure your performance,
+              and improve your organic and AI search visibility.
             </p>
           </div>
           <InstallPicker />
@@ -129,10 +129,10 @@ const faqs = [
           </p>
         </div>
         <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">It lives in your CLI and MCP, where your agents already work.</h2>
+          <h2 class="text-lg font-semibold">One skill, not fifty stuffed into your context window.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Run an audit from a script, an agent, your terminal, or CI and read the results back as
-            structured JSON or Markdown.
+            The CLI and MCP server do the heavy lifting. Your agent carries one short skill and
+            asks for the detail on each tool only when it is about to use it.
           </p>
         </div>
         <div class="rounded-lg bg-muted p-8">

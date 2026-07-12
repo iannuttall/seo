@@ -39,7 +39,7 @@ function selectedSkill(name?: string): SkillInfo[] {
 }
 
 const listCommand = defineCommand({
-  meta: { name: 'list', description: 'List packaged agent skills' },
+  meta: { name: 'list', description: 'Show the packaged SEO skill' },
   args: {
     json: {
       type: 'boolean',
@@ -65,7 +65,7 @@ const pathCommand = defineCommand({
   args: {
     name: {
       type: 'positional',
-      description: 'Skill name. Omit it for the skills directory.',
+      description: 'Skill name. Omit it for the skill directory.',
     },
     json: {
       type: 'boolean',
@@ -85,7 +85,10 @@ const pathCommand = defineCommand({
 })
 
 export const skillsCommand = defineCommand({
-  meta: { name: 'skills', description: 'Inspect packaged agent skills' },
+  meta: {
+    name: 'skill',
+    description: 'Inspect the packaged SEO skill and run its evals',
+  },
   subCommands: {
     list: listCommand,
     path: pathCommand,

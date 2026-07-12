@@ -255,7 +255,7 @@ test('loadEvalFile rejects malformed eval files', () => {
 })
 
 test('--list reports subjects with eval counts as json', async () => {
-  const result = await runEval(['skills', 'eval', '--list', '--json'])
+  const result = await runEval(['skill', 'eval', '--list', '--json'])
   assert.equal(result.exitCode, 0)
   const doc = JSON.parse(result.stdout) as {
     schemaVersion: number
@@ -268,7 +268,7 @@ test('--list reports subjects with eval counts as json', async () => {
 
 test('a passing run returns judged verdicts and exit 0', async () => {
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'demo',
     'other',
@@ -312,7 +312,7 @@ test('a passing run returns judged verdicts and exit 0', async () => {
 
 test('--no-skill omits the router body from the agent prompt', async () => {
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'other',
     '--agent',
@@ -336,7 +336,7 @@ test('--no-skill omits the router body from the agent prompt', async () => {
 test('a failed assertion exits 1', async () => {
   const result = await runEval(
     [
-      'skills',
+      'skill',
       'eval',
       'other',
       '--agent',
@@ -361,7 +361,7 @@ test('malformed judge output retries once then parses', async () => {
   rmSync(stateFile, { force: true })
   const result = await runEval(
     [
-      'skills',
+      'skill',
       'eval',
       'other',
       '--agent',
@@ -382,7 +382,7 @@ test('malformed judge output retries once then parses', async () => {
 test('a wrong-count judge marks the eval errored and exits 1', async () => {
   const result = await runEval(
     [
-      'skills',
+      'skill',
       'eval',
       'other',
       '--agent',
@@ -404,7 +404,7 @@ test('a wrong-count judge marks the eval errored and exits 1', async () => {
 
 test('--id runs a single eval within one subject', async () => {
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'demo',
     '--id',
@@ -425,7 +425,7 @@ test('--id runs a single eval within one subject', async () => {
 
 test('--id with more than one subject fails', async () => {
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'demo',
     'other',
@@ -458,7 +458,7 @@ test('a shell-unsafe prompt reaches the agent as one argument', async () => {
     }),
   )
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'inject',
     '--agent',
@@ -479,7 +479,7 @@ test('a shell-unsafe prompt reaches the agent as one argument', async () => {
 
 test('an unknown subject fails clearly', async () => {
   const result = await runEval([
-    'skills',
+    'skill',
     'eval',
     'does-not-exist',
     '--agent',

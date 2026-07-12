@@ -42,7 +42,7 @@ async function runSeo(
 }
 
 test('skills list and path expose the packaged seo skill', async () => {
-  const listed = await runSeo(['skills', 'list', '--json'])
+  const listed = await runSeo(['skill', 'list', '--json'])
   assert.equal(listed.exitCode, 0)
   assert.equal(listed.stderr, '')
   const skills = JSON.parse(listed.stdout).skills as Array<{
@@ -56,6 +56,6 @@ test('skills list and path expose the packaged seo skill', async () => {
   )
   assert.ok(skills.every((skill) => skill.description.length > 40))
 
-  const path = await runSeo(['skills', 'path', 'seo', '--json'])
+  const path = await runSeo(['skill', 'path', 'seo', '--json'])
   assert.equal(JSON.parse(path.stdout).path, join(sourceSkills, 'seo'))
 })

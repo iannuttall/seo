@@ -1,9 +1,9 @@
 export const site = {
-  name: 'SEO CLI',
+  name: 'SEO Skill',
   packageName: 'seo',
   url: 'https://seoskill.dev',
   description:
-    'An open source SEO tool your AI agents can run. Crawl a site, use your Search Console and GA4 data, and fix what is hurting organic and AI search visibility.',
+    'One SEO skill gives your agent 50+ SEO audit tools through a local CLI and MCP server, using your crawl, Search Console, and GA4 data to grow your visibility.',
   repository: 'https://github.com/iannuttall/seo',
   issues: 'https://github.com/iannuttall/seo/issues',
   advisory: 'https://github.com/iannuttall/seo/security/advisories/new',

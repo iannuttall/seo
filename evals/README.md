@@ -43,18 +43,18 @@ surface partial data.
 
 ## Run them
 
-`seo skills eval` runs these against a real agent on your machine and judges the
+`seo skill eval` runs these against a real agent on your machine and judges the
 result, so you catch a routing or truth-rule regression before it ships. It
 stays local: you bring your own agent, and nothing is sent to a hosted service.
 
 List what is available, then run one subject, several, or all of them:
 
 ```sh
-seo skills eval --list          # subjects with their eval counts
-seo skills eval quick-wins      # one subject
-seo skills eval quick-wins seo  # several subjects
-seo skills eval                 # every subject
-seo skills eval quick-wins --id 3
+seo skill eval --list          # subjects with their eval counts
+seo skill eval quick-wins      # one subject
+seo skill eval quick-wins seo  # several subjects
+seo skill eval                 # every subject
+seo skill eval quick-wins --id 3
 ```
 
 Each eval sends the `seo` router skill as context, then the eval prompt, to your
@@ -63,8 +63,8 @@ reads a prompt and prints a reply. Put `{prompt}` in the command to receive the
 prompt as an argument, or leave it out to receive the prompt on stdin:
 
 ```sh
-seo skills eval quick-wins --agent "claude -p"
-seo skills eval quick-wins --agent "my-agent --input {prompt}"
+seo skill eval quick-wins --agent "claude -p"
+seo skill eval quick-wins --agent "my-agent --input {prompt}"
 ```
 
 The prompt is always passed as a single argument, never through a shell, so a
@@ -105,7 +105,7 @@ agent and judge commands used. JSON mode never prompts and never decorates its
 output.
 
 ```sh
-seo skills eval --agent "claude -p" --json > eval-results.json
+seo skill eval --agent "claude -p" --json > eval-results.json
 ```
 
 ## Validation

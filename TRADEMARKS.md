@@ -5,8 +5,7 @@ right to present another product or service as the official `seo` project.
 
 This policy covers this project's identity: the name `seo` when it refers to
 this specific package and project, the tagline "The SEO command for AI agents",
-the logo and project artwork, and seoskill.dev. This project was formerly named
-SEO Skills CLI.
+the logo and project artwork, and seoskill.dev.
 
 "seo" is a generic term for search engine optimization. This policy claims no
 rights over that generic use. It covers only the project's name in context, its

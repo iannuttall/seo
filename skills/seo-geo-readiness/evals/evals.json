@@ -1,0 +1,84 @@
+{
+  "skill_name": "seo-geo-readiness",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We want ChatGPT and Perplexity to recommend our tool. Can you check if our site is set up for AI search?",
+      "expected_output": "Should frame this as a technical readiness and referral-evidence check, not proof that any AI product cites the site. Should build a saved crawl and run report id ai-readiness, for example seo crawl --project <project> --max-pages 500 --save --json then seo ai-readiness --project <project> --json, describing the schema first when parameters are unknown. Should check dataStatus, summary.pageLimitReached, warnings, and caveats. Should separate failed technical checks from contextual observations and not promise citations or recommendations.",
+      "assertions": [
+        "Frames the work as technical readiness, not proof of AI citation",
+        "Builds a saved crawl then runs report id ai-readiness",
+        "Checks dataStatus, summary.pageLimitReached, warnings, and caveats",
+        "Separates failed technical checks from contextual observations",
+        "Does not promise that ChatGPT or Perplexity will recommend the site",
+        "Offers report id geo-gaps when exact affected URLs are needed"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The ai-readiness report came back with no blockers. Does that mean AI systems are citing us now?",
+      "expected_output": "Should refuse to equate a clean readiness report with observed citations. Should explain that the report measures technical eligibility and that eligibility is not selection or citation. Should point out that ai-referrals can only report known GA4 referral evidence and cannot measure citations without a referral, and that no detected page-level restriction does not guarantee Google or any AI product will select or show the page. Should recommend monitoring rather than asserting citation.",
+      "assertions": [
+        "Refuses to equate a clean ai-readiness report with observed citations",
+        "States technical eligibility is not selection or citation",
+        "Explains ai-referrals needs a referral and cannot measure citations otherwise",
+        "Notes no detected restriction does not guarantee selection or display",
+        "Recommends monitoring instead of claiming citation"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Someone told me adding an llms.txt file will boost our Google rankings. Should we add one to climb the rankings?",
+      "expected_output": "Should correct the premise. Should explain that /llms.txt is optional metadata for agents that support it and that the report does not treat it as a Google Search ranking signal. Should say adding it is fine as optional machine discovery but should not be sold as a ranking lever. Should offer report id llms-txt-audit or the seo llms audit command to check the file rather than claiming a ranking effect.",
+      "assertions": [
+        "Corrects the claim that llms.txt boosts Google rankings",
+        "States llms.txt is optional metadata and not a Google ranking signal",
+        "Does not recommend it as a way to climb rankings",
+        "Frames it as optional machine discovery only",
+        "Offers a way to audit the file rather than asserting a ranking effect"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Can you pull the list of AI search queries people actually used to find us, from seo-to-ai-query?",
+      "expected_output": "Should clarify that seo-to-ai-query produces deterministic monitoring-prompt suggestions derived from retained GSC wording and that these are not observed AI queries. Should run report id seo-to-ai-query for the property and present the output as suggested prompts to monitor, not as evidence of real AI-product searches. Should note grouped GSC wording can omit anonymised rows so the suggestion set is a retained subset.",
+      "assertions": [
+        "Clarifies seo-to-ai-query outputs are suggestions, not observed AI queries",
+        "Explains the suggestions derive deterministically from retained GSC wording",
+        "Runs report id seo-to-ai-query for the property",
+        "Does not present the output as real AI-product search data",
+        "Notes the retained wording can omit anonymised rows"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Our blog posts have max-snippet:0 set. The readiness report should just tell us we're not AI ready and we fix it, right?",
+      "expected_output": "Should report the snippet directive exactly rather than jumping to a defect verdict. Should record nosnippet, max-snippet:0, positive max-snippet limits, and unrestricted max-snippet:-1 as observed controls, treating an intentional control as an observation until intent or contradictory evidence makes it a defect. Should ask whether the restriction is intentional before recommending removal, and should explain it can limit snippet display without being a readiness failure by itself.",
+      "assertions": [
+        "Reports the max-snippet:0 directive exactly as an observed control",
+        "Treats the snippet control as an observation until intent is confirmed",
+        "Asks whether the restriction is intentional before recommending a change",
+        "Distinguishes nosnippet, max-snippet:0, positive limits, and max-snippet:-1",
+        "Does not declare the pages not AI ready solely from the directive"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "To rank in AI answers, should we chunk every page into small sections and hit a 1,500 word minimum? Also can you write the intros?",
+      "expected_output": "Should decline the content-chunking and minimum word count recommendations made solely for AI search, since the skill does not recommend either for that reason. Should treat paragraph shape, lists, tables, and question headings as observations that do not prove quality or citation likelihood. Should recommend structured data, semantic HTML, authorship, and dates only for a documented user or Search feature need. Should not generate the intro copy, keeping advice structural.",
+      "assertions": [
+        "Declines to recommend content chunking solely for AI search",
+        "Declines to recommend a minimum word count for AI search",
+        "Treats paragraph shape, lists, and headings as observations, not proof of citation",
+        "Ties structured data and authorship advice to a documented user or feature need",
+        "Does not write the intro copy"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -79,3 +79,52 @@ discovery flow and the evidence limits that matter for that report.
 - Reporting: `audit-page`, `monthly-report`, `pseo-audit`, `narrative-report`, `second-page`.
 - Experiments: `measure-change`.
 - Workflows: `monthly-action-plan`, `refresh-priorities`, `technical-watch`, `update-postmortem`.
+
+## Evals
+
+Evals are behaviour tests for a skill. Each one pairs a realistic user request
+with a description of the correct agent behaviour and a list of checkable
+assertions. They exist to catch a skill that stops selecting the right report
+id, builds bad parameters, skips the evidence checks, or breaks a report truth
+rule such as calling capped data an all-clear or promising traffic from a
+heuristic.
+
+Evals are optional per skill. The flagship skills ship them today. A skill
+without them is still valid.
+
+The file lives at `skills/<name>/evals/evals.json` and has this shape:
+
+```json
+{
+  "skill_name": "quick-wins",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Where can we get some easy SEO wins without new content?",
+      "expected_output": "Prose describing what a correct agent does.",
+      "assertions": [
+        "Uses report id quick-wins for the opportunity queue",
+        "Clarifies quick win names the review queue, not expected traffic"
+      ],
+      "files": []
+    }
+  ]
+}
+```
+
+`skill_name` must match the folder name. Every `id` is a unique integer.
+`prompt`, `expected_output`, and each `assertions` entry are non-empty. Each
+assertion is one behaviour a judge can check on its own. Vary the prompts across
+a vague human ask, a precise agent ask, and an adversarial ask where the correct
+move is to refuse a claim or surface partial data.
+
+To run an eval, load the skill in an agent and feed it one prompt at a time. For
+example, use `claude -p` with the skill available, send the `prompt`, then judge
+the reply against each assertion. Score an eval as a pass only when every
+assertion holds.
+
+`node scripts/validate-skills.mjs` checks the structure of any `evals.json` it
+finds. It confirms the JSON parses, `skill_name` matches the folder, ids are
+unique integers, the prompt, expected output, and assertions are non-empty, and
+every backtick-quoted `seo` command and every referenced report id resolves to a
+real command and report. It does not run the evals or judge agent output.

@@ -1,0 +1,85 @@
+{
+  "skill_name": "seo-fix-queue",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Give me a prioritized list of SEO fixes we can actually ship this sprint, with the URLs to change.",
+      "expected_output": "Should run the bounded queue directly with `seo crawl-queue --project <project> --json`, or through MCP run report id site-crawl with saveReport true and pass its reportId to report ids top-fixes and affected-urls. Should read dataStatus, source joins, selection counts, warnings, and caveats before ranking. Should preserve the returned priority order unless stronger evidence supports a change. Should keep each item's rule id, priority, evidence, affected count, bounded URL sample, fix, and verification step.",
+      "assertions": [
+        "Runs the bounded queue via seo crawl-queue or report id site-crawl with saveReport",
+        "Passes the saved reportId to report ids top-fixes and affected-urls",
+        "Reads dataStatus, source joins, selection counts, warnings, and caveats before ranking",
+        "Preserves the returned priority order unless stronger evidence changes it",
+        "Keeps rule id, priority, evidence, affected count, URL sample, fix, and verification per item",
+        "Does not dump every rule the crawler checked"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Reuse the crawl we already saved. Give me the affected URLs for the title-missing issue and explain what the rule means.",
+      "expected_output": "Should reuse the saved crawl instead of crawling again, running report id affected-urls with the ruleId and the saved reportId, and report id explain-crawl-issue for the rule, with the CLI parity `seo explain --rule <rule-id> --json`. Should return the bounded URL sample and the rule explanation with its verification step. Should not launch a fresh crawl when a saved report is available.",
+      "assertions": [
+        "Reuses the saved crawl rather than recrawling",
+        "Runs report id affected-urls filtered to the requested rule",
+        "Runs report id explain-crawl-issue for the rule",
+        "Shows the `seo explain --rule <rule-id> --json` parity command",
+        "Returns a bounded URL sample and a verification step",
+        "Does not start a new crawl when a saved report exists"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The crawl-queue came back with only three issues on the 500 pages it hit. Mark everything else on the site as passing so we can close the ticket.",
+      "expected_output": "Should refuse to mark the rest of the site passing. Should point out that summary.pageLimitReached means the crawl was capped, and a capped crawl cannot support an inventory-wide zero or all-clear. Should keep failed fetches, missing provider data, and filtered rows separate from observed zeros. Should recommend widening the crawl or sampling untested URLs before closing the issue as clean.",
+      "assertions": [
+        "Refuses to mark untested pages as passing",
+        "Cites summary.pageLimitReached and the capped crawl",
+        "States a capped crawl cannot support an inventory-wide zero or all-clear",
+        "Separates failed fetches and filtered rows from observed zeros",
+        "Recommends widening scope or sampling before closing the ticket"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "This page has clean tags in the crawl, so add it to the queue as a high-value page we should build more internal links to.",
+      "expected_output": "Should not call the page valuable or search-visible from crawl evidence alone. Should explain that GSC or GA4 evidence is required for a value or visibility claim and should only be used when the source join is available. Should keep the crawl observation (clean tags) separate from any performance judgment. Should offer to check search evidence for the URL before assigning a value-based priority.",
+      "assertions": [
+        "Refuses to call the page valuable or search-visible from crawl evidence alone",
+        "States a value or visibility claim needs an available GSC or GA4 source join",
+        "Keeps the clean-tags observation separate from a performance judgment",
+        "Offers to check search evidence before prioritising the page by value",
+        "Does not fabricate traffic or link value for the page"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Turn the whole crawl into an implementation ticket file our devs can pick up. And keep your summary to me short.",
+      "expected_output": "Should write the Markdown handoff only because the user asked for a file, using seo crawl --project <project> --format markdown --output seo-fixes.md. Should keep the reply to the user short, showing the top material fixes and ending with the next verification command rather than every rule. Should keep each ticket's evidence and verification intact in the file. Should not pad the answer with the full rule inventory.",
+      "assertions": [
+        "Writes the Markdown ticket file with seo crawl --format markdown --output",
+        "Keeps the direct reply short with only the top material fixes",
+        "Ends the reply with the next verification command",
+        "Retains evidence and verification for each ticket in the file",
+        "Does not dump the full rule inventory into the reply"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "The crawler returned an unfamiliar rule id and a couple of pages that failed to fetch. What do we do with those?",
+      "expected_output": "Should run report id explain-crawl-issue for the unfamiliar rule so the queue item carries a real explanation and verification step. Should treat the failed fetches as a distinct state, not an observed zero and not a passing result, and keep them visible in the queue rather than dropping them. Should not assume the failed-fetch pages are clean.",
+      "assertions": [
+        "Runs report id explain-crawl-issue for the unfamiliar rule",
+        "Keeps failed fetches as a distinct state, not an observed zero",
+        "Does not treat failed-fetch pages as passing or clean",
+        "Keeps the failed fetches visible in the queue",
+        "Attaches a verification step to the explained rule"
+      ],
+      "files": []
+    }
+  ]
+}

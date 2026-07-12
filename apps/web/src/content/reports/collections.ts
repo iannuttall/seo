@@ -75,6 +75,7 @@ export const reportCollections = [
     introduction:
       'Find technical restrictions, improve machine-readable context, and measure AI referral traffic.',
     reports: [
+      ['ai-search-scorecard', 'AI search scorecard'],
       ['ai-readiness', 'AI readiness'],
       ['entity-readiness', 'Entity readiness'],
       ['geo-gaps', 'Google AI search controls'],

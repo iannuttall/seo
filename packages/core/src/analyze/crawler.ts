@@ -1,5 +1,6 @@
 export * from './crawler/affected-urls.js'
 export * from './crawler/ai-readiness.js'
+export * from './crawler/ai-search-scorecard.js'
 export * from './crawler/audit.js'
 export * from './crawler/baseline.js'
 export * from './crawler/entity-readiness.js'

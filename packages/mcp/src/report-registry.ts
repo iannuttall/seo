@@ -82,6 +82,11 @@ const reportGroups: readonly ReportGroup[] = [
     ],
   },
   {
+    category: 'ai-search',
+    register: registerCrawlerTools,
+    names: ['seo_ai_search_scorecard'],
+  },
+  {
     category: 'crawl',
     register: registerCrawlerTools,
     names: [

@@ -55,10 +55,10 @@ export function reportPageTitle(
   if (seo) return seo.title
 
   const candidates = [
-    `${displayName}: SEO report evidence and local CLI guide | SEO Skills CLI`,
-    `${displayName}: SEO report and local CLI guide | SEO Skills CLI`,
-    `${displayName}: local CLI report guide | SEO Skills CLI`,
-    `${displayName} report guide | SEO Skills CLI`,
+    `${displayName}: SEO report evidence and local CLI guide | seo`,
+    `${displayName}: SEO report and local CLI guide | seo`,
+    `${displayName}: local CLI report guide | seo`,
+    `${displayName} report guide | seo`,
   ]
   return (
     candidates.find((title) => title.length >= 55 && title.length <= 70) ??

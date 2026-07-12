@@ -26,7 +26,7 @@ import {
 
 const localServerCommand = {
   command: '/usr/local/bin/node',
-  args: ['/Applications/SEO Skills/seo.js', 'mcp', 'serve'],
+  args: ['/Applications/Local Tools/seo.js', 'mcp', 'serve'],
 }
 
 function install(
@@ -80,7 +80,7 @@ test('MCP install preserves JSONC and is idempotent', () => {
   assert.equal(servers.other?.command, 'other-command')
   assert.equal(servers.seo?.command, '/usr/local/bin/node')
   assert.deepEqual(servers.seo?.args, [
-    '/Applications/SEO Skills/seo.js',
+    '/Applications/Local Tools/seo.js',
     'mcp',
     'serve',
   ])
@@ -318,7 +318,7 @@ test('Codex MCP install uses the native CLI and stays idempotent', () => {
         ? {
             status: 0,
             stdout:
-              'seo\n  command: /usr/local/bin/node\n  args: /Applications/SEO Skills/seo.js mcp serve\n  SEO_MCP_CONFIGURED_BY=seo\n',
+              'seo\n  command: /usr/local/bin/node\n  args: /Applications/Local Tools/seo.js mcp serve\n  SEO_MCP_CONFIGURED_BY=seo\n',
             stderr: '',
           }
         : { status: 1, stdout: '', stderr: 'not found' }
@@ -346,7 +346,7 @@ test('Codex MCP install uses the native CLI and stays idempotent', () => {
       args
         .join(' ')
         .includes(
-          '/usr/local/bin/node /Applications/SEO Skills/seo.js mcp serve',
+          '/usr/local/bin/node /Applications/Local Tools/seo.js mcp serve',
         ),
     ),
   )
@@ -364,7 +364,7 @@ test('MCP install can rewrite an existing managed config', () => {
 })
 
 test('MCP command uses the installed CLI without npm or PATH lookup', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'SEO Skills '))
+  const dir = mkdtempSync(join(tmpdir(), 'Local Tools '))
   const cliPath = join(dir, 'seo cli.js')
   writeFileSync(cliPath, '', 'utf8')
 
@@ -376,7 +376,7 @@ test('MCP command uses the installed CLI without npm or PATH lookup', () => {
 
   assert.equal(command.command, '/usr/local/bin/node')
   assert.deepEqual(command.args.slice(-2), ['mcp', 'serve'])
-  assert.match(command.args[0] ?? '', /SEO Skills .+\/seo cli\.js$/)
+  assert.match(command.args[0] ?? '', /Local Tools .+\/seo cli\.js$/)
 })
 
 test('MCP command pins the package only for a disposable npx CLI', () => {

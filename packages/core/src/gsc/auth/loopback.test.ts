@@ -12,7 +12,7 @@ test('missing shared OAuth configuration points installed users to GitHub', () =
 test('OAuth callback page matches the local product style without remote assets', () => {
   const page = oauthCallbackPage()
 
-  assert.match(page, /SEO Skills is connected/)
+  assert.match(page, /seo is connected/)
   assert.match(page, /Google account connected/)
   assert.match(page, /Go back to your terminal to continue/)
   assert.match(page, /Read-only access/)

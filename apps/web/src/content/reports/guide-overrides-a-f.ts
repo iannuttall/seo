@@ -41,7 +41,7 @@ export const reportGuideOverridesAF: Partial<
       },
     ],
     seo: {
-      title: 'Technical SEO Issues: Find Every Affected URL',
+      title: 'Technical SEO Issues: Find Every Affected URL From a Crawl',
       description:
         'Find every URL affected by specific technical SEO issues, inspect the crawl evidence, and turn a summary count into a practical review list.',
       heading: 'Find the URLs behind your technical SEO issues',
@@ -277,7 +277,7 @@ export const reportGuideOverridesAF: Partial<
       },
     ],
     seo: {
-      title: 'Bulk SEO Checker: Audit a Selected List of URLs',
+      title: 'Bulk SEO Checker: Audit a Selected List of URLs at Once',
       description:
         'Use a bulk SEO checker to audit an exact list of URLs for launch checks, template samples, migrations, and post-fix verification.',
       heading: 'Check a list of URLs without crawling the whole site',
@@ -895,7 +895,7 @@ export const reportGuideOverridesAF: Partial<
       },
     ],
     seo: {
-      title: 'SEO Crawl Report: Open a Saved Local Audit',
+      title: 'SEO Crawl Report: Reopen and Read a Saved Local Audit',
       description:
         'Open a saved SEO crawl report by id or site, read the compact summary, and request page or issue details without crawling the site again.',
       heading: 'Open a saved SEO crawl report without fetching the site again',

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <title>SEO Skills CLI, local SEO tools for agents</title>
+  <title>seo, the SEO command for AI agents</title>
   <rect width="1200" height="630" fill="#fafafa"/>
   <rect x="48.5" y="48.5" width="1103" height="533" rx="20" fill="#ffffff" stroke="#e4e4e7"/>
   <g transform="translate(88 88)">
@@ -7,7 +7,7 @@
     <circle cx="30" cy="30" r="7" fill="#0891b2"/>
     <path d="M30 0v12M30 48v12M0 30h12M48 30h12" stroke="#0891b2" stroke-width="6"/>
   </g>
-  <text x="172" y="128" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="650">SEO Skills CLI</text>
+  <text x="172" y="128" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="650">seo</text>
   <text x="88" y="286" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">Find and fix the SEO work</text>
   <text x="88" y="364" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">that will move the needle.</text>
   <text x="88" y="446" fill="#52525b" font-family="Inter, Arial, sans-serif" font-size="27">Crawl evidence, Search Console and GA4. Local by default.</text>

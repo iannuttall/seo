@@ -1,5 +1,5 @@
 ---
-title: Use SEO Skills CLI for daily work and automation
+title: Use the seo CLI for daily work and automation
 description: Choose the right SEO command, switch projects safely, save technical evidence, and produce deterministic JSON that agents and CI can inspect.
 ---
 

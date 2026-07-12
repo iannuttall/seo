@@ -35,9 +35,10 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-`seo` turns a local crawl and your own search data into work you can inspect
-and ship. Find technical blockers, recover search demand, improve pages already
-close to more clicks, and catch regressions after a release.
+`seo` runs a full SEO audit from your terminal, turning a local crawl and your
+own search data into work you can inspect and ship. Find technical blockers,
+recover search demand, improve pages already close to more clicks, and catch
+regressions after a release.
 
 ## Who this is for
 
@@ -171,7 +172,7 @@ Run `seo help` for the short path or `seo help all` for the full command list.
 
 ## Crawl a site
 
-Run a readable technical crawl:
+Run a readable technical crawl, the base of any technical SEO audit:
 
 ```sh
 seo crawl https://example.com --format pretty

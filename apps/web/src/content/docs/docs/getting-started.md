@@ -1,13 +1,13 @@
 ---
-title: Set up the seo CLI and run your first SEO audit
-description: Install the seo CLI, connect Search Console, save a local project profile, and run your first SEO audit that points you to a clear next action.
+title: Set up the SEO CLI and run your first SEO audit
+description: Install the SEO CLI, connect Search Console, save a local project profile, and run your first SEO audit that points you to a clear next action.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search
 Console property adds traffic and query evidence. GA4 is optional. You can
 still start with a local technical report before connecting Google.
 
-## Install the seo CLI
+## Install the SEO CLI
 
 Install the command once, then start setup:
 
@@ -129,7 +129,7 @@ prints the paths used for profiles, tokens, caches, and saved reports on your
 operating system.
 
 Use `seo auth logout` to delete local Google tokens. Use `seo reset` only when
-you want to remove all local seo data. The [privacy policy](/privacy)
+you want to remove all local SEO data. The [privacy policy](/privacy)
 documents every storage and network boundary.
 
 ## Add your agent after the first report works

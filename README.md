@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" alt="seo" width="72" height="72">
+  <img src="apps/web/public/favicon.svg" alt="SEO CLI" width="72" height="72">
 </p>
 
-<h1 align="center">seo</h1>
+<h1 align="center">SEO CLI</h1>
 
 <p align="center">
   The SEO command for AI agents. Open source, evidence-backed SEO reports from your own crawl, Search Console, and GA4 data.
@@ -35,10 +35,10 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-`seo` runs a full SEO audit from your terminal, turning a local crawl and your
-own search data into work you can inspect and ship. Find technical blockers,
-recover search demand, improve pages already close to more clicks, and catch
-regressions after a release.
+The `seo` command runs a full SEO audit from your terminal, turning a local
+crawl and your own search data into work you can inspect and ship. Find
+technical blockers, recover search demand, improve pages already close to more
+clicks, and catch regressions after a release.
 
 ## Who this is for
 
@@ -64,8 +64,8 @@ optional GA4 property, and a local project profile. Public releases can include
 the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
-That is the normal path. `seo` is then available in every terminal, script,
-CI job, and local MCP client on the machine.
+That is the normal path. The `seo` command is then available in every terminal,
+script, CI job, and local MCP client on the machine.
 
 The main report uses the evidence you have, explains what it could not check,
 and recommends a short list of follow-up commands. You can start with a local
@@ -243,8 +243,11 @@ drift.
 ## Use it with AI agents
 
 Agents work best with both parts of the project. The `seo` package runs the
-reports. The `seo` skill teaches an agent which report to choose, how to read
+reports, and the SEO skill teaches an agent which report to choose, how to read
 it, and what to verify before changing a site.
+
+`seo start` offers to install the SEO skill during setup. In an agent-managed
+environment, add it yourself with the standard installer:
 
 ```sh
 npm i -g seo
@@ -346,7 +349,7 @@ local Google access, and more examples.
 ## Local data and Google access
 
 Google OAuth tokens use your system keychain when it is available. On a
-headless machine or a locked keychain, the seo CLI falls back to a private
+headless machine or a locked keychain, the CLI falls back to a private
 `0600` file in your user config directory. Project profiles, crawl reports, and
 provider caches are also local. Use these commands to inspect or remove them:
 

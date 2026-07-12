@@ -52,7 +52,7 @@ seo crawl --mode list --urls-file changed-urls.txt
 
 `site` mode discovers internal URLs from the start page and sitemap. `sitemap`
 mode starts from a sitemap. `page` fetches one page, while `list` keeps the run
-to URLs you provide. When `robots.txt` declares same-origin sitemap files, SEO
+to URLs you provide. When `robots.txt` declares same-origin sitemap files, the crawler
 tries those first and records which ones supplied URLs in JSON. If none return
 URLs, it also tries `/sitemap.xml`.
 
@@ -69,8 +69,8 @@ as evidence to inspect, not proof that the sitemap is broken.
 
 `sitemapDiscovery.roots[].lastmods` records supplied `lastmod` values as
 unverified metadata. It counts values that parse and keeps small samples of
-malformed or future dates so you can inspect the generating system. SEO never
-uses them to order discovery or claim that a page changed. An index-level
+malformed or future dates so you can inspect the generating system. The crawler
+never uses them to order discovery or claim that a page changed. An index-level
 `lastmod` describes the sitemap file, not every page it lists. Google only uses
 `lastmod` when it is consistently and verifiably accurate in its
 <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap guidance</a>.
@@ -86,7 +86,7 @@ inspection, but its presence does not prove that Google indexed it.
 ## External-link checks stay bounded
 
 External-link checks run against a bounded sample of the URLs retained by the
-crawl. SEO spreads that sample across source pages, keeps each selected check
+crawl. The crawler spreads that sample across source pages, keeps each selected check
 on the page that linked to it, and records the limits, deferred URLs, and
 request failures in `externalLinkVerification` JSON. A 404 is evidence about
 the external target. It does not mean the page containing that link failed to
@@ -146,7 +146,7 @@ Use `--rendering on` when the links, canonicals, or main content are missing
 from the initial HTML. `auto` is the default. It only opens a browser when the
 response looks client-rendered. `off` keeps the raw HTTP response.
 
-SEO uses a local Chrome or Chromium browser. It reuses a browser process during
+The crawler uses a local Chrome or Chromium browser. It reuses a browser process during
 a crawl and keeps each page in its own browser context. If no compatible
 browser is available, the report says that rendered evidence is unavailable and
 keeps the raw response separate. It does not pretend raw HTML was rendered.

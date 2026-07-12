@@ -1,5 +1,5 @@
 export const site = {
-  name: 'seo',
+  name: 'SEO CLI',
   packageName: 'seo',
   url: 'https://seoskills.dev',
   description:

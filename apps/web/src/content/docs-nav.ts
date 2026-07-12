@@ -10,7 +10,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/getting-started',
     label: 'Getting started',
     description:
-      'Install the seo CLI, connect Search Console, save a local project profile, and run your first useful report.',
+      'Install the SEO CLI, connect Search Console, save a local project profile, and run your first useful report.',
   },
   {
     path: '/docs/google',

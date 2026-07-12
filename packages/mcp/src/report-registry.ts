@@ -7,7 +7,11 @@ import { registerExperimentTools } from './experiment-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerPseoTools } from './pseo-tools.js'
-import { getReportGuidance, REPORT_GUIDANCE } from './report-guidance.js'
+import {
+  getReportGuidance,
+  REPORT_GUIDANCE,
+  type RelatedReport,
+} from './report-guidance.js'
 import { registerReportTools } from './report-tools.js'
 import type { ToolResult } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
@@ -165,6 +169,10 @@ export type ReportDefinition = ReportSummary & {
   useWhen: readonly string[]
   avoidWhen: readonly string[]
   outcome: string
+  readOrder: readonly string[]
+  doNotClaim: readonly string[]
+  verify: string
+  related: readonly RelatedReport[]
   inputSchema: z.ZodObject<z.ZodRawShape>
   handler: ReportHandler
 }

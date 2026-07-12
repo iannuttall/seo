@@ -133,6 +133,17 @@ const describeCommand = defineCommand({
     for (const reason of report.useWhen) process.stdout.write(`- ${reason}\n`)
     process.stdout.write('\nAvoid when\n')
     for (const reason of report.avoidWhen) process.stdout.write(`- ${reason}\n`)
+    process.stdout.write('\nRead in order\n')
+    for (const field of report.readOrder) process.stdout.write(`- ${field}\n`)
+    process.stdout.write('\nDo not claim\n')
+    for (const limit of report.doNotClaim) process.stdout.write(`- ${limit}\n`)
+    process.stdout.write(`\nVerify\n- ${report.verify}\n`)
+    if (report.related.length > 0) {
+      process.stdout.write('\nRelated reports\n')
+      for (const item of report.related) {
+        process.stdout.write(`- ${item.id}: ${item.reason}\n`)
+      }
+    }
     process.stdout.write('\nParameters (JSON Schema)\n')
     printJson(report.inputSchema)
   },

@@ -32,6 +32,10 @@ export function describeReport(id: string) {
     useWhen: report.useWhen,
     avoidWhen: report.avoidWhen,
     outcome: report.outcome,
+    readOrder: report.readOrder,
+    doNotClaim: report.doNotClaim,
+    verify: report.verify,
+    related: report.related,
     inputSchema: z.toJSONSchema(report.inputSchema),
   }
 }

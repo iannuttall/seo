@@ -4,8 +4,12 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { createServer, startMcpServer } from './index.js'
+import { REPORT_DEPTH } from './report-depth.js'
 import { REPORT_GUIDANCE } from './report-guidance.js'
-import { listReportDefinitions } from './report-registry.js'
+import {
+  getReportDefinition,
+  listReportDefinitions,
+} from './report-registry.js'
 
 type JsonRecord = Record<string, unknown>
 
@@ -130,6 +134,40 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
   }
 })
 
+test('every report has populated depth guidance with valid related ids', () => {
+  const reports = listReportDefinitions()
+  const ids = new Set(reports.map((report) => report.id))
+  assert.deepEqual(Object.keys(REPORT_DEPTH).sort(), [...ids].sort())
+
+  for (const report of reports) {
+    const definition = getReportDefinition(report.id)
+    assert.ok(definition, report.id)
+    assert.ok(
+      definition.readOrder.length >= 3 && definition.readOrder.length <= 6,
+      `${report.id} readOrder length`,
+    )
+    assert.ok(
+      definition.readOrder.every((entry) => entry.length > 0),
+      `${report.id} readOrder entries`,
+    )
+    assert.ok(
+      definition.doNotClaim.length >= 2 && definition.doNotClaim.length <= 4,
+      `${report.id} doNotClaim length`,
+    )
+    assert.ok(
+      definition.doNotClaim.every((entry) => entry.length > 0),
+      `${report.id} doNotClaim entries`,
+    )
+    assert.ok(definition.verify.length > 0, `${report.id} verify`)
+    assert.ok(definition.related.length <= 4, `${report.id} related count`)
+    for (const item of definition.related) {
+      assert.ok(item.reason.length > 0, `${report.id} related reason`)
+      assert.notEqual(item.id, report.id, `${report.id} self-related`)
+      assert.ok(ids.has(item.id), `${report.id} related id ${item.id}`)
+    }
+  }
+})
+
 test('list and describe return compact ordered metadata and parameter schema', async () => {
   await withClient(async (client) => {
     const listed = structured(
@@ -153,7 +191,11 @@ test('list and describe return compact ordered metadata and parameter schema', a
           report.name.length > 0 &&
           !('useWhen' in report) &&
           !('avoidWhen' in report) &&
-          !('outcome' in report),
+          !('outcome' in report) &&
+          !('readOrder' in report) &&
+          !('doNotClaim' in report) &&
+          !('verify' in report) &&
+          !('related' in report),
       ),
     )
 
@@ -185,6 +227,21 @@ test('list and describe return compact ordered metadata and parameter schema', a
       report.outcome,
       'A page-level audit that separates observed evidence from review advice.',
     )
+    assert.ok(
+      Array.isArray(report.readOrder) &&
+        (report.readOrder as unknown[]).length > 0,
+    )
+    assert.ok(
+      Array.isArray(report.doNotClaim) &&
+        (report.doNotClaim as unknown[]).length > 0,
+    )
+    assert.equal(typeof report.verify, 'string')
+    assert.ok((report.verify as string).length > 0)
+    assert.ok(Array.isArray(report.related))
+    for (const item of report.related as Array<JsonRecord>) {
+      assert.equal(typeof item.id, 'string')
+      assert.equal(typeof item.reason, 'string')
+    }
     assert.deepEqual(inputSchema.required, ['url'])
     assert.equal((properties.url as JsonRecord).format, 'uri')
     assert.equal(inputSchema.additionalProperties, false)

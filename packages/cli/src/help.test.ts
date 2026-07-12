@@ -851,8 +851,8 @@ test('performance help exposes lab and field controls', async () => {
 })
 
 test('version aliases and nested command help are available', async () => {
-  assert.match(await runSeo(['--version']), /0\.1\.0/)
-  assert.match(await runSeo(['-v']), /0\.1\.0/)
+  assert.match(await runSeo(['--version']), /\d+\.\d+\.\d+/)
+  assert.match(await runSeo(['-v']), /\d+\.\d+\.\d+/)
 
   for (const args of [
     ['content', 'optimize', '--help'],

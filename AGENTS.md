@@ -1,13 +1,18 @@
 # Agent Notes
 
-This is the source for `seo`, a local-first TypeScript SEO CLI, library, skills
-collection, and stdio MCP server. The public repository is
+This is the source for `seo`, a local-first TypeScript SEO CLI, library,
+router skill, and stdio MCP server. The public repository is
 `iannuttall/seo`. The public npm package is the unscoped `seo` package.
+
+`PRODUCT.md` is the durable product definition: users, purpose, brand
+personality, vocabulary, and anti-references. Read it before writing any
+user-facing copy or making product-shape decisions. This file owns the
+engineering contract.
 
 The product has two primary users:
 
 - Humans start with a guided prompt flow and one main report.
-- Agents use explicit flags, structured JSON, focused skills, and MCP tools.
+- Agents use explicit flags, structured JSON, the router skill, and MCP tools.
 
 Keep the human path calm. Keep the agent path powerful. Both paths must use the
 same core report logic and return the same evidence.
@@ -47,10 +52,11 @@ skills/         packaged agent skills
 - Runtime bundles must not depend on private workspace package names.
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
   deliberately migrated and verified.
-- The product name is `seo`, written lowercase, the same as the command and
-  package. The tagline is "The SEO command for AI agents". Do not use
-  "SEO Skills CLI" in new copy; it survives only as a JSON-LD alternate name
-  for continuity.
+- The product name is SEO as a wordmark, `seo` as the command and package,
+  and always qualified in prose (the `seo` command, the seo CLI); see
+  PRODUCT.md's Name section. The tagline is "The SEO command for AI agents".
+  Do not use "SEO Skills CLI" in new copy; it survives only as a JSON-LD
+  alternate name for continuity.
 - Teach `npm i -g seo`, then `seo start`, as the primary README path.
 - Library and contributor setup belongs below normal CLI usage in the README.
 

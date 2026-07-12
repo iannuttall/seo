@@ -27,14 +27,14 @@ if (
 
 const faqs = [
   {
-    question: 'Does seo include an AI agent?',
+    question: 'Does the SEO CLI include an AI agent?',
     answer:
-      'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work, and seo provides the crawl data, Search Console data, GA4 data, and report evidence.',
+      'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work, and the CLI provides the crawl data, Search Console data, GA4 data, and report evidence.',
   },
   {
     question: 'Why not build another SEO dashboard?',
     answer:
-      'Dashboards are useful when you want to click around, but seo is built for the way agents work. They discover reports, run them, and read structured evidence without leaving your editor or terminal.',
+      'Dashboards are useful when you want to click around, but the CLI is built for the way agents work. They discover reports, run them, and read structured evidence without leaving your editor or terminal.',
   },
   {
     question: 'What does my agent actually get back?',
@@ -44,7 +44,7 @@ const faqs = [
   {
     question: 'Why connect Search Console?',
     answer:
-      'Search Console proves you can access the site and gives reports real search demand. That lets seo find page-two queries, weak CTR, decaying pages, cannibalisation, and indexing candidates using your own data. The CLI requests read-only access.',
+      'Search Console proves you can access the site and gives reports real search demand. That lets your agent find page-two queries, weak CTR, decaying pages, cannibalisation, and indexing candidates using your own data. The CLI requests read-only access.',
   },
   {
     question: 'Is GA4 required?',
@@ -79,10 +79,10 @@ const faqs = [
   {
     question: 'How is this different from generic SEO advice?',
     answer:
-      'Generic advice guesses from best practices, but seo works from the site, crawl, queries, search demand, and analytics data in front of it. Your agent can inspect the evidence behind each finding instead of trusting a generic score.',
+      'Generic advice guesses from best practices, but your agent works from the site, crawl, queries, search demand, and analytics data in front of it. It can inspect the evidence behind each finding instead of trusting a generic score.',
   },
   {
-    question: 'Who is seo for?',
+    question: 'Who is the SEO CLI for?',
     answer:
       'Developers, founders, SEO consultants, agencies, and technical teams who want their agents to work from clean SEO evidence instead of screenshots or copied dashboard rows.',
   },
@@ -103,8 +103,8 @@ const faqs = [
               Turn your agents into an SEO team that grows your organic and AI search visibility.
             </h1>
             <p class="text-pretty text-2xl/8 font-medium -tracking-[0.2px] text-foreground-muted xl:text-3xl/10 xl:-tracking-[0.4px]">
-              The seo command is a local SEO engine for AI agents. Install it once and your
-              agents can crawl a site, read your Search Console and GA4 data, and run {reports.length} evidence-backed reports.
+              Your agents crawl a site, read your Search Console and GA4 data, and run {reports.length} evidence-backed
+              reports, all on your machine and inside the tools you already use.
             </p>
           </div>
           <InstallPicker />
@@ -124,7 +124,7 @@ const faqs = [
         <div class="rounded-lg bg-muted p-8">
           <h2 class="text-lg font-semibold">Data other tools keep behind a dashboard.</h2>
           <p class="mt-2 text-base leading-7 text-foreground-muted">
-            The seo CLI gives your agent owner-verified Search Console and GA4 data on your machine,
+            Give your agent owner-verified Search Console and GA4 data on your machine,
             joined to crawl findings, so it sees what is actually losing visibility.
           </p>
         </div>
@@ -147,7 +147,7 @@ const faqs = [
       <section class="site-frame">
         <SectionHeading
           eyebrow="See your agent in the loop"
-          text="It reads your crawl findings and Search Console data through seo, finds what is hurting visibility, then drafts the fix in your stack."
+          text="It reads your crawl findings and Search Console data, finds what is hurting visibility, then drafts the fix in your stack."
         />
         <HeroPanel />
       </section>
@@ -181,11 +181,11 @@ const faqs = [
         <div class="border-t border-border pt-12">
           <div class="max-w-2xl">
             <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-              Questions people ask before adding seo to an agent
+              Questions people ask before giving an agent SEO evidence
             </h2>
             <p class="mt-4 text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]">
-              The seo CLI gives the best models better SEO evidence. It does not try to replace
-              Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use.
+              Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex,
+              Cursor, or the agent workflow you already use.
             </p>
           </div>
 

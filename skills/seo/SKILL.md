@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 52 evidence-backed local reports through the seo CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 52 evidence-backed local reports through the SEO CLI and MCP server.
 ---
 
 # seo

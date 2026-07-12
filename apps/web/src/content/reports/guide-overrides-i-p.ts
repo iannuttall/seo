@@ -391,10 +391,11 @@ export const reportGuideOverridesIP: Partial<
       },
     ],
     seo: {
-      title: 'SEO Crawler Rules: Browse Every Built-in Technical Check | seo',
+      title:
+        'SEO Crawler Rules: Browse Every Built-in Technical Check | SEO CLI',
       description:
         'Browse every SEO crawler rule, filter technical checks by category, and find the exact rule id needed for issue guidance or affected URLs from a saved crawl.',
-      heading: 'Browse the technical checks built into the seo CLI',
+      heading: 'Browse the technical checks built into the SEO CLI',
       primaryKeyword: 'SEO crawler',
       supportingKeywords: ['SEO crawler tool'],
     },

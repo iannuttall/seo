@@ -4,17 +4,18 @@
 
 The product name has three registers. As a wordmark or visual brand it is
 SEO, in caps, the way the acronym is properly written. As the command,
-package, and in any code context it is `seo`, lowercase. In running prose,
-never use the bare word as a name, because uppercase collides with the
-practice and lowercase reads as a typo; qualify it instead: the `seo`
-command, the seo CLI, the seo package.
+package, and in any code context it is `seo`, lowercase. When prose truly
+has to name the product, use SEO CLI or the SEO skill, with SEO in caps;
+never the bare lowercase word, which reads as a typo.
 
-The tagline is "The SEO command for AI agents". The definition sentence,
-used wherever a first-time reader needs one, is:
+The stronger rule is that prose almost never needs the name. Copy is
+benefit-first and written to the reader: say what they get and what to do,
+not what the product is. "Give your agent owner-verified Search Console and
+GA4 data" beats "The seo CLI gives your agent...". Self-description
+sentences ("X is a local SEO engine...") are cut, not rewritten.
 
-> The `seo` command is a local SEO engine for AI agents. Install it once and
-> your agents can crawl a site, read your Search Console and GA4 data, and
-> run evidence-backed reports.
+The tagline is "The SEO command for AI agents". The site brand in the nav
+is SEO CLI for now.
 
 The project was formerly named SEO Skills CLI. That name survives only as a
 JSON-LD alternate name and one former-name mention in the trademark policy.

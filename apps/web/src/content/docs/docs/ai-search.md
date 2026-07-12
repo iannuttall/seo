@@ -10,7 +10,7 @@ blockers, improve the page for people, or make evidence easier to verify. They
 turn dangerous when an optional file or markup pattern gets sold as a citation
 score.
 
-The seo CLI keeps those two jobs separate.
+The reports keep those two jobs separate.
 
 ## Reuse fresh page evidence instead of crawling twice
 

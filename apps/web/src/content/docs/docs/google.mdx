@@ -1,6 +1,6 @@
 ---
 title: 'Google Search Console API: query data you can trust'
-description: How the seo CLI uses the Google Search Console API for query, page, and position data, plus what row limits and anonymized queries mean for your conclusions.
+description: How the SEO CLI uses the Google Search Console API for query, page, and position data, plus what row limits and anonymized queries mean for your conclusions.
 ---
 
 Search Console shows how a verified property performed in Google Search. GA4
@@ -22,7 +22,7 @@ The browser asks you to approve read-only Search Console and Analytics access.
 The CLI then lists the properties available to that Google account. Choose the
 Search Console property first and add GA4 only when you want post-click context.
 
-If one GA4 web stream clearly matches the property you chose, seo
+If one GA4 web stream clearly matches the property you chose, the CLI
 attaches that GA4 property and shows the stream and hostname it matched. When
 several GA4 properties match, or none is clear, it asks you to choose or skip GA4.
 Skipping it is fine. You can attach GA4 later.
@@ -42,7 +42,7 @@ seo projects list
 ## Use Search Console to find search demand and affected pages
 
 Search Console reports clicks, impressions, CTR, and average position for the
-property and dimensions you request, and seo uses that evidence for
+property and dimensions you request, and the CLI uses that evidence for
 reports such as quick wins, page-two opportunities, decaying pages,
 cannibalisation review, query clusters, and update comparisons.
 
@@ -150,7 +150,7 @@ zone. The
 <a href="https://developers.google.com/webmaster-tools/v1/searchanalytics/query" target="_blank" rel="noreferrer">Search Analytics API reference</a>
 also warns that rows after the first incomplete date may change noticeably.
 
-The seo CLI uses finalized windows for comparisons that need a directional
+The CLI uses finalized windows for comparisons that need a directional
 verdict. That matters for traffic anomalies, update analysis, SEO tests, and
 before-and-after measurement. Comparing a complete month with the last five
 unfinished days can manufacture a decline that never happened.
@@ -276,8 +276,8 @@ user account.
 ## Use a service account in CI or a container
 
 Browser sign-in belongs on a person's machine. A GitHub Actions runner, a
-container, or a server needs a credential with no browser involved. The seo
-CLI supports one Google service account JSON credential for that job.
+container, or a server needs a credential with no browser involved. The CLI
+supports one Google service account JSON credential for that job.
 
 Create the service account in a Google Cloud project with the Search Console
 API, Google Analytics Data API, and Google Analytics Admin API enabled. Then
@@ -322,8 +322,8 @@ seo auth status
 seo report --site sc-domain:example.com --json
 ```
 
-`GOOGLE_APPLICATION_CREDENTIALS` is also accepted as a file-path alias. SEO
-Skills CLI does not search for local gcloud credentials or write a private key
+`GOOGLE_APPLICATION_CREDENTIALS` is also accepted as a file-path alias. The CLI
+does not search for local gcloud credentials or write a private key
 to disk. Set only one of the three variables. A configured service account
 takes precedence over a saved browser login, so unset it before running
 `seo auth login`.

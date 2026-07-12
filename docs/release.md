@@ -15,7 +15,7 @@ The package includes:
 - the programmatic API from `seo`
 - the MCP API from `seo/mcp`
 - the local stdio MCP server through `seo mcp serve`
-- the agent skills under `skills/`
+- the `seo` agent skill under `skills/` and its evals under `evals/`
 
 ## Release checklist
 

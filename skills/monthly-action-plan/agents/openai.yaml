@@ -1,4 +1,0 @@
-interface:
-  display_name: "Monthly workflow"
-  short_description: "Run the monthly reporting workflow"
-  default_prompt: "Use $monthly-action-plan to run the monthly-action-plan report and explain its evidence and limits."

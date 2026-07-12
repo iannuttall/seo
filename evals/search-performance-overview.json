@@ -1,0 +1,86 @@
+{
+  "subject": "search-performance-overview",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We just connected Search Console for a new property. Where should we even start looking?",
+      "expected_output": "Should treat search-performance-overview as the best first report for a newly connected property and run it before any focused report. Should follow the discovery flow: seo_list_reports with category workflows, seo_describe_report with id search-performance-overview, then seo_run_report with only schema-valid params. Should read the workflow envelope first, including workflow, site, summary, steps, actions, and output, then each report's dataStatus and skipped sections. Should use the report to point at the focused report to run next rather than asking this workflow for a larger payload.",
+      "assertions": [
+        "Uses search-performance-overview as the first report for a new property",
+        "Follows seo_list_reports then seo_describe_report then seo_run_report in order",
+        "Reads the workflow envelope (workflow, site, summary, steps, actions, output) first",
+        "Checks each report's dataStatus and skipped sections",
+        "Plans to run a focused report next rather than enlarging this payload",
+        "Passes only schema-valid parameters"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run the overview for sc-domain:example.com over 90 days with a 7 day recent window, top 10 items, brand excluded. Return JSON.",
+      "expected_output": "Should run report id search-performance-overview via seo reports run search-performance-overview --params or seo_run_report with params site sc-domain:example.com, days 90, recentDays 7, limit 10, includeBrand false. Should note that days sets the main evidence window, recentDays sets the recent comparison period, and limit caps returned items without increasing provider coverage. Should return the structuredContent contract and preserve dataStatus, partial reasons, and evidence references.",
+      "assertions": [
+        "Runs report id search-performance-overview with days 90 and recentDays 7",
+        "Sets limit 10 and includeBrand false as requested",
+        "Explains days is the main window and recentDays is the recent comparison",
+        "Notes limit caps returned items and does not increase provider coverage",
+        "Returns structuredContent and preserves dataStatus and evidence references",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The overview shows clicks down and a Google update in the same window. Tell me the update caused the drop and how many clicks we'll recover if we act.",
+      "expected_output": "Should refuse both the causation claim and the recovery forecast. Should explain that update overlap, opportunity scores, average position, and timing are investigation signals, not causation or forecasts. Should recommend confirming affected URLs, provider dates, selection limits, and intentional technical controls before concluding, and should run a focused report such as update-correlation to inspect the overlap rather than asserting cause. Should not produce a click recovery number.",
+      "assertions": [
+        "Refuses to state the update caused the drop",
+        "Refuses to forecast how many clicks will be recovered",
+        "Labels update overlap and timing as investigation signals, not causation",
+        "Recommends confirming affected URLs, provider dates, and intentional controls first",
+        "Points to a focused report like update-correlation to inspect the overlap",
+        "Does not invent a recovery figure"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The summary section looks totally healthy, so we're fine across the board this quarter, correct?",
+      "expected_output": "Should not let one complete section imply a sitewide all-clear. Should check each step's own status and evidence, since a failed or capped neighbour can sit beside a complete section. Should inspect dataStatus, skipped sections, and partial reasons before agreeing anything is fine. Should name any partial, capped, or skipped evidence rather than generalizing from the healthy summary.",
+      "assertions": [
+        "Refuses to generalize a healthy summary into a sitewide all-clear",
+        "Checks each step's own status and evidence",
+        "Notes a failed or capped neighbour can sit beside a complete section",
+        "Inspects dataStatus, skipped sections, and partial reasons",
+        "Names any partial, capped, or skipped evidence before concluding"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Can you just have this overview return every query and page and all the striking-distance and cannibalisation detail in one giant response?",
+      "expected_output": "Should decline to enlarge the workflow payload and instead run a focused report to inspect detail. Should explain the overview points to the focused report that verifies each issue, and that limit caps items without increasing provider coverage. Should name the focused reports for the requested detail, such as report id striking-distance, rather than expanding this broad workflow. Should keep the overview bounded.",
+      "assertions": [
+        "Declines to expand the overview into one large payload",
+        "Recommends running a focused report for the detail instead",
+        "Names report id striking-distance for the near-page-one detail",
+        "Explains limit caps items and does not increase provider coverage",
+        "Keeps the workflow output bounded"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "The report flags a decaying page. Push a rewrite of it to the top of the list right now.",
+      "expected_output": "Should treat the decay signal as an investigation signal and confirm the evidence before acting. Should confirm affected URLs, provider dates, selection limits, and intentional technical controls such as noindex or canonicals before recommending a rewrite. Should suggest running a focused report like decaying-pages to inspect the detail. Should not present the decay flag as a proven cause or as justification for an immediate rewrite.",
+      "assertions": [
+        "Treats the decay flag as an investigation signal, not a proven cause",
+        "Confirms affected URLs, provider dates, and selection limits first",
+        "Checks for intentional controls like noindex or canonicals before acting",
+        "Suggests a focused report such as decaying-pages for the detail",
+        "Does not rush a rewrite from the flag alone"
+      ],
+      "files": []
+    }
+  ]
+}

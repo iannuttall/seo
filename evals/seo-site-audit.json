@@ -1,0 +1,85 @@
+{
+  "subject": "seo-site-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you audit our website? It's a mid-size ecommerce store and I think our SEO has problems but I'm not sure where.",
+      "expected_output": "Should start with the main report rather than jumping into a crawl or a niche report. Should run report id search-performance-overview, calling seo_describe_report first when the parameters are not known, and offer the CLI path `seo report --project <project> --json`. Should read dataStatus, source completeness, skipped sections, warnings, and caveats before interpreting anything. Should use the report's nextCommands to pick a small set of follow-ups instead of running every report. Should end with three to five evidence-backed actions, each with a verification command.",
+      "assertions": [
+        "Starts with report id search-performance-overview as the main report",
+        "Describes the report schema before running when parameters are unknown",
+        "Checks dataStatus, skipped sections, warnings, and caveats before interpreting",
+        "Uses nextCommands to choose a small number of follow-ups",
+        "Does not run every available report by default",
+        "Ends with three to five actions each paired with a verification step"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the main audit for sc-domain:example.com and then add technical coverage. I want the crawl saved so we can reuse it.",
+      "expected_output": "Should run report id search-performance-overview for the property, then run a saved crawl with seo crawl --site sc-domain:example.com --max-pages 500 --save --json. Should read summary, topFixes, warnings, and caveats first and check summary.pageLimitReached before any sitewide claim. Should reuse the saved report through report ids top-fixes and affected-urls rather than crawling again. Should keep the structured evidence rather than paraphrasing away the caveats.",
+      "assertions": [
+        "Runs report id search-performance-overview before the crawl",
+        "Runs a saved crawl with a page cap and --save",
+        "Reads summary, topFixes, warnings, and caveats before findings",
+        "Checks summary.pageLimitReached before any sitewide claim",
+        "Reuses the saved report via report ids top-fixes and affected-urls instead of recrawling",
+        "Preserves the structured caveats rather than dropping them"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We crawled 500 pages and it found no broken canonicals. Our site has about 40,000 URLs. Can we tell the team canonicals are clean sitewide?",
+      "expected_output": "Should refuse the sitewide all-clear. Should point out that summary.pageLimitReached is true when the crawl stopped at 500 of roughly 40,000 URLs, so a capped source cannot support an inventory-wide zero or all-clear. Should keep the observed result scoped to the crawled sample and distinguish a capped sample from a verified zero. Should recommend widening the crawl scope or sampling the untested templates before making a sitewide claim.",
+      "assertions": [
+        "Refuses to declare canonicals clean sitewide from a capped crawl",
+        "Cites summary.pageLimitReached or the 500 of 40,000 coverage gap",
+        "States a capped source cannot support an inventory-wide zero or all-clear",
+        "Scopes the finding to the crawled sample only",
+        "Recommends widening scope or sampling untested URLs before a sitewide claim"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The audit came back clean on the technical checks. Great, so that confirms Google is indexing everything and we're ranking fine, yes?",
+      "expected_output": "Should decline to translate a clean crawl into indexing or ranking conclusions. Should explain that the crawl observes technical signals on fetched pages and never proves indexing state, crawler access to every URL, or ranking. Should note a partial or capped source cannot support an all-clear. Should recommend separate evidence for the indexing question, such as report id index-coverage or bounded URL Inspection, before making any indexing claim.",
+      "assertions": [
+        "Refuses to infer indexing or ranking from a clean technical crawl",
+        "States the crawl does not prove indexing state or crawler access to every URL",
+        "Notes a partial or capped source cannot support an all-clear",
+        "Points to index-coverage or URL Inspection as the separate evidence for indexing",
+        "Keeps ranking claims out of the crawl-based conclusion"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "The crawl flagged slow pages. Can you use it to tell me our Core Web Vitals scores and whether we pass?",
+      "expected_output": "Should explain that a crawl does not replace Lighthouse lab data or CrUX field data, so it cannot report Core Web Vitals pass or fail. Should route to report id performance-audit for a selected URL when performance evidence is needed and separate lab diagnostics from field data. Should not convert crawl-observed slowness into a Core Web Vitals verdict.",
+      "assertions": [
+        "States the crawl does not replace Lighthouse lab or CrUX field data",
+        "Does not report Core Web Vitals pass or fail from crawl evidence",
+        "Routes to report id performance-audit for a selected URL",
+        "Separates lab diagnostics from field measurement",
+        "Keeps the performance claim scoped to what the evidence supports"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Give me the final audit writeup for the stakeholders. Keep it to the things worth doing.",
+      "expected_output": "Should present the top three to five evidence-backed actions with their affected areas and a verification command for each, rather than dumping every issue the tools checked. Should name every material gap or cap so the summary is defensible. Should keep advice structural and diagnostic and not invent clicks, sessions, rankings, issue counts, indexing state, or sitewide health. Should not add title or meta copy unless asked.",
+      "assertions": [
+        "Limits the writeup to three to five prioritised actions",
+        "Gives each action an affected area and a verification command",
+        "Names every material gap or cap in the evidence",
+        "Does not invent clicks, sessions, rankings, issue counts, or indexing state",
+        "Keeps advice structural rather than writing new title or meta copy unprompted"
+      ],
+      "files": []
+    }
+  ]
+}

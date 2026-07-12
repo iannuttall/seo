@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI referrals"
-  short_description: "Find known AI referral traffic in GA4"
-  default_prompt: "Use $ai-referrals to run the ai-referrals report and explain its evidence and limits."

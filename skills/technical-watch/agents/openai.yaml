@@ -1,4 +1,0 @@
-interface:
-  display_name: "Technical watch workflow"
-  short_description: "Run crawl-diff and URL Inspection monitoring together"
-  default_prompt: "Use $technical-watch to run the technical-watch report and explain its evidence and limits."

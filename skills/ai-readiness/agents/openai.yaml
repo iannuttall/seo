@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI readiness"
-  short_description: "Review local AI-search readiness evidence"
-  default_prompt: "Use $ai-readiness to run the ai-readiness report and explain its evidence and limits."

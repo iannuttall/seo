@@ -1,4 +1,0 @@
-interface:
-  display_name: "Index coverage plan"
-  short_description: "Plan URL Inspection allocation across Search Console properties"
-  default_prompt: "Use $index-coverage-plan to run the index-coverage-plan report and explain its evidence and limits."

@@ -41,7 +41,7 @@ async function runSeo(
   }
 }
 
-test('skills list and path expose packaged skill metadata', async () => {
+test('skills list and path expose the packaged seo skill', async () => {
   const listed = await runSeo(['skills', 'list', '--json'])
   assert.equal(listed.exitCode, 0)
   assert.equal(listed.stderr, '')
@@ -50,13 +50,12 @@ test('skills list and path expose packaged skill metadata', async () => {
     description: string
     path: string
   }>
-  assert.ok(skills.length >= 10)
   assert.deepEqual(
     skills.map((skill) => skill.name),
-    [...skills.map((skill) => skill.name)].sort(),
+    ['seo'],
   )
   assert.ok(skills.every((skill) => skill.description.length > 40))
 
-  const path = await runSeo(['skills', 'path', 'performance', '--json'])
-  assert.equal(JSON.parse(path.stdout).path, join(sourceSkills, 'performance'))
+  const path = await runSeo(['skills', 'path', 'seo', '--json'])
+  assert.equal(JSON.parse(path.stdout).path, join(sourceSkills, 'seo'))
 })

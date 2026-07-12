@@ -124,15 +124,17 @@ Do not parse error text when `structuredContent.error` is available.
 
 ## Skills and plugin metadata
 
-Focused agent skills ship under `skills/` in the npm package and repository.
-Install them through the standard agent skills installer:
+The `seo` skill ships under `skills/seo` in the npm package and repository. It
+routes an agent to the right report and defers per-report depth to
+`seo reports describe <id> --json`. Install it through the standard agent skills
+installer:
 
 ```bash
-npx skills add iannuttall/seo --all
+npx skills add iannuttall/seo
 ```
 
-Use `seo skills list` or `seo skills path <name>` when you want to inspect the
-copies bundled inside the npm package.
+Use `seo skills list` or `seo skills path seo` when you want to inspect the copy
+bundled inside the npm package.
 
 The repository includes Claude plugin metadata, but the plugin is not yet
 published to a marketplace.

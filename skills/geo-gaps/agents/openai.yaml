@@ -1,4 +1,0 @@
-interface:
-  display_name: "GEO gaps"
-  short_description: "Return technical AI-search eligibility gaps from crawl evidence"
-  default_prompt: "Use $geo-gaps to run the geo-gaps report and explain its evidence and limits."

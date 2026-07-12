@@ -1,4 +1,0 @@
-interface:
-  display_name: "Monthly report"
-  short_description: "Generate one monthly SEO narrative"
-  default_prompt: "Use $monthly-report to run the monthly-report report and explain its evidence and limits."

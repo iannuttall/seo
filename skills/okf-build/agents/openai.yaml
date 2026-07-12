@@ -1,4 +1,0 @@
-interface:
-  display_name: "Build OKF"
-  short_description: "Build a compact OKF site knowledge bundle"
-  default_prompt: "Use $okf-build to run the okf-build report and explain its evidence and limits."

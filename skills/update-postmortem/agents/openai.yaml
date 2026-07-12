@@ -1,4 +1,0 @@
-interface:
-  display_name: "Update postmortem workflow"
-  short_description: "Analyze winners and losers around a Google ranking update window"
-  default_prompt: "Use $update-postmortem to run the update-postmortem report and explain its evidence and limits."

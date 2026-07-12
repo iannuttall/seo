@@ -1,4 +1,0 @@
-interface:
-  display_name: "CTR underperformers"
-  short_description: "Find retained GSC queries below a position-based CTR benchmark"
-  default_prompt: "Use $ctr-underperformers to run the ctr-underperformers report and explain its evidence and limits."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Content optimization"
-  short_description: "Build a first-party content review for one URL"
-  default_prompt: "Use $content-optimization to run the content-optimization report and explain its evidence and limits."

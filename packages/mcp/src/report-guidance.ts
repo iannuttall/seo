@@ -1,3 +1,7 @@
+import { REPORT_DEPTH, type ReportDepth } from './report-depth.js'
+
+export type { RelatedReport, ReportDepth } from './report-depth.js'
+
 export type ReportGuidance = {
   name: string
   description: string
@@ -8,6 +12,8 @@ export type ReportGuidance = {
   avoidWhen: readonly [string] | readonly [string, string]
   outcome: string
 }
+
+export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
   'affected-urls': {
@@ -771,6 +777,9 @@ export const REPORT_GUIDANCE = {
   },
 } as const satisfies Record<string, ReportGuidance>
 
-export function getReportGuidance(id: string): ReportGuidance | undefined {
-  return (REPORT_GUIDANCE as Record<string, ReportGuidance>)[id]
+export function getReportGuidance(id: string): FullReportGuidance | undefined {
+  const base = (REPORT_GUIDANCE as Record<string, ReportGuidance>)[id]
+  const depth = (REPORT_DEPTH as Record<string, ReportDepth>)[id]
+  if (!base || !depth) return undefined
+  return { ...base, ...depth }
 }

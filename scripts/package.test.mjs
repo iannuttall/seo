@@ -19,7 +19,7 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   assert.equal(packageJson.exports['.'].import, './dist/index.js')
   assert.equal(packageJson.exports['./mcp'].import, './dist/mcp.js')
   assert.equal(packageJson.license, 'Apache-2.0')
-  assert.equal(packageJson.homepage, 'https://seocli.sh')
+  assert.equal(packageJson.homepage, 'https://seoskill.dev')
   assert.equal(packageJson.repository.url, `git+${repositoryUrl}.git`)
   assert.equal(packageJson.bugs.url, `${repositoryUrl}/issues`)
   assert.doesNotMatch(

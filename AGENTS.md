@@ -68,7 +68,7 @@ skills/         packaged agent skills
 - `packages/cli`: `seo` command, prompt flows, command help, selection, and
   terminal output.
 - `packages/mcp`: local stdio MCP server exposing core analysis.
-- `apps/web`: static Astro documentation and landing site for seocli.sh.
+- `apps/web`: static Astro documentation and landing site for seoskill.dev.
 - `skills/seo/SKILL.md`: the single router skill agents install. It teaches
   discovery, the jobs table, and evidence rules; per-report depth lives in the
   registry.

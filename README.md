@@ -11,13 +11,13 @@
 <p align="center">
   <a href="#quick-start">Get started</a>
   ·
-  <a href="https://seocli.sh/docs">Documentation</a>
+  <a href="https://seoskill.dev/docs">Documentation</a>
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
   <a href="https://github.com/iannuttall/seo/issues">Questions</a>
   ·
-  <a href="https://seocli.sh/privacy">Privacy</a>
+  <a href="https://seoskill.dev/privacy">Privacy</a>
   ·
   <a href="SECURITY.md">Security</a>
   ·
@@ -223,7 +223,7 @@ browser or a copied local token:
     SEO_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SEO_GOOGLE_SERVICE_ACCOUNT_JSON }}
 ```
 
-The [Google data guide](https://seocli.sh/docs/google) covers Search
+The [Google data guide](https://seoskill.dev/docs/google) covers Search
 Console and GA4 permissions, mounted secret files, and how to check the active
 identity safely.
 
@@ -290,10 +290,10 @@ seo skills path seo
 ```
 
 Agents can also discover the canonical skill from
-`https://seocli.sh/.well-known/agent-skills/index.json`. The entry links to
+`https://seoskill.dev/.well-known/agent-skills/index.json`. The entry links to
 the canonical skill instructions and includes a content digest for verification.
 
-See [MCP and agents](https://seocli.sh/docs/agents) for setup and tool
+See [MCP and agents](https://seoskill.dev/docs/agents) for setup and tool
 details.
 
 ## Use it as a library
@@ -343,7 +343,7 @@ console.log(crawl.summary, crawl.issueGroups)
 The main `seo` export contains the report, provider, crawler, storage, and
 rendering APIs. `seo/mcp` exposes report discovery, report execution, and the
 embeddable MCP server. See the [TypeScript library
-guide](https://seocli.sh/docs/library) for structured error handling,
+guide](https://seoskill.dev/docs/library) for structured error handling,
 local Google access, and more examples.
 
 ## Local data and Google access
@@ -364,7 +364,7 @@ seo reset
 `seo auth storage --keychain` or `seo auth storage --file`.
 
 Power users can bring their own Google OAuth client. See
-[getting started](https://seocli.sh/docs/getting-started) for the available
+[getting started](https://seoskill.dev/docs/getting-started) for the available
 auth paths.
 
 ## Common questions
@@ -403,15 +403,15 @@ Questions, bug reports, and feature requests go through
 [GitHub Issues](https://github.com/iannuttall/seo/issues). Report suspected
 vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
-- [Getting started](https://seocli.sh/docs/getting-started)
-- [CLI commands](https://seocli.sh/docs/cli)
-- [Crawler](https://seocli.sh/docs/crawler)
-- [Reports and data](https://seocli.sh/docs/reports)
-- [MCP and agents](https://seocli.sh/docs/agents)
-- [AI-search evidence](https://seocli.sh/docs/ai-search)
-- [Privacy policy](https://seocli.sh/privacy)
-- [Terms of use](https://seocli.sh/terms)
-- [Security policy](https://seocli.sh/security)
+- [Getting started](https://seoskill.dev/docs/getting-started)
+- [CLI commands](https://seoskill.dev/docs/cli)
+- [Crawler](https://seoskill.dev/docs/crawler)
+- [Reports and data](https://seoskill.dev/docs/reports)
+- [MCP and agents](https://seoskill.dev/docs/agents)
+- [AI-search evidence](https://seoskill.dev/docs/ai-search)
+- [Privacy policy](https://seoskill.dev/privacy)
+- [Terms of use](https://seoskill.dev/terms)
+- [Security policy](https://seoskill.dev/security)
 - [Contributing](CONTRIBUTING.md)
 - [Trademark and brand policy](TRADEMARKS.md)
 

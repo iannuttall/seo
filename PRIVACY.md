@@ -3,7 +3,7 @@
 Last updated: 10 July 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
-and the seocli.sh website.
+and the seoskill.dev website.
 
 The current software runs on your machine. It does not create an SEO account,
 upload reports to an SEO service, or send your Google data to the project
@@ -57,7 +57,7 @@ The CLI does not include project-controlled usage telemetry. Installing the
 package through npm or using GitHub is covered by the policies of those
 services.
 
-The seocli.sh host and security provider may process normal web request
+The seoskill.dev host and security provider may process normal web request
 data such as an IP address, user agent, requested path, and timestamp. Website
 logs do not include the reports, tokens, or Google API responses stored by the
 local software.

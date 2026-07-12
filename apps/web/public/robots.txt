@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://seocli.sh/sitemap.xml
+Sitemap: https://seoskill.dev/sitemap.xml

@@ -5,7 +5,7 @@
   "compatibility_date": "2026-07-10",
   "workers_dev": false,
   "preview_urls": false,
-  "routes": [{ "pattern": "seocli.sh", "custom_domain": true }],
+  "routes": [{ "pattern": "seoskill.dev", "custom_domain": true }],
   "assets": {
     "directory": "./dist",
     "html_handling": "drop-trailing-slash",

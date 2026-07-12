@@ -221,6 +221,110 @@ for (const skillName of skillEntries) {
   }
 }
 
+function evalBacktickCommands(text) {
+  const commands = new Set()
+  for (const match of text.matchAll(/`seo\s+([a-z][a-z0-9-]*)[^`]*`/g)) {
+    commands.add(match[1])
+  }
+  return commands
+}
+
+function evalReportIds(text) {
+  const ids = new Set()
+  const patterns = [
+    /reports (?:run|describe) ([a-z][a-z0-9-]+)/g,
+    /report ids? ([a-z][a-z0-9-]+)/g,
+    /`([a-z][a-z0-9-]+)` report\b/g,
+    /"id"\s*:\s*"([a-z][a-z0-9-]+)"/g,
+  ]
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) ids.add(match[1])
+  }
+  return ids
+}
+
+// Evals are optional per skill. Only flagship skills ship them today, but any
+// evals.json that exists must be structurally valid and cite real commands and
+// report ids so a stale example fails the gate.
+for (const skillName of skillEntries) {
+  const evalPath = `skills/${skillName}/evals/evals.json`
+  let raw
+  try {
+    raw = await text(evalPath)
+  } catch {
+    continue
+  }
+
+  let doc
+  try {
+    doc = JSON.parse(raw)
+  } catch (error) {
+    fail(
+      `${evalPath}: invalid JSON (${error instanceof Error ? error.message : 'parse error'})`,
+    )
+    continue
+  }
+
+  if (doc.skill_name !== skillName) {
+    fail(`${evalPath}: skill_name must match its folder`)
+  }
+  if (!Array.isArray(doc.evals) || doc.evals.length === 0) {
+    fail(`${evalPath}: evals must be a non-empty array`)
+    continue
+  }
+
+  const seenIds = new Set()
+  for (const item of doc.evals) {
+    const label = `${evalPath} eval ${item?.id ?? '?'}`
+    if (!Number.isInteger(item?.id)) {
+      fail(`${label}: id must be an integer`)
+    } else if (seenIds.has(item.id)) {
+      fail(`${label}: duplicate id`)
+    } else {
+      seenIds.add(item.id)
+    }
+    if (typeof item?.prompt !== 'string' || item.prompt.trim().length === 0) {
+      fail(`${label}: prompt must be a non-empty string`)
+    }
+    if (
+      typeof item?.expected_output !== 'string' ||
+      item.expected_output.trim().length === 0
+    ) {
+      fail(`${label}: expected_output must be a non-empty string`)
+    }
+    if (!Array.isArray(item?.assertions) || item.assertions.length === 0) {
+      fail(`${label}: assertions must be a non-empty array`)
+    } else if (
+      item.assertions.some(
+        (entry) => typeof entry !== 'string' || entry.trim().length === 0,
+      )
+    ) {
+      fail(`${label}: every assertion must be a non-empty string`)
+    }
+    if (!Array.isArray(item?.files)) {
+      fail(`${label}: files must be an array`)
+    }
+
+    const evalText = [
+      item?.prompt,
+      item?.expected_output,
+      ...(Array.isArray(item?.assertions) ? item.assertions : []),
+    ]
+      .filter((value) => typeof value === 'string')
+      .join('\n')
+    for (const command of evalBacktickCommands(evalText)) {
+      if (!cliCommands.has(command)) {
+        fail(`${label}: unknown seo root command ${command}`)
+      }
+    }
+    for (const reportId of evalReportIds(evalText)) {
+      if (!reportIds.has(reportId)) {
+        fail(`${label}: unknown report id ${reportId}`)
+      }
+    }
+  }
+}
+
 const publicSkillFiles = [
   'skills/README.md',
   '.claude-plugin/plugin.json',

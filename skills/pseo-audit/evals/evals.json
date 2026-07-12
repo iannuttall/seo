@@ -1,0 +1,84 @@
+{
+  "skill_name": "pseo-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We generate thousands of pages from templates, like one per city and one per integration. Can you audit whether they're working?",
+      "expected_output": "Should use report id pseo-audit to group repeated URL templates and compare their retained Search Console visibility. Should start compact with a summary pass, describing the schema first when parameters are unknown, for example seo reports run pseo-audit --params with detail summary. Should read dataStatus, source, selection, warnings, and caveats, then use population to separate discovered, GSC-visible, sampled, and untested URLs. Should not label repeated paths as spam or thin by default.",
+      "assertions": [
+        "Uses report id pseo-audit to compare template families",
+        "Starts with a compact summary pass before deep sampling",
+        "Describes the schema before running when parameters are unknown",
+        "Reads dataStatus, source, selection, warnings, and caveats first",
+        "Uses population to separate discovered, GSC-visible, sampled, and untested URLs",
+        "Does not label repeated templates as spam or thin by default"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the pSEO audit for sc-domain:example.com. Start summary-only, then rerun the important templates with 3 crawl and 3 index samples each.",
+      "expected_output": "Should run report id pseo-audit first with detail summary, then rerun with crawlSamples 3, inspectSamples 3, and detail full for the important templates, via seo reports run pseo-audit --params. Should note URL Inspection uses property quota and should only be requested when index evidence changes the decision, with 3 samples a sensible start and 10 per template the maximum. Should read the template verdict, then confirm it against crawl, inspection, and evidence.",
+      "assertions": [
+        "Runs report id pseo-audit with detail summary first",
+        "Reruns important templates with crawlSamples 3 and inspectSamples 3 and detail full",
+        "Notes URL Inspection uses property quota and is requested only when it changes the decision",
+        "Confirms the template verdict against crawl, inspection, and evidence",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The URL Inspection coverageState for a sample says 'Crawled - currently not indexed'. That still counts as indexed for our template health, right?",
+      "expected_output": "Should refuse to read coverageState as an indexed signal. Should explain that coverageState is diagnostic text and must never be parsed to decide whether a URL is indexed, and that PASS is the only indexed URL Inspection verdict, with NEUTRAL meaning excluded, FAIL meaning invalid, and every other value unknown. Should note URL Inspection describes Google's indexed snapshot for one URL and does not prove every URL in the template is healthy. Should mark the template as index-risk if sampled URLs returned excluded or invalid verdicts, stating the sample count.",
+      "assertions": [
+        "Refuses to treat coverageState text as an indexed signal",
+        "States coverageState must never be parsed to decide indexing",
+        "States PASS is the only indexed verdict and NEUTRAL and FAIL mean excluded and invalid",
+        "Notes URL Inspection covers one URL and does not prove template-wide health",
+        "Flags index-risk with the sample count when samples are excluded or invalid"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Some template URLs from our sitemap have zero rows in the report. That proves nobody searches for those pages, so let's delete them. Also mark the short ones as thin.",
+      "expected_output": "Should reject both conclusions. Should explain a sitemap URL with no GSC row does not prove zero demand, since performance may be omitted or credited to a canonical URL, so a missing row is not a definitive zero. Should explain word count is descriptive and a page should not be called thin because it is short, and literal query-term coverage and path entity fit are review heuristics, not ranking factors or spam verdicts. Should recommend human review before deletion.",
+      "assertions": [
+        "Refuses to treat a sitemap URL with no GSC row as proven zero demand",
+        "Notes performance may be omitted or credited to a canonical URL",
+        "Refuses to call short pages thin from word count alone",
+        "States literal term coverage and path entity fit are review heuristics, not ranking factors",
+        "Recommends human review before deleting the pages"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "One of our template groups only has two matching URLs. Just give me the same healthy-or-not verdict for it.",
+      "expected_output": "Should note the minimumTemplateUrls default is 3, so two URLs may not form a comparable template group, and should explain that too few pages cannot be compared as a template. Should explain that a healthy verdict requires at least two conclusive indexed samples and two usable crawl samples and remains a sample finding, while inconclusive means search evidence exists but technical sampling is too weak. Should not force a health verdict on a group that lacks the evidence.",
+      "assertions": [
+        "Notes minimumTemplateUrls default is 3 and two URLs may not form a group",
+        "Explains too few pages cannot be compared as a template",
+        "States healthy requires at least two indexed and two usable crawl samples and stays a sample finding",
+        "Explains inconclusive when technical sampling is too weak",
+        "Does not force a health verdict without sufficient evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "The clicks and impressions in the report are our official template totals for the board deck, correct?",
+      "expected_output": "Should clarify that clicks, impressions, CTR, and position come from retained page-dimension Search Analytics rows and are not guaranteed property totals. Should note query patterns and examples come from retained query and page rows, so anonymized and lower-ranked rows may be absent. Should keep retained subsets distinct from complete totals and recommend labeling the figures as a retained subset rather than official totals.",
+      "assertions": [
+        "States the metrics come from retained page-dimension rows, not guaranteed totals",
+        "Notes query patterns come from retained rows and may omit anonymized rows",
+        "Keeps retained subsets distinct from complete property totals",
+        "Refuses to present the figures as official template totals",
+        "Recommends labeling the numbers as a retained subset"
+      ],
+      "files": []
+    }
+  ]
+}

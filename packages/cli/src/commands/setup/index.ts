@@ -51,6 +51,11 @@ export const setupCommand = defineCommand({
       default: false,
       description: 'Skip MCP install prompts.',
     },
+    'skip-skill': {
+      type: 'boolean',
+      default: false,
+      description: 'Skip the SEO skill install prompt.',
+    },
     refresh: {
       type: 'boolean',
       default: false,

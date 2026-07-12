@@ -47,8 +47,10 @@ skills/         packaged agent skills
 - Runtime bundles must not depend on private workspace package names.
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
   deliberately migrated and verified.
-- Use SEO Skills CLI as the product name in human-facing copy and `seo` for the
-  command and package.
+- The product name is `seo`, written lowercase, the same as the command and
+  package. The tagline is "The SEO command for AI agents". Do not use
+  "SEO Skills CLI" in new copy; it survives only as a JSON-LD alternate name
+  for continuity.
 - Teach `npm i -g seo`, then `seo start`, as the primary README path.
 - Library and contributor setup belongs below normal CLI usage in the README.
 
@@ -60,7 +62,10 @@ skills/         packaged agent skills
   terminal output.
 - `packages/mcp`: local stdio MCP server exposing core analysis.
 - `apps/web`: static Astro documentation and landing site for seoskills.dev.
-- `skills/<name>/SKILL.md`: focused instructions for agents using one workflow.
+- `skills/seo/SKILL.md`: the single router skill agents install. It teaches
+  discovery, the jobs table, and evidence rules; per-report depth lives in the
+  registry.
+- `evals/`: behaviour evals keyed by report id or job, shipped in the package.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: human usage documentation.
 - Working plans live outside the repository in the sibling `seo-plans`
@@ -200,15 +205,20 @@ Every report must be technically defensible and useful to another program.
 
 ## Skills And MCP
 
-Each focused agent workflow may have a skill at `skills/<name>/SKILL.md` plus
-only the references, scripts, or assets it genuinely needs.
+The package ships exactly one skill, the router at `skills/seo/SKILL.md`. Do
+not add per-report skills. Per-report guidance lives in the registry depth
+tables (`packages/mcp/src/report-depth*.ts`) and is served at runtime by
+`seo reports describe` and `seo_describe_report`.
 
-- Follow the skill format and progressive-disclosure rules in
-  `skills/README.md`.
-- Keep descriptions specific enough for reliable tool selection.
-- Teach agents to start compact, inspect evidence, then request detail.
-- Give every report skill a schema-backed `seo reports describe` and `run` example.
-- Do not duplicate the full CLI manual in every skill.
+- Follow the format rules in `skills/README.md`.
+- A new report registers once with its schema and depth guidance (readOrder,
+  doNotClaim, verify, related); no skill file is added for it.
+- Keep the router description broad enough to trigger on any SEO-adjacent
+  request, and keep its body under roughly a thousand words.
+- Teach agents to start compact, inspect evidence, then request detail through
+  describe.
+- Behaviour evals live in `evals/` (see `evals/README.md`) and are validated
+  by `scripts/validate-skills.mjs`.
 - Skills and MCP must call the same core functions as the CLI.
 - Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
   tools when discovery plus a report id can cover them cleanly.

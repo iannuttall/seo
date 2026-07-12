@@ -94,6 +94,13 @@ export function deleteClient(idOrName: string): boolean {
   const client = getClient(idOrName)
   if (!client) return false
   config.clients = config.clients.filter((item) => item.id !== client.id)
+  if (
+    config.defaultSite === client.siteUrl &&
+    !config.clients.some((item) => item.siteUrl === client.siteUrl) &&
+    !config.sites.some((site) => site.siteUrl === client.siteUrl)
+  ) {
+    config.defaultSite = undefined
+  }
   writeConfig(config)
   return true
 }

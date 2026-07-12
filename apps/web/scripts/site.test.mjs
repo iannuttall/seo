@@ -11,7 +11,10 @@ const dist = resolve(appRoot, 'dist')
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
   ['docs/index.html', 'https://seoskill.dev/docs'],
-  ['docs/getting-started/index.html', 'https://seoskill.dev/docs/getting-started'],
+  [
+    'docs/getting-started/index.html',
+    'https://seoskill.dev/docs/getting-started',
+  ],
   ['docs/cli/index.html', 'https://seoskill.dev/docs/cli'],
   ['docs/crawler/index.html', 'https://seoskill.dev/docs/crawler'],
   ['docs/google/index.html', 'https://seoskill.dev/docs/google'],
@@ -236,7 +239,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
   )
   assert.match(
     pseo,
-    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| SEO CLI<\/title>/,
+    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| SEO Skill<\/title>/,
   )
   assert.match(
     pseo,
@@ -391,15 +394,12 @@ test('site uses the shared visual system and copyable install choices', () => {
 
   assert.match(home, /data-install-picker/)
   assert.match(home, /data-copy-install-command/)
-  assert.match(home, /npx skills add iannuttall\/seo(?! --all)/)
   assert.match(home, /npm i -g seo/)
   assert.match(home, /seo start/)
-  assert.match(home, /Install the CLI and the SEO skill\. Then run seo start\./)
-  assert.match(home, /Install the CLI first, then connect its local MCP server/)
+  assert.match(home, /One command installs everything\./)
   assert.doesNotMatch(home, /npx seo/)
   assert.doesNotMatch(home, /data-install-option="skills"/)
   assert.doesNotMatch(home, /data-install-option="npm"/)
-  assert.match(home, /seo mcp install/)
   assert.match(css, /font-family: "InterVariable"/)
   assert.match(css, /font-family: "JetBrains Mono"/)
   assert.match(css, /--frame-max: 48rem/)

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" alt="SEO CLI" width="72" height="72">
+  <img src="apps/web/public/favicon.svg" alt="SEO Skill" width="72" height="72">
 </p>
 
-<h1 align="center">SEO CLI</h1>
+<h1 align="center">SEO Skill</h1>
 
 <p align="center">
   The SEO command for AI agents. Open source, evidence-backed SEO reports from your own crawl, Search Console, and GA4 data.
@@ -45,7 +45,7 @@ clicks, and catch regressions after a release.
 - People running their own sites who want a clear audit and a ranked list of
   fixes, without learning a heavy dashboard.
 - AI agents that need real crawl, Search Console, and GA4 evidence through MCP
-  and packaged skills instead of screenshots or guesses.
+  and one packaged SEO skill instead of screenshots or guesses.
 - Developers who want to embed the same report engine in a script, a CI job, or
   a TypeScript app.
 
@@ -100,7 +100,7 @@ Agent and power tools
   seo report --json    Run the main report as structured JSON
   seo export diagnose  Export report data to CSV
   seo mcp install      Install SEO tools into MCP clients
-  seo skills list      List packaged skills for agents
+  seo skill list       Show the packaged SEO skill
   seo reports list     Discover every structured report
 
 Use `seo help <command>` or `seo <command> --help` for command help.
@@ -242,9 +242,11 @@ drift.
 
 ## Use it with AI agents
 
-Agents work best with both parts of the project. The `seo` package runs the
-reports, and the SEO skill teaches an agent which report to choose, how to read
-it, and what to verify before changing a site.
+Your agent carries one short SEO skill, and the CLI and MCP server do the
+heavy lifting. The skill teaches an agent how to discover the 50+ audit and
+report tools at runtime, and the agent asks the CLI for the detail on each
+tool only when it is about to run it. You get the whole toolkit without fifty
+skill files sitting in the context window on every session.
 
 `seo start` offers to install the SEO skill during setup. In an agent-managed
 environment, add it yourself with the standard installer:
@@ -285,8 +287,8 @@ into context. Per-report guidance lives in the registry and is fetched with
 The npm package includes the same file for local inspection:
 
 ```sh
-seo skills list
-seo skills path seo
+seo skill list
+seo skill path seo
 ```
 
 Agents can also discover the canonical skill from

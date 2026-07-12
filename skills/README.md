@@ -28,7 +28,7 @@ with the standard agent skills installer:
 npx skills add iannuttall/seo
 ```
 
-Use `seo skills list` or `seo skills path seo` to inspect the copy bundled with
+Use `seo skill list` or `seo skill path seo` to inspect the copy bundled with
 the npm package.
 
 ## Discover, describe, run

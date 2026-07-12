@@ -133,7 +133,7 @@ installer:
 npx skills add iannuttall/seo
 ```
 
-Use `seo skills list` or `seo skills path seo` when you want to inspect the copy
+Use `seo skill list` or `seo skill path seo` when you want to inspect the copy
 bundled inside the npm package.
 
 The repository includes Claude plugin metadata, but the plugin is not yet

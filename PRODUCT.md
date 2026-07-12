@@ -5,8 +5,9 @@
 The product name has three registers. As a wordmark or visual brand it is
 SEO, in caps, the way the acronym is properly written. As the command,
 package, and in any code context it is `seo`, lowercase. When prose truly
-has to name the product, use SEO CLI or the SEO skill, with SEO in caps;
-never the bare lowercase word, which reads as a typo.
+has to name the product, it is SEO Skill: one skill is the product story,
+and the CLI and MCP server are the machinery behind it. Never use the bare
+lowercase word as a name in prose; it reads as a typo.
 
 The stronger rule is that prose almost never needs the name. Copy is
 benefit-first and written to the reader: say what they get and what to do,
@@ -14,11 +15,16 @@ not what the product is. "Give your agent owner-verified Search Console and
 GA4 data" beats "The seo CLI gives your agent...". Self-description
 sentences ("X is a local SEO engine...") are cut, not rewritten.
 
-The tagline is "The SEO command for AI agents". The site brand in the nav
-is SEO CLI for now.
+The positioning is one SEO skill backed by a powerful CLI and MCP server.
+The CLI does the heavy lifting, so an agent carries one short skill instead
+of fifty, its context window stays clean, and it fetches the detail for each
+tool at the moment it runs it. Say this in full, direct sentences.
 
-The project was formerly named SEO Skills CLI. That name survives only as a
-JSON-LD alternate name and one former-name mention in the trademark policy.
+The tagline is "The SEO command for AI agents". The site brand in the nav
+is SEO Skill, the home is seoskill.dev, and speak of the skill in the
+singular everywhere: the plural "skills" survives only in ecosystem names
+such as the `skills/` directory convention, `npx skills add`, and
+agent-skills spec paths.
 
 ## Users
 

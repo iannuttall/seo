@@ -53,11 +53,13 @@ skills/         packaged agent skills
 - Keep Node 22 or newer as the supported runtime unless the whole repository is
   deliberately migrated and verified.
 - The product name is SEO as a wordmark, `seo` as the command and package,
-  and SEO CLI when prose truly needs a name; see PRODUCT.md's Name section.
-  Prose defaults to benefit-first copy that does not name the product at
-  all. The tagline is "The SEO command for AI agents". Do not use
-  "SEO Skills CLI" in new copy; it survives only as a JSON-LD alternate
-  name for continuity.
+  and SEO Skill when prose truly needs a name; see PRODUCT.md's Name
+  section. Speak of the skill in the singular; plural "skills" survives
+  only in ecosystem names like the `skills/` directory and `npx skills
+  add`. Prose defaults to benefit-first copy that does not name the product
+  at all. The tagline is "The SEO command for AI agents". Do not use
+  "SEO Skills CLI" or "SEO CLI" in new copy; they survive only as JSON-LD
+  alternate names.
 - Teach `npm i -g seo`, then `seo start`, as the primary README path.
 - Library and contributor setup belongs below normal CLI usage in the README.
 

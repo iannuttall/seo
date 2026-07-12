@@ -2,7 +2,7 @@
 import { installCommands } from '@/lib/install'
 
 const { standalone = false } = Astro.props as { standalone?: boolean }
-const initial = installCommands[0]
+const install = installCommands[0]
 ---
 
 <section data-install-picker>
@@ -12,33 +12,13 @@ const initial = installCommands[0]
       standalone ? 'rounded-xl border' : 'rounded-t-xl border-x border-t',
     ]}
   >
-    <div
-      class="inline-flex w-fit max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg bg-card p-0.5 ring ring-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      role="group"
-      aria-label="Install method"
-    >
-      {
-        installCommands.map((option, index) => (
-          <button
-            type="button"
-            class="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-transparent px-2.5 text-sm font-medium text-foreground-muted transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 data-[state=on]:bg-secondary data-[state=on]:text-foreground"
-            data-install-option={option.id}
-            data-state={index === 0 ? 'on' : 'off'}
-            aria-pressed={index === 0 ? 'true' : 'false'}
-          >
-            {option.label}
-          </button>
-        ))
-      }
-    </div>
-
     <p data-install-description class="text-base leading-7 text-foreground-muted">
-      {initial.description}
+      {install.description}
     </p>
 
     <div class="grid min-w-0 gap-2">
       <div class="relative min-w-0 overflow-hidden rounded-lg border border-input bg-card">
-        <pre class="m-0 min-h-9 min-w-0 overflow-x-auto px-3 py-2 pr-16 font-mono text-sm leading-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><code data-install-command>{initial.command}</code></pre>
+        <pre class="m-0 min-h-9 min-w-0 overflow-x-auto px-3 py-2 pr-16 font-mono text-sm leading-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><code data-install-command>{install.command}</code></pre>
         <div
           class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent via-card/95 to-card"
           aria-hidden="true"
@@ -65,34 +45,14 @@ const initial = installCommands[0]
   </div>
 </section>
 
-<script is:inline type="application/json" data-install-options set:html={JSON.stringify(installCommands)} />
-
 <script is:inline>
   const root = document.querySelector('[data-install-picker]')
-  const options = JSON.parse(document.querySelector('[data-install-options]')?.textContent ?? '[]')
 
-  if (root && options.length) {
-    const buttons = [...root.querySelectorAll('[data-install-option]')]
+  if (root) {
     const command = root.querySelector('[data-install-command]')
-    const description = root.querySelector('[data-install-description]')
     const copyButton = root.querySelector('[data-copy-install-command]')
     const copyIcon = root.querySelector('[data-copy-icon]')
     const copyCheckIcon = root.querySelector('[data-copy-check-icon]')
-
-    for (const button of buttons) {
-      button.addEventListener('click', () => {
-        const selected = options.find((option) => option.id === button.dataset.installOption)
-        if (!selected) return
-
-        for (const item of buttons) {
-          const active = item === button
-          item.dataset.state = active ? 'on' : 'off'
-          item.setAttribute('aria-pressed', String(active))
-        }
-        if (command) command.textContent = selected.command
-        if (description) description.textContent = selected.description
-      })
-    }
 
     copyButton?.addEventListener('click', async () => {
       const value = command?.textContent ?? ''

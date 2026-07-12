@@ -8,7 +8,7 @@
     {
       "name": "seo",
       "source": "./",
-      "description": "SEO MCP server plus skills for site audits, GEO readiness, and implementation queues."
+      "description": "The seo MCP server plus one SEO skill that gives an agent 50+ audit and report tools."
     }
   ]
 }

@@ -56,7 +56,7 @@ export const docsNav: DocsNavEntry[] = [
   },
   {
     path: '/docs/skills',
-    label: 'Agent skills',
+    label: 'Agent skill',
     description:
       'Install focused instructions that teach an agent which report to run, how to read it, and what to verify next.',
   },

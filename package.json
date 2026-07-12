@@ -5,7 +5,7 @@
   "type": "module",
   "license": "Apache-2.0",
   "author": "Ian Nuttall",
-  "homepage": "https://seoskills.dev",
+  "homepage": "https://seocli.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iannuttall/seo.git"

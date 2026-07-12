@@ -1,6 +1,6 @@
 # Site agent notes
 
-This package is the static Astro site for `https://seoskills.dev`.
+This package is the static Astro site for `https://seocli.sh`.
 
 ## Commands
 

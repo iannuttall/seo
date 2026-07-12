@@ -1,7 +1,7 @@
 export const site = {
   name: 'SEO CLI',
   packageName: 'seo',
-  url: 'https://seoskills.dev',
+  url: 'https://seocli.sh',
   description:
     'An open source SEO tool your AI agents can run. Crawl a site, use your Search Console and GA4 data, and fix what is hurting organic and AI search visibility.',
   repository: 'https://github.com/iannuttall/seo',

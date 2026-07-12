@@ -5,7 +5,7 @@ right to present another product or service as the official `seo` project.
 
 This policy covers this project's identity: the name `seo` when it refers to
 this specific package and project, the tagline "The SEO command for AI agents",
-the logo and project artwork, and seoskills.dev. This project was formerly named
+the logo and project artwork, and seocli.sh. This project was formerly named
 SEO Skills CLI.
 
 "seo" is a generic term for search engine optimization. This policy claims no
@@ -15,7 +15,7 @@ logo, its branding, and its tagline.
 ## Uses that are fine
 
 - Truthfully saying that software uses, supports, or is based on `seo`.
-- Linking to the official repository or seoskills.dev.
+- Linking to the official repository or seocli.sh.
 - Keeping required attribution and notices in copies or forks.
 - Describing a fork as an unofficial fork, provided the distinction is clear.
 
@@ -27,6 +27,6 @@ service, domain, package, event, or merchandise.
 
 Do not imply endorsement, partnership, or official status. Forks and hosted
 versions must use a distinct name and visual identity, and must not create
-confusion with the npm package, repository, or seoskills.dev.
+confusion with the npm package, repository, or seocli.sh.
 
 Nominative and other uses allowed by applicable law remain allowed.

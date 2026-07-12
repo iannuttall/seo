@@ -41,12 +41,72 @@ check on its own. Vary the prompts across a vague human ask, a precise agent
 ask, and an adversarial ask where the correct move is to refuse a claim or
 surface partial data.
 
-## Running an eval
+## Run them
 
-Load the `seo` skill in an agent and feed it one prompt at a time. For example,
-use `claude -p` with the skill available, send the `prompt`, then judge the
-reply against each assertion. Score an eval as a pass only when every assertion
-holds.
+`seo skills eval` runs these against a real agent on your machine and judges the
+result, so you catch a routing or truth-rule regression before it ships. It
+stays local: you bring your own agent, and nothing is sent to a hosted service.
+
+List what is available, then run one subject, several, or all of them:
+
+```sh
+seo skills eval --list          # subjects with their eval counts
+seo skills eval quick-wins      # one subject
+seo skills eval quick-wins seo  # several subjects
+seo skills eval                 # every subject
+seo skills eval quick-wins --id 3
+```
+
+Each eval sends the `seo` router skill as context, then the eval prompt, to your
+agent. The default agent is `claude -p`. Point `--agent` at any command that
+reads a prompt and prints a reply. Put `{prompt}` in the command to receive the
+prompt as an argument, or leave it out to receive the prompt on stdin:
+
+```sh
+seo skills eval quick-wins --agent "claude -p"
+seo skills eval quick-wins --agent "my-agent --input {prompt}"
+```
+
+The prompt is always passed as a single argument, never through a shell, so a
+prompt cannot inject extra commands. Use `--no-skill` to send the eval prompt
+without the router skill, and `--timeout <seconds>` (default 300) to bound each
+call. Run up to four evals at once with `--concurrency <n>`.
+
+The agent must be allowed to execute the `seo` CLI or MCP tools, or every
+behavioural assertion will fail for the honest reason that the agent never ran
+anything. A sandboxed `claude -p` cannot approve permission prompts, so grant
+the permission up front, for example with a permission mode or allowlist that
+covers `seo` commands. Judged failures always carry the judge's reason, so a
+sandbox problem is visible in the output rather than silent.
+
+Write assertions about outcomes, not narration. An agent that used a field
+rarely names it, so "presents the diagnosis from the check results" is
+judgeable where "reads generatedAt last" is not. Accept both surfaces in
+assertions: the MCP tools and the `seo reports` CLI flow are equivalent, and
+an agent without MCP configured will correctly use the CLI.
+
+### Judging
+
+By default the same agent judges each reply against the assertions and returns a
+pass or fail with a short reason. Judge with a different model using
+`--judge-agent "<command>"`. These verdicts are model judgments, not ground
+truth, so the output labels them as judge verdicts and keeps every reason
+visible for you to check.
+
+Use `--no-judge` to skip judging. That prints each reply next to an assertion
+checklist so you can score the run by hand.
+
+### CI usage
+
+The command exits `0` when every assertion passes and `1` when any assertion
+fails or an eval errors, so it drops straight into a pipeline. Add `--json` for
+one structured document with per-assertion verdicts, reasons, durations, and the
+agent and judge commands used. JSON mode never prompts and never decorates its
+output.
+
+```sh
+seo skills eval --agent "claude -p" --json > eval-results.json
+```
 
 ## Validation
 

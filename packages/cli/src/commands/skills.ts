@@ -1,37 +1,16 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { existsSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
 import { printJson, printTable } from '../utils.js'
+import { readSkillDescription, skillsDirectory } from './skill-paths.js'
+import { skillsEvalCommand } from './skills-eval.js'
 
 type SkillInfo = {
   name: string
   description: string
   path: string
-}
-
-function skillsDirectory(): string {
-  const override = process.env.SEO_SKILLS_DIR
-  if (override) return resolve(override)
-
-  let current = dirname(fileURLToPath(import.meta.url))
-  for (let depth = 0; depth < 6; depth += 1) {
-    const candidate = join(current, 'skills')
-    if (existsSync(join(candidate, 'README.md'))) return candidate
-    current = dirname(current)
-  }
-
-  throw new SeoError(
-    'INTERNAL_ERROR',
-    'Packaged SEO skills could not be found. Reinstall `seo` and try again.',
-  )
-}
-
-function skillDescription(path: string): string {
-  const source = readFileSync(join(path, 'SKILL.md'), 'utf8')
-  return source.match(/^description:\s*(.+)$/m)?.[1]?.trim() ?? ''
 }
 
 function listSkills(): SkillInfo[] {
@@ -43,7 +22,7 @@ function listSkills(): SkillInfo[] {
     )
     .map((entry) => ({
       name: entry.name,
-      description: skillDescription(join(root, entry.name)),
+      description: readSkillDescription(join(root, entry.name)),
       path: join(root, entry.name),
     }))
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
@@ -110,5 +89,6 @@ export const skillsCommand = defineCommand({
   subCommands: {
     list: listCommand,
     path: pathCommand,
+    eval: skillsEvalCommand,
   },
 })

@@ -87,12 +87,18 @@ export async function resolveSite(input: {
   if (input.site) return input.site
 
   const config = readConfig()
-  if (config.defaultSite) return config.defaultSite
+  const defaultSiteKnown =
+    Boolean(config.defaultSite) &&
+    (config.clients.some((client) => client.siteUrl === config.defaultSite) ||
+      config.sites.some((site) => site.siteUrl === config.defaultSite))
+  if (config.defaultSite && defaultSiteKnown) return config.defaultSite
 
   if (input.options?.json || !canPrompt()) {
     throw new SeoError(
       'INVALID_INPUT',
-      'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
+      config.defaultSite
+        ? `Saved default site ${config.defaultSite} does not match any saved project. Pass --site or --project, or run \`seo start\` to save a new default.`
+        : 'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
     )
   }
 

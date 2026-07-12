@@ -2,10 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { reportIds, reportSlugs } from '../src/content/reports/manifest.mjs'
 
-const site = (process.env.SITE_URL ?? 'https://seoskills.dev').replace(
-  /\/$/,
-  '',
-)
+const site = (process.env.SITE_URL ?? 'https://seocli.sh').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 const paths = [
   '/',

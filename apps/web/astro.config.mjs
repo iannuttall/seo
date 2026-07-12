@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 
 export default defineConfig({
-  site: process.env.SITE_URL ?? 'https://seoskills.dev',
+  site: process.env.SITE_URL ?? 'https://seocli.sh',
   output: 'static',
   trailingSlash: 'never',
   markdown: {

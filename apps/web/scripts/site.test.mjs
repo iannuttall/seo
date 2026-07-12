@@ -9,27 +9,24 @@ const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const repoRoot = resolve(appRoot, '../..')
 const dist = resolve(appRoot, 'dist')
 const expectedPages = new Map([
-  ['index.html', 'https://seoskills.dev'],
-  ['docs/index.html', 'https://seoskills.dev/docs'],
-  [
-    'docs/getting-started/index.html',
-    'https://seoskills.dev/docs/getting-started',
-  ],
-  ['docs/cli/index.html', 'https://seoskills.dev/docs/cli'],
-  ['docs/crawler/index.html', 'https://seoskills.dev/docs/crawler'],
-  ['docs/google/index.html', 'https://seoskills.dev/docs/google'],
-  ['docs/library/index.html', 'https://seoskills.dev/docs/library'],
-  ['docs/mcp/index.html', 'https://seoskills.dev/docs/mcp'],
-  ['docs/reports/index.html', 'https://seoskills.dev/docs/reports'],
-  ['docs/skills/index.html', 'https://seoskills.dev/docs/skills'],
-  ['docs/agents/index.html', 'https://seoskills.dev/docs/agents'],
-  ['docs/ai-search/index.html', 'https://seoskills.dev/docs/ai-search'],
-  ['privacy/index.html', 'https://seoskills.dev/privacy'],
-  ['terms/index.html', 'https://seoskills.dev/terms'],
-  ['security/index.html', 'https://seoskills.dev/security'],
-  ['trademarks/index.html', 'https://seoskills.dev/trademarks'],
-  ['cookies/index.html', 'https://seoskills.dev/cookies'],
-  ['404.html', 'https://seoskills.dev/404'],
+  ['index.html', 'https://seocli.sh'],
+  ['docs/index.html', 'https://seocli.sh/docs'],
+  ['docs/getting-started/index.html', 'https://seocli.sh/docs/getting-started'],
+  ['docs/cli/index.html', 'https://seocli.sh/docs/cli'],
+  ['docs/crawler/index.html', 'https://seocli.sh/docs/crawler'],
+  ['docs/google/index.html', 'https://seocli.sh/docs/google'],
+  ['docs/library/index.html', 'https://seocli.sh/docs/library'],
+  ['docs/mcp/index.html', 'https://seocli.sh/docs/mcp'],
+  ['docs/reports/index.html', 'https://seocli.sh/docs/reports'],
+  ['docs/skills/index.html', 'https://seocli.sh/docs/skills'],
+  ['docs/agents/index.html', 'https://seocli.sh/docs/agents'],
+  ['docs/ai-search/index.html', 'https://seocli.sh/docs/ai-search'],
+  ['privacy/index.html', 'https://seocli.sh/privacy'],
+  ['terms/index.html', 'https://seocli.sh/terms'],
+  ['security/index.html', 'https://seocli.sh/security'],
+  ['trademarks/index.html', 'https://seocli.sh/trademarks'],
+  ['cookies/index.html', 'https://seocli.sh/cookies'],
+  ['404.html', 'https://seocli.sh/404'],
 ])
 const discoverySchema =
   'https://schemas.agentskills.io/discovery/0.2.0/schema.json'
@@ -67,7 +64,7 @@ test('build contains every public route with one complete SEO contract', () => {
     assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
     assert.match(
       html,
-      /<meta property="og:image" content="https:\/\/seoskills\.dev\/og\.png"\s*\/?>/,
+      /<meta property="og:image" content="https:\/\/seocli\.sh\/og\.png"\s*\/?>/,
     )
     assert.match(
       html,
@@ -118,14 +115,14 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
   )
   indexable.push(
     ...listReportDefinitions().map(
-      ({ id }) => `https://seoskills.dev/docs/reports/${reportSlugs[id] ?? id}`,
+      ({ id }) => `https://seocli.sh/docs/reports/${reportSlugs[id] ?? id}`,
     ),
   )
 
   assert.deepEqual(locations.sort(), indexable.sort())
   assert.match(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
-    /Sitemap: https:\/\/seoskills\.dev\/sitemap\.xml/,
+    /Sitemap: https:\/\/seocli\.sh\/sitemap\.xml/,
   )
 })
 
@@ -184,7 +181,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.match(
       html,
       new RegExp(
-        `<link rel="canonical" href="https://seoskills\\.dev/docs/reports/${slug}"\\s*/?>`,
+        `<link rel="canonical" href="https://seocli\\.sh/docs/reports/${slug}"\\s*/?>`,
       ),
     )
     assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)

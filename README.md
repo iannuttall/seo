@@ -5,7 +5,7 @@
 <h1 align="center">SEO Skills CLI</h1>
 
 <p align="center">
-  Find what is costing you traffic, which pages are closest to more clicks, and what to fix first. Local SEO tools and skills for people, AI agents, and CI.
+  Open source SEO tools and skills for people, AI agents, and CI. Find what is costing you traffic, which pages are closest to more clicks, and what to fix first.
 </p>
 
 <p align="center">
@@ -39,15 +39,21 @@
 and ship. Find technical blockers, recover search demand, improve pages already
 close to more clicks, and catch regressions after a release.
 
+## Who this is for
+
+- People running their own sites who want a clear audit and a ranked list of
+  fixes, without learning a heavy dashboard.
+- AI agents that need real crawl, Search Console, and GA4 evidence through MCP
+  and packaged skills instead of screenshots or guesses.
+- Developers who want to embed the same report engine in a script, a CI job, or
+  a TypeScript app.
+
 ## Quick start
 
 Requires Node 22 or newer.
 
-Install the command once, then add the skills when an agent will use it:
-
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo --all
 seo start
 seo report
 ```
@@ -64,6 +70,42 @@ The main report uses the evidence you have, explains what it could not check,
 and recommends a short list of follow-up commands. You can start with a local
 technical report before connecting Google.
 
+Running `seo help` shows the shape of the tool:
+
+```txt
+seo v0.1.0
+
+Human-friendly SEO reports first, power tools when you need them.
+
+Start here
+  seo start                                Connect Google and save a project profile
+  seo report                               Run the main SEO report for the default project
+  seo report --site sc-domain:example.com  Run without a profile
+  seo report --url https://example.com     Start with a local technical report
+
+Projects
+  seo projects list  List saved project profiles
+  seo projects add   Create or update a project profile
+  seo sites          List Search Console properties
+  seo doctor         Check local auth and config
+
+Act on a report
+  seo refresh-priorities  Rank the next best SEO actions
+  seo quick-wins          Find ranking 4-10 low-CTR wins
+  seo second-page         Investigate URLs averaging positions 10-20
+  seo technical-watch     Crawl and index-monitor a site
+
+Agent and power tools
+  seo report --json    Run the main report as structured JSON
+  seo export diagnose  Export report data to CSV
+  seo mcp install      Install SEO tools into MCP clients
+  seo skills list      List packaged skills for agents
+  seo reports list     Discover every structured report
+
+Use `seo help <command>` or `seo <command> --help` for command help.
+Use `seo help all` for the longer command list.
+```
+
 ## What you get
 
 - Find technical blockers across metadata, links, indexability, canonicals,
@@ -77,6 +119,19 @@ technical report before connecting Google.
 - Measure SEO changes with matched before and after Search Console windows.
 - Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
   compact local MCP surface.
+
+## How the reports stay honest
+
+The point of a report is to be defensible, so the design keeps a few rules:
+
+- Observed evidence stays separate from derived findings and recommended
+  actions. You can always see the crawl row or provider row behind a claim.
+- Partial data is never reported as a zero. A capped, filtered, or sampled
+  source says so, and it cannot support a definitive all-clear.
+- Heuristics are labeled as heuristics. A convention or threshold is not
+  presented as a search-engine rule.
+- Each recommendation comes with a way to check that the fix worked, rather than
+  a promise about rankings or traffic.
 
 ## Everyday use
 
@@ -305,6 +360,36 @@ seo reset
 Power users can bring their own Google OAuth client. See
 [getting started](https://seoskills.dev/docs/getting-started) for the available
 auth paths.
+
+## Common questions
+
+### Does my site data stay on my machine?
+
+Yes. Reports, project profiles, Google tokens, crawls, and caches stay in your
+local config directory. The CLI only makes the network requests needed to fetch
+your site and call the Google APIs you connect. There is no hosted backend,
+account, or telemetry service.
+
+### Do I need a Google API key?
+
+No. `seo start` uses a normal Google sign-in for read-only Search Console and
+GA4 access. Public releases can include a shared desktop OAuth client, and if
+your build does not have one, setup helps you add your own. You can also run a
+local technical crawl with no Google connection at all.
+
+### What does it cost?
+
+The `seo` package is free and open source under Apache-2.0. It calls Google APIs
+you already have access to, so there is no separate subscription. Your own API
+quotas still apply.
+
+### How is this different from a paid SEO tool?
+
+A hosted SEO tool keeps your data on its servers and shows you a dashboard. This
+runs on your machine, works from your own crawl and Google data, and returns
+structured evidence your agent can read and act on. Every finding shows the
+evidence behind it and a way to verify a fix, so you are not trusting a score
+you cannot inspect.
 
 ## Documentation
 

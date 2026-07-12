@@ -3,7 +3,7 @@
 Last updated: 10 July 2026
 
 These terms cover the official `seo` command-line tool, library, MCP server,
-documentation, and seocli.sh website.
+documentation, and seoskill.dev website.
 
 ## Open source licence
 
@@ -58,7 +58,7 @@ You are responsible for protecting local tokens, configuration, caches,
 reports, exports, backups, and environment variables. Keep secrets out of
 public issues, logs, screenshots, repositories, and shared report files.
 
-The [privacy policy](https://seocli.sh/privacy) explains what the software
+The [privacy policy](https://seoskill.dev/privacy) explains what the software
 stores and how to remove it.
 
 ## Availability and changes

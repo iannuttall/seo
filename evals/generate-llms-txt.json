@@ -1,0 +1,44 @@
+{
+  "subject": "generate-llms-txt",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to give AI agents a clean map of our useful public pages. Can you draft an llms.txt from our site?",
+      "expected_output": "Should use report id generate-llms-txt to create an editable llms.txt draft from selected public pages in a current crawl. Should follow the discovery flow: seo_describe_report with id generate-llms-txt, then seo_run_report from a saved crawl by reportId or site. Should read content, includedUrls, estimatedTokens, and sections, then check the generated titles and descriptions against the source pages, then the source crawl date, cap, failures, and caveats. Should present it as a draft for human review, not a finished file.",
+      "assertions": [
+        "Uses report id generate-llms-txt to draft the file from a current crawl",
+        "Reads content, includedUrls, estimatedTokens, and sections",
+        "Checks generated titles and descriptions against the source pages",
+        "Reads the source crawl date, cap, failures, and caveats",
+        "Presents the output as a draft for human review, not a finished file"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Generate an llms.txt from saved crawl crawl_example_20260710, cap it at 40 urls and a 2000 token budget, and exclude anything under /tag/.",
+      "expected_output": "Should run report id generate-llms-txt with reportId crawl_example_20260710, maxUrls 40, tokenBudget 2000, and exclude set to the /tag/ pattern, via seo reports run generate-llms-txt or seo_run_report. Should read content, includedUrls, estimatedTokens, and sections, and note that reaching maxUrls or the token budget is possible truncation, not a complete inventory. Should route to report id llms-txt-audit to validate the links after the file is published.",
+      "assertions": [
+        "Runs report id generate-llms-txt with reportId crawl_example_20260710",
+        "Sets maxUrls 40, tokenBudget 2000, and the /tag/ exclude pattern",
+        "Reads content, includedUrls, estimatedTokens, and sections",
+        "States reaching maxUrls or the token budget is possible truncation, not complete",
+        "Routes to report id llms-txt-audit to validate the published file"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Once we publish this llms.txt, we'll rank better and get cited in AI answers, right? That's the point of it.",
+      "expected_output": "Should refuse to promise ranking, indexing, or citation benefit from publishing llms.txt. Should explain that a valid draft does not prove search or AI benefit, selection, indexing, or citations, and that the crawler cannot determine publisher intent. Should keep the file as a human-reviewed navigation aid and recommend human review, then validating the published file with report id llms-txt-audit, rather than claiming an outcome.",
+      "assertions": [
+        "Refuses to promise ranking, indexing, or citation gains from llms.txt",
+        "States a valid draft does not prove search or AI benefit, selection, or citations",
+        "Notes the crawler cannot determine publisher intent",
+        "Keeps the file as a human-reviewed navigation aid",
+        "Recommends validating the published file with report id llms-txt-audit"
+      ],
+      "files": []
+    }
+  ]
+}

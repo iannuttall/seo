@@ -1,0 +1,44 @@
+{
+  "subject": "top-fixes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our crawl came back with hundreds of issues and I have no idea where to start. What should we fix first?",
+      "expected_output": "Should use report id top-fixes to turn crawl findings into a short, ranked queue of technical issues to investigate first. Should follow the discovery flow: seo_describe_report with id top-fixes, then seo_run_report from a saved crawl by reportId or site, with a bounded limit. Should read dataSources, summary, warnings, and caveats first, then per-item rule id, affected count, sample URLs, scoreFactors, and whyThisRanks, then effort, fix guidance, and verification. Should treat rank as a triage order among retained findings, not proof of business impact.",
+      "assertions": [
+        "Uses report id top-fixes to build the ranked triage queue",
+        "Works from a saved crawl by reportId or site with a bounded limit",
+        "Reads dataSources, summary, warnings, and caveats first",
+        "Reads per-item rule id, affected count, sample URLs, scoreFactors, and whyThisRanks",
+        "Treats rank as triage order, not proof of business impact"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run top-fixes on saved crawl crawl_example_20260710 for category indexability, limit 10, and give me the reasons each one ranks.",
+      "expected_output": "Should run report id top-fixes with reportId crawl_example_20260710, category indexability, and limit 10, via seo reports run top-fixes or seo_run_report. Should read dataSources, summary, warnings, and caveats, then per-item rule id, affected count, sample URLs, scoreFactors, and whyThisRanks, then effort and verification. Should route to report id affected-urls for the same rule and saved crawl to list every affected URL, and note limit bounds the returned items.",
+      "assertions": [
+        "Runs report id top-fixes with reportId crawl_example_20260710, category indexability, and limit 10",
+        "Reads per-item rule id, affected count, sample URLs, scoreFactors, and whyThisRanks",
+        "Routes to report id affected-urls for the same rule to list every URL",
+        "Notes limit bounds the returned items",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The number one item here is our single biggest business problem and this is the globally worst issue on the site. Forecast the traffic we'll gain by fixing it.",
+      "expected_output": "Should refuse all three claims. Should explain that rank means highest among retained eligible findings, not globally highest, because the crawl or category may be capped, and that this is not a forecast of rankings, traffic, or revenue. Should note that a numeric zero is meaningful only when the source is complete and missing provider joins stay unavailable. Should recommend confirming the finding with report id affected-urls before treating it as the top priority.",
+      "assertions": [
+        "Refuses to call the top item the single biggest business problem",
+        "States rank means highest among retained eligible findings, not globally highest",
+        "Notes the crawl or category may be capped",
+        "Refuses to forecast rankings, traffic, or revenue from the queue",
+        "Recommends confirming with report id affected-urls before prioritising"
+      ],
+      "files": []
+    }
+  ]
+}

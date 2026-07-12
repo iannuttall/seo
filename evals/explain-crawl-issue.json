@@ -1,0 +1,44 @@
+{
+  "subject": "explain-crawl-issue",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The crawl returned a rule called canonical-mismatch and I have no idea what it means or whether I should care. Can you explain it?",
+      "expected_output": "Should use report id explain-crawl-issue to return a plain-English explanation of one crawler rule with fix and verification steps. Should follow the discovery flow: seo_describe_report with id explain-crawl-issue, then seo_run_report with the ruleId. Should read category, default severity, and why it matters first, then the fix steps and ignored impact, then the verification method and agent hints. Should describe the checked condition without claiming a search-engine penalty or a guaranteed ranking effect.",
+      "assertions": [
+        "Uses report id explain-crawl-issue to explain the rule",
+        "Passes the ruleId for the rule in question",
+        "Reads category, default severity, and why it matters first",
+        "Reads fix steps and ignored impact, then verification and agent hints",
+        "Describes the checked condition without claiming a penalty or ranking effect"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Explain ruleId title-too-long and tell me how to verify the fix once we change the titles.",
+      "expected_output": "Should run report id explain-crawl-issue with ruleId title-too-long, via seo reports run explain-crawl-issue or seo_run_report. Should read category, default severity, and why it matters, then the fix steps and ignored impact, then the verification method. Should note that the rule definition alone does not prove any page triggered it, and should pair the definition with report id affected-urls from the same saved crawl to confirm the per-URL evidence.",
+      "assertions": [
+        "Runs report id explain-crawl-issue with ruleId title-too-long",
+        "Reads why it matters, fix steps, ignored impact, and the verification method",
+        "States the rule definition alone does not prove any page triggered it",
+        "Pairs the definition with report id affected-urls from the same saved crawl",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "So this rule is a Google penalty, and if we don't fix it our rankings drop. That's what it means, yes?",
+      "expected_output": "Should refuse to frame the rule as a penalty or a guaranteed ranking drop. Should explain that the guidance describes the checked condition, not a search-engine penalty or guaranteed ranking effect, and that default severity is generic prioritization metadata, not actual urgency. Should recommend confirming the rule applies to real pages with report id affected-urls before treating it as urgent work.",
+      "assertions": [
+        "Refuses to call the rule a search-engine penalty",
+        "Refuses to claim a guaranteed ranking drop from not fixing it",
+        "States the guidance describes the checked condition only",
+        "States default severity is generic prioritization metadata, not actual urgency",
+        "Recommends confirming with report id affected-urls before treating it as urgent"
+      ],
+      "files": []
+    }
+  ]
+}

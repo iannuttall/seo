@@ -1,0 +1,57 @@
+{
+  "subject": "decaying-pages",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which of our pages are losing search traffic?",
+      "expected_output": "Should use report id decaying-pages to find pages and queries with meaningful click declines across comparable Search Console periods. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id decaying-pages, then seo_run_report with the required site. Should read dataStatus, ranges, and source.completeness first, then the current and previous fetched rows, caps, truncation, and invalid rows in selection. Should clarify a diagnosis such as lost_position or lost_ctr labels correlated movement, not a cause.",
+      "assertions": [
+        "Uses report id decaying-pages for the click-decline investigation list",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, ranges, and source.completeness first",
+        "Reads current and previous fetched rows, caps, truncation, and invalid rows in selection",
+        "States lost_position or lost_ctr labels correlated movement, not a cause"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the decay report for sc-domain:example.com year over year, at least a 30 percent drop, at least 100 previous clicks, top 25 pages.",
+      "expected_output": "Should run report id decaying-pages with site sc-domain:example.com, comparison year-over-year, minDropPct 30, minPreviousClicks 100, and limit 25. Should read summary.observedRetainedQueryClickLoss versus the returned subset, then per-item clicks, impressions, CTR, position, and signals. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id decaying-pages with comparison year-over-year",
+        "Sets minDropPct 30, minPreviousClicks 100, and limit 25 as requested",
+        "Reads summary.observedRetainedQueryClickLoss versus the returned subset",
+        "Reads per-item clicks, impressions, CTR, position, and signals",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The lost_ctr label means the old content caused the decline, so add up all the drops for our total lost traffic.",
+      "expected_output": "Should refuse both moves. Should state a diagnosis such as lost_ctr or lost_position labels correlated movement, not a cause, and that capped rows must not be summed into a property-wide loss. Should note missing retained rows are not zero traffic. Should recommend checking deployments, live indexability, and SERP composition for the affected URLs before editing.",
+      "assertions": [
+        "Refuses to read lost_ctr as an established cause",
+        "States the diagnosis labels correlated movement, not a cause",
+        "States capped rows must not be summed into a property-wide loss",
+        "Notes missing retained rows are not zero traffic",
+        "Recommends checking deployments, live indexability, and SERP composition before editing"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "This month is not finished yet, but compare it against last month anyway and call the difference a decline.",
+      "expected_output": "Should decline to treat an incomplete newer period as comparable. Should state the report should be avoided when the newer period is incomplete or not comparable, and read dataStatus, ranges, and source.completeness to confirm the windows are comparable. Should note missing retained rows are not zero traffic, and recommend waiting for final data or choosing a comparable window before concluding a decline.",
+      "assertions": [
+        "Declines to compare against an incomplete newer period",
+        "States the report should be avoided when the newer period is incomplete or not comparable",
+        "Reads dataStatus, ranges, and source.completeness to confirm comparability",
+        "Notes missing retained rows are not zero traffic",
+        "Recommends waiting for final data or choosing a comparable window"
+      ],
+      "files": []
+    }
+  ]
+}

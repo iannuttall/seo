@@ -1,0 +1,44 @@
+{
+  "subject": "crawl-report",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Open the crawl I saved earlier and show me the summary before I dig into anything.",
+      "expected_output": "Should use report id crawl-report to load a saved crawl by id, or the latest local crawl for a site, and return its summary. Should follow the discovery flow: seo_describe_report with id crawl-report, then seo_run_report with the id or site. Should read id, source URL and site, generatedAt, definition id, config hash, status, and requestEvidenceStatus first, then summary counts and pageLimitReached, then data sources, warnings, and caveats. Should keep page and issue detail opt-in through includePages and includeIssues.",
+      "assertions": [
+        "Uses report id crawl-report to load the saved crawl",
+        "Reads generatedAt, status, and requestEvidenceStatus before the summary",
+        "Reads summary counts and pageLimitReached next",
+        "Keeps page and issue detail opt-in via includePages and includeIssues",
+        "Reads data sources, warnings, and caveats before analysis"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Load crawl_example_20260710 with includeIssues true so I can see the technical findings.",
+      "expected_output": "Should run report id crawl-report with id crawl_example_20260710 and includeIssues true, via seo reports run crawl-report or seo_run_report. Should confirm status and requestEvidenceStatus, then read summary counts and pageLimitReached, then the issues once includeIssues is set. Should note that loading a report is a local storage read, not a fresh check, and that pageLimitReached true means the crawl was capped.",
+      "assertions": [
+        "Runs report id crawl-report with id crawl_example_20260710 and includeIssues true",
+        "Confirms status and requestEvidenceStatus before reading detail",
+        "Reads summary counts and pageLimitReached before the issues",
+        "States loading a report is a local storage read, not a fresh check",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This saved crawl passed with no critical issues, so that's the current state of the live site. We're good, right?",
+      "expected_output": "Should refuse to treat a saved crawl as the current live state. Should explain that a report can be internally valid yet stale, capped, or partial and cannot prove the current live state, and that loading it is a local storage read rather than a fresh check. Should check generatedAt, pageLimitReached, and caveats, and recommend running a new crawl with the same configuration and keeping both ids to confirm the current state.",
+      "assertions": [
+        "Refuses to treat the saved crawl as the current live state",
+        "States a valid report can still be stale, capped, or partial",
+        "States loading a report is a local storage read, not a fresh check",
+        "Checks generatedAt, pageLimitReached, and caveats",
+        "Recommends a new crawl with the same configuration to confirm current state"
+      ],
+      "files": []
+    }
+  ]
+}

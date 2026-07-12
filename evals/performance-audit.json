@@ -1,0 +1,57 @@
+{
+  "subject": "performance-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Is this page fast enough? Run a performance check on it.",
+      "expected_output": "Should use report id performance-audit to run Lighthouse lab checks and add CrUX field Core Web Vitals when that data is available. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id performance-audit, then seo_run_report with the required url. Should read dataStatus, source, labDataStatus, and fieldDataStatus first, then keep lab findings separate from real-user field data.",
+      "assertions": [
+        "Uses report id performance-audit for the page performance check",
+        "Notes it runs Lighthouse lab checks and adds CrUX field data when available",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, source, labDataStatus, and fieldDataStatus first",
+        "Keeps lab findings separate from real-user field data"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the performance audit for https://example.com/product on mobile.",
+      "expected_output": "Should run report id performance-audit with url https://example.com/product and strategy mobile. Should read the Lighthouse score, lab metrics, and labInsights, then CrUX fieldData.metrics with scope, formFactor, and collectionPeriod, keeping the lab and field values clearly labelled and separate. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id performance-audit with url and strategy mobile",
+        "Reads the Lighthouse score, lab metrics, and labInsights",
+        "Reads CrUX fieldData.metrics with scope, formFactor, and collectionPeriod",
+        "Keeps lab and field values clearly labelled and separate",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Average the Lighthouse score and the CrUX field numbers into one score, and tell me this mobile result beats our desktop page and will rank us higher.",
+      "expected_output": "Should refuse every move. Should state lab and field values must not be combined into a new score, that origin-level CrUX data is not page-level evidence, that mobile and desktop must not be compared as equal populations, and that no ranking outcome can be claimed. Should keep the Lighthouse lab score and CrUX field metrics distinct with their scope and formFactor, and recommend reproducing the relevant lab issue and re-running the audit after the change.",
+      "assertions": [
+        "Refuses to combine lab and field values into a new score",
+        "States origin-level CrUX data is not page-level evidence",
+        "Refuses to compare mobile and desktop as equal populations",
+        "Refuses to claim a ranking outcome",
+        "Recommends reproducing the lab issue and re-running the audit"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The source came back as fetch-fallback. Use that duration as our LCP and TTFB and give it a performance score.",
+      "expected_output": "Should refuse to treat the fetch-fallback duration as a Core Web Vital or score it. Should state a fetch-fallback duration is the local fetch workflow, not TTFB, LCP, CLS, TBT, or INP, and never earns a score. Should read the fetch-fallback fields as such when source is fetch-fallback, keep them distinct from lab and field metrics, and recommend re-running once the page can be measured properly.",
+      "assertions": [
+        "Refuses to treat the fetch-fallback duration as a Core Web Vital",
+        "States a fetch-fallback duration is the local fetch workflow, not TTFB, LCP, CLS, TBT, or INP",
+        "States a fetch-fallback duration never earns a score",
+        "Reads the fetch-fallback fields as such when source is fetch-fallback",
+        "Keeps fetch-fallback values distinct from lab and field metrics"
+      ],
+      "files": []
+    }
+  ]
+}

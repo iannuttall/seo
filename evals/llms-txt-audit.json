@@ -1,0 +1,44 @@
+{
+  "subject": "llms-txt-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We published an llms.txt a while back. Can you check it's actually valid and the links still work?",
+      "expected_output": "Should use report id llms-txt-audit to check whether llms.txt exists, whether its links work, and how well it reflects useful public pages. Should follow the discovery flow: seo_describe_report with id llms-txt-audit, then seo_run_report by url or site. Should read exists, the resolved file URL, response status, headline, and issues first, then recommendedPages, then the source crawl date, cap, partial state, failed requests, and caveats. Should return file, link, and page coverage findings without visibility claims.",
+      "assertions": [
+        "Uses report id llms-txt-audit to verify the published file",
+        "Reads exists, resolved file URL, response status, headline, and issues first",
+        "Reads recommendedPages and then the source crawl caveats",
+        "Returns file, link, and coverage findings without visibility claims",
+        "Reads the source crawl cap and partial state before concluding"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Audit the llms.txt for https://example.com and tell me which recommended pages are missing from it.",
+      "expected_output": "Should run report id llms-txt-audit with url https://example.com, or site, via seo reports run llms-txt-audit or seo_run_report. Should read exists, resolved file URL, response status, headline, and issues, then recommendedPages to see the useful pages not covered, then the source crawl date, cap, partial state, and failed requests. Should note that a short recommendation list from a capped crawl is not sitewide evidence, and route to report id generate-llms-txt to draft a fresh file.",
+      "assertions": [
+        "Runs report id llms-txt-audit with url https://example.com or site",
+        "Reads exists, response status, and issues before recommendedPages",
+        "Uses recommendedPages to identify useful pages missing from the file",
+        "States a short recommendation list from a capped crawl is not sitewide evidence",
+        "Routes to report id generate-llms-txt to draft a fresh file"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The audit says we have no llms.txt. Flag that as a technical SEO defect that's hurting our Google rankings, and note that adding one will boost traffic.",
+      "expected_output": "Should refuse both claims. Should explain that llms.txt presence is not a ranking signal and its absence is not a technical defect, and that adding the file does not improve indexing, rankings, traffic, AI selection, or citations. Should keep the missing file as an observation rather than a defect, and, if the user wants one, route to report id generate-llms-txt to draft it for human review.",
+      "assertions": [
+        "Refuses to flag a missing llms.txt as a technical SEO defect",
+        "States llms.txt presence is not a ranking signal and absence is not a defect",
+        "States adding the file does not improve indexing, rankings, traffic, or citations",
+        "Keeps the missing file as an observation, not a defect",
+        "Routes to report id generate-llms-txt if the user wants to draft one"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "subject": "index-monitor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Start tracking whether Google is indexing our key pages so we can spot changes.",
+      "expected_output": "Should route to report id index-monitor, which checks selected sitemap URLs with Google URL Inspection and saves the results locally for later comparison. Should follow the discovery flow: seo_list_reports with category monitoring, seo_describe_report with id index-monitor, then seo_run_report with site and sitemaps. Should read dataStatus and the source sitemap and inventory limits, discovered and invalid URLs, and truncation first, then the inventory states, then properties allocation, then items with inspectionStatus, indexStatus, regressions, recoveries, and errors. Should plan to review changes over time with report id index-watch.",
+      "assertions": [
+        "Uses report id index-monitor to collect and save URL Inspection snapshots",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Provides site and sitemaps as required by the schema",
+        "Reads dataStatus, inventory limits, invalid URLs, and truncation first",
+        "Reads items inspectionStatus and indexStatus with regressions and recoveries",
+        "Plans to review changes with report id index-watch"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run index-monitor for sc-domain:example.com from https://example.com/sitemap.xml, inspect at most 50 URLs, daily limit 100.",
+      "expected_output": "Should run report id index-monitor with site sc-domain:example.com, sitemaps set to the sitemap URL, inspectLimit 50, and dailyLimit 100, via seo reports run index-monitor or seo_run_report. Should keep params within the schema bounds, where inspectLimit allows up to 100 and dailyLimit up to 2000. Should note the run saves snapshots for later comparison and that only selected URLs get a new inspection result.",
+      "assertions": [
+        "Runs report id index-monitor with inspectLimit 50 and dailyLimit 100",
+        "Provides site and the sitemap as required",
+        "Keeps inspectLimit and dailyLimit within the schema bounds",
+        "Notes the run saves snapshots for later comparison",
+        "Uses only parameters defined in the index-monitor schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Several checks came back quota-blocked and a few failed. Log those pages as index problems.",
+      "expected_output": "Should refuse. Failed, deferred, or quota-blocked checks are operational outcomes, not SEO defects. Should keep those states distinct from index problems and recommend retrying the failed checks per retryAt rather than recording the pages as defects.",
+      "assertions": [
+        "Refuses to log quota-blocked and failed checks as index problems",
+        "States failed, deferred, or quota-blocked checks are operational outcomes",
+        "Keeps operational outcomes distinct from SEO defects",
+        "Recommends retrying failed checks per retryAt",
+        "Does not treat an operational skip as a page defect"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The selected batch all came back indexed, so the whole site is indexed and future pages will be too.",
+      "expected_output": "Should refuse. A complete selected batch does not prove inventory-wide indexing or future inclusion, and a due URL that was not selected has no new inspection result. Should keep the bounded selected batch distinct from the full inventory and avoid projecting the result onto unselected or future pages.",
+      "assertions": [
+        "Refuses to conclude the whole site is indexed from the batch",
+        "States a complete selected batch does not prove inventory-wide indexing",
+        "States a due URL that was not selected has no new inspection result",
+        "Refuses to promise future pages will be indexed",
+        "Keeps the bounded selected batch distinct from the full inventory"
+      ],
+      "files": []
+    }
+  ]
+}

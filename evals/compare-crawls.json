@@ -1,0 +1,56 @@
+{
+  "subject": "compare-crawls",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We pushed a big migration last week. Can you tell me what actually changed on the site technically since before it went out?",
+      "expected_output": "Should use report id compare-crawls to produce a before-and-after view of added, removed, fixed, and new findings from two saved crawl snapshots. Should follow the discovery flow: seo_describe_report with id compare-crawls, then seo_run_report with the before and after snapshot ids. Should read comparability.status and its matching flags first, then the preserved config, requestScope, and caps for each side, then top-level completeness and truncated reason codes, then summary, pageChanges, and issueChanges. Should offer report id crawl-history to find the snapshot ids.",
+      "assertions": [
+        "Uses report id compare-crawls for the before-and-after view",
+        "Reads comparability.status and its matching flags before any delta",
+        "Reads preserved config, requestScope, and caps for both snapshots",
+        "Reads summary, pageChanges, and issueChanges after the completeness checks",
+        "Offers report id crawl-history to locate the two snapshot ids"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Compare saved crawls with before crawl_example_20260601 and after crawl_example_20260710 and confirm the canonical fix landed.",
+      "expected_output": "Should run report id compare-crawls with before crawl_example_20260601 and after crawl_example_20260710, via seo reports run compare-crawls or seo_run_report. Should check comparability.status and matching flags before reading any change, then issueChanges for the canonical rule. Should note source row caps limit joined GSC or GA4 evidence even when the document crawl completed, and that verification is re-running the same definition and request scope after deployment.",
+      "assertions": [
+        "Runs report id compare-crawls with the before and after snapshot ids as given",
+        "Checks comparability.status and matching flags before reading any change",
+        "Reads issueChanges to confirm the canonical rule delta",
+        "Notes source row caps limit joined GSC or GA4 evidence even when the crawl completed",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "A page shows up in the before crawl but not the after crawl, and issues dropped after the release. So the release removed the page and fixed those issues, correct?",
+      "expected_output": "Should refuse both causal conclusions. Should explain that an absent page from a capped, skipped, failed, or differently scoped crawl is not proven removed, and that a change between snapshots is not proof the release caused it. Should check comparability.status, the caps, and the scope on both sides before drawing any conclusion, and should recommend re-running the same definition and request scope to confirm the delta rather than asserting cause.",
+      "assertions": [
+        "Refuses to treat an absent page as proven removed",
+        "States absence can come from a capped, skipped, failed, or differently scoped crawl",
+        "Refuses to treat the change as proof the release caused it",
+        "Checks comparability.status, caps, and scope on both sides first",
+        "Recommends re-running the same definition and scope to confirm the delta"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The two crawls I picked used different page limits and start URLs, but just diff them and give me the numbers anyway.",
+      "expected_output": "Should warn that materially different scope or settings make the comparison unreliable and that report id compare-crawls should be avoided when the two crawls used different scope. Should read comparability.status and its matching flags and surface that the snapshots are not comparable rather than presenting the raw delta as a real change. Should recommend re-running both sides with the same definition and request scope before comparing.",
+      "assertions": [
+        "Warns that different scope or settings make the diff unreliable",
+        "Reads comparability.status and its matching flags to show the crawls are not comparable",
+        "Does not present the raw delta as a confirmed change",
+        "Recommends re-running both sides with the same definition and request scope"
+      ],
+      "files": []
+    }
+  ]
+}

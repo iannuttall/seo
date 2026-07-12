@@ -1,0 +1,57 @@
+{
+  "subject": "update-postmortem",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The March core update seems to have hit us. What happened?",
+      "expected_output": "Should use report id update-postmortem to find the pages and queries that gained or lost around a confirmed Google ranking update. Should follow the discovery flow: seo_list_reports with category workflows, seo_describe_report with id update-postmortem, then seo_run_report with the required site. Should read the workflow step statuses, finalized date windows, and source completeness first, then failed measurements, retained limits, and caveats, then update, insights, templateMovement, and segments. Should clarify the cause remains not established even when dates overlap.",
+      "assertions": [
+        "Uses report id update-postmortem for the winners and losers review",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads workflow step statuses, finalized date windows, and source completeness first",
+        "Reads update, insights, templateMovement, and segments",
+        "States the cause remains not established even when dates overlap"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the update postmortem for sc-domain:example.com over 90 days with a 28 day recent window, include the change log, and note that we ran a migration as a known confounder.",
+      "expected_output": "Should run report id update-postmortem with site sc-domain:example.com, days 90, recentDays 28, includeChangeLog true, and knownConfounders including the migration. Should read the finalized date windows and source completeness, then failed measurements, retained limits, and caveats, then templateMovement and segments. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id update-postmortem with days 90 and recentDays 28",
+        "Sets includeChangeLog true and passes the migration in knownConfounders",
+        "Reads the finalized date windows and source completeness",
+        "Reads failed measurements, retained limits, and caveats",
+        "Reads templateMovement and segments"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The update clearly caused every one of these changes. Tell me our recovery odds and next month's traffic.",
+      "expected_output": "Should refuse every move. Should state the cause remains not established even when dates overlap, and that the report does not claim update causation, recovery probability, or future traffic. Should recommend inspecting representative URLs from the affected segments and reproducing technical changes before any rollback, rather than asserting causation or a forecast.",
+      "assertions": [
+        "Refuses to attribute every change to the update",
+        "States the cause remains not established even when dates overlap",
+        "Refuses to claim recovery probability or future traffic",
+        "Recommends inspecting representative URLs from the affected segments",
+        "Recommends reproducing technical changes before any rollback"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "This winners and losers list is every affected page, even though our recent period is not final yet.",
+      "expected_output": "Should refuse both readings. Should state retained winners and losers are not a complete inventory when sources are capped or filtered, and that the report should be avoided when the comparison periods are incomplete or contain major unrecorded changes. Should read the finalized date windows, retained limits, failed measurements, and caveats, and recommend waiting for final data before treating the list as complete.",
+      "assertions": [
+        "Refuses to treat the list as every affected page",
+        "States retained winners and losers are not a complete inventory when sources are capped or filtered",
+        "States the report should be avoided when the comparison periods are incomplete",
+        "Reads the finalized date windows, retained limits, failed measurements, and caveats",
+        "Recommends waiting for final data before treating the list as complete"
+      ],
+      "files": []
+    }
+  ]
+}

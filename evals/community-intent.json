@@ -1,0 +1,57 @@
+{
+  "subject": "community-intent",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What are people searching that shows they want reviews, comparisons, or real experiences?",
+      "expected_output": "Should use report id community-intent to find Search Console queries that explicitly ask for reviews, comparisons, recommendations, or real experience. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id community-intent, then seo_run_report with the required site. Should read dataStatus, source.completeness, warnings, and caveats first. Should clarify the intent labels are low-confidence English language heuristics based on explicit query wording, not verified intent.",
+      "assertions": [
+        "Uses report id community-intent for review and comparison query wording",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, source.completeness, warnings, and caveats first",
+        "States intent labels are low-confidence English language heuristics, not verified intent",
+        "Grounds the labels in explicit query wording rather than guessed intent"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run community intent for sc-domain:example.com over 180 days, top 50 queries, at least 50 impressions, and exclude brand terms.",
+      "expected_output": "Should run report id community-intent with site sc-domain:example.com, days 180, limit 50, minImpressions 50, and includeBrand false. Should read selection.classifiedRows for every match and selection.returnedRows for the limited set, then per-item intent, signals, and matchedTerms. Should note limit bounds the returned set while classifiedRows shows all matches, and use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id community-intent with days 180, limit 50, and minImpressions 50",
+        "Sets includeBrand false to exclude brand terms",
+        "Reads selection.classifiedRows for all matches and selection.returnedRows for the limited set",
+        "Reads per-item intent, signals, and matchedTerms",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "For each of these community queries, tell me which page ranks and confirm the searcher's real intent.",
+      "expected_output": "Should decline to name the ranking URL or confirm verified intent from this report. Should state the classifier does not inspect the live SERP or identify the ranking URL, and that intent labels are low-confidence English language heuristics, not verified intent. Should recommend retrieving GSC query and page rows to find the ranking URL and check its content against the observed query language. Should route to page-opportunities to review one ranking URL and content-optimization to turn intent into a brief.",
+      "assertions": [
+        "Declines to name the ranking URL from this report",
+        "States the classifier does not inspect the live SERP or identify the ranking URL",
+        "States intent labels are low-confidence heuristics, not verified intent",
+        "Recommends retrieving GSC query and page rows to find the ranking URL",
+        "Routes to report id page-opportunities or report id content-optimization"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "No community-intent rows came back for our product category, so there is no review demand there.",
+      "expected_output": "Should refuse to read the empty result as absence of demand. Should state a capped or partial zero is inconclusive, not absence of demand, and check dataStatus, source.completeness, warnings, and caveats. Should keep filtered, capped, partial, and complete states distinct and recommend widening the window with days, lowering minImpressions, or raising maxRows before concluding there is no review demand.",
+      "assertions": [
+        "Refuses to treat the empty result as absence of demand",
+        "States a capped or partial zero is inconclusive, not absence of demand",
+        "Checks dataStatus, source.completeness, warnings, and caveats",
+        "Keeps filtered, capped, partial, and complete states distinct",
+        "Recommends widening the window or lowering minImpressions before concluding"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "subject": "geo-gaps",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Is anything in our setup quietly blocking our pages from Google's AI search stuff? Want the technical restrictions and which pages they hit.",
+      "expected_output": "Should use report id geo-gaps to find crawl, index, and snippet settings that could restrict pages in Google AI search features, and the pages where they appear. Should follow the discovery flow: seo_describe_report with id geo-gaps, then seo_run_report from a saved crawl by reportId or site, with a bounded limit. Should read dataStatus, source.partialReasons, and selection evaluated, matched, returned, and truncated counts first, then per-URL issues separated from searchEligibility, then the access states where null means unknown.",
+      "assertions": [
+        "Uses report id geo-gaps for the technical restrictions and affected pages",
+        "Reads dataStatus, source.partialReasons, and the selection counts first",
+        "Keeps per-URL issues separate from searchEligibility",
+        "Treats a null access state as unknown, not allowed",
+        "Passes a bounded limit rather than unbounded input"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run geo-gaps on saved crawl crawl_example_20260710, limit 25, and show me the pages with hard access restrictions.",
+      "expected_output": "Should run report id geo-gaps with reportId crawl_example_20260710 and limit 25, via seo reports run geo-gaps or seo_run_report. Should read dataStatus, source.partialReasons, and the evaluated, matched, returned, and truncated counts, then per-URL issues separated from searchEligibility, then access states. Should treat null access states as unknown rather than allowed and note semantic HTML and structured data do not override a hard access restriction. Should offer report id affected-urls to list URLs for a specific rule.",
+      "assertions": [
+        "Runs report id geo-gaps with reportId crawl_example_20260710 and limit 25",
+        "Reads dataStatus, source.partialReasons, and the selection counts before rows",
+        "Keeps per-URL issues separate from searchEligibility",
+        "States semantic HTML and structured data do not override a hard access restriction",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The gap list came back empty, so every page is eligible and visible in Google AI search. And those noindex tags it skipped, flag them as defects to remove.",
+      "expected_output": "Should refuse both moves. Should explain that an empty gap list does not prove indexing, visibility, selection, or complete coverage, and that noindex, robots, canonicals, or snippet limits should be confirmed as intent before being treated as defects. Should keep the noindex directives as intentional controls until intent or contradictory evidence makes them defects, and should check dataStatus and source.partialReasons before calling the list clean.",
+      "assertions": [
+        "Refuses to read an empty gap list as proof of visibility or eligibility",
+        "States an empty list does not prove indexing, selection, or complete coverage",
+        "Treats noindex, robots, canonicals, and snippet limits as intentional controls",
+        "Confirms intent before treating a control as a defect",
+        "Checks dataStatus and source.partialReasons before calling the list clean"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Some URLs show a null access state. Count those as allowed and move on.",
+      "expected_output": "Should refuse to count null access states as allowed. Should explain that a null access state means unknown, not allowed, and keep unknown and allowed states distinct. Should read source.partialReasons and the evaluated versus matched counts to see why the state is unknown, and recommend re-checking the exact URL and directive rather than assuming access.",
+      "assertions": [
+        "Refuses to count null access states as allowed",
+        "States a null access state means unknown, not allowed",
+        "Keeps unknown and allowed states distinct",
+        "Reads source.partialReasons to understand why the state is unknown",
+        "Recommends re-checking the exact URL and directive before assuming access"
+      ],
+      "files": []
+    }
+  ]
+}

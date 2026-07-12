@@ -1,0 +1,44 @@
+{
+  "subject": "okf-validate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I edited our knowledge pack markdown by hand. Can you check I didn't break the structure or any references before we use it?",
+      "expected_output": "Should use report id okf-validate to check supplied OKF markdown files for structure, references, and broken links before use. Should follow the discovery flow: seo_describe_report with id okf-validate, then seo_run_report with the required files array of path and content objects. Should read validation.valid and the file and concept counts first, then each issue level, path, and message, then explanation.nextActions as ordering guidance. Should present it as a file-contract check, not a fact check.",
+      "assertions": [
+        "Uses report id okf-validate to check the edited files",
+        "Passes the required files array of path and content objects",
+        "Reads validation.valid and the file and concept counts first",
+        "Reads each issue level, path, and message, then explanation.nextActions",
+        "Presents the result as a file-contract check, not a fact check"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Validate these two OKF files and tell me what to fix first if anything is wrong.",
+      "expected_output": "Should run report id okf-validate with the files array containing both path and content entries, via seo reports run okf-validate or seo_run_report. Should read validation.valid and the counts, then each issue level, path, and message, then use explanation.nextActions as the ordering guidance for what to fix first. Should note that warnings still require review even when validation.valid is true, and that a valid result must not be reported as fact checked.",
+      "assertions": [
+        "Runs report id okf-validate with both files in the files array",
+        "Reads validation.valid, then each issue level, path, and message",
+        "Uses explanation.nextActions to order the fixes",
+        "States warnings still require review even when validation.valid is true",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "It came back valid true, so the pack is fact checked and the cited sources are all confirmed. We can trust it as-is.",
+      "expected_output": "Should refuse to equate valid true with fact checked. Should explain that validation checks the file contract only and does not browse cited sources or determine whether the knowledge is true, current, owned, or complete, and that valid true must never be reported as fact checked. Should recommend separately verifying the cited URLs, claims, dates, and the recorded crawl snapshot after the structural check passes.",
+      "assertions": [
+        "Refuses to report valid true as fact checked",
+        "States validation checks the file contract only",
+        "States it does not confirm the knowledge is true, current, owned, or complete",
+        "Notes the validator does not browse the cited sources",
+        "Recommends separately verifying cited URLs, claims, dates, and the crawl snapshot"
+      ],
+      "files": []
+    }
+  ]
+}

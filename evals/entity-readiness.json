@@ -1,0 +1,57 @@
+{
+  "subject": "entity-readiness",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Does our site make it clear who we are and who writes our articles? Want to check the author and organization signals.",
+      "expected_output": "Should use report id entity-readiness to review names, authors, dates, structured data, and profile links across crawled pages and return page-level observations that need human review. Should follow the discovery flow: seo_describe_report with id entity-readiness, then seo_run_report from a saved crawl by reportId or site. Should read dataStatus, evaluatedPages versus crawlPages, and caveats first, then entities.schemaTypes, then sameAs, sameAsByType, and socialProfiles, then authors. Should treat the checks as informational observations, not pass or fail requirements.",
+      "assertions": [
+        "Uses report id entity-readiness for the author and organization signals",
+        "Works from a saved crawl by reportId or site",
+        "Reads dataStatus, evaluatedPages versus crawlPages, and caveats first",
+        "Reads schemaTypes, then sameAs, sameAsByType, socialProfiles, then authors",
+        "Treats the checks as informational observations, not pass or fail requirements"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run entity-readiness on saved crawl crawl_example_20260710 and point me at pages missing author markup.",
+      "expected_output": "Should run report id entity-readiness with reportId crawl_example_20260710, via seo reports run entity-readiness or seo_run_report. Should read dataStatus, evaluatedPages versus crawlPages, and caveats, then entities.schemaTypes, sameAs, sameAsByType, socialProfiles, and authors to find the examples with missing or inconsistent author evidence. Should note that skipped or non-indexable pages are not evidence of absence and that the examples need human confirmation against the publisher.",
+      "assertions": [
+        "Runs report id entity-readiness with reportId crawl_example_20260710",
+        "Reads dataStatus and evaluatedPages versus crawlPages before the examples",
+        "Reads the authors and sameAs evidence to surface missing author markup",
+        "States skipped or non-indexable pages are not evidence of absence",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Our JSON-LD lists the organization and authors, so this gets us into Google's Knowledge Graph and lifts our rankings. Confirm that.",
+      "expected_output": "Should refuse to translate entity markup into Knowledge Graph inclusion or ranking gains. Should explain that these signals do not prove Knowledge Graph inclusion, ownership, expertise, rankings, or citations, and that the checks are informational observations rather than requirements. Should recommend confirming names, URLs, authorship, and dates with the publisher and re-crawling the same scope, instead of claiming an outcome.",
+      "assertions": [
+        "Refuses to claim Knowledge Graph inclusion from entity markup",
+        "Refuses to claim a ranking lift from the signals",
+        "States the signals do not prove ownership, expertise, rankings, or citations",
+        "Treats the checks as observations, not requirements",
+        "Recommends confirming names, URLs, authorship, and dates with the publisher"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Only a handful of pages got evaluated because the crawl was small. Treat the rest as having no author signals at all.",
+      "expected_output": "Should refuse to read unevaluated pages as having no author signals. Should compare evaluatedPages versus crawlPages and read dataStatus and caveats, and explain that skipped or non-indexable pages are not evidence of absence. Should keep evaluated, skipped, and unavailable states distinct and recommend widening the crawl scope before concluding anything about the pages that were not evaluated.",
+      "assertions": [
+        "Refuses to treat unevaluated pages as having no author signals",
+        "Compares evaluatedPages versus crawlPages and reads dataStatus",
+        "States skipped or non-indexable pages are not evidence of absence",
+        "Keeps evaluated, skipped, and unavailable states distinct",
+        "Recommends widening the crawl scope before concluding on unevaluated pages"
+      ],
+      "files": []
+    }
+  ]
+}

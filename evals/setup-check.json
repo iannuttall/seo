@@ -1,0 +1,56 @@
+{
+  "subject": "setup-check",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My reports keep erroring out. Is something wrong with my setup?",
+      "expected_output": "Should route to report id setup-check, which checks Google login, scopes, local configuration, and saved defaults before running reports. Should follow the discovery flow: seo_list_reports with category setup, seo_describe_report with id setup-check, then seo_run_report. Should note the report takes no parameters. Should read ok first, then each checks entry status, distinguishing fail from warn, with its detail and fix, then generatedAt.",
+      "assertions": [
+        "Uses report id setup-check to diagnose the local setup",
+        "Discovers or identifies setup-check through the report catalog (MCP tools or seo reports list/describe/run)",
+        "Notes the report takes no parameters",
+        "Reads ok first, then each check status",
+        "Distinguishes fail from warn and reads each detail and fix",
+        "Presents the diagnosis from the actual check results rather than generic setup advice"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run the local setup check and tell me exactly what to fix.",
+      "expected_output": "Should run report id setup-check with no parameters, since the schema is empty, via seo reports run setup-check or seo_run_report. Should read each checks entry, separate fail from warn, and surface the detail and fix for each failed check. Should recommend applying the fix, re-running setup-check, then running a small read-only report for the intended property.",
+      "assertions": [
+        "Runs report id setup-check with no parameters",
+        "Separates fail from warn across the checks",
+        "Surfaces the detail and fix for each failed check",
+        "Recommends applying the fix and re-running setup-check",
+        "Recommends a small read-only report after setup passes"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Setup check passed, so my token works, I can pull data for any property, and the site's SEO is fine.",
+      "expected_output": "Should refuse the claims. A passing result means local prerequisites look present, not that a token is still accepted by Google or that the account can access a property. A setup pass is not evidence about rankings, indexing, or site health. Should recommend running a small read-only report for the intended property to confirm access.",
+      "assertions": [
+        "Refuses to read a pass as a working token or property access",
+        "States a pass means local prerequisites look present, not accepted by Google",
+        "States a setup pass is not evidence about rankings, indexing, or site health",
+        "Recommends a small read-only report to confirm property access"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "It warns about missing saved defaults, so that is a blocking failure, right?",
+      "expected_output": "Should not treat the warning as a blocking failure. Missing saved defaults are usually warnings because explicit parameters can replace them. Should distinguish warn from fail and note a report can still run when the site is passed explicitly rather than from a saved default.",
+      "assertions": [
+        "Refuses to treat the missing-defaults warning as a blocking failure",
+        "States missing saved defaults are usually warnings because explicit parameters can replace them",
+        "Distinguishes warn from fail",
+        "Notes a report can run with the site passed explicitly"
+      ],
+      "files": []
+    }
+  ]
+}

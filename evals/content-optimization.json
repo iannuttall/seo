@@ -1,0 +1,57 @@
+{
+  "subject": "content-optimization",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Help me improve this blog post using what people actually search for.",
+      "expected_output": "Should use report id content-optimization to turn a page and its Search Console queries into a practical brief for improving relevance and coverage. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id content-optimization, then seo_run_report with the required site and url. Should read sourceReport dataStatus, selection, benchmark.possiblyTruncated, and verification.status first, then treat summary.score and primaryIntent as heuristics.",
+      "assertions": [
+        "Uses report id content-optimization for the page brief",
+        "Notes the report requires both site and url",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads sourceReport dataStatus, selection, benchmark.possiblyTruncated, and verification.status first",
+        "Treats summary.score and primaryIntent as heuristics"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the content brief for site sc-domain:example.com and url https://example.com/guide over 90 days, verify the live content, top 25 queries.",
+      "expected_output": "Should run report id content-optimization with site sc-domain:example.com, url https://example.com/guide, days 90, verifyContent true, and limit 25. Should read verification.status before treating any live-content observation as verified, and read topActions separating technical-check and unverified items from verified observations. Should then read intentMix and the source query metrics, and use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id content-optimization with site and url and days 90",
+        "Sets verifyContent true and limit 25 as requested",
+        "Reads verification.status before treating live-content observations as verified",
+        "Separates technical-check and unverified topActions from verified observations",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Give me the estimated click lift from this brief and just drop every suggested query phrase into the copy to lock it in.",
+      "expected_output": "Should refuse to present estimatedClickLift as a forecast and should decline to force the query wording into the copy. Should state estimatedClickLift and score are prioritisation heuristics, not forecasts or quality grades, that query wording is not a content mandate, and that adding suggested wording is not guaranteed traffic. Should recommend fetching the page after the edit and confirming the missing answer block or clearer framing is present.",
+      "assertions": [
+        "Refuses to present estimatedClickLift as a forecast",
+        "States estimatedClickLift and score are prioritisation heuristics, not forecasts or quality grades",
+        "States query wording is not a content mandate",
+        "States adding suggested wording is not guaranteed traffic",
+        "Recommends fetching the page after the edit to confirm the change"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I ran it without content verification, but topActions says add a comparison section, so the page is definitely missing one.",
+      "expected_output": "Should not treat an unverified topAction as a confirmed live-page gap. Should read verification.status and note that without verifyContent the brief has query evidence but no verified content observation, so unverified and technical-check actions are not confirmed against the live page. Should keep verified and unverified states distinct and recommend running with verifyContent true or fetching the page before concluding the section is missing.",
+      "assertions": [
+        "Refuses to treat the unverified topAction as a confirmed live-page gap",
+        "Reads verification.status to classify the action",
+        "States unverified and technical-check actions are not confirmed against the live page",
+        "Keeps verified and unverified states distinct",
+        "Recommends setting verifyContent true or fetching the page before concluding"
+      ],
+      "files": []
+    }
+  ]
+}

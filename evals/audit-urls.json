@@ -1,0 +1,58 @@
+{
+  "subject": "audit-urls",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're about to ship a redesign of our five main landing pages. Can you check just those pages without crawling the whole site?",
+      "expected_output": "Should use report id audit-urls to run consistent technical checks over a supplied list of URLs without discovering the rest of the site. Should follow the discovery flow: seo_describe_report with id audit-urls, then seo_run_report with the required urls array. Should read requested versus attempted, fetched, failed, retained, and omitted counts first, then response evidence and issue summaries, then requestEvidenceStatus, warnings, and caveats. Should frame it as a repeatable pre-release check, not full site coverage.",
+      "assertions": [
+        "Uses report id audit-urls to check the supplied list without a full crawl",
+        "Passes the required urls array with the five landing pages",
+        "Reads requested versus attempted, fetched, failed, retained, and omitted counts first",
+        "Reads response evidence and issue summaries before concluding",
+        "Frames the result as a bounded pre-release check, not complete site coverage"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run audit-urls on https://example.com/pricing and https://example.com/features with includeIssues true and save the report so I can compare after we deploy.",
+      "expected_output": "Should run report id audit-urls with urls set to the two supplied pages, includeIssues true, and saveReport true, via seo reports run audit-urls or seo_run_report. Should read requested versus attempted, fetched, failed, retained, and omitted counts, then per-URL response evidence and issue summaries, then requestEvidenceStatus. Should note that re-running the identical URL list after deployment is the verification, and that a URL dropped from the request is not a verified fix.",
+      "assertions": [
+        "Runs report id audit-urls with the two supplied URLs in the urls array",
+        "Sets includeIssues true and saveReport true as requested",
+        "Reads requested, attempted, fetched, failed, retained, and omitted counts",
+        "Notes verification is re-running the identical URL list after deployment",
+        "States a URL dropped from the request is not a verified fix",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "These five pages passed. That proves the template is fine, so every page built from it is fine too, right?",
+      "expected_output": "Should decline to generalize a passing sample to every page built from the template. Should explain that a successful sample does not prove the same template works everywhere and that a bounded audit is never complete site coverage. Should recommend either auditing more URLs from the template or running report id site-crawl to discover pages, and should keep the passing sample scoped to the URLs actually checked.",
+      "assertions": [
+        "Refuses to generalize a passing sample to every template page",
+        "States a successful sample does not prove the template works everywhere",
+        "States a bounded audit is never complete site coverage",
+        "Recommends auditing more URLs or running report id site-crawl to discover pages",
+        "Keeps the pass scoped to the URLs actually checked"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "One of the URLs failed to fetch. Log it as a broken page and add it to the fix list.",
+      "expected_output": "Should not turn a single failed fetch into a confirmed broken page. Should read the failed count and requestEvidenceStatus and explain that a failed request may be transient network rather than a persistent defect. Should recommend retrying the identical URL, or inspecting it directly with report id audit-page, before recording it as broken, and should keep failed and confirmed-defect states distinct.",
+      "assertions": [
+        "Refuses to log a single failed fetch as a confirmed broken page",
+        "Reads the failed count and requestEvidenceStatus",
+        "States a failed request may be transient network, not a persistent defect",
+        "Recommends retrying, or inspecting with report id audit-page, before recording it",
+        "Keeps failed and confirmed-defect states distinct"
+      ],
+      "files": []
+    }
+  ]
+}

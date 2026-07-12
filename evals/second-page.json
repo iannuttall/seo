@@ -1,0 +1,58 @@
+{
+  "subject": "second-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which of our pages are just barely off page one?",
+      "expected_output": "Should route to report id second-page, which finds URLs averaging positions 11 to 20 with the queries behind each one. Should follow the discovery flow: seo_list_reports with category reporting, seo_describe_report with id second-page, then seo_run_report with only schema-valid params. Should read source completeness, date range, selection, methodology, provenance, and brand filtering first, then per-item impressions, clicks, CTR, and average position, then the priority value. Should note average position is aggregated, not an exact rank.",
+      "assertions": [
+        "Uses report id second-page for the positions 11 to 20 review",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads source completeness, date range, and selection before the rows",
+        "Reads per-item impressions, clicks, CTR, and average position",
+        "States average position is aggregated and not an exact rank",
+        "Reads the priority value last"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run second-page for sc-domain:example.com over a 90 day range, at least 200 impressions, top 25 URLs, brand excluded.",
+      "expected_output": "Should run report id second-page with site sc-domain:example.com, range 90, minImpressions 200, limit 25, and includeBrand false, via seo reports run second-page or seo_run_report. Should keep params within the schema bounds, where range allows up to 548 and limit up to 100. Should note limit caps the retained rows and does not increase provider coverage, so the output is not a complete inventory.",
+      "assertions": [
+        "Runs report id second-page with range 90 and minImpressions 200",
+        "Sets limit 25 and includeBrand false as requested",
+        "Keeps range and limit within the schema bounds",
+        "Notes limit caps retained rows and does not increase provider coverage",
+        "States the output is not a complete inventory"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Add up the priority values, that is how many extra clicks we will get, and any URL sharing a query with another is cannibalisation, right?",
+      "expected_output": "Should refuse both claims. Priority is a transparent heuristic, not expected click lift, so it must not be totalled into a promised click gain. One row is not cannibalisation. Should point to report id cannibalisation to check query and URL overlap rather than inferring it from a single row here.",
+      "assertions": [
+        "States priority is a transparent heuristic, not expected click lift",
+        "Refuses to total priority values into a promised click gain",
+        "States one row is not cannibalisation",
+        "Points to report id cannibalisation to check query and URL overlap",
+        "Does not present a total extra clicks figure"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "This URL sits at position 12, so we are locked at number 12 for that query. Just drop the exact phrase into the title to jump to number 1.",
+      "expected_output": "Should decline the framing. Average position is aggregated across searches, locations, devices, and time and is not an exact or locked rank, and retained limits mean the output is not a complete inventory. Should recommend inspecting the live page and search intent and confirming the query suits the URL before one defensible change, rather than forcing the exact phrase into the title.",
+      "assertions": [
+        "States average position 12 is not an exact or locked rank",
+        "Notes average position is aggregated across searches, locations, devices, and time",
+        "Declines to force the exact query phrase into the title",
+        "Recommends inspecting the live page and intent before one defensible change",
+        "Notes retained limits mean the output is not a complete inventory"
+      ],
+      "files": []
+    }
+  ]
+}

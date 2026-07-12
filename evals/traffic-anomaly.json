@@ -1,0 +1,57 @@
+{
+  "subject": "traffic-anomaly",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Did anything weird happen with our search traffic lately?",
+      "expected_output": "Should route to report id traffic-anomaly, which finds recent clicks or impressions that moved beyond the site's normal Search Console pattern. Should follow the discovery flow: seo_list_reports with category diagnosis, seo_describe_report with id traffic-anomaly, then seo_run_report with site. Should read coverage with requested dates, expected versus observed days, missing days, invalid rows, and status first, then the anomalies with metric, baseline and comparison dates, percentChange, zScore, and significanceMethod, then direction and significant. Should treat the output as a movement signal, not a cause.",
+      "assertions": [
+        "Uses report id traffic-anomaly for the movement signal",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads coverage with expected versus observed days and status first",
+        "Reads anomalies with percentChange, zScore, and significanceMethod",
+        "Reads direction and significant",
+        "Treats the output as a movement signal, not a cause"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run traffic-anomaly for sc-domain:example.com with a 90 day baseline and a 7 day recent window.",
+      "expected_output": "Should run report id traffic-anomaly with site sc-domain:example.com, days 90, and recentDays 7, via seo reports run traffic-anomaly or seo_run_report. Should use only site, days, recentDays, and refresh from the schema. Should check coverage status and missing days before reading whether the movement is significant, and if it is, run report id segment-impact next.",
+      "assertions": [
+        "Runs report id traffic-anomaly with days 90 and recentDays 7",
+        "Uses only parameters defined in the traffic-anomaly schema",
+        "Checks coverage status and missing days before reading significance",
+        "Plans to run report id segment-impact if the movement is significant"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The spike is significant, so the algorithm update caused it. Put that down as the reason.",
+      "expected_output": "Should refuse. Statistical unusualness does not identify a cause, diagnose a defect, or prove an external event affected the property. Should keep the signal separate from a cause and recommend report id update-correlation for update timing and report id segment-impact for where the movement sits.",
+      "assertions": [
+        "Refuses to name the algorithm update as the cause",
+        "States statistical unusualness does not identify a cause or prove an external event",
+        "Keeps the movement signal separate from a cause",
+        "Recommends report id update-correlation for update timing",
+        "Recommends report id segment-impact for where the movement sits"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "percentChange is null, so there was zero change, and just ignore the missing days in the window.",
+      "expected_output": "Should refuse both readings. A null percentage from a zero baseline differs from zero change, and partial coverage can change the baseline. Should read coverage expected versus observed days, missing days, and status before trusting the signal, and not equate a null percentage with a flat result.",
+      "assertions": [
+        "Refuses to read a null percentChange as zero change",
+        "States a null percentage from a zero baseline differs from zero change",
+        "States partial coverage can change the baseline",
+        "Reads coverage expected versus observed days and missing days",
+        "Does not ignore the missing days in the window"
+      ],
+      "files": []
+    }
+  ]
+}

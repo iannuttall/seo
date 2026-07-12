@@ -26,9 +26,11 @@ import {
   chooseGa4Property,
   maybeConnectAuth,
   maybeInstallMcp,
+  maybeInstallSkill,
   type SetupAuthStatus,
   type SetupGa4Selection,
   type SetupMcpInstall,
+  type SetupSkillInstall,
 } from './prompts.js'
 
 type SetupResult = {
@@ -37,7 +39,14 @@ type SetupResult = {
   auth: SetupAuthStatus
   ga4?: SetupGa4Selection
   mcp: SetupMcpInstall[]
+  skill?: SetupSkillInstall
   next: string[]
+}
+
+function skillInstallLabel(skill: SetupSkillInstall): string {
+  if (skill.status === 'installed') return 'installed'
+  if (skill.status === 'failed') return 'install failed'
+  return 'not installed'
 }
 
 function shellArg(value: string): string {
@@ -143,13 +152,14 @@ export async function runGuidedSetup(
 
   if (!shouldSaveProfile) {
     const mcp = await maybeInstallMcp(args)
+    const skill = await maybeInstallSkill(args)
     const siteArg = `--site ${shellArg(site)}`
     const next = [
       `seo report ${siteArg}`,
       `seo refresh-priorities ${siteArg} --verify-content`,
       `seo technical-watch ${siteArg}`,
     ]
-    const result: SetupResult = { site, auth, mcp, next }
+    const result: SetupResult = { site, auth, mcp, skill, next }
 
     if (json) {
       printJson(result)
@@ -161,9 +171,11 @@ export async function runGuidedSetup(
       ['GSC property', site],
       ['Auth', auth],
       ['MCP', mcpInstallLabel(mcp)],
+      ['SEO skill', skillInstallLabel(skill)],
     ])
     const mcpFailure = mcpFailureMessage(mcp)
     if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
+    if (skill.error) note(skill.error, 'SEO skill install failed')
     note(next.join('\n'), 'Try next')
     outro('Setup complete.')
     printStarAsk()
@@ -225,12 +237,13 @@ export async function runGuidedSetup(
     isDefault,
   })
   const mcp = await maybeInstallMcp(args)
+  const skill = await maybeInstallSkill(args)
   const next = [
     `seo report --project ${client.id}`,
     `seo refresh-priorities --project ${client.id} --verify-content`,
     `seo technical-watch --project ${client.id}`,
   ]
-  const result: SetupResult = { client, site, auth, ga4, mcp, next }
+  const result: SetupResult = { client, site, auth, ga4, mcp, skill, next }
 
   if (json) {
     printJson(result)
@@ -247,9 +260,11 @@ export async function runGuidedSetup(
     ...(ga4 ? [['GA4 selection', ga4.reason] as [string, string]] : []),
     ['Auth', auth],
     ['MCP', mcpInstallLabel(mcp)],
+    ['SEO skill', skillInstallLabel(skill)],
   ])
   const mcpFailure = mcpFailureMessage(mcp)
   if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
+  if (skill.error) note(skill.error, 'SEO skill install failed')
   note(next.join('\n'), 'Try next')
   outro('Setup complete.')
   printStarAsk()

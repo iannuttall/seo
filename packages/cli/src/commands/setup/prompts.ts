@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import {
   confirm,
   multiselect,
@@ -38,6 +39,10 @@ export type SetupGa4Selection = {
   propertyId: string
   selection: 'explicit' | 'matched' | 'manual'
   reason: string
+}
+export type SetupSkillInstall = {
+  status: 'installed' | 'declined' | 'skipped' | 'failed'
+  error?: string
 }
 
 type Ga4PropertyChoice = {
@@ -257,6 +262,36 @@ export async function chooseGa4Property(input: {
         ? `Selected ${choice.label} during setup. Its web stream did not clearly match ${input.site}.`
         : `Selected ${choice.label} during setup. seo could not read every GA4 web stream, so it did not guess a match.`,
   }
+}
+
+export async function maybeInstallSkill(
+  args: Record<string, unknown>,
+): Promise<SetupSkillInstall> {
+  if (args['skip-skill'] || !canPrompt({ json: args.json === true })) {
+    return { status: 'skipped' }
+  }
+  const shouldInstall = maybeExitCancelled(
+    await confirm({
+      message:
+        'Install the SEO skill so coding agents know how to run reports?',
+      initialValue: true,
+    }),
+  )
+  if (!shouldInstall) return { status: 'declined' }
+
+  const result = spawnSync('npx', ['-y', 'skills', 'add', 'iannuttall/seo'], {
+    stdio: 'inherit',
+  })
+  if (result.error) {
+    return { status: 'failed', error: result.error.message }
+  }
+  if (result.status !== 0) {
+    return {
+      status: 'failed',
+      error: `npx skills add exited with status ${result.status ?? 'unknown'}.`,
+    }
+  }
+  return { status: 'installed' }
 }
 
 export async function maybeInstallMcp(

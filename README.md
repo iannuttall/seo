@@ -5,7 +5,7 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The SEO command for AI agents. Open source, evidence-backed SEO reports from your own crawl, Search Console, and GA4 data.
+  The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and GA4 data.
 </p>
 
 <p align="center">
@@ -74,7 +74,7 @@ technical report before connecting Google.
 Running `seo help` shows the shape of the tool:
 
 ```txt
-seo v0.1.0
+seo v0.2.0
 
 Human-friendly SEO reports first, power tools when you need them.
 

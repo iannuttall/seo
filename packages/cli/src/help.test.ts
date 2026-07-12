@@ -231,13 +231,13 @@ test('start reuses the existing project profile for the selected property', asyn
         'projects',
         'add',
         '--id',
-        'keep',
+        'example',
         '--name',
-        'keep.md',
+        'example.com',
         '--site',
-        'sc-domain:keep.md',
+        'sc-domain:example.com',
         '--url',
-        'https://keep.md/',
+        'https://example.com/',
         '--json',
       ],
       env,
@@ -248,7 +248,7 @@ test('start reuses the existing project profile for the selected property', asyn
       [
         'start',
         '--site',
-        'sc-domain:keep.md',
+        'sc-domain:example.com',
         '--skip-auth',
         '--skip-mcp',
         '--json',
@@ -258,11 +258,11 @@ test('start reuses the existing project profile for the selected property', asyn
     const output = JSON.parse(result.stdout)
 
     assert.equal(result.exitCode, 0)
-    assert.equal(output.client.id, 'keep')
+    assert.equal(output.client.id, 'example')
     assert.deepEqual(output.next, [
-      'seo report --project keep',
-      'seo refresh-priorities --project keep --verify-content',
-      'seo technical-watch --project keep',
+      'seo report --project example',
+      'seo refresh-priorities --project example --verify-content',
+      'seo technical-watch --project example',
     ])
 
     const listed = await runSeoResult(['projects', 'list', '--json'], env)
@@ -329,7 +329,7 @@ test('reset refuses to prompt outside a terminal without --yes', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-reset-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-reset-cache-'))
   const marker = join(configDir, 'keep.txt')
-  await writeFile(marker, 'keep')
+  await writeFile(marker, 'example')
 
   try {
     const result = await runSeoResult(['reset'], {

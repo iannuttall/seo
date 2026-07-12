@@ -1,0 +1,58 @@
+{
+  "subject": "crawl-diff",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We just shipped a big deploy. Did anything technical break on the site?",
+      "expected_output": "Should route to report id crawl-diff, which crawls the site and compares it with the previous matching run. Should follow the discovery flow: seo_list_reports with category monitoring, seo_describe_report with id crawl-diff, then seo_run_report with a startUrl. Should read run versus previousRun first, treating a missing previous run as a baseline, then the start URL, limit, counts, timestamps, rendering, and warnings for both runs, then the summary counts traced into items before, after, and changes. Should treat recommendations as review actions.",
+      "assertions": [
+        "Uses report id crawl-diff for the post-deploy technical check",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads run versus previousRun and treats a missing previous run as a baseline",
+        "Reads counts, rendering, and warnings for both runs",
+        "Reads the summary counts traced into before, after, and changes",
+        "Treats recommendations as review actions rather than confirmed defects"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run crawl-diff starting at https://example.com with a 500 page limit and JavaScript rendering.",
+      "expected_output": "Should run report id crawl-diff with startUrl https://example.com, limit 500, and js true, via seo reports run crawl-diff or seo_run_report. Should use only startUrl, site, limit, refresh, and js from the schema. Should note that a first run with no previousRun is a baseline, not a change set, and that comparability depends on running with a comparable scope next time.",
+      "assertions": [
+        "Runs report id crawl-diff with startUrl, limit 500, and js true",
+        "Uses only parameters defined in the crawl-diff schema",
+        "States a first run with no previousRun is a baseline, not a change set",
+        "Notes comparability depends on a comparable scope on the next run",
+        "Reads the fresh run and previousRun before the changes"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Twelve URLs are gone from the diff, so we deleted 12 pages, and the crawl is clean now so our rankings are safe.",
+      "expected_output": "Should refuse both claims. A removed URL may be outside the current discovered set or limit rather than deleted. A bounded diff is not an inventory-wide audit and does not show ranking impact. Should recommend repeating the crawl with comparable scope and confirming the changed items before concluding pages were deleted or that rankings are unaffected.",
+      "assertions": [
+        "Refuses to treat a removed URL as a deleted page",
+        "States a removed URL may be outside the current discovered set or limit",
+        "States a bounded diff is not an inventory-wide audit",
+        "Refuses to claim the diff shows ranking impact",
+        "Recommends repeating the crawl with comparable scope to confirm"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Those issues do not appear in this run, so they are fixed, even though the log shows some fetches failed.",
+      "expected_output": "Should not treat the absence as resolved when fetches failed. A fetch or extraction failure cannot support a resolved issue. Should read the warnings and rendering for both runs and keep a failed fetch distinct from a resolved finding. Should recommend re-running with comparable scope and confirming the changed item before calling the issues fixed.",
+      "assertions": [
+        "Refuses to call the issues fixed when fetches failed",
+        "States a fetch or extraction failure cannot support a resolved issue",
+        "Reads the warnings and rendering for both runs",
+        "Keeps a failed fetch distinct from a resolved finding",
+        "Recommends re-running with comparable scope to confirm the fix"
+      ],
+      "files": []
+    }
+  ]
+}

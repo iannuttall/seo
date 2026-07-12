@@ -1,0 +1,44 @@
+{
+  "subject": "crawler-rules",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What technical checks can this tool actually run on a crawl? I want to see what's available before I ask for anything specific.",
+      "expected_output": "Should use report id crawler-rules to return the catalog of available technical check IDs and the evidence each rule looks for. Should follow the discovery flow: seo_describe_report with id crawler-rules, then seo_run_report, optionally scoped by category. Should read each rule id, title, and category, then default severity as triage metadata, then guidance metadata. Should present the list as a catalog of available checks, not as findings on any specific site.",
+      "assertions": [
+        "Uses report id crawler-rules to list the available checks",
+        "Reads each rule id, title, and category",
+        "Treats default severity as generic triage metadata, not actual priority",
+        "Presents the catalog as available checks, not findings on a site",
+        "Does not imply any listed rule was triggered by a crawl"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Show me only the indexability rules so I can pick the right rule id for an affected-urls run.",
+      "expected_output": "Should run report id crawler-rules with category indexability, one of the allowed enum values, via seo reports run crawler-rules or seo_run_report. Should read each rule id, title, and category, then read the guidance metadata to choose the correct id, then pass that exact id to report id affected-urls or report id explain-crawl-issue against a real crawl. Should note that listing a rule does not mean any page triggered it.",
+      "assertions": [
+        "Runs report id crawler-rules with category indexability from the allowed enum",
+        "Reads each rule id, title, and category to pick the right one",
+        "Passes the chosen id to report id affected-urls or report id explain-crawl-issue",
+        "States listing a rule does not mean any page triggered it",
+        "Uses only the category enum values defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This rule is marked high severity in the catalog, so it must be the most urgent thing on our site and a Google requirement. Add it to the top of the list.",
+      "expected_output": "Should refuse both claims. Should explain that default severity is generic triage metadata, not actual priority for this site, and that listing a rule does not make the convention a search-engine requirement. Should note that similarly named rules may not share source semantics. Should recommend confirming the rule against real evidence with report id affected-urls and ranking real findings with report id top-fixes before deciding urgency.",
+      "assertions": [
+        "Refuses to treat default severity as this site's actual priority",
+        "States listing a rule does not make the convention a search-engine requirement",
+        "Notes similarly named rules may not share source semantics",
+        "Recommends confirming the rule with report id affected-urls against real evidence",
+        "Recommends report id top-fixes to rank real findings before deciding urgency"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "subject": "ai-referrals",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "How much traffic are we getting from ChatGPT and other AI tools?",
+      "expected_output": "Should use report id ai-referrals to find visits from known AI products in GA4 and a ranked, bounded set of landing pages that received them. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id ai-referrals, then seo_run_report with the required GA4 property. Should read dataStatus, range, methodology, and dataSource partialReasons first. Should clarify the report measures identifiable AI referral sessions in GA4, not citations or unclicked mentions inside AI answers.",
+      "assertions": [
+        "Uses report id ai-referrals for measured AI referral traffic",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Notes the report needs a GA4 property and reads GA4 referral sessions",
+        "Reads dataStatus, range, methodology, and dataSource partialReasons first",
+        "Clarifies it measures identifiable referral sessions, not citations or unclicked mentions"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the AI referral report for GA4 property 123456789 from 2026-04-01 to 2026-06-30 and give me the top 25 landing pages.",
+      "expected_output": "Should run report id ai-referrals with property 123456789, startDate 2026-04-01, endDate 2026-06-30, and resultLimit 25 to bound the ranked landing pages. Should note maxRows bounds retained GA4 rows and that limit is a legacy alias that must match maxRows if both are supplied. Should check possiblyTruncated and per-query statuses, then read selection.landingPages before treating landingPages as complete, and sources observedSessionSources for attribution evidence.",
+      "assertions": [
+        "Runs report id ai-referrals with property 123456789 and the given startDate and endDate",
+        "Sets resultLimit 25 to bound the ranked landing pages",
+        "Notes limit is a legacy alias that must match maxRows when both are set",
+        "Checks possiblyTruncated and per-query statuses",
+        "Reads selection.landingPages before treating landingPages as complete",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The AI referral report came back empty. That proves no AI system has sent us anyone or cited us, right?",
+      "expected_output": "Should refuse to read an empty result as proof of absence. Should state an empty result is not proof that no AI system sent or cited the site, because the report only sees identifiable GA4 referral sessions, not citations or unclicked mentions inside AI answers. Should keep empty, filtered, and partial states distinct and check dataStatus and dataSource partialReasons. Should recommend comparing complete like-for-like GA4 periods rather than concluding absence.",
+      "assertions": [
+        "Refuses to treat the empty result as proof no AI sent or cited the site",
+        "States the report only sees identifiable GA4 referral sessions, not citations or unclicked mentions",
+        "Checks dataStatus and dataSource partialReasons before concluding",
+        "Keeps empty, filtered, and partial states distinct",
+        "Recommends comparing complete like-for-like GA4 periods"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Add up totalUsers across all the landing-page rows to get our AI audience size, and count those sessions as conversions.",
+      "expected_output": "Should refuse both moves. Should state totalUsers is not additive and must not be reconstructed by summing rows. Should state referral sessions did not necessarily cause conversions and are not all AI traffic. Should keep sessions, users, and conversions as distinct measures and point to sources observedSessionSources as attribution evidence rather than a conversion or audience claim.",
+      "assertions": [
+        "Refuses to sum totalUsers across rows into an audience size",
+        "States totalUsers is not additive and must not be reconstructed by summing rows",
+        "States referral sessions did not necessarily cause conversions and are not all AI traffic",
+        "Keeps sessions, users, and conversions as distinct measures",
+        "Points to sources observedSessionSources as attribution evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "The run shows partialReasons and possiblyTruncated true, but I only see 25 pages. That is the full list of AI landing pages, correct?",
+      "expected_output": "Should not treat the 25 rows as the complete set. Should explain resultLimit bounds the ranked landing pages to 25 by default, and that possiblyTruncated and dataSource partialReasons mean the source is capped or partial. Should read selection.landingPages before treating landingPages as complete. Should recommend raising resultLimit or maxRows or resolving the partialReasons before calling it the full list. Should route to seo-to-ai-query for monitoring prompts if the user wants ongoing tracking.",
+      "assertions": [
+        "Refuses to treat the 25 returned rows as the complete list",
+        "States resultLimit bounds the ranked landing pages, defaulting to 25",
+        "Cites possiblyTruncated and dataSource partialReasons as capped or partial evidence",
+        "Reads selection.landingPages before treating landingPages as complete",
+        "Recommends raising resultLimit or maxRows or resolving partialReasons first"
+      ],
+      "files": []
+    }
+  ]
+}

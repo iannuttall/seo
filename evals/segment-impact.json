@@ -1,0 +1,57 @@
+{
+  "subject": "segment-impact",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Traffic dropped. Is it the whole site or just one section?",
+      "expected_output": "Should route to report id segment-impact, which compares page or query groups across equal periods to find which parts of a site moved. Should follow the discovery flow: seo_list_reports with category diagnosis, seo_describe_report with id segment-impact, then seo_run_report with site. Should read before, after, and rangeDays first, then dataStatus and source.before, source.after, and completeness for caps and truncation, then the selection counts, then per-item clickDelta, impressionDelta, and positionDelta and unmatchedSegments. Should recommend confirming the movement first with report id traffic-anomaly.",
+      "assertions": [
+        "Uses report id segment-impact to locate where movement sits",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads before, after, and rangeDays first",
+        "Reads dataStatus and source completeness for caps and truncation",
+        "Reads per-item clickDelta, impressionDelta, and positionDelta",
+        "Recommends confirming movement first with report id traffic-anomaly"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run segment-impact for sc-domain:example.com by page over 90 days against the prior 90 days, top 25 segments.",
+      "expected_output": "Should run report id segment-impact with site sc-domain:example.com, dimension page, days 90, compareDays 90, and limit 25, via seo reports run segment-impact or seo_run_report. Should keep params within the schema bounds, where days and compareDays allow up to 240 and limit up to 100. Should read the selection invalid, duplicate, conflicting, matched, unmatched, returned, and limited counts before ranking movers.",
+      "assertions": [
+        "Runs report id segment-impact with dimension page, days 90, and compareDays 90",
+        "Sets limit 25 as requested",
+        "Keeps days, compareDays, and limit within the schema bounds",
+        "Reads the selection matched, unmatched, and limited counts before ranking",
+        "Uses only parameters defined in the segment-impact schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This segment has a positive positionDelta, so it improved. Promote it as a win.",
+      "expected_output": "Should refuse. A positive positionDelta is worse because a larger average position is lower in results. Should read the direction correctly and note that a limited or truncated result cannot support an inventory-wide winner or loser. Should recommend auditing the top matched movers before drawing a conclusion.",
+      "assertions": [
+        "Refuses to call a positive positionDelta an improvement",
+        "States a larger average position is lower in results",
+        "States a limited or truncated result cannot support an inventory-wide winner or loser",
+        "Recommends auditing the top matched movers before concluding"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "These unmatched segments dropped to zero clicks. Count them as total losses.",
+      "expected_output": "Should refuse. unmatchedSegments are retained in one window only and are not gains from or losses to zero. Missing Search Console rows would be mistaken for zero activity. Should keep unmatched segments distinct from real losses and audit the top matched movers and query intent before drawing a segment conclusion.",
+      "assertions": [
+        "Refuses to count unmatched segments as total losses",
+        "States unmatchedSegments are retained in one window only, not losses to zero",
+        "Notes missing Search Console rows are not zero activity",
+        "Keeps unmatched segments distinct from real losses",
+        "Recommends auditing the top matched movers first"
+      ],
+      "files": []
+    }
+  ]
+}

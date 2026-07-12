@@ -1,0 +1,57 @@
+{
+  "subject": "technical-watch",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Set up a check that catches technical SEO regressions after we deploy.",
+      "expected_output": "Should use report id technical-watch to run crawl and index checks together to catch technical regressions on a schedule. Should follow the discovery flow: seo_list_reports with category workflows, seo_describe_report with id technical-watch, then seo_run_report with the required site and at least one crawl, index, or link recovery input. Should read each workflow step and its nested crawl, index, and recovery output independently. Should clarify a successful run does not prove every URL is crawlable, indexed, unchanged, or issue-free.",
+      "assertions": [
+        "Uses report id technical-watch for the recurring crawl and index checks",
+        "Notes it needs at least one crawl, index, or link recovery input",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads each workflow step and its nested crawl, index, and recovery output independently",
+        "States a successful run does not prove every URL is crawlable, indexed, unchanged, or issue-free"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run technical watch for sc-domain:example.com against our sitemap https://example.com/sitemap.xml, inspect up to 50 URLs, and recover broken search-value links from the last 90 days.",
+      "expected_output": "Should run report id technical-watch with site sc-domain:example.com, sitemaps including https://example.com/sitemap.xml, inspectLimit 50, recoverLinks true, and recoverDays 90. Should read the crawl run ids, limits, failures, and changed items, then the inspection selected, unselected-due, attempted, failed, quota-blocked, deferred, and regression states, then recovery clicks-at-risk as history. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id technical-watch with the sitemap and inspectLimit 50",
+        "Sets recoverLinks true and recoverDays 90 as requested",
+        "Reads crawl run ids, limits, failures, and changed items",
+        "Reads inspection selected, attempted, failed, quota-blocked, deferred, and regression states",
+        "Reads recovery clicks-at-risk as history"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The run passed, so every page is crawlable, indexed, and issue-free, and all the sitemap URLs are indexed.",
+      "expected_output": "Should refuse the all-clear. Should state a successful run does not prove every URL is crawlable, indexed, unchanged, or issue-free, that URL Inspection is a provider snapshot and sitemap discovery is not proof of indexing, and that partial crawls, capped inventories, quotas, and failed subqueries must stay visible in any all-clear. Should read the crawl limits and inspection states before making any sitewide claim.",
+      "assertions": [
+        "Refuses the sitewide all-clear",
+        "States a successful run does not prove every URL is crawlable, indexed, unchanged, or issue-free",
+        "States URL Inspection is a provider snapshot and sitemap discovery is not proof of indexing",
+        "States partial crawls, capped inventories, quotas, and failed subqueries must stay visible",
+        "Reads the crawl limits and inspection states before any sitewide claim"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Some inspections were quota-blocked but the rest passed, so there are no index regressions.",
+      "expected_output": "Should refuse to read quota-blocked inspections as clear. Should state quotas and failed subqueries must stay visible in any all-clear, and read the inspection unselected-due, quota-blocked, deferred, and regression states rather than assuming the unchecked URLs are fine. Should keep checked, quota-blocked, deferred, and regressed states distinct and recommend reproducing new failures, then scheduling another bounded run with a rollback path.",
+      "assertions": [
+        "Refuses to read the quota-blocked inspections as clear",
+        "States quotas and failed subqueries must stay visible in any all-clear",
+        "Reads the inspection unselected-due, quota-blocked, deferred, and regression states",
+        "Keeps checked, quota-blocked, deferred, and regressed states distinct",
+        "Recommends reproducing failures then scheduling another bounded run with a rollback path"
+      ],
+      "files": []
+    }
+  ]
+}

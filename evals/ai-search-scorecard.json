@@ -1,0 +1,70 @@
+{
+  "subject": "ai-search-scorecard",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Give me a single score for how ready our site is for AI search.",
+      "expected_output": "Should use report id ai-search-scorecard to score AI-search technical readiness 0-100 from one crawl using this tool's own weighted checks, with observed evidence kept separate. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id ai-search-scorecard, then seo_run_report. Should read partial, crawlComplete, and excluded before the number, and note score is null when no check had known evidence. Should state up front the number is a heuristic over this tool's own checks, not a Google or AI-engine requirement or ranking prediction.",
+      "assertions": [
+        "Uses report id ai-search-scorecard for the scored summary",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "States the score is a heuristic over this tool's own checks, not a Google or AI-engine requirement",
+        "Reads partial, crawlComplete, and excluded before the number",
+        "Notes score is null when no check had known evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Score AI search readiness from our saved crawl reportId crawl_example_20260710 and show me the per-check weights.",
+      "expected_output": "Should run report id ai-search-scorecard with reportId crawl_example_20260710 rather than starting a fresh crawl, so the score reuses the saved evidence. Should read partial, crawlComplete, and excluded before the score, then each check status, observed evidence, and finding, then methodology weights, statusCredit, and formula. Should treat the number as a heuristic and note unknown checks are excluded from the score.",
+      "assertions": [
+        "Runs report id ai-search-scorecard with reportId rather than recrawling",
+        "Reads partial, crawlComplete, and excluded before the score",
+        "Reads each check status, observed evidence, and finding",
+        "Reads methodology weights, statusCredit, and formula",
+        "Notes unknown checks are excluded from the score"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We scored 92 out of 100, so we are eligible for Google AI Overviews and this will rank us higher and get us cited.",
+      "expected_output": "Should refuse to convert the score into an eligibility verdict, ranking prediction, or proof of citations. Should state the score is a heuristic over this tool's own checks, not a Google or AI-engine requirement, eligibility verdict, or ranking prediction, and that it does not prove citations. Should recommend re-crawling at the same scope after a change and confirming the per-check evidence moved, rather than asserting an outcome. Should point to ai-readiness for the per-page evidence behind the number.",
+      "assertions": [
+        "Refuses to read the score as eligibility, a ranking prediction, or proof of citations",
+        "States the score is a heuristic over this tool's own checks, not a Google or AI-engine requirement or eligibility verdict",
+        "Notes the score does not prove citations",
+        "Recommends re-crawling at the same scope and confirming per-check evidence moved",
+        "Points to report id ai-readiness for the per-page evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Count the unknown checks as fails and flag the blocked GPTBot token as a defect that is dragging our score down.",
+      "expected_output": "Should refuse both moves. Should state unknown checks are excluded from the score and are never failures, using the excluded set and each check status. Should state a blocked AI crawler token can be an intentional publisher choice and should stay an observation, not an automatic defect. Should keep unknown, pass, warn, and fail states distinct and note score is null when no check had known evidence.",
+      "assertions": [
+        "Refuses to count unknown checks as failures",
+        "States unknown checks are excluded from the score and are never failures",
+        "States a blocked AI crawler token can be an intentional publisher choice",
+        "Treats the blocked token as an observation, not an automatic defect",
+        "Keeps unknown, pass, warn, and fail states distinct"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "The run shows partial true and several excluded checks, but the score is 80. That is our final AI readiness grade.",
+      "expected_output": "Should not treat 80 as a final grade. Should read partial, crawlComplete, and excluded before the number and explain a partial run and excluded checks mean the evidence is incomplete. Should state the score is a heuristic over this tool's own checks and unknown checks are excluded, not failed. Should recommend re-crawling at the same scope so more checks have known evidence before relying on the number. Should route to geo-gaps for affected URLs if the user wants per-page fixes.",
+      "assertions": [
+        "Refuses to treat the score as a final grade",
+        "Reads partial, crawlComplete, and excluded before the number",
+        "States the score is a heuristic and unknown checks are excluded, not failed",
+        "Recommends re-crawling at the same scope before relying on the number",
+        "Routes to report id geo-gaps for per-page affected URLs"
+      ],
+      "files": []
+    }
+  ]
+}

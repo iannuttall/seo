@@ -1,0 +1,57 @@
+{
+  "subject": "page-opportunities",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What should I fix on this one page to get more search traffic?",
+      "expected_output": "Should use report id page-opportunities to find Search Console queries and page evidence pointing to useful improvements for one URL. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id page-opportunities, then seo_run_report with the required site and url. Should read dataStatus, range, source.targetRowsFetched, selection, and benchmark first, then benchmark.possiblyTruncated and verification.status and reason. Should clarify summary.opportunities is a review queue, not a defect count.",
+      "assertions": [
+        "Uses report id page-opportunities for the single-URL improvement list",
+        "Notes the report requires both site and url",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, range, source.targetRowsFetched, selection, and benchmark first",
+        "States summary.opportunities is a review queue, not a defect count"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run page opportunities for site sc-domain:example.com and url https://example.com/pricing over 120 days, verify content, top 20.",
+      "expected_output": "Should run report id page-opportunities with site sc-domain:example.com, url https://example.com/pricing, days 120, verifyContent true, and limit 20. Should read benchmark.possiblyTruncated and verification.status and reason before treating results as complete or verified, then per-item query metrics, opportunity type, and benchmark and verification evidence. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id page-opportunities with site and url and days 120",
+        "Sets verifyContent true and limit 20 as requested",
+        "Reads benchmark.possiblyTruncated and verification.status and reason",
+        "Reads per-item query metrics, opportunity type, and benchmark and verification evidence",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Total the estimatedCtrClickShortfall for these opportunities as the extra clicks we will get, and if there are only a few rows the page is basically fine.",
+      "expected_output": "Should refuse to total the shortfall as promised clicks and should not read a short queue as an all-clear. Should state estimatedCtrClickShortfall is a directional calculation, not a click forecast, and that summary.opportunities is a review queue, not a defect count, so partial data is not an all-clear. Should check benchmark.possiblyTruncated and selection before concluding, and recommend inspecting the live SERP before editing.",
+      "assertions": [
+        "Refuses to total estimatedCtrClickShortfall into promised clicks",
+        "States estimatedCtrClickShortfall is a directional calculation, not a click forecast",
+        "States summary.opportunities is a review queue and partial data is not an all-clear",
+        "Checks benchmark.possiblyTruncated and selection before concluding",
+        "Recommends inspecting the live SERP before editing"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Content verification failed on this URL, but it lists a missing-topic opportunity, so the page clearly does not cover that topic.",
+      "expected_output": "Should not turn a failed verification into a live-page coverage conclusion. Should read verification.status and reason and state that only verified results support live-page coverage observations, so a failed or unverified item still has query evidence but no confirmed coverage gap. Should keep verified and unverified states distinct and recommend inspecting the live SERP and resolving any status or indexability contradiction before editing.",
+      "assertions": [
+        "Refuses to read the failed verification as a confirmed coverage gap",
+        "Reads verification.status and reason",
+        "States only verified results support live-page coverage observations",
+        "Keeps verified and unverified states distinct",
+        "Recommends inspecting the live SERP and resolving contradictions before editing"
+      ],
+      "files": []
+    }
+  ]
+}

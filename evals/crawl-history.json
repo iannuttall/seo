@@ -1,0 +1,44 @@
+{
+  "subject": "crawl-history",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I ran a few crawls of our site over the last month and lost track of them. Which ones do I have saved?",
+      "expected_output": "Should use report id crawl-history to list the local crawl snapshots so the user can choose one by site and date. Should follow the discovery flow: seo_describe_report with id crawl-history, then seo_run_report, optionally scoped by site and a bounded limit. Should read each snapshot id, site, start URL, creation time, and status, then total pages and issue count, then the configuration hash and storage version. Should present the list as orientation metadata for choosing a snapshot, not as findings.",
+      "assertions": [
+        "Uses report id crawl-history to list saved crawl snapshots",
+        "Optionally scopes by site and passes a bounded limit",
+        "Reads each snapshot id, site, start URL, creation time, and status",
+        "Reads total pages and issue count as orientation, not findings",
+        "Presents the list for choosing a snapshot rather than analysing it"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "List the last 5 saved crawls for sc-domain:example.com so I can grab the newest snapshot id.",
+      "expected_output": "Should run report id crawl-history with site sc-domain:example.com and limit 5, via seo reports run crawl-history or seo_run_report. Should read each snapshot id, site, start URL, creation time, and status to identify the newest one, then hand the chosen id to report id crawl-report for inspection. Should note that a saved list can expose stale data, so the loaded snapshot's caveats still need checking before analysis.",
+      "assertions": [
+        "Runs report id crawl-history with site sc-domain:example.com and limit 5",
+        "Reads snapshot id, site, start URL, creation time, and status to pick the newest",
+        "Hands the chosen id to report id crawl-report for inspection",
+        "Notes a saved list can expose stale data",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The newest crawl has way fewer pages than the one before it. That means our site shrank, right? And the higher issue count means it's in worse shape.",
+      "expected_output": "Should refuse both readings. Should explain that a smaller page count could reflect a scope change, cap, or failure rather than a real site change, and that the counts are orientation metadata, not severity or completeness. Should recommend loading each snapshot with report id crawl-report and comparing scope and caveats, or using report id compare-crawls with matched scope, before concluding anything about site size or health.",
+      "assertions": [
+        "Refuses to read a smaller page count as the site shrinking",
+        "States a smaller count can reflect a scope change, cap, or failure",
+        "States the counts are orientation metadata, not severity or completeness",
+        "Recommends loading snapshots with report id crawl-report to compare scope and caveats",
+        "Suggests report id compare-crawls with matched scope for a real before-and-after"
+      ],
+      "files": []
+    }
+  ]
+}

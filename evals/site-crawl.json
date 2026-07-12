@@ -1,0 +1,44 @@
+{
+  "subject": "site-crawl",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you crawl our site and find the technical SEO problems across our pages? Want a baseline I can come back to.",
+      "expected_output": "Should use report id site-crawl to crawl linked pages, check technical SEO signals, and save a local baseline with a saved crawl id for follow-up. Should follow the discovery flow: seo_describe_report with id site-crawl, then seo_run_report with the required url and a bounded maxPages. Should read status, requestEvidenceStatus, attempted and fetched counts, failures, retained pages, and pageLimitReached first, then data-source states, then warnings and caveats, with pages, requests, and issues kept opt-in. Should preserve the saved crawl id for later filtering or comparison.",
+      "assertions": [
+        "Uses report id site-crawl to crawl and save a baseline",
+        "Passes the required url and a bounded maxPages",
+        "Reads status, requestEvidenceStatus, attempted, fetched, failures, and pageLimitReached first",
+        "Keeps pages, requests, and issues opt-in rather than dumping them",
+        "Preserves the saved crawl id for later filtering or comparison"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Crawl https://example.com with maxPages 200, maxDepth 3, and js true, then hand me the highest-priority fixes.",
+      "expected_output": "Should run report id site-crawl with url https://example.com, maxPages 200, maxDepth 3, and js true, via seo reports run site-crawl or seo_run_report. Should read status, attempted and fetched counts, failures, retained pages, and pageLimitReached, then route to report id top-fixes against the saved crawl to rank the queue. Should note that if pageLimitReached is true the crawl was capped, and that a crawl is not an index, traffic source, or guarantee of complete site coverage.",
+      "assertions": [
+        "Runs report id site-crawl with maxPages 200, maxDepth 3, and js true",
+        "Reads status, attempted, fetched, failures, retained pages, and pageLimitReached",
+        "Routes to report id top-fixes against the saved crawl to rank fixes",
+        "States a crawl is not an index, traffic source, or complete coverage",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The crawl finished and found no critical issues. That means the whole site is clean and every page is fine, right?",
+      "expected_output": "Should refuse to read a finished crawl as a sitewide all-clear. Should explain that a partial or capped crawl cannot support an all-clear or a definitive zero, and check pageLimitReached, attempted versus fetched counts, and failures before concluding. Should state that if JavaScript rendering was disabled that is a discovery boundary, and recommend preserving the saved crawl id and re-running the same configuration to confirm any change.",
+      "assertions": [
+        "Refuses to read the finished crawl as a sitewide all-clear",
+        "States a partial or capped crawl cannot support an all-clear or a definitive zero",
+        "Checks pageLimitReached, attempted versus fetched counts, and failures",
+        "States a disabled JavaScript rendering is a discovery boundary",
+        "Recommends re-running the same configuration to confirm a change"
+      ],
+      "files": []
+    }
+  ]
+}

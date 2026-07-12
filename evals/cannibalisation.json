@@ -1,0 +1,57 @@
+{
+  "subject": "cannibalisation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Are our pages competing against each other for the same searches?",
+      "expected_output": "Should use report id cannibalisation to find search queries that appear across several URLs and decide whether the overlap needs attention. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id cannibalisation, then seo_run_report with the required site. Should read dataStatus and both source.pageExposure and source.propertyDemand with their validation counts and completeness first. Should clarify URL overlap is a review candidate, not proven harmful cannibalisation.",
+      "assertions": [
+        "Uses report id cannibalisation for the query and URL overlap review",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus and both source.pageExposure and source.propertyDemand first",
+        "Reads the validation counts and completeness for each source",
+        "States URL overlap is a review candidate, not proven harmful cannibalisation"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the overlap report for sc-domain:example.com over 90 days, top 30 queries, at least 100 impressions.",
+      "expected_output": "Should run report id cannibalisation with site sc-domain:example.com, days 90, limit 30, and minImpressions 100. Should read selection to see why groups were excluded or suppressed, then per-page clicks, impressions, position, impression share, reviewContext, and HHI, then priority.score and suggestedOwnerUrl. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id cannibalisation with days 90, limit 30, and minImpressions 100",
+        "Reads selection to see why groups were excluded or suppressed",
+        "Reads per-page clicks, impressions, position, impression share, reviewContext, and HHI",
+        "Reads priority.score and suggestedOwnerUrl",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Just redirect every overlapping URL into the suggestedOwnerUrl to fix the cannibalisation.",
+      "expected_output": "Should decline to consolidate automatically on the mechanical pick. Should state suggestedOwnerUrl is a low-confidence mechanical pick that requires intent review, and that URL overlap is a review candidate, not proven harmful cannibalisation, so not every multi-URL query is a problem. Should recommend comparing intent and live SERPs for the overlapping URLs before consolidating anything.",
+      "assertions": [
+        "Declines to redirect every overlapping URL automatically",
+        "States suggestedOwnerUrl is a low-confidence mechanical pick that requires intent review",
+        "States URL overlap is a review candidate, not proven harmful cannibalisation",
+        "Notes not every multi-URL query is a problem",
+        "Recommends comparing intent and live SERPs before consolidating"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "priority.score is the click lift from merging, and the empty result means we have no cannibalisation anywhere.",
+      "expected_output": "Should refuse both readings. Should state priority.score is a heuristic, not estimated click lift, and that a partial source cannot support an all-clear. Should read the validation counts and completeness on source.pageExposure and source.propertyDemand and the selection suppressions before concluding, keeping partial, suppressed, and complete states distinct.",
+      "assertions": [
+        "Refuses to read priority.score as estimated click lift",
+        "States priority.score is a heuristic",
+        "States a partial source cannot support an all-clear",
+        "Reads validation counts and completeness and selection suppressions before concluding",
+        "Keeps partial, suppressed, and complete states distinct"
+      ],
+      "files": []
+    }
+  ]
+}

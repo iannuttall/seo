@@ -1,0 +1,57 @@
+{
+  "subject": "affected-urls",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The crawl flagged a load of missing meta descriptions. Which pages actually have that problem so I can go fix them?",
+      "expected_output": "Should use report id affected-urls to open the exact pages behind one crawl finding, working from an existing saved crawl by reportId or site rather than starting a new one. Should follow the discovery flow: seo_list_reports, seo_describe_report with id affected-urls, then seo_run_report with a ruleId filter and a bounded limit. Should read dataSources, then selection totalMatchedRows, returnedRows, and truncated before listing rows, and should scope the result to pages affected among the evaluated crawl, not the whole site.",
+      "assertions": [
+        "Uses report id affected-urls to list the pages behind one finding",
+        "Works from an existing saved crawl by reportId or site rather than recrawling",
+        "Passes a ruleId filter and a bounded limit rather than unbounded input",
+        "Reads selection totalMatchedRows, returnedRows, and truncated before the rows",
+        "Scopes the result to pages affected among the evaluated crawl, not sitewide"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run affected-urls against saved crawl crawl_example_20260710 for ruleId meta-description-missing, cap it at 50 rows, and show me the per-URL evidence.",
+      "expected_output": "Should run report id affected-urls with reportId crawl_example_20260710, ruleId meta-description-missing, and limit 50, via seo reports run affected-urls or seo_run_report, and should not pass url when a saved reportId is given. Should read selection totalMatchedRows, returnedRows, and truncated first, then each row rule, category, severity, and crawler evidence, then warnings and caveats. Should note limit bounds the returned rows and that truncated true means more matching rows exist than were returned.",
+      "assertions": [
+        "Runs report id affected-urls with reportId crawl_example_20260710 and ruleId meta-description-missing",
+        "Sets limit 50 and does not also pass url when a saved reportId is supplied",
+        "Reads selection totalMatchedRows, returnedRows, and truncated before the rows",
+        "Reads each row rule, category, severity, and crawler evidence in order",
+        "Notes limit bounds returned rows and truncated true means more rows exist",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The run came back with truncated true. Just give me the exact total number of pages on the whole site that have this issue.",
+      "expected_output": "Should refuse to turn a truncated result into an exact sitewide count. Should explain that selection.truncated true means more matching rows exist than were returned, and that a capped or partial crawl only supports affected among evaluated pages, not a sitewide total. Should keep matched, returned, and truncated states distinct and recommend removing the cap, widening the crawl, or reading totalMatchedRows before quoting any number.",
+      "assertions": [
+        "Refuses to quote an exact sitewide count from a truncated run",
+        "States truncated true means more matching rows exist than were returned",
+        "States a capped crawl supports affected among evaluated pages, not sitewide",
+        "Keeps matched, returned, and truncated states distinct",
+        "Recommends reading totalMatchedRows or widening the crawl before quoting a number"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I don't even know what this rule means or whether it's worth fixing before the others. Can you sort that out from here?",
+      "expected_output": "Should route to report id explain-crawl-issue for a plain explanation of what the rule checks and how to verify a fix, and to report id top-fixes when there are too many findings to review at once and the user needs a ranked queue. Should keep affected-urls as the per-URL evidence source that confirms which pages actually trigger the rule. Should not treat the rule as a search-engine penalty or promise a ranking effect.",
+      "assertions": [
+        "Routes to report id explain-crawl-issue to explain the rule",
+        "Routes to report id top-fixes when there are too many findings to triage",
+        "Keeps report id affected-urls as the per-URL evidence source",
+        "Does not describe the rule as a search-engine penalty or ranking guarantee"
+      ],
+      "files": []
+    }
+  ]
+}

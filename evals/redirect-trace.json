@@ -1,0 +1,57 @@
+{
+  "subject": "redirect-trace",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "This old URL bounces around before it lands somewhere. Can you trace where it ends up?",
+      "expected_output": "Should route to report id redirect-trace, which follows every redirect hop and checks the final page, indexability, and canonical signals. Should follow the discovery flow: seo_list_reports with category monitoring, seo_describe_report with id redirect-trace, then seo_run_report with a url. Should read the chain in order with requested URL, status, Location, resolved next, and duration first, then finalUrl versus finalPage and summary.finalStatus, then summary.issues, then metaRobots, xRobotsTag, canonical, and warnings.",
+      "assertions": [
+        "Uses report id redirect-trace to follow the redirect chain",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads the chain in order with status, Location, and resolved next first",
+        "Reads finalUrl versus finalPage and summary.finalStatus",
+        "Reads summary.issues before drawing conclusions",
+        "Reads metaRobots, xRobotsTag, and canonical last"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: trace https://example.com/old with up to 10 hops, a fresh fetch, and JavaScript rendering.",
+      "expected_output": "Should run report id redirect-trace with url https://example.com/old, maxHops 10, refresh true, and js true, via seo reports run redirect-trace or seo_run_report. Should use only url, maxHops, refresh, and js from the schema. Should note that JavaScript rendering affects final-page extraction, not the HTTP chain.",
+      "assertions": [
+        "Runs report id redirect-trace with maxHops 10, refresh true, and js true",
+        "Uses only parameters defined in the redirect-trace schema",
+        "States JavaScript rendering affects final-page extraction, not the HTTP chain",
+        "Reads the chain before the final page checks"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "It is a 302, so that is a broken redirect, and it proves every visitor gets sent there.",
+      "expected_output": "Should refuse both claims. A 302 can be intentional. The trace is one observation from the machine and time that ran it, and CDNs, geography, cookies, or later deploys can differ, so it does not prove every visitor is routed the same way. Should keep the observation distinct from a defect and recommend re-running the trace after deployment to confirm the intended destination and status.",
+      "assertions": [
+        "Refuses to call the 302 a broken redirect on its own",
+        "States a 302 can be intentional",
+        "States the trace is one observation and CDNs, geography, or cookies can differ",
+        "Refuses to claim every visitor is routed the same way",
+        "Recommends re-running the trace after deployment to confirm"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Turn on JS rendering to fix the redirect chain, and since there is a canonical pointing elsewhere the whole redirect is wrong.",
+      "expected_output": "Should refuse both points. JavaScript rendering affects final-page extraction, not the HTTP chain, so it cannot fix the chain. A canonical elsewhere can be intentional. Should keep the HTTP chain distinct from final-page extraction and treat the canonical as an observation until intent or contradictory evidence makes it a defect.",
+      "assertions": [
+        "States JavaScript rendering does not change the HTTP redirect chain",
+        "Refuses to treat JS rendering as a fix for the chain",
+        "States a canonical pointing elsewhere can be intentional",
+        "Keeps the HTTP chain distinct from final-page extraction",
+        "Treats the canonical as an observation rather than an automatic defect"
+      ],
+      "files": []
+    }
+  ]
+}

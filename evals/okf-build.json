@@ -1,0 +1,44 @@
+{
+  "subject": "okf-build",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want a compact, cited knowledge pack about our site that an agent can load and trust. Can you build one from our pages?",
+      "expected_output": "Should use report id okf-build to create an OKF manifest and optional markdown files with source links from public pages in a crawl. Should follow the discovery flow: seo_describe_report with id okf-build, then seo_run_report from a saved crawl by reportId or site. Should read the manifest schema version, report id, source URL, generation time, crawl status, title, concept count, and caveats first, then selection page counts and deterministic ordering, then the returned validation before using files. Should treat the pack as bounded, cited evidence, not invented facts.",
+      "assertions": [
+        "Uses report id okf-build to create the cited knowledge pack",
+        "Works from a saved crawl by reportId or site",
+        "Reads manifest schema version, crawl status, concept count, and caveats first",
+        "Reads selection page counts and deterministic ordering, then the validation",
+        "Treats the pack as bounded, cited evidence rather than invented facts"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Build an OKF pack from saved crawl crawl_example_20260710 with maxConcepts 30 and includeFiles true, then check it validates.",
+      "expected_output": "Should run report id okf-build with reportId crawl_example_20260710, maxConcepts 30, and includeFiles true, via seo reports run okf-build or seo_run_report. Should read the manifest schema version, crawl status, title, concept count, and caveats, then selection page counts and deterministic ordering, then the returned validation before using the files. Should note that if selected pages equal the limit the bundle is bounded, not exhaustive, and route to report id okf-validate to check the files separately.",
+      "assertions": [
+        "Runs report id okf-build with reportId crawl_example_20260710",
+        "Sets maxConcepts 30 and includeFiles true as requested",
+        "Reads manifest, selection page counts, and the returned validation in order",
+        "States a bundle at the page limit is bounded, not exhaustive",
+        "Routes to report id okf-validate to check the files separately"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The pack built and validated fine, so everything in it is accurate, current, and confirms we own these pages. Ship it to the agents.",
+      "expected_output": "Should refuse to read structural success as fact. Should explain that a successful structural validation does not establish ownership, freshness, factual accuracy, or completeness, and that the builder does not make extracted claims true or current. Should recommend inspecting citations, canonical URLs, and summaries against the source pages, especially for time-dependent claims, before distributing the pack.",
+      "assertions": [
+        "Refuses to treat structural validation as proof the content is accurate",
+        "States validation does not establish ownership, freshness, accuracy, or completeness",
+        "States the builder does not make extracted claims true or current",
+        "Recommends inspecting citations and canonical URLs against source pages",
+        "Flags time-dependent claims for extra verification before distribution"
+      ],
+      "files": []
+    }
+  ]
+}

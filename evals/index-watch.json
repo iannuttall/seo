@@ -1,0 +1,68 @@
+{
+  "subject": "index-watch",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Did the index status of our monitored pages change since last time?",
+      "expected_output": "Should route to report id index-watch, which compares current Google index evidence with saved snapshots to find regressions and recoveries. Should note it needs a URL list and earlier snapshots. Should follow the discovery flow: seo_list_reports with category monitoring, seo_describe_report with id index-watch, then seo_run_report with site and urls. Should read source.possiblyTruncated, dataStatus, warnings, and sitemap inventory states first, then currentIssues, regressions, recoveries, failed, quotaBlocked, and deferred separately, then indexStatus, issueCodes, and typed changes.",
+      "assertions": [
+        "Uses report id index-watch to compare against saved snapshots",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Notes it needs a URL list and earlier snapshots",
+        "Reads source.possiblyTruncated, dataStatus, and warnings first",
+        "Reads currentIssues, regressions, recoveries, failed, quotaBlocked, and deferred separately",
+        "Reads indexStatus and issueCodes for each change"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run index-watch for sc-domain:example.com on https://example.com/a, https://example.com/b, and https://example.com/c in English with a daily limit of 100.",
+      "expected_output": "Should run report id index-watch with site sc-domain:example.com, urls set to the three URLs, languageCode en, and dailyLimit 100, via seo reports run index-watch or seo_run_report. Should keep params within the schema bounds, where urls allows up to 100 entries and dailyLimit up to 2000. Should keep failed, quotaBlocked, and deferred distinct from regressions when reading the result.",
+      "assertions": [
+        "Runs report id index-watch with the three URLs and dailyLimit 100",
+        "Sets languageCode as requested",
+        "Keeps urls and dailyLimit within the schema bounds",
+        "Keeps failed, quotaBlocked, and deferred distinct from regressions",
+        "Uses only parameters defined in the index-watch schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This URL came back NEUTRAL with a different canonical, so it is broken. Flag it as a defect.",
+      "expected_output": "Should refuse. A NEUTRAL verdict or canonical difference may be intentional, not a defect. Should keep it as an observation and recommend auditing the live page, the sitemap, and the exact inspection evidence before treating it as a regression or defect.",
+      "assertions": [
+        "Refuses to flag the NEUTRAL verdict as a defect",
+        "States a NEUTRAL verdict or canonical difference may be intentional",
+        "Keeps the verdict as an observation rather than a defect",
+        "Recommends auditing the live page, sitemap, and exact inspection evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "URL Inspection says indexed, so the page is ranking right now and the whole site is healthy.",
+      "expected_output": "Should refuse. URL Inspection is Google's indexed snapshot for one URL, not a live crawl or current search appearance. Should not infer inventory-wide health from the bounded selected sample. Should keep the single-URL indexed snapshot distinct from live ranking and from whole-site health.",
+      "assertions": [
+        "Refuses to claim the page is ranking right now from an indexed verdict",
+        "States URL Inspection is an indexed snapshot, not a live crawl or search appearance",
+        "Refuses to infer whole-site health from the bounded sample",
+        "Keeps the single-URL snapshot distinct from live ranking"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Our local quota ledger still shows budget, so ignore the provider 429 and treat those checks as Google-side failures we can retry immediately.",
+      "expected_output": "Should refuse to override the 429. A provider 429 is authoritative over the local quota ledger. Should keep quotaBlocked distinct from a page defect, respect the 429 rather than retrying immediately, and follow the retry timing the provider gives.",
+      "assertions": [
+        "Refuses to ignore the provider 429 based on the local ledger",
+        "States a provider 429 is authoritative over the local quota ledger",
+        "Keeps quotaBlocked distinct from a page defect",
+        "Does not recommend an immediate retry against the 429"
+      ],
+      "files": []
+    }
+  ]
+}

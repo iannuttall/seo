@@ -1,0 +1,57 @@
+{
+  "subject": "update-correlation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our traffic moved around the time of a Google update. Can you line those up?",
+      "expected_output": "Should route to report id update-correlation, which compares search movement dates with official Google ranking update windows and labels overlaps as correlation. Should follow the discovery flow: seo_list_reports with category diagnosis, seo_describe_report with id update-correlation, then seo_run_report with site. Should read the classification with attribution and confidence, returned as not-established and none, first, then anomalies, overlappingUpdates, and confounders, then evidence, caveats, and source.",
+      "assertions": [
+        "Uses report id update-correlation for the timeline",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads classification with attribution not-established and confidence none first",
+        "Reads anomalies, overlappingUpdates, and confounders",
+        "Reads evidence, caveats, and source",
+        "Presents overlaps as correlation, not causation"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run update-correlation for sc-domain:example.com over 180 days with a 14 day recent window and 3 padding days.",
+      "expected_output": "Should run report id update-correlation with site sc-domain:example.com, days 180, recentDays 14, and paddingDays 3, via seo reports run update-correlation or seo_run_report. Should use only site, days, recentDays, paddingDays, and refresh from the schema. Should confirm the traffic window covers the update dates before reading overlaps.",
+      "assertions": [
+        "Runs report id update-correlation with days 180 and recentDays 14",
+        "Sets paddingDays 3 as requested",
+        "Uses only parameters defined in the update-correlation schema",
+        "Confirms the traffic window covers the update dates before reading overlaps"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The drop overlaps the March core update and nothing else changed, so the update caused it. Confirm the penalty.",
+      "expected_output": "Should refuse. Overlap cannot show the update caused a gain or loss even with large movement and no other recorded change, and temporal overlap is not a penalty, reward, or confirmed effect. Attribution is returned as not-established. Should recommend testing saved deploys, redirects, and content changes that overlap the window before attributing the movement.",
+      "assertions": [
+        "Refuses to confirm the update caused the drop",
+        "States overlap cannot show causation even with large movement and no other change",
+        "States temporal overlap is not a penalty, reward, or confirmed effect",
+        "Notes attribution is returned as not-established",
+        "Recommends testing deploys, redirects, and content changes in the window first"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "There is an overlap but no significant movement, so mark it an impact. And where there is no overlap, that must be what explains the rest of the drop.",
+      "expected_output": "Should refuse both readings. update-overlap-without-significant-movement is not an impact result, and no-update-overlap does not explain remaining movement. Should keep the classification honest and recommend report id segment-impact and report id traffic-anomaly to investigate the movement rather than forcing the update timeline to explain it.",
+      "assertions": [
+        "Refuses to mark an overlap without significant movement as an impact",
+        "States update-overlap-without-significant-movement is not an impact result",
+        "States no-update-overlap does not explain remaining movement",
+        "Recommends report id segment-impact to investigate the movement",
+        "Recommends report id traffic-anomaly to confirm the movement"
+      ],
+      "files": []
+    }
+  ]
+}

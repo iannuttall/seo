@@ -1,0 +1,57 @@
+{
+  "subject": "seo-to-ai-query",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Give me a set of prompts to monitor whether AI tools mention us.",
+      "expected_output": "Should use report id seo-to-ai-query to turn real Search Console query wording into a repeatable set of prompts for external AI monitoring. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id seo-to-ai-query, then seo_run_report with the required site. Should read dataStatus states empty, filtered, partial, and available, then dateRange, source.possiblyTruncated, filters, selection.invalidRows, and limited rows. Should note methodology.observedAiPromptData and estimatedTrafficLift are both false.",
+      "assertions": [
+        "Uses report id seo-to-ai-query for the monitoring prompt set",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus states empty, filtered, partial, and available",
+        "Reads dateRange, source.possiblyTruncated, filters, and selection.invalidRows",
+        "Notes methodology.observedAiPromptData and estimatedTrafficLift are both false"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the AI monitoring prompt report for sc-domain:example.com over 90 days, top 40 prompts, at least 25 impressions, and exclude brand.",
+      "expected_output": "Should run report id seo-to-ai-query with site sc-domain:example.com, days 90, limit 40, minImpressions 25, and includeBrand false. Should read source.possiblyTruncated and selection.invalidRows before treating the limited rows as complete, then per-item evidenceScope. Should note each prompt inherits the narrow retained-GSC-query scope, and use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id seo-to-ai-query with days 90, limit 40, and minImpressions 25",
+        "Sets includeBrand false to exclude brand terms",
+        "Reads source.possiblyTruncated and selection.invalidRows before treating rows as complete",
+        "Reads per-item evidenceScope",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "You generated 40 prompts, so there is clearly AI demand for us and answers are mentioning our brand.",
+      "expected_output": "Should refuse to read the prompt count as demand or mentions. Should state the generated prompt count is not AI demand, and prompts do not prove anyone entered them or that an answer mentioned the site. Should note methodology.observedAiPromptData is false and each prompt inherits the narrow retained-GSC-query scope. Should recommend storing the source query and date range beside later monitoring observations, and point to ai-referrals for measured GA4 referral evidence.",
+      "assertions": [
+        "Refuses to read the prompt count as AI demand or as mentions",
+        "States the prompt count is not AI demand",
+        "States prompts do not prove anyone entered them or that an answer mentioned the site",
+        "Notes each prompt inherits the narrow retained-GSC-query scope",
+        "Points to report id ai-referrals for measured GA4 referral evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "No prompt rows came back, so there are no AI prompt opportunities and this run already covers all our topics.",
+      "expected_output": "Should refuse to read no returned rows as an all-clear or as full topic coverage. Should state no returned rows is not an all-clear when the source is partial or filtered, and check dataStatus, source.possiblyTruncated, filters, and selection.invalidRows. Should note each prompt inherits the narrow retained-GSC-query scope, so the run does not cover every topic, and recommend widening the window or lowering minImpressions before concluding.",
+      "assertions": [
+        "Refuses to read no returned rows as an all-clear",
+        "States no returned rows is not an all-clear when the source is partial or filtered",
+        "Checks dataStatus, source.possiblyTruncated, filters, and selection.invalidRows",
+        "Notes each prompt inherits the narrow retained-GSC-query scope",
+        "Recommends widening the window or lowering minImpressions before concluding"
+      ],
+      "files": []
+    }
+  ]
+}

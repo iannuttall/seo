@@ -1,0 +1,57 @@
+{
+  "subject": "query-clusters",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Group our search queries into topics so I can see the themes.",
+      "expected_output": "Should use report id query-clusters to group related Search Console queries so repeated demand themes are easier to review. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id query-clusters, then seo_run_report with the required site. Should read the summary cluster and query counts, clicks, impressions, threshold, limit, and brand filtering first, then per-cluster member queries, pages, demand, and performance. Should clarify token overlap does not prove shared intent.",
+      "assertions": [
+        "Uses report id query-clusters for the query grouping",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads the summary counts, threshold, limit, and brand filtering first",
+        "Reads per-cluster member queries, pages, demand, and performance",
+        "States token overlap does not prove shared intent"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run query clusters for sc-domain:example.com, at least 100 impressions, top 40 clusters, scope /blog/.",
+      "expected_output": "Should run report id query-clusters with site sc-domain:example.com, minImpressions 100, limit 40, and scope /blog/. Should read per-cluster member queries, pages, and demand, then each cluster recommendation. Should note the threshold and cap in the summary bound the conclusion, and use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id query-clusters with minImpressions 100 and limit 40",
+        "Sets scope to /blog/ as requested",
+        "Reads per-cluster member queries, pages, and demand",
+        "Reads each cluster recommendation",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Each cluster should become a new page, and this proves those existing URLs are competing for the same thing.",
+      "expected_output": "Should decline both conclusions. Should state token overlap does not prove shared intent, justify a new page, or establish that current URLs compete. Should recommend checking whether a cluster maps to one intent before changing section structure or navigation, and route to cannibalisation to check URL overlap when competition is the real question.",
+      "assertions": [
+        "Declines to turn each cluster into a new page",
+        "States token overlap does not prove shared intent or justify a new page",
+        "States token overlap does not establish that current URLs compete",
+        "Recommends checking whether a cluster maps to one intent before restructuring",
+        "Routes to report id cannibalisation to check URL overlap"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Queries under the threshold basically do not exist, and these page-two clusters will just pick up clicks from better CTR.",
+      "expected_output": "Should refuse both readings. Should state queries below the threshold or outside the cap are outside the conclusion, not absent demand, and that page-two clusters do not claim a CTR-only click lift. Should read the summary threshold, limit, and brand filtering to see what was excluded, and keep excluded and observed states distinct.",
+      "assertions": [
+        "Refuses to treat below-threshold queries as absent demand",
+        "States queries below the threshold or outside the cap are outside the conclusion, not absent demand",
+        "States page-two clusters do not claim a CTR-only click lift",
+        "Reads the summary threshold, limit, and brand filtering to see what was excluded",
+        "Keeps excluded and observed states distinct"
+      ],
+      "files": []
+    }
+  ]
+}

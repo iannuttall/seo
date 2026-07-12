@@ -1,0 +1,57 @@
+{
+  "subject": "ctr-underperformers",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which queries get lots of impressions but hardly any clicks?",
+      "expected_output": "Should use report id ctr-underperformers to find high-impression queries whose click-through rate trails comparable queries at similar positions. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id ctr-underperformers, then seo_run_report with the required site. Should read dataStatus, range, source.completeness, possiblyTruncated, and validation counts first. Should clarify these are title or snippet review candidates, not a promised click uplift.",
+      "assertions": [
+        "Uses report id ctr-underperformers for the CTR comparison queue",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, range, source.completeness, possiblyTruncated, and validation counts first",
+        "Frames the rows as title or snippet review candidates",
+        "States the report does not promise a click uplift"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run CTR underperformers for sc-domain:example.com, at least 500 impressions, top 30, exclude brand.",
+      "expected_output": "Should run report id ctr-underperformers with site sc-domain:example.com, minImpressions 500, limit 30, and includeBrand false. Should read selection before the queue, then per-item query, URL, impressions, position, observed CTR, target CTR, and benchmark source, then the estimated shortfall. Should use only parameters defined in the schema and not invent a days parameter, since the report does not accept one.",
+      "assertions": [
+        "Runs report id ctr-underperformers with minImpressions 500 and limit 30",
+        "Sets includeBrand false to exclude brand terms",
+        "Reads per-item observed CTR, target CTR, and benchmark source",
+        "Reads selection before the queue and the estimated shortfall",
+        "Uses only parameters defined in the schema and does not invent a days parameter"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Add up the estimated shortfall across these rows to get the clicks we will gain once we rewrite the titles.",
+      "expected_output": "Should refuse to total the shortfall as promised clicks. Should state the shortfall is directional prioritisation math, not a traffic forecast, and that page-one average position hides day, device, geography, and result-feature variation, so a title change does not promise clicks. Should recommend inspecting the current SERP and displayed title link, then comparing a complete later period after testing framing.",
+      "assertions": [
+        "Refuses to total the shortfall into promised clicks",
+        "States the shortfall is directional prioritisation math, not a traffic forecast",
+        "Notes page-one average position hides day, device, geography, and result-feature variation",
+        "Recommends inspecting the current SERP and displayed title link",
+        "Recommends comparing a complete later period after testing framing"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "No underperformers came back, so all our titles are already optimal.",
+      "expected_output": "Should refuse to read the empty result as an all-clear. Should state a partial empty result is not an all-clear and check source.completeness, possiblyTruncated, and the validation counts. Should note the comparison groups may have too little data to benchmark, and recommend lowering minImpressions or widening the input before concluding the titles are optimal.",
+      "assertions": [
+        "Refuses to read the empty result as an all-clear",
+        "States a partial empty result is not an all-clear",
+        "Checks source.completeness, possiblyTruncated, and validation counts",
+        "Notes the comparison groups may have too little data to benchmark",
+        "Recommends lowering minImpressions or widening the input before concluding"
+      ],
+      "files": []
+    }
+  ]
+}

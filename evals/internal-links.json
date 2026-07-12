@@ -1,0 +1,57 @@
+{
+  "subject": "internal-links",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find pages on our site that should link to this new article.",
+      "expected_output": "Should use report id internal-links to find relevant pages that could add a useful internal link to a target URL. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id internal-links, then seo_run_report with the required site and targetUrl. Should read dataStatus, target verification, aliases, canonical, and technical signals first, then source completeness and selection attempted, checked, failed, unchecked, and exclusions. Should clarify query overlap does not prove a link belongs.",
+      "assertions": [
+        "Uses report id internal-links for the source-page candidates",
+        "Notes the report requires both site and targetUrl",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads dataStatus, target verification, aliases, canonical, and technical signals first",
+        "States query overlap does not prove a link belongs"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run internal links for site sc-domain:example.com and targetUrl https://example.com/new-guide, top 20 candidates, check 100 of them.",
+      "expected_output": "Should run report id internal-links with site sc-domain:example.com, targetUrl https://example.com/new-guide, limit 20, and checkLimit 100. Should read source completeness and selection attempted, checked, failed, unchecked, and exclusions, then per-item exact versus lexical matches and linkEvidence. Should use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id internal-links with site and targetUrl",
+        "Sets limit 20 and checkLimit 100 as requested",
+        "Reads selection attempted, checked, failed, unchecked, and exclusions",
+        "Reads per-item exact versus lexical matches and linkEvidence",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Great, add all these internal links automatically. They will boost our rankings.",
+      "expected_output": "Should decline to add links automatically and should not promise a ranking gain. Should state the report should be avoided when links are to be added automatically, that query overlap does not prove a link belongs or that adding one improves rankings, and that priority is a heuristic, not estimated impact. Should recommend reading the source passage, adding one contextual link only if the target is genuinely useful, and re-crawling to confirm it.",
+      "assertions": [
+        "Declines to add the links automatically",
+        "States query overlap does not prove a link belongs or that adding one improves rankings",
+        "States priority is a heuristic, not estimated impact",
+        "Recommends reading the source passage before adding a link",
+        "Recommends re-crawling to confirm any added link"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "We set checkLimit to 20 and only a couple of candidates came back, so there are no internal link opportunities for this page.",
+      "expected_output": "Should refuse to read the small result as proven absence. Should state a low checkLimit can leave plausible candidates unchecked, so absence is not proven, and read selection attempted, checked, failed, and unchecked to see how many were actually inspected. Should recommend raising checkLimit or inspecting the unchecked candidates before concluding there are no opportunities.",
+      "assertions": [
+        "Refuses to read the small result as proven absence",
+        "States a low checkLimit can leave plausible candidates unchecked, so absence is not proven",
+        "Reads selection attempted, checked, failed, and unchecked",
+        "Recommends raising checkLimit or inspecting the unchecked candidates",
+        "Keeps unchecked and checked states distinct"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "subject": "index-coverage-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our site is huge. How should we spread URL Inspection checks so we don't blow the quota?",
+      "expected_output": "Should route to report id index-coverage-plan, which chooses which sitemap URLs and Search Console properties should use limited URL Inspection checks. Should follow the discovery flow: seo_list_reports with category monitoring, seo_describe_report with id index-coverage-plan, then seo_run_report with site and sitemaps. Should read the summary sitemapUrls, urlCount, property count, daily capacity, and estimated versus target cycle days first, then the properties allocations and sample URLs, then suggestions and every warning. Should treat the output as a plan, not a result.",
+      "assertions": [
+        "Uses report id index-coverage-plan for the quota sampling plan",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Provides site and sitemaps as required by the schema",
+        "Reads summary urlCount, daily capacity, and estimated versus target cycle days first",
+        "Reads the properties allocations and every warning",
+        "Treats the output as a plan, not a coverage result"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: build a plan for sc-domain:example.com from the sitemap https://example.com/sitemap.xml with a daily limit of 200 and a target 30 day cycle.",
+      "expected_output": "Should run report id index-coverage-plan with site sc-domain:example.com, sitemaps set to the sitemap URL, dailyLimit 200, and targetCycleDays 30, via seo reports run index-coverage-plan or seo_run_report. Should keep params within the schema bounds, where dailyLimit allows up to 2000 and targetCycleDays up to 365. Should use the plan to set a realistic recurring limit for report id index-monitor next.",
+      "assertions": [
+        "Runs report id index-coverage-plan with dailyLimit 200 and targetCycleDays 30",
+        "Provides site and the sitemap as required",
+        "Keeps dailyLimit and targetCycleDays within the schema bounds",
+        "Uses the plan to set a realistic limit for report id index-monitor",
+        "Uses only parameters defined in the index-coverage-plan schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "So after the 30 day cycle every URL in the plan will be indexed, correct?",
+      "expected_output": "Should refuse. Estimated cycle time is arithmetic over discovered URLs and capacity, not a promise Google will process or index them. This plan does not report an index coverage percentage or an all-clear. Should explain the plan only schedules checks and recommend collecting evidence with report id index-monitor and reviewing changes with report id index-watch.",
+      "assertions": [
+        "Refuses to promise every URL will be indexed after the cycle",
+        "States estimated cycle time is arithmetic over URLs and capacity, not a promise",
+        "States the plan does not report a coverage percentage or an all-clear",
+        "Explains the plan only schedules checks",
+        "Recommends collecting evidence with report id index-monitor"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "One sitemap failed to fetch but just give me the plan as complete coverage.",
+      "expected_output": "Should not present the plan as complete. Sitemap fetch failures or maxUrls truncation make the plan incomplete. Should read every warning and keep the incomplete plan distinct from a complete one. Should recommend fixing the sitemap fetch or noting the truncation before relying on the allocations.",
+      "assertions": [
+        "Refuses to present the plan as complete coverage",
+        "States sitemap fetch failures or maxUrls truncation make the plan incomplete",
+        "Reads every warning in the output",
+        "Keeps the incomplete plan distinct from a complete one",
+        "Recommends resolving the fetch failure before relying on the plan"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "subject": "narrative-report",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write up where our SEO stands right now for a stakeholder update.",
+      "expected_output": "Should route to report id narrative-report to assemble one evidence-linked briefing. Should follow the discovery flow: seo_list_reports with category reporting, seo_describe_report with id narrative-report, then seo_run_report with only schema-valid params. Should read the top-level caveats and headline first, then sections and priorities, then diagnosis, changeMeasurements, and changeMeasurementAttempts, then monitoring. Should keep the caveats visible rather than smoothing them out.",
+      "assertions": [
+        "Uses report id narrative-report for the stakeholder briefing",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads top-level caveats and headline before the sections",
+        "Reads diagnosis, changeMeasurements, and changeMeasurementAttempts",
+        "Keeps caveats visible rather than hiding them",
+        "Passes only parameters defined in the narrative-report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run the narrative report for sc-domain:example.com over 90 days with a 28 day recent window, cap changes at 10, verify 5 pages, and return the structured evidence.",
+      "expected_output": "Should run report id narrative-report with site sc-domain:example.com, days 90, recentDays 28, changeLimit 10, verifyContent true, and verifyLimit 5, via seo reports run narrative-report or seo_run_report. Should use only parameters defined in the schema. Should preserve the caveats, the diagnosis, and the changeMeasurementAttempts in the structured output rather than dropping failed measurements.",
+      "assertions": [
+        "Runs report id narrative-report with days 90 and recentDays 28",
+        "Sets changeLimit 10, verifyContent true, and verifyLimit 5 as requested",
+        "Uses only parameters defined in the narrative-report schema",
+        "Preserves caveats and changeMeasurementAttempts in the output",
+        "Reads diagnosis and monitoring as part of the evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Summarize this so it says the March update caused our gains. Make it persuasive for the client.",
+      "expected_output": "Should refuse the causal framing. Update timing, template groupings, and opportunity scores are investigation context, not ranking causes, and the narrative summarizes evidence and does not strengthen it or prove causation. Should keep the caveats intact and describe the update overlap as context to investigate rather than a confirmed cause of the gains.",
+      "assertions": [
+        "Refuses to state the March update caused the gains",
+        "Labels update timing and template groupings as investigation context, not causes",
+        "States the narrative summarizes evidence and does not prove causation",
+        "Keeps the caveats intact rather than removing them for persuasion",
+        "Frames the update overlap as context to investigate"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "One of the change measurements failed to run, so just leave it out and mark that change as no impact.",
+      "expected_output": "Should not drop the failed measurement or call it no impact. A failed or skipped measurement stays visible and is not a zero. Should keep it in changeMeasurementAttempts and recommend reproducing the technical failure or inspecting the affected URLs before treating it as a defect or a no-impact result.",
+      "assertions": [
+        "Refuses to drop the failed measurement from the report",
+        "States a failed or skipped measurement stays visible and is not a zero",
+        "Keeps the failure in changeMeasurementAttempts",
+        "Refuses to record the change as no impact",
+        "Recommends reproducing the failure or inspecting the URLs first"
+      ],
+      "files": []
+    }
+  ]
+}

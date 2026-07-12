@@ -1,0 +1,58 @@
+{
+  "subject": "measure-change",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We changed our blog title tags on May 1. Did it do anything?",
+      "expected_output": "Should route to report id measure-change, which compares equal Search Console periods before and after a known change. Should follow the discovery flow: seo_list_reports with category experiments, seo_describe_report with id measure-change, then seo_run_report with changedAt and a scope and target. Should read dataStatus, window, source, warnings, and caveats first, then window.effectiveDays versus requestedDays and afterWindowTruncated, then GSC before and after metrics. Should require equal comparable finalized windows before reading a directional verdict.",
+      "assertions": [
+        "Uses report id measure-change for the before-and-after comparison",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Sets changedAt with a scope and target for the change",
+        "Reads dataStatus, window, source, warnings, and caveats first",
+        "Reads window.effectiveDays versus requestedDays and afterWindowTruncated",
+        "Requires equal comparable finalized windows before a directional verdict"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run measure-change for sc-domain:example.com, page scope, target https://example.com/blog, changed 2026-05-01, 28 days before and after, with the homepage as a control page.",
+      "expected_output": "Should run report id measure-change with site sc-domain:example.com, scope page, target https://example.com/blog, changedAt 2026-05-01, beforeDays 28, afterDays 28, controlScope page, and controlTarget set to the homepage, via seo reports run measure-change or seo_run_report. Should keep beforeDays and afterDays within the schema bounds up to 548 and read the control adjusted deltas alongside the raw before and after metrics.",
+      "assertions": [
+        "Runs report id measure-change with scope page and changedAt 2026-05-01",
+        "Sets beforeDays 28 and afterDays 28 as requested",
+        "Sets controlScope page and controlTarget for the control",
+        "Keeps beforeDays and afterDays within the schema bounds",
+        "Uses only parameters defined in the measure-change schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The after window is up 12 percent, so the change caused it. Multiply by 12 for the annual gain.",
+      "expected_output": "Should refuse both. Timing does not prove the recorded change caused the movement, and the delta must not be annualized or forecast. Should check afterWindowTruncated and window.effectiveDays before trusting the direction, and recommend report id segment-impact to see where the movement sits rather than attributing it to the change or projecting an annual figure.",
+      "assertions": [
+        "Refuses to state the change caused the movement from timing",
+        "Refuses to annualize or forecast the delta",
+        "Checks afterWindowTruncated and window.effectiveDays before trusting the direction",
+        "Recommends report id segment-impact to see where movement sits",
+        "Does not present an annual gain figure"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "It says not-enough-data and clickPct is null. Call that a flat result and an infinite gain.",
+      "expected_output": "Should refuse both readings. not-enough-data is never positive, negative, or flat, and clickPct null means the before value was zero, not an infinite gain. Should recommend using equal whole-day before and after windows with at least 7 finalized days each before reading any directional verdict.",
+      "assertions": [
+        "Refuses to read not-enough-data as a flat result",
+        "States not-enough-data is never positive, negative, or flat",
+        "States clickPct null means the before value was zero, not an infinite gain",
+        "Recommends equal whole-day windows with at least 7 finalized days each",
+        "Does not present an infinite or flat verdict"
+      ],
+      "files": []
+    }
+  ]
+}

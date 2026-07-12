@@ -1,0 +1,57 @@
+{
+  "subject": "audit-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Before I rewrite our pricing page can you give it a technical once-over? It is https://example.com/pricing",
+      "expected_output": "Should route to report id audit-page as the single-page technical review. Should follow the discovery flow: seo_list_reports with category reporting, seo_describe_report with id audit-page, then seo_run_report with url set to the pricing URL and only schema-valid params. Should read fetchDiagnostics, warnings, and the final fetched URL first, then the observed page fields and structured-data findings, then issues and recommendations. Should keep observed evidence separate from review advice and not turn one page into a sitewide conclusion.",
+      "assertions": [
+        "Uses report id audit-page for the single-page technical review",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Passes url and only parameters defined in the audit-page schema",
+        "Reads fetchDiagnostics, warnings, and the final fetched URL before the findings",
+        "Separates observed page fields from issues and recommendations",
+        "Does not extend one page into a sitewide conclusion"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: audit https://example.com/blog/guide with JavaScript rendering enabled and a fresh fetch that bypasses any cache. Return the observed evidence.",
+      "expected_output": "Should run report id audit-page with url https://example.com/blog/guide, js true, and refresh true, via seo reports run audit-page or seo_run_report. Should use only url, site, js, and refresh from the schema. Should note js changes final-page extraction and refresh forces a fresh fetch rather than a cached result. Should read fetchDiagnostics, warnings, and the final fetched URL first, then the observed fields and structured-data findings, then issues.",
+      "assertions": [
+        "Runs report id audit-page with js true and refresh true",
+        "Uses only url, site, js, and refresh from the schema",
+        "Notes refresh forces a fresh fetch rather than a cached result",
+        "Reads fetchDiagnostics, warnings, and the final fetched URL first",
+        "Reports observed page fields and structured-data findings before recommendations"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The audit says our title is 640 pixels wide. That means Google is cutting it off and it is costing us rankings. Fix it to recover the traffic.",
+      "expected_output": "Should refuse the claim. Title pixel width is a review estimator, not a Google limit, and the audit cannot claim truncation caused a ranking or traffic loss. One page cannot support a sitewide conclusion. Should treat the finding as a review prompt, and recommend verifying by re-fetching the URL after the edit and confirming the observed field changed. Should not promise recovered traffic.",
+      "assertions": [
+        "States title pixel width is a review estimator, not a Google limit",
+        "Refuses to claim the title width caused a ranking or traffic loss",
+        "Does not promise recovered traffic from a title change",
+        "Recommends verifying by re-fetching the URL after the edit",
+        "Keeps the finding a review prompt rather than a proven defect"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Good, the fetched HTML no longer has the noindex tag, so Google has definitely reindexed the page. We are done.",
+      "expected_output": "Should refuse the conclusion. The fetched version is not proof that Google indexed that version, and the audit is one fetch from the machine and time that ran it. Should keep the observed absence of noindex distinct from an index verdict and recommend confirming with Google URL Inspection, for example report id index-watch, before concluding the page is indexed.",
+      "assertions": [
+        "States the fetched version is not proof Google indexed that version",
+        "Refuses to conclude the page is reindexed from the audit alone",
+        "Keeps the observed page state distinct from an index verdict",
+        "Recommends confirming with URL Inspection such as report id index-watch"
+      ],
+      "files": []
+    }
+  ]
+}

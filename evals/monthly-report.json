@@ -1,0 +1,58 @@
+{
+  "subject": "monthly-report",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you put together last month's SEO summary for the client?",
+      "expected_output": "Should route to report id monthly-report as a readable calendar-month summary. Should follow the discovery flow: seo_list_reports with category reporting, seo_describe_report with id monthly-report, then seo_run_report with a month that has final Search Console data. Should note the report covers a calendar month, not a rolling window. Should read the month and its underlying date windows first, then dataStatus and source completeness, then skipped sections, warnings, and caveats, before the narrative and its referenced diagnosis, changes, and priorities.",
+      "assertions": [
+        "Uses report id monthly-report for the calendar-month summary",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Notes the report is a calendar month, not a rolling window",
+        "Reads the month and its date windows before the narrative",
+        "Checks dataStatus, source completeness, and skipped sections first",
+        "Confirms the month has final Search Console data before presenting it"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run the monthly report for sc-domain:example.com for 2026-05, top 15 items, brand excluded, and verify the top 5 pages against their live content.",
+      "expected_output": "Should run report id monthly-report with site sc-domain:example.com, month 2026-05, limit 15, includeBrand false, verifyContent true, and verifyLimit 5, via seo reports run monthly-report or seo_run_report. Should use only parameters defined in the schema and keep month in the YYYY-MM form. Should note verifyLimit is a bounded subset, not full-site validation, and read dataStatus and skipped sections before the narrative.",
+      "assertions": [
+        "Runs report id monthly-report with month 2026-05 and limit 15",
+        "Sets includeBrand false, verifyContent true, and verifyLimit 5 as requested",
+        "Uses only parameters defined in the monthly-report schema",
+        "States verifyLimit is a bounded subset, not full-site validation",
+        "Reads dataStatus and skipped sections before the narrative"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Traffic dropped last month. Tell the client exactly why it happened and forecast next month's clicks.",
+      "expected_output": "Should refuse both requests. The report cannot establish why traffic changed and cannot forecast clicks, rankings, or revenue. Should follow a narrative reference into the structured evidence and validate the affected URLs before drawing any conclusion. Should point to a focused diagnosis such as report id segment-impact or report id update-correlation to investigate the movement rather than asserting a cause or inventing a forecast.",
+      "assertions": [
+        "Refuses to state why traffic changed from this report alone",
+        "Refuses to forecast next month's clicks, rankings, or revenue",
+        "Follows a narrative reference into the structured evidence to check it",
+        "Points to a focused diagnosis such as report id segment-impact",
+        "Does not invent a forecast figure"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "One section shows zero, so we had nothing there last month. Put that in the report as a clean zero.",
+      "expected_output": "Should not record the section as a clean zero without checking its state. A zero from a complete source differs from an unavailable, partial, filtered, or capped section. Should read dataStatus, source completeness, and skipped sections and keep these states distinct. Should only report a true zero when the source for that section is complete, and otherwise name the section as unavailable, partial, or capped.",
+      "assertions": [
+        "Refuses to record the section as a clean zero without checking its state",
+        "Distinguishes a zero from a complete source from an unavailable or partial section",
+        "Reads dataStatus, source completeness, and skipped sections",
+        "Keeps unavailable, partial, filtered, and capped states distinct",
+        "Only reports a true zero when that section's source is complete"
+      ],
+      "files": []
+    }
+  ]
+}

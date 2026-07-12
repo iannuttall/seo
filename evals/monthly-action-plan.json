@@ -1,0 +1,56 @@
+{
+  "subject": "monthly-action-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Give me this month's SEO action plan.",
+      "expected_output": "Should use report id monthly-action-plan to review a calendar month of search performance and turn the evidence into next actions. Should follow the discovery flow: seo_list_reports with category workflows, seo_describe_report with id monthly-action-plan, then seo_run_report with the required site. Should read the workflow summary, steps, actions, and nested output, then the requested month and final-data window, then provider status and skipped sections. Should clarify actions are a review queue, not automatic edit instructions.",
+      "assertions": [
+        "Uses report id monthly-action-plan for the monthly review and action queue",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Reads the workflow summary, steps, actions, and nested output first",
+        "Reads the requested month, final-data window, provider status, and skipped sections",
+        "States actions are a review queue, not automatic edit instructions"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the monthly action plan for sc-domain:example.com for 2026-06, top 20 items.",
+      "expected_output": "Should run report id monthly-action-plan with site sc-domain:example.com, month 2026-06, and limit 20. Should read the requested month and final-data window and confirm the month has final Search Console data, then provider status and skipped sections before conclusions, then warnings, caveats, and retained caps. Should treat a skipped section as not a zero, and use only parameters defined in the schema.",
+      "assertions": [
+        "Runs report id monthly-action-plan with month 2026-06 and limit 20",
+        "Reads the requested month and final-data window",
+        "Reads provider status and skipped sections before conclusions",
+        "Treats a skipped section as not a zero",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Have the plan forecast next month's traffic, blame the June core update for the drop, and treat the skipped GA4 section as zero AI traffic.",
+      "expected_output": "Should refuse every move. Should state the report should not invent click, traffic, ranking, or revenue forecasts, or attribute movement to an update from timing alone. Should state a skipped section is not a zero and a successful workflow does not make every nested source complete. Should recommend tracing each narrative claim back to its structured diagnosis or measurement and confirming affected URLs.",
+      "assertions": [
+        "Refuses to forecast next month's traffic",
+        "Refuses to attribute the drop to the update from timing alone",
+        "States a skipped section is not a zero",
+        "States a successful workflow does not make every nested source complete",
+        "Recommends tracing each narrative claim back to its structured diagnosis or measurement"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Actually I just want a clean client summary, not an action queue.",
+      "expected_output": "Should note that monthly-action-plan should be avoided when you only need a client-ready summary without an action queue, and route to report id monthly-report to produce the human brief. Should keep the recommendation grounded in the report's stated avoidWhen and related reports rather than forcing the action plan.",
+      "assertions": [
+        "Notes monthly-action-plan is for a review with an action queue",
+        "States it should be avoided when only a client-ready summary is needed",
+        "Routes to report id monthly-report for the human brief",
+        "Grounds the routing in the report's avoidWhen and related reports"
+      ],
+      "files": []
+    }
+  ]
+}

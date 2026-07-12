@@ -1,13 +1,16 @@
 ---
-title: Find technical blockers to AI search eligibility
-description: Check crawlability, indexing controls, page evidence, entities, and AI referrals without turning optional markup into unsupported citation promises.
+title: Generative engine optimization and llms.txt without the hype
+description: How generative engine optimization and llms.txt affect AI search. Which technical blockers actually matter, which markup is optional, and what evidence can prove.
 ---
 
-AI search reports are useful when they remove technical blockers, improve the
-page for people, or make evidence easier to verify. They become dangerous when
-an optional file or markup pattern is presented as a citation score.
+Generative engine optimization, often shortened to GEO, is the current label for
+making a site work in AI search. Most of it is ordinary technical SEO plus honest
+evidence about what you can and cannot prove. The useful reports remove technical
+blockers, improve the page for people, or make evidence easier to verify. They
+turn dangerous when an optional file or markup pattern gets sold as a citation
+score.
 
-SEO Skills CLI keeps those two things separate.
+SEO Skills CLI keeps those two jobs separate.
 
 ## Reuse fresh page evidence instead of crawling twice
 

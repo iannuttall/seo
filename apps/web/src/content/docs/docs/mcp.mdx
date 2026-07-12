@@ -1,12 +1,13 @@
 ---
-title: Connect the local SEO MCP server to your AI client
-description: Install the local SEO MCP server in Codex, Claude Code, Claude Desktop, or Cursor, then give agents compact access to every structured report.
+title: 'SEO MCP server for Claude, Codex, and Cursor'
+description: Install the local SEO MCP server in Claude Code, Claude Desktop, Codex, or Cursor, then give your agent compact access to every structured SEO report.
 ---
 
-The MCP server runs as a local process on your computer. The installer points
-your client at the installed CLI, sends tool calls over standard input and
-output, and receives the same structured reports as the CLI. It does not fetch
-the package from npm when the client starts.
+The SEO MCP server runs as a local process on your computer and gives Claude
+Code, Claude Desktop, Codex, or Cursor the same structured reports as the CLI.
+The installer points your client at the installed CLI and sends tool calls over
+standard input and output. It does not fetch the package from npm when the
+client starts.
 
 MCP supplies the tools. The packaged [SEO skills](/docs/skills) supply the
 report-specific instructions that help an agent choose the right tool, read

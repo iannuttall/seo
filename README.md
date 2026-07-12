@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" alt="SEO Skills CLI" width="72" height="72">
+  <img src="apps/web/public/favicon.svg" alt="seo" width="72" height="72">
 </p>
 
-<h1 align="center">SEO Skills CLI</h1>
+<h1 align="center">seo</h1>
 
 <p align="center">
-  Open source SEO tools and skills for people, AI agents, and CI. Find what is costing you traffic, which pages are closest to more clicks, and what to fix first.
+  The SEO command for AI agents. Open source, evidence-backed SEO reports from your own crawl, Search Console, and GA4 data.
 </p>
 
 <p align="center">
@@ -345,7 +345,7 @@ local Google access, and more examples.
 ## Local data and Google access
 
 Google OAuth tokens use your system keychain when it is available. On a
-headless machine or a locked keychain, SEO Skills CLI falls back to a private
+headless machine or a locked keychain, the seo CLI falls back to a private
 `0600` file in your user config directory. Project profiles, crawl reports, and
 provider caches are also local. Use these commands to inspect or remove them:
 

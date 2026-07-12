@@ -239,7 +239,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
   )
   assert.match(
     pseo,
-    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| SEO Skills CLI<\/title>/,
+    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| seo<\/title>/,
   )
   assert.match(
     pseo,

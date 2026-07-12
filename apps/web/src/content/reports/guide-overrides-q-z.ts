@@ -231,7 +231,7 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Segment Impact Report: Compare GSC Movement',
+      title: 'SEO Segment Impact Report: Compare Search Console Movement',
       description:
         'Compare Search Console movement by page, query, country, or device and find which segments gained or lost traffic.',
       heading: 'SEO segment impact report for Search Console movement.',

@@ -6,6 +6,7 @@ import {
   listClients,
   saveClient,
 } from '@seo/core'
+import pc from 'picocolors'
 import {
   booleanArg,
   jsonFlag,
@@ -44,6 +45,14 @@ function shellArg(value: string): string {
     return value
   }
   return `'${value.replaceAll("'", "'\\''")}'`
+}
+
+function printStarAsk(): void {
+  console.log(
+    pc.dim(
+      'Find seo useful? A star helps other people discover it: https://github.com/iannuttall/seo',
+    ),
+  )
 }
 
 function mcpInstallLabel(installs: SetupMcpInstall[]): string {
@@ -157,6 +166,7 @@ export async function runGuidedSetup(
     if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
     note(next.join('\n'), 'Try next')
     outro('Setup complete.')
+    printStarAsk()
     return
   }
 
@@ -242,4 +252,5 @@ export async function runGuidedSetup(
   if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
   note(next.join('\n'), 'Try next')
   outro('Setup complete.')
+  printStarAsk()
 }

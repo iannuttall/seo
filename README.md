@@ -77,7 +77,7 @@ technical report before connecting Google.
 Running `seo help` shows the shape of the tool:
 
 ```txt
-seo v0.2.0
+seo v0.2.1
 
 Human-friendly SEO reports first, power tools when you need them.
 

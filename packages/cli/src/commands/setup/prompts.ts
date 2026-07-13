@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process'
 import {
   confirm,
   multiselect,
@@ -23,6 +22,7 @@ import {
 import { canPrompt, maybeExitCancelled } from '../../utils.js'
 import { detectMcpClients } from '../mcp-clients.js'
 import { installMcpConfig } from '../mcp-config.js'
+import { installSeoSkill } from '../skill-install.js'
 
 export type SetupAuthStatus =
   | 'connected'
@@ -279,19 +279,7 @@ export async function maybeInstallSkill(
   )
   if (!shouldInstall) return { status: 'declined' }
 
-  const result = spawnSync('npx', ['-y', 'skills', 'add', 'iannuttall/seo'], {
-    stdio: 'inherit',
-  })
-  if (result.error) {
-    return { status: 'failed', error: result.error.message }
-  }
-  if (result.status !== 0) {
-    return {
-      status: 'failed',
-      error: `npx skills add exited with status ${result.status ?? 'unknown'}.`,
-    }
-  }
-  return { status: 'installed' }
+  return installSeoSkill()
 }
 
 export async function maybeInstallMcp(

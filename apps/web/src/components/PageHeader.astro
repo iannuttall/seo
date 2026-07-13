@@ -17,8 +17,8 @@ const centered = align === 'center'
     description ? (
       <p
         class:list={[
-          'max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-foreground-muted sm:text-xl sm:leading-8',
-          centered && 'mx-auto',
+          'text-pretty font-sans text-lg leading-7 tracking-tight text-foreground-muted sm:text-xl sm:leading-8',
+          centered && 'mx-auto max-w-2xl',
         ]}
       >
         {description}

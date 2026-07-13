@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" alt="SEO Skill" width="72" height="72">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/s-dark.svg">
+    <img src="assets/brand/s.svg" alt="SEO Skill" width="144">
+  </picture>
 </p>
 
 <h1 align="center">SEO Skill</h1>

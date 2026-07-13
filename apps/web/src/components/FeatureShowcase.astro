@@ -4,45 +4,45 @@ import { reports } from '@/content/reports'
 
 const features = [
   {
-    title: `One skill routes all ${reports.length} reports.`,
+    title: "Chat with your SEO data to find out what works and what doesn't.",
     description:
-      `Your agent can discover and run the same ${reports.length} reports through MCP, the CLI, or the library. It only loads the guidance for the report it needs, keeping its context clean.`,
+      'Ask why traffic dropped, which pages are close to page one, or what is blocking a crawl. Your agent answers from your crawl, Search Console, and GA4 data instead of guessing.',
     demo: 'mcp',
   },
   {
-    title: 'Terminal agents ship the fix.',
+    title: 'Use the CLI with Codex or Claude Code to ship SEO fixes fast.',
     description:
-      'A coding agent like Codex runs the same CLI in JSON mode, reads the evidence, and makes the edits in your codebase. Every command works for humans too, starting with seo report.',
+      'Run an audit in the terminal and let your coding agent trace each problem to the code. You get a reviewable fix without copying findings between tools.',
     demo: 'cli',
   },
   {
-    title: 'Trace every finding to real URLs.',
+    title: 'Run a complete SEO audit and know what to fix next.',
     description:
-      'Open the URLs, rules, redirects, canonicals, robots directives, and fetch evidence behind each finding. No mystery score.',
+      `Run ${reports.length} reports across crawl health, content, search performance, and AI visibility. Each result shows the affected pages and gives your agent the evidence it needs to act.`,
     demo: 'crawl',
   },
   {
-    title: 'See how you look to AI search.',
+    title: 'Make your site easier for AI search engines to understand and cite.',
     description:
-      'One crawl checks AI crawler access, structured data, entity identity, and answerable content. It can draft an llms.txt from your highest-value pages too.',
+      'Check whether AI crawlers can access your pages and understand what your site is about. Your agent can fix the gaps and draft an llms.txt from the pages you choose.',
     demo: 'ai',
   },
   {
-    title: 'Use the same engine in your code.',
+    title: 'Build SEO checks into the tools and workflows your team already uses.',
     description:
-      'Import the typed crawler or run any registered report from the unscoped seo package. CLI, MCP, and library calls use the same report logic.',
+      'Import the typed crawler and reports from the seo package. Add audits to CI, content pipelines, internal tools, or whatever you are already building.',
     demo: 'library',
   },
   {
-    title: 'Check what changed after the fix.',
+    title: 'See which SEO fixes worked and where your effort should go next.',
     description:
-      'Compare saved crawls and measure observed search movement after a release. The report keeps correlation separate from causation.',
+      'Compare every release against saved crawl and search performance data. See what improved, what stayed flat, and which changes need more time before you call them a win.',
     demo: 'measure',
   },
 ] as const
 ---
 
-<section class="mt-12 border-y-2 border-nav">
+<section class="border-b-2 border-nav">
   <div class="mx-auto w-full max-w-4xl px-8 md:px-12">
     <div class="grid border-x-2 border-nav sm:auto-rows-fr">
       {features.map((feature, index) => {

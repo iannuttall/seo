@@ -1,0 +1,50 @@
+---
+import Logo from '@/components/Logo.astro'
+import LogoDark from '@/components/LogoDark.astro'
+
+type Props = {
+  class?: string
+  title?: string
+  size?: 'hero' | 'nav'
+}
+
+const { class: className, title = 'SEO Skill', size = 'hero' } = Astro.props
+---
+
+<div class:list={['theme-logo', className]} data-size={size} role="img" aria-label={title}>
+  <Logo class="theme-logo-light" />
+  <LogoDark class="theme-logo-dark" />
+</div>
+
+<style>
+  .theme-logo {
+    position: relative;
+    width: clamp(7.5rem, 22vw, 10rem);
+    aspect-ratio: 960 / 838;
+  }
+
+  .theme-logo[data-size='nav'] {
+    width: 2rem;
+    flex: 0 0 auto;
+  }
+
+  .theme-logo :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .theme-logo :global(.theme-logo-dark) {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .theme-logo :global(.theme-logo-light) {
+      display: none;
+    }
+
+    .theme-logo :global(.theme-logo-dark) {
+      display: block;
+    }
+  }
+</style>

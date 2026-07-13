@@ -3,6 +3,7 @@ import DottedCard from '@/components/DottedCard.astro'
 import FeatureShowcase from '@/components/FeatureShowcase.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import StackedWordmark from '@/components/StackedWordmark.astro'
 import {
   Accordion,
   AccordionContent,
@@ -96,33 +97,38 @@ const faqs = [
   framed={false}
 >
   <main data-agent-content="true">
-    <section class="mx-auto w-full max-w-4xl space-y-5 px-8 pb-8 pt-12 md:px-12">
-      <h1
-        class="text-center text-pretty text-4xl font-normal leading-tight tracking-tight max-[420px]:text-[7.2vw] sm:text-5xl"
-        data-glitch
-        aria-label="The only SEO skill your agent needs"
-      >
-        <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">The only SEO skill</span>
-        <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">your agent needs</span>
-      </h1>
-      <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
-        One SEO skill and {reports.length} audit tools for AI agents to fix
-        issues, measure performance, and grow your organic and AI search
-        visibility.
-      </p>
-      <InstallPicker />
+    <section class="border-b-2 border-nav">
+      <div class="hero-shell mx-auto w-full max-w-4xl px-8 md:px-12">
+        <div class="hero-copy">
+          <h1
+            class="text-center text-pretty text-4xl font-normal leading-tight tracking-tight max-[420px]:text-[7.2vw] sm:text-5xl"
+            data-glitch
+            aria-label="The only SEO skill your agent needs"
+          >
+            <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">The only SEO skill</span>
+            <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">your agent needs</span>
+          </h1>
+          <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
+            One SEO skill and {reports.length} audit tools for AI agents to fix
+            issues, measure performance, and grow your organic and AI search
+            visibility.
+          </p>
+        </div>
+        <InstallPicker />
+        <StackedWordmark />
+      </div>
     </section>
 
     <FeatureShowcase />
 
-    <section class="mb-12 border-b-2 border-nav bg-nav text-nav-foreground">
+    <section class="mb-12 border-b-2 border-nav bg-panel text-panel-foreground">
       <div class="mx-auto w-full max-w-4xl px-8 md:px-12">
         <div class="px-6 py-12 sm:px-8">
           <div class="mb-10 space-y-4 text-center">
             <h2 class="text-pretty text-3xl font-normal leading-tight tracking-tight sm:text-4xl">
               Reports for a complete SEO audit
             </h2>
-            <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-nav-foreground/70 sm:text-xl sm:leading-8">
+            <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-panel-foreground/70 sm:text-xl sm:leading-8">
               {reports.length} reports and tools across crawl health, Search Console and GA4,
               opportunities, AI readiness, and monitoring.
             </p>
@@ -150,7 +156,7 @@ const faqs = [
     <section>
       <div class="mx-auto w-full max-w-4xl px-8 py-12 md:px-12">
         <SectionHeading
-          eyebrow="Questions people ask before giving an agent SEO evidence"
+          eyebrow="Questions about the CLI, MCP, and your data"
           text="Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use."
         />
         <DottedCard patternId="faq-card">
@@ -236,4 +242,18 @@ const faqs = [
       schedule()
     })()
   </script>
+  <style>
+    .hero-shell {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2rem, 4vh, 4rem);
+      padding-top: clamp(2.5rem, 5vh, 4.5rem);
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1.5rem, 3vh, 2.5rem);
+    }
+  </style>
 </BaseLayout>

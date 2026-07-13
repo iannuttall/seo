@@ -1,0 +1,57 @@
+---
+const copies = 8
+---
+
+<div class="wordmark-stage" aria-hidden="true">
+  <div class="wordmark-stack">
+    {
+      Array.from({ length: copies }, (_, index) => (
+        <span class="wordmark-copy wordmark-outline" data-copy={index}>seo skill</span>
+      ))
+    }
+    <span class="wordmark-copy wordmark-solid">seo skill</span>
+  </div>
+</div>
+
+<style>
+  .wordmark-stage {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .wordmark-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--fg);
+    font-family: "Martian Grotesk", system-ui, sans-serif;
+    font-size: clamp(4.5rem, 18.6vw, 10.5rem);
+    font-weight: 650;
+    letter-spacing: -0.09em;
+    line-height: 0.8;
+    transform: translateY(0.08em);
+    white-space: nowrap;
+  }
+
+  .wordmark-copy + .wordmark-copy {
+    margin-top: -0.712em;
+  }
+
+  .wordmark-outline {
+    color: var(--bg);
+    user-select: none;
+    -webkit-text-stroke: 1.25px var(--fg);
+  }
+
+  .wordmark-solid {
+    color: var(--fg);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .wordmark-stage {
+      background: var(--bg);
+    }
+  }
+</style>

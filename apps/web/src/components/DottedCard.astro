@@ -9,9 +9,9 @@ type Props = {
 
 const { class: className, patternId = 'card-dot-pattern', inverted = false } = Astro.props
 
-const line = inverted ? 'border-nav-foreground' : 'border-nav'
-const surface = inverted ? 'bg-nav' : 'bg-background'
-const ink = inverted ? 'text-nav-foreground' : 'text-foreground'
+const line = inverted ? 'border-panel-foreground' : 'border-nav'
+const surface = inverted ? 'bg-panel' : 'bg-background'
+const ink = inverted ? 'text-panel-foreground' : 'text-foreground'
 ---
 
 <div class:list={['relative h-full', Astro.slots.has('label') ? 'pb-6' : 'pb-2']}>

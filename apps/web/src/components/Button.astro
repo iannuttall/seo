@@ -1,0 +1,25 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = HTMLAttributes<'button'> & {
+  href?: string
+}
+
+const { class: className, href, ...props } = Astro.props as Props
+const Tag = href ? 'a' : 'button'
+
+// The Turbopuffer button in brand colors: inset highlight and shade give the
+// 3D face, active presses it inward. Selection colors are pinned so the
+// global primary-tinted selection never clashes with the primary background.
+const classes = [
+  'group relative grid cursor-pointer items-center justify-center whitespace-nowrap border border-primary-active bg-primary font-medium text-primary-foreground',
+  'shadow-btn transition-all hover:bg-primary-hover hover:shadow-btn-hover active:bg-primary-active active:shadow-btn-active',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+  'selection:bg-primary-foreground selection:text-primary',
+  className,
+]
+---
+
+<Tag href={href} class:list={classes} {...props}>
+  <slot />
+</Tag>

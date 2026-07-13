@@ -1,0 +1,33 @@
+---
+type Variant = 'shadow' | 'stripes' | 'dots'
+
+const {
+  class: className,
+  patternId = 'dot-pattern',
+  variant = 'shadow' as Variant,
+  ...props
+} = Astro.props
+
+const tileSizes: Record<Variant, { width: number; height: number }> = {
+  shadow: { width: 7, height: 13 },
+  stripes: { width: 8, height: 8 },
+  dots: { width: 10, height: 10 },
+}
+
+const tile = tileSizes[variant as Variant]
+---
+
+<svg class={className} width="100%" height="100%" fill="currentColor" aria-hidden="true" {...props}>
+  <defs>
+    <pattern id={patternId} width={tile.width} height={tile.height} patternUnits="userSpaceOnUse">
+      {variant === 'shadow' && (
+        <path d="M5.58984 12.2344V10.7051H6.52734V12.2344H5.58984ZM1.86328 12.2344V10.7051H2.79492V12.2344H1.86328ZM3.72656 10.0957V8.56641H4.6582V10.0957H3.72656ZM0 10.0957V8.56641H0.925781V10.0957H0ZM5.58984 7.95117V6.42188H6.52734V7.95117H5.58984ZM1.86328 7.95117V6.42188H2.79492V7.95117H1.86328ZM3.72656 5.8125V4.2832H4.6582V5.8125H3.72656ZM0 5.8125V4.2832H0.925781V5.8125H0ZM5.58984 3.66797V2.13867H6.52734V3.66797H5.58984ZM1.86328 3.66797V2.13867H2.79492V3.66797H1.86328ZM3.72656 1.5293V0H4.6582V1.5293H3.72656ZM0 1.5293V0H0.925781V1.5293H0Z" />
+      )}
+      {variant === 'stripes' && (
+        <path d="M0 8L8 0M-4 4L4 -4M4 12L12 4" stroke="currentColor" stroke-width="2.2" fill="none" />
+      )}
+      {variant === 'dots' && <circle cx="5" cy="5" r="1" />}
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill={`url(#${patternId})`}></rect>
+</svg>

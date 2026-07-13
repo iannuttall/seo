@@ -1,5 +1,7 @@
 ---
+import DottedCard from '@/components/DottedCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import PagerNav from '@/components/PagerNav.astro'
 import CopyCode from '@/components/docs/CopyCode.astro'
 import {
   editorialReports,
@@ -172,7 +174,7 @@ function alternativeReportName(id: string): string {
     <PageHeader
       title={guide.seo?.heading ?? guide.name}
       description={guide.lead}
-      bordered={false}
+      align="left"
     />
 
     <div class="docs-prose">
@@ -192,18 +194,24 @@ function alternativeReportName(id: string): string {
       </ul>
 
       <h2 id="command-facts">Command facts</h2>
-      <dl class="mt-4 grid gap-3 rounded-lg bg-muted p-6 sm:grid-cols-2">
-        {
-          commandFacts.map(([label, value]) => (
-            <div>
-              <dt class="text-sm font-medium text-foreground">{label}</dt>
-              <dd class="mt-1 text-sm leading-6 text-foreground-muted">
-                <code>{value}</code>
-              </dd>
-            </div>
-          ))
-        }
-      </dl>
+      <div class="mt-4 font-mono">
+        <DottedCard patternId={`facts-${report.id}`}>
+          <div class="flex items-center justify-between gap-3 border-b-2 border-nav px-4 py-2 text-xs">
+            <span>{report.id}</span>
+            <span class="text-foreground-muted">{categoryLabels[report.category]}</span>
+          </div>
+          <dl class="divide-y divide-border text-sm">
+            {
+              commandFacts.map(([label, value]) => (
+                <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-4 py-2.5">
+                  <dt class="shrink-0 font-sans">{label}</dt>
+                  <dd class="min-w-0 text-xs text-foreground-muted">{value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </DottedCard>
+      </div>
 
       <h2 id="when-this-report-is-not-the-right-tool">
         When this report is not the right tool
@@ -342,7 +350,7 @@ function alternativeReportName(id: string): string {
       </ul>
 
       <h2 id="what-to-do-next">What to do next</h2>
-      <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-base/6 text-foreground-muted">
+      <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-base/6">
         {report.nextSteps.map((item) => <li>{item}</li>)}
       </ol>
 
@@ -389,60 +397,20 @@ function alternativeReportName(id: string): string {
 
     {
       previousReport || nextReport ? (
-        <nav
-          aria-label="Report docs"
-          class="mt-16 flex items-stretch justify-between gap-4 pt-6"
-        >
-          {previousReport ? (
-            <a
-              href={reportPath(previousReport.id)}
-              class="group flex flex-col gap-1 no-underline"
-            >
-              <span class="text-sm text-foreground-muted">Previous</span>
-              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {previousGuide?.name}
-              </span>
-            </a>
-          ) : (
-            <span />
-          )}
-          {nextReport ? (
-            <a
-              href={reportPath(nextReport.id)}
-              class="group flex flex-col items-end gap-1 text-right no-underline"
-            >
-              <span class="text-sm text-foreground-muted">Next</span>
-              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {nextGuide?.name}
-              </span>
-            </a>
-          ) : (
-            <span />
-          )}
-        </nav>
+        <PagerNav
+          ariaLabel="Report docs"
+          previous={
+            previousReport && previousGuide
+              ? { label: previousGuide.name, href: reportPath(previousReport.id) }
+              : undefined
+          }
+          next={
+            nextReport && nextGuide
+              ? { label: nextGuide.name, href: reportPath(nextReport.id) }
+              : undefined
+          }
+        />
       ) : null
     }
   </main>
 </BaseLayout>
-
-<script>
-  for (const button of document.querySelectorAll<HTMLButtonElement>(
-    '[data-copy-report-command]',
-  )) {
-    button.addEventListener('click', async () => {
-      const value = button.dataset.copyValue
-      const label = button.querySelector<HTMLElement>('[data-copy-label]')
-      if (!value) return
-
-      try {
-        await navigator.clipboard.writeText(value)
-        if (label) label.textContent = 'Copied'
-        window.setTimeout(() => {
-          if (label) label.textContent = 'Copy'
-        }, 1500)
-      } catch {
-        if (label) label.textContent = 'Select'
-      }
-    })
-  }
-</script>

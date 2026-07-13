@@ -1,0 +1,63 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
+type Props = HTMLAttributes<'code'> & {
+  copyable?: boolean
+  value?: string
+}
+
+const { class: className, copyable = false, value = '', ...props } = Astro.props as Props
+const classes = [
+  'inline-flex items-center whitespace-nowrap border border-primary-active bg-primary px-1.5 py-px font-mono font-semibold leading-5 text-primary-foreground selection:bg-primary-foreground selection:text-primary',
+  copyable &&
+    'cursor-pointer gap-1 shadow-btn transition-all hover:bg-primary-hover hover:shadow-btn-hover active:bg-primary-active active:shadow-btn-active',
+  className,
+]
+---
+
+{copyable ? (
+  <button
+    type="button"
+    class:list={classes}
+    data-inline-code-copy={value}
+    aria-label={`Copy ${value}`}
+    {...props}
+  >
+    <code><slot /></code>
+    <PixelIcon name="copy" data-copy-icon class="size-3 shrink-0" />
+    <PixelIcon name="copy-check" data-copy-check-icon class="hidden size-3 shrink-0" />
+  </button>
+) : (
+  <code class:list={classes} {...props}><slot /></code>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-inline-code-copy]').forEach((button) => {
+    if (button.dataset.copyReady === 'true') return
+    button.dataset.copyReady = 'true'
+
+    button.addEventListener('click', async () => {
+      const value = button.dataset.inlineCodeCopy ?? ''
+      if (!value) return
+
+      try {
+        await navigator.clipboard.writeText(value)
+      } catch {
+        return
+      }
+
+      const copyIcon = button.querySelector('[data-copy-icon]')
+      const checkIcon = button.querySelector('[data-copy-check-icon]')
+      copyIcon?.classList.add('hidden')
+      checkIcon?.classList.remove('hidden')
+      button.setAttribute('aria-label', `Copied ${value}`)
+
+      window.setTimeout(() => {
+        copyIcon?.classList.remove('hidden')
+        checkIcon?.classList.add('hidden')
+        button.setAttribute('aria-label', `Copy ${value}`)
+      }, 1500)
+    })
+  })
+</script>

@@ -1,0 +1,112 @@
+---
+// A very faded ordered-dither field behind the footer: a slowly drifting wave
+// is thresholded through a Bayer 4x4 matrix into crisp on/off cells, densest
+// along the bottom edge and dissolving upward. Rendered chunky on a low-res
+// canvas that CSS scales up with pixelated rendering.
+---
+
+<canvas
+  class="dither-field pointer-events-none absolute inset-0 h-full w-full text-primary-foreground"
+  data-footer-dither
+  aria-hidden="true"></canvas>
+
+<style>
+  .dither-field {
+    image-rendering: pixelated;
+    opacity: 0.14;
+  }
+</style>
+
+<script>
+  const CELL = 3 // css px per dither cell
+  const FRAME_MS = 90 // stepped, low-fps flicker reads more like print than video
+
+  const BAYER = [
+    [0, 8, 2, 10],
+    [12, 4, 14, 6],
+    [3, 11, 1, 9],
+    [15, 7, 13, 5],
+  ].map((row) => row.map((value) => (value + 0.5) / 16))
+
+  function initFooterDither(canvas: HTMLCanvasElement) {
+    const context = canvas.getContext('2d')
+    const parent = canvas.parentElement
+    if (!context || !parent) return
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let cols = 0
+    let rows = 0
+    let ink: [number, number, number] = [255, 255, 255]
+
+    const build = () => {
+      cols = Math.max(8, Math.round(parent.clientWidth / CELL))
+      rows = Math.max(8, Math.round(parent.clientHeight / CELL))
+      canvas.width = cols
+      canvas.height = rows
+      const raw = getComputedStyle(canvas).color.match(/\d+/g)
+      if (raw && raw.length >= 3) ink = [Number(raw[0]), Number(raw[1]), Number(raw[2])]
+    }
+
+    const draw = (time: number) => {
+      const image = context.createImageData(cols, rows)
+      const data = image.data
+      const t = time * 0.001
+      for (let y = 0; y < rows; y += 1) {
+        const fade = (y / rows) ** 1.6
+        for (let x = 0; x < cols; x += 1) {
+          const wave =
+            Math.sin(x * 0.32 + t * 0.5) +
+            Math.sin(y * 0.27 - t * 0.34) +
+            Math.sin((x + y) * 0.16 + t * 0.21)
+          const level = (wave / 3 + 1) / 2
+          if (level * fade > BAYER[y & 3][x & 3]) {
+            const i = (y * cols + x) * 4
+            data[i] = ink[0]
+            data[i + 1] = ink[1]
+            data[i + 2] = ink[2]
+            data[i + 3] = 255
+          }
+        }
+      }
+      context.putImageData(image, 0, 0)
+    }
+
+    let frame: number | null = null
+    let last = 0
+    const tick = (time: number) => {
+      if (time - last >= FRAME_MS) {
+        last = time
+        draw(time)
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    const start = () => {
+      if (frame === null && !reducedMotion) frame = requestAnimationFrame(tick)
+    }
+    const stop = () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame)
+        frame = null
+      }
+    }
+
+    build()
+    draw(0)
+    window.addEventListener('resize', () => {
+      build()
+      draw(0)
+    })
+
+    // Only animate while the footer is actually on screen.
+    new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) start()
+        else stop()
+      }
+    }).observe(parent)
+  }
+
+  document.querySelectorAll('[data-footer-dither]').forEach((canvas) => {
+    if (canvas instanceof HTMLCanvasElement) initFooterDither(canvas)
+  })
+</script>

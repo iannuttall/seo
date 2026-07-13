@@ -388,7 +388,7 @@ test('site copy has no stale hosted product, email contact, or dash punctuation'
   assert.doesNotMatch(copy, /[\u2013\u2014]/u)
 })
 
-test('site uses the shared visual system and copyable install choices', () => {
+test('site uses the keep-brutal visual system and copyable install choices', () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const css = readFileSync(resolve(appRoot, 'src/styles/globals.css'), 'utf8')
 
@@ -396,13 +396,38 @@ test('site uses the shared visual system and copyable install choices', () => {
   assert.match(home, /data-copy-install-command/)
   assert.match(home, /npm i -g seo/)
   assert.match(home, /seo start/)
-  assert.match(home, /One command installs everything\./)
+  assert.match(home, /The only SEO skill/)
+  assert.match(home, /your agent needs/)
+  assert.match(
+    home,
+    /One SEO skill and \d+ audit tools for AI agents to fix\s+issues, measure performance, and grow your organic and AI search\s+visibility\./,
+  )
+  assert.match(home, /data-glitch/)
+  assert.match(home, /prefers-reduced-motion: reduce/)
+  assert.match(home, /One skill routes all \d+ reports\./)
+  assert.match(home, /Claude \/ keep\.md/)
+  assert.match(home, /Codex \/ keep\.md/)
+  assert.match(home, /seo report --project keep/)
+  assert.match(home, /data-chat-part="spinner"/)
+  assert.match(home, /metadata findings/)
+  assert.match(home, /indexability changes/)
+  assert.match(home, /Search Console/)
+  assert.match(home, /AI crawler access/)
+  assert.match(home, /llms\.txt/)
+  assert.match(home, /import/)
+  assert.match(home, /auditPage/)
+  assert.match(home, /Correlation only, not a causal claim/)
   assert.doesNotMatch(home, /npx seo/)
   assert.doesNotMatch(home, /data-install-option="skills"/)
   assert.doesNotMatch(home, /data-install-option="npm"/)
-  assert.match(css, /font-family: "InterVariable"/)
-  assert.match(css, /font-family: "JetBrains Mono"/)
-  assert.match(css, /--frame-max: 48rem/)
+  assert.match(css, /font-family: "Martian Grotesk"/)
+  assert.match(css, /font-family: "Martian Mono"/)
+  assert.match(css, /--nav-bg: #171717/)
+  assert.match(css, /--primary: #ff4500/)
+  assert.match(
+    readFileSync(resolve(appRoot, 'src/layouts/BaseLayout.astro'), 'utf8'),
+    /max-w-4xl/,
+  )
   assert.match(css, /prefers-color-scheme: dark/)
 })
 
@@ -422,8 +447,8 @@ test('published guidance does not teach disposable npx CLI installs', () => {
 
 test('bundled fonts ship with their open font licenses', () => {
   const fonts = [
-    ['InterVF.woff2', 'LICENSE-inter.txt'],
-    ['JetBrainsMonoVF.woff2', 'LICENSE-jetbrains-mono.txt'],
+    ['MartianGroteskVF.woff2', 'MartianMono-OFL.txt'],
+    ['MartianMonoVF.woff2', 'MartianMono-OFL.txt'],
   ]
 
   for (const [fontName, licenseName] of fonts) {

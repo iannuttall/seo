@@ -1,4 +1,7 @@
 ---
+import DottedCard from '@/components/DottedCard.astro'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
 type Props = {
   title: string
   description?: string
@@ -7,24 +10,19 @@ type Props = {
 }
 
 const { title, description, href, class: className } = Astro.props
+const patternId = `nav-card-${(href ?? title).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`
 const Tag = href ? 'a' : 'div'
 ---
 
-<Tag
-  href={href}
-  class:list={[
-    'flex h-full flex-col gap-2 rounded-lg bg-muted p-6 no-underline',
-    href && 'transition-colors hover:bg-secondary-hover',
-    className,
-  ]}
->
-  <div class="flex items-start justify-between gap-3">
-    <h2 class="text-base font-medium text-foreground">{title}</h2>
-  </div>
-  {
-    description ? (
-      <p class="text-sm/6 text-foreground-muted">{description}</p>
-    ) : null
-  }
-  <slot />
+<Tag href={href} class:list={['group block h-full', href && 'cursor-pointer', className]}>
+  <DottedCard patternId={patternId}>
+    <div class="flex h-full flex-col gap-3 p-5 pb-8">
+      {description ? <p class="font-sans text-sm font-light text-foreground-muted">{description}</p> : null}
+      <slot />
+    </div>
+    <span slot="label" class="inline-flex items-center gap-2 whitespace-nowrap">
+      {title}
+      <PixelIcon name="arrow-right" class="nav-card-arrow size-3.5 shrink-0" />
+    </span>
+  </DottedCard>
 </Tag>

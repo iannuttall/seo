@@ -1,4 +1,6 @@
 ---
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
 type Props = {
   label: string
   value: string
@@ -8,21 +10,19 @@ const { label, value } = Astro.props
 ---
 
 <div class="mt-5">
-  <p class="mb-2 text-sm font-medium text-foreground">{label}</p>
-  <div class="relative min-w-0 overflow-hidden rounded-lg border border-input bg-card">
-    <pre class="m-0 min-h-9 min-w-0 overflow-x-auto border-0 bg-card px-3 py-2 pr-20 font-mono text-sm leading-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><code>{value}</code></pre>
-    <div
-      class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent via-card/95 to-card"
-      aria-hidden="true"
-    ></div>
-    <button
-      type="button"
-      class="absolute right-1 top-1/2 inline-flex h-8 -translate-y-1/2 items-center justify-center bg-card px-2 text-xs text-foreground-muted hover:text-foreground"
-      data-copy-report-command
-      data-copy-value={value}
-      aria-label={`Copy ${label.toLowerCase()}`}
-    >
-      <span data-copy-label>Copy</span>
-    </button>
+  <p class="mb-2 text-sm">{label}</p>
+  <div class="code-frame">
+    <pre><code>{value}</code></pre>
+    <div class="absolute bottom-[2px] right-[2px] top-[2px] flex items-start bg-linear-to-l from-background from-70% to-transparent pl-6 pr-1.5 pt-1.5">
+      <button
+        type="button"
+        class="flex size-8 shrink-0 cursor-pointer items-center justify-center bg-background text-foreground-muted transition-colors hover:text-foreground"
+        aria-label={`Copy ${label.toLowerCase()}`}
+        data-code-copy
+      >
+        <PixelIcon name="copy" data-copy-icon class="size-4" />
+        <PixelIcon name="copy-check" data-copy-check-icon class="hidden size-4" />
+      </button>
+    </div>
   </div>
 </div>

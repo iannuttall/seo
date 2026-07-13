@@ -1,4 +1,5 @@
 ---
+import NavCard from '@/components/NavCard.astro'
 import { editorialReports } from '@/content/reports'
 import { reportCollections } from '@/content/reports/collections'
 import { resolveReportGuide } from '@/content/reports/guides'
@@ -14,38 +15,25 @@ const catalogCollections = reportCollections.map((collection) => ({
 }))
 ---
 
-<div class="mt-10 space-y-14">
+<div class="mt-8 space-y-12">
   {
     catalogCollections.map((collection) => {
       return (
         <section>
-          <header class="max-w-2xl">
-            <h2 class="text-2xl/8 font-medium text-foreground">
-              {collection.title}
-            </h2>
-            <p class="mt-2 text-base/7 text-foreground-muted">
+          <header>
+            <h2 class="text-lg font-normal leading-7 tracking-wide">{collection.title}</h2>
+            <p class="mt-2 font-sans text-foreground-muted">
               {collection.introduction}
             </p>
           </header>
 
-          <div class="mt-6 grid gap-2 sm:grid-cols-2">
+          <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-6 sm:auto-rows-fr sm:grid-cols-2">
             {collection.reports.map(({ report, label }) => {
               const guide = resolveReportGuide(report)
               return (
-                <a
-                  href={reportPath(report.id)}
-                  class="group flex min-h-40 flex-col rounded-lg bg-muted p-6 no-underline transition-colors hover:bg-secondary-hover"
-                >
-                  <span class="block text-base font-medium text-foreground">
-                    {label}
-                  </span>
-                  <span class="mt-3 block text-sm/6 text-foreground-muted">
-                    {guide.summary}
-                  </span>
-                  <span class="mt-auto pt-5 font-mono text-xs text-foreground-soft">
-                    {report.id}
-                  </span>
-                </a>
+                <NavCard title={label} description={guide.summary} href={reportPath(report.id)}>
+                  <span class="mt-auto font-mono text-xs text-foreground-faint">{report.id}</span>
+                </NavCard>
               )
             })}
           </div>

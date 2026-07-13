@@ -3,6 +3,7 @@ import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
+import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://seoskill.dev',
@@ -10,6 +11,7 @@ export default defineConfig({
   trailingSlash: 'never',
   markdown: {
     syntaxHighlight: false,
+    rehypePlugins: [rehypeCodeFrame],
   },
   integrations: [mdx(), react()],
   vite: {
@@ -26,8 +28,6 @@ export default defineConfig({
         'react-dom/client',
         'react/jsx-runtime',
         'react/jsx-dev-runtime',
-        '@icons-pack/react-simple-icons',
-        '@phosphor-icons/react',
       ],
     },
   },

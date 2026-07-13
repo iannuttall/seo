@@ -1,0 +1,18 @@
+---
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+
+type Props = {
+  name: string
+  class?: string
+  title?: string
+  [key: string]: unknown
+}
+
+const { name, class: className, title, ...props } = Astro.props as Props
+const icons = import.meta.glob<{ default: AstroComponentFactory }>('./pixelarticons/*.astro', {
+  eager: true,
+})
+const Icon = icons[`./pixelarticons/${name}.astro`]?.default
+---
+
+{Icon && <Icon class={className} aria-hidden={title ? undefined : 'true'} aria-label={title} role={title ? 'img' : undefined} {...props} />}

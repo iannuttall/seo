@@ -77,8 +77,8 @@ skills/         packaged agent skills
 - `evals/`: behaviour evals keyed by report id or job, shipped in the package.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: human usage documentation.
-- Working plans live outside the repository in the sibling `seo-plans`
-  directory. Never depend on them for product behavior or durable context.
+- Working plans live in the git-ignored `plans/` directory at the repository
+  root. Never depend on them for product behavior or durable context.
 - `dist`: generated public package bundles. Do not hand-edit or commit them.
 
 Useful web areas:

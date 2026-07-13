@@ -4,15 +4,16 @@ import PixelIcon from '@/components/icons/PixelIcon.astro'
 type Props = {
   label: string
   value: string
+  wrap?: boolean
 }
 
-const { label, value } = Astro.props
+const { label, value, wrap = false } = Astro.props
 ---
 
 <div class="mt-5">
   <p class="mb-2 text-sm">{label}</p>
   <div class="code-frame">
-    <pre><code>{value}</code></pre>
+    <pre class:list={[wrap && 'whitespace-pre-wrap break-words']}><code>{value}</code></pre>
     <div class="absolute bottom-[2px] right-[2px] top-[2px] flex items-start bg-linear-to-l from-background from-70% to-transparent pl-6 pr-1.5 pt-1.5">
       <button
         type="button"

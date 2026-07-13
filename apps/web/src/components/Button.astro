@@ -1,12 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 
-type Props = HTMLAttributes<'button'> & {
-  href?: string
-}
+type Props =
+  | (HTMLAttributes<'button'> & { href?: undefined })
+  | (HTMLAttributes<'a'> & { href: string })
 
-const { class: className, href, ...props } = Astro.props as Props
-const Tag = href ? 'a' : 'button'
+const { class: className, ...props } = Astro.props as Props
+const anchorProps = typeof props.href === 'string' ? (props as HTMLAttributes<'a'>) : undefined
+const buttonProps = anchorProps ? undefined : (props as HTMLAttributes<'button'>)
 
 // The Turbopuffer button in brand colors: inset highlight and shade give the
 // 3D face, active presses it inward. Selection colors are pinned so the
@@ -20,6 +21,14 @@ const classes = [
 ]
 ---
 
-<Tag href={href} class:list={classes} {...props}>
-  <slot />
-</Tag>
+{
+  anchorProps ? (
+    <a {...anchorProps} class:list={classes}>
+      <slot />
+    </a>
+  ) : (
+    <button {...buttonProps} class:list={classes}>
+      <slot />
+    </button>
+  )
+}

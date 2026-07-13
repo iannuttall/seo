@@ -1,5 +1,5 @@
 ---
-title: Set up the SEO CLI and run your first SEO audit
+title: Set up SEO Skill and run your first audit
 description: Install the SEO CLI, connect Search Console, save a local project profile, and run your first SEO audit that points you to a clear next action.
 ---
 
@@ -34,19 +34,22 @@ limits before you sign in.
 Do not run the global install with `sudo`. If npm reports a permission error,
 fix npm's global install directory, then run the same command again.
 
-## Add the skills when an agent will use it
+## Add the skill for your agent
 
 The CLI and MCP server run the reports. The skill teaches an agent which report
-fits the job, how to interpret its limits, and what to verify next. Install both
-for the strongest agent setup:
+fits the job, how to interpret its limits, and what to verify next. During
+`seo start` you can choose to add the skill to your supported agents as part of
+the guided setup.
+
+If you chose no during setup, or need to reinstall the skill later, run:
 
 ```sh
-npx skills add iannuttall/seo
+seo skill install
 ```
 
-You only need the first command for direct terminal use, scripts, and CI. An
-agent can call the CLI without the skill, but it loses the report-specific SEO
-guidance that keeps the analysis focused and honest.
+The CLI still works without the skill for direct terminal use, scripts and CI.
+An agent can call it too, but it loses the report-specific guidance that keeps
+the analysis focused and honest.
 
 ## Run the main report first
 
@@ -135,6 +138,6 @@ documents every storage and network boundary.
 ## Add your agent after the first report works
 
 Once `seo report` runs in the terminal, connect the [local MCP server](/docs/mcp)
-and install the [focused SEO skills](/docs/skills). The MCP server gives the
+and install the [focused SEO skill](/docs/skill). The MCP server gives the
 agent the tools; the skills teach it how to use them. Testing the human path
 first makes auth and property mistakes much easier to spot.

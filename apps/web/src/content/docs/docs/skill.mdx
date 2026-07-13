@@ -1,5 +1,5 @@
 ---
-title: Install the SEO skill that teaches agents how to use reports
+title: Install the SEO skill for agents
 description: Add the SEO skill to Codex, Claude Code, or a project so agents can choose the right report, fetch its depth at runtime, read the evidence, and verify each change.
 ---
 
@@ -14,23 +14,28 @@ schema, the order to read its output, what its evidence cannot support, and one
 verification step, is fetched at runtime with `describe`. This progressive
 disclosure keeps the skill small and always in sync with the report registry.
 
-## Install the skill with the standard installer
+## Install the skill during setup
 
-Install the skill with the command used across the agent skills ecosystem:
-
-```sh
-npx skills add iannuttall/seo
-```
-
-The installer handles the supported agent destinations. The repository remains
-the skill source, while report execution comes from the local `seo` package.
-
-For the recommended setup, install both parts:
+New users do not need a separate skill command. Install the CLI and start the
+guided setup:
 
 ```sh
 npm i -g seo
-npx skills add iannuttall/seo
+seo start
 ```
+
+`seo start` connects your site, saves a local project and offers to install the
+SEO skill and MCP server for your agents. The skill teaches the agent how to use
+the reports. The CLI runs them.
+
+If the CLI is already set up you can install or reinstall the skill directly:
+
+```sh
+seo skill install
+```
+
+The command uses the standard agent skills installer and handles the supported
+agent destinations for you.
 
 ## Inspect the copy inside the SEO package
 
@@ -94,10 +99,10 @@ agent needs to execute reports locally.
 ## Update the installed copy deliberately
 
 The skill is a copied file, so it does not update itself when the repository
-changes. Review local edits before running the standard installer again:
+changes. Review local edits before installing the packaged copy again:
 
 ```sh
-npx skills add iannuttall/seo
+seo skill install
 ```
 
 Project-specific instructions may be worth keeping. A blind overwrite is a poor

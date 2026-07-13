@@ -126,11 +126,11 @@ Do not parse error text when `structuredContent.error` is available.
 
 The `seo` skill ships under `skills/seo` in the npm package and repository. It
 routes an agent to the right report and defers per-report depth to
-`seo reports describe <id> --json`. Install it through the standard agent skills
-installer:
+`seo reports describe <id> --json`. New users can add it during `seo start`. If
+setup is already complete, install or reinstall it directly:
 
 ```bash
-npx skills add iannuttall/seo
+seo skill install
 ```
 
 Use `seo skill list` or `seo skill path seo` when you want to inspect the copy

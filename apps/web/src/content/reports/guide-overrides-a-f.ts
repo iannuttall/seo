@@ -527,10 +527,10 @@ export const reportGuideOverridesAF: Partial<
     },
   },
   'site-crawl': {
-    name: 'Crawl a site for technical SEO issues',
+    name: 'Technical SEO site crawl audit',
     summary:
-      'Map a limited part of a site, run the maintained technical checks, and save a reusable evidence baseline.',
-    lead: 'This is the baseline technical SEO audit when you do not have a saved crawl yet. It follows same-origin links and optional sitemaps within explicit limits, then saves grouped findings that later reports can reuse without fetching the whole site again.',
+      'Find technical SEO issues across a site and save the crawl for follow-up audits.',
+    lead: 'Find technical SEO issues across your site and see which pages need attention. Save the crawl as a baseline for follow-up audits.',
     inputs: [
       {
         label: 'Live site responses and discovered links',
@@ -571,11 +571,10 @@ export const reportGuideOverridesAF: Partial<
       },
     ],
     seo: {
-      title: 'Technical SEO Site Crawl: Indexing, Links and Metadata',
+      title: 'Technical SEO Site Crawl Audit',
       description:
-        'Run a technical SEO site crawl that checks indexability, redirects, canonicals, links, metadata, schema, and AI readiness.',
-      heading:
-        'Technical SEO site crawl for indexing, links, metadata, and AI readiness.',
+        'Run a technical SEO site crawl audit to find crawl, indexing, link and metadata issues. See affected pages and save a baseline for follow-up checks.',
+      heading: 'Technical SEO site crawl audit',
       primaryKeyword: 'technical SEO audit',
       supportingKeywords: ['seo site audit', 'seo crawler', 'website audit'],
     },

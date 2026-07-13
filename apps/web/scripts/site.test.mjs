@@ -18,10 +18,10 @@ const expectedPages = new Map([
   ['docs/cli/index.html', 'https://seoskill.dev/docs/cli'],
   ['docs/crawler/index.html', 'https://seoskill.dev/docs/crawler'],
   ['docs/google/index.html', 'https://seoskill.dev/docs/google'],
-  ['docs/library/index.html', 'https://seoskill.dev/docs/library'],
+  ['docs/typescript/index.html', 'https://seoskill.dev/docs/typescript'],
   ['docs/mcp/index.html', 'https://seoskill.dev/docs/mcp'],
   ['docs/reports/index.html', 'https://seoskill.dev/docs/reports'],
-  ['docs/skills/index.html', 'https://seoskill.dev/docs/skills'],
+  ['docs/skill/index.html', 'https://seoskill.dev/docs/skill'],
   ['docs/agents/index.html', 'https://seoskill.dev/docs/agents'],
   ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -96,6 +96,9 @@ test('legal and error pages are noindex but remain crawlable', () => {
 
   const notFound = readFileSync(resolve(dist, '404.html'), 'utf8')
   assert.match(notFound, /<meta name="robots" content="noindex, follow">/)
+  assert.match(notFound, /That page is not here/)
+  assert.match(notFound, /Get back to something useful/)
+  assert.match(notFound, /Report the broken link/)
   assert.doesNotMatch(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Disallow:/,
@@ -175,7 +178,11 @@ test('report library covers the live registry and keeps legacy routes', async ()
       /<meta name="description" content="([^"]+)"\s*\/?>/,
     )?.[1]
 
-    assert.ok(title && title.length >= 55 && title.length <= 80, id)
+    if (id === 'site-crawl') {
+      assert.equal(title, 'Technical SEO Site Crawl Audit | SEO Skill')
+    } else {
+      assert.ok(title && title.length >= 55 && title.length <= 80, id)
+    }
     assert.ok(
       description && description.length >= 110 && description.length <= 160,
       id,
@@ -188,18 +195,36 @@ test('report library covers the live registry and keeps legacy routes', async ()
       ),
     )
     assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)
-    assert.match(html, /What this report helps you decide/)
-    assert.match(html, /When this report is not the right tool/)
-    assert.match(html, /Data sources and inputs/)
-    assert.match(html, /What this report checks/)
-    assert.match(html, /Run the report from the CLI/)
-    assert.match(html, /How an MCP agent should use it/)
-    assert.match(html, /Use the report in a TypeScript app/)
-    assert.match(html, /npm install seo/)
-    assert.match(html, /What comes back/)
-    assert.match(html, /What comes back and how to read it/)
-    assert.match(html, /What this report cannot tell you/)
-    assert.match(html, /What to do next/)
+    if (id === 'site-crawl') {
+      assert.match(html, /<h1[^>]*>Technical SEO site crawl audit<\/h1>/)
+      assert.match(html, /Install and run the audit/)
+      assert.match(html, /npm i -g seo/)
+      assert.match(html, /seo start/)
+      assert.match(html, /seo crawl https:\/\/example\.com --save/)
+      assert.match(html, /What you get from this audit/)
+      assert.match(html, /Read the coverage before the issue count/)
+      assert.match(html, /What this audit cannot prove/)
+      assert.match(html, /Use the audit with an agent or in code/)
+      assert.match(html, /aria-label="Ways to run the audit"/)
+      assert.match(html, /usage-tab-cli/)
+      assert.match(html, /usage-tab-mcp/)
+      assert.match(html, /usage-tab-typescript/)
+      assert.doesNotMatch(html, /Command facts/)
+      assert.doesNotMatch(html, /JSON is the source of truth/)
+    } else {
+      assert.match(html, /What this report helps you decide/)
+      assert.match(html, /When this report is not the right tool/)
+      assert.match(html, /Data sources and inputs/)
+      assert.match(html, /What this report checks/)
+      assert.match(html, /Run the report from the CLI/)
+      assert.match(html, /How an MCP agent should use it/)
+      assert.match(html, /Use the report in a TypeScript app/)
+      assert.match(html, /npm install seo/)
+      assert.match(html, /What comes back/)
+      assert.match(html, /What comes back and how to read it/)
+      assert.match(html, /What this report cannot tell you/)
+      assert.match(html, /What to do next/)
+    }
     assert.match(html, new RegExp(`seo reports describe ${id}`))
     assert.match(html, new RegExp(`seo reports run ${id}`))
     assert.doesNotMatch(
@@ -404,7 +429,10 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   )
   assert.match(home, /data-glitch/)
   assert.match(home, /prefers-reduced-motion: reduce/)
-  assert.match(home, /One skill routes all \d+ reports\./)
+  assert.match(
+    home,
+    /Chat with your SEO data to find out what works and what doesn&#39;t\./,
+  )
   assert.match(home, /Claude \/ keep\.md/)
   assert.match(home, /Codex \/ keep\.md/)
   assert.match(home, /seo report --project keep/)

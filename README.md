@@ -251,15 +251,15 @@ report tools at runtime, and the agent asks the CLI for the detail on each
 tool only when it is about to run it. You get the whole toolkit without fifty
 skill files sitting in the context window on every session.
 
-`seo start` offers to install the SEO skill during setup. In an agent-managed
-environment, add it yourself with the standard installer:
+`seo start` offers to install the SEO skill during setup. If you skipped that
+step or need to reinstall it later, run the packaged installer:
 
 ```sh
-npm i -g seo
-npx skills add iannuttall/seo
+seo skill install
 ```
 
-Then install the local stdio MCP server into a supported client:
+If you also skipped the MCP step, install the local server into a supported
+client:
 
 ```sh
 seo mcp install
@@ -348,7 +348,7 @@ console.log(crawl.summary, crawl.issueGroups)
 The main `seo` export contains the report, provider, crawler, storage, and
 rendering APIs. `seo/mcp` exposes report discovery, report execution, and the
 embeddable MCP server. See the [TypeScript library
-guide](https://seoskill.dev/docs/library) for structured error handling,
+guide](https://seoskill.dev/docs/typescript) for structured error handling,
 local Google access, and more examples.
 
 ## Local data and Google access

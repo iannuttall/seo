@@ -25,8 +25,8 @@ export const docsNav: DocsNavEntry[] = [
       'Run focused SEO reports yourself, produce deterministic JSON, and reuse the same commands in scripts and CI.',
   },
   {
-    path: '/docs/library',
-    label: 'TypeScript library',
+    path: '/docs/typescript',
+    label: 'TypeScript package',
     description:
       'Install the seo package in a Node app, call typed core functions, or run the same report catalog used by the CLI and MCP.',
   },
@@ -55,7 +55,7 @@ export const docsNav: DocsNavEntry[] = [
       'Connect Codex, Claude Code, Claude Desktop, or Cursor to the local report server without hand-editing config.',
   },
   {
-    path: '/docs/skills',
+    path: '/docs/skill',
     label: 'Agent skill',
     description:
       'Install focused instructions that teach an agent which report to run, how to read it, and what to verify next.',

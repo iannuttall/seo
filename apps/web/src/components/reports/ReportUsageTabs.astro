@@ -1,0 +1,187 @@
+---
+import DottedCard from '@/components/DottedCard.astro'
+import CopyCode from '@/components/docs/CopyCode.astro'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
+type Props = {
+  describeValue: string
+  runValue: string
+  mcpDescribeInput: string
+  mcpRunInput: string
+  libraryExample: string
+}
+
+const {
+  describeValue,
+  runValue,
+  mcpDescribeInput,
+  mcpRunInput,
+  libraryExample,
+} = Astro.props
+---
+
+<DottedCard patternId="report-usage-tabs">
+  <div data-report-usage-tabs>
+    <div
+      class="grid grid-cols-3 border-b-2 border-nav"
+      role="tablist"
+      aria-label="Ways to run the audit"
+    >
+      <button
+        id="usage-tab-cli"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="usage-panel-cli"
+        class="group flex min-w-0 cursor-pointer items-center justify-center gap-2 border-r-2 border-nav px-3 py-3 font-mono text-xs transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary aria-selected:bg-foreground aria-selected:text-background sm:text-sm"
+      >
+        <PixelIcon name="terminal" class="size-4 shrink-0" />
+        <span>CLI</span>
+      </button>
+      <button
+        id="usage-tab-mcp"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="usage-panel-mcp"
+        tabindex="-1"
+        class="group flex min-w-0 cursor-pointer items-center justify-center gap-2 border-r-2 border-nav px-3 py-3 font-mono text-xs transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary aria-selected:bg-foreground aria-selected:text-background sm:text-sm"
+      >
+        <PixelIcon name="server" class="size-4 shrink-0" />
+        <span>MCP</span>
+      </button>
+      <button
+        id="usage-tab-typescript"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="usage-panel-typescript"
+        tabindex="-1"
+        class="group flex min-w-0 cursor-pointer items-center justify-center gap-2 px-3 py-3 font-mono text-xs transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary aria-selected:bg-foreground aria-selected:text-background sm:text-sm"
+      >
+        <PixelIcon name="braces" class="size-4 shrink-0" />
+        <span>TypeScript</span>
+      </button>
+    </div>
+
+    <section
+      id="usage-panel-cli"
+      role="tabpanel"
+      aria-labelledby="usage-tab-cli"
+      data-tab-panel
+      class="docs-prose p-5 sm:p-6"
+    >
+      <p>
+        Use the report catalog when an agent, script or CI job needs predictable
+        JSON instead of the normal terminal output. Check the current input
+        first, then run the audit with the validated parameters.
+      </p>
+      <CopyCode
+        label="Check the current input before the agent or script runs the audit."
+        value={describeValue}
+        wrap
+      />
+      <CopyCode
+        label="Once the input is valid, run the audit through the report catalog."
+        value={runValue}
+        wrap
+      />
+    </section>
+
+    <section
+      id="usage-panel-mcp"
+      role="tabpanel"
+      aria-labelledby="usage-tab-mcp"
+      data-tab-panel
+      class="docs-prose p-5 sm:p-6"
+      hidden
+    >
+      <p>
+        An MCP agent follows the same two-step flow. It inspects the current
+        schema, fills the required fields and only then runs the audit.
+      </p>
+      <CopyCode
+        label="Ask the MCP server for the current audit input."
+        value={mcpDescribeInput}
+        wrap
+      />
+      <CopyCode
+        label="Run the audit after the agent has checked and filled the input."
+        value={mcpRunInput}
+        wrap
+      />
+    </section>
+
+    <section
+      id="usage-panel-typescript"
+      role="tabpanel"
+      aria-labelledby="usage-tab-typescript"
+      data-tab-panel
+      class="docs-prose p-5 sm:p-6"
+      hidden
+    >
+      <p>
+        Install the package in a Node 22 project when your application needs to
+        run the audit directly. The result includes the same evidence, warnings
+        and limits returned through the CLI and MCP server.
+      </p>
+      <CopyCode
+        label="Add the SEO package to your project."
+        value="npm install seo"
+      />
+      <CopyCode
+        label="Run the audit from your TypeScript application."
+        value={libraryExample}
+        wrap
+      />
+    </section>
+  </div>
+</DottedCard>
+
+<script>
+  function initialiseReportUsageTabs() {
+    document.querySelectorAll<HTMLElement>('[data-report-usage-tabs]').forEach((root) => {
+      if (root.dataset.tabsReady === 'true') return
+      root.dataset.tabsReady = 'true'
+
+      const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+      const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-tab-panel]'))
+
+      const activate = (nextTab: HTMLButtonElement, moveFocus = true) => {
+        const panelId = nextTab.getAttribute('aria-controls')
+
+        tabs.forEach((tab) => {
+          const selected = tab === nextTab
+          tab.setAttribute('aria-selected', String(selected))
+          tab.tabIndex = selected ? 0 : -1
+        })
+
+        panels.forEach((panel) => {
+          panel.hidden = panel.id !== panelId
+        })
+
+        if (moveFocus) nextTab.focus()
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(tab, false))
+        tab.addEventListener('keydown', (event) => {
+          let nextIndex: number | undefined
+
+          if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
+          if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length
+          if (event.key === 'Home') nextIndex = 0
+          if (event.key === 'End') nextIndex = tabs.length - 1
+          if (nextIndex === undefined) return
+
+          event.preventDefault()
+          const nextTab = tabs[nextIndex]
+          if (nextTab) activate(nextTab)
+        })
+      })
+    })
+  }
+
+  initialiseReportUsageTabs()
+  document.addEventListener('astro:page-load', initialiseReportUsageTabs)
+</script>

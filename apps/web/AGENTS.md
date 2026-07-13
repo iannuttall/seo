@@ -43,7 +43,8 @@ pnpm --filter @seo/web deploy:dry-run
   Never hand-edit or commit the generated files.
 - Use plain, human copy with sentence-case headings. Lead with the outcome,
   support claims with specific evidence, and keep contributor details out of
-  the primary user journey.
+  the primary user journey. Follow the root `CONTENT.md` guide for titles,
+  product vocabulary, instructions, report pages, and SEO copy.
 - Keep client-side JavaScript limited to real interactions: install tabs,
   copy buttons, accordions, and the example report panel.
 - The home page example panel (`src/components/HeroPanel.astro` and

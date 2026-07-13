@@ -3,6 +3,7 @@ import DottedCard from '@/components/DottedCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import PagerNav from '@/components/PagerNav.astro'
 import CopyCode from '@/components/docs/CopyCode.astro'
+import SiteCrawlReportGuide from '@/components/reports/SiteCrawlReportGuide.astro'
 import {
   editorialReports,
   legacyReportAliases,
@@ -80,6 +81,7 @@ const previousGuide = previousReport
   ? resolveReportGuide(previousReport)
   : undefined
 const nextGuide = nextReport ? resolveReportGuide(nextReport) : undefined
+const isSiteCrawlPilot = report.id === 'site-crawl'
 const hasSeparateChecks = guide.checks !== report.methodology
 const humanCommand = humanReportCommand(report.id)
 const commands = [
@@ -171,12 +173,19 @@ function alternativeReportName(id: string): string {
       </ol>
     </nav>
 
-    <PageHeader
-      title={guide.seo?.heading ?? guide.name}
-      description={guide.lead}
-      align="left"
-    />
+    {
+      isSiteCrawlPilot ? (
+        <SiteCrawlReportGuide report={report} guide={guide} />
+      ) : (
+        <PageHeader
+          title={guide.seo?.heading ?? guide.name}
+          description={guide.lead}
+          align="left"
+        />
+      )
+    }
 
+    {!isSiteCrawlPilot ? (
     <div class="docs-prose">
       <p>
         Run this report from the CLI, an MCP client, or application code. Every
@@ -326,7 +335,7 @@ function alternativeReportName(id: string): string {
       <CopyCode label="Install the library" value="npm install seo" />
       <CopyCode label="Run this report from TypeScript" value={libraryExample} />
       <p>
-        The <a href="/docs/library">TypeScript library guide</a> also covers
+        The <a href="/docs/typescript">TypeScript package guide</a> also covers
         direct core functions, schema discovery, and the difference between
         <code>executeReport</code> and <code>runReport</code>.
       </p>
@@ -394,6 +403,7 @@ function alternativeReportName(id: string): string {
         {categoryLabels[report.category]}.
       </p>
     </div>
+    ) : null}
 
     {
       previousReport || nextReport ? (

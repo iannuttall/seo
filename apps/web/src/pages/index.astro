@@ -3,7 +3,6 @@ import DottedCard from '@/components/DottedCard.astro'
 import FeatureShowcase from '@/components/FeatureShowcase.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
-import StackedWordmark from '@/components/StackedWordmark.astro'
 import {
   Accordion,
   AccordionContent,
@@ -115,7 +114,6 @@ const faqs = [
           </p>
         </div>
         <InstallPicker />
-        <StackedWordmark />
       </div>
     </section>
 
@@ -248,6 +246,7 @@ const faqs = [
       flex-direction: column;
       gap: clamp(2rem, 4vh, 4rem);
       padding-top: clamp(2.5rem, 5vh, 4.5rem);
+      padding-bottom: clamp(4.5rem, 8vh, 7rem);
     }
 
     .hero-copy {

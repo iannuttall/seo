@@ -1,5 +1,5 @@
 ---
-title: Use the SEO CLI for daily work and automation
+title: SEO CLI commands
 description: Choose the right SEO command, switch projects safely, save technical evidence, and produce deterministic JSON that agents and CI can inspect.
 ---
 

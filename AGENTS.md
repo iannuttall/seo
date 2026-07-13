@@ -9,6 +9,10 @@ personality, vocabulary, and anti-references. Read it before writing any
 user-facing copy or making product-shape decisions. This file owns the
 engineering contract.
 
+`CONTENT.md` is the durable writing guide for website copy, documentation,
+report pages, command help, onboarding, metadata, and README content. Read it
+before writing or editing user-facing language.
+
 The product has two primary users:
 
 - Humans start with a guided prompt flow and one main report.

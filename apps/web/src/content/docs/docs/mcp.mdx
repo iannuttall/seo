@@ -1,5 +1,5 @@
 ---
-title: 'SEO MCP server for Claude, Codex, and Cursor'
+title: SEO MCP server for AI agents
 description: Install the local SEO MCP server in Claude Code, Claude Desktop, Codex, or Cursor, then give your agent compact access to every structured SEO report.
 ---
 
@@ -9,7 +9,7 @@ The installer points your client at the installed CLI and sends tool calls over
 standard input and output. It does not fetch the package from npm when the
 client starts.
 
-MCP supplies the tools. The packaged [SEO skills](/docs/skills) supply the
+MCP supplies the tools. The packaged [SEO skill](/docs/skill) supplies the
 report-specific instructions that help an agent choose the right tool, read
 the evidence, and verify a change. Install both for the best agent results.
 
@@ -143,7 +143,7 @@ result's status, warnings, limits, and skipped sections before recommending
 work.
 
 The [agent workflow guide](/docs/agents) shows how to keep those calls bounded.
-[Focused skills](/docs/skills) add the SEO context that tells an agent why a
+[The focused SEO skill](/docs/skill) adds the context that tells an agent why a
 report matters and how to act on its result.
 
 ## Remove the managed server entry

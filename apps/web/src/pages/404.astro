@@ -1,5 +1,9 @@
 ---
-import PageHeader from '@/components/PageHeader.astro'
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import NavCard from '@/components/NavCard.astro'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+import { reports } from '@/content/reports'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 ---
 
@@ -9,17 +13,75 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
   canonicalPath="/404"
   noindex
 >
-  <section>
-    <PageHeader
-      title="404: That page is not here."
-      description="The requested page could not be found."
-    />
-    <div class="docs-prose">
-    <p>
-      Try the <a href="/docs">documentation</a>, go back to the
-      <a href="/">home page</a>, or report a broken link through
-      <a href="https://github.com/iannuttall/seo/issues">GitHub Issues</a>.
-    </p>
+  <section class="space-y-12" aria-labelledby="not-found-title">
+    <DottedCard patternId="not-found-status" inverted>
+      <div class="grid gap-8 p-6 sm:p-8 md:grid-cols-[12rem_1fr] md:items-center">
+        <div class="flex items-center justify-between gap-5 md:block">
+          <p class="font-mono text-6xl leading-none text-primary sm:text-7xl">404</p>
+          <PixelIcon name="map-pin-x" class="size-10 text-primary md:mt-8" />
+        </div>
+        <div class="space-y-4">
+          <h1 id="not-found-title" class="text-pretty text-3xl font-normal leading-tight sm:text-4xl">
+            That page is not here.
+          </h1>
+          <p class="max-w-2xl font-sans text-lg font-light leading-7 text-panel-foreground/75">
+            The URL may be old or typed incorrectly. Either way there is
+            nothing useful waiting here, so pick a route below and keep going.
+          </p>
+        </div>
+      </div>
+    </DottedCard>
+
+    <div class="space-y-5">
+      <header class="space-y-2">
+        <h2 class="font-mono text-xl font-normal leading-tight">
+          Get back to something useful
+        </h2>
+        <p class="max-w-2xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+          Start with the product, follow the setup guide or find the exact SEO
+          job you were looking for.
+        </p>
+      </header>
+      <div class="grid gap-6 sm:grid-cols-3">
+        <NavCard
+          title="Home"
+          description="See what SEO Skill does and install the CLI."
+          href="/"
+        />
+        <NavCard
+          title="Getting started"
+          description="Run seo start, connect your site and get the first useful report."
+          href="/docs/getting-started"
+        />
+        <NavCard
+          title="Report catalog"
+          description={`Browse all ${reports.length} audits and reports by the job you need done.`}
+          href="/docs/reports"
+        />
+      </div>
     </div>
+
+    <DottedCard patternId="not-found-report">
+      <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div class="space-y-2">
+          <h2 class="font-mono text-base font-normal">Did one of our links send you here?</h2>
+          <p class="max-w-xl font-sans text-sm font-light leading-6 text-foreground-muted">
+            That is a bug. Include the broken URL in a GitHub issue and it can
+            be fixed without making anyone else hunt for the missing page.
+          </p>
+        </div>
+        <Button
+          href="https://github.com/iannuttall/seo/issues/new"
+          target="_blank"
+          rel="noreferrer"
+          class="w-fit px-5 py-3 font-mono text-xs sm:text-sm"
+        >
+          <span class="inline-flex items-center gap-2">
+            Report the broken link
+            <PixelIcon name="external-link" class="size-4 shrink-0" />
+          </span>
+        </Button>
+      </div>
+    </DottedCard>
   </section>
 </BaseLayout>

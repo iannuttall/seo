@@ -12,18 +12,19 @@ const { class: className, patternId = 'card-dot-pattern', inverted = false } = A
 const line = inverted ? 'border-panel-foreground' : 'border-nav'
 const surface = inverted ? 'bg-panel' : 'bg-background'
 const ink = inverted ? 'text-panel-foreground' : 'text-foreground'
+const shadowInk = 'text-foreground'
 ---
 
 <div class:list={['relative h-full', Astro.slots.has('label') ? 'pb-6' : 'pb-2']}>
   <div class="relative h-full">
-    <DotPattern patternId={`${patternId}-card`} class={`absolute -bottom-2 -right-2 left-2 top-2 ${ink}`} />
-    <div class:list={['relative z-10 h-full border-2', line, surface, className]}>
+    <DotPattern patternId={`${patternId}-card`} class={`absolute -bottom-2 -right-2 left-2 top-2 ${shadowInk}`} />
+    <div class:list={['relative z-10 h-full border-2', line, surface, ink, className]}>
       <slot />
     </div>
     {
       Astro.slots.has('label') && (
         <div class="clipped-dot-shadow absolute -bottom-4 left-2 z-20 sm:left-6">
-          <DotPattern patternId={`${patternId}-label`} class:list={['clipped-dot-pattern', ink]} />
+          <DotPattern patternId={`${patternId}-label`} class:list={['clipped-dot-pattern', shadowInk]} />
           <div
             class:list={[
               'relative z-10 flex items-center border-2 px-3 py-2 font-mono text-xs transition-colors',

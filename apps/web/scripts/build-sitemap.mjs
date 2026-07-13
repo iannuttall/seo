@@ -13,10 +13,10 @@ const paths = [
   '/docs/crawler',
   '/docs/getting-started',
   '/docs/google',
-  '/docs/library',
+  '/docs/typescript',
   '/docs/mcp',
   '/docs/reports',
-  '/docs/skills',
+  '/docs/skill',
   ...reportIds.map((id) => `/docs/reports/${reportSlugs[id] ?? id}`),
 ]
 

@@ -11,22 +11,24 @@ what its evidence cannot support, and one verification step, is fetched at
 runtime with `describe`. This keeps the skill small and always in sync with the
 registry.
 
-## Install
+## Install during setup
 
-The skill works best with the MCP server installed. This command is an
-interactive setup flow for a human:
-
-```bash
-seo mcp install
-```
-
-The skill also works by calling the CLI directly when MCP tools are not
-available. The npm package and repository contain the same skill. Install it
-with the standard agent skills installer:
+Install the CLI and run the guided setup when you are starting from scratch:
 
 ```bash
-npx skills add iannuttall/seo
+npm i -g seo
+seo start
 ```
+
+Setup offers to install both the skill and local MCP server. If the CLI is
+already set up, install or reinstall the skill directly:
+
+```bash
+seo skill install
+```
+
+The skill can call the CLI directly when MCP tools are not available. The npm
+package and repository contain the same skill.
 
 Use `seo skill list` or `seo skill path seo` to inspect the copy bundled with
 the npm package.

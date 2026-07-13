@@ -1,5 +1,5 @@
 ---
-title: Generative engine optimization and llms.txt without the hype
+title: AI search visibility and readiness
 description: How generative engine optimization and llms.txt affect AI search. Which technical blockers actually matter, which markup is optional, and what evidence can prove.
 ---
 

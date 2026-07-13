@@ -4,6 +4,7 @@ import { SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
 import { printJson, printTable } from '../utils.js'
+import { installSeoSkill } from './skill-install.js'
 import { readSkillDescription, skillsDirectory } from './skill-paths.js'
 import { skillsEvalCommand } from './skills-eval.js'
 
@@ -84,6 +85,38 @@ const pathCommand = defineCommand({
   },
 })
 
+const installCommand = defineCommand({
+  meta: {
+    name: 'install',
+    description: 'Install the SEO skill for coding agents',
+  },
+  args: {
+    json: {
+      type: 'boolean',
+      default: false,
+      description: 'Print machine-readable JSON.',
+    },
+  },
+  run: ({ args }) => {
+    const json = jsonFlag(args)
+    const result = installSeoSkill({ quiet: json })
+    if (json) {
+      printJson(result)
+      if (result.status === 'failed') process.exitCode = 1
+      return
+    }
+    if (result.status === 'failed') {
+      throw new SeoError(
+        'INTERNAL_ERROR',
+        `Skill install failed: ${result.error}`,
+      )
+    }
+    process.stdout.write(
+      'SEO skill installed. Agents that support skills can discover it now.\n',
+    )
+  },
+})
+
 export const skillsCommand = defineCommand({
   meta: {
     name: 'skill',
@@ -92,6 +125,7 @@ export const skillsCommand = defineCommand({
   subCommands: {
     list: listCommand,
     path: pathCommand,
+    install: installCommand,
     eval: skillsEvalCommand,
   },
 })

@@ -14,7 +14,7 @@ type Props = {
 const { demo, patternId, title } = Astro.props
 ---
 
-<div class="relative flex h-full min-h-[20rem] overflow-hidden pt-5 pl-5 pb-[27px] pr-[27px]" aria-label={`Demo of ${title}`}>
+<div class="relative flex h-full min-h-[21.25rem] overflow-hidden p-5" aria-label={`Demo of ${title}`}>
   <DotPattern variant="dots" patternId={patternId} class="absolute inset-0" />
   <div class="relative flex w-full min-w-0">
     {
@@ -293,11 +293,6 @@ console.log(report.issues)</code></pre>
 </div>
 
 <style>
-  .demo-window,
-  .stack-card {
-    box-shadow: 7px 7px 0 var(--background);
-  }
-
   .stack-card {
     transition:
       top 0.45s ease,

@@ -40,6 +40,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-report-header: var(--report-header);
   --color-report-header-foreground: var(--report-header-foreground);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-fg);
   --color-nav: var(--nav-bg);
   --color-nav-foreground: var(--nav-fg);
   --color-nav-border: var(--nav-border);
@@ -143,6 +145,11 @@
   --info: #2563eb;
   --info-soft: #dbeafe;
   --overlay-scrim: rgb(0 0 0 / 50%);
+
+  /* The inverted band: dark nav ink in light mode; in dark mode it blends
+     into the page background instead of flipping to white. */
+  --panel: var(--nav-bg);
+  --panel-fg: var(--nav-fg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -173,6 +180,10 @@
     --background: var(--bg);
     --foreground: var(--fg);
     --input: var(--border);
+
+    /* In dark mode the band blends into the page background. */
+    --panel: var(--bg);
+    --panel-fg: var(--fg);
   }
 
 }

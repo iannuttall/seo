@@ -1,0 +1,78 @@
+---
+import FeatureDemo from '@/components/FeatureDemo.astro'
+import { reports } from '@/content/reports'
+
+const features = [
+  {
+    title: `One skill routes all ${reports.length} reports.`,
+    description:
+      `Your agent can discover and run the same ${reports.length} reports through MCP, the CLI, or the library. It only loads the guidance for the report it needs, keeping its context clean.`,
+    demo: 'mcp',
+  },
+  {
+    title: 'Terminal agents ship the fix.',
+    description:
+      'A coding agent like Codex runs the same CLI in JSON mode, reads the evidence, and makes the edits in your codebase. Every command works for humans too, starting with seo report.',
+    demo: 'cli',
+  },
+  {
+    title: 'Trace every finding to real URLs.',
+    description:
+      'Open the URLs, rules, redirects, canonicals, robots directives, and fetch evidence behind each finding. No mystery score.',
+    demo: 'crawl',
+  },
+  {
+    title: 'See how you look to AI search.',
+    description:
+      'One crawl checks AI crawler access, structured data, entity identity, and answerable content. It can draft an llms.txt from your highest-value pages too.',
+    demo: 'ai',
+  },
+  {
+    title: 'Use the same engine in your code.',
+    description:
+      'Import the typed crawler or run any registered report from the unscoped seo package. CLI, MCP, and library calls use the same report logic.',
+    demo: 'library',
+  },
+  {
+    title: 'Check what changed after the fix.',
+    description:
+      'Compare saved crawls and measure observed search movement after a release. The report keeps correlation separate from causation.',
+    demo: 'measure',
+  },
+] as const
+---
+
+<section class="mt-12 border-y-2 border-nav">
+  <div class="mx-auto w-full max-w-4xl px-8 md:px-12">
+    <div class="grid border-x-2 border-nav sm:auto-rows-fr">
+      {features.map((feature, index) => {
+        const demoRight = index % 2 === 0
+
+        return (
+          <article class="grid grid-cols-1 border-b-2 border-nav last:border-b-0 sm:grid-cols-2">
+            <div
+              class:list={[
+                'flex min-h-52 flex-col justify-center px-6 py-8 sm:px-8',
+                demoRight && 'sm:border-r-2 sm:border-nav',
+                !demoRight && 'sm:order-2',
+              ]}
+            >
+              <h2 class="text-lg font-normal tracking-wide">{feature.title}</h2>
+              <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{feature.description}</p>
+            </div>
+
+            <div
+              class:list={[
+                'h-full border-t-2 border-nav sm:border-t-0',
+                demoRight && 'sm:order-2',
+                !demoRight && 'sm:border-r-2 sm:border-nav',
+              ]}
+            >
+              <FeatureDemo demo={feature.demo} patternId={`feature-demo-${index}`} title={feature.title} />
+            </div>
+          </article>
+        )
+      })}
+    </div>
+  </div>
+</section>

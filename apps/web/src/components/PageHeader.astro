@@ -2,34 +2,34 @@
 type Props = {
   title: string
   description?: string
-  bordered?: boolean
+  align?: 'center' | 'left'
   class?: string
 }
 
-const { title, description, bordered = true, class: className } = Astro.props
+const { title, description, align = 'center', class: className } = Astro.props
 const hasActions = Astro.slots.has('actions')
+const centered = align === 'center'
 ---
 
-<header
-  class:list={[
-    'mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between',
-    bordered && 'border-b border-border pb-6',
-    className,
-  ]}
->
-  <div class="flex max-w-2xl flex-col gap-3">
-    <h1
-      class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]"
-    >
-      {title}
-    </h1>
-    {
-      description ? (
-        <p class="text-pretty text-lg/7 font-medium -tracking-[0.1px] text-foreground-muted xl:text-xl/8">
-          {description}
-        </p>
-      ) : null
-    }
-  </div>
-  {hasActions ? <div class="flex shrink-0 items-center gap-3"><slot name="actions" /></div> : null}
+<header class:list={['mb-10 space-y-4', centered && 'text-center', className]}>
+  <h1 class="text-pretty text-3xl font-normal leading-tight tracking-tight sm:text-4xl">{title}</h1>
+  {
+    description ? (
+      <p
+        class:list={[
+          'max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-foreground-muted sm:text-xl sm:leading-8',
+          centered && 'mx-auto',
+        ]}
+      >
+        {description}
+      </p>
+    ) : null
+  }
+  {
+    hasActions ? (
+      <div class:list={['flex items-center gap-3', centered && 'justify-center']}>
+        <slot name="actions" />
+      </div>
+    ) : null
+  }
 </header>

@@ -1,47 +1,32 @@
 ---
 import { installCommands } from '@/lib/install'
+import DottedCard from '@/components/DottedCard.astro'
+import InlineCode from '@/components/InlineCode.astro'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
 
 const { standalone = false } = Astro.props as { standalone?: boolean }
 const install = installCommands[0]
 ---
 
-<section data-install-picker>
-  <div
-    class:list={[
-      'flex flex-col gap-4 border-border bg-card p-5 shadow-[0_8px_44px_-12px_rgba(0,0,0,0.1)] sm:p-6',
-      standalone ? 'rounded-xl border' : 'rounded-t-xl border-x border-t',
-    ]}
-  >
-    <p data-install-description class="text-base leading-7 text-foreground-muted">
-      {install.description}
-    </p>
-
-    <div class="grid min-w-0 gap-2">
-      <div class="relative min-w-0 overflow-hidden rounded-lg border border-input bg-card">
-        <pre class="m-0 min-h-9 min-w-0 overflow-x-auto px-3 py-2 pr-16 font-mono text-sm leading-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><code data-install-command>{install.command}</code></pre>
-        <div
-          class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent via-card/95 to-card"
-          aria-hidden="true"
-        ></div>
-        <button
-          type="button"
-          class="absolute right-1 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center bg-card text-foreground-muted hover:text-foreground"
-          data-copy-install-command
-          aria-label="Copy install command"
-        >
-          <svg data-copy-icon class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          <svg data-copy-check-icon class="hidden size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="m5 12 4 4L19 6"></path>
-          </svg>
-        </button>
+<section class:list={[standalone && 'max-w-2xl']} data-install-picker>
+  <div class="font-sans">
+    <DottedCard>
+      <button
+        type="button"
+        class="group flex w-full cursor-pointer appearance-none items-center justify-between gap-3 bg-background p-6 pb-10 text-left transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        data-copy-install-command
+        aria-label={`Copy ${install.command}`}
+      >
+        <pre class="m-0 min-w-0 flex-1 overflow-x-auto"><code class="bg-transparent p-0" data-install-command>{install.command}</code></pre>
+          <PixelIcon name="copy" data-copy-icon class="size-5 shrink-0 text-foreground transition-colors group-hover:text-background" />
+          <PixelIcon name="copy-check" data-copy-check-icon class="hidden size-5 shrink-0 text-foreground transition-colors group-hover:text-background" />
+      </button>
+      <div slot="label" class="inline-flex items-center gap-1 whitespace-nowrap leading-none">
+        <span>Run</span>
+        <InlineCode copyable value="seo start">seo start</InlineCode>
+        <span>after install</span>
       </div>
-      <p class="text-sm leading-6 text-foreground-muted">
-        Run <code class="font-mono text-foreground">seo start</code> for guided Google sign-in and project setup.
-      </p>
-    </div>
+    </DottedCard>
   </div>
 </section>
 
@@ -57,16 +42,20 @@ const install = installCommands[0]
     copyButton?.addEventListener('click', async () => {
       const value = command?.textContent ?? ''
       if (!value) return
+
       try {
         await navigator.clipboard.writeText(value)
       } catch {
         return
       }
+
       copyIcon?.classList.add('hidden')
       copyCheckIcon?.classList.remove('hidden')
+      copyButton.setAttribute('aria-label', 'Copied install command')
       window.setTimeout(() => {
         copyIcon?.classList.remove('hidden')
         copyCheckIcon?.classList.add('hidden')
+        copyButton.setAttribute('aria-label', `Copy ${value}`)
       }, 1500)
     })
   }

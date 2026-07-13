@@ -1,5 +1,6 @@
 ---
-import HeroPanel from '@/components/HeroPanel.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FeatureShowcase from '@/components/FeatureShowcase.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import {
@@ -95,101 +96,65 @@ const faqs = [
   framed={false}
 >
   <main data-agent-content="true">
-    <section class="flex flex-col border-b border-border bg-background pt-4 text-foreground">
-      <div class="site-frame">
-        <div class="flex flex-col gap-8 pt-16 sm:pt-24">
-          <div class="flex max-w-2xl flex-col gap-4">
-            <h1 class="text-pretty text-3xl font-medium -tracking-[0.5px] xl:text-4xl xl:-tracking-[0.7px]">
-              The only SEO skill your agent needs to grow organic and AI search visibility.
-            </h1>
-            <p class="text-pretty text-2xl/8 font-medium -tracking-[0.2px] text-foreground-muted xl:text-3xl/10 xl:-tracking-[0.4px]">
-              Give your agent 50+ SEO audit tools to find and fix issues, measure your performance,
-              and improve your organic and AI search visibility.
+    <section class="mx-auto w-full max-w-4xl space-y-5 px-8 pb-8 pt-12 md:px-12">
+      <h1
+        class="text-center text-pretty text-4xl font-normal leading-tight tracking-tight max-[420px]:text-[7.2vw] sm:text-5xl"
+        data-glitch
+        aria-label="The only SEO skill your agent needs"
+      >
+        <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">The only SEO skill</span>
+        <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">your agent needs</span>
+      </h1>
+      <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
+        One SEO skill and {reports.length} audit tools for AI agents to fix
+        issues, measure performance, and grow your organic and AI search
+        visibility.
+      </p>
+      <InstallPicker />
+    </section>
+
+    <FeatureShowcase />
+
+    <section class="mb-12 border-b-2 border-nav bg-nav text-nav-foreground">
+      <div class="mx-auto w-full max-w-4xl px-8 md:px-12">
+        <div class="px-6 py-12 sm:px-8">
+          <div class="mb-10 space-y-4 text-center">
+            <h2 class="text-pretty text-3xl font-normal leading-tight tracking-tight sm:text-4xl">
+              Reports for a complete SEO audit
+            </h2>
+            <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-nav-foreground/70 sm:text-xl sm:leading-8">
+              {reports.length} reports and tools across crawl health, Search Console and GA4,
+              opportunities, AI readiness, and monitoring.
             </p>
           </div>
-          <InstallPicker />
+          <div class="grid grid-cols-1 gap-x-10 gap-y-8 sm:auto-rows-fr sm:grid-cols-2">
+            {
+              reportCollections.map((group, index) => (
+                <DottedCard inverted patternId={`report-group-${index}`}>
+                  <span slot="label">{group.title}</span>
+                  <ul class="flex flex-col gap-1.5 p-5 pb-8 font-sans text-sm">
+                    {group.reports.map(([id, label]) => (
+                      <li>
+                        <a class="underline underline-offset-2 hover:decoration-dotted" href={reportPath(id)}>{label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </DottedCard>
+              ))
+            }
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="space-y-24 py-24">
-      <section class="site-frame grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Your agent audits your site without you.</h2>
-          <p class="mt-2 text-base leading-7 text-foreground-muted">
-            It crawls the site, finds the technical SEO and AI-readiness issues, and hands back
-            specific fixes. You stay in your editor while it does the busywork.
-          </p>
-        </div>
-        <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Data other tools keep behind a dashboard.</h2>
-          <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Give your agent owner-verified Search Console and GA4 data on your machine,
-            joined to crawl findings, so it sees what is actually losing visibility.
-          </p>
-        </div>
-        <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">One skill, not fifty stuffed into your context window.</h2>
-          <p class="mt-2 text-base leading-7 text-foreground-muted">
-            The CLI and MCP server do the heavy lifting. Your agent carries one short skill and
-            asks for the detail on each tool only when it is about to use it.
-          </p>
-        </div>
-        <div class="rounded-lg bg-muted p-8">
-          <h2 class="text-lg font-semibold">Your search visibility grows while you ship.</h2>
-          <p class="mt-2 text-base leading-7 text-foreground-muted">
-            Your agent fixes issues, tracks new and resolved ones build over build, and measures the
-            impact across organic and AI search.
-          </p>
-        </div>
-      </section>
-
-      <section class="site-frame">
+    <section>
+      <div class="mx-auto w-full max-w-4xl px-8 py-12 md:px-12">
         <SectionHeading
-          eyebrow="See your agent in the loop"
-          text="It reads your crawl findings and Search Console data, finds what is hurting visibility, then drafts the fix in your stack."
+          eyebrow="Questions people ask before giving an agent SEO evidence"
+          text="Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use."
         />
-        <HeroPanel />
-      </section>
-
-      <section class="site-frame">
-        <SectionHeading
-          eyebrow="Reports for a complete SEO audit"
-          text={`${reports.length} reports and tools across crawl health, Search Console and GA4, opportunities, AI readiness, and monitoring.`}
-        />
-        <div class="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {
-            reportCollections.map((group) => (
-              <div>
-                <h3 class="text-lg font-medium text-foreground">{group.title}</h3>
-                <ul class="mt-3 flex flex-col gap-1.5 text-base text-foreground-muted">
-                  {group.reports.map(([id, label]) => (
-                    <li>
-                      <a class="body-link" href={reportPath(id)}>
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          }
-        </div>
-      </section>
-
-      <section class="site-frame">
-        <div class="border-t border-border pt-12">
-          <div class="max-w-2xl">
-            <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-              Questions people ask before giving an agent SEO evidence
-            </h2>
-            <p class="mt-4 text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]">
-              Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex,
-              Cursor, or the agent workflow you already use.
-            </p>
-          </div>
-
-          <Accordion class="mt-6 space-y-2">
+        <DottedCard patternId="faq-card">
+          <Accordion>
             {
               faqs.map((item) => (
                 <AccordionItem value={item.question}>
@@ -199,8 +164,76 @@ const faqs = [
               ))
             }
           </Accordion>
-        </div>
-      </section>
-    </div>
+        </DottedCard>
+      </div>
+    </section>
   </main>
+  <script is:inline>
+    ;(() => {
+      const headline = document.querySelector('[data-glitch]')
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+      if (!headline || reducedMotion.matches) return
+
+      const characters = []
+      for (const line of headline.querySelectorAll('[data-glitch-line]')) {
+        const source = line.textContent ?? ''
+        line.textContent = ''
+
+        for (const [wordIndex, word] of source.split(' ').entries()) {
+          if (wordIndex > 0) line.append(' ')
+
+          const wordSpan = document.createElement('span')
+          wordSpan.style.display = 'inline-block'
+          wordSpan.style.whiteSpace = 'nowrap'
+          line.append(wordSpan)
+
+          for (const character of word) {
+            const span = document.createElement('span')
+            span.textContent = character
+            span.style.display = 'inline-block'
+            span.style.width = '1ch'
+            span.dataset.source = character
+            wordSpan.append(span)
+            characters.push(span)
+          }
+        }
+      }
+
+      const glyphs = '0123456789_<>/[]{}'
+      const random = (minimum, range) => minimum + Math.random() * range
+
+      const schedule = () => {
+        window.setTimeout(() => {
+          if (!document.hidden) {
+            const available = [...characters]
+            const count = 2 + Math.floor(Math.random() * 3)
+            const simultaneous = Math.random() < 0.2
+            let offset = random(0, 120)
+
+            for (let index = 0; index < count; index += 1) {
+              const position = Math.floor(Math.random() * available.length)
+              const character = available.splice(position, 1)[0]
+              if (!character) continue
+
+              if (index > 0 && !simultaneous) {
+                offset +=
+                  Math.random() < 0.3 ? random(10, 35) : random(90, 220)
+              }
+
+              window.setTimeout(() => {
+                character.textContent = glyphs[Math.floor(Math.random() * glyphs.length)]
+                window.setTimeout(() => {
+                  character.textContent = character.dataset.source ?? ''
+                }, random(70, 130))
+              }, offset)
+            }
+          }
+
+          schedule()
+        }, random(1800, 3800))
+      }
+
+      schedule()
+    })()
+  </script>
 </BaseLayout>

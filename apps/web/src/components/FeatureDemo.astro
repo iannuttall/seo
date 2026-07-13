@@ -1,0 +1,763 @@
+---
+import DotPattern from '@/components/DotPattern.astro'
+import ClaudePixel from '@/components/icons/ClaudePixel.astro'
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
+type Demo = 'mcp' | 'cli' | 'crawl' | 'ai' | 'library' | 'measure'
+
+type Props = {
+  demo: Demo
+  patternId: string
+  title: string
+}
+
+const { demo, patternId, title } = Astro.props
+---
+
+<div class="relative flex h-full min-h-[20rem] overflow-hidden pt-5 pl-5 pb-[27px] pr-[27px]" aria-label={`Demo of ${title}`}>
+  <DotPattern variant="dots" patternId={patternId} class="absolute inset-0" />
+  <div class="relative flex w-full min-w-0">
+    {
+      demo === 'mcp' && (
+        <div class="demo-window flex w-full flex-col border-2 border-nav bg-background" data-mcp-demo>
+          <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+            <span>Claude / keep.md</span>
+            <span class="text-foreground-muted">MCP</span>
+          </div>
+          <div class="relative min-h-0 flex-1">
+            <div class="chat-feed absolute inset-0 flex flex-col justify-end gap-3 overflow-hidden p-3 text-[11px] leading-5" data-chat-log aria-live="off">
+              <div class="flex gap-2">
+                <PixelIcon name="user" class="mt-[3px] size-3.5 shrink-0 text-foreground-muted" />
+                <p>Why did clicks dip in June?</p>
+              </div>
+              <div class="flex gap-2">
+                <ClaudePixel class="mt-[3px] size-3.5 shrink-0 text-primary" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-foreground-muted">Ran 2 reports</p>
+                  <p class="mt-1">The dip lines up with the June core update. The evidence shows correlation, not causation.</p>
+                  <p class="mt-1 flex gap-2">
+                    <span class="mt-[7px] size-1 shrink-0 bg-foreground-muted" />
+                    <span>Clicks fell Jun 8-14, then recovered</span>
+                  </p>
+                  <p class="mt-1 flex gap-2">
+                    <span class="mt-[7px] size-1 shrink-0 bg-foreground-muted" />
+                    <span>No technical change in the same window</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <template data-chat-part="user-icon"><PixelIcon name="user" class="mt-[3px] size-3.5 shrink-0 text-foreground-muted" /></template>
+          <template data-chat-part="agent-icon"><ClaudePixel class="mt-[3px] size-3.5 shrink-0 text-primary" /></template>
+          <template data-chat-part="spinner"><PixelIcon name="loading-5" class="chat-spinner mt-[3px] size-3.5 shrink-0 text-foreground-muted" /></template>
+        </div>
+      )
+    }
+
+    {
+      demo === 'cli' && (
+        <div class="demo-window flex w-full flex-col border-2 border-nav bg-background" data-codex-demo data-chat-style="codex">
+          <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+            <span>Codex / keep.md</span>
+            <span class="text-foreground-muted">CLI</span>
+          </div>
+          <div class="relative min-h-0 flex-1">
+            <div class="chat-feed absolute inset-0 flex flex-col justify-end gap-3 overflow-hidden p-3 text-[11px] leading-5" data-chat-log aria-live="off">
+              <p class="bg-background-subtle px-2.5 py-1.5">Fix the metadata findings from the last crawl.</p>
+              <div class="min-w-0">
+                <p>Ran</p>
+                <p class="text-foreground-muted">&nbsp;&nbsp;&#9492; seo report --project keep --json</p>
+                <p class="mt-1">The crawl flagged 14 pages with metadata findings. I wrote the missing descriptions and committed.</p>
+                <p class="mt-1 flex gap-2">
+                  <span class="mt-[7px] size-1 shrink-0 bg-foreground-muted" />
+                  <span>edited 14 pages in src/content</span>
+                </p>
+                <p class="mt-1 flex gap-2">
+                  <span class="mt-[7px] size-1 shrink-0 bg-foreground-muted" />
+                  <span>commit: add missing meta descriptions</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      demo === 'crawl' && (
+        <div class="relative w-full" aria-label="Stack of crawl findings" data-stack-demo>
+          <div class="stack-card stack-pos-front absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>keep.md / crawl</span>
+              <span class="text-primary">100 pages</span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>missing social tags</span>
+                <span class="text-foreground-muted">100 URLs</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>metadata findings</span>
+                <span class="text-foreground-muted">14 URLs</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>weak internal links</span>
+                <span class="text-foreground-muted">1 URL</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Open a finding for its URLs</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-middle absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>indexability changes</span>
+              <span class="text-primary">4 URLs</span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>noindex added</span>
+                <span class="text-foreground-muted">1 URL</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>canonical moved</span>
+                <span class="text-foreground-muted">2 URLs</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>now indexable</span>
+                <span class="text-foreground-muted">1 URL</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Open a change for its URLs</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-back absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>redirect chains</span>
+              <span class="text-primary">6 URLs</span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>2 hops</span>
+                <span class="text-foreground-muted">4 URLs</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>3 hops</span>
+                <span class="text-foreground-muted">2 URLs</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>ends on a redirect</span>
+                <span class="text-foreground-muted">1 URL</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Open a chain for its hops</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      demo === 'ai' && (
+        <div class="demo-window flex w-full flex-col border-2 border-nav bg-background" data-ai-demo>
+          <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+            <span>keep.md / ai search</span>
+            <span class="text-primary" data-ai-score>85 / 100</span>
+          </div>
+          <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+            <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+              <span>AI crawler access</span>
+              <span class="text-foreground-muted" data-ai-status>pass</span>
+            </div>
+            <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+              <span>structured data</span>
+              <span class="text-foreground-muted" data-ai-status>pass</span>
+            </div>
+            <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+              <span>entity identity</span>
+              <span class="text-primary" data-ai-status>warn</span>
+            </div>
+            <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+              <span>answerable content</span>
+              <span class="text-primary" data-ai-status>warn</span>
+            </div>
+            <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+              <span>llms.txt</span>
+              <span class="text-primary" data-ai-status>not found</span>
+            </div>
+            <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">generate a draft from your top pages</div>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      demo === 'library' && (
+        <div class="demo-window flex w-full flex-col border-2 border-nav bg-background" data-library-demo>
+          <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+            <span>keep-audit.ts</span>
+            <span class="text-foreground-muted">Node 22+</span>
+          </div>
+          <pre class="min-h-0 flex-1 overflow-x-auto p-4 text-[11px] leading-5"><code data-code><span class="text-primary">import</span> {'{ auditPage }'} <span class="text-primary">from</span> 'seo'
+
+<span class="text-primary">const</span> report = <span class="text-primary">await</span> auditPage({'{'}
+  url: 'https://keep.md/blog/send-to-kindle'
+{'}'})
+
+console.log(report.issues)</code></pre>
+        </div>
+      )
+    }
+
+    {
+      demo === 'measure' && (
+        <div class="relative w-full" aria-label="Stack of measurement charts" data-stack-demo>
+          <div class="stack-card stack-pos-front absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>keep.md / change log</span>
+              <span class="text-foreground-muted">14 days</span>
+            </div>
+            <div class="min-h-0 flex-1 px-3 pt-2">
+              <svg class="h-full w-full" viewBox="0 0 300 160" role="img" aria-label="Clicks before and after the fix">
+                <g class="chart-col" style="--i: 0">
+                  <rect x="55" y="24" width="70" height="111" fill="var(--foreground-muted)" />
+                </g>
+                <g class="chart-col" style="--i: 1">
+                  <rect x="175" y="15" width="70" height="120" fill="var(--primary)" />
+                </g>
+                <g font-family="var(--font-mono)" font-size="11" text-anchor="middle">
+                  <text x="90" y="154" fill="var(--foreground-muted)">before 184</text>
+                  <text x="210" y="154" fill="var(--foreground)">after 199</text>
+                </g>
+              </svg>
+            </div>
+            <div class="border-t-2 border-nav text-[11px]">
+              <div class="flex items-center justify-between gap-3 px-3 py-1.5">
+                <span>logged fix</span>
+                <span class="text-foreground-muted">descriptions on 14 pages</span>
+              </div>
+              <div class="flex items-center justify-between gap-3 border-t border-border px-3 py-1.5">
+                <span>observed change</span>
+                <span class="text-primary">+8.2%</span>
+              </div>
+              <div class="border-t border-border px-3 py-1.5 text-foreground-muted">Correlation only, not a causal claim</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-middle absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>keep.md / clicks</span>
+              <span class="text-foreground-muted">8 weeks</span>
+            </div>
+            <div class="min-h-0 flex-1 px-3 pt-2 pb-1">
+              <svg class="h-full w-full" viewBox="0 0 300 150" role="img" aria-label="Weekly clicks trend with the fix marked">
+                {
+                  [51, 61, 56, 74, 67, 84, 96, 112].map((height, index) => {
+                    const x = 18 + index * 34
+                    const top = 135 - height
+                    return (
+                      <g class="chart-col" style={`--i: ${index}`}>
+                        <rect x={x} y={top} width="26" height={height} fill="var(--primary)" />
+                      </g>
+                    )
+                  })
+                }
+                <line x1="116" y1="18" x2="116" y2="135" stroke="var(--foreground)" stroke-width="1.5" stroke-dasharray="4 4" />
+                <text x="112" y="12" font-family="var(--font-mono)" font-size="10" fill="var(--foreground)" text-anchor="start">fix shipped</text>
+              </svg>
+            </div>
+            <div class="border-t-2 border-nav text-[11px]">
+              <div class="px-3 py-1.5 text-foreground-muted">found by seo report, fixed in week 3</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-back absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between border-b-2 border-nav px-3 py-2 text-xs">
+              <span>keep.md / positions</span>
+              <span class="text-foreground-muted">28 days</span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>moved onto page one</span>
+                <span class="text-primary">+9 queries</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>moved into the top 3</span>
+                <span class="text-primary">+3 queries</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>still on page two</span>
+                <span class="text-foreground-muted">131 queries</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">found and tracked by seo second-page</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .demo-window,
+  .stack-card {
+    box-shadow: 7px 7px 0 var(--background);
+  }
+
+  .stack-card {
+    transition:
+      top 0.45s ease,
+      right 0.45s ease,
+      bottom 0.45s ease,
+      left 0.45s ease;
+  }
+
+  .stack-pos-front {
+    inset: 2.5rem 0 0;
+    z-index: 30;
+  }
+
+  .stack-pos-middle {
+    inset: 1.25rem 1rem 0;
+    z-index: 20;
+  }
+
+  .stack-pos-back {
+    inset: 0 2rem 0;
+    z-index: 10;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stack-card {
+      transition: none;
+    }
+  }
+
+  .chat-feed {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 3rem);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem);
+  }
+
+  .chat-spinner {
+    animation: chat-spin 0.9s steps(8) infinite;
+    transform-origin: center;
+  }
+
+  @keyframes chat-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  .chart-col {
+    transform: scaleY(0);
+    transform-box: fill-box;
+    transform-origin: bottom;
+    transition: transform 0.55s ease;
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .stack-pos-front .chart-col {
+    transform: scaleY(1);
+  }
+
+  :global(.code-caret) {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.875rem;
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    background: var(--primary);
+    animation: caret-blink 1s step-end infinite;
+  }
+
+  @keyframes caret-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chat-spinner,
+    :global(.code-caret) {
+      animation: none;
+    }
+
+    .chart-col {
+      transform: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  type ChatTurn = {
+    question: string
+    tools: readonly string[]
+    answer: string
+    bullets?: readonly string[]
+  }
+  const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms))
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  function keepLatestVisible(log: HTMLElement) {
+    log.scrollTop = log.scrollHeight
+  }
+
+  async function typeInto(element: HTMLElement, text: string, log: HTMLElement) {
+    element.textContent = ''
+    for (const character of text) {
+      element.textContent += character
+      keepLatestVisible(log)
+      await sleep(character === ' ' ? 12 : 22)
+    }
+  }
+
+  const maxFeedRows = 14
+
+  function chatPart(root: HTMLElement, name: string): Node | null {
+    const template = root.querySelector(`template[data-chat-part="${name}"]`)
+    return template instanceof HTMLTemplateElement ? template.content.cloneNode(true) : null
+  }
+
+  function trimFeed(log: HTMLElement) {
+    while (log.childElementCount > maxFeedRows) log.firstElementChild?.remove()
+  }
+
+  async function addUserTurn(root: HTMLElement, log: HTMLElement, text: string) {
+    // The codex style has no avatars: user prompts are full-width shaded
+    // blocks, like a prompt box in a terminal agent.
+    if (root.dataset.chatStyle === 'codex') {
+      const message = document.createElement('p')
+      message.className = 'bg-background-subtle px-2.5 py-1.5'
+      log.append(message)
+      trimFeed(log)
+      await typeInto(message, text, log)
+      return
+    }
+
+    const row = document.createElement('div')
+    row.className = 'flex gap-2'
+    const icon = chatPart(root, 'user-icon')
+    if (icon) row.append(icon)
+    const message = document.createElement('p')
+    row.append(message)
+    log.append(row)
+    trimFeed(log)
+    await typeInto(message, text, log)
+  }
+
+  function addAgentRow(root: HTMLElement, log: HTMLElement): HTMLElement {
+    if (root.dataset.chatStyle === 'codex') {
+      const body = document.createElement('div')
+      body.className = 'min-w-0'
+      log.append(body)
+      trimFeed(log)
+      return body
+    }
+
+    const row = document.createElement('div')
+    row.className = 'flex gap-2'
+    const icon = chatPart(root, 'agent-icon')
+    if (icon) row.append(icon)
+    const body = document.createElement('div')
+    body.className = 'min-w-0 flex-1'
+    row.append(body)
+    log.append(row)
+    trimFeed(log)
+    return body
+  }
+
+  async function typeAnswer(body: HTMLElement, log: HTMLElement, turn: ChatTurn) {
+    const answer = document.createElement('p')
+    answer.className = 'mt-1'
+    body.append(answer)
+    await typeInto(answer, turn.answer, log)
+
+    for (const bullet of turn.bullets ?? []) {
+      const item = document.createElement('p')
+      item.className = 'mt-1 flex gap-2'
+      const marker = document.createElement('span')
+      marker.className = 'mt-[7px] size-1 shrink-0 bg-foreground-muted'
+      const text = document.createElement('span')
+      item.append(marker, text)
+      body.append(item)
+      await typeInto(text, bullet, log)
+    }
+  }
+
+  async function addAgentTurn(root: HTMLElement, log: HTMLElement, turn: ChatTurn) {
+    const body = addAgentRow(root, log)
+
+    const toolLine = document.createElement('p')
+    toolLine.className = 'flex gap-2'
+    const spinner = chatPart(root, 'spinner')
+    if (spinner) toolLine.append(spinner)
+    const toolName = document.createElement('span')
+    toolName.className = 'text-foreground-muted'
+    toolLine.append(toolName)
+    body.append(toolLine)
+
+    for (const tool of turn.tools) {
+      toolName.textContent = tool
+      await sleep(850)
+    }
+    toolLine.replaceChildren()
+    toolLine.className = 'text-foreground-muted'
+    toolLine.textContent = `Ran ${turn.tools.length} ${turn.tools.length === 1 ? 'report' : 'reports'}`
+    await sleep(350)
+
+    await typeAnswer(body, log, turn)
+  }
+
+  // Codex turns show a `Ran` group whose single tree line swaps to the command
+  // currently running, under a ticking `Working (Ns • esc to interrupt)` status
+  // that clears before the reply types.
+  async function addCodexTurn(root: HTMLElement, log: HTMLElement, turn: ChatTurn) {
+    const body = addAgentRow(root, log)
+
+    const ranLabel = document.createElement('p')
+    ranLabel.textContent = 'Ran'
+    const commandLine = document.createElement('p')
+    commandLine.className = 'text-foreground-muted'
+    const working = document.createElement('p')
+    working.className = 'text-foreground-muted'
+    working.textContent = 'Working (0s • esc to interrupt)'
+    body.append(ranLabel, commandLine, working)
+    keepLatestVisible(log)
+
+    let seconds = 0
+    const ticker = window.setInterval(() => {
+      seconds += 1
+      working.textContent = `Working (${seconds}s • esc to interrupt)`
+    }, 1000)
+
+    for (const command of turn.tools) {
+      commandLine.textContent = `  └ ${command}`
+      keepLatestVisible(log)
+      await sleep(1600)
+    }
+    window.clearInterval(ticker)
+    working.remove()
+
+    await typeAnswer(body, log, turn)
+  }
+
+  async function playMcpDemo(root: HTMLElement) {
+    if (root.dataset.demoReady || reducedMotion) return
+    root.dataset.demoReady = 'true'
+    const log = root.querySelector('[data-chat-log]')
+    if (!(log instanceof HTMLElement)) return
+
+    // Example session for the saved `keep` project. Counts mirror a real local
+    // report run; the report ids are real catalog ids.
+    const turns: ChatTurn[] = [
+      {
+        question: 'Why did clicks dip in June?',
+        tools: ['traffic-anomaly', 'update-correlation'],
+        answer: 'The dip lines up with the June core update. The evidence shows correlation, not causation.',
+        bullets: ['Clicks fell Jun 8-14, then recovered', 'No technical change in the same window'],
+      },
+      {
+        question: 'Anything sitting just off page one?',
+        tools: ['second-page'],
+        answer: '/blog/send-to-kindle averages position 12.8 with 706 impressions and no clicks yet.',
+        bullets: [
+          'Stronger internal links could push it to page one',
+          'Verify with a fresh crawl after the change',
+        ],
+      },
+      {
+        question: 'Is my indexing healthy?',
+        tools: ['index-coverage', 'crawl-report'],
+        answer: 'All 100 crawled pages are indexable, but the crawl hit its page cap, so that is a partial view, not an all-clear.',
+        bullets: [
+          '250 URLs discovered, 100 crawled before the cap',
+          'Search Console joined for 90 of 100 pages',
+        ],
+      },
+      {
+        question: 'Did the internal link fix help?',
+        tools: ['measure-change'],
+        answer: 'Clicks on the changed pages are up against the prior 14 days. Correlation, not proof, but it points the right way.',
+      },
+    ]
+
+    // The first turn is rendered statically in the markup, so the loop starts
+    // at the second and feeds forever without clearing the log.
+    let index = 1
+    await sleep(2200)
+    while (root.isConnected) {
+      const turn = turns[index % turns.length]
+      await addUserTurn(root, log, turn.question)
+      await sleep(500)
+      await addAgentTurn(root, log, turn)
+      await sleep(1600)
+      index += 1
+    }
+  }
+
+  async function playCodexDemo(root: HTMLElement) {
+    if (root.dataset.demoReady || reducedMotion) return
+    root.dataset.demoReady = 'true'
+    const log = root.querySelector('[data-chat-log]')
+    if (!(log instanceof HTMLElement)) return
+
+    // Example implementation session for the saved `keep` project. The agent
+    // runs the CLI in JSON mode and edits the site, instead of just reporting.
+    const turns: ChatTurn[] = [
+      {
+        question: 'Fix the metadata findings from the last crawl.',
+        tools: ['seo report --project keep --json'],
+        answer:
+          'The crawl flagged 14 pages with metadata findings. I wrote the missing descriptions and committed.',
+        bullets: ['edited 14 pages in src/content', 'commit: add missing meta descriptions'],
+      },
+      {
+        question: 'Push /blog/send-to-kindle onto page one.',
+        tools: ['seo second-page --project keep --json'],
+        answer: 'It sits at position 12.8 with 706 impressions. I linked it from three related guides.',
+        bullets: ['edited 3 guide pages', 'commit: add contextual internal links'],
+      },
+      {
+        question: 'Verify what changed.',
+        tools: ['seo technical-watch --project keep --json'],
+        answer: 'The fresh crawl shows 5 inlinks to the guide, up from 1, with no new issues introduced.',
+        bullets: ['measure-change queued for the next data window'],
+      },
+    ]
+
+    // The first turn is rendered statically in the markup, so the loop starts
+    // at the second and feeds forever without clearing the log.
+    let index = 1
+    await sleep(2600)
+    while (root.isConnected) {
+      const turn = turns[index % turns.length]
+      await addUserTurn(root, log, turn.question)
+      await sleep(500)
+      await addCodexTurn(root, log, turn)
+      await sleep(1600)
+      index += 1
+    }
+  }
+
+  // Re-types the highlighted code forever, keeping each span's original class
+  // so the syntax colors survive, with a block caret leading the way.
+  async function playLibraryDemo(root: HTMLElement) {
+    if (root.dataset.demoReady || reducedMotion) return
+    root.dataset.demoReady = 'true'
+    const code = root.querySelector('[data-code]')
+    if (!(code instanceof HTMLElement)) return
+
+    const source = Array.from(code.childNodes).map((node) => ({
+      className: node instanceof HTMLElement ? node.className : null,
+      text: node.textContent ?? '',
+    }))
+    const caret = document.createElement('span')
+    caret.className = 'code-caret'
+
+    await sleep(2400)
+    while (root.isConnected) {
+      code.replaceChildren(caret)
+      for (const part of source) {
+        const target =
+          part.className === null ? document.createTextNode('') : document.createElement('span')
+        if (target instanceof HTMLElement) target.className = part.className ?? ''
+        code.insertBefore(target, caret)
+        for (const character of part.text) {
+          target.textContent += character
+          await sleep(character === ' ' || character === '\n' ? 12 : 24)
+        }
+      }
+      await sleep(12000)
+    }
+  }
+
+  // Replays the scorecard as a sequential scan: each status spins with
+  // terminal frames, resolves to its real value, and the score lands last.
+  async function playAiDemo(root: HTMLElement) {
+    if (root.dataset.demoReady || reducedMotion) return
+    root.dataset.demoReady = 'true'
+    const score = root.querySelector('[data-ai-score]')
+    const statuses = Array.from(root.querySelectorAll('[data-ai-status]')).filter(
+      (element): element is HTMLElement => element instanceof HTMLElement,
+    )
+    if (!(score instanceof HTMLElement) || statuses.length === 0) return
+
+    const frames = ['*', '/', '-', '\\']
+    const finals = statuses.map((element) => ({
+      element,
+      text: element.textContent ?? '',
+      className: element.className,
+    }))
+    const scoreFinal = { text: score.textContent ?? '', className: score.className }
+
+    const spin = async (element: HTMLElement, ticks: number) => {
+      for (let tick = 0; tick < ticks; tick += 1) {
+        element.textContent = frames[tick % frames.length]
+        await sleep(110)
+      }
+    }
+
+    await sleep(2400)
+    while (root.isConnected) {
+      score.className = 'text-primary'
+      score.textContent = '[scanning]'
+      for (const status of finals) {
+        status.element.className = 'text-foreground-muted'
+        status.element.textContent = ''
+      }
+      await sleep(400)
+
+      for (const status of finals) {
+        await spin(status.element, 8)
+        status.element.className = status.className
+        status.element.textContent = status.text
+        await sleep(180)
+      }
+
+      await sleep(300)
+      score.className = scoreFinal.className
+      score.textContent = scoreFinal.text
+      await sleep(10000)
+    }
+  }
+
+  async function playStackDemo(root: HTMLElement) {
+    if (root.dataset.demoReady || reducedMotion) return
+    root.dataset.demoReady = 'true'
+    const cards = Array.from(root.querySelectorAll('[data-stack-card]')).filter(
+      (card): card is HTMLElement => card instanceof HTMLElement,
+    )
+    if (cards.length === 0) return
+
+    const positions = ['stack-pos-front', 'stack-pos-middle', 'stack-pos-back']
+    let step = 0
+    while (root.isConnected) {
+      await sleep(3200)
+      step += 1
+      cards.forEach((card, index) => {
+        const position = (((index - step) % cards.length) + cards.length) % cards.length
+        card.classList.remove(...positions)
+        card.classList.add(positions[position])
+      })
+    }
+  }
+
+
+  document.querySelectorAll('[data-mcp-demo]').forEach((root) => {
+    if (root instanceof HTMLElement) void playMcpDemo(root)
+  })
+
+  document.querySelectorAll('[data-codex-demo]').forEach((root) => {
+    if (root instanceof HTMLElement) void playCodexDemo(root)
+  })
+
+  document.querySelectorAll('[data-stack-demo]').forEach((root) => {
+    if (root instanceof HTMLElement) void playStackDemo(root)
+  })
+
+  document.querySelectorAll('[data-library-demo]').forEach((root) => {
+    if (root instanceof HTMLElement) void playLibraryDemo(root)
+  })
+
+  document.querySelectorAll('[data-ai-demo]').forEach((root) => {
+    if (root instanceof HTMLElement) void playAiDemo(root)
+  })
+
+
+</script>

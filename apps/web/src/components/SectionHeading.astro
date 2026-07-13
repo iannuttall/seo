@@ -7,15 +7,9 @@ type Props = {
 const { eyebrow, text } = Astro.props;
 ---
 
-<div class="mb-10 flex max-w-2xl flex-col gap-3">
-  <h2
-    class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]"
-  >
-    {eyebrow}
-  </h2>
-  <p
-    class="text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]"
-  >
+<div class="mb-10 space-y-4 text-center">
+  <h2 class="text-pretty text-3xl font-normal leading-tight tracking-tight sm:text-4xl">{eyebrow}</h2>
+  <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-foreground-muted sm:text-xl sm:leading-8">
     {text}
   </p>
 </div>

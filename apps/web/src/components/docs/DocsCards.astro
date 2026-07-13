@@ -3,7 +3,7 @@ import NavCard from '@/components/NavCard.astro'
 import { docsCards } from '@/content/docs-nav'
 ---
 
-<div class="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2">
+<div class="mt-8 grid grid-cols-1 gap-x-6 gap-y-4 sm:auto-rows-fr sm:grid-cols-2">
   {
     docsCards.map((card) => (
       <NavCard title={card.label} description={card.description} href={card.path} />

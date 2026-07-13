@@ -1,14 +1,11 @@
 /** @jsxImportSource react */
-import { SiClaude } from '@icons-pack/react-simple-icons'
-import { CheckIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
+import { PixelCheckIcon, PixelRobotIcon } from '@/components/icons/PixelIcons'
 
 /**
  * A scripted example of an agent using real SEO CLI commands. The numbers are
  * example data. Claims stay bounded to what each report can actually observe.
  */
-const CLAUDE_ORANGE = '#D97757'
-
 type Chart = { data: { label: string; value: number }[]; highlight?: number[] }
 
 type Msg = {
@@ -133,15 +130,15 @@ const SCRIPT: Msg[] = [
 
 const INIT = 2 // first turn (user + agent) shown on load, untyped
 const ALL_BULLETS = Number.POSITIVE_INFINITY
-const APPEAR = 'animate-[fade-slide-in_0.4s_ease-out]'
+const APPEAR = 'animate-fade-slide-in'
 
 function ThinkingDots() {
   return (
-    <span className="grid grid-cols-3 gap-[3px]">
+    <span className="grid grid-cols-3 gap-1">
       {[1.4, 1.1, 1.6, 1.3, 1.8, 1, 1.5, 1.2, 1.7].map((d, i) => (
         <span
           key={d}
-          className="size-[3px] rounded-full bg-muted-foreground"
+          className="size-1 bg-muted-foreground"
           style={{
             animation: `braille-pulse ${d}s ease-in-out ${(i % 5) * 0.15}s infinite`,
           }}
@@ -153,7 +150,7 @@ function ThinkingDots() {
 
 function Caret() {
   return (
-    <span className="ml-0.5 inline-block h-3.5 w-px translate-y-[2px] animate-pulse bg-current align-baseline" />
+    <span className="ml-0.5 inline-block h-3.5 w-px translate-y-0.5 animate-pulse bg-current align-baseline" />
   )
 }
 
@@ -171,13 +168,13 @@ function BarChart({ data, highlight = [] }: Chart) {
             className="flex flex-1 flex-col items-center gap-2"
           >
             <div
-              className={`w-full rounded-sm ${on ? 'bg-primary' : 'bg-muted-foreground/20'}`}
+              className={`w-full ${on ? 'bg-primary' : 'bg-muted-foreground/20'}`}
               style={{
                 height: Math.max(6, Math.round((d.value / max) * TRACK)),
               }}
             />
             <span
-              className={`text-[10px] ${on ? 'font-medium text-primary' : 'text-muted-foreground'}`}
+              className={`text-xs ${on ? 'font-medium text-primary' : 'text-muted-foreground'}`}
             >
               {d.label}
             </span>
@@ -337,17 +334,11 @@ export function HeroChat() {
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_44px_-12px_rgba(0,0,0,0.1)]"
+      className="overflow-hidden border-2 border-nav bg-background"
       style={{ contain: 'layout' }}
     >
-      {/* Title bar, no divider line, kept clean */}
-      <div className="flex items-center gap-3 px-6 py-4">
-        <div className="flex items-center gap-1.5">
-          <span className="size-3 rounded-full bg-border" />
-          <span className="size-3 rounded-full bg-border" />
-          <span className="size-3 rounded-full bg-border" />
-        </div>
-        <span className="text-muted-foreground text-sm font-medium">
+      <div className="flex items-center bg-background-subtle px-4 py-2">
+        <span className="text-sm text-foreground-muted">
           Example SEO audit agent
         </span>
       </div>
@@ -357,7 +348,7 @@ export function HeroChat() {
           `overflowAnchor: none` excludes this churning feed from Chrome's
           scroll-anchoring, so adding/removing turns can't nudge page scrollY. */}
       <div
-        className="flex h-[360px] flex-col justify-end gap-7 overflow-hidden px-6 pt-10 pb-8"
+        className="flex h-90 flex-col justify-end gap-7 overflow-hidden px-4 pt-8 pb-6"
         style={{
           maskImage: 'linear-gradient(to bottom, transparent 0, #000 64px)',
           WebkitMaskImage:
@@ -383,7 +374,7 @@ export function HeroChat() {
           if (m.role === 'user') {
             return (
               <div key={key} className={`flex gap-3 ${APPEAR}`}>
-                <span className="mt-0.5 size-5 shrink-0 rounded-full bg-muted" />
+                <span className="mt-0.5 size-5 shrink-0 bg-muted" />
                 <p className="text-foreground text-sm leading-relaxed">
                   {text}
                   {typingNow && <Caret />}
@@ -399,10 +390,7 @@ export function HeroChat() {
 
           return (
             <div key={key} className={`flex gap-3 ${APPEAR}`}>
-              <SiClaude
-                className="mt-0.5 size-5 shrink-0"
-                color={CLAUDE_ORANGE}
-              />
+              <PixelRobotIcon className="mt-0.5 size-5 shrink-0 text-primary" />
               <div className="flex min-w-0 flex-1 flex-col gap-4">
                 {tools.length > 0 ? (
                   <ToolRun
@@ -449,7 +437,7 @@ export function HeroChat() {
                               key={b}
                               className="flex items-start gap-2.5 text-sm"
                             >
-                              <span className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground/50" />
+                              <span className="mt-2 size-1 shrink-0 bg-muted-foreground/50" />
                               <span className="text-secondary-foreground">
                                 {typingThis ? typedBullet : b}
                                 {typingThis && <Caret />}
@@ -461,7 +449,9 @@ export function HeroChat() {
                     ) : null}
 
                     {showExtras && m.draft ? (
-                      <div className={`rounded-lg bg-muted/60 p-4 ${APPEAR}`}>
+                      <div
+                        className={`border border-border bg-background-subtle p-4 ${APPEAR}`}
+                      >
                         <p className="whitespace-pre-line font-mono text-foreground text-xs leading-relaxed">
                           {m.draft.text}
                         </p>
@@ -473,9 +463,9 @@ export function HeroChat() {
 
                     {showExtras && m.action ? (
                       <div
-                        className={`flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary text-sm ${APPEAR}`}
+                        className={`flex w-fit items-center gap-1.5 bg-primary px-2.5 py-1 font-medium text-primary-foreground text-sm ${APPEAR}`}
                       >
-                        <CheckIcon weight="bold" className="size-3.5" />
+                        <PixelCheckIcon className="size-3.5" />
                         {m.action}
                       </div>
                     ) : null}

@@ -1,0 +1,41 @@
+---
+import DotPattern from '@/components/DotPattern.astro'
+
+type Props = {
+  class?: string
+  patternId?: string
+  inverted?: boolean
+}
+
+const { class: className, patternId = 'card-dot-pattern', inverted = false } = Astro.props
+
+const line = inverted ? 'border-nav-foreground' : 'border-nav'
+const surface = inverted ? 'bg-nav' : 'bg-background'
+const ink = inverted ? 'text-nav-foreground' : 'text-foreground'
+---
+
+<div class:list={['relative h-full', Astro.slots.has('label') ? 'pb-6' : 'pb-2']}>
+  <div class="relative h-full">
+    <DotPattern patternId={`${patternId}-card`} class={`absolute -bottom-2 -right-2 left-2 top-2 ${ink}`} />
+    <div class:list={['relative z-10 h-full border-2', line, surface, className]}>
+      <slot />
+    </div>
+    {
+      Astro.slots.has('label') && (
+        <div class="clipped-dot-shadow absolute -bottom-4 left-2 z-20 sm:left-6">
+          <DotPattern patternId={`${patternId}-label`} class:list={['clipped-dot-pattern', ink]} />
+          <div
+            class:list={[
+              'relative z-10 flex items-center border-2 px-3 py-2 font-mono text-xs transition-colors',
+              'group-hover:bg-foreground group-hover:text-background',
+              line,
+              surface,
+            ]}
+          >
+            <slot name="label" />
+          </div>
+        </div>
+      )
+    }
+  </div>
+</div>

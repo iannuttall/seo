@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content'
 import { getCollection, render } from 'astro:content'
 import PageHeader from '@/components/PageHeader.astro'
+import PagerNav from '@/components/PagerNav.astro'
 import { docsMdxComponents } from '@/components/docs/mdx'
 import { docsNavFor } from '@/content/docs-nav'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -56,7 +57,7 @@ const nav = docsNavFor(path)
       <PageHeader
         title={entry.data.heading ?? entry.data.title}
         description={entry.data.lead ?? entry.data.description}
-        bordered={false}
+        align="left"
       />
 
       <div class="docs-prose">
@@ -64,31 +65,11 @@ const nav = docsNavFor(path)
       </div>
 
       {nav && (nav.prev || nav.next) ? (
-        <nav
-          aria-label="Docs pages"
-          class="mt-16 flex items-stretch justify-between gap-4 pt-6"
-        >
-          {nav.prev ? (
-            <a href={nav.prev.path} class="group flex flex-col gap-1 no-underline">
-              <span class="text-sm text-foreground-muted">Previous</span>
-              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {nav.prev.label}
-              </span>
-            </a>
-          ) : (
-            <span />
-          )}
-          {nav.next ? (
-            <a href={nav.next.path} class="group flex flex-col items-end gap-1 text-right no-underline">
-              <span class="text-sm text-foreground-muted">Next</span>
-              <span class="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors group-hover:decoration-foreground">
-                {nav.next.label}
-              </span>
-            </a>
-          ) : (
-            <span />
-          )}
-        </nav>
+        <PagerNav
+          ariaLabel="Docs pages"
+          previous={nav.prev ? { label: nav.prev.label, href: nav.prev.path } : undefined}
+          next={nav.next ? { label: nav.next.label, href: nav.next.path } : undefined}
+        />
       ) : null}
   </main>
 </BaseLayout>

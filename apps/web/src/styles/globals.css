@@ -1,21 +1,19 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 @font-face {
-  font-family: "InterVariable";
-  src: url("/fonts/InterVF.woff2") format("woff2");
+  font-family: "Martian Grotesk";
+  src: url("/fonts/MartianGroteskVF.woff2") format("woff2");
+  font-weight: 100 1000;
+  font-stretch: 75% 200%;
   font-display: swap;
-  font-style: normal;
-  font-weight: 100 900;
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  src: url("/fonts/JetBrainsMonoVF.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
+  font-family: "Martian Mono";
+  src: url("/fonts/MartianMonoVF.woff2") format("woff2");
   font-weight: 100 800;
+  font-stretch: 75% 112.5%;
+  font-display: swap;
 }
 
 @theme inline {
@@ -25,6 +23,7 @@
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
   --color-foreground-soft: var(--foreground-soft);
+  --color-foreground-faint: var(--fg-faint);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
   --color-border-strong: var(--border-strong);
@@ -41,6 +40,12 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-report-header: var(--report-header);
   --color-report-header-foreground: var(--report-header-foreground);
+  --color-nav: var(--nav-bg);
+  --color-nav-foreground: var(--nav-fg);
+  --color-nav-border: var(--nav-border);
+  --color-header: var(--header-bg);
+  --color-header-foreground: var(--header-fg);
+  --color-header-border: var(--header-border);
   --color-secondary: var(--secondary);
   --color-secondary-soft: var(--secondary-soft);
   --color-secondary-hover: var(--secondary-hover);
@@ -62,287 +67,193 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-overlay-scrim: var(--overlay-scrim);
-  --radius-xs: calc(var(--radius) - 6px);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-  --radius-2xl: calc(var(--radius) + 4px);
-  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-sans);
+  --font-sans: "Martian Grotesk", system-ui, sans-serif;
   --font-mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    "Martian Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    monospace;
+  --animate-fade-slide-in: fade-slide-in 0.4s ease-out;
+  /* Button 3D comes from inset light and shade only. Never add an outer
+     offset drop shadow to these. */
+  --shadow-btn:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-btn-hover:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-btn-active: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Shared design tokens from keep-brutal. */
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 
-  --radius: 0.625rem;
+  --bg: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --fg: #171717;
+  --fg-muted: #525252;
+  --fg-faint: #a3a3a3;
+  --border: #e5e5e5;
+  --shadow: #ccc;
+  --success: #16a34a;
+  --error: #dc2626;
 
-  /* Single source of truth for the page content frame width. Change this one
-     value to widen/narrow every page, header, and footer at once. */
-  --frame-max: 48rem; /* 3xl */
+  --nav-bg: #171717;
+  --nav-fg: #ffffff;
+  --nav-border: #333333;
+  --header-bg: var(--nav-bg);
+  --header-fg: var(--nav-fg);
+  --header-border: var(--nav-border);
 
-  --background: oklch(98.5% 0 0);
-  --background-raised: oklch(100% 0 0);
-  --background-subtle: oklch(96% 0 0);
-  --foreground: oklch(20.5% 0 0);
-  --foreground-muted: oklch(45% 0 0);
-  --foreground-soft: oklch(60% 0 0);
-  --border: oklch(92% 0 0);
-  --border-subtle: oklch(95% 0 0);
-  --border-strong: oklch(85% 0 0);
-  --input: oklch(92% 0 0);
-  --ring: oklch(60.9% 0.126 221.723);
-
-  --card: oklch(100% 0 0);
-  --card-foreground: var(--foreground);
-  --popover: oklch(100% 0 0);
-  --popover-foreground: var(--foreground);
-
-  --primary: oklch(60.9% 0.126 221.723);
-  --primary-soft: oklch(95% 0.04 221.723);
-  --primary-hover: oklch(54% 0.13 221.723);
-  --primary-active: oklch(48% 0.13 221.723);
-  --primary-foreground: oklch(98.5% 0 0);
-  --report-header: oklch(20.5% 0 0);
-  --report-header-foreground: oklch(98.5% 0 0);
-
-  --secondary: oklch(96% 0 0);
-  --secondary-soft: oklch(98% 0 0);
-  --secondary-hover: oklch(92% 0 0);
-  --secondary-active: oklch(88% 0 0);
-  --secondary-foreground: var(--foreground);
-
-  --muted: oklch(96% 0 0);
-  --muted-foreground: oklch(45% 0 0);
-  --accent: oklch(96% 0 0);
-  --accent-foreground: var(--foreground);
-
-  --destructive: oklch(57% 0.22 27);
-  --destructive-soft: oklch(95% 0.05 27);
-  --destructive-hover: oklch(50% 0.22 27);
-  --destructive-foreground: oklch(98.5% 0 0);
-
-  --success: oklch(60% 0.16 145);
-  --success-soft: oklch(95% 0.04 145);
-  --warning: oklch(75% 0.16 80);
-  --warning-soft: oklch(95% 0.05 80);
-  --warning-foreground: oklch(30% 0.06 80);
-  --info: oklch(60% 0.13 240);
-  --info-soft: oklch(95% 0.04 240);
-
-  --overlay-scrim: oklch(0% 0 0 / 0.5);
-}
-
-.dark {
-  color-scheme: dark;
-
-  --background: oklch(20.5% 0 0);
-  --background-raised: oklch(24% 0 0);
-  --background-subtle: oklch(17% 0 0);
-  --foreground: oklch(98.5% 0 0);
-  --foreground-muted: oklch(72% 0 0);
-  --foreground-soft: oklch(55% 0 0);
-  --border: oklch(28% 0 0);
-  --border-subtle: oklch(24% 0 0);
-  --border-strong: oklch(38% 0 0);
-  --input: oklch(28% 0 0);
-  --ring: oklch(78.9% 0.154 211.53);
-
-  --card: oklch(24% 0 0);
-  --popover: oklch(24% 0 0);
-
-  --primary: oklch(78.9% 0.154 211.53);
-  --primary-soft: oklch(30% 0.07 211.53);
-  --primary-hover: oklch(72% 0.16 211.53);
-  --primary-active: oklch(65% 0.17 211.53);
-  --primary-foreground: oklch(15% 0.05 211.53);
-  --report-header: oklch(98.5% 0 0);
-  --report-header-foreground: oklch(20.5% 0 0);
-
-  --secondary: oklch(28% 0 0);
-  --secondary-soft: oklch(24% 0 0);
-  --secondary-hover: oklch(34% 0 0);
-  --secondary-active: oklch(40% 0 0);
-
-  --muted: oklch(28% 0 0);
-  --accent: oklch(28% 0 0);
-
-  --destructive: oklch(65% 0.22 27);
-  --destructive-soft: oklch(30% 0.1 27);
-  --destructive-hover: oklch(58% 0.22 27);
-
-  --success: oklch(70% 0.16 145);
-  --success-soft: oklch(28% 0.07 145);
-  --warning: oklch(80% 0.16 80);
-  --warning-soft: oklch(30% 0.08 80);
-  --info: oklch(72% 0.13 240);
-  --info-soft: oklch(28% 0.07 240);
+  --primary: #ff4500;
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-secondary);
+  --secondary-foreground: var(--fg);
+  --destructive: var(--error);
+  --accent: var(--bg-secondary);
+  --accent-foreground: var(--fg);
+  --ring: var(--fg);
+  --background: var(--bg);
+  --background-raised: var(--bg);
+  --background-subtle: var(--bg-secondary);
+  --foreground: var(--fg);
+  --foreground-muted: var(--fg-muted);
+  --foreground-soft: var(--fg-faint);
+  --input: var(--border);
+  --card: var(--bg);
+  --card-foreground: var(--fg);
+  --popover: var(--bg);
+  --popover-foreground: var(--fg);
+  --primary-soft: color-mix(in srgb, var(--primary) 12%, transparent);
+  --primary-hover: #e63e00;
+  --primary-active: #cc3700;
+  --report-header: var(--nav-bg);
+  --report-header-foreground: var(--nav-fg);
+  --secondary-soft: var(--bg-secondary);
+  --secondary-hover: var(--border);
+  --secondary-active: var(--shadow);
+  --muted: var(--bg-secondary);
+  --muted-foreground: var(--fg-muted);
+  --destructive-soft: color-mix(in srgb, var(--destructive) 12%, transparent);
+  --destructive-hover: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+  --warning: #a16207;
+  --warning-soft: #fef3c7;
+  --warning-foreground: #713f12;
+  --info: #2563eb;
+  --info-soft: #dbeafe;
+  --overlay-scrim: rgb(0 0 0 / 50%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    color-scheme: dark;
+    --bg: oklch(17% 0.00365 228.89);
+    --bg-secondary: oklch(30.284% 0.00916 248.14);
+    --fg: oklch(92.565% 0.00459 78.3);
+    --fg-muted: oklch(76% 0 0);
+    --fg-faint: oklch(42.615% 0.00201 228.84);
+    --border: oklch(42.615% 0.00201 228.84);
+    --shadow: oklch(15% 0.003 228.89);
+    --success: #22c55e;
+    --error: #ef4444;
 
-    --background: oklch(20.5% 0 0);
-    --background-raised: oklch(24% 0 0);
-    --background-subtle: oklch(17% 0 0);
-    --foreground: oklch(98.5% 0 0);
-    --foreground-muted: oklch(72% 0 0);
-    --foreground-soft: oklch(55% 0 0);
-    --border: oklch(28% 0 0);
-    --border-subtle: oklch(24% 0 0);
-    --border-strong: oklch(38% 0 0);
-    --input: oklch(28% 0 0);
-    --ring: oklch(78.9% 0.154 211.53);
+    --nav-bg: oklch(92.565% 0.00459 78.3);
+    --nav-fg: oklch(21.604% 0.00365 228.89);
+    --nav-border: oklch(42.615% 0.00201 228.84);
+    --header-bg: var(--primary);
+    --header-fg: var(--fg);
+    --header-border: var(--primary-active);
 
-    --card: oklch(24% 0 0);
-    --popover: oklch(24% 0 0);
-
-    --primary: oklch(78.9% 0.154 211.53);
-    --primary-soft: oklch(30% 0.07 211.53);
-    --primary-hover: oklch(72% 0.16 211.53);
-    --primary-active: oklch(65% 0.17 211.53);
-    --primary-foreground: oklch(15% 0.05 211.53);
-    --report-header: oklch(98.5% 0 0);
-    --report-header-foreground: oklch(20.5% 0 0);
-
-    --secondary: oklch(28% 0 0);
-    --secondary-soft: oklch(24% 0 0);
-    --secondary-hover: oklch(34% 0 0);
-    --secondary-active: oklch(40% 0 0);
-
-    --muted: oklch(28% 0 0);
-    --accent: oklch(28% 0 0);
-
-    --destructive: oklch(65% 0.22 27);
-    --destructive-soft: oklch(30% 0.1 27);
-    --destructive-hover: oklch(58% 0.22 27);
-
-    --success: oklch(70% 0.16 145);
-    --success-soft: oklch(28% 0.07 145);
-    --warning: oklch(80% 0.16 80);
-    --warning-soft: oklch(30% 0.08 80);
-    --info: oklch(72% 0.13 240);
-    --info-soft: oklch(28% 0.07 240);
+    --secondary: var(--bg-secondary);
+    --secondary-foreground: var(--fg);
+    --destructive: var(--error);
+    --accent: var(--bg-secondary);
+    --accent-foreground: var(--fg);
+    --ring: var(--fg);
+    --background: var(--bg);
+    --foreground: var(--fg);
+    --input: var(--border);
   }
+
 }
 
-@layer base {
-  body {
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
+::selection {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: 550;
-    letter-spacing: 0;
-    font-variation-settings: "opsz" 32;
-  }
+/* Inner scrollers hide their scrollbars entirely; wheel, trackpad, and keys
+   still scroll, and code blocks have a copy button. The page keeps its own. */
+* {
+  scrollbar-width: none;
+}
 
-  code,
-  pre {
-    font-family:
-      "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  }
+html {
+  scrollbar-width: auto;
 }
 
 @layer components {
-  /* The shared page content frame: centered, full-width up to --frame-max,
-     with the standard horizontal gutter. Used by every page shell so the
-     width lives in exactly one place. */
-  .site-frame {
-    margin-inline: auto;
-    width: 100%;
-    max-width: var(--frame-max);
-    padding-inline: 1.5rem; /* px-6 */
+  /* The floating label keeps Turbopuffer's offset, clipped at the card rule. */
+  .clipped-dot-pattern {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    z-index: 0;
+    width: calc(100% + 3px);
+    height: calc(100% + 3px);
+    clip-path: inset(25px 0 0);
   }
 
-  @media (width >= 64rem) {
-    .site-frame {
-      padding-inline: 2.5rem; /* lg:px-10 */
-    }
+
+  /* Markdown is CMS content, so it needs one scoped prose pattern. */
+  .docs-prose {
+    color: var(--fg);
+    font-family: "Martian Grotesk", system-ui, sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 300;
+    line-height: 1.7;
   }
 
-  .body-link {
-    color: var(--primary);
-    text-decoration-line: underline;
-    text-decoration-color: var(--primary);
-    text-underline-offset: 4px;
-    transition:
-      color 150ms,
-      text-decoration-color 150ms;
+  .docs-prose a {
+    font-weight: 400;
   }
 
-  .body-link:hover {
-    color: var(--primary-hover);
-    text-decoration-color: var(--primary-hover);
+  .docs-prose strong {
+    font-weight: 500;
   }
 
-  /* Typography for MDX-rendered docs. Mirrors the hand-tuned utilities the
-     structured PublicSections renderer uses, so MDX docs match the rest of the
-     site without a prose plugin. Custom components (DocsCards, Install) bring
-     their own styling and pass through untouched. */
   .docs-prose > :first-child {
     margin-top: 0;
   }
 
+  .docs-prose > h1,
+  .docs-prose > h2,
+  .docs-prose > h3,
+  .docs-prose > h4,
+  .docs-prose > h5,
+  .docs-prose > h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-family: "Martian Mono", ui-monospace, monospace;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .docs-prose > h1 {
+    font-size: 1.6em;
+  }
+
   .docs-prose > h2 {
-    margin-top: 3rem; /* mt-12 */
-    font-size: 1.25rem; /* text-xl */
-    line-height: 1.75rem;
-    font-weight: 500;
-    letter-spacing: -0.2px;
-    color: var(--foreground);
+    font-size: 1.333em;
   }
 
   .docs-prose > h3 {
-    margin-top: 2rem; /* mt-8 */
-    font-size: 1.125rem; /* text-lg */
-    line-height: 1.75rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    color: var(--foreground);
+    font-size: 1.173em;
   }
 
   .docs-prose > p {
-    margin-top: 0.75rem; /* mt-3 */
-    font-size: 1rem; /* text-base */
-    line-height: 1.5rem;
-    color: var(--foreground-muted);
-  }
-
-  .docs-prose > ul {
-    margin-top: 0.75rem; /* mt-3 */
-    padding-left: 1.25rem;
-    list-style: disc;
-  }
-
-  .docs-prose > ul li {
-    font-size: 1rem; /* text-base */
-    line-height: 1.5rem;
-    color: var(--foreground-muted);
-  }
-
-  .docs-prose > ul li + li {
-    margin-top: 0.375rem; /* space-y-1.5 */
-  }
-
-  .docs-prose > ul li::marker {
-    color: var(--foreground-soft);
-  }
-
-  .docs-prose > p strong,
-  .docs-prose > ul strong,
-  .docs-prose > ol strong {
-    font-weight: 500;
-    color: var(--foreground);
+    margin-top: 0;
+    margin-bottom: 1em;
   }
 
   .docs-prose > p a,
@@ -350,18 +261,44 @@
   .docs-prose > ol a {
     color: var(--primary);
     text-decoration-line: underline;
-    text-decoration-color: var(--primary);
-    text-underline-offset: 4px;
-    transition:
-      color 150ms,
-      text-decoration-color 150ms;
+    text-underline-offset: 2px;
   }
 
   .docs-prose > p a:hover,
   .docs-prose > ul a:hover,
   .docs-prose > ol a:hover {
-    color: var(--primary-hover);
-    text-decoration-color: var(--primary-hover);
+    text-decoration-style: dotted;
+  }
+
+  .docs-prose > img {
+    max-width: 100%;
+    height: auto;
+    margin: 1em 0;
+  }
+
+  .docs-prose > blockquote {
+    margin: 1em 0;
+    border-left: 3px solid var(--border);
+    background-color: var(--bg-secondary);
+    padding: 0.875em 1em;
+  }
+
+  .docs-prose > ul,
+  .docs-prose > ol {
+    margin: 1em 0;
+    padding-left: 1.5em;
+  }
+
+  .docs-prose > ul {
+    list-style-type: disc;
+  }
+
+  .docs-prose > ol {
+    list-style-type: decimal;
+  }
+
+  .docs-prose > li {
+    margin-bottom: 0.35em;
   }
 
   .docs-prose > p code,
@@ -369,29 +306,80 @@
   .docs-prose > ol code,
   .docs-prose > h2 code,
   .docs-prose > h3 code {
-    border-radius: 0.375rem; /* rounded-md */
-    background-color: var(--muted);
-    padding: 0.125rem 0.375rem; /* py-0.5 px-1.5 */
-    font-size: 0.85em;
+    background-color: var(--bg-secondary);
+    padding: 0.125rem 0.25rem;
+    font-size: 0.875em;
   }
 
-  .docs-prose pre {
-    margin-top: 1.25rem; /* mt-5 */
+  /* Code blocks share the hero command card's look: hard frame plus a dotted
+     offset shadow peeking bottom-right. The shadow and copy button live on the
+     .code-frame wrapper (added by the layout script) because the scrolling pre
+     would clip its own pseudo-element. */
+  .docs-prose pre:where(:not([data-prose-ignore] pre)) {
+    margin: 1.5em 0;
     overflow-x: auto;
-    border-radius: 0.5rem; /* rounded-lg */
-    border: 1px solid var(--border);
-    background-color: var(--muted);
-    padding: 1rem; /* p-4 */
-    font-size: 0.875rem; /* text-sm */
-    line-height: 1.5rem;
-    color: var(--foreground);
+    border: 2px solid var(--nav-bg);
+    background-color: var(--background);
+    padding: 1em;
+    padding-right: 3rem;
+    font-size: 0.85em;
+    line-height: 1.5;
   }
+
+  .code-frame {
+    position: relative;
+    isolation: isolate;
+    margin: 1.75em 0;
+  }
+
+  /* The same halftone tile the home cards use (DotPattern's shadow variant),
+     applied as a mask so the colour stays on the --fg token. */
+  .code-frame::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 8px -8px -8px 8px;
+    background-color: var(--fg);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='7'%20height='13'%3E%3Cpath%20d='M5.58984%2012.2344V10.7051H6.52734V12.2344H5.58984ZM1.86328%2012.2344V10.7051H2.79492V12.2344H1.86328ZM3.72656%2010.0957V8.56641H4.6582V10.0957H3.72656ZM0%2010.0957V8.56641H0.925781V10.0957H0ZM5.58984%207.95117V6.42188H6.52734V7.95117H5.58984ZM1.86328%207.95117V6.42188H2.79492V7.95117H1.86328ZM3.72656%205.8125V4.2832H4.6582V5.8125H3.72656ZM0%205.8125V4.2832H0.925781V5.8125H0ZM5.58984%203.66797V2.13867H6.52734V3.66797H5.58984ZM1.86328%203.66797V2.13867H2.79492V3.66797H1.86328ZM3.72656%201.5293V0H4.6582V1.5293H3.72656ZM0%201.5293V0H0.925781V1.5293H0Z'%20fill='white'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='7'%20height='13'%3E%3Cpath%20d='M5.58984%2012.2344V10.7051H6.52734V12.2344H5.58984ZM1.86328%2012.2344V10.7051H2.79492V12.2344H1.86328ZM3.72656%2010.0957V8.56641H4.6582V10.0957H3.72656ZM0%2010.0957V8.56641H0.925781V10.0957H0ZM5.58984%207.95117V6.42188H6.52734V7.95117H5.58984ZM1.86328%207.95117V6.42188H2.79492V7.95117H1.86328ZM3.72656%205.8125V4.2832H4.6582V5.8125H3.72656ZM0%205.8125V4.2832H0.925781V5.8125H0ZM5.58984%203.66797V2.13867H6.52734V3.66797H5.58984ZM1.86328%203.66797V2.13867H2.79492V3.66797H1.86328ZM3.72656%201.5293V0H4.6582V1.5293H3.72656ZM0%201.5293V0H0.925781V1.5293H0Z'%20fill='white'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+  }
+
+  .code-frame pre {
+    margin: 0;
+  }
+
 
   .docs-prose pre code {
-    border-radius: 0;
-    background-color: transparent;
+    background: none;
     padding: 0;
     font-size: inherit;
+  }
+
+  .docs-prose hr {
+    margin: 1.5em 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .docs-prose table {
+    width: 100%;
+    margin: 1em 0;
+    border-collapse: collapse;
+    font-size: 0.875em;
+  }
+
+  .docs-prose th,
+  .docs-prose td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+
+  .docs-prose th {
+    background: var(--bg-secondary);
+    font-weight: 600;
   }
 }
 

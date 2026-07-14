@@ -93,6 +93,48 @@ function bodyWordCount(value: string): number {
     .filter(Boolean).length
 }
 
+function repeatedProseLines(markdown: string): number {
+  const counts = new Map<string, number>()
+  let inFrontmatter = false
+  let fence: '```' | '~~~' | undefined
+
+  for (const [index, rawLine] of markdown.split(/\r?\n/u).entries()) {
+    const line = rawLine.trim()
+
+    if (index === 0 && line === '---') {
+      inFrontmatter = true
+      continue
+    }
+    if (inFrontmatter) {
+      if (line === '---') inFrontmatter = false
+      continue
+    }
+
+    if (!fence && (line.startsWith('```') || line.startsWith('~~~'))) {
+      fence = line.startsWith('```') ? '```' : '~~~'
+      continue
+    }
+    if (fence) {
+      if (line.startsWith(fence)) fence = undefined
+      continue
+    }
+
+    if (
+      line.length < 40 ||
+      /^(?:#{1,6}\s|[-+*]\s|\d+[.)]\s|>|\||`|\]\()/u.test(line)
+    ) {
+      continue
+    }
+
+    counts.set(line, (counts.get(line) ?? 0) + 1)
+  }
+
+  return [...counts.values()].reduce(
+    (duplicates, count) => duplicates + Math.max(0, count - 1),
+    0,
+  )
+}
+
 function responseIsNoindex(response: Response, body: string): boolean {
   if (
     (response.headers.get('x-robots-tag') ?? '')
@@ -119,10 +161,6 @@ function markdownQuality(
   const introProbe = intro?.split(' ').slice(0, 10).join(' ')
   const normalizedMarkdown = markdown.replace(/\s+/gu, ' ')
   const codeFences = markdown.match(/^```/gmu)?.length ?? 0
-  const repeatedLines = [...markdown.matchAll(/^(.{12,})$/gmu)]
-    .map((match) => match[1]?.trim())
-    .filter((line): line is string => Boolean(line))
-    .filter((line, index, lines) => lines.indexOf(line) !== index).length
   const wordCount = bodyWordCount(markdown)
   const sourceWordCount = page.wordCount ?? 0
   return {
@@ -140,7 +178,7 @@ function markdownQuality(
     rawStyleTags: markdown.match(/<style\b/giu)?.length ?? 0,
     suspiciousConcatenations:
       markdown.match(/\b[a-z]{4,}[A-Z][A-Za-z]{3,}\b/gu)?.length ?? 0,
-    repeatedLines,
+    repeatedLines: repeatedProseLines(markdown),
     sourceWordCount,
     wordRetentionRatio:
       sourceWordCount > 0

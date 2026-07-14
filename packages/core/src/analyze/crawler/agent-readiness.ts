@@ -98,8 +98,7 @@ function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
         quality.navigationOnly ||
         quality.repeatedLines > 0 ||
         (quality.wordRetentionRatio !== null &&
-          quality.wordRetentionRatio < 0.4) ||
-        quality.introductoryCopyRetained === false
+          quality.wordRetentionRatio < 0.4)
       )
     })
     .map((page) => page.htmlUrl)

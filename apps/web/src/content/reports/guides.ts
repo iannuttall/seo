@@ -1,13 +1,13 @@
 import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
-import { reportPageCopy } from './page-copy'
 import type {
   ReportGuideAlternative,
   ReportGuideInput,
   ReportGuideOverride,
   ResolvedReportGuide,
 } from './guide-types'
+import { reportPageCopy } from './page-copy'
 import type { ReportEditorial } from './types'
 
 export type {

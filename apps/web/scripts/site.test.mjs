@@ -24,10 +24,7 @@ const expectedPages = new Map([
   ['docs/skill/index.html', 'https://seoskill.dev/docs/skill'],
   ['docs/agents/index.html', 'https://seoskill.dev/docs/agents'],
   ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
-  [
-    'docs/ai-visibility/index.html',
-    'https://seoskill.dev/docs/ai-visibility',
-  ],
+  ['docs/ai-visibility/index.html', 'https://seoskill.dev/docs/ai-visibility'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
   ['terms/index.html', 'https://seoskill.dev/terms'],
   ['security/index.html', 'https://seoskill.dev/security'],
@@ -204,8 +201,14 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.match(html, /What you need before you run it/)
     assert.match(html, /What the result cannot prove/)
     assert.match(html, /Use a different report for these jobs/)
-    assert.match(html, /Use the (?:audit|report|monitor|check|tool|generator|export|validator) with an agent or in code/)
-    assert.match(html, /aria-label="Ways to run the (?:audit|report|monitor|check|tool|generator|export|validator)"/)
+    assert.match(
+      html,
+      /Use the (?:audit|report|monitor|check|tool|generator|export|validator) with an agent or in code/,
+    )
+    assert.match(
+      html,
+      /aria-label="Ways to run the (?:audit|report|monitor|check|tool|generator|export|validator)"/,
+    )
     assert.match(html, /usage-tab-cli/)
     assert.match(html, /usage-tab-mcp/)
     assert.match(html, /usage-tab-typescript/)
@@ -267,18 +270,12 @@ test('report library covers the live registry and keeps legacy routes', async ()
     resolve(dist, 'docs/reports/pseo-audit/index.html'),
     'utf8',
   )
-  assert.match(
-    pseo,
-    /<title>Programmatic SEO audit \| SEO Skill<\/title>/,
-  )
+  assert.match(pseo, /<title>Programmatic SEO audit \| SEO Skill<\/title>/)
   assert.match(
     pseo,
     /<meta name="description" content="Audit programmatic SEO templates, repeated URL patterns and Search Console demand\. Review representative pages before changing a whole template\."\s*\/?>/,
   )
-  assert.match(
-    pseo,
-    /<h1[^>]*>Programmatic SEO audit<\/h1>/,
-  )
+  assert.match(pseo, /<h1[^>]*>Programmatic SEO audit<\/h1>/)
   assert.match(
     pseo,
     /No report should condemn a template from word count or one sampled URL\./,

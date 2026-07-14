@@ -6,6 +6,7 @@ import { agentMarkdown } from '@seo/astro'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
+import { llmsTxt } from './llms.config.mjs'
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://seoskill.dev',
@@ -15,7 +16,7 @@ export default defineConfig({
     syntaxHighlight: false,
     processor: unified({ rehypePlugins: [rehypeCodeFrame] }),
   },
-  integrations: [mdx(), react(), agentMarkdown()],
+  integrations: [mdx(), react(), agentMarkdown({ llmsTxt })],
   vite: {
     plugins: [tailwindcss()],
     resolve: {

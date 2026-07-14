@@ -199,6 +199,85 @@ test('every content page has one deterministic Markdown alternative', () => {
   )
 })
 
+test('llms.txt is a short curated map generated from the route manifest', async () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
+  )
+  const actual = readFileSync(resolve(dist, 'llms.txt'), 'utf8')
+  const { llmsTxt } = await import('../llms.config.mjs')
+  const { renderLlmsTxt } = await import('@seo/astro')
+
+  assert.equal(actual, renderLlmsTxt(manifest, llmsTxt))
+  assert.match(actual, /^# SEO Skill\n\n> /u)
+  assert.equal(matches(actual, /^## /gmu).length, 4)
+  assert.equal(matches(actual, /^- \[/gmu).length, 12)
+  assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
+  assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
+
+  const manifestMarkdown = new Set(
+    manifest.pages.map((page) =>
+      new URL(page.markdownPath, manifest.site).toString(),
+    ),
+  )
+  for (const [, , href] of matches(actual, /\[([^\]]+)]\(([^)]+)\)/g)) {
+    const url = new URL(href)
+    if (url.pathname.startsWith('/.well-known/')) {
+      assert.ok(existsSync(resolve(dist, url.pathname.slice(1))), href)
+    } else {
+      assert.ok(manifestMarkdown.has(url.toString()), href)
+    }
+  }
+})
+
+test('every content page publishes one connected identity graph', () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
+  )
+  for (const page of manifest.pages) {
+    const html = readFileSync(resolve(dist, page.htmlFile), 'utf8')
+    const scripts = matches(
+      html,
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+    )
+    assert.equal(scripts.length, 1, page.htmlPath)
+    const schema = JSON.parse(scripts[0][1])
+    assert.equal(schema['@context'], 'https://schema.org')
+    assert.ok(Array.isArray(schema['@graph']), page.htmlPath)
+    const byId = new Map(schema['@graph'].map((node) => [node['@id'], node]))
+    const creator = byId.get('https://seoskill.dev/#creator')
+    const website = byId.get('https://seoskill.dev/#website')
+    const software = byId.get('https://seoskill.dev/#software')
+    const webPage = byId.get(`${page.canonical}#webpage`)
+    assert.equal(creator?.['@type'], 'Person', page.htmlPath)
+    assert.deepEqual(creator?.sameAs, ['https://github.com/iannuttall'])
+    assert.equal(website?.['@type'], 'WebSite', page.htmlPath)
+    assert.equal(software?.['@type'], 'SoftwareApplication', page.htmlPath)
+    assert.deepEqual(software?.sameAs, [
+      'https://github.com/iannuttall/seo',
+      'https://www.npmjs.com/package/seo',
+    ])
+    assert.ok(
+      ['CollectionPage', 'TechArticle', 'WebPage'].includes(webPage?.['@type']),
+      page.htmlPath,
+    )
+    assert.deepEqual(webPage?.isPartOf, { '@id': website['@id'] })
+    assert.deepEqual(webPage?.about, { '@id': software['@id'] })
+    assert.deepEqual(webPage?.creator, { '@id': creator['@id'] })
+
+    const hasVisibleBreadcrumb = /<nav aria-label="Breadcrumb"/u.test(html)
+    assert.equal(
+      Boolean(webPage?.breadcrumb),
+      hasVisibleBreadcrumb,
+      page.htmlPath,
+    )
+    assert.equal(
+      schema['@graph'].some((node) => node['@type'] === 'BreadcrumbList'),
+      hasVisibleBreadcrumb,
+      page.htmlPath,
+    )
+  }
+})
+
 test('sitemap is exact and contains only indexable canonical pages', async () => {
   const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf8')
   const locations = matches(sitemap, /<loc>([^<]+)<\/loc>/g).map(

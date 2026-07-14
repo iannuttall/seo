@@ -1,6 +1,11 @@
 ---
 import FooterDither from '@/components/FooterDither.astro'
 import { site } from '@/lib/site'
+import {
+  type PageSchemaType,
+  type SchemaBreadcrumb,
+  pageSchema,
+} from '@/lib/schema'
 import { canonicalUrl } from '@/lib/urls'
 import '@/styles/globals.css'
 
@@ -10,6 +15,10 @@ type Props = {
   framed?: boolean
   canonicalPath?: string
   noindex?: boolean
+  schemaType?: PageSchemaType
+  breadcrumbs?: readonly SchemaBreadcrumb[]
+  dateModified?: string
+  datePublished?: string
 }
 
 const {
@@ -18,6 +27,10 @@ const {
   framed = true,
   canonicalPath = Astro.url.pathname,
   noindex = false,
+  schemaType = 'WebPage',
+  breadcrumbs,
+  dateModified,
+  datePublished,
 } = Astro.props
 const pageTitle = title.includes(site.name) ? title : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
@@ -26,20 +39,15 @@ const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,
 )
 const showClicky = import.meta.env.PROD && !isLocalHost && site.clickySiteId
-const schema = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: site.name,
-  alternateName: ['SEO CLI', 'SEO Skills CLI', 'SEO Skills', 'seo'],
-  applicationCategory: 'DeveloperApplication',
-  operatingSystem: 'Linux, macOS, Windows',
+const schema = pageSchema({
+  breadcrumbs,
+  canonical,
+  dateModified,
+  datePublished,
   description,
-  url: canonical,
-  downloadUrl: site.npm,
-  codeRepository: site.repository,
-  license: 'https://www.apache.org/licenses/LICENSE-2.0',
-  isAccessibleForFree: true,
-}
+  title: pageTitle,
+  type: schemaType,
+})
 
 const footerGroups = [
   {

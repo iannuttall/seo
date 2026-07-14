@@ -22,12 +22,19 @@ const { entry } = Astro.props
 const { Content } = await render(entry)
 const path = entry.id === 'index' ? '/docs' : `/docs/${entry.id}`
 const nav = docsNavFor(path)
+const breadcrumbs = nav?.breadcrumbs
+const schemaType =
+  entry.id === 'index' || entry.id === 'reports'
+    ? 'CollectionPage'
+    : 'TechArticle'
 ---
 
 <BaseLayout
   title={entry.data.title}
   description={entry.data.description}
   canonicalPath={path}
+  {breadcrumbs}
+  {schemaType}
 >
   <main>
       {nav ? (

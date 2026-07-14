@@ -84,9 +84,18 @@ test('build contains every public route with one complete SEO contract', () => {
       new RegExp(`<link rel="canonical" href="${canonical}"\\s*/?>`),
     )
     assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
+    const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}`
     assert.match(
       html,
-      /<meta property="og:image" content="https:\/\/seoskill\.dev\/og\.png"\s*\/?>/,
+      new RegExp(
+        `<meta property="og:image" content="${escapeRegExp(ogImage)}"\\s*/?>`,
+      ),
+    )
+    assert.match(
+      html,
+      new RegExp(
+        `<meta name="twitter:image" content="${escapeRegExp(ogImage)}"\\s*/?>`,
+      ),
     )
     assert.match(
       html,

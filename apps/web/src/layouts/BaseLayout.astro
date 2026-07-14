@@ -35,6 +35,7 @@ const {
 } = Astro.props
 const pageTitle = title.includes(site.name) ? title : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
+const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}`
 const year = new Date().getFullYear()
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,
@@ -179,14 +180,14 @@ const projectThings = [
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={`${site.url}/og.png`} />
+    <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={site.name} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={`${site.url}/og.png`} />
+    <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={site.name} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
     {

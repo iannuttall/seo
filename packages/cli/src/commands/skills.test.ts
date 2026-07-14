@@ -59,3 +59,15 @@ test('skills list and path expose the packaged seo skill', async () => {
   const path = await runSeo(['skill', 'path', 'seo', '--json'])
   assert.equal(JSON.parse(path.stdout).path, join(sourceSkills, 'seo'))
 })
+
+test('skill list explains the packaged skill without dumping its router prompt', async () => {
+  const result = await runSeo(['skill', 'list'])
+
+  assert.equal(result.exitCode, 0)
+  assert.equal(result.stderr, '')
+  assert.match(result.stdout, /^SEO skill$/m)
+  assert.match(result.stdout, /Helps agents choose and run the right SEO audit/)
+  assert.match(result.stdout, /seo start/)
+  assert.doesNotMatch(result.stdout, /Use and read this skill immediately/)
+  assert.ok(result.stdout.split('\n').length < 20)
+})

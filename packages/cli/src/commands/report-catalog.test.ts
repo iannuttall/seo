@@ -73,6 +73,20 @@ test('reports list exposes the shared sorted catalog', async () => {
   )
 })
 
+test('reports list stays browsable for humans', async () => {
+  const result = await runSeo(['reports', 'list'])
+
+  assert.equal(result.exitCode, 0)
+  assert.equal(result.stderr, '')
+  assert.ok(!result.stdout.includes(String.fromCharCode(27)))
+  assert.match(result.stdout, /^53 reports across 9 categories\./)
+  assert.match(result.stdout, /^AI search \(7\)$/m)
+  assert.match(result.stdout, /affected-urls\s+URLs affected by a crawl issue/)
+  assert.match(result.stdout, /seo reports describe <id>/)
+  assert.doesNotMatch(result.stdout, /^Description\s/m)
+  assert.ok(result.stdout.split('\n').length < 100)
+})
+
 test('reports describe returns the exact report input schema', async () => {
   const result = await runSeo(['reports', 'describe', 'audit-page', '--json'])
 

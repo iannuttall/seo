@@ -9,7 +9,24 @@ import {
 } from '@seo/mcp'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import {
+  printCallout,
+  printCatalog,
+  printJson,
+  printKeyValue,
+} from '../utils.js'
+
+const CATEGORY_LABELS: Record<ReportCategory, string> = {
+  'ai-search': 'AI search',
+  crawl: 'Crawling and technical checks',
+  diagnosis: 'Diagnosis',
+  experiments: 'Experiments',
+  monitoring: 'Monitoring',
+  opportunities: 'Opportunities',
+  reporting: 'Reporting',
+  setup: 'Setup',
+  workflows: 'Workflows',
+}
 
 function categoryArg(value: unknown): ReportCategory | undefined {
   const category = stringArg(value)
@@ -87,15 +104,16 @@ const listCommand = defineCommand({
       printJson({ reports, categories: REPORT_CATEGORIES })
       return
     }
-    printTable(
-      ['ID', 'Category', 'Name', 'Description'],
-      reports.map((report) => [
-        report.id,
-        report.category,
-        report.name,
-        report.description,
-      ]),
-    )
+    printCatalog(reports, {
+      noun: 'report',
+      categoryLabels: CATEGORY_LABELS,
+    })
+    process.stdout.write('\n')
+    printCallout({
+      title: 'Need the detail?',
+      body: 'Describe one report to see when to use it, what it needs, and what the result can prove.',
+      command: 'seo reports describe <id>',
+    })
   },
 })
 

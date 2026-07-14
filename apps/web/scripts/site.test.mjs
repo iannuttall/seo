@@ -85,16 +85,17 @@ test('build contains every public route with one complete SEO contract', () => {
     )
     assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
     const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
+    const escapedOgImage = escapeRegExp(ogImage).replaceAll('&', '(?:&|&amp;)')
     assert.match(
       html,
       new RegExp(
-        `<meta property="og:image" content="${escapeRegExp(ogImage)}"\\s*/?>`,
+        `<meta property="og:image" content="${escapedOgImage}"\\s*/?>`,
       ),
     )
     assert.match(
       html,
       new RegExp(
-        `<meta name="twitter:image" content="${escapeRegExp(ogImage)}"\\s*/?>`,
+        `<meta name="twitter:image" content="${escapedOgImage}"\\s*/?>`,
       ),
     )
     assert.match(
@@ -110,9 +111,9 @@ test('build contains every public route with one complete SEO contract', () => {
   }
 })
 
-test('home uses its H1 in its page and social titles', () => {
+test('home prefixes the brand in its page and social titles', () => {
   const html = readFileSync(resolve(dist, 'index.html'), 'utf8')
-  const title = 'The only SEO Skill your agent needs'
+  const title = 'SEO Skill | Open source SEO audit tool for AI agents'
 
   const escapedTitle = escapeRegExp(title)
 
@@ -125,6 +126,16 @@ test('home uses its H1 in its page and social titles', () => {
     html,
     new RegExp(`<meta name="twitter:title" content="${escapedTitle}"`),
   )
+  assert.match(html, />The only SEO skill your agent needs<\/h1>/i)
+})
+
+test('every non-home page suffixes the site name', () => {
+  for (const relativePath of expectedPages.keys()) {
+    if (relativePath === 'index.html') continue
+    const html = readFileSync(resolve(dist, relativePath), 'utf8')
+    const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
+    assert.ok(title?.endsWith(' | SEO Skill'), `${relativePath}: ${title}`)
+  }
 })
 
 test('legal and error pages are noindex but remain crawlable', () => {

@@ -12,11 +12,11 @@ test('built pages include the OG template and static preview hook', () => {
   )?.[1]
 
   assert.ok(template)
-  assert.match(template, /The only SEO Skill your agent needs/)
+  assert.match(template, /Open source SEO audit tool for AI agents/)
   assert.doesNotMatch(template, /One SEO skill gives your agent/)
   assert.match(template, /The SEO command for AI agents/)
   assert.match(template, /leading-\[1\.12\]/)
-  assert.match(template, /bg-header[^\"]*text-header-foreground/)
+  assert.match(template, /bg-header[^"]*text-header-foreground/)
   assert.match(template, /data-footer-dither-static/)
   assert.match(template, /og-frame-shadow/)
   assert.match(template, /og-command-shadow/)

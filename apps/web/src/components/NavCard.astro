@@ -4,25 +4,36 @@ import PixelIcon from '@/components/icons/PixelIcon.astro'
 
 type Props = {
   title: string
+  heading?: string
   description?: string
   href?: string
   class?: string
 }
 
-const { title, description, href, class: className } = Astro.props
+const { title, heading, description, href, class: className } = Astro.props
 const patternId = `nav-card-${(href ?? title).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`
 const Tag = href ? 'a' : 'div'
 ---
 
-<Tag href={href} class:list={['group block h-full', href && 'cursor-pointer', className]}>
+<Tag href={href} class:list={['nav-card block h-full', href && 'group cursor-pointer', className]}>
   <DottedCard patternId={patternId}>
-    <div class="flex h-full flex-col gap-3 p-5 pb-8">
+    <div class="flex h-full flex-col gap-3 p-5 pb-12">
+      {heading ? <h3 class="font-mono text-sm font-normal leading-5">{heading}</h3> : null}
       {description ? <p class="font-sans text-sm font-light text-foreground-muted">{description}</p> : null}
       <slot />
     </div>
-    <span slot="label" class="inline-flex items-center gap-2 whitespace-nowrap">
-      {title}
-      <PixelIcon name="arrow-right" class="nav-card-arrow size-3.5 shrink-0" />
+    <span slot="label" class="nav-card-label relative flex min-w-0 max-w-full items-center gap-2">
+      <span class="min-w-0 flex-1 truncate leading-5">{title}</span>
+      {href ? <PixelIcon name="arrow-right" class="nav-card-arrow size-3.5 shrink-0" /> : null}
+      <span
+        class="nav-card-tooltip pointer-events-none absolute bottom-[calc(100%+0.5rem)] left-0 z-50 max-w-[min(20rem,calc(100vw-2rem))] bg-primary px-3 py-2 text-left font-mono text-xs leading-5 text-primary-foreground opacity-0 transition-[opacity,transform] duration-150 selection:bg-primary-foreground selection:text-primary group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-translate-y-0.5 group-focus-visible:opacity-100"
+        aria-hidden="true"
+      >
+        {title}
+        <span
+          class="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-primary"
+        ></span>
+      </span>
     </span>
   </DottedCard>
 </Tag>

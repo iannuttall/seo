@@ -13,6 +13,10 @@ engineering contract.
 report pages, command help, onboarding, metadata, and README content. Read it
 before writing or editing user-facing language.
 
+Reading `CONTENT.md` is mandatory in the same task before writing, editing, or
+generating user-facing copy. Do not rely on memory or treat shared template
+copy as an exception.
+
 The product has two primary users:
 
 - Humans start with a guided prompt flow and one main report.

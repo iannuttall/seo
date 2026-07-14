@@ -1,6 +1,6 @@
 ---
 title: Set up SEO Skill and run your first audit
-description: Install the SEO CLI, connect Search Console, save a local project profile, and run your first SEO audit that points you to a clear next action.
+description: Install the SEO CLI and run setup to connect Search Console, save your site and complete your first audit. GA4 can wait until you need it.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search

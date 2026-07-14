@@ -23,11 +23,11 @@ const shadowInk = 'text-foreground'
     </div>
     {
       Astro.slots.has('label') && (
-        <div class="clipped-dot-shadow absolute -bottom-4 left-2 z-20 sm:left-6">
+        <div class="clipped-dot-shadow absolute -bottom-4 left-2 z-20 max-w-[calc(100%-1rem)] sm:left-6 sm:max-w-[calc(100%-3rem)]">
           <DotPattern patternId={`${patternId}-label`} class:list={['clipped-dot-pattern', shadowInk]} />
           <div
             class:list={[
-              'relative z-10 flex items-center border-2 px-3 py-2 font-mono text-xs transition-colors',
+              'relative z-10 flex max-w-full items-center border-2 px-3 py-2 font-mono text-xs transition-colors',
               'group-hover:bg-foreground group-hover:text-background',
               line,
               surface,

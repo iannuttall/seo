@@ -7,7 +7,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Find SEO quick wins',
     summary:
       'Find page-one rankings with weak CTR where title or snippet work may earn more clicks.',
-    lead: "Quick wins looks for queries already ranking on page one, usually positions 4 to 10, where CTR is below the site's own benchmark. It gives you a focused review queue, not a promise that changing a title will increase clicks.",
     inputs: [
       {
         label: 'Returned Search Console query and page rows',
@@ -43,10 +42,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Quick Wins Report: Find Low CTR Page-One Rankings',
-      description:
-        'Find page-one rankings with weak CTR so you can improve titles, snippets, and search framing without rewriting everything.',
-      heading: 'SEO quick wins report for low-CTR page-one rankings.',
       primaryKeyword: 'seo quick wins',
       supportingKeywords: ['ctr optimization', 'google search console seo'],
     },
@@ -55,7 +50,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Trace a redirect chain',
     summary:
       'Follow every hop from one URL to its final page and catch loops, long chains, broken destinations, or conflicting index signals.',
-    lead: 'Use this before changing an old URL, debugging a migration, or checking where an important link lands. The report follows the chain and then inspects the final page it can reach.',
     inputs: [
       {
         label: 'Live URL responses',
@@ -90,10 +84,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Redirect Trace Tool: Check SEO Redirect Chains and Final URLs',
-      description:
-        'Trace a URL redirect chain, inspect every hop, and see whether the final page is safe for SEO, links, and canonicals.',
-      heading: 'Redirect trace tool for SEO redirect chains and final URLs.',
       primaryKeyword: 'redirect trace',
       supportingKeywords: ['seo audit', 'technical SEO audit'],
     },
@@ -102,7 +92,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Explain crawl findings clearly',
     summary:
       'Turn crawl and search evidence into a short report that explains what matters and what to do next.',
-    lead: 'Narrative report turns existing findings into a concise explanation for clients and teammates. It keeps skipped checks, failed measurements, and caveats in the report instead of smoothing over gaps in the evidence.',
     inputs: [
       {
         label: 'Property diagnosis results',
@@ -136,10 +125,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Narrative SEO Report: Explain Crawl Findings Clearly',
-      description:
-        'Turn crawl evidence into a short narrative SEO report that explains what matters, what changed, and what to do next.',
-      heading: 'Narrative SEO report for explaining crawl findings clearly.',
       primaryKeyword: 'seo report',
       supportingKeywords: ['seo audit report', 'technical SEO audit'],
     },
@@ -148,7 +133,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Find pages close to page one',
     summary:
       'Find URLs ranking around positions 11 to 20 and decide which pages deserve closer review.',
-    lead: 'Second page gives you a page-level list of URLs ranking around positions 11 to 20. Use it when you want specific pages to improve rather than grouped themes. Average position is an aggregate filter, so every candidate still needs intent, SERP, content, link, and technical review.',
     inputs: [
       {
         label: 'Returned Search Console page and query rows',
@@ -184,10 +168,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Second Page SEO Report: Find Queries Close to Page One',
-      description:
-        'Find URLs ranking around positions 11 to 20 and decide which pages need content, links, snippets, or technical fixes.',
-      heading: 'Second page SEO report for queries close to page one.',
       primaryKeyword: 'second page SEO',
       supportingKeywords: ['striking distance SEO', 'search console queries'],
     },
@@ -196,7 +176,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Find which search segments moved',
     summary:
       'Compare Search Console movement by page, query, country, or device.',
-    lead: 'Segment impact narrows a property-level change to the pages, queries, countries, or devices behind it. It compares matched periods and keeps unmatched rows separate, so a row missing from the returned data is never silently counted as zero.',
     inputs: [
       {
         label: 'Matched Search Console periods',
@@ -231,10 +210,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Segment Impact Report: Compare Search Console Movement',
-      description:
-        'Compare Search Console movement by page, query, country, or device and find which segments gained or lost traffic.',
-      heading: 'SEO segment impact report for Search Console movement.',
       primaryKeyword: 'google search console seo',
       supportingKeywords: ['seo report', 'search console queries'],
     },
@@ -243,7 +218,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Find striking-distance opportunities',
     summary:
       'Group position 11 to 20 Search Console queries into practical actions.',
-    lead: 'Striking distance is for page-two opportunities where several rows share the same kind of fix. It keeps query and page pairs intact, then groups them into content, snippet, internal-link, or technical themes. Position 11 to 20 is a filter, not a promise that a small edit will reach page one.',
     inputs: [
       {
         label: 'Returned Search Console query and page rows',
@@ -280,11 +254,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Striking Distance SEO Report: Push Page-Two Queries Up',
-      description:
-        'Group position 11 to 20 Search Console queries into practical actions for content, snippets, internal links, and templates.',
-      heading:
-        'Striking distance SEO report for page-two queries and grouped actions.',
       primaryKeyword: 'striking distance SEO',
       supportingKeywords: ['second page SEO', 'search console queries'],
     },
@@ -293,7 +262,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Turn SEO queries into AI prompts',
     summary:
       'Turn real Search Console queries into prompts for repeatable AI answer monitoring.',
-    lead: 'SEO to AI query converts Search Console demand into natural prompts that agents can monitor. Every prompt keeps the source query and metrics attached. Generated prompts are monitoring suggestions, not evidence that people ask the same questions in AI products.',
     inputs: [
       {
         label: 'Returned Search Console queries',
@@ -328,10 +296,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'AI Search Query Report: Turn SEO Queries Into AI Prompts',
-      description:
-        'Turn real Search Console queries into AI-style prompts so you can monitor how assistants answer demand you already have.',
-      heading: 'AI search query report built from real SEO query demand.',
       primaryKeyword: 'ai search optimization',
       supportingKeywords: ['search console queries', 'ai search readiness'],
     },
@@ -340,7 +304,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Fix the most important technical SEO issues',
     summary:
       'Turn a long crawl report into a short list of technical SEO fixes ranked by evidence, reach, and effort.',
-    lead: 'Top fixes is for the point where a crawl has found more technical SEO issues than you can tackle at once. It groups repeated findings, adds available Search Console and GA4 evidence, and shows exactly why each fix appears where it does.',
     inputs: [
       {
         label: 'Saved or fresh crawl findings',
@@ -375,10 +338,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Technical SEO Issues: Find and Prioritise the Right Fixes',
-      description:
-        'Find technical SEO issues, see which URLs they affect, and prioritise fixes using crawl severity, search evidence, analytics, and effort.',
-      heading: 'Technical SEO issues ranked by evidence, reach, and effort.',
       primaryKeyword: 'technical SEO issues',
       supportingKeywords: ['technical SEO fixes'],
     },
@@ -387,7 +346,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Investigate an organic traffic drop',
     summary:
       'Compare recent Search Console clicks and impressions with the site history to find unusual changes.',
-    lead: 'Traffic anomaly is the starting point when organic clicks or impressions move unexpectedly. It shows whether the change stands out against the property history and gives you the dates and evidence for a deeper investigation. It does not assign a cause.',
     inputs: [
       {
         label: 'Finalised Search Console property totals',
@@ -422,10 +380,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Organic Traffic Drop: Find Unusual Search Performance Changes',
-      description:
-        'Investigate an organic traffic drop by comparing Search Console clicks and impressions with the site history and official Google update dates.',
-      heading: 'Find unusual changes behind an organic traffic drop.',
       primaryKeyword: 'organic traffic drop',
     },
   },
@@ -433,7 +387,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Check traffic changes against Google updates',
     summary:
       'Place unusual Search Console movement beside confirmed Google ranking update windows without claiming the update caused it.',
-    lead: 'Use this when a property movement overlaps talk of a Google update. The report checks official dates and the observed anomaly window, then points to the segments and pages that need real investigation.',
     inputs: [
       {
         label: 'Search Console traffic anomaly result',
@@ -468,11 +421,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Google Algorithm Update Checker: Compare Dates With SEO Traffic',
-      description:
-        'Compare unusual Search Console traffic dates with confirmed Google ranking update windows without treating a timing overlap as proof of causation.',
-      heading:
-        'Check whether search changes overlap a confirmed Google update.',
       primaryKeyword: 'Google algorithm update checker',
       supportingKeywords: ['Google update checker'],
     },
@@ -481,7 +429,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Review SEO performance',
     summary:
       'See where clicks and impressions changed, which pages or queries account for the movement, and what to inspect next.',
-    lead: 'Use this first when clicks or impressions changed and you do not yet know where the movement came from. It shows which pages, queries, countries, and devices account for the change, then points you to the next focused report worth running.',
     inputs: [
       {
         label: 'Search Console performance data',
@@ -516,10 +463,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Performance Report: Find What Changed in Search Console',
-      description:
-        'Review SEO performance in Search Console, find which pages and queries explain the movement, and choose the next useful report.',
-      heading: 'SEO performance report for finding what changed and where.',
       primaryKeyword: 'SEO performance report',
       supportingKeywords: ['Search Console report'],
     },
@@ -528,7 +471,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Create a monthly SEO action plan',
     summary:
       'Produce the shared monthly SEO report and finish with a short list of evidence-backed follow-up work.',
-    lead: 'Monthly action plan turns a calendar month of Search Console evidence into a readable report and a short work queue. It keeps partial and unavailable sections visible, then recommends follow-up checks only when the report supports them.',
     inputs: [
       {
         label: 'Finalised monthly Search Console evidence',
@@ -563,10 +505,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Action Plan: Turn Monthly Search Data Into Next Steps',
-      description:
-        'Create an SEO action plan from finalised monthly Search Console evidence, with clear priorities and follow-up reports based on supported findings.',
-      heading: 'Monthly SEO reporting with a practical action plan.',
       primaryKeyword: 'SEO action plan',
       supportingKeywords: ['monthly SEO report'],
     },
@@ -575,7 +513,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Rank the next SEO fixes',
     summary:
       'Turn crawl and Search Console evidence into one ranked implementation list.',
-    lead: 'Refresh priorities turns the latest evidence into an action queue. It combines quick wins, second-page opportunities, decaying pages, cannibalisation, and crawl findings so an agent can see what to investigate next. The score helps order the work, but it does not forecast traffic or make the final edit decision.',
     inputs: [
       {
         label: 'Search Console diagnosis and opportunity reports',
@@ -612,10 +549,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'SEO Priority Report: Rank Fixes From Crawl and GSC Evidence',
-      description:
-        'Turn Search Console opportunity reports and crawl evidence into a core-scored SEO priority list for technical and content work.',
-      heading: 'SEO priority report for ranking the next fixes to make.',
       primaryKeyword: 'seo priorities',
       supportingKeywords: ['seo audit report', 'technical SEO audit'],
     },
@@ -624,7 +557,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Monitor technical SEO changes',
     summary:
       'Run recurring crawl, index, and link-recovery checks after the first audit.',
-    lead: 'Technical watch packages the recurring checks a site needs after the first baseline. It combines crawl changes, sampled Google index evidence, and link recovery without hiding quota limits or failed checks.',
     inputs: [
       {
         label: 'Current and previous limited crawl evidence',
@@ -666,11 +598,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Technical SEO Monitoring: Crawl, Index and Link Checks',
-      description:
-        'Run recurring technical SEO monitoring across crawl health, index risks, URL inspection evidence, and link recovery work.',
-      heading:
-        'Technical SEO monitoring for crawl, index, and link recovery checks.',
       primaryKeyword: 'technical SEO monitoring',
       supportingKeywords: ['technical SEO audit', 'site audit'],
     },
@@ -679,7 +606,6 @@ export const reportGuideOverridesQZ: Partial<
     name: 'Review winners and losers around a Google update',
     summary:
       'Inspect winners, losers, page evidence, and known site changes around a confirmed Google ranking update window.',
-    lead: 'Update postmortem compares Search Console winners and losers around an official Google update window. It looks for repeated patterns while keeping migrations, releases, tracking changes, demand, and seasonality in the investigation. Timing alone does not prove that the update caused a change.',
     inputs: [
       {
         label: 'Official Google ranking update dates',
@@ -718,10 +644,6 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     seo: {
-      title: 'Google Update Postmortem: Find SEO Winners and Losers',
-      description:
-        'Analyze Search Console winners and losers around an official Google update window without overclaiming causation.',
-      heading: 'Google update postmortem for SEO winners and losers.',
       primaryKeyword: 'google update',
       supportingKeywords: ['google search updates', 'seo report'],
     },

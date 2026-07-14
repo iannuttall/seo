@@ -24,6 +24,10 @@ const expectedPages = new Map([
   ['docs/skill/index.html', 'https://seoskill.dev/docs/skill'],
   ['docs/agents/index.html', 'https://seoskill.dev/docs/agents'],
   ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
+  [
+    'docs/ai-visibility/index.html',
+    'https://seoskill.dev/docs/ai-visibility',
+  ],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
   ['terms/index.html', 'https://seoskill.dev/terms'],
   ['security/index.html', 'https://seoskill.dev/security'],
@@ -174,17 +178,17 @@ test('report library covers the live registry and keeps legacy routes', async ()
     const relativePath = `docs/reports/${slug}/index.html`
     const html = readFileSync(resolve(dist, relativePath), 'utf8')
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
+    const heading = html.match(/<h1[^>]*>([^<]+)<\/h1>/)?.[1]
     const description = html.match(
       /<meta name="description" content="([^"]+)"\s*\/?>/,
     )?.[1]
 
-    if (id === 'site-crawl') {
-      assert.equal(title, 'Technical SEO Site Crawl Audit | SEO Skill')
-    } else {
-      assert.ok(title && title.length >= 55 && title.length <= 80, id)
-    }
+    assert.ok(title, id)
+    assert.ok(heading, id)
+    assert.equal(title, `${heading} | SEO Skill`, id)
+    assert.equal(title.includes(':'), false, id)
     assert.ok(
-      description && description.length >= 110 && description.length <= 160,
+      description && description.length >= 140 && description.length <= 160,
       id,
     )
     assert.match(catalogHtml, new RegExp(`href="/docs/reports/${slug}"`))
@@ -194,37 +198,38 @@ test('report library covers the live registry and keeps legacy routes', async ()
         `<link rel="canonical" href="https://seoskill\\.dev/docs/reports/${slug}"\\s*/?>`,
       ),
     )
-    assert.match(html, /<h1[^>]*>[^<]+<\/h1>/)
+    assert.match(html, /Install and (?:run|generate|validate)/)
+    assert.match(html, /npm i -g seo/)
+    assert.match(html, /seo start/)
+    assert.match(html, /What you need before you run it/)
+    assert.match(html, /What the result cannot prove/)
+    assert.match(html, /Use a different report for these jobs/)
+    assert.match(html, /Use the (?:audit|report|monitor|check|tool|generator|export|validator) with an agent or in code/)
+    assert.match(html, /aria-label="Ways to run the (?:audit|report|monitor|check|tool|generator|export|validator)"/)
+    assert.match(html, /usage-tab-cli/)
+    assert.match(html, /usage-tab-mcp/)
+    assert.match(html, /usage-tab-typescript/)
+    assert.match(html, /What to do next/)
+    assert.match(html, /Related reports/)
     if (id === 'site-crawl') {
       assert.match(html, /<h1[^>]*>Technical SEO site crawl audit<\/h1>/)
-      assert.match(html, /Install and run the audit/)
-      assert.match(html, /npm i -g seo/)
-      assert.match(html, /seo start/)
       assert.match(html, /seo crawl https:\/\/example\.com --save/)
       assert.match(html, /What you get from this audit/)
-      assert.match(html, /Read the coverage before the issue count/)
-      assert.match(html, /What this audit cannot prove/)
-      assert.match(html, /Use the audit with an agent or in code/)
-      assert.match(html, /aria-label="Ways to run the audit"/)
-      assert.match(html, /usage-tab-cli/)
-      assert.match(html, /usage-tab-mcp/)
-      assert.match(html, /usage-tab-typescript/)
-      assert.doesNotMatch(html, /Command facts/)
-      assert.doesNotMatch(html, /JSON is the source of truth/)
-    } else {
-      assert.match(html, /What this report helps you decide/)
-      assert.match(html, /When this report is not the right tool/)
-      assert.match(html, /Data sources and inputs/)
-      assert.match(html, /What this report checks/)
-      assert.match(html, /Run the report from the CLI/)
-      assert.match(html, /How an MCP agent should use it/)
-      assert.match(html, /Use the report in a TypeScript app/)
-      assert.match(html, /npm install seo/)
-      assert.match(html, /What comes back/)
-      assert.match(html, /What comes back and how to read it/)
-      assert.match(html, /What this report cannot tell you/)
-      assert.match(html, /What to do next/)
     }
+    assert.doesNotMatch(html, /Command facts/)
+    assert.doesNotMatch(html, /JSON is the source of truth/)
+    assert.doesNotMatch(html, /What this report helps you decide/)
+    assert.doesNotMatch(html, /Run the report from the CLI/)
+    assert.doesNotMatch(html, /Keep the next step tied to the evidence/)
+    assert.doesNotMatch(html, /These reports reuse nearby evidence/)
+
+    const limitsStart = html.indexOf('id="cannot-prove"')
+    const limitsEnd = html.indexOf('id="different-tool"', limitsStart)
+    assert.ok(limitsStart >= 0 && limitsEnd > limitsStart, id)
+    assert.ok(
+      matches(html.slice(limitsStart, limitsEnd), /<p>/g).length >= 2,
+      `Expected two limits paragraphs for ${id}`,
+    )
     assert.match(html, new RegExp(`seo reports describe ${id}`))
     assert.match(html, new RegExp(`seo reports run ${id}`))
     assert.doesNotMatch(
@@ -264,15 +269,15 @@ test('report library covers the live registry and keeps legacy routes', async ()
   )
   assert.match(
     pseo,
-    /<title>Programmatic SEO Audit: Templates, Pages and Demand \| SEO Skill<\/title>/,
+    /<title>Programmatic SEO audit \| SEO Skill<\/title>/,
   )
   assert.match(
     pseo,
-    /<meta name="description" content="Audit programmatic SEO templates, repeated URL patterns, page evidence, Search Console demand, and pSEO-specific fixes\."\s*\/?>/,
+    /<meta name="description" content="Audit programmatic SEO templates, repeated URL patterns and Search Console demand\. Review representative pages before changing a whole template\."\s*\/?>/,
   )
   assert.match(
     pseo,
-    /<h1[^>]*>Programmatic SEO audit for templates, scaled pages, and search demand\.<\/h1>/,
+    /<h1[^>]*>Programmatic SEO audit<\/h1>/,
   )
   assert.match(
     pseo,

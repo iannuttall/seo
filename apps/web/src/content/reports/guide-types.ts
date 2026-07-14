@@ -10,6 +10,8 @@ export type ReportGuideAlternative = {
   when: string
   doInstead: string
   reportId?: string
+  href?: string
+  label?: string
 }
 
 export type ReportGuideSeo = {
@@ -20,15 +22,19 @@ export type ReportGuideSeo = {
   supportingKeywords?: readonly string[]
 }
 
+export type ReportGuideKeywords = Pick<
+  ReportGuideSeo,
+  'primaryKeyword' | 'supportingKeywords'
+>
+
 export type ReportGuideOverride = {
   name?: string
   summary?: string
-  lead?: string
   inputs?: readonly [ReportGuideInput, ...ReportGuideInput[]]
   checks?: readonly [string, ...string[]]
   returns?: readonly [string, ...string[]]
   alternatives?: readonly [ReportGuideAlternative, ...ReportGuideAlternative[]]
-  seo?: ReportGuideSeo
+  seo?: ReportGuideKeywords
 }
 
 export type ResolvedReportGuide = Omit<ReportEditorial, 'name' | 'summary'> & {

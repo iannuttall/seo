@@ -463,7 +463,7 @@ export function HeroChat() {
 
                     {showExtras && m.action ? (
                       <div
-                        className={`flex w-fit items-center gap-1.5 bg-primary px-2.5 py-1 font-medium text-primary-foreground text-sm ${APPEAR}`}
+                        className={`flex w-fit items-center gap-1.5 bg-primary px-2.5 py-1 font-medium text-primary-foreground text-sm selection:bg-primary-foreground selection:text-primary ${APPEAR}`}
                       >
                         <PixelCheckIcon className="size-3.5" />
                         {m.action}

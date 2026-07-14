@@ -1,0 +1,553 @@
+---
+import DottedCard from '@/components/DottedCard.astro'
+import InstallPicker from '@/components/InstallPicker.astro'
+import NavCard from '@/components/NavCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import CopyCode from '@/components/docs/CopyCode.astro'
+import ReportUsageTabs from '@/components/reports/ReportUsageTabs.astro'
+import { reportsById } from '@/content/reports'
+import { humanReportCommand } from '@/content/reports/commands'
+import { resolveReportGuide } from '@/content/reports/guides'
+import { describeCommand, reportCommand, reportPath } from '@/content/reports/helpers'
+import {
+  reportNextStepIntros,
+  reportScheduleNotes,
+} from '@/content/reports/section-copy'
+import { reportSources } from '@/content/reports/sources'
+import type { ResolvedReportGuide } from '@/content/reports/guides'
+import type { ReportEditorial } from '@/content/reports/types'
+
+type Props = {
+  report: ReportEditorial
+  guide: ResolvedReportGuide
+}
+
+type ReportPageKind =
+  | 'audit'
+  | 'report'
+  | 'monitor'
+  | 'check'
+  | 'tool'
+  | 'generator'
+  | 'export'
+  | 'validator'
+
+const reportPageKinds: Record<string, ReportPageKind> = {
+  'affected-urls': 'report',
+  'ai-readiness': 'audit',
+  'ai-referrals': 'report',
+  'ai-search-scorecard': 'report',
+  'audit-page': 'audit',
+  'audit-urls': 'audit',
+  cannibalisation: 'report',
+  'community-intent': 'report',
+  'compare-crawls': 'report',
+  'content-optimization': 'report',
+  'crawl-diff': 'report',
+  'site-crawl': 'audit',
+  'ctr-underperformers': 'report',
+  'decaying-pages': 'report',
+  'setup-check': 'check',
+  'entity-readiness': 'audit',
+  'explain-crawl-issue': 'tool',
+  'geo-gaps': 'audit',
+  'crawl-report': 'report',
+  'index-coverage': 'audit',
+  'index-coverage-plan': 'tool',
+  'index-monitor': 'monitor',
+  'index-watch': 'monitor',
+  'internal-links': 'report',
+  'link-recovery': 'report',
+  'crawl-history': 'report',
+  'crawler-rules': 'tool',
+  'llms-txt-audit': 'audit',
+  'generate-llms-txt': 'generator',
+  'measure-change': 'report',
+  'monthly-report': 'report',
+  'okf-build': 'export',
+  'okf-validate': 'validator',
+  'page-opportunities': 'report',
+  'performance-audit': 'audit',
+  'pseo-audit': 'audit',
+  'query-clusters': 'report',
+  'quick-wins': 'report',
+  'redirect-trace': 'tool',
+  'narrative-report': 'report',
+  'second-page': 'report',
+  'segment-impact': 'report',
+  'striking-distance': 'report',
+  'seo-to-ai-query': 'report',
+  'top-fixes': 'report',
+  'traffic-anomaly': 'report',
+  'update-correlation': 'tool',
+  'search-performance-overview': 'report',
+  'monthly-action-plan': 'report',
+  'refresh-priorities': 'report',
+  'technical-watch': 'monitor',
+  'update-postmortem': 'report',
+}
+
+const kindCopy: Record<
+  ReportPageKind,
+  { noun: string; installHeading: string; resultHeading: string }
+> = {
+  audit: {
+    noun: 'audit',
+    installHeading: 'Install and run the audit',
+    resultHeading: 'What you get from this audit',
+  },
+  report: {
+    noun: 'report',
+    installHeading: 'Install and run the report',
+    resultHeading: 'What you get from this report',
+  },
+  monitor: {
+    noun: 'monitor',
+    installHeading: 'Install and run the monitor',
+    resultHeading: 'What the monitor records',
+  },
+  check: {
+    noun: 'check',
+    installHeading: 'Install and run the check',
+    resultHeading: 'What the check tells you',
+  },
+  tool: {
+    noun: 'tool',
+    installHeading: 'Install and run the tool',
+    resultHeading: 'What the tool gives you',
+  },
+  generator: {
+    noun: 'generator',
+    installHeading: 'Install and generate the file',
+    resultHeading: 'What the generator creates',
+  },
+  export: {
+    noun: 'export',
+    installHeading: 'Install and run the export',
+    resultHeading: 'What the export contains',
+  },
+  validator: {
+    noun: 'validator',
+    installHeading: 'Install and validate the files',
+    resultHeading: 'What the validator checks',
+  },
+}
+
+const categoryCopy = {
+  setup: {
+    checksHeading: 'What the setup check looks for',
+    checksIntro:
+      'Start with the first failed check. Fixing later warnings before the account, permissions or saved project are working usually wastes time.',
+    readHeading: 'Fix the first failed check',
+    readIntro:
+      'Read the checks in order. One broken login or missing property can explain several failures further down the result.',
+  },
+  diagnosis: {
+    checksHeading: 'What the report compares',
+    checksIntro:
+      'The report compares the selected dates and search dimensions before it suggests where to investigate. Keep the returned rows and missing data beside the conclusion.',
+    readHeading: 'Read the change before the explanation',
+    readIntro:
+      'Start with the dates, totals and returned rows. They show what moved. The report can narrow the investigation, but it cannot invent the reason.',
+  },
+  opportunities: {
+    checksHeading: 'How the report finds the opportunity',
+    checksIntro:
+      'The report uses existing search and page evidence to build a limited review list. An opportunity is a reason to inspect a page, not a promise of more traffic.',
+    readHeading: 'Check the evidence behind each opportunity',
+    readIntro:
+      'Start with the query, page and date range behind each suggestion. Thin or partial evidence belongs in the review pile, not the implementation queue.',
+  },
+  crawl: {
+    checksHeading: 'What the crawl evidence checks',
+    checksIntro:
+      'Every finding stays tied to the page, rule and crawl scope that produced it. Check what the crawler reached before treating an issue count as complete.',
+    readHeading: 'Read the coverage before the findings',
+    readIntro:
+      'A clean result means little if important pages were blocked, skipped or outside the crawl limit. Coverage comes first, then findings.',
+  },
+  monitoring: {
+    checksHeading: 'What the monitor checks',
+    checksIntro:
+      'The monitor compares limited snapshots over time. It keeps failed, deferred and unchecked pages separate so missing evidence does not look like a recovery.',
+    readHeading: 'Check what ran before trusting the status',
+    readIntro:
+      'Start with the selected pages, dates and quota use. A page that was not checked has an unknown status, even when the rest of the run looks healthy.',
+  },
+  reporting: {
+    checksHeading: 'What goes into the report',
+    checksIntro:
+      'The report turns saved crawl or Google data into something a person can act on. Dates, limits and missing sections stay visible beside the summary.',
+    readHeading: 'Read the dates and limits first',
+    readIntro:
+      'Confirm that the report covers the period, pages and data sources you expected. A tidy summary cannot repair an incomplete input.',
+  },
+  experiments: {
+    checksHeading: 'How the change is measured',
+    checksIntro:
+      'The comparison uses matched windows and keeps visible confounders beside the result. It can show movement after a change without claiming the change caused it.',
+    readHeading: 'Check the comparison before claiming impact',
+    readIntro:
+      'Start with the control, variant, dates and sample size. Search demand, rankings and other releases can move at the same time.',
+  },
+  'ai-search': {
+    checksHeading: 'What the AI search evidence checks',
+    checksIntro:
+      'The report uses observed crawl, search or referral evidence. It keeps technical access, assistant visibility and recorded visits as separate questions.',
+    readHeading: 'Keep access, visibility and visits separate',
+    readIntro:
+      'A page can be crawlable without appearing in an answer. A mention can also happen without sending a measurable visit. Read the evidence for the question this report actually answers.',
+  },
+  workflows: {
+    checksHeading: 'How the reports are combined',
+    checksIntro:
+      'The workflow joins several focused reports into one limited work list. Each recommendation should still point back to the evidence that earned its place.',
+    readHeading: 'Check each report before acting on the plan',
+    readIntro:
+      'The final order is useful only when its crawl and Google inputs are current. Open the underlying evidence before making a large change.',
+  },
+} as const
+
+const { report, guide } = Astro.props
+const pageKind = reportPageKinds[report.id] ?? 'report'
+const page = kindCopy[pageKind]
+const category = categoryCopy[report.category]
+const nextStepsIntro = reportNextStepIntros[report.id]
+if (!nextStepsIntro) {
+  throw new Error(`Missing next-step copy for ${report.id}.`)
+}
+const scheduleNote = reportScheduleNotes[report.id]
+const humanCommand = humanReportCommand(report.id)
+const normalCommand = humanCommand?.command ?? reportCommand(report)
+const relatedGuides = report.related
+  .map((id) => reportsById.get(id))
+  .filter((item): item is ReportEditorial => item !== undefined)
+  .map(resolveReportGuide)
+const nextGuide = relatedGuides[0]
+const sources = report.sources.map((key) => reportSources[key])
+const facts = [
+  ['Best for', report.useWhen[0]],
+  ['Needs', guide.inputs[0].label],
+  ['You get', guide.returns[0]],
+  ['Use next', nextGuide?.name ?? report.nextSteps[0]],
+] as const
+const resultRows = [
+  { label: 'Result', detail: guide.returns[0] },
+  ...(guide.returns[1]
+    ? [{ label: 'More detail', detail: guide.returns[1] }]
+    : []),
+  { label: 'Read it with', detail: report.interpretation[0] },
+]
+const lowerSentenceStart = (value: string) =>
+  /^[A-Z][a-z]/.test(value) ? `${value[0]?.toLowerCase()}${value.slice(1)}` : value
+const evidenceIntro = `This ${page.noun} uses ${report.evidence
+  .map(lowerSentenceStart)
+  .join(' ')}`
+const limitParagraphs = [
+  report.caveats.join(' '),
+  [...report.interpretation, report.nextSteps.at(-1)]
+    .filter((value): value is string => Boolean(value))
+    .join(' '),
+  scheduleNote,
+].filter((value): value is string => Boolean(value))
+const describeValue = describeCommand(report)
+const runValue = reportCommand(report)
+const mcpDescribeInput = JSON.stringify({ id: report.id }, null, 2)
+const mcpRunInput = JSON.stringify(
+  { id: report.id, params: report.exampleParams },
+  null,
+  2,
+)
+const libraryExample = `import { executeReport } from 'seo/mcp'
+
+const result = await executeReport(
+  '${report.id}',
+  ${JSON.stringify(report.exampleParams, null, 2)},
+)
+
+console.log(result)`
+---
+
+<PageHeader
+  title={guide.seo?.heading ?? guide.name}
+  description={guide.lead}
+  align="left"
+  class="mb-8"
+/>
+
+<section aria-labelledby="install-and-run" class="mb-14">
+  <div class="docs-prose">
+    <h2 id="install-and-run">{page.installHeading}</h2>
+    {
+      report.category === 'setup' ? (
+        <p>
+          Install the CLI first. If setup is the part that has gone wrong, run
+          this check before trying to connect the site again.
+        </p>
+      ) : (
+        <p>
+          Install the CLI once, then run <code>seo start</code> to connect your
+          site and Google data. After setup you can run this {page.noun} yourself
+          or ask your agent to run it.
+        </p>
+      )
+    }
+  </div>
+  <div class="mt-5 space-y-7">
+    <InstallPicker />
+    <div class="docs-prose">
+      <CopyCode
+        label={humanCommand?.note ?? `Run ${guide.name.toLowerCase()} through the report catalog.`}
+        value={normalCommand}
+        wrap
+      />
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="what-you-get" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="what-you-get" class="font-mono text-xl font-normal leading-tight">
+      {page.resultHeading}
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">{guide.summary}</p>
+  </div>
+  <DottedCard patternId={`report-facts-${report.id}`}>
+    <dl class="divide-y divide-border">
+      {
+        facts.map(([label, value]) => (
+          <div class="grid gap-1 px-5 py-4 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-6">
+            <dt class="font-sans text-sm font-medium">{label}</dt>
+            <dd class="text-xs leading-5 text-foreground-muted sm:text-right">{value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="what-you-need" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="what-you-need" class="font-mono text-xl font-normal leading-tight">
+      What you need before you run it
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">
+      {evidenceIntro}
+    </p>
+  </div>
+  <DottedCard patternId={`report-inputs-${report.id}`}>
+    <div class="divide-y divide-border">
+      {
+        guide.inputs.map((input) => (
+          <div class="grid gap-2 px-5 py-4 sm:grid-cols-[11rem_1fr] sm:gap-6">
+            <h3 class="font-mono text-xs font-normal leading-5 sm:text-sm">{input.label}</h3>
+            {input.role ? (
+              <p class="font-sans text-sm font-light leading-6 text-foreground-muted">{input.role}</p>
+            ) : null}
+          </div>
+        ))
+      }
+    </div>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="checks" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="checks" class="font-mono text-xl font-normal leading-tight">
+      {category.checksHeading}
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">{category.checksIntro}</p>
+  </div>
+  <DottedCard patternId={`report-checks-${report.id}`}>
+    <div class="divide-y divide-border">
+      {
+        guide.checks.map((detail, index) => (
+          <div class="grid items-start gap-2 px-5 py-4 sm:grid-cols-[4rem_1fr] sm:gap-6">
+            <span class="font-mono text-xs leading-6 text-foreground-muted">{String(index + 1).padStart(2, '0')}</span>
+            <p class="font-sans text-sm font-light leading-6 text-foreground-muted">{detail}</p>
+          </div>
+        ))
+      }
+    </div>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="read-results" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="read-results" class="font-mono text-xl font-normal leading-tight">
+      {category.readHeading}
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">{category.readIntro}</p>
+  </div>
+  <DottedCard patternId={`report-results-${report.id}`}>
+    <table class="w-full table-fixed border-collapse text-left">
+      <thead class="border-b-2 border-nav bg-background">
+        <tr>
+          <th class="w-24 px-3 py-3 font-mono text-xs font-normal sm:w-40 sm:px-5 sm:text-sm">
+            Read first
+          </th>
+          <th class="px-3 py-3 font-mono text-xs font-normal sm:px-5 sm:text-sm">
+            Why it matters
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {
+          resultRows.map(({ label, detail }) => (
+            <tr>
+              <th class="px-3 py-4 align-top font-sans text-xs font-medium sm:px-5 sm:text-sm">
+                {label}
+              </th>
+              <td class="break-words px-3 py-4 font-sans text-xs font-light leading-5 text-foreground-muted sm:px-5 sm:text-sm sm:leading-6">
+                {detail}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="cannot-prove" class="mb-14 space-y-5">
+  <DottedCard patternId={`report-limits-${report.id}`} inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <h2 id="cannot-prove" class="font-mono text-xl font-normal leading-tight">
+        What the result cannot prove
+      </h2>
+      <div class="space-y-4 font-sans text-sm font-light leading-6">
+        {limitParagraphs.map((item) => <p>{item}</p>)}
+      </div>
+    </div>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="different-tool" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="different-tool" class="font-mono text-xl font-normal leading-tight">
+      Use a different report for these jobs
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">
+      {report.avoidWhen.join(' ')}
+    </p>
+  </div>
+  <div class="grid gap-5 sm:grid-cols-2">
+    {
+      guide.alternatives.map((alternative) => {
+        const alternativeReport = alternative.reportId
+          ? reportsById.get(alternative.reportId)
+          : undefined
+        const alternativeGuide = alternativeReport
+          ? resolveReportGuide(alternativeReport)
+          : undefined
+
+        const href = alternativeGuide
+          ? reportPath(alternativeGuide.id)
+          : alternative.href
+        const label = alternativeGuide
+          ? alternativeGuide.seo?.heading ?? alternativeGuide.name
+          : alternative.label ?? 'Needs more evidence'
+
+        return (
+          <NavCard
+            title={label}
+            heading={alternative.when}
+            description={alternative.doInstead}
+            {href}
+          />
+        )
+      })
+    }
+  </div>
+</section>
+
+<section aria-labelledby="advanced-usage" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="advanced-usage" class="font-mono text-xl font-normal leading-tight">
+      Use the {page.noun} with an agent or in code
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">
+      The command above is enough for most work. These options let an agent,
+      script or application run the same {page.noun} with explicit input and
+      structured output.
+    </p>
+  </div>
+  <ReportUsageTabs
+    noun={page.noun}
+    {describeValue}
+    {runValue}
+    {mcpDescribeInput}
+    {mcpRunInput}
+    {libraryExample}
+  />
+</section>
+
+<section aria-labelledby="next-steps" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="next-steps" class="font-mono text-xl font-normal leading-tight">
+      What to do next
+    </h2>
+    <p class="font-sans text-[0.9375rem] font-light leading-7">
+      {nextStepsIntro}
+    </p>
+  </div>
+  <DottedCard patternId={`report-next-steps-${report.id}`}>
+    <ol class="divide-y divide-border">
+      {
+        report.nextSteps.map((item, index) => (
+          <li class="grid items-start gap-2 px-5 py-4 sm:grid-cols-[4rem_1fr] sm:gap-6">
+            <span class="font-mono text-xs leading-6 text-foreground-muted">{String(index + 1).padStart(2, '0')}</span>
+            <span class="font-sans text-sm font-light leading-6 text-foreground-muted">{item}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </DottedCard>
+</section>
+
+<section aria-labelledby="related-reports" class="mb-14 space-y-5">
+  <div class="space-y-2">
+    <h2 id="related-reports" class="font-mono text-xl font-normal leading-tight">
+      Related reports
+    </h2>
+  </div>
+  <div class="grid gap-5 sm:grid-cols-3">
+    {
+      relatedGuides.map((related) => (
+        <NavCard
+          title={related.seo?.heading ?? related.name}
+          description={related.summary}
+          href={reportPath(related.id)}
+        />
+      ))
+    }
+  </div>
+</section>
+
+{
+  sources.length ? (
+    <section aria-labelledby="sources" class="space-y-4">
+      <h2 id="sources" class="font-mono text-xl font-normal leading-tight">
+        Sources used by this {page.noun}
+      </h2>
+      <p class="font-sans text-[0.9375rem] font-light leading-7">
+        These primary sources define the provider data or search controls used
+        by the result.
+      </p>
+      <ul class="space-y-2 font-sans text-sm font-light leading-6">
+        {sources.map((source) => (
+          <li>
+            <a
+              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              href={source.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {source.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : null
+}

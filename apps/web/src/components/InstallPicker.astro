@@ -9,7 +9,7 @@ const install = installCommands[0]
 ---
 
 <section class:list={[standalone && 'max-w-2xl']} data-install-picker>
-  <div class="font-sans">
+  <div class="font-sans" data-agent-markdown="exclude">
     <DottedCard>
       <button
         type="button"
@@ -27,6 +27,12 @@ const install = installCommands[0]
         <span>after install</span>
       </div>
     </DottedCard>
+  </div>
+  <div hidden data-agent-markdown="only">
+    <p>Install the SEO CLI globally.</p>
+    <pre><code>{install.command}</code></pre>
+    <p>Run setup after installation.</p>
+    <pre><code>seo start</code></pre>
   </div>
 </section>
 

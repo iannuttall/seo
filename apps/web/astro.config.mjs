@@ -1,6 +1,8 @@
 // @ts-check
 import mdx from '@astrojs/mdx'
+import { unified } from '@astrojs/markdown-remark'
 import react from '@astrojs/react'
+import { agentMarkdown } from '@seo/astro'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
@@ -11,9 +13,9 @@ export default defineConfig({
   trailingSlash: 'never',
   markdown: {
     syntaxHighlight: false,
-    rehypePlugins: [rehypeCodeFrame],
+    processor: unified({ rehypePlugins: [rehypeCodeFrame] }),
   },
-  integrations: [mdx(), react()],
+  integrations: [mdx(), react(), agentMarkdown()],
   vite: {
     plugins: [tailwindcss()],
     resolve: {

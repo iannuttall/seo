@@ -20,7 +20,9 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.0",
+    "@astrojs/markdown-remark": "^7.0.0",
     "@astrojs/react": "^6.0.0",
+    "@seo/astro": "workspace:*",
     "@kiwa-ui/enhance": "^2.1.0",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.7",

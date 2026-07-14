@@ -1,5 +1,5 @@
 ---
-title: Set up SEO Skill and run your first audit
+title: Set up the SEO CLI and run your first audit
 description: Install the SEO CLI and run setup to connect Search Console, save your site and complete your first audit. GA4 can wait until you need it.
 ---
 

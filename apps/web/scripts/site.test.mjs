@@ -630,6 +630,7 @@ test('Cloudflare serves static assets with exact Markdown response headers', () 
     const rule = [
       page.markdownPath,
       '  ! Link',
+      '  ! Vary',
       '  Content-Type: text/markdown; charset=utf-8',
       `  Link: <${page.canonical}>; rel="canonical"`,
       '  Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"',

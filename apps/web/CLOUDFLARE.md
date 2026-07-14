@@ -4,7 +4,7 @@ The site is a static Astro build. Astro writes the HTML pages, Markdown alternat
 
 ## Git build settings
 
-Use these settings for the `seo-skill` Worker:
+Use these settings for the `seo-skill` Worker. Changing `name` in Wrangler creates another Worker instead of renaming the current one, so keep this value stable after the project has been created.
 
 | Setting | Value |
 | --- | --- |

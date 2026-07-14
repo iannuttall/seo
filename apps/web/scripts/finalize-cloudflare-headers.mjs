@@ -33,6 +33,7 @@ const tokenRules = [...manifest.pages]
     return [
       page.markdownPath,
       '  ! Link',
+      '  ! Vary',
       '  Content-Type: text/markdown; charset=utf-8',
       `  Link: <${page.canonical}>; rel="canonical"`,
       '  Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"',

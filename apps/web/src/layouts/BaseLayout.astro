@@ -22,6 +22,10 @@ const {
 const pageTitle = title.includes(site.name) ? title : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
 const year = new Date().getFullYear()
+const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
+  Astro.url.hostname,
+)
+const showClicky = import.meta.env.PROD && !isLocalHost && site.clickySiteId
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -158,6 +162,22 @@ const projectThings = [
     <meta name="twitter:image" content={`${site.url}/og.png`} />
     <meta name="twitter:image:alt" content={site.name} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    {
+      showClicky ? (
+        <>
+          <script is:inline>
+            window.clicky_custom = window.clicky_custom || {}
+            window.clicky_custom.cookies_disable = 1
+          </script>
+          <script
+            is:inline
+            async
+            data-id={site.clickySiteId}
+            src="//static.getclicky.com/js"
+          />
+        </>
+      ) : null
+    }
     <title>{pageTitle}</title>
   </head>
   <body class="bg-background font-mono text-foreground">

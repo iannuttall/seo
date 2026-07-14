@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 10 July 2026
+Last updated: 14 July 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -57,10 +57,15 @@ The CLI does not include project-controlled usage telemetry. Installing the
 package through npm or using GitHub is covered by the policies of those
 services.
 
-The seoskill.dev host and security provider may process normal web request
+The seoskill.dev website uses [Clicky](https://clicky.com/terms/privacy) to
+count visits and see which pages people use. Tracking cookies are disabled in
+the website code. Clicky receives normal browser and request information such
+as the page, referrer, device, and IP address.
+
+The website host and security provider may also process normal web request
 data such as an IP address, user agent, requested path, and timestamp. Website
-logs do not include the reports, tokens, or Google API responses stored by the
-local software.
+analytics and logs do not include the reports, tokens, or Google API responses
+stored by the local software.
 
 ## Sharing and sale
 

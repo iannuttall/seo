@@ -8,4 +8,5 @@ export const site = {
   issues: 'https://github.com/iannuttall/seo/issues',
   advisory: 'https://github.com/iannuttall/seo/security/advisories/new',
   npm: 'https://www.npmjs.com/package/seo',
+  clickySiteId: '101508763',
 } as const

@@ -1,2 +1,5 @@
+export * from './html.js'
+export * from './integration.js'
+export * from './manifest.js'
 export * from './render.js'
 export * from './routes.js'

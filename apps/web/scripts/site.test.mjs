@@ -39,6 +39,24 @@ function matches(html, pattern) {
   return [...html.matchAll(pattern)]
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function walkFiles(directory, predicate) {
+  const files = []
+  const pending = [directory]
+  while (pending.length > 0) {
+    const current = pending.pop()
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const path = resolve(current, entry.name)
+      if (entry.isDirectory()) pending.push(path)
+      else if (entry.isFile() && predicate(path)) files.push(path)
+    }
+  }
+  return files.sort()
+}
+
 test('build contains every public route with one complete SEO contract', () => {
   for (const [relativePath, canonical] of expectedPages) {
     const file = resolve(dist, relativePath)
@@ -103,6 +121,81 @@ test('legal and error pages are noindex but remain crawlable', () => {
   assert.doesNotMatch(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Disallow:/,
+  )
+})
+
+test('every content page has one deterministic Markdown alternative', () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
+  )
+  const manifestPaths = manifest.pages.map((page) => page.htmlPath)
+  const representedHtml = walkFiles(dist, (file) => file.endsWith('.html'))
+    .filter((file) =>
+      /<link rel="alternate" type="text\/markdown" href="[^"]+">/.test(
+        readFileSync(file, 'utf8'),
+      ),
+    )
+    .map((file) => file.slice(dist.length + 1))
+
+  assert.equal(manifest.version, 1)
+  assert.equal(manifest.site, 'https://seoskill.dev')
+  assert.equal(manifest.pages.length, 70)
+  assert.deepEqual(manifestPaths, [...manifestPaths].sort())
+  assert.equal(
+    manifest.pages.filter((page) => page.htmlPath.startsWith('/docs/reports/'))
+      .length,
+    52,
+  )
+  assert.deepEqual(
+    manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
+    ['/cookies', '/privacy', '/security', '/terms', '/trademarks'],
+  )
+  assert.equal(representedHtml.length, manifest.pages.length)
+
+  for (const page of manifest.pages) {
+    const markdown = readFileSync(resolve(dist, page.markdownFile), 'utf8')
+    const html = readFileSync(resolve(dist, page.htmlFile), 'utf8')
+    const markdownUrl = new URL(page.markdownPath, manifest.site).toString()
+
+    assert.equal(Buffer.byteLength(markdown), page.bytes, page.markdownFile)
+    assert.equal(Math.ceil(page.bytes / 4), page.tokens, page.markdownFile)
+    assert.equal(
+      createHash('sha256').update(markdown).digest('hex'),
+      page.sha256,
+      page.markdownFile,
+    )
+    assert.match(
+      markdown,
+      /^---\ntitle: .+\ndescription: .+\ncanonical: .+\nlanguage: .+\n---\n/u,
+      page.markdownFile,
+    )
+    assert.equal(matches(markdown, /^#\s+.+$/gmu).length, 1, page.markdownFile)
+    assert.doesNotMatch(
+      markdown,
+      /<(?:script|style|svg|canvas)\b|Runafter|data-agent-markdown/iu,
+      page.markdownFile,
+    )
+    assert.equal(
+      matches(
+        html,
+        /<link rel="alternate" type="text\/markdown" href="[^"]+">/gu,
+      ).length,
+      1,
+      page.htmlFile,
+    )
+    assert.match(
+      html,
+      new RegExp(
+        `<link rel="alternate" type="text/markdown" href="${escapeRegExp(markdownUrl)}">`,
+      ),
+      page.htmlFile,
+    )
+  }
+
+  assert.equal(existsSync(resolve(dist, '404.md')), false)
+  assert.doesNotMatch(
+    readFileSync(resolve(dist, 'sitemap.xml'), 'utf8'),
+    /\.md</,
   )
 })
 
@@ -174,6 +267,10 @@ test('report library covers the live registry and keeps legacy routes', async ()
     const slug = reportSlugs[id] ?? id
     const relativePath = `docs/reports/${slug}/index.html`
     const html = readFileSync(resolve(dist, relativePath), 'utf8')
+    const markdown = readFileSync(
+      resolve(dist, `docs/reports/${slug}.md`),
+      'utf8',
+    )
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
     const heading = html.match(/<h1[^>]*>([^<]+)<\/h1>/)?.[1]
     const description = html.match(
@@ -182,6 +279,21 @@ test('report library covers the live registry and keeps legacy routes', async ()
 
     assert.ok(title, id)
     assert.ok(heading, id)
+    assert.match(markdown, new RegExp(`^# ${escapeRegExp(heading)}$`, 'm'), id)
+    assert.match(markdown, new RegExp(`seo reports describe ${id} --json`), id)
+    assert.match(markdown, new RegExp(`seo reports run ${id} --params`), id)
+    for (const usageHeading of ['CLI', 'MCP', 'TypeScript']) {
+      assert.equal(
+        matches(markdown, new RegExp(`^### ${usageHeading}$`, 'gmu')).length,
+        1,
+        `${id} ${usageHeading}`,
+      )
+    }
+    assert.doesNotMatch(
+      markdown,
+      /Copy |Demo of|nav-card-tooltip|clipped-dot|dither/iu,
+      id,
+    )
     assert.equal(title, `${heading} | SEO Skill`, id)
     assert.equal(title.includes(':'), false, id)
     assert.ok(

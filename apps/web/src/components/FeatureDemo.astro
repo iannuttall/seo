@@ -14,7 +14,11 @@ type Props = {
 const { demo, patternId, title } = Astro.props
 ---
 
-<div class="relative flex h-full min-h-[21.25rem] overflow-hidden p-5" aria-label={`Demo of ${title}`}>
+<div
+  class="relative flex h-full min-h-[21.25rem] overflow-hidden p-5"
+  aria-label={`Demo of ${title}`}
+  data-agent-markdown="exclude"
+>
   <DotPattern variant="dots" patternId={patternId} class="absolute inset-0" />
   <div class="relative flex w-full min-w-0">
     {

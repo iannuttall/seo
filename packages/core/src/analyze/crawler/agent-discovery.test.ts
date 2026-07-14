@@ -125,6 +125,29 @@ const fakeFetch = (async (url: string, input?: RequestInit) => {
   return response('', 404, { 'content-type': 'text/plain' })
 }) as typeof publicHttpFetch
 
+function fetchWithMarkdown(body: string): typeof publicHttpFetch {
+  return (async (url: string, input?: Parameters<typeof fakeFetch>[1]) => {
+    const requestedUrl = String(url)
+    const accept =
+      (input?.headers as Record<string, string> | undefined)?.accept ?? ''
+    if (
+      requestedUrl === 'https://example.com/index.md' ||
+      (requestedUrl === 'https://example.com/' &&
+        accept.startsWith('text/markdown') &&
+        !accept.includes('text/markdown;q=0'))
+    ) {
+      return response(body, 200, {
+        'content-type': 'text/markdown; charset=utf-8',
+        link: '<https://example.com/>; rel="canonical"; type="text/html"',
+        vary: 'Accept',
+        'x-markdown-tokens': String(Math.ceil(Buffer.byteLength(body) / 4)),
+        'content-signal': 'search=yes, ai-input=yes, ai-train=no',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+}
+
 const page: CrawlPageSnapshot = {
   url: 'https://example.com/',
   finalUrl: 'https://example.com/',
@@ -176,6 +199,105 @@ test('collectAgentDiscovery validates one deterministic content contract', async
   assert.equal(discovery.routeManifest.valid, true)
   assert.deepEqual(discovery.routeManifest.orphanMarkdownRoutes, [])
   assert.equal(discovery.protocolVariants.http.permanentRedirectToHttps, true)
+})
+
+test('markdown quality ignores repeated commands and weak intro samples', async () => {
+  const exampleMarkdown = `---
+title: "Example"
+description: "An example page"
+canonical: "https://example.com/"
+language: "en"
+---
+
+# Example
+
+This useful explanation is retained even when the HTML sample points at unrelated layout copy.
+The rest of the document contains enough useful detail to stand on its own as a complete page for an agent.
+
+\`\`\`sh
+seo projects list
+seo projects list
+\`\`\`
+
+| Field | Value |
+| --- | --- |
+| Report | site-crawl |
+| Report | site-crawl |
+
+](https://example.com/docs/related-report)[
+
+](https://example.com/docs/related-report)[
+`
+  const variantPage: CrawlPageSnapshot = {
+    ...page,
+    wordCount: 12,
+    contentSample:
+      'Unrelated visual navigation text that is not part of the useful document intro.',
+  }
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [variantPage],
+    timeoutMs: 1_000,
+    fetch: fetchWithMarkdown(exampleMarkdown),
+  })
+  const quality = discovery.markdownAlternates.pages[0]?.quality
+
+  assert.equal(quality?.repeatedLines, 0)
+  assert.equal(quality?.introductoryCopyRetained, false)
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [variantPage],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+
+  assert.equal(
+    agentReadiness(crawl).checks.find((item) => item.id === 'markdown-quality')
+      ?.status,
+    'pass',
+  )
+})
+
+test('markdown quality warns when prose is duplicated in the document', async () => {
+  const duplicated =
+    'This exact explanatory paragraph was accidentally rendered twice in the useful page content.'
+  const exampleMarkdown = `---
+title: "Example"
+description: "An example page"
+canonical: "https://example.com/"
+language: "en"
+---
+
+# Example
+
+${duplicated}
+
+${duplicated}
+`
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [page],
+    timeoutMs: 1_000,
+    fetch: fetchWithMarkdown(exampleMarkdown),
+  })
+
+  assert.equal(discovery.markdownAlternates.pages[0]?.quality?.repeatedLines, 1)
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+
+  assert.equal(
+    agentReadiness(crawl).checks.find((item) => item.id === 'markdown-quality')
+      ?.status,
+    'warning',
+  )
 })
 
 test('agentReadiness reports evidence without scoring irrelevant profiles', async () => {

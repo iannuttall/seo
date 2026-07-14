@@ -13,6 +13,19 @@ export type CatalogItemView = {
   name: string
 }
 
+export type SummaryItemView = {
+  description?: string
+  meta?: string[]
+  title: string
+}
+
+export type ParameterView = {
+  description?: string
+  name: string
+  required: boolean
+  type: string
+}
+
 function plural(count: number, singular: string, multiple = `${singular}s`) {
   return count === 1 ? singular : multiple
 }
@@ -92,6 +105,11 @@ function renderCatalogItem(
     .join('\n')
 }
 
+function categoryLabel(category: string): string {
+  const value = category.replaceAll('-', ' ')
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 export function renderCatalog(
   items: CatalogItemView[],
   context: TerminalContext,
@@ -120,7 +138,8 @@ export function renderCatalog(
   const sections = [...labelledCategories, ...remainingCategories].map(
     (category) => {
       const entries = groups.get(category) ?? []
-      const label = options.categoryLabels?.[category] ?? category
+      const label =
+        options.categoryLabels?.[category] ?? categoryLabel(category)
       return [
         context.colors.bold(`${label} (${entries.length})`),
         ...entries.map((item) => renderCatalogItem(item, idWidth, context)),
@@ -128,4 +147,72 @@ export function renderCatalog(
     },
   )
   return [intro, ...sections].join('\n\n')
+}
+
+export function renderSummaryList(
+  items: SummaryItemView[],
+  context: TerminalContext,
+  options: { empty: string },
+): string {
+  if (items.length === 0) return context.colors.dim(options.empty)
+
+  return items
+    .map((item) => {
+      const lines = [context.colors.bold(item.title)]
+      if (item.description) {
+        lines.push(...indented(item.description, 2, context.columns))
+      }
+      const meta = item.meta?.filter(Boolean).join(' · ')
+      if (meta) {
+        lines.push(
+          ...indented(meta, 2, context.columns).map((line) =>
+            context.colors.dim(line),
+          ),
+        )
+      }
+      return lines.join('\n')
+    })
+    .join('\n\n')
+}
+
+export function renderSection(
+  title: string,
+  paragraphs: readonly string[],
+  context: TerminalContext,
+): string {
+  const body = paragraphs
+    .filter((paragraph) => paragraph.trim().length > 0)
+    .flatMap((paragraph) => wrapText(paragraph, context.columns))
+  return [context.colors.bold(title), ...body].join('\n')
+}
+
+export function renderBulletSection(
+  title: string,
+  items: readonly string[],
+  context: TerminalContext,
+): string {
+  const body = items.flatMap((item) => {
+    const wrapped = wrapText(item, Math.max(1, context.columns - 2))
+    return wrapped.map((line, index) => `${index === 0 ? '- ' : '  '}${line}`)
+  })
+  return [context.colors.bold(title), ...body].join('\n')
+}
+
+export function renderParameters(
+  parameters: ParameterView[],
+  context: TerminalContext,
+): string {
+  if (parameters.length === 0) {
+    return context.colors.dim('No parameters.')
+  }
+
+  return renderSummaryList(
+    parameters.map((parameter) => ({
+      title: parameter.name,
+      description: parameter.description,
+      meta: [parameter.type, parameter.required ? 'required' : 'optional'],
+    })),
+    context,
+    { empty: 'No parameters.' },
+  )
 }

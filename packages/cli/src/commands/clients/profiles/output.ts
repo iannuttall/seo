@@ -1,26 +1,23 @@
 import type { ClientProfile } from '@seo/core'
-import { printKeyValue, printTable } from '../../../utils.js'
+import { printKeyValue, printSummaryList } from '../../../utils.js'
 
 export function printClientList(clients: ClientProfile[]): void {
-  printTable(
-    [
-      'Default',
-      'ID',
-      'Name',
-      'GSC property',
-      'Crawl URL',
-      'Watch URLs',
-      'Brand terms',
-    ],
-    clients.map((client) => [
-      client.isDefault ? 'yes' : '',
-      client.id,
-      client.name,
-      client.siteUrl,
-      client.startUrl ?? '',
-      client.watchUrls.length,
-      client.brandTerms.join(', '),
-    ]),
+  printSummaryList(
+    clients.map((client) => ({
+      title: `${client.name}${client.isDefault ? ' (default)' : ''}`,
+      description: client.siteUrl,
+      meta: [
+        client.id,
+        client.startUrl ? `crawl ${client.startUrl}` : '',
+        client.watchUrls.length
+          ? `${client.watchUrls.length} watched URL${client.watchUrls.length === 1 ? '' : 's'}`
+          : '',
+        client.brandTerms.length
+          ? `${client.brandTerms.length} brand term${client.brandTerms.length === 1 ? '' : 's'}`
+          : '',
+      ],
+    })),
+    { empty: 'No saved projects.' },
   )
 }
 

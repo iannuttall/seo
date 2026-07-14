@@ -20,7 +20,12 @@ import {
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import {
+  printJson,
+  printKeyValue,
+  printSummaryList,
+  printTable,
+} from '../utils.js'
 import { printNotes, truncate } from './output.js'
 
 async function reportSiteFilter(args: Record<string, unknown>, json: boolean) {
@@ -37,20 +42,18 @@ async function reportSiteFilter(args: Record<string, unknown>, json: boolean) {
 }
 
 function printReportList(reports: CrawlReportMeta[]): void {
-  if (!reports.length) {
-    process.stdout.write('No saved crawl reports found.\n')
-    return
-  }
-  printTable(
-    ['Created', 'Status', 'Pages', 'Issues', 'Site', 'ID'],
-    reports.map((report) => [
-      report.createdAt,
-      report.status,
-      String(report.totalPages),
-      String(report.issueCount),
-      report.site ?? '-',
-      report.id,
-    ]),
+  printSummaryList(
+    reports.map((report) => ({
+      title: report.id,
+      description: report.site ?? report.url,
+      meta: [
+        report.status,
+        `${report.totalPages} page${report.totalPages === 1 ? '' : 's'}`,
+        `${report.issueCount} issue${report.issueCount === 1 ? '' : 's'}`,
+        report.createdAt,
+      ],
+    })),
+    { empty: 'No saved crawl reports.' },
   )
 }
 

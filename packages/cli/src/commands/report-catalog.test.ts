@@ -118,11 +118,15 @@ test('reports describe explains when the report is useful', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-  assert.match(result.stdout, /Name\s+Single-page SEO audit/)
+  assert.match(result.stdout, /^Single-page SEO audit$/m)
   assert.match(result.stdout, /Outcome\s+A page-level audit/)
   assert.match(result.stdout, /Use when/)
   assert.match(result.stdout, /Avoid when/)
-  assert.match(result.stdout, /Parameters \(JSON Schema\)/)
+  assert.match(result.stdout, /^Parameters$/m)
+  assert.match(result.stdout, /^url$/m)
+  assert.match(result.stdout, /string \(uri\) · required/)
+  assert.match(result.stdout, /seo reports describe audit-page --json/)
+  assert.doesNotMatch(result.stdout, /\$schema/)
 })
 
 test('reports run validates inline and file parameters consistently', async () => {

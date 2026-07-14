@@ -3,9 +3,13 @@ import test from 'node:test'
 import { createTerminalContext, visibleWidth } from './context.js'
 import {
   checkSummary,
+  renderBulletSection,
   renderCatalog,
   renderChecks,
   renderHeading,
+  renderParameters,
+  renderSection,
+  renderSummaryList,
 } from './views.js'
 
 test('check views show status, evidence, and a fix without relying on color', () => {
@@ -76,4 +80,66 @@ test('headings keep their summary separate and width-bound', () => {
     'Every required local check passed.',
   )
   assert.equal(output, 'SEO doctor\nEvery required local check passed.')
+})
+
+test('summary lists omit empty metadata and stay compact', () => {
+  const context = createTerminalContext({ color: false, columns: 60 })
+  const output = renderSummaryList(
+    [
+      {
+        title: 'keep.md (default)',
+        description: 'sc-domain:keep.md',
+        meta: ['keep', '', '2 watched URLs'],
+      },
+    ],
+    context,
+    { empty: 'No saved projects.' },
+  )
+  assert.equal(
+    output,
+    'keep.md (default)\n  sc-domain:keep.md\n  keep · 2 watched URLs',
+  )
+  assert.equal(
+    renderSummaryList([], context, { empty: 'No saved projects.' }),
+    'No saved projects.',
+  )
+})
+
+test('sections and parameter summaries wrap at common widths', () => {
+  for (const columns of [40, 60, 80, 120, 160]) {
+    const context = createTerminalContext({ color: false, columns })
+    const outputs = [
+      renderSection(
+        'Verify',
+        ['Re-fetch the URL after the edit and confirm the field changed.'],
+        context,
+      ),
+      renderBulletSection(
+        'Use when',
+        ['One page needs a technical review before you change it.'],
+        context,
+      ),
+      renderParameters(
+        [
+          {
+            name: 'url',
+            type: 'string (uri)',
+            required: true,
+            description: 'The live page to audit.',
+          },
+          {
+            name: 'refresh',
+            type: 'boolean',
+            required: false,
+          },
+        ],
+        context,
+      ),
+    ]
+    for (const output of outputs) {
+      for (const line of output.split('\n')) {
+        assert.ok(visibleWidth(line) <= columns)
+      }
+    }
+  }
 })

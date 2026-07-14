@@ -1,7 +1,7 @@
 import { explainRule, listRules } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { printCatalog, printJson, printKeyValue } from '../utils.js'
 
 export const rulesCommand = defineCommand({
   meta: {
@@ -30,14 +30,13 @@ export const rulesCommand = defineCommand({
       return
     }
 
-    printTable(
-      ['ID', 'Severity', 'Category', 'Title'],
-      rules.map((rule) => [
-        rule.id,
-        rule.defaultSeverity,
-        rule.category,
-        rule.title,
-      ]),
+    printCatalog(
+      rules.map((rule) => ({
+        id: rule.id,
+        category: rule.category,
+        name: `${rule.title} · ${rule.defaultSeverity}`,
+      })),
+      { noun: 'rule' },
     )
   },
 })

@@ -35,9 +35,8 @@ const {
   dateModified,
   datePublished,
 } = Astro.props
-const pageTitle = title.includes(site.name)
-  ? title
-  : titleBrandPosition === 'prefix'
+const pageTitle =
+  titleBrandPosition === 'prefix'
     ? `${site.name} | ${title}`
     : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)

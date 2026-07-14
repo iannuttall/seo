@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and GA4 data.",
   "type": "module",
   "license": "Apache-2.0",

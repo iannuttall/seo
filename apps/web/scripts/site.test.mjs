@@ -110,6 +110,23 @@ test('build contains every public route with one complete SEO contract', () => {
   }
 })
 
+test('home prefixes the brand in its page and social titles', () => {
+  const html = readFileSync(resolve(dist, 'index.html'), 'utf8')
+  const title = 'SEO Skill | Open source SEO audit tool for AI agents'
+
+  const escapedTitle = escapeRegExp(title)
+
+  assert.match(html, new RegExp(`<title>${escapedTitle}</title>`))
+  assert.match(
+    html,
+    new RegExp(`<meta property="og:title" content="${escapedTitle}"`),
+  )
+  assert.match(
+    html,
+    new RegExp(`<meta name="twitter:title" content="${escapedTitle}"`),
+  )
+})
+
 test('legal and error pages are noindex but remain crawlable', () => {
   for (const page of [
     'privacy',

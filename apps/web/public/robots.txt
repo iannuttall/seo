@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 
 Sitemap: https://seoskill.dev/sitemap.xml

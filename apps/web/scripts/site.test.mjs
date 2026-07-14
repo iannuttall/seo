@@ -711,6 +711,29 @@ test('site copy has no stale hosted product, email contact, or dash punctuation'
   assert.doesNotMatch(copy, /[\u2013\u2014]/u)
 })
 
+test('site has no retired Kiwa or React runtime', () => {
+  const packageJson = JSON.parse(
+    readFileSync(resolve(appRoot, 'package.json'), 'utf8'),
+  )
+  const dependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  }
+
+  for (const dependency of [
+    '@astrojs/react',
+    '@kiwa-ui/enhance',
+    '@types/react',
+    '@types/react-dom',
+    'clsx',
+    'react',
+    'react-dom',
+    'tailwind-merge',
+  ]) {
+    assert.equal(dependencies[dependency], undefined, dependency)
+  }
+})
+
 test('site uses the keep-brutal visual system and copyable install choices', () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const css = readFileSync(resolve(appRoot, 'src/styles/globals.css'), 'utf8')
@@ -733,6 +756,21 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(home, /data-glitch/)
   assert.match(home, /requestAnimationFrame\(enhanceHeadline\)/)
   assert.match(home, /prefers-reduced-motion: reduce/)
+  assert.match(home, /data-faq-accordion/)
+  assert.match(home, /<button[^>]+aria-controls="faq-content-1"/)
+  assert.match(home, /aria-expanded="false"[^>]+data-faq-trigger/)
+  assert.match(
+    home,
+    /role="region" aria-labelledby="faq-trigger-1" aria-hidden="true"/,
+  )
+  assert.match(home, /grid-template-rows:0fr/)
+  assert.match(home, /grid-template-rows:1fr/)
+  assert.match(home, /ArrowDown/)
+  assert.match(home, /ArrowUp/)
+  assert.match(home, /setAttribute\([`'"]aria-hidden[`'"],String\(!\w+\)\)/)
+  assert.doesNotMatch(home, /<details/)
+  assert.doesNotMatch(home, /data-accordion(?:-|=)/)
+  assert.doesNotMatch(home, /kiwa-ui/)
   assert.match(
     home,
     /Chat with your SEO data to find out what works and what doesn&#39;t\./,

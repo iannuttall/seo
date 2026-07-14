@@ -1,5 +1,7 @@
 import { effectiveSnippetControl } from '../../robots-directives.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import type { CrawlAgentDiscovery } from './agent-discovery.js'
+import { isEntityEvidenceSchemaType } from './entity-readiness.js'
 import type {
   CrawlAiBotAccess,
   CrawlAiResourceSignal,
@@ -97,6 +99,9 @@ function sampleUrls(
 }
 
 export function aiReadiness(report: CrawlReport): AiReadinessReport {
+  const agentDiscovery = (
+    report as CrawlReport & { agentDiscovery?: CrawlAgentDiscovery }
+  ).agentDiscovery
   const pages = indexablePages(report)
   const pageCount = pages.length
   const hasIndexablePages = pageCount > 0
@@ -135,9 +140,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
   const langPages = pages.filter((page) => page.lang)
   const entityPages = pages.filter(
     (page) =>
-      page.schemaTypes?.some((type) =>
-        /^(Organization|LocalBusiness|Person|Product|WebSite)$/i.test(type),
-      ) ||
+      page.schemaTypes?.some(isEntityEvidenceSchemaType) ||
       (page.schemaSameAs?.length ?? 0) > 0 ||
       (page.socialProfileLinks?.length ?? 0) > 0,
   )
@@ -251,12 +254,15 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         score: 0,
         title: 'llms.txt is optional',
         plainEnglish: report.ai?.llmsTxt?.exists
-          ? 'An optional llms.txt file was found. Google says it has no positive or negative Search impact.'
+          ? agentDiscovery?.llmsTxt
+            ? `An optional llms.txt file was found and its body was checked. It declared ${agentDiscovery.llmsTxt.links.length} links, ${agentDiscovery.llmsTxt.duplicateLinks.length} duplicates, and ${agentDiscovery.llmsTxt.missingCrawlRoutes.length} links outside the crawled route inventory. Google says llms.txt has no positive or negative Search impact.`
+            : 'An optional llms.txt file was found. Its body was not validated in this crawl. Google says it has no positive or negative Search impact.'
           : 'No llms.txt file was found. Google says the file is not needed for Search and does not affect visibility.',
         action:
           'No SEO action is required. Generate one only for a specific agent or service that consumes it.',
         evidence: {
           llmsTxt: report.ai?.llmsTxt,
+          validation: agentDiscovery?.llmsTxt,
           googleSearchImpact: 'none',
           guidanceUrl:
             'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
@@ -428,6 +434,69 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
           : 'No crawled pages were available, so status and indexability were not evaluated.',
         action:
           'Fix 4xx/5xx pages, accidental noindex, and blocked internal URLs before expanding AI discovery work.',
+      }),
+    ]),
+    section('agent-content', 'Agent content observations', [
+      check({
+        id: 'markdown-alternates',
+        section: 'agent-content',
+        maxScore: 0,
+        score: 0,
+        evaluated: Boolean(agentDiscovery),
+        title: agentDiscovery
+          ? 'Markdown alternatives were checked'
+          : 'Markdown alternatives were not evaluated',
+        plainEnglish: agentDiscovery
+          ? `${agentDiscovery.markdownAlternates.advertisedPages} of ${agentDiscovery.markdownAlternates.eligibleHtmlPages} successful HTML pages advertised one Markdown alternative. ${agentDiscovery.markdownAlternates.exactByteMatches} explicit responses matched content negotiation byte for byte.`
+          : 'This crawl does not include the focused representation checks, so it cannot say whether HTML pages publish stable Markdown alternatives.',
+        action:
+          'Use the focused agent-readiness report when you need route coverage, content negotiation, byte stability, or extraction-quality evidence.',
+        evidence: agentDiscovery
+          ? {
+              eligibleHtmlPages:
+                agentDiscovery.markdownAlternates.eligibleHtmlPages,
+              advertisedPages:
+                agentDiscovery.markdownAlternates.advertisedPages,
+              exactByteMatches:
+                agentDiscovery.markdownAlternates.exactByteMatches,
+              stableResponses:
+                agentDiscovery.markdownAlternates.stableResponses,
+            }
+          : undefined,
+      }),
+      check({
+        id: 'agent-skills-discovery',
+        section: 'agent-content',
+        maxScore: 0,
+        score: 0,
+        evaluated: Boolean(agentDiscovery),
+        title: agentDiscovery
+          ? 'Agent Skills discovery was checked'
+          : 'Agent Skills discovery was not evaluated',
+        plainEnglish: agentDiscovery
+          ? `${agentDiscovery.agentSkills.skills.length} published skill${agentDiscovery.agentSkills.skills.length === 1 ? '' : 's'} were found. ${agentDiscovery.agentSkills.skills.filter((skill) => skill.digestMatches).length} matched their declared SHA-256 digest.`
+          : 'This crawl checked common legacy descriptor paths but did not validate the Agent Skills discovery index or its file digests.',
+        action:
+          'Publish Agent Skills only for real reusable capabilities. Generate the index digest from the exact deployed SKILL.md bytes.',
+        evidence: agentDiscovery?.agentSkills as
+          | Record<string, unknown>
+          | undefined,
+      }),
+      check({
+        id: 'agent-content-profile',
+        section: 'agent-content',
+        maxScore: 0,
+        score: 0,
+        evaluated: Boolean(agentDiscovery),
+        title: agentDiscovery
+          ? 'The content profile was selected explicitly'
+          : 'No focused agent-readiness profile was selected',
+        plainEnglish: agentDiscovery
+          ? 'Document access, representations, discovery, identity, and extraction quality were evaluated. API, application, and commerce checks were marked not applicable rather than failed.'
+          : 'A normal crawl does not assume that a content site also exposes a public API, remote agent endpoint, or checkout.',
+        action:
+          'Run a different profile only when that public capability really exists.',
+        evidence: agentDiscovery?.profileApplicability,
       }),
     ]),
     section('crawl-completeness', 'Crawl completeness', [

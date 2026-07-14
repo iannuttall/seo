@@ -52,6 +52,8 @@ export type GeoGapResult = {
     queuedUrls: number
     crawledUrls: number
     skippedUrls: number
+    coverageAffectingSkippedUrls: number
+    nonImpactingSkippedUrls: number
     failedRequests: number
     extractionFailures: number
     partialReasons: Array<
@@ -60,7 +62,7 @@ export type GeoGapResult = {
       | 'request-evidence-partial'
       | 'request-evidence-unavailable'
       | 'page-limit-reached'
-      | 'skipped-urls'
+      | 'coverage-affecting-skips'
       | 'failed-requests'
       | 'extraction-failures'
     >
@@ -165,7 +167,9 @@ function partialReasons(
     reasons.push('request-evidence-unavailable')
   }
   if (report.summary.pageLimitReached) reasons.push('page-limit-reached')
-  if (report.summary.skippedUrls > 0) reasons.push('skipped-urls')
+  if (report.summary.skippedUrlsByImpact.coverageAffecting > 0) {
+    reasons.push('coverage-affecting-skips')
+  }
   if (report.summary.failedRequests > 0) reasons.push('failed-requests')
   if (report.summary.extractionFailures > 0) {
     reasons.push('extraction-failures')
@@ -205,6 +209,9 @@ export function geoGapsReport(
       queuedUrls: report.summary.queuedUrls,
       crawledUrls: report.summary.crawledUrls,
       skippedUrls: report.summary.skippedUrls,
+      coverageAffectingSkippedUrls:
+        report.summary.skippedUrlsByImpact.coverageAffecting,
+      nonImpactingSkippedUrls: report.summary.skippedUrlsByImpact.nonImpacting,
       failedRequests: report.summary.failedRequests,
       extractionFailures: report.summary.extractionFailures,
       partialReasons: reasons,

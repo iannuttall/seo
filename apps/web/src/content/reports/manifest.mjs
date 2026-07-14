@@ -1,5 +1,6 @@
 export const reportIds = [
   'affected-urls',
+  'agent-readiness',
   'ai-readiness',
   'ai-referrals',
   'ai-search-scorecard',

@@ -1,6 +1,8 @@
 export const reportNextStepIntros: Record<string, string> = {
   'affected-urls':
     'The URL list is ready for inspection, not bulk editing. Open representative pages, confirm that the rule conflicts with their purpose, then recrawl the same scope after the fix.',
+  'agent-readiness':
+    'Fix shared representation failures before patching one generated file. Repeat the same route scope after deployment and confirm the explicit Markdown URL, negotiated response, discovery files, and identity evidence now agree.',
   'ai-readiness':
     "Start with hard access, indexability or snippet conflicts that work against the publisher's intent. Keep referral traffic and assistant mentions as separate measurements because this audit cannot observe either one.",
   'ai-referrals':
@@ -106,6 +108,8 @@ export const reportNextStepIntros: Record<string, string> = {
 }
 
 export const reportScheduleNotes: Partial<Record<string, string>> = {
+  'agent-readiness':
+    'This is a useful post-deploy check for documentation and content sites. Ask your agent to repeat the same route scope and report new failures, resolved warnings, and any route that disappeared from the HTML or Markdown inventory.',
   'ai-referrals':
     "Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete GA4 periods because today's traffic can still be arriving or attributed.",
   'compare-crawls':

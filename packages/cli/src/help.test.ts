@@ -493,6 +493,10 @@ test('auth status reports a service account identity without printing the key', 
 test('long help and crawler command help are available', async () => {
   const all = await runSeo(['help', 'all'])
   assert.match(all, /seo crawl\s+Crawl a site/)
+  assert.match(
+    all,
+    /seo agent-readiness\s+Check content-site readiness for AI agents/,
+  )
   assert.match(all, /seo crawl-reports\s+List saved crawl reports/)
 
   for (const args of [
@@ -508,11 +512,23 @@ test('long help and crawler command help are available', async () => {
     ['decaying', '--help'],
     ['pseo', 'audit', '--help'],
     ['ai-referrals', '--help'],
+    ['agent-readiness', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
   }
+})
+
+test('agent readiness help exposes URL and saved-report paths', async () => {
+  const output = await runSeo(['agent-readiness', '--help'])
+
+  assert.match(output, /Public site URL to check/)
+  assert.match(output, /--report-id/)
+  assert.match(output, /--project/)
+  assert.match(output, /--max-pages/)
+  assert.match(output, /--json/)
+  assert.doesNotMatch(output, /aggregate score/i)
 })
 
 test('AI referrals help exposes bounded evidence controls', async () => {

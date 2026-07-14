@@ -175,6 +175,11 @@ test('createCrawlReport summarizes pages and grouped issues', () => {
   assert.equal(report.summary.queuedUrls, 2)
   assert.equal(report.summary.crawledUrls, 2)
   assert.equal(report.summary.skippedUrls, 0)
+  assert.deepEqual(report.summary.skipReasons, [])
+  assert.deepEqual(report.summary.skippedUrlsByImpact, {
+    coverageAffecting: 0,
+    nonImpacting: 0,
+  })
   assert.equal(report.summary.failedUrls, 1)
   assert.equal(report.summary.observedInternalLinks, 1)
   assert.equal(report.summary.highIssues, 2)
@@ -269,6 +274,9 @@ test('legacy report normalization removes unsupported stored scores', () => {
   legacyPage.geoScore = 64
   legacy.summary.healthScore = 82
   legacy.summary.geoReadinessScore = 64
+  legacy.summary.skippedUrls = 3
+  delete (legacy.summary as Partial<CrawlReport['summary']>).skipReasons
+  delete (legacy.summary as Partial<CrawlReport['summary']>).skippedUrlsByImpact
   delete (legacy as Partial<CrawlReport>).requests
   delete (legacy as Partial<CrawlReport>).requestEvidenceStatus
 
@@ -279,6 +287,51 @@ test('legacy report normalization removes unsupported stored scores', () => {
   assert.equal('geoScore' in (normalized.pages[0] ?? {}), false)
   assert.equal('healthScore' in normalized.summary, false)
   assert.equal('geoReadinessScore' in normalized.summary, false)
+  assert.deepEqual(normalized.summary.skipReasons, [
+    {
+      reason: 'legacy-unclassified',
+      impact: 'coverage-affecting',
+      count: 3,
+    },
+  ])
+  assert.deepEqual(normalized.summary.skippedUrlsByImpact, {
+    coverageAffecting: 3,
+    nonImpacting: 0,
+  })
+})
+
+test('createCrawlReport classifies skip reasons deterministically', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    stats: {
+      skippedUrls: 5,
+      skipReasonCounts: {
+        'queue-safety-limit': 1,
+        'off-origin': 2,
+        'asset-url': 1,
+      },
+    },
+  })
+
+  assert.equal(report.summary.skippedUrls, 5)
+  assert.deepEqual(report.summary.skipReasons, [
+    { reason: 'asset-url', impact: 'non-impacting', count: 1 },
+    { reason: 'off-origin', impact: 'non-impacting', count: 2 },
+    {
+      reason: 'queue-safety-limit',
+      impact: 'coverage-affecting',
+      count: 1,
+    },
+    {
+      reason: 'legacy-unclassified',
+      impact: 'coverage-affecting',
+      count: 1,
+    },
+  ])
+  assert.deepEqual(report.summary.skippedUrlsByImpact, {
+    coverageAffecting: 2,
+    nonImpacting: 3,
+  })
 })
 
 test('createCrawlReport orders request and document evidence deterministically', () => {

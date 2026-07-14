@@ -7,6 +7,10 @@ export type HumanReportCommand = {
 // the shortest equivalent path for someone working directly in a terminal.
 export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
   {
+    'agent-readiness': {
+      command: 'seo agent-readiness https://example.com --max-pages 100 --json',
+      note: 'Check the public content-site contract with a fresh bounded crawl.',
+    },
     'ai-readiness': {
       command: 'seo ai-readiness --project example',
       note: 'Review AI search access and page signals from the latest crawl.',

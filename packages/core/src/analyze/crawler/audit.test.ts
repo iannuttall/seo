@@ -396,7 +396,15 @@ test('auditCrawlPages flags link issues', () => {
       page({
         url: 'https://example.com/source',
         externalLinkChecks: [
-          { url: 'https://external.example/missing', status: 404 },
+          {
+            url: 'https://external.example/missing',
+            status: 404,
+            state: 'confirmed-broken',
+            attempts: [
+              { method: 'HEAD', status: 404 },
+              { method: 'GET', status: 404 },
+            ],
+          },
         ],
       }),
       page({
@@ -433,6 +441,40 @@ test('auditCrawlPages flags link issues', () => {
       'deep_page',
       'weak_internal_links_to_valuable_page',
     ],
+  )
+})
+
+test('auditCrawlPages does not turn uncertain external checks into issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/source',
+      externalLinkChecks: [
+        {
+          url: 'https://external.example/transient',
+          status: 200,
+          state: 'transient',
+          attempts: [
+            { method: 'HEAD', status: 404 },
+            { method: 'GET', status: 200 },
+          ],
+        },
+        {
+          url: 'https://external.example/blocked',
+          status: 403,
+          state: 'provider-blocked',
+          attempts: [{ method: 'HEAD', status: 403 }],
+        },
+        {
+          url: 'https://external.example/legacy',
+          status: 404,
+        },
+      ],
+    }),
+  ])
+
+  assert.equal(
+    issues.some((issue) => issue.ruleId === 'broken_external_link'),
+    false,
   )
 })
 

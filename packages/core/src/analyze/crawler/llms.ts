@@ -1,4 +1,5 @@
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import type { CrawlAgentDiscovery } from './agent-discovery.js'
 import type { CrawlReport } from './report.js'
 
 export type LlmsAuditIssue = {
@@ -112,8 +113,86 @@ function candidatePages(
 
 export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
   const llmsTxt = report.ai?.llmsTxt
+  const validation = (
+    report as CrawlReport & { agentDiscovery?: CrawlAgentDiscovery }
+  ).agentDiscovery?.llmsTxt
   const pages = candidatePages(report)
   const issues: LlmsAuditIssue[] = []
+
+  if (
+    validation?.exists &&
+    !/^\s*(?:text\/plain|text\/markdown)\b/iu.test(validation.contentType ?? '')
+  ) {
+    issues.push({
+      id: 'llms-content-type',
+      severity: 'medium',
+      title: 'llms.txt uses an unexpected content type',
+      plainEnglish: `The file returned ${validation.contentType ?? 'no content type'} instead of plain text or Markdown.`,
+      action:
+        'Serve the deterministic text file as text/plain or text/markdown so consumers do not mistake it for HTML.',
+      evidence: { contentType: validation.contentType },
+    })
+  }
+  if (validation?.exists && validation.headingCount === 0) {
+    issues.push({
+      id: 'llms-structure',
+      severity: 'medium',
+      title: 'llms.txt has no useful heading structure',
+      plainEnglish:
+        'The fetched file did not contain a level-one or level-two Markdown heading.',
+      action:
+        'Start with one clear title, then group a short list of useful entry points under descriptive headings.',
+    })
+  }
+  if (validation?.duplicateLinks.length) {
+    issues.push({
+      id: 'llms-duplicate-links',
+      severity: 'low',
+      title: 'llms.txt repeats the same link',
+      plainEnglish: `${validation.duplicateLinks.length} URL${validation.duplicateLinks.length === 1 ? ' appears' : 's appear'} more than once.`,
+      action:
+        'Remove duplicate entries so the file remains short and deliberate.',
+      evidence: { urls: validation.duplicateLinks },
+    })
+  }
+  const brokenLinks =
+    validation?.links.filter(
+      (link) =>
+        !link.status || link.status < 200 || link.status >= 400 || link.error,
+    ) ?? []
+  if (brokenLinks.length) {
+    issues.push({
+      id: 'llms-broken-links',
+      severity: 'medium',
+      title: 'llms.txt links did not resolve',
+      plainEnglish: `${brokenLinks.length} declared link${brokenLinks.length === 1 ? '' : 's'} did not return a usable response during this audit.`,
+      action:
+        'Update or remove stale entries, then rerun the focused agent-readiness report.',
+      evidence: { links: brokenLinks },
+    })
+  }
+  if (validation?.missingCrawlRoutes.length) {
+    issues.push({
+      id: 'llms-outside-crawl',
+      severity: 'low',
+      title: 'llms.txt links fall outside the crawl inventory',
+      plainEnglish: `${validation.missingCrawlRoutes.length} same-origin route${validation.missingCrawlRoutes.length === 1 ? ' was' : 's were'} not present in the retained crawl.`,
+      action:
+        'Confirm those routes are intentional and indexable, or remove stale declarations.',
+      evidence: { urls: validation.missingCrawlRoutes },
+    })
+  }
+  if (validation?.repeatedHashStable === false) {
+    issues.push({
+      id: 'llms-unstable-body',
+      severity: 'medium',
+      title: 'llms.txt changed between repeated requests',
+      plainEnglish:
+        'Two requests in the same audit returned different SHA-256 digests.',
+      action:
+        'Generate the file during the build and remove timestamps, random ordering, or runtime rewriting.',
+    })
+  }
 
   if (pages.length < 3) {
     issues.push({
@@ -140,7 +219,11 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
     guidanceUrl:
       'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
     headline: llmsTxt?.exists
-      ? 'An optional llms.txt file is present. It has no Google Search visibility impact.'
+      ? validation
+        ? issues.length
+          ? `The optional llms.txt file was validated and ${issues.length} content or link issue${issues.length === 1 ? ' needs' : 's need'} review. It has no Google Search visibility impact.`
+          : `The optional llms.txt file was validated with ${validation.links.length} resolving link${validation.links.length === 1 ? '' : 's'} and a stable body. It has no Google Search visibility impact.`
+        : 'An optional llms.txt file is present, but its body was not validated in this crawl. It has no Google Search visibility impact.'
       : 'No llms.txt file was found. This is not an SEO issue and requires no action.',
     issues,
     recommendedPages: pages.slice(0, 25).map((page) => ({

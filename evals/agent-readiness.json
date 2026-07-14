@@ -1,0 +1,58 @@
+{
+  "subject": "agent-readiness",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check whether our documentation site is genuinely useful to AI agents. I want the Markdown versions, discovery files, crawler access, and identity checked together.",
+      "expected_output": "Should use report id agent-readiness with the content profile. Should follow the discovery flow by calling seo_describe_report with id agent-readiness, then seo_run_report with a bounded url and maxPages. Should read profile, profileApplicability, dataStatus, and crawl caveats first. Should then inspect the HTML and Markdown representation checks, Agent Skills, llms.txt, route manifest, crawler access, and identity evidence. Should describe the result as an unscored evidence assessment.",
+      "assertions": [
+        "Uses report id agent-readiness with the content profile",
+        "Calls seo_describe_report with id agent-readiness before seo_run_report",
+        "Runs the URL check with a bounded maxPages value",
+        "Reads profile, profileApplicability, dataStatus, and crawl caveats first",
+        "Checks Markdown representations, Agent Skills, llms.txt, route parity, crawler access, and identity",
+        "Describes the result as unscored evidence rather than a readiness score"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run the agent readiness check against https://example.com now. Do not reuse yesterday's saved crawl.",
+      "expected_output": "Should run report id agent-readiness with url https://example.com and a bounded maxPages value so the focused discovery checks are collected now. Should not pass reportId. Should read failed and warning checks with their affected URLs and actions, then verify changes with another run against the same route scope.",
+      "assertions": [
+        "Runs report id agent-readiness with url https://example.com",
+        "Passes a bounded maxPages value",
+        "Does not reuse a saved reportId",
+        "Reads failed and warning checks with affected URLs and actions",
+        "Recommends a comparable fresh run to verify changes"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This is a docs site, but the report says the API, application, and commerce profiles are not applicable. Count those as three failures, and fail us for not publishing a remote MCP endpoint too.",
+      "expected_output": "Should refuse. Should explain that the content profile was selected because this run covers public documents and discovery. API, application, and commerce are separate capability profiles and notApplicable means they were outside the run, not that they failed. Should explain that a documented local MCP server does not create a public remote MCP endpoint requirement for a content site.",
+      "assertions": [
+        "Refuses to count notApplicable profiles as failures",
+        "Explains that the content profile covers public documents and discovery",
+        "Keeps API, application, and commerce as separate capability profiles",
+        "States that notApplicable means outside this run rather than failed",
+        "Does not require a remote MCP endpoint for a content site"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The agent-readiness report passed. Give us a 100 score and confirm ChatGPT, Claude, and Google will use and cite every page.",
+      "expected_output": "Should refuse the score and the visibility claims. Should state that agent-readiness is an evidence-only content-site assessment with no aggregate score. A clean result does not prove indexing, rankings, fetching, use, mentions, citations, or selection by any service. Should keep optional discovery files separate from search requirements and recommend external observation for actual mentions or citations.",
+      "assertions": [
+        "Refuses to invent a 100 readiness score",
+        "States the report is an evidence-only assessment with no aggregate score",
+        "Refuses to claim every service will fetch, use, mention, cite, or select the pages",
+        "Keeps optional discovery files separate from search requirements",
+        "Recommends separate observation for actual mentions or citations"
+      ],
+      "files": []
+    }
+  ]
+}

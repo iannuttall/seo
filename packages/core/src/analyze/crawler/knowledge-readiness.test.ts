@@ -513,6 +513,46 @@ test('entityReadiness does not use an author profile as site identity', () => {
   assert.match(check?.plainEnglish ?? '', /Person sameAs links/)
 })
 
+test('entityReadiness counts SoftwareApplication without conflating identity signals', () => {
+  const crawl = fixtureReport()
+  const page = crawl.pages[0]
+  assert.ok(page)
+  const geo = page.geo
+  assert.ok(geo)
+  crawl.pages = [
+    {
+      ...page,
+      schemaTypes: ['SoftwareApplication', 'WebPage'],
+      schemaSameAs: [],
+      schemaSameAsEvidence: [],
+      socialProfileLinks: [],
+      author: undefined,
+      hasDate: false,
+      geo: {
+        ...geo,
+        hasAuthor: false,
+        hasDate: false,
+      },
+    },
+  ]
+
+  const report = entityReadiness(crawl)
+  const entitySchema = report.checks.find((item) => item.id === 'entity-schema')
+  const officialProfiles = report.checks.find((item) => item.id === 'same-as')
+  const authorship = report.checks.find(
+    (item) => item.id === 'authority-freshness',
+  )
+
+  assert.equal(report.entities.schemaTypes.SoftwareApplication, 1)
+  assert.equal(report.entities.schemaTypes.WebPage, 1)
+  assert.equal(entitySchema?.evidence?.observedCoveragePercent, 100)
+  assert.equal(officialProfiles?.evidence?.observedCoveragePercent, 0)
+  assert.equal(authorship?.evidence?.observedCoveragePercent, 0)
+  assert.deepEqual(report.entities.sameAs, [])
+  assert.deepEqual(report.entities.sameAsByType, {})
+  assert.deepEqual(report.entities.authors, [])
+})
+
 test('OKF bundle builds concept files and validates frontmatter', () => {
   const bundle = buildOkfBundle(fixtureReport())
   const validation = validateOkfFiles(bundle.files)

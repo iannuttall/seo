@@ -97,7 +97,8 @@ export type CrawlPageSnapshot = {
   sampleExternalLinks?: string[]
   internalAnchorSamples?: Array<{ href: string; text: string }>
   externalAnchorSamples?: Array<{ href: string; text: string }>
-  externalLinkChecks?: Array<{ url: string; status?: number; error?: string }>
+  markdownAlternates?: string[]
+  externalLinkChecks?: ExternalLinkCheck[]
   schemaTypes?: string[]
   structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>
   googleRichResults?: import('../../types.js').GoogleRichResultAssessment[]
@@ -167,6 +168,29 @@ export type CrawlPageSnapshot = {
     totalUsers: number
     conversions: number
   }
+}
+
+export type ExternalLinkCheckState =
+  | 'available'
+  | 'confirmed-broken'
+  | 'transient'
+  | 'provider-blocked'
+  | 'rate-limited'
+  | 'method-rejected'
+  | 'unavailable'
+
+export type ExternalLinkCheckAttempt = {
+  method: 'HEAD' | 'GET'
+  status?: number
+  error?: string
+}
+
+export type ExternalLinkCheck = {
+  url: string
+  status?: number
+  error?: string
+  state?: ExternalLinkCheckState
+  attempts?: ExternalLinkCheckAttempt[]
 }
 
 export type CrawlResponseObservation = {

@@ -449,12 +449,14 @@ export function auditCrawlPages(
       }
     }
     for (const link of page.externalLinkChecks ?? []) {
-      if (!isBrokenLinkStatus(link.status)) continue
+      if (link.state !== 'confirmed-broken') continue
       issues.push(
         issue('broken_external_link', page, link.url, {
           url: link.url,
           status: link.status,
           error: link.error,
+          state: link.state,
+          attempts: link.attempts,
         }),
       )
     }

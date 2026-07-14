@@ -55,6 +55,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
   const ids = reports.map((report) => report.id)
   assert.deepEqual(ids, [
     'affected-urls',
+    'agent-readiness',
     'ai-readiness',
     'ai-referrals',
     'ai-search-scorecard',

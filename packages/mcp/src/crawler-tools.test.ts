@@ -196,7 +196,9 @@ test('crawler MCP structured output schema stays stable', async () => {
         'queuedUrls',
         'requestByStatus',
         'responseRequests',
+        'skipReasons',
         'skippedUrls',
+        'skippedUrlsByImpact',
         'statusErrors',
         'totalPages',
       ],
@@ -328,6 +330,7 @@ test('crawler MCP structured output schema stays stable', async () => {
     const geoSource = geo.source as JsonRecord
     assert.deepEqual(keys(geoSource), [
       'configuredMaxPages',
+      'coverageAffectingSkippedUrls',
       'crawlStatus',
       'crawledUrls',
       'definitionId',
@@ -335,6 +338,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       'extractionFailures',
       'failedRequests',
       'generatedAt',
+      'nonImpactingSkippedUrls',
       'pageLimitReached',
       'partialReasons',
       'provider',
@@ -350,6 +354,47 @@ test('crawler MCP structured output schema stays stable', async () => {
       String((geoResult.content as Array<JsonRecord>)[0]?.text),
       /Returned 1 of 1.*evidence is complete/,
     )
+
+    const agentReadinessTool = tools.get('seo_agent_readiness')
+    assert.ok(agentReadinessTool)
+    assert.deepEqual(keys(agentReadinessTool.config.inputSchema), [
+      'fetchIntervalCap',
+      'fetchIntervalMs',
+      'maxPages',
+      'refresh',
+      'reportId',
+      'site',
+      'url',
+    ])
+    const agentReadinessResult = await agentReadinessTool.handler({
+      url: fixture.baseUrl,
+      maxPages: 1,
+    })
+    const agentReadiness = agentReadinessResult.structuredContent as JsonRecord
+    assert.equal(agentReadiness.profile, 'content')
+    assert.equal(agentReadiness.assessment, 'evidence-only')
+    assert.equal('score' in agentReadiness, false)
+    const profileApplicability =
+      agentReadiness.profileApplicability as JsonRecord
+    for (const profile of ['api', 'application', 'commerce']) {
+      assert.equal(
+        (profileApplicability[profile] as JsonRecord).status,
+        'notApplicable',
+      )
+    }
+    const ambiguousAgentReadiness = await agentReadinessTool.handler({
+      url: fixture.baseUrl,
+      reportId: 'crawl-example',
+    })
+    assert.equal(ambiguousAgentReadiness.isError, true)
+    assert.deepEqual(ambiguousAgentReadiness.structuredContent, {
+      ok: false,
+      error: {
+        code: 'INVALID_INPUT',
+        message: 'Use either url or reportId, not both.',
+        retryable: false,
+      },
+    })
 
     const okfTool = tools.get('seo_okf_build')
     assert.ok(okfTool)

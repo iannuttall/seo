@@ -357,3 +357,45 @@ test('aiSearchScorecard separates observed evidence from derived findings', () =
     assert.ok(check.verification.length > 0)
   }
 })
+
+test('aiSearchScorecard recognizes software identity without treating it as site identity', () => {
+  const card = aiSearchScorecard(
+    cleanReport({
+      pages: [
+        cleanPage('https://example.com/', {
+          schemaTypes: ['SoftwareApplication', 'WebPage'],
+          schemaSameAs: [],
+          schemaSameAsEvidence: [],
+          socialProfileLinks: [],
+        }),
+      ],
+    }),
+  )
+  const identity = card.checks.find((check) => check.id === 'entity-identity')
+
+  assert.equal(identity?.status, 'warn')
+  assert.deepEqual(identity?.observed.schemaTypes, {
+    SoftwareApplication: 1,
+    WebPage: 1,
+  })
+  assert.deepEqual(identity?.observed.siteSameAs, [])
+  assert.match(identity?.finding ?? '', /Entity schema is present/)
+})
+
+test('aiSearchScorecard does not count a page-level type as entity identity', () => {
+  const card = aiSearchScorecard(
+    cleanReport({
+      pages: [
+        cleanPage('https://example.com/', {
+          schemaTypes: ['WebPage'],
+          schemaSameAs: [],
+          schemaSameAsEvidence: [],
+          socialProfileLinks: [],
+        }),
+      ],
+    }),
+  )
+  const identity = card.checks.find((check) => check.id === 'entity-identity')
+
+  assert.equal(identity?.status, 'fail')
+})

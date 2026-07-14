@@ -1,5 +1,33 @@
 import type { CrawlReport } from './report.js'
 
+const ENTITY_EVIDENCE_SCHEMA_TYPES = new Set([
+  'organization',
+  'localbusiness',
+  'person',
+  'product',
+  'softwareapplication',
+  'website',
+])
+
+const SITE_IDENTITY_SCHEMA_TYPES = new Set(['organization', 'localbusiness'])
+
+const PROFILE_IDENTITY_SCHEMA_TYPES = new Set([
+  ...SITE_IDENTITY_SCHEMA_TYPES,
+  'person',
+])
+
+export function isEntityEvidenceSchemaType(type: string): boolean {
+  return ENTITY_EVIDENCE_SCHEMA_TYPES.has(type.toLowerCase())
+}
+
+export function isSiteIdentitySchemaType(type: string): boolean {
+  return SITE_IDENTITY_SCHEMA_TYPES.has(type.toLowerCase())
+}
+
+function isProfileIdentitySchemaType(type: string): boolean {
+  return PROFILE_IDENTITY_SCHEMA_TYPES.has(type.toLowerCase())
+}
+
 export type EntityReadinessCheck = {
   id: string
   status: 'info'
@@ -50,27 +78,21 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
     }
   }
   const entitySchemaPages = pages.filter((page) =>
-    page.schemaTypes?.some((type) =>
-      /^(Organization|LocalBusiness|Person|Product|WebSite)$/i.test(type),
-    ),
+    page.schemaTypes?.some(isEntityEvidenceSchemaType),
   )
   const sameAsEvidence = pages
     .flatMap((page) => page.schemaSameAsEvidence ?? [])
     .filter((evidence) =>
-      evidence.subjectTypes.some((type) =>
-        /^(Organization|LocalBusiness|Person)$/i.test(type),
-      ),
+      evidence.subjectTypes.some(isProfileIdentitySchemaType),
     )
   const siteSameAsEvidence = sameAsEvidence.filter((evidence) =>
-    evidence.subjectTypes.some((type) =>
-      /^(Organization|LocalBusiness)$/i.test(type),
-    ),
+    evidence.subjectTypes.some(isSiteIdentitySchemaType),
   )
   const sameAs = unique(sameAsEvidence.map((evidence) => evidence.url))
   const sameAsByType: Record<string, string[]> = {}
   for (const evidence of sameAsEvidence) {
     for (const type of evidence.subjectTypes) {
-      if (!/^(Organization|LocalBusiness|Person)$/i.test(type)) continue
+      if (!isProfileIdentitySchemaType(type)) continue
       sameAsByType[type] = unique([...(sameAsByType[type] ?? []), evidence.url])
     }
   }
@@ -88,9 +110,9 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
       check: {
         id: 'entity-schema',
         title: 'Entity schema is present',
-        plainEnglish: `${pct(entitySchemaPages.length, total)}% of evaluated indexable pages include Organization, LocalBusiness, Person, Product, or WebSite schema.`,
+        plainEnglish: `${pct(entitySchemaPages.length, total)}% of evaluated indexable pages include Organization, LocalBusiness, Person, Product, SoftwareApplication, or WebSite schema.`,
         action:
-          'Add accurate entity schema to the homepage and key product, author, organization, and local pages.',
+          'Add accurate schema only where it describes the software, website, organization, person, product, or local business shown on the page.',
         evidence: { schemaTypes },
         urls: pages
           .filter((page) => !entitySchemaPages.includes(page))

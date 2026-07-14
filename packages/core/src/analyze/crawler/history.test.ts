@@ -173,6 +173,57 @@ test('compareCrawlReports marks complete matching inputs as comparable', () => {
   assert.deepEqual(diff.caveats, [])
 })
 
+test('compareCrawlReports keeps deliberate skips out of partial evidence', () => {
+  const build = (id: string, generatedAt: string) =>
+    createCrawlReport({
+      id,
+      generatedAt,
+      config: { url: 'https://example.com/' },
+      pages: [page({ url: 'https://example.com/' })],
+      requests: [response('https://example.com/')],
+      stats: {
+        skippedUrls: 2,
+        skipReasonCounts: {
+          'asset-url': 1,
+          'off-origin': 1,
+        },
+      },
+    })
+
+  const diff = compareCrawlReports({
+    before: build('crawl_before_skips', '2026-06-01T00:00:00.000Z'),
+    after: build('crawl_after_skips', '2026-06-02T00:00:00.000Z'),
+  })
+
+  assert.equal(diff.before.completeness.status, 'complete')
+  assert.equal(diff.after.completeness.status, 'complete')
+  assert.deepEqual(diff.before.completeness.skippedUrlsByImpact, {
+    coverageAffecting: 0,
+    nonImpacting: 2,
+  })
+  assert.deepEqual(diff.before.completeness.reasons, [])
+  assert.equal(diff.completeness.status, 'complete')
+})
+
+test('compareCrawlReports marks coverage-affecting skips as partial', () => {
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page({ url: 'https://example.com/' })],
+    requests: [response('https://example.com/')],
+    stats: {
+      skippedUrls: 1,
+      skipReasonCounts: { 'robots-uncertain': 1 },
+    },
+  })
+
+  const diff = compareCrawlReports({ before: report, after: report })
+
+  assert.equal(diff.before.completeness.status, 'partial')
+  assert.deepEqual(diff.before.completeness.reasons, [
+    'coverage-affecting-urls-skipped',
+  ])
+})
+
 test('compareCrawlReports exposes caps, truncation, and scope caveats', () => {
   const before = createCrawlReport({
     id: 'crawl_before_partial',

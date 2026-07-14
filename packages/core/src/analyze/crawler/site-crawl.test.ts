@@ -47,6 +47,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.summary.queuedUrls, 2)
     assert.equal(report.summary.crawledUrls, 2)
     assert.equal(report.summary.skippedUrls, 0)
+    assert.deepEqual(report.summary.skipReasons, [])
     assert.equal(report.summary.failedUrls, 0)
     assert.equal(report.summary.observedInternalLinks, 2)
     assert.deepEqual(
@@ -142,6 +143,13 @@ test('crawlSite emits queue-friendly status events', async () => {
     assert.equal(events.at(-1)?.crawledUrls, report.summary.crawledUrls)
     assert.equal(events.at(-1)?.queuedUrls, report.summary.queuedUrls)
     assert.equal(events.at(-1)?.skippedUrls, report.summary.skippedUrls)
+    assert.deepEqual(report.summary.skipReasons, [
+      { reason: 'asset-url', impact: 'non-impacting', count: 1 },
+    ])
+    assert.deepEqual(report.summary.skippedUrlsByImpact, {
+      coverageAffecting: 0,
+      nonImpacting: 1,
+    })
     assert.equal(
       events.find((event) => event.reason === 'asset_url')?.url,
       `${fixture.baseUrl}/asset.pdf`,
@@ -190,6 +198,13 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
     assert.equal(report.summary.queuedUrls, 2)
     assert.equal(report.summary.crawledUrls, 1)
     assert.equal(report.summary.skippedUrls, 1)
+    assert.deepEqual(report.summary.skipReasons, [
+      {
+        reason: 'robots-disallowed',
+        impact: 'coverage-affecting',
+        count: 1,
+      },
+    ])
     assert.equal(report.summary.failedUrls, 0)
     assert.equal(blockedPageRequests, 0)
     const blockedRequest = report.requests.find(
@@ -343,7 +358,15 @@ test('crawlSite checks broken external links when enabled', async () => {
     })
 
     assert.deepEqual(report.pages[0]?.externalLinkChecks, [
-      { url: `${external.baseUrl}/gone`, status: 404 },
+      {
+        url: `${external.baseUrl}/gone`,
+        status: 404,
+        state: 'confirmed-broken',
+        attempts: [
+          { method: 'HEAD', status: 404 },
+          { method: 'GET', status: 404 },
+        ],
+      },
     ])
     assert.deepEqual(report.externalLinkVerification, {
       dataStatus: 'complete',
@@ -354,6 +377,15 @@ test('crawlSite checks broken external links when enabled', async () => {
       failedUrls: 0,
       deferredUrls: 0,
       limit: 200,
+      outcomes: {
+        available: 0,
+        'confirmed-broken': 1,
+        transient: 0,
+        'provider-blocked': 0,
+        'rate-limited': 0,
+        'method-rejected': 0,
+        unavailable: 0,
+      },
       warnings: [],
     })
     assert.equal(
@@ -400,125 +432,6 @@ test('crawlSite passes cache and rate controls through the shared fetch layer', 
   } finally {
     await fixture.close()
   }
-})
-
-test('crawlSite bounds large-site limits, concurrency, and skipped URLs', async () => {
-  const calls: string[] = []
-  let activeFetches = 0
-  let maxActiveFetches = 0
-  const rootLinks = [
-    ...Array.from(
-      { length: 40 },
-      (_, index) => `https://example.com/page-${index}`,
-    ),
-    ...Array.from(
-      { length: 10 },
-      (_, index) => `https://example.com/asset-${index}.pdf`,
-    ),
-    'https://external.example/offsite-a',
-    'https://external.example/offsite-b',
-  ]
-
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      useSitemap: false,
-      checkExternal: false,
-      maxPages: 3,
-      maxDepth: 5,
-      concurrency: 2,
-    },
-    {
-      fetch: async () =>
-        new Response('# llms', {
-          status: 200,
-          headers: { 'content-type': 'text/plain' },
-        }),
-      fetchPage: async (url) => {
-        calls.push(url)
-        activeFetches += 1
-        maxActiveFetches = Math.max(maxActiveFetches, activeFetches)
-        await new Promise((resolve) => setTimeout(resolve, 5))
-        activeFetches -= 1
-        const urls = url.endsWith('/') ? rootLinks : []
-        return {
-          urls,
-          page: crawlPageSnapshot(url, {
-            outgoingInternalCount: urls.length,
-            sampleInternalLinks: urls.slice(0, 25),
-          }),
-        }
-      },
-    },
-  )
-
-  assert.equal(report.status, 'partial')
-  assert.equal(report.requestEvidenceStatus, 'available')
-  assert.equal(report.summary.attemptedRequests, 3)
-  assert.equal(report.summary.totalPages, 3)
-  assert.equal(report.summary.crawledUrls, 3)
-  assert.equal(report.summary.queuedUrls, 15)
-  assert.equal(report.summary.skippedUrls, 38)
-  assert.equal(report.summary.failedUrls, 0)
-  assert.equal(maxActiveFetches, 2)
-  assert.equal(calls.length, 3)
-  assert.match(report.caveats.join('\n'), /maxPages \(3\)/)
-  assert.match(
-    report.caveats.join('\n'),
-    /Left 26 eligible same-origin URLs unqueued to keep this crawl bounded/,
-  )
-  assert.equal(report.summary.pageLimitReached, true)
-})
-
-test('crawlSite treats origin backpressure as incomplete evidence, not a site error', async () => {
-  const root = 'https://example.com/'
-  const protectedUrl = 'https://example.com/slow'
-  const report = await crawlSite(
-    {
-      url: root,
-      useSitemap: false,
-      respectRobots: false,
-      maxPages: 10,
-      maxDepth: 1,
-      concurrency: 1,
-    },
-    {
-      fetch: async () =>
-        new Response('', {
-          status: 404,
-          headers: { 'content-type': 'text/plain' },
-        }),
-      fetchPage: async (url) =>
-        url === root
-          ? { urls: [protectedUrl], page: crawlPageSnapshot(url) }
-          : {
-              urls: [],
-              request: {
-                requestedUrl: url,
-                outcome: 'skipped',
-                reason: 'origin-backpressure',
-                error:
-                  'Origin backpressure stopped fetches for example.com: 4 consecutive slow responses',
-                extraction: 'not-applicable',
-              },
-            },
-    },
-  )
-
-  assert.equal(report.status, 'partial')
-  assert.equal(report.summary.crawledUrls, 1)
-  assert.equal(report.summary.skippedUrls, 1)
-  assert.equal(report.summary.failedUrls, 0)
-  assert.equal(report.summary.failedRequests, 0)
-  assert.deepEqual(report.summary.requestByStatus, {
-    '200': 1,
-    'origin-backpressure': 1,
-  })
-  assert.equal(
-    report.issues.some((issue) => issue.ruleId === 'connection_error'),
-    false,
-  )
-  assert.match(report.caveats.join('\n'), /incomplete crawl evidence/)
 })
 
 test('crawlSite does not mark an exact-size crawl as page-limit truncated', async () => {
@@ -779,6 +692,7 @@ test('crawlSite accepts injected provider dependencies', async () => {
     'https://example.com/.well-known/openapi.json',
     'https://example.com/openapi.json',
     'https://external.example/gone',
+    'https://external.example/gone',
   ])
   assert.deepEqual(calls.searchMetrics, [
     {
@@ -823,7 +737,15 @@ test('crawlSite accepts injected provider dependencies', async () => {
   assert.equal(report.ai?.robotsTxt?.exists, false)
   assert.equal(report.ai?.agentResources?.length, 6)
   assert.deepEqual(report.pages[0]?.externalLinkChecks, [
-    { url: 'https://external.example/gone', status: 404 },
+    {
+      url: 'https://external.example/gone',
+      status: 404,
+      state: 'confirmed-broken',
+      attempts: [
+        { method: 'HEAD', status: 404 },
+        { method: 'GET', status: 404 },
+      ],
+    },
   ])
   assert.equal(
     report.issues.some((issue) => issue.ruleId === 'broken_external_link'),

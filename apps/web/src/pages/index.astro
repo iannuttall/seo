@@ -19,6 +19,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 import { site } from '@/lib/site'
 
 const catalogIds = reports.map((report) => report.id)
+const reportCountLabel = '50+'
 if (
   new Set(reportCollectionIds).size !== reportCollectionIds.length ||
   [...reportCollectionIds].sort().join('\n') !== [...catalogIds].sort().join('\n')
@@ -108,7 +109,7 @@ const faqs = [
             <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">your agent needs</span>
           </h1>
           <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
-            One SEO skill and {reports.length} audit tools for AI agents to fix
+            One SEO skill and {reportCountLabel} audit tools for AI agents to fix
             issues, measure performance, and grow your organic and AI search
             visibility.
           </p>
@@ -127,7 +128,7 @@ const faqs = [
               Reports for a complete SEO audit
             </h2>
             <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-panel-foreground/70 sm:text-xl sm:leading-8">
-              {reports.length} reports and tools across crawl health, Search Console and GA4,
+              {reportCountLabel} reports and tools across crawl health, Search Console and GA4,
               opportunities, AI readiness, and monitoring.
             </p>
           </div>

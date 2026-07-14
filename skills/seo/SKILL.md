@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 52 evidence-backed local reports through the SEO CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 50+ evidence-backed local reports through the SEO CLI and MCP server.
 ---
 
 # seo
@@ -58,7 +58,8 @@ its evidence, then decide; do not run a whole chain blindly.
 | Traffic or clicks dropped | `search-performance-overview`, `traffic-anomaly`, `update-correlation`, `segment-impact`, `decaying-pages`, `link-recovery` |
 | Audit a whole site | `report` command (main report), `site-crawl`, `top-fixes`, `ai-search-scorecard` |
 | More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
-| AI search visibility and readiness | `ai-search-scorecard`, `ai-readiness`, `geo-gaps`, `entity-readiness`, `llms-txt-audit`, `ai-referrals` |
+| AI agent readiness for a content site | `agent-readiness`, `ai-readiness`, `entity-readiness`, `llms-txt-audit` |
+| AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |

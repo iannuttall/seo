@@ -132,6 +132,38 @@ test('geoGapsReport marks missing evaluated pages as unavailable evidence', () =
   ])
 })
 
+test('geoGapsReport only treats coverage-affecting skips as partial', () => {
+  const deliberateSkip = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page('https://example.com/', false)],
+    requests: [],
+    stats: {
+      skippedUrls: 1,
+      skipReasonCounts: { 'asset-url': 1 },
+    },
+  })
+  const uncertainSkip = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page('https://example.com/', false)],
+    requests: [],
+    stats: {
+      skippedUrls: 1,
+      skipReasonCounts: { 'robots-uncertain': 1 },
+    },
+  })
+
+  const complete = geoGapsReport(deliberateSkip)
+  const partial = geoGapsReport(uncertainSkip)
+
+  assert.equal(complete.dataStatus, 'complete')
+  assert.deepEqual(complete.source.partialReasons, [])
+  assert.equal(complete.source.nonImpactingSkippedUrls, 1)
+  assert.equal(complete.source.coverageAffectingSkippedUrls, 0)
+  assert.equal(partial.dataStatus, 'partial')
+  assert.deepEqual(partial.source.partialReasons, ['coverage-affecting-skips'])
+  assert.equal(partial.source.coverageAffectingSkippedUrls, 1)
+})
+
 function page(url: string, structuredData: boolean): CrawlPageSnapshot {
   return {
     url,

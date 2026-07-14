@@ -197,6 +197,7 @@ function compactTechnicalSection(section: ReturnType<typeof technicalSection>) {
 
 function printTechnicalSection(
   section: ReturnType<typeof technicalSection>,
+  options: { providerFree?: boolean } = {},
 ): void {
   if (!('topFixes' in section)) {
     process.stdout.write(
@@ -213,8 +214,10 @@ function printTechnicalSection(
       `Coverage is capped at ${section.maxPages} pages. Run \`seo crawl\` for a broader investigation.\n`,
     )
   }
-  for (const line of crawlDataSourceLines(section.dataSources)) {
-    process.stdout.write(`${line}\n`)
+  if (!options.providerFree) {
+    for (const line of crawlDataSourceLines(section.dataSources)) {
+      process.stdout.write(`${line}\n`)
+    }
   }
   if (!section.topFixes.length) {
     process.stdout.write('No prioritised technical fixes were found.\n')
@@ -226,9 +229,11 @@ function printTechnicalSection(
     return
   }
   process.stdout.write(
-    section.searchDataJoined
-      ? '\nTechnical fixes with search value\n'
-      : '\nTechnical fixes (no Search Console data joined)\n',
+    options.providerFree
+      ? '\nPrioritised technical fixes\n'
+      : section.searchDataJoined
+        ? '\nTechnical fixes with search value\n'
+        : '\nTechnical fixes (no Search Console data joined)\n',
   )
   if (!section.searchDataJoined) {
     printTable(
@@ -257,6 +262,57 @@ function printTechnicalSection(
     process.stdout.write(
       `\n${section.reviewObservations.length} review observation${section.reviewObservations.length === 1 ? '' : 's'} were kept out of this action queue.\n`,
     )
+  }
+}
+
+function printSkippedProviderSections(
+  section: ReturnType<typeof technicalSection>,
+): void {
+  process.stdout.write('\nProvider-backed sections skipped\n')
+  const observedLines =
+    'dataSources' in section ? crawlDataSourceLines(section.dataSources) : []
+  const lines = observedLines.length
+    ? observedLines
+    : ['Search Console: not connected.', 'GA4: not connected.']
+  for (const line of lines) {
+    process.stdout.write(`${line}\n`)
+  }
+  process.stdout.write(
+    'Run `seo start` when you want traffic, query, ranking, and analytics evidence added to the report.\n',
+  )
+}
+
+function technicalFirstSummary(
+  section: ReturnType<typeof technicalSection>,
+): string {
+  if (!('topFixes' in section)) {
+    return `Technical crawl evidence was ${section.status}. Search Console and GA4 sections were skipped because they are not connected.`
+  }
+
+  const source = section.status === 'reused' ? 'Loaded' : 'Completed'
+  const pages = section.summary.crawledUrls
+  return `${source} a technical crawl of ${pages} ${pages === 1 ? 'page' : 'pages'}. Search Console and GA4 sections were skipped because they are not connected.`
+}
+
+function technicalWorkflowStep(section: ReturnType<typeof technicalSection>): {
+  tool: string
+  status: 'completed' | 'skipped'
+  summary: string
+} {
+  if (!('topFixes' in section)) {
+    return {
+      tool: 'seo_crawl',
+      status: 'skipped',
+      summary:
+        section.reason ?? `Technical crawl evidence was ${section.status}.`,
+    }
+  }
+
+  const pages = section.summary.crawledUrls
+  return {
+    tool: 'seo_crawl',
+    status: 'completed',
+    summary: `${section.status === 'reused' ? 'Loaded' : 'Completed'} technical evidence for ${pages} crawled ${pages === 1 ? 'page' : 'pages'}.`,
   }
 }
 
@@ -409,9 +465,6 @@ function printReportFollowups(
 
 function printTechnicalOnlyIntro(site: string): void {
   process.stdout.write(`# Technical SEO report: ${site}\n\n`)
-  process.stdout.write(
-    'Search Console is not connected for this run. The crawl below shows local technical evidence only. Run `seo start` when you want traffic, query, and ranking evidence in the same report.\n',
-  )
 }
 
 function workflowCommandMeta(input: {
@@ -544,10 +597,21 @@ function workflowCommandMeta(input: {
           input.printFollowups && !full
             ? compactMainReportJson(report, input.workflowName)
             : outputReport
+        const reportWithTechnicalEvidence =
+          !useSearchData && technicalCrawl
+            ? {
+                ...jsonReport,
+                summary: technicalFirstSummary(technicalCrawl),
+                steps: [
+                  technicalWorkflowStep(technicalCrawl),
+                  ...jsonReport.steps,
+                ],
+              }
+            : jsonReport
         printJson(
           technicalCrawl || followups
             ? {
-                ...jsonReport,
+                ...reportWithTechnicalEvidence,
                 ...(input.printFollowups
                   ? { detail: full ? 'full' : 'summary' }
                   : {}),
@@ -571,7 +635,10 @@ function workflowCommandMeta(input: {
       } else {
         printTechnicalOnlyIntro(site)
       }
-      if (technicalCrawl) printTechnicalSection(technicalCrawl)
+      if (technicalCrawl) {
+        printTechnicalSection(technicalCrawl, { providerFree: !useSearchData })
+        if (!useSearchData) printSkippedProviderSections(technicalCrawl)
+      }
       if (followups) printReportFollowups(followups)
     },
   })

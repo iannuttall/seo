@@ -13,6 +13,7 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from '../workflows/analytics-value.js'
+import { collectAgentDiscovery } from './agent-discovery.js'
 
 export type ResolvedCrawlSiteDependencies = {
   fetchPage: typeof crawlOne
@@ -26,6 +27,7 @@ export type ResolvedCrawlSiteDependencies = {
   queryPagesTopQueriesBatch?: typeof queryPagesTopQueriesBatch
   fetchLandingPageValues: typeof fetchLandingPageValues
   landingValueForUrl: typeof landingValueForUrl
+  collectAgentDiscovery: typeof collectAgentDiscovery
   now: () => Date
 }
 
@@ -92,6 +94,8 @@ export function resolveCrawlSiteDependencies(
     fetchLandingPageValues:
       dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
+    collectAgentDiscovery:
+      dependencies.collectAgentDiscovery ?? collectAgentDiscovery,
     now: dependencies.now ?? (() => new Date()),
   }
 }

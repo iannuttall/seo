@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GscRow } from '../../types.js'
-import type { CrawlReport } from '../crawler/report.js'
+import { type CrawlReport, createCrawlReport } from '../crawler/report.js'
 import {
   analyzeIndexCoverageSignals,
   type IndexCoverageInput,
@@ -222,6 +222,26 @@ test('derives retained crawl completeness from a saved crawl report', () => {
   assert.equal(report.sources.crawl.rowLimit, 1)
   assert.equal(report.sources.crawl.rowLimitReached, true)
   assert.equal(report.sources.crawl.semantics, 'local-crawl-page-snapshots')
+})
+
+test('keeps deliberate crawl skips separate from retained coverage', () => {
+  const savedCrawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page('https://example.com/retained')],
+    stats: {
+      skippedUrls: 2,
+      skipReasonCounts: {
+        'asset-url': 1,
+        'off-origin': 1,
+      },
+    },
+  })
+  const report = analyzeIndexCoverageSignals(
+    baseInput({ crawl: { report: savedCrawl } }),
+  )
+
+  assert.equal(report.sources.crawl.completeness, 'complete')
+  assert.equal(report.sources.crawl.rowLimitReached, false)
 })
 
 test('keeps exact totals and caveats when retained sources are truncated', () => {

@@ -1,7 +1,12 @@
 import { explainRule, listRules } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
-import { printCatalog, printJson, printKeyValue } from '../utils.js'
+import {
+  printCatalog,
+  printJson,
+  printKeyValue,
+  printSection,
+} from '../utils.js'
 
 export const rulesCommand = defineCommand({
   meta: {
@@ -76,9 +81,13 @@ export const explainCommand = defineCommand({
       ['Category', rule.category],
       ['Severity', rule.defaultSeverity],
     ])
-    process.stdout.write(`\nWhy it matters\n${rule.whyItMatters}\n`)
-    process.stdout.write(`\nHow to fix\n${rule.howToFix}\n`)
-    process.stdout.write(`\nImpact if ignored\n${rule.impactIfIgnored}\n`)
-    process.stdout.write(`\nHow to verify\n${rule.howToVerify}\n`)
+    process.stdout.write('\n')
+    printSection('Why it matters', rule.whyItMatters)
+    process.stdout.write('\n')
+    printSection('How to fix', rule.howToFix)
+    process.stdout.write('\n')
+    printSection('Impact if ignored', rule.impactIfIgnored)
+    process.stdout.write('\n')
+    printSection('How to verify', rule.howToVerify)
   },
 })

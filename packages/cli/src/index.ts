@@ -82,7 +82,12 @@ import {
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
-import { maybeCheckForUpdates } from './utils.js'
+import {
+  maybeCheckForUpdates,
+  printCatalog,
+  printHeading,
+  printSection,
+} from './utils.js'
 
 const pkg = {
   name: 'seo',
@@ -201,24 +206,32 @@ const allHelpSections: HelpSection[] = [
 ]
 
 function printHelpSections(sections: HelpSection[]): void {
-  process.stdout.write(`seo v${pkg.version}\n\n`)
-  process.stdout.write(
-    'Run SEO audits, find what needs fixing, and ship the changes with your agent.\n\n',
+  printHeading(
+    `seo v${pkg.version}`,
+    'Run SEO audits, find what needs fixing, and ship the changes with your agent.',
   )
-  for (const section of sections) {
-    process.stdout.write(`${section.title}\n`)
-    const width = Math.max(
-      ...section.commands.map(([command]) => command.length),
-    )
-    for (const [command, description] of section.commands) {
-      process.stdout.write(`  ${command.padEnd(width)}  ${description}\n`)
-    }
-    process.stdout.write('\n')
-  }
-  process.stdout.write(
-    'Use `seo help <command>` or `seo <command> --help` for command help.\n',
+  process.stdout.write('\n')
+  printCatalog(
+    sections.flatMap((section) =>
+      section.commands.map(([command, description]) => ({
+        category: section.title,
+        id: command,
+        name: description,
+      })),
+    ),
+    {
+      noun: 'command',
+      categoryLabels: Object.fromEntries(
+        sections.map((section) => [section.title, section.title]),
+      ),
+    },
   )
-  process.stdout.write('Use `seo help all` for the longer command list.\n')
+  process.stdout.write('\n')
+  printSection(
+    'More help',
+    'Use `seo help <command>` or `seo <command> --help` for command help.',
+    'Use `seo help all` for the longer command list.',
+  )
 }
 
 const main = defineCommand({

@@ -92,7 +92,9 @@ function renderCatalogItem(
   const nameWidth = context.columns - idWidth - gap - 2
   if (nameWidth < 24 || visibleWidth(item.id) > idWidth) {
     return [
-      `  ${context.colors.cyan(item.id)}`,
+      ...indented(item.id, 2, context.columns).map((line) =>
+        context.colors.cyan(line),
+      ),
       ...indented(item.name, 4, context.columns),
     ].join('\n')
   }

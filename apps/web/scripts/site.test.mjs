@@ -331,7 +331,7 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
   )
   assert.match(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
-    /Content-Signal: search=yes, ai-input=yes, ai-train=no/,
+    /Content-Signal: search=yes, ai-input=yes, ai-train=yes/,
   )
 })
 
@@ -636,7 +636,10 @@ test('Cloudflare serves static assets with exact Markdown response headers', () 
   assert.equal(existsSync(resolve(appRoot, 'tsconfig.worker.json')), false)
   assert.equal(existsSync(resolve(appRoot, 'worker-configuration.d.ts')), false)
 
-  assert.match(headers, /Content-Signal: search=yes, ai-input=yes, ai-train=no/)
+  assert.match(
+    headers,
+    /Content-Signal: search=yes, ai-input=yes, ai-train=yes/,
+  )
   assert.match(headers, /Strict-Transport-Security: max-age=300/)
   assert.match(headers, /rel="sitemap"; type="application\/xml"/)
   assert.match(headers, /rel="llms-txt"; type="text\/markdown"/)
@@ -714,6 +717,7 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
 
   assert.match(home, /data-install-picker/)
   assert.match(home, /data-copy-install-command/)
+  assert.match(home, /<a[^>]+href="\/cookies"[^>]*>Cookies<\/a>/)
   assert.match(home, /npm i -g seo/)
   assert.match(home, /seo start/)
   assert.match(home, /The only SEO skill/)

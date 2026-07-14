@@ -1,7 +1,5 @@
-// Wraps every markdown code block in the .code-frame chrome at build time:
-// the dotted offset shadow and the copy button are static HTML, so pages do
-// not reflow when client JavaScript arrives. The button's click handler is
-// bound by the small script in BaseLayout.
+// Wraps markdown code blocks and tables in their shared dotted chrome at build
+// time. Static wrappers avoid layout shifts when client JavaScript arrives.
 
 const COPY_PATH =
   'M20 22H8v-2h12v2ZM8 20H6v-2H4v-2h2V8h2v12Zm14 0h-2V8h2v12ZM4 16H2V4h2v12ZM18 6h2v2H8V6h8V4h2v2Zm-2-2H4V2h12v2Z'
@@ -75,11 +73,21 @@ function frame(pre) {
   }
 }
 
+function tableFrame(table) {
+  return {
+    type: 'element',
+    tagName: 'div',
+    properties: { className: ['table-frame'] },
+    children: [table],
+  }
+}
+
 function walk(node) {
   if (!Array.isArray(node.children)) return
   node.children = node.children.map((child) => {
     if (child.type === 'element') {
       if (child.tagName === 'pre') return frame(child)
+      if (child.tagName === 'table') return tableFrame(child)
       walk(child)
     }
     return child

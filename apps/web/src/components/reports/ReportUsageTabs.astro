@@ -4,6 +4,7 @@ import CopyCode from '@/components/docs/CopyCode.astro'
 import PixelIcon from '@/components/icons/PixelIcon.astro'
 
 type Props = {
+  noun: string
   describeValue: string
   runValue: string
   mcpDescribeInput: string
@@ -12,6 +13,7 @@ type Props = {
 }
 
 const {
+  noun,
   describeValue,
   runValue,
   mcpDescribeInput,
@@ -25,7 +27,7 @@ const {
     <div
       class="grid grid-cols-3 border-b-2 border-nav"
       role="tablist"
-      aria-label="Ways to run the audit"
+      aria-label={`Ways to run the ${noun}`}
     >
       <button
         id="usage-tab-cli"
@@ -74,15 +76,15 @@ const {
       <p>
         Use the report catalog when an agent, script or CI job needs predictable
         JSON instead of the normal terminal output. Check the current input
-        first, then run the audit with the validated parameters.
+        first, then run the {noun} with the validated parameters.
       </p>
       <CopyCode
-        label="Check the current input before the agent or script runs the audit."
+        label={`Check the current input before the agent or script runs the ${noun}.`}
         value={describeValue}
         wrap
       />
       <CopyCode
-        label="Once the input is valid, run the audit through the report catalog."
+        label={`Once the input is valid, run the ${noun} through the report catalog.`}
         value={runValue}
         wrap
       />
@@ -98,15 +100,15 @@ const {
     >
       <p>
         An MCP agent follows the same two-step flow. It inspects the current
-        schema, fills the required fields and only then runs the audit.
+        schema, fills the required fields and only then runs the {noun}.
       </p>
       <CopyCode
-        label="Ask the MCP server for the current audit input."
+        label={`Ask the MCP server for the current ${noun} input.`}
         value={mcpDescribeInput}
         wrap
       />
       <CopyCode
-        label="Run the audit after the agent has checked and filled the input."
+        label={`Run the ${noun} after the agent has checked and filled the input.`}
         value={mcpRunInput}
         wrap
       />
@@ -122,7 +124,7 @@ const {
     >
       <p>
         Install the package in a Node 22 project when your application needs to
-        run the audit directly. The result includes the same evidence, warnings
+        run the {noun} directly. The result includes the same evidence, warnings
         and limits returned through the CLI and MCP server.
       </p>
       <CopyCode
@@ -130,7 +132,7 @@ const {
         value="npm install seo"
       />
       <CopyCode
-        label="Run the audit from your TypeScript application."
+        label={`Run the ${noun} from your TypeScript application.`}
         value={libraryExample}
         wrap
       />

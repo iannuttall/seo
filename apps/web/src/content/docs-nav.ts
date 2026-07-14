@@ -49,6 +49,12 @@ export const docsNav: DocsNavEntry[] = [
       'Check technical eligibility, entity evidence, and known referrals without inventing an AI visibility score.',
   },
   {
+    path: '/docs/ai-visibility',
+    label: 'AI visibility tracking',
+    description:
+      'See what AI visibility tracking should measure, what SEO Skill supports now, and what the planned provider-backed report will add.',
+  },
+  {
     path: '/docs/mcp',
     label: 'Local MCP',
     description:

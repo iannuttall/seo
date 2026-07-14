@@ -191,6 +191,13 @@ section where the choice is useful.
 Every report page should feel written for that report. Shared structure is
 fine. Repeated generic copy is not.
 
+Shared templates do not excuse shared filler. Every introduction must name the
+report's actual evidence, result, limitation, or next decision. If the same
+paragraph could be pasted onto twenty report pages unchanged, remove it or make
+it conditional. "Keep the next step tied to the evidence" is true, but it does
+not tell someone what to do with a crawl, index check, referral report, or
+redirect trace.
+
 A useful report page covers:
 
 1. What question the report answers.
@@ -206,6 +213,16 @@ A useful report page covers:
 Use conditional content for different report families. A crawl audit, Search
 Console analysis, GA4 measurement report, export tool, and monitoring command
 should not have identical introductions or fact tables.
+
+Mention scheduled agent tasks only when repeat runs make the report more
+useful. Name a sensible cadence or trigger, say what the agent should report,
+and explain which scope, filters, or date windows must stay comparable. Do not
+paste a generic "run this regularly" line onto every report.
+
+The limits section needs room to explain the boundary properly. Use at least
+two short paragraphs. The first states what the report cannot establish from
+its evidence. The second explains how to interpret or verify that specific
+result. Do not leave a single caveat sentence floating in a large card.
 
 Show parallel facts in a table or structured card. Use prose for explanation,
 limits, and decisions. Code examples must be complete, copyable, and able to

@@ -188,9 +188,11 @@
 
 }
 
-::selection {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
+@layer base {
+  ::selection {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+  }
 }
 
 /* Inner scrollers hide their scrollbars entirely; wheel, trackpad, and keys
@@ -337,7 +339,8 @@ html {
     line-height: 1.5;
   }
 
-  .code-frame {
+  .code-frame,
+  .table-frame {
     position: relative;
     isolation: isolate;
     margin: 1.75em 0;
@@ -345,7 +348,8 @@ html {
 
   /* The same halftone tile the home cards use (DotPattern's shadow variant),
      applied as a mask so the colour stays on the --fg token. */
-  .code-frame::after {
+  .code-frame::after,
+  .table-frame::after {
     content: "";
     position: absolute;
     z-index: -1;
@@ -359,6 +363,17 @@ html {
 
   .code-frame pre {
     margin: 0;
+  }
+
+  .table-frame {
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .table-frame::after {
+    right: 0;
+    bottom: 0;
   }
 
 
@@ -376,20 +391,33 @@ html {
 
   .docs-prose table {
     width: 100%;
-    margin: 1em 0;
+    min-width: 36rem;
+    margin: 0;
     border-collapse: collapse;
-    font-size: 0.875em;
+    border: 2px solid var(--nav-bg);
+    background: var(--background);
+    font-size: 0.8125em;
   }
 
   .docs-prose th,
   .docs-prose td {
-    border: 1px solid var(--border);
-    padding: 0.5em 0.75em;
+    border: 2px solid var(--nav-bg);
+    padding: 0.75rem 1rem;
     text-align: left;
+    vertical-align: top;
   }
 
-  .docs-prose th {
-    background: var(--bg-secondary);
+  .docs-prose thead th {
+    background: var(--report-header);
+    color: var(--report-header-foreground);
+    font-family: "Martian Mono", ui-monospace, monospace;
+    font-weight: 400;
+  }
+
+  .docs-prose tbody th {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: "Martian Grotesk", system-ui, sans-serif;
     font-weight: 600;
   }
 }

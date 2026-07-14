@@ -1,6 +1,7 @@
 import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
+import { reportPageCopy } from './page-copy'
 import type {
   ReportGuideAlternative,
   ReportGuideInput,
@@ -33,6 +34,10 @@ export function resolveReportGuide(
   report: ReportEditorial,
 ): ResolvedReportGuide {
   const override = reportGuideOverrides[report.id]
+  const pageCopy = reportPageCopy[report.id]
+  if (!pageCopy) {
+    throw new Error(`Missing report page copy for ${report.id}.`)
+  }
   const fallbackInputs = report.evidence.map((label) => ({ label })) as [
     ReportGuideInput,
     ...ReportGuideInput[],
@@ -47,7 +52,7 @@ export function resolveReportGuide(
     ...report,
     name: override?.name ?? report.name,
     summary: override?.summary ?? report.summary,
-    lead: override?.lead ?? report.summary,
+    lead: pageCopy.lead,
     inputs: override?.inputs ?? fallbackInputs,
     checks: override?.checks ?? report.methodology,
     returns: override?.returns ?? [
@@ -55,6 +60,11 @@ export function resolveReportGuide(
       'The dates, limits, thresholds, and skipped work needed to judge what the result supports.',
     ],
     alternatives: override?.alternatives ?? fallbackAlternatives,
-    seo: override?.seo,
+    seo: {
+      ...override?.seo,
+      title: pageCopy.title,
+      description: pageCopy.description,
+      heading: pageCopy.title,
+    },
   }
 }

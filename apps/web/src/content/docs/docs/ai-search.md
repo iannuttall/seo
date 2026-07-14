@@ -1,6 +1,6 @@
 ---
 title: AI search visibility and readiness
-description: How generative engine optimization and llms.txt affect AI search. Which technical blockers actually matter, which markup is optional, and what evidence can prove.
+description: Check whether AI crawlers can access your pages and whether AI tools send visitors to your site. See what llms.txt can help with and what it cannot prove.
 ---
 
 Generative engine optimization, often shortened to GEO, is the current label for
@@ -125,6 +125,11 @@ found the site through an AI product.
 Google now directs site owners to its own Search Console reporting for
 visibility in Google generative AI features. Other providers expose different
 or no first-party reporting, so keep source-specific evidence separate.
+
+The [AI visibility tracking guide](/docs/ai-visibility) covers the separate
+planned report for observed mentions, citations, prompt coverage, and share of
+voice. That work needs repeatable provider data and does not belong inside a
+technical readiness score.
 
 ## Give an agent a claim it can defend
 

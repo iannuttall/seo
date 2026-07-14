@@ -2,6 +2,10 @@
 
 This package is the static Astro site for `https://seoskill.dev`.
 
+Before writing, editing, or generating any site copy, read the root
+`CONTENT.md` file in the same task. This includes metadata and shared template
+copy.
+
 ## Commands
 
 Run these from the repository root:

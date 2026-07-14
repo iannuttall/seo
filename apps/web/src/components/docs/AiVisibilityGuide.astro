@@ -1,0 +1,209 @@
+---
+import DottedCard from '@/components/DottedCard.astro'
+import NavCard from '@/components/NavCard.astro'
+
+const measurements = [
+  ['Brand mentions', 'How often tracked answers name your brand or a named competitor.'],
+  ['Citations', 'Which pages and domains the answers cite, including citations that do not mention the brand.'],
+  ['Prompt coverage', 'How many prompts in a fixed set return a mention or citation for your site.'],
+  ['Share of voice', 'How your observed mentions compare with competitors tracked against the same prompts.'],
+  ['Change over time', 'Which assistants, prompt groups, pages, or competitors gained or lost observed visibility.'],
+] as const
+
+const requirements = [
+  'A provider connection and the answer data returned by that provider.',
+  'Your brand names, domains, competitors, markets, and assistants to track.',
+  'A fixed prompt set grouped by topic or customer question.',
+  'The date, location, model, and provider settings used for each observation.',
+  'The mentioned brands, cited URLs, and answer evidence returned for each prompt.',
+] as const
+---
+
+<div class="space-y-14" data-prose-ignore>
+  <DottedCard patternId="ai-visibility-status" inverted>
+    <div class="space-y-5 p-5 sm:p-7">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="border-2 border-primary bg-primary px-2 py-1 font-mono text-xs text-primary-foreground selection:bg-primary-foreground selection:text-primary">
+          Planned report
+        </span>
+        <h2 class="font-mono text-xl font-normal leading-tight text-panel-foreground">
+          AI visibility tracking is not in the package yet
+        </h2>
+      </div>
+      <div class="max-w-3xl space-y-4 font-sans text-sm font-light leading-7 text-panel-foreground/80 sm:text-[0.9375rem]">
+        <p>
+          The current reports can check technical eligibility and recorded referral traffic.
+          They cannot tell you how often an AI assistant mentions your brand, cites your site,
+          or chooses a competitor instead.
+        </p>
+        <p>
+          That needs a separate report built on repeatable third-party data. Running the same
+          prompt by hand a few times is interesting, but it is a terrible monitoring system
+          (and you will forget which answer you saw last Tuesday).
+        </p>
+      </div>
+    </div>
+  </DottedCard>
+
+  <section aria-labelledby="visibility-measurements" class="space-y-5">
+    <div class="space-y-2">
+      <h2 id="visibility-measurements" class="font-mono text-xl font-normal leading-tight">
+        What AI visibility tracking should measure
+      </h2>
+      <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+        The planned report will keep the observed answers and citations beside every summary
+        number. A score without the prompts, provider, market, and date is not much use when
+        the answer changes.
+      </p>
+    </div>
+
+    <DottedCard patternId="ai-visibility-measurements">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[42rem] border-collapse text-left">
+          <caption class="sr-only">Measurements planned for AI visibility tracking</caption>
+          <thead class="bg-report-header text-report-header-foreground">
+            <tr>
+              <th class="w-48 border-b-2 border-nav px-5 py-3 font-mono text-xs font-normal sm:text-sm">
+                Measurement
+              </th>
+              <th class="border-b-2 border-nav px-5 py-3 font-mono text-xs font-normal sm:text-sm">
+                What it should tell you
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              measurements.map(([label, detail]) => (
+                <tr>
+                  <th class="px-5 py-4 align-top font-sans text-sm font-medium">{label}</th>
+                  <td class="px-5 py-4 font-sans text-sm font-light leading-6 text-foreground-muted">
+                    {detail}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </DottedCard>
+
+    <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+      You should be able to open the prompts and cited pages behind each change. Missing,
+      capped, or unsupported provider data must stay visible too. Zero and unknown are
+      different answers.
+    </p>
+  </section>
+
+  <section aria-labelledby="visibility-now" class="space-y-5">
+    <div class="space-y-2">
+      <h2 id="visibility-now" class="font-mono text-xl font-normal leading-tight">
+        What SEO Skill can measure now
+      </h2>
+      <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+        These reports cover the evidence around AI search without pretending it is a
+        visibility score. Each one answers a smaller question you can verify today.
+      </p>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <NavCard
+        title="AI search readiness audit"
+        description="Check crawl access, indexability, snippet controls, page structure, and optional agent resources."
+        href="/docs/reports/ai-readiness"
+      />
+      <NavCard
+        title="Google AI search readiness audit"
+        description="Check the technical controls Google documents for AI search eligibility."
+        href="/docs/reports/geo-gaps"
+      />
+      <NavCard
+        title="AI referral traffic report"
+        description="Find visits from known AI assistants that reached the site and were recorded by GA4."
+        href="/docs/reports/ai-referrals"
+      />
+      <NavCard
+        title="SEO query to AI prompt report"
+        description="Turn real search queries into a stable prompt set for an external tracking provider."
+        href="/docs/reports/seo-to-ai-query"
+      />
+    </div>
+
+    <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+      A crawl restriction can affect eligibility. A GA4 referral proves that one recorded
+      visit reached the site. Neither result measures how often your pages appeared inside
+      generated answers.
+    </p>
+  </section>
+
+  <section aria-labelledby="visibility-inputs" class="space-y-5">
+    <div class="space-y-2">
+      <h2 id="visibility-inputs" class="font-mono text-xl font-normal leading-tight">
+        What the planned report will need
+      </h2>
+      <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
+        A useful report needs more than a domain name. It must keep the tracked prompt,
+        provider response, and comparison settings attached to every result.
+      </p>
+    </div>
+
+    <DottedCard patternId="ai-visibility-inputs">
+      <ol class="divide-y divide-border">
+        {
+          requirements.map((item, index) => (
+            <li class="grid items-start gap-2 px-5 py-4 sm:grid-cols-[4rem_1fr] sm:gap-6">
+              <span class="font-mono text-xs leading-6 text-foreground-muted">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="font-sans text-sm font-light leading-6 text-foreground-muted">
+                {item}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </DottedCard>
+
+    <DottedCard patternId="ai-visibility-providers" inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="font-mono text-base font-normal leading-tight text-panel-foreground">
+          Provider plan
+        </h3>
+        <div class="max-w-3xl space-y-4 font-sans text-sm font-light leading-7 text-panel-foreground/80">
+          <p>
+            The planned report will support Ahrefs, Semrush, and DataForSEO. Connect the
+            services you already use, or use all three in the same report.
+          </p>
+          <p>
+            Each result will show which service supplied it, what was measured, and where the
+            data is missing or limited. If the services disagree, you will see the difference
+            instead of getting one neat score that hides it.
+          </p>
+        </div>
+      </div>
+    </DottedCard>
+  </section>
+
+  <section aria-labelledby="visibility-limits">
+    <DottedCard patternId="ai-visibility-limits" inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <h2 id="visibility-limits" class="font-mono text-xl font-normal leading-tight text-panel-foreground">
+          What AI visibility data still cannot prove
+        </h2>
+        <div class="max-w-3xl space-y-4 font-sans text-sm font-light leading-7 text-panel-foreground/80 sm:text-[0.9375rem]">
+          <p>
+            AI answers are generated again for every request, so the same prompt can return a
+            different answer on the next run. A tracked prompt set gives you a repeatable
+            sample across the assistants, countries, models, and dates you choose. A missing
+            mention only means the provider did not see one in that run. It does not prove
+            your brand never appeared elsewhere.
+          </p>
+          <p>
+            Mentions and citations also need human review. A citation can be irrelevant,
+            negative, or attached to the wrong claim. More mentions are not automatically
+            better if the answer describes the product badly.
+          </p>
+        </div>
+      </div>
+    </DottedCard>
+  </section>
+</div>

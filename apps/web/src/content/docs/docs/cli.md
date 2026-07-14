@@ -1,6 +1,6 @@
 ---
 title: SEO CLI commands
-description: Choose the right SEO command, switch projects safely, save technical evidence, and produce deterministic JSON that agents and CI can inspect.
+description: Use the SEO CLI to audit a site, investigate lost traffic and save evidence before you make a change. Scripts and CI can run the same reports as JSON.
 ---
 
 The CLI has a short path for normal work and a report registry for agents and

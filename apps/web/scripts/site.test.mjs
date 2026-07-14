@@ -587,35 +587,60 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /X-Content-Type-Options: nosniff/)
 })
 
-test('Cloudflare only runs the thin representation adapter for document routes', () => {
+test('Cloudflare serves static assets with exact Markdown response headers', () => {
   const config = JSON.parse(
     readFileSync(resolve(appRoot, 'wrangler.jsonc'), 'utf8'),
   )
-  const worker = readFileSync(resolve(appRoot, 'src/worker.ts'), 'utf8')
   const headers = readFileSync(resolve(dist, '_headers'), 'utf8')
+  const manifest = JSON.parse(
+    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
+  )
 
-  assert.equal(config.main, 'src/worker.ts')
-  assert.equal(config.assets.binding, 'ASSETS')
+  assert.equal(config.name, 'seo-skill')
+  assert.equal(config.main, undefined)
+  assert.equal(config.assets.binding, undefined)
+  assert.equal(config.assets.run_worker_first, undefined)
   assert.equal(config.assets.html_handling, 'drop-trailing-slash')
   assert.equal(config.assets.not_found_handling, '404-page')
-  assert.deepEqual(config.assets.run_worker_first, [
-    '/',
-    '/docs*',
-    '/*.md',
-    '!/.well-known/*',
-    '/cookies',
-    '/privacy',
-    '/security',
-    '/terms',
-    '/trademarks',
+  assert.deepEqual(config.routes, [
+    { pattern: 'seoskill.dev', custom_domain: true },
+    { pattern: 'www.seoskill.dev', custom_domain: true },
   ])
-  assert.match(worker, /createCloudflareMarkdownHandler/)
-  assert.match(worker, /search=yes, ai-input=yes, ai-train=no/)
-  assert.match(worker, /Strict-Transport-Security': 'max-age=300'/)
-  assert.doesNotMatch(worker, /Turndown|Defuddle|fetch\(['"]https?:/i)
+  assert.equal(existsSync(resolve(appRoot, 'src/worker.ts')), false)
+  assert.equal(existsSync(resolve(appRoot, 'tsconfig.worker.json')), false)
+  assert.equal(existsSync(resolve(appRoot, 'worker-configuration.d.ts')), false)
+
   assert.match(headers, /Content-Signal: search=yes, ai-input=yes, ai-train=no/)
   assert.match(headers, /Strict-Transport-Security: max-age=300/)
+  assert.match(headers, /rel="sitemap"; type="application\/xml"/)
+  assert.match(headers, /rel="llms-txt"; type="text\/markdown"/)
+  assert.match(headers, /rel="agent-skills"; type="application\/json"/)
+  assert.match(
+    headers,
+    new RegExp(
+      escapeRegExp(
+        '/docs/*\n  Link: <https://seoskill.dev/docs/:splat.md>; rel="alternate"; type="text/markdown"\n  Vary: Accept',
+      ),
+    ),
+  )
+
+  assert.equal(manifest.pages.length, 71)
   assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 71)
+  for (const page of manifest.pages) {
+    const rule = [
+      page.markdownPath,
+      '  ! Link',
+      '  Content-Type: text/markdown; charset=utf-8',
+      `  Link: <${page.canonical}>; rel="canonical"`,
+      '  Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"',
+      '  Link: <https://seoskill.dev/llms.txt>; rel="llms-txt"; type="text/markdown"',
+      '  Link: <https://seoskill.dev/.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"',
+      '  Vary: Accept',
+      `  X-Markdown-Tokens: ${page.tokens}`,
+    ].join('\n')
+    assert.match(headers, new RegExp(escapeRegExp(rule)))
+  }
+
   for (const page of [
     'cookies',
     'privacy',
@@ -627,7 +652,12 @@ test('Cloudflare only runs the thin representation adapter for document routes',
       headers,
       new RegExp(`/${page}\\.md\\n  X-Robots-Tag: noindex, follow`),
     )
-    assert.match(worker, new RegExp(`['"]/${page}['"]`))
+    assert.match(
+      headers,
+      new RegExp(
+        `/${page}\\n  Link: <https://seoskill\\.dev/${page}\\.md>; rel="alternate"; type="text/markdown"\\n  Vary: Accept\\n  X-Robots-Tag: noindex, follow`,
+      ),
+    )
   }
 })
 

@@ -1,27 +1,17 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "seo-cli-site",
-  "main": "src/worker.ts",
+  "name": "seo-skill",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",
   "compatibility_date": "2026-07-10",
   "workers_dev": false,
   "preview_urls": false,
-  "routes": [{ "pattern": "seoskill.dev", "custom_domain": true }],
+  "routes": [
+    { "pattern": "seoskill.dev", "custom_domain": true },
+    { "pattern": "www.seoskill.dev", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
-    "binding": "ASSETS",
     "html_handling": "drop-trailing-slash",
-    "not_found_handling": "404-page",
-    "run_worker_first": [
-      "/",
-      "/docs*",
-      "/*.md",
-      "!/.well-known/*",
-      "/cookies",
-      "/privacy",
-      "/security",
-      "/terms",
-      "/trademarks"
-    ]
+    "not_found_handling": "404-page"
   }
 }

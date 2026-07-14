@@ -12,20 +12,20 @@ Run these from the repository root:
 
 ```sh
 pnpm --filter @seo/web dev
-pnpm --filter @seo/web build
+pnpm build:web
 pnpm --filter @seo/web typecheck
 pnpm --filter @seo/web test
-pnpm --filter @seo/web deploy:dry-run
+pnpm deploy:web:dry-run
 ```
 
 ## Site rules
 
-- Keep page content static. The one allowed Worker is the thin representation
-  adapter in `src/worker.ts`: it may select prebuilt HTML or Markdown bytes and
-  add response headers, but it must not render pages, convert content, store
-  state, call a model, or fetch an external service. Do not add an account
-  system, database, remote MCP server, telemetry, or cookies without an explicit
-  product decision.
+- Keep page content static. Deploy the site as Workers Static Assets with no
+  application Worker or runtime Astro middleware. The Astro integration writes
+  Markdown alternates during the build. Cloudflare zone Transform Rules handle
+  `Accept: text/markdown` requests without invoking compute. Do not add an
+  account system, database, remote MCP server, telemetry, or cookies without an
+  explicit product decision.
 - Keep canonical metadata, structured data, navigation, and footer markup in
   `src/layouts/BaseLayout.astro`. Marketing, docs, reports, policy pages, and
   the 404 page all use that layout.
@@ -66,10 +66,10 @@ pnpm --filter @seo/web deploy:dry-run
 After site changes, run:
 
 ```sh
-pnpm --filter @seo/web build
+pnpm build:web
 pnpm --filter @seo/web typecheck
 pnpm --filter @seo/web test
-pnpm --filter @seo/web deploy:dry-run
+pnpm deploy:web:dry-run
 ```
 
 Spot-check the home page, docs, mobile layout, privacy, terms, canonical tags,

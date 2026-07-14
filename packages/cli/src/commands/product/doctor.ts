@@ -1,7 +1,8 @@
 import { runDoctor } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag } from '../../args.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { checkSummary } from '../../presentation/views.js'
+import { printChecks, printHeading, printJson } from '../../utils.js'
 
 export const doctorCommand = defineCommand({
   meta: {
@@ -19,20 +20,13 @@ export const doctorCommand = defineCommand({
     const report = await runDoctor()
     if (jsonFlag(args)) {
       printJson(report)
+      if (!report.ok) process.exitCode = 1
       return
     }
-    printKeyValue([
-      ['Status', report.ok ? 'ok' : 'needs attention'],
-      ['Generated', report.generatedAt],
-    ])
-    printTable(
-      ['Check', 'Status', 'Detail', 'Fix'],
-      report.checks.map((check) => [
-        check.label,
-        check.status,
-        check.detail,
-        check.fix ?? '',
-      ]),
-    )
+    printHeading('SEO doctor', checkSummary(report.checks))
+    process.stdout.write('\n')
+    printChecks(report.checks)
+    process.stdout.write(`\nChecked ${report.generatedAt}\n`)
+    if (!report.ok) process.exitCode = 1
   },
 })

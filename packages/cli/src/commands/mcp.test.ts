@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -146,4 +146,58 @@ test('mcp install accepts multiple explicit client flags', async () => {
   } finally {
     await rm(home, { recursive: true, force: true })
   }
+})
+
+test('the installed CLI completes an MCP initialize handshake', async () => {
+  const request = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: {
+      protocolVersion: '2025-03-26',
+      capabilities: {},
+      clientInfo: { name: 'seo-test', version: '1.0.0' },
+    },
+  }
+  const result = await new Promise<{
+    exitCode: number | null
+    stderr: string
+    stdout: string
+  }>((resolve, reject) => {
+    const child = spawn(process.execPath, [cliPath, 'mcp', 'serve'], {
+      env: {
+        ...process.env,
+        CI: '1',
+        NO_UPDATE_NOTIFIER: '1',
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    let stdout = ''
+    let stderr = ''
+    const timeout = setTimeout(() => {
+      child.kill()
+      reject(new Error('MCP initialize handshake timed out.'))
+    }, 10_000)
+    child.stdout.on('data', (chunk) => {
+      stdout += String(chunk)
+    })
+    child.stderr.on('data', (chunk) => {
+      stderr += String(chunk)
+    })
+    child.on('error', reject)
+    child.on('close', (exitCode) => {
+      clearTimeout(timeout)
+      resolve({ exitCode, stderr, stdout })
+    })
+    child.stdin.end(`${JSON.stringify(request)}\n`)
+  })
+
+  assert.equal(result.exitCode, 0)
+  assert.equal(result.stderr, '')
+  const response = JSON.parse(result.stdout) as {
+    id: number
+    result: { serverInfo: { name: string } }
+  }
+  assert.equal(response.id, 1)
+  assert.equal(response.result.serverInfo.name, 'seo')
 })

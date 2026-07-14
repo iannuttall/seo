@@ -6,7 +6,6 @@ import {
   listClients,
   saveClient,
 } from '@seo/core'
-import pc from 'picocolors'
 import {
   booleanArg,
   jsonFlag,
@@ -18,6 +17,7 @@ import { resolveSite } from '../../selection.js'
 import {
   canPrompt,
   maybeExitCancelled,
+  printCallout,
   printJson,
   printKeyValue,
 } from '../../utils.js'
@@ -57,11 +57,12 @@ function shellArg(value: string): string {
 }
 
 function printStarAsk(): void {
-  console.log(
-    pc.dim(
-      'Find seo useful? A star helps other people discover it: https://github.com/iannuttall/seo',
-    ),
-  )
+  process.stdout.write('\n')
+  printCallout({
+    title: 'Help other people find SEO Skill',
+    body: 'If SEO Skill saved you time, a GitHub star helps other people find it.',
+    command: 'https://github.com/iannuttall/seo',
+  })
 }
 
 function mcpInstallLabel(installs: SetupMcpInstall[]): string {

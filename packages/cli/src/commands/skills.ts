@@ -3,7 +3,12 @@ import { join } from 'node:path'
 import { SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
-import { printJson, printTable } from '../utils.js'
+import {
+  printCallout,
+  printHeading,
+  printJson,
+  printKeyValue,
+} from '../utils.js'
 import { installSeoSkill } from './skill-install.js'
 import { readSkillDescription, skillsDirectory } from './skill-paths.js'
 import { skillsEvalCommand } from './skills-eval.js'
@@ -54,10 +59,24 @@ const listCommand = defineCommand({
       printJson({ skills })
       return
     }
-    printTable(
-      ['Skill', 'Description'],
-      skills.map((skill) => [skill.name, skill.description]),
-    )
+    printHeading('SEO skill', 'Packaged with this CLI.')
+    process.stdout.write('\n')
+    for (const skill of skills) {
+      printKeyValue([
+        ['Name', skill.name],
+        [
+          'Purpose',
+          'Helps agents choose and run the right SEO audit or report.',
+        ],
+        ['Path', skill.path],
+      ])
+    }
+    process.stdout.write('\n')
+    printCallout({
+      title: 'Add it to an agent',
+      body: 'Run setup to install the skill and connect your first site.',
+      command: 'seo start',
+    })
   },
 })
 

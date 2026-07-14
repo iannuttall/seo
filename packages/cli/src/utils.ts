@@ -5,6 +5,13 @@ import {
   renderKeyValues,
   renderTable,
 } from './presentation/render.js'
+import {
+  type CatalogItemView,
+  type CheckView,
+  renderCatalog,
+  renderChecks,
+  renderHeading,
+} from './presentation/views.js'
 
 export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
   if (process.env.CI || process.env.NO_UPDATE_NOTIFIER) {
@@ -45,6 +52,28 @@ export function printCallout(callout: {
   title: string
 }): void {
   process.stdout.write(`${renderCallout(callout, createTerminalContext())}\n`)
+}
+
+export function printHeading(title: string, summary?: string): void {
+  process.stdout.write(
+    `${renderHeading(title, createTerminalContext(), summary)}\n`,
+  )
+}
+
+export function printChecks(checks: CheckView[]): void {
+  process.stdout.write(`${renderChecks(checks, createTerminalContext())}\n`)
+}
+
+export function printCatalog(
+  items: CatalogItemView[],
+  options: {
+    categoryLabels?: Record<string, string>
+    noun: string
+  },
+): void {
+  process.stdout.write(
+    `${renderCatalog(items, createTerminalContext(), options)}\n`,
+  )
 }
 
 export function formatBytes(bytes: number): string {

@@ -1,3 +1,4 @@
+export * from './cloudflare.js'
 export * from './html.js'
 export * from './integration.js'
 export * from './manifest.js'

@@ -1,5 +1,3 @@
-import { posix } from 'node:path'
-
 export interface MarkdownRoute {
   filePath: string
   htmlPath: string
@@ -45,6 +43,26 @@ function canonicalSegments(pathname: string): string[] {
     )
 }
 
+function normalizedPath(pathname: string): string {
+  const segments = canonicalSegments(pathname)
+  return segments.length > 0 ? `/${segments.join('/')}` : '/'
+}
+
+function normalizedBasePath(base: string): string {
+  const basePath = normalizedBase(base)
+  return basePath === '/' ? '/' : normalizedPath(basePath)
+}
+
+function assertPathInsideBase(pathname: string, basePath: string): void {
+  if (
+    basePath !== '/' &&
+    pathname !== basePath &&
+    !pathname.startsWith(`${basePath}/`)
+  ) {
+    throw new Error(`Route ${pathname} is outside base ${basePath}`)
+  }
+}
+
 export function markdownRouteForPath(
   pathname: string,
   base = '/',
@@ -52,26 +70,14 @@ export function markdownRouteForPath(
   if (!pathname.startsWith('/')) throw new Error('Route path must start with /')
   validateRawPath(pathname)
 
-  const basePath = normalizedBase(base)
-  const segments = canonicalSegments(pathname)
-  const normalizedPath = segments.length > 0 ? `/${segments.join('/')}` : '/'
-  const normalizedBasePath =
-    basePath === '/' ? '/' : `/${canonicalSegments(basePath).join('/')}`
-
-  if (
-    normalizedBasePath !== '/' &&
-    normalizedPath !== normalizedBasePath &&
-    !normalizedPath.startsWith(`${normalizedBasePath}/`)
-  ) {
-    throw new Error(
-      `Route ${normalizedPath} is outside base ${normalizedBasePath}`,
-    )
-  }
+  const canonicalPath = normalizedPath(pathname)
+  const basePath = normalizedBasePath(base)
+  assertPathInsideBase(canonicalPath, basePath)
 
   const relativePath =
-    normalizedBasePath === '/'
-      ? normalizedPath.slice(1)
-      : normalizedPath.slice(normalizedBasePath.length).replace(/^\//u, '')
+    basePath === '/'
+      ? canonicalPath.slice(1)
+      : canonicalPath.slice(basePath.length).replace(/^\//u, '')
   const relativeSegments = relativePath ? relativePath.split('/') : []
   const markdownSegments =
     relativeSegments.length === 0
@@ -80,21 +86,43 @@ export function markdownRouteForPath(
           ...relativeSegments.slice(0, -1),
           `${relativeSegments.at(-1) ?? ''}.md`,
         ]
-  const publicPrefix = normalizedBasePath === '/' ? '' : normalizedBasePath
+  const publicPrefix = basePath === '/' ? '' : basePath
   const markdownPath = `${publicPrefix}/${markdownSegments.join('/')}`
-  const filePath = posix.join(
-    ...markdownSegments.map((segment) => decodeURIComponent(segment)),
-  )
-
-  if (filePath.startsWith('../') || posix.isAbsolute(filePath)) {
-    throw new Error('Markdown target escapes the output directory')
-  }
+  const filePath = markdownSegments
+    .map((segment) => decodeURIComponent(segment))
+    .join('/')
 
   return {
-    htmlPath: normalizedPath,
+    htmlPath: canonicalPath,
     markdownPath,
     filePath,
   }
+}
+
+export function htmlPathForMarkdownPath(pathname: string, base = '/'): string {
+  if (!pathname.startsWith('/')) throw new Error('Route path must start with /')
+  validateRawPath(pathname)
+
+  const canonicalPath = normalizedPath(pathname)
+  const basePath = normalizedBasePath(base)
+  assertPathInsideBase(canonicalPath, basePath)
+  if (!canonicalPath.endsWith('.md')) {
+    throw new Error(`Markdown route must end with .md: ${canonicalPath}`)
+  }
+
+  const relativePath =
+    basePath === '/'
+      ? canonicalPath.slice(1)
+      : canonicalPath.slice(basePath.length).replace(/^\//u, '')
+  if (relativePath === 'index.md') return basePath
+
+  const htmlRelativePath = relativePath.slice(0, -'.md'.length)
+  if (!htmlRelativePath) {
+    throw new Error(`Markdown route has no HTML route: ${canonicalPath}`)
+  }
+  return basePath === '/'
+    ? `/${htmlRelativePath}`
+    : `${basePath}/${htmlRelativePath}`
 }
 
 export function assertNoRouteCollisions(

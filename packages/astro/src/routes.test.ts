@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { assertNoRouteCollisions, markdownRouteForPath } from './routes.js'
+import {
+  assertNoRouteCollisions,
+  htmlPathForMarkdownPath,
+  markdownRouteForPath,
+} from './routes.js'
 
 test('maps root and nested pages to one stable public contract', () => {
   assert.deepEqual(markdownRouteForPath('/'), {
@@ -21,6 +25,27 @@ test('keeps a base in public URLs without duplicating it in files', () => {
     markdownPath: '/seo/docs/start.md',
     filePath: 'docs/start.md',
   })
+  assert.equal(htmlPathForMarkdownPath('/seo/index.md', '/seo'), '/seo')
+  assert.equal(
+    htmlPathForMarkdownPath('/seo/docs/start.md', '/seo'),
+    '/seo/docs/start',
+  )
+})
+
+test('round trips every generated public route through the shared mapper', () => {
+  for (const [pathname, base] of [
+    ['/', '/'],
+    ['/docs', '/'],
+    ['/caf%C3%A9', '/'],
+    ['/seo', '/seo'],
+    ['/seo/docs/start', '/seo'],
+  ] as const) {
+    const route = markdownRouteForPath(pathname, base)
+    assert.equal(
+      htmlPathForMarkdownPath(route.markdownPath, base),
+      route.htmlPath,
+    )
+  }
 })
 
 test('normalizes Unicode for URLs and decodes it for the filesystem', () => {
@@ -38,6 +63,10 @@ test('rejects traversal, encoded separators, and routes outside the base', () =>
   assert.throws(
     () => markdownRouteForPath('/docs/start', '/site'),
     /outside base/u,
+  )
+  assert.throws(
+    () => htmlPathForMarkdownPath('/docs/start.txt'),
+    /must end with .md/u,
   )
 })
 

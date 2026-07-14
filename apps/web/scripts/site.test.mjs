@@ -110,9 +110,9 @@ test('build contains every public route with one complete SEO contract', () => {
   }
 })
 
-test('home prefixes the brand in its page and social titles', () => {
+test('home uses its H1 in its page and social titles', () => {
   const html = readFileSync(resolve(dist, 'index.html'), 'utf8')
-  const title = 'SEO Skill | Open source SEO audit tool for AI agents'
+  const title = 'The only SEO Skill your agent needs'
 
   const escapedTitle = escapeRegExp(title)
 

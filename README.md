@@ -79,7 +79,7 @@ Running `seo help` shows the shape of the tool:
 ```txt
 seo v0.2.1
 
-Human-friendly SEO reports first, power tools when you need them.
+Run SEO audits, find what needs fixing, and ship the changes with your agent.
 
 Start here
   seo start                                Connect Google and save a project profile

@@ -34,6 +34,28 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'crawl-report', reason: 'Opens the source crawl snapshot.' },
     ],
   },
+  'agent-readiness': {
+    readOrder: [
+      'profile, profileApplicability, dataStatus, and crawl caveats',
+      'summary and topActions',
+      'HTML and Markdown representation checks with affected URLs',
+      'Agent Skills, llms.txt, route manifest, crawler access, and identity evidence',
+    ],
+    doNotClaim: [
+      'A clean content profile is not proof of indexing, rankings, AI mentions, citations, or selection.',
+      'API, application, and commerce checks marked notApplicable were outside this content-site run. They did not fail.',
+      'An allowed crawler token does not prove that a service fetched or used the page.',
+      'Optional discovery files are not Google ranking requirements.',
+    ],
+    verify:
+      'Run the same content profile against the same public route scope after deployment and confirm each failed or warning check changed.',
+    related: [
+      { id: 'ai-readiness', reason: 'Checks AI search technical eligibility.' },
+      { id: 'llms-txt-audit', reason: 'Inspects llms.txt in more detail.' },
+      { id: 'entity-readiness', reason: 'Reviews identity evidence.' },
+      { id: 'site-crawl', reason: 'Creates a reusable crawl baseline.' },
+    ],
+  },
   'ai-readiness': {
     readOrder: [
       'dataStatus and crawl caveats',

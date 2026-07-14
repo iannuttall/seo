@@ -18,8 +18,9 @@ export async function diagnosePropertyWorkflow(input: {
 > {
   const narrative = await reportNarrative(input)
   const skippedCount = narrative.diagnosis.skippedSections?.length ?? 0
-  const stepSummary =
-    narrative.dataStatus === 'complete'
+  const stepSummary = input.skipSearchData
+    ? 'Skipped provider-backed search diagnosis because no Search Console property was selected.'
+    : narrative.dataStatus === 'complete'
       ? 'Generated diagnosis, movement, change, and monitoring narrative.'
       : skippedCount
         ? `Generated ${narrative.dataStatus === 'unavailable' ? 'an' : 'a'} ${narrative.dataStatus} diagnosis; ${skippedCount} sections were unavailable.`
@@ -31,7 +32,7 @@ export async function diagnosePropertyWorkflow(input: {
     steps: [
       {
         tool: 'seo_report_narrative',
-        status: 'completed',
+        status: input.skipSearchData ? 'skipped' : 'completed',
         summary: stepSummary,
       },
     ],

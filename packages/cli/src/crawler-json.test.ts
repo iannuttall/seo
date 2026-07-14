@@ -153,6 +153,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'warning',
       ],
       config: [
+        'checkAgentDiscovery',
         'checkExternal',
         'concurrency',
         'exclude',
@@ -192,7 +193,9 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'queuedUrls',
         'requestByStatus',
         'responseRequests',
+        'skipReasons',
         'skippedUrls',
+        'skippedUrlsByImpact',
         'statusErrors',
         'totalPages',
       ],

@@ -11,6 +11,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Find every URL affected by a technical SEO issue, inspect the crawl evidence on each page and turn one broad finding into a practical fix list.',
     lead: 'Open the URLs behind one crawl finding and see the evidence recorded on each page. Use this when a summary count is too broad to fix safely.',
   },
+  'agent-readiness': {
+    title: 'AI agent readiness',
+    description:
+      'Check Markdown alternatives, agent discovery, crawler access and identity across a content site. Find broken routes without inventing a readiness score.',
+    lead: 'Check whether agents can find and read a clean machine-readable version of every public page. The report tests the content-site contract directly, then keeps unrelated API, application and commerce checks out of the failure count.',
+  },
   'ai-readiness': {
     title: 'AI search readiness audit',
     description:

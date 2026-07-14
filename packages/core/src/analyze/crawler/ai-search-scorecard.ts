@@ -1,6 +1,10 @@
 import { effectiveSnippetControl } from '../../robots-directives.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import { entityReadiness } from './entity-readiness.js'
+import {
+  entityReadiness,
+  isEntityEvidenceSchemaType,
+  isSiteIdentitySchemaType,
+} from './entity-readiness.js'
 import { type GeoGapResult, geoGapsReport } from './geo-gaps.js'
 import { auditLlmsTxt } from './llms.js'
 import type { CrawlAiBotAccess, CrawlReport } from './report.js'
@@ -116,10 +120,6 @@ export type AiSearchScorecard = {
     partialReasons: GeoGapResult['source']['partialReasons']
   }
 }
-
-const ENTITY_SCHEMA_PATTERN =
-  /^(Organization|LocalBusiness|Person|Product|WebSite)$/i
-const SITE_ENTITY_TYPE_PATTERN = /^(Organization|LocalBusiness)$/i
 
 function indexablePages(report: CrawlReport): CrawlPageSnapshot[] {
   return report.pages.filter((page) => page.indexable && page.status < 400)
@@ -406,10 +406,10 @@ function entityIdentityCheck(report: CrawlReport): ScorecardCheck {
     }
   }
   const hasEntitySchema = Object.keys(entity.entities.schemaTypes).some(
-    (type) => ENTITY_SCHEMA_PATTERN.test(type),
+    isEntityEvidenceSchemaType,
   )
   const siteSameAs = Object.entries(entity.entities.sameAsByType)
-    .filter(([type]) => SITE_ENTITY_TYPE_PATTERN.test(type))
+    .filter(([type]) => isSiteIdentitySchemaType(type))
     .flatMap(([, urls]) => urls)
   const uniqueSiteSameAs = [...new Set(siteSameAs)].sort()
   const status: ScorecardStatus = uniqueSiteSameAs.length
@@ -432,7 +432,7 @@ function entityIdentityCheck(report: CrawlReport): ScorecardCheck {
         ? 'The crawl found sameAs links attached to Organization or LocalBusiness structured data for the site entity.'
         : status === 'warn'
           ? 'Entity schema is present, but no Organization or LocalBusiness sameAs evidence connects the site entity to official profiles.'
-          : 'No Organization, LocalBusiness, Person, Product, or WebSite schema was found on the evaluated pages.',
+          : 'No Organization, LocalBusiness, Person, Product, SoftwareApplication, or WebSite schema was found on the evaluated pages.',
     verification,
   }
 }

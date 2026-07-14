@@ -1,5 +1,6 @@
 import { SEO_VERSION, seoErrorEnvelope, toSeoError } from '@seo/core'
 import { defineCommand, runCommand, runMain } from 'citty'
+import { agentReadinessCommand } from './commands/agent-readiness.js'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
@@ -159,6 +160,7 @@ const allHelpSections: HelpSection[] = [
     commands: [
       ['seo audit-page', 'Audit one page'],
       ['seo crawl', 'Crawl a site for technical SEO issues'],
+      ['seo agent-readiness', 'Check content-site readiness for AI agents'],
       ['seo ai-readiness', 'Review AI-search technical evidence'],
       ['seo llms audit', 'Inspect optional llms.txt presence'],
       ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],
@@ -201,7 +203,7 @@ const allHelpSections: HelpSection[] = [
 function printHelpSections(sections: HelpSection[]): void {
   process.stdout.write(`seo v${pkg.version}\n\n`)
   process.stdout.write(
-    'Human-friendly SEO reports first, power tools when you need them.\n\n',
+    'Run SEO audits, find what needs fixing, and ship the changes with your agent.\n\n',
   )
   for (const section of sections) {
     process.stdout.write(`${section.title}\n`)
@@ -278,6 +280,7 @@ const main = defineCommand({
     'traffic-anomaly': trafficAnomalyCommand,
     'update-correlate': updateCorrelateCommand,
     'ai-referrals': aiReferralsCommand,
+    'agent-readiness': agentReadinessCommand,
     'ai-readiness': aiReadinessCommand,
     'entity-readiness': entityReadinessCommand,
     'audit-page': auditPageCommand,

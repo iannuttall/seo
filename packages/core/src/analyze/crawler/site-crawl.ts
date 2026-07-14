@@ -8,6 +8,7 @@ import {
   CRAWL_CANCELLED,
   cancellationRace,
 } from './crawl-control.js'
+import type { CrawlSkipReason } from './crawl-skip-reasons.js'
 import { verifyExternalLinks } from './external-link-checks.js'
 import { resolveLinkGraphAliases } from './link-graph.js'
 import type {
@@ -367,6 +368,11 @@ export async function crawlSite(
   const followLinks = config.mode === 'site'
   let queuedUrls = 0
   let skippedUrls = 0
+  const skipReasonCounts: Partial<Record<CrawlSkipReason, number>> = {}
+  const recordSkip = (reason: CrawlSkipReason): void => {
+    skippedUrls += 1
+    skipReasonCounts[reason] = (skipReasonCounts[reason] ?? 0) + 1
+  }
   let robotsDeferredUrls = 0
   let originBackpressureSkippedUrls = 0
   let queueSafetySkippedUrls = 0
@@ -450,7 +456,7 @@ export async function crawlSite(
     const enqueue = (value: string, depth: number): void => {
       const normalized = normalizeUrl(value, config.url)
       if (!normalized) {
-        skippedUrls += 1
+        recordSkip('invalid-url')
         emitStatus('url_skipped', {
           url: value,
           depth,
@@ -471,7 +477,7 @@ export async function crawlSite(
         return
       }
       if (!sameOrigin(normalized, origin)) {
-        skippedUrls += 1
+        recordSkip('off-origin')
         emitStatus('url_skipped', {
           url: normalized,
           depth,
@@ -480,7 +486,7 @@ export async function crawlSite(
         return
       }
       if (isLikelyAsset(normalized)) {
-        skippedUrls += 1
+        recordSkip('asset-url')
         emitStatus('url_skipped', {
           url: normalized,
           depth,
@@ -489,7 +495,7 @@ export async function crawlSite(
         return
       }
       if (!passesFilters(normalized, config.include, config.exclude)) {
-        skippedUrls += 1
+        recordSkip('configured-exclusion')
         emitStatus('url_skipped', {
           url: normalized,
           depth,
@@ -498,7 +504,7 @@ export async function crawlSite(
         return
       }
       if (queue.length + visited.size + inFlight.size >= config.maxPages * 5) {
-        skippedUrls += 1
+        recordSkip('queue-safety-limit')
         queueSafetySkippedUrls += 1
         emitStatus('url_skipped', {
           url: normalized,
@@ -636,7 +642,13 @@ export async function crawlSite(
       requests.push(request)
 
       if (request.outcome === 'skipped') {
-        skippedUrls += 1
+        recordSkip(
+          request.reason === 'robots-disallowed'
+            ? 'robots-disallowed'
+            : request.reason === 'robots-deferred'
+              ? 'robots-uncertain'
+              : 'origin-backpressure',
+        )
         if (request.reason === 'robots-deferred') {
           robotsDeferredUrls += 1
           warnings.push(
@@ -765,7 +777,7 @@ export async function crawlSite(
         page.declaredIndexability = 'robots-blocked'
         storeDocument([])
         warnings.push(`${page.url}: skipped because robots.txt disallows it`)
-        skippedUrls += 1
+        recordSkip('robots-disallowed')
         emitStatus('page_skipped', {
           url: page.url,
           depth: task.depth,
@@ -891,6 +903,18 @@ export async function crawlSite(
       })
     }
 
+    const agentDiscovery =
+      !cancelled && config.checkAgentDiscovery
+        ? await deps.collectAgentDiscovery({
+            startUrl: config.url,
+            pages,
+            timeoutMs: config.timeoutMs,
+            fetch: deps.fetch,
+            signal,
+            concurrency: Math.min(config.concurrency, 4),
+          })
+        : undefined
+
     for (const page of pages) {
       if (!page.geo) continue
       page.geo = {
@@ -918,6 +942,7 @@ export async function crawlSite(
       },
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
+      ...(agentDiscovery ? { agentDiscovery } : {}),
       status: reportStatus,
       warnings,
       caveats: crawlCaveats({
@@ -932,6 +957,7 @@ export async function crawlSite(
         queuedUrls,
         crawledUrls: pages.length,
         skippedUrls,
+        skipReasonCounts,
         failedUrls,
         observedInternalLinks,
         pageLimitReached,

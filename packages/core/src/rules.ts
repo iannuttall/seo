@@ -450,7 +450,7 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'Readers and agents following citations hit dead ends, which weakens trust in the content.',
     howToVerify:
-      'Re-run the crawl with external checks enabled and confirm the external link no longer appears in externalLinkChecks as broken.',
+      'Re-run the crawl with external checks enabled and confirm the URL no longer has a confirmed-broken externalLinkChecks result.',
   },
   {
     id: 'orphan_page',

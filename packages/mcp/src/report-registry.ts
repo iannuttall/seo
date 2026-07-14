@@ -95,6 +95,7 @@ const reportGroups: readonly ReportGroup[] = [
     register: registerCrawlerTools,
     names: [
       'seo_affected_urls',
+      'seo_agent_readiness',
       'seo_ai_readiness',
       'seo_audit_urls',
       'seo_compare_crawl_reports',

@@ -263,10 +263,11 @@ function crawlInput(input: IndexCoverageCrawlInput): {
   const completeness: IndexCoverageSourceCompleteness = report
     ? report.summary.pageLimitReached
       ? 'truncated'
-      : report.status === 'completed'
-        ? 'complete'
-        : report.status === 'partial'
-          ? 'partial'
+      : report.status === 'partial' ||
+          report.summary.skippedUrlsByImpact.coverageAffecting > 0
+        ? 'partial'
+        : report.status === 'completed'
+          ? 'complete'
           : 'unknown'
     : 'completeness' in input
       ? input.completeness

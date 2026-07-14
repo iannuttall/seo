@@ -44,6 +44,50 @@ export const reportGuideOverridesAF: Partial<
       supportingKeywords: [],
     },
   },
+  'agent-readiness': {
+    name: 'Check AI agent readiness',
+    summary:
+      'Check whether agents can find, fetch, and read a stable machine-readable version of every public content page.',
+    inputs: [
+      {
+        label: 'Fresh content-site crawl',
+        role: 'Provides the public HTML route inventory, response evidence, crawler policy, and structured identity found during this run.',
+      },
+      {
+        label: 'Agent-facing representations and discovery',
+        role: 'Provides Markdown alternatives, negotiated responses, the route manifest, Agent Skills, and llms.txt for direct validation.',
+      },
+    ],
+    checks: [
+      'Confirms that every successful public HTML page advertises one working Markdown alternative with a matching canonical relationship.',
+      'Compares explicit and negotiated Markdown byte for byte, honours Accept q-values, and checks repeated response hashes for stability.',
+      'Validates Agent Skills digests, llms.txt links, route-manifest coverage, crawler access, protocol handling, and the site identity graph.',
+    ],
+    returns: [
+      'An unscored content-profile result with pass, warning, fail, unknown, information, and not-applicable states kept separate.',
+      'Affected URLs, observed evidence, and a concrete action for every representation or discovery check that needs attention.',
+      'Profile applicability showing that API, application, and commerce checks were outside this content-site run rather than failed.',
+    ],
+    alternatives: [
+      {
+        when: 'You want to check technical eligibility for Google AI search features rather than the machine-readable content contract.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI search readiness. It checks crawl, index, canonical, snippet, and page evidence without treating optional agent discovery as a search requirement.',
+      },
+      {
+        when: 'You need observed mentions, citations, prompt coverage, or share of voice inside AI answers.',
+        href: '/docs/ai-visibility',
+        label: 'AI visibility tracking',
+        doInstead:
+          'Use a repeatable external visibility measurement. This audit can prove whether the site delivered its content contract, but it cannot show whether an AI product used it.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'AI agent readiness',
+      supportingKeywords: ['markdown for AI agents', 'AI agent website audit'],
+    },
+  },
   'ai-readiness': {
     name: 'Check AI search technical readiness',
     summary:

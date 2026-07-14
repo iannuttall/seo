@@ -31,6 +31,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A focused list of affected URLs with the evidence for each match.',
   },
+  'agent-readiness': {
+    name: 'AI agent readiness',
+    description:
+      'Check whether a content site gives agents clean, stable, machine-readable pages and discovery files.',
+    useWhen: [
+      'You want to test Markdown alternatives, content negotiation, Agent Skills, llms.txt, identity, and crawler access together.',
+      'You need evidence that the agent-facing version of a content site matches its public HTML routes.',
+    ],
+    avoidWhen: [
+      'You need an AI visibility, mention, citation, or ranking report.',
+      'You are auditing a public API, interactive application, or commerce flow rather than a content site.',
+    ],
+    outcome:
+      'An unscored content-site assessment with failed routes, evidence, and clear next actions.',
+  },
   'ai-readiness': {
     name: 'AI search technical readiness',
     description:

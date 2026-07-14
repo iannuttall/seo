@@ -447,6 +447,7 @@ export async function crawlOne(
       sampleExternalLinks: uniqueExternalLinks.slice(0, 25),
       internalAnchorSamples: anchorSamples(extracted.links, true),
       externalAnchorSamples: anchorSamples(extracted.links, false),
+      markdownAlternates: extracted.markdownAlternates,
       schemaTypes: extracted.schemaTypes,
       structuredDataFormats: extracted.structuredDataFormats ?? [],
       googleRichResults: richResults.assessments,

@@ -1,4 +1,8 @@
 import type {
+  CrawlSkippedUrlsByImpact,
+  CrawlSkipReasonCount,
+} from './crawl-skip-reasons.js'
+import type {
   CrawlConfig,
   CrawlReport,
   CrawlReportDataSources,
@@ -33,6 +37,8 @@ export type CrawlSnapshotCompleteness = {
   requestEvidenceStatus: CrawlReport['requestEvidenceStatus']
   pageLimitReached: boolean
   skippedUrls: number
+  skipReasons: CrawlSkipReasonCount[]
+  skippedUrlsByImpact: CrawlSkippedUrlsByImpact
   failedRequests: number
   abortedRequests: number
   extractionFailures: number
@@ -125,7 +131,9 @@ function completenessReasons(report: CrawlReport): string[] {
   if (report.requestEvidenceStatus !== 'available') {
     reasons.push(`request-evidence-${report.requestEvidenceStatus}`)
   }
-  if (report.summary.skippedUrls > 0) reasons.push('urls-skipped')
+  if (report.summary.skippedUrlsByImpact.coverageAffecting > 0) {
+    reasons.push('coverage-affecting-urls-skipped')
+  }
   if (report.summary.failedRequests > 0) reasons.push('requests-failed')
   if (report.summary.abortedRequests > 0) reasons.push('requests-aborted')
   if (report.summary.extractionFailures > 0) {
@@ -169,6 +177,8 @@ function snapshotCompleteness(report: CrawlReport): CrawlSnapshotCompleteness {
     requestEvidenceStatus: report.requestEvidenceStatus,
     pageLimitReached: report.summary.pageLimitReached,
     skippedUrls: report.summary.skippedUrls,
+    skipReasons: report.summary.skipReasons,
+    skippedUrlsByImpact: report.summary.skippedUrlsByImpact,
     failedRequests: report.summary.failedRequests,
     abortedRequests: report.summary.abortedRequests,
     extractionFailures: report.summary.extractionFailures,

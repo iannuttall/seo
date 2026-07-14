@@ -165,6 +165,9 @@ test('crawl report store recomputes derived fields on load', () => {
   legacyPage.geoScore = 20
   legacySummary.healthScore = 70
   legacySummary.geoReadinessScore = 20
+  legacySummary.skippedUrls = 2
+  delete legacySummary.skipReasons
+  delete legacySummary.skippedUrlsByImpact
   delete legacyJson.definitionId
   delete legacyJson.requests
   delete legacyJson.requestEvidenceStatus
@@ -182,6 +185,17 @@ test('crawl report store recomputes derived fields on load', () => {
   assert.equal('geoScore' in (loaded?.pages[0] ?? {}), false)
   assert.equal(loaded?.requestEvidenceStatus, 'unavailable')
   assert.equal(loaded?.summary.attemptedRequests, 0)
+  assert.deepEqual(loaded?.summary.skipReasons, [
+    {
+      reason: 'legacy-unclassified',
+      impact: 'coverage-affecting',
+      count: 2,
+    },
+  ])
+  assert.deepEqual(loaded?.summary.skippedUrlsByImpact, {
+    coverageAffecting: 2,
+    nonImpacting: 0,
+  })
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
   assert.equal(loaded?.definitionId, report.definitionId)
 })

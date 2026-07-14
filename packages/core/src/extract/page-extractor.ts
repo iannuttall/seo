@@ -165,6 +165,21 @@ export async function extractPage(
     }
   }
 
+  const markdownAlternates = [
+    ...new Set(
+      $('head link[rel~="alternate"][type][href]')
+        .toArray()
+        .filter(
+          (element) =>
+            $(element).attr('type')?.trim().toLowerCase() === 'text/markdown',
+        )
+        .map((element) =>
+          httpUrl($(element).attr('href'), fetchResult.finalUrl),
+        )
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ].sort()
+
   const openGraph = Object.fromEntries(
     $('meta[property^="og:"]')
       .toArray()
@@ -315,6 +330,7 @@ export async function extractPage(
     hasViewport: Boolean($('meta[name="viewport"]').attr('content')),
     headings,
     links,
+    markdownAlternates,
     hreflang,
     jsonLd: structuredData.jsonLd,
     invalidJsonLdCount: structuredData.invalidJsonLdSamples.length,

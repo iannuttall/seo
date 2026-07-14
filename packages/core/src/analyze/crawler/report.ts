@@ -13,8 +13,17 @@ import type {
 import type {
   CrawlPageSnapshot,
   CrawlRequestObservation,
+  ExternalLinkCheckState,
 } from '../monitoring/types.js'
+import type { CrawlAgentDiscovery } from './agent-discovery.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
+import {
+  type CrawlSkippedUrlsByImpact,
+  type CrawlSkipReason,
+  type CrawlSkipReasonCount,
+  crawlSkipReasonCountsFromRecord,
+  normalizeCrawlSkipReasonCounts,
+} from './crawl-skip-reasons.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 
@@ -33,6 +42,7 @@ export type CrawlConfig = {
   respectRobots: boolean
   useSitemap: boolean
   checkExternal: boolean
+  checkAgentDiscovery: boolean
   js: JavaScriptRenderingMode
   refresh: boolean
   fetchRate: CrawlFetchRateConfig
@@ -114,6 +124,7 @@ export type CrawlRunStats = {
   queuedUrls: number
   crawledUrls: number
   skippedUrls: number
+  skipReasonCounts?: Partial<Record<CrawlSkipReason, number>>
   failedUrls: number
   observedInternalLinks: number
   pageLimitReached: boolean
@@ -184,6 +195,7 @@ export type CrawlExternalLinkVerification = {
   failedUrls: number
   deferredUrls: number
   limit: number
+  outcomes?: Record<ExternalLinkCheckState, number>
   warnings: string[]
 }
 
@@ -243,6 +255,8 @@ export type CrawlReportSummary = {
   queuedUrls: number
   crawledUrls: number
   skippedUrls: number
+  skipReasons: CrawlSkipReasonCount[]
+  skippedUrlsByImpact: CrawlSkippedUrlsByImpact
   failedUrls: number
   observedInternalLinks: number
   pageLimitReached: boolean
@@ -281,6 +295,7 @@ export type CrawlReport = {
   ai?: CrawlAiSignals
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
+  agentDiscovery?: CrawlAgentDiscovery
   warnings: string[]
   caveats: string[]
 }
@@ -333,6 +348,7 @@ export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
     respectRobots: input.respectRobots ?? true,
     useSitemap: input.useSitemap ?? true,
     checkExternal: input.checkExternal ?? true,
+    checkAgentDiscovery: input.checkAgentDiscovery ?? false,
     js: normalizeJavaScriptRenderingMode(input.js),
     refresh: input.refresh ?? false,
     fetchRate: normalizeFetchRate(input),
@@ -500,7 +516,7 @@ export function summarizeCrawlReport(input: {
   requests?: CrawlRequestObservation[]
   requestEvidenceStatus?: CrawlReport['requestEvidenceStatus']
   issues: CrawlIssue[]
-  stats?: Partial<CrawlRunStats>
+  stats?: Partial<CrawlRunStats> & { skipReasons?: CrawlSkipReasonCount[] }
 }): CrawlReportSummary {
   const byStatus: Record<string, number> = {}
   const requestByStatus: Record<string, number> = {}
@@ -545,6 +561,7 @@ export function summarizeCrawlReport(input: {
     byCategory[issue.category] = (byCategory[issue.category] ?? 0) + 1
   }
 
+  const runStats = crawlRunStats(input.pages, input.stats)
   return {
     totalPages: input.pages.length,
     indexablePages: input.pages.filter((page) => page.indexable).length,
@@ -552,7 +569,7 @@ export function summarizeCrawlReport(input: {
     statusErrors: input.pages.filter(
       (page) => page.status === 0 || page.status >= 400,
     ).length,
-    ...crawlRunStats(input.pages, input.stats),
+    ...runStats,
     attemptedRequests:
       input.requestEvidenceStatus === 'unavailable' ? 0 : requests.length,
     responseRequests: requests.filter(
@@ -583,8 +600,11 @@ export function summarizeCrawlReport(input: {
 
 function crawlRunStats(
   pages: CrawlPageSnapshot[],
-  stats: Partial<CrawlRunStats> = {},
-): CrawlRunStats {
+  stats: Partial<CrawlRunStats> & { skipReasons?: CrawlSkipReasonCount[] } = {},
+): Omit<CrawlRunStats, 'skipReasonCounts'> & {
+  skipReasons: CrawlSkipReasonCount[]
+  skippedUrlsByImpact: CrawlSkippedUrlsByImpact
+} {
   const discovered = new Set<string>()
   let observedInternalLinks = 0
   for (const page of pages) {
@@ -593,11 +613,19 @@ function crawlRunStats(
     for (const url of page.sampleExternalLinks ?? []) discovered.add(url)
     observedInternalLinks += page.outgoingInternalCount
   }
+  const skips = normalizeCrawlSkipReasonCounts({
+    skippedUrls: stats.skippedUrls,
+    skipReasons:
+      stats.skipReasons ??
+      crawlSkipReasonCountsFromRecord(stats.skipReasonCounts),
+  })
   return {
     discoveredUrls: stats.discoveredUrls ?? discovered.size,
     queuedUrls: stats.queuedUrls ?? pages.length,
     crawledUrls: stats.crawledUrls ?? pages.length,
-    skippedUrls: stats.skippedUrls ?? 0,
+    skippedUrls: skips.skippedUrls,
+    skipReasons: skips.skipReasons,
+    skippedUrlsByImpact: skips.skippedUrlsByImpact,
     failedUrls:
       stats.failedUrls ??
       pages.filter((page) => page.status === 0 || page.status >= 400).length,
@@ -689,6 +717,7 @@ export function createCrawlReport(input: {
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
+  agentDiscovery?: CrawlAgentDiscovery
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -767,6 +796,13 @@ export function createCrawlReport(input: {
           externalLinkVerification: sanitizeTenantValue(
             input.externalLinkVerification,
           ) as CrawlExternalLinkVerification,
+        }
+      : {}),
+    ...(input.agentDiscovery
+      ? {
+          agentDiscovery: sanitizeTenantValue(
+            input.agentDiscovery,
+          ) as CrawlAgentDiscovery,
         }
       : {}),
     warnings: sanitizeMessages(input.warnings).sort(compareText),

@@ -139,12 +139,12 @@ test('every content page has one deterministic Markdown alternative', () => {
 
   assert.equal(manifest.version, 1)
   assert.equal(manifest.site, 'https://seoskill.dev')
-  assert.equal(manifest.pages.length, 70)
+  assert.equal(manifest.pages.length, 71)
   assert.deepEqual(manifestPaths, [...manifestPaths].sort())
   assert.equal(
     manifest.pages.filter((page) => page.htmlPath.startsWith('/docs/reports/'))
       .length,
-    52,
+    53,
   )
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
@@ -503,11 +503,8 @@ test('published report count stays tied to the implementation', async () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const homeText = home.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
 
-  assert.equal(listReportDefinitions().length, 52)
-  assert.match(
-    homeText,
-    new RegExp(`${listReportDefinitions().length} reports`),
-  )
+  assert.equal(listReportDefinitions().length, 53)
+  assert.match(homeText, /50\+ reports/)
 })
 
 test('well-known discovery publishes canonical skills with verified digests', () => {
@@ -614,7 +611,7 @@ test('Cloudflare only runs the thin representation adapter for document routes',
   assert.doesNotMatch(worker, /Turndown|Defuddle|fetch\(['"]https?:/i)
   assert.match(headers, /Content-Signal: search=yes, ai-input=yes, ai-train=no/)
   assert.match(headers, /Strict-Transport-Security: max-age=300/)
-  assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 70)
+  assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 71)
   for (const page of [
     'cookies',
     'privacy',
@@ -662,7 +659,7 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(home, /your agent needs/)
   assert.match(
     home,
-    /One SEO skill and \d+ audit tools for AI agents to fix\s+issues, measure performance, and grow your organic and AI search\s+visibility\./,
+    /One SEO skill and 50\+ audit tools for AI agents to fix\s+issues, measure performance, and grow your organic and AI search\s+visibility\./,
   )
   assert.match(home, /data-glitch/)
   assert.match(home, /prefers-reduced-motion: reduce/)

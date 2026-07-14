@@ -297,6 +297,7 @@ export interface ExtractedPage {
     internal: boolean
     location: ExtractedLinkLocation
   }>
+  markdownAlternates?: string[]
   hreflang: Array<{ hreflang: string; href: string }>
   jsonLd: unknown[]
   invalidJsonLdCount: number

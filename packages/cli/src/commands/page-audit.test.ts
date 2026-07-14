@@ -103,6 +103,8 @@ test('report runs a technical crawl when given only a URL', async () => {
       },
     )
     const report = JSON.parse(result.stdout) as {
+      summary: string
+      steps: Array<{ tool: string; status: string; summary: string }>
       detail: string
       output: {
         narrative: {
@@ -123,6 +125,12 @@ test('report runs a technical crawl when given only a URL', async () => {
     }
 
     assert.equal(report.detail, 'summary')
+    assert.match(report.summary, /^Completed a technical crawl of 1 page\./)
+    assert.match(report.summary, /Search Console and GA4 sections were skipped/)
+    assert.equal(report.steps[0]?.tool, 'seo_crawl')
+    assert.equal(report.steps[0]?.status, 'completed')
+    assert.equal(report.steps[1]?.tool, 'seo_report_narrative')
+    assert.equal(report.steps[1]?.status, 'skipped')
     const compactBytes = Buffer.byteLength(result.stdout)
     assert.ok(
       compactBytes < 15_000,
@@ -200,13 +208,19 @@ test('report runs a technical crawl when given only a URL', async () => {
       },
     )
     assert.match(human.stdout, /# Technical SEO report/)
-    assert.match(
-      human.stdout,
-      /Technical fixes \(no Search Console data joined\)/,
-    )
+    assert.match(human.stdout, /Prioritised technical fixes/)
+    assert.match(human.stdout, /Provider-backed sections skipped/)
     assert.match(human.stdout, /Search Console: not connected\./)
     assert.match(human.stdout, /GA4: not connected\./)
     assert.doesNotMatch(human.stdout, /Diagnosis unavailable/)
+    assert.ok(
+      human.stdout.indexOf('Technical crawl evidence') <
+        human.stdout.indexOf('Provider-backed sections skipped'),
+    )
+    assert.ok(
+      human.stdout.indexOf('Prioritised technical fixes') <
+        human.stdout.indexOf('Search Console: not connected.'),
+    )
   } finally {
     await new Promise<void>((resolve, reject) => {
       ;(server as Server).close((error) => {

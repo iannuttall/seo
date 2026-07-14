@@ -1,5 +1,6 @@
 ---
 import FooterDither from '@/components/FooterDither.astro'
+import OgTemplate from '@/components/OgTemplate.astro'
 import { site } from '@/lib/site'
 import {
   type PageSchemaType,
@@ -145,6 +146,24 @@ const projectThings = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
+    <script is:inline>
+      if (new URLSearchParams(window.location.search).has('og')) {
+        document.documentElement.dataset.ogPreview = 'true'
+      }
+    </script>
+    <style is:global>
+      html[data-og-preview='true'] [data-site-shell] {
+        display: none;
+      }
+
+      html[data-og-preview='true'],
+      html[data-og-preview='true'] body {
+        width: 1200px;
+        height: 630px;
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#000000" />
     {noindex ? <meta name="robots" content="noindex, follow" /> : null}
@@ -189,7 +208,7 @@ const projectThings = [
     <title>{pageTitle}</title>
   </head>
   <body class="bg-background font-mono text-foreground">
-    <div class="flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div class="flex min-h-screen flex-col overflow-hidden bg-background text-foreground" data-site-shell>
       <header class="sticky top-0 z-50 border-b border-header-border bg-header text-header-foreground selection:bg-header-foreground/25 selection:text-header-foreground">
         <div class="mx-auto flex w-full max-w-4xl items-center justify-between px-8 py-3 md:px-12">
           <a class="underline underline-offset-2 hover:decoration-dotted" href="/">{site.name}</a>
@@ -270,5 +289,17 @@ const projectThings = [
         })
       </script>
     </div>
+    <template data-og-template data-og-width="1200" data-og-height="630">
+      <OgTemplate title={title} description={description} />
+    </template>
+    <script is:inline>
+      const template = document.querySelector('template[data-og-template]')
+
+      if (document.documentElement.dataset.ogPreview === 'true' && template) {
+        document.body.replaceChildren(template.content.cloneNode(true))
+      }
+
+      window.__OG_READY__ = true
+    </script>
   </body>
 </html>

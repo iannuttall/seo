@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  agentReadiness,
   aiReadiness,
   aiSearchScorecard,
   auditLlmsTxt,
@@ -17,6 +18,7 @@ import {
   listRules,
   loadCrawlReport,
   reviewObservations,
+  SeoError,
   saveCrawlReport,
   selectAffectedUrls,
   topFixes,
@@ -78,6 +80,12 @@ function resolveSavedReportAlias(input: {
     return meta ? loadCrawlReport(meta.id) : undefined
   }
   return loadCrawlReport(input.value)
+}
+
+function assertExclusiveReportInput(url?: string, reportId?: string): void {
+  if (url && reportId) {
+    throw new SeoError('INVALID_INPUT', 'Use either url or reportId, not both.')
+  }
 }
 
 export function registerCrawlerTools(server: McpServer): void {
@@ -253,6 +261,7 @@ export function registerCrawlerTools(server: McpServer): void {
       limit,
     }) => {
       try {
+        assertExclusiveReportInput(url, reportId)
         const report = url
           ? await crawlSite({
               url,
@@ -460,6 +469,62 @@ export function registerCrawlerTools(server: McpServer): void {
             ...gaps,
           },
         )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_agent_readiness',
+    {
+      description:
+        'Check a content site for stable Markdown alternatives, agent discovery, crawler access, and identity evidence without an aggregate score.',
+      inputSchema: {
+        url: z.string().url().optional(),
+        reportId: z.string().optional(),
+        site: z.string().optional(),
+        maxPages: z.number().int().positive().optional(),
+        fetchIntervalCap: z.number().int().positive().optional(),
+        fetchIntervalMs: z.number().int().positive().optional(),
+        refresh: z.boolean().optional(),
+      },
+    },
+    async ({
+      url,
+      reportId,
+      site,
+      maxPages,
+      fetchIntervalCap,
+      fetchIntervalMs,
+      refresh,
+    }) => {
+      try {
+        assertExclusiveReportInput(url, reportId)
+        const report = url
+          ? await crawlSite({
+              url,
+              site,
+              maxPages,
+              refresh,
+              checkAgentDiscovery: true,
+              useSitemap: true,
+              checkExternal: false,
+              fetchRate: fetchRateInput({
+                fetchIntervalCap,
+                fetchIntervalMs,
+              }),
+            })
+          : reportId
+            ? loadCrawlReport(reportId)
+            : latestCrawlReport(site)
+        if (!report) {
+          return toolError(
+            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
+          )
+        }
+        const readiness = agentReadiness(report)
+        return toolSuccess(readiness.headline, readiness)
       } catch (error) {
         return toolError(error)
       }

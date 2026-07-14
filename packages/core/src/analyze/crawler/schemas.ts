@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { listRules } from '../../rules.js'
+import { agentDiscoverySchema } from './agent-discovery-schema.js'
+import { CRAWL_SKIP_REASONS } from './crawl-skip-reasons.js'
 
 export const crawlerRuleSeveritySchema = z.enum(['low', 'medium', 'high'])
 export const crawlerRuleRecommendationSchema = z.enum(['fix', 'review'])
@@ -421,12 +423,33 @@ export const crawlPageSnapshotSchema = z.object({
   externalAnchorSamples: z
     .array(z.object({ href: z.string().url(), text: z.string() }))
     .optional(),
+  markdownAlternates: z.array(z.string().url()).optional(),
   externalLinkChecks: z
     .array(
       z.object({
         url: z.string().url(),
         status: z.number().int().optional(),
         error: z.string().optional(),
+        state: z
+          .enum([
+            'available',
+            'confirmed-broken',
+            'transient',
+            'provider-blocked',
+            'rate-limited',
+            'method-rejected',
+            'unavailable',
+          ])
+          .optional(),
+        attempts: z
+          .array(
+            z.object({
+              method: z.enum(['HEAD', 'GET']),
+              status: z.number().int().optional(),
+              error: z.string().optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .optional(),
@@ -728,6 +751,20 @@ const crawlExternalLinkVerificationSchema = z.object({
   failedUrls: z.number().int().nonnegative(),
   deferredUrls: z.number().int().nonnegative(),
   limit: z.number().int().positive(),
+  outcomes: z
+    .record(
+      z.enum([
+        'available',
+        'confirmed-broken',
+        'transient',
+        'provider-blocked',
+        'rate-limited',
+        'method-rejected',
+        'unavailable',
+      ]),
+      z.number().int().nonnegative(),
+    )
+    .optional(),
   warnings: z.array(z.string()),
 })
 
@@ -744,6 +781,7 @@ export const crawlConfigSchema = z.object({
   respectRobots: z.boolean(),
   useSitemap: z.boolean(),
   checkExternal: z.boolean(),
+  checkAgentDiscovery: z.boolean(),
   js: z.union([z.enum(['auto', 'on', 'off']), z.boolean()]),
   refresh: z.boolean(),
   fetchRate: z.object({
@@ -773,6 +811,17 @@ export const crawlReportSummarySchema = z.object({
   queuedUrls: z.number().int(),
   crawledUrls: z.number().int(),
   skippedUrls: z.number().int(),
+  skipReasons: z.array(
+    z.object({
+      reason: z.enum(CRAWL_SKIP_REASONS),
+      impact: z.enum(['coverage-affecting', 'non-impacting']),
+      count: z.number().int().positive(),
+    }),
+  ),
+  skippedUrlsByImpact: z.object({
+    coverageAffecting: z.number().int().nonnegative(),
+    nonImpacting: z.number().int().nonnegative(),
+  }),
   failedUrls: z.number().int(),
   observedInternalLinks: z.number().int(),
   pageLimitReached: z.boolean().default(false),
@@ -857,6 +906,7 @@ const crawlReportBaseSchema = z.object({
   ai: crawlAiSignalsSchema.optional(),
   sitemapDiscovery: crawlSitemapDiscoverySchema.optional(),
   externalLinkVerification: crawlExternalLinkVerificationSchema.optional(),
+  agentDiscovery: agentDiscoverySchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),
 })

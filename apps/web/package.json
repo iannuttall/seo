@@ -17,7 +17,7 @@
     "lint": "astro check && tsc -p tsconfig.worker.json --noEmit && wrangler types --check",
     "preview": "astro preview",
     "preview:worker": "pnpm build && wrangler dev",
-    "test": "node --test scripts/site.test.mjs && pnpm test:worker",
+    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs && pnpm test:worker",
     "test:worker": "node --test scripts/worker.test.mjs",
     "typecheck": "astro check && tsc -p tsconfig.worker.json --noEmit && wrangler types --check",
     "types:worker": "wrangler types worker-configuration.d.ts",

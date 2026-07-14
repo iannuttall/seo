@@ -45,7 +45,7 @@ test('reports list exposes the shared sorted catalog', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   const output = JSON.parse(result.stdout)
-  assert.equal(output.reports.length, 52)
+  assert.equal(output.reports.length, 53)
   assert.deepEqual(output.categories, [
     'ai-search',
     'crawl',

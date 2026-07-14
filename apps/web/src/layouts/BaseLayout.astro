@@ -12,6 +12,7 @@ import '@/styles/globals.css'
 
 type Props = {
   title: string
+  titleBrandPosition?: 'prefix' | 'suffix'
   description: string
   framed?: boolean
   canonicalPath?: string
@@ -24,6 +25,7 @@ type Props = {
 
 const {
   title,
+  titleBrandPosition = 'suffix',
   description,
   framed = true,
   canonicalPath = Astro.url.pathname,
@@ -33,7 +35,11 @@ const {
   dateModified,
   datePublished,
 } = Astro.props
-const pageTitle = title.includes(site.name) ? title : `${title} | ${site.name}`
+const pageTitle = title.includes(site.name)
+  ? title
+  : titleBrandPosition === 'prefix'
+    ? `${site.name} | ${title}`
+    : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
 const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}`
 const year = new Date().getFullYear()

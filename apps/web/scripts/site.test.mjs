@@ -84,7 +84,7 @@ test('build contains every public route with one complete SEO contract', () => {
       new RegExp(`<link rel="canonical" href="${canonical}"\\s*/?>`),
     )
     assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
-    const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}`
+    const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
     assert.match(
       html,
       new RegExp(

@@ -41,7 +41,7 @@ const pageTitle = title.includes(site.name)
     ? `${site.name} | ${title}`
     : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
-const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}`
+const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
 const year = new Date().getFullYear()
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,

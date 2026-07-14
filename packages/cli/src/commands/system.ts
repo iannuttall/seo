@@ -17,6 +17,7 @@ import {
   maybeExitCancelled,
   printJson,
   printKeyValue,
+  printSummaryList,
   printTable,
 } from '../utils.js'
 
@@ -133,15 +134,16 @@ export const updatesCommand = defineCommand({
       printJson({ updates })
       return
     }
-    printTable(
-      ['Start', 'End', 'Type', 'Name', 'Status'],
-      updates.map((update) => [
-        update.start.slice(0, 10),
-        update.end?.slice(0, 10) ?? 'open',
-        update.type,
-        update.name,
-        update.status,
-      ]),
+    printSummaryList(
+      updates.map((update) => ({
+        title: update.name,
+        meta: [
+          update.type,
+          update.status,
+          `${update.start.slice(0, 10)} to ${update.end?.slice(0, 10) ?? 'present'}`,
+        ],
+      })),
+      { empty: 'No matching Google Search updates.' },
     )
   },
 })

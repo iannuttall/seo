@@ -8,9 +8,15 @@ import {
 import {
   type CatalogItemView,
   type CheckView,
+  type ParameterView,
+  renderBulletSection,
   renderCatalog,
   renderChecks,
   renderHeading,
+  renderParameters,
+  renderSection,
+  renderSummaryList,
+  type SummaryItemView,
 } from './presentation/views.js'
 
 export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
@@ -73,6 +79,36 @@ export function printCatalog(
 ): void {
   process.stdout.write(
     `${renderCatalog(items, createTerminalContext(), options)}\n`,
+  )
+}
+
+export function printSummaryList(
+  items: SummaryItemView[],
+  options: { empty: string },
+): void {
+  process.stdout.write(
+    `${renderSummaryList(items, createTerminalContext(), options)}\n`,
+  )
+}
+
+export function printSection(title: string, ...paragraphs: string[]): void {
+  process.stdout.write(
+    `${renderSection(title, paragraphs, createTerminalContext())}\n`,
+  )
+}
+
+export function printBulletSection(
+  title: string,
+  items: readonly string[],
+): void {
+  process.stdout.write(
+    `${renderBulletSection(title, items, createTerminalContext())}\n`,
+  )
+}
+
+export function printParameters(parameters: ParameterView[]): void {
+  process.stdout.write(
+    `${renderParameters(parameters, createTerminalContext())}\n`,
   )
 }
 

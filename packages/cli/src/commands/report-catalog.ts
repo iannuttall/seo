@@ -10,10 +10,14 @@ import {
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../args.js'
 import {
+  printBulletSection,
   printCallout,
   printCatalog,
+  printHeading,
   printJson,
   printKeyValue,
+  printParameters,
+  printSection,
 } from '../utils.js'
 
 const CATEGORY_LABELS: Record<ReportCategory, string> = {
@@ -81,6 +85,39 @@ function throwToolError(result: {
   )
 }
 
+type JsonSchemaProperty = {
+  description?: string
+  format?: string
+  items?: { type?: string }
+  type?: string | string[]
+}
+
+function reportParameters(inputSchema: unknown) {
+  if (!inputSchema || typeof inputSchema !== 'object') return []
+  const schema = inputSchema as {
+    properties?: Record<string, JsonSchemaProperty>
+    required?: string[]
+  }
+  const required = new Set(schema.required ?? [])
+  return Object.entries(schema.properties ?? {}).map(([name, property]) => {
+    const rawType = Array.isArray(property.type)
+      ? property.type.join(' | ')
+      : (property.type ?? 'any')
+    const type =
+      rawType === 'array' && property.items?.type
+        ? `${property.items.type}[]`
+        : property.format
+          ? `${rawType} (${property.format})`
+          : rawType
+    return {
+      name,
+      type,
+      required: required.has(name),
+      description: property.description,
+    }
+  })
+}
+
 const listCommand = defineCommand({
   meta: {
     name: 'list',
@@ -140,30 +177,37 @@ const describeCommand = defineCommand({
       printJson({ report })
       return
     }
+    printHeading(report.name, report.description)
+    process.stdout.write('\n')
     printKeyValue([
       ['ID', report.id],
       ['Category', report.category],
-      ['Name', report.name],
-      ['Description', report.description],
       ['Outcome', report.outcome],
     ])
-    process.stdout.write('\nUse when\n')
-    for (const reason of report.useWhen) process.stdout.write(`- ${reason}\n`)
-    process.stdout.write('\nAvoid when\n')
-    for (const reason of report.avoidWhen) process.stdout.write(`- ${reason}\n`)
-    process.stdout.write('\nRead in order\n')
-    for (const field of report.readOrder) process.stdout.write(`- ${field}\n`)
-    process.stdout.write('\nDo not claim\n')
-    for (const limit of report.doNotClaim) process.stdout.write(`- ${limit}\n`)
-    process.stdout.write(`\nVerify\n- ${report.verify}\n`)
+    process.stdout.write('\n')
+    printBulletSection('Use when', report.useWhen)
+    process.stdout.write('\n')
+    printBulletSection('Avoid when', report.avoidWhen)
+    process.stdout.write('\n')
+    printBulletSection('Read in order', report.readOrder)
+    process.stdout.write('\n')
+    printBulletSection('Do not claim', report.doNotClaim)
+    process.stdout.write('\n')
+    printSection('Verify', report.verify)
     if (report.related.length > 0) {
-      process.stdout.write('\nRelated reports\n')
-      for (const item of report.related) {
-        process.stdout.write(`- ${item.id}: ${item.reason}\n`)
-      }
+      process.stdout.write('\n')
+      printBulletSection(
+        'Related reports',
+        report.related.map((item) => `${item.id}: ${item.reason}`),
+      )
     }
-    process.stdout.write('\nParameters (JSON Schema)\n')
-    printJson(report.inputSchema)
+    process.stdout.write('\nParameters\n')
+    printParameters(reportParameters(report.inputSchema))
+    process.stdout.write('\n')
+    printCallout({
+      title: 'Need the exact schema?',
+      command: `seo reports describe ${report.id} --json`,
+    })
   },
 })
 

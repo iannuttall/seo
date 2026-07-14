@@ -188,11 +188,9 @@ export async function authStatus(): Promise<{
   serviceAccount: ServiceAccountStatus
 }> {
   const status = getAuthModeStatus()
-  const tokens = await readTokens()
   const serviceAccount = getServiceAccountStatus()
   if (serviceAccount.configured || serviceAccount.error) {
     return {
-      tokens,
       configured: serviceAccount.configured,
       sharedConfigured: status.sharedConfigured,
       byoConfigured: status.byoConfigured,
@@ -201,6 +199,7 @@ export async function authStatus(): Promise<{
       serviceAccount,
     }
   }
+  const tokens = await readTokens()
   return {
     tokens,
     configured: Boolean(getClientConfig(tokens?.client_source)),

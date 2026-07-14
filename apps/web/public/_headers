@@ -1,5 +1,5 @@
 /*
-  Content-Signal: search=yes, ai-input=yes, ai-train=no
+  Content-Signal: search=yes, ai-input=yes, ai-train=yes
   Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"
   Link: <https://seoskill.dev/llms.txt>; rel="llms-txt"; type="text/markdown"
   Link: <https://seoskill.dev/.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"

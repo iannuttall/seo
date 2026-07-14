@@ -2,13 +2,13 @@ export const reportNextStepIntros: Record<string, string> = {
   'affected-urls':
     'The URL list is ready for inspection, not bulk editing. Open representative pages, confirm that the rule conflicts with their purpose, then recrawl the same scope after the fix.',
   'ai-readiness':
-    'Start with hard access, indexability or snippet conflicts that work against the publisher\'s intent. Keep referral traffic and assistant mentions as separate measurements because this audit cannot observe either one.',
+    "Start with hard access, indexability or snippet conflicts that work against the publisher's intent. Keep referral traffic and assistant mentions as separate measurements because this audit cannot observe either one.",
   'ai-referrals':
     'Check the matched referrer and landing page before treating a session as useful AI traffic. Search demand and assistant visibility need their own reports because GA4 only records visits that reached the site.',
   'ai-search-scorecard':
     'Open the checks behind the weakest score group and fix only the failures supported by crawl evidence. Run the scorecard again against a comparable crawl so the before and after numbers describe the same scope.',
   'audit-page':
-    'Choose the finding that affects this page\'s actual purpose, make one supported change and audit the URL again. A fresh page check is more useful than carrying an old crawl observation into the next decision.',
+    "Choose the finding that affects this page's actual purpose, make one supported change and audit the URL again. A fresh page check is more useful than carrying an old crawl observation into the next decision.",
   'audit-urls':
     'Separate repeated template problems from failures that affect one URL. Fix a representative page first, then run the same bounded URL list again before changing the rest of the batch.',
   cannibalisation:
@@ -18,7 +18,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'compare-crawls':
     'Confirm that both crawls covered comparable pages before calling a difference a regression or recovery. Audit representative changes directly, then use affected URLs when the same rule spans a larger group.',
   'content-optimization':
-    'Choose the gaps supported by returned queries and the page\'s existing purpose. Update the page around a focused intent, then measure the same query and page set after enough Search Console data has arrived.',
+    "Choose the gaps supported by returned queries and the page's existing purpose. Update the page around a focused intent, then measure the same query and page set after enough Search Console data has arrived.",
   'crawl-diff':
     'Check that the repeated crawl used the same start URL, limits and discovery rules. Inspect new regressions on live pages and run the bounded crawl again after the release fix.',
   'site-crawl':
@@ -48,7 +48,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'internal-links':
     'Open both the suggested source page and target page before adding a link. Keep the link only when it helps the reader in that exact context, then recrawl to confirm the relationship was recorded.',
   'link-recovery':
-    'Inspect the broken URL\'s search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.',
+    "Inspect the broken URL's search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.",
   'crawl-history':
     'Choose snapshots with the date and crawl scope needed for the decision. Open one report for a focused investigation or compare two compatible runs when you need evidence of change.',
   'crawler-rules':
@@ -76,7 +76,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'quick-wins':
     'Inspect the current result and page intent before changing its snippet. Record the exact title or description update and compare the same queries after a complete data window.',
   'redirect-trace':
-    'Fix loops, unnecessary hops and destinations that do not match the original URL\'s purpose. Update internal links to the final URL and trace the path again after deployment.',
+    "Fix loops, unnecessary hops and destinations that do not match the original URL's purpose. Update internal links to the final URL and trace the path again after deployment.",
   'narrative-report':
     'Check every main claim against the linked crawl evidence before sharing the narrative. Keep affected pages, warnings and missing sections attached so the reader can inspect what supports the recommendation.',
   'second-page':
@@ -107,7 +107,7 @@ export const reportNextStepIntros: Record<string, string> = {
 
 export const reportScheduleNotes: Partial<Record<string, string>> = {
   'ai-referrals':
-    'Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete GA4 periods because today\'s traffic can still be arriving or attributed.',
+    "Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete GA4 periods because today's traffic can still be arriving or attributed.",
   'compare-crawls':
     'Your agent can schedule matching crawls and compare each new snapshot with the previous one. Keep the start URL, scope and limits stable or the change list will mix site changes with crawl changes.',
   'crawl-diff':

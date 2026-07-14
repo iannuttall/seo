@@ -1,14 +1,9 @@
 ---
 import DottedCard from '@/components/DottedCard.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import FeatureShowcase from '@/components/FeatureShowcase.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import { reports } from '@/content/reports'
 import {
   reportCollectionIds,
@@ -158,16 +153,7 @@ const faqs = [
           text="Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use."
         />
         <DottedCard patternId="faq-card">
-          <Accordion>
-            {
-              faqs.map((item) => (
-                <AccordionItem value={item.question}>
-                  <AccordionTrigger>{item.question}</AccordionTrigger>
-                  <AccordionContent>{item.answer}</AccordionContent>
-                </AccordionItem>
-              ))
-            }
-          </Accordion>
+          <FaqAccordion items={faqs} />
         </DottedCard>
       </div>
     </section>

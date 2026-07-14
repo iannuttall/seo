@@ -1,0 +1,135 @@
+---
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+
+type FaqItem = {
+  question: string
+  answer: string
+}
+
+type Props = {
+  items: FaqItem[]
+}
+
+const { items } = Astro.props
+---
+
+<div class="w-full" data-faq-accordion>
+  {
+    items.map((item, index) => (
+      <div
+        class="border-b border-border bg-background last:border-b-0"
+        data-faq-item
+        data-state="closed"
+      >
+        <h3 class="flex text-sm font-normal tracking-wide">
+          <button
+            id={`faq-trigger-${index + 1}`}
+            type="button"
+            aria-controls={`faq-content-${index + 1}`}
+            aria-expanded="false"
+            class="group flex flex-1 cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left text-sm outline-none transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            data-faq-trigger
+          >
+            <span>{item.question}</span>
+            <PixelIcon
+              name="chevron-down-2"
+              class="size-3.5 shrink-0 text-foreground transition-transform duration-200 group-aria-expanded:rotate-180"
+            />
+          </button>
+        </h3>
+        <div
+          id={`faq-content-${index + 1}`}
+          role="region"
+          aria-labelledby={`faq-trigger-${index + 1}`}
+          aria-hidden="true"
+          class="faq-content grid text-sm"
+          data-faq-content
+          data-state="closed"
+        >
+          <div class="overflow-hidden">
+            <div class="max-w-3xl px-6 pb-5 pt-3 font-sans text-sm leading-6 text-foreground-muted">
+              {item.answer}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  for (const root of document.querySelectorAll('[data-faq-accordion]')) {
+    if (!(root instanceof HTMLElement) || root.dataset.faqReady === 'true') continue
+    root.dataset.faqReady = 'true'
+
+    const items = Array.from(root.querySelectorAll('[data-faq-item]')).filter(
+      (item): item is HTMLElement => item instanceof HTMLElement,
+    )
+    const triggers = items
+      .map((item) => item.querySelector('[data-faq-trigger]'))
+      .filter((trigger): trigger is HTMLButtonElement => trigger instanceof HTMLButtonElement)
+
+    const setOpen = (item: HTMLElement, open: boolean) => {
+      const trigger = item.querySelector('[data-faq-trigger]')
+      const content = item.querySelector('[data-faq-content]')
+      if (!(trigger instanceof HTMLButtonElement) || !(content instanceof HTMLElement)) return
+
+      const state = open ? 'open' : 'closed'
+      item.dataset.state = state
+      content.dataset.state = state
+      trigger.setAttribute('aria-expanded', String(open))
+      content.setAttribute('aria-hidden', String(!open))
+    }
+
+    for (const item of items) {
+      const trigger = item.querySelector('[data-faq-trigger]')
+      if (!(trigger instanceof HTMLButtonElement)) continue
+
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault()
+        const shouldOpen = item.dataset.state !== 'open'
+
+        if (shouldOpen) {
+          for (const other of items) {
+            if (other === item) continue
+            setOpen(other, false)
+          }
+        }
+
+        setOpen(item, shouldOpen)
+      })
+
+      trigger.addEventListener('keydown', (event) => {
+        const currentIndex = triggers.indexOf(trigger)
+        let nextIndex = currentIndex
+
+        if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % triggers.length
+        else if (event.key === 'ArrowUp') {
+          nextIndex = (currentIndex - 1 + triggers.length) % triggers.length
+        } else if (event.key === 'Home') nextIndex = 0
+        else if (event.key === 'End') nextIndex = triggers.length - 1
+        else return
+
+        event.preventDefault()
+        triggers[nextIndex]?.focus()
+      })
+    }
+  }
+</script>
+
+<style>
+  .faq-content {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .faq-content[data-state='open'] {
+    grid-template-rows: 1fr;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-content {
+      transition: none;
+    }
+  }
+</style>

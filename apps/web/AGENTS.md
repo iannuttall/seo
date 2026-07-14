@@ -55,9 +55,9 @@ pnpm deploy:web:dry-run
   product vocabulary, instructions, report pages, and SEO copy.
 - Keep client-side JavaScript limited to real interactions: install tabs,
   copy buttons, accordions, and the example report panel.
-- The home page example panel (`src/components/HeroPanel.astro` and
-  `src/islands/HeroChat.tsx`) must only show real commands from the shipped CLI
-  catalog and stay labelled as example data.
+- The home page example panels (`src/components/FeatureShowcase.astro` and
+  `src/components/FeatureDemo.astro`) must only show real commands from the
+  shipped CLI catalog and stay labelled as example data.
 - Do not commit `.astro/`, `.wrangler/`, `dist/`, or `node_modules/`.
 - Use `pnpm`, not npm, for repository development.
 

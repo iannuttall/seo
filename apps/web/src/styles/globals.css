@@ -18,23 +18,12 @@
 
 @theme inline {
   --color-background: var(--background);
-  --color-background-raised: var(--background-raised);
   --color-background-subtle: var(--background-subtle);
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
-  --color-foreground-soft: var(--foreground-soft);
   --color-foreground-faint: var(--fg-faint);
   --color-border: var(--border);
-  --color-border-subtle: var(--border-subtle);
-  --color-border-strong: var(--border-strong);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
-  --color-primary-soft: var(--primary-soft);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
   --color-primary-foreground: var(--primary-foreground);
@@ -43,37 +32,13 @@
   --color-panel: var(--panel);
   --color-panel-foreground: var(--panel-fg);
   --color-nav: var(--nav-bg);
-  --color-nav-foreground: var(--nav-fg);
-  --color-nav-border: var(--nav-border);
   --color-header: var(--header-bg);
   --color-header-foreground: var(--header-fg);
   --color-header-border: var(--header-border);
-  --color-secondary: var(--secondary);
-  --color-secondary-soft: var(--secondary-soft);
-  --color-secondary-hover: var(--secondary-hover);
-  --color-secondary-active: var(--secondary-active);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-soft: var(--destructive-soft);
-  --color-destructive-hover: var(--destructive-hover);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-success-soft: var(--success-soft);
-  --color-warning: var(--warning);
-  --color-warning-soft: var(--warning-soft);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-soft: var(--info-soft);
-  --color-overlay-scrim: var(--overlay-scrim);
   --font-sans: "Martian Grotesk", system-ui, sans-serif;
   --font-mono:
     "Martian Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
-  --animate-fade-slide-in: fade-slide-in 0.4s ease-out;
   /* Button 3D comes from inset light and shade only. Never add an outer
      offset drop shadow to these. */
   --shadow-btn:
@@ -95,9 +60,6 @@
   --fg-muted: #525252;
   --fg-faint: #a3a3a3;
   --border: #e5e5e5;
-  --shadow: #ccc;
-  --success: #16a34a;
-  --error: #dc2626;
 
   --nav-bg: #171717;
   --nav-fg: #ffffff;
@@ -108,43 +70,14 @@
 
   --primary: #ff4500;
   --primary-foreground: #ffffff;
-  --secondary: var(--bg-secondary);
-  --secondary-foreground: var(--fg);
-  --destructive: var(--error);
-  --accent: var(--bg-secondary);
-  --accent-foreground: var(--fg);
-  --ring: var(--fg);
   --background: var(--bg);
-  --background-raised: var(--bg);
   --background-subtle: var(--bg-secondary);
   --foreground: var(--fg);
   --foreground-muted: var(--fg-muted);
-  --foreground-soft: var(--fg-faint);
-  --input: var(--border);
-  --card: var(--bg);
-  --card-foreground: var(--fg);
-  --popover: var(--bg);
-  --popover-foreground: var(--fg);
-  --primary-soft: color-mix(in srgb, var(--primary) 12%, transparent);
   --primary-hover: #e63e00;
   --primary-active: #cc3700;
   --report-header: var(--nav-bg);
   --report-header-foreground: var(--nav-fg);
-  --secondary-soft: var(--bg-secondary);
-  --secondary-hover: var(--border);
-  --secondary-active: var(--shadow);
-  --muted: var(--bg-secondary);
-  --muted-foreground: var(--fg-muted);
-  --destructive-soft: color-mix(in srgb, var(--destructive) 12%, transparent);
-  --destructive-hover: #b91c1c;
-  --destructive-foreground: #ffffff;
-  --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
-  --warning: #a16207;
-  --warning-soft: #fef3c7;
-  --warning-foreground: #713f12;
-  --info: #2563eb;
-  --info-soft: #dbeafe;
-  --overlay-scrim: rgb(0 0 0 / 50%);
 
   /* The inverted band: dark nav ink in light mode; in dark mode it blends
      into the page background instead of flipping to white. */
@@ -160,9 +93,6 @@
     --fg-muted: oklch(76% 0 0);
     --fg-faint: oklch(42.615% 0.00201 228.84);
     --border: oklch(42.615% 0.00201 228.84);
-    --shadow: oklch(15% 0.003 228.89);
-    --success: #22c55e;
-    --error: #ef4444;
 
     --nav-bg: oklch(92.565% 0.00459 78.3);
     --nav-fg: oklch(21.604% 0.00365 228.89);
@@ -171,15 +101,8 @@
     --header-fg: var(--fg);
     --header-border: var(--primary-active);
 
-    --secondary: var(--bg-secondary);
-    --secondary-foreground: var(--fg);
-    --destructive: var(--error);
-    --accent: var(--bg-secondary);
-    --accent-foreground: var(--fg);
-    --ring: var(--fg);
     --background: var(--bg);
     --foreground: var(--fg);
-    --input: var(--border);
 
     /* In dark mode the band blends into the page background. */
     --panel: var(--bg);
@@ -419,26 +342,5 @@ html {
     color: var(--foreground);
     font-family: "Martian Grotesk", system-ui, sans-serif;
     font-weight: 600;
-  }
-}
-
-@keyframes fade-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes braille-pulse {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
   }
 }

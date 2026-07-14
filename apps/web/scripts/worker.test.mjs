@@ -126,6 +126,7 @@ test('local Worker serves every generated representation contract', async (t) =>
     for (const pathname of [
       '/robots.txt',
       '/sitemap.xml',
+      '/llms.txt',
       '/.well-known/agent-skills/seo/SKILL.md',
       `/_astro/${bundledAsset}`,
     ]) {

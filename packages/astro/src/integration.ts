@@ -8,7 +8,9 @@ import {
   isNoindexHtml,
   isRedirectHtml,
 } from './html.js'
+import { type LlmsTxtConfig, renderLlmsTxt } from './llms.js'
 import {
+  type AgentRouteManifest,
   type AgentRouteManifestEntry,
   renderAgentRouteManifest,
   sha256,
@@ -19,6 +21,7 @@ import { assertNoRouteCollisions, markdownRouteForPath } from './routes.js'
 export interface AgentMarkdownIntegrationOptions {
   excludeSelectors?: readonly string[]
   manifestFile?: string
+  llmsTxt?: LlmsTxtConfig
   strict?: boolean
 }
 
@@ -66,6 +69,7 @@ export async function writeAgentMarkdownArtifacts(input: {
   base?: string
   excludeSelectors?: readonly string[]
   manifestFile?: string
+  llmsTxt?: LlmsTxtConfig
   outputDir: string
   site: string
 }): Promise<AgentRouteManifestEntry[]> {
@@ -155,14 +159,23 @@ export async function writeAgentMarkdownArtifacts(input: {
     outputDir,
     input.manifestFile ?? 'agent-routes.json',
   )
+  const manifest: AgentRouteManifest = {
+    version: 1,
+    site: site.origin,
+    pages: prepared.map((item) => item.entry),
+  }
   await writeFile(
     manifestPath,
-    renderAgentRouteManifest(
-      site.origin,
-      prepared.map((item) => item.entry),
-    ),
+    renderAgentRouteManifest(site.origin, manifest.pages),
     'utf8',
   )
+  if (input.llmsTxt) {
+    await writeFile(
+      resolve(outputDir, 'llms.txt'),
+      renderLlmsTxt(manifest, input.llmsTxt),
+      'utf8',
+    )
+  }
 
   return prepared.map((item) => item.entry)
 }
@@ -194,6 +207,7 @@ export function agentMarkdown(
           base: config.base,
           excludeSelectors: options.excludeSelectors,
           manifestFile: options.manifestFile,
+          llmsTxt: options.llmsTxt,
           outputDir: fileURLToPath(dir),
           site: config.site.toString(),
         })

@@ -6,6 +6,12 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { writeAgentMarkdownArtifacts } from './integration.js'
 
+const llmsTxt = {
+  title: 'Example',
+  summary: 'Useful docs for agents.',
+  sections: [{ heading: 'Start here', items: [{ path: '/' }] }],
+} as const
+
 function page(path: string, title: string, noindex = false): string {
   return `<!doctype html><html lang="en"><head>
     <title>${title}</title>
@@ -36,7 +42,7 @@ async function fixtureDirectory(): Promise<string> {
 
 async function artifactHash(directory: string): Promise<string> {
   const values = await Promise.all(
-    ['index.md', 'docs.md', 'agent-routes.json'].map((file) =>
+    ['index.md', 'docs.md', 'agent-routes.json', 'llms.txt'].map((file) =>
       readFile(join(directory, file)),
     ),
   )
@@ -49,11 +55,13 @@ test('writes one deterministic artifact for each public content page', async () 
     const first = await writeAgentMarkdownArtifacts({
       outputDir: directory,
       site: 'https://example.com',
+      llmsTxt,
     })
     const firstHash = await artifactHash(directory)
     const second = await writeAgentMarkdownArtifacts({
       outputDir: directory,
       site: 'https://example.com',
+      llmsTxt,
     })
 
     assert.equal(first.length, 2)
@@ -88,10 +96,12 @@ test('two clean checkout paths produce identical artifact bytes', async () => {
     await writeAgentMarkdownArtifacts({
       outputDir: first,
       site: 'https://example.com',
+      llmsTxt,
     })
     await writeAgentMarkdownArtifacts({
       outputDir: second,
       site: 'https://example.com',
+      llmsTxt,
     })
     assert.equal(await artifactHash(first), await artifactHash(second))
   } finally {

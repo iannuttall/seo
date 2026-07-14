@@ -15,6 +15,7 @@ import {
 } from '@/content/reports/helpers'
 import type { ReportEditorial } from '@/content/reports/types'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
 
 export function getStaticPaths() {
   return [
@@ -43,7 +44,7 @@ type Props = {
   redirectTo?: string
 }
 
-const { report, redirectTo } = Astro.props
+const { report, redirectTo } = Astro.props as Props
 
 if (redirectTo) {
   return Astro.redirect(redirectTo, 301)
@@ -67,44 +68,41 @@ const previousGuide = previousReport
   ? resolveReportGuide(previousReport)
   : undefined
 const nextGuide = nextReport ? resolveReportGuide(nextReport) : undefined
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Docs', href: '/docs' },
+  { label: 'Reports', href: '/docs/reports' },
+  { label: guide.seo?.heading ?? guide.name },
+]
 ---
 
 <BaseLayout
   title={pageTitle}
   description={description}
   canonicalPath={reportPath(report.id)}
+  {breadcrumbs}
+  schemaType="TechArticle"
 >
   <main>
     <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
       <ol class="flex flex-wrap items-center gap-1.5">
-        <li>
-          <a
-            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
-            href="/"
-          >
-            Home
-          </a>
-        </li>
-        <li aria-hidden="true" class="text-border">/</li>
-        <li>
-          <a
-            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
-            href="/docs"
-          >
-            Docs
-          </a>
-        </li>
-        <li aria-hidden="true" class="text-border">/</li>
-        <li>
-          <a
-            class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
-            href="/docs/reports"
-          >
-            Reports
-          </a>
-        </li>
-        <li aria-hidden="true" class="text-border">/</li>
-        <li class="text-foreground">{guide.seo?.heading ?? guide.name}</li>
+        {breadcrumbs.map((crumb, index) => (
+          <li class="flex items-center gap-1.5">
+            {crumb.href ? (
+              <a
+                class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+                href={crumb.href}
+              >
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-foreground">{crumb.label}</span>
+            )}
+            {index < breadcrumbs.length - 1 ? (
+              <span aria-hidden="true" class="text-border">/</span>
+            ) : null}
+          </li>
+        ))}
       </ol>
     </nav>
 

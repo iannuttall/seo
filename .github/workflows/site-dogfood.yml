@@ -48,19 +48,27 @@ jobs:
           fi
       - name: Build the expected agent manifest
         if: steps.package.outputs.published == 'true'
-        run: |
-          pnpm --filter @seo/astro build
-          pnpm --filter @seo/web build
+        run: pnpm build:web
       - name: Wait for the production manifest
         if: steps.package.outputs.published == 'true' && github.event_name == 'push'
         shell: bash
         run: |
-          expected="$(sha256sum apps/web/dist/agent-routes.json | cut -d ' ' -f 1)"
+          expected_manifest="$(sha256sum apps/web/dist/agent-routes.json | cut -d ' ' -f 1)"
+          expected_robots="$(sha256sum apps/web/dist/robots.txt | cut -d ' ' -f 1)"
+          expected_llms="$(sha256sum apps/web/dist/llms.txt | cut -d ' ' -f 1)"
           for attempt in $(seq 1 20); do
             if curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
-              https://seoskill.dev/agent-routes.json --output /tmp/live-agent-routes.json; then
-              actual="$(sha256sum /tmp/live-agent-routes.json | cut -d ' ' -f 1)"
-              if [ "$actual" = "$expected" ]; then
+              https://seoskill.dev/agent-routes.json --output /tmp/live-agent-routes.json \
+              && curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
+              https://seoskill.dev/robots.txt --output /tmp/live-robots.txt \
+              && curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
+              https://seoskill.dev/llms.txt --output /tmp/live-llms.txt; then
+              actual_manifest="$(sha256sum /tmp/live-agent-routes.json | cut -d ' ' -f 1)"
+              actual_robots="$(sha256sum /tmp/live-robots.txt | cut -d ' ' -f 1)"
+              actual_llms="$(sha256sum /tmp/live-llms.txt | cut -d ' ' -f 1)"
+              if [ "$actual_manifest" = "$expected_manifest" ] \
+                && [ "$actual_robots" = "$expected_robots" ] \
+                && [ "$actual_llms" = "$expected_llms" ]; then
                 exit 0
               fi
             fi

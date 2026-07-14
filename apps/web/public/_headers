@@ -1,9 +1,24 @@
 /*
   Content-Signal: search=yes, ai-input=yes, ai-train=no
+  Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"
+  Link: <https://seoskill.dev/llms.txt>; rel="llms-txt"; type="text/markdown"
+  Link: <https://seoskill.dev/.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"
   Strict-Transport-Security: max-age=300
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), geolocation=(), microphone=()
+
+/
+  Link: <https://seoskill.dev/index.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
+
+/docs
+  Link: <https://seoskill.dev/docs.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
+
+/docs/*
+  Link: <https://seoskill.dev/docs/:splat.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
@@ -22,30 +37,40 @@
   Content-Type: text/markdown; charset=utf-8
 
 /cookies
+  Link: <https://seoskill.dev/cookies.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
   X-Robots-Tag: noindex, follow
 
 /cookies.md
   X-Robots-Tag: noindex, follow
 
 /privacy
+  Link: <https://seoskill.dev/privacy.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
   X-Robots-Tag: noindex, follow
 
 /privacy.md
   X-Robots-Tag: noindex, follow
 
 /security
+  Link: <https://seoskill.dev/security.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
   X-Robots-Tag: noindex, follow
 
 /security.md
   X-Robots-Tag: noindex, follow
 
 /terms
+  Link: <https://seoskill.dev/terms.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
   X-Robots-Tag: noindex, follow
 
 /terms.md
   X-Robots-Tag: noindex, follow
 
 /trademarks
+  Link: <https://seoskill.dev/trademarks.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
   X-Robots-Tag: noindex, follow
 
 /trademarks.md

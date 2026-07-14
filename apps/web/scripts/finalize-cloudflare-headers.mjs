@@ -21,6 +21,8 @@ const tokenRules = [...manifest.pages]
     if (
       typeof page.markdownPath !== 'string' ||
       !page.markdownPath.endsWith('.md') ||
+      typeof page.canonical !== 'string' ||
+      !page.canonical.startsWith('https://seoskill.dev') ||
       !Number.isSafeInteger(page.tokens) ||
       page.tokens < 0
     ) {
@@ -28,7 +30,17 @@ const tokenRules = [...manifest.pages]
         `Invalid agent route manifest entry: ${page.markdownPath}`,
       )
     }
-    return `${page.markdownPath}\n  X-Markdown-Tokens: ${page.tokens}`
+    return [
+      page.markdownPath,
+      '  ! Link',
+      '  Content-Type: text/markdown; charset=utf-8',
+      `  Link: <${page.canonical}>; rel="canonical"`,
+      '  Link: <https://seoskill.dev/sitemap.xml>; rel="sitemap"; type="application/xml"',
+      '  Link: <https://seoskill.dev/llms.txt>; rel="llms-txt"; type="text/markdown"',
+      '  Link: <https://seoskill.dev/.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"',
+      '  Vary: Accept',
+      `  X-Markdown-Tokens: ${page.tokens}`,
+    ].join('\n')
   })
 
 await writeFile(

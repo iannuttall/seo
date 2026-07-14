@@ -17,6 +17,8 @@
       "!!**/bun.lock",
       "!!**/bun.lockb",
       "!!**/biome.json",
+      "!!**/*.md",
+      "!!**/*.mdx",
       "!!**/tsconfig*.json",
       "!!**/*.config.ts",
       "!!**/*.config.cts",

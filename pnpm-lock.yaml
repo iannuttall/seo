@@ -87,6 +87,9 @@ importers:
       schema-dts:
         specifier: ^2.0.0
         version: 2.0.0(typescript@6.0.3)
+      string-width:
+        specifier: ^7.2.0
+        version: 7.2.0
       undici:
         specifier: ^8.7.0
         version: 8.7.0

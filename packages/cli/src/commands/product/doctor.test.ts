@@ -55,8 +55,8 @@ test('doctor shows readable failures and exits unsuccessfully', async () => {
   assert.equal(result.exitCode, 1)
   assert.equal(result.stderr, '')
   assert.match(result.stdout, /^SEO doctor$/m)
-  assert.match(result.stdout, /^FAIL {2}Google credentials$/m)
-  assert.match(result.stdout, /^ {6}Fix {2}Run `seo auth setup-client`/m)
+  assert.match(result.stdout, /^FAIL {2}Google login$/m)
+  assert.match(result.stdout, /^ {6}Fix {2}Run `seo auth login`/m)
   assert.ok(!result.stdout.includes(String.fromCharCode(27)))
 })
 

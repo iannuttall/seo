@@ -7,7 +7,7 @@ type Props = {
   description?: string
 }
 
-const { title, description } = Astro.props
+const { title } = Astro.props
 ---
 
 <div
@@ -27,16 +27,9 @@ const { title, description } = Astro.props
       </header>
 
       <div class="flex min-h-0 flex-1 flex-col justify-center px-12 py-8">
-        <h1 class="og-title text-[61px] font-medium leading-[1.04] tracking-[-0.045em]">
+        <h1 class="og-title text-[61px] font-medium leading-[1.12] tracking-[-0.045em]">
           {title}
         </h1>
-        {
-          description ? (
-            <p class="og-description mt-6 max-w-[1020px] font-sans text-[27px] font-normal leading-[1.35] tracking-tight text-foreground-muted">
-              {description}
-            </p>
-          ) : null
-        }
       </div>
 
       <footer class="relative flex h-[112px] shrink-0 items-center justify-between overflow-hidden border-t-2 border-nav bg-primary px-8 text-primary-foreground">
@@ -58,19 +51,10 @@ const { title, description } = Astro.props
 </div>
 
 <style>
-  .og-title,
-  .og-description {
+  .og-title {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
-  }
-
-  .og-title {
     -webkit-line-clamp: 3;
   }
-
-  .og-description {
-    -webkit-line-clamp: 2;
-  }
-
 </style>

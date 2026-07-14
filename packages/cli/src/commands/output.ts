@@ -1,3 +1,4 @@
+import { truncateText } from '../presentation/context.js'
 import { printTable } from '../utils.js'
 
 const HUMAN_ROW_LIMIT = 25
@@ -21,8 +22,7 @@ export function formatPercent(value: number): string {
 }
 
 export function truncate(value: string, maxLength = 72): string {
-  if (value.length <= maxLength) return value
-  return `${value.slice(0, maxLength - 3)}...`
+  return truncateText(value, maxLength)
 }
 
 export function verificationSummary(report: {

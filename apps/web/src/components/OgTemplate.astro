@@ -1,5 +1,6 @@
 ---
 import DotPattern from '@/components/DotPattern.astro'
+import FooterDither from '@/components/FooterDither.astro'
 
 type Props = {
   title: string
@@ -11,48 +12,49 @@ const { title, description } = Astro.props
 
 <div
   class="relative h-[630px] w-[1200px] overflow-hidden bg-background font-mono text-foreground"
-  style="color-scheme: light; --background: #ffffff; --foreground: #171717; --foreground-muted: #525252; --nav-bg: #171717; --nav-fg: #ffffff; --primary: #ff4500; --primary-foreground: #ffffff;"
+  style="color-scheme: light; --background: #ffffff; --foreground: #171717; --foreground-muted: #525252; --nav-bg: #171717; --nav-fg: #ffffff; --nav-border: #333333; --header-bg: #171717; --header-fg: #ffffff; --header-border: #333333; --primary: #ff4500; --primary-foreground: #ffffff;"
 >
-  <DotPattern
-    patternId="og-frame-shadow"
-    class="absolute bottom-[26px] left-[54px] right-[26px] top-[54px] text-foreground"
-  />
+  <div class="absolute bottom-2 right-2 left-0 top-0">
+    <DotPattern
+      patternId="og-frame-shadow"
+      class="absolute -bottom-2 -right-2 left-2 top-2 text-foreground"
+    />
 
-  <article class="absolute inset-10 flex flex-col border-[3px] border-nav bg-background">
-    <header class="flex h-[82px] shrink-0 items-center justify-between border-b-[3px] border-nav px-8">
-      <div class="flex items-center gap-4">
-        <span class="grid size-10 place-items-center border-2 border-nav bg-primary text-lg font-semibold text-primary-foreground">s</span>
+    <article class="relative z-10 flex h-full flex-col border-2 border-nav bg-background">
+      <header class="flex h-[82px] shrink-0 items-center justify-between border-b border-header-border bg-header px-8 text-header-foreground">
         <span class="text-[25px] font-medium tracking-tight">SEO Skill</span>
-      </div>
-      <span class="text-[19px] text-foreground-muted">The SEO command for AI agents</span>
-    </header>
+        <span class="text-[19px] text-header-foreground">The SEO command for AI agents</span>
+      </header>
 
-    <div class="flex min-h-0 flex-1 flex-col justify-center px-12 py-8">
-      <h1 class="og-title text-[61px] font-medium leading-[1.04] tracking-[-0.045em]">
-        {title}
-      </h1>
-      {
-        description ? (
-          <p class="og-description mt-6 max-w-[1020px] font-sans text-[27px] font-normal leading-[1.35] tracking-tight text-foreground-muted">
-            {description}
-          </p>
-        ) : null
-      }
-    </div>
-
-    <footer class="relative flex h-[112px] shrink-0 items-center justify-between overflow-hidden border-t-[3px] border-nav bg-primary px-8 text-primary-foreground">
-      <DotPattern
-        patternId="og-footer-dither"
-        variant="dots"
-        class="og-dither absolute inset-0 text-primary-foreground"
-      />
-      <div class="relative flex items-center border-2 border-nav bg-background px-5 py-3 text-[21px] text-foreground">
-        <span class="mr-4 text-primary">$</span>
-        <span>npm i -g seo</span>
+      <div class="flex min-h-0 flex-1 flex-col justify-center px-12 py-8">
+        <h1 class="og-title text-[61px] font-medium leading-[1.04] tracking-[-0.045em]">
+          {title}
+        </h1>
+        {
+          description ? (
+            <p class="og-description mt-6 max-w-[1020px] font-sans text-[27px] font-normal leading-[1.35] tracking-tight text-foreground-muted">
+              {description}
+            </p>
+          ) : null
+        }
       </div>
-      <span class="relative text-[20px] font-medium">seoskill.dev</span>
-    </footer>
-  </article>
+
+      <footer class="relative flex h-[112px] shrink-0 items-center justify-between overflow-hidden border-t-2 border-nav bg-primary px-8 text-primary-foreground">
+        <FooterDither staticFrame />
+        <div class="relative">
+          <DotPattern
+            patternId="og-command-shadow"
+            class="absolute -bottom-2 -right-2 left-2 top-2 text-foreground"
+          />
+          <div class="relative z-10 flex items-center border-2 border-nav bg-background px-5 py-3 text-[21px] text-foreground">
+            <span class="mr-4 text-primary">$</span>
+            <span>npm i -g seo</span>
+          </div>
+        </div>
+        <span class="relative text-[20px] font-medium">seoskill.dev</span>
+      </footer>
+    </article>
+  </div>
 </div>
 
 <style>
@@ -71,8 +73,4 @@ const { title, description } = Astro.props
     -webkit-line-clamp: 2;
   }
 
-  .og-dither {
-    opacity: 0.22;
-    mask-image: linear-gradient(90deg, transparent 8%, #000 58%, #000 100%);
-  }
 </style>

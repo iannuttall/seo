@@ -3,11 +3,18 @@
 // is thresholded through a Bayer 4x4 matrix into crisp on/off cells, densest
 // along the bottom edge and dissolving upward. Rendered chunky on a low-res
 // canvas that CSS scales up with pixelated rendering.
+
+type Props = {
+  staticFrame?: boolean
+}
+
+const { staticFrame = false } = Astro.props
 ---
 
 <canvas
   class="dither-field pointer-events-none absolute inset-0 h-full w-full text-primary-foreground"
   data-footer-dither
+  data-footer-dither-static={staticFrame ? '' : undefined}
   aria-hidden="true"></canvas>
 
 <style>
@@ -29,10 +36,14 @@
   ].map((row) => row.map((value) => (value + 0.5) / 16))
 
   function initFooterDither(canvas: HTMLCanvasElement) {
+    if (canvas.dataset.footerDitherReady === 'true') return
+    canvas.dataset.footerDitherReady = 'true'
+
     const context = canvas.getContext('2d')
     const parent = canvas.parentElement
     if (!context || !parent) return
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const staticFrame = canvas.hasAttribute('data-footer-dither-static')
 
     let cols = 0
     let rows = 0
@@ -98,15 +109,33 @@
     })
 
     // Only animate while the footer is actually on screen.
-    new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) start()
-        else stop()
-      }
-    }).observe(parent)
+    if (!staticFrame) {
+      new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) start()
+          else stop()
+        }
+      }).observe(parent)
+    }
   }
 
-  document.querySelectorAll('[data-footer-dither]').forEach((canvas) => {
-    if (canvas instanceof HTMLCanvasElement) initFooterDither(canvas)
-  })
+  const initDitherFields = (root: ParentNode) => {
+    root.querySelectorAll('[data-footer-dither]').forEach((canvas) => {
+      if (canvas instanceof HTMLCanvasElement) initFooterDither(canvas)
+    })
+  }
+
+  initDitherFields(document)
+
+  new MutationObserver((entries) => {
+    for (const entry of entries) {
+      for (const node of entry.addedNodes) {
+        if (!(node instanceof Element)) continue
+        if (node.matches('[data-footer-dither]') && node instanceof HTMLCanvasElement) {
+          initFooterDither(node)
+        }
+        initDitherFields(node)
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true })
 </script>

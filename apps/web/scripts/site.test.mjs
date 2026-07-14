@@ -507,6 +507,50 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /X-Content-Type-Options: nosniff/)
 })
 
+test('Cloudflare only runs the thin representation adapter for document routes', () => {
+  const config = JSON.parse(
+    readFileSync(resolve(appRoot, 'wrangler.jsonc'), 'utf8'),
+  )
+  const worker = readFileSync(resolve(appRoot, 'src/worker.ts'), 'utf8')
+  const headers = readFileSync(resolve(dist, '_headers'), 'utf8')
+
+  assert.equal(config.main, 'src/worker.ts')
+  assert.equal(config.assets.binding, 'ASSETS')
+  assert.equal(config.assets.html_handling, 'drop-trailing-slash')
+  assert.equal(config.assets.not_found_handling, '404-page')
+  assert.deepEqual(config.assets.run_worker_first, [
+    '/',
+    '/docs*',
+    '/*.md',
+    '!/.well-known/*',
+    '/cookies',
+    '/privacy',
+    '/security',
+    '/terms',
+    '/trademarks',
+  ])
+  assert.match(worker, /createCloudflareMarkdownHandler/)
+  assert.match(worker, /search=yes, ai-input=yes, ai-train=no/)
+  assert.match(worker, /Strict-Transport-Security': 'max-age=300'/)
+  assert.doesNotMatch(worker, /Turndown|Defuddle|fetch\(['"]https?:/i)
+  assert.match(headers, /Content-Signal: search=yes, ai-input=yes, ai-train=no/)
+  assert.match(headers, /Strict-Transport-Security: max-age=300/)
+  assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 70)
+  for (const page of [
+    'cookies',
+    'privacy',
+    'security',
+    'terms',
+    'trademarks',
+  ]) {
+    assert.match(
+      headers,
+      new RegExp(`/${page}\\.md\\n  X-Robots-Tag: noindex, follow`),
+    )
+    assert.match(worker, new RegExp(`['"]/${page}['"]`))
+  }
+})
+
 test('site copy has no stale hosted product, email contact, or dash punctuation', () => {
   const sourceFiles = []
   const pending = [resolve(appRoot, 'src')]

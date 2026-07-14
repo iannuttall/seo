@@ -1,4 +1,6 @@
 /*
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
+  Strict-Transport-Security: max-age=300
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), geolocation=(), microphone=()
@@ -18,3 +20,33 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300, must-revalidate
   Content-Type: text/markdown; charset=utf-8
+
+/cookies
+  X-Robots-Tag: noindex, follow
+
+/cookies.md
+  X-Robots-Tag: noindex, follow
+
+/privacy
+  X-Robots-Tag: noindex, follow
+
+/privacy.md
+  X-Robots-Tag: noindex, follow
+
+/security
+  X-Robots-Tag: noindex, follow
+
+/security.md
+  X-Robots-Tag: noindex, follow
+
+/terms
+  X-Robots-Tag: noindex, follow
+
+/terms.md
+  X-Robots-Tag: noindex, follow
+
+/trademarks
+  X-Robots-Tag: noindex, follow
+
+/trademarks.md
+  X-Robots-Tag: noindex, follow

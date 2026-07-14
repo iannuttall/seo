@@ -724,9 +724,14 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(home, /your agent needs/)
   assert.match(
     home,
+    /<h1[^>]*data-glitch[^>]*>\s*The only SEO skill your agent needs\s*<\/h1>/,
+  )
+  assert.match(
+    home,
     /One SEO skill and 50\+ audit tools for AI agents to fix\s+issues, measure performance, and grow your organic and AI search\s+visibility\./,
   )
   assert.match(home, /data-glitch/)
+  assert.match(home, /requestAnimationFrame\(enhanceHeadline\)/)
   assert.match(home, /prefers-reduced-motion: reduce/)
   assert.match(
     home,

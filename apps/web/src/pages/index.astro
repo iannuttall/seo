@@ -104,10 +104,8 @@ const faqs = [
           <h1
             class="text-center text-pretty text-4xl font-normal leading-tight tracking-tight max-[420px]:text-[7.2vw] sm:text-5xl"
             data-glitch
-            aria-label="The only SEO skill your agent needs"
           >
-            <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">The only SEO skill</span>
-            <span class="block whitespace-nowrap" data-glitch-line aria-hidden="true">your agent needs</span>
+            The only SEO skill your agent needs
           </h1>
           <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
             One SEO skill and {reportCountLabel} audit tools for AI agents to fix
@@ -180,66 +178,83 @@ const faqs = [
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
       if (!headline || reducedMotion.matches) return
 
-      const characters = []
-      for (const line of headline.querySelectorAll('[data-glitch-line]')) {
-        const source = line.textContent ?? ''
-        line.textContent = ''
+      const enhanceHeadline = () => {
+        const source = headline.textContent?.trim()
+        if (!source) return
 
-        for (const [wordIndex, word] of source.split(' ').entries()) {
-          if (wordIndex > 0) line.append(' ')
+        const breakAt = source.indexOf(' your ')
+        const lines = breakAt === -1
+          ? [source]
+          : [source.slice(0, breakAt), source.slice(breakAt + 1)]
+        const characters = []
 
-          const wordSpan = document.createElement('span')
-          wordSpan.style.display = 'inline-block'
-          wordSpan.style.whiteSpace = 'nowrap'
-          line.append(wordSpan)
+        headline.textContent = ''
+        headline.setAttribute('aria-label', source)
 
-          for (const character of word) {
-            const span = document.createElement('span')
-            span.textContent = character
-            span.style.display = 'inline-block'
-            span.style.width = '1ch'
-            span.dataset.source = character
-            wordSpan.append(span)
-            characters.push(span)
-          }
-        }
-      }
+        for (const sourceLine of lines) {
+          const line = document.createElement('span')
+          line.className = 'block whitespace-nowrap'
+          line.setAttribute('aria-hidden', 'true')
+          headline.append(line)
 
-      const glyphs = '0123456789_<>/[]{}'
-      const random = (minimum, range) => minimum + Math.random() * range
+          for (const [wordIndex, word] of sourceLine.split(' ').entries()) {
+            if (wordIndex > 0) line.append(' ')
 
-      const schedule = () => {
-        window.setTimeout(() => {
-          if (!document.hidden) {
-            const available = [...characters]
-            const count = 2 + Math.floor(Math.random() * 3)
-            const simultaneous = Math.random() < 0.2
-            let offset = random(0, 120)
+            const wordSpan = document.createElement('span')
+            wordSpan.style.display = 'inline-block'
+            wordSpan.style.whiteSpace = 'nowrap'
+            line.append(wordSpan)
 
-            for (let index = 0; index < count; index += 1) {
-              const position = Math.floor(Math.random() * available.length)
-              const character = available.splice(position, 1)[0]
-              if (!character) continue
-
-              if (index > 0 && !simultaneous) {
-                offset +=
-                  Math.random() < 0.3 ? random(10, 35) : random(90, 220)
-              }
-
-              window.setTimeout(() => {
-                character.textContent = glyphs[Math.floor(Math.random() * glyphs.length)]
-                window.setTimeout(() => {
-                  character.textContent = character.dataset.source ?? ''
-                }, random(70, 130))
-              }, offset)
+            for (const character of word) {
+              const span = document.createElement('span')
+              span.textContent = character
+              span.style.display = 'inline-block'
+              span.style.width = '1ch'
+              span.dataset.source = character
+              wordSpan.append(span)
+              characters.push(span)
             }
           }
+        }
 
-          schedule()
-        }, random(1800, 3800))
+        const glyphs = '0123456789_<>/[]{}'
+        const random = (minimum, range) => minimum + Math.random() * range
+
+        const schedule = () => {
+          window.setTimeout(() => {
+            if (!document.hidden) {
+              const available = [...characters]
+              const count = 2 + Math.floor(Math.random() * 3)
+              const simultaneous = Math.random() < 0.2
+              let offset = random(0, 120)
+
+              for (let index = 0; index < count; index += 1) {
+                const position = Math.floor(Math.random() * available.length)
+                const character = available.splice(position, 1)[0]
+                if (!character) continue
+
+                if (index > 0 && !simultaneous) {
+                  offset +=
+                    Math.random() < 0.3 ? random(10, 35) : random(90, 220)
+                }
+
+                window.setTimeout(() => {
+                  character.textContent = glyphs[Math.floor(Math.random() * glyphs.length)]
+                  window.setTimeout(() => {
+                    character.textContent = character.dataset.source ?? ''
+                  }, random(70, 130))
+                }, offset)
+              }
+            }
+
+            schedule()
+          }, random(1800, 3800))
+        }
+
+        schedule()
       }
 
-      schedule()
+      window.requestAnimationFrame(enhanceHeadline)
     })()
   </script>
   <style>

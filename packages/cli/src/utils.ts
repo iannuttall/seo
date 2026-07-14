@@ -1,10 +1,10 @@
-import Table from 'cli-table3'
-import pc from 'picocolors'
 import updateNotifier from 'update-notifier'
-
-const terminalColors = pc.createColors(
-  Boolean(process.stdout.isTTY && !process.env.NO_COLOR),
-)
+import { createTerminalContext } from './presentation/context.js'
+import {
+  renderCallout,
+  renderKeyValues,
+  renderTable,
+} from './presentation/render.js'
 
 export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
   if (process.env.CI || process.env.NO_UPDATE_NOTIFIER) {
@@ -28,23 +28,23 @@ export function printJson(data: unknown): void {
 }
 
 export function printKeyValue(rows: Array<[string, string]>): void {
-  const width = Math.max(...rows.map(([label]) => label.length), 0)
-  for (const [label, value] of rows) {
-    process.stdout.write(
-      `${terminalColors.bold(label.padEnd(width))}  ${value}\n`,
-    )
-  }
+  const output = renderKeyValues(rows, createTerminalContext())
+  if (output) process.stdout.write(`${output}\n`)
 }
 
 export function printTable(
   head: string[],
   rows: Array<Array<string | number>>,
 ): void {
-  const table = new Table({ head })
-  for (const row of rows) {
-    table.push(row)
-  }
-  process.stdout.write(`${table.toString()}\n`)
+  process.stdout.write(`${renderTable(head, rows, createTerminalContext())}\n`)
+}
+
+export function printCallout(callout: {
+  body?: string
+  command?: string
+  title: string
+}): void {
+  process.stdout.write(`${renderCallout(callout, createTerminalContext())}\n`)
 }
 
 export function formatBytes(bytes: number): string {

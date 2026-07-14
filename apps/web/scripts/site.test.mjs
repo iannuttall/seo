@@ -303,6 +303,10 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Sitemap: https:\/\/seoskill\.dev\/sitemap\.xml/,
   )
+  assert.match(
+    readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
+    /Content-Signal: search=yes, ai-input=yes, ai-train=no/,
+  )
 })
 
 test('report library covers the live registry and keeps legacy routes', async () => {

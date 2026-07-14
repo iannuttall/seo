@@ -71,7 +71,7 @@
     "security:check": "pnpm run security:audit && pnpm run security:secrets",
     "security:secrets": "node scripts/security-secrets.mjs",
     "skills:validate": "node scripts/validate-skills.mjs",
-    "test": "turbo run test && pnpm run build:package && node --test scripts/package.test.mjs && pnpm run skills:validate",
+    "test": "turbo run test && pnpm run build:package && node --test scripts/package.test.mjs scripts/dogfood-summary.test.mjs && pnpm run skills:validate",
     "test:package-install": "pnpm run build:package && node --test scripts/installed-package.test.mjs",
     "typecheck": "turbo run typecheck"
   },

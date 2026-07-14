@@ -1,0 +1,126 @@
+name: Site dogfood
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Also run the full provider-free SEO report"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-dogfood-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.11.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read release version
+        id: package
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "seo@$version" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "seo@$version is not published yet. The audit will run after the release exists." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Build the expected agent manifest
+        if: steps.package.outputs.published == 'true'
+        run: |
+          pnpm --filter @seo/astro build
+          pnpm --filter @seo/web build
+      - name: Wait for the production manifest
+        if: steps.package.outputs.published == 'true' && github.event_name == 'push'
+        shell: bash
+        run: |
+          expected="$(sha256sum apps/web/dist/agent-routes.json | cut -d ' ' -f 1)"
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
+              https://seoskill.dev/agent-routes.json --output /tmp/live-agent-routes.json; then
+              actual="$(sha256sum /tmp/live-agent-routes.json | cut -d ' ' -f 1)"
+              if [ "$actual" = "$expected" ]; then
+                exit 0
+              fi
+            fi
+            sleep 15
+          done
+          echo "Production did not publish the expected agent route manifest." >&2
+          exit 1
+      - name: Install the released CLI
+        if: steps.package.outputs.published == 'true'
+        run: npm install --global "seo@${{ steps.package.outputs.version }}"
+      - uses: actions/cache/restore@v5
+        if: steps.package.outputs.published == 'true'
+        id: previous
+        with:
+          path: .dogfood/previous-agent-readiness.json
+          key: site-dogfood-${{ github.run_id }}
+          restore-keys: |
+            site-dogfood-
+      - name: Run the focused agent-readiness audit
+        if: steps.package.outputs.published == 'true'
+        run: |
+          mkdir -p artifacts .dogfood
+          seo agent-readiness https://seoskill.dev \
+            --max-pages 100 \
+            --refresh \
+            --json > artifacts/agent-readiness.json
+      - name: Run the full provider-free report
+        if: >-
+          steps.package.outputs.published == 'true' &&
+          (github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.full))
+        run: |
+          seo report \
+            --url https://seoskill.dev \
+            --crawl-max-pages 100 \
+            --full \
+            --json > artifacts/full-report.json
+      - name: Summarize changes
+        if: steps.package.outputs.published == 'true'
+        shell: bash
+        run: |
+          previous=""
+          if [ -s .dogfood/previous-agent-readiness.json ]; then
+            previous=".dogfood/previous-agent-readiness.json"
+          fi
+          node scripts/dogfood-summary.mjs \
+            artifacts/agent-readiness.json \
+            "$previous" \
+            artifacts/summary.md
+          cp artifacts/agent-readiness.json .dogfood/previous-agent-readiness.json
+          cat artifacts/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/cache/save@v5
+        if: steps.package.outputs.published == 'true'
+        with:
+          path: .dogfood/previous-agent-readiness.json
+          key: site-dogfood-${{ github.run_id }}
+      - uses: actions/upload-artifact@v7
+        if: steps.package.outputs.published == 'true'
+        with:
+          name: site-dogfood-${{ github.run_id }}
+          path: artifacts
+          if-no-files-found: error
+          retention-days: 90

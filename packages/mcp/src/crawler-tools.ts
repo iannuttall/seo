@@ -97,7 +97,7 @@ export function registerCrawlerTools(server: McpServer): void {
       inputSchema: {
         url: z.string().url(),
         site: z.string().optional(),
-        ga4PropertyId: z.string().optional(),
+        googleAnalyticsPropertyId: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         maxDepth: z.number().int().nonnegative().optional(),
         concurrency: z.number().int().positive().optional(),
@@ -117,7 +117,7 @@ export function registerCrawlerTools(server: McpServer): void {
     async ({
       url,
       site,
-      ga4PropertyId,
+      googleAnalyticsPropertyId,
       maxPages,
       maxDepth,
       concurrency,
@@ -137,7 +137,7 @@ export function registerCrawlerTools(server: McpServer): void {
         const report = await crawlSite({
           url,
           site,
-          ga4PropertyId,
+          googleAnalyticsPropertyId,
           maxPages,
           maxDepth,
           concurrency,
@@ -175,7 +175,7 @@ export function registerCrawlerTools(server: McpServer): void {
       inputSchema: {
         urls: z.array(z.string().url()).min(1),
         site: z.string().optional(),
-        ga4PropertyId: z.string().optional(),
+        googleAnalyticsPropertyId: z.string().optional(),
         maxPages: z.number().int().positive().optional(),
         concurrency: z.number().int().positive().optional(),
         fetchIntervalCap: z.number().int().positive().optional(),
@@ -189,7 +189,7 @@ export function registerCrawlerTools(server: McpServer): void {
     async ({
       urls,
       site,
-      ga4PropertyId,
+      googleAnalyticsPropertyId,
       maxPages,
       concurrency,
       fetchIntervalCap,
@@ -205,7 +205,7 @@ export function registerCrawlerTools(server: McpServer): void {
           urls,
           mode: 'list',
           site,
-          ga4PropertyId,
+          googleAnalyticsPropertyId,
           maxPages: maxPages ?? urls.length,
           concurrency,
           refresh,

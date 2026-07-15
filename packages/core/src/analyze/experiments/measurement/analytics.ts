@@ -22,7 +22,7 @@ function stringMatchType(matchType?: ContentGroup['matchType']) {
   return 'CONTAINS'
 }
 
-export function ga4LandingPageFilterForChange(
+export function googleAnalyticsLandingPageFilterForChange(
   change: SeoChange,
   group?: ContentGroup,
 ): Ga4ReportRequest['dimensionFilter'] | undefined {
@@ -55,7 +55,7 @@ export function ga4LandingPageFilterForChange(
   }
 }
 
-export function summarizeGa4Rows(
+export function summarizeGoogleAnalyticsRows(
   rows: Array<Record<string, string>>,
 ): AnalyticsTestMetrics {
   return rows.reduce(

@@ -158,11 +158,11 @@ test('GSC joins preserve successful evidence when one bulk provider fails', asyn
   assert.match(warnings.join('\n'), /top queries failed/)
 })
 
-test('crawlSite contains a throwing custom GA4 adapter', async () => {
+test('crawlSite contains a throwing custom Google Analytics adapter', async () => {
   const report = await crawlSite(
     {
       url: 'https://example.com/',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: false,
       maxPages: 1,
@@ -182,11 +182,14 @@ test('crawlSite contains a throwing custom GA4 adapter', async () => {
   assert.equal(report.status, 'partial')
   assert.equal(report.dataSources?.analytics.status, 'unavailable')
   assert.equal(report.dataSources?.analytics.joinedPages, 0)
-  assert.match(report.warnings.join('\n'), /GA4 metrics unavailable/)
+  assert.match(
+    report.warnings.join('\n'),
+    /Google Analytics metrics unavailable/,
+  )
   assert.match(report.warnings.join('\n'), /custom adapter failed/)
 })
 
-test('crawlSite reports sparse GSC and missing GA4 joins', async () => {
+test('crawlSite reports sparse GSC and missing Google Analytics joins', async () => {
   const calls = {
     searchMetrics: [] as string[],
     topQueries: [] as string[],
@@ -202,7 +205,7 @@ test('crawlSite reports sparse GSC and missing GA4 joins', async () => {
     {
       url: 'https://example.com/',
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: false,
       maxPages: 3,
@@ -280,7 +283,10 @@ test('crawlSite reports sparse GSC and missing GA4 joins', async () => {
   assert.equal(report.pages[2]?.searchMetrics, undefined)
   assert.equal(report.pages[0]?.analytics, undefined)
   assert.match(report.warnings.join('\n'), /GSC metrics joined for 1 of 3/)
-  assert.match(report.warnings.join('\n'), /GA4 metrics joined for 0/)
+  assert.match(
+    report.warnings.join('\n'),
+    /Google Analytics metrics joined for 0/,
+  )
   assert.equal(report.dataSources?.searchConsole.status, 'partial')
   assert.equal(report.dataSources?.searchConsole.joinedMetricPages, 1)
   assert.equal(report.dataSources?.searchConsole.joinedQueryPages, 0)
@@ -295,7 +301,7 @@ test('crawlSite marks capped provider evidence partial instead of zero', async (
     {
       url: 'https://example.com/',
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: false,
       maxPages: 10,

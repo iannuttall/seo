@@ -21,7 +21,7 @@ export type AiReferralQueryEvidence = {
 }
 
 export type AiReferralDataSource = {
-  provider: 'google-analytics-4'
+  provider: 'google-analytics'
   api: 'analyticsdata.v1beta.runReport'
   maxRows: number
   calls: number
@@ -43,7 +43,7 @@ export type AiReferralReport = {
     kind: 'absolute' | 'relative'
   }
   methodology: {
-    id: 'ga4-ai-referrals'
+    id: 'google-analytics-ai-referrals'
     version: 2
     attributionDimension: 'sessionSource'
     sourceRulesVersion: 'ai-referral-sources@1'

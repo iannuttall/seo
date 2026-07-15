@@ -19,8 +19,8 @@ function dependencies(
     now?: string
     requests?: GscRequest[]
     rows?: GscRow[]
-    ga4Result?: unknown
-    ga4Requests?: unknown[]
+    googleAnalyticsResult?: unknown
+    googleAnalyticsRequests?: unknown[]
     contentGroups?: ContentGroup[]
   } = {},
 ): MeasureChangeDependencies {
@@ -41,9 +41,9 @@ function dependencies(
         ] satisfies GscRow[])
       return { rows, calls: 1, rowsFetched: rows.length }
     },
-    ga4Report: async (_propertyId, request) => {
-      input.ga4Requests?.push(request)
-      return (input.ga4Result ?? {
+    googleAnalyticsReport: async (_propertyId, request) => {
+      input.googleAnalyticsRequests?.push(request)
+      return (input.googleAnalyticsResult ?? {
         dimensionHeaders: [{ name: 'date' }],
         metricHeaders: [
           { name: 'sessions', type: 'TYPE_INTEGER' },
@@ -107,8 +107,8 @@ test('measureChange validates windows before provider calls at the Pacific bound
   assert.equal(requests.length, 0)
 })
 
-test('measureChange exposes GA4 quality warnings as partial evidence', async () => {
-  const ga4Result = {
+test('measureChange exposes Google Analytics quality warnings as partial evidence', async () => {
+  const googleAnalyticsResult = {
     dimensionHeaders: [{ name: 'date' }],
     metricHeaders: [
       { name: 'sessions', type: 'TYPE_INTEGER' },
@@ -137,8 +137,8 @@ test('measureChange exposes GA4 quality warnings as partial evidence', async () 
     },
   }
   const result = await measureChange(
-    { ...change, changedAt: '2026-05-01', ga4PropertyId: '123' },
-    dependencies({ ga4Result }),
+    { ...change, changedAt: '2026-05-01', googleAnalyticsPropertyId: '123' },
+    dependencies({ googleAnalyticsResult }),
   )
 
   assert.equal(result.dataStatus, 'partial')
@@ -150,7 +150,7 @@ test('measureChange exposes GA4 quality warnings as partial evidence', async () 
   assert.match(result.warnings.join(' '), /\(other\).*thresholding.*sampled/)
   assert.match(
     result.caveats.join(' '),
-    /GA4 property timezone \(Europe\/London\)/,
+    /Google Analytics property timezone \(Europe\/London\)/,
   )
 })
 
@@ -269,8 +269,8 @@ test('control adjustment normalizes proportional movement across scales', async 
   assert.equal(result.control?.adjusted.clickPctPoints, 0)
 })
 
-test('query content groups do not attach unfiltered sitewide GA4', async () => {
-  const ga4Requests: unknown[] = []
+test('query content groups do not attach unfiltered sitewide Google Analytics', async () => {
+  const googleAnalyticsRequests: unknown[] = []
   const group: ContentGroup = {
     id: 'query-group',
     site: change.site,
@@ -287,19 +287,19 @@ test('query content groups do not attach unfiltered sitewide GA4', async () => {
       scope: 'group',
       target: group.id,
       changedAt: '2026-05-01',
-      ga4PropertyId: '123',
+      googleAnalyticsPropertyId: '123',
     },
-    dependencies({ ga4Requests, contentGroups: [group] }),
+    dependencies({ googleAnalyticsRequests, contentGroups: [group] }),
   )
 
-  assert.equal(ga4Requests.length, 0)
+  assert.equal(googleAnalyticsRequests.length, 0)
   assert.equal(result.analytics, undefined)
   assert.equal(result.source.analytics, undefined)
 })
 
 test('content groups cannot be measured against another site', async () => {
   const requests: GscRequest[] = []
-  const ga4Requests: unknown[] = []
+  const googleAnalyticsRequests: unknown[] = []
   const group: ContentGroup = {
     id: 'foreign-group',
     site: 'sc-domain:other.example',
@@ -317,9 +317,13 @@ test('content groups cannot be measured against another site', async () => {
         scope: 'group',
         target: group.id,
         changedAt: '2026-05-01',
-        ga4PropertyId: '123',
+        googleAnalyticsPropertyId: '123',
       },
-      dependencies({ requests, ga4Requests, contentGroups: [group] }),
+      dependencies({
+        requests,
+        googleAnalyticsRequests,
+        contentGroups: [group],
+      }),
     ),
     (error) =>
       error instanceof SeoError &&
@@ -327,7 +331,7 @@ test('content groups cannot be measured against another site', async () => {
       /belongs to/.test(error.message),
   )
   assert.equal(requests.length, 0)
-  assert.equal(ga4Requests.length, 0)
+  assert.equal(googleAnalyticsRequests.length, 0)
 })
 
 test('foreign control groups fail before treatment provider calls', async () => {

@@ -3,9 +3,9 @@ import { runGa4Report } from '../../ga4/client.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { getChange } from './change-log.js'
 import { getContentGroup } from './content-groups.js'
-import { ga4LandingPageFilterForChange } from './measurement/analytics.js'
+import { googleAnalyticsLandingPageFilterForChange } from './measurement/analytics.js'
 import { classify } from './measurement/classify.js'
-import { queryGa4ChangeWindows } from './measurement/ga4-change-provider.js'
+import { queryGoogleAnalyticsChangeWindows } from './measurement/ga4-change-provider.js'
 import { queryGscChangeWindows } from './measurement/gsc-change-provider.js'
 import { fixed } from './measurement/math.js'
 import { measurementWindow } from './measurement/window.js'
@@ -13,14 +13,14 @@ import type { ChangeMeasurement, ChangeScope, SeoChange } from './types.js'
 
 export type MeasureChangeDependencies = {
   searchAnalytics: typeof querySearchAnalytics
-  ga4Report: typeof runGa4Report
+  googleAnalyticsReport: typeof runGa4Report
   contentGroup: typeof getContentGroup
   now: () => Date
 }
 
 const defaultDependencies: MeasureChangeDependencies = {
   searchAnalytics: querySearchAnalytics,
-  ga4Report: runGa4Report,
+  googleAnalyticsReport: runGa4Report,
   contentGroup: getContentGroup,
   now: () => new Date(),
 }
@@ -66,7 +66,7 @@ export async function measureChange(
     target?: string
     title?: string
     changedAt?: string
-    ga4PropertyId?: string
+    googleAnalyticsPropertyId?: string
     controlScope?: ChangeScope
     controlTarget?: string
     controlTitle?: string
@@ -188,18 +188,21 @@ export async function measureChange(
           note: `${classified.note} Confidence is capped because Search Console evidence is partial.`,
         }
       : classified
-  const ga4Filter = ga4LandingPageFilterForChange(change, group)
+  const googleAnalyticsFilter = googleAnalyticsLandingPageFilterForChange(
+    change,
+    group,
+  )
   const queryDimension =
     change.scope === 'query' || group?.dimension === 'query'
   const analytics =
-    input.ga4PropertyId && !queryDimension
-      ? await queryGa4ChangeWindows({
-          propertyId: input.ga4PropertyId,
+    input.googleAnalyticsPropertyId && !queryDimension
+      ? await queryGoogleAnalyticsChangeWindows({
+          propertyId: input.googleAnalyticsPropertyId,
           before,
           after,
-          filter: ga4Filter,
+          filter: googleAnalyticsFilter,
           refresh: input.refresh,
-          ga4Report: dependencies.ga4Report,
+          googleAnalyticsReport: dependencies.googleAnalyticsReport,
         })
       : undefined
 
@@ -344,7 +347,7 @@ export async function measureChange(
         : []),
       ...(analytics
         ? [
-            `GA4 attribution uses landing pages and the GA4 property timezone${analytics.source.before.timeZone ? ` (${analytics.source.before.timeZone})` : ''}; its day boundaries may differ from Search Console Pacific dates.`,
+            `Google Analytics attribution uses landing pages and the Google Analytics property timezone${analytics.source.before.timeZone ? ` (${analytics.source.before.timeZone})` : ''}; its day boundaries may differ from Search Console Pacific dates.`,
           ]
         : []),
     ],

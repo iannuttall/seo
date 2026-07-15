@@ -184,18 +184,19 @@ export async function crawlImplementationQueueWorkflow(
         warnings: crawl.warnings,
       }),
       joinStep({
-        tool: 'seo_ga4_landing_page_values',
-        enabled: Boolean(input.ga4PropertyId),
-        warningPrefix: 'GA4 metrics skipped:',
-        enabledSummary: 'Joined GA4 landing-page value where URLs matched.',
-        skippedSummary: 'No GA4 property was selected.',
+        tool: 'seo_google_analytics_landing_page_values',
+        enabled: Boolean(input.googleAnalyticsPropertyId),
+        warningPrefix: 'Google Analytics metrics skipped:',
+        enabledSummary:
+          'Joined Google Analytics landing-page value where URLs matched.',
+        skippedSummary: 'No Google Analytics property was selected.',
         warnings: crawl.warnings,
       }),
       {
         tool: 'seo_top_crawl_fixes',
         status: 'completed',
         summary:
-          'Grouped crawl issues, weighted them by severity, affected URLs, GSC visibility, GA4 value, and effort.',
+          'Grouped crawl issues, weighted them by severity, affected URLs, GSC visibility, Google Analytics value, and effort.',
       },
     ],
     actions: queue.slice(0, 5).map((item) => ({

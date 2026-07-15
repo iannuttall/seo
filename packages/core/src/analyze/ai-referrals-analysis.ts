@@ -44,7 +44,7 @@ function metric(row: Record<string, string>, name: string): number {
   ) {
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',
-      `GA4 returned an invalid ${name} value.`,
+      `Google Analytics returned an invalid ${name} value.`,
     )
   }
   return parsed
@@ -54,7 +54,7 @@ function dateValue(value: string | undefined): string {
   if (!value || !/^\d{8}$/.test(value)) {
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',
-      'GA4 returned an invalid date value.',
+      'Google Analytics returned an invalid date value.',
     )
   }
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`
@@ -111,7 +111,7 @@ export function analyzeAiReferralRows(
     if (!definition || !sourceTotals.has(definition.id)) {
       throw new SeoError(
         'PROVIDER_UNAVAILABLE',
-        'GA4 detail rows contained an unexpected session source.',
+        'Google Analytics detail rows contained an unexpected session source.',
       )
     }
     const metrics = {
@@ -159,16 +159,16 @@ export function analyzeAiReferralRows(
     ...evidenceReasons('Total users', input.totalUsersEvidence),
     ...(detailMismatch
       ? [
-          'GA4 detail totals differ from source-discovery totals; landing-page and daily breakdowns are incomplete.',
+          'Google Analytics detail totals differ from source-discovery totals; landing-page and daily breakdowns are incomplete.',
         ]
       : []),
     ...(timeZones.size > 1
-      ? ['GA4 queries returned inconsistent property time zones.']
+      ? ['Google Analytics queries returned inconsistent property time zones.']
       : []),
   ]
   const dataStatus = partialReasons.length ? 'partial' : 'complete'
   const generalCaveat =
-    'GA4 only attributes visits that arrive with a recognized session source; some AI visits appear as direct, unassigned, or another source.'
+    'Google Analytics only attributes visits that arrive with a recognized session source; some AI visits appear as direct, unassigned, or another source.'
   const possiblyTruncated =
     input.sourceDiscovery.truncated ||
     input.detail.truncated ||
@@ -217,13 +217,13 @@ export function analyzeAiReferralRows(
     dataStatus,
     range: input.range,
     methodology: {
-      id: 'ga4-ai-referrals',
+      id: 'google-analytics-ai-referrals',
       version: 2,
       attributionDimension: 'sessionSource',
       sourceRulesVersion: AI_REFERRAL_SOURCES_VERSION,
     },
     dataSource: {
-      provider: 'google-analytics-4',
+      provider: 'google-analytics',
       api: 'analyticsdata.v1beta.runReport',
       maxRows: input.maxRows,
       calls:
@@ -246,11 +246,11 @@ export function analyzeAiReferralRows(
       landingPages: pageTotals.size,
       verdict: total.sessions
         ? dataStatus === 'complete'
-          ? 'Detected AI referral traffic in GA4.'
+          ? 'Detected AI referral traffic in Google Analytics.'
           : 'Detected AI referral traffic; partial counts and breakdowns are lower bounds.'
         : dataStatus === 'complete'
           ? 'No sessions attributed to the known AI session-source rules were detected.'
-          : 'No AI-attributed sessions were found in retained GA4 data; this partial report cannot establish absence.',
+          : 'No AI-attributed sessions were found in retained Google Analytics data; this partial report cannot establish absence.',
       caveat: generalCaveat,
     },
     sources: [...sourceTotals.values()]
@@ -279,7 +279,7 @@ export function analyzeAiReferralRows(
       .sort((left, right) => compareText(left.date, right.date)),
     caveats: [
       generalCaveat,
-      'Attribution uses GA4 sessionSource only; landing-page text, medium text, and event referrers are never treated as referral sources.',
+      'Attribution uses Google Analytics sessionSource only; landing-page text, medium text, and event referrers are never treated as referral sources.',
       'Source totals come from a low-cardinality source query; landing-page and daily detail is queried separately for the exact observed source values.',
       'Total users come from a separate filtered aggregate when AI sources are observed and are never summed across report rows; complete zero-session evidence implies zero users without another query.',
       ...(selection.omittedRows > 0

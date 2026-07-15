@@ -131,7 +131,7 @@ function crawlDataSourceLines(
       warning: dataSources.searchConsole.warning,
     }),
     sourceLine({
-      label: 'GA4',
+      label: 'Google Analytics',
       status: dataSources.analytics.status,
       joinedPages: dataSources.analytics.joinedPages,
       totalPages: dataSources.analytics.totalPages,
@@ -273,7 +273,7 @@ function printSkippedProviderSections(
     'dataSources' in section ? crawlDataSourceLines(section.dataSources) : []
   const lines = observedLines.length
     ? observedLines
-    : ['Search Console: not connected.', 'GA4: not connected.']
+    : ['Search Console: not connected.', 'Google Analytics: not connected.']
   for (const line of lines) {
     process.stdout.write(`${line}\n`)
   }
@@ -286,12 +286,12 @@ function technicalFirstSummary(
   section: ReturnType<typeof technicalSection>,
 ): string {
   if (!('topFixes' in section)) {
-    return `Technical crawl evidence was ${section.status}. Search Console and GA4 sections were skipped because they are not connected.`
+    return `Technical crawl evidence was ${section.status}. Search Console and Google Analytics sections were skipped because they are not connected.`
   }
 
   const source = section.status === 'reused' ? 'Loaded' : 'Completed'
   const pages = section.summary.crawledUrls
-  return `${source} a technical crawl of ${pages} ${pages === 1 ? 'page' : 'pages'}. Search Console and GA4 sections were skipped because they are not connected.`
+  return `${source} a technical crawl of ${pages} ${pages === 1 ? 'page' : 'pages'}. Search Console and Google Analytics sections were skipped because they are not connected.`
 }
 
 function technicalWorkflowStep(section: ReturnType<typeof technicalSection>): {
@@ -573,7 +573,8 @@ function workflowCommandMeta(input: {
             url:
               directUrl ?? selection?.client?.startUrl ?? startUrlForSite(site),
             projectId: selection?.client?.id,
-            ga4PropertyId: selection?.client?.ga4PropertyId,
+            googleAnalyticsPropertyId:
+              selection?.client?.analytics.google?.propertyId,
             crawl: !negatedBooleanArg(args, 'crawl'),
             refresh: booleanArg(args.refresh),
             maxPages: numberArg(args['crawl-max-pages']),

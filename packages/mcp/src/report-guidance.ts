@@ -63,13 +63,13 @@ export const REPORT_GUIDANCE = {
   'ai-referrals': {
     name: 'AI referral traffic',
     description:
-      'Find visits from known AI products in GA4 and see a ranked, bounded set of landing pages that received them.',
+      'Find visits from known AI products in Google Analytics and see a ranked, bounded set of landing pages that received them.',
     useWhen: [
-      'You want measured AI referral traffic from GA4.',
+      'You want measured AI referral traffic from Google Analytics.',
       'You need the landing pages and sources behind those visits.',
     ],
     avoidWhen: [
-      'GA4 is not connected or does not track the site.',
+      'Google Analytics is not connected or does not track the site.',
       'You want to measure citations or unclicked mentions inside AI answers.',
     ],
     outcome:

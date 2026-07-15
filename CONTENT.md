@@ -104,7 +104,7 @@ Weak:
 Better:
 
 > Ask your agent what is hurting search performance and get an answer based on
-> your crawl, Search Console, and GA4 data.
+> your crawl, Search Console, and Google Analytics data.
 
 Weak:
 
@@ -211,7 +211,7 @@ A useful report page covers:
 9. How an agent or application can run it when that is useful.
 
 Use conditional content for different report families. A crawl audit, Search
-Console analysis, GA4 measurement report, export tool, and monitoring command
+Console analysis, Google Analytics measurement report, export tool, and monitoring command
 should not have identical introductions or fact tables.
 
 Mention scheduled agent tasks only when repeat runs make the report more

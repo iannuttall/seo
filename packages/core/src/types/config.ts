@@ -10,6 +10,16 @@ export const siteSchema = z.object({
 
 export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
+export const analyticsConnectionsSchema = z
+  .object({
+    google: z
+      .object({
+        propertyId: z.string(),
+      })
+      .optional(),
+  })
+  .default({})
+
 export const clientProfileSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -17,7 +27,7 @@ export const clientProfileSchema = z.object({
   startUrl: z.string().optional(),
   watchUrls: z.array(z.string()).default([]),
   brandTerms: z.array(z.string()).default([]),
-  ga4PropertyId: z.string().optional(),
+  analytics: analyticsConnectionsSchema,
   reportDay: z.number().int().min(1).max(31).optional(),
   technicalWeekday: z.number().int().min(0).max(7).optional(),
   isDefault: z.boolean().optional(),
@@ -29,20 +39,24 @@ export const configSchema = z.object({
   defaultSite: z.string().optional(),
   sites: z.array(siteSchema).default([]),
   clients: z.array(clientProfileSchema).default([]),
-  google: z
+  analytics: z
     .object({
-      defaultGa4PropertyId: z.string().optional(),
-      propertyMappings: z
-        .array(
-          z.object({
-            siteUrl: z.string(),
-            ga4PropertyId: z.string(),
-            addedAt: z.number().int().optional(),
-          }),
-        )
-        .default([]),
+      google: z
+        .object({
+          defaultPropertyId: z.string().optional(),
+          propertyMappings: z
+            .array(
+              z.object({
+                siteUrl: z.string(),
+                propertyId: z.string(),
+                addedAt: z.number().int().optional(),
+              }),
+            )
+            .default([]),
+        })
+        .default({ propertyMappings: [] }),
     })
-    .default({ propertyMappings: [] }),
+    .default({ google: { propertyMappings: [] } }),
   providers: z
     .object({
       semrushApiKey: z.string().optional(),

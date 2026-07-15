@@ -105,7 +105,7 @@ test('crawlImplementationQueueWorkflow crawls, joins providers, and ranks fixes'
     {
       url: pageUrl,
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: false,
       maxPages: 1,
@@ -135,7 +135,7 @@ test('crawlImplementationQueueWorkflow crawls, joins providers, and ranks fixes'
   assert.equal(titleItem.affectedUrls, 1)
   assert.deepEqual(titleItem.analytics, { sessions: 25, totalUsers: 18 })
   assert.match(titleItem.evidence, /GSC visibility/)
-  assert.match(titleItem.evidence, /GA4 adds 25 sessions/)
+  assert.match(titleItem.evidence, /Google Analytics adds 25 sessions/)
   assert.match(
     titleItem.verification.command,
     /^seo crawl https:\/\/example\.com\//,

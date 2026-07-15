@@ -45,7 +45,7 @@ export function crawlProviderLimits(input: {
 export async function crawlDataSources(input: {
   cancelled: boolean
   site?: string
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   pages: CrawlReport['pages']
   warnings: string[]
   searchMetricsLimit: number
@@ -83,8 +83,8 @@ export async function crawlDataSources(input: {
       retainedRowLimit: input.analyticsLimit,
       retainedRowLimitReached: false,
       warning: input.cancelled
-        ? 'GA4 join skipped because the crawl was cancelled.'
-        : 'GA4 join skipped because no property was selected.',
+        ? 'Google Analytics join skipped because the crawl was cancelled.'
+        : 'Google Analytics join skipped because no property was selected.',
     },
   }
 
@@ -103,9 +103,9 @@ export async function crawlDataSources(input: {
       queryPagesTopQueriesBatch: input.queryPagesTopQueriesBatch,
     })
   }
-  if (!input.cancelled && input.ga4PropertyId) {
+  if (!input.cancelled && input.googleAnalyticsPropertyId) {
     dataSources.analytics = await joinAnalytics({
-      propertyId: input.ga4PropertyId,
+      propertyId: input.googleAnalyticsPropertyId,
       pages: input.pages,
       warnings: input.warnings,
       limit: input.analyticsLimit,

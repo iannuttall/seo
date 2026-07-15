@@ -1,7 +1,10 @@
 import { aiReferralsReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, projectArg, strictNumberArg, stringArg } from '../../args.js'
-import { resolveClient, resolveGa4Property } from '../../selection.js'
+import {
+  resolveClient,
+  resolveGoogleAnalyticsProperty,
+} from '../../selection.js'
 import { printJson, printKeyValue } from '../../utils.js'
 import {
   formatCount,
@@ -13,12 +16,13 @@ import {
 export const aiReferralsCommand = defineCommand({
   meta: {
     name: 'ai-referrals',
-    description: 'Find AI referral traffic detected in GA4',
+    description: 'Find AI referral traffic detected in Google Analytics',
   },
   args: {
     property: {
       type: 'string',
-      description: 'GA4 property ID. If omitted in a terminal, choose one.',
+      description:
+        'Google Analytics property ID. If omitted in a terminal, choose one.',
     },
     client: {
       type: 'string',
@@ -26,13 +30,15 @@ export const aiReferralsCommand = defineCommand({
     },
     project: {
       type: 'string',
-      description: 'Saved project id or name with an optional GA4 property.',
+      description:
+        'Saved project id or name with an optional Google Analytics property.',
     },
     'start-date': { type: 'string', default: '28daysAgo' },
     'end-date': { type: 'string', default: 'yesterday' },
     'max-rows': {
       type: 'string',
-      description: 'Maximum GA4 rows per query. Defaults to 100000.',
+      description:
+        'Maximum Google Analytics rows per query. Defaults to 100000.',
     },
     'result-limit': {
       type: 'string',
@@ -45,7 +51,7 @@ export const aiReferralsCommand = defineCommand({
     refresh: {
       type: 'boolean',
       default: false,
-      description: 'Bypass cached GA4 responses.',
+      description: 'Bypass cached Google Analytics responses.',
     },
     json: { type: 'boolean', default: false },
   },
@@ -55,8 +61,9 @@ export const aiReferralsCommand = defineCommand({
       client: projectArg(args),
       options: { json },
     })
-    const property = await resolveGa4Property({
-      property: stringArg(args.property) ?? client?.ga4PropertyId,
+    const property = await resolveGoogleAnalyticsProperty({
+      property:
+        stringArg(args.property) ?? client?.analytics.google?.propertyId,
       options: { json },
     })
     const report = await aiReferralsReport({

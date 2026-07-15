@@ -37,9 +37,9 @@ export const clientAddCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated URLs to watch with URL Inspection.',
     },
-    ga4: {
+    'google-analytics-property': {
       type: 'string',
-      description: 'Optional GA4 property ID for this project.',
+      description: 'Optional Google Analytics property ID for this project.',
     },
     brand: {
       type: 'string',
@@ -75,7 +75,13 @@ export const clientAddCommand = defineCommand({
       startUrl: stringArg(args.url),
       watchUrls: listArg(args.urls),
       brandTerms: listArg(args.brand),
-      ga4PropertyId: stringArg(args.ga4),
+      analytics: stringArg(args['google-analytics-property'])
+        ? {
+            google: {
+              propertyId: stringArg(args['google-analytics-property']) ?? '',
+            },
+          }
+        : undefined,
       reportDay: numberArg(args['report-day']),
       technicalWeekday: numberArg(args.weekday),
       isDefault: booleanArg(args.default),

@@ -861,7 +861,7 @@ export async function crawlSite(
     const dataSources = await crawlDataSources({
       cancelled,
       site,
-      ga4PropertyId: input.ga4PropertyId,
+      googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
       pages,
       warnings,
       searchMetricsLimit,
@@ -929,7 +929,7 @@ export async function crawlSite(
       config,
       projectId: input.projectId,
       site,
-      ga4PropertyId: input.ga4PropertyId,
+      googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
       dataSources,
       pages,
       requests,

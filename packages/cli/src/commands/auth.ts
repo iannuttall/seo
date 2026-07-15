@@ -42,6 +42,36 @@ function tokenStorageLabel(input: {
     : 'private file'
 }
 
+function oauthClientLabel(source: 'shared' | 'byo'): string {
+  return source === 'shared' ? 'SEO Skill app' : 'Local OAuth config'
+}
+
+function oauthIdentityRows(input: {
+  accountEmail: string
+  clientSource: 'shared' | 'byo'
+  expiresAt: number
+  scope: string
+}): Array<[string, string]> {
+  const rows: Array<[string, string]> = [['Account', input.accountEmail]]
+  const scopes = new Set(input.scope.split(/\s+/u).filter(Boolean))
+
+  if (scopes.has('https://www.googleapis.com/auth/webmasters.readonly')) {
+    rows.push(['Search Console', 'Read only'])
+  } else {
+    rows.push(['Search Console', 'Not granted'])
+  }
+  if (scopes.has('https://www.googleapis.com/auth/analytics.readonly')) {
+    rows.push(['Google Analytics', 'Read only'])
+  } else {
+    rows.push(['Google Analytics', 'Not granted'])
+  }
+  rows.push(
+    ['OAuth app', oauthClientLabel(input.clientSource)],
+    ['Expires', formatRelativeExpiry(input.expiresAt)],
+  )
+  return rows
+}
+
 export const authCommand = defineCommand({
   meta: {
     name: 'auth',
@@ -59,8 +89,13 @@ export const authCommand = defineCommand({
           )
         }
         const tokens = await loginWithLoopback()
-        process.stdout.write(
-          `${tokens.account_email} · ${tokens.scope.replace('https://www.googleapis.com/auth/', '')} · ${tokens.client_source === 'shared' ? 'shared seo app' : 'BYO client'}\n`,
+        printKeyValue(
+          oauthIdentityRows({
+            accountEmail: tokens.account_email,
+            clientSource: tokens.client_source,
+            expiresAt: tokens.expires_at,
+            scope: tokens.scope,
+          }),
         )
       },
     }),
@@ -85,25 +120,59 @@ export const authCommand = defineCommand({
         name: 'whoami',
         description: 'Show the signed-in Google account',
       },
-      run: async () => {
+      args: {
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
+      },
+      run: async ({ args }) => {
         const status = await authStatus()
         if (status.activeMode === 'service-account') {
-          process.stdout.write(
-            'service account · ' +
-              (status.identity ?? 'invalid configuration') +
-              ' · ' +
-              serviceAccountSource(status.serviceAccount.source) +
-              '\n',
-          )
+          const result = {
+            mode: 'service-account',
+            account: status.identity ?? null,
+            source: serviceAccountSource(status.serviceAccount.source),
+          }
+          if (jsonFlag(args)) {
+            printJson(result)
+            return
+          }
+          printKeyValue([
+            ['Account type', 'Service account'],
+            ['Account', status.identity ?? 'Invalid configuration'],
+            ['Credentials', result.source],
+            ['Access', 'Search Console and Google Analytics, read only'],
+          ])
           return
         }
         const tokens = status.tokens
         if (!tokens) {
+          if (jsonFlag(args)) {
+            printJson({ mode: 'oauth', account: null })
+            return
+          }
           process.stdout.write('Not logged in.\n')
           return
         }
-        process.stdout.write(
-          `${tokens.account_email} · ${tokens.scope.replace('https://www.googleapis.com/auth/', '')} · ${formatRelativeExpiry(tokens.expires_at)} · ${tokens.client_source === 'shared' ? 'shared seo app' : 'BYO client'}\n`,
+        if (jsonFlag(args)) {
+          printJson({
+            mode: 'oauth',
+            account: tokens.account_email,
+            scopes: tokens.scope.split(/\s+/u).filter(Boolean),
+            clientSource: tokens.client_source,
+            expiresAt: tokens.expires_at,
+          })
+          return
+        }
+        printKeyValue(
+          oauthIdentityRows({
+            accountEmail: tokens.account_email,
+            clientSource: tokens.client_source,
+            expiresAt: tokens.expires_at,
+            scope: tokens.scope,
+          }),
         )
       },
     }),
@@ -164,7 +233,7 @@ export const authCommand = defineCommand({
             ['Mode', 'service account'],
             ['Identity', status.identity ?? 'unavailable'],
             ['Source', serviceAccountSource(status.serviceAccount.source)],
-            ['Scopes', 'Search Console readonly, GA4 readonly'],
+            ['Scopes', 'Search Console readonly, Google Analytics readonly'],
             ['Storage', 'credentials stay in the environment'],
           ]
           if (status.serviceAccount.error) {
@@ -179,7 +248,7 @@ export const authCommand = defineCommand({
             : status.sharedConfigured
               ? 'Shared seo app available'
               : status.byoConfigured
-                ? 'BYO client configured'
+                ? 'Local OAuth config available'
                 : 'No OAuth client configured'
           process.stdout.write(
             `Not logged in. ${authMode}. Run \`seo auth login\` to connect Google.\n`,
@@ -190,12 +259,7 @@ export const authCommand = defineCommand({
         printKeyValue([
           ['Account', status.tokens.account_email],
           ['Scopes', status.tokens.scope],
-          [
-            'Client',
-            status.tokens.client_source === 'shared'
-              ? 'shared seo app'
-              : 'BYO client',
-          ],
+          ['Client', oauthClientLabel(status.tokens.client_source)],
           ['Expires', formatRelativeExpiry(status.tokens.expires_at)],
           ['Tokens file', getSeoCliPaths().tokensFile],
           ['Token storage', tokenStorageLabel(tokenStorage)],
@@ -205,9 +269,9 @@ export const authCommand = defineCommand({
           [
             'OAuth mode',
             status.sharedConfigured
-              ? 'shared app available'
+              ? 'SEO Skill app available'
               : status.byoConfigured
-                ? 'BYO client configured'
+                ? 'Local OAuth config available'
                 : 'missing',
           ],
           ['Revoke at', 'https://myaccount.google.com/permissions'],
@@ -301,7 +365,7 @@ export const authCommand = defineCommand({
             '`seo auth setup-client` needs an interactive terminal. Run it without --json, or set SEO_GOOGLE_CLIENT_ID and SEO_GOOGLE_CLIENT_SECRET.',
           )
         }
-        intro('seo BYO OAuth client')
+        intro('Local Google OAuth client')
         note(
           [
             'This is the advanced path.',
@@ -324,7 +388,7 @@ export const authCommand = defineCommand({
           }),
         )
         writeOauthClient({ clientId, clientSecret })
-        outro(`Saved BYO OAuth client to ${getSeoCliPaths().oauthClientFile}`)
+        outro(`Saved local OAuth config to ${getSeoCliPaths().oauthClientFile}`)
       },
     }),
   },

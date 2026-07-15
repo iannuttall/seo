@@ -452,18 +452,18 @@ export const reportGuideOverridesIP: Partial<
         role: 'Defines the site, page, query, or content group being measured and the date it changed.',
       },
       {
-        label: 'Optional GA4 and control evidence',
-        source: 'ga4-acquisition',
+        label: 'Optional Google Analytics and control evidence',
+        source: 'google-analytics-acquisition',
         role: 'Adds separate post-click or comparison context when configured.',
       },
     ],
     checks: [
       'Builds adjacent equal-length windows from finalised Search Console dates and reports any shortfall in usable days.',
-      'Compares the selected scope while keeping absent rows, controls, GA4 evidence, and known confounders separate.',
+      'Compares the selected scope while keeping absent rows, controls, Google Analytics evidence, and known confounders separate.',
     ],
     returns: [
       'Before and after search metrics, absolute and percentage movement, window coverage, and a cautious verdict.',
-      'Optional control and GA4 comparisons plus warnings for incomplete data and plausible confounders.',
+      'Optional control and Google Analytics comparisons plus warnings for incomplete data and plausible confounders.',
     ],
     alternatives: [
       {

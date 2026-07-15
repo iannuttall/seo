@@ -1,17 +1,14 @@
 import { SEO_VERSION, seoErrorEnvelope, toSeoError } from '@seo/core'
 import { defineCommand, runCommand, runMain } from 'citty'
 import { agentReadinessCommand } from './commands/agent-readiness.js'
+import { analyticsCommand } from './commands/analytics/index.js'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
 import { contentCommand } from './commands/content.js'
 import { crawlCommand } from './commands/crawl.js'
 import { crawlReportsCommand } from './commands/crawl-reports.js'
-import {
-  ga4ReportCommand,
-  gscQueryCommand,
-  urlInspectCommand,
-} from './commands/data.js'
+import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
 import {
   trafficAnomalyCommand,
   updateCorrelateCommand,
@@ -53,7 +50,6 @@ import { performanceCommand } from './commands/performance.js'
 import {
   diagnoseCommand,
   doctorCommand,
-  ga4PropertiesCommand,
   segmentImpactCommand,
   strikingDistanceCommand,
 } from './commands/product/index.js'
@@ -82,12 +78,8 @@ import {
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
-import {
-  maybeCheckForUpdates,
-  printCatalog,
-  printHeading,
-  printSection,
-} from './utils.js'
+import { maybeOfferSelfUpdate } from './self-update.js'
+import { printCatalog, printHeading, printSection } from './utils.js'
 
 const pkg = {
   name: 'seo',
@@ -156,7 +148,7 @@ const allHelpSections: HelpSection[] = [
       ['seo perf audit', 'Run a page performance audit'],
       ['seo internal-links', 'Find internal link opportunities'],
       ['seo community-intent', 'Find forum, review, and comparison intent'],
-      ['seo ai-referrals', 'Find AI referral traffic in GA4'],
+      ['seo ai-referrals', 'Find AI referral traffic in Google Analytics'],
       ['seo seo-to-ai-query', 'Convert searches into AI-monitor prompts'],
     ],
   },
@@ -181,7 +173,8 @@ const allHelpSections: HelpSection[] = [
       ['seo redirect-trace', 'Trace redirects'],
       ['seo gsc-query', 'Run a raw GSC query'],
       ['seo url-inspect', 'Run URL Inspection'],
-      ['seo ga4-report', 'Run a GA4 report'],
+      ['seo analytics google properties', 'List Google Analytics properties'],
+      ['seo analytics google report', 'Run a Google Analytics report'],
       ['seo updates', 'List official Google ranking updates'],
     ],
   },
@@ -242,12 +235,12 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
+    analytics: analyticsCommand,
     llms: llmsCommand,
     auth: authCommand,
     mcp: mcpCommand,
     okf: okfCommand,
     doctor: doctorCommand,
-    'ga4-properties': ga4PropertiesCommand,
     privacy: privacyCommand,
     reset: resetCommand,
     cache: cacheCommand,
@@ -288,7 +281,6 @@ const main = defineCommand({
     sites: sitesCommand,
     'gsc-query': gscQueryCommand,
     'url-inspect': urlInspectCommand,
-    'ga4-report': ga4ReportCommand,
     updates: updatesCommand,
     'traffic-anomaly': trafficAnomalyCommand,
     'update-correlate': updateCorrelateCommand,
@@ -319,9 +311,11 @@ const main = defineCommand({
   },
 })
 
-maybeCheckForUpdates(pkg)
-
 const argv = process.argv.slice(2)
+const updateExitCode = await maybeOfferSelfUpdate(pkg, { argv })
+if (updateExitCode !== undefined) {
+  process.exit(updateExitCode)
+}
 if (
   argv.length === 0 ||
   (argv.length === 1 && ['help', '--help', '-h'].includes(argv[0] ?? ''))

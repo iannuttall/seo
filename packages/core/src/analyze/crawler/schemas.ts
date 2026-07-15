@@ -893,7 +893,7 @@ const crawlReportBaseSchema = z.object({
   definitionId: z.string(),
   projectId: z.string().optional(),
   site: z.string().optional(),
-  ga4PropertyId: z.string().optional(),
+  googleAnalyticsPropertyId: z.string().optional(),
   generatedAt: z.string().datetime(),
   status: z.enum(['completed', 'partial', 'failed']),
   configHash: z.string(),

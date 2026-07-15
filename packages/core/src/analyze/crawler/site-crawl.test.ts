@@ -480,7 +480,7 @@ test('crawlSite keeps large-site cancellation bounded', async () => {
     {
       url: 'https://example.com/',
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: true,
       maxPages: 50,
@@ -671,7 +671,7 @@ test('crawlSite accepts injected provider dependencies', async () => {
     {
       url: 'https://example.com/',
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: true,
       checkExternal: true,
       maxPages: 1,
@@ -753,7 +753,7 @@ test('crawlSite accepts injected provider dependencies', async () => {
   )
 })
 
-test('crawlSite skips auth data providers when no site or GA4 property is selected', async () => {
+test('crawlSite skips auth data providers when no site or Google Analytics property is selected', async () => {
   const calls = {
     searchMetrics: 0,
     topQueries: 0,
@@ -813,7 +813,9 @@ test('crawlSite skips auth data providers when no site or GA4 property is select
       },
       fetchLandingPageValues: async () => {
         calls.analytics += 1
-        throw new Error('GA4 should not be called without a property.')
+        throw new Error(
+          'Google Analytics should not be called without a property.',
+        )
       },
     },
   )
@@ -871,7 +873,7 @@ test('crawlSite returns completed pages and skips joins after cancellation', asy
     {
       url: 'https://example.com/',
       site: 'sc-domain:example.com',
-      ga4PropertyId: 'properties/123',
+      googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: true,
       maxPages: 10,

@@ -8,7 +8,7 @@ import {
   landingValueForUrl,
 } from './analytics-value.js'
 
-test('aggregates GA4 query-string variants by normalized landing path', () => {
+test('aggregates Google Analytics query-string variants by normalized landing path', () => {
   const values = landingPageValuesFromRows([
     {
       landingPagePlusQueryString: '/pricing?utm_source=newsletter',
@@ -31,7 +31,7 @@ test('aggregates GA4 query-string variants by normalized landing path', () => {
   })
 })
 
-test('aggregation and map order do not depend on GA4 row order', () => {
+test('aggregation and map order do not depend on Google Analytics row order', () => {
   const rows = [
     {
       landingPagePlusQueryString: '/pricing?campaign=b',
@@ -127,16 +127,16 @@ test('sampling and thresholding make landing-page values ineligible for ranking'
   assert.equal(result.source?.dataStatus, 'partial')
   assert.equal(landingPageValuesCanRank(result.source), false)
   assert.deepEqual(result.source?.qualityWarnings, [
-    'GA4 landing-page report was subject to Google Analytics thresholding.',
-    'GA4 landing-page report was sampled by Google Analytics.',
+    'Google Analytics landing-page report was subject to Google Analytics thresholding.',
+    'Google Analytics landing-page report was sampled by Google Analytics.',
   ])
   assert.deepEqual(
     landingPageRankingPolicy({ propertyId: '123', source: result.source }),
     {
       canRank: false,
       warnings: [
-        'GA4 landing-page report was subject to Google Analytics thresholding. Observed landing-page values remain visible but do not affect priority scores.',
-        'GA4 landing-page report was sampled by Google Analytics. Observed landing-page values remain visible but do not affect priority scores.',
+        'Google Analytics landing-page report was subject to Google Analytics thresholding. Observed landing-page values remain visible but do not affect priority scores.',
+        'Google Analytics landing-page report was sampled by Google Analytics. Observed landing-page values remain visible but do not affect priority scores.',
       ],
     },
   )
@@ -173,7 +173,7 @@ test('complete retained landing-page rows can influence ranking', async () => {
   )
 })
 
-test('unknown GA4 completeness cannot silently influence priority ranking', () => {
+test('unknown Google Analytics completeness cannot silently influence priority ranking', () => {
   assert.deepEqual(
     landingPageRankingPolicy({
       propertyId: '123',
@@ -186,7 +186,7 @@ test('unknown GA4 completeness cannot silently influence priority ranking', () =
     {
       canRank: false,
       warnings: [
-        'GA4: landing-page completeness was not reported. Observed landing-page values remain visible but do not affect priority scores.',
+        'Google Analytics: landing-page completeness was not reported. Observed landing-page values remain visible but do not affect priority scores.',
       ],
     },
   )

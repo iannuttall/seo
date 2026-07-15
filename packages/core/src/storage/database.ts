@@ -326,7 +326,7 @@ export function getCacheStats(): CacheStats {
     gsc_cache: database
       .prepare('SELECT COUNT(*) AS count FROM gsc_cache')
       .get() as { count: number },
-    ga4_cache: database
+    google_analytics_cache: database
       .prepare('SELECT COUNT(*) AS count FROM ga4_cache')
       .get() as { count: number },
     semrush_cache: database
@@ -347,7 +347,7 @@ export function getCacheStats(): CacheStats {
 }
 
 export function clearCache(
-  provider?: 'gsc' | 'ga4' | 'semrush' | 'http',
+  provider?: 'gsc' | 'google-analytics' | 'semrush' | 'http',
   olderThanMs?: number,
 ): number {
   const database = getDb()
@@ -356,7 +356,7 @@ export function clearCache(
   const tables =
     provider === 'gsc'
       ? ['gsc_cache']
-      : provider === 'ga4'
+      : provider === 'google-analytics'
         ? ['ga4_cache']
         : provider === 'semrush'
           ? ['semrush_cache']

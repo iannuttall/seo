@@ -16,7 +16,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/google',
     label: 'Google data',
     description:
-      'Connect read-only Search Console and optional GA4 data without treating partial rows as complete evidence.',
+      'Connect read-only Search Console and optional Google Analytics data without treating partial rows as complete evidence.',
   },
   {
     path: '/docs/cli',

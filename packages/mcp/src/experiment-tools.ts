@@ -129,7 +129,7 @@ export function registerExperimentTools(server: McpServer): void {
     'seo_measure_change',
     {
       description:
-        'Measure a saved or ad hoc SEO change with equal finalized GSC windows and optional GA4/control evidence',
+        'Measure a saved or ad hoc SEO change with equal finalized GSC windows and optional Google Analytics/control evidence',
       inputSchema: {
         id: z.string().min(1).optional(),
         site: z.string().min(1).optional(),
@@ -137,7 +137,7 @@ export function registerExperimentTools(server: McpServer): void {
         target: z.string().min(1).optional(),
         title: z.string().min(1).optional(),
         changedAt: calendarDateSchema.optional(),
-        ga4PropertyId: z.string().min(1).optional(),
+        googleAnalyticsPropertyId: z.string().min(1).optional(),
         controlScope: z.enum(['site', 'page', 'query', 'group']).optional(),
         controlTarget: z.string().min(1).optional(),
         controlTitle: z.string().min(1).optional(),
@@ -153,7 +153,7 @@ export function registerExperimentTools(server: McpServer): void {
       target,
       title,
       changedAt,
-      ga4PropertyId,
+      googleAnalyticsPropertyId,
       controlScope,
       controlTarget,
       controlTitle,
@@ -169,7 +169,7 @@ export function registerExperimentTools(server: McpServer): void {
           target,
           title,
           changedAt,
-          ga4PropertyId,
+          googleAnalyticsPropertyId,
           controlScope,
           controlTarget,
           controlTitle,

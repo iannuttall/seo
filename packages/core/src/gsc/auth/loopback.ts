@@ -1,12 +1,18 @@
 import crypto from 'node:crypto'
 import http from 'node:http'
 import open from 'open'
+import { SeoError } from '../../errors.js'
 import { writeTokens } from '../../storage/config.js'
 import type { StoredTokens } from '../../types.js'
 import { oauthCallbackPage } from './callback-page.js'
 import { getAuthModeStatus, getClientConfig } from './client-config.js'
 import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
-import { GOOGLE_SCOPE, type OAuthClientConfig } from './types.js'
+import {
+  GOOGLE_READONLY_SCOPE_LABELS,
+  GOOGLE_SCOPE,
+  missingGoogleReadonlyScopes,
+  type OAuthClientConfig,
+} from './types.js'
 import { decodeJwtEmail, fetchUserEmail } from './user-email.js'
 
 export function missingSharedClientLoginMessage(): string {
@@ -56,47 +62,75 @@ export async function loginWithLoopback(
 
   await open(authUrl.toString())
 
-  const code = await waitForCode({ server, redirectUri, state }).finally(() =>
-    server.close(),
-  )
-  const tokenJson = await exchangeCode({
-    clientConfig,
-    code,
-    redirectUri,
-    verifier,
-  })
+  let callback: Awaited<ReturnType<typeof waitForCode>> | undefined
+  try {
+    callback = await waitForCode({ server, redirectUri, state })
+    const tokenJson = await exchangeCode({
+      clientConfig,
+      code: callback.code,
+      redirectUri,
+      verifier,
+    })
 
-  const jwtEmail = decodeJwtEmail(tokenJson.id_token)
-  const accountEmail =
-    jwtEmail ?? (await fetchUserEmail(tokenJson.access_token))
-  if (!accountEmail) {
-    throw new Error(
-      'Google login succeeded but account email could not be determined.',
-    )
+    const missingScopes = missingGoogleReadonlyScopes(tokenJson.scope)
+    if (missingScopes.length > 0) {
+      const labels = missingScopes.map(
+        (scope) => GOOGLE_READONLY_SCOPE_LABELS[scope],
+      )
+      callback.respond(
+        400,
+        oauthCallbackPage({ status: 'permissions-missing', missing: labels }),
+      )
+      throw new SeoError(
+        'ACCESS_DENIED',
+        `Google login did not grant ${labels.join(' and ')} read-only access. Run \`seo auth login\` again, choose Select all, and approve both permission boxes.`,
+      )
+    }
+
+    const jwtEmail = decodeJwtEmail(tokenJson.id_token)
+    const accountEmail =
+      jwtEmail ?? (await fetchUserEmail(tokenJson.access_token))
+    if (!accountEmail) {
+      throw new Error(
+        'Google login succeeded but account email could not be determined.',
+      )
+    }
+
+    const tokens: StoredTokens = {
+      provider: 'google',
+      account_email: accountEmail,
+      scope: tokenJson.scope,
+      token_type: tokenJson.token_type,
+      access_token: tokenJson.access_token,
+      refresh_token: tokenJson.refresh_token,
+      expires_at: Date.now() + tokenJson.expires_in * 1000,
+      obtained_at: Date.now(),
+      client_source: clientConfig.source,
+    }
+
+    await writeTokens(tokens)
+    callback.respond(200, oauthCallbackPage({ status: 'connected' }))
+    return tokens
+  } catch (error) {
+    callback?.respond(400, oauthCallbackPage({ status: 'failed' }))
+    throw error
+  } finally {
+    server.close()
   }
-
-  const tokens: StoredTokens = {
-    provider: 'google',
-    account_email: accountEmail,
-    scope: tokenJson.scope,
-    token_type: tokenJson.token_type,
-    access_token: tokenJson.access_token,
-    refresh_token: tokenJson.refresh_token,
-    expires_at: Date.now() + tokenJson.expires_in * 1000,
-    obtained_at: Date.now(),
-    client_source: clientConfig.source,
-  }
-
-  await writeTokens(tokens)
-  return tokens
 }
 
 function waitForCode(input: {
   server: http.Server
   redirectUri: string
   state: string
-}): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+}): Promise<{
+  code: string
+  respond: (status: number, page: string) => void
+}> {
+  return new Promise<{
+    code: string
+    respond: (status: number, page: string) => void
+  }>((resolve, reject) => {
     const timer = setTimeout(
       () => reject(new Error('OAuth flow timed out after 5 minutes.')),
       300_000,
@@ -117,11 +151,22 @@ function waitForCode(input: {
           throw new Error('OAuth code missing.')
         }
 
-        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-        res.end(oauthCallbackPage())
+        let responded = false
         clearTimeout(timer)
-        resolve(incomingCode)
+        resolve({
+          code: incomingCode,
+          respond: (status, page) => {
+            if (responded) return
+            responded = true
+            res.writeHead(status, {
+              'content-type': 'text/html; charset=utf-8',
+            })
+            res.end(page)
+          },
+        })
       } catch (error) {
+        res.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
+        res.end(oauthCallbackPage({ status: 'failed' }))
         clearTimeout(timer)
         reject(error)
       }

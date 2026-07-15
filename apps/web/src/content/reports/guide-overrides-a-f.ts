@@ -22,7 +22,7 @@ export const reportGuideOverridesAF: Partial<
       'Orders URLs by severity and available clicks, impressions, and sessions before applying the explicit limit.',
     ],
     returns: [
-      'Affected URLs with rule id, severity, detail, evidence, and available Search Console or GA4 metrics.',
+      'Affected URLs with rule id, severity, detail, evidence, and available Search Console or Google Analytics metrics.',
       'Selection metadata showing total matches, returned rows, limit, and whether the list was truncated.',
     ],
     alternatives: [
@@ -132,11 +132,11 @@ export const reportGuideOverridesAF: Partial<
   'ai-referrals': {
     name: 'Find AI referral traffic',
     summary:
-      'See which known AI products sent referral sessions recorded by GA4 and which landing pages received them.',
+      'See which known AI products sent referral sessions recorded by Google Analytics and which landing pages received them.',
     inputs: [
       {
-        label: 'GA4 traffic acquisition rows',
-        source: 'ga4-acquisition',
+        label: 'Google Analytics traffic acquisition rows',
+        source: 'google-analytics-acquisition',
         role: 'Provides session source, landing page, sessions, engagement, and the selected date scope.',
       },
       {
@@ -149,12 +149,12 @@ export const reportGuideOverridesAF: Partial<
       'Aggregates matching sources and landing pages while leaving unclassified traffic outside the AI total.',
     ],
     returns: [
-      'AI referral sessions grouped by matched source and landing page with the requested GA4 date range.',
+      'AI referral sessions grouped by matched source and landing page with the requested Google Analytics date range.',
       'Returned-row limits and caveats for missing referrers, consent, redirects, attribution settings, and source changes.',
     ],
     alternatives: [
       {
-        when: 'You want to know whether important pages are technically available to AI search systems, regardless of whether GA4 recorded a visit.',
+        when: 'You want to know whether important pages are technically available to AI search systems, regardless of whether Google Analytics recorded a visit.',
         reportId: 'ai-readiness',
         doInstead:
           'Run AI readiness. It checks crawl, index, snippet, and page-structure evidence that referral analytics cannot see.',
@@ -162,12 +162,12 @@ export const reportGuideOverridesAF: Partial<
       {
         when: 'You need to know whether assistants mention or cite the site even when nobody clicks through.',
         doInstead:
-          'No automated report in this package measures unclicked mentions or citations. Use repeatable external prompt monitoring and inspect the answers and cited URLs. AI referrals can only confirm visits that reached GA4 with a recognisable source.',
+          'No automated report in this package measures unclicked mentions or citations. Use repeatable external prompt monitoring and inspect the answers and cited URLs. AI referrals can only confirm visits that reached Google Analytics with a recognisable source.',
       },
     ],
     seo: {
       primaryKeyword: 'ai referrals',
-      supportingKeywords: ['ga4 report', 'ai search optimization'],
+      supportingKeywords: ['google analytics report', 'ai search optimization'],
     },
   },
   'ai-search-scorecard': {
@@ -265,7 +265,7 @@ export const reportGuideOverridesAF: Partial<
         role: 'Defines the exact pages to fetch and the maximum scope of the audit.',
       },
       {
-        label: 'Optional Search Console and GA4 project context',
+        label: 'Optional Search Console and Google Analytics project context',
         source: 'search-analytics',
         role: 'Adds available first-party page value without widening the URL list.',
       },
@@ -525,7 +525,7 @@ export const reportGuideOverridesAF: Partial<
         role: 'Controls allowed fetches and adds eligible sitemap URLs when enabled.',
       },
       {
-        label: 'Optional Search Console and GA4 joins',
+        label: 'Optional Search Console and Google Analytics joins',
         source: 'search-analytics',
         role: 'Adds available first-party value to fetched landing pages without filling missing rows with zero.',
       },
@@ -656,7 +656,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     checks: [
       'Checks the local config directory, shared or bring-your-own OAuth client, token client compatibility, and Google sign-in.',
-      'Checks read-only scopes and saved Search Console or GA4 defaults without sending credentials anywhere.',
+      'Checks read-only scopes and saved Search Console or Google Analytics defaults without sending credentials anywhere.',
     ],
     returns: [
       'A pass, warning, or failure for each local setup check with the observed path or state.',

@@ -1,5 +1,4 @@
 export { diagnoseCommand } from './diagnose.js'
 export { doctorCommand } from './doctor.js'
-export { ga4PropertiesCommand } from './ga4-properties.js'
 export { segmentImpactCommand } from './segment-impact.js'
 export { strikingDistanceCommand } from './striking-distance.js'

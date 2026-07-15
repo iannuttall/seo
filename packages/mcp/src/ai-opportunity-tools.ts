@@ -14,12 +14,12 @@ import { calendarDateSchema, resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
-const ga4DateSchema = z
+const googleAnalyticsDateSchema = z
   .union([
     calendarDateSchema,
     z.string().regex(/^(?:today|yesterday|\d+daysAgo)$/),
   ])
-  .describe('Use YYYY-MM-DD or a GA4 relative date.')
+  .describe('Use YYYY-MM-DD or a Google Analytics relative date.')
 
 const queryOpportunitySchema = {
   site: z.string().trim().min(1),
@@ -48,18 +48,18 @@ export function registerAiOpportunityTools(
     'seo_ai_referrals',
     {
       description:
-        'Find AI referral traffic detected in GA4. maxRows bounds retained provider rows; resultLimit bounds returned landing pages.',
+        'Find AI referral traffic detected in Google Analytics. maxRows bounds retained provider rows; resultLimit bounds returned landing pages.',
       inputSchema: {
         property: z.string().trim().min(1),
-        startDate: ga4DateSchema.optional(),
-        endDate: ga4DateSchema.optional(),
+        startDate: googleAnalyticsDateSchema.optional(),
+        endDate: googleAnalyticsDateSchema.optional(),
         maxRows: z
           .number()
           .int()
           .min(1)
           .max(100_000)
           .describe(
-            'Maximum retained GA4 rows. If limit is also supplied, both values must match.',
+            'Maximum retained Google Analytics rows. If limit is also supplied, both values must match.',
           )
           .optional(),
         limit: z

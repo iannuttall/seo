@@ -23,7 +23,7 @@ function candidate(
   }
 }
 
-test('matches one GA4 web stream inside a Search Console domain property', () => {
+test('matches one Google Analytics web stream inside a Search Console domain property', () => {
   const matches = matchGa4WebStreams('sc-domain:example.com', [
     candidate('100', 'https://www.example.com'),
     candidate('200', 'https://other.example'),

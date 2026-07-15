@@ -19,7 +19,10 @@ export const setupCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated URLs to watch with URL Inspection.',
     },
-    ga4: { type: 'string', description: 'Optional GA4 property ID.' },
+    'google-analytics-property': {
+      type: 'string',
+      description: 'Optional Google Analytics property ID.',
+    },
     brand: {
       type: 'string',
       description: 'Comma-separated branded query terms to exclude by default.',

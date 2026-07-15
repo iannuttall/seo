@@ -59,7 +59,7 @@ export async function joinAnalytics(input: {
       limit: input.limit,
     })
   } catch (error) {
-    const warning = `GA4 metrics unavailable: ${error instanceof Error ? error.message : String(error)}`
+    const warning = `Google Analytics metrics unavailable: ${error instanceof Error ? error.message : String(error)}`
     input.warnings.push(warning)
     return {
       status: 'unavailable',
@@ -72,7 +72,7 @@ export async function joinAnalytics(input: {
     }
   }
   if (analytics.warning) {
-    const warning = `GA4 metrics unavailable: ${analytics.warning}`
+    const warning = `Google Analytics metrics unavailable: ${analytics.warning}`
     input.warnings.push(warning)
     return {
       status: 'unavailable',
@@ -103,13 +103,13 @@ export async function joinAnalytics(input: {
   const retainedRowLimitReached = analytics.source?.retainedRowLimitReached
   const qualityWarnings = analytics.source?.qualityWarnings ?? []
   const warning = !sourceQualityKnown
-    ? `GA4 metrics joined for ${joinedPages} of ${input.pages.length} crawled pages, but the provider did not expose row completeness; missing page metrics are not reliable zero-traffic evidence.`
+    ? `Google Analytics metrics joined for ${joinedPages} of ${input.pages.length} crawled pages, but the provider did not expose row completeness; missing page metrics are not reliable zero-traffic evidence.`
     : retainedRowLimitReached
-      ? `GA4 retained-row limit reached; missing page metrics are not reliable zero-traffic evidence.`
+      ? `Google Analytics retained-row limit reached; missing page metrics are not reliable zero-traffic evidence.`
       : qualityWarnings.length
         ? `${qualityWarnings.join(' ')} Missing page metrics and relative analytics value are partial evidence.`
         : input.pages.length && joinedPages === 0
-          ? 'GA4 metrics joined for 0 crawled pages.'
+          ? 'Google Analytics metrics joined for 0 crawled pages.'
           : undefined
   if (warning) input.warnings.push(warning)
   return {

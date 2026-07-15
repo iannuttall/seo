@@ -18,7 +18,7 @@
     {
       "id": 2,
       "prompt": "The ai-readiness report came back with no blockers. Does that mean AI systems are citing us now?",
-      "expected_output": "Should refuse to equate a clean readiness report with observed citations. Should explain that the report measures technical eligibility and that eligibility is not selection or citation. Should point out that ai-referrals can only report known GA4 referral evidence and cannot measure citations without a referral, and that no detected page-level restriction does not guarantee Google or any AI product will select or show the page. Should recommend monitoring rather than asserting citation.",
+      "expected_output": "Should refuse to equate a clean readiness report with observed citations. Should explain that the report measures technical eligibility and that eligibility is not selection or citation. Should point out that ai-referrals can only report known Google Analytics referral evidence and cannot measure citations without a referral, and that no detected page-level restriction does not guarantee Google or any AI product will select or show the page. Should recommend monitoring rather than asserting citation.",
       "assertions": [
         "Refuses to equate a clean ai-readiness report with observed citations",
         "States technical eligibility is not selection or citation",

@@ -8,7 +8,7 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and GA4 data.
+  The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and Google Analytics data.
 </p>
 
 <p align="center">
@@ -47,7 +47,7 @@ clicks, and catch regressions after a release.
 
 - People running their own sites who want a clear audit and a ranked list of
   fixes, without learning a heavy dashboard.
-- AI agents that need real crawl, Search Console, and GA4 evidence through MCP
+- AI agents that need real crawl, Search Console, and Google Analytics evidence through MCP
   and one packaged SEO skill instead of screenshots or guesses.
 - Developers who want to embed the same report engine in a script, a CI job, or
   a TypeScript app.
@@ -63,7 +63,7 @@ seo report
 ```
 
 The setup walks you through Google sign-in, your Search Console property, an
-optional GA4 property, and a local project profile. Public releases can include
+optional Google Analytics property, and a local project profile. Public releases can include
 the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
@@ -140,7 +140,7 @@ The point of a report is to be defensible, so the design keeps a few rules:
 ## Everyday use
 
 `seo start` can save a project profile, which is a local shortcut for a site,
-Search Console property, GA4 property, and brand terms. If you have one default
+Search Console property, Google Analytics property, and brand terms. If you have one default
 project, most commands need no flags.
 
 ```sh
@@ -172,6 +172,14 @@ pretend to know traffic, queries, or rankings until you add a Search Console
 property with `seo start`.
 
 Run `seo help` for the short path or `seo help all` for the full command list.
+
+Google Analytics commands sit under their provider namespace. List the properties available
+to the connected account, then run a report with the property you need:
+
+```sh
+seo analytics google properties
+seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
+```
 
 ## Crawl a site
 
@@ -212,7 +220,7 @@ terminal prose.
 evidence so an agent can choose its next call without loading every raw report.
 Use `--full` only when a script needs the complete report object.
 
-When a CI job needs Search Console or GA4 data, give it a Google service
+When a CI job needs Search Console or Google Analytics data, give it a Google service
 account JSON key through its secret store. The service account needs access to
 the exact properties it will query. This GitHub Actions step runs without a
 browser or a copied local token:
@@ -227,7 +235,7 @@ browser or a copied local token:
 ```
 
 The [Google data guide](https://seoskill.dev/docs/google) covers Search
-Console and GA4 permissions, mounted secret files, and how to check the active
+Console and Google Analytics permissions, mounted secret files, and how to check the active
 identity safely.
 
 Agents can discover and run the same report catalog as MCP without starting a
@@ -368,9 +376,9 @@ seo reset
 `seo auth status` shows the active storage mode. Power users can choose it with
 `seo auth storage --keychain` or `seo auth storage --file`.
 
-Power users can bring their own Google OAuth client. See
-[getting started](https://seoskill.dev/docs/getting-started) for the available
-auth paths.
+Power users can bring their own Google OAuth client or use a service account in
+CI. The [Google data guide](https://seoskill.dev/docs/google) covers both auth
+paths, including OAuth testing-mode limits.
 
 ## Common questions
 
@@ -384,7 +392,7 @@ account, or telemetry service.
 ### Do I need a Google API key?
 
 No. `seo start` uses a normal Google sign-in for read-only Search Console and
-GA4 access. Public releases can include a shared desktop OAuth client, and if
+Google Analytics access. Public releases can include a shared desktop OAuth client, and if
 your build does not have one, setup helps you add your own. You can also run a
 local technical crawl with no Google connection at all.
 

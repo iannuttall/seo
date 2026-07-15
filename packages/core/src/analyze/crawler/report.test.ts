@@ -94,7 +94,7 @@ test('crawlDefinitionId is stable for equivalent configs and scoped by site', ()
   const d = crawlDefinitionId({
     config: { url: 'https://example.com/', include: ['/a', '/b'] },
     site: 'sc-domain:example.com',
-    ga4PropertyId: '123',
+    googleAnalyticsPropertyId: '123',
   })
 
   assert.equal(a, b)

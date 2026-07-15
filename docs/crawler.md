@@ -78,7 +78,7 @@ seo rules
 seo explain --rule missing_meta_description
 ```
 
-## GSC and GA4 joins
+## GSC and Google Analytics joins
 
 When you pass `--site`, the crawler joins Search Console page metrics.
 
@@ -86,10 +86,10 @@ When you pass `--site`, the crawler joins Search Console page metrics.
 seo crawl https://example.com --site sc-domain:example.com
 ```
 
-When you pass `--ga4-property`, it joins GA4 landing-page metrics.
+When you pass `--google-analytics-property`, it joins Google Analytics landing-page metrics.
 
 ```bash
-seo crawl https://example.com --ga4-property 123456789
+seo crawl https://example.com --google-analytics-property 123456789
 ```
 
 Project profiles can save both, so the command stays short:

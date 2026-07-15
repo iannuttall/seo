@@ -17,7 +17,7 @@
     {
       "id": 2,
       "prompt": "Run refresh priorities for sc-domain:example.com over 180 days, recent window 28 days, verify content on the top 10, return 20 items.",
-      "expected_output": "Should run report id refresh-priorities with site sc-domain:example.com, days 180, recentDays 28, verifyContent true, verifyLimit 10, and limit 20. Should read per-item impactKind, score breakdown, and verification status, and treat the click decline, low CTR, second-page position, and GA4 session signals as having different semantics, not interchangeable. Should use only parameters defined in the schema.",
+      "expected_output": "Should run report id refresh-priorities with site sc-domain:example.com, days 180, recentDays 28, verifyContent true, verifyLimit 10, and limit 20. Should read per-item impactKind, score breakdown, and verification status, and treat the click decline, low CTR, second-page position, and Google Analytics session signals as having different semantics, not interchangeable. Should use only parameters defined in the schema.",
       "assertions": [
         "Runs report id refresh-priorities with days 180 and recentDays 28",
         "Sets verifyContent true, verifyLimit 10, and limit 20 as requested",
@@ -29,8 +29,8 @@
     },
     {
       "id": 3,
-      "prompt": "Rank by score and treat it as the extra clicks we will get, and remember the GA4 signal and the CTR signal mean the same thing.",
-      "expected_output": "Should refuse both moves. Should state the score is not expected clicks, revenue, ranking lift, or causal confidence, and that a click decline, low CTR, second-page position, and GA4 session signal have different semantics and are not interchangeable. Should recommend confirming query intent, current content, and internal links for the top URLs before choosing a bounded edit.",
+      "prompt": "Rank by score and treat it as the extra clicks we will get, and remember the Google Analytics signal and the CTR signal mean the same thing.",
+      "expected_output": "Should refuse both moves. Should state the score is not expected clicks, revenue, ranking lift, or causal confidence, and that a click decline, low CTR, second-page position, and Google Analytics session signal have different semantics and are not interchangeable. Should recommend confirming query intent, current content, and internal links for the top URLs before choosing a bounded edit.",
       "assertions": [
         "Refuses to read the score as extra clicks",
         "States the score is not expected clicks, revenue, ranking lift, or causal confidence",
@@ -42,11 +42,11 @@
     },
     {
       "id": 4,
-      "prompt": "GA4 was not connected on this run, so those pages have zero sessions and should rank lowest in the queue.",
-      "expected_output": "Should refuse to treat missing GA4 as zero. Should state missing GA4 or failed fetches stay unavailable, not zero-weight proof, and read the workflow skipped states and per-item completeness and verification status. Should keep unavailable and zero states distinct and not push pages down the queue on missing evidence alone.",
+      "prompt": "Google Analytics was not connected on this run, so those pages have zero sessions and should rank lowest in the queue.",
+      "expected_output": "Should refuse to treat missing Google Analytics as zero. Should state missing Google Analytics or failed fetches stay unavailable, not zero-weight proof, and read the workflow skipped states and per-item completeness and verification status. Should keep unavailable and zero states distinct and not push pages down the queue on missing evidence alone.",
       "assertions": [
-        "Refuses to treat missing GA4 as zero sessions",
-        "States missing GA4 or failed fetches stay unavailable, not zero-weight proof",
+        "Refuses to treat missing Google Analytics as zero sessions",
+        "States missing Google Analytics or failed fetches stay unavailable, not zero-weight proof",
         "Reads the workflow skipped states and per-item completeness and verification status",
         "Keeps unavailable and zero states distinct",
         "Does not push pages down the queue on missing evidence alone"

@@ -17,12 +17,12 @@
     {
       "id": 2,
       "prompt": "Compare saved crawls with before crawl_example_20260601 and after crawl_example_20260710 and confirm the canonical fix landed.",
-      "expected_output": "Should run report id compare-crawls with before crawl_example_20260601 and after crawl_example_20260710, via seo reports run compare-crawls or seo_run_report. Should check comparability.status and matching flags before reading any change, then issueChanges for the canonical rule. Should note source row caps limit joined GSC or GA4 evidence even when the document crawl completed, and that verification is re-running the same definition and request scope after deployment.",
+      "expected_output": "Should run report id compare-crawls with before crawl_example_20260601 and after crawl_example_20260710, via seo reports run compare-crawls or seo_run_report. Should check comparability.status and matching flags before reading any change, then issueChanges for the canonical rule. Should note source row caps limit joined GSC or Google Analytics evidence even when the document crawl completed, and that verification is re-running the same definition and request scope after deployment.",
       "assertions": [
         "Runs report id compare-crawls with the before and after snapshot ids as given",
         "Checks comparability.status and matching flags before reading any change",
         "Reads issueChanges to confirm the canonical rule delta",
-        "Notes source row caps limit joined GSC or GA4 evidence even when the crawl completed",
+        "Notes source row caps limit joined GSC or Google Analytics evidence even when the crawl completed",
         "Uses only parameters defined in the report schema"
       ],
       "files": []

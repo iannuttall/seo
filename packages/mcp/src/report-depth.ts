@@ -89,7 +89,7 @@ const REPORT_DEPTH_PRIMARY = {
       'totalUsers is not additive and must not be reconstructed by summing rows.',
     ],
     verify:
-      'Compare complete like-for-like GA4 periods and check whether high-session landing pages answer the referring context.',
+      'Compare complete like-for-like Google Analytics periods and check whether high-session landing pages answer the referring context.',
     related: [
       { id: 'seo-to-ai-query', reason: 'Builds monitoring prompts.' },
       { id: 'ai-readiness', reason: 'Checks technical AI access.' },
@@ -201,7 +201,7 @@ const REPORT_DEPTH_PRIMARY = {
     ],
     doNotClaim: [
       'An absent page from a capped, skipped, failed, or differently scoped crawl is not proven removed.',
-      'Source row caps limit joined GSC or GA4 evidence even when the document crawl completed.',
+      'Source row caps limit joined GSC or Google Analytics evidence even when the document crawl completed.',
       'A change between snapshots is not proof the release caused it.',
     ],
     verify:
@@ -564,7 +564,7 @@ const REPORT_DEPTH_PRIMARY = {
       'dataStatus, window, source, warnings, and caveats',
       'window.effectiveDays versus requestedDays and afterWindowTruncated',
       'GSC before and after metrics',
-      'GA4 source.analytics.status and timezone and any control adjusted deltas',
+      'Google Analytics source.analytics.status and timezone and any control adjusted deltas',
     ],
     doNotClaim: [
       'Timing does not prove the recorded change caused the movement.',

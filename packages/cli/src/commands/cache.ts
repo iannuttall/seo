@@ -15,11 +15,14 @@ export const cacheCommand = defineCommand({
         printKeyValue([
           ['DB', stats.dbPath],
           ['Size', formatBytes(stats.sizeBytes)],
-          ['sites', String(stats.counts.sites ?? 0)],
-          ['gsc_cache', String(stats.counts.gsc_cache ?? 0)],
-          ['ga4_cache', String(stats.counts.ga4_cache ?? 0)],
-          ['semrush_cache', String(stats.counts.semrush_cache ?? 0)],
-          ['http_cache', String(stats.counts.http_cache ?? 0)],
+          ['Sites', String(stats.counts.sites ?? 0)],
+          ['Search Console', String(stats.counts.gsc_cache ?? 0)],
+          [
+            'Google Analytics',
+            String(stats.counts.google_analytics_cache ?? 0),
+          ],
+          ['Semrush', String(stats.counts.semrush_cache ?? 0)],
+          ['HTTP', String(stats.counts.http_cache ?? 0)],
         ])
       },
     }),
@@ -31,12 +34,18 @@ export const cacheCommand = defineCommand({
       args: {
         provider: {
           type: 'string',
-          description: 'Optional cache provider: gsc, ga4, semrush, or http',
+          description:
+            'Optional cache provider: gsc, google-analytics, semrush, or http',
         },
       },
       run: async ({ args }) => {
         const removed = clearCache(
-          args.provider as 'gsc' | 'ga4' | 'semrush' | 'http' | undefined,
+          args.provider as
+            | 'gsc'
+            | 'google-analytics'
+            | 'semrush'
+            | 'http'
+            | undefined,
         )
         process.stdout.write(`Removed ${removed} cached rows.\n`)
       },

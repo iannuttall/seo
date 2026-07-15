@@ -301,7 +301,7 @@ export const crawlReportsCommand = defineCommand({
         ...previous.config,
         projectId: previous.projectId,
         site: previous.site,
-        ga4PropertyId: previous.ga4PropertyId,
+        googleAnalyticsPropertyId: previous.googleAnalyticsPropertyId,
       })
       const saved = saveCrawlReport(report)
       if (json) {

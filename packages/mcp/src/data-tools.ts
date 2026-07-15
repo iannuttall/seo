@@ -13,9 +13,10 @@ import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerDataTools(server: McpServer): void {
   server.registerTool(
-    'ga4_properties',
+    'google_analytics_properties',
     {
-      description: 'List GA4 accounts and properties available to Google OAuth',
+      description:
+        'List Google Analytics accounts and properties available to Google OAuth',
       inputSchema: {},
     },
     async () => {
@@ -28,10 +29,13 @@ export function registerDataTools(server: McpServer): void {
             displayName: property.displayName ?? property.property,
           })),
         )
-        return toolSuccess(`${properties.length} GA4 properties found.`, {
-          accountSummaries,
-          properties,
-        })
+        return toolSuccess(
+          `${properties.length} Google Analytics properties found.`,
+          {
+            accountSummaries,
+            properties,
+          },
+        )
       } catch (error) {
         return toolError(error)
       }
@@ -90,10 +94,10 @@ export function registerDataTools(server: McpServer): void {
   )
 
   server.registerTool(
-    'ga4_run_report',
+    'google_analytics_run_report',
     {
       description:
-        'Run a GA4 Data API report for a property the signed-in user can access',
+        'Run a Google Analytics Data API report for a property the signed-in user can access',
       inputSchema: {
         propertyId: z.string(),
         body: z.record(z.string(), z.any()),
@@ -103,7 +107,7 @@ export function registerDataTools(server: McpServer): void {
       try {
         const result = await runGa4Report(propertyId, body as never)
         return toolSuccess(
-          `Fetched ${result.rowCount ?? result.rows?.length ?? 0} GA4 rows.`,
+          `Fetched ${result.rowCount ?? result.rows?.length ?? 0} Google Analytics rows.`,
           {
             ...result,
             objects: ga4RowsToObjects(result),

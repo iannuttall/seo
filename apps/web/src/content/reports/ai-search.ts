@@ -6,18 +6,18 @@ export const aiSearchReports = [
     name: 'AI referral traffic',
     category: 'ai-search',
     summary:
-      'Find sessions that GA4 attributed to known AI referral sources, with the source and date scope kept visible.',
+      'Find sessions that Google Analytics attributed to known AI referral sources, with the source and date scope kept visible.',
     question:
-      'Which AI products sent referral sessions recorded by this GA4 property?',
+      'Which AI products sent referral sessions recorded by this Google Analytics property?',
     useWhen: [
       'You need observed referral evidence rather than an AI visibility estimate.',
-      'The GA4 property and date range are known.',
+      'The Google Analytics property and date range are known.',
     ],
     avoidWhen: [
       'You need every AI mention or citation. Many products and journeys do not pass a usable referrer.',
     ],
     evidence: [
-      'GA4 session-scoped traffic source dimensions and metrics matched to documented AI referral source definitions.',
+      'Google Analytics session-scoped traffic source dimensions and metrics matched to documented AI referral source definitions.',
     ],
     methodology: [
       'Filters returned acquisition rows by explicit source rules, aggregates matches, and keeps unclassified traffic out of the AI total.',
@@ -39,7 +39,7 @@ export const aiSearchReports = [
       'Use a stable prompt corpus if you separately monitor citations or answers.',
     ],
     related: ['page-opportunities', 'seo-to-ai-query', 'ai-readiness'],
-    sources: ['ga4-acquisition'],
+    sources: ['google-analytics-acquisition'],
   },
   {
     id: 'ai-search-scorecard',
@@ -276,7 +276,7 @@ export const aiSearchReports = [
     ],
     nextSteps: [
       'Choose representative variants and monitor them on a controlled schedule.',
-      'Use AI referrals separately for observed GA4 referral evidence.',
+      'Use AI referrals separately for observed Google Analytics referral evidence.',
     ],
     related: ['ai-referrals', 'community-intent', 'ai-readiness'],
     sources: ['search-analytics', 'ai-features'],

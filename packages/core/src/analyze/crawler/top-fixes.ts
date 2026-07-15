@@ -184,7 +184,7 @@ function whyThisRanks(
       ? `No joined GSC visibility is available for these affected URLs; Search Console evidence is ${searchStatus}.`
       : 'No affected URL has joined GSC visibility yet.'
   const analytics = input.sessions
-    ? ` GA4 adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
+    ? ` Google Analytics adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
     : ''
   const priority =
     recommendation === 'review'

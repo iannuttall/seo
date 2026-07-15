@@ -63,5 +63,5 @@ export function matchGa4WebStreams(
 export function ga4MatchReason(match: Ga4WebStreamMatch, site: string): string {
   const stream = match.stream.displayName ?? match.defaultUri
   const location = match.match === 'domain' ? 'is inside' : 'matches'
-  return `Matched GA4 web stream ${stream} (${match.defaultUri}): its hostname ${location} ${site}.`
+  return `Matched Google Analytics web stream ${stream} (${match.defaultUri}): its hostname ${location} ${site}.`
 }

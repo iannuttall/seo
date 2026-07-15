@@ -23,12 +23,12 @@ import {
 } from '../../utils.js'
 import { slugId, startUrlForSite, suggestedClientName } from '../shared.js'
 import {
-  chooseGa4Property,
+  chooseGoogleAnalyticsProperty,
   maybeConnectAuth,
   maybeInstallMcp,
   maybeInstallSkill,
   type SetupAuthStatus,
-  type SetupGa4Selection,
+  type SetupGoogleAnalyticsSelection,
   type SetupMcpInstall,
   type SetupSkillInstall,
 } from './prompts.js'
@@ -37,7 +37,7 @@ type SetupResult = {
   client?: ClientProfile
   site: string
   auth: SetupAuthStatus
-  ga4?: SetupGa4Selection
+  googleAnalytics?: SetupGoogleAnalyticsSelection
   mcp: SetupMcpInstall[]
   skill?: SetupSkillInstall
   next: string[]
@@ -212,12 +212,12 @@ export async function runGuidedSetup(
         )
       : defaultStartUrl || undefined)
   const watchUrls = listArg(args.urls).length > 0 ? listArg(args.urls) : []
-  const ga4 = await chooseGa4Property({
-    property: stringArg(args.ga4),
+  const googleAnalytics = await chooseGoogleAnalyticsProperty({
+    property: stringArg(args['google-analytics-property']),
     site,
     interactive: canPrompt({ json }),
   })
-  const ga4PropertyId = ga4?.propertyId
+  const googleAnalyticsPropertyId = googleAnalytics?.propertyId
   const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
     listArg(args.brand).length > 0 ? listArg(args.brand) : derivedBrandTerms
@@ -232,7 +232,9 @@ export async function runGuidedSetup(
     startUrl,
     watchUrls,
     brandTerms,
-    ga4PropertyId,
+    analytics: googleAnalyticsPropertyId
+      ? { google: { propertyId: googleAnalyticsPropertyId } }
+      : undefined,
     reportDay,
     technicalWeekday,
     isDefault,
@@ -244,7 +246,15 @@ export async function runGuidedSetup(
     `seo refresh-priorities --project ${client.id} --verify-content`,
     `seo technical-watch --project ${client.id}`,
   ]
-  const result: SetupResult = { client, site, auth, ga4, mcp, skill, next }
+  const result: SetupResult = {
+    client,
+    site,
+    auth,
+    googleAnalytics,
+    mcp,
+    skill,
+    next,
+  }
 
   if (json) {
     printJson(result)
@@ -257,8 +267,18 @@ export async function runGuidedSetup(
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', String(client.watchUrls.length)],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
-    ['GA4 property', client.ga4PropertyId ?? 'not connected (optional)'],
-    ...(ga4 ? [['GA4 selection', ga4.reason] as [string, string]] : []),
+    [
+      'Google Analytics property',
+      client.analytics.google?.propertyId ?? 'not connected (optional)',
+    ],
+    ...(googleAnalytics
+      ? [
+          ['Google Analytics selection', googleAnalytics.reason] as [
+            string,
+            string,
+          ],
+        ]
+      : []),
     ['Auth', auth],
     ['MCP', mcpInstallLabel(mcp)],
     ['SEO skill', skillInstallLabel(skill)],

@@ -26,7 +26,7 @@ export type ResolveTechnicalBaselineInput = {
   searchSite?: string
   url?: string
   projectId?: string
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   crawl?: boolean
   refresh?: boolean
   maxPages?: number
@@ -113,14 +113,14 @@ function crawlInput(
   > &
     Pick<
       ResolveTechnicalBaselineInput,
-      'projectId' | 'ga4PropertyId' | 'refresh' | 'searchSite'
+      'projectId' | 'googleAnalyticsPropertyId' | 'refresh' | 'searchSite'
     >,
 ): CrawlConfigInput {
   return {
     url: input.url,
     ...(input.searchSite ? { site: input.searchSite } : {}),
     projectId: input.projectId,
-    ga4PropertyId: input.ga4PropertyId,
+    googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
     mode: 'site',
     maxPages: input.maxPages,
     maxDepth: input.maxDepth,

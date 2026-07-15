@@ -1,6 +1,11 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - ".github/workflows/release.yml"
   workflow_dispatch:
     inputs:
       dryRun:
@@ -12,8 +17,12 @@ on:
           - "true"
           - "false"
 permissions:
-  contents: read
+  contents: write
   id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   npm:
@@ -37,6 +46,34 @@ jobs:
           package-manager-cache: false
       - name: Use an npm CLI with trusted publishing support
         run: npm install --global npm@11.10.0
+      - name: Read release version
+        id: release
+        shell: bash
+        run: |
+          version="$(node --print "require('./package.json').version")"
+          tag="v${version}"
+
+          if npm view "seo@${version}" version >/dev/null 2>&1; then
+            published="true"
+          else
+            published="false"
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+            tagged="true"
+          else
+            tagged="false"
+          fi
+
+          if [[ "${published}" == "false" && "${tagged}" == "true" ]]; then
+            echo "${tag} exists, but seo@${version} is not published." >&2
+            exit 1
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "published=${published}" >> "$GITHUB_OUTPUT"
+          echo "tagged=${tagged}" >> "$GITHUB_OUTPUT"
       - run: pnpm install --frozen-lockfile
       - name: Inject shared desktop OAuth client
         run: pnpm auth:inject-shared-client
@@ -50,8 +87,23 @@ jobs:
       - run: pnpm lint
       - run: pnpm security:check
       - name: Publish dry run
-        if: inputs.dryRun == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.dryRun == 'true'
         run: npm publish --dry-run
       - name: Publish to npm
-        if: inputs.dryRun == 'false'
+        if: steps.release.outputs.published == 'false' && (github.event_name == 'push' || inputs.dryRun == 'false')
         run: npm publish --access public --provenance
+      - name: Tag published version
+        if: steps.release.outputs.published == 'false' && (github.event_name == 'push' || inputs.dryRun == 'false')
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "$RELEASE_TAG" --message "Release seo@$RELEASE_VERSION"
+          git push origin "$RELEASE_TAG"
+      - name: Report existing release
+        if: steps.release.outputs.published == 'true'
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: echo "seo@$RELEASE_VERSION is already published; nothing to release."

@@ -50,7 +50,7 @@ function reportRange(input: {
   if (!absolute && !relative) {
     throw new SeoError(
       'INVALID_INPUT',
-      'startDate and endDate must both be YYYY-MM-DD dates or GA4 relative dates such as 28daysAgo and yesterday.',
+      'startDate and endDate must both be YYYY-MM-DD dates or Google Analytics relative dates such as 28daysAgo and yesterday.',
     )
   }
   if (absolute && startDate > endDate) {
@@ -156,7 +156,7 @@ export async function aiReferralsReport(
   const property = input.property.trim()
   if (!property) throw new SeoError('INVALID_INPUT', 'property is required.')
   const range = reportRange(input)
-  const ga4Range = {
+  const googleAnalyticsDateRange = {
     startDate: range.startDate,
     endDate: range.endDate,
   }
@@ -167,7 +167,7 @@ export async function aiReferralsReport(
   const sourceResult = await fetchAiReferralRows({
     property,
     request: {
-      dateRanges: [ga4Range],
+      dateRanges: [googleAnalyticsDateRange],
       dimensions: [{ name: 'sessionSource' }],
       metrics: [{ name: 'sessions' }, { name: 'eventCount' }],
       orderBys: [
@@ -198,7 +198,7 @@ export async function aiReferralsReport(
       detailResult = await fetchAiReferralRows({
         property,
         request: {
-          dateRanges: [ga4Range],
+          dateRanges: [googleAnalyticsDateRange],
           dimensions: [
             { name: 'date' },
             { name: 'sessionSource' },
@@ -230,7 +230,7 @@ export async function aiReferralsReport(
       usersResult = await fetchAiReferralRows({
         property,
         request: {
-          dateRanges: [ga4Range],
+          dateRanges: [googleAnalyticsDateRange],
           metrics: [{ name: 'totalUsers' }],
           dimensionFilter,
         },

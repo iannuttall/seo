@@ -18,7 +18,12 @@ import {
   GoogleTokenEndpointError,
   requestGoogleAccessToken,
 } from './token-endpoint.js'
-import type { GoogleAccessTokenClient, OAuthClientConfig } from './types.js'
+import {
+  GOOGLE_READONLY_SCOPE_LABELS,
+  type GoogleAccessTokenClient,
+  missingGoogleReadonlyScopes,
+  type OAuthClientConfig,
+} from './types.js'
 
 const REFRESH_BUFFER_MS = 60_000
 
@@ -33,6 +38,16 @@ function authExpired(): SeoError {
   return new SeoError(
     'AUTH_EXPIRED',
     'Google refresh token is no longer valid. Run `seo auth login` again.',
+  )
+}
+
+function requireReadonlyScopes(tokens: StoredTokens): void {
+  const missing = missingGoogleReadonlyScopes(tokens.scope)
+  if (missing.length === 0) return
+  const labels = missing.map((scope) => GOOGLE_READONLY_SCOPE_LABELS[scope])
+  throw new SeoError(
+    'ACCESS_DENIED',
+    `Google access is missing ${labels.join(' and ')}. Run \`seo auth login\` again, choose Select all, and approve both permission boxes.`,
   )
 }
 
@@ -123,6 +138,7 @@ export async function createAuthorizedClient(): Promise<{
   if (!tokens) throw authRequired()
 
   requireClientConfig(tokens)
+  requireReadonlyScopes(tokens)
   if (needsRefresh(tokens, Date.now())) {
     tokens = await refreshStoredToken({
       onlyIfExpiring: true,

@@ -17,7 +17,7 @@ export type ReportSourceKey =
   | 'canonical'
   | 'core-web-vitals'
   | 'crawlable-links'
-  | 'ga4-acquisition'
+  | 'google-analytics-acquisition'
   | 'google-updates'
   | 'javascript'
   | 'redirects'

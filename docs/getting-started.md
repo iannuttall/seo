@@ -38,7 +38,7 @@ Run:
 seo start
 ```
 
-The setup flow asks for a project name, a Search Console property, a crawl URL, optional brand terms, and optional GA4 property. It saves those as a project profile.
+The setup flow asks for a project name, a Search Console property, a crawl URL, optional brand terms, and optional Google Analytics property. It saves those as a project profile.
 
 Project profiles are just local shortcuts. They stop you from typing the same property IDs over and over.
 
@@ -48,7 +48,7 @@ Project profiles are just local shortcuts. They stop you from typing the same pr
 seo report --project keep
 ```
 
-The report checks what data is available. If GSC, GA4, crawl, or monitoring data is missing, it skips that section and tells you what to run next.
+The report checks what data is available. If GSC, Google Analytics, crawl, or monitoring data is missing, it skips that section and tells you what to run next.
 
 ## Run a crawl
 
@@ -60,7 +60,7 @@ The crawler finds technical SEO issues, broken links, duplicate metadata,
 indexability and snippet restrictions, schema gaps, weak internal links, and
 separately labelled AI-search observations.
 
-If the project has a GSC property, it joins search metrics to the crawled pages. If the project has GA4, it joins landing-page sessions and conversions too.
+If the project has a GSC property, it joins search metrics to the crawled pages. If the project has Google Analytics, it joins landing-page sessions and conversions too.
 
 ## Save reports
 
@@ -81,7 +81,7 @@ seo content optimize --project keep --url https://example.com/page
 seo perf audit --project keep
 ```
 
-The test workflow measures before and after periods from GSC and can add GA4 landing-page metrics when the project has a GA4 property. The content report uses real query demand for one URL. The performance audit uses local Lighthouse when available and falls back to a simple HTML response check when it is not.
+The test workflow measures before and after periods from GSC and can add Google Analytics landing-page metrics when the project has a Google Analytics property. The content report uses real query demand for one URL. The performance audit uses local Lighthouse when available and falls back to a simple HTML response check when it is not.
 
 ## Use JSON for scripts and agents
 

@@ -30,13 +30,13 @@
     {
       "id": 3,
       "prompt": "You generated 40 prompts, so there is clearly AI demand for us and answers are mentioning our brand.",
-      "expected_output": "Should refuse to read the prompt count as demand or mentions. Should state the generated prompt count is not AI demand, and prompts do not prove anyone entered them or that an answer mentioned the site. Should note methodology.observedAiPromptData is false and each prompt inherits the narrow retained-GSC-query scope. Should recommend storing the source query and date range beside later monitoring observations, and point to ai-referrals for measured GA4 referral evidence.",
+      "expected_output": "Should refuse to read the prompt count as demand or mentions. Should state the generated prompt count is not AI demand, and prompts do not prove anyone entered them or that an answer mentioned the site. Should note methodology.observedAiPromptData is false and each prompt inherits the narrow retained-GSC-query scope. Should recommend storing the source query and date range beside later monitoring observations, and point to ai-referrals for measured Google Analytics referral evidence.",
       "assertions": [
         "Refuses to read the prompt count as AI demand or as mentions",
         "States the prompt count is not AI demand",
         "States prompts do not prove anyone entered them or that an answer mentioned the site",
         "Notes each prompt inherits the narrow retained-GSC-query scope",
-        "Points to report id ai-referrals for measured GA4 referral evidence"
+        "Points to report id ai-referrals for measured Google Analytics referral evidence"
       ],
       "files": []
     },

@@ -322,7 +322,7 @@ test('landing-page and medium text never create AI referral false positives', as
   assert.match(report.summary.verdict, /No sessions attributed/)
 })
 
-test('GA4 pagination uses stable offsets and reports complete row counts', async () => {
+test('Google Analytics pagination uses stable offsets and reports complete row counts', async () => {
   const offsets: Array<string | number | undefined> = []
   const result = await fetchAiReferralRows({
     property: '123',
@@ -358,7 +358,7 @@ test('GA4 pagination uses stable offsets and reports complete row counts', async
   assert.equal(result.truncated, false)
 })
 
-test('GA4 pagination does not double count overlapping dimension rows', async () => {
+test('Google Analytics pagination does not double count overlapping dimension rows', async () => {
   const result = await fetchAiReferralRows({
     property: '123',
     request: {
@@ -395,7 +395,7 @@ test('GA4 pagination does not double count overlapping dimension rows', async ()
   assert.match(result.warnings.join('\n'), /overlapping pagination rows/)
 })
 
-test('truncated GA4 evidence cannot produce a definitive zero', async () => {
+test('truncated Google Analytics evidence cannot produce a definitive zero', async () => {
   const report = await aiReferralsReport(
     { property: '123', maxRows: 1 },
     {

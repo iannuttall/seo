@@ -45,10 +45,10 @@
     {
       "id": 4,
       "prompt": "This page has clean tags in the crawl, so add it to the queue as a high-value page we should build more internal links to.",
-      "expected_output": "Should not call the page valuable or search-visible from crawl evidence alone. Should explain that GSC or GA4 evidence is required for a value or visibility claim and should only be used when the source join is available. Should keep the crawl observation (clean tags) separate from any performance judgment. Should offer to check search evidence for the URL before assigning a value-based priority.",
+      "expected_output": "Should not call the page valuable or search-visible from crawl evidence alone. Should explain that GSC or Google Analytics evidence is required for a value or visibility claim and should only be used when the source join is available. Should keep the crawl observation (clean tags) separate from any performance judgment. Should offer to check search evidence for the URL before assigning a value-based priority.",
       "assertions": [
         "Refuses to call the page valuable or search-visible from crawl evidence alone",
-        "States a value or visibility claim needs an available GSC or GA4 source join",
+        "States a value or visibility claim needs an available GSC or Google Analytics source join",
         "Keeps the clean-tags observation separate from a performance judgment",
         "Offers to check search evidence before prioritising the page by value",
         "Does not fabricate traffic or link value for the page"

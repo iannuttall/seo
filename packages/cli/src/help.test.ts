@@ -874,11 +874,26 @@ test('version aliases and nested command help are available', async () => {
     ['content', 'optimize', '--help'],
     ['monitoring', 'cron', '--help'],
     ['export', 'refresh-priorities', '--help'],
+    ['analytics', 'google', 'properties', '--help'],
+    ['analytics', 'google', 'report', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
   }
+})
+
+test('Google Analytics commands only use the provider namespace', async () => {
+  for (const command of ['ga4-properties', 'ga4-report']) {
+    const result = await runSeoResult([command])
+    assert.equal(result.exitCode, 2)
+    assert.match(`${result.stdout}${result.stderr}`, /Unknown command/)
+  }
+
+  const output = await runSeo(['analytics', 'google', '--help'])
+  assert.match(output, /properties/)
+  assert.match(output, /report/)
+  assert.doesNotMatch(output, /ga4/i)
 })
 
 test('unknown commands emit one error and exit with failure', async () => {

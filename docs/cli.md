@@ -87,7 +87,7 @@ seo tests report --project keep --id <test-id> --property 123456789 --control-sc
 
 Use tests when you changed titles, content, templates, internal links, schema, or site sections and want a before/after read from your own data.
 
-The GSC side works for page, query, group, and site changes. GA4 metrics are attached when the test maps to landing pages. Query-only tests stay GSC-only because GA4 does not have query data.
+The GSC side works for page, query, group, and site changes. Google Analytics metrics are attached when the test maps to landing pages. Query-only tests stay GSC-only because Google Analytics does not have query data.
 
 ## Performance
 
@@ -128,7 +128,7 @@ seo ai-referrals --project keep
 
 `seo-to-ai-query` turns real search demand into prompts worth monitoring in AI engines.
 
-`ai-referrals` scans GA4 for known AI referral sources. It is useful, but it will miss visits that arrive as direct or unassigned traffic.
+`ai-referrals` scans Google Analytics for known AI referral sources. It is useful, but it will miss visits that arrive as direct or unassigned traffic.
 
 ## Monitoring
 
@@ -148,7 +148,8 @@ Monitoring commands are designed for repeat runs. They save enough history to sp
 ```bash
 seo gsc-query --site sc-domain:example.com --dimensions query,page
 seo url-inspect --site sc-domain:example.com --url https://example.com/page
-seo ga4-report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
+seo analytics google properties
+seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 seo updates
 ```
 

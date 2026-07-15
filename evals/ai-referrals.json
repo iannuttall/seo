@@ -4,11 +4,11 @@
     {
       "id": 1,
       "prompt": "How much traffic are we getting from ChatGPT and other AI tools?",
-      "expected_output": "Should use report id ai-referrals to find visits from known AI products in GA4 and a ranked, bounded set of landing pages that received them. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id ai-referrals, then seo_run_report with the required GA4 property. Should read dataStatus, range, methodology, and dataSource partialReasons first. Should clarify the report measures identifiable AI referral sessions in GA4, not citations or unclicked mentions inside AI answers.",
+      "expected_output": "Should use report id ai-referrals to find visits from known AI products in Google Analytics and a ranked, bounded set of landing pages that received them. Should follow the discovery flow: seo_list_reports with category ai-search, seo_describe_report with id ai-referrals, then seo_run_report with the required Google Analytics property. Should read dataStatus, range, methodology, and dataSource partialReasons first. Should clarify the report measures identifiable AI referral sessions in Google Analytics, not citations or unclicked mentions inside AI answers.",
       "assertions": [
         "Uses report id ai-referrals for measured AI referral traffic",
         "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
-        "Notes the report needs a GA4 property and reads GA4 referral sessions",
+        "Notes the report needs a Google Analytics property and reads Google Analytics referral sessions",
         "Reads dataStatus, range, methodology, and dataSource partialReasons first",
         "Clarifies it measures identifiable referral sessions, not citations or unclicked mentions"
       ],
@@ -16,8 +16,8 @@
     },
     {
       "id": 2,
-      "prompt": "Run the AI referral report for GA4 property 123456789 from 2026-04-01 to 2026-06-30 and give me the top 25 landing pages.",
-      "expected_output": "Should run report id ai-referrals with property 123456789, startDate 2026-04-01, endDate 2026-06-30, and resultLimit 25 to bound the ranked landing pages. Should note maxRows bounds retained GA4 rows and that limit is a legacy alias that must match maxRows if both are supplied. Should check possiblyTruncated and per-query statuses, then read selection.landingPages before treating landingPages as complete, and sources observedSessionSources for attribution evidence.",
+      "prompt": "Run the AI referral report for Google Analytics property 123456789 from 2026-04-01 to 2026-06-30 and give me the top 25 landing pages.",
+      "expected_output": "Should run report id ai-referrals with property 123456789, startDate 2026-04-01, endDate 2026-06-30, and resultLimit 25 to bound the ranked landing pages. Should note maxRows bounds retained Google Analytics rows and that limit is a legacy alias that must match maxRows if both are supplied. Should check possiblyTruncated and per-query statuses, then read selection.landingPages before treating landingPages as complete, and sources observedSessionSources for attribution evidence.",
       "assertions": [
         "Runs report id ai-referrals with property 123456789 and the given startDate and endDate",
         "Sets resultLimit 25 to bound the ranked landing pages",
@@ -31,13 +31,13 @@
     {
       "id": 3,
       "prompt": "The AI referral report came back empty. That proves no AI system has sent us anyone or cited us, right?",
-      "expected_output": "Should refuse to read an empty result as proof of absence. Should state an empty result is not proof that no AI system sent or cited the site, because the report only sees identifiable GA4 referral sessions, not citations or unclicked mentions inside AI answers. Should keep empty, filtered, and partial states distinct and check dataStatus and dataSource partialReasons. Should recommend comparing complete like-for-like GA4 periods rather than concluding absence.",
+      "expected_output": "Should refuse to read an empty result as proof of absence. Should state an empty result is not proof that no AI system sent or cited the site, because the report only sees identifiable Google Analytics referral sessions, not citations or unclicked mentions inside AI answers. Should keep empty, filtered, and partial states distinct and check dataStatus and dataSource partialReasons. Should recommend comparing complete like-for-like Google Analytics periods rather than concluding absence.",
       "assertions": [
         "Refuses to treat the empty result as proof no AI sent or cited the site",
-        "States the report only sees identifiable GA4 referral sessions, not citations or unclicked mentions",
+        "States the report only sees identifiable Google Analytics referral sessions, not citations or unclicked mentions",
         "Checks dataStatus and dataSource partialReasons before concluding",
         "Keeps empty, filtered, and partial states distinct",
-        "Recommends comparing complete like-for-like GA4 periods"
+        "Recommends comparing complete like-for-like Google Analytics periods"
       ],
       "files": []
     },

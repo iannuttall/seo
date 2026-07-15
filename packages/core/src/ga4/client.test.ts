@@ -9,7 +9,7 @@ function request(startDate: string, endDate: string): Ga4ReportRequest {
   }
 }
 
-test('GA4 caches only absolute windows that cannot roll over', () => {
+test('Google Analytics caches only absolute windows that cannot roll over', () => {
   assert.equal(ga4RequestCanUseCache(request('2026-06-01', '2026-06-28')), true)
   assert.equal(ga4RequestCanUseCache(request('28daysAgo', 'yesterday')), false)
   assert.equal(ga4RequestCanUseCache(request('today', 'today')), false)

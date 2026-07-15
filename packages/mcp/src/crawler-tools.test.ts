@@ -113,7 +113,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       'exclude',
       'fetchIntervalCap',
       'fetchIntervalMs',
-      'ga4PropertyId',
+      'googleAnalyticsPropertyId',
       'include',
       'includeIssues',
       'includePages',

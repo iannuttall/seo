@@ -287,7 +287,7 @@ export const reportGuideOverridesQZ: Partial<
         when: 'You want to know whether AI assistants already send visits recorded by your analytics property.',
         reportId: 'ai-referrals',
         doInstead:
-          'Run AI referrals. It reads captured GA4 referral traffic and reports the sources, landing pages, sessions, and available engagement evidence. Generated monitoring prompts contain no referral or visit data.',
+          'Run AI referrals. It reads captured Google Analytics referral traffic and reports the sources, landing pages, sessions, and available engagement evidence. Generated monitoring prompts contain no referral or visit data.',
       },
       {
         when: 'You need to know whether an assistant currently mentions, cites, or recommends the site for a prompt.',
@@ -310,7 +310,7 @@ export const reportGuideOverridesQZ: Partial<
         role: 'Provides issue instances, affected pages, rule severity, and technical evidence.',
       },
       {
-        label: 'Joined Search Console and GA4 page metrics',
+        label: 'Joined Search Console and Google Analytics page metrics',
         source: 'search-analytics',
         role: 'Adds available search visibility, sessions, users, and conversions for affected pages.',
       },

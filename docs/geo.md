@@ -69,13 +69,13 @@ Example output might turn a search query like `best payroll software for contrac
 - Which payroll software options are best and why?
 - How do I choose the best payroll software for contractors?
 
-`seo ai-referrals` scans GA4 for referral traffic from known AI sources.
+`seo ai-referrals` scans Google Analytics for referral traffic from known AI sources.
 
 ```bash
 seo ai-referrals --project keep
 ```
 
-GA4 can miss AI visits when the referrer is stripped. Treat this as evidence, not the whole truth.
+Google Analytics can miss AI visits when the referrer is stripped. Treat this as evidence, not the whole truth.
 
 ## What is not built yet
 

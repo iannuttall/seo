@@ -12,7 +12,7 @@ lowercase word as a name in prose; it reads as a typo.
 The stronger rule is that prose almost never needs the name. Copy is
 benefit-first and written to the reader: say what they get and what to do,
 not what the product is. "Give your agent owner-verified Search Console and
-GA4 data" beats "The seo CLI gives your agent...". Self-description
+Google Analytics data" beats "The seo CLI gives your agent...". Self-description
 sentences ("X is a local SEO engine...") are cut, not rewritten.
 
 The positioning is one SEO skill backed by a powerful CLI and MCP server.

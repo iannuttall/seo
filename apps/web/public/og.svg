@@ -10,7 +10,7 @@
   <text x="172" y="128" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="650">seo</text>
   <text x="88" y="286" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">Find and fix the SEO work</text>
   <text x="88" y="364" fill="#18181b" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="680" letter-spacing="-2">that will move the needle.</text>
-  <text x="88" y="446" fill="#52525b" font-family="Inter, Arial, sans-serif" font-size="27">Crawl evidence, Search Console and GA4. Local by default.</text>
+  <text x="88" y="446" fill="#52525b" font-family="Inter, Arial, sans-serif" font-size="27">Crawl evidence, Search Console and Google Analytics. Local by default.</text>
   <rect x="88" y="492" width="481" height="62" rx="10" fill="#f4f4f5"/>
   <text x="112" y="532" fill="#0891b2" font-family="JetBrains Mono, Menlo, monospace" font-size="22">$</text>
   <text x="140" y="532" fill="#27272a" font-family="JetBrains Mono, Menlo, monospace" font-size="22">npm i -g seo</text>

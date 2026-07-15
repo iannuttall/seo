@@ -112,7 +112,7 @@ function printMeasurement(report: ChangeMeasurement): void {
   )
 
   if (report.analytics) {
-    process.stdout.write('\nGA4 impact\n')
+    process.stdout.write('\nGoogle Analytics impact\n')
     printTable(
       ['Metric', 'Before', 'After', 'Delta'],
       [
@@ -164,7 +164,8 @@ function printMeasurement(report: ChangeMeasurement): void {
 export const testsCommand = defineCommand({
   meta: {
     name: 'tests',
-    description: 'Create and report local SEO tests from GSC and GA4 data',
+    description:
+      'Create and report local SEO tests from Search Console and Google Analytics data',
   },
   subCommands: {
     list: defineCommand({
@@ -303,7 +304,10 @@ export const testsCommand = defineCommand({
           type: 'string',
           description: 'Ad-hoc change date in YYYY-MM-DD.',
         },
-        property: { type: 'string', description: 'GA4 property ID.' },
+        property: {
+          type: 'string',
+          description: 'Google Analytics property ID.',
+        },
         'control-scope': {
           type: 'string',
           description: 'Control scope: site, page, query, or group.',
@@ -327,7 +331,8 @@ export const testsCommand = defineCommand({
         refresh: {
           type: 'boolean',
           default: false,
-          description: 'Bypass local GSC and GA4 cache.',
+          description:
+            'Bypass the local Search Console and Google Analytics cache.',
         },
         json: {
           type: 'boolean',
@@ -354,8 +359,9 @@ export const testsCommand = defineCommand({
           target: id ? undefined : stringArg(args.target),
           title: stringArg(args.title),
           changedAt: id ? undefined : stringArg(args.date),
-          ga4PropertyId:
-            stringArg(args.property) ?? selection?.client?.ga4PropertyId,
+          googleAnalyticsPropertyId:
+            stringArg(args.property) ??
+            selection?.client?.analytics.google?.propertyId,
           controlScope: maybeScope(args['control-scope']),
           controlTarget: stringArg(args['control-target']),
           controlTitle: stringArg(args['control-title']),

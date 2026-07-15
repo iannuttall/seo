@@ -114,12 +114,12 @@ licensing, privacy, or product reasons to limit snippets.
 seo ai-referrals --project example
 ```
 
-The GA4 report groups measurable visits from known AI referral sources. It can
-show a real landing page, source, and session count when GA4 received them.
+The Google Analytics report groups measurable visits from known AI referral sources. It can
+show a real landing page, source, and session count when Google Analytics received them.
 
 Referrer stripping, apps, redirects, privacy controls, and changing source
 domains make that evidence incomplete. "No retained AI referrals" means the
-query found none in the available GA4 rows. It does not prove that no person
+query found none in the available Google Analytics rows. It does not prove that no person
 found the site through an AI product.
 
 Google now directs site owners to its own Search Console reporting for

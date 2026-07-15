@@ -18,7 +18,7 @@ read-only access to:
   you connected;
 - Search Console properties, performance data, and URL Inspection data you can
   already access; and
-- Google Analytics 4 accounts, properties, and report data you can already
+- Google Analytics accounts, properties, and report data you can already
   access.
 
 The software uses this data to list properties, run the report you requested,

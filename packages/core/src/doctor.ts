@@ -112,7 +112,9 @@ export async function runDoctor(): Promise<{
   for (const scope of REQUIRED_SCOPES) {
     checks.push({
       id: `scope:${scope}`,
-      label: scope.endsWith('webmasters.readonly') ? 'GSC scope' : 'GA4 scope',
+      label: scope.endsWith('webmasters.readonly')
+        ? 'Search Console scope'
+        : 'Google Analytics scope',
       status:
         serviceAccount.configured || (tokens && grantedScopes.has(scope))
           ? 'pass'
@@ -143,11 +145,11 @@ export async function runDoctor(): Promise<{
   })
 
   checks.push({
-    id: 'default-ga4',
-    label: 'Saved GA4 property',
+    id: 'default-google-analytics',
+    label: 'Saved Google Analytics property',
     status: 'pass',
     detail:
-      config.google.defaultGa4PropertyId ??
+      config.analytics.google.defaultPropertyId ??
       'No saved default. Human CLI commands will prompt; agents can pass --property.',
   })
 

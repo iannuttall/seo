@@ -114,7 +114,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'content-groups',
     'change-log',
     'gsc-query',
-    'ga4-run-report',
+    'google-analytics-run-report',
     'semrush-call',
   ]) {
     assert.equal(ids.includes(excluded), false, excluded)

@@ -60,7 +60,7 @@ export function registerClientTools(server: McpServer): void {
         site: z.string().optional(),
         startUrl: z.string().url().optional(),
         watchUrls: z.array(z.string().url()).optional(),
-        ga4PropertyId: z.string().optional(),
+        googleAnalyticsPropertyId: z.string().optional(),
         reportDay: z.number().optional(),
         technicalWeekday: z.number().optional(),
         isDefault: z.boolean().optional(),
@@ -73,7 +73,7 @@ export function registerClientTools(server: McpServer): void {
       site,
       startUrl,
       watchUrls,
-      ga4PropertyId,
+      googleAnalyticsPropertyId,
       reportDay,
       technicalWeekday,
       isDefault,
@@ -104,7 +104,9 @@ export function registerClientTools(server: McpServer): void {
           siteUrl: site,
           startUrl,
           watchUrls,
-          ga4PropertyId,
+          analytics: googleAnalyticsPropertyId
+            ? { google: { propertyId: googleAnalyticsPropertyId } }
+            : undefined,
           reportDay,
           technicalWeekday,
           isDefault,

@@ -54,7 +54,7 @@ export type CrawlConfigInput = Omit<Partial<CrawlConfig>, 'url' | 'js'> & {
   projectId?: string
   site?: string
   searchMetricsLimit?: number
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   analyticsLimit?: number
   signal?: AbortSignal
   onStatus?: CrawlStatusHandler
@@ -280,7 +280,7 @@ export type CrawlReport = {
   definitionId: string
   projectId?: string
   site?: string
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   generatedAt: string
   status: 'completed' | 'partial' | 'failed'
   configHash: string
@@ -366,12 +366,12 @@ export function crawlConfigHash(config: CrawlConfigInput): string {
 export function crawlDefinitionId(input: {
   config: CrawlConfigInput
   site?: string
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
 }): string {
   const normalized = {
     config: normalizeCrawlConfig(input.config),
     site: input.site ?? null,
-    ga4PropertyId: input.ga4PropertyId ?? null,
+    googleAnalyticsPropertyId: input.googleAnalyticsPropertyId ?? null,
   }
   const hash = createHash('sha256')
     .update(JSON.stringify(normalized))
@@ -713,7 +713,7 @@ export function createCrawlReport(input: {
   ai?: CrawlAiSignals
   projectId?: string
   site?: string
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
@@ -728,7 +728,7 @@ export function createCrawlReport(input: {
   const definitionId = crawlDefinitionId({
     config,
     site: input.site,
-    ga4PropertyId: input.ga4PropertyId,
+    googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
   })
   const pagesWithLinks = deriveInternalLinkAuthority(
     input.pages ?? [],
@@ -757,7 +757,7 @@ export function createCrawlReport(input: {
     definitionId,
     projectId: input.projectId,
     site: input.site,
-    ga4PropertyId: input.ga4PropertyId,
+    googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),
@@ -831,7 +831,7 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
       crawlDefinitionId({
         config: report.config,
         site: report.site,
-        ga4PropertyId: report.ga4PropertyId,
+        googleAnalyticsPropertyId: report.googleAnalyticsPropertyId,
       }),
     summary: summarizeCrawlReport({
       pages,

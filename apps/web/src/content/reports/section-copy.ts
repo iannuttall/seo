@@ -6,7 +6,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'ai-readiness':
     "Start with hard access, indexability or snippet conflicts that work against the publisher's intent. Keep referral traffic and assistant mentions as separate measurements because this audit cannot observe either one.",
   'ai-referrals':
-    'Check the matched referrer and landing page before treating a session as useful AI traffic. Search demand and assistant visibility need their own reports because GA4 only records visits that reached the site.',
+    'Check the matched referrer and landing page before treating a session as useful AI traffic. Search demand and assistant visibility need their own reports because Google Analytics only records visits that reached the site.',
   'ai-search-scorecard':
     'Open the checks behind the weakest score group and fix only the failures supported by crawl evidence. Run the scorecard again against a comparable crawl so the before and after numbers describe the same scope.',
   'audit-page':
@@ -111,7 +111,7 @@ export const reportScheduleNotes: Partial<Record<string, string>> = {
   'agent-readiness':
     'This is a useful post-deploy check for documentation and content sites. Ask your agent to repeat the same route scope and report new failures, resolved warnings, and any route that disappeared from the HTML or Markdown inventory.',
   'ai-referrals':
-    "Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete GA4 periods because today's traffic can still be arriving or attributed.",
+    "Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete Google Analytics periods because today's traffic can still be arriving or attributed.",
   'compare-crawls':
     'Your agent can schedule matching crawls and compare each new snapshot with the previous one. Keep the start URL, scope and limits stable or the change list will mix site changes with crawl changes.',
   'crawl-diff':

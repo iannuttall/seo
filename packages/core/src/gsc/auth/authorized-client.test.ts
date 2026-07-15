@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, afterEach, beforeEach, test } from 'node:test'
 import { configSchema, type StoredTokens } from '../../types.js'
+import { GOOGLE_SCOPE } from './types.js'
 
 const configDir = mkdtempSync(join(tmpdir(), 'seo-token-refresh-'))
 const previousConfigDir = process.env.SEO_CONFIG_DIR
@@ -26,7 +27,7 @@ function storedTokens(overrides: Partial<StoredTokens> = {}): StoredTokens {
   return {
     provider: 'google',
     account_email: 'user@example.com',
-    scope: 'scope',
+    scope: GOOGLE_SCOPE,
     token_type: 'Bearer',
     access_token: 'old-access-token',
     refresh_token: 'old-refresh-token',
@@ -204,4 +205,21 @@ test('an expiring login without a refresh token requires login again', async () 
     return true
   })
   assert.equal(await readTokens(), undefined)
+})
+
+test('a login missing data scopes fails before calling Google APIs', async () => {
+  await writeTokens(
+    storedTokens({
+      scope: 'openid https://www.googleapis.com/auth/userinfo.email',
+      expires_at: Date.now() + 3_600_000,
+    }),
+  )
+
+  await assert.rejects(createAuthorizedClient(), (error: unknown) => {
+    assert.ok(error instanceof SeoError)
+    assert.equal(error.code, 'ACCESS_DENIED')
+    assert.match(error.message, /choose Select all/)
+    assert.match(error.message, /Search Console and Google Analytics/)
+    return true
+  })
 })

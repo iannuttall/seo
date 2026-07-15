@@ -51,7 +51,7 @@ function reportCaveats(input: {
     input.skipSearchData
       ? 'Search Console: skipped because no property was selected. Run `seo start` to add performance evidence.'
       : 'Search Console: included where the selected property returned usable data.',
-    'GA4: not included in this narrative; use refresh-priorities when GA4 value should influence prioritisation.',
+    'Google Analytics: not included in this narrative; use refresh-priorities when Google Analytics value should influence prioritisation.',
     input.skipSearchData
       ? 'Content verification: not run because Search Console did not provide page candidates for this report.'
       : input.verifyContent

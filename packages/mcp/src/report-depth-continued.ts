@@ -223,8 +223,8 @@ export const REPORT_DEPTH_CONTINUED = {
       'the top few URLs manually',
     ],
     doNotClaim: [
-      'A click decline, low CTR, second-page position, and GA4 session signal have different semantics and are not interchangeable.',
-      'Missing GA4 or failed fetches stay unavailable, not zero-weight proof.',
+      'A click decline, low CTR, second-page position, and Google Analytics session signal have different semantics and are not interchangeable.',
+      'Missing Google Analytics or failed fetches stay unavailable, not zero-weight proof.',
       'The score is not expected clicks, revenue, ranking lift, or causal confidence.',
     ],
     verify:
@@ -309,7 +309,10 @@ export const REPORT_DEPTH_CONTINUED = {
     verify:
       'Store the source query and date range beside later monitoring observations and refresh on a controlled schedule.',
     related: [
-      { id: 'ai-referrals', reason: 'Adds GA4 referral evidence.' },
+      {
+        id: 'ai-referrals',
+        reason: 'Adds Google Analytics referral evidence.',
+      },
       { id: 'community-intent', reason: 'Reviews intent language.' },
       { id: 'ai-readiness', reason: 'Checks technical access.' },
     ],

@@ -88,7 +88,7 @@ export async function refreshPrioritiesWorkflow(input: {
   limit?: number
   brandTerms?: string[]
   includeBrand?: boolean
-  ga4PropertyId?: string
+  googleAnalyticsPropertyId?: string
   verifyContent?: boolean
   verifyLimit?: number
   refresh?: boolean
@@ -106,12 +106,12 @@ export async function refreshPrioritiesWorkflow(input: {
   })
   const range = defaultDateRange(input.days ?? 28)
   const analytics = await fetchLandingPageValues({
-    propertyId: input.ga4PropertyId,
+    propertyId: input.googleAnalyticsPropertyId,
     startDate: range.startDate,
     endDate: range.endDate,
   })
   const analyticsPolicy = landingPageRankingPolicy({
-    propertyId: input.ga4PropertyId,
+    propertyId: input.googleAnalyticsPropertyId,
     source: analytics.source,
     warning: analytics.warning,
   })

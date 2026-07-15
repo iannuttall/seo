@@ -1,10 +1,10 @@
 ---
 title: Set up the SEO CLI and run your first audit
-description: Install the SEO CLI and run setup to connect Search Console, save your site and complete your first audit. GA4 can wait until you need it.
+description: Install the SEO CLI and run setup to connect Search Console, save your site and complete your first audit. Google Analytics can wait until you need it.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search
-Console property adds traffic and query evidence. GA4 is optional. You can
+Console property adds traffic and query evidence. Google Analytics is optional. You can
 still start with a local technical report before connecting Google.
 
 ## Install the SEO CLI
@@ -20,11 +20,11 @@ Setup opens Google sign-in in your browser. After you approve read-only access,
 the CLI brings you back to the terminal and asks you to choose:
 
 1. A Search Console property.
-2. An optional GA4 property.
+2. An optional Google Analytics property.
 3. A name for the project profile saved on your computer.
 
 A project profile is a local shortcut. It remembers the property, crawl URL,
-optional GA4 property, and brand terms you would otherwise repeat on every
+optional Google Analytics property, and brand terms you would otherwise repeat on every
 command. If this is your only site, make it the default and most commands will
 need no flags.
 
@@ -69,7 +69,7 @@ seo report --url https://example.com
 
 This creates a bounded local crawl and saves the evidence. Search Console
 sections say that they were skipped. They do not become zeroes or guesses. Run
-`seo start` later when you want click, query, ranking, and GA4 data in the
+`seo start` later when you want click, query, ranking, and Google Analytics data in the
 same investigation.
 
 Read the result in this order:
@@ -110,7 +110,7 @@ ongoing work because you are less likely to query the wrong property.
 
 ## Keep going when one source is missing
 
-A useful report should survive a missing optional section. If GA4 is not
+A useful report should survive a missing optional section. If Google Analytics is not
 connected or a Search Console window is too sparse, the report records the
 skip reason and continues with evidence that still holds.
 

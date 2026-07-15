@@ -125,10 +125,10 @@ export async function runGa4Report(
   if (!response.ok) {
     if (response.status === 403) {
       throw new Error(
-        `GA4 report failed with 403. Check access to property ${propertyId}.`,
+        `Google Analytics report failed with 403. Check access to property ${propertyId}.`,
       )
     }
-    throw new Error(`GA4 report failed with ${response.status}.`)
+    throw new Error(`Google Analytics report failed with ${response.status}.`)
   }
 
   const result = (await response.json()) as Ga4RunReportResult
@@ -160,10 +160,12 @@ export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
   if (!response.ok) {
     if (response.status === 403) {
       throw new Error(
-        'GA4 account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
+        'Google Analytics account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
       )
     }
-    throw new Error(`GA4 account summary fetch failed with ${response.status}.`)
+    throw new Error(
+      `Google Analytics account summary fetch failed with ${response.status}.`,
+    )
   }
 
   const json = (await response.json()) as {
@@ -183,7 +185,7 @@ export async function listGa4DataStreams(
   do {
     if (pageCount >= 20) {
       throw new Error(
-        `GA4 data stream discovery exceeded 20 pages for property ${propertyId}.`,
+        `Google Analytics data stream discovery exceeded 20 pages for property ${propertyId}.`,
       )
     }
 
@@ -197,11 +199,11 @@ export async function listGa4DataStreams(
     if (!response.ok) {
       if (response.status === 403) {
         throw new Error(
-          `GA4 data stream fetch failed with 403 for property ${propertyId}. Check Analytics access.`,
+          `Google Analytics data stream fetch failed with 403 for property ${propertyId}. Check Analytics access.`,
         )
       }
       throw new Error(
-        `GA4 data stream fetch failed with ${response.status} for property ${propertyId}.`,
+        `Google Analytics data stream fetch failed with ${response.status} for property ${propertyId}.`,
       )
     }
 
@@ -241,7 +243,7 @@ export function ga4RowsToObjects(
 
 export function ga4ReportQualityWarnings(
   result: Ga4RunReportResult,
-  label = 'GA4 report',
+  label = 'Google Analytics report',
 ): string[] {
   const warnings: string[] = []
   if (result.metadata?.dataLossFromOtherRow) {

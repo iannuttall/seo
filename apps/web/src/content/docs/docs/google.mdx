@@ -1,9 +1,9 @@
 ---
 title: Google Search Console data
-description: Connect Google Search Console data to your SEO reports and understand the limits before you trust the numbers. Add GA4 only when it helps.
+description: Connect Google Search Console data to your SEO reports and understand the limits before you trust the numbers. Add Google Analytics only when it helps.
 ---
 
-Search Console shows how a verified property performed in Google Search. GA4
+Search Console shows how a verified property performed in Google Search. Google Analytics
 shows what happened after measured visitors reached your site. Joining them can
 turn a vague traffic problem into a page, query, and post-click investigation.
 
@@ -20,15 +20,15 @@ seo start
 
 The browser asks you to approve read-only Search Console and Analytics access.
 The CLI then lists the properties available to that Google account. Choose the
-Search Console property first and add GA4 only when you want post-click context.
+Search Console property first and add Google Analytics only when you want post-click context.
 
-If one GA4 web stream clearly matches the property you chose, the CLI
-attaches that GA4 property and shows the stream and hostname it matched. When
-several GA4 properties match, or none is clear, it asks you to choose or skip GA4.
-Skipping it is fine. You can attach GA4 later.
+If one Google Analytics web stream clearly matches the property you chose, the CLI
+attaches that Google Analytics property and shows the stream and hostname it matched. When
+several Google Analytics properties match, or none is clear, it asks you to choose or skip Google Analytics.
+Skipping it is fine. You can attach Google Analytics later.
 
 You do not need to copy a property id if Google can list it. You also do not
-need GA4 to crawl a public site or run Search Console-only opportunity reports.
+need Google Analytics to crawl a public site or run Search Console-only opportunity reports.
 
 Use these commands to check the connection later:
 
@@ -185,9 +185,9 @@ with overlapping official windows. Use the
 [Google update postmortem](/docs/reports/update-postmortem) when you
 also need page, query, device, country, and known-confounder evidence.
 
-## Add GA4 when post-click behavior changes the decision
+## Add Google Analytics when post-click behavior changes the decision
 
-GA4 can add landing-page sessions, users, engagement, events, key events,
+Google Analytics can add landing-page sessions, users, engagement, events, key events,
 sources, campaigns, and known AI referrals. It helps answer a different set of
 questions:
 
@@ -196,32 +196,45 @@ questions:
 - Which known referral sources sent measurable visits?
 - Does one page group behave differently from another after the click?
 
-GA4 cannot restore visits that were never measured, identify a referrer that
+Google Analytics cannot restore visits that were never measured, identify a referrer that
 was stripped, or prove that an SEO edit caused a conversion change.
 
-Run a raw report when you need a supported GA4 dimension and metric
-combination:
+List the properties available to the connected account before running a raw report:
 
 ```sh
-seo ga4-report --project example --start-date 2026-05-01 --end-date 2026-05-31 --dimensions landingPage --metrics sessions,totalUsers,eventCount --limit 100 --json
-seo ga4-report --help
+seo analytics google properties
 ```
 
-The command uses the GA4 property saved in the project profile unless you pass
+Then use the numeric property ID when you need a supported Google Analytics dimension and
+metric combination:
+
+```sh
+seo analytics google report \
+  --property 123456789 \
+  --start-date 2026-05-01 \
+  --end-date 2026-05-31 \
+  --dimensions landingPage \
+  --metrics sessions,totalUsers,eventCount \
+  --limit 100 \
+  --json
+seo analytics google report --help
+```
+
+The command uses the Google Analytics property saved in the project profile unless you pass
 `--property`. It requests the date range, dimensions, metrics, and row limit you
 provide. Advanced users can pass a complete Data API request with `--body` or
 `--body-file`.
 
 Human output shows the selected property, row count, and a compact table. JSON
 keeps the Data API response, including headers, rows, totals, metadata, and row
-count when Google returns them. This makes `seo ga4-report` useful when you need
-raw post-click evidence without a higher-level SEO interpretation.
+count when Google returns them. This makes `seo analytics google report` useful when you
+need raw post-click evidence without a higher-level SEO interpretation.
 
 Use [AI referrals](/docs/reports/ai-referrals) for known assistant referral
 sources. Use [measure change](/docs/reports/measure-change) when a recorded page
 or page-group change needs equal before and after windows.
 
-## Leave room for GA4 processing and data controls
+## Leave room for Google Analytics processing and data controls
 
 Google says Analytics data can change while events are processed. Its
 <a href="https://support.google.com/analytics/answer/11198161" target="_blank" rel="noreferrer">data freshness guidance</a>
@@ -252,14 +265,81 @@ Linux, and Windows in its
 The browser is talking to Google during consent. The loopback redirect only
 returns the authorization response to the CLI running on your machine.
 
-Some builds may not include the shared client. Add your own Google desktop
-OAuth client when needed:
+## Use your own Google OAuth client
+
+The published package normally uses the verified SEO Skill OAuth client. You
+can use a Google Desktop OAuth client from your own Cloud project instead. This
+is useful for local development, a private installation, or a build that does
+not include the shared client.
+
+Create a separate Google Cloud project for this client. In **APIs and services**
+enable these APIs:
+
+- Google Search Console API
+- Google Analytics Data API
+- Google Analytics Admin API
+
+Open **Google Auth Platform** and configure the project in this order:
+
+1. Under **Branding** add the app name, support email, and developer contact.
+2. Under **Audience** choose **External** and leave the publishing status as
+   **Testing** for a private setup. Add every Google account that will use the
+   client as a test user.
+3. Under **Data access** add the four scopes used by the CLI.
+
+```txt
+openid
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/webmasters.readonly
+https://www.googleapis.com/auth/analytics.readonly
+```
+
+4. Under **Clients** create an OAuth client with the **Desktop app** application
+   type. Copy its client ID and client secret.
+
+Google's
+<a href="https://support.google.com/cloud/answer/15544987?hl=en" target="_blank" rel="noreferrer">Google Auth Platform setup guide</a>
+shows where each part lives in the current Cloud Console. The API project owns
+the quota for requests made through this client.
+
+Save the Desktop client locally:
 
 ```sh
 seo auth setup-client
+seo auth login
+seo auth whoami
 ```
 
-This is an advanced fallback, not a normal onboarding step.
+`seo auth setup-client` stores the client configuration in your local SEO
+config directory. Do not commit it to the repository. Environment-based setups
+can provide `SEO_GOOGLE_CLIENT_ID` and `SEO_GOOGLE_CLIENT_SECRET` instead.
+
+The CLI records which client created a saved login. If you switch from the
+shared client to your own client, run `seo auth logout` before signing in again.
+`seo auth status` shows whether the active login uses the shared SEO Skill app
+or your own client.
+
+## Keep a private OAuth client in testing
+
+A Google OAuth project in **Testing** does not need to complete verification.
+It still needs the APIs, scopes, Desktop client, and test users described above.
+Testing changes who can use the client. It does not remove the permissions the
+CLI needs to request.
+
+Testing mode is best for one person or a small known team. Google applies these
+limits:
+
+- Only Google accounts added as test users can sign in.
+- The project can have no more than 100 test users.
+- Test users see a warning during authorization.
+- Authorizations that include sensitive scopes expire after seven days, so the
+  user must sign in again.
+
+Google documents those limits in its
+<a href="https://support.google.com/cloud/answer/15549945?hl=en" target="_blank" rel="noreferrer">OAuth audience and testing guide</a>.
+For a personal client this is usually fine (the seven-day login is the annoying
+bit). A client intended for public use should move to **In production** and
+complete the verification required for its sensitive scopes.
 
 Use `seo auth status` to see where the active tokens are stored. You can make
 the choice yourself when a local setup needs it:
@@ -279,6 +359,14 @@ Browser sign-in belongs on a person's machine. A GitHub Actions runner, a
 container, or a server needs a credential with no browser involved. The CLI
 supports one Google service account JSON credential for that job.
 
+A service account does not use the shared Desktop OAuth client or open a user
+consent screen. It requests short-lived server-to-server tokens for its own
+identity, so the public OAuth app verification flow is not part of this path.
+The service account can only read properties where its email address has been
+given access. The CLI does not support domain-wide delegation. Google's
+<a href="https://developers.google.com/identity/protocols/oauth2/service-account" target="_blank" rel="noreferrer">server-to-server OAuth guide</a>
+explains how this differs from a person granting access in the browser.
+
 Create the service account in a Google Cloud project with the Search Console
 API, Google Analytics Data API, and Google Analytics Admin API enabled. Then
 grant the service account email access to the properties it needs:
@@ -286,7 +374,7 @@ grant the service account email access to the properties it needs:
 - In Search Console, a property owner adds the service account email under
   Settings, then Users and permissions. Google explains the available
   <a href="https://support.google.com/webmasters/answer/7687615" target="_blank" rel="noreferrer">Search Console roles and user setup</a>.
-- In GA4, grant the service account access to the property before expecting it
+- In Google Analytics, grant the service account access to the property before expecting it
   to appear in account summaries. Google's
   <a href="https://developers.google.com/analytics/devguides/config/admin/v1/quickstart" target="_blank" rel="noreferrer">Admin API quickstart</a>
   covers service-account property access and API setup.
@@ -329,7 +417,7 @@ takes precedence over a saved browser login, so unset it before running
 `seo auth login`.
 
 If Google denies a property, check that the service account email was granted
-access to that exact Search Console or GA4 property. `seo auth status` shows
+access to that exact Search Console or Google Analytics property. `seo auth status` shows
 the active identity without printing the key. `seo doctor` also checks the
 credential configuration before a report runs.
 
@@ -341,6 +429,6 @@ seo privacy
 ```
 
 Logout deletes locally stored Google tokens. It does not delete your Search
-Console property or GA4 property. The [privacy policy](/privacy) documents the
+Console property or Google Analytics property. The [privacy policy](/privacy) documents the
 local paths and network requests, while the [setup guide](/docs/getting-started)
 covers project profiles and first-run troubleshooting.

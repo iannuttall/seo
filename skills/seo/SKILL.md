@@ -1,13 +1,13 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or GA4 questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 50+ evidence-backed local reports through the SEO CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or Google Analytics questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 50+ evidence-backed local reports through the SEO CLI and MCP server.
 ---
 
 # seo
 
 `seo` is a local CLI, MCP server, and report engine. It answers SEO questions
 with evidence from three sources: its own crawl of the site, Google Search
-Console, and GA4. Every report returns structured JSON with the observed
+Console, and Google Analytics. Every report returns structured JSON with the observed
 evidence, derived findings, caveats, and provenance kept separate. Nothing is
 hosted; data stays on the machine.
 
@@ -91,10 +91,11 @@ reports above are for specific symptoms.
 ## Beyond the report catalog
 
 The CLI also has direct commands for raw provider access and administration:
-`seo gsc-query`, `seo url-inspect`, `seo ga4-report`, `seo updates`,
-`seo crawl`, `seo export`, and `seo projects`. Use `seo help all` to list
-everything. Prefer a registered report when one covers the question, because
-reports carry provenance and caveats that raw queries do not.
+`seo gsc-query`, `seo url-inspect`, `seo analytics google properties`,
+`seo analytics google report`, `seo updates`, `seo crawl`, `seo export`, and
+`seo projects`. Use `seo help all` to list everything. Prefer a registered
+report when one covers the question, because reports carry provenance and
+caveats that raw queries do not.
 
 Report output is cached locally. Pass `refresh: true` (or `--refresh`) only
 when the user explicitly wants a fresh fetch.

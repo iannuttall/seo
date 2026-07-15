@@ -5,13 +5,13 @@ import {
   writeConfig,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../../args.js'
-import { printJson, printTable } from '../../utils.js'
+import { jsonFlag, stringArg } from '../../../args.js'
+import { printJson, printTable } from '../../../utils.js'
 
-export const ga4PropertiesCommand = defineCommand({
+export const googleAnalyticsPropertiesCommand = defineCommand({
   meta: {
-    name: 'ga4-properties',
-    description: 'List GA4 accounts and properties available to Google OAuth',
+    name: 'properties',
+    description: 'List Google Analytics accounts and properties',
   },
   args: {
     json: {
@@ -21,7 +21,8 @@ export const ga4PropertiesCommand = defineCommand({
     },
     save: {
       type: 'string',
-      description: 'Save this numeric GA4 property ID as the default.',
+      description:
+        'Save this numeric Google Analytics property ID as the default.',
     },
   },
   run: async ({ args }) => {
@@ -37,7 +38,7 @@ export const ga4PropertiesCommand = defineCommand({
     const save = stringArg(args.save)
     if (save) {
       const config = readConfig()
-      config.google.defaultGa4PropertyId = save
+      config.analytics.google.defaultPropertyId = save
       writeConfig(config)
     }
 
@@ -46,7 +47,7 @@ export const ga4PropertiesCommand = defineCommand({
       return
     }
     if (save) {
-      process.stdout.write(`Saved default GA4 property ${save}.\n`)
+      process.stdout.write(`Saved default Google Analytics property ${save}.\n`)
     }
     printTable(
       ['Property', 'Name', 'Account'],

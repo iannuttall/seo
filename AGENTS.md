@@ -73,7 +73,7 @@ skills/         packaged agent skills
 
 ## Repo Map
 
-- `packages/core`: report logic, storage, providers, GSC/GA4 clients,
+- `packages/core`: report logic, storage, providers, Search Console/Google Analytics clients,
   fetch/extract, crawling, analysis, workflows, and renderers.
 - `packages/cli`: `seo` command, prompt flows, command help, selection, and
   terminal output.
@@ -101,7 +101,7 @@ Useful CLI areas:
 
 - `packages/cli/src/index.ts`: root command registration and curated help.
 - `packages/cli/src/args.ts`: shared argument parsing, including `projectArg`.
-- `packages/cli/src/selection.ts`: project, site, and GA4 selection.
+- `packages/cli/src/selection.ts`: project, site, and Google Analytics selection.
 - `packages/cli/src/commands/setup`: `seo start` and guided onboarding.
 - `packages/cli/src/commands/mcp-clients.ts`: MCP client paths and detection.
 - `packages/cli/src/commands/mcp-config.ts`: safe MCP install and removal.
@@ -116,7 +116,11 @@ Useful core areas:
 - `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.
 - `packages/core/src/extract`: page and structured-data extraction.
 - `packages/core/src/export`: CSV and export rendering.
-- `packages/core/src/gsc` and `packages/core/src/ga4`: provider boundaries.
+- `packages/core/src/gsc`: Search Console provider boundary.
+- `packages/core/src/ga4`: Google Analytics Data/Admin API adapter. Keep `ga4`
+  naming inside this implementation boundary only. Product commands, config,
+  report fields, MCP inputs, docs, and UI use `googleAnalytics` or “Google
+  Analytics”.
 
 ## Product Rules
 
@@ -149,7 +153,7 @@ The guided flow should not ask humans for implementation details.
 - Derive stable ids automatically.
 - Explain project profiles in one short sentence.
 - Default to saving a profile, but allow profile-free use with `--site`.
-- Discover Search Console and GA4 choices after sign-in. Do not expect users to
+- Discover Search Console and Google Analytics choices after sign-in. Do not expect users to
   copy property ids if the provider can list them.
 - Keep advanced OAuth, service-account, quota, and cache choices out of the
   default path.

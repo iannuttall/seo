@@ -135,7 +135,7 @@ test('creates and saves a bounded crawl when no compatible baseline exists', asy
       searchSite: 'sc-domain:example.com',
       url: 'https://example.com/',
       projectId: 'example',
-      ga4PropertyId: '123',
+      googleAnalyticsPropertyId: '123',
     },
     deps,
   )
@@ -146,7 +146,7 @@ test('creates and saves a bounded crawl when no compatible baseline exists', asy
     url: 'https://example.com/',
     site: 'sc-domain:example.com',
     projectId: 'example',
-    ga4PropertyId: '123',
+    googleAnalyticsPropertyId: '123',
     mode: 'site',
     maxPages: 100,
     maxDepth: 4,
@@ -168,7 +168,7 @@ test('does not join Google data for a direct-url technical baseline', async () =
   )
 
   assert.equal(crawlInputs[0]?.site, undefined)
-  assert.equal(crawlInputs[0]?.ga4PropertyId, undefined)
+  assert.equal(crawlInputs[0]?.googleAnalyticsPropertyId, undefined)
 })
 
 test('refreshes even when a compatible crawl is saved', async () => {

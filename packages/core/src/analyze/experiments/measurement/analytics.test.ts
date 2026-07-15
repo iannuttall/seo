@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   analyticsDelta,
-  ga4LandingPageFilterForChange,
-  summarizeGa4Rows,
+  googleAnalyticsLandingPageFilterForChange,
+  summarizeGoogleAnalyticsRows,
 } from './analytics.js'
 
-test('ga4LandingPageFilterForChange maps page URLs to GA4 paths', () => {
-  const filter = ga4LandingPageFilterForChange({
+test('googleAnalyticsLandingPageFilterForChange maps page URLs to Google Analytics paths', () => {
+  const filter = googleAnalyticsLandingPageFilterForChange({
     id: 'change',
     site: 'sc-domain:example.com',
     scope: 'page',
@@ -29,8 +29,8 @@ test('ga4LandingPageFilterForChange maps page URLs to GA4 paths', () => {
   })
 })
 
-test('ga4LandingPageFilterForChange supports page content groups', () => {
-  const filter = ga4LandingPageFilterForChange(
+test('googleAnalyticsLandingPageFilterForChange supports page content groups', () => {
+  const filter = googleAnalyticsLandingPageFilterForChange(
     {
       id: 'change',
       site: 'sc-domain:example.com',
@@ -58,8 +58,8 @@ test('ga4LandingPageFilterForChange supports page content groups', () => {
   )
 })
 
-test('summarizeGa4Rows and analyticsDelta aggregate test metrics', () => {
-  const before = summarizeGa4Rows([
+test('summarizeGoogleAnalyticsRows and analyticsDelta aggregate test metrics', () => {
+  const before = summarizeGoogleAnalyticsRows([
     {
       sessions: '10',
       engagedSessions: '6',
@@ -67,7 +67,7 @@ test('summarizeGa4Rows and analyticsDelta aggregate test metrics', () => {
       totalRevenue: '20',
     },
   ])
-  const after = summarizeGa4Rows([
+  const after = summarizeGoogleAnalyticsRows([
     {
       sessions: '15',
       engagedSessions: '9',

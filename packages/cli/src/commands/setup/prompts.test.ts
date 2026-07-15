@@ -13,7 +13,7 @@ test('saved BYO OAuth clients go directly to Google sign-in', () => {
     {
       value: 'login',
       label: 'Connect Google',
-      hint: 'Opens your browser for read-only Search Console and GA4 access',
+      hint: 'Opens your browser for read-only Search Console and Google Analytics access',
     },
     { value: 'skip', label: 'Skip for now' },
   ])

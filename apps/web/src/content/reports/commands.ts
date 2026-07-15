@@ -17,7 +17,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     },
     'ai-referrals': {
       command: 'seo ai-referrals --project example',
-      note: 'Find GA4 sessions referred by known AI products.',
+      note: 'Find Google Analytics sessions referred by known AI products.',
     },
     'audit-page': {
       command: 'seo audit-page --url https://example.com/page',

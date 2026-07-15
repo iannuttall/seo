@@ -21,8 +21,8 @@ export const reportSources = {
     label: 'Google guidance for crawlable links',
     url: 'https://developers.google.com/search/docs/crawling-indexing/links-crawlable',
   },
-  'ga4-acquisition': {
-    key: 'ga4-acquisition',
+  'google-analytics-acquisition': {
+    key: 'google-analytics-acquisition',
     label: 'Google Analytics traffic acquisition guidance',
     url: 'https://support.google.com/analytics/answer/12923437',
   },

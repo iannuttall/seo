@@ -19,7 +19,7 @@ export const experimentReports = [
     ],
     evidence: [
       'Matched Search Console windows for the selected page, query, or site scope.',
-      'Optional GA4 and saved control-group evidence when those inputs exist.',
+      'Optional Google Analytics and saved control-group evidence when those inputs exist.',
     ],
     methodology: [
       'Uses adjacent equal-length finalised windows, preserves missing and partial states, and keeps control evidence separate from the measured target.',

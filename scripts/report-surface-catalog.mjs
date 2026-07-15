@@ -92,8 +92,16 @@ export const reportSurfaces = [
     },
     options: [
       opt('property', 'property:', 'property: z.string()'),
-      opt('startDate', "'start-date':", 'startDate: ga4DateSchema.optional()'),
-      opt('endDate', "'end-date':", 'endDate: ga4DateSchema.optional()'),
+      opt(
+        'startDate',
+        "'start-date':",
+        'startDate: googleAnalyticsDateSchema.optional()',
+      ),
+      opt(
+        'endDate',
+        "'end-date':",
+        'endDate: googleAnalyticsDateSchema.optional()',
+      ),
       opt(
         'maxRows',
         "'max-rows':",
@@ -402,10 +410,10 @@ export const reportSurfaces = [
       opt('title', 'title:', 'title: z.string()', 'title?: string'),
       opt('changedAt', 'date:', 'changedAt: z.string()', 'changedAt?: string'),
       opt(
-        'ga4PropertyId',
+        'googleAnalyticsPropertyId',
         'property:',
-        'ga4PropertyId: z.string()',
-        'ga4PropertyId?: string',
+        'googleAnalyticsPropertyId: z.string()',
+        'googleAnalyticsPropertyId?: string',
       ),
       opt(
         'controlScope',
@@ -635,9 +643,9 @@ export const reportSurfaces = [
       common.limit,
       common.includeBrand,
       opt(
-        'ga4PropertyId',
-        "'ga4-property':",
-        'ga4PropertyId: z.string().optional()',
+        'googleAnalyticsPropertyId',
+        "'google-analytics-property':",
+        'googleAnalyticsPropertyId: z.string().optional()',
       ),
       common.verifyContent,
       common.verifyLimit,

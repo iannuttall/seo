@@ -4,16 +4,16 @@ import {
   type runGa4Report,
 } from '../../../ga4/client.js'
 import type { AnalyticsTestMetrics } from '../types.js'
-import { analyticsDelta, summarizeGa4Rows } from './analytics.js'
+import { analyticsDelta, summarizeGoogleAnalyticsRows } from './analytics.js'
 
 type Window = { startDate: string; endDate: string }
 
-async function queryGa4Metrics(input: {
+async function queryGoogleAnalyticsMetrics(input: {
   propertyId: string
   window: Window
   filter?: unknown
   refresh?: boolean
-  ga4Report: typeof runGa4Report
+  googleAnalyticsReport: typeof runGa4Report
   label: string
 }): Promise<{
   metrics: AnalyticsTestMetrics
@@ -25,7 +25,7 @@ async function queryGa4Metrics(input: {
   }
   warnings: string[]
 }> {
-  const result = await input.ga4Report(
+  const result = await input.googleAnalyticsReport(
     input.propertyId,
     {
       dateRanges: [input.window],
@@ -43,7 +43,7 @@ async function queryGa4Metrics(input: {
   )
   const rows = ga4RowsToObjects(result)
   return {
-    metrics: summarizeGa4Rows(rows),
+    metrics: summarizeGoogleAnalyticsRows(rows),
     source: {
       rows: rows.length,
       rowCount: result.rowCount ?? rows.length,
@@ -54,24 +54,24 @@ async function queryGa4Metrics(input: {
   }
 }
 
-export async function queryGa4ChangeWindows(input: {
+export async function queryGoogleAnalyticsChangeWindows(input: {
   propertyId: string
   before: Window
   after: Window
   filter?: unknown
   refresh?: boolean
-  ga4Report: typeof runGa4Report
+  googleAnalyticsReport: typeof runGa4Report
 }) {
   const [before, after] = await Promise.all([
-    queryGa4Metrics({
+    queryGoogleAnalyticsMetrics({
       ...input,
       window: input.before,
-      label: 'GA4 before window',
+      label: 'Google Analytics before window',
     }),
-    queryGa4Metrics({
+    queryGoogleAnalyticsMetrics({
       ...input,
       window: input.after,
-      label: 'GA4 after window',
+      label: 'Google Analytics after window',
     }),
   ])
   const metadataWarnings: string[] = []
@@ -81,7 +81,7 @@ export async function queryGa4ChangeWindows(input: {
     before.source.timeZone !== after.source.timeZone
   ) {
     metadataWarnings.push(
-      'GA4 returned different property timezones across the two windows.',
+      'Google Analytics returned different property timezones across the two windows.',
     )
   }
   if (
@@ -90,7 +90,7 @@ export async function queryGa4ChangeWindows(input: {
     before.source.currencyCode !== after.source.currencyCode
   ) {
     metadataWarnings.push(
-      'GA4 returned different currency codes across the two windows.',
+      'Google Analytics returned different currency codes across the two windows.',
     )
   }
   return {
@@ -99,7 +99,7 @@ export async function queryGa4ChangeWindows(input: {
       before: { ...input.before, metrics: before.metrics },
       after: { ...input.after, metrics: after.metrics },
       delta: analyticsDelta({ before: before.metrics, after: after.metrics }),
-      note: 'GA4 attribution is landing-page based. Query-level tests use GSC only.',
+      note: 'Google Analytics attribution is landing-page based. Query-level tests use GSC only.',
     },
     source: { before: before.source, after: after.source },
     warnings: [

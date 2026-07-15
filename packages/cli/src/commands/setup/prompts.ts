@@ -35,7 +35,7 @@ export type SetupMcpInstall = {
   changed: boolean
   error?: string
 }
-export type SetupGa4Selection = {
+export type SetupGoogleAnalyticsSelection = {
   propertyId: string
   selection: 'explicit' | 'matched' | 'manual'
   reason: string
@@ -45,13 +45,13 @@ export type SetupSkillInstall = {
   error?: string
 }
 
-type Ga4PropertyChoice = {
+type GoogleAnalyticsPropertyChoice = {
   property: string
   label: string
   account: string
 }
 
-type Ga4SetupChoice = Ga4PropertyChoice & {
+type GoogleAnalyticsSetupChoice = GoogleAnalyticsPropertyChoice & {
   match?: Ga4WebStreamMatch
 }
 
@@ -76,7 +76,7 @@ export function authSetupOptions(input: {
         {
           value: 'login',
           label: 'Connect Google',
-          hint: 'Opens your browser for read-only Search Console and GA4 access',
+          hint: 'Opens your browser for read-only Search Console and Google Analytics access',
         },
         ...skipOption,
       ]
@@ -90,8 +90,8 @@ export function authSetupOptions(input: {
       ]
 }
 
-async function findGa4WebStreamCandidates(
-  properties: Ga4PropertyChoice[],
+async function findGoogleAnalyticsWebStreamCandidates(
+  properties: GoogleAnalyticsPropertyChoice[],
 ): Promise<{ candidates: Ga4WebStreamCandidate[]; complete: boolean }> {
   const candidates: Ga4WebStreamCandidate[] = []
   let complete = true
@@ -177,33 +177,34 @@ export async function maybeConnectAuth(
   return 'connected'
 }
 
-export async function chooseGa4Property(input: {
+export async function chooseGoogleAnalyticsProperty(input: {
   property?: string
   site: string
   interactive?: boolean
-}): Promise<SetupGa4Selection | undefined> {
+}): Promise<SetupGoogleAnalyticsSelection | undefined> {
   if (input.property) {
     return {
       propertyId: input.property,
       selection: 'explicit',
-      reason: 'Set with --ga4.',
+      reason: 'Set with --google-analytics-property.',
     }
   }
   const interactive = input.interactive ?? canPrompt()
   if (!interactive) return undefined
 
   const summaries = await listGa4AccountSummaries().catch(() => [])
-  const properties: Ga4PropertyChoice[] = summaries.flatMap((account) =>
-    account.propertySummaries.map((property) => ({
-      property: ga4PropertyIdFromName(property.property),
-      label: property.displayName ?? property.property,
-      account: account.displayName ?? account.account,
-    })),
+  const properties: GoogleAnalyticsPropertyChoice[] = summaries.flatMap(
+    (account) =>
+      account.propertySummaries.map((property) => ({
+        property: ga4PropertyIdFromName(property.property),
+        label: property.displayName ?? property.property,
+        account: account.displayName ?? account.account,
+      })),
   )
   if (!properties.length) return undefined
 
   const { candidates, complete: streamsComplete } =
-    await findGa4WebStreamCandidates(properties)
+    await findGoogleAnalyticsWebStreamCandidates(properties)
   const matches = streamsComplete
     ? matchGa4WebStreams(input.site, candidates)
     : []
@@ -223,7 +224,7 @@ export async function chooseGa4Property(input: {
     }
   }
 
-  const choices: Ga4SetupChoice[] = matchedProperties.length
+  const choices: GoogleAnalyticsSetupChoice[] = matchedProperties.length
     ? matchedProperties.map((match) => ({
         property: match.property,
         label: match.propertyName,
@@ -233,14 +234,14 @@ export async function chooseGa4Property(input: {
     : properties
 
   const choice = maybeExitCancelled(
-    await select<Ga4SetupChoice | ''>({
+    await select<GoogleAnalyticsSetupChoice | ''>({
       message: matchedProperties.length
-        ? 'Several GA4 properties match this site. Which property should seo use?'
+        ? 'Several Google Analytics properties match this site. Which property should seo use?'
         : streamsComplete
-          ? 'No GA4 web stream clearly matches this site. Attach a property?'
-          : 'Some GA4 web streams could not be read. Attach a property?',
+          ? 'No Google Analytics web stream clearly matches this site. Attach a property?'
+          : 'Some Google Analytics web streams could not be read. Attach a property?',
       options: [
-        { value: '', label: 'Skip GA4 for now' },
+        { value: '', label: 'Skip Google Analytics for now' },
         ...choices.map((property) => ({
           value: property,
           label: `${property.label} (${property.property})`,
@@ -260,7 +261,7 @@ export async function chooseGa4Property(input: {
       ? ga4MatchReason(choice.match, input.site)
       : streamsComplete
         ? `Selected ${choice.label} during setup. Its web stream did not clearly match ${input.site}.`
-        : `Selected ${choice.label} during setup. seo could not read every GA4 web stream, so it did not guess a match.`,
+        : `Selected ${choice.label} during setup. seo could not read every Google Analytics web stream, so it did not guess a match.`,
   }
 }
 

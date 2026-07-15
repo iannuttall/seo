@@ -26,8 +26,8 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'ai-referrals': {
     title: 'AI referral traffic report',
     description:
-      'Find visits from known AI assistants in GA4, see which landing pages received them and keep missing referrers separate from confirmed traffic.',
-    lead: 'See which known AI assistants sent visits recorded by GA4 and where those visitors landed. It measures observed referrals, not general visibility inside an assistant.',
+      'Find visits from known AI assistants in Google Analytics, see which landing pages received them and keep missing referrers separate from confirmed traffic.',
+    lead: 'See which known AI assistants sent visits recorded by Google Analytics and where those visitors landed. It measures observed referrals, not general visibility inside an assistant.',
   },
   'ai-search-scorecard': {
     title: 'AI search scorecard',

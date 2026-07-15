@@ -126,7 +126,10 @@ test('report runs a technical crawl when given only a URL', async () => {
 
     assert.equal(report.detail, 'summary')
     assert.match(report.summary, /^Completed a technical crawl of 1 page\./)
-    assert.match(report.summary, /Search Console and GA4 sections were skipped/)
+    assert.match(
+      report.summary,
+      /Search Console and Google Analytics sections were skipped/,
+    )
     assert.equal(report.steps[0]?.tool, 'seo_crawl')
     assert.equal(report.steps[0]?.status, 'completed')
     assert.equal(report.steps[1]?.tool, 'seo_report_narrative')
@@ -211,7 +214,7 @@ test('report runs a technical crawl when given only a URL', async () => {
     assert.match(human.stdout, /Prioritised technical fixes/)
     assert.match(human.stdout, /Provider-backed sections skipped/)
     assert.match(human.stdout, /Search Console: not connected\./)
-    assert.match(human.stdout, /GA4: not connected\./)
+    assert.match(human.stdout, /Google Analytics: not connected\./)
     assert.doesNotMatch(human.stdout, /Diagnosis unavailable/)
     assert.ok(
       human.stdout.indexOf('Technical crawl evidence') <

@@ -9,10 +9,16 @@ export type ClientProfileInput = {
   startUrl?: string
   watchUrls?: string[]
   brandTerms?: string[]
-  ga4PropertyId?: string
+  analytics?: ClientProfile['analytics']
   reportDay?: number
   technicalWeekday?: number
   isDefault?: boolean
+}
+
+export function googleAnalyticsPropertyId(
+  client: Pick<ClientProfile, 'analytics'> | undefined,
+): string | undefined {
+  return client?.analytics.google?.propertyId
 }
 
 function slug(value: string): string {
@@ -71,7 +77,7 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
           siteUrl: input.siteUrl,
         }),
     ),
-    ga4PropertyId: input.ga4PropertyId ?? existing?.ga4PropertyId,
+    analytics: input.analytics ?? existing?.analytics ?? {},
     reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,
     isDefault: input.isDefault ?? existing?.isDefault,

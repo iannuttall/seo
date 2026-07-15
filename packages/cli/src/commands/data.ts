@@ -1,9 +1,4 @@
-import {
-  ga4RowsToObjects,
-  inspectUrl,
-  querySearchAnalytics,
-  runGa4Report,
-} from '@seo/core'
+import { inspectUrl, querySearchAnalytics } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -14,7 +9,6 @@ import {
   projectArg,
   stringArg,
 } from '../args.js'
-import { resolveClient, resolveGa4Property } from '../selection.js'
 import { printJson, printKeyValue, printTable } from '../utils.js'
 import { selectedSiteOrThrow } from './shared.js'
 
@@ -175,84 +169,5 @@ export const urlInspectCommand = defineCommand({
       ['Last crawl', indexStatus?.lastCrawlTime ?? 'unknown'],
       ['Google canonical', indexStatus?.googleCanonical ?? 'unknown'],
     ])
-  },
-})
-
-export const ga4ReportCommand = defineCommand({
-  meta: {
-    name: 'ga4-report',
-    description: 'Run a GA4 Data API report',
-  },
-  args: {
-    property: {
-      type: 'string',
-      description: 'GA4 property ID. If omitted in a terminal, choose one.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name with an optional GA4 property.',
-    },
-    'start-date': { type: 'string', default: '28daysAgo' },
-    'end-date': { type: 'string', default: 'yesterday' },
-    dimensions: { type: 'string', default: 'landingPage' },
-    metrics: { type: 'string', default: 'sessions,totalUsers,eventCount' },
-    limit: { type: 'string', default: '25' },
-    body: { type: 'string' },
-    'body-file': { type: 'string' },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass local GA4 cache.',
-    },
-    json: { type: 'boolean', default: false },
-  },
-  run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const client = await resolveClient({
-      client: projectArg(args),
-      options: { json },
-    })
-    const property = await resolveGa4Property({
-      property: stringArg(args.property) ?? client?.ga4PropertyId,
-      options: { json },
-    })
-    const body =
-      (await jsonBodyArg(args.body, args['body-file'])) ??
-      ({
-        dateRanges: [
-          {
-            startDate: stringArg(args['start-date']),
-            endDate: stringArg(args['end-date']),
-          },
-        ],
-        dimensions: (csvArg(args.dimensions) ?? []).map((name) => ({ name })),
-        metrics: (csvArg(args.metrics) ?? []).map((name) => ({ name })),
-        limit: stringArg(args.limit),
-      } as Record<string, unknown>)
-    const result = await runGa4Report(property, body as never, {
-      refresh: booleanArg(args.refresh),
-    })
-    if (json) {
-      printJson(result)
-      return
-    }
-    const rows = ga4RowsToObjects(result)
-    printKeyValue([
-      ['Property', property],
-      ['Rows', String(result.rowCount ?? rows.length)],
-    ])
-    if (rows.length) {
-      const headings = Object.keys(rows[0] ?? {})
-      printTable(
-        headings,
-        rows
-          .slice(0, 25)
-          .map((row) => headings.map((heading) => row[heading] ?? '')),
-      )
-    }
   },
 })

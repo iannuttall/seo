@@ -65,7 +65,7 @@ test('topFixes ranks search-visible errors above generic notices', () => {
   assert.match(fixes[0]?.whyThisRanks ?? '', /GSC visibility/)
   assert.match(
     fixes[0]?.whyThisRanks ?? '',
-    /GA4 adds 120 sessions and 3 conversions/,
+    /Google Analytics adds 120 sessions and 3 conversions/,
   )
   assert.match(fixes[0]?.howToFix ?? '', /Restore the page/)
   assert.match(

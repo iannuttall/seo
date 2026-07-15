@@ -45,10 +45,10 @@ export const crawlQueueCommand = defineCommand({
       type: 'string',
       description: 'Saved project id or name.',
     },
-    'ga4-property': {
+    'google-analytics-property': {
       type: 'string',
       description:
-        'GA4 property ID for landing-page sessions. Defaults from --project when saved.',
+        'Google Analytics property ID for landing-page sessions. Defaults from --project when saved.',
     },
     mode: {
       type: 'string',
@@ -166,8 +166,9 @@ export const crawlQueueCommand = defineCommand({
       }),
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
-      ga4PropertyId:
-        stringArg(args['ga4-property']) ?? selection?.client?.ga4PropertyId,
+      googleAnalyticsPropertyId:
+        stringArg(args['google-analytics-property']) ??
+        selection?.client?.analytics.google?.propertyId,
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),

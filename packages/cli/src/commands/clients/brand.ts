@@ -87,7 +87,7 @@ export const clientBrandCommand = defineCommand({
                 siteUrl: client.siteUrl,
                 startUrl: client.startUrl,
                 watchUrls: client.watchUrls,
-                ga4PropertyId: client.ga4PropertyId,
+                analytics: client.analytics,
                 brandTerms: detection.suggestedTerms,
                 reportDay: client.reportDay,
                 technicalWeekday: client.technicalWeekday,

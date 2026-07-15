@@ -21,7 +21,7 @@ type SiteChoice = {
   permissionLevel?: string
 }
 
-type Ga4Choice = {
+type GoogleAnalyticsPropertyChoice = {
   property: string
   displayName: string
   account: string
@@ -195,21 +195,21 @@ export async function resolveClient(input: {
   })
 }
 
-export async function resolveGa4Property(input: {
+export async function resolveGoogleAnalyticsProperty(input: {
   property?: string
   options?: ResolveOptions
 }): Promise<string> {
   if (input.property) return input.property
 
   const config = readConfig()
-  if (config.google.defaultGa4PropertyId) {
-    return config.google.defaultGa4PropertyId
+  if (config.analytics.google.defaultPropertyId) {
+    return config.analytics.google.defaultPropertyId
   }
 
   if (input.options?.json || !canPrompt()) {
     throw new SeoError(
       'INVALID_INPUT',
-      'No GA4 property selected. Pass --property or run this command in a terminal to choose one.',
+      'No Google Analytics property selected. Pass --property or run this command in a terminal to choose one.',
     )
   }
 
@@ -225,17 +225,17 @@ export async function resolveGa4Property(input: {
   if (!choices.length) {
     throw new SeoError(
       'PROPERTY_NOT_FOUND',
-      'No GA4 properties found for this Google login.',
+      'No Google Analytics properties found for this Google login.',
     )
   }
   if (choices.length === 1) {
     return choices[0]?.property ?? ''
   }
 
-  const choice = await chooseFromSearch<Ga4Choice>({
-    message: 'Choose a GA4 property',
-    searchMessage: 'Search GA4 properties',
-    emptyMessage: 'No GA4 properties matched that search.',
+  const choice = await chooseFromSearch<GoogleAnalyticsPropertyChoice>({
+    message: 'Choose a Google Analytics property',
+    searchMessage: 'Search Google Analytics properties',
+    emptyMessage: 'No Google Analytics properties matched that search.',
     choices,
     label: (property) => `${property.displayName} (${property.property})`,
     hint: (property) => property.account,

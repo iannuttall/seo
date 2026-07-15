@@ -106,9 +106,11 @@ export function landingPageRankingPolicy(input: {
   const warningSuffix =
     'Observed landing-page values remain visible but do not affect priority scores.'
   const warnings = [
-    ...(input.warning ? [`GA4: ${input.warning}`] : []),
+    ...(input.warning ? [`Google Analytics: ${input.warning}`] : []),
     ...(input.source?.retainedRowLimitReached
-      ? [`GA4: the retained-row limit was reached. ${warningSuffix}`]
+      ? [
+          `Google Analytics: the retained-row limit was reached. ${warningSuffix}`,
+        ]
       : []),
     ...(input.source?.qualityWarnings?.map(
       (warning) => `${warning} ${warningSuffix}`,
@@ -116,7 +118,7 @@ export function landingPageRankingPolicy(input: {
   ]
   if (!input.source?.dataStatus && !input.warning) {
     warnings.push(
-      `GA4: landing-page completeness was not reported. ${warningSuffix}`,
+      `Google Analytics: landing-page completeness was not reported. ${warningSuffix}`,
     )
   }
   return {
@@ -170,7 +172,7 @@ export async function fetchLandingPageValues(
       rows.length >= retainedRowLimit
     const qualityWarnings = ga4ReportQualityWarnings(
       result,
-      'GA4 landing-page report',
+      'Google Analytics landing-page report',
     )
     return {
       values,

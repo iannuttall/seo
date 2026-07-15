@@ -37,10 +37,10 @@ export const exportRefreshPrioritiesCommand = defineCommand({
         },
       },
     ),
-    'ga4-property': {
+    'google-analytics-property': {
       type: 'string',
       description:
-        'GA4 property ID to use for analytics value. Defaults from the selected project.',
+        'Google Analytics property ID to use for analytics value. Defaults from the selected project.',
     },
     'verify-content': defaultTrueBooleanArg(
       'Verify top opportunities against page title, meta, and content. Defaults to true.',
@@ -64,8 +64,9 @@ export const exportRefreshPrioritiesCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      ga4PropertyId:
-        stringArg(args['ga4-property']) ?? selection.client?.ga4PropertyId,
+      googleAnalyticsPropertyId:
+        stringArg(args['google-analytics-property']) ??
+        selection.client?.analytics.google?.propertyId,
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

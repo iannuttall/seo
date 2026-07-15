@@ -36,7 +36,7 @@ seo crawl --project example --max-pages 500
 ```
 
 `--project` is the public selector for saved profiles. A profile can hold the
-Search Console property, default crawl URL, optional GA4 property, brand terms,
+Search Console property, default crawl URL, optional Google Analytics property, brand terms,
 and reporting preferences.
 
 Commands can still run without a profile when you provide their required site
@@ -122,8 +122,8 @@ seo change-log add --site sc-domain:example.com --scope group --target <group-id
 seo change-log measure --id <change-id> --json
 ```
 
-Page groups can scope compatible Search Console and GA4 evidence. Query groups
-scope Search Console evidence and do not attach unfiltered sitewide GA4 data.
+Page groups can scope compatible Search Console and Google Analytics evidence. Query groups
+scope Search Console evidence and do not attach unfiltered sitewide Google Analytics data.
 The measurement still shows correlation around a recorded change, not proof
 that the change caused the movement.
 
@@ -133,7 +133,7 @@ Delete a group only when later measurements no longer need it:
 seo content-groups delete --id <group-id>
 ```
 
-Deleting the local group does not change the site, Search Console, or GA4. The
+Deleting the local group does not change the site, Search Console, or Google Analytics. The
 [change measurement report](/docs/reports/measure-change) explains finalized
 windows, control evidence, and confounders.
 
@@ -178,7 +178,7 @@ seo report --project example --refresh
 seo crawl --project example --refresh --save
 ```
 
-Fresh does not mean final. Recent Search Console rows and GA4 processing can
+Fresh does not mean final. Recent Search Console rows and Google Analytics processing can
 still change at the provider.
 
 ## Get focused help in the terminal

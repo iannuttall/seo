@@ -1,4 +1,3 @@
-import updateNotifier from 'update-notifier'
 import { createTerminalContext } from './presentation/context.js'
 import {
   renderCallout,
@@ -18,14 +17,6 @@ import {
   renderSummaryList,
   type SummaryItemView,
 } from './presentation/views.js'
-
-export function maybeCheckForUpdates(pkg: { name: string; version: string }) {
-  if (process.env.CI || process.env.NO_UPDATE_NOTIFIER) {
-    return
-  }
-
-  updateNotifier({ pkg, shouldNotifyInNpmScript: false }).notify()
-}
 
 export function canPrompt(options: { json?: boolean } = {}): boolean {
   return Boolean(

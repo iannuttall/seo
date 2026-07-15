@@ -29,7 +29,10 @@ export function printClientProfile(client: ClientProfile): void {
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', client.watchUrls.join(', ') || 'not set'],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
-    ['GA4 property', client.ga4PropertyId ?? 'not set'],
+    [
+      'Google Analytics property',
+      client.analytics.google?.propertyId ?? 'not set',
+    ],
     ['Report day', client.reportDay ? String(client.reportDay) : 'not set'],
     [
       'Technical weekday',

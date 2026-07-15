@@ -66,11 +66,11 @@ test('calendar-date report inputs reject malformed and impossible dates', () => 
       id,
     )
     for (const date of ['2026-6-28', '2026-02-30', '2026-13-01', 'yesterday']) {
-      const allowsRelativeGa4Date =
+      const allowsRelativeGoogleAnalyticsDate =
         id === 'ai-referrals' && date === 'yesterday'
       assert.equal(
         schema.safeParse({ ...required, [field]: date }).success,
-        allowsRelativeGa4Date,
+        allowsRelativeGoogleAnalyticsDate,
         `${id}: ${date}`,
       )
     }

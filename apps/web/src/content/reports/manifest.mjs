@@ -62,7 +62,6 @@ export const legacyReportAliases = {
   'broad-seo-report': 'search-performance-overview',
   'change-log': 'measure-change',
   'content-groups': '/docs/cli',
-  'ga4-report': '/docs/google',
   'knowledge-export': 'okf-build',
   'okf-export': 'okf-build',
   'search-console-actions': 'refresh-priorities',

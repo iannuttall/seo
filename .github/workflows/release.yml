@@ -46,7 +46,7 @@ jobs:
           package-manager-cache: false
       - name: Use an npm CLI with trusted publishing support
         run: npm install --global npm@11.10.0
-      - name: Read release version
+      - name: Check release version
         id: release
         shell: bash
         run: |

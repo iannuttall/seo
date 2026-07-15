@@ -133,12 +133,16 @@ test('public support and security routes stay on GitHub', async () => {
   assert.doesNotMatch(combined, /audits\.run/i)
 })
 
-test('the release workflow uses npm trusted publishing and release-only OAuth injection', async () => {
+test('the release workflow automates trusted publishing, tagging, and release-only OAuth injection', async () => {
   const release = await readFile('.github/workflows/release.yml', 'utf8')
   const ci = await readFile('.github/workflows/ci.yml', 'utf8')
 
-  assert.match(release, /contents: read/)
+  assert.match(release, /contents: write/)
   assert.match(release, /id-token: write/)
+  assert.match(release, /push:\n\s+branches: \[main\]/)
+  assert.match(release, /npm view "seo@\$\{version\}" version/)
+  assert.match(release, /git tag --annotate "\$RELEASE_TAG"/)
+  assert.match(release, /git push origin "\$RELEASE_TAG"/)
   for (const workflow of [release, ci]) {
     assert.match(workflow, /actions\/checkout@v7/)
     assert.match(workflow, /pnpm\/action-setup@v6/)

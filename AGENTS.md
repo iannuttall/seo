@@ -274,6 +274,22 @@ pnpm pack --dry-run
 pnpm outdated --recursive
 ```
 
+The unqualified `seo` command on this machine is deliberately the globally
+installed npm release. Use it from outside the repository when checking the
+published user experience. Never use it to validate uncommitted source changes,
+and do not replace it with `npm link`, `pnpm link`, or a repository shim.
+
+For local development, build the root public package and invoke its entry point
+explicitly:
+
+```sh
+pnpm build:package
+node dist/cli.js <command>
+```
+
+Do not add a separate `seo-local` command. Keeping the local invocation explicit
+prevents published-package tests and development tests from being confused.
+
 Use `pnpm exec biome format <files> --write` after edits. Avoid unrelated
 formatting churn.
 

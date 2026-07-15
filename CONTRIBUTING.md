@@ -40,6 +40,10 @@ node dist/cli.js start --help
 node dist/cli.js report --help
 ```
 
+Use `node dist/cli.js` for repository changes. A globally installed `seo`
+command represents the published npm package and must not be linked back to the
+working tree.
+
 Keep pull requests focused. Add or update tests for behavior changes, avoid
 unrelated formatting, and use conventional commit subjects.
 

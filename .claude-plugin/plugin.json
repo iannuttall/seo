@@ -7,7 +7,15 @@
     "name": "Ian Nuttall"
   },
   "license": "Apache-2.0",
-  "keywords": ["seo", "geo", "crawler", "gsc", "google-analytics", "ai-search", "mcp"],
+  "keywords": [
+    "seo",
+    "geo",
+    "crawler",
+    "gsc",
+    "google-analytics",
+    "ai-search",
+    "mcp"
+  ],
   "mcpServers": {
     "seo": {
       "command": "npx",

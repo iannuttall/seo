@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import Database from 'better-sqlite3'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import type { CacheStats } from '../types.js'
+import Database from './sqlite.js'
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS sites (
@@ -309,6 +309,17 @@ export function getDb(): Database.Database {
   db = new Database(path)
   initDb(db)
   return db
+}
+
+export function checkDatabaseReadiness(): { dbPath: string } {
+  const database = getDb()
+  const result = database.prepare('SELECT 1 AS ready').get() as
+    | { ready: number }
+    | undefined
+  if (result?.ready !== 1) {
+    throw new Error('The local SQLite database did not return a readiness row.')
+  }
+  return { dbPath: getSeoCliPaths().cacheDbFile }
 }
 
 export function hashKey(parts: unknown[]): string {

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
-import type Database from 'better-sqlite3'
 import { SeoError } from '../../errors.js'
 import { getDb } from '../../storage/database.js'
+import type Database from '../../storage/sqlite.js'
 
 export const URL_INSPECTION_DAILY_LIMIT = 2_000
 export const URL_INSPECTION_MINUTE_LIMIT = 600

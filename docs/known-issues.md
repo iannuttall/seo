@@ -170,3 +170,102 @@ database compaction that does not interrupt active reports.
 
 Seed expired and oversized HTTP cache data, run the normal cache lifecycle,
 and confirm retained rows and file size stay inside the documented bounds.
+
+## SEO-006: report summaries do not inflect singular counts
+
+- Status: Open
+- Observed: 2026-07-16
+- Affected version: 0.2.7
+
+### What failed
+
+The second-page report returned phrases including `1 eligible average-position
+pages found`, `1 are returned`, and `1 query/page candidate have`. The report
+uses plural nouns and verbs even when a count is exactly one.
+
+### Impact
+
+Human and agent-facing summaries look unfinished even though the underlying
+report data is correct.
+
+### Cause and fix
+
+The narrative templates interpolate counts without count-aware nouns and
+verbs. Move repeated count grammar behind a small formatting helper and cover
+both singular and plural output.
+
+### Verification
+
+Generate the second-page narrative with zero, one, and multiple eligible pages
+and candidates, then assert each sentence uses the matching noun and verb.
+
+## SEO-007: agent-readiness requires explicit Markdown mirrors
+
+- Status: Verified
+- Observed: 2026-07-16
+- Affected version: 0.2.7
+- Fixed in: 0.2.8
+
+### What failed
+
+`seo agent-readiness --url https://ian.is --refresh` reported five Markdown
+representation failures because the pages did not advertise explicit Markdown
+mirror URLs. Direct requests with `Accept: text/markdown` returned Cloudflare's
+valid negotiated Markdown with `Vary: Accept`, token headers, stable bytes, and
+the site's Content-Signal policy.
+
+### Impact
+
+Cloudflare Pro, Business, and Enterprise users with Markdown for Agents enabled
+receive false failures and are told to build unnecessary mirrors. That makes
+onboarding require knowledge of an implementation detail the platform already
+handles.
+
+### Cause and fix
+
+Representation collection returned before making negotiated requests unless a
+page advertised exactly one mirror. Collect negotiated Markdown independently,
+repeat whichever representation is available, and accept negotiation-only
+coverage when media type, `Vary: Accept`, q-values, stability, and quality all
+verify.
+
+### Verification
+
+Run the focused readiness report against a fixture with no alternate link and a
+valid negotiated Markdown response. Coverage, negotiation, determinism, token,
+quality, and Content-Signal checks must pass without an explicit mirror.
+
+The core fixture passed, and a fresh dogfood run against `ian.is` verified five
+of five negotiated pages with zero representation failures.
+
+## SEO-008: content profile requires software schema
+
+- Status: Verified
+- Observed: 2026-07-16
+- Affected version: 0.2.7
+- Fixed in: 0.2.8
+
+### What failed
+
+The focused agent-readiness report warned that the personal site `ian.is` was
+missing a software identity even though it already had connected `WebSite`,
+`Person`, `ProfilePage`, and page-level structured data.
+
+### Impact
+
+Publishers can be told to add an untruthful `SoftwareApplication` node to a
+personal, editorial, or other content site just to clear the report.
+
+### Cause and fix
+
+The content-profile identity check required `SoftwareApplication` for every
+site. Require a website, creator or publisher, and page identity; report
+software as optional evidence and tell users to add it only when it is true.
+
+### Verification
+
+Run the identity check with `WebSite`, `Person`, and `WebPage` schema but no
+`SoftwareApplication`. The content-profile identity check must pass.
+
+The existing agent-readiness fixture now omits `SoftwareApplication` and keeps
+the identity check passing.

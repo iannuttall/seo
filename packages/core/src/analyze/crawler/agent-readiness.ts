@@ -67,18 +67,20 @@ function section(
 
 function failedMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
   return discovery.markdownAlternates.pages
-    .filter(
-      (page) =>
-        !page.htmlAlternateUnique ||
-        page.httpAlternateUrls.length !== 1 ||
-        page.explicit?.status !== 200 ||
-        !/^\s*text\/markdown\b/iu.test(page.explicit.contentType ?? '') ||
-        page.explicitMatchesNegotiated !== true ||
-        page.repeatedHashStable !== true ||
-        page.markdownCanonicalMatchesHtml !== true ||
-        page.explicit?.varyAccept !== true ||
-        page.negotiated?.varyAccept !== true,
-    )
+    .filter((page) => {
+      const negotiatedOk =
+        page.negotiated?.status === 200 &&
+        /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? '') &&
+        page.negotiated.varyAccept
+      const explicitOk = !page.htmlAlternateUnique
+        ? true
+        : page.httpAlternateUrls.length === 1 &&
+          page.explicit?.status === 200 &&
+          /^\s*text\/markdown\b/iu.test(page.explicit.contentType ?? '') &&
+          page.explicitMatchesNegotiated === true &&
+          page.markdownCanonicalMatchesHtml === true
+      return !negotiatedOk || !explicitOk || page.repeatedHashStable !== true
+    })
     .map((page) => page.htmlUrl)
 }
 
@@ -140,23 +142,37 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
   const markdown = discovery.markdownAlternates
   const failedUrls = failedMarkdownUrls(discovery)
   const qualityUrls = qualityFailureUrls(discovery)
+  const negotiatedPages = markdown.pages.filter(
+    (page) =>
+      page.negotiated?.status === 200 &&
+      /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? ''),
+  ).length
+  const explicitPages = markdown.pages.filter(
+    (page) => page.htmlAlternateUnique,
+  ).length
   const coverageComplete =
     markdown.eligibleHtmlPages > 0 &&
-    markdown.advertisedPages === markdown.eligibleHtmlPages &&
     markdown.evaluatedPages === markdown.eligibleHtmlPages
-  const bytesMatch =
+  const negotiationComplete =
     markdown.eligibleHtmlPages > 0 &&
-    markdown.exactByteMatches === markdown.eligibleHtmlPages
+    negotiatedPages === markdown.eligibleHtmlPages &&
+    markdown.pages.every((page) => page.negotiated?.varyAccept) &&
+    markdown.pages.every(
+      (page) =>
+        !page.htmlAlternateUnique || page.explicitMatchesNegotiated === true,
+    )
   const stable =
     markdown.eligibleHtmlPages > 0 &&
     markdown.stableResponses === markdown.eligibleHtmlPages
-  const tokenHeaders = markdown.pages.filter(
-    (page) =>
-      page.explicit?.bytes !== undefined &&
-      page.explicit?.markdownTokens !== undefined &&
-      page.explicit.markdownTokens === Math.ceil(page.explicit.bytes / 4) &&
-      page.explicit.markdownTokens === page.negotiated?.markdownTokens,
-  ).length
+  const tokenHeaders = markdown.pages.filter((page) => {
+    const primary = page.explicit ?? page.negotiated
+    return (
+      primary?.markdownTokens !== undefined &&
+      (!page.explicit ||
+        !page.negotiated ||
+        page.explicit.markdownTokens === page.negotiated.markdownTokens)
+    )
+  }).length
   return [
     check('representations', {
       id: 'markdown-coverage',
@@ -167,15 +183,16 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
             ? 'pass'
             : 'fail',
       title: coverageComplete
-        ? 'Every successful HTML page advertises one Markdown alternative'
-        : 'Markdown alternative coverage is incomplete',
-      plainEnglish: `${markdown.advertisedPages} of ${markdown.eligibleHtmlPages} successful HTML pages advertised one Markdown alternative, and ${markdown.evaluatedPages} were fetched.`,
+        ? 'Every successful HTML page has a Markdown representation'
+        : 'Markdown representation coverage is incomplete',
+      plainEnglish: `${markdown.evaluatedPages} of ${markdown.eligibleHtmlPages} successful HTML pages returned Markdown. ${explicitPages} advertised an explicit alternative and ${negotiatedPages} supported content negotiation.`,
       action: coverageComplete
-        ? 'Keep route generation tied to the same deterministic page manifest.'
-        : 'Add one text/markdown alternate for each public HTML page and make every advertised URL return successfully.',
+        ? 'Keep the negotiated or explicit Markdown response stable as routes change.'
+        : 'Return text/markdown through content negotiation or advertise one working Markdown alternative for each public HTML page.',
       evidence: {
         eligibleHtmlPages: markdown.eligibleHtmlPages,
         advertisedPages: markdown.advertisedPages,
+        negotiatedPages,
         evaluatedPages: markdown.evaluatedPages,
       },
       urls: failedUrls.slice(0, 25),
@@ -190,17 +207,21 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
             : 'warning',
       title:
         tokenHeaders === markdown.evaluatedPages
-          ? 'Every Markdown response includes the same token estimate'
+          ? 'Every Markdown response includes a token estimate'
           : 'Some Markdown responses are missing a stable token estimate',
-      plainEnglish: `${tokenHeaders} of ${markdown.evaluatedPages} evaluated pages returned matching X-Markdown-Tokens values on the explicit and negotiated responses. The value is a quick size estimate, not an exact model-specific token count.`,
+      plainEnglish: `${tokenHeaders} of ${markdown.evaluatedPages} evaluated pages returned X-Markdown-Tokens. Paired explicit and negotiated responses agreed where both existed. The value is an estimate, not an exact model-specific token count.`,
       action:
-        'Generate the estimate from the stored Markdown bytes and return the same value for explicit and negotiated responses.',
+        'Return a stable token estimate and keep it consistent when both explicit and negotiated responses exist.',
       urls: markdown.pages
-        .filter(
-          (page) =>
-            page.explicit?.markdownTokens === undefined ||
-            page.explicit.markdownTokens !== page.negotiated?.markdownTokens,
-        )
+        .filter((page) => {
+          const primary = page.explicit ?? page.negotiated
+          return (
+            primary?.markdownTokens === undefined ||
+            (page.explicit !== undefined &&
+              page.negotiated !== undefined &&
+              page.explicit.markdownTokens !== page.negotiated.markdownTokens)
+          )
+        })
         .map((page) => page.htmlUrl)
         .slice(0, 25),
     }),
@@ -209,17 +230,19 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
       status:
         markdown.eligibleHtmlPages === 0
           ? 'unknown'
-          : bytesMatch && discovery.contentNegotiation.qZeroHonoured
+          : negotiationComplete && discovery.contentNegotiation.qZeroHonoured
             ? 'pass'
             : 'fail',
       title:
-        bytesMatch && discovery.contentNegotiation.qZeroHonoured
-          ? 'Explicit and negotiated Markdown use the same bytes'
-          : 'Content negotiation does not match the explicit Markdown contract',
-      plainEnglish: `${markdown.exactByteMatches} of ${markdown.eligibleHtmlPages} pages returned identical explicit and negotiated Markdown. A request that refuses Markdown ${discovery.contentNegotiation.qZeroHonoured ? 'received HTML' : 'did not produce confirmed HTML evidence'}.`,
+        negotiationComplete && discovery.contentNegotiation.qZeroHonoured
+          ? 'Markdown content negotiation works across the site'
+          : 'Markdown content negotiation needs attention',
+      plainEnglish: `${negotiatedPages} of ${markdown.eligibleHtmlPages} pages returned negotiated Markdown. ${markdown.exactByteMatches} of ${explicitPages} paired explicit responses matched byte for byte. A request that refuses Markdown ${discovery.contentNegotiation.qZeroHonoured ? 'received HTML' : 'did not produce confirmed HTML evidence'}.`,
       action:
-        'Use one stored Markdown artifact for both routes, honour Accept q-values, and send Vary: Accept on negotiated responses.',
+        'Honour Accept q-values, send Vary: Accept, and keep paired explicit and negotiated responses identical when both exist.',
       evidence: {
+        negotiatedPages,
+        explicitPages,
         exactByteMatches: markdown.exactByteMatches,
         qZero: discovery.contentNegotiation,
       },
@@ -232,9 +255,9 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
       title: stable
         ? 'Repeated Markdown responses are stable'
         : 'Repeated Markdown responses changed during the audit',
-      plainEnglish: `${markdown.stableResponses} of ${markdown.eligibleHtmlPages} repeated explicit responses kept the same SHA-256 digest.`,
+      plainEnglish: `${markdown.stableResponses} of ${markdown.eligibleHtmlPages} repeated Markdown responses kept the same SHA-256 digest.`,
       action:
-        'Generate Markdown during the build and remove runtime rewriting, timestamps, or random output.',
+        'Remove timestamps, random output, or other runtime rewriting that changes the same Markdown response between requests.',
       evidence: { stableResponses: markdown.stableResponses },
       urls: failedUrls.slice(0, 25),
     }),
@@ -461,16 +484,14 @@ function identityChecks(report: CrawlReport): AgentReadinessCheck[] {
     check('identity', {
       id: 'identity-graph',
       status:
-        hasSoftware && hasWebsite && hasCreator && pageTypes.length > 0
-          ? 'pass'
-          : 'warning',
+        hasWebsite && hasCreator && pageTypes.length > 0 ? 'pass' : 'warning',
       title:
-        hasSoftware && hasWebsite && hasCreator && pageTypes.length > 0
-          ? 'Structured identity covers the software, website, creator, and pages'
+        hasWebsite && hasCreator && pageTypes.length > 0
+          ? 'Structured identity covers the website, creator, and pages'
           : 'The structured identity graph is missing a useful entity layer',
-      plainEnglish: `Software identity: ${hasSoftware ? 'present' : 'missing'}. Website identity: ${hasWebsite ? 'present' : 'missing'}. Creator or publisher identity: ${hasCreator ? 'present' : 'missing'}. Page-level types: ${pageTypes.length ? pageTypes.join(', ') : 'missing'}.`,
+      plainEnglish: `Website identity: ${hasWebsite ? 'present' : 'missing'}. Creator or publisher identity: ${hasCreator ? 'present' : 'missing'}. Page-level types: ${pageTypes.length ? pageTypes.join(', ') : 'missing'}. Software identity: ${hasSoftware ? 'present' : 'not observed and not required for a content site'}.`,
       action:
-        'Connect truthful SoftwareApplication, WebSite, creator or publisher, and page nodes. Use sameAs only for official profiles that identify the same entity.',
+        'Connect truthful WebSite, creator or publisher, and page nodes. Add SoftwareApplication only when the site actually represents software. Use sameAs only for official profiles that identify the same entity.',
       evidence: {
         schemaTypes: [...types].sort(),
         officialProfiles: officialProfiles.sort(),

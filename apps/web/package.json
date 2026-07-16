@@ -9,26 +9,28 @@
     "build:sitemap": "node scripts/build-sitemap.mjs",
     "build:headers": "node scripts/finalize-cloudflare-headers.mjs",
     "clean": "rm -rf .astro dist .wrangler public/.well-known/agent-skills",
-    "deploy": "pnpm --filter @seo/web... build && wrangler deploy",
+    "deploy": "pnpm --filter @seo/web... build && wrangler d1 migrations apply seo-telemetry --remote && wrangler deploy",
     "deploy:dry-run": "pnpm --filter @seo/web... build && wrangler deploy --dry-run",
     "dev": "astro dev",
     "icons:generate": "node scripts/generate-pixelarticons.mjs",
     "predev": "pnpm build:discovery",
     "lint": "astro check",
     "preview": "astro preview",
-    "preview:cloudflare": "pnpm build && wrangler dev",
-    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs",
-    "typecheck": "astro check"
+    "preview:cloudflare": "pnpm build && wrangler d1 migrations apply seo-telemetry --local && wrangler dev",
+    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs worker/index.test.ts",
+    "typecheck": "wrangler types worker/worker-configuration.d.ts --include-runtime false --check && astro check && tsc -p worker/tsconfig.json",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts --include-runtime false"
   },
   "dependencies": {
-    "@astrojs/mdx": "^7.0.0",
     "@astrojs/markdown-remark": "^7.0.0",
+    "@astrojs/mdx": "^7.0.0",
     "@seo/astro": "workspace:*",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.7"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@cloudflare/workers-types": "5.20260716.1",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.110.0"

@@ -1,6 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { SEO_VERSION } from '@seo/core'
+import {
+  initializeTelemetry,
+  SEO_VERSION,
+  type TelemetryOptions,
+} from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
 
 export type {
@@ -21,7 +25,7 @@ export {
   runReport,
 } from './reports.js'
 
-export function createServer(): McpServer {
+export function createServer(options: { telemetry?: boolean } = {}): McpServer {
   const server = new McpServer(
     {
       name: 'seo',
@@ -30,7 +34,17 @@ export function createServer(): McpServer {
     { capabilities: { logging: {} } },
   )
 
-  registerDiscoveryTools(server)
+  const telemetryOptions = (): TelemetryOptions => ({
+    clientName: server.server.getClientVersion()?.name,
+  })
+  registerDiscoveryTools(server, {
+    telemetry: options.telemetry === false ? undefined : telemetryOptions,
+  })
+  if (options.telemetry !== false) {
+    server.server.oninitialized = () => {
+      initializeTelemetry(telemetryOptions())
+    }
+  }
 
   return server
 }

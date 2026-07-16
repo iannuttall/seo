@@ -25,6 +25,8 @@ const expectedPages = new Map([
   ['docs/agents/index.html', 'https://seoskill.dev/docs/agents'],
   ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
   ['docs/ai-visibility/index.html', 'https://seoskill.dev/docs/ai-visibility'],
+  ['stats/index.html', 'https://seoskill.dev/stats'],
+  ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
   ['terms/index.html', 'https://seoskill.dev/terms'],
   ['security/index.html', 'https://seoskill.dev/security'],
@@ -176,7 +178,7 @@ test('every content page has one deterministic Markdown alternative', () => {
 
   assert.equal(manifest.version, 1)
   assert.equal(manifest.site, 'https://seoskill.dev')
-  assert.equal(manifest.pages.length, 71)
+  assert.equal(manifest.pages.length, 73)
   assert.deepEqual(manifestPaths, [...manifestPaths].sort())
   assert.equal(
     manifest.pages.filter((page) => page.htmlPath.startsWith('/docs/reports/'))
@@ -321,7 +323,13 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
     (match) => match[1],
   )
   const indexable = [...expectedPages.entries()]
-    .filter(([path]) => path === 'index.html' || path.startsWith('docs/'))
+    .filter(
+      ([path]) =>
+        path === 'index.html' ||
+        path.startsWith('docs/') ||
+        path === 'stats/index.html' ||
+        path === 'telemetry/index.html',
+    )
     .map(([, canonical]) => canonical)
   const { listReportDefinitions } = await import(
     resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
@@ -624,7 +632,7 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /X-Content-Type-Options: nosniff/)
 })
 
-test('Cloudflare serves static assets with exact Markdown response headers', () => {
+test('Cloudflare limits the Worker to anonymous telemetry and static assets', () => {
   const config = JSON.parse(
     readFileSync(resolve(appRoot, 'wrangler.jsonc'), 'utf8'),
   )
@@ -634,11 +642,27 @@ test('Cloudflare serves static assets with exact Markdown response headers', () 
   )
 
   assert.equal(config.name, 'seo-skill')
-  assert.equal(config.main, undefined)
-  assert.equal(config.assets.binding, undefined)
-  assert.equal(config.assets.run_worker_first, undefined)
+  assert.equal(config.main, './worker/index.ts')
+  assert.equal(config.assets.binding, 'ASSETS')
+  assert.deepEqual(config.assets.run_worker_first, ['/api/*'])
   assert.equal(config.assets.html_handling, 'drop-trailing-slash')
   assert.equal(config.assets.not_found_handling, '404-page')
+  assert.equal(config.analytics_engine_datasets, undefined)
+  assert.equal(config.secrets, undefined)
+  assert.equal(config.vars, undefined)
+  assert.equal(config.observability.enabled, false)
+  assert.equal(config.observability.logs.enabled, false)
+  assert.equal(config.observability.logs.invocation_logs, false)
+  assert.equal(config.kv_namespaces, undefined)
+  assert.deepEqual(config.d1_databases, [
+    {
+      binding: 'TELEMETRY_DB',
+      database_name: 'seo-telemetry',
+      database_id: '4b8c5f37-983d-4229-a712-77dbcd853efe',
+      migrations_dir: './migrations',
+    },
+  ])
+  assert.equal(config.r2_buckets, undefined)
   assert.deepEqual(config.routes, [
     { pattern: 'seoskill.dev', custom_domain: true },
     { pattern: 'www.seoskill.dev', custom_domain: true },
@@ -646,6 +670,22 @@ test('Cloudflare serves static assets with exact Markdown response headers', () 
   assert.equal(existsSync(resolve(appRoot, 'src/worker.ts')), false)
   assert.equal(existsSync(resolve(appRoot, 'tsconfig.worker.json')), false)
   assert.equal(existsSync(resolve(appRoot, 'worker-configuration.d.ts')), false)
+  assert.equal(existsSync(resolve(appRoot, 'worker/index.ts')), true)
+  assert.equal(existsSync(resolve(appRoot, 'worker/tsconfig.json')), true)
+  assert.equal(
+    existsSync(resolve(appRoot, 'worker/worker-configuration.d.ts')),
+    true,
+  )
+  const migration = readFileSync(
+    resolve(appRoot, 'migrations/0001_create_telemetry_events.sql'),
+    'utf8',
+  )
+  assert.match(migration, /CREATE TABLE telemetry_events/)
+  assert.match(migration, /received_month TEXT NOT NULL/)
+  assert.doesNotMatch(
+    migration,
+    /ip_address|country|region|city|request_headers|user_id|machine_id/i,
+  )
 
   assert.match(
     headers,
@@ -664,8 +704,8 @@ test('Cloudflare serves static assets with exact Markdown response headers', () 
     ),
   )
 
-  assert.equal(manifest.pages.length, 71)
-  assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 71)
+  assert.equal(manifest.pages.length, 73)
+  assert.equal(matches(headers, /X-Markdown-Tokens: \d+/g).length, 73)
   for (const page of manifest.pages) {
     const rule = [
       page.markdownPath,

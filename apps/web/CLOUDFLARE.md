@@ -1,6 +1,8 @@
 # Cloudflare deployment
 
-The site is a static Astro build. Astro writes the HTML pages, Markdown alternates, discovery files, and response-header rules into `apps/web/dist`. Cloudflare serves those files as Workers Static Assets. There is no application Worker or Astro middleware running for normal page requests.
+The site is a static Astro build with one small Cloudflare Worker in front of its assets. Astro writes the HTML pages, Markdown alternates, discovery files, and response-header rules into `apps/web/dist`. The Worker handles only `/api/t` and `/api/stats`, then sends every other request to the static assets binding.
+
+Anonymous telemetry events go to a dedicated D1 database through a Worker binding. The Worker validates a fixed schema, does not read request IP or location fields, and has invocation logging disabled. The public stats endpoint queries aggregate counts through the same binding and caches its response at the edge for one hour.
 
 ## Git build settings
 
@@ -22,6 +24,28 @@ The Wrangler config declares both custom domains:
 - `www.seoskill.dev`
 
 The dashboard Redirect Rule should keep sending `www.seoskill.dev` to the apex domain with a permanent `301` response. Keep **Always Use HTTPS** enabled for the zone so plain HTTP requests also reach the canonical HTTPS URL.
+
+## D1 setup
+
+The `TELEMETRY_DB` binding and `seo-telemetry` database are declared in `wrangler.jsonc`. Reads and writes use the binding directly, so the Worker does not need a Cloudflare API token or secret.
+
+The deploy command applies tracked migrations before it deploys the Worker. To apply them without deploying, run:
+
+```sh
+pnpm --filter @seo/web exec wrangler d1 migrations apply seo-telemetry --remote
+```
+
+For local Worker development, apply the same migration to Wrangler's local D1 database:
+
+```sh
+pnpm --filter @seo/web exec wrangler d1 migrations apply seo-telemetry --local
+```
+
+Regenerate isolated Worker types after changing bindings:
+
+```sh
+pnpm --filter @seo/web types:worker
+```
 
 ## Route Markdown requests at the edge
 
@@ -52,7 +76,7 @@ Leave the query string unchanged.
 Use this rule expression:
 
 ```txt
-(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not ends_with(http.request.uri.path, ".md") and (http.request.uri.path eq "/docs" or starts_with(http.request.uri.path, "/docs/") or http.request.uri.path in {"/cookies" "/privacy" "/security" "/terms" "/trademarks"}) and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
+(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not ends_with(http.request.uri.path, ".md") and (http.request.uri.path eq "/docs" or starts_with(http.request.uri.path, "/docs/") or http.request.uri.path in {"/cookies" "/privacy" "/security" "/stats" "/telemetry" "/terms" "/trademarks"}) and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
 ```
 
 Set **Path** to **Rewrite to Dynamic** with this expression:
@@ -71,7 +95,7 @@ The `Accept` check is deliberately strict. It handles the normal agent header an
 
 `apps/web/public/_headers` contains the shared security, discovery, caching, and content-policy headers. The build then appends the exact Markdown token estimate and canonical link for each generated `.md` file.
 
-Cloudflare applies `_headers` directly to static asset responses. Do not move these headers into a Worker unless the site later gains a real runtime feature.
+Cloudflare applies `_headers` directly to static asset responses returned through the assets binding. The API routes set their own minimal JSON security and cache headers in the Worker.
 
 ## Check the deployed site
 

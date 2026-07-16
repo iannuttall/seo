@@ -51,7 +51,7 @@ const faqs = [
   {
     question: 'Does my site data leave my machine?',
     answer:
-      'Reports, project profiles, tokens, crawls, and caches stay local. The CLI only sends the requests needed to fetch the site and call the Google APIs you connect.',
+      'Reports, project profiles, tokens, crawls, and caches stay local. Optional anonymous usage events contain a fixed event name, report id, tool version, agent, coarse platform details, and install week. They never contain URLs, report content, Google data, or identifiers, and you can disable them with seo telemetry disable or DO_NOT_TRACK=1.',
   },
   {
     question: 'Can it change my site?',

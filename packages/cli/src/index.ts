@@ -1,4 +1,16 @@
-import { SEO_VERSION, seoErrorEnvelope, toSeoError } from '@seo/core'
+import {
+  detectTelemetryAgent,
+  initializeTelemetry,
+  SEO_VERSION,
+  seoErrorEnvelope,
+  telemetryErrorCategory,
+  toSeoError,
+  trackTelemetryReportComplete,
+  trackTelemetryReportFailed,
+  trackTelemetryReportStart,
+  trackTelemetrySetupComplete,
+} from '@seo/core'
+import { listReports } from '@seo/mcp'
 import { defineCommand, runCommand, runMain } from 'citty'
 import { agentReadinessCommand } from './commands/agent-readiness.js'
 import { analyticsCommand } from './commands/analytics/index.js'
@@ -70,6 +82,7 @@ import {
   sitesCommand,
   updatesCommand,
 } from './commands/system.js'
+import { telemetryCommand } from './commands/telemetry.js'
 import {
   crawlQueueCommand,
   diagnosePropertyWorkflowCommand,
@@ -193,6 +206,7 @@ const allHelpSections: HelpSection[] = [
       ['seo auth', 'Manage Google auth'],
       ['seo cache', 'Manage local cache'],
       ['seo privacy', 'Show local storage paths'],
+      ['seo telemetry status', 'Check anonymous usage telemetry'],
       ['seo reset', 'Delete local SEO data'],
     ],
   },
@@ -242,6 +256,7 @@ const main = defineCommand({
     okf: okfCommand,
     doctor: doctorCommand,
     privacy: privacyCommand,
+    telemetry: telemetryCommand,
     reset: resetCommand,
     cache: cacheCommand,
     crawl: crawlCommand,
@@ -311,7 +326,86 @@ const main = defineCommand({
   },
 })
 
+const reportAliases: Record<string, string> = {
+  cannibal: 'cannibalisation',
+  crawl: 'site-crawl',
+  'crawl-queue': 'top-fixes',
+  decaying: 'decaying-pages',
+  'diagnose-property': 'search-performance-overview',
+  doctor: 'setup-check',
+  explain: 'explain-crawl-issue',
+  'link-recover': 'link-recovery',
+  'monthly-report': 'monthly-report',
+  'query-cluster': 'query-clusters',
+  report: 'search-performance-overview',
+  'report-narrative': 'narrative-report',
+  rules: 'crawler-rules',
+  'update-correlate': 'update-correlation',
+}
+
+const directReportIds = new Set([
+  'agent-readiness',
+  'ai-readiness',
+  'ai-referrals',
+  'audit-page',
+  'community-intent',
+  'crawl-diff',
+  'ctr-underperformers',
+  'entity-readiness',
+  'index-coverage',
+  'index-watch',
+  'internal-links',
+  'page-opportunities',
+  'quick-wins',
+  'redirect-trace',
+  'refresh-priorities',
+  'second-page',
+  'segment-impact',
+  'seo-to-ai-query',
+  'striking-distance',
+  'technical-watch',
+  'traffic-anomaly',
+  'update-postmortem',
+])
+const knownReportIds = new Set(listReports().map((report) => report.id))
+
+function telemetryReportId(args: string[]): string | undefined {
+  const [command, subcommand, id] = args
+  if (!command) return undefined
+  if (command === 'reports' && subcommand === 'run') {
+    return id && knownReportIds.has(id) ? id : undefined
+  }
+  if (command === 'content' && subcommand === 'optimize') {
+    return 'content-optimization'
+  }
+  if (command === 'change-log' && subcommand === 'measure') {
+    return 'measure-change'
+  }
+  if (command === 'llms' && subcommand === 'audit') return 'llms-txt-audit'
+  if (command === 'llms' && subcommand === 'generate') {
+    return 'generate-llms-txt'
+  }
+  if (command === 'okf' && subcommand === 'export') return 'okf-build'
+  if (command === 'okf' && subcommand === 'validate') return 'okf-validate'
+  if (command === 'monitoring' && subcommand === 'run') {
+    return 'technical-watch'
+  }
+  if (command === 'perf' && subcommand === 'audit') return 'performance-audit'
+  if (command === 'pseo' && subcommand === 'audit') return 'pseo-audit'
+  if (command === 'tests' && subcommand === 'report') return 'measure-change'
+  return (
+    reportAliases[command] ??
+    (directReportIds.has(command) ? command : undefined)
+  )
+}
+
 const argv = process.argv.slice(2)
+const telemetryOptions = { agent: detectTelemetryAgent() }
+const isTelemetryControl = argv[0] === 'telemetry'
+const isMcpServer = argv[0] === 'mcp' && argv[1] === 'serve'
+if (!isTelemetryControl && !isMcpServer) {
+  initializeTelemetry(telemetryOptions)
+}
 const updateExitCode = await maybeOfferSelfUpdate(pkg, { argv })
 if (updateExitCode !== undefined) {
   process.exit(updateExitCode)
@@ -339,13 +433,34 @@ if (commandArgs !== argv) {
 const helpRequested = commandArgs.some((arg) => ['--help', '-h'].includes(arg))
 const versionRequested =
   argv.length === 1 && ['--version', '-v'].includes(argv[0] ?? '')
+const trackedReport =
+  helpRequested || versionRequested ? undefined : telemetryReportId(commandArgs)
 
 if (helpRequested || versionRequested) {
   await runMain(main)
 } else {
+  if (trackedReport) {
+    trackTelemetryReportStart(trackedReport, telemetryOptions)
+  }
   try {
     await runCommand(main, { rawArgs: commandArgs })
+    if (trackedReport) {
+      trackTelemetryReportComplete(trackedReport, telemetryOptions)
+    }
+    if (
+      ['init', 'setup', 'start'].includes(commandArgs[0] ?? '') &&
+      !commandArgs.includes('--dry-run')
+    ) {
+      trackTelemetrySetupComplete(telemetryOptions)
+    }
   } catch (error) {
+    if (trackedReport) {
+      trackTelemetryReportFailed(
+        trackedReport,
+        telemetryErrorCategory(error),
+        telemetryOptions,
+      )
+    }
     const normalized = toSeoError(error)
     if (argv.includes('--json')) {
       process.stdout.write(

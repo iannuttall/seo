@@ -77,7 +77,7 @@ technical report before connecting Google.
 Running `seo help` shows the shape of the tool:
 
 ```txt
-seo v0.2.5
+seo v0.2.6
 
 Run SEO audits, find what needs fixing, and ship the changes with your agent.
 
@@ -386,8 +386,14 @@ paths, including OAuth testing-mode limits.
 
 Yes. Reports, project profiles, Google tokens, crawls, and caches stay in your
 local config directory. The CLI only makes the network requests needed to fetch
-your site and call the Google APIs you connect. There is no hosted backend,
-account, or telemetry service.
+your site and call the Google APIs you connect.
+
+SEO data never leaves your machine. The CLI sends anonymous usage events such
+as the event name, report id, tool version, agent, OS, architecture, Node major,
+and install week. It never sends URLs, identifiers, report data, or Google data.
+Disable telemetry with `DO_NOT_TRACK=1` or `seo telemetry disable`. Read the
+[full telemetry details](https://seoskill.dev/telemetry) and the
+[public aggregate stats](https://seoskill.dev/stats).
 
 ### Do I need a Google API key?
 
@@ -423,6 +429,8 @@ vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 - [MCP and agents](https://seoskill.dev/docs/agents)
 - [AI-search evidence](https://seoskill.dev/docs/ai-search)
 - [Privacy policy](https://seoskill.dev/privacy)
+- [Anonymous telemetry](https://seoskill.dev/telemetry)
+- [Public usage stats](https://seoskill.dev/stats)
 - [Terms of use](https://seoskill.dev/terms)
 - [Security policy](https://seoskill.dev/security)
 - [Contributing](CONTRIBUTING.md)

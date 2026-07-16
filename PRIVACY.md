@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 14 July 2026
+Last updated: 16 July 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -53,9 +53,46 @@ work you request. These can include Google APIs, public pages and sitemaps you
 choose to crawl, and the npm registry for package update checks. Those services
 receive ordinary request data under their own privacy policies.
 
-The CLI does not include project-controlled usage telemetry. Installing the
-package through npm or using GitHub is covered by the policies of those
-services.
+## Anonymous tool usage
+
+Anonymous usage telemetry is enabled by default with a one-time first-run
+notice. It describes use of the tool, not the site or Google data being
+analysed. Events can contain only a fixed event name, public report identifier,
+package version, detected agent category, operating system, architecture, Node
+major version, first-run ISO week, wire schema version, and a fixed error
+category for failed reports.
+
+Telemetry never contains a user ID, machine ID, UUID, fingerprint, audited
+domain, URL, hostname, page content, report content, Search Console or Google
+Analytics response, Google property ID, token, secret, file path, username,
+local hostname, raw error message, IP address, or location. The complete event
+and field catalogue is published at
+[seoskill.dev/telemetry](https://seoskill.dev/telemetry).
+
+Once-only event state stays in a private local file in the existing SEO config
+directory. The telemetry endpoint accepts only the published fixed schema and
+writes those fields to a dedicated Cloudflare D1 table. The server adds only
+the UTC receipt month, such as `2026-07`, so it can publish monthly totals
+without storing an exact request time. The table has no account or identity
+column. It does not use KV, R2, or Analytics Engine. Worker request logging is
+disabled. The ingest code does not read request IP or Cloudflare location
+fields, and neither is written to D1. Cloudflare still handles the ordinary
+network request at its edge.
+
+Disable all telemetry network calls with `seo telemetry disable`,
+`DO_NOT_TRACK=1`, `SEOSKILL_TELEMETRY_DISABLED=1`, or
+`SEO_TELEMETRY_DISABLED=1`. It is automatically disabled in common CI
+environments. Use `seo telemetry status` to inspect the effective setting and
+`seo telemetry enable` to turn the local setting back on. Environment and CI
+overrides always win.
+
+Aggregate event counts are public at
+[seoskill.dev/stats](https://seoskill.dev/stats). They are described as
+installs, active machines, and audits, never users. One person can have several
+installs, and clearing local state creates a new install.
+
+Installing the package through npm or using GitHub is covered by the policies
+of those services.
 
 The seoskill.dev website uses [Clicky](https://clicky.com/terms/privacy) to
 count visits and see which pages people use. Tracking cookies are disabled in

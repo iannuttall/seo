@@ -287,6 +287,12 @@ export function getPrivacySnapshot(): Array<{
       sizeBytes: sizeOf(paths.oauthClientFile),
     },
     {
+      label: 'Telemetry state',
+      path: paths.telemetryStateFile,
+      mode: fileMode(paths.telemetryStateFile),
+      sizeBytes: sizeOf(paths.telemetryStateFile),
+    },
+    {
       label: 'Cache DB',
       path: paths.cacheDbFile,
       mode: fileMode(paths.cacheDbFile),

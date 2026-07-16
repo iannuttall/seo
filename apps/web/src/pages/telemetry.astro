@@ -1,80 +1,18 @@
 ---
+import DottedCard from '@/components/DottedCard.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import CopyCode from '@/components/docs/CopyCode.astro'
 import { reportIds } from '@/content/reports/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
-const reportValues = reportIds.join(' | ')
----
-
-<BaseLayout
-  title="Anonymous telemetry"
-  description="Every anonymous usage event SEO sends, everything it never collects, and every way to disable telemetry."
-  dateModified="2026-07-16"
->
-  <main data-agent-content>
-    <article class="docs-prose">
-      <h1>Anonymous telemetry</h1>
-      <p>
-        SEO sends small anonymous usage events so the project can count installs,
-        completed setup and audits, retention, agent usage, and report popularity.
-        Your SEO data stays on your machine. Telemetry never contains an
-        identifier that could link events to a person or machine.
-      </p>
-      <p>
-        See the same aggregate data as the maintainer on the <a href="/stats">public usage stats page</a>.
-      </p>
-
-      <h2>First run notice</h2>
-      <p>This notice is shown before the first event is sent:</p>
-      <pre><code>SEO Skill collects anonymous usage data to improve the tool (event name,
+const firstRunNotice = `SEO Skill collects anonymous usage data to improve the tool (event name,
 report id, version, agent, OS, architecture, Node major, and install week;
 never URLs, report data, or identifiers of any kind).
 Docs: https://seoskill.dev/telemetry
-Disable: seo telemetry disable (or set DO_NOT_TRACK=1)</code></pre>
+Disable: seo telemetry disable (or set DO_NOT_TRACK=1)`
 
-      <h2>Every event</h2>
-      <table>
-        <thead>
-          <tr><th>Event name</th><th>When it is sent</th><th>Frequency</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>first_run</code></td><td>The first invocation that creates local telemetry state.</td><td>Once per local install.</td></tr>
-          <tr><td><code>setup_complete</code></td><td>A non-dry-run guided setup finishes successfully.</td><td>Once per local install.</td></tr>
-          <tr><td><code>audit_start</code></td><td>A recognised report starts through the CLI or MCP server.</td><td>Every report run.</td></tr>
-          <tr><td><code>audit_complete</code></td><td>A recognised report finishes successfully.</td><td>Every successful report run.</td></tr>
-          <tr><td><code>audit_failed</code></td><td>A recognised report fails. It includes only a fixed <code>errorCategory</code>.</td><td>Every failed report run.</td></tr>
-          <tr><td><code>first_audit_complete</code></td><td>The first recognised report finishes successfully.</td><td>Once per local install.</td></tr>
-          <tr><td><code>active_d1</code></td><td>An invocation happens at least one day after the first run.</td><td>Once per local install.</td></tr>
-          <tr><td><code>active_d7</code></td><td>An invocation happens at least seven days after the first run.</td><td>Once per local install.</td></tr>
-          <tr><td><code>active_d30</code></td><td>An invocation happens at least 30 days after the first run.</td><td>Once per local install.</td></tr>
-        </tbody>
-      </table>
-
-      <h2>Every field sent</h2>
-      <table>
-        <thead>
-          <tr><th>Field</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>event</code></td><td>One event name from the table above.</td></tr>
-          <tr><td><code>version</code></td><td>The installed <code>seo</code> package version, such as <code>0.2.5</code>.</td></tr>
-          <tr><td><code>agent</code></td><td><code>claude-code</code> | <code>cursor</code> | <code>codex</code> | <code>cli</code> | <code>unknown</code>. MCP uses the client name from its standard initialize handshake, then discards the original name.</td></tr>
-          <tr><td><code>os</code></td><td><code>aix</code> | <code>android</code> | <code>darwin</code> | <code>freebsd</code> | <code>haiku</code> | <code>linux</code> | <code>openbsd</code> | <code>sunos</code> | <code>win32</code>.</td></tr>
-          <tr><td><code>arch</code></td><td><code>arm</code> | <code>arm64</code> | <code>ia32</code> | <code>loong64</code> | <code>mips</code> | <code>mipsel</code> | <code>ppc</code> | <code>ppc64</code> | <code>riscv64</code> | <code>s390</code> | <code>s390x</code> | <code>x64</code>.</td></tr>
-          <tr><td><code>node</code></td><td>The Node.js major version as a string, such as <code>22</code>.</td></tr>
-          <tr><td><code>cohort</code></td><td>The ISO week of the first run, such as <code>2026-W29</code>. The exact first-run time never leaves local state.</td></tr>
-          <tr><td><code>schema</code></td><td>The integer wire schema version. The current value is <code>1</code>.</td></tr>
-          <tr><td><code>errorCategory</code></td><td>Sent only with <code>audit_failed</code>. One of <code>auth</code> | <code>crawl_timeout</code> | <code>network</code> | <code>config</code> | <code>unknown</code>. Raw errors are never sent.</td></tr>
-          <tr><td><code>report</code></td><td>Sent only with report lifecycle events. It is one fixed public report identifier from the list below, never a URL or user-supplied string.</td></tr>
-        </tbody>
-      </table>
-
-      <details>
-        <summary>Allowed <code>report</code> values</summary>
-        <p><code>{reportValues}</code></p>
-      </details>
-
-      <p>A report completion event looks like this:</p>
-      <pre><code>{`{
+const exampleEvent = `{
   "event": "audit_complete",
   "version": "0.2.5",
   "agent": "codex",
@@ -84,87 +22,259 @@ Disable: seo telemetry disable (or set DO_NOT_TRACK=1)</code></pre>
   "cohort": "2026-W29",
   "schema": 1,
   "report": "site-crawl"
-}`}</code></pre>
+}`
 
-      <h2>Never collected or transmitted</h2>
-      <ul>
-        <li>User IDs, machine IDs, UUIDs, advertising IDs, or fingerprints of any kind.</li>
-        <li>Audited domains, URLs, hostnames, page content, search queries, or crawl results.</li>
-        <li>Report findings, recommendations, scores, exports, or other report content.</li>
-        <li>Google Search Console or Google Analytics responses, property IDs, account data, or metrics.</li>
-        <li>API keys, OAuth tokens, secrets, file paths, usernames, local hostnames, or raw error messages.</li>
-        <li>IP addresses in D1, Worker logs, application storage, or the public stats response.</li>
-        <li>Country, region, city, coordinates, or any other location data.</li>
-      </ul>
-
-      <h2>How to disable it</h2>
-      <p>The local command is the simplest permanent setting:</p>
-      <pre><code>seo telemetry disable
+const telemetryCommands = `seo telemetry disable
 seo telemetry status
-seo telemetry enable</code></pre>
-      <p>Any of these environment settings disables every telemetry network call:</p>
-      <pre><code>DO_NOT_TRACK=1
-SEOSKILL_TELEMETRY_DISABLED=1
-SEO_TELEMETRY_DISABLED=1</code></pre>
-      <p>
-        Telemetry is also disabled when <code>CI=true</code> or a common CI
-        environment variable is present, including GitHub Actions, GitLab CI,
-        CircleCI, Travis CI, Buildkite, Jenkins, TeamCity, Azure Pipelines,
-        Bitbucket Pipelines, and AWS CodeBuild. An environment override wins
-        over <code>seo telemetry enable</code>.
-      </p>
+seo telemetry enable`
 
-      <h2>Local state</h2>
-      <p>
-        The memory needed for once-only events stays in
-        <code>telemetry.json</code> inside the existing SEO config directory.
-        Run <code>seo telemetry status --json</code> to see the exact path on
-        your platform. The file contains only these fields:
-      </p>
-      <pre><code>{`{
+const telemetryEnvironment = `DO_NOT_TRACK=1
+SEOSKILL_TELEMETRY_DISABLED=1
+SEO_TELEMETRY_DISABLED=1`
+
+const localState = `{
   "telemetryEnabled": true,
   "firstRunAt": "2026-07-16T09:12:00.000Z",
   "cohort": "2026-W29",
   "sentMilestones": ["first_run", "first_audit_complete", "active_d1"]
-}`}</code></pre>
-      <p>
-        <code>firstRunAt</code> is used only on your machine to decide when a
-        retention milestone is due. Only its week-level <code>cohort</code> is
-        sent. Clearing all local SEO state means a later run is counted as a
-        new install because the server has no identity to recognise it.
-      </p>
+}`
+---
 
-      <h2>Transport and storage</h2>
-      <p>
-        Each event is one JSON <code>POST</code> to <code>https://seoskill.dev/api/t</code>.
-        The sender has a two-second timeout, does not batch or retry, silently
-        drops failures, and never changes command output or exit status.
-      </p>
-      <p>
-        The Cloudflare Worker accepts only the fields and fixed values documented
-        above. Unknown fields or values are rejected. It writes those values to
-        a dedicated D1 table through a Worker binding. The server adds only the
-        UTC receipt month, such as <code>2026-07</code>, for monthly totals. It
-        does not store the exact request time. There is no account or identity
-        column, and no telemetry KV, R2, or Analytics Engine dataset. Worker
-        invocation logs are disabled, and the code never reads
-        <code>request.cf</code>, IP headers, or location fields. Cloudflare
-        handles the ordinary network request at the edge, but no IP address or
-        geography is written to D1.
-      </p>
-      <p>
-        D1 keeps the accepted anonymous events until they are deliberately
-        deleted. Public totals cover all events recorded since collection
-        began. Only aggregate counts are returned by the public stats endpoint.
-      </p>
+<BaseLayout
+  title="Anonymous telemetry"
+  description="Every anonymous usage event SEO sends, everything it never collects, and every way to disable telemetry."
+  dateModified="2026-07-16"
+>
+  <main data-agent-content>
+    <PageHeader
+      title="Anonymous telemetry"
+      description="SEO sends small anonymous usage events so the project can count installs, completed setup and audits, retention, agent usage, and report popularity."
+      align="left"
+    />
 
-      <h2>Read the source</h2>
-      <ul>
-        <li><a href="https://github.com/iannuttall/seo/blob/main/packages/core/src/telemetry.ts">Client state, checks, agent detection, and sender</a></li>
-        <li><a href="https://github.com/iannuttall/seo/blob/main/apps/web/worker/index.ts">Strict ingest validation, D1 write, and aggregate query</a></li>
-        <li><a href="https://github.com/iannuttall/seo/blob/main/apps/web/migrations/0001_create_telemetry_events.sql">Exact D1 columns and database constraints</a></li>
-        <li><a href="/stats">Public aggregate usage stats</a></li>
-      </ul>
-    </article>
+    <div class="docs-prose mb-14">
+      <p>
+        Your SEO data stays on your machine. Telemetry never contains an
+        identifier that could link events to a person or machine.
+      </p>
+      <p>
+        See the same aggregate data as the maintainer on the <a href="/stats">public usage stats page</a>.
+      </p>
+    </div>
+
+    <section aria-labelledby="first-run-notice" class="mb-14 space-y-5">
+      <div class="space-y-2">
+        <h2 id="first-run-notice" class="font-mono text-xl font-normal leading-tight">
+          First run notice
+        </h2>
+        <p class="font-sans text-[0.9375rem] font-light leading-7">
+          This notice is shown before the first event is sent.
+        </p>
+      </div>
+      <div class="docs-prose">
+        <CopyCode label="The notice shown before anonymous telemetry starts." value={firstRunNotice} wrap />
+      </div>
+    </section>
+
+    <section aria-labelledby="every-event" class="mb-14 space-y-5">
+      <h2 id="every-event" class="font-mono text-xl font-normal leading-tight">
+        Every event
+      </h2>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table>
+            <thead>
+              <tr><th>Event name</th><th>When it is sent</th><th>Frequency</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>first_run</code></td><td>The first invocation that creates local telemetry state.</td><td>Once per local install.</td></tr>
+              <tr><td><code>setup_complete</code></td><td>A non-dry-run guided setup finishes successfully.</td><td>Once per local install.</td></tr>
+              <tr><td><code>audit_start</code></td><td>A recognised report starts through the CLI or MCP server.</td><td>Every report run.</td></tr>
+              <tr><td><code>audit_complete</code></td><td>A recognised report finishes successfully.</td><td>Every successful report run.</td></tr>
+              <tr><td><code>audit_failed</code></td><td>A recognised report fails. It includes only a fixed <code>errorCategory</code>.</td><td>Every failed report run.</td></tr>
+              <tr><td><code>first_audit_complete</code></td><td>The first recognised report finishes successfully.</td><td>Once per local install.</td></tr>
+              <tr><td><code>active_d1</code></td><td>An invocation happens at least one day after the first run.</td><td>Once per local install.</td></tr>
+              <tr><td><code>active_d7</code></td><td>An invocation happens at least seven days after the first run.</td><td>Once per local install.</td></tr>
+              <tr><td><code>active_d30</code></td><td>An invocation happens at least 30 days after the first run.</td><td>Once per local install.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="every-field" class="mb-14 space-y-5">
+      <h2 id="every-field" class="font-mono text-xl font-normal leading-tight">
+        Every field sent
+      </h2>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table>
+            <thead>
+              <tr><th>Field</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>event</code></td><td>One event name from the table above.</td></tr>
+              <tr><td><code>version</code></td><td>The installed <code>seo</code> package version, such as <code>0.2.5</code>.</td></tr>
+              <tr><td><code>agent</code></td><td><code>claude-code</code> | <code>cursor</code> | <code>codex</code> | <code>cli</code> | <code>unknown</code>. MCP uses the client name from its standard initialize handshake, then discards the original name.</td></tr>
+              <tr><td><code>os</code></td><td><code>aix</code> | <code>android</code> | <code>darwin</code> | <code>freebsd</code> | <code>haiku</code> | <code>linux</code> | <code>openbsd</code> | <code>sunos</code> | <code>win32</code>.</td></tr>
+              <tr><td><code>arch</code></td><td><code>arm</code> | <code>arm64</code> | <code>ia32</code> | <code>loong64</code> | <code>mips</code> | <code>mipsel</code> | <code>ppc</code> | <code>ppc64</code> | <code>riscv64</code> | <code>s390</code> | <code>s390x</code> | <code>x64</code>.</td></tr>
+              <tr><td><code>node</code></td><td>The Node.js major version as a string, such as <code>22</code>.</td></tr>
+              <tr><td><code>cohort</code></td><td>The ISO week of the first run, such as <code>2026-W29</code>. The exact first-run time never leaves local state.</td></tr>
+              <tr><td><code>schema</code></td><td>The integer wire schema version. The current value is <code>1</code>.</td></tr>
+              <tr><td><code>errorCategory</code></td><td>Sent only with <code>audit_failed</code>. One of <code>auth</code> | <code>crawl_timeout</code> | <code>network</code> | <code>config</code> | <code>unknown</code>. Raw errors are never sent.</td></tr>
+              <tr><td><code>report</code></td><td>Sent only with report lifecycle events. It is one fixed public report identifier from the list below, never a URL or user-supplied string.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <DottedCard patternId="telemetry-report-values">
+        <FaqAccordion items={[{ question: 'Allowed report values', values: reportIds }]} />
+      </DottedCard>
+
+      <div class="docs-prose">
+        <CopyCode label="A successful report completion event." value={exampleEvent} wrap />
+      </div>
+    </section>
+
+    <section aria-labelledby="never-collected" class="mb-14">
+      <DottedCard patternId="telemetry-never-collected" inverted>
+        <div class="space-y-5 p-5 sm:p-6">
+          <h2 id="never-collected" class="font-mono text-xl font-normal leading-tight">
+            Never collected or transmitted
+          </h2>
+          <ul class="list-disc space-y-2 pl-5 font-sans text-sm font-light leading-6">
+            <li>User IDs, machine IDs, UUIDs, advertising IDs, or fingerprints of any kind.</li>
+            <li>Audited domains, URLs, hostnames, page content, search queries, or crawl results.</li>
+            <li>Report findings, recommendations, scores, exports, or other report content.</li>
+            <li>Google Search Console or Google Analytics responses, property IDs, account data, or metrics.</li>
+            <li>API keys, OAuth tokens, secrets, file paths, usernames, local hostnames, or raw error messages.</li>
+            <li>IP addresses in D1, Worker logs, application storage, or the public stats response.</li>
+            <li>Country, region, city, coordinates, or any other location data.</li>
+          </ul>
+        </div>
+      </DottedCard>
+    </section>
+
+    <section aria-labelledby="disable-telemetry" class="mb-14 space-y-5">
+      <div class="space-y-2">
+        <h2 id="disable-telemetry" class="font-mono text-xl font-normal leading-tight">
+          How to disable it
+        </h2>
+        <p class="font-sans text-[0.9375rem] font-light leading-7">
+          The local command is the simplest permanent setting. Environment settings can disable every telemetry network call without changing the saved preference.
+        </p>
+      </div>
+      <div class="docs-prose space-y-7">
+        <CopyCode label="Change or check the saved telemetry setting." value={telemetryCommands} wrap />
+        <CopyCode label="Disable telemetry for the current environment." value={telemetryEnvironment} wrap />
+      </div>
+      <div class="docs-prose text-foreground-muted">
+        <p class="!mb-0 text-sm leading-6">
+          Telemetry is also disabled when{' '}<code>CI=true</code>{' '}or a
+          common CI environment variable is present, including GitHub Actions,
+          GitLab CI, CircleCI, Travis CI, Buildkite, Jenkins, TeamCity, Azure
+          Pipelines, Bitbucket Pipelines, and AWS CodeBuild. An environment
+          override wins over{' '}<code>seo telemetry enable</code>.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="local-state" class="mb-14 space-y-5">
+      <div class="space-y-2">
+        <h2 id="local-state" class="font-mono text-xl font-normal leading-tight">
+          Local state
+        </h2>
+        <div class="docs-prose">
+          <p class="!mb-0">
+            The memory needed for once-only events stays in{' '}<code>telemetry.json</code>{' '}
+            inside the existing SEO config directory. Run{' '}<code>seo telemetry status --json</code>{' '}
+            to see the exact path on your platform. The file contains only these
+            fields.
+          </p>
+        </div>
+      </div>
+      <div class="docs-prose">
+        <CopyCode label="The complete local telemetry state file." value={localState} wrap />
+      </div>
+      <div class="docs-prose text-foreground-muted">
+        <p class="!mb-0 text-sm leading-6">
+          <code>firstRunAt</code>{' '}is used only on your machine to decide when
+          a retention milestone is due. Only its week-level{' '}<code>cohort</code>{' '}
+          is sent. Clearing all local SEO state means a later run is counted as
+          a new install because the server has no identity to recognise it.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="transport-storage" class="mb-14 space-y-5">
+      <h2 id="transport-storage" class="font-mono text-xl font-normal leading-tight">
+        Transport and storage
+      </h2>
+      <div class="docs-prose">
+        <p>
+          Each event is one JSON <code>POST</code> to <code>https://seoskill.dev/api/t</code>.
+          The sender has a two-second timeout, does not batch or retry, silently
+          drops failures, and never changes command output or exit status.
+        </p>
+        <p>
+          The Cloudflare Worker accepts only the fields and fixed values documented
+          above. Unknown fields or values are rejected. It writes those values to
+          a dedicated D1 table through a Worker binding. The server adds only the
+          UTC receipt month, such as <code>2026-07</code>, for monthly totals. It
+          does not store the exact request time. There is no account or identity
+          column, and no telemetry KV, R2, or Analytics Engine dataset. Worker
+          invocation logs are disabled, and the code never reads
+          <code>request.cf</code>, IP headers, or location fields. Cloudflare
+          handles the ordinary network request at the edge, but no IP address or
+          geography is written to D1.
+        </p>
+        <p>
+          D1 keeps the accepted anonymous events until they are deliberately
+          deleted. Public totals cover all events recorded since collection
+          began. Only aggregate counts are returned by the public stats endpoint.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="read-source" class="space-y-5">
+      <h2 id="read-source" class="font-mono text-xl font-normal leading-tight">
+        Read the source
+      </h2>
+      <DottedCard patternId="telemetry-source-links">
+        <ul class="divide-y divide-border font-sans text-sm leading-6">
+          <li class="px-5 py-4">
+            <a
+              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              href="https://github.com/iannuttall/seo/blob/main/packages/core/src/telemetry.ts"
+              target="_blank"
+              rel="noreferrer"
+            >Client state, checks, agent detection, and sender</a>
+          </li>
+          <li class="px-5 py-4">
+            <a
+              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              href="https://github.com/iannuttall/seo/blob/main/apps/web/worker/index.ts"
+              target="_blank"
+              rel="noreferrer"
+            >Strict ingest validation, D1 write, and aggregate query</a>
+          </li>
+          <li class="px-5 py-4">
+            <a
+              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              href="https://github.com/iannuttall/seo/blob/main/apps/web/migrations/0001_create_telemetry_events.sql"
+              target="_blank"
+              rel="noreferrer"
+            >Exact D1 columns and database constraints</a>
+          </li>
+          <li class="px-5 py-4">
+            <a
+              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              href="/stats"
+            >Public aggregate usage stats</a>
+          </li>
+        </ul>
+      </DottedCard>
+    </section>
   </main>
 </BaseLayout>

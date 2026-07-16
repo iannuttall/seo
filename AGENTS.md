@@ -89,6 +89,9 @@ skills/         packaged agent skills
   root. Never depend on them for product behavior or durable context.
 - `dist`: generated public package bundles. Do not hand-edit or commit them.
 
+Changes anywhere under `apps/web` must also follow `apps/web/AGENTS.md`. Read
+that file before inspecting, editing, or generating site code or copy.
+
 Useful web areas:
 
 - `apps/web/src/layouts/BaseLayout.astro`: canonical SEO, metadata, header, and

@@ -852,6 +852,37 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(css, /prefers-color-scheme: dark/)
 })
 
+test('telemetry prose and stats keep a stable readable first render', () => {
+  const telemetry = readFileSync(resolve(dist, 'telemetry/index.html'), 'utf8')
+  const stats = readFileSync(resolve(dist, 'stats/index.html'), 'utf8')
+
+  assert.match(
+    telemetry,
+    /in <code>telemetry\.json<\/code> inside the existing SEO config/u,
+  )
+  assert.match(
+    telemetry,
+    /<code>seo telemetry status --json<\/code> to see the exact path/u,
+  )
+  assert.match(
+    telemetry,
+    /<code>firstRunAt<\/code> is used only on your machine/u,
+  )
+
+  assert.match(stats, /data-stats-root aria-busy="true"/u)
+  assert.equal(
+    matches(stats, /data-stat="[^"]+" data-stats-loading>0%?</gu).length,
+    6,
+  )
+  assert.match(
+    stats,
+    /data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events/u,
+  )
+  assert.match(stats, /class="animate-pulse[^>]+data-stats-loading/u)
+  assert.doesNotMatch(stats, />Loading<\//u)
+  assert.doesNotMatch(stats, /Not available/u)
+})
+
 test('published guidance does not teach disposable npx CLI installs', () => {
   const guides = [
     resolve(repoRoot, 'README.md'),

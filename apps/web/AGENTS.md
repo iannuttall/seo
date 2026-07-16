@@ -1,6 +1,8 @@
 # Site agent notes
 
-This package is the static Astro site for `https://seoskill.dev`.
+This package is the Astro site for `https://seoskill.dev`. Pages stay static.
+A small Cloudflare Worker handles the anonymous telemetry API and serves the
+built assets.
 
 Before writing, editing, or generating any site copy, read the root
 `CONTENT.md` file in the same task. This includes metadata and shared template
@@ -20,11 +22,11 @@ pnpm deploy:web:dry-run
 
 ## Site rules
 
-- Keep page content static. Deploy the site as Workers Static Assets with no
-  application Worker or runtime Astro middleware. The Astro integration writes
-  Markdown alternates during the build. Cloudflare zone Transform Rules handle
-  `Accept: text/markdown` requests without invoking compute. Do not add an
-  account system, database, remote MCP server, telemetry, or cookies without an
+- Keep page content static. The application Worker is limited to `/api/t`,
+  `/api/stats`, and the static assets binding. The Astro integration writes
+  Markdown alternatives during the build. Cloudflare zone Transform Rules
+  handle `Accept: text/markdown` requests. Do not add an account system,
+  remote MCP server, cookies, or another hosted product surface without an
   explicit product decision.
 - Keep canonical metadata, structured data, navigation, and footer markup in
   `src/layouts/BaseLayout.astro`. Marketing, docs, reports, policy pages, and
@@ -33,9 +35,19 @@ pnpm deploy:web:dry-run
   Navigation lives in `src/content/docs-nav.ts`; shared MDX components live in
   `src/components/docs/`.
 - Brand tokens and all shared typography live in `src/styles/globals.css`.
-  Match the restrained Audits site system: Inter for prose, JetBrains Mono for
-  code, neutral surfaces, a cyan accent, automatic light/dark mode, a 48rem
-  reading frame, and consistent rounded controls and cards.
+  Match the current site system: Martian Grotesk for prose, Martian Mono for
+  code and headings, an orange accent, automatic light/dark mode, the shared
+  `max-w-4xl` reading frame, hard borders, and dotted offset shadows.
+- Reuse the site components before writing page-specific markup. Page headers
+  use `PageHeader.astro`, framed surfaces use `DottedCard.astro`, navigation
+  cards use `NavCard.astro`, accordions use `FaqAccordion.astro`, and copyable
+  examples use `docs/CopyCode.astro` or `InlineCode.astro`. Extend a shared
+  component when the same visual pattern needs richer content. Do not recreate
+  these patterns with one-page border, spacing, or interaction code.
+- Documentation tables use the shared `docs-prose` table styling inside a
+  `table-frame`. Documentation and report sections use the established heading
+  scale and vertical rhythm from `ReportGuide.astro`. Do not invent separate
+  table, heading, metric-card, or code-block treatments for a new page.
 - Keep canonical URLs slashless through `src/lib/urls.ts`, Astro config, and
   Wrangler asset handling.
 - Generate exact sitemap XML into `public/` with
@@ -58,6 +70,9 @@ pnpm deploy:web:dry-run
 - The home page example panels (`src/components/FeatureShowcase.astro` and
   `src/components/FeatureDemo.astro`) must only show real commands from the
   shipped CLI catalog and stay labelled as example data.
+- After a visual change, inspect the rendered desktop and mobile pages. Passing
+  an Astro build is not a substitute for checking layout, wrapping, spacing,
+  component reuse, and dark mode.
 - Do not commit `.astro/`, `.wrangler/`, `dist/`, or `node_modules/`.
 - Use `pnpm`, not npm, for repository development.
 

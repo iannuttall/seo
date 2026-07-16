@@ -205,6 +205,7 @@ and candidates, then assert each sentence uses the matching noun and verb.
 - Observed: 2026-07-16
 - Affected version: 0.2.7
 - Fixed in: 0.2.8
+- Fix commit: `dea3714`
 
 ### What failed
 
@@ -244,6 +245,7 @@ of five negotiated pages with zero representation failures.
 - Observed: 2026-07-16
 - Affected version: 0.2.7
 - Fixed in: 0.2.8
+- Fix commit: `dea3714`
 
 ### What failed
 

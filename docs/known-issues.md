@@ -43,7 +43,7 @@ Version 0.2.7 replaces `better-sqlite3` with the script-free `libsql` package
 shape and keeps the existing synchronous database contract behind a local
 adapter.
 
-- Fix commit: Pending
+- Fix commit: `8ac0a36`
 
 ### Verification
 
@@ -72,7 +72,7 @@ An agent can report that setup is ready even though the main report cannot run.
 that setup is ready. A failed check tells the user to upgrade or reinstall the
 CLI and links to the issue tracker if it persists.
 
-- Fix commit: Pending
+- Fix commit: `8ac0a36`
 
 ### Verification
 
@@ -103,7 +103,7 @@ The isolated install tests now run `seo cache stats` after npm global, pnpm
 global, and npm consumer installs. The pnpm case disables lifecycle scripts to
 prove the published package does not depend on them.
 
-- Fix commit: Pending
+- Fix commit: `8ac0a36`
 
 ### Verification
 
@@ -134,7 +134,7 @@ The `libsql` compatibility layer includes query timing metadata in each row.
 The local SQLite adapter removes that property at the storage boundary so the
 rest of the CLI retains its existing database contract.
 
-- Fix commit: Pending
+- Fix commit: `8ac0a36`
 
 ### Verification
 

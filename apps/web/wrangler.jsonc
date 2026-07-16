@@ -1,8 +1,10 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "seo-skill",
+  "main": "./worker/index.ts",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",
-  "compatibility_date": "2026-07-10",
+  "compatibility_date": "2026-07-15",
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
@@ -11,7 +13,24 @@
   ],
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page"
+  },
+  "d1_databases": [
+    {
+      "binding": "TELEMETRY_DB",
+      "database_name": "seo-telemetry",
+      "database_id": "4b8c5f37-983d-4229-a712-77dbcd853efe",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "observability": {
+    "enabled": false,
+    "logs": {
+      "enabled": false,
+      "invocation_logs": false
+    }
   }
 }

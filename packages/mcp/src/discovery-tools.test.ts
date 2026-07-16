@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { TELEMETRY_REPORTS } from '@seo/core'
 import { createServer, startMcpServer } from './index.js'
 import { REPORT_DEPTH } from './report-depth.js'
 import { REPORT_GUIDANCE } from './report-guidance.js'
@@ -121,6 +122,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
   }
   assert.equal(new Set(ids).size, ids.length)
   assert.deepEqual(Object.keys(REPORT_GUIDANCE).sort(), ids)
+  assert.deepEqual([...TELEMETRY_REPORTS].sort(), ids)
   for (const report of reports) {
     assert.ok(report.name.length > 0, report.id)
     assert.ok(report.description.length > 0, report.id)

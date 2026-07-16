@@ -1,0 +1,290 @@
+<section class="space-y-10" aria-labelledby="stats-heading">
+  <div class="space-y-3">
+    <h1 id="stats-heading" class="text-pretty text-4xl font-normal leading-tight tracking-tight sm:text-5xl">
+      Anonymous usage stats
+    </h1>
+    <p class="max-w-3xl font-sans text-lg leading-7 text-foreground-muted">
+      Aggregate event counts from installs that leave anonymous telemetry enabled.
+      No user, machine, site, URL, report content, Google data, or location is
+      attached to any event.
+    </p>
+    <p class="font-sans text-sm text-foreground-muted" data-stats-status aria-live="polite">
+      Loading the latest aggregate counts.
+    </p>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Usage totals">
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">Recorded installs</p>
+      <p class="mt-2 text-3xl" data-stat="installs">Loading</p>
+    </article>
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">Recorded audits</p>
+      <p class="mt-2 text-3xl" data-stat="auditsStarted">Loading</p>
+    </article>
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">Audits run this month</p>
+      <p class="mt-2 text-3xl" data-stat="auditsThisMonth">Loading</p>
+    </article>
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">Setup completions</p>
+      <p class="mt-2 text-3xl" data-stat="setupCompletions">Loading</p>
+    </article>
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">First audit event ratio</p>
+      <p class="mt-2 text-3xl" data-stat="firstAuditConversionPercent">Loading</p>
+    </article>
+    <article class="border-2 border-nav p-5">
+      <p class="font-sans text-sm text-foreground-muted">Failed audits</p>
+      <p class="mt-2 text-3xl" data-stat="auditsFailed">Loading</p>
+    </article>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-2">
+    <section class="space-y-4" aria-labelledby="agent-installs-heading">
+      <h2 id="agent-installs-heading" class="text-2xl">Install agent breakdown</h2>
+      <div class="overflow-x-auto border-2 border-nav">
+        <table class="w-full border-collapse font-sans text-sm">
+          <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Agent</th><th class="p-3 text-right">Installs</th><th class="p-3 text-right">Share</th></tr></thead>
+          <tbody data-agent-table="installs"><tr><td class="p-3" colspan="3">Loading</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="space-y-4" aria-labelledby="agent-audits-heading">
+      <h2 id="agent-audits-heading" class="text-2xl">Audit agent breakdown</h2>
+      <div class="overflow-x-auto border-2 border-nav">
+        <table class="w-full border-collapse font-sans text-sm">
+          <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Agent</th><th class="p-3 text-right">Audits</th><th class="p-3 text-right">Share</th></tr></thead>
+          <tbody data-agent-table="audits"><tr><td class="p-3" colspan="3">Loading</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="space-y-4" aria-labelledby="retention-heading">
+    <div class="space-y-2">
+      <h2 id="retention-heading" class="text-2xl">Day 7 retention by install week</h2>
+      <p class="font-sans text-sm leading-6 text-foreground-muted">
+        A retained install ran the tool at least seven days after its first run.
+        Only complete weekly cohorts are shown.
+      </p>
+    </div>
+    <div class="overflow-x-auto border-2 border-nav">
+      <table class="w-full border-collapse font-sans text-sm">
+        <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Cohort</th><th class="p-3 text-right">Installs</th><th class="p-3 text-right">Active at day 7</th><th class="p-3 text-right">Retention</th></tr></thead>
+        <tbody data-retention-table><tr><td class="p-3" colspan="4">Loading</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid gap-8 lg:grid-cols-2">
+    <section class="space-y-4" aria-labelledby="popular-reports-heading">
+      <h2 id="popular-reports-heading" class="text-2xl">Most run reports</h2>
+      <ol class="border-2 border-nav font-sans text-sm" data-report-list="popular"><li class="p-3">Loading</li></ol>
+    </section>
+    <section class="space-y-4" aria-labelledby="quiet-reports-heading">
+      <h2 id="quiet-reports-heading" class="text-2xl">Least run reports</h2>
+      <ol class="border-2 border-nav font-sans text-sm" data-report-list="quiet"><li class="p-3">Loading</li></ol>
+    </section>
+  </div>
+
+  <div class="docs-prose">
+    <h2>How to read these numbers</h2>
+    <p>
+      These are event totals, not people. One person can use several machines,
+      clearing local state creates a new install, and disabled or CI runs do not
+      appear. The first audit ratio divides first completed audit events by
+      all recorded first run events. It is not an identity-linked funnel.
+    </p>
+    <p>
+      The totals cover events recorded since anonymous collection began. Read
+      the <a href="/telemetry">full telemetry specification</a> or inspect the
+      <a href="/api/stats">aggregate JSON</a>.
+    </p>
+  </div>
+</section>
+
+<script>
+  const numberFormat = new Intl.NumberFormat('en-GB', {
+    maximumFractionDigits: 0,
+  })
+
+  const text = (element: Element | null, value: string) => {
+    if (element) element.textContent = value
+  }
+
+  const count = (value: unknown) =>
+    typeof value === 'number' && Number.isFinite(value)
+      ? numberFormat.format(value)
+      : 'Not available'
+
+  const percent = (value: unknown) =>
+    typeof value === 'number' && Number.isFinite(value)
+      ? `${value.toFixed(1).replace('.0', '')}%`
+      : 'Not available'
+
+  const cell = (value: string, align = 'left') => {
+    const element = document.createElement('td')
+    element.className = `border-b border-nav p-3 ${align === 'right' ? 'text-right' : 'text-left'}`
+    element.textContent = value
+    return element
+  }
+
+  const emptyRow = (columns: number) => {
+    const row = document.createElement('tr')
+    const value = cell('No recorded events')
+    value.colSpan = columns
+    row.append(value)
+    return row
+  }
+
+  const renderAgents = (
+    table: Element | null,
+    rows: Array<{ agent: string; count: number; percent: number }>,
+  ) => {
+    if (!(table instanceof HTMLElement)) return
+    table.replaceChildren()
+    if (rows.length === 0) {
+      table.append(emptyRow(3))
+      return
+    }
+    for (const item of rows) {
+      const row = document.createElement('tr')
+      row.append(
+        cell(item.agent),
+        cell(count(item.count), 'right'),
+        cell(percent(item.percent), 'right'),
+      )
+      table.append(row)
+    }
+  }
+
+  const renderRetention = (
+    table: Element | null,
+    rows: Array<{
+      cohort: string
+      installs: number
+      retained: number
+      percent: number | null
+      complete: boolean
+    }>,
+  ) => {
+    if (!(table instanceof HTMLElement)) return
+    table.replaceChildren()
+    const completeRows = rows.filter((row) => row.complete).slice(0, 12)
+    if (completeRows.length === 0) {
+      table.append(emptyRow(4))
+      return
+    }
+    for (const item of completeRows) {
+      const row = document.createElement('tr')
+      row.append(
+        cell(item.cohort),
+        cell(count(item.installs), 'right'),
+        cell(count(item.retained), 'right'),
+        cell(percent(item.percent), 'right'),
+      )
+      table.append(row)
+    }
+  }
+
+  const reportPath = (report: string) =>
+    `/docs/reports/${report === 'index-coverage-plan' ? 'index-plan' : report}`
+
+  const reportLabel = (report: string) =>
+    report
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+
+  const renderReports = (
+    list: Element | null,
+    rows: Array<{ report: string; count: number }>,
+  ) => {
+    if (!(list instanceof HTMLElement)) return
+    list.replaceChildren()
+    if (rows.length === 0) {
+      const row = document.createElement('li')
+      row.className = 'p-3'
+      row.textContent = 'No recorded events'
+      list.append(row)
+      return
+    }
+    for (const item of rows) {
+      const row = document.createElement('li')
+      row.className = 'flex items-center justify-between gap-4 border-b border-nav p-3 last:border-b-0'
+      const link = document.createElement('a')
+      link.className = 'underline underline-offset-2 hover:decoration-dotted'
+      link.href = reportPath(item.report)
+      link.textContent = reportLabel(item.report)
+      const value = document.createElement('span')
+      value.textContent = count(item.count)
+      row.append(link, value)
+      list.append(row)
+    }
+  }
+
+  const loadStats = async () => {
+    const status = document.querySelector('[data-stats-status]')
+    try {
+      const response = await fetch('/api/stats', {
+        headers: { accept: 'application/json' },
+      })
+      if (!response.ok) throw new Error('Stats request failed')
+      const stats = await response.json()
+      const totals = stats.totals ?? {}
+      for (const key of [
+        'installs',
+        'auditsStarted',
+        'auditsThisMonth',
+        'setupCompletions',
+        'auditsFailed',
+      ]) {
+        text(document.querySelector(`[data-stat="${key}"]`), count(totals[key]))
+      }
+      text(
+        document.querySelector('[data-stat="firstAuditConversionPercent"]'),
+        percent(totals.firstAuditConversionPercent),
+      )
+      renderAgents(
+        document.querySelector('[data-agent-table="installs"]'),
+        stats.agents?.installs ?? [],
+      )
+      renderAgents(
+        document.querySelector('[data-agent-table="audits"]'),
+        stats.agents?.audits ?? [],
+      )
+      renderRetention(
+        document.querySelector('[data-retention-table]'),
+        stats.retentionD7 ?? [],
+      )
+      const reports = Array.isArray(stats.reports) ? stats.reports : []
+      renderReports(
+        document.querySelector('[data-report-list="popular"]'),
+        reports
+          .filter((item: { count: number }) => item.count > 0)
+          .slice(0, 10),
+      )
+      renderReports(
+        document.querySelector('[data-report-list="quiet"]'),
+        [...reports]
+          .sort((a, b) => a.count - b.count || a.report.localeCompare(b.report))
+          .slice(0, 10),
+      )
+      const generated = new Date(stats.generatedAt)
+      text(
+        status,
+        Number.isNaN(generated.getTime())
+          ? 'Aggregate counts loaded.'
+          : `Updated ${generated.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC.`,
+      )
+    } catch {
+      text(status, 'Live aggregate counts are temporarily unavailable.')
+      document.querySelectorAll('[data-stat]').forEach((item) => {
+        item.textContent = 'Not available'
+      })
+    }
+  }
+
+  void loadStats()
+</script>

@@ -1,12 +1,23 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import {
+  type TelemetryOptions,
+  telemetryErrorCategory,
+  trackTelemetryReportComplete,
+  trackTelemetryReportFailed,
+  trackTelemetryReportStart,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { REPORT_CATEGORIES } from './report-registry.js'
 import { describeReport, listReports, runReport } from './reports.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 const openOutputSchema = z.looseObject({})
+const reportIds = new Set(listReports().map((report) => report.id))
 
-export function registerDiscoveryTools(server: McpServer): void {
+export function registerDiscoveryTools(
+  server: McpServer,
+  options: { telemetry?: () => TelemetryOptions } = {},
+): void {
   server.registerTool(
     'seo_list_reports',
     {
@@ -72,7 +83,32 @@ export function registerDiscoveryTools(server: McpServer): void {
       },
     },
     async ({ id, params }) => {
-      return runReport(id, params)
+      const telemetry = reportIds.has(id) ? options.telemetry?.() : undefined
+      if (telemetry) trackTelemetryReportStart(id, telemetry)
+      try {
+        const result = await runReport(id, params)
+        if (telemetry) {
+          if (result.isError) {
+            trackTelemetryReportFailed(
+              id,
+              telemetryErrorCategory(result.structuredContent?.error),
+              telemetry,
+            )
+          } else {
+            trackTelemetryReportComplete(id, telemetry)
+          }
+        }
+        return result
+      } catch (error) {
+        if (telemetry) {
+          trackTelemetryReportFailed(
+            id,
+            telemetryErrorCategory(error),
+            telemetry,
+          )
+        }
+        throw error
+      }
     },
   )
 }

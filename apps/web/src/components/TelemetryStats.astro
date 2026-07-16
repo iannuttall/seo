@@ -1,108 +1,137 @@
-<section class="space-y-10" aria-labelledby="stats-heading">
-  <div class="space-y-3">
-    <h1 id="stats-heading" class="text-pretty text-4xl font-normal leading-tight tracking-tight sm:text-5xl">
-      Anonymous usage stats
-    </h1>
-    <p class="max-w-3xl font-sans text-lg leading-7 text-foreground-muted">
-      Aggregate event counts from installs that leave anonymous telemetry enabled.
-      No user, machine, site, URL, report content, Google data, or location is
-      attached to any event.
-    </p>
-    <p class="font-sans text-sm text-foreground-muted" data-stats-status aria-live="polite">
+---
+import DottedCard from '@/components/DottedCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+
+const metrics = [
+  ['installs', 'Recorded installs'],
+  ['auditsStarted', 'Recorded audits'],
+  ['auditsThisMonth', 'Audits run this month'],
+  ['setupCompletions', 'Setup completions'],
+  ['firstAuditConversionPercent', 'First audit event ratio'],
+  ['auditsFailed', 'Failed audits'],
+] as const
+---
+
+<div data-stats-root aria-busy="true">
+  <PageHeader
+    title="Anonymous usage stats"
+    description="Aggregate event counts from installs that leave anonymous telemetry enabled. No user, machine, site, URL, report content, Google data, or location is attached to any event."
+    align="left"
+  >
+    <p slot="actions" class="animate-pulse font-sans text-sm text-foreground-muted" data-stats-status data-stats-loading aria-live="polite">
       Loading the latest aggregate counts.
     </p>
-  </div>
+  </PageHeader>
 
-  <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Usage totals">
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">Recorded installs</p>
-      <p class="mt-2 text-3xl" data-stat="installs">Loading</p>
-    </article>
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">Recorded audits</p>
-      <p class="mt-2 text-3xl" data-stat="auditsStarted">Loading</p>
-    </article>
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">Audits run this month</p>
-      <p class="mt-2 text-3xl" data-stat="auditsThisMonth">Loading</p>
-    </article>
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">Setup completions</p>
-      <p class="mt-2 text-3xl" data-stat="setupCompletions">Loading</p>
-    </article>
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">First audit event ratio</p>
-      <p class="mt-2 text-3xl" data-stat="firstAuditConversionPercent">Loading</p>
-    </article>
-    <article class="border-2 border-nav p-5">
-      <p class="font-sans text-sm text-foreground-muted">Failed audits</p>
-      <p class="mt-2 text-3xl" data-stat="auditsFailed">Loading</p>
-    </article>
-  </div>
+  <section class="mb-14" aria-label="Usage totals">
+    <div class="grid items-stretch gap-5 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">
+      {
+        metrics.map(([key, label]) => (
+          <DottedCard patternId={`telemetry-stat-${key}`}>
+            <article class="flex h-full min-h-32 flex-col justify-between gap-5 p-5 sm:p-6">
+              <p class="font-sans text-sm text-foreground-muted">{label}</p>
+              <p class="animate-pulse text-2xl sm:text-3xl" data-stat={key} data-stats-loading>
+                {key === 'firstAuditConversionPercent' ? '0%' : '0'}
+              </p>
+            </article>
+          </DottedCard>
+        ))
+      }
+    </div>
+  </section>
 
-  <div class="grid gap-8 lg:grid-cols-2">
-    <section class="space-y-4" aria-labelledby="agent-installs-heading">
-      <h2 id="agent-installs-heading" class="text-2xl">Install agent breakdown</h2>
-      <div class="overflow-x-auto border-2 border-nav">
-        <table class="w-full border-collapse font-sans text-sm">
-          <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Agent</th><th class="p-3 text-right">Installs</th><th class="p-3 text-right">Share</th></tr></thead>
-          <tbody data-agent-table="installs"><tr><td class="p-3" colspan="3">Loading</td></tr></tbody>
-        </table>
+  <div class="mb-14 grid items-start gap-5 lg:grid-cols-2">
+    <section class="space-y-5" aria-labelledby="agent-installs-heading">
+      <h2 id="agent-installs-heading" class="font-mono text-xl font-normal leading-tight">
+        Install agent breakdown
+      </h2>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table class="min-w-0">
+            <thead><tr><th>Agent</th><th class="text-right">Installs</th><th class="text-right">Share</th></tr></thead>
+            <tbody class="animate-pulse" data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
-    <section class="space-y-4" aria-labelledby="agent-audits-heading">
-      <h2 id="agent-audits-heading" class="text-2xl">Audit agent breakdown</h2>
-      <div class="overflow-x-auto border-2 border-nav">
-        <table class="w-full border-collapse font-sans text-sm">
-          <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Agent</th><th class="p-3 text-right">Audits</th><th class="p-3 text-right">Share</th></tr></thead>
-          <tbody data-agent-table="audits"><tr><td class="p-3" colspan="3">Loading</td></tr></tbody>
-        </table>
+    <section class="space-y-5" aria-labelledby="agent-audits-heading">
+      <h2 id="agent-audits-heading" class="font-mono text-xl font-normal leading-tight">
+        Audit agent breakdown
+      </h2>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table class="min-w-0">
+            <thead><tr><th>Agent</th><th class="text-right">Audits</th><th class="text-right">Share</th></tr></thead>
+            <tbody class="animate-pulse" data-agent-table="audits" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
 
-  <section class="space-y-4" aria-labelledby="retention-heading">
+  <section class="mb-14 space-y-5" aria-labelledby="retention-heading">
     <div class="space-y-2">
-      <h2 id="retention-heading" class="text-2xl">Day 7 retention by install week</h2>
-      <p class="font-sans text-sm leading-6 text-foreground-muted">
+      <h2 id="retention-heading" class="font-mono text-xl font-normal leading-tight">
+        Day 7 retention by install week
+      </h2>
+      <p class="font-sans text-[0.9375rem] font-light leading-7">
         A retained install ran the tool at least seven days after its first run.
         Only complete weekly cohorts are shown.
       </p>
     </div>
-    <div class="overflow-x-auto border-2 border-nav">
-      <table class="w-full border-collapse font-sans text-sm">
-        <thead><tr class="border-b-2 border-nav"><th class="p-3 text-left">Cohort</th><th class="p-3 text-right">Installs</th><th class="p-3 text-right">Active at day 7</th><th class="p-3 text-right">Retention</th></tr></thead>
-        <tbody data-retention-table><tr><td class="p-3" colspan="4">Loading</td></tr></tbody>
-      </table>
+    <div class="docs-prose">
+      <div class="table-frame">
+        <table>
+          <thead><tr><th>Cohort</th><th class="text-right">Installs</th><th class="text-right">Active at day 7</th><th class="text-right">Retention</th></tr></thead>
+          <tbody class="animate-pulse" data-retention-table data-stats-loading><tr><td colspan="4">No recorded events</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
-  <div class="grid gap-8 lg:grid-cols-2">
-    <section class="space-y-4" aria-labelledby="popular-reports-heading">
-      <h2 id="popular-reports-heading" class="text-2xl">Most run reports</h2>
-      <ol class="border-2 border-nav font-sans text-sm" data-report-list="popular"><li class="p-3">Loading</li></ol>
+  <div class="mb-14 grid items-stretch gap-5 lg:grid-cols-2">
+    <section class="flex h-full flex-col gap-5" aria-labelledby="popular-reports-heading">
+      <h2 id="popular-reports-heading" class="font-mono text-xl font-normal leading-tight">
+        Most run reports
+      </h2>
+      <DottedCard patternId="telemetry-popular-reports" class="h-full">
+        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="popular" data-stats-loading><li class="p-4">No recorded events</li></ol>
+      </DottedCard>
     </section>
-    <section class="space-y-4" aria-labelledby="quiet-reports-heading">
-      <h2 id="quiet-reports-heading" class="text-2xl">Least run reports</h2>
-      <ol class="border-2 border-nav font-sans text-sm" data-report-list="quiet"><li class="p-3">Loading</li></ol>
+    <section class="flex h-full flex-col gap-5" aria-labelledby="quiet-reports-heading">
+      <h2 id="quiet-reports-heading" class="font-mono text-xl font-normal leading-tight">
+        Least run reports
+      </h2>
+      <DottedCard patternId="telemetry-quiet-reports" class="h-full">
+        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="quiet" data-stats-loading><li class="p-4">No recorded events</li></ol>
+      </DottedCard>
     </section>
   </div>
 
-  <div class="docs-prose">
-    <h2>How to read these numbers</h2>
-    <p>
-      These are event totals, not people. One person can use several machines,
-      clearing local state creates a new install, and disabled or CI runs do not
-      appear. The first audit ratio divides first completed audit events by
-      all recorded first run events. It is not an identity-linked funnel.
-    </p>
-    <p>
-      The totals cover events recorded since anonymous collection began. Read
-      the <a href="/telemetry">full telemetry specification</a> or inspect the
-      <a href="/api/stats">aggregate JSON</a>.
-    </p>
-  </div>
-</section>
+  <section aria-labelledby="reading-stats">
+    <DottedCard patternId="telemetry-reading-stats" inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <h2 id="reading-stats" class="font-mono text-xl font-normal leading-tight">
+          How to read these numbers
+        </h2>
+        <div class="space-y-4 font-sans text-sm font-light leading-6">
+          <p>
+            These are event totals, not people. One person can use several machines,
+            clearing local state creates a new install, and disabled or CI runs do not
+            appear. The first audit ratio divides first completed audit events by
+            all recorded first run events. It is not an identity-linked funnel.
+          </p>
+          <p>
+            The totals cover events recorded since anonymous collection began. Read
+            the <a class="text-primary underline underline-offset-4 hover:decoration-dotted" href="/telemetry">full telemetry specification</a>
+            {' '}or inspect the{' '}
+            <a class="text-primary underline underline-offset-4 hover:decoration-dotted" href="/api/stats">aggregate JSON</a>.
+          </p>
+        </div>
+      </div>
+    </DottedCard>
+  </section>
+</div>
 
 <script>
   const numberFormat = new Intl.NumberFormat('en-GB', {
@@ -116,16 +145,16 @@
   const count = (value: unknown) =>
     typeof value === 'number' && Number.isFinite(value)
       ? numberFormat.format(value)
-      : 'Not available'
+      : '0'
 
   const percent = (value: unknown) =>
     typeof value === 'number' && Number.isFinite(value)
       ? `${value.toFixed(1).replace('.0', '')}%`
-      : 'Not available'
+      : '0%'
 
   const cell = (value: string, align = 'left') => {
     const element = document.createElement('td')
-    element.className = `border-b border-nav p-3 ${align === 'right' ? 'text-right' : 'text-left'}`
+    element.className = align === 'right' ? 'text-right' : 'text-left'
     element.textContent = value
     return element
   }
@@ -205,16 +234,16 @@
     list.replaceChildren()
     if (rows.length === 0) {
       const row = document.createElement('li')
-      row.className = 'p-3'
+      row.className = 'p-4'
       row.textContent = 'No recorded events'
       list.append(row)
       return
     }
     for (const item of rows) {
       const row = document.createElement('li')
-      row.className = 'flex items-center justify-between gap-4 border-b border-nav p-3 last:border-b-0'
+      row.className = 'flex items-center justify-between gap-4 p-4'
       const link = document.createElement('a')
-      link.className = 'underline underline-offset-2 hover:decoration-dotted'
+      link.className = 'text-primary underline underline-offset-2 hover:decoration-dotted'
       link.href = reportPath(item.report)
       link.textContent = reportLabel(item.report)
       const value = document.createElement('span')
@@ -268,6 +297,7 @@
       renderReports(
         document.querySelector('[data-report-list="quiet"]'),
         [...reports]
+          .filter((item: { count: number }) => item.count > 0)
           .sort((a, b) => a.count - b.count || a.report.localeCompare(b.report))
           .slice(0, 10),
       )
@@ -280,8 +310,11 @@
       )
     } catch {
       text(status, 'Live aggregate counts are temporarily unavailable.')
-      document.querySelectorAll('[data-stat]').forEach((item) => {
-        item.textContent = 'Not available'
+    } finally {
+      document.querySelector('[data-stats-root]')?.setAttribute('aria-busy', 'false')
+      document.querySelectorAll('[data-stats-loading]').forEach((item) => {
+        item.classList.remove('animate-pulse')
+        item.removeAttribute('data-stats-loading')
       })
     }
   }

@@ -3,7 +3,8 @@ import PixelIcon from '@/components/icons/PixelIcon.astro'
 
 type FaqItem = {
   question: string
-  answer: string
+  answer?: string
+  values?: string[]
 }
 
 type Props = {
@@ -48,7 +49,20 @@ const { items } = Astro.props
         >
           <div class="overflow-hidden">
             <div class="max-w-3xl px-6 pb-5 pt-3 font-sans text-sm leading-6 text-foreground-muted">
-              {item.answer}
+              {item.answer ? <p>{item.answer}</p> : null}
+              {
+                item.values ? (
+                  <ul class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                    {item.values.map((value) => (
+                      <li>
+                        <code class="block break-words bg-background-subtle px-2 py-1 font-mono text-xs leading-5 text-foreground">
+                          {value}
+                        </code>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null
+              }
             </div>
           </div>
         </div>

@@ -330,6 +330,11 @@ Do not let `seo help` return `Unknown command help`.
 
 ## Verification And Commits
 
+Record every product or CLI issue discovered during development in
+`docs/known-issues.md` as soon as there is reproducible evidence. Keep the
+original observation, update its status instead of deleting it, and add the
+fix commit plus verification evidence when it is resolved.
+
 Every implementation slice needs proportionate tests plus all four repository
 gates before it is considered finished:
 

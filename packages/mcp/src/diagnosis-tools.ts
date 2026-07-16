@@ -36,7 +36,8 @@ export function registerDiagnosisTools(
   server.registerTool(
     'seo_doctor',
     {
-      description: 'Check local auth, scopes, config, and defaults',
+      description:
+        'Check the local database, auth, scopes, config, and defaults',
       inputSchema: {},
     },
     async () => {

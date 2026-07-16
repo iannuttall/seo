@@ -142,10 +142,14 @@ test('doctor reports whether the stored token client is configured', async () =>
   })
   await writeTokens(storedTokens('shared'))
 
-  const report = await runDoctor()
+  const report = await runDoctor({
+    checkDatabase: () => ({ dbPath: '/tmp/seo-test/cache.sqlite' }),
+  })
   const oauth = report.checks.find((check) => check.id === 'oauth-client')
+  const database = report.checks.find((check) => check.id === 'local-database')
 
   assert.equal(report.ok, hasEmbeddedSharedClient())
+  assert.equal(database?.status, 'pass')
   assert.equal(oauth?.status, hasEmbeddedSharedClient() ? 'pass' : 'fail')
   if (hasEmbeddedSharedClient()) {
     assert.match(oauth?.detail ?? '', /shared client configured/i)
@@ -153,4 +157,18 @@ test('doctor reports whether the stored token client is configured', async () =>
     assert.match(oauth?.detail ?? '', /shared seo app.*not configured/i)
     assert.match(oauth?.fix ?? '', /github\.com\/iannuttall\/seo\/issues/)
   }
+})
+
+test('doctor fails clearly when the local database cannot open', async () => {
+  const report = await runDoctor({
+    checkDatabase: () => {
+      throw new Error('SQLite runtime is unavailable.')
+    },
+  })
+  const database = report.checks.find((check) => check.id === 'local-database')
+
+  assert.equal(report.ok, false)
+  assert.equal(database?.status, 'fail')
+  assert.match(database?.detail ?? '', /SQLite runtime is unavailable/)
+  assert.match(database?.fix ?? '', /Upgrade or reinstall `seo`/)
 })

@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { delimiter, join } from 'node:path'
 import { after, test } from 'node:test'
 import { promisify } from 'node:util'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
@@ -18,6 +18,8 @@ const consumerDirectory = join(tempRoot, 'consumer')
 const configDirectory = join(tempRoot, 'config')
 const cacheDirectory = join(tempRoot, 'cache')
 const globalPrefix = join(tempRoot, 'global')
+const pnpmGlobalDirectory = join(tempRoot, 'pnpm-global')
+const pnpmBinDirectory = join(tempRoot, 'pnpm-bin')
 const tsc = require.resolve('typescript/bin/tsc')
 let archivePath
 
@@ -106,11 +108,56 @@ test('the packed package installs globally into an isolated prefix', {
   })
   assert.equal(JSON.parse(start.stdout).dryRun, true)
 
+  const cache = await execFileAsync(seo, ['cache', 'stats'], {
+    cwd: root,
+    env: consumerEnv(),
+  })
+  assert.match(cache.stdout, /DB\s+/)
+
   const mcp = await listInstalledMcpTools(seo)
   assert.deepEqual(
     mcp.tools.map((tool) => tool.name),
     ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
   )
+})
+
+test('the packed package opens its database after a pnpm global install', {
+  timeout: 120_000,
+}, async () => {
+  if (process.platform === 'win32') return
+
+  const tarball = await packedTarball()
+  await mkdir(pnpmGlobalDirectory, { recursive: true })
+  await mkdir(pnpmBinDirectory, { recursive: true })
+  await execFileAsync(
+    'pnpm',
+    [
+      'add',
+      '--global',
+      '--global-dir',
+      pnpmGlobalDirectory,
+      '--global-bin-dir',
+      pnpmBinDirectory,
+      '--ignore-scripts',
+      tarball,
+    ],
+    {
+      cwd: root,
+      env: {
+        ...consumerEnv(),
+        PATH: `${pnpmBinDirectory}${delimiter}${process.env.PATH ?? ''}`,
+        PNPM_HOME: pnpmBinDirectory,
+      },
+      maxBuffer: 1024 * 1024,
+    },
+  )
+
+  const seo = join(pnpmBinDirectory, 'seo')
+  const cache = await execFileAsync(seo, ['cache', 'stats'], {
+    cwd: root,
+    env: consumerEnv(),
+  })
+  assert.match(cache.stdout, /DB\s+/)
 })
 
 test('the packed package installs and runs without the workspace', {
@@ -155,6 +202,12 @@ test('the packed package installs and runs without the workspace', {
   )
   const startResult = JSON.parse(start.stdout)
   assert.equal(startResult.dryRun, true)
+
+  const cache = await execFileAsync(process.execPath, [cli, 'cache', 'stats'], {
+    cwd: consumerDirectory,
+    env: consumerEnv(),
+  })
+  assert.match(cache.stdout, /DB\s+/)
 
   const reportHelp = await execFileAsync(
     process.execPath,

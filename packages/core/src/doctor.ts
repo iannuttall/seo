@@ -6,6 +6,7 @@ import {
 } from './gsc/auth.js'
 import { getSeoCliPaths } from './paths.js'
 import { readConfig, readOauthClient, readTokens } from './storage/config.js'
+import { checkDatabaseReadiness } from './storage/database.js'
 
 export type DoctorCheck = {
   id: string
@@ -20,7 +21,13 @@ const REQUIRED_SCOPES = [
   'https://www.googleapis.com/auth/analytics.readonly',
 ]
 
-export async function runDoctor(): Promise<{
+type DoctorDependencies = {
+  checkDatabase?: typeof checkDatabaseReadiness
+}
+
+export async function runDoctor(
+  dependencies: DoctorDependencies = {},
+): Promise<{
   ok: boolean
   generatedAt: string
   checks: DoctorCheck[]
@@ -35,6 +42,27 @@ export async function runDoctor(): Promise<{
     ? Boolean(getClientConfig(tokens.client_source))
     : undefined
   const checks: DoctorCheck[] = []
+
+  try {
+    const database = (dependencies.checkDatabase ?? checkDatabaseReadiness)()
+    checks.push({
+      id: 'local-database',
+      label: 'Local database',
+      status: 'pass',
+      detail: database.dbPath,
+    })
+  } catch (error) {
+    checks.push({
+      id: 'local-database',
+      label: 'Local database',
+      status: 'fail',
+      detail:
+        error instanceof Error
+          ? error.message
+          : 'The local database could not be opened.',
+      fix: 'Upgrade or reinstall `seo`. If this still fails, report it at https://github.com/iannuttall/seo/issues.',
+    })
+  }
 
   checks.push({
     id: 'config-dir',

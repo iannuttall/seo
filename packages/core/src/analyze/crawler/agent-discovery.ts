@@ -318,17 +318,18 @@ async function inspectMarkdownPage(input: {
     repeatedHashStable: null,
     markdownCanonicalMatchesHtml: null,
   }
-  if (advertisedUrls.length !== 1) return observation
-
-  const explicitUrl = advertisedUrls[0] as string
+  const explicitUrl =
+    advertisedUrls.length === 1 ? advertisedUrls[0] : undefined
   const [explicit, negotiated, repeated] = await Promise.all([
-    fetchRepresentation({
-      url: explicitUrl,
-      accept: 'text/markdown',
-      timeoutMs: input.timeoutMs,
-      fetch: input.fetch,
-      signal: input.signal,
-    }),
+    explicitUrl
+      ? fetchRepresentation({
+          url: explicitUrl,
+          accept: 'text/markdown',
+          timeoutMs: input.timeoutMs,
+          fetch: input.fetch,
+          signal: input.signal,
+        })
+      : Promise.resolve(undefined),
     fetchRepresentation({
       url: input.page.finalUrl,
       accept: 'text/markdown',
@@ -337,30 +338,31 @@ async function inspectMarkdownPage(input: {
       signal: input.signal,
     }),
     fetchRepresentation({
-      url: explicitUrl,
+      url: explicitUrl ?? input.page.finalUrl,
       accept: 'text/markdown',
       timeoutMs: input.timeoutMs,
       fetch: input.fetch,
       signal: input.signal,
     }),
   ])
-  observation.explicit = explicit.observation
+  if (explicit) observation.explicit = explicit.observation
   observation.negotiated = negotiated.observation
   observation.repeated = repeated.observation
   observation.explicitMatchesNegotiated =
-    explicit.observation.sha256 && negotiated.observation.sha256
+    explicit?.observation.sha256 && negotiated.observation.sha256
       ? explicit.observation.sha256 === negotiated.observation.sha256
       : null
+  const primary = explicit ?? negotiated
   observation.repeatedHashStable =
-    explicit.observation.sha256 && repeated.observation.sha256
-      ? explicit.observation.sha256 === repeated.observation.sha256
+    primary.observation.sha256 && repeated.observation.sha256
+      ? primary.observation.sha256 === repeated.observation.sha256
       : null
   observation.markdownCanonicalMatchesHtml = sameDocument(
-    explicit.observation.canonicalUrl,
+    primary.observation.canonicalUrl,
     input.page.finalUrl,
   )
-  if (explicit.body) {
-    observation.quality = markdownQuality(explicit.body, input.page)
+  if (primary.body) {
+    observation.quality = markdownQuality(primary.body, input.page)
   }
   return observation
 }
@@ -832,9 +834,15 @@ export async function collectAgentDiscovery(input: {
   const advertisedPages = observations.filter(
     (observation) => observation.htmlAlternateUnique,
   ).length
-  const evaluatedPages = observations.filter(
-    (observation) => observation.explicit?.status !== undefined,
-  ).length
+  const evaluatedPages = observations.filter((observation) => {
+    const representation = observation.explicit ?? observation.negotiated
+    return (
+      representation?.status !== undefined &&
+      representation.status >= 200 &&
+      representation.status < 300 &&
+      /^\s*text\/markdown\b/iu.test(representation.contentType ?? '')
+    )
+  }).length
   const warnings = [
     ...(pages.length !== input.pages.length
       ? [
@@ -851,7 +859,11 @@ export async function collectAgentDiscovery(input: {
     .map((page) => headerValue(page.responseHeaders, 'content-signal'))
     .filter((value): value is string => Boolean(value))
   const markdownContentSignals = observations
-    .map((observation) => observation.explicit?.contentSignal)
+    .map(
+      (observation) =>
+        observation.explicit?.contentSignal ??
+        observation.negotiated?.contentSignal,
+    )
     .filter((value): value is string => Boolean(value))
   const contentSignalValues = [
     ...new Set([...htmlContentSignals, ...markdownContentSignals]),

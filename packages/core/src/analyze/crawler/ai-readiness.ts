@@ -447,7 +447,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
           ? 'Markdown alternatives were checked'
           : 'Markdown alternatives were not evaluated',
         plainEnglish: agentDiscovery
-          ? `${agentDiscovery.markdownAlternates.advertisedPages} of ${agentDiscovery.markdownAlternates.eligibleHtmlPages} successful HTML pages advertised one Markdown alternative. ${agentDiscovery.markdownAlternates.exactByteMatches} explicit responses matched content negotiation byte for byte.`
+          ? `${agentDiscovery.markdownAlternates.evaluatedPages} of ${agentDiscovery.markdownAlternates.eligibleHtmlPages} successful HTML pages returned Markdown through an explicit alternative or content negotiation. ${agentDiscovery.markdownAlternates.exactByteMatches} paired explicit responses matched content negotiation byte for byte.`
           : 'This crawl does not include the focused representation checks, so it cannot say whether HTML pages publish stable Markdown alternatives.',
         action:
           'Use the focused agent-readiness report when you need route coverage, content negotiation, byte stability, or extraction-quality evidence.',

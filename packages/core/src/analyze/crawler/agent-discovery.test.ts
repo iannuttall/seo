@@ -168,7 +168,7 @@ const page: CrawlPageSnapshot = {
   outgoingInternalCount: 0,
   markdownAlternates: ['https://example.com/index.md'],
   hasHsts: true,
-  schemaTypes: ['SoftwareApplication', 'WebSite', 'Person', 'WebPage'],
+  schemaTypes: ['WebSite', 'Person', 'WebPage'],
 }
 
 test('collectAgentDiscovery validates one deterministic content contract', async () => {
@@ -199,6 +199,62 @@ test('collectAgentDiscovery validates one deterministic content contract', async
   assert.equal(discovery.routeManifest.valid, true)
   assert.deepEqual(discovery.routeManifest.orphanMarkdownRoutes, [])
   assert.equal(discovery.protocolVariants.http.permanentRedirectToHttps, true)
+})
+
+test('collectAgentDiscovery accepts negotiated Markdown without explicit mirrors', async () => {
+  const negotiatedMarkdown = `${markdown}
+This additional paragraph gives the negotiated-only fixture enough substantive
+copy to exercise the clean quality path without relying on an explicit route.
+`
+  const negotiatedOnlyPage: CrawlPageSnapshot = {
+    ...page,
+    responseHeaders: {
+      'content-signal': 'search=yes, ai-input=yes, ai-train=no',
+    },
+    markdownAlternates: [],
+  }
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [negotiatedOnlyPage],
+    timeoutMs: 1_000,
+    fetch: fetchWithMarkdown(negotiatedMarkdown),
+  })
+
+  assert.equal(discovery.dataStatus, 'complete')
+  assert.equal(discovery.markdownAlternates.advertisedPages, 0)
+  assert.equal(discovery.markdownAlternates.evaluatedPages, 1)
+  assert.equal(discovery.markdownAlternates.exactByteMatches, 0)
+  assert.equal(discovery.markdownAlternates.stableResponses, 1)
+  assert.equal(discovery.markdownAlternates.pages[0]?.explicit, undefined)
+  assert.match(
+    discovery.markdownAlternates.pages[0]?.negotiated?.contentType ?? '',
+    /^text\/markdown/u,
+  )
+  assert.equal(discovery.markdownAlternates.pages[0]?.quality?.h1Count, 1)
+  assert.equal(discovery.contentSignals.consistent, true)
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [negotiatedOnlyPage],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+  const readiness = agentReadiness(crawl)
+
+  for (const id of [
+    'markdown-coverage',
+    'markdown-token-estimates',
+    'markdown-negotiation',
+    'markdown-determinism',
+    'markdown-quality',
+  ]) {
+    assert.equal(
+      readiness.checks.find((item) => item.id === id)?.status,
+      'pass',
+      id,
+    )
+  }
 })
 
 test('markdown quality ignores repeated commands and weak intro samples', async () => {

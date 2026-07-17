@@ -271,3 +271,62 @@ Run the identity check with `WebSite`, `Person`, and `WebPage` schema but no
 
 The existing agent-readiness fixture now omits `SoftwareApplication` and keeps
 the identity check passing.
+
+## SEO-009: authorized-client test can exceed four minutes and flake the suite
+
+- Status: Open
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+- Environment: Node 24.3.0, pnpm 11.11.0, macOS arm64
+
+### What failed
+
+`pnpm test` failed once in `@seo/core` with
+`dist/gsc/auth/authorized-client.test.js` reporting
+`'Promise resolution is still pending but the event loop has already
+resolved'` after 51 seconds. Two later runs in the same window, one solo and
+one on a clean `main` checkout, took over 120 and 248 seconds but passed.
+
+Later the same day the file ran in 240ms solo, with every test between 1ms
+and 204ms, and two deliberately concurrent instances each finished in 320ms.
+The stall is intermittent and load-dependent, not inherent to the tests.
+
+### Evidence so far
+
+The suite mocks `fetch`, uses a per-process temp `SEO_CONFIG_DIR`, and holds
+no cross-process resources, so the tests themselves have nothing minute-long
+to wait on. The production code path they exercise does: `withFileLock`
+(`packages/core/src/storage/lock.ts`) configures `proper-lockfile` with 60
+retries backing off to 1 second (about 55 seconds to exhaust) and a 60 second
+staleness window, and `proper-lockfile` routes filesystem calls through
+`graceful-fs`, which parks operations in an in-process queue on `EMFILE`.
+The observed 51 and 248 second durations sit on multiples of that retry
+window, and every stall happened while parallel test fleets, builds, and a
+live crawl were saturating the machine. The node:test diagnostic about a
+pending promise with a resolved event loop matches an fs call parked by
+`graceful-fs` with nothing left to wake it.
+
+### Impact
+
+The full test gate can fail or crawl for minutes with no product defect,
+which hides real failures and slows every verification run.
+
+### Mitigation
+
+Both guard rails are in place. Every test in the file now carries a 10
+second timeout, and the suite sets `SEO_LOCK_FAST=1`, which makes
+`withFileLock` use a short retry and staleness schedule so a wedged lock
+fails in about a second with a clear error. Production CLI runs are
+untouched and keep the patient schedule that lets concurrent seo processes
+wait for each other.
+
+The stall itself has not recurred since, so the root cause remains
+unconfirmed. If a timeout fires under the fast schedule, the error will now
+say whether lock acquisition was the stage that stalled. Instrument
+`withFileLock` with acquisition timing if more detail is needed then.
+
+### Verification
+
+Run `node --test dist/gsc/auth/authorized-client.test.js` in `packages/core`.
+The file should finish in seconds and pass consistently under a parallel
+`pnpm test` run.

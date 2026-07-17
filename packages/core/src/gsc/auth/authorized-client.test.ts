@@ -11,6 +11,8 @@ const previousConfigDir = process.env.SEO_CONFIG_DIR
 const originalFetch = globalThis.fetch
 
 process.env.SEO_CONFIG_DIR = configDir
+// Fail fast on any wedged file lock instead of polling for a minute.
+process.env.SEO_LOCK_FAST = '1'
 
 const { SeoError } = await import('../../errors.js')
 const { readTokens, writeConfig, writeOauthClient, writeTokens } = await import(
@@ -55,9 +57,12 @@ after(() => {
   rmSync(configDir, { recursive: true, force: true })
   if (previousConfigDir === undefined) delete process.env.SEO_CONFIG_DIR
   else process.env.SEO_CONFIG_DIR = previousConfigDir
+  delete process.env.SEO_LOCK_FAST
 })
 
-test('raw refresh request uses the Google token endpoint and form body', async () => {
+test('raw refresh request uses the Google token endpoint and form body', {
+  timeout: 10_000,
+}, async () => {
   let requestUrl = ''
   let requestInit: RequestInit | undefined
   const fetchImpl = (async (
@@ -110,7 +115,9 @@ test('raw refresh request uses the Google token endpoint and form body', async (
   })
 })
 
-test('refresh updates stored access data without changing its client source', async () => {
+test('refresh updates stored access data without changing its client source', {
+  timeout: 10_000,
+}, async () => {
   await writeTokens(storedTokens())
   const requestedAt = Date.now()
   globalThis.fetch = (async (
@@ -140,7 +147,9 @@ test('refresh updates stored access data without changing its client source', as
   assert.deepEqual(await readTokens(), refreshed)
 })
 
-test('concurrent authorized clients refresh an expiring token once under lock', async () => {
+test('concurrent authorized clients refresh an expiring token once under lock', {
+  timeout: 10_000,
+}, async () => {
   await writeTokens(storedTokens())
   let requests = 0
   globalThis.fetch = (async () => {
@@ -166,7 +175,9 @@ test('concurrent authorized clients refresh an expiring token once under lock', 
   assert.equal(second.tokens.client_source, 'byo')
 })
 
-test('invalid grants delete stored tokens and return the auth-expired contract', async () => {
+test('invalid grants delete stored tokens and return the auth-expired contract', {
+  timeout: 10_000,
+}, async () => {
   await writeTokens(storedTokens())
   globalThis.fetch = (async () =>
     new Response(JSON.stringify({ error: 'invalid_grant' }), {
@@ -182,7 +193,9 @@ test('invalid grants delete stored tokens and return the auth-expired contract',
   assert.equal(await readTokens(), undefined)
 })
 
-test('transient refresh errors preserve stored tokens for a retry', async () => {
+test('transient refresh errors preserve stored tokens for a retry', {
+  timeout: 10_000,
+}, async () => {
   const stored = storedTokens()
   await writeTokens(stored)
   globalThis.fetch = (async () =>
@@ -196,7 +209,9 @@ test('transient refresh errors preserve stored tokens for a retry', async () => 
   assert.deepEqual(await readTokens(), stored)
 })
 
-test('an expiring login without a refresh token requires login again', async () => {
+test('an expiring login without a refresh token requires login again', {
+  timeout: 10_000,
+}, async () => {
   await writeTokens(storedTokens({ refresh_token: undefined }))
 
   await assert.rejects(createAuthorizedClient(), (error: unknown) => {
@@ -207,7 +222,9 @@ test('an expiring login without a refresh token requires login again', async () 
   assert.equal(await readTokens(), undefined)
 })
 
-test('a login missing data scopes fails before calling Google APIs', async () => {
+test('a login missing data scopes fails before calling Google APIs', {
+  timeout: 10_000,
+}, async () => {
   await writeTokens(
     storedTokens({
       scope: 'openid https://www.googleapis.com/auth/userinfo.email',

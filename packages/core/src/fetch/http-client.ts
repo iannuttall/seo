@@ -1,5 +1,11 @@
 import { fetch, Headers, type RequestInit } from 'undici'
-import UserAgent from 'user-agents'
+import { SEO_CRAWLER_USER_AGENT } from './crawler-identity.js'
+
+export {
+  SEO_CRAWLER_IDENTITY,
+  SEO_CRAWLER_TOKEN,
+  SEO_CRAWLER_USER_AGENT,
+} from './crawler-identity.js'
 
 export type HttpProfile = 'browser' | 'bot'
 
@@ -13,9 +19,8 @@ export class ResponseSizeLimitError extends Error {
   }
 }
 
-export const BROWSER_USER_AGENT = new UserAgent({
-  deviceCategory: 'desktop',
-}).toString()
+/** @deprecated Use SEO_CRAWLER_USER_AGENT. */
+export const BROWSER_USER_AGENT = SEO_CRAWLER_USER_AGENT
 
 export function requestHeaders(profile: HttpProfile): Headers {
   if (profile === 'bot') {
@@ -23,7 +28,7 @@ export function requestHeaders(profile: HttpProfile): Headers {
       accept: 'text/plain,*/*;q=0.8',
       'accept-language': 'en-US,en;q=0.9',
       connection: 'close',
-      'user-agent': BROWSER_USER_AGENT,
+      'user-agent': SEO_CRAWLER_USER_AGENT,
     })
   }
 
@@ -34,7 +39,7 @@ export function requestHeaders(profile: HttpProfile): Headers {
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"macOS"',
     'upgrade-insecure-requests': '1',
-    'user-agent': BROWSER_USER_AGENT,
+    'user-agent': SEO_CRAWLER_USER_AGENT,
   })
 }
 

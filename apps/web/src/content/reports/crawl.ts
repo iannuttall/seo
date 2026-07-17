@@ -202,37 +202,40 @@ export const crawlReports = [
     name: 'Site crawl',
     category: 'crawl',
     summary:
-      'Map a limited part of the site and turn technical evidence into a reusable baseline for follow-up work.',
-    question:
-      'What can the crawler discover and verify across this site scope?',
+      'Check sitemap URL health first, then map a limited part of the site when deeper technical evidence is needed.',
+    question: 'Are sitemap URLs reachable, and what needs a deeper crawl?',
     useWhen: [
+      'You need a fast status, redirect, robots, network, or access check across sitemap URLs.',
       'You need a technical baseline, issue inventory, or saved crawl for focused follow-ups.',
-      'The start URL, page limit, and depth are appropriate for the site.',
+      'You have checked health first before opening a large or unfamiliar site to full crawling.',
     ],
     avoidWhen: [
-      'You need proof of Google indexing or complete coverage beyond the configured crawl boundary.',
+      'You need proof of Google indexing or complete coverage beyond the sitemap and configured crawl boundary.',
     ],
     evidence: [
-      'Fetched responses, redirects, directives, canonicals, metadata, headings, links, structured data, and crawl discovery paths.',
+      'Health mode keeps sitemap sources, statuses, redirects, robots decisions, network failures, and access-block evidence.',
+      'Full mode adds fetched page directives, canonicals, metadata, headings, links, structured data, and discovery paths.',
     ],
     methodology: [
-      'Crawls same-origin pages within explicit depth and page bounds, applies shared rules, and preserves skipped, blocked, invalid, and partial states.',
+      'Health mode probes same-origin sitemap URLs without parsing, rendering, or caching page bodies and increases concurrency only after clean responses.',
+      'Full mode crawls pages within explicit depth and page bounds, applies shared rules, and preserves skipped, blocked, invalid, and partial states.',
     ],
     exampleParams: {
       url: 'https://example.com/',
+      health: true,
+      sitemapUrl: 'https://example.com/sitemap.xml',
       maxPages: 100,
-      maxDepth: 3,
-      saveReport: true,
     },
     interpretation: [
-      'Read coverage, limits, failures, and robots evidence before issue counts. Prioritise conflicts that affect important pages and match publisher intent.',
+      'Read strategy, sitemap coverage, limits, failures, robots, and access evidence first. Run full mode only when the question needs page-body analysis.',
     ],
     caveats: [
-      'A local crawl is not Googlebot and cannot prove indexing. Pages outside discovery or limits remain untested.',
+      'A health pass does not evaluate content, metadata, canonicals, internal links, structured data, or rendered HTML.',
+      'A local crawl is not Googlebot and cannot prove indexing. URLs outside the sitemap, discovery, or limits remain untested.',
     ],
     nextSteps: [
-      'Use top fixes for a compact action queue.',
-      'Use affected URLs or a focused readiness report without rerunning the crawl.',
+      'Audit a failed health URL directly or run full mode for page-level evidence.',
+      'Use top fixes and affected URLs after the full crawl.',
     ],
     related: ['top-fixes', 'affected-urls', 'compare-crawls'],
     sources: ['robots', 'canonical', 'crawlable-links', 'javascript'],

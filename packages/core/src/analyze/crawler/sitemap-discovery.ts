@@ -13,9 +13,16 @@ function isSameOrigin(url: string, origin: string): boolean {
 
 function sitemapRootUrls(input: {
   url: string
+  sitemapUrl?: string
   declaredSitemapUrls: string[]
   warnings: string[]
-}): Array<{ url: string; source: 'robots-txt' | 'default-path' }> {
+}): Array<{
+  url: string
+  source: 'explicit' | 'robots-txt' | 'default-path'
+}> {
+  if (input.sitemapUrl) {
+    return [{ url: new URL(input.sitemapUrl).toString(), source: 'explicit' }]
+  }
   const origin = new URL(input.url).origin
   const declared = input.declaredSitemapUrls.filter((url) =>
     isSameOrigin(url, origin),
@@ -59,6 +66,7 @@ function sitemapDiscoveryStatus(
 
 export async function sitemapSeeds(input: {
   url: string
+  sitemapUrl?: string
   maxPages: number
   declaredSitemapUrls: string[]
   warnings: string[]

@@ -1,5 +1,5 @@
 export const productFacts = {
-  crawlerRules: 50,
+  crawlerRules: 51,
   reportCategories: 9,
   reports: 53,
   skills: 1,

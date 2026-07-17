@@ -78,10 +78,10 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     lead: 'Run the same bounded crawl again and see which technical findings changed. This is the quick release check when you need fresh evidence rather than a comparison of two existing snapshots.',
   },
   'site-crawl': {
-    title: 'Technical SEO site crawl audit',
+    title: 'Sitemap health check and technical site crawl',
     description:
-      'Run a technical SEO site crawl audit to find indexing, link and metadata issues. See affected pages and save a baseline for follow-up checks.',
-    lead: 'Crawl your site to find technical SEO problems and the pages affected by each one. Save the result as a baseline so you can investigate a finding or check a fix without starting from scratch.',
+      'Check sitemap URL status, redirects and access first. Run the full technical SEO crawl only when you need page content, links, metadata and affected URLs.',
+    lead: 'Start with a light sitemap health pass, especially on a large or unfamiliar site. Move to the full crawl when its response evidence needs investigation or you need page-level technical checks.',
   },
   'ctr-underperformers': {
     title: 'CTR optimization report',

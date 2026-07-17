@@ -263,6 +263,28 @@ const RULE_DEFINITIONS = [
       'Re-run the crawl and confirm the URL returns a normal HTTP status instead of status 0.',
   },
   {
+    id: 'crawler_access_blocked',
+    title: 'Crawler access blocked',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The audit could not observe the intended page because an authentication layer, rate limit, firewall, or challenge intercepted this crawler. This limits the audit evidence but does not prove that search engines or users are blocked.',
+    howToFix:
+      'First confirm the block is unintended. If the audit should have access, use the provider evidence in the report to grant temporary, narrow access for the audit machine source IP, required hostname or paths, and the exact crawler User-Agent. Do not trust a User-Agent by itself.',
+    impactIfIgnored:
+      'The affected URL remains unverified in this crawl, so content and indexability checks cannot support a pass or an all-clear.',
+    howToVerify:
+      'Re-run the same health check and confirm access.blockedRequests is zero and the URL returns its intended status without challenge evidence.',
+    agentHints: {
+      evidenceFields: [
+        'request.accessBlock',
+        'report.access',
+        'issue.evidence.accessBlock',
+      ],
+      suggestedCommands: ['seo crawl --sitemap-url <url> --health --json'],
+    },
+  },
+  {
     id: 'client_error',
     title: 'Client error',
     category: 'response',
@@ -903,6 +925,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   nofollow: 'review',
   x_robots_noindex: 'review',
   robots_blocked: 'review',
+  crawler_access_blocked: 'review',
   orphan_page: 'review',
   redirected_url: 'review',
   slow_response: 'review',

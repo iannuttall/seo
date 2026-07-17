@@ -5,6 +5,7 @@ import {
   crawlSite,
   renderCrawlCsv,
   renderCrawlHtml,
+  renderCrawlJunit,
   renderCrawlMarkdownTickets,
   renderCrawlPagesCsv,
   renderCrawlPretty,
@@ -39,13 +40,13 @@ const severityRank: Record<Severity, number> = {
 export const crawlCommand = defineCommand({
   meta: {
     name: 'crawl',
-    description: 'Crawl a site and run technical SEO checks',
+    description: 'Run a fast sitemap health pass or a full technical crawl',
   },
   args: {
     crawlUrl: {
       type: 'positional',
       required: false,
-      description: 'Start URL to crawl.',
+      description: 'Site start URL. Optional with --sitemap-url.',
     },
     url: {
       type: 'string',
@@ -72,7 +73,18 @@ export const crawlCommand = defineCommand({
     mode: {
       type: 'string',
       description:
-        'Crawl mode: site, page, list, or sitemap. Defaults to site.',
+        'Crawl mode: site, page, list, or sitemap. Start with sitemap --health for large sites.',
+    },
+    health: {
+      type: 'boolean',
+      default: false,
+      description:
+        'Run the uncached sitemap status and redirect pass before a full audit. No page-body analysis.',
+    },
+    'sitemap-url': {
+      type: 'string',
+      description:
+        'Explicit sitemap URL. Selects sitemap mode when --mode is omitted.',
     },
     urls: {
       type: 'string',
@@ -92,7 +104,8 @@ export const crawlCommand = defineCommand({
     },
     concurrency: {
       type: 'string',
-      description: 'Parallel page fetches, up to 16. Defaults to 8.',
+      description:
+        'Parallel page fetches, up to 16. Defaults to 8, or progressively up to 4 with --health.',
     },
     'fetch-interval-cap': {
       type: 'string',
@@ -148,7 +161,8 @@ export const crawlCommand = defineCommand({
     },
     format: {
       type: 'string',
-      description: 'Output format: pretty, json, csv, html, or markdown.',
+      description:
+        'Output format: pretty, json, csv, html, markdown, or junit. JUnit requires --health.',
     },
     output: {
       type: 'string',
@@ -182,8 +196,27 @@ export const crawlCommand = defineCommand({
     const project = projectArg(args)
     const urls = await urlListArgs(args)
     const explicitUrl = crawlUrlArg(args)
+    const sitemapUrl = stringArg(args['sitemap-url'])
+    const health = booleanArg(args.health)
+    const explicitMode = crawlModeArg(args.mode)
+    if (format === 'junit' && !health) {
+      throw new Error('--format junit requires --health.')
+    }
+    if ((health || sitemapUrl) && explicitMode && explicitMode !== 'sitemap') {
+      throw new Error('--health and --sitemap-url require sitemap mode.')
+    }
+    if (health && negatedBooleanArg(args, 'sitemap')) {
+      throw new Error('--health cannot be combined with --no-sitemap.')
+    }
+    if ((health || sitemapUrl) && urls.length) {
+      throw new Error(
+        '--health and --sitemap-url cannot be combined with URL list input.',
+      )
+    }
     const selection =
-      stringArg(args.site) || project || (!explicitUrl && !urls.length)
+      stringArg(args.site) ||
+      project ||
+      (!explicitUrl && !urls.length && !sitemapUrl)
         ? await resolveClientSelection({
             client: project,
             site: stringArg(args.site),
@@ -194,6 +227,7 @@ export const crawlCommand = defineCommand({
       explicitUrl ??
       selection?.client?.startUrl ??
       (selection?.site ? startUrlForSite(selection.site) : undefined) ??
+      (sitemapUrl ? new URL('/', sitemapUrl).toString() : undefined) ??
       urls[0]
     if (!crawlUrl) {
       throw new Error(
@@ -205,7 +239,11 @@ export const crawlCommand = defineCommand({
       url: crawlUrl,
       projectId: selection?.client?.id,
       site: selection?.site,
-      mode: crawlModeArg(args.mode) ?? (urls.length ? 'list' : undefined),
+      mode:
+        explicitMode ??
+        (health || sitemapUrl ? 'sitemap' : urls.length ? 'list' : undefined),
+      strategy: health ? 'health' : 'full',
+      sitemapUrl,
       urls,
       maxPages: numberArg(args['max-pages']),
       maxDepth: numberArg(args['max-depth']),
@@ -259,6 +297,12 @@ export const crawlCommand = defineCommand({
 
     if (format === 'html') {
       await writeOrPrint(output, renderCrawlHtml(report, rankedFixes))
+      if (failedRun || failedThreshold) process.exitCode = 1
+      return
+    }
+
+    if (format === 'junit') {
+      await writeOrPrint(output, renderCrawlJunit(report))
       if (failedRun || failedThreshold) process.exitCode = 1
       return
     }
@@ -325,10 +369,12 @@ function crawlFormatArg(value: unknown, json: boolean): CrawlOutputFormat {
     throw new Error('Use either --json or --format, not both.')
   }
   if (!format) return json ? 'json' : 'pretty'
-  if (['pretty', 'json', 'csv', 'html', 'markdown'].includes(format)) {
+  if (['pretty', 'json', 'csv', 'html', 'markdown', 'junit'].includes(format)) {
     return format as CrawlOutputFormat
   }
-  throw new Error('Format must be one of: pretty, json, csv, html, markdown.')
+  throw new Error(
+    'Format must be one of: pretty, json, csv, html, markdown, junit.',
+  )
 }
 
 function crawlCsvArg(value: unknown): 'issues' | 'pages' {

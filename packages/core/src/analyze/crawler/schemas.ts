@@ -59,6 +59,44 @@ const analyticsSchema = z.object({
   conversions: z.number(),
 })
 
+const crawlerIdentitySchema = z.object({
+  name: z.string(),
+  robotsToken: z.string(),
+  version: z.string(),
+  userAgent: z.string(),
+  documentationUrl: z.string().url(),
+})
+
+const accessBlockEvidenceSchema = z.object({
+  provider: z.enum(['cloudflare', 'unknown']),
+  kind: z.enum(['challenge', 'firewall', 'rate-limit', 'authentication']),
+  status: z.number().int(),
+  crawler: crawlerIdentitySchema,
+  indicators: z.array(z.string()),
+  requestId: z.string().optional(),
+  guidance: z.object({
+    summary: z.string(),
+    recommendedAction: z.string(),
+    securityNote: z.string(),
+    documentationUrl: z.string().url().optional(),
+  }),
+})
+
+const crawlRobotsEvidenceSchema = z.object({
+  url: z.string().url(),
+  allowed: z.boolean().nullable(),
+  availability: z.enum([
+    'available',
+    'absent',
+    'access-blocked',
+    'rate-limited',
+    'unreachable',
+  ]),
+  status: z.number().int().optional(),
+  error: z.string().optional(),
+  matchedLine: z.string().optional(),
+})
+
 const geoSignalsSchema = z.object({
   semanticHtml: z.boolean(),
   structuredData: z.boolean(),
@@ -208,6 +246,7 @@ export const crawlPageSnapshotSchema = z.object({
           recentP95Ms: z.number().optional(),
         })
         .optional(),
+      accessBlock: accessBlockEvidenceSchema.optional(),
       robotsTxt: z
         .object({
           url: z.string().url(),
@@ -297,25 +336,12 @@ export const crawlPageSnapshotSchema = z.object({
     })
     .optional(),
   blocked: z.boolean().optional(),
+  auditScope: z.enum(['full', 'status']).optional(),
+  accessBlock: accessBlockEvidenceSchema.optional(),
   contentAuditAllowed: z.boolean().optional(),
   crawlDepth: z.number().int().optional(),
   error: z.string().optional(),
-  robotsTxt: z
-    .object({
-      url: z.string().url(),
-      allowed: z.boolean().nullable(),
-      availability: z.enum([
-        'available',
-        'absent',
-        'access-blocked',
-        'rate-limited',
-        'unreachable',
-      ]),
-      status: z.number().int().optional(),
-      error: z.string().optional(),
-      matchedLine: z.string().optional(),
-    })
-    .optional(),
+  robotsTxt: crawlRobotsEvidenceSchema.optional(),
   title: z.string().optional(),
   metaDescription: z.string().optional(),
   canonical: z.string().url().optional(),
@@ -538,6 +564,8 @@ const crawlResponseObservationBaseSchema = z.object({
       }),
     )
     .optional(),
+  accessBlock: accessBlockEvidenceSchema.optional(),
+  robotsTxt: crawlRobotsEvidenceSchema.optional(),
 })
 
 export const crawlRequestObservationSchema = z.union([
@@ -553,20 +581,7 @@ export const crawlRequestObservationSchema = z.union([
     outcome: z.literal('skipped'),
     durationMs: z.number().optional(),
     reason: z.enum(['robots-disallowed', 'robots-deferred']),
-    robotsTxt: z.object({
-      url: z.string().url(),
-      allowed: z.boolean().nullable(),
-      availability: z.enum([
-        'available',
-        'absent',
-        'access-blocked',
-        'rate-limited',
-        'unreachable',
-      ]),
-      status: z.number().int().optional(),
-      error: z.string().optional(),
-      matchedLine: z.string().optional(),
-    }),
+    robotsTxt: crawlRobotsEvidenceSchema,
     extraction: z.literal('not-applicable'),
   }),
   z.object({
@@ -691,7 +706,7 @@ const crawlSitemapDiscoverySchema = z.object({
   roots: z.array(
     z.object({
       url: z.string().url(),
-      source: z.enum(['robots-txt', 'default-path']),
+      source: z.enum(['explicit', 'robots-txt', 'default-path']),
       dataStatus: z.enum(['complete', 'partial', 'unavailable']),
       urlsReturned: z.number().int().nonnegative(),
       sitemapsFetched: z.number().int().nonnegative(),
@@ -772,6 +787,8 @@ const crawlExternalLinkVerificationSchema = z.object({
 export const crawlConfigSchema = z.object({
   url: z.string().url(),
   mode: z.enum(['site', 'page', 'list', 'sitemap']),
+  strategy: z.enum(['full', 'health']),
+  sitemapUrl: z.string().url().optional(),
   urls: z.array(z.string().url()),
   maxPages: z.number().int(),
   maxDepth: z.number().int(),
@@ -805,6 +822,7 @@ export const crawlConfigSchema = z.object({
 
 export const crawlReportSummarySchema = z.object({
   totalPages: z.number().int(),
+  statusOnlyPages: z.number().int(),
   indexablePages: z.number().int(),
   nonIndexablePages: z.number().int(),
   statusErrors: z.number().int(),
@@ -899,6 +917,24 @@ const crawlReportBaseSchema = z.object({
   status: z.enum(['completed', 'partial', 'failed']),
   configHash: z.string(),
   config: crawlConfigSchema,
+  access: z
+    .object({
+      crawler: crawlerIdentitySchema,
+      blockedRequests: z.number().int().nonnegative(),
+      providers: z.partialRecord(
+        z.enum(['cloudflare', 'unknown']),
+        z.number().int().nonnegative(),
+      ),
+      samples: z.array(
+        z.object({
+          url: z.string().url(),
+          evidence: accessBlockEvidenceSchema,
+        }),
+      ),
+      sampleLimit: z.number().int().positive(),
+      truncated: z.boolean(),
+    })
+    .optional(),
   summary: crawlReportSummarySchema,
   pages: z.array(crawlPageSnapshotSchema),
   issues: z.array(crawlIssueSchema),

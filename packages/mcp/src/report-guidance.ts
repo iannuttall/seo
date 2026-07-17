@@ -686,19 +686,20 @@ export const REPORT_GUIDANCE = {
     outcome: 'A local setup status with the exact problems that need fixing.',
   },
   'site-crawl': {
-    name: 'Technical SEO site crawl',
+    name: 'Sitemap health pass and technical site crawl',
     description:
-      'Crawl a site, check technical SEO signals, and save a local baseline for follow-up reports.',
+      'Start with a lightweight sitemap health pass, then run a full technical crawl only when page bodies and content-level evidence are needed.',
     useWhen: [
+      'You need a fast first check of sitemap URLs, statuses, redirects, robots decisions, or access blocks.',
       'You need to discover technical issues across linked pages.',
       'You want a crawl snapshot for later filtering or comparison.',
     ],
     avoidWhen: [
       'You only need to check one page or a known URL list.',
-      'Important content requires browser rendering that is not enabled.',
+      'Do not run a full crawl on a large or unknown site before health=true, or when important content requires browser rendering that is not enabled.',
     ],
     outcome:
-      'A crawl summary with page evidence, technical findings, and saved report ID.',
+      'A fast sitemap response gate or a full crawl summary with page evidence, technical findings, crawler identity, access guidance, and an optional saved report ID.',
   },
   'striking-distance': {
     name: 'Queries near page one',

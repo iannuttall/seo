@@ -510,33 +510,39 @@ export const reportGuideOverridesAF: Partial<
     },
   },
   'site-crawl': {
-    name: 'Technical SEO site crawl audit',
+    name: 'Sitemap health check and technical site crawl',
     summary:
-      'Find technical SEO issues across a site and save the crawl for follow-up audits.',
+      'Check sitemap URL health first, then run a full technical crawl only when page-level evidence is needed.',
     inputs: [
       {
-        label: 'Live site responses and discovered links',
-        source: 'crawlable-links',
-        role: 'Provides the limited page set, redirects, response evidence, links, metadata, directives, and content extraction.',
+        label: 'Explicit sitemap or bounded sitemap discovery',
+        source: 'sitemaps',
+        role: 'Defines the URL set for the health pass and keeps sitemap source, completeness, redirects, and limits visible.',
       },
       {
-        label: 'robots.txt and sitemap discovery',
+        label: 'Live responses and robots.txt',
         source: 'robots',
-        role: 'Controls allowed fetches and adds eligible sitemap URLs when enabled.',
+        role: 'Provides status, redirect, network, crawler access, and robots decisions without consuming page bodies in health mode.',
+      },
+      {
+        label: 'Full crawl page evidence when requested',
+        source: 'crawlable-links',
+        role: 'Adds discovered links, metadata, directives, content extraction, structured data, and rendered evidence after the health pass.',
       },
       {
         label: 'Optional Search Console and Google Analytics joins',
         source: 'search-analytics',
-        role: 'Adds available first-party value to fetched landing pages without filling missing rows with zero.',
+        role: 'Adds available first-party value to fetched landing pages in full mode without filling missing rows with zero.',
       },
     ],
     checks: [
-      'Fetches and extracts pages within the configured origin, depth, page, rate, inclusion, exclusion, robots, sitemap, and JavaScript settings.',
-      'Runs maintained response, redirect, canonical, indexability, metadata, heading, link, structured-data, international, security, mobile, and content observations.',
+      'Health mode checks sitemap URL status, redirects, robots decisions, network failures, and access blocks with uncached, status-only probes.',
+      'Full mode fetches and extracts pages within the configured origin, depth, page, rate, inclusion, exclusion, robots, sitemap, and JavaScript settings.',
+      'Full mode runs maintained response, redirect, canonical, indexability, metadata, heading, link, structured-data, international, security, mobile, and content observations.',
     ],
     returns: [
-      'A compact technical summary with crawl status, page totals, grouped issues, top fixes, warnings, caveats, and source coverage.',
-      'Optional limited page and issue inventories plus a local report id for comparisons and focused follow-ups.',
+      'A compact health result with exact URLs, statuses, redirects, robots outcomes, network failures, crawler identity, and access-block guidance.',
+      'In full mode, grouped page-level issues, top fixes, warnings, caveats, source coverage, and an optional local report id.',
     ],
     alternatives: [
       {

@@ -1,4 +1,5 @@
 import type {
+  AccessBlockEvidence,
   ContentExtractionDiagnostics,
   PageFetchDiagnostics,
 } from '../../types.js'
@@ -15,6 +16,8 @@ export type CrawlPageSnapshot = {
   fetchSource?: 'cache' | 'network' | 'rendered'
   cacheState?: 'hit' | 'miss' | 'bypass'
   fetchDiagnostics?: PageFetchDiagnostics
+  auditScope?: 'full' | 'status'
+  accessBlock?: AccessBlockEvidence
   blocked?: boolean
   contentAuditAllowed?: boolean
   crawlDepth?: number
@@ -201,6 +204,8 @@ export type CrawlResponseObservation = {
   contentType?: string
   durationMs?: number
   redirectChain?: PageFetchDiagnostics['redirectChain']
+  accessBlock?: AccessBlockEvidence
+  robotsTxt?: NonNullable<CrawlPageSnapshot['robotsTxt']>
 } & (
   | { extraction: 'complete' | 'not-applicable' | 'unknown-media-type' }
   | { extraction: 'failed'; extractionError: string }

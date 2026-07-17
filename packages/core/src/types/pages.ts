@@ -6,6 +6,29 @@ export interface GscRow {
   position: number
 }
 
+export type CrawlerIdentity = {
+  name: string
+  robotsToken: string
+  version: string
+  userAgent: string
+  documentationUrl: string
+}
+
+export type AccessBlockEvidence = {
+  provider: 'cloudflare' | 'unknown'
+  kind: 'challenge' | 'firewall' | 'rate-limit' | 'authentication'
+  status: number
+  crawler: CrawlerIdentity
+  indicators: string[]
+  requestId?: string
+  guidance: {
+    summary: string
+    recommendedAction: string
+    securityNote: string
+    documentationUrl?: string
+  }
+}
+
 export interface PageFetchResult {
   url: string
   finalUrl: string
@@ -55,6 +78,7 @@ export interface PageFetchDiagnostics {
     consecutiveErrors: number
     recentP95Ms?: number
   }
+  accessBlock?: AccessBlockEvidence
   robotsTxt?: {
     url: string
     cache: 'hit' | 'miss' | 'bypass'

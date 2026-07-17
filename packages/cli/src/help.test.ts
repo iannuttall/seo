@@ -492,7 +492,14 @@ test('auth status reports a service account identity without printing the key', 
 
 test('long help and crawler command help are available', async () => {
   const all = await runSeo(['help', 'all'])
-  assert.match(all, /seo crawl\s+Crawl a site/)
+  assert.match(
+    all,
+    /seo crawl --sitemap-url <url> --health\s+Run the fast sitemap gate before a full crawl/,
+  )
+  assert.match(
+    all,
+    /seo crawl\s+Run a full crawl for page and content evidence/,
+  )
   assert.match(
     all,
     /seo agent-readiness\s+Check content-site readiness for AI agents/,

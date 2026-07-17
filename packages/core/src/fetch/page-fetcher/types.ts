@@ -29,6 +29,8 @@ export interface FetchPageOptions {
   rate?: FetchRateControls
   signal?: AbortSignal
   respectRobots?: boolean
+  /** Reuse one robots.txt policy in memory across a bounded crawl. */
+  robotsResolver?: RobotsResolver
   /** Reuse one browser process across related fetches, such as a site crawl. */
   renderer?: PageRenderer
 }
@@ -67,3 +69,8 @@ export type RobotsResult = {
   cache: 'hit' | 'miss' | 'bypass'
   url: string
 }
+
+export type RobotsResolver = (
+  origin: string,
+  targetUrl: string,
+) => Promise<RobotsResult>

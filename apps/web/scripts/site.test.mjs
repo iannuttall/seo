@@ -455,8 +455,15 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.match(html, /What to do next/)
     assert.match(html, /Related reports/)
     if (id === 'site-crawl') {
-      assert.match(html, /<h1[^>]*>Technical SEO site crawl audit<\/h1>/)
-      assert.match(html, /seo crawl https:\/\/example\.com --save/)
+      assert.match(
+        html,
+        /<h1[^>]*>Sitemap health check and technical site crawl<\/h1>/,
+      )
+      assert.match(
+        html,
+        /seo crawl --sitemap-url https:\/\/example\.com\/sitemap\.xml --health/,
+      )
+      assert.match(html, /Move to the full crawl/)
       assert.match(html, /What you get from this audit/)
     }
     assert.doesNotMatch(html, /Command facts/)

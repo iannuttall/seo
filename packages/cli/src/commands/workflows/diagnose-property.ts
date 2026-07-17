@@ -335,6 +335,11 @@ export function reportFollowups(
     ) {
       addFollowup(
         commands,
+        `seo crawl --url ${shellArg(input.crawlStartUrl)} --health`,
+        'Run the fast sitemap response and access gate before fetching page bodies.',
+      )
+      addFollowup(
+        commands,
         `seo crawl --url ${shellArg(input.crawlStartUrl)} --save`,
         'Create the technical crawl that this report needs before opening a page-level follow-up.',
       )
@@ -434,6 +439,11 @@ export function reportFollowups(
     input.technicalBaselineStatus !== 'refreshed' &&
     input.technicalBaselineStatus !== 'reused'
   ) {
+    addFollowup(
+      commands,
+      `seo crawl --url ${shellArg(input.crawlStartUrl)} --health`,
+      'Run the fast sitemap response and access gate before fetching page bodies.',
+    )
     addFollowup(
       commands,
       `seo crawl --url ${shellArg(input.crawlStartUrl)} ${identity} --save`,

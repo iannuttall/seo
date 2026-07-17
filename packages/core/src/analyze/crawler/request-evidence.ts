@@ -15,6 +15,8 @@ export function observationFromPage(
     contentType: page.contentType,
     durationMs: page.responseTimeMs,
     redirectChain: page.fetchDiagnostics?.redirectChain,
+    accessBlock: page.accessBlock ?? page.fetchDiagnostics?.accessBlock,
+    robotsTxt: page.robotsTxt,
   }
   if (page.extractionStatus === 'failed') {
     return {

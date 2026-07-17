@@ -93,9 +93,6 @@ importers:
       update-notifier:
         specifier: ^7.3.1
         version: 7.3.1
-      user-agents:
-        specifier: 2.1.117
-        version: 2.1.117
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -248,9 +245,6 @@ importers:
       undici:
         specifier: ^8.7.0
         version: 8.7.0
-      user-agents:
-        specifier: 2.1.117
-        version: 2.1.117
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4490,10 +4484,6 @@ packages:
 
   update-notifier@7.3.1:
     resolution: {integrity: sha512-+dwUY4L35XFYEzE+OAL3sarJdUioVovq+8f7lcIJ7wnmnYQV5UD1Y/lcwaMSyaQ6Bj3JMj1XSTjZbNLHn/19yA==}
-    engines: {node: '>=18'}
-
-  user-agents@2.1.117:
-    resolution: {integrity: sha512-xcPO6YyvH1IRemUvcPshwPNb1KFYnjeDtyydVvTNEVarlV+DjT+iOqjvttPTZCUZKvu7qjx9kk4F4Ulpy6ZlNg==}
     engines: {node: '>=18'}
 
   vary@1.1.2:
@@ -9341,8 +9331,6 @@ snapshots:
       pupa: 3.3.0
       semver: 7.8.5
       xdg-basedir: 5.1.0
-
-  user-agents@2.1.117: {}
 
   vary@1.1.2: {}
 

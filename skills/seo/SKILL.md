@@ -64,7 +64,7 @@ its evidence, then decide; do not run a whole chain blindly.
 |---|---|
 | Page not indexed or missing from Google | `index-coverage`, `index-monitor` (URL Inspection), `audit-page`, `redirect-trace` |
 | Traffic or clicks dropped | `search-performance-overview`, `traffic-anomaly`, `update-correlation`, `segment-impact`, `decaying-pages`, `link-recovery` |
-| Audit a whole site | `report` command (main report), `site-crawl`, `top-fixes`, `ai-search-scorecard` |
+| Audit a whole site | `site-crawl` with `health: true`, `report` command (main report), full `site-crawl` only if needed, `top-fixes`, `ai-search-scorecard` |
 | More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
 | AI agent readiness for a content site | `agent-readiness`, `ai-readiness`, `entity-readiness`, `llms-txt-audit` |
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
@@ -78,8 +78,25 @@ URL and an `audit-page` pass for content or technical problems on the page
 itself.
 
 The main human report is the `seo report` command. It is the right first move
-when the user asks a broad "how is my site doing" question; the focused
-reports above are for specific symptoms.
+for a broad performance question with a known project and available search
+evidence. For a broad technical audit of a large or unfamiliar URL, run the
+sitemap health pass before any full crawl. The focused reports above are for
+specific symptoms.
+
+For a large or unfamiliar site, do not open with a full crawl. Describe and run
+`site-crawl` with `health: true` and an explicit `sitemapUrl` when known. This
+first pass checks sitemap URL responses, redirects, robots decisions, and
+access blocks without downloading, parsing, rendering, or caching page bodies.
+Read `config.strategy`, `access`, failures, limits, and sitemap completeness.
+Run the full `site-crawl` second only when the question needs page content,
+metadata, canonicals, internal links, structured data, or rendered HTML.
+
+The crawler identifies every HTTP and browser request as
+`SEO-Skill/<version> (+https://seoskill.dev)`. If `access.blockedRequests` is
+non-zero, give the user the provider evidence and exact User-Agent. A
+User-Agent is spoofable, so ask for a temporary exception scoped to the audit
+machine source IP, hostname or required paths, and only the blocking security
+rule. Never recommend a broad User-Agent-only bypass.
 
 ## Evidence rules
 
@@ -105,5 +122,6 @@ The CLI also has direct commands for raw provider access and administration:
 report when one covers the question, because reports carry provenance and
 caveats that raw queries do not.
 
-Report output is cached locally. Pass `refresh: true` (or `--refresh`) only
-when the user explicitly wants a fresh fetch.
+Full report output is cached locally. Pass `refresh: true` (or `--refresh`)
+only when the user explicitly wants a fresh fetch. The sitemap health strategy
+always bypasses page-body cache and never writes page responses to it.

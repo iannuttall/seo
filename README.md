@@ -183,7 +183,21 @@ seo analytics google report --property 123456789 --dimensions landingPage --metr
 
 ## Crawl a site
 
-Run a readable technical crawl, the base of any technical SEO audit:
+For a large or unfamiliar site, start with the sitemap health pass:
+
+```sh
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format pretty
+```
+
+This reads the sitemap, then checks each listed URL for status, redirects,
+robots decisions, network failures, and access blocks. It does not parse or
+render page bodies, join Google data, check external links, or write page and
+robots responses to the local cache. Requests begin one at a time and increase
+only after clean responses.
+
+Run the full crawl second when the health evidence points to a problem, or when
+you need metadata, canonicals, indexability, links, structured data, or page
+content:
 
 ```sh
 seo crawl https://example.com --format pretty
@@ -199,7 +213,15 @@ seo crawl-reports --compare latest --against previous
 ```
 
 Useful crawl controls include `--max-pages`, `--max-depth`, `--include`,
-`--exclude`, `--no-sitemap`, `--no-external`, and `--fail-on` for CI.
+`--exclude`, `--no-sitemap`, `--no-external`, and `--fail-on` for CI. Every
+request uses the stable versioned identity
+`SEO-Skill/<version> (+https://seoskill.dev)`.
+
+If a site denies or challenges that identity, the report keeps the HTTP status,
+provider indicators, request ID when available, and practical access guidance.
+Do not allow requests based on User-Agent alone because it can be spoofed.
+Scope any temporary exception to the audit machine source IP, required host or
+paths, and the exact blocking rule.
 
 ## Use it in CI and scripts
 
@@ -208,8 +230,8 @@ runs.
 
 ```sh
 seo report --project example --json
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml --fail-on high
 seo crawl https://example.com --json --output crawl.json
-seo crawl https://example.com --fail-on high --json
 ```
 
 Reports keep observed data, derived findings, skipped sections, limits, and
@@ -343,6 +365,13 @@ const page = await auditPage({
   url: 'https://example.com/pricing',
 })
 
+const health = await crawlSite({
+  url: 'https://example.com',
+  mode: 'sitemap',
+  strategy: 'health',
+  sitemapUrl: 'https://example.com/sitemap.xml',
+})
+
 const crawl = await crawlSite({
   url: 'https://example.com',
   maxPages: 100,
@@ -350,6 +379,7 @@ const crawl = await crawlSite({
 })
 
 console.log(page.issues)
+console.log(health.summary, health.access)
 console.log(crawl.summary, crawl.issueGroups)
 ```
 

@@ -7,17 +7,36 @@ It is built for two jobs:
 - A human wants a short list of fixes.
 - An agent wants structured data with stable rule ids and evidence.
 
-## Basic crawl
+## Start with the sitemap health pass
+
+```bash
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format pretty
+```
+
+Use this first on a large or unfamiliar site. It reads the sitemap and checks
+the listed URLs for HTTP status, redirects, robots decisions, network failures,
+and access blocks. It does not parse or render page bodies, join provider data,
+check external links, or write page and robots responses to the local cache.
+It starts with one request at a time and increases concurrency only after clean
+responses.
+
+Run a full crawl second when a health result needs investigation, or when the
+question needs metadata, canonicals, indexability, internal links, structured
+data, page content, or rendered HTML:
 
 ```bash
 seo crawl https://example.com --format pretty
 ```
 
-Use a project profile when you have one:
+Use a project profile for a full crawl when you have one:
 
 ```bash
 seo crawl --project keep --max-pages 500
 ```
+
+When the exact sitemap URL is unknown, `--health` checks same-origin sitemap
+declarations in `robots.txt` and then falls back to `/sitemap.xml`. Passing
+`--sitemap-url` is faster and removes that discovery ambiguity.
 
 When `robots.txt` declares same-origin sitemap files, the crawler tries those
 first. JSON records the sitemap sources and returned URL counts. If none return
@@ -46,6 +65,37 @@ report keeps each selected result on the page that linked to it and records
 retained, selected, fetched, failed, and deferred URLs. A 404 is evidence that
 the external target is unavailable. It does not mean the source page failed.
 
+External-link checks run only during the full crawl, never during the health
+pass.
+
+## Crawler identity and access blocks
+
+HTTP and browser requests use this stable, versioned User-Agent:
+
+```text
+SEO-Skill/<version> (+https://seoskill.dev)
+```
+
+Robots rules are evaluated against the `SEO-Skill` token. Structured output
+keeps the exact identity in `access.crawler`. When a request returns an access
+challenge, denial, or rate limit, `access.samples` preserves the URL, status,
+provider indicators, request ID when available, and guidance.
+
+Cloudflare Challenge Pages are identified from the response's
+`cf-mitigated: challenge` header. Other Cloudflare headers show that the
+response passed through Cloudflare, but do not prove Cloudflare caused an
+ordinary 401, 403, or 429.
+See Cloudflare's [Challenge response detection](https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/)
+and [custom Skip rule](https://developers.cloudflare.com/waf/custom-rules/skip/)
+documentation.
+
+A User-Agent can be spoofed. Never create a broad User-Agent-only allow rule.
+If the audit should have access, use a temporary exception limited to the audit
+machine source IP, required hostname or paths, exact User-Agent, and only the
+security rule that blocked the request. For Cloudflare, check Security Events
+first and use the narrowest custom Skip rule. If no event matches, inspect the
+origin security logs.
+
 ## What it captures
 
 For each page, the crawler records:
@@ -60,7 +110,7 @@ For each page, the crawler records:
 
 ## Rules
 
-The rule registry has 50 rules. Each rule includes:
+The rule registry has 51 rules. Each rule includes:
 
 - stable id
 - category
@@ -109,17 +159,22 @@ seo crawl https://example.com --format csv --csv issues
 seo crawl https://example.com --format csv --csv pages
 seo crawl https://example.com --format html --output report.html
 seo crawl https://example.com --format markdown --output tickets.md
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml
 ```
 
 Pretty output is for humans. JSON is for agents and scripts. HTML is for sharing. Markdown creates tickets for prioritised fixes and keeps review observations in their own section.
+JUnit creates one test case per sitemap document and listed URL with exact
+status, redirect, network, robots, and access-block evidence for CI systems.
 
 ## CI gates
 
 ```bash
-seo crawl https://example.com --fail-on high
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml --fail-on high
 ```
 
-Use `--fail-on medium` when you want stricter gates before launch.
+Choose `--fail-on medium` or `--fail-on low` when the team has agreed to fail
+on those findings. Follow a failed health URL with a focused page check or full
+crawl; do not turn every deploy check into a full-site content audit.
 
 ## Saved reports
 

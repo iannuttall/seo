@@ -1,7 +1,8 @@
 import PQueue from 'p-queue'
 import { type Browser, chromium, type Page } from 'playwright-core'
 import type { PageFetchDiagnostics, PageFetchResult } from '../../types.js'
-import { BROWSER_USER_AGENT } from '../http-client.js'
+import { detectAccessBlock } from '../access-block.js'
+import { SEO_CRAWLER_USER_AGENT } from '../crawler-identity.js'
 import {
   type BrowserExecutable,
   browserUnavailableMessage,
@@ -192,7 +193,7 @@ async function renderPage(input: {
   const beforeFetch = await waitForHostBackpressure(host, input.rate)
   const timeoutMs = input.timeoutMs ?? DEFAULT_RENDER_TIMEOUT_MS
   const context = await input.browser.browser.newContext({
-    userAgent: BROWSER_USER_AGENT,
+    userAgent: SEO_CRAWLER_USER_AGENT,
     viewport: { width: 1440, height: 900 },
     locale: 'en-US',
   })
@@ -230,6 +231,8 @@ async function renderPage(input: {
       })
     const html = await page.content()
     const status = response?.status() ?? 200
+    const headers = response?.headers() ?? {}
+    const accessBlock = detectAccessBlock({ status, headers })
     const durationMs = Date.now() - startedAt
     const backpressure = recordHostFetch({
       host,
@@ -242,7 +245,7 @@ async function renderPage(input: {
       url: input.url,
       finalUrl: page.url(),
       status,
-      headers: response?.headers() ?? {},
+      headers,
       html,
       usedJs: true,
       diagnostics: {
@@ -250,7 +253,7 @@ async function renderPage(input: {
         cache: 'bypass',
         fetched: true,
         rendered: true,
-        blocked: [401, 403, 429].includes(status),
+        blocked: Boolean(accessBlock) || [401, 403, 429].includes(status),
         durationMs,
         retries: 0,
         rateLimit: rateLimitDiagnostics(host, input.rate),
@@ -258,6 +261,7 @@ async function renderPage(input: {
           backpressure.status === 'ok' && beforeFetch.status !== 'ok'
             ? beforeFetch
             : backpressure,
+        accessBlock,
         rendering: {
           mode: 'on',
           status: 'rendered',
@@ -274,11 +278,18 @@ async function renderPage(input: {
           ...renderDiagnostics,
         },
       },
-      warnings: networkIdleReached
-        ? []
-        : [
-            `Rendered page did not reach network idle within ${Math.min(NETWORK_IDLE_TIMEOUT_MS, timeoutMs)}ms; captured DOM after DOMContentLoaded.`,
-          ],
+      warnings: [
+        ...(networkIdleReached
+          ? []
+          : [
+              `Rendered page did not reach network idle within ${Math.min(NETWORK_IDLE_TIMEOUT_MS, timeoutMs)}ms; captured DOM after DOMContentLoaded.`,
+            ]),
+        ...(accessBlock
+          ? [
+              `${accessBlock.guidance.summary} Identify the crawler as ${accessBlock.crawler.userAgent}.`,
+            ]
+          : []),
+      ],
     }
   } catch (error) {
     if (error instanceof JavaScriptRenderingError) throw error

@@ -80,6 +80,10 @@ test('technical-only report asks for a crawl before a page follow-up', () => {
 
   assert.deepEqual(
     followups.map((item) => item.command),
-    ['seo crawl --url https://example.com/ --save', 'seo start'],
+    [
+      'seo crawl --url https://example.com/ --health',
+      'seo crawl --url https://example.com/ --save',
+      'seo start',
+    ],
   )
 })

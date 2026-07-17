@@ -203,6 +203,7 @@ test('crawl report store recomputes derived fields on load', () => {
   >
   const legacyPages = legacyJson.pages as Array<Record<string, unknown>>
   const legacySummary = legacyJson.summary as Record<string, unknown>
+  const legacyConfig = legacyJson.config as Record<string, unknown>
   const legacyPage = legacyPages[0]
   assert.ok(legacyPage)
   legacyPage.seoScore = 70
@@ -212,7 +213,10 @@ test('crawl report store recomputes derived fields on load', () => {
   legacySummary.skippedUrls = 2
   delete legacySummary.skipReasons
   delete legacySummary.skippedUrlsByImpact
+  delete legacySummary.statusOnlyPages
+  delete legacyConfig.strategy
   delete legacyJson.definitionId
+  delete legacyJson.access
   delete legacyJson.requests
   delete legacyJson.requestEvidenceStatus
   legacyJson.issueGroups = []
@@ -228,6 +232,9 @@ test('crawl report store recomputes derived fields on load', () => {
   assert.equal('seoScore' in (loaded?.pages[0] ?? {}), false)
   assert.equal('geoScore' in (loaded?.pages[0] ?? {}), false)
   assert.equal(loaded?.requestEvidenceStatus, 'unavailable')
+  assert.equal(loaded?.config.strategy, 'full')
+  assert.equal(loaded?.summary.statusOnlyPages, 0)
+  assert.equal(loaded?.access.crawler.robotsToken, 'SEO-Skill')
   assert.equal(loaded?.summary.attemptedRequests, 0)
   assert.deepEqual(loaded?.summary.skipReasons, [
     {

@@ -2,10 +2,12 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { test } from 'node:test'
 import type { PageFetchResult } from '../../types.js'
+import { ResponseSizeLimitError } from '../http-client.js'
 import {
   decodePageFetchCacheEvidence,
   encodePageFetchCacheEvidence,
   fetchPlain,
+  MAX_PAGE_RESPONSE_BYTES,
 } from './plain.js'
 import { normalizeRateControls } from './rate-controls.js'
 import { RobotsAccessError } from './robots.js'
@@ -108,6 +110,41 @@ test('respecting robots checks policy before serving a cached page', async () =>
         error.reason === 'robots-disallowed',
     )
     assert.equal(pageRequests, 1)
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()))
+    })
+  }
+})
+
+test('page fetch rejects responses above the local memory limit', async () => {
+  const server = createServer((_req, res) => {
+    res.setHeader('content-type', 'text/html')
+    res.setHeader('content-length', String(MAX_PAGE_RESPONSE_BYTES + 1))
+    res.end()
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  assert.ok(address && typeof address === 'object')
+  const rate = normalizeRateControls({
+    concurrency: 1,
+    intervalCap: 100,
+    intervalMs: 1,
+  })
+
+  try {
+    await assert.rejects(
+      () =>
+        fetchPlain(
+          `http://127.0.0.1:${address.port}/oversized`,
+          true,
+          2_000,
+          rate,
+          undefined,
+          false,
+        ),
+      ResponseSizeLimitError,
+    )
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()))

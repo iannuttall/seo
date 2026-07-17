@@ -84,6 +84,51 @@ const discovery: CrawlAgentDiscovery = {
   warnings: [],
 }
 
+test('crawlSite parses Content-Signal directives and expanded AI bot tokens from robots.txt', async () => {
+  const dependencies = {
+    fetch: async (url: string) => {
+      if (String(url).endsWith('/robots.txt')) {
+        return new Response(
+          'User-agent: *\nAllow: /\nContent-Signal: search=yes, ai-train=no\n',
+          { status: 200, headers: { 'content-type': 'text/plain' } },
+        )
+      }
+      return new Response('', { status: 404 })
+    },
+    fetchPage: async (url: string) => ({
+      page: crawlPageSnapshot(url),
+      urls: [],
+    }),
+  }
+
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      useSitemap: false,
+      checkExternal: false,
+      checkAgentDiscovery: false,
+    },
+    dependencies as never,
+  )
+
+  assert.deepEqual(report.ai?.robotsTxt?.contentSignals, [
+    'search=yes, ai-train=no',
+  ])
+  const tokens = report.ai?.robotsTxt?.botAccess.map((bot) => bot.userAgent)
+  for (const token of [
+    'GPTBot',
+    'ClaudeBot',
+    'Claude-User',
+    'Bytespider',
+    'Amazonbot',
+    'Meta-ExternalAgent',
+    'DuckAssistBot',
+  ]) {
+    assert.ok(tokens?.includes(token), token)
+  }
+  assert.equal(crawlReportSchema.safeParse(report).success, true)
+})
+
 test('crawlSite only collects focused agent evidence when requested', async () => {
   let collections = 0
   const dependencies = {

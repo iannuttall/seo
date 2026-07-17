@@ -1,4 +1,7 @@
-import type { CrawlAgentDiscovery } from './agent-discovery.js'
+import type {
+  AgentEndpointObservation,
+  CrawlAgentDiscovery,
+} from './agent-discovery.js'
 import type { CrawlReport } from './report.js'
 
 export type AgentReadinessCheckStatus =
@@ -284,8 +287,81 @@ function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
   ]
 }
 
+function contentSignalsCheck(
+  discovery: CrawlAgentDiscovery,
+  robotsContentSignals: string[] | undefined,
+): AgentReadinessCheck {
+  const signals = discovery.contentSignals
+  const robotsDeclared = robotsContentSignals ?? []
+  const robotsCollected = robotsContentSignals !== undefined
+  const headersObserved =
+    signals.htmlValues.length > 0 || signals.markdownValues.length > 0
+  const headersConsistent = signals.consistent === true
+  const evidence = {
+    robotsDirectives: robotsDeclared,
+    robotsDirectivesCollected: robotsCollected,
+    ...signals,
+  }
+  if (headersConsistent) {
+    return check('discovery', {
+      id: 'content-signals',
+      status: 'pass',
+      title: 'Every response publishes one explicit Content Signals policy',
+      plainEnglish: `The same ${signals.htmlValues[0]} policy was observed on every evaluated HTML and Markdown response${robotsDeclared.length ? ', and robots.txt declares a Content-Signal directive' : ''}.`,
+      action:
+        'Keep the same Content-Signal value on robots.txt, HTML, and Markdown responses when the policy changes.',
+      evidence,
+    })
+  }
+  if (robotsDeclared.length > 0 && !headersObserved) {
+    return check('discovery', {
+      id: 'content-signals',
+      status: 'pass',
+      title: 'robots.txt declares a Content Signals policy',
+      plainEnglish: `robots.txt declares ${robotsDeclared.length === 1 ? 'one Content-Signal directive' : `${robotsDeclared.length} Content-Signal directives`}. No response-header variant was observed, which is fine because robots.txt is the primary published location.`,
+      action:
+        'Keep the robots.txt directive as the single policy, or mirror the same value in response headers if you add them.',
+      evidence,
+    })
+  }
+  if (robotsDeclared.length > 0 || headersObserved) {
+    return check('discovery', {
+      id: 'content-signals',
+      status: 'warning',
+      title: 'Content Signals are published inconsistently',
+      plainEnglish: `${signals.missingHtmlPages} HTML responses and ${signals.missingMarkdownPages} Markdown responses were missing the header, the observed values differed, or the header policy does not line up with robots.txt.`,
+      action:
+        'Choose the site policy deliberately and publish the same Content-Signal value everywhere it appears.',
+      evidence,
+    })
+  }
+  if (signals.consistent === null && !robotsCollected) {
+    return check('discovery', {
+      id: 'content-signals',
+      status: 'unknown',
+      title: 'Content Signals evidence was not collected',
+      plainEnglish:
+        'No pages were evaluated for the header and robots.txt directive evidence is unavailable in this crawl.',
+      action:
+        'Re-run the report with a URL so robots.txt and response headers can be checked.',
+      evidence,
+    })
+  }
+  return check('discovery', {
+    id: 'content-signals',
+    status: 'info',
+    title: 'No Content Signals policy is published',
+    plainEnglish:
+      'Neither robots.txt nor the evaluated responses declare a Content-Signal policy. Publishing one is optional.',
+    action:
+      'Add a Content-Signal directive to robots.txt only when you want to state an explicit search, ai-input, or ai-train preference.',
+    evidence,
+  })
+}
+
 function discoveryChecks(
   discovery: CrawlAgentDiscovery,
+  robotsContentSignals: string[] | undefined,
 ): AgentReadinessCheck[] {
   const skills = discovery.agentSkills
   const skillsValid =
@@ -370,24 +446,7 @@ function discoveryChecks(
         ...llms.missingCrawlRoutes,
       ].slice(0, 25),
     }),
-    check('discovery', {
-      id: 'content-signals',
-      status:
-        discovery.contentSignals.consistent === null
-          ? 'unknown'
-          : discovery.contentSignals.consistent
-            ? 'pass'
-            : 'warning',
-      title: discovery.contentSignals.consistent
-        ? 'HTML and Markdown publish one explicit Content Signals policy'
-        : 'Content Signals are missing or inconsistent across representations',
-      plainEnglish: discovery.contentSignals.consistent
-        ? `The same ${discovery.contentSignals.htmlValues[0]} policy was observed on every evaluated HTML and Markdown response.`
-        : `${discovery.contentSignals.missingHtmlPages} HTML responses and ${discovery.contentSignals.missingMarkdownPages} Markdown responses were missing the header, or the observed values differed.`,
-      action:
-        'Choose the site policy deliberately and return the same Content-Signal value on HTML and Markdown responses.',
-      evidence: discovery.contentSignals,
-    }),
+    contentSignalsCheck(discovery, robotsContentSignals),
     check('discovery', {
       id: 'route-manifest',
       status: !discovery.routeManifest.valid
@@ -406,6 +465,215 @@ function discoveryChecks(
       action:
         'Generate one deterministic route inventory from the build when exact HTML and Markdown parity matters.',
       evidence: discovery.routeManifest as unknown as Record<string, unknown>,
+    }),
+  ]
+}
+
+type OptionalEndpointCopy = {
+  id: string
+  subject: string
+  absent: string
+  absentAction: string
+  presentAction: string
+  requiredNote: string
+}
+
+function optionalEndpointCheck(
+  endpoints: AgentEndpointObservation[],
+  copy: OptionalEndpointCopy,
+): AgentReadinessCheck {
+  const found = endpoints.filter((endpoint) => endpoint.exists)
+  const evidence = { endpoints } as unknown as Record<string, unknown>
+  if (found.length === 0) {
+    return check('endpoints', {
+      id: copy.id,
+      status: 'info',
+      title: `${copy.subject} is not published`,
+      plainEnglish: copy.absent,
+      action: copy.absentAction,
+      evidence,
+    })
+  }
+  const valid = found.filter(
+    (endpoint) =>
+      endpoint.validJson !== false &&
+      (endpoint.missingFields ?? []).length === 0,
+  )
+  if (valid.length > 0) {
+    return check('endpoints', {
+      id: copy.id,
+      status: 'pass',
+      title: `${copy.subject} is published and parses`,
+      plainEnglish: `${valid[0]?.url} returned ${valid[0]?.contentType ?? 'a response'} with the expected structure. ${copy.requiredNote}`,
+      action: copy.presentAction,
+      evidence,
+      urls: valid.map((endpoint) => endpoint.url),
+    })
+  }
+  const broken = found[0]
+  return check('endpoints', {
+    id: copy.id,
+    status: 'warning',
+    title: `${copy.subject} is published but needs review`,
+    plainEnglish: `${broken?.url} responded, but ${broken?.validJson === false ? 'the body is not valid JSON' : `required fields are missing: ${(broken?.missingFields ?? []).join(', ')}`}. ${copy.requiredNote}`,
+    action: copy.presentAction,
+    evidence,
+    urls: found.map((endpoint) => endpoint.url),
+  })
+}
+
+function endpointChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
+  const endpointDiscovery = discovery.endpointDiscovery
+  if (!endpointDiscovery) {
+    return [
+      check('endpoints', {
+        id: 'agent-endpoints-evidence',
+        status: 'unknown',
+        title: 'Agent endpoint evidence was not collected',
+        plainEnglish:
+          'This saved crawl predates the Link header and well-known endpoint probes, so that evidence is unavailable.',
+        action:
+          'Run the agent-readiness report with a URL to collect endpoint evidence.',
+      }),
+    ]
+  }
+  const byId = new Map(
+    endpointDiscovery.endpoints.map((endpoint) => [endpoint.id, endpoint]),
+  )
+  const pick = (...ids: string[]): AgentEndpointObservation[] =>
+    ids
+      .map((id) => byId.get(id))
+      .filter((endpoint): endpoint is AgentEndpointObservation =>
+        Boolean(endpoint),
+      )
+  const linkHeader = endpointDiscovery.linkHeader
+  const advertisedRels = [
+    ...linkHeader.registeredRels,
+    ...linkHeader.emergingRels,
+  ]
+  const linkHeaderCheck = check('endpoints', {
+    id: 'link-headers',
+    status: linkHeader.error
+      ? 'unknown'
+      : advertisedRels.length > 0
+        ? 'pass'
+        : 'info',
+    title: linkHeader.error
+      ? 'Link header evidence was not collected'
+      : advertisedRels.length > 0
+        ? 'The start page Link header advertises agent resources'
+        : linkHeader.entries.length > 0
+          ? 'Link headers exist but advertise no agent resources'
+          : 'No Link header advertises agent resources',
+    plainEnglish: linkHeader.error
+      ? `The start page request failed: ${linkHeader.error}`
+      : advertisedRels.length > 0
+        ? `${linkHeader.entries.length} Link header ${linkHeader.entries.length === 1 ? 'entry was' : 'entries were'} observed. Registered relation types: ${linkHeader.registeredRels.join(', ') || 'none'}. Emerging relation types: ${linkHeader.emergingRels.join(', ') || 'none'}.`
+        : linkHeader.entries.length > 0
+          ? `${linkHeader.entries.length} Link header ${linkHeader.entries.length === 1 ? 'entry was' : 'entries were'} observed, but none used a recognised agent relation type such as api-catalog, service-desc, service-doc, describedby, llms-txt, or agent-skills.`
+          : 'The start page response includes no Link header. Advertising machine-readable resources this way is optional.',
+    action:
+      'Advertise real machine-readable resources with Link response headers. Use registered relation types such as api-catalog and service-desc, and emerging types such as llms-txt only when the target resolves.',
+    evidence: linkHeader as unknown as Record<string, unknown>,
+  })
+  return [
+    linkHeaderCheck,
+    optionalEndpointCheck(pick('mcp-server-card', 'mcp-server-cards'), {
+      id: 'mcp-server-card',
+      subject: 'An MCP server card',
+      absent:
+        'Neither /.well-known/mcp/server-card.json nor server-cards.json returned a machine-readable document. The server card format is a draft MCP proposal, and a content site does not need one.',
+      absentAction:
+        'Publish a server card only when the site exposes a real public MCP endpoint.',
+      presentAction:
+        'Keep serverInfo, the transport endpoint, and capabilities accurate for the deployed MCP server.',
+      requiredNote:
+        'The server card format is a draft MCP proposal, so this is a structural observation rather than a compliance verdict.',
+    }),
+    optionalEndpointCheck(pick('a2a-agent-card'), {
+      id: 'a2a-agent-card',
+      subject: 'An A2A agent card',
+      absent:
+        '/.well-known/agent-card.json returned no machine-readable document. Agent cards matter only for sites that expose an agent-to-agent endpoint.',
+      absentAction:
+        'Publish an agent card only when the site hosts a real A2A endpoint.',
+      presentAction:
+        'Keep the agent card name, url, and capabilities aligned with the deployed endpoint.',
+      requiredNote:
+        'A2A is an emerging protocol, so this is a structural observation rather than a compliance verdict.',
+    }),
+    optionalEndpointCheck(
+      pick('openid-configuration', 'oauth-authorization-server'),
+      {
+        id: 'oauth-discovery',
+        subject: 'OAuth or OpenID Connect discovery metadata',
+        absent:
+          'No authorization-server metadata was found at /.well-known/openid-configuration or /.well-known/oauth-authorization-server. That only matters when the site exposes protected APIs that agents authenticate with.',
+        absentAction:
+          'Publish RFC 8414 or OpenID Connect discovery metadata only when a real authorization server issues tokens for this origin.',
+        presentAction:
+          'Keep the issuer and endpoint URLs accurate so clients can discover how to authenticate.',
+        requiredNote:
+          'Structural presence of issuer metadata does not prove the authorization flow works.',
+      },
+    ),
+    optionalEndpointCheck(pick('oauth-protected-resource'), {
+      id: 'oauth-protected-resource',
+      subject: 'OAuth protected resource metadata',
+      absent:
+        '/.well-known/oauth-protected-resource returned no metadata. RFC 9728 metadata matters only for origins that serve OAuth-protected APIs.',
+      absentAction:
+        'Publish protected resource metadata only when this origin actually serves OAuth-protected APIs.',
+      presentAction:
+        'Keep the resource identifier and authorization_servers list accurate.',
+      requiredNote:
+        'Structural presence does not prove tokens are issued or accepted.',
+    }),
+    optionalEndpointCheck(pick('api-catalog'), {
+      id: 'api-catalog',
+      subject: 'An API catalog',
+      absent:
+        '/.well-known/api-catalog returned no linkset document. An RFC 9727 catalog matters only for sites that publish APIs.',
+      absentAction: 'Publish an API catalog only when the site has real APIs.',
+      presentAction:
+        'Keep the linkset entries pointing at live service-desc and service-doc resources.',
+      requiredNote:
+        'The catalog was checked for structure only, not for whether each linked API works.',
+    }),
+    optionalEndpointCheck(pick('web-bot-auth-directory'), {
+      id: 'web-bot-auth',
+      subject: 'A Web Bot Auth key directory',
+      absent:
+        '/.well-known/http-message-signatures-directory returned no key set. Publishing one matters only for operators that sign their own outbound bot requests.',
+      absentAction:
+        'Publish a signature directory only when this origin operates bots that sign requests with Web Bot Auth.',
+      presentAction: 'Keep the published keys current and rotate them safely.',
+      requiredNote:
+        'Web Bot Auth is an emerging draft, so this is a structural observation rather than a compliance verdict.',
+    }),
+    optionalEndpointCheck(pick('auth-md'), {
+      id: 'auth-md',
+      subject: 'An auth.md registration guide',
+      absent:
+        '/auth.md returned no document. auth.md is an emerging proposal for telling agents how to register and authenticate, and most content sites do not need one.',
+      absentAction:
+        'Add auth.md only when agents can genuinely register for and authenticate with this site.',
+      presentAction:
+        'Keep the registration steps accurate and pair the file with real OAuth discovery metadata.',
+      requiredNote:
+        'auth.md is an emerging proposal, so this is a presence observation only.',
+    }),
+    optionalEndpointCheck(pick('llms-full-txt'), {
+      id: 'llms-full-txt',
+      subject: 'llms-full.txt',
+      absent:
+        '/llms-full.txt returned no document. The expanded companion to llms.txt is optional, and its absence is not a search ranking problem.',
+      absentAction:
+        'Add llms-full.txt only when an intended consumer wants the full expanded content in one file.',
+      presentAction:
+        'Keep the file deterministic and consistent with the curated llms.txt entry points.',
+      requiredNote:
+        'Only presence and content type were checked, not the quality of the expanded content.',
     }),
   ]
 }
@@ -569,7 +837,16 @@ export function agentReadiness(
       'HTML and Markdown representations',
       markdownChecks(discovery),
     ),
-    section('discovery', 'Agent discovery files', discoveryChecks(discovery)),
+    section(
+      'discovery',
+      'Agent discovery files',
+      discoveryChecks(discovery, report.ai?.robotsTxt?.contentSignals),
+    ),
+    section(
+      'endpoints',
+      'Agent endpoints and auth discovery',
+      endpointChecks(discovery),
+    ),
     section('identity', 'Identity evidence', identityChecks(report)),
   ]
   const checks = sections.flatMap((item) => item.checks)
@@ -606,6 +883,7 @@ export function agentReadiness(
       ...discovery.warnings,
       'A clean content profile does not prove indexing, rankings, AI mentions, citations, or selection.',
       'A crawler token being allowed does not prove that a service fetched or used the page.',
+      'MCP server cards, A2A agent cards, Web Bot Auth directories, and auth.md are emerging conventions. Their absence is an observation, not a defect.',
       'API, application, and commerce checks were not applicable to this content-site run.',
     ],
   }

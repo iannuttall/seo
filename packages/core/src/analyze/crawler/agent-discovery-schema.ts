@@ -145,6 +145,37 @@ export const agentDiscoverySchema = z.object({
     missingMarkdownPages: z.number().int().nonnegative(),
     consistent: z.boolean().nullable(),
   }),
+  endpointDiscovery: z
+    .object({
+      linkHeader: z.object({
+        url: z.string().url(),
+        status: z.number().int().optional(),
+        entries: z.array(
+          z.object({
+            url: z.string().url(),
+            rel: z.array(z.string()),
+            type: z.string().optional(),
+          }),
+        ),
+        registeredRels: z.array(z.string()),
+        emergingRels: z.array(z.string()),
+        error: z.string().optional(),
+      }),
+      endpoints: z.array(
+        z.object({
+          id: z.string(),
+          url: z.string().url(),
+          status: z.number().int().optional(),
+          exists: z.boolean(),
+          contentType: z.string().optional(),
+          validJson: z.boolean().optional(),
+          presentFields: z.array(z.string()).optional(),
+          missingFields: z.array(z.string()).optional(),
+          error: z.string().optional(),
+        }),
+      ),
+    })
+    .optional(),
   protocolVariants: z.object({
     http: z.object({
       url: z.string().url(),

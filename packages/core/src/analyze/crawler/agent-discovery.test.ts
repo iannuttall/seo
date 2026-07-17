@@ -443,6 +443,188 @@ test('agentReadiness keeps unavailable check totals internally consistent', () =
   )
 })
 
+test('agent endpoint discovery records optional endpoints and link header relations', async () => {
+  const variantFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    const accept =
+      (input?.headers as Record<string, string> | undefined)?.accept ?? ''
+    if (requestedUrl === 'https://example.com/.well-known/api-catalog') {
+      return response(JSON.stringify({ linkset: [] }), 200, {
+        'content-type': 'application/linkset+json',
+      })
+    }
+    if (requestedUrl === 'https://example.com/.well-known/agent-card.json') {
+      return response(JSON.stringify({ description: 'No name field.' }), 200, {
+        'content-type': 'application/json',
+      })
+    }
+    if (
+      requestedUrl === 'https://example.com/' &&
+      accept.startsWith('text/html')
+    ) {
+      return response('<h1>Example</h1>', 200, {
+        'content-type': 'text/html; charset=utf-8',
+        link: '<https://example.com/llms.txt>; rel="llms-txt"; type="text/markdown", <https://example.com/.well-known/api-catalog>; rel="api-catalog"',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [page],
+    timeoutMs: 1_000,
+    fetch: variantFetch,
+  })
+
+  const endpointDiscovery = discovery.endpointDiscovery
+  assert.ok(endpointDiscovery)
+  assert.deepEqual(endpointDiscovery.linkHeader.registeredRels, ['api-catalog'])
+  assert.deepEqual(endpointDiscovery.linkHeader.emergingRels, ['llms-txt'])
+  assert.equal(endpointDiscovery.endpoints[0]?.id, 'mcp-server-card')
+  const apiCatalog = endpointDiscovery.endpoints.find(
+    (endpoint) => endpoint.id === 'api-catalog',
+  )
+  assert.equal(apiCatalog?.exists, true)
+  assert.equal(apiCatalog?.validJson, true)
+  assert.deepEqual(apiCatalog?.missingFields, [])
+  const agentCard = endpointDiscovery.endpoints.find(
+    (endpoint) => endpoint.id === 'a2a-agent-card',
+  )
+  assert.equal(agentCard?.exists, true)
+  assert.deepEqual(agentCard?.missingFields, ['name'])
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+  const readiness = agentReadiness(crawl)
+  const status = (id: string) =>
+    readiness.checks.find((item) => item.id === id)?.status
+  assert.equal(status('link-headers'), 'pass')
+  assert.equal(status('api-catalog'), 'pass')
+  assert.equal(status('a2a-agent-card'), 'warning')
+  assert.equal(status('mcp-server-card'), 'info')
+  assert.equal(status('oauth-discovery'), 'info')
+  assert.equal(status('llms-full-txt'), 'info')
+})
+
+test('an HTML fallback page does not count as a published agent endpoint', async () => {
+  const variantFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    if (requestedUrl === 'https://example.com/auth.md') {
+      return response('<h1>Not found</h1>', 200, {
+        'content-type': 'text/html; charset=utf-8',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [page],
+    timeoutMs: 1_000,
+    fetch: variantFetch,
+  })
+
+  const authMd = discovery.endpointDiscovery?.endpoints.find(
+    (endpoint) => endpoint.id === 'auth-md',
+  )
+  assert.equal(authMd?.status, 200)
+  assert.equal(authMd?.exists, false)
+})
+
+test('content signals fall back to the robots.txt directive when headers are absent', async () => {
+  const noSignalFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    const accept =
+      (input?.headers as Record<string, string> | undefined)?.accept ?? ''
+    if (
+      requestedUrl === 'https://example.com/index.md' ||
+      (requestedUrl === 'https://example.com/' &&
+        accept.startsWith('text/markdown') &&
+        !accept.includes('text/markdown;q=0'))
+    ) {
+      return response(markdown, 200, {
+        'content-type': 'text/markdown; charset=utf-8',
+        link: '<https://example.com/>; rel="canonical"; type="text/html"',
+        vary: 'Accept',
+        'x-markdown-tokens': '67',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+  const noSignalPage: CrawlPageSnapshot = {
+    ...page,
+    responseHeaders: {
+      link: '<https://example.com/index.md>; rel="alternate"; type="text/markdown"',
+    },
+  }
+
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [noSignalPage],
+    timeoutMs: 1_000,
+    fetch: noSignalFetch,
+  })
+  assert.deepEqual(discovery.contentSignals.htmlValues, [])
+  assert.deepEqual(discovery.contentSignals.markdownValues, [])
+
+  const robotsTxt = {
+    url: 'https://example.com/robots.txt',
+    exists: true,
+    availability: 'available' as const,
+    sitemapUrls: [],
+    botAccess: [],
+  }
+  const withDirective = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [noSignalPage],
+    ai: {
+      robotsTxt: {
+        ...robotsTxt,
+        contentSignals: ['search=yes, ai-train=no'],
+      },
+    },
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  withDirective.agentDiscovery = discovery
+  assert.equal(
+    agentReadiness(withDirective).checks.find(
+      (item) => item.id === 'content-signals',
+    )?.status,
+    'pass',
+  )
+
+  const withoutDirective = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [noSignalPage],
+    ai: { robotsTxt: { ...robotsTxt, contentSignals: [] } },
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  withoutDirective.agentDiscovery = discovery
+  assert.equal(
+    agentReadiness(withoutDirective).checks.find(
+      (item) => item.id === 'content-signals',
+    )?.status,
+    'info',
+  )
+})
+
 test('llms.txt validation reports malformed, stale, redirected, off-site, non-indexable, and oversized evidence', async () => {
   const llmsBody = `${'# Example\n\n## Start\n\n- [Home](https://example.com/)\n- [Missing](https://example.com/missing)\n- [Hidden](https://example.com/hidden)\n- [Old](https://example.com/old)\n- [External](https://other.example/resource)\n- [Malformed](https://[broken])\n\n'}${'x'.repeat(100_001)}`
   const variantFetch = (async (

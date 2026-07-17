@@ -53,11 +53,23 @@ const AI_BOT_USER_AGENTS = [
   'OAI-SearchBot',
   'ChatGPT-User',
   'ClaudeBot',
+  'Claude-User',
+  'Claude-SearchBot',
   'PerplexityBot',
+  'Perplexity-User',
   'Google-Extended',
   'CCBot',
   'Applebot',
+  'Applebot-Extended',
   'Bingbot',
+  'Amazonbot',
+  'Bytespider',
+  'Meta-ExternalAgent',
+  'Meta-ExternalFetcher',
+  'DuckAssistBot',
+  'MistralAI-User',
+  'Diffbot',
+  'cohere-ai',
 ]
 
 const AGENT_RESOURCE_PATHS = [
@@ -177,6 +189,15 @@ function declaredUserAgents(text: string): Set<string> {
   return declared
 }
 
+function contentSignalsFromRobots(text: string): string[] {
+  const values = new Set<string>()
+  for (const match of text.matchAll(/^\s*content-signal\s*:\s*(.+?)\s*$/gim)) {
+    const value = match[1]?.trim()
+    if (value) values.add(value)
+  }
+  return [...values].sort()
+}
+
 function sitemapUrlsFromRobots(text: string): string[] {
   const urls = new Set<string>()
   for (const match of text.matchAll(/^\s*sitemap\s*:\s*(\S+)\s*$/gim)) {
@@ -233,6 +254,7 @@ async function checkRobotsAiAccess(input: {
         ? { error: `robots.txt returned HTTP ${response.status}.` }
         : {}),
       sitemapUrls: exists ? sitemapUrlsFromRobots(text) : [],
+      contentSignals: exists ? contentSignalsFromRobots(text) : [],
       botAccess: AI_BOT_USER_AGENTS.map((userAgent) => {
         const lower = userAgent.toLowerCase()
         return {

@@ -68,6 +68,38 @@ export type AgentSkillObservation = {
   error?: string
 }
 
+export type AgentEndpointObservation = {
+  id: string
+  url: string
+  status?: number
+  exists: boolean
+  contentType?: string
+  validJson?: boolean
+  presentFields?: string[]
+  missingFields?: string[]
+  error?: string
+}
+
+export type AgentLinkHeaderEntry = {
+  url: string
+  rel: string[]
+  type?: string
+}
+
+export type AgentLinkHeaderObservation = {
+  url: string
+  status?: number
+  entries: AgentLinkHeaderEntry[]
+  registeredRels: string[]
+  emergingRels: string[]
+  error?: string
+}
+
+export type AgentEndpointDiscovery = {
+  linkHeader: AgentLinkHeaderObservation
+  endpoints: AgentEndpointObservation[]
+}
+
 export type LlmsTxtLinkObservation = {
   label: string
   url: string
@@ -148,6 +180,7 @@ export type CrawlAgentDiscovery = {
     missingMarkdownPages: number
     consistent: boolean | null
   }
+  endpointDiscovery?: AgentEndpointDiscovery
   protocolVariants: {
     http: {
       url: string

@@ -86,6 +86,34 @@ test('queries complete query/page rows and returns report provenance', async () 
   assert.equal(report.items[0]?.finding, 'unverified')
 })
 
+test('summary grammar matches zero, one, and multiple page counts', async () => {
+  const empty = await secondPage({ site }, dependencies([]))
+  const singular = await secondPage(
+    { site },
+    dependencies([row('technical seo', 'https://example.com/guide')]),
+  )
+  const plural = await secondPage(
+    { site },
+    dependencies([
+      row('technical seo', 'https://example.com/guide'),
+      row('seo checklist', 'https://example.com/checklist'),
+    ]),
+  )
+
+  assert.equal(
+    empty.summary.verdict,
+    'Google Search Console returned no retained query/page rows for this window.',
+  )
+  assert.equal(
+    singular.summary.verdict,
+    '1 eligible average-position page found; 1 page is returned in priority order for investigation.',
+  )
+  assert.equal(
+    plural.summary.verdict,
+    '2 eligible average-position pages found; 2 pages are returned in priority order for investigation.',
+  )
+})
+
 test('does not fetch unless verification is explicitly requested', async () => {
   let fetches = 0
   const report = await secondPage(
@@ -148,6 +176,10 @@ test('technical evidence overrides copy advice', async () => {
   )
   assert.doesNotMatch(item?.recommendation.action ?? '', /add.*copy/i)
   assert.equal(report.summary.technicalIssues, 1)
+  assert.equal(
+    report.summary.verdict,
+    '1 eligible average-position page found; 1 returned page has verified technical issues to fix before content changes.',
+  )
 })
 
 test('keeps other results when one page fetch fails', async () => {

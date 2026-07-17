@@ -60,8 +60,8 @@ export function buildDiagnosisPriorities(
     priorities.push({
       label: 'Refresh decaying content',
       reason: topGroup
-        ? `${input.decay.selection.eligibleRows} observed retained query/page declines found; ${topGroup.label} declined by ${topGroup.totalClickLoss.toFixed(0)} clicks.`
-        : `${input.decay.selection.eligibleRows} observed retained query/page declines found.`,
+        ? `${countLabel(input.decay.selection.eligibleRows, 'observed retained query/page decline')} found; ${topGroup.label} declined by ${topGroup.totalClickLoss.toFixed(0)} clicks.`
+        : `${countLabel(input.decay.selection.eligibleRows, 'observed retained query/page decline')} found.`,
       action: topGroup
         ? topGroup.recommendation
         : 'Start with declines that continued outside the update window. Check indexability first, then ranking and CTR causes.',
@@ -72,7 +72,7 @@ export function buildDiagnosisPriorities(
   if (input.cannibal.items.length) {
     priorities.push({
       label: 'Review multi-URL query candidates',
-      reason: `${input.cannibal.selection.eligibleClusters} multi-URL query candidates found.`,
+      reason: `${countLabel(input.cannibal.selection.eligibleClusters, 'multi-URL query candidate')} found.`,
       action:
         'Confirm whether each URL set satisfies the same intent and inspect technical state. Consolidate only verified duplicate or same-intent pages; otherwise clarify the distinction.',
       confidence: 'low',
@@ -99,7 +99,7 @@ export function buildDiagnosisPriorities(
     const top = input.striking.items[0]
     priorities.push({
       label: 'Investigate striking-distance candidates',
-      reason: `${input.striking.items.length} query/page rows have an average GSC position above 10 and at most 20.`,
+      reason: `${countLabel(input.striking.items.length, 'query/page row')} ${input.striking.items.length === 1 ? 'has' : 'have'} an average GSC position above 10 and at most 20.`,
       action:
         top?.recommendation.action ??
         'Check technical state, query coverage, competing URLs, and relevant internal links before choosing a change.',

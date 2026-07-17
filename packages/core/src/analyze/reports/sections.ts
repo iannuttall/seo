@@ -354,8 +354,8 @@ export function contentOpportunityBullets(
     const top = report.strikingDistance.items[0]
     bullets.push(
       top
-        ? `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20. Start by investigating "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
-        : `${report.summary.strikingDistanceItems} query/page ${plural(report.summary.strikingDistanceItems, 'candidate')} have an average GSC position above 10 and at most 20.`,
+        ? `${countLabel(report.summary.strikingDistanceItems, 'query/page candidate')} ${plural(report.summary.strikingDistanceItems, 'has', 'have')} an average GSC position above 10 and at most 20. Start by investigating "${top.query}" on ${top.url}; it averages position ${top.position.toFixed(1)} with ${top.impressions.toFixed(0)} impressions.`
+        : `${countLabel(report.summary.strikingDistanceItems, 'query/page candidate')} ${plural(report.summary.strikingDistanceItems, 'has', 'have')} an average GSC position above 10 and at most 20.`,
     )
   }
 

@@ -363,6 +363,39 @@ test('contentOpportunityBullets hides zero-count non-findings', () => {
   assert.doesNotMatch(bullets.join('\n'), /0 cannibalisation/)
 })
 
+test('striking-distance summaries use singular nouns and verbs', () => {
+  const report = emptyDiagnosis()
+  const analysis = analyzeStrikingDistanceRows({
+    site: report.site,
+    rows: [
+      {
+        keys: ['technical seo', 'https://example.com/guide'],
+        clicks: 2,
+        impressions: 100,
+        ctr: 0.02,
+        position: 15,
+      },
+    ],
+  })
+  report.strikingDistance.items = analysis.items
+  report.summary.strikingDistanceItems = analysis.items.length
+
+  assert.match(
+    contentOpportunityBullets(report).join('\n'),
+    /1 query\/page candidate has an average GSC position/,
+  )
+  const priority = buildDiagnosisPriorities({
+    anomaly: report.anomaly,
+    update: report.updateCorrelation,
+    page: report.segments.page,
+    decay: report.decay,
+    cannibal: report.cannibalization,
+    striking: report.strikingDistance,
+    quickWins: report.quickWins,
+  })[0]
+  assert.match(priority?.reason ?? '', /1 query\/page row has an average/)
+})
+
 test('headlineLine writes zero counts as plain English', () => {
   const headline = headlineLine(emptyDiagnosis())
 

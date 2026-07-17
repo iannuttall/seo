@@ -2,6 +2,7 @@ import { SeoError } from '../errors.js'
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { finalGscDateRange } from '../gsc/dates.js'
+import { countLabel } from '../phrasing.js'
 import {
   contentCoverageRecommendation,
   type QueryContentCoverage,
@@ -168,7 +169,7 @@ function verdict(analysis: StrikingDistanceAnalysis): string {
   if (analysis.dataStatus === 'filtered') {
     return 'No retained query/page rows met the report filters.'
   }
-  return `${analysis.summary.eligibleRows} eligible query/page rows found; ${analysis.summary.returnedRows} returned for review.`
+  return `${countLabel(analysis.summary.eligibleRows, 'eligible query/page row')} found; ${countLabel(analysis.summary.returnedRows, 'row')} returned for review.`
 }
 
 export async function strikingDistance(

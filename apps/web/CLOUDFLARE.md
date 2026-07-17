@@ -16,7 +16,7 @@ Use these settings for the `seo-skill` Worker. Changing `name` in Wrangler creat
 | Deploy command | `pnpm deploy:web` |
 | Non-production deploy command | `pnpm --filter @seo/web exec wrangler versions upload` |
 
-The root `.node-version` file pins Node `22.20.0`. The build command includes the `@seo/astro` workspace dependency, so a clean Cloudflare build does not try to load that package before it exists.
+The root `.node-version` file pins Node `22.20.0`. Agent markdown comes from the published `@iannuttall/seo-graph-astro` package, which also appends the per-file Markdown headers to `_headers` at build time.
 
 The Wrangler config declares both custom domains:
 

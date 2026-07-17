@@ -18,6 +18,8 @@ allowBuilds:
   workerd@1.20260708.1: true
 
 minimumReleaseAgeExclude:
+  - '@iannuttall/seo-graph-astro'
+  - '@iannuttall/seo-graph-core'
   - miniflare@4.20260708.1
   - wrangler@4.110.0
   - '@cloudflare/workers-types@5.20260716.1'

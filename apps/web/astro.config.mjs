@@ -1,7 +1,7 @@
 // @ts-check
 import mdx from '@astrojs/mdx'
 import { unified } from '@astrojs/markdown-remark'
-import { agentMarkdown } from '@seo/astro'
+import { agentMarkdown } from '@iannuttall/seo-graph-astro'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'

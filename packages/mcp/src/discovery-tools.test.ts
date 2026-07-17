@@ -351,3 +351,51 @@ test('run validates the selected report and returns structured errors', async ()
 test('test mode constructs the real discovery server', async () => {
   await startMcpServer({ test: true })
 })
+
+test('describe returns per-check fix guidance for agent-readiness', async () => {
+  await withClient(async (client) => {
+    const described = structured(
+      await client.callTool({
+        name: 'seo_describe_report',
+        arguments: { id: 'agent-readiness' },
+      }),
+    )
+    const report = described.report as JsonRecord
+    assert.ok(Array.isArray(report.fixableChecks))
+    assert.ok((report.fixableChecks as string[]).includes('link-headers'))
+
+    const fix = structured(
+      await client.callTool({
+        name: 'seo_describe_report',
+        arguments: { id: 'agent-readiness', check: 'link-headers' },
+      }),
+    )
+    const fixReport = fix.report as JsonRecord
+    assert.equal(fixReport.id, 'agent-readiness')
+    assert.equal(fixReport.check, 'link-headers')
+    const checkFix = fixReport.checkFix as JsonRecord
+    for (const field of ['goal', 'fix', 'prompt', 'verify'] as const) {
+      assert.ok(String(checkFix[field]).length > 0, field)
+    }
+    assert.ok(Array.isArray(checkFix.resources))
+
+    const unknown = await client.callTool({
+      name: 'seo_describe_report',
+      arguments: { id: 'agent-readiness', check: 'not-a-check' },
+    })
+    assert.equal(resultRecord(unknown).isError, true)
+    const unknownError = structured(unknown).error as JsonRecord
+    assert.equal(unknownError.code, 'INVALID_INPUT')
+    assert.match(String(unknownError.message), /Fix guidance exists for/)
+
+    const noFixes = await client.callTool({
+      name: 'seo_describe_report',
+      arguments: { id: 'audit-page', check: 'anything' },
+    })
+    assert.equal(resultRecord(noFixes).isError, true)
+    assert.match(
+      String((structured(noFixes).error as JsonRecord).message),
+      /no per-check fix guidance/,
+    )
+  })
+})

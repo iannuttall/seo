@@ -38,6 +38,14 @@ response is the per-report manual: follow its `readOrder`, respect its
 `doNotClaim` limits, and use its `related` ids to decide what to run next.
 Reuse the schema for repeated runs. Do not guess parameters.
 
+When a describe response lists `fixableChecks`, the report also serves fix
+guidance per check. After a run, take each failed or warning check id from
+`topActions` and call `seo_describe_report` with `id` and `check` (CLI:
+`seo reports describe <report-id> --check <check-id>`). The result contains
+the goal, fix steps, a ready-to-use agent prompt, spec links, and a
+verification step for that one check. Fetch guidance only for checks you are
+actually going to fix.
+
 ## Setup and selection
 
 Run the `setup-check` report (or `seo doctor`) if auth state is unknown.

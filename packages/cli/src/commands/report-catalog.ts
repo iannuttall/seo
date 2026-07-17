@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { SeoError, type SeoErrorCode } from '@seo/core'
 import {
   describeReport,
+  describeReportCheck,
   executeReport,
   listReports,
   REPORT_CATEGORIES,
@@ -165,6 +166,10 @@ const describeCommand = defineCommand({
       required: true,
       description: 'Report id from `seo reports list`.',
     },
+    check: {
+      type: 'string',
+      description: 'Show fix guidance for one check id from the report output.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -172,6 +177,32 @@ const describeCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const check = stringArg(args.check)
+    if (check) {
+      const report = describeReportCheck(stringArg(args.id) ?? '', check)
+      if (jsonFlag(args)) {
+        printJson({ report })
+        return
+      }
+      printHeading(`${report.name}: ${report.check}`, report.checkFix.goal)
+      process.stdout.write('\n')
+      printSection('Fix', report.checkFix.fix)
+      process.stdout.write('\n')
+      printSection('Agent prompt', report.checkFix.prompt)
+      process.stdout.write('\n')
+      printSection('Verify', report.checkFix.verify)
+      if (report.checkFix.resources.length > 0) {
+        process.stdout.write('\n')
+        printBulletSection(
+          'Resources',
+          report.checkFix.resources.map(
+            (resource) => `${resource.title}: ${resource.url}`,
+          ),
+        )
+      }
+      process.stdout.write('\n')
+      return
+    }
     const report = describeReport(stringArg(args.id) ?? '')
     if (jsonFlag(args)) {
       printJson({ report })
@@ -203,6 +234,14 @@ const describeCommand = defineCommand({
     }
     process.stdout.write('\nParameters\n')
     printParameters(reportParameters(report.inputSchema))
+    if (report.fixableChecks) {
+      process.stdout.write('\n')
+      printCallout({
+        title: 'Fix a failed check',
+        body: 'Get the fix steps, an agent prompt, and spec links for one check id from the report output.',
+        command: `seo reports describe ${report.id} --check <check-id>`,
+      })
+    }
     process.stdout.write('\n')
     printCallout({
       title: 'Need the exact schema?',

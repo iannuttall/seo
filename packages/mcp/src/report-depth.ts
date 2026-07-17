@@ -40,12 +40,14 @@ const REPORT_DEPTH_PRIMARY = {
       'summary and topActions',
       'HTML and Markdown representation checks with affected URLs',
       'Agent Skills, llms.txt, route manifest, crawler access, and identity evidence',
+      'endpoint checks for Link headers and optional well-known files, where info means absent and optional',
+      'for any failed or warning check, request seo_describe_report with the check id to get fix guidance',
     ],
     doNotClaim: [
       'A clean content profile is not proof of indexing, rankings, AI mentions, citations, or selection.',
       'API, application, and commerce checks marked notApplicable were outside this content-site run. They did not fail.',
       'An allowed crawler token does not prove that a service fetched or used the page.',
-      'Optional discovery files are not Google ranking requirements.',
+      'Optional discovery files and emerging endpoints such as MCP server cards, A2A agent cards, OAuth metadata, and auth.md are observations, not requirements or defects.',
     ],
     verify:
       'Run the same content profile against the same public route scope after deployment and confirm each failed or warning check changed.',

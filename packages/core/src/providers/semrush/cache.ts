@@ -1,10 +1,12 @@
 import { fetch } from 'undici'
+import { readBoundedResponseText } from '../../fetch/http-client.js'
 import { readConfig } from '../../storage/config.js'
-import { getDb, hashKey } from '../../storage/database.js'
+import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { ProviderResult } from '../../types.js'
 import { parseSemicolonCsv } from './csv.js'
 
 const BASE_URL = 'https://api.semrush.com/'
+const MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 
 function estimateUsd(units: number): number {
   return (units / 1000) * 0.05
@@ -59,7 +61,11 @@ export async function cachedSemrushCall<T>(
   url.search = new URLSearchParams(requestParams).toString()
 
   const response = await fetch(url)
-  const text = await response.text()
+  const text = await readBoundedResponseText(
+    response,
+    MAX_RESPONSE_BYTES,
+    'Semrush response',
+  )
   if (!response.ok || text.startsWith('ERROR ::')) {
     throw new Error(text || `Semrush request failed with ${response.status}.`)
   }
@@ -67,6 +73,8 @@ export async function cachedSemrushCall<T>(
   const rows = parseSemicolonCsv(text)
   const data = map(rows)
   const credits = Math.max(0, rows.length - 1) * creditsPerLine
+  const requestJson = JSON.stringify(requestParams)
+  const responseJson = JSON.stringify(data)
 
   db.prepare(
     `INSERT OR REPLACE INTO semrush_cache
@@ -75,11 +83,14 @@ export async function cachedSemrushCall<T>(
   ).run(
     endpoint,
     queryHash,
-    JSON.stringify(requestParams),
-    JSON.stringify(data),
+    requestJson,
+    responseJson,
     credits,
     Date.now(),
     Date.now() + ttlMs,
+  )
+  noteCacheWrite(
+    Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
   )
 
   return {

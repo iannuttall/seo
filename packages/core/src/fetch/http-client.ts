@@ -3,6 +3,16 @@ import UserAgent from 'user-agents'
 
 export type HttpProfile = 'browser' | 'bot'
 
+export class ResponseSizeLimitError extends Error {
+  constructor(
+    readonly maxBytes: number,
+    label = 'Response',
+  ) {
+    super(`${label} exceeds the ${maxBytes}-byte response limit.`)
+    this.name = 'ResponseSizeLimitError'
+  }
+}
+
 export const BROWSER_USER_AGENT = new UserAgent({
   deviceCategory: 'desktop',
 }).toString()
@@ -52,4 +62,37 @@ export function publicHttpFetch(
   }
 
   return fetch(url, { ...init, headers: base })
+}
+
+export async function readBoundedResponseText(
+  response: Awaited<ReturnType<typeof publicHttpFetch>>,
+  maxBytes: number,
+  label = 'Response',
+): Promise<string> {
+  const declaredLength = Number(response.headers.get('content-length'))
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    await response.body?.cancel().catch(() => undefined)
+    throw new ResponseSizeLimitError(maxBytes, label)
+  }
+
+  const reader = response.body?.getReader()
+  if (!reader) return ''
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => undefined)
+        throw new ResponseSizeLimitError(maxBytes, label)
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  return Buffer.concat(chunks, total).toString('utf8')
 }

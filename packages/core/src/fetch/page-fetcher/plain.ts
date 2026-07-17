@@ -1,7 +1,7 @@
 import pRetry, { AbortError } from 'p-retry'
-import { getDb, hashKey } from '../../storage/database.js'
+import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { PageFetchResult } from '../../types.js'
-import { publicHttpFetch } from '../http-client.js'
+import { publicHttpFetch, readBoundedResponseText } from '../http-client.js'
 import {
   hostBackpressureSnapshot,
   rateLimitDiagnostics,
@@ -15,6 +15,8 @@ import type { NormalizedFetchRateControls, RobotsResult } from './types.js'
 type RedirectHop = NonNullable<
   PageFetchResult['diagnostics']['redirectChain']
 >[number]
+
+export const MAX_PAGE_RESPONSE_BYTES = 5 * 1024 * 1024
 
 type CachedPageEvidence = {
   finalUrl: string
@@ -215,7 +217,11 @@ export async function fetchPlain(
     { retries: 2 },
   )
 
-  const html = await response.response.text()
+  const html = await readBoundedResponseText(
+    response.response,
+    MAX_PAGE_RESPONSE_BYTES,
+    'Page response',
+  )
   const headerMap = Object.fromEntries(response.response.headers.entries())
   const durationMs = Date.now() - startedAt
   const backpressure = recordHostFetch({
@@ -277,6 +283,7 @@ export async function fetchPlain(
     Date.now(),
     Date.now() + 3_600_000,
   )
+  noteCacheWrite(Buffer.byteLength(html))
 
   return result
 }

@@ -1,7 +1,13 @@
 import robotsParserModule from 'robots-parser'
-import { getDb, hashKey } from '../../storage/database.js'
-import { BROWSER_USER_AGENT, publicHttpFetch } from '../http-client.js'
+import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
+import {
+  BROWSER_USER_AGENT,
+  publicHttpFetch,
+  readBoundedResponseText,
+} from '../http-client.js'
 import type { RobotsResult } from './types.js'
+
+const MAX_ROBOTS_RESPONSE_BYTES = 1024 * 1024
 
 export class RobotsAccessError extends Error {
   constructor(
@@ -119,7 +125,11 @@ export async function fetchRobots(
     const response = await publicHttpFetch(robotsUrl, {
       profile: 'bot',
     })
-    const text = await response.text()
+    const text = await readBoundedResponseText(
+      response,
+      MAX_ROBOTS_RESPONSE_BYTES,
+      'robots.txt response',
+    )
     const result = resultFromResponse({
       robotsUrl,
       targetUrl,
@@ -142,6 +152,7 @@ export async function fetchRobots(
         Date.now(),
         Date.now() + 86_400_000,
       )
+      noteCacheWrite(Buffer.byteLength(text))
     }
     return result
   } catch (error) {

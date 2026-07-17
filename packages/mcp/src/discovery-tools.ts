@@ -8,7 +8,12 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { REPORT_CATEGORIES } from './report-registry.js'
-import { describeReport, listReports, runReport } from './reports.js'
+import {
+  describeReport,
+  describeReportCheck,
+  listReports,
+  runReport,
+} from './reports.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 const openOutputSchema = z.looseObject({})
@@ -47,9 +52,10 @@ export function registerDiscoveryTools(
     'seo_describe_report',
     {
       description:
-        'Explain when to use one SEO report, what it returns, and which parameters it accepts',
+        'Explain when to use one SEO report, what it returns, and which parameters it accepts. Pass check to get fix guidance for one failed check id.',
       inputSchema: {
         id: z.string().trim().min(1).max(100),
+        check: z.string().trim().min(1).max(100).optional(),
       },
       outputSchema: openOutputSchema,
       annotations: {
@@ -58,8 +64,15 @@ export function registerDiscoveryTools(
         idempotentHint: true,
       },
     },
-    async ({ id }) => {
+    async ({ id, check }) => {
       try {
+        if (check !== undefined) {
+          const report = describeReportCheck(id, check)
+          return toolSuccess(
+            `${report.id} ${report.check}: ${report.checkFix.goal}`,
+            { report },
+          )
+        }
         const report = describeReport(id)
         return toolSuccess(`${report.id}: ${report.description}`, { report })
       } catch (error) {

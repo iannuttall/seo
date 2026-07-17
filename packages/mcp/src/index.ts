@@ -7,6 +7,7 @@ import {
 } from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
 
+export type { CheckFix, CheckFixResource } from './check-fixes.js'
 export type {
   FullReportGuidance,
   RelatedReport,
@@ -20,6 +21,7 @@ export {
 } from './report-registry.js'
 export {
   describeReport,
+  describeReportCheck,
   executeReport,
   listReports,
   runReport,

@@ -490,7 +490,7 @@ entries that prune logs before appending to each scheduled output file.
 
 ## SEO-014: sitemap crawls require full page downloads
 
-- Status: Open
+- Status: Verified
 - Observed: 2026-07-17
 - Affected version: 0.2.8
 
@@ -506,15 +506,32 @@ Large sitemap checks do far more network, CPU, memory, and disk work than a
 deploy health gate needs. Users must choose between an expensive full audit and
 no sitemap-wide status evidence.
 
-### Planned fix
+### Cause and fix
 
-Add an explicit sitemap URL, a status-only health strategy that cancels page
-bodies without parsing or caching them, conservative crawl controls, and JUnit
-output backed by the same structured request evidence.
+The existing sitemap path had no lighter execution strategy. It remains the
+full audit, while `--health` now accepts an explicit sitemap URL and runs fresh
+status and redirect probes without page parsing, rendering, provider joins,
+external-link checks, or cache writes. Health crawls start with one request at
+a time, increase gradually after clean response streaks, and return to one
+after a network or access failure. JUnit output uses the same sitemap, status,
+redirect, robots, network, and firewall evidence as JSON and human reports.
+
+- Fix commit: `8f54c2f`
+
+### Verification
+
+Core tests cover explicit sitemap selection, status-only evidence, no content
+rules, progressive concurrency, access blocks, redirect handling, and body
+disposal. Export tests cover per-URL and sitemap JUnit failures. CLI and MCP
+tests confirm the health-first inputs and structured output.
+
+The full build, typecheck, test, and lint gates pass. The built help surfaces
+put the health gate before the full crawl, skill validation passes, and the
+public package dry run passes.
 
 ## SEO-015: crawler identity and access blocks are not actionable
 
-- Status: Open
+- Status: Verified
 - Observed: 2026-07-17
 - Affected version: 0.2.8
 
@@ -531,9 +548,27 @@ Site owners cannot reliably recognize the crawler in logs or configure a
 stable exception. When a WAF blocks the audit, agents and humans receive a
 generic status instead of the evidence needed to resolve access safely.
 
-### Planned fix
+### Cause and fix
 
-Use a stable versioned crawler identity, evaluate robots.txt against its token,
-detect Cloudflare challenges and generic access blocks from response evidence,
-and return structured, security-conscious allowlisting guidance in crawl
-reports and human output.
+The HTTP client generated a browser identity independently of robots and report
+output. Every HTTP and rendered request now uses
+`SEO-Skill/<version> (+https://seoskill.dev)`, and robots.txt evaluation uses
+the stable `SEO-Skill` token. Denied, rate-limited, and Cloudflare challenge
+responses retain structured provider indicators, request ids when available,
+the exact crawler identity, and narrow access guidance. Challenge bodies are
+not parsed, rendered, or cached. Guidance warns that User-Agent values are
+spoofable and requires any exception to be restricted by source IP, hostname
+or path, and the blocking rule.
+
+- Fix commit: `8f54c2f`
+
+### Verification
+
+HTTP, robots, plain-fetch, access-block, crawler-schema, report, JUnit, CLI, and
+MCP tests cover stable identity and blocked-request evidence. Tests also
+confirm Cloudflare infrastructure headers alone do not create a false block
+and that confirmed challenge bodies do not enter the page cache.
+
+The full build, typecheck, test, and lint gates pass. Skill, README, CLI help,
+report guidance, and website documentation all expose the same identity and
+safe access policy.

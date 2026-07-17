@@ -1,0 +1,249 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-07-17T12:20:38.254Z",
+  "window": {
+    "kind": "all_time",
+    "firstMonth": "2026-07",
+    "currentMonth": "2026-07"
+  },
+  "totals": {
+    "installs": 0,
+    "setupCompletions": 0,
+    "firstAuditCompletions": 1,
+    "auditsStarted": 30,
+    "auditsCompleted": 29,
+    "auditsFailed": 1,
+    "auditsThisMonth": 30,
+    "firstAuditConversionPercent": null
+  },
+  "agents": {
+    "installs": [],
+    "audits": [
+      {
+        "agent": "codex",
+        "count": 28,
+        "percent": 93.3
+      },
+      {
+        "agent": "claude-code",
+        "count": 2,
+        "percent": 6.7
+      }
+    ]
+  },
+  "retentionD7": [],
+  "reports": [
+    {
+      "report": "audit-page",
+      "count": 6
+    },
+    {
+      "report": "agent-readiness",
+      "count": 5
+    },
+    {
+      "report": "setup-check",
+      "count": 4
+    },
+    {
+      "report": "site-crawl",
+      "count": 4
+    },
+    {
+      "report": "search-performance-overview",
+      "count": 3
+    },
+    {
+      "report": "ai-readiness",
+      "count": 2
+    },
+    {
+      "report": "ai-search-scorecard",
+      "count": 1
+    },
+    {
+      "report": "crawl-report",
+      "count": 1
+    },
+    {
+      "report": "decaying-pages",
+      "count": 1
+    },
+    {
+      "report": "entity-readiness",
+      "count": 1
+    },
+    {
+      "report": "refresh-priorities",
+      "count": 1
+    },
+    {
+      "report": "second-page",
+      "count": 1
+    },
+    {
+      "report": "affected-urls",
+      "count": 0
+    },
+    {
+      "report": "ai-referrals",
+      "count": 0
+    },
+    {
+      "report": "audit-urls",
+      "count": 0
+    },
+    {
+      "report": "cannibalisation",
+      "count": 0
+    },
+    {
+      "report": "community-intent",
+      "count": 0
+    },
+    {
+      "report": "compare-crawls",
+      "count": 0
+    },
+    {
+      "report": "content-optimization",
+      "count": 0
+    },
+    {
+      "report": "crawl-diff",
+      "count": 0
+    },
+    {
+      "report": "crawl-history",
+      "count": 0
+    },
+    {
+      "report": "crawler-rules",
+      "count": 0
+    },
+    {
+      "report": "ctr-underperformers",
+      "count": 0
+    },
+    {
+      "report": "explain-crawl-issue",
+      "count": 0
+    },
+    {
+      "report": "generate-llms-txt",
+      "count": 0
+    },
+    {
+      "report": "geo-gaps",
+      "count": 0
+    },
+    {
+      "report": "index-coverage",
+      "count": 0
+    },
+    {
+      "report": "index-coverage-plan",
+      "count": 0
+    },
+    {
+      "report": "index-monitor",
+      "count": 0
+    },
+    {
+      "report": "index-watch",
+      "count": 0
+    },
+    {
+      "report": "internal-links",
+      "count": 0
+    },
+    {
+      "report": "link-recovery",
+      "count": 0
+    },
+    {
+      "report": "llms-txt-audit",
+      "count": 0
+    },
+    {
+      "report": "measure-change",
+      "count": 0
+    },
+    {
+      "report": "monthly-action-plan",
+      "count": 0
+    },
+    {
+      "report": "monthly-report",
+      "count": 0
+    },
+    {
+      "report": "narrative-report",
+      "count": 0
+    },
+    {
+      "report": "okf-build",
+      "count": 0
+    },
+    {
+      "report": "okf-validate",
+      "count": 0
+    },
+    {
+      "report": "page-opportunities",
+      "count": 0
+    },
+    {
+      "report": "performance-audit",
+      "count": 0
+    },
+    {
+      "report": "pseo-audit",
+      "count": 0
+    },
+    {
+      "report": "query-clusters",
+      "count": 0
+    },
+    {
+      "report": "quick-wins",
+      "count": 0
+    },
+    {
+      "report": "redirect-trace",
+      "count": 0
+    },
+    {
+      "report": "segment-impact",
+      "count": 0
+    },
+    {
+      "report": "seo-to-ai-query",
+      "count": 0
+    },
+    {
+      "report": "striking-distance",
+      "count": 0
+    },
+    {
+      "report": "technical-watch",
+      "count": 0
+    },
+    {
+      "report": "top-fixes",
+      "count": 0
+    },
+    {
+      "report": "traffic-anomaly",
+      "count": 0
+    },
+    {
+      "report": "update-correlation",
+      "count": 0
+    },
+    {
+      "report": "update-postmortem",
+      "count": 0
+    }
+  ]
+}

@@ -43,7 +43,6 @@
     "robots-parser": "^3.0.1",
     "schema-dts": "^2.0.0",
     "undici": "^8.7.0",
-    "user-agents": "2.1.117",
     "zod": "^4.4.3"
   }
 }

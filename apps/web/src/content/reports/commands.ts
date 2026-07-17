@@ -183,8 +183,9 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       note: 'Check local sign-in, scopes, configuration, and defaults.',
     },
     'site-crawl': {
-      command: 'seo crawl https://example.com --save',
-      note: 'Create and save a reusable technical SEO baseline.',
+      command:
+        'seo crawl --sitemap-url https://example.com/sitemap.xml --health',
+      note: 'Check sitemap URL health before running a full site crawl.',
     },
     'striking-distance': {
       command: 'seo striking-distance --project example',

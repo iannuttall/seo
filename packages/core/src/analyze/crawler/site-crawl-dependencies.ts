@@ -7,7 +7,7 @@ import {
   queryPagesTopQueriesBatch,
   queryPageTopQuery,
 } from '../../gsc/client.js'
-import { crawlOne } from '../monitoring/crawl-page.js'
+import { crawlOne, crawlStatusOnly } from '../monitoring/crawl-page.js'
 import { fetchSitemapUrls } from '../monitoring/sitemaps.js'
 import {
   fetchLandingPageValues,
@@ -17,6 +17,7 @@ import { collectAgentDiscovery } from './agent-discovery.js'
 
 export type ResolvedCrawlSiteDependencies = {
   fetchPage: typeof crawlOne
+  fetchStatusPage: typeof crawlStatusOnly
   fetchSitemapUrls: typeof fetchSitemapUrls
   fetch: typeof publicHttpFetch
   queryPageMetrics: typeof queryPageMetrics
@@ -57,6 +58,7 @@ export function resolveCrawlSiteDependencies(
   const emptyPageTopQuery: typeof queryPageTopQuery = async () => undefined
   return {
     fetchPage: dependencies.fetchPage ?? crawlOne,
+    fetchStatusPage: dependencies.fetchStatusPage ?? crawlStatusOnly,
     fetchSitemapUrls: dependencies.fetchSitemapUrls ?? fetchSitemapUrls,
     fetch: dependencies.fetch ?? publicHttpFetch,
     queryPageMetrics:

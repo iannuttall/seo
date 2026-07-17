@@ -114,6 +114,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       'fetchIntervalCap',
       'fetchIntervalMs',
       'googleAnalyticsPropertyId',
+      'health',
       'include',
       'includeIssues',
       'includePages',
@@ -124,6 +125,7 @@ test('crawler MCP structured output schema stays stable', async () => {
       'respectRobots',
       'saveReport',
       'site',
+      'sitemapUrl',
       'url',
       'useSitemap',
     ])
@@ -139,8 +141,10 @@ test('crawler MCP structured output schema stays stable', async () => {
       root: ['content', 'structuredContent'],
       contentItem: ['text', 'type'],
       structured: [
+        'access',
         'ai',
         'caveats',
+        'config',
         'configHash',
         'dataSources',
         'definitionId',
@@ -200,6 +204,7 @@ test('crawler MCP structured output schema stays stable', async () => {
         'skippedUrls',
         'skippedUrlsByImpact',
         'statusErrors',
+        'statusOnlyPages',
         'totalPages',
       ],
       topFix: [
@@ -252,6 +257,17 @@ test('crawler MCP structured output schema stays stable', async () => {
     const robotsTxt = ai.robotsTxt as JsonRecord
     assert.equal(robotsTxt.availability, 'available')
     assert.equal(firstRecord(robotsTxt.botAccess).allowed, true)
+
+    const healthResult = await crawlTool.handler({
+      health: true,
+      sitemapUrl: `${fixture.baseUrl}/sitemap.xml`,
+      maxPages: 1,
+    })
+    const health = healthResult.structuredContent as JsonRecord
+    const healthConfig = health.config as JsonRecord
+    assert.equal(healthConfig.url, `${fixture.baseUrl}/`)
+    assert.equal(healthConfig.strategy, 'health')
+    assert.equal(healthConfig.mode, 'sitemap')
 
     const topFixTool = tools.get('seo_top_fixes')
     const affectedTool = tools.get('seo_affected_urls')

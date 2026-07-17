@@ -10,6 +10,9 @@ import {
   looksLikeSpa,
 } from './page-fetcher/rendered.js'
 import { renderingDocumentDifference } from './page-fetcher/rendering-difference.js'
+
+export { fetchPageStatus } from './page-fetcher/status-probe.js'
+
 import type {
   FetchPageOptions,
   JavaScriptRenderingInput,
@@ -115,8 +118,9 @@ export async function fetchPage(
       opts.respectRobots,
     )
     const shouldRetryJs =
-      renderingMode === 'on' ||
-      (renderingMode === 'auto' && looksLikeSpa(first.html))
+      !first.diagnostics.accessBlock &&
+      (renderingMode === 'on' ||
+        (renderingMode === 'auto' && looksLikeSpa(first.html)))
 
     if (!shouldRetryJs || opts.signal?.aborted) {
       return withRenderingState(
@@ -143,6 +147,8 @@ export async function fetchPage(
           ...rendered.diagnostics,
           robotsTxt: first.diagnostics.robotsTxt,
           redirectChain: first.diagnostics.redirectChain,
+          accessBlock:
+            rendered.diagnostics.accessBlock ?? first.diagnostics.accessBlock,
           rendering: {
             ...rendered.diagnostics.rendering,
             mode: renderingMode,

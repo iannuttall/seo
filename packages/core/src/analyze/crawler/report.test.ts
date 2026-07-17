@@ -31,6 +31,27 @@ test('normalizeCrawlConfig applies stable defaults', () => {
   assert.deepEqual(config.fetchRate, { concurrency: 8 })
 })
 
+test('health crawl defaults to sitemap mode and rejects incompatible modes', () => {
+  const health = normalizeCrawlConfig({
+    url: 'https://example.com/',
+    strategy: 'health',
+  })
+
+  assert.equal(health.mode, 'sitemap')
+  assert.equal(assertCrawlConfigLimits(health), health)
+  assert.throws(
+    () =>
+      assertCrawlConfigLimits(
+        normalizeCrawlConfig({
+          url: 'https://example.com/',
+          mode: 'list',
+          strategy: 'health',
+        }),
+      ),
+    /requires sitemap mode/,
+  )
+})
+
 test('crawl execution limits bound local CPU and memory inputs', () => {
   assert.doesNotThrow(() =>
     assertCrawlConfigLimits(
@@ -311,12 +332,18 @@ test('legacy report normalization removes unsupported stored scores', () => {
   legacy.summary.skippedUrls = 3
   delete (legacy.summary as Partial<CrawlReport['summary']>).skipReasons
   delete (legacy.summary as Partial<CrawlReport['summary']>).skippedUrlsByImpact
+  delete (legacy.summary as Partial<CrawlReport['summary']>).statusOnlyPages
+  delete (legacy.config as Partial<CrawlReport['config']>).strategy
+  delete (legacy as Partial<CrawlReport>).access
   delete (legacy as Partial<CrawlReport>).requests
   delete (legacy as Partial<CrawlReport>).requestEvidenceStatus
 
   const normalized = normalizeLoadedCrawlReport(legacy)
 
   assert.equal(normalized.requestEvidenceStatus, 'unavailable')
+  assert.equal(normalized.config.strategy, 'full')
+  assert.equal(normalized.summary.statusOnlyPages, 0)
+  assert.equal(normalized.access.crawler.robotsToken, 'SEO-Skill')
   assert.equal('seoScore' in (normalized.pages[0] ?? {}), false)
   assert.equal('geoScore' in (normalized.pages[0] ?? {}), false)
   assert.equal('healthScore' in normalized.summary, false)

@@ -1,27 +1,44 @@
 ---
 title: Technical SEO crawler
-description: Crawl a site from your terminal to find technical SEO problems and every affected URL. Save the result, make the fix and compare the next crawl.
+description: Check sitemap URL health first, then run a full crawl when you need page-level technical SEO evidence and every affected URL.
 ---
 
 import { productFacts } from '@/lib/facts'
 
-The crawler is the base of a technical SEO audit. It fetches pages from your
-machine and records what a crawler can observe at that moment, giving you a
-technical baseline, an affected URL set, and a way to verify changes after a
-release.
+The crawler has two stages. The fast health pass checks whether sitemap URLs
+respond cleanly. The full crawl fetches and analyses pages when you need a
+technical baseline, an affected URL set, or evidence to verify a change.
 
-## Run a useful first crawl
+## Run the sitemap health pass first
 
-Start with the public URL you expect search engines and users to reach:
+Give it the sitemap URL when you know it:
+
+```sh
+seo crawl --sitemap-url https://example.com/sitemap.xml --health
+```
+
+This reads the sitemap, then checks each listed URL for status, redirects,
+robots decisions, network failures, and access blocks. It does not parse or
+render page bodies, join Google data, check external links, or write page and
+robots responses to the local cache. Requests begin one at a time and increase
+only after clean responses, up to the configured limit.
+
+When the sitemap URL is unknown, `--health` reads same-origin sitemap
+declarations from robots.txt and falls back to `/sitemap.xml`. An explicit
+`--sitemap-url` is faster and makes the checked scope unambiguous.
+
+## Run the full crawl when you need page evidence
+
+Use the public URL you expect search engines and users to reach:
 
 ```sh
 seo crawl https://example.com --save
 ```
 
-The default site crawl stops at 500 pages and a click depth of 16. It can seed
-URLs from sitemaps, follows internal links, and respects robots.txt by default.
-Saving the result lets focused reports reuse the page evidence without fetching
-the site again.
+The default full crawl stops at 500 pages and a click depth of 16. It seeds
+URLs from sitemaps, follows internal links, respects robots.txt, and analyses
+page bodies. Saving the result lets focused reports reuse that evidence without
+fetching the site again.
 
 Use a project profile to join the crawl to available Search Console and Google Analytics
 evidence:
@@ -45,7 +62,7 @@ Bound the crawl to the question in front of you:
 ```sh
 seo crawl https://example.com --max-pages 100 --max-depth 4
 seo crawl https://example.com --include '/products/' --exclude '/account/'
-seo crawl --mode sitemap https://example.com
+seo crawl --sitemap-url https://example.com/sitemap.xml --health
 seo crawl --mode page --url https://example.com/pricing
 seo crawl --mode list --urls-file changed-urls.txt
 ```
@@ -110,6 +127,33 @@ explains why robots.txt should not be treated as a removal tool.
 The crawler reports the rule it observed. It cannot know whether the rule is
 intentional. The same caution applies to `noindex`, canonicals, redirects, and
 snippet controls.
+
+## Identify the crawler without opening a broad bypass
+
+Every HTTP and browser request uses a stable, versioned identity:
+
+```text
+SEO-Skill/<version> (+https://seoskill.dev)
+```
+
+Robots rules are evaluated against the `SEO-Skill` token. JSON keeps the exact
+identity under `access.crawler`. If a request is challenged, denied, or rate
+limited, `access.samples` keeps the URL, status, provider indicators, request
+ID when available, and practical guidance.
+
+The crawler detects a Cloudflare Challenge Page from the response's
+`cf-mitigated: challenge` header. Other Cloudflare headers show that the
+response passed through Cloudflare, but do not prove Cloudflare caused an
+ordinary 401, 403, or 429. Cloudflare documents the
+<a href="https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/" target="_blank" rel="noreferrer">Challenge response header</a>
+and the available
+<a href="https://developers.cloudflare.com/waf/custom-rules/skip/" target="_blank" rel="noreferrer">custom Skip rules</a>.
+
+A User-Agent can be spoofed, so never create a broad User-Agent-only allow
+rule. If the audit should have access, limit any temporary exception to the
+audit machine source IP, required hostname or paths, exact User-Agent, and only
+the security rule that blocked the request. Check Cloudflare Security Events
+first. If no event matches, inspect the origin security logs.
 
 ## Read technical findings without inventing an SEO rule
 
@@ -189,16 +233,19 @@ seo crawl https://example.com --format json --output crawl.json
 seo crawl https://example.com --format csv --csv issues --output issues.csv
 seo crawl https://example.com --format html --output report.html
 seo crawl https://example.com --format markdown --output tickets.md
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml
 ```
 
 JSON preserves the structured contract for scripts and agents. CSV works for
 sorting issues or pages. HTML gives you a local standalone report, while
-Markdown is useful for a bounded implementation brief.
+Markdown is useful for a bounded implementation brief. JUnit creates one test
+case per sitemap document and listed URL with status, redirect, network,
+robots, and access-block evidence.
 
 ## Fail CI on a severity you have agreed to enforce
 
 ```sh
-seo crawl https://example.com --fail-on high --json
+seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml --fail-on high
 ```
 
 The process exits unsuccessfully when findings meet the selected severity or
@@ -207,6 +254,9 @@ higher. JSON output still includes the triggering evidence.
 A CI gate is strongest when the crawl scope is stable and the team agrees what
 that severity means. Save the output as an artifact. Without the affected URLs
 and rule evidence, a red build is just a red build.
+
+Follow a failed health URL with a focused page audit or full crawl. Do not make
+every deployment download and analyse the whole site.
 
 Use the [CLI automation guide](/docs/cli) for explicit JSON runs. The
 [AI search evidence guide](/docs/ai-search) covers technical eligibility checks

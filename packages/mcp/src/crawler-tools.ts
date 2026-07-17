@@ -20,7 +20,6 @@ import {
   MAX_CRAWL_CONCURRENCY,
   MAX_CRAWL_DEPTH,
   MAX_CRAWL_PAGES,
-  reviewObservations,
   SeoError,
   saveCrawlReport,
   selectAffectedUrls,
@@ -28,6 +27,11 @@ import {
   validateOkfFiles,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import {
+  assertExclusiveReportInput,
+  compactCrawlResult,
+  resolveSavedReportAlias,
+} from './crawler-tool-helpers.js'
 import { fetchRateInput } from './fetch-rate.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -38,74 +42,33 @@ function boundedPositiveInteger(maximum: number) {
 const crawlPageLimit = boundedPositiveInteger(MAX_CRAWL_PAGES)
 const crawlDepthLimit = z.number().int().min(0).max(MAX_CRAWL_DEPTH).optional()
 
-function compactCrawlResult(
-  report: Awaited<ReturnType<typeof crawlSite>>,
-  opts: { includePages?: boolean; includeIssues?: boolean } = {},
-) {
-  const requestHeadline =
-    report.requestEvidenceStatus === 'available'
-      ? `Processed ${report.requests.length} URL requests into ${report.summary.totalPages} unique documents.`
-      : report.requestEvidenceStatus === 'partial'
-        ? `Observed ${report.requests.length} URL requests and retained ${report.summary.totalPages} unique documents; some started requests were still in flight when the crawl stopped.`
-        : `Loaded ${report.summary.totalPages} unique documents; request evidence is unavailable for this legacy report.`
-  const payload: Record<string, unknown> = {
-    id: report.id,
-    definitionId: report.definitionId,
-    headline: `${requestHeadline} Found ${report.summary.highIssues} high, ${report.summary.mediumIssues} medium, and ${report.summary.lowIssues} low issues.`,
-    status: report.status,
-    requestEvidenceStatus: report.requestEvidenceStatus,
-    configHash: report.configHash,
-    summary: report.summary,
-    dataSources: report.dataSources,
-    ai: report.ai
-      ? {
-          robotsTxt: report.ai.robotsTxt,
-          llmsTxt: report.ai.llmsTxt,
-          agentResources: report.ai.agentResources,
-        }
-      : undefined,
-    topFixes: topFixes(report, { limit: 10 }),
-    reviewObservations: reviewObservations(report, { limit: 10 }),
-    warnings: report.warnings,
-    caveats: report.caveats,
-  }
-  if (opts.includeIssues) payload.issues = report.issues
-  if (opts.includePages) {
-    payload.requests = report.requests
-    payload.pages = report.pages
-  }
-  return payload
-}
-
-function resolveSavedReportAlias(input: {
-  value?: string
-  site?: string
-  skipId?: string
-}) {
-  if (!input.value || input.value === 'latest' || input.value === 'previous') {
-    const reports = listCrawlReports({ site: input.site, limit: 20 }).filter(
-      (report) => report.id !== input.skipId,
-    )
-    const meta = input.value === 'previous' ? reports[1] : reports[0]
-    return meta ? loadCrawlReport(meta.id) : undefined
-  }
-  return loadCrawlReport(input.value)
-}
-
-function assertExclusiveReportInput(url?: string, reportId?: string): void {
-  if (url && reportId) {
-    throw new SeoError('INVALID_INPUT', 'Use either url or reportId, not both.')
-  }
-}
-
 export function registerCrawlerTools(server: McpServer): void {
   server.registerTool(
     'seo_crawl_site',
     {
       description:
-        'Crawl a site and run technical SEO checks. The compact result separates prioritised fixes from review observations. Set includePages/includeIssues for raw data.',
+        'Run a site crawl. Start with health=true for a fast uncached sitemap status and redirect pass, especially on large or unknown sites. Run the full crawl second when content-level evidence is needed. The compact result includes crawler identity and access-block guidance.',
       inputSchema: {
-        url: z.string().url(),
+        url: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            'Site start URL. Optional when sitemapUrl supplies the health-pass scope.',
+          ),
+        health: z
+          .boolean()
+          .optional()
+          .describe(
+            'Run the fast sitemap health pass before a full crawl. Downloads no page bodies and writes no page cache entries.',
+          ),
+        sitemapUrl: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            'Explicit sitemap or sitemap index URL for the health pass.',
+          ),
         site: z.string().optional(),
         googleAnalyticsPropertyId: z.string().optional(),
         maxPages: crawlPageLimit,
@@ -126,6 +89,8 @@ export function registerCrawlerTools(server: McpServer): void {
     },
     async ({
       url,
+      health,
+      sitemapUrl,
       site,
       googleAnalyticsPropertyId,
       maxPages,
@@ -144,8 +109,19 @@ export function registerCrawlerTools(server: McpServer): void {
       saveReport,
     }) => {
       try {
+        const crawlUrl =
+          url ?? (sitemapUrl ? new URL('/', sitemapUrl).toString() : undefined)
+        if (!crawlUrl) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Pass url or an explicit sitemapUrl.',
+          )
+        }
         const report = await crawlSite({
-          url,
+          url: crawlUrl,
+          mode: health || sitemapUrl ? 'sitemap' : 'site',
+          strategy: health ? 'health' : 'full',
+          sitemapUrl,
           site,
           googleAnalyticsPropertyId,
           maxPages,
@@ -165,7 +141,7 @@ export function registerCrawlerTools(server: McpServer): void {
         })
         const saved = saveReport ? saveCrawlReport(report) : undefined
         return toolSuccess(
-          `Crawl complete for ${url}. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
+          `${health ? 'Sitemap health pass' : 'Crawl'} complete for ${crawlUrl}. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
           {
             ...compactCrawlResult(report, { includePages, includeIssues }),
             ...(saved ? { saved } : {}),

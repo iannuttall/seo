@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { SEO_CRAWLER_IDENTITY } from '../../fetch/crawler-identity.js'
 import {
   isCompatibleTechnicalBaseline,
   resolveTechnicalBaseline,
@@ -25,6 +26,7 @@ function crawlReport(
     config: {
       url: input.url ?? 'https://example.com/',
       mode: 'site',
+      strategy: 'full',
       urls: [],
       maxPages: input.maxPages ?? 100,
       maxDepth: input.maxDepth ?? 4,
@@ -42,6 +44,7 @@ function crawlReport(
     },
     summary: {
       totalPages: 1,
+      statusOnlyPages: 0,
       indexablePages: 1,
       nonIndexablePages: 0,
       statusErrors: 0,
@@ -68,6 +71,14 @@ function crawlReport(
       lowIssues: 0,
       byStatus: { '200': 1 },
       byCategory: {},
+    },
+    access: {
+      crawler: SEO_CRAWLER_IDENTITY,
+      blockedRequests: 0,
+      providers: {},
+      samples: [],
+      sampleLimit: 10,
+      truncated: false,
     },
     requestEvidenceStatus: 'available',
     requests: [],

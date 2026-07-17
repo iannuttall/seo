@@ -487,3 +487,53 @@ output.
 
 The full build, typecheck, test, and lint gates pass. The built CLI prints cron
 entries that prune logs before appending to each scheduled output file.
+
+## SEO-014: sitemap crawls require full page downloads
+
+- Status: Open
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+Sitemap mode downloads, parses, and caches every retained page body before it
+can report HTTP status or redirects. It cannot start from an explicit sitemap
+URL, and CI has no JUnit output.
+
+### Impact
+
+Large sitemap checks do far more network, CPU, memory, and disk work than a
+deploy health gate needs. Users must choose between an expensive full audit and
+no sitemap-wide status evidence.
+
+### Planned fix
+
+Add an explicit sitemap URL, a status-only health strategy that cancels page
+bodies without parsing or caching them, conservative crawl controls, and JUnit
+output backed by the same structured request evidence.
+
+## SEO-015: crawler identity and access blocks are not actionable
+
+- Status: Open
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+HTTP and browser-rendered requests use a generated desktop browser identity.
+Robots evaluation uses that generated value too. Firewall and challenge
+responses are recorded as ordinary HTTP errors without naming the crawler,
+showing reliable provider evidence, or explaining how to grant narrow access.
+
+### Impact
+
+Site owners cannot reliably recognize the crawler in logs or configure a
+stable exception. When a WAF blocks the audit, agents and humans receive a
+generic status instead of the evidence needed to resolve access safely.
+
+### Planned fix
+
+Use a stable versioned crawler identity, evaluate robots.txt against its token,
+detect Cloudflare challenges and generic access blocks from response evidence,
+and return structured, security-conscious allowlisting guidance in crawl
+reports and human output.

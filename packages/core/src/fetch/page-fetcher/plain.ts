@@ -1,7 +1,8 @@
 import pRetry, { AbortError } from 'p-retry'
 import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { PageFetchResult } from '../../types.js'
-import { publicHttpFetch, readBoundedResponseText } from '../http-client.js'
+import { detectAccessBlock } from '../access-block.js'
+import { readBoundedResponseText } from '../http-client.js'
 import {
   hostBackpressureSnapshot,
   rateLimitDiagnostics,
@@ -9,54 +10,31 @@ import {
   retryAfterMs,
   waitForHostBackpressure,
 } from './rate-controls.js'
+import { fetchWithRedirectChain } from './redirects.js'
 import { fetchRobots, RobotsAccessError } from './robots.js'
-import type { NormalizedFetchRateControls, RobotsResult } from './types.js'
-
-type RedirectHop = NonNullable<
-  PageFetchResult['diagnostics']['redirectChain']
->[number]
+import {
+  diagnosticRobotsEvidence,
+  pageRobotsEvidence,
+} from './robots-evidence.js'
+import type { NormalizedFetchRateControls } from './types.js'
 
 export const MAX_PAGE_RESPONSE_BYTES = 5 * 1024 * 1024
 
 type CachedPageEvidence = {
   finalUrl: string
   blocked: boolean
+  accessBlock?: PageFetchResult['diagnostics']['accessBlock']
   robotsTxt?: PageFetchResult['robotsTxt']
   diagnosticsRobotsTxt?: PageFetchResult['diagnostics']['robotsTxt']
   redirectChain?: PageFetchResult['diagnostics']['redirectChain']
   warnings: string[]
 }
 
-function pageRobotsEvidence(
-  robots: RobotsResult,
-): NonNullable<PageFetchResult['robotsTxt']> {
-  return {
-    url: robots.url,
-    allowed: robots.allowed,
-    availability: robots.availability,
-    status: robots.status,
-    error: robots.error,
-    matchedLine: robots.matchedLine,
-  }
-}
-
-function diagnosticRobotsEvidence(
-  robots: RobotsResult,
-): NonNullable<PageFetchResult['diagnostics']['robotsTxt']> {
-  return {
-    url: robots.url,
-    cache: robots.cache,
-    allowed: robots.allowed,
-    availability: robots.availability,
-    status: robots.status,
-    error: robots.error,
-  }
-}
-
 export function encodePageFetchCacheEvidence(result: PageFetchResult): string {
   return JSON.stringify({
     finalUrl: result.finalUrl,
     blocked: result.diagnostics.blocked,
+    accessBlock: result.diagnostics.accessBlock,
     robotsTxt: result.robotsTxt,
     diagnosticsRobotsTxt: result.diagnostics.robotsTxt,
     redirectChain: result.diagnostics.redirectChain,
@@ -83,40 +61,6 @@ export function decodePageFetchCacheEvidence(
   }
 }
 
-async function fetchWithRedirectChain(
-  url: string,
-  signal: AbortSignal,
-): Promise<{
-  response: Awaited<ReturnType<typeof publicHttpFetch>>
-  redirectChain: RedirectHop[]
-}> {
-  const redirectChain: RedirectHop[] = []
-  let currentUrl = url
-
-  for (let redirectCount = 0; redirectCount <= 10; redirectCount += 1) {
-    const response = await publicHttpFetch(currentUrl, {
-      redirect: 'manual',
-      signal,
-    })
-    const location = response.headers.get('location')
-
-    if (response.status < 300 || response.status >= 400 || !location) {
-      return { response, redirectChain }
-    }
-
-    const nextUrl = new URL(location, currentUrl).toString()
-    redirectChain.push({
-      url: currentUrl,
-      status: response.status,
-      location: nextUrl,
-    })
-    await response.body?.cancel().catch(() => undefined)
-    currentUrl = nextUrl
-  }
-
-  throw new Error(`Too many redirects for ${url}`)
-}
-
 export async function fetchPlain(
   url: string,
   refresh = false,
@@ -130,7 +74,10 @@ export async function fetchPlain(
   const key = hashKey(['page', url])
   const host = new URL(url).host
   let robots = respectRobots
-    ? await fetchRobots(new URL(url).origin, url, refresh)
+    ? await fetchRobots(new URL(url).origin, url, refresh, {
+        timeoutMs,
+        signal,
+      })
     : undefined
   if (robots && robots.allowed !== true) {
     throw new RobotsAccessError(
@@ -173,6 +120,7 @@ export async function fetchPlain(
           ...rateLimitDiagnostics(host, rate),
         },
         backpressure: hostBackpressureSnapshot(host),
+        accessBlock: evidence?.accessBlock,
         robotsTxt: robots
           ? diagnosticRobotsEvidence(robots)
           : evidence?.diagnosticsRobotsTxt
@@ -187,7 +135,10 @@ export async function fetchPlain(
     }
   }
 
-  robots ??= await fetchRobots(new URL(url).origin, url, refresh)
+  robots ??= await fetchRobots(new URL(url).origin, url, refresh, {
+    timeoutMs,
+    signal,
+  })
   const beforeFetch = await waitForHostBackpressure(host, rate)
   let attempts = 0
 
@@ -217,12 +168,21 @@ export async function fetchPlain(
     { retries: 2 },
   )
 
-  const html = await readBoundedResponseText(
-    response.response,
-    MAX_PAGE_RESPONSE_BYTES,
-    'Page response',
-  )
   const headerMap = Object.fromEntries(response.response.headers.entries())
+  const accessBlock = detectAccessBlock({
+    status: response.response.status,
+    headers: response.response.headers,
+  })
+  let html = ''
+  if (accessBlock) {
+    await response.response.body?.cancel().catch(() => undefined)
+  } else {
+    html = await readBoundedResponseText(
+      response.response,
+      MAX_PAGE_RESPONSE_BYTES,
+      'Page response',
+    )
+  }
   const durationMs = Date.now() - startedAt
   const backpressure = recordHostFetch({
     host,
@@ -246,6 +206,7 @@ export async function fetchPlain(
       rendered: false,
       blocked:
         robots.allowed === false ||
+        Boolean(accessBlock) ||
         [401, 403, 429].includes(response.response.status),
       durationMs,
       retries: Math.max(0, attempts - 1),
@@ -256,34 +217,43 @@ export async function fetchPlain(
         backpressure.status === 'ok' && beforeFetch.status !== 'ok'
           ? beforeFetch
           : backpressure,
+      accessBlock,
       robotsTxt: diagnosticRobotsEvidence(robots),
       redirectChain: response.redirectChain,
     },
-    warnings:
-      robots.allowed === null
+    warnings: [
+      ...(robots.allowed === null
         ? [
             `robots.txt availability is unknown${robots.status ? ` after HTTP ${robots.status}` : ''}; this fetch does not prove crawler access is allowed.`,
           ]
-        : [],
+        : []),
+      ...(accessBlock
+        ? [
+            `${accessBlock.guidance.summary} Identify the crawler as ${accessBlock.crawler.userAgent}.`,
+          ]
+        : []),
+    ],
     robotsTxt: pageRobotsEvidence(robots),
   }
 
-  db.prepare(
-    `INSERT OR REPLACE INTO http_cache
-    (url_hash, url, status, headers_json, body_blob, metadata_json, etag, fetched_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    key,
-    url,
-    response.response.status,
-    JSON.stringify(headerMap),
-    Buffer.from(html),
-    encodePageFetchCacheEvidence(result),
-    response.response.headers.get('etag'),
-    Date.now(),
-    Date.now() + 3_600_000,
-  )
-  noteCacheWrite(Buffer.byteLength(html))
+  if (!accessBlock) {
+    db.prepare(
+      `INSERT OR REPLACE INTO http_cache
+      (url_hash, url, status, headers_json, body_blob, metadata_json, etag, fetched_at, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      key,
+      url,
+      response.response.status,
+      JSON.stringify(headerMap),
+      Buffer.from(html),
+      encodePageFetchCacheEvidence(result),
+      response.response.headers.get('etag'),
+      Date.now(),
+      Date.now() + 3_600_000,
+    )
+    noteCacheWrite(Buffer.byteLength(html))
+  }
 
   return result
 }

@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
+import { SEO_CRAWLER_IDENTITY } from '../../fetch/http-client.js'
 import { MAX_FETCH_CONCURRENCY } from '../../fetch/page-fetcher/rate-controls.js'
 import {
   type FetchRateControls,
@@ -7,6 +8,7 @@ import {
   normalizeJavaScriptRenderingMode,
 } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
+import type { AccessBlockEvidence, CrawlerIdentity } from '../../types.js'
 import type {
   SitemapDocument,
   SitemapFetchResult,
@@ -27,6 +29,7 @@ import {
 } from './crawl-skip-reasons.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
+export type CrawlStrategy = 'full' | 'health'
 
 export const MAX_CRAWL_PAGES = 10_000
 export const MAX_CRAWL_DEPTH = 64
@@ -38,6 +41,8 @@ export type CrawlFetchRateConfig = FetchRateControls
 export type CrawlConfig = {
   url: string
   mode: CrawlMode
+  strategy: CrawlStrategy
+  sitemapUrl?: string
   urls: string[]
   maxPages: number
   maxDepth: number
@@ -184,7 +189,7 @@ export type CrawlSitemapDiscovery = {
   urlsReturned: number
   roots: Array<{
     url: string
-    source: 'robots-txt' | 'default-path'
+    source: 'explicit' | 'robots-txt' | 'default-path'
     dataStatus: 'complete' | 'partial' | 'unavailable'
     urlsReturned: number
     sitemapsFetched: number
@@ -257,6 +262,7 @@ export type CrawlReportDataSources = {
 
 export type CrawlReportSummary = {
   totalPages: number
+  statusOnlyPages: number
   indexablePages: number
   nonIndexablePages: number
   statusErrors: number
@@ -284,6 +290,18 @@ export type CrawlReportSummary = {
   byCategory: Record<string, number>
 }
 
+export type CrawlAccessSummary = {
+  crawler: CrawlerIdentity
+  blockedRequests: number
+  providers: Partial<Record<AccessBlockEvidence['provider'], number>>
+  samples: Array<{
+    url: string
+    evidence: AccessBlockEvidence
+  }>
+  sampleLimit: number
+  truncated: boolean
+}
+
 export type CrawlReport = {
   id: string
   definitionId: string
@@ -294,6 +312,7 @@ export type CrawlReport = {
   status: 'completed' | 'partial' | 'failed'
   configHash: string
   config: CrawlConfig
+  access: CrawlAccessSummary
   summary: CrawlReportSummary
   requestEvidenceStatus: 'available' | 'partial' | 'unavailable'
   requests: CrawlRequestObservation[]
@@ -328,9 +347,14 @@ function uniqueSorted(values: string[] = []): string[] {
   return [...new Set(values.filter(Boolean))].sort()
 }
 
-function normalizeFetchRate(input: CrawlConfigInput): CrawlFetchRateConfig {
+function normalizeFetchRate(
+  input: CrawlConfigInput,
+  strategy: CrawlStrategy,
+): CrawlFetchRateConfig {
+  const defaultConcurrency = strategy === 'health' ? 4 : 8
   return {
-    concurrency: input.fetchRate?.concurrency ?? input.concurrency ?? 8,
+    concurrency:
+      input.fetchRate?.concurrency ?? input.concurrency ?? defaultConcurrency,
     ...(input.fetchRate?.intervalCap !== undefined
       ? { intervalCap: input.fetchRate.intervalCap }
       : {}),
@@ -344,23 +368,34 @@ function normalizeFetchRate(input: CrawlConfigInput): CrawlFetchRateConfig {
 }
 
 export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
+  const strategy = input.strategy ?? 'full'
+  const concurrency = input.concurrency ?? (strategy === 'health' ? 4 : 8)
   return {
     url: new URL(input.url).toString(),
-    mode: input.mode ?? 'site',
+    mode: input.mode ?? (strategy === 'health' ? 'sitemap' : 'site'),
+    strategy,
+    ...(input.sitemapUrl
+      ? { sitemapUrl: new URL(input.sitemapUrl).toString() }
+      : {}),
     urls: uniqueSorted(input.urls ?? []),
     maxPages: input.maxPages ?? 500,
     maxDepth: input.maxDepth ?? 16,
-    concurrency: input.concurrency ?? 8,
+    concurrency,
     timeoutMs: input.timeoutMs ?? 20_000,
     include: uniqueSorted(input.include ?? []),
     exclude: uniqueSorted(input.exclude ?? []),
     respectRobots: input.respectRobots ?? true,
     useSitemap: input.useSitemap ?? true,
-    checkExternal: input.checkExternal ?? true,
-    checkAgentDiscovery: input.checkAgentDiscovery ?? false,
-    js: normalizeJavaScriptRenderingMode(input.js),
-    refresh: input.refresh ?? false,
-    fetchRate: normalizeFetchRate(input),
+    checkExternal:
+      strategy === 'health' ? false : (input.checkExternal ?? true),
+    checkAgentDiscovery:
+      strategy === 'health' ? false : (input.checkAgentDiscovery ?? false),
+    js:
+      strategy === 'health'
+        ? 'off'
+        : normalizeJavaScriptRenderingMode(input.js),
+    refresh: strategy === 'health' ? true : (input.refresh ?? false),
+    fetchRate: normalizeFetchRate(input, strategy),
   }
 }
 
@@ -378,6 +413,12 @@ function assertIntegerRange(
 }
 
 export function assertCrawlConfigLimits(config: CrawlConfig): CrawlConfig {
+  if (config.strategy === 'health' && config.mode !== 'sitemap') {
+    throw new RangeError('The health strategy requires sitemap mode.')
+  }
+  if (config.strategy === 'health' && !config.useSitemap) {
+    throw new RangeError('The health strategy requires sitemap discovery.')
+  }
   assertIntegerRange(config.maxPages, 'maxPages', 1, MAX_CRAWL_PAGES)
   assertIntegerRange(config.maxDepth, 'maxDepth', 0, MAX_CRAWL_DEPTH)
   assertIntegerRange(
@@ -394,6 +435,12 @@ export function assertCrawlConfigLimits(config: CrawlConfig): CrawlConfig {
       1,
       MAX_FETCH_CONCURRENCY,
     )
+  }
+  if (config.strategy === 'health' && config.mode !== 'sitemap') {
+    throw new RangeError('Health strategy requires sitemap mode.')
+  }
+  if (config.sitemapUrl && config.mode !== 'sitemap') {
+    throw new RangeError('sitemapUrl requires sitemap mode.')
   }
   return config
 }
@@ -605,10 +652,16 @@ export function summarizeCrawlReport(input: {
   }
 
   const runStats = crawlRunStats(input.pages, input.stats)
+  const indexabilityPages = input.pages.filter(
+    (page) => page.auditScope !== 'status',
+  )
   return {
     totalPages: input.pages.length,
-    indexablePages: input.pages.filter((page) => page.indexable).length,
-    nonIndexablePages: input.pages.filter((page) => !page.indexable).length,
+    statusOnlyPages: input.pages.filter((page) => page.auditScope === 'status')
+      .length,
+    indexablePages: indexabilityPages.filter((page) => page.indexable).length,
+    nonIndexablePages: indexabilityPages.filter((page) => !page.indexable)
+      .length,
     statusErrors: input.pages.filter(
       (page) => page.status === 0 || page.status >= 400,
     ).length,
@@ -638,6 +691,31 @@ export function summarizeCrawlReport(input: {
       : undefined,
     byStatus,
     byCategory,
+  }
+}
+
+const ACCESS_BLOCK_SAMPLE_LIMIT = 10
+
+function crawlAccessSummary(
+  requests: CrawlRequestObservation[],
+): CrawlAccessSummary {
+  const blocked = requests.flatMap((request) =>
+    request.outcome === 'response' && request.accessBlock
+      ? [{ url: request.requestedUrl, evidence: request.accessBlock }]
+      : [],
+  )
+  const providers: CrawlAccessSummary['providers'] = {}
+  for (const item of blocked) {
+    providers[item.evidence.provider] =
+      (providers[item.evidence.provider] ?? 0) + 1
+  }
+  return {
+    crawler: SEO_CRAWLER_IDENTITY,
+    blockedRequests: blocked.length,
+    providers,
+    samples: blocked.slice(0, ACCESS_BLOCK_SAMPLE_LIMIT),
+    sampleLimit: ACCESS_BLOCK_SAMPLE_LIMIT,
+    truncated: blocked.length > ACCESS_BLOCK_SAMPLE_LIMIT,
   }
 }
 
@@ -805,6 +883,7 @@ export function createCrawlReport(input: {
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),
     config,
+    access: crawlAccessSummary(requests),
     summary: summarizeCrawlReport({
       pages,
       requests,
@@ -854,6 +933,7 @@ export function createCrawlReport(input: {
 }
 
 export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
+  const config = sanitizeCrawlConfig(normalizeCrawlConfig(report.config))
   const requestEvidenceStatus =
     report.requestEvidenceStatus ??
     (Object.hasOwn(report as object, 'requests') ? 'available' : 'unavailable')
@@ -867,12 +947,14 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
   )
   return {
     ...(sanitizeTenantValue(report) as CrawlReport),
+    config,
+    access: crawlAccessSummary(requests),
     requestEvidenceStatus,
     requests,
     definitionId:
       report.definitionId ??
       crawlDefinitionId({
-        config: report.config,
+        config,
         site: report.site,
         googleAnalyticsPropertyId: report.googleAnalyticsPropertyId,
       }),

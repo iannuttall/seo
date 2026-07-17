@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { test } from 'node:test'
+import { getDb, hashKey } from '../../storage/database.js'
 import type { PageFetchResult } from '../../types.js'
 import { ResponseSizeLimitError } from '../http-client.js'
 import {
@@ -145,6 +146,45 @@ test('page fetch rejects responses above the local memory limit', async () => {
         ),
       ResponseSizeLimitError,
     )
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()))
+    })
+  }
+})
+
+test('page fetch does not retain or cache an access challenge body', async () => {
+  const server = createServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.statusCode = 403
+    res.setHeader('content-type', 'text/html')
+    res.setHeader('cf-mitigated', 'challenge')
+    res.setHeader('cf-ray', 'plain-test-LHR')
+    res.end('<html>challenge body</html>')
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  assert.ok(address && typeof address === 'object')
+  const url = `http://127.0.0.1:${address.port}/challenge`
+  const rate = normalizeRateControls({
+    concurrency: 1,
+    intervalCap: 100,
+    intervalMs: 1,
+  })
+
+  try {
+    const result = await fetchPlain(url, true, 2_000, rate, undefined, true)
+    const cached = getDb()
+      .prepare('SELECT 1 FROM http_cache WHERE url_hash = ?')
+      .get(hashKey(['page', url]))
+
+    assert.equal(result.html, '')
+    assert.equal(result.diagnostics.accessBlock?.provider, 'cloudflare')
+    assert.equal(cached, undefined)
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()))

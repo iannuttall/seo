@@ -4,7 +4,11 @@ import { selectGoogleRichResultAssessments } from '../../extract/google-rich-res
 import { extractPage } from '../../extract/page-extractor.js'
 import { OriginBackpressureError } from '../../fetch/page-fetcher/rate-controls.js'
 import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
-import { type FetchPageOptions, fetchPage } from '../../fetch/page-fetcher.js'
+import {
+  type FetchPageOptions,
+  fetchPage,
+  fetchPageStatus,
+} from '../../fetch/page-fetcher.js'
 import {
   hasMetaRobotsDirective,
   hasXRobotsDirective,
@@ -196,6 +200,8 @@ function responseObservation(
     contentType: headerValue(fetched.headers, 'content-type'),
     durationMs: fetched.diagnostics.durationMs,
     redirectChain: fetched.diagnostics.redirectChain,
+    accessBlock: fetched.diagnostics.accessBlock,
+    robotsTxt: fetched.robotsTxt,
   }
   if (extraction === 'failed') {
     if (!extractionError) {
@@ -222,13 +228,13 @@ function unextractedPage(
     finalUrl: fetched.finalUrl,
     status: fetched.status,
     contentType,
-    responseHeaders: safeResponseHeaders(fetched.headers),
     responseTimeMs: fetched.diagnostics.durationMs,
     sizeBytes: Buffer.byteLength(fetched.html),
     usedJs: fetched.usedJs,
     fetchSource: fetched.diagnostics.source,
     cacheState: fetched.diagnostics.cache,
     fetchDiagnostics: fetched.diagnostics,
+    accessBlock: fetched.diagnostics.accessBlock,
     blocked: fetched.diagnostics.blocked,
     robotsTxt: fetched.robotsTxt,
     xRobotsTag,
@@ -256,6 +262,36 @@ function unextractedPage(
     isHttps: new URL(fetched.finalUrl).protocol === 'https:',
     hasHsts: Boolean(headerValue(fetched.headers, 'strict-transport-security')),
     compression: headerValue(fetched.headers, 'content-encoding'),
+  }
+}
+
+function statusOnlyPage(fetched: PageFetchResult): CrawlPageSnapshot {
+  const contentType = headerValue(fetched.headers, 'content-type')
+  return {
+    url: fetched.finalUrl,
+    finalUrl: fetched.finalUrl,
+    status: fetched.status,
+    contentType,
+    responseHeaders: safeResponseHeaders(fetched.headers),
+    responseTimeMs: fetched.diagnostics.durationMs,
+    usedJs: false,
+    fetchSource: 'network',
+    cacheState: 'bypass',
+    fetchDiagnostics: fetched.diagnostics,
+    auditScope: 'status',
+    accessBlock: fetched.diagnostics.accessBlock,
+    blocked: fetched.diagnostics.blocked,
+    contentAuditAllowed: false,
+    robotsTxt: fetched.robotsTxt,
+    indexable: false,
+    indexability: 'Not evaluated by status-only health probe',
+    declaredIndexability: 'unknown',
+    extractionStatus: 'not-applicable',
+    wordCount: 0,
+    contentHash: '',
+    outgoingInternalCount: 0,
+    outgoingExternalCount: 0,
+    isHttps: new URL(fetched.finalUrl).protocol === 'https:',
   }
 }
 
@@ -333,6 +369,19 @@ export async function crawlOne(
   }
 
   const contentType = headerValue(fetched.headers, 'content-type')
+  if (fetched.diagnostics.accessBlock) {
+    const page = unextractedPage(fetched, contentType)
+    page.contentAuditAllowed = false
+    page.indexable = false
+    page.indexability = 'Crawler access blocked'
+    page.declaredIndexability = 'unknown'
+    page.extractionStatus = 'not-applicable'
+    return {
+      request: responseObservation(url, fetched, 'not-applicable'),
+      page,
+      urls: [],
+    }
+  }
   if (!isHtmlContentType(contentType)) {
     const extraction = contentType
       ? ('not-applicable' as const)
@@ -509,6 +558,70 @@ export async function crawlOne(
       request: responseObservation(url, fetched, 'failed', message),
       urls: [],
       warning: `${url}: content extraction failed: ${message}`,
+    }
+  }
+}
+
+export async function crawlStatusOnly(
+  url: string,
+  opts: FetchPageOptions = {},
+): Promise<CrawlOneResult> {
+  const startedAt = Date.now()
+  try {
+    const fetched = await fetchPageStatus(url, {
+      ...opts,
+      js: 'off',
+      refresh: true,
+    })
+    return {
+      request: responseObservation(url, fetched, 'not-applicable'),
+      page: statusOnlyPage(fetched),
+      urls: [],
+    }
+  } catch (error) {
+    if (error instanceof OriginBackpressureError) {
+      return {
+        request: {
+          requestedUrl: url,
+          outcome: 'skipped',
+          reason: 'origin-backpressure',
+          error: error.message,
+          extraction: 'not-applicable',
+        },
+        urls: [],
+      }
+    }
+    if (error instanceof RobotsAccessError) {
+      return {
+        request: {
+          requestedUrl: url,
+          outcome: 'skipped',
+          reason: error.reason,
+          robotsTxt: {
+            url: error.evidence.url,
+            allowed: error.evidence.allowed,
+            availability: error.evidence.availability,
+            status: error.evidence.status,
+            error: error.evidence.error,
+            matchedLine: error.evidence.matchedLine,
+          },
+          extraction: 'not-applicable',
+        },
+        urls: [],
+      }
+    }
+    const message = error instanceof Error ? error.message : String(error)
+    return {
+      request: {
+        requestedUrl: url,
+        outcome: 'failure',
+        durationMs: Date.now() - startedAt,
+        failureKind: fetchFailureKind(error, opts.signal),
+        error: message,
+        extraction: 'not-applicable',
+      },
+      urls: [],
+      warning: `${url}: ${message}`,
     }
   }
 }

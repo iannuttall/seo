@@ -1,16 +1,9 @@
-import robotsParserModule from 'robots-parser'
-import {
-  type publicHttpFetch,
-  readBoundedResponseText,
-} from '../../fetch/http-client.js'
+import { SEO_CRAWLER_USER_AGENT } from '../../fetch/crawler-identity.js'
+import { createRobotsSession } from '../../fetch/page-fetcher/robots.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
-import type { crawlOne } from '../monitoring/crawl-page.js'
+import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import { crawlCaveats } from './crawl-caveats.js'
-import {
-  abortController,
-  CRAWL_CANCELLED,
-  cancellationRace,
-} from './crawl-control.js'
+import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
 import { shortestCrawlDepths } from './crawl-depths.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
 import { verifyExternalLinks } from './external-link-checks.js'
@@ -28,6 +21,7 @@ import {
   normalizeCrawlConfig,
 } from './report.js'
 import { observationFromPage } from './request-evidence.js'
+import { collectCrawlAiSignals } from './site-crawl-ai-signals.js'
 import {
   crawlDataSources,
   crawlProviderLimits,
@@ -43,53 +37,12 @@ type QueueItem = {
   depth: number
 }
 
-const MAX_AUXILIARY_RESPONSE_BYTES = 2 * 1024 * 1024
-
 type CrawlTask = QueueItem & {
   promise: Promise<{
     task: CrawlTask
-    result: Awaited<ReturnType<typeof crawlOne>>
+    result: CrawlOneResult
   }>
 }
-
-type LlmsTxtSignal = {
-  url: string
-  exists: boolean
-  status?: number
-}
-
-const AI_BOT_USER_AGENTS = [
-  'GPTBot',
-  'OAI-SearchBot',
-  'ChatGPT-User',
-  'ClaudeBot',
-  'Claude-User',
-  'Claude-SearchBot',
-  'PerplexityBot',
-  'Perplexity-User',
-  'Google-Extended',
-  'CCBot',
-  'Applebot',
-  'Applebot-Extended',
-  'Bingbot',
-  'Amazonbot',
-  'Bytespider',
-  'Meta-ExternalAgent',
-  'Meta-ExternalFetcher',
-  'DuckAssistBot',
-  'MistralAI-User',
-  'Diffbot',
-  'cohere-ai',
-]
-
-const AGENT_RESOURCE_PATHS = [
-  '/.well-known/agent.json',
-  '/agent.json',
-  '/.well-known/mcp.json',
-  '/.well-known/ai-plugin.json',
-  '/.well-known/openapi.json',
-  '/openapi.json',
-]
 
 export type { CrawlSiteDependencies } from './site-crawl-dependencies.js'
 
@@ -143,236 +96,6 @@ function passesFilters(
   )
 }
 
-async function checkLlmsTxt(input: {
-  url: string
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<LlmsTxtSignal> {
-  const llmsUrl = new URL('/llms.txt', input.url).toString()
-  const controller = abortController({
-    timeoutMs: input.timeoutMs,
-    signal: input.signal,
-  })
-
-  try {
-    const response = await input.fetch(llmsUrl, {
-      profile: 'bot',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    const contentType = response.headers.get('content-type') ?? ''
-    const exists =
-      response.status >= 200 &&
-      response.status < 300 &&
-      !/\btext\/html\b/i.test(contentType)
-    await response.body?.cancel().catch(() => undefined)
-    return {
-      url: response.url || llmsUrl,
-      exists,
-      status: response.status,
-    }
-  } catch {
-    return { url: llmsUrl, exists: false }
-  } finally {
-    controller.cleanup()
-  }
-}
-
-function parseRobots(robotsUrl: string, text: string) {
-  return (
-    robotsParserModule as unknown as (
-      url: string,
-      robotstxt: string,
-    ) => {
-      isAllowed(url: string, ua?: string): boolean | undefined
-    }
-  )(robotsUrl, text)
-}
-
-function declaredUserAgents(text: string): Set<string> {
-  const declared = new Set<string>()
-  for (const match of text.matchAll(/^\s*user-agent\s*:\s*(.+?)\s*$/gim)) {
-    const value = match[1]?.trim().toLowerCase()
-    if (value) declared.add(value)
-  }
-  return declared
-}
-
-function contentSignalsFromRobots(text: string): string[] {
-  const values = new Set<string>()
-  for (const match of text.matchAll(/^\s*content-signal\s*:\s*(.+?)\s*$/gim)) {
-    const value = match[1]?.trim()
-    if (value) values.add(value)
-  }
-  return [...values].sort()
-}
-
-function sitemapUrlsFromRobots(text: string): string[] {
-  const urls = new Set<string>()
-  for (const match of text.matchAll(/^\s*sitemap\s*:\s*(\S+)\s*$/gim)) {
-    const value = match[1]?.trim()
-    if (!value) continue
-    try {
-      urls.add(new URL(value).toString())
-    } catch {
-      // Ignore malformed sitemap declarations.
-    }
-  }
-  return [...urls]
-}
-
-async function checkRobotsAiAccess(input: {
-  url: string
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<NonNullable<CrawlReport['ai']>['robotsTxt']> {
-  const robotsUrl = new URL('/robots.txt', input.url).toString()
-  const controller = abortController({
-    timeoutMs: input.timeoutMs,
-    signal: input.signal,
-  })
-  try {
-    const response = await input.fetch(robotsUrl, {
-      profile: 'bot',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    const text = await readBoundedResponseText(
-      response,
-      MAX_AUXILIARY_RESPONSE_BYTES,
-      'robots.txt response',
-    )
-    const available = response.status >= 200 && response.status < 300
-    const absent =
-      response.status >= 400 && response.status < 500 && response.status !== 429
-    const availability = available
-      ? ('available' as const)
-      : [401, 403].includes(response.status)
-        ? ('access-blocked' as const)
-        : response.status === 429
-          ? ('rate-limited' as const)
-          : absent
-            ? ('absent' as const)
-            : ('unreachable' as const)
-    const exists = available
-    const declared = exists ? declaredUserAgents(text) : new Set<string>()
-    const parsed = parseRobots(robotsUrl, exists ? text : '')
-    return {
-      url: response.url || robotsUrl,
-      exists,
-      availability,
-      status: response.status,
-      ...(['rate-limited', 'unreachable'].includes(availability)
-        ? { error: `robots.txt returned HTTP ${response.status}.` }
-        : {}),
-      sitemapUrls: exists ? sitemapUrlsFromRobots(text) : [],
-      contentSignals: exists ? contentSignalsFromRobots(text) : [],
-      botAccess: AI_BOT_USER_AGENTS.map((userAgent) => {
-        const lower = userAgent.toLowerCase()
-        return {
-          userAgent,
-          allowed:
-            availability === 'rate-limited' || availability === 'unreachable'
-              ? null
-              : (parsed.isAllowed(input.url, userAgent) ?? true),
-          declared: declared.has(lower),
-          coveredByWildcard: declared.has('*'),
-        }
-      }),
-    }
-  } catch (error) {
-    return {
-      url: robotsUrl,
-      exists: false,
-      availability: 'unreachable',
-      error: error instanceof Error ? error.message : String(error),
-      sitemapUrls: [],
-      botAccess: AI_BOT_USER_AGENTS.map((userAgent) => ({
-        userAgent,
-        allowed: null,
-        declared: false,
-        coveredByWildcard: false,
-      })),
-    }
-  } finally {
-    controller.cleanup()
-  }
-}
-
-async function checkAgentResource(input: {
-  baseUrl: string
-  path: string
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<
-  NonNullable<NonNullable<CrawlReport['ai']>['agentResources']>[number]
-> {
-  const url = new URL(input.path, input.baseUrl).toString()
-  const controller = abortController({
-    timeoutMs: input.timeoutMs,
-    signal: input.signal,
-  })
-  try {
-    const response = await input.fetch(url, {
-      profile: 'bot',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    const contentType = response.headers.get('content-type') ?? ''
-    const text = await readBoundedResponseText(
-      response,
-      MAX_AUXILIARY_RESPONSE_BYTES,
-      'Agent resource response',
-    )
-    const exists = response.status >= 200 && response.status < 300
-    let validJson: boolean | undefined
-    if (exists && /\bjson\b/i.test(contentType)) {
-      try {
-        JSON.parse(text)
-        validJson = true
-      } catch {
-        validJson = false
-      }
-    }
-    return {
-      url: response.url || url,
-      exists,
-      status: response.status,
-      contentType,
-      ...(validJson === undefined ? {} : { validJson }),
-    }
-  } catch {
-    return { url, exists: false }
-  } finally {
-    controller.cleanup()
-  }
-}
-
-async function checkAgentResources(input: {
-  url: string
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<NonNullable<CrawlReport['ai']>['agentResources']> {
-  const resources: NonNullable<CrawlReport['ai']>['agentResources'] = []
-  for (const path of AGENT_RESOURCE_PATHS) {
-    if (input.signal?.aborted) break
-    resources.push(
-      await checkAgentResource({
-        baseUrl: input.url,
-        path,
-        timeoutMs: input.timeoutMs,
-        fetch: input.fetch,
-        signal: input.signal,
-      }),
-    )
-  }
-  return resources
-}
-
 export async function crawlSite(
   input: CrawlConfigInput,
   dependencies?: CrawlSiteDependencies,
@@ -406,6 +129,9 @@ export async function crawlSite(
   >()
   const inFlight = new Set<CrawlTask>()
   const followLinks = config.mode === 'site'
+  const healthStrategy = config.strategy === 'health'
+  let activeConcurrency = healthStrategy ? 1 : config.concurrency
+  let healthyProbeStreak = 0
   let queuedUrls = 0
   let skippedUrls = 0
   const skipReasonCounts: Partial<Record<CrawlSkipReason, number>> = {}
@@ -451,9 +177,18 @@ export async function crawlSite(
     await statusEventChain
   }
   const renderer =
-    config.js === 'off'
+    config.js === 'off' || healthStrategy
       ? undefined
       : createPageRenderer({ concurrency: config.concurrency })
+  const robotsSession = healthStrategy
+    ? createRobotsSession({
+        refresh: true,
+        writeCache: false,
+        timeoutMs: config.timeoutMs,
+        signal,
+      })
+    : undefined
+  const robotsResolver = robotsSession?.resolve
 
   try {
     emitStatus('started', {
@@ -461,34 +196,20 @@ export async function crawlSite(
       message: `Started crawl for ${config.url}.`,
     })
 
-    const aiSignals = isCancelled()
-      ? undefined
-      : await Promise.all([
-          checkLlmsTxt({
+    const aiSignals =
+      isCancelled() || healthStrategy
+        ? undefined
+        : await collectCrawlAiSignals({
             url: config.url,
             timeoutMs: config.timeoutMs,
             fetch: deps.fetch,
             signal,
-          }),
-          checkRobotsAiAccess({
-            url: config.url,
-            timeoutMs: config.timeoutMs,
-            fetch: deps.fetch,
-            signal,
-          }),
-          checkAgentResources({
-            url: config.url,
-            timeoutMs: config.timeoutMs,
-            fetch: deps.fetch,
-            signal,
-          }),
-        ])
-    const llmsTxt =
-      aiSignals?.[0] ??
-      ({
-        url: new URL('/llms.txt', config.url).toString(),
-        exists: false,
-      } satisfies LlmsTxtSignal)
+          })
+    const llmsTxt = aiSignals?.[0]
+    const healthSitemapUrls =
+      healthStrategy && !config.sitemapUrl && !isCancelled()
+        ? await robotsSession?.sitemapUrls(origin)
+        : undefined
     const robotsTxt = aiSignals?.[1]
     const agentResources = aiSignals?.[2]
     cancelled = isCancelled()
@@ -578,8 +299,9 @@ export async function crawlSite(
     ) {
       const sitemap = await sitemapSeeds({
         url: config.url,
+        sitemapUrl: config.sitemapUrl,
         maxPages: config.maxPages,
-        declaredSitemapUrls: robotsTxt?.sitemapUrls ?? [],
+        declaredSitemapUrls: robotsTxt?.sitemapUrls ?? healthSitemapUrls ?? [],
         warnings,
         fetchSitemapUrls: deps.fetchSitemapUrls,
       })
@@ -604,18 +326,19 @@ export async function crawlSite(
 
     const startTask = (item: QueueItem): void => {
       let task: CrawlTask
+      const fetcher = healthStrategy ? deps.fetchStatusPage : deps.fetchPage
       task = {
         ...item,
-        promise: deps
-          .fetchPage(item.url, {
-            js: config.js,
-            refresh: config.refresh,
-            timeoutMs: config.timeoutMs,
-            rate: config.fetchRate,
-            signal,
-            respectRobots: config.respectRobots,
-            renderer,
-          })
+        promise: fetcher(item.url, {
+          js: config.js,
+          refresh: config.refresh,
+          timeoutMs: config.timeoutMs,
+          rate: config.fetchRate,
+          signal,
+          respectRobots: config.respectRobots,
+          robotsResolver,
+          renderer,
+        })
           .then((result) => ({
             task,
             result,
@@ -646,7 +369,7 @@ export async function crawlSite(
     ) {
       while (
         !isCancelled() &&
-        inFlight.size < config.concurrency &&
+        inFlight.size < activeConcurrency &&
         pages.length + inFlight.size < config.maxPages
       ) {
         const item = nextQueueItem()
@@ -680,6 +403,23 @@ export async function crawlSite(
               extraction: 'not-applicable' as const,
             })
       requests.push(request)
+
+      if (healthStrategy) {
+        const healthy =
+          request.outcome === 'response' &&
+          request.status < 400 &&
+          !request.accessBlock
+        if (healthy) {
+          healthyProbeStreak += 1
+          activeConcurrency = Math.min(
+            config.concurrency,
+            1 + Math.floor(healthyProbeStreak / 20),
+          )
+        } else {
+          healthyProbeStreak = 0
+          activeConcurrency = 1
+        }
+      }
 
       if (request.outcome === 'skipped') {
         recordSkip(
@@ -848,6 +588,12 @@ export async function crawlSite(
     }
 
     cancelled = isCancelled()
+    const robotsDisallowed = skipReasonCounts['robots-disallowed'] ?? 0
+    if (robotsDisallowed > 0) {
+      warnings.push(
+        `${robotsDisallowed} URL${robotsDisallowed === 1 ? '' : 's'} disallowed ${SEO_CRAWLER_USER_AGENT} in robots.txt. If the audit should reach them, allow the SEO-Skill token on only those public paths.`,
+      )
+    }
     if (cancelled) {
       warnings.push('Crawl cancelled; returning a partial report.')
       emitStatus('cancelled', {
@@ -859,6 +605,12 @@ export async function crawlSite(
     const pageLimitReached =
       pages.length >= config.maxPages && (queue.length > 0 || inFlight.size > 0)
     const sitemapEvidencePartial = sitemapDiscovery?.dataStatus === 'partial'
+    const accessEvidencePartial = requests.some(
+      (request) => request.outcome === 'response' && request.accessBlock,
+    )
+    const requiredSitemapUnavailable =
+      config.mode === 'sitemap' &&
+      sitemapDiscovery?.dataStatus === 'unavailable'
     const partial =
       cancelled ||
       failedUrls > 0 ||
@@ -868,19 +620,24 @@ export async function crawlSite(
       queueSafetySkippedUrls > 0 ||
       queue.length > 0 ||
       inFlight.size > 0 ||
-      sitemapEvidencePartial
+      sitemapEvidencePartial ||
+      accessEvidencePartial ||
+      requiredSitemapUnavailable
     const failed =
       !cancelled &&
       pages.length === 0 &&
-      requests.length > 0 &&
-      requests.every((request) => request.outcome === 'failure')
+      (requiredSitemapUnavailable ||
+        (requests.length > 0 &&
+          requests.every((request) => request.outcome === 'failure')))
     const requestEvidenceStatus =
       cancelled && inFlight.size > 0 ? 'partial' : 'available'
 
     const dataSources = await crawlDataSources({
       cancelled,
-      site,
-      googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
+      site: healthStrategy ? undefined : site,
+      googleAnalyticsPropertyId: healthStrategy
+        ? undefined
+        : input.googleAnalyticsPropertyId,
       pages,
       warnings,
       searchMetricsLimit,
@@ -935,7 +692,7 @@ export async function crawlSite(
         : undefined
 
     for (const page of pages) {
-      if (!page.geo) continue
+      if (!page.geo || !llmsTxt) continue
       page.geo = {
         ...page.geo,
         hasLlmsTxt: llmsTxt.exists,
@@ -954,11 +711,15 @@ export async function crawlSite(
       requests,
       requestEvidenceStatus,
       linkGraph: resolvedLinkGraph,
-      ai: {
-        llmsTxt,
-        ...(robotsTxt ? { robotsTxt } : {}),
-        ...(agentResources ? { agentResources } : {}),
-      },
+      ...(!healthStrategy
+        ? {
+            ai: {
+              ...(llmsTxt ? { llmsTxt } : {}),
+              ...(robotsTxt ? { robotsTxt } : {}),
+              ...(agentResources ? { agentResources } : {}),
+            },
+          }
+        : {}),
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
       ...(agentDiscovery ? { agentDiscovery } : {}),

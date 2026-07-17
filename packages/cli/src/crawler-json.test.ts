@@ -112,6 +112,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
 
     assert.deepEqual(crawlerJsonKeySnapshot(payload), {
       root: [
+        'access',
         'ai',
         'caveats',
         'config',
@@ -165,6 +166,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'mode',
         'refresh',
         'respectRobots',
+        'strategy',
         'timeoutMs',
         'url',
         'urls',
@@ -197,6 +199,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'skippedUrls',
         'skippedUrlsByImpact',
         'statusErrors',
+        'statusOnlyPages',
         'totalPages',
       ],
       issue: ['category', 'evidence', 'ruleId', 'severity', 'title', 'url'],
@@ -279,6 +282,81 @@ test('crawler CLI exits unsuccessfully when no document can be fetched', async (
     const payload = JSON.parse(result.stdout ?? '') as JsonRecord
     assert.equal(payload.status, 'failed')
     assert.equal((payload.pages as unknown[]).length, 0)
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawler CLI exposes the fast sitemap health pass and JUnit output', async () => {
+  const userAgents: string[] = []
+  let baseUrl = ''
+  const fixture = await withServer((req, res) => {
+    userAgents.push(String(req.headers['user-agent'] ?? ''))
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: SEO-Skill\nAllow: /\n')
+      return
+    }
+    if (req.url === '/custom-sitemap.xml') {
+      res.setHeader('content-type', 'application/xml')
+      res.end(
+        `<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${baseUrl}/good</loc></url><url><loc>${baseUrl}/missing</loc></url></urlset>`,
+      )
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    if (req.url === '/missing') res.statusCode = 404
+    res.end(
+      '<html><title>This body must not be parsed during health checks</title></html>',
+    )
+  })
+  baseUrl = fixture.baseUrl
+  const sitemapUrl = `${baseUrl}/custom-sitemap.xml`
+
+  try {
+    const output = await runSeo([
+      'crawl',
+      '--sitemap-url',
+      sitemapUrl,
+      '--health',
+      '--max-pages',
+      '2',
+      '--json',
+    ])
+    const payload = JSON.parse(output) as JsonRecord
+    const config = payload.config as JsonRecord
+    const summary = payload.summary as JsonRecord
+    assert.equal(config.mode, 'sitemap')
+    assert.equal(config.strategy, 'health')
+    assert.equal(config.sitemapUrl, sitemapUrl)
+    assert.equal(config.js, 'off')
+    assert.equal(config.checkExternal, false)
+    assert.equal(summary.statusOnlyPages, 2)
+    assert.equal(
+      (payload.issues as JsonRecord[]).some(
+        (issue) => issue.ruleId === 'missing_title',
+      ),
+      false,
+    )
+
+    const junit = await runSeo([
+      'crawl',
+      '--sitemap-url',
+      sitemapUrl,
+      '--health',
+      '--max-pages',
+      '2',
+      '--format',
+      'junit',
+    ])
+    assert.match(junit, /<testsuite name="seo sitemap health"/)
+    assert.match(junit, /tests="3" failures="1"/)
+    assert.match(junit, /robotsAllowed=true/)
+    assert.ok(
+      userAgents.every((value) =>
+        /^SEO-Skill\/\d+\.\d+\.\d+ \(\+https:\/\/seoskill\.dev\)$/.test(value),
+      ),
+    )
   } finally {
     await fixture.close()
   }

@@ -74,8 +74,12 @@ function jobsTableReportTokens(source) {
   const rest = source.slice(start + '## Common jobs'.length)
   const nextHeading = rest.search(/\n## /)
   const section = nextHeading < 0 ? rest : rest.slice(0, nextHeading)
+  const table = section
+    .split('\n')
+    .filter((line) => line.trimStart().startsWith('|'))
+    .join('\n')
   const tokens = new Set()
-  for (const match of section.matchAll(/`([a-z][a-z0-9-]+)`/g)) {
+  for (const match of table.matchAll(/`([a-z][a-z0-9-]+)`/g)) {
     tokens.add(match[1])
   }
   return tokens

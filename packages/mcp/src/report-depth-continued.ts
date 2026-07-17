@@ -339,17 +339,20 @@ export const REPORT_DEPTH_CONTINUED = {
   },
   'site-crawl': {
     readOrder: [
+      'config.strategy first; use health before full on large or unknown sites',
       'status, requestEvidenceStatus, attempted and fetched counts, failures, retained pages, and pageLimitReached',
+      'access crawler identity, blockedRequests, provider counts, and samples',
       'data-source states',
       'warnings and caveats, then opt-in pages, requests, and issues',
     ],
     doNotClaim: [
       'A partial or capped crawl cannot support an all-clear or a definitive zero.',
       'A crawl is not an index, traffic source, or guarantee of complete site coverage.',
-      'If JavaScript rendering was disabled, state that discovery boundary.',
+      'A health pass checks response access, status, and redirects only. It does not download page bodies or evaluate content, metadata, canonicals, indexability directives, internal links, or rendered HTML. For full crawls, state when JavaScript rendering was disabled.',
+      'A User-Agent can be spoofed. Never ask the user for a broad firewall bypass based on crawler identity alone.',
     ],
     verify:
-      'Preserve the report id and settings, then re-run the same configuration to confirm a change.',
+      'Re-run the same health configuration first. Use a full crawl only when the health evidence is clean and the question needs page-body analysis.',
     related: [
       { id: 'top-fixes', reason: 'Ranks the fix queue.' },
       { id: 'affected-urls', reason: 'Lists URLs for a rule.' },

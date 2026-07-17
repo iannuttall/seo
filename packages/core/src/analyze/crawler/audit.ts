@@ -252,6 +252,22 @@ export function auditCrawlRequests(
     }
     if (request.outcome === 'skipped') continue
 
+    if (request.accessBlock) {
+      issues.push(
+        requestIssue(
+          'crawler_access_blocked',
+          request,
+          request.accessBlock.guidance.summary,
+          {
+            requestedUrl: request.requestedUrl,
+            finalUrl: request.finalUrl,
+            accessBlock: request.accessBlock,
+          },
+        ),
+      )
+      continue
+    }
+
     const redirectChain = request.redirectChain ?? []
     const redirected =
       redirectChain.length > 0 ||
@@ -318,6 +334,7 @@ export function auditCrawlPages(
       )
       continue
     }
+    if (page.accessBlock) continue
     if (page.status >= 500) {
       issues.push(
         issue('server_error', page, String(page.status), {
@@ -392,6 +409,7 @@ export function auditCrawlPages(
         }),
       )
     }
+    if (page.auditScope === 'status') continue
     if (redirected) continue
 
     if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {

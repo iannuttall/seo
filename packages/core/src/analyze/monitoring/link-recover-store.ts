@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { getDb } from '../../storage/database.js'
 import type { LinkRecoverReport } from './link-recover.js'
 
+export const LINK_RECOVER_RUN_RETENTION = 20
+
 export type LinkRecoverSummary = {
   id: string
   site: string
@@ -132,6 +134,17 @@ export function insertLinkRecoverRun(report: LinkRecoverReport): string {
       )
     }
   })()
+
+  db.prepare(
+    `DELETE FROM link_recover_runs
+    WHERE site_url = ?
+      AND id NOT IN (
+        SELECT id FROM link_recover_runs
+        WHERE site_url = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+      )`,
+  ).run(report.site, report.site, LINK_RECOVER_RUN_RETENTION)
 
   return id
 }

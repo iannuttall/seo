@@ -15,6 +15,10 @@ export const cacheCommand = defineCommand({
         printKeyValue([
           ['DB', stats.dbPath],
           ['Size', formatBytes(stats.sizeBytes)],
+          [
+            'Cached data',
+            `${formatBytes(stats.logicalSizeBytes)} of ${formatBytes(stats.maxSizeBytes)} automatic limit`,
+          ],
           ['Sites', String(stats.counts.sites ?? 0)],
           ['Search Console', String(stats.counts.gsc_cache ?? 0)],
           [

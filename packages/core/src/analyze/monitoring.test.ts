@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import test from 'node:test'
+import { getDb } from '../storage/database.js'
 import {
+  CRAWL_RUN_RETENTION,
   type CrawlPageSnapshot,
   compareCrawlPages,
   getRunPages,
@@ -167,6 +169,42 @@ test('crawl store preserves rich page snapshots', () => {
   assert.equal(saved?.geo?.structuredData, true)
   assert.equal(saved?.contentExtraction?.fallbackReason, 'defuddle_empty')
   assert.match(saved?.warnings?.[0] ?? '', /Readability/)
+})
+
+test('crawl monitoring retains only the recent runs it can use', () => {
+  const site = `sc-domain:retention-${randomUUID()}.example`
+  const startUrl = `https://${site.slice('sc-domain:'.length)}/`
+  const ids: string[] = []
+  try {
+    for (let index = 0; index < CRAWL_RUN_RETENTION + 2; index += 1) {
+      const id = `run-${randomUUID()}`
+      ids.push(id)
+      insertCrawlRun(
+        {
+          id,
+          site,
+          startUrl,
+          createdAt: new Date(1_700_000_000_000 + index).toISOString(),
+          limit: 1,
+          urlCount: 0,
+        },
+        [],
+      )
+    }
+
+    const rows = getDb()
+      .prepare(
+        'SELECT id FROM crawl_runs WHERE site_url = ? AND start_url = ? ORDER BY created_at',
+      )
+      .all(site, startUrl) as Array<{ id: string }>
+    assert.equal(rows.length, CRAWL_RUN_RETENTION)
+    assert.deepEqual(
+      rows.map((row) => row.id),
+      ids.slice(2),
+    )
+  } finally {
+    getDb().prepare('DELETE FROM crawl_runs WHERE site_url = ?').run(site)
+  }
 })
 
 test('monitoringStatus flags saved crawl recommendations', () => {

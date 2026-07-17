@@ -4,10 +4,12 @@ import { SeoError } from '../../errors.js'
 import { UrlInspectionQuotaError } from '../../gsc/client/inspection-quota.js'
 import { getDb } from '../../storage/database.js'
 import {
+  INDEX_WATCH_ATTEMPT_RETENTION,
   type IndexWatchDependencies,
   type IndexWatchStore,
   indexWatch,
   latestIndexWatchSummary,
+  pruneIndexWatchSnapshots,
 } from './index-watch.js'
 import type { IndexWatchItem, IndexWatchPrevious } from './types.js'
 
@@ -308,6 +310,61 @@ test('latest summary rolls prefix properties into the root deterministically', (
     assert.equal(summary.nonPass, 1)
     assert.equal(summary.currentIssues, 1)
     assert.equal(summary.failed, 1)
+  } finally {
+    db.prepare('DELETE FROM index_watch_snapshots WHERE root_site_url = ?').run(
+      root,
+    )
+  }
+})
+
+test('index watch bounds attempts while preserving the latest success', () => {
+  const root = 'sc-domain:index-retention.test'
+  const url = 'https://index-retention.test/page'
+  const db = getDb()
+  const insert = db.prepare(
+    `INSERT INTO index_watch_snapshots
+    (id, site_url, root_site_url, property_site_url, url, verdict,
+     inspection_status, error_code, inspected_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+  try {
+    insert.run(
+      'index-retention-success',
+      root,
+      root,
+      root,
+      url,
+      'PASS',
+      'succeeded',
+      null,
+      1,
+    )
+    for (let index = 0; index < INDEX_WATCH_ATTEMPT_RETENTION + 4; index += 1) {
+      insert.run(
+        `index-retention-failure-${index}`,
+        root,
+        root,
+        root,
+        url,
+        null,
+        'failed',
+        'provider_unavailable',
+        index + 2,
+      )
+    }
+
+    assert.equal(pruneIndexWatchSnapshots(root, url, db), 4)
+    const rows = db
+      .prepare(
+        'SELECT id FROM index_watch_snapshots WHERE root_site_url = ? AND url = ?',
+      )
+      .all(root, url) as Array<{ id: string }>
+    assert.equal(rows.length, INDEX_WATCH_ATTEMPT_RETENTION + 1)
+    assert.ok(rows.some((row) => row.id === 'index-retention-success'))
+
+    const summary = latestIndexWatchSummary(root)
+    assert.equal(summary.failed, 1)
+    assert.equal(summary.nonPass, 0)
   } finally {
     db.prepare('DELETE FROM index_watch_snapshots WHERE root_site_url = ?').run(
       root,

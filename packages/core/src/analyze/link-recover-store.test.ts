@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { getDb } from '../storage/database.js'
 import type { LinkRecoverReport } from './monitoring/link-recover.js'
 import {
   getRepeatedLinkRecoverUrls,
   insertLinkRecoverRun,
+  LINK_RECOVER_RUN_RETENTION,
   latestLinkRecoverSummary,
 } from './monitoring/link-recover-store.js'
 
@@ -72,4 +74,27 @@ test('link recovery store tracks repeated URLs across runs', () => {
   assert.equal(repeated[0]?.seenCount, 2)
   assert.equal(latest?.repeatedUrls, 1)
   assert.equal(latest?.repeatedTopUrl, url)
+})
+
+test('link recovery retains only recent monitoring runs', () => {
+  const site = `sc-domain:link-retention-${Date.now()}.example`
+  const url = `https://${site.slice('sc-domain:'.length)}/old/`
+  try {
+    for (let index = 0; index < LINK_RECOVER_RUN_RETENTION + 2; index += 1) {
+      const input = report(site, url)
+      input.generatedAt = new Date(1_700_000_000_000 + index).toISOString()
+      insertLinkRecoverRun(input)
+    }
+
+    const row = getDb()
+      .prepare(
+        'SELECT COUNT(*) AS count FROM link_recover_runs WHERE site_url = ?',
+      )
+      .get(site) as { count: number }
+    assert.equal(row.count, LINK_RECOVER_RUN_RETENTION)
+  } finally {
+    getDb()
+      .prepare('DELETE FROM link_recover_runs WHERE site_url = ?')
+      .run(site)
+  }
 })

@@ -5,6 +5,7 @@ import { getDb } from '../../storage/database.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { createCrawlReport } from './report.js'
 import {
+  AUTOMATIC_BASELINE_SITE_RETENTION,
   CRAWL_REPORT_STORAGE_VERSION,
   type CrawlReportStoreAdapter,
   deleteCrawlReport,
@@ -13,6 +14,49 @@ import {
   loadCrawlReport,
   saveCrawlReport,
 } from './report-store.js'
+
+test('automatic baselines stay bounded without deleting saved reports', () => {
+  const site = `sc-domain:baseline-retention-${randomUUID()}.example`
+  const host = site.slice('sc-domain:'.length)
+  const saved = createCrawlReport({
+    site,
+    generatedAt: '2026-06-18T00:00:00.000Z',
+    config: { url: `https://${host}/saved/` },
+  })
+  saveCrawlReport(saved)
+
+  for (
+    let index = 0;
+    index < AUTOMATIC_BASELINE_SITE_RETENTION + 2;
+    index += 1
+  ) {
+    const report = createCrawlReport({
+      site,
+      generatedAt: new Date(Date.UTC(2026, 5, 19, 0, index)).toISOString(),
+      config: { url: `https://${host}/` },
+    })
+    saveCrawlReport(report, undefined, { retention: 'baseline' })
+  }
+
+  const rows = getDb()
+    .prepare(
+      `SELECT retention_class, COUNT(*) AS count
+      FROM crawl_reports
+      WHERE site_url = ?
+      GROUP BY retention_class
+      ORDER BY retention_class`,
+    )
+    .all(site)
+
+  assert.deepEqual(rows, [
+    {
+      retention_class: 'baseline',
+      count: AUTOMATIC_BASELINE_SITE_RETENTION,
+    },
+    { retention_class: 'saved', count: 1 },
+  ])
+  assert.equal(loadCrawlReport(saved.id)?.id, saved.id)
+})
 
 test('crawl report store saves, lists, loads, and returns latest', () => {
   const site = `sc-domain:report-${randomUUID()}.example`

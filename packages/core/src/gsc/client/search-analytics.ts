@@ -1,5 +1,5 @@
 import { SeoError } from '../../errors.js'
-import { getDb, hashKey } from '../../storage/database.js'
+import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
 import { finalGscDateRange } from '../dates.js'
 import { authedFetch, getAuthorized } from './fetch.js'
@@ -143,6 +143,8 @@ export async function querySearchAnalytics(
     startRow += rowLimit
   }
 
+  const requestJson = JSON.stringify(body)
+  const responseJson = JSON.stringify(allRows)
   db.prepare(
     `INSERT OR REPLACE INTO gsc_cache
     (site_url, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
@@ -150,11 +152,14 @@ export async function querySearchAnalytics(
   ).run(
     site,
     queryHash,
-    JSON.stringify(body),
-    JSON.stringify(allRows),
+    requestJson,
+    responseJson,
     allRows.length,
     Date.now(),
     Date.now() + 86_400_000,
+  )
+  noteCacheWrite(
+    Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
   )
 
   return { rows: allRows, calls, rowsFetched: allRows.length }

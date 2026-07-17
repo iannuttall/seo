@@ -2,6 +2,14 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import type { CacheStats } from '../types.js'
+import {
+  CACHE_MAINTENANCE_WRITE_BYTES,
+  CACHE_MAINTENANCE_WRITE_COUNT,
+  CACHE_MAX_BYTES,
+  cacheLogicalSizes,
+  compactCacheDatabase,
+  runCacheMaintenance,
+} from './cache-maintenance.js'
 import Database from './sqlite.js'
 
 const CREATE_SQL = `
@@ -47,6 +55,7 @@ CREATE TABLE IF NOT EXISTS semrush_cache (
   expires_at INTEGER,
   PRIMARY KEY(endpoint, query_hash)
 ) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_semrush_expires ON semrush_cache(expires_at);
 
 CREATE TABLE IF NOT EXISTS http_cache (
   url_hash TEXT PRIMARY KEY,
@@ -59,6 +68,8 @@ CREATE TABLE IF NOT EXISTS http_cache (
   fetched_at INTEGER,
   expires_at INTEGER
 );
+CREATE INDEX IF NOT EXISTS idx_http_expires ON http_cache(expires_at);
+CREATE INDEX IF NOT EXISTS idx_http_fetched ON http_cache(fetched_at);
 
 CREATE TABLE IF NOT EXISTS content_groups (
   id TEXT PRIMARY KEY,
@@ -102,6 +113,7 @@ CREATE TABLE IF NOT EXISTS crawl_reports (
   total_pages INTEGER NOT NULL,
   issue_count INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
+  retention_class TEXT NOT NULL DEFAULT 'saved',
   report_json TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_crawl_reports_latest ON crawl_reports(created_at DESC);
@@ -245,9 +257,12 @@ CREATE TABLE IF NOT EXISTS performance_reports (
   expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_performance_reports_url ON performance_reports(url, strategy, created_at);
+CREATE INDEX IF NOT EXISTS idx_performance_reports_expires ON performance_reports(expires_at);
 `
 
 let db: Database.Database | undefined
+let cacheWritesSinceMaintenance = 0
+let cacheBytesSinceMaintenance = 0
 
 function ensureColumn(
   database: Database.Database,
@@ -264,17 +279,26 @@ function ensureColumn(
   database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
 }
 
-function initDb(database: Database.Database): void {
+function initDb(database: Database.Database, isNewDatabase: boolean): void {
   database.pragma('journal_mode = WAL')
   database.pragma('synchronous = NORMAL')
   database.pragma('foreign_keys = ON')
   database.pragma('temp_store = MEMORY')
   database.pragma('mmap_size = 268435456')
   database.pragma('busy_timeout = 5000')
+  if (isNewDatabase) {
+    database.pragma('auto_vacuum = INCREMENTAL')
+  }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
+    ensureColumn(
+      database,
+      'crawl_reports',
+      'retention_class',
+      "TEXT NOT NULL DEFAULT 'saved'",
+    )
     ensureColumn(database, 'index_watch_snapshots', 'root_site_url', 'TEXT')
     ensureColumn(database, 'index_watch_snapshots', 'property_site_url', 'TEXT')
     ensureColumn(database, 'index_watch_snapshots', 'error_code', 'TEXT')
@@ -294,9 +318,15 @@ function initDb(database: Database.Database): void {
         ON index_watch_snapshots(root_site_url, url, inspected_at DESC, id DESC);
       CREATE INDEX IF NOT EXISTS idx_index_watch_property_url
         ON index_watch_snapshots(property_site_url, url, inspected_at DESC, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_crawl_reports_retention
+        ON crawl_reports(retention_class, site_url, created_at DESC, id DESC);
     `)
   })
   migrate.immediate()
+  runCacheMaintenance(database, {
+    compact: true,
+    allowFullVacuum: true,
+  })
 }
 
 export function getDb(): Database.Database {
@@ -305,10 +335,26 @@ export function getDb(): Database.Database {
   }
 
   const path = getSeoCliPaths().cacheDbFile
+  const isNewDatabase = !existsSync(path)
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
   db = new Database(path)
-  initDb(db)
+  initDb(db, isNewDatabase)
   return db
+}
+
+export function noteCacheWrite(sizeBytes = 0): void {
+  cacheWritesSinceMaintenance += 1
+  cacheBytesSinceMaintenance += Math.max(0, sizeBytes)
+  if (
+    cacheWritesSinceMaintenance < CACHE_MAINTENANCE_WRITE_COUNT &&
+    cacheBytesSinceMaintenance < CACHE_MAINTENANCE_WRITE_BYTES
+  ) {
+    return
+  }
+
+  runCacheMaintenance(getDb())
+  cacheWritesSinceMaintenance = 0
+  cacheBytesSinceMaintenance = 0
 }
 
 export function checkDatabaseReadiness(): { dbPath: string } {
@@ -330,6 +376,7 @@ export function hashKey(parts: unknown[]): string {
 export function getCacheStats(): CacheStats {
   const database = getDb()
   const dbPath = getSeoCliPaths().cacheDbFile
+  const logicalSizes = cacheLogicalSizes(database)
   const counts = {
     sites: database.prepare('SELECT COUNT(*) AS count FROM sites').get() as {
       count: number
@@ -350,11 +397,23 @@ export function getCacheStats(): CacheStats {
 
   return {
     dbPath,
-    sizeBytes: existsSync(dbPath) ? fileSize(dbPath) : 0,
+    sizeBytes: databaseFootprint(dbPath),
+    logicalSizeBytes: Object.values(logicalSizes).reduce(
+      (total, size) => total + size,
+      0,
+    ),
+    maxSizeBytes: CACHE_MAX_BYTES,
     counts: Object.fromEntries(
       Object.entries(counts).map(([key, value]) => [key, value.count]),
     ),
   }
+}
+
+function databaseFootprint(path: string): number {
+  return [path, `${path}-wal`, `${path}-shm`].reduce(
+    (total, file) => total + fileSize(file),
+    0,
+  )
 }
 
 export function clearCache(
@@ -386,6 +445,8 @@ export function clearCache(
       : database.prepare(sql).run()
     removed += info.changes
   }
+
+  compactCacheDatabase(database, { allowFullVacuum: true })
 
   return removed
 }

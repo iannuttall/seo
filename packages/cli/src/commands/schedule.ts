@@ -124,7 +124,7 @@ export const scheduleCommand = defineCommand({
         ])
         for (const line of lines) {
           process.stdout.write(
-            `${line.cron} ${line.command} >> ${quote(`${paths.logDir}/${line.name}.log`)} 2>&1\n`,
+            `${line.cron} seo logs prune --quiet; ${line.command} >> ${quote(`${paths.logDir}/${line.name}.log`)} 2>&1\n`,
           )
         }
       },

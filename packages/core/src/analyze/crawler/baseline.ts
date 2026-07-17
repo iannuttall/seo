@@ -1,5 +1,9 @@
 import type { CrawlConfigInput, CrawlReport } from './report.js'
-import { latestCrawlReport, saveCrawlReport } from './report-store.js'
+import {
+  crawlReportStore,
+  latestCrawlReport,
+  saveCrawlReport,
+} from './report-store.js'
 import { crawlSite } from './site-crawl.js'
 
 export const REPORT_BASELINE_MAX_PAGES = 100
@@ -44,7 +48,8 @@ export type TechnicalBaselineDependencies = {
 const defaultDependencies: TechnicalBaselineDependencies = {
   latestCrawlReport,
   crawlSite,
-  saveCrawlReport,
+  saveCrawlReport: (report) =>
+    saveCrawlReport(report, crawlReportStore, { retention: 'baseline' }),
   now: () => new Date(),
 }
 

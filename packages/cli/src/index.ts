@@ -34,6 +34,7 @@ import {
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
 import { llmsCommand } from './commands/llms.js'
+import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
   crawlDiffCommand,
@@ -259,6 +260,7 @@ const main = defineCommand({
     telemetry: telemetryCommand,
     reset: resetCommand,
     cache: cacheCommand,
+    logs: logsCommand,
     crawl: crawlCommand,
     'crawl-queue': crawlQueueCommand,
     'crawl-reports': crawlReportsCommand,

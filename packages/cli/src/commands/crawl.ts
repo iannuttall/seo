@@ -84,15 +84,15 @@ export const crawlCommand = defineCommand({
     },
     'max-pages': {
       type: 'string',
-      description: 'Maximum pages to crawl. Defaults to 500.',
+      description: 'Maximum pages to crawl, up to 10,000. Defaults to 500.',
     },
     'max-depth': {
       type: 'string',
-      description: 'Maximum click depth. Defaults to 16.',
+      description: 'Maximum click depth, up to 64. Defaults to 16.',
     },
     concurrency: {
       type: 'string',
-      description: 'Parallel page fetches. Defaults to 8.',
+      description: 'Parallel page fetches, up to 16. Defaults to 8.',
     },
     'fetch-interval-cap': {
       type: 'string',

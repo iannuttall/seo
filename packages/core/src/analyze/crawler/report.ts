@@ -160,6 +160,9 @@ export type CrawlAiSignals = {
     status?: number
     error?: string
     sitemapUrls: string[]
+    // Distinct robots.txt Content-Signal directive values. undefined means the
+    // directives were not collected; [] means robots.txt declared none.
+    contentSignals?: string[]
     botAccess: CrawlAiBotAccess[]
   }
   llmsTxt?: {

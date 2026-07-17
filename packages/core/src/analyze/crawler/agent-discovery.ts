@@ -10,9 +10,14 @@ import type {
   MarkdownAlternateObservation,
   MarkdownQualityObservation,
 } from './agent-discovery-types.js'
+import { inspectAgentEndpoints } from './agent-endpoints.js'
 
 export type {
   AgentDiscoveryDataStatus,
+  AgentEndpointDiscovery,
+  AgentEndpointObservation,
+  AgentLinkHeaderEntry,
+  AgentLinkHeaderObservation,
   AgentReadinessProfile,
   AgentRepresentationResponse,
   AgentSkillObservation,
@@ -26,7 +31,6 @@ const MAX_BODY_BYTES = 2_000_000
 const MAX_LLMS_LINKS = 100
 const MAX_CURATED_LLMS_BYTES = 100_000
 const MAX_SKILLS = 25
-
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex')
 }
@@ -42,7 +46,7 @@ function headerValue(
   )?.[1]
 }
 
-function linkEntries(value: string | undefined, base: string) {
+export function linkEntries(value: string | undefined, base: string) {
   if (!value) return []
   return value
     .split(/,(?=\s*<)/u)
@@ -367,7 +371,7 @@ async function inspectMarkdownPage(input: {
   return observation
 }
 
-async function fetchText(input: {
+export async function fetchText(input: {
   url: string
   timeoutMs: number
   fetch: typeof publicHttpFetch
@@ -389,7 +393,7 @@ async function fetchText(input: {
   }
 }
 
-function safeError(error: unknown): string {
+export function safeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
@@ -801,11 +805,13 @@ export async function collectAgentDiscovery(input: {
       ),
     ),
   )
-  const [agentSkills, llmsTxt, routeManifest] = await Promise.all([
-    inspectAgentSkills({ ...input, origin }),
-    inspectLlmsTxt({ ...input, origin, pages }),
-    inspectRouteManifest({ ...input, origin, pages, observations }),
-  ])
+  const [agentSkills, llmsTxt, routeManifest, endpointDiscovery] =
+    await Promise.all([
+      inspectAgentSkills({ ...input, origin }),
+      inspectLlmsTxt({ ...input, origin, pages }),
+      inspectRouteManifest({ ...input, origin, pages, observations }),
+      inspectAgentEndpoints({ ...input, origin }),
+    ])
   const qZero = await fetchRepresentation({
     url: input.startUrl,
     accept: 'text/markdown;q=0,text/html;q=1',
@@ -920,6 +926,7 @@ export async function collectAgentDiscovery(input: {
     routeManifest,
     agentSkills,
     llmsTxt,
+    endpointDiscovery,
     contentSignals: {
       htmlValues: [...new Set(htmlContentSignals)].sort(),
       markdownValues: [...new Set(markdownContentSignals)].sort(),

@@ -629,6 +629,7 @@ const crawlAiSignalsSchema = z.object({
       status: z.number().int().optional(),
       error: z.string().optional(),
       sitemapUrls: z.array(z.string().url()),
+      contentSignals: z.array(z.string()).optional(),
       botAccess: z.array(
         z.object({
           userAgent: z.string(),

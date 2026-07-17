@@ -3,6 +3,7 @@ import { extractPage } from '../extract/page-extractor.js'
 import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { finalGscDateRange } from '../gsc/dates.js'
+import { countLabel, plural } from '../phrasing.js'
 import { SessionLedger } from '../storage/ledger.js'
 import type { QueryContentCoverage } from '../types/pages.js'
 import {
@@ -168,15 +169,15 @@ function verdict(report: {
     return 'No pages met the position, brand, and minimum-impression criteria.'
   }
   if (report.technical > 0) {
-    return `${report.eligible} eligible average-position pages found; ${report.technical} returned pages have verified technical issues to fix before content changes.`
+    return `${countLabel(report.eligible, 'eligible average-position page')} found; ${countLabel(report.technical, 'returned page')} ${plural(report.technical, 'has', 'have')} verified technical issues to fix before content changes.`
   }
   if (report.failed > 0) {
-    return `${report.eligible} eligible average-position pages found; ${report.failed} returned pages could not be verified and need a fetch check before content changes.`
+    return `${countLabel(report.eligible, 'eligible average-position page')} found; ${countLabel(report.failed, 'returned page')} could not be verified and ${plural(report.failed, 'needs', 'need')} a fetch check before content changes.`
   }
   if (report.content > 0) {
-    return `${report.eligible} eligible average-position pages found; ${report.content} returned pages have verified content or search-framing gaps.`
+    return `${countLabel(report.eligible, 'eligible average-position page')} found; ${countLabel(report.content, 'returned page')} ${plural(report.content, 'has', 'have')} verified content or search-framing gaps.`
   }
-  return `${report.eligible} eligible average-position pages found; ${report.returned} are returned in priority order for investigation.`
+  return `${countLabel(report.eligible, 'eligible average-position page')} found; ${countLabel(report.returned, 'page')} ${plural(report.returned, 'is', 'are')} returned in priority order for investigation.`
 }
 
 function reportRecommendations(items: SecondPageItem[]): string[] {

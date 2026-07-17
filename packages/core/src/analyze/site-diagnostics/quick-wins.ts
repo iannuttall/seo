@@ -1,6 +1,7 @@
 import { extractPage } from '../../extract/page-extractor.js'
 import { type FetchRateControls, fetchPage } from '../../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
+import { countLabel } from '../../phrasing.js'
 import { SessionLedger } from '../../storage/ledger.js'
 import type { PageFetchResult } from '../../types.js'
 import {
@@ -259,7 +260,7 @@ export async function quickWinsReport(
           ? 'Search Console returned no retained query/page rows for this date window.'
           : analysis.dataStatus === 'filtered'
             ? 'No retained rows met the quick-win report criteria.'
-            : `${analysis.summary.eligibleRows} eligible CTR-target rows found; ${analysis.summary.returnedRows} returned for review.`,
+            : `${countLabel(analysis.summary.eligibleRows, 'eligible CTR-target row')} found; ${countLabel(analysis.summary.returnedRows, 'row')} returned for review.`,
     },
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,

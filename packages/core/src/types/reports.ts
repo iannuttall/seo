@@ -87,5 +87,7 @@ export interface QueryCluster {
 export interface CacheStats {
   dbPath: string
   sizeBytes: number
+  logicalSizeBytes: number
+  maxSizeBytes: number
   counts: Record<string, number>
 }

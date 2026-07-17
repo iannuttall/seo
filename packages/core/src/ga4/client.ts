@@ -3,7 +3,7 @@ import {
   createGoogleAccessTokenClient,
   type GoogleAccessTokenClient,
 } from '../gsc/auth.js'
-import { getDb, hashKey } from '../storage/database.js'
+import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
 
 export interface Ga4ReportRequest {
   dateRanges: Array<{ startDate: string; endDate: string }>
@@ -133,6 +133,8 @@ export async function runGa4Report(
 
   const result = (await response.json()) as Ga4RunReportResult
   if (cacheable) {
+    const requestJson = JSON.stringify(body)
+    const responseJson = JSON.stringify(result)
     db.prepare(
       `INSERT OR REPLACE INTO ga4_cache
     (property_id, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
@@ -140,11 +142,14 @@ export async function runGa4Report(
     ).run(
       propertyId,
       queryHash,
-      JSON.stringify(body),
-      JSON.stringify(result),
+      requestJson,
+      responseJson,
       result.rowCount ?? result.rows?.length ?? 0,
       Date.now(),
       Date.now() + 86_400_000,
+    )
+    noteCacheWrite(
+      Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
     )
   }
   return result

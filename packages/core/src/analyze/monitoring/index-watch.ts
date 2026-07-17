@@ -22,6 +22,7 @@ import type {
 } from './types.js'
 
 const MAX_DIRECT_INSPECTIONS = 100
+export const INDEX_WATCH_ATTEMPT_RETENTION = 20
 
 type InspectUrl = (input: UrlInspectionRequest) => Promise<UrlInspectionResult>
 
@@ -51,6 +52,45 @@ function previousFromRow(row: IndexWatchRow): IndexWatchPrevious | undefined {
   }
 }
 
+export function pruneIndexWatchSnapshots(
+  rootSite: string,
+  url: string,
+  database: ReturnType<typeof getDb> = getDb(),
+): number {
+  return database
+    .prepare(
+      `WITH attempts AS (
+        SELECT id,
+          ROW_NUMBER() OVER (
+            PARTITION BY root_site_url, url
+            ORDER BY inspected_at DESC, id DESC
+          ) AS attempt_rank
+        FROM index_watch_snapshots
+        WHERE root_site_url = ? AND url = ?
+      ), latest_success AS (
+        SELECT id FROM (
+          SELECT id,
+            ROW_NUMBER() OVER (
+              ORDER BY inspected_at DESC, id DESC
+            ) AS success_rank
+          FROM index_watch_snapshots
+          WHERE root_site_url = ? AND url = ?
+            AND inspection_status = 'succeeded'
+            AND error_code IS NULL
+        )
+        WHERE success_rank = 1
+      )
+      DELETE FROM index_watch_snapshots
+      WHERE id IN (
+        SELECT attempts.id
+        FROM attempts
+        LEFT JOIN latest_success ON latest_success.id = attempts.id
+        WHERE attempts.attempt_rank > ? AND latest_success.id IS NULL
+      )`,
+    )
+    .run(rootSite, url, rootSite, url, INDEX_WATCH_ATTEMPT_RETENTION).changes
+}
+
 const sqliteIndexWatchStore: IndexWatchStore = {
   latest(rootSite, url) {
     const row = getDb()
@@ -65,34 +105,34 @@ const sqliteIndexWatchStore: IndexWatchStore = {
     return row ? previousFromRow(row) : undefined
   },
   insert(item) {
-    getDb()
-      .prepare(
-        `INSERT INTO index_watch_snapshots
+    const db = getDb()
+    db.prepare(
+      `INSERT INTO index_watch_snapshots
         (id, site_url, root_site_url, property_site_url, url, verdict,
          coverage_state, indexing_state, robots_txt_state, page_fetch_state,
          google_canonical, user_canonical, last_crawl_time, inspection_status,
          error_code, error_message, inspected_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        randomUUID(),
-        item.property,
-        item.rootSite,
-        item.property,
-        item.url,
-        item.verdict ?? null,
-        item.coverageState ?? null,
-        item.indexingState ?? null,
-        item.robotsTxtState ?? null,
-        item.pageFetchState ?? null,
-        item.googleCanonical ?? null,
-        item.userCanonical ?? null,
-        item.lastCrawlTime ?? null,
-        item.inspectionStatus,
-        item.errorCode ?? null,
-        item.errorMessage ?? null,
-        Date.parse(item.inspectedAt),
-      )
+    ).run(
+      randomUUID(),
+      item.property,
+      item.rootSite,
+      item.property,
+      item.url,
+      item.verdict ?? null,
+      item.coverageState ?? null,
+      item.indexingState ?? null,
+      item.robotsTxtState ?? null,
+      item.pageFetchState ?? null,
+      item.googleCanonical ?? null,
+      item.userCanonical ?? null,
+      item.lastCrawlTime ?? null,
+      item.inspectionStatus,
+      item.errorCode ?? null,
+      item.errorMessage ?? null,
+      Date.parse(item.inspectedAt),
+    )
+    pruneIndexWatchSnapshots(item.rootSite, item.url, db)
   },
 }
 

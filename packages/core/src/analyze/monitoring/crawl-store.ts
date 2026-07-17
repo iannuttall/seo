@@ -8,6 +8,8 @@ import type {
   LatestCrawlSummaryRow,
 } from './types.js'
 
+export const CRAWL_RUN_RETENTION = 20
+
 function toRun(row: CrawlRunRow): CrawlRun {
   return {
     id: row.id,
@@ -149,6 +151,17 @@ export function insertCrawlRun(
     }
   })
   transaction()
+
+  db.prepare(
+    `DELETE FROM crawl_runs
+    WHERE site_url = ? AND start_url = ?
+      AND id NOT IN (
+        SELECT id FROM crawl_runs
+        WHERE site_url = ? AND start_url = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+      )`,
+  ).run(run.site, run.startUrl, run.site, run.startUrl, CRAWL_RUN_RETENTION)
 }
 
 export function latestCrawlSummaries(
@@ -170,32 +183,42 @@ export function latestCrawlSummaries(
 > {
   const rows = getDb()
     .prepare(
-      `WITH page_counts AS (
+      `WITH recent_runs AS (
+        SELECT *
+        FROM crawl_runs
+        WHERE site_url = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+      ),
+      page_counts AS (
         SELECT
-          run_id,
-          COALESCE(SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END), 0) AS status_errors,
-          COALESCE(SUM(CASE WHEN indexable = 0 THEN 1 ELSE 0 END), 0) AS non_indexable
+          crawl_pages.run_id,
+          COALESCE(SUM(CASE WHEN crawl_pages.status >= 400 THEN 1 ELSE 0 END), 0) AS status_errors,
+          COALESCE(SUM(CASE WHEN crawl_pages.indexable = 0 THEN 1 ELSE 0 END), 0) AS non_indexable
         FROM crawl_pages
-        GROUP BY run_id
+        INNER JOIN recent_runs ON recent_runs.id = crawl_pages.run_id
+        GROUP BY crawl_pages.run_id
       ),
       recommendation_counts AS (
         SELECT
-          run_id,
+          crawl_recommendations.run_id,
           COUNT(*) AS recommendation_count,
-          COALESCE(SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END), 0) AS high_recommendation_count
+          COALESCE(SUM(CASE WHEN crawl_recommendations.severity = 'high' THEN 1 ELSE 0 END), 0) AS high_recommendation_count
         FROM crawl_recommendations
-        GROUP BY run_id
+        INNER JOIN recent_runs ON recent_runs.id = crawl_recommendations.run_id
+        GROUP BY crawl_recommendations.run_id
       ),
       recommendation_rank AS (
         SELECT
           crawl_recommendations.*,
           ROW_NUMBER() OVER (
-            PARTITION BY run_id
+            PARTITION BY crawl_recommendations.run_id
             ORDER BY
-              CASE severity WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC,
-              created_at DESC
+              CASE crawl_recommendations.severity WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC,
+              crawl_recommendations.created_at DESC
           ) AS rank
         FROM crawl_recommendations
+        INNER JOIN recent_runs ON recent_runs.id = crawl_recommendations.run_id
       )
       SELECT
         crawl_runs.*,
@@ -207,14 +230,12 @@ export function latestCrawlSummaries(
         top.title AS top_recommendation_title,
         top.action AS top_recommendation_action,
         top.severity AS top_recommendation_severity
-      FROM crawl_runs
+      FROM recent_runs AS crawl_runs
       LEFT JOIN page_counts ON page_counts.run_id = crawl_runs.id
       LEFT JOIN recommendation_counts ON recommendation_counts.run_id = crawl_runs.id
       LEFT JOIN recommendation_rank top ON top.run_id = crawl_runs.id AND top.rank = 1
-      WHERE crawl_runs.site_url = ?
       GROUP BY crawl_runs.id
-      ORDER BY crawl_runs.created_at DESC
-      LIMIT ?`,
+      ORDER BY crawl_runs.created_at DESC`,
     )
     .all(site, limit) as LatestCrawlSummaryRow[]
 

@@ -2,6 +2,12 @@ import { getDb } from '../../storage/database.js'
 import { type CrawlReport, normalizeLoadedCrawlReport } from './report.js'
 
 export const CRAWL_REPORT_STORAGE_VERSION = 6
+export const AUTOMATIC_BASELINE_SITE_RETENTION = 2
+export const AUTOMATIC_BASELINE_TOTAL_RETENTION = 50
+
+export type CrawlReportSaveOptions = {
+  retention?: 'saved' | 'baseline'
+}
 
 export type CrawlReportMeta = {
   id: string
@@ -27,7 +33,10 @@ export type CrawlReportStorageEnvelope = {
 }
 
 export type CrawlReportStoreAdapter = {
-  save: (report: CrawlReport) => CrawlReportMeta
+  save: (
+    report: CrawlReport,
+    options?: CrawlReportSaveOptions,
+  ) => CrawlReportMeta
   list: (input?: { site?: string; limit?: number }) => CrawlReportMeta[]
   load: (id: string) => CrawlReport | undefined
   delete: (id: string) => boolean
@@ -43,6 +52,7 @@ type CrawlReportRow = {
   total_pages: number
   issue_count: number
   created_at: number
+  retention_class: 'saved' | 'baseline'
   report_json: string
 }
 
@@ -102,12 +112,42 @@ function reportFromJson(value: string): CrawlReport {
   return normalizeLoadedCrawlReport(parsed as CrawlReport)
 }
 
-function saveCrawlReportToSqlite(report: CrawlReport): CrawlReportMeta {
-  const result = getDb()
+function pruneAutomaticBaselines(): void {
+  getDb()
+    .prepare(
+      `WITH ranked AS (
+        SELECT id,
+          ROW_NUMBER() OVER (
+            PARTITION BY site_url
+            ORDER BY created_at DESC, id DESC
+          ) AS site_rank,
+          ROW_NUMBER() OVER (
+            ORDER BY created_at DESC, id DESC
+          ) AS total_rank
+        FROM crawl_reports
+        WHERE retention_class = 'baseline'
+      )
+      DELETE FROM crawl_reports
+      WHERE id IN (
+        SELECT id FROM ranked
+        WHERE site_rank > ? OR total_rank > ?
+      )`,
+    )
+    .run(AUTOMATIC_BASELINE_SITE_RETENTION, AUTOMATIC_BASELINE_TOTAL_RETENTION)
+}
+
+function saveCrawlReportToSqlite(
+  report: CrawlReport,
+  options: CrawlReportSaveOptions = {},
+): CrawlReportMeta {
+  const database = getDb()
+  const retention = options.retention ?? 'saved'
+  const result = database
     .prepare(
       `INSERT INTO crawl_reports
-      (id, config_hash, site_url, url, status, total_pages, issue_count, created_at, report_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, config_hash, site_url, url, status, total_pages, issue_count, created_at,
+       retention_class, report_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO NOTHING`,
     )
     .run(
@@ -119,14 +159,16 @@ function saveCrawlReportToSqlite(report: CrawlReport): CrawlReportMeta {
       report.summary.totalPages,
       report.issues.length,
       Date.parse(report.generatedAt),
+      retention,
       JSON.stringify(storageEnvelope(report)),
     )
   if (result.changes === 0) {
-    const existing = getDb()
+    const existing = database
       .prepare('SELECT * FROM crawl_reports WHERE id = ?')
       .get(report.id) as CrawlReportRow | undefined
     if (existing) return toMeta(existing)
   }
+  if (retention === 'baseline') pruneAutomaticBaselines()
   return {
     id: report.id,
     configHash: report.configHash,
@@ -212,8 +254,9 @@ export const crawlReportStore: CrawlReportStoreAdapter = sqliteCrawlReportStore
 export function saveCrawlReport(
   report: CrawlReport,
   store: CrawlReportStoreAdapter = crawlReportStore,
+  options: CrawlReportSaveOptions = {},
 ): CrawlReportMeta {
-  return store.save(report)
+  return store.save(report, options)
 }
 
 export function listCrawlReports(

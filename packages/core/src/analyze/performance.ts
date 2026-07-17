@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import type { fetch } from 'undici'
 import { fetchPage } from '../fetch/page-fetcher.js'
 import { normalizeHttpUrl } from '../gsc/property-url.js'
-import { getDb } from '../storage/database.js'
+import { getDb, noteCacheWrite } from '../storage/database.js'
 import { performanceActions } from './performance-analysis.js'
 import { fetchCruxFieldData } from './performance-crux.js'
 import {
@@ -50,6 +50,7 @@ function cacheGet(id: string, now: number): PerformanceAuditReport | undefined {
 
 function cacheSet(report: PerformanceAuditReport, now: number): void {
   const stored = { ...report, raw: undefined }
+  const reportJson = JSON.stringify(stored)
   getDb()
     .prepare(
       `INSERT OR REPLACE INTO performance_reports
@@ -60,10 +61,11 @@ function cacheSet(report: PerformanceAuditReport, now: number): void {
       report.id,
       report.url,
       report.strategy,
-      JSON.stringify(stored),
+      reportJson,
       Date.parse(report.generatedAt),
       now + CACHE_TTL_MS,
     )
+  noteCacheWrite(Buffer.byteLength(reportJson))
 }
 
 async function fallbackReport(input: {

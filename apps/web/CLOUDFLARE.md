@@ -76,7 +76,7 @@ Leave the query string unchanged.
 Use this rule expression:
 
 ```txt
-(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not ends_with(http.request.uri.path, ".md") and (http.request.uri.path eq "/docs" or starts_with(http.request.uri.path, "/docs/") or http.request.uri.path in {"/cookies" "/privacy" "/security" "/stats" "/telemetry" "/terms" "/trademarks"}) and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
+(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not (http.request.uri.path contains ".") and not starts_with(http.request.uri.path, "/api/") and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
 ```
 
 Set **Path** to **Rewrite to Dynamic** with this expression:
@@ -87,7 +87,15 @@ concat(http.request.uri.path, ".md")
 
 Leave the query string unchanged.
 
-The `.md` exclusion is required because explicit Markdown requests also send `Accept: text/markdown`. Without it Cloudflare rewrites `/docs/skill.md` to `/docs/skill.md.md` and returns the 404 page.
+The rule is deliberately deterministic rather than a path allowlist: every
+extensionless page path negotiates automatically, so new pages are covered
+the moment the build emits their `.md` twin, with no rule edit. The
+`contains "."` exclusion keeps every file-extension asset out — including
+explicit `.md` requests, which also send `Accept: text/markdown` and would
+otherwise be rewritten to `.md.md` and 404. `/api/` is excluded so the
+Worker's telemetry routes are never rewritten. A page without a generated
+`.md` twin returns the 404 page for Markdown requests; that only happens
+for paths that are already 404 in HTML.
 
 The `Accept` check is deliberately strict. It handles the normal agent header and a Markdown-first media list, while `Accept: text/markdown;q=0` stays on the HTML page. A broad `contains "text/markdown"` rule would incorrectly serve Markdown when the client explicitly gave it a quality value of zero.
 

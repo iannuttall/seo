@@ -10,6 +10,82 @@ const metrics = [
   ['firstAuditConversionPercent', 'First audit event ratio'],
   ['auditsFailed', 'Failed audits'],
 ] as const
+
+// Build-time snapshot of the live aggregates so the static page — and its
+// generated Markdown twin — carries real numbers instead of the loading
+// state. The browser still refreshes to live values on load. A failed fetch
+// (first deploy, offline build) falls back to the previous zero placeholders.
+type AgentRow = { agent: string; count: number; percent: number }
+type RetentionRow = {
+  cohort: string
+  installs: number
+  retained: number
+  percent: number | null
+  complete: boolean
+}
+type ReportRow = { report: string; count: number }
+
+const buildNumberFormat = new Intl.NumberFormat('en-GB', {
+  maximumFractionDigits: 0,
+})
+const buildCount = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? buildNumberFormat.format(value)
+    : '0'
+const buildPercent = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? `${value.toFixed(1).replace('.0', '')}%`
+    : '0%'
+const buildReportPath = (report: string) =>
+  `/docs/reports/${report === 'index-coverage-plan' ? 'index-plan' : report}`
+const buildReportLabel = (report: string) =>
+  report
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+
+let snapshot: {
+  generatedAt?: string
+  totals?: Record<string, number | null>
+  agents?: { installs?: AgentRow[]; audits?: AgentRow[] }
+  retentionD7?: RetentionRow[]
+  reports?: ReportRow[]
+} | null = null
+try {
+  const response = await fetch('https://seoskill.dev/api/stats', {
+    headers: { accept: 'application/json' },
+  })
+  if (response.ok) snapshot = await response.json()
+} catch {
+  snapshot = null
+}
+
+const totals = snapshot?.totals ?? {}
+const statValue = (key: (typeof metrics)[number][0]) =>
+  key === 'firstAuditConversionPercent'
+    ? buildPercent(totals[key])
+    : buildCount(totals[key])
+const installAgents: AgentRow[] = snapshot?.agents?.installs ?? []
+const auditAgents: AgentRow[] = snapshot?.agents?.audits ?? []
+const retentionRows: RetentionRow[] = (snapshot?.retentionD7 ?? [])
+  .filter((row) => row.complete)
+  .slice(0, 12)
+const allReports: ReportRow[] = Array.isArray(snapshot?.reports)
+  ? snapshot.reports
+  : []
+const popularReports = allReports.filter((row) => row.count > 0).slice(0, 10)
+const quietReports = [...allReports]
+  .filter((row) => row.count > 0)
+  .sort((a, b) => a.count - b.count || a.report.localeCompare(b.report))
+  .slice(0, 10)
+const snapshotDate = snapshot?.generatedAt ? new Date(snapshot.generatedAt) : null
+const snapshotLabel =
+  snapshotDate && !Number.isNaN(snapshotDate.getTime())
+    ? `${snapshotDate.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC`
+    : null
+const statusText = snapshotLabel
+  ? `Snapshot from ${snapshotLabel}. Counts refresh live in the browser; agents can fetch current values as JSON from https://seoskill.dev/api/stats.`
+  : 'Loading the latest aggregate counts.'
 ---
 
 <div data-stats-root aria-busy="true">
@@ -19,7 +95,7 @@ const metrics = [
     align="left"
   >
     <p slot="actions" class="animate-pulse font-sans text-sm text-foreground-muted" data-stats-status data-stats-loading aria-live="polite">
-      Loading the latest aggregate counts.
+      {statusText}
     </p>
   </PageHeader>
 
@@ -31,7 +107,7 @@ const metrics = [
             <article class="flex h-full min-h-32 flex-col justify-between gap-5 p-5 sm:p-6">
               <p class="font-sans text-sm text-foreground-muted">{label}</p>
               <p class="animate-pulse text-2xl sm:text-3xl" data-stat={key} data-stats-loading>
-                {key === 'firstAuditConversionPercent' ? '0%' : '0'}
+                {statValue(key)}
               </p>
             </article>
           </DottedCard>
@@ -49,7 +125,19 @@ const metrics = [
         <div class="table-frame">
           <table class="min-w-0">
             <thead><tr><th>Agent</th><th class="text-right">Installs</th><th class="text-right">Share</th></tr></thead>
-            <tbody class="animate-pulse" data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
+            <tbody class="animate-pulse" data-agent-table="installs" data-stats-loading>
+              {installAgents.length === 0 ? (
+                <tr><td colspan="3">No recorded events</td></tr>
+              ) : (
+                installAgents.map((row) => (
+                  <tr>
+                    <td class="text-left">{row.agent}</td>
+                    <td class="text-right">{buildCount(row.count)}</td>
+                    <td class="text-right">{buildPercent(row.percent)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>
@@ -62,7 +150,19 @@ const metrics = [
         <div class="table-frame">
           <table class="min-w-0">
             <thead><tr><th>Agent</th><th class="text-right">Audits</th><th class="text-right">Share</th></tr></thead>
-            <tbody class="animate-pulse" data-agent-table="audits" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
+            <tbody class="animate-pulse" data-agent-table="audits" data-stats-loading>
+              {auditAgents.length === 0 ? (
+                <tr><td colspan="3">No recorded events</td></tr>
+              ) : (
+                auditAgents.map((row) => (
+                  <tr>
+                    <td class="text-left">{row.agent}</td>
+                    <td class="text-right">{buildCount(row.count)}</td>
+                    <td class="text-right">{buildPercent(row.percent)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>
@@ -83,7 +183,20 @@ const metrics = [
       <div class="table-frame">
         <table>
           <thead><tr><th>Cohort</th><th class="text-right">Installs</th><th class="text-right">Active at day 7</th><th class="text-right">Retention</th></tr></thead>
-          <tbody class="animate-pulse" data-retention-table data-stats-loading><tr><td colspan="4">No recorded events</td></tr></tbody>
+          <tbody class="animate-pulse" data-retention-table data-stats-loading>
+            {retentionRows.length === 0 ? (
+              <tr><td colspan="4">No recorded events</td></tr>
+            ) : (
+              retentionRows.map((row) => (
+                <tr>
+                  <td class="text-left">{row.cohort}</td>
+                  <td class="text-right">{buildCount(row.installs)}</td>
+                  <td class="text-right">{buildCount(row.retained)}</td>
+                  <td class="text-right">{buildPercent(row.percent)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
         </table>
       </div>
     </div>
@@ -95,7 +208,18 @@ const metrics = [
         Most run reports
       </h2>
       <DottedCard patternId="telemetry-popular-reports" class="h-full">
-        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="popular" data-stats-loading><li class="p-4">No recorded events</li></ol>
+        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="popular" data-stats-loading>
+          {popularReports.length === 0 ? (
+            <li class="p-4">No recorded events</li>
+          ) : (
+            popularReports.map((row) => (
+              <li class="flex items-center justify-between gap-4 p-4">
+                <a class="text-primary underline underline-offset-2 hover:decoration-dotted" href={buildReportPath(row.report)}>{buildReportLabel(row.report)}</a>
+                <span>{buildCount(row.count)}</span>
+              </li>
+            ))
+          )}
+        </ol>
       </DottedCard>
     </section>
     <section class="flex h-full flex-col gap-5" aria-labelledby="quiet-reports-heading">
@@ -103,7 +227,18 @@ const metrics = [
         Least run reports
       </h2>
       <DottedCard patternId="telemetry-quiet-reports" class="h-full">
-        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="quiet" data-stats-loading><li class="p-4">No recorded events</li></ol>
+        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="quiet" data-stats-loading>
+          {quietReports.length === 0 ? (
+            <li class="p-4">No recorded events</li>
+          ) : (
+            quietReports.map((row) => (
+              <li class="flex items-center justify-between gap-4 p-4">
+                <a class="text-primary underline underline-offset-2 hover:decoration-dotted" href={buildReportPath(row.report)}>{buildReportLabel(row.report)}</a>
+                <span>{buildCount(row.count)}</span>
+              </li>
+            ))
+          )}
+        </ol>
       </DottedCard>
     </section>
   </div>

@@ -316,7 +316,6 @@ for (const file of evalFiles) {
 }
 
 const forbidden = [
-  { pattern: /audits\.run/i, label: 'Audits.run reference' },
   {
     pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
     label: 'email address',

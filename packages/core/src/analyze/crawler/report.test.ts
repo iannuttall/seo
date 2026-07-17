@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  assertCrawlConfigLimits,
   type CrawlIssue,
   type CrawlReport,
   crawlConfigHash,
@@ -28,6 +29,39 @@ test('normalizeCrawlConfig applies stable defaults', () => {
   assert.equal(config.js, 'auto')
   assert.equal(config.refresh, false)
   assert.deepEqual(config.fetchRate, { concurrency: 8 })
+})
+
+test('crawl execution limits bound local CPU and memory inputs', () => {
+  assert.doesNotThrow(() =>
+    assertCrawlConfigLimits(
+      normalizeCrawlConfig({
+        url: 'https://example.com',
+        maxPages: 10_000,
+        maxDepth: 64,
+        concurrency: 16,
+      }),
+    ),
+  )
+  assert.throws(
+    () =>
+      assertCrawlConfigLimits(
+        normalizeCrawlConfig({
+          url: 'https://example.com',
+          maxPages: 10_001,
+        }),
+      ),
+    /maxPages must be an integer from 1 to 10000/,
+  )
+  assert.throws(
+    () =>
+      assertCrawlConfigLimits(
+        normalizeCrawlConfig({
+          url: 'https://example.com',
+          concurrency: 17,
+        }),
+      ),
+    /concurrency must be an integer from 1 to 16/,
+  )
 })
 
 test('normalizeCrawlConfig keeps fetch controls stable', () => {

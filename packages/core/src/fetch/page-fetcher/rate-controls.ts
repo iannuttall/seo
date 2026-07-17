@@ -4,6 +4,8 @@ import type { FetchRateControls, NormalizedFetchRateControls } from './types.js'
 const HOST_QUEUES = new Map<string, PQueue>()
 const HOST_HEALTH = new Map<string, HostHealth>()
 
+export const MAX_FETCH_CONCURRENCY = 16
+
 type BackpressureSnapshot = {
   host: string
   status: 'ok' | 'slowed' | 'stopped'
@@ -101,8 +103,18 @@ function snapshotForHost(
 export function normalizeRateControls(
   rate?: FetchRateControls,
 ): NormalizedFetchRateControls {
+  const concurrency = rate?.concurrency ?? numberEnv('SEO_FETCH_CONCURRENCY', 4)
+  if (
+    !Number.isInteger(concurrency) ||
+    concurrency < 1 ||
+    concurrency > MAX_FETCH_CONCURRENCY
+  ) {
+    throw new RangeError(
+      `Fetch concurrency must be an integer from 1 to ${MAX_FETCH_CONCURRENCY}.`,
+    )
+  }
   return {
-    concurrency: rate?.concurrency ?? numberEnv('SEO_FETCH_CONCURRENCY', 4),
+    concurrency,
     intervalCap: rate?.intervalCap ?? numberEnv('SEO_FETCH_INTERVAL_CAP', 4),
     intervalMs: rate?.intervalMs ?? numberEnv('SEO_FETCH_INTERVAL_MS', 1000),
     backpressure: {

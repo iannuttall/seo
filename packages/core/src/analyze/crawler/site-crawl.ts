@@ -1,5 +1,8 @@
 import robotsParserModule from 'robots-parser'
-import type { publicHttpFetch } from '../../fetch/http-client.js'
+import {
+  type publicHttpFetch,
+  readBoundedResponseText,
+} from '../../fetch/http-client.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { crawlOne } from '../monitoring/crawl-page.js'
 import { crawlCaveats } from './crawl-caveats.js'
@@ -8,6 +11,7 @@ import {
   CRAWL_CANCELLED,
   cancellationRace,
 } from './crawl-control.js'
+import { shortestCrawlDepths } from './crawl-depths.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
 import { verifyExternalLinks } from './external-link-checks.js'
 import { resolveLinkGraphAliases } from './link-graph.js'
@@ -18,7 +22,11 @@ import type {
   CrawlStatusEvent,
   CrawlStatusPhase,
 } from './report.js'
-import { createCrawlReport, normalizeCrawlConfig } from './report.js'
+import {
+  assertCrawlConfigLimits,
+  createCrawlReport,
+  normalizeCrawlConfig,
+} from './report.js'
 import { observationFromPage } from './request-evidence.js'
 import {
   crawlDataSources,
@@ -34,6 +42,8 @@ type QueueItem = {
   url: string
   depth: number
 }
+
+const MAX_AUXILIARY_RESPONSE_BYTES = 2 * 1024 * 1024
 
 type CrawlTask = QueueItem & {
   promise: Promise<{
@@ -229,7 +239,11 @@ async function checkRobotsAiAccess(input: {
       redirect: 'follow',
       signal: controller.signal,
     })
-    const text = await response.text()
+    const text = await readBoundedResponseText(
+      response,
+      MAX_AUXILIARY_RESPONSE_BYTES,
+      'robots.txt response',
+    )
     const available = response.status >= 200 && response.status < 300
     const absent =
       response.status >= 400 && response.status < 500 && response.status !== 429
@@ -308,7 +322,11 @@ async function checkAgentResource(input: {
       signal: controller.signal,
     })
     const contentType = response.headers.get('content-type') ?? ''
-    const text = await response.text()
+    const text = await readBoundedResponseText(
+      response,
+      MAX_AUXILIARY_RESPONSE_BYTES,
+      'Agent resource response',
+    )
     const exists = response.status >= 200 && response.status < 300
     let validJson: boolean | undefined
     if (exists && /\bjson\b/i.test(contentType)) {
@@ -360,7 +378,7 @@ export async function crawlSite(
   dependencies?: CrawlSiteDependencies,
 ): Promise<CrawlReport> {
   const deps = resolveCrawlSiteDependencies(dependencies)
-  const config = normalizeCrawlConfig(input)
+  const config = assertCrawlConfigLimits(normalizeCrawlConfig(input))
   const { searchMetricsLimit, analyticsLimit } = crawlProviderLimits(input)
   const signal = input.signal
   let cancelled = Boolean(signal?.aborted)
@@ -824,28 +842,7 @@ export async function crawlSite(
     }
 
     const resolvedLinkGraph = resolveLinkGraphAliases(linkGraph, fetchedAliases)
-    const pageIndexes = new Map(
-      pages.map((page, index) => [page.url, index] as const),
-    )
-    const depths = pages.map((page) => page.crawlDepth ?? 0)
-    for (let pass = 0; pass < pages.length; pass += 1) {
-      let changed = false
-      for (const [sourceUrl, targets] of Object.entries(resolvedLinkGraph)) {
-        const sourceIndex = pageIndexes.get(sourceUrl)
-        if (sourceIndex === undefined) continue
-        for (const target of targets) {
-          const targetIndex = pageIndexes.get(target)
-          if (targetIndex === undefined) continue
-          const nextDepth = (depths[sourceIndex] ?? 0) + 1
-          if (nextDepth >= (depths[targetIndex] ?? Number.POSITIVE_INFINITY)) {
-            continue
-          }
-          depths[targetIndex] = nextDepth
-          changed = true
-        }
-      }
-      if (!changed) break
-    }
+    const depths = shortestCrawlDepths(pages, resolvedLinkGraph)
     for (const [index, page] of pages.entries()) {
       page.crawlDepth = depths[index]
     }

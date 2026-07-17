@@ -86,7 +86,8 @@ const REPORT_OPTIONS = {
     cli: 'fetch-concurrency',
     arg: {
       type: 'string',
-      description: 'Maximum concurrent page fetches per host. Defaults to 4.',
+      description:
+        'Maximum concurrent page fetches per host, up to 16. Defaults to 4.',
     },
   },
   fetchIntervalCap: {

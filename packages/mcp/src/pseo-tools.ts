@@ -76,7 +76,7 @@ export function registerPseoTools(server: McpServer): void {
         includeBrand: z.boolean().optional(),
         refresh: z.boolean().optional(),
         js: z.boolean().optional(),
-        fetchConcurrency: z.number().int().min(1).max(20).optional(),
+        fetchConcurrency: z.number().int().min(1).max(16).optional(),
         fetchIntervalCap: z.number().int().min(1).max(100).optional(),
         fetchIntervalMs: z.number().int().min(100).max(60_000).optional(),
         detail: z.enum(['summary', 'full']).optional(),

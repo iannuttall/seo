@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
+import { MAX_FETCH_CONCURRENCY } from '../../fetch/page-fetcher/rate-controls.js'
 import {
   type FetchRateControls,
   type JavaScriptRenderingInput,
@@ -26,6 +27,11 @@ import {
 } from './crawl-skip-reasons.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
+
+export const MAX_CRAWL_PAGES = 10_000
+export const MAX_CRAWL_DEPTH = 64
+export const MAX_CRAWL_CONCURRENCY = MAX_FETCH_CONCURRENCY
+export const MAX_CRAWL_TIMEOUT_MS = 120_000
 
 export type CrawlFetchRateConfig = FetchRateControls
 
@@ -356,6 +362,40 @@ export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
     refresh: input.refresh ?? false,
     fetchRate: normalizeFetchRate(input),
   }
+}
+
+function assertIntegerRange(
+  value: number,
+  label: string,
+  minimum: number,
+  maximum: number,
+): void {
+  if (!Number.isInteger(value) || value < minimum || value > maximum) {
+    throw new RangeError(
+      `${label} must be an integer from ${minimum} to ${maximum}.`,
+    )
+  }
+}
+
+export function assertCrawlConfigLimits(config: CrawlConfig): CrawlConfig {
+  assertIntegerRange(config.maxPages, 'maxPages', 1, MAX_CRAWL_PAGES)
+  assertIntegerRange(config.maxDepth, 'maxDepth', 0, MAX_CRAWL_DEPTH)
+  assertIntegerRange(
+    config.concurrency,
+    'concurrency',
+    1,
+    MAX_FETCH_CONCURRENCY,
+  )
+  assertIntegerRange(config.timeoutMs, 'timeoutMs', 1, MAX_CRAWL_TIMEOUT_MS)
+  if (config.fetchRate.concurrency !== undefined) {
+    assertIntegerRange(
+      config.fetchRate.concurrency,
+      'fetchRate.concurrency',
+      1,
+      MAX_FETCH_CONCURRENCY,
+    )
+  }
+  return config
 }
 
 export function crawlConfigHash(config: CrawlConfigInput): string {

@@ -870,65 +870,30 @@ test('telemetry prose and stats keep a stable readable first render', () => {
   )
 
   assert.match(stats, /data-stats-root aria-busy="true"/u)
-
-  // The static render bakes the committed snapshot so agents reading the
-  // page (or its Markdown twin) never see loading placeholders.
-  const snapshot = JSON.parse(
-    readFileSync(resolve(appRoot, 'src/data/stats-snapshot.json'), 'utf8'),
+  assert.equal(
+    matches(stats, /data-stat="[^"]+" data-stats-loading>0%?</gu).length,
+    6,
   )
-  const snapshotCount = (value) =>
-    typeof value === 'number' && Number.isFinite(value)
-      ? new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 }).format(
-          value,
-        )
-      : '0'
-  const snapshotPercent = (value) =>
-    typeof value === 'number' && Number.isFinite(value)
-      ? `${value.toFixed(1).replace('.0', '')}%`
-      : '0%'
-  const totals = snapshot.totals ?? {}
-  for (const key of [
-    'installs',
-    'auditsStarted',
-    'auditsThisMonth',
-    'setupCompletions',
-    'auditsFailed',
-  ]) {
-    assert.match(
-      stats,
-      new RegExp(
-        `data-stat="${key}" data-stats-loading>\\s*${snapshotCount(totals[key])}\\s*<`,
-        'u',
-      ),
-    )
-  }
   assert.match(
     stats,
-    new RegExp(
-      `data-stat="firstAuditConversionPercent" data-stats-loading>\\s*${snapshotPercent(totals.firstAuditConversionPercent)}\\s*<`,
-      'u',
-    ),
+    /data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events/u,
   )
-  const installAgents = snapshot.agents?.installs ?? []
-  if (installAgents.length === 0) {
-    assert.match(
-      stats,
-      /data-agent-table="installs" data-stats-loading>\s*<tr><td colspan="3">No recorded events/u,
-    )
-  } else {
-    assert.ok(stats.includes(`<td class="text-left">${installAgents[0].agent}</td>`))
-  }
-  const auditAgents = snapshot.agents?.audits ?? []
-  if (auditAgents.length > 0) {
-    assert.ok(stats.includes(`<td class="text-left">${auditAgents[0].agent}</td>`))
-  }
-  if (snapshot.generatedAt) {
-    assert.match(stats, /Snapshot from /u)
-    assert.match(stats, /https:\/\/seoskill\.dev\/api\/stats/u)
-  }
   assert.match(stats, /class="animate-pulse[^>]+data-stats-loading/u)
   assert.doesNotMatch(stats, />Loading<\//u)
   assert.doesNotMatch(stats, /Not available/u)
+
+  // Live values are browser-only. The static page tells agents to fetch the
+  // aggregate JSON instead, and every dynamic section is excluded from the
+  // Markdown alternate so placeholder zeros never reach it.
+  assert.match(
+    stats,
+    /Agents can fetch current\s+values as JSON with a GET request to https:\/\/seoskill\.dev\/api\/stats/u,
+  )
+  assert.equal(matches(stats, /data-agent-markdown="exclude"/gu).length, 4)
+  const statsMarkdown = readFileSync(resolve(dist, 'stats.md'), 'utf8')
+  assert.match(statsMarkdown, /https:\/\/seoskill\.dev\/api\/stats/u)
+  assert.doesNotMatch(statsMarkdown, /Recorded installs/u)
+  assert.doesNotMatch(statsMarkdown, /No recorded events/u)
 })
 
 test('published guidance does not teach disposable npx CLI installs', () => {

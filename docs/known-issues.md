@@ -144,7 +144,7 @@ shape.
 
 ## SEO-005: the local cache can grow beyond one gigabyte
 
-- Status: Open
+- Status: Verified
 - Observed: 2026-07-16
 - Affected version: 0.2.5
 
@@ -161,19 +161,32 @@ unnecessary database and backup costs.
 
 ### Cause and fix
 
-The HTTP cache stores response bodies and expiration controls whether a row is
-reused, but no verified size or age retention policy keeps the database
-bounded. The cache needs automatic pruning with a conservative limit, plus
-database compaction that does not interrupt active reports.
+Expired rows were ignored on reads but never removed. The HTTP, Search Console,
+Google Analytics, Semrush, and performance caches also had no shared storage
+budget.
+
+Disposable cached data now has a 256 MiB combined limit, split by provider, and
+a maximum age of 30 days. Maintenance runs when the database opens and after
+either 50 cache writes or 16 MiB of new cached data. It removes expired rows,
+keeps the newest data inside each provider budget, and compacts free database
+pages outside active report work. `seo cache stats` reports both the database
+footprint and logical cached data against the automatic limit.
+
+- Fix commits: `1658a01`, `9f7fe01`
 
 ### Verification
 
-Seed expired and oversized HTTP cache data, run the normal cache lifecycle,
-and confirm retained rows and file size stay inside the documented bounds.
+The storage tests seed expired and oversized cache data, verify newest-first
+retention under the provider budgets, convert a legacy database to incremental
+vacuum mode, and confirm the database file shrinks after cleanup.
+
+The full build, typecheck, test, and lint gates pass. The built CLI reports an
+empty cache as `0 B of 256.0 MB automatic limit`, and the public package
+contract and dry-run pack checks pass.
 
 ## SEO-006: report summaries do not inflect singular counts
 
-- Status: Open
+- Status: Verified
 - Observed: 2026-07-16
 - Affected version: 0.2.7
 
@@ -190,14 +203,18 @@ report data is correct.
 
 ### Cause and fix
 
-The narrative templates interpolate counts without count-aware nouns and
-verbs. Move repeated count grammar behind a small formatting helper and cover
-both singular and plural output.
+Several narrative templates interpolated counts without using the shared
+count-aware noun and verb helpers. Second-page, striking-distance, quick-win,
+and diagnosis summaries now use the same grammar path.
+
+- Fix commit: `94701ec`
 
 ### Verification
 
-Generate the second-page narrative with zero, one, and multiple eligible pages
-and candidates, then assert each sentence uses the matching noun and verb.
+The report tests generate zero, one, and multiple eligible pages and candidates
+and assert each sentence uses the matching noun and verb.
+
+The full build, typecheck, test, and lint gates pass.
 
 ## SEO-007: agent-readiness requires explicit Markdown mirrors
 
@@ -330,3 +347,143 @@ say whether lock acquisition was the stage that stalled. Instrument
 Run `node --test dist/gsc/auth/authorized-client.test.js` in `packages/core`.
 The file should finish in seconds and pass consistently under a parallel
 `pnpm test` run.
+
+## SEO-010: fetched response bodies can exceed local memory budgets
+
+- Status: Verified
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+Page, robots.txt, agent-resource, and Semrush responses were read into memory in
+full. A server could return an unexpectedly large body before the cache policy
+had any chance to limit it.
+
+### Impact
+
+A single bad response could cause a large memory spike, slow the machine, or
+terminate a crawl even though the stored cache is bounded.
+
+### Cause and fix
+
+The shared fetch path had timeouts but no streaming byte limit. It now checks a
+declared content length, counts streamed bytes, cancels the body when it crosses
+the limit, and returns a specific size-limit error. HTML pages are capped at 5
+MiB, robots.txt at 1 MiB, focused agent resources at 2 MiB, and Semrush
+responses at 10 MiB.
+
+- Fix commits: `9f7fe01`, `c82d6b9`
+
+### Verification
+
+The fetch tests cover bodies inside the limit, oversized declared lengths,
+oversized streamed bodies, and an end-to-end page request rejected before it is
+cached.
+
+The full build, typecheck, test, and lint gates pass.
+
+## SEO-011: crawl inputs can allocate excessive local work
+
+- Status: Verified
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+Library and some MCP crawl inputs accepted arbitrarily large page, depth, and
+concurrency values. Final click-depth correction also rescanned the full link
+graph once per page in the worst case.
+
+### Impact
+
+An accidental large value could create excessive network, memory, and CPU work
+on the user's machine. Large crawls also spent avoidable CPU time recalculating
+shortest link depths.
+
+### Cause and fix
+
+Core validation now caps a crawl at 10,000 pages, depth 64, concurrency 16, and
+a 120 second per-request timeout. CLI help and MCP schemas expose the same
+limits. Click depths now use one queue-based graph traversal, and recent-crawl
+summary queries aggregate only the selected runs instead of scanning all saved
+page and recommendation rows.
+
+- Fix commits: `c82d6b9`, `1658a01`
+
+### Verification
+
+Core and MCP tests reject unsafe crawl inputs. A graph regression fixture
+confirms shorter paths propagate in one traversal, and monitoring tests verify
+the narrowed summary query returns the same evidence.
+
+The full build, typecheck, test, and lint gates pass.
+
+## SEO-012: automatic report histories can grow without retention
+
+- Status: Verified
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+Crawl monitoring, link recovery, index watch, and automatic technical baselines
+kept adding database rows without a retention policy. Automatic baselines also
+shared a table with reports users explicitly chose to save.
+
+### Impact
+
+Scheduled monitoring and repeated main reports could quietly grow the local
+database long after older internal snapshots stopped being useful.
+
+### Cause and fix
+
+Crawl monitoring and link recovery now retain the latest 20 runs for each
+scope. Index watch retains 20 attempts for each URL and preserves the latest
+successful inspection when it is older. Automatic technical baselines are now
+marked separately and retain two per site with a global limit of 50. Explicitly
+saved crawl reports remain user-owned and are never removed by this cleanup.
+
+- Fix commit: `1658a01`
+
+### Verification
+
+Storage tests insert histories beyond every limit and confirm old automatic
+rows are removed with their dependent rows. Separate crawl-report tests confirm
+automatic baselines stay bounded while an explicitly saved report remains
+loadable.
+
+The full build, typecheck, test, and lint gates pass.
+
+## SEO-013: local log files have no retention policy
+
+- Status: Verified
+- Observed: 2026-07-17
+- Affected version: 0.2.8
+
+### What failed
+
+Daily application logs and redirected schedule output could grow indefinitely.
+The schedule generator kept appending to one file per job without cleanup.
+
+### Impact
+
+Long-running scheduled installs could quietly consume disk even after cache
+retention was fixed.
+
+### Cause and fix
+
+Local logs now rotate at 8 MiB, expire after 14 days, and share a 64 MiB total
+limit. Logger startup runs cleanup, scheduled cron lines prune before appending,
+and `seo logs prune` provides the same operation for manual or scripted use.
+
+- Fix commit: `1658a01`
+
+### Verification
+
+The log-retention test covers rotation, age deletion, and total-size pruning.
+CLI smoke tests confirm quiet, human, and JSON cleanup modes and scheduled cron
+output.
+
+The full build, typecheck, test, and lint gates pass. The built CLI prints cron
+entries that prune logs before appending to each scheduled output file.

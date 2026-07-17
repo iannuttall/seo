@@ -1,4 +1,4 @@
-/** @satisfies {import('@seo/astro').LlmsTxtConfig} */
+/** @satisfies {import('@iannuttall/seo-graph-core').LlmsTxtConfig} */
 export const llmsTxt = {
   title: 'SEO Skill',
   summary:

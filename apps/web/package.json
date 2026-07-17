@@ -4,10 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm build:discovery && pnpm build:sitemap && astro build && pnpm build:headers && node -e \"const fs=require('node:fs');for(const f of ['sitemap-index.xml','sitemap-0.xml'])fs.rmSync('dist/'+f,{force:true})\"",
+    "build": "pnpm build:discovery && pnpm build:sitemap && astro build && node -e \"const fs=require('node:fs');for(const f of ['sitemap-index.xml','sitemap-0.xml'])fs.rmSync('dist/'+f,{force:true})\"",
     "build:discovery": "node scripts/build-agent-skills.mjs",
     "build:sitemap": "node scripts/build-sitemap.mjs",
-    "build:headers": "node scripts/finalize-cloudflare-headers.mjs",
     "clean": "rm -rf .astro dist .wrangler public/.well-known/agent-skills",
     "deploy": "pnpm --filter @seo/web... build && wrangler d1 migrations apply seo-telemetry --remote && wrangler deploy",
     "deploy:dry-run": "pnpm --filter @seo/web... build && wrangler deploy --dry-run",
@@ -24,7 +23,8 @@
   "dependencies": {
     "@astrojs/markdown-remark": "^7.0.0",
     "@astrojs/mdx": "^7.0.0",
-    "@seo/astro": "workspace:*",
+    "@iannuttall/seo-graph-astro": "^0.0.4",
+    "@iannuttall/seo-graph-core": "^0.0.2",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.7"
   },

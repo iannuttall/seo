@@ -25,9 +25,9 @@ import {
   renderingModeArg,
   stringArg,
 } from '../args.js'
+import { writeJsonOutput } from '../json-output.js'
 import { resolveClientSelection } from '../selection.js'
 import { printKeyValue } from '../utils.js'
-import { writeJsonOutput } from '../json-output.js'
 import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'

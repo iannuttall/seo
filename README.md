@@ -77,7 +77,7 @@ technical report before connecting Google.
 Running `seo help` shows the shape of the tool:
 
 ```txt
-seo v0.2.10
+seo v0.2.11
 
 Run SEO audits, find what needs fixing, and ship the changes with your agent.
 

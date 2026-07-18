@@ -134,6 +134,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded traffic and crawl summary with provider coverage and caveats.',
   },
+  'link-evidence': {
+    name: 'Referring link evidence',
+    description:
+      'Review a bounded set of pages that link to the site from Bing Webmaster or a local export.',
+    useWhen: [
+      'You want concrete referring URLs and anchor text where available.',
+      'You need one normalized view of Bing or an exported CSV, JSON, or JSONL file.',
+    ],
+    avoidWhen: [
+      'You need a complete backlink index or a domain authority score.',
+      'You want to find broken internal links during a crawl.',
+    ],
+    outcome:
+      'A bounded, deduplicated link list with target-page counts and explicit source coverage.',
+  },
   cannibalisation: {
     name: 'Query and URL overlap',
     description:

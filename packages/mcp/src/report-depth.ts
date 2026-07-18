@@ -179,6 +179,25 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'link-recovery', reason: 'Finds broken search-value URLs.' },
     ],
   },
+  'link-evidence': {
+    readOrder: [
+      'dataStatus, provenance, warnings, and caveats',
+      'selection and summary coverage counts',
+      'targetCounts, then the bounded links list',
+    ],
+    doNotClaim: [
+      'The retained rows are not a complete backlink index.',
+      'Missing rows do not prove a link does not exist.',
+      'Observed links do not establish quality, authority, value, or ranking impact.',
+    ],
+    verify:
+      'Open a selected referring URL and confirm the link is still present before acting on it.',
+    related: [
+      { id: 'link-recovery', reason: 'Finds broken search-value URLs.' },
+      { id: 'redirect-trace', reason: 'Checks a target redirect chain.' },
+      { id: 'site-crawl', reason: 'Checks internal links and live pages.' },
+    ],
+  },
   cannibalisation: {
     readOrder: [
       'dataStatus and both source.pageExposure and source.propertyDemand with validation counts and completeness',

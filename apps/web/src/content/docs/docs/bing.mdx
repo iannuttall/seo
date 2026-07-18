@@ -74,6 +74,37 @@ Read `dataStatus` before the totals. One failed section makes the result
 partial. Two failed sections make it unavailable. Invalid or capped rows also
 prevent a complete result.
 
+## Review referring links
+
+The connected site can also return a bounded sample of pages Bing says link to
+it:
+
+```sh
+seo links --project example --json
+```
+
+The command first requests target-page link counts, then requests referring
+URLs for a limited number of those targets. Provider pages, target pages,
+parallel requests, response bytes, retained rows, and returned rows all have
+hard limits. The result says when any of those limits made the evidence
+partial.
+
+You can use a local export instead of Bing:
+
+```sh
+seo links --file ./links.csv --row-limit 10000 --json
+```
+
+CSV and JSONL files stream from disk. Regular JSON arrays are accepted only
+under a smaller file limit. Common source URL, target URL, anchor text,
+first-seen, last-seen, and nofollow column names are normalized. Invalid and
+duplicate rows stay visible in provenance.
+
+This report does not download a web-scale backlink database. A missing row is
+not proof that no link exists, and a returned row is not an authority, quality,
+or ranking verdict. Open an important referring URL and confirm the link is
+still present before acting on it.
+
 ## Keep the claims narrow
 
 Bing's search traffic includes data observed by Bing. It is not Google Search

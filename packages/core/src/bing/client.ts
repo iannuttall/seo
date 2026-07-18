@@ -8,6 +8,7 @@ import {
 const DEFAULT_BASE_URL = 'https://ssl.bing.com/webmaster/api.svc/json'
 const MAX_RESPONSE_BYTES = 2_000_000
 const MAX_STAT_ROWS = 400
+const MAX_LINK_ROWS = 200
 
 export type BingWebmasterCredentials =
   | { apiKey: string; accessToken?: never }
@@ -49,6 +50,24 @@ export type BingRows<T> = {
   returnedRows: number
 }
 
+export type BingLinkCountRow = {
+  url: string
+  count: number
+}
+
+export type BingUrlLinkRow = {
+  url: string
+  anchorText?: string
+}
+
+export type BingLinkPage<T> = {
+  rows: T[]
+  totalPages: number
+  invalidRows: number
+  capped: boolean
+  returnedRows: number
+}
+
 type BingFetch = (url: string, init?: RequestInit) => Promise<Response>
 
 type BingClientOptions = {
@@ -70,6 +89,16 @@ function nonnegativeNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
     ? value
     : undefined
+}
+
+function isHttpUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length > 2_000) return false
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 function boundedRows<T>(rows: T[], invalidRows: number): BingRows<T> {
@@ -305,5 +334,118 @@ export class BingWebmasterClient {
     }
     rows.sort((a, b) => a.date.localeCompare(b.date, 'en'))
     return boundedRows(rows, invalidRows)
+  }
+
+  async getLinkCounts(
+    siteUrl: string,
+    page: number,
+  ): Promise<BingLinkPage<BingLinkCountRow>> {
+    const data = await this.request('GetLinkCounts', {
+      siteUrl,
+      page: String(page),
+    })
+    if (!data || typeof data !== 'object') {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'Bing Webmaster returned invalid link counts.',
+      )
+    }
+    const response = data as Record<string, unknown>
+    if (!Array.isArray(response.Links)) {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'Bing Webmaster returned invalid link counts.',
+      )
+    }
+    const rows: BingLinkCountRow[] = []
+    let invalidRows = 0
+    for (const item of response.Links) {
+      if (!item || typeof item !== 'object') {
+        invalidRows += 1
+        continue
+      }
+      const row = item as Record<string, unknown>
+      const count = nonnegativeNumber(row.Count)
+      if (!isHttpUrl(row.Url) || count === undefined) {
+        invalidRows += 1
+        continue
+      }
+      rows.push({ url: row.Url, count })
+    }
+    rows.sort((a, b) => b.count - a.count || a.url.localeCompare(b.url, 'en'))
+    return linkPage(rows, response.TotalPages, invalidRows)
+  }
+
+  async getUrlLinks(
+    siteUrl: string,
+    link: string,
+    page: number,
+  ): Promise<BingLinkPage<BingUrlLinkRow>> {
+    const data = await this.request('GetUrlLinks', {
+      siteUrl,
+      link,
+      page: String(page),
+    })
+    if (!data || typeof data !== 'object') {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'Bing Webmaster returned invalid referring links.',
+      )
+    }
+    const response = data as Record<string, unknown>
+    if (!Array.isArray(response.Details)) {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'Bing Webmaster returned invalid referring links.',
+      )
+    }
+    const rows: BingUrlLinkRow[] = []
+    let invalidRows = 0
+    for (const item of response.Details) {
+      if (!item || typeof item !== 'object') {
+        invalidRows += 1
+        continue
+      }
+      const row = item as Record<string, unknown>
+      if (!isHttpUrl(row.Url)) {
+        invalidRows += 1
+        continue
+      }
+      rows.push({
+        url: row.Url,
+        anchorText:
+          typeof row.AnchorText === 'string' && row.AnchorText.trim()
+            ? row.AnchorText.trim()
+            : undefined,
+      })
+    }
+    rows.sort(
+      (a, b) =>
+        a.url.localeCompare(b.url, 'en') ||
+        (a.anchorText ?? '').localeCompare(b.anchorText ?? '', 'en'),
+    )
+    return linkPage(rows, response.TotalPages, invalidRows)
+  }
+}
+
+function linkPage<T>(
+  rows: T[],
+  totalPagesValue: unknown,
+  invalidRows: number,
+): BingLinkPage<T> {
+  const totalPages = nonnegativeNumber(totalPagesValue)
+  if (totalPages === undefined || !Number.isInteger(totalPages)) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      'Bing Webmaster returned invalid link pagination.',
+    )
+  }
+  const capped = rows.length > MAX_LINK_ROWS
+  return {
+    rows: capped ? rows.slice(0, MAX_LINK_ROWS) : rows,
+    totalPages,
+    invalidRows,
+    capped,
+    returnedRows: rows.length,
   }
 }

@@ -1,6 +1,6 @@
 export const productFacts = {
   crawlerRules: 51,
   reportCategories: 9,
-  reports: 54,
+  reports: 55,
   skills: 1,
 } as const

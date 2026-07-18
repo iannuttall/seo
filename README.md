@@ -200,6 +200,19 @@ invalid, partial, capped, and unavailable provider evidence instead of turning
 it into a zero. Bing's `inIndex` crawl statistic is provider evidence, not
 URL-level proof that a page is indexed.
 
+Use the same connection to review a bounded set of referring links, or import
+an export from another source:
+
+```sh
+seo links --project example --json
+seo links --file ./links.csv --row-limit 10000 --json
+```
+
+CSV and JSONL imports stream from disk. Regular JSON arrays have a smaller
+file limit to avoid a memory spike. Every result includes the number of rows
+read, rejected, deduplicated, omitted, or stopped by a limit. It is evidence
+from the selected source, not a complete backlink index or an authority score.
+
 ## Crawl a site
 
 For a large or unfamiliar site, start with the sitemap health pass:

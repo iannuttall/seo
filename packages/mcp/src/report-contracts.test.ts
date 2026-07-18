@@ -93,6 +93,36 @@ test('AI referral output limits are bounded separately from provider rows', () =
   }
 })
 
+test('link evidence bounds provider work, imports, and returned rows', () => {
+  const schema = reportSchema('link-evidence')
+  assert.equal(
+    schema.safeParse({
+      file: './links.jsonl',
+      format: 'jsonl',
+      rowLimit: 100_000,
+      limit: 500,
+    }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'https://example.com/',
+      rowLimit: 1_000,
+      targetLimit: 50,
+      detailPagesPerTarget: 3,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { file: './links.csv', rowLimit: 100_001 },
+    { file: './links.csv', limit: 501 },
+    { site: 'https://example.com/', targetLimit: 51 },
+    { site: 'https://example.com/', detailPagesPerTarget: 4 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('technical-watch accepts active components and rejects a true no-op', async () => {
   const schema = reportSchema('technical-watch')
   for (const input of [

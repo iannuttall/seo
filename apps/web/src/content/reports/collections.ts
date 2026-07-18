@@ -42,6 +42,7 @@ export const reportCollections = [
       ['index-monitor', 'Index monitor'],
       ['index-watch', 'Index watch'],
       ['bing-webmaster-overview', 'Bing Webmaster overview'],
+      ['link-evidence', 'Referring link evidence'],
       ['technical-watch', 'Technical watch'],
     ],
   },

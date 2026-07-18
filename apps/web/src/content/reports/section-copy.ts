@@ -53,6 +53,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Open both the suggested source page and target page before adding a link. Keep the link only when it helps the reader in that exact context, then recrawl to confirm the relationship was recorded.',
   'link-recovery':
     "Inspect the broken URL's search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.",
+  'link-evidence':
+    'Open a selected referring page and confirm the link is still present before making a decision. Use a fresh export or Bing report later when you need to check whether the observed set changed.',
   'crawl-history':
     'Choose snapshots with the date and crawl scope needed for the decision. Open one report for a focused investigation or compare two compatible runs when you need evidence of change.',
   'crawler-rules':

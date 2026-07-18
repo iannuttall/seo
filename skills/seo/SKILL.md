@@ -71,6 +71,7 @@ its evidence, then decide; do not run a whole chain blindly.
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
 | Review Bing search and crawl evidence | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
+| See who links to the site | `link-evidence`, then verify selected referring URLs directly |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
 | Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
 
@@ -120,6 +121,8 @@ The CLI also has direct commands for raw provider access and administration:
 `seo gsc-query`, `seo url-inspect`, `seo analytics google properties`,
 `seo analytics google report`, `seo updates`, `seo crawl`, `seo export`, and
 `seo projects`. Bing setup and saved-project reports use `seo providers bing`.
+Use `seo links --project <id> --json` for bounded Bing link evidence, or
+`seo links --file <path> --json` for CSV, JSON, or JSONL imports.
 Agents and CI can set `SEO_BING_API_KEY` without saving it. Use `seo help all`
 to list everything. Prefer a registered
 report when one covers the question, because reports carry provenance and

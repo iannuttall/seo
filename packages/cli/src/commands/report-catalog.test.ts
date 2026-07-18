@@ -45,7 +45,7 @@ test('reports list exposes the shared sorted catalog', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   const output = JSON.parse(result.stdout)
-  assert.equal(output.reports.length, 54)
+  assert.equal(output.reports.length, 55)
   assert.deepEqual(output.categories, [
     'ai-search',
     'crawl',
@@ -79,7 +79,7 @@ test('reports list stays browsable for humans', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-  assert.match(result.stdout, /^54 reports across 9 categories\./)
+  assert.match(result.stdout, /^55 reports across 9 categories\./)
   assert.match(result.stdout, /^AI search \(7\)$/m)
   assert.match(result.stdout, /affected-urls\s+URLs affected by a crawl issue/)
   assert.match(result.stdout, /seo reports describe <id>/)

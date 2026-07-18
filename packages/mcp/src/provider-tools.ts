@@ -1,5 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { bingWebmasterOverview } from '@seo/core'
+import {
+  bingWebmasterOverview,
+  collectBingLinkEvidence,
+  importLinkEvidence,
+  linkEvidenceReport,
+  SeoError,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -65,6 +71,55 @@ export function registerProviderTools(server: McpServer): void {
         return toolSuccess(
           `Bing evidence is ${result.dataStatus}. Observed clicks: ${clicks}.`,
           compactBingWebmasterOverview(result),
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+  server.registerTool(
+    'seo_link_evidence',
+    {
+      description:
+        'Review bounded referring-link evidence from Bing Webmaster or a local export',
+      inputSchema: {
+        site: z.string().url().max(2_000).optional(),
+        file: z.string().min(1).max(4_096).optional(),
+        format: z.enum(['csv', 'json', 'jsonl']).optional(),
+        rowLimit: z.number().int().min(1).max(100_000).optional(),
+        targetLimit: z.number().int().min(1).max(50).optional(),
+        detailPagesPerTarget: z.number().int().min(1).max(3).optional(),
+        limit: z.number().int().min(1).max(500).optional(),
+      },
+    },
+    async ({
+      site,
+      file,
+      format,
+      rowLimit,
+      targetLimit,
+      detailPagesPerTarget,
+      limit,
+    }) => {
+      try {
+        if (Boolean(site) === Boolean(file)) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Pass exactly one of site for Bing or file for a local import.',
+          )
+        }
+        const evidence = file
+          ? await importLinkEvidence({ file, format, rowLimit })
+          : await collectBingLinkEvidence({
+              site: site ?? '',
+              rowLimit,
+              targetLimit,
+              detailPagesPerTarget,
+            })
+        const report = linkEvidenceReport({ evidence, limit })
+        return toolSuccess(
+          `${report.summary.observedLinks} referring links were retained from ${report.provenance.provider}.`,
+          report,
         )
       } catch (error) {
         return toolError(error)

@@ -125,7 +125,10 @@ The CLI also has direct commands for raw provider access and administration:
 Use `seo links --project <id> --json` for bounded Bing link evidence, or
 `seo links --file <path> --json` for CSV, JSON, or JSONL imports.
 Agents and CI can set `SEO_BING_API_KEY` without saving it. Use `seo help all`
-to list everything. Prefer a registered
+to list everything. IndexNow is an external write action, not a report. Use
+`seo indexnow submit --dry-run --json` to validate the exact changed URLs, and
+only remove `--dry-run` when the user has asked to notify search engines. A
+successful response proves receipt, not crawling or indexing. Prefer a registered
 report when one covers the question, because reports carry provenance and
 caveats that raw queries do not.
 

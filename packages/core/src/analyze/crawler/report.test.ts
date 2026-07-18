@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import {
   assertCrawlConfigLimits,
   type CrawlIssue,
@@ -441,32 +442,52 @@ test('createCrawlReport orders request and document evidence deterministically',
   assert.deepEqual(first.warnings, second.warnings)
 })
 
+test('createCrawlReport reuses already safe scored page evidence', () => {
+  const page: CrawlPageSnapshot = {
+    url: 'https://example.com/',
+    finalUrl: 'https://example.com/',
+    status: 200,
+    indexable: true,
+    wordCount: 100,
+    contentHash: 'safe',
+    outgoingInternalCount: 0,
+    internalInlinkCount: 0,
+    internalLinkAuthorityScore: 0,
+  }
+
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [page],
+    issues: [],
+  })
+
+  assert.equal(report.pages[0], page)
+})
+
 test('createCrawlReport redacts tenant-unsafe payload strings', () => {
+  const inputPage: CrawlPageSnapshot = {
+    url: 'https://example.com/private?token=abc123&ok=1',
+    finalUrl: 'https://example.com/private?token=abc123&ok=1',
+    status: 200,
+    responseHeaders: {
+      authorization: 'Bearer raw-auth-token',
+      'x-public': 'visible',
+    },
+    error: 'Failed reading /Users/ian/.seo/token.json with password=hunter2',
+    indexable: true,
+    wordCount: 100,
+    contentHash: 'tenant-hash',
+    outgoingInternalCount: 0,
+    outgoingExternalCount: 1,
+    sampleExternalLinks: ['https://other.example/?signature=raw-signature'],
+  }
   const report = createCrawlReport({
     config: {
       url: 'https://example.com/private?token=abc123&ok=1',
       urls: ['https://example.com/queued?api_key=raw-key'],
     },
     generatedAt: '2026-06-19T00:00:00.000Z',
-    pages: [
-      {
-        url: 'https://example.com/private?token=abc123&ok=1',
-        finalUrl: 'https://example.com/private?token=abc123&ok=1',
-        status: 200,
-        responseHeaders: {
-          authorization: 'Bearer raw-auth-token',
-          'x-public': 'visible',
-        },
-        error:
-          'Failed reading /Users/ian/.seo/token.json with password=hunter2',
-        indexable: true,
-        wordCount: 100,
-        contentHash: 'tenant-hash',
-        outgoingInternalCount: 0,
-        outgoingExternalCount: 1,
-        sampleExternalLinks: ['https://other.example/?signature=raw-signature'],
-      },
-    ],
+    pages: [inputPage],
     issues: [
       {
         ruleId: 'connection_error',
@@ -499,6 +520,11 @@ test('createCrawlReport redacts tenant-unsafe payload strings', () => {
   assert.equal(report.issues[0]?.evidence?.token, '[redacted]')
   assert.match(report.warnings[0] ?? '', /\[local-path\]/)
   assert.match(report.caveats[0] ?? '', /\[local-path\]/)
+  assert.match(inputPage.url, /token=abc123/)
+  assert.equal(
+    inputPage.responseHeaders?.authorization,
+    'Bearer raw-auth-token',
+  )
 })
 
 test('groupCrawlIssues ranks severity before count', () => {

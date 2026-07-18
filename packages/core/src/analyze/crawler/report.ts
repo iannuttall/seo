@@ -537,16 +537,32 @@ function sanitizeTenantString(value: string): string {
 }
 
 function sanitizeTenantValue(value: unknown, key?: string): unknown {
-  if (key && isSensitiveFieldName(key)) return '[redacted]'
+  if (key && isSensitiveFieldName(key)) {
+    return value === '[redacted]' ? value : '[redacted]'
+  }
   if (typeof value === 'string') return sanitizeTenantString(value)
-  if (Array.isArray(value))
-    return value.map((item) => sanitizeTenantValue(item))
+  if (Array.isArray(value)) {
+    let sanitized: unknown[] | undefined
+    for (let index = 0; index < value.length; index += 1) {
+      const item = sanitizeTenantValue(value[index])
+      if (sanitized) {
+        sanitized.push(item)
+      } else if (item !== value[index]) {
+        sanitized = [...value.slice(0, index), item]
+      }
+    }
+    return sanitized ?? value
+  }
   if (!value || typeof value !== 'object') return value
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(
-      ([entryKey, entry]) => [entryKey, sanitizeTenantValue(entry, entryKey)],
-    ),
-  )
+  const record = value as Record<string, unknown>
+  let sanitized: Record<string, unknown> | undefined
+  for (const [entryKey, entry] of Object.entries(record)) {
+    const safeEntry = sanitizeTenantValue(entry, entryKey)
+    if (safeEntry === entry) continue
+    sanitized ??= { ...record }
+    sanitized[entryKey] = safeEntry
+  }
+  return sanitized ?? value
 }
 
 function sanitizeCrawlConfig(config: CrawlConfig): CrawlConfig {
@@ -554,11 +570,22 @@ function sanitizeCrawlConfig(config: CrawlConfig): CrawlConfig {
 }
 
 function sanitizePages(pages: CrawlPageSnapshot[]): CrawlPageSnapshot[] {
-  return (
-    sanitizeTenantValue(pages) as Array<
-      CrawlPageSnapshot & { seoScore?: unknown; geoScore?: unknown }
-    >
-  ).map(({ seoScore: _seoScore, geoScore: _geoScore, ...page }) => page)
+  const safePages = sanitizeTenantValue(pages) as Array<
+    CrawlPageSnapshot & { seoScore?: unknown; geoScore?: unknown }
+  >
+  let normalized: CrawlPageSnapshot[] | undefined
+  for (let index = 0; index < safePages.length; index += 1) {
+    const page = safePages[index]
+    if (!page) continue
+    if ('seoScore' in page || 'geoScore' in page) {
+      normalized ??= safePages.slice(0, index)
+      const { seoScore: _seoScore, geoScore: _geoScore, ...current } = page
+      normalized.push(current)
+    } else if (normalized) {
+      normalized.push(page)
+    }
+  }
+  return normalized ?? safePages
 }
 
 function sanitizeIssues(issues: CrawlIssue[]): CrawlIssue[] {
@@ -613,6 +640,10 @@ export function summarizeCrawlReport(input: {
   const byCategory: Record<string, number> = {}
   let responseMs = 0
   let responseCount = 0
+  let statusOnlyPages = 0
+  let indexablePages = 0
+  let nonIndexablePages = 0
+  let statusErrors = 0
 
   for (const page of input.pages) {
     byStatus[String(page.status)] = (byStatus[String(page.status)] ?? 0) + 1
@@ -620,18 +651,22 @@ export function summarizeCrawlReport(input: {
       responseMs += page.responseTimeMs
       responseCount += 1
     }
+    if (page.auditScope === 'status') {
+      statusOnlyPages += 1
+    } else if (page.indexable) {
+      indexablePages += 1
+    } else {
+      nonIndexablePages += 1
+    }
+    if (page.status === 0 || page.status >= 400) statusErrors += 1
   }
   const requests = input.requests ?? []
-  const failedRequests = requests.filter(
-    (request) =>
-      request.outcome === 'failure' && request.failureKind !== 'aborted',
-  )
-  const abortedRequests = requests.filter(
-    (request) =>
-      request.outcome === 'failure' && request.failureKind === 'aborted',
-  )
   let requestMs = 0
   let requestMsCount = 0
+  let responseRequests = 0
+  let failedRequests = 0
+  let abortedRequests = 0
+  let extractionFailures = 0
   for (const request of requests) {
     const status =
       request.outcome === 'response'
@@ -646,46 +681,45 @@ export function summarizeCrawlReport(input: {
       requestMs += request.durationMs
       requestMsCount += 1
     }
+    if (request.outcome === 'response') {
+      responseRequests += 1
+      if (request.extraction === 'failed') extractionFailures += 1
+    } else if (request.outcome === 'failure') {
+      if (request.failureKind === 'aborted') abortedRequests += 1
+      else failedRequests += 1
+    }
   }
+  let highIssues = 0
+  let mediumIssues = 0
+  let lowIssues = 0
   for (const issue of input.issues) {
     byCategory[issue.category] = (byCategory[issue.category] ?? 0) + 1
+    if (issue.severity === 'high') highIssues += 1
+    else if (issue.severity === 'medium') mediumIssues += 1
+    else lowIssues += 1
   }
 
   const runStats = crawlRunStats(input.pages, input.stats)
-  const indexabilityPages = input.pages.filter(
-    (page) => page.auditScope !== 'status',
-  )
   return {
     totalPages: input.pages.length,
-    statusOnlyPages: input.pages.filter((page) => page.auditScope === 'status')
-      .length,
-    indexablePages: indexabilityPages.filter((page) => page.indexable).length,
-    nonIndexablePages: indexabilityPages.filter((page) => !page.indexable)
-      .length,
-    statusErrors: input.pages.filter(
-      (page) => page.status === 0 || page.status >= 400,
-    ).length,
+    statusOnlyPages,
+    indexablePages,
+    nonIndexablePages,
+    statusErrors,
     ...runStats,
     attemptedRequests:
       input.requestEvidenceStatus === 'unavailable' ? 0 : requests.length,
-    responseRequests: requests.filter(
-      (request) => request.outcome === 'response',
-    ).length,
-    failedRequests: failedRequests.length,
-    abortedRequests: abortedRequests.length,
-    extractionFailures: requests.filter(
-      (request) =>
-        request.outcome === 'response' && request.extraction === 'failed',
-    ).length,
+    responseRequests,
+    failedRequests,
+    abortedRequests,
+    extractionFailures,
     requestByStatus,
     avgRequestMs: requestMsCount
       ? Math.round(requestMs / requestMsCount)
       : undefined,
-    highIssues: input.issues.filter((issue) => issue.severity === 'high')
-      .length,
-    mediumIssues: input.issues.filter((issue) => issue.severity === 'medium')
-      .length,
-    lowIssues: input.issues.filter((issue) => issue.severity === 'low').length,
+    highIssues,
+    mediumIssues,
+    lowIssues,
     avgResponseMs: responseCount
       ? Math.round(responseMs / responseCount)
       : undefined,
@@ -699,23 +733,28 @@ const ACCESS_BLOCK_SAMPLE_LIMIT = 10
 function crawlAccessSummary(
   requests: CrawlRequestObservation[],
 ): CrawlAccessSummary {
-  const blocked = requests.flatMap((request) =>
-    request.outcome === 'response' && request.accessBlock
-      ? [{ url: request.requestedUrl, evidence: request.accessBlock }]
-      : [],
-  )
   const providers: CrawlAccessSummary['providers'] = {}
-  for (const item of blocked) {
-    providers[item.evidence.provider] =
-      (providers[item.evidence.provider] ?? 0) + 1
+  const samples: CrawlAccessSummary['samples'] = []
+  let blockedRequests = 0
+  for (const request of requests) {
+    if (request.outcome !== 'response' || !request.accessBlock) continue
+    blockedRequests += 1
+    providers[request.accessBlock.provider] =
+      (providers[request.accessBlock.provider] ?? 0) + 1
+    if (samples.length < ACCESS_BLOCK_SAMPLE_LIMIT) {
+      samples.push({
+        url: request.requestedUrl,
+        evidence: request.accessBlock,
+      })
+    }
   }
   return {
     crawler: SEO_CRAWLER_IDENTITY,
-    blockedRequests: blocked.length,
+    blockedRequests,
     providers,
-    samples: blocked.slice(0, ACCESS_BLOCK_SAMPLE_LIMIT),
+    samples,
     sampleLimit: ACCESS_BLOCK_SAMPLE_LIMIT,
-    truncated: blocked.length > ACCESS_BLOCK_SAMPLE_LIMIT,
+    truncated: blockedRequests > ACCESS_BLOCK_SAMPLE_LIMIT,
   }
 }
 
@@ -726,13 +765,26 @@ function crawlRunStats(
   skipReasons: CrawlSkipReasonCount[]
   skippedUrlsByImpact: CrawlSkippedUrlsByImpact
 } {
-  const discovered = new Set<string>()
+  const needsDiscoveredUrls = stats.discoveredUrls === undefined
+  const needsObservedInternalLinks = stats.observedInternalLinks === undefined
+  const needsFailedUrls = stats.failedUrls === undefined
+  const discovered = needsDiscoveredUrls ? new Set<string>() : undefined
   let observedInternalLinks = 0
-  for (const page of pages) {
-    discovered.add(page.url)
-    for (const url of page.sampleInternalLinks ?? []) discovered.add(url)
-    for (const url of page.sampleExternalLinks ?? []) discovered.add(url)
-    observedInternalLinks += page.outgoingInternalCount
+  let failedUrls = 0
+  if (needsDiscoveredUrls || needsObservedInternalLinks || needsFailedUrls) {
+    for (const page of pages) {
+      if (discovered) {
+        discovered.add(page.url)
+        for (const url of page.sampleInternalLinks ?? []) discovered.add(url)
+        for (const url of page.sampleExternalLinks ?? []) discovered.add(url)
+      }
+      if (needsObservedInternalLinks) {
+        observedInternalLinks += page.outgoingInternalCount
+      }
+      if (needsFailedUrls && (page.status === 0 || page.status >= 400)) {
+        failedUrls += 1
+      }
+    }
   }
   const skips = normalizeCrawlSkipReasonCounts({
     skippedUrls: stats.skippedUrls,
@@ -741,15 +793,13 @@ function crawlRunStats(
       crawlSkipReasonCountsFromRecord(stats.skipReasonCounts),
   })
   return {
-    discoveredUrls: stats.discoveredUrls ?? discovered.size,
+    discoveredUrls: stats.discoveredUrls ?? discovered?.size ?? 0,
     queuedUrls: stats.queuedUrls ?? pages.length,
     crawledUrls: stats.crawledUrls ?? pages.length,
     skippedUrls: skips.skippedUrls,
     skipReasons: skips.skipReasons,
     skippedUrlsByImpact: skips.skippedUrlsByImpact,
-    failedUrls:
-      stats.failedUrls ??
-      pages.filter((page) => page.status === 0 || page.status >= 400).length,
+    failedUrls: stats.failedUrls ?? failedUrls,
     observedInternalLinks: stats.observedInternalLinks ?? observedInternalLinks,
     pageLimitReached: stats.pageLimitReached ?? false,
   }
@@ -776,11 +826,25 @@ function deriveInternalLinkAuthority(
       page.internalLinkAuthorityScore !== undefined,
   )
   if (!hasLinkGraph && hasStoredScores) {
-    return pages.map((page) => ({
-      ...page,
-      internalInlinkCount: page.internalInlinkCount ?? 0,
-      internalLinkAuthorityScore: page.internalLinkAuthorityScore ?? 0,
-    }))
+    if (
+      pages.every(
+        (page) =>
+          page.internalInlinkCount !== undefined &&
+          page.internalLinkAuthorityScore !== undefined,
+      )
+    ) {
+      return pages
+    }
+    return pages.map((page) =>
+      page.internalInlinkCount !== undefined &&
+      page.internalLinkAuthorityScore !== undefined
+        ? page
+        : {
+            ...page,
+            internalInlinkCount: page.internalInlinkCount ?? 0,
+            internalLinkAuthorityScore: page.internalLinkAuthorityScore ?? 0,
+          },
+    )
   }
 
   const pageByUrl = new Map<string, string>()
@@ -810,7 +874,8 @@ function deriveInternalLinkAuthority(
     }
   }
 
-  const maxInlinks = Math.max(0, ...inlinks.values())
+  let maxInlinks = 0
+  for (const count of inlinks.values()) maxInlinks = Math.max(maxInlinks, count)
   return pages.map((page) => {
     const internalInlinkCount = inlinks.get(page.url) ?? 0
     return {

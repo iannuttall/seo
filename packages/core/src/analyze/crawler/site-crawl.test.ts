@@ -929,6 +929,7 @@ test('crawlSite returns completed pages and skips joins after cancellation', asy
       fetchPage: async (url, options = {}) => {
         calls.fetchPages.push(url)
         assert.equal(options.signal, controller.signal)
+        assert.equal(options.writeCache, false)
         if (url.endsWith('/next')) {
           controller.abort()
           return new Promise(() => undefined)

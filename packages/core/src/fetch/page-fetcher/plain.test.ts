@@ -191,3 +191,41 @@ test('page fetch does not retain or cache an access challenge body', async () =>
     })
   }
 })
+
+test('page fetch can skip retaining a response body in the HTTP cache', async () => {
+  const server = createServer((_req, res) => {
+    res.setHeader('content-type', 'text/html')
+    res.end('<title>Uncached crawl page</title>')
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  assert.ok(address && typeof address === 'object')
+  const url = `http://127.0.0.1:${address.port}/uncached-crawl-page`
+  const rate = normalizeRateControls({
+    concurrency: 1,
+    intervalCap: 100,
+    intervalMs: 1,
+  })
+
+  try {
+    const result = await fetchPlain(
+      url,
+      true,
+      2_000,
+      rate,
+      undefined,
+      false,
+      false,
+    )
+    const cached = getDb()
+      .prepare('SELECT 1 FROM http_cache WHERE url_hash = ?')
+      .get(hashKey(['page', url]))
+
+    assert.equal(result.status, 200)
+    assert.equal(cached, undefined)
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()))
+    })
+  }
+})

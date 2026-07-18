@@ -116,6 +116,7 @@ export async function fetchPage(
       rate,
       opts.signal,
       opts.respectRobots,
+      opts.writeCache,
     )
     const shouldRetryJs =
       !first.diagnostics.accessBlock &&

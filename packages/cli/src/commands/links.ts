@@ -1,5 +1,6 @@
 import {
   bingWebmasterSiteUrl,
+  type CollectedLinkEvidence,
   collectBingLinkEvidence,
   importLinkEvidence,
   linkEvidenceReport,
@@ -62,7 +63,7 @@ export const linksCommand = defineCommand({
       )
     }
     const rowLimit = strictNumberArg(args['row-limit'], '--row-limit')
-    let evidence
+    let evidence: CollectedLinkEvidence
     if (file) {
       evidence = await importLinkEvidence({
         file,

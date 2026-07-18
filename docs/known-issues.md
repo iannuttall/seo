@@ -937,3 +937,79 @@ The site regression test checks the built stats page for `AI search readiness`,
 `CTR underperformers`, and `Affected URLs`. A browser check with mocked live
 stats confirmed the canonical names at 1440-pixel and 390-pixel widths with no
 horizontal page overflow.
+
+## SEO-028: a 1,000-page full crawl still exceeds 1 GB RSS
+
+- Status: Open
+- Observed: 2026-07-18
+- Affected version: 0.2.9
+
+### What failed
+
+A sitemap crawl of 1,000 Example Site pages completed successfully but reached
+1,221,083,136 bytes of peak RSS. The run used four workers, disabled JavaScript
+rendering and external-link checks, joined no provider data, and received 1,000
+successful responses with no extraction failures.
+
+### Impact
+
+The earlier resource fixes make bounded crawls much safer, but they do not yet
+make a large full crawl suitable for an ordinary local machine. A 10,000-page
+body crawl cannot be treated as safe while the 1,000-page run already exceeds
+1 GB.
+
+### Current evidence
+
+The final JSON report was about 14 MB, retained page records totalled about
+8.5 MB, and link samples stayed capped at 25 URLs per page. The isolated HTTP
+cache used about 177 MB. Those retained artifacts do not explain the full peak,
+so the remaining memory needs allocation profiling across fetch, extraction,
+cache writes, issue analysis, and final report assembly. The 100-page resource
+gate remains useful as a regression floor, but it is not evidence for
+1,000-page or 10,000-page safety.
+
+### Required fix and verification
+
+Profile the full crawl under a realistic 1,000-page fixture, remove or stream
+the allocations that remain live beyond the active worker window, and add
+scaling gates at 100, 1,000, and 10,000 pages. A fix is verified only when peak
+memory stays tied to active work and retained evidence, rather than increasing
+with all downloaded page bodies.
+
+## SEO-029: a 10,000-URL health pass uses excessive memory
+
+- Status: Open
+- Observed: 2026-07-18
+- Affected version: 0.2.9
+
+### What failed
+
+A status-only sitemap health pass completed 10,000 Example Site URLs with
+10,000 successful responses, no blocks, no failures, and no cache writes. Peak
+RSS still reached 668,696,576 bytes. The final JSON file was about 42 MB,
+including about 30 MB of page evidence and 4.5 MB of request evidence.
+
+### Impact
+
+The health strategy is substantially safer than a full crawl and completed
+below 1 GB, but its peak memory is still high for the lightweight first step
+recommended to every large-site user. Sites with larger requested inventories
+or users running other local tools at the same time have too little safety
+margin.
+
+### Current evidence
+
+The health path downloaded no page bodies, performed no extraction, created no
+HTTP cache data, and held steady during request processing. The higher final
+peak is therefore likely in retained status evidence, aggregation, or JSON
+serialization, but allocation profiling is required before assigning a cause.
+The crawl was correctly marked partial because the 10,000-URL boundary stopped
+complete sitemap discovery.
+
+### Required fix and verification
+
+Profile the health report while it grows and while JSON is rendered. Remove
+duplicate in-memory representations or stream the CLI file output without
+weakening the library and MCP evidence contract. Add a 10,000-URL status-only
+resource gate that measures acquisition, steady-state memory, render memory,
+output size, and zero cache growth separately.

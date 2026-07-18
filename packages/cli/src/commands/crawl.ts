@@ -27,6 +27,7 @@ import {
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printKeyValue } from '../utils.js'
+import { writeJsonOutput } from '../json-output.js'
 import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'
@@ -281,7 +282,7 @@ export const crawlCommand = defineCommand({
     }
 
     if (format === 'json') {
-      await writeOrPrint(output, `${JSON.stringify(payload, null, 2)}\n`)
+      await writeJsonOutput(output, payload)
       if (failedRun || failedThreshold) process.exitCode = 1
       return
     }

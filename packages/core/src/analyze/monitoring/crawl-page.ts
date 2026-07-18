@@ -272,17 +272,9 @@ function statusOnlyPage(fetched: PageFetchResult): CrawlPageSnapshot {
     finalUrl: fetched.finalUrl,
     status: fetched.status,
     contentType,
-    responseHeaders: safeResponseHeaders(fetched.headers),
     responseTimeMs: fetched.diagnostics.durationMs,
-    usedJs: false,
-    fetchSource: 'network',
-    cacheState: 'bypass',
-    fetchDiagnostics: fetched.diagnostics,
     auditScope: 'status',
-    accessBlock: fetched.diagnostics.accessBlock,
-    blocked: fetched.diagnostics.blocked,
     contentAuditAllowed: false,
-    robotsTxt: fetched.robotsTxt,
     indexable: false,
     indexability: 'Not evaluated by status-only health probe',
     declaredIndexability: 'unknown',
@@ -291,7 +283,6 @@ function statusOnlyPage(fetched: PageFetchResult): CrawlPageSnapshot {
     contentHash: '',
     outgoingInternalCount: 0,
     outgoingExternalCount: 0,
-    isHttps: new URL(fetched.finalUrl).protocol === 'https:',
   }
 }
 

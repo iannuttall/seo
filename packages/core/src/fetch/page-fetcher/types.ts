@@ -25,6 +25,8 @@ export interface FetchPageOptions {
    */
   js?: JavaScriptRenderingInput
   refresh?: boolean
+  /** Read existing cached responses but do not retain this response body. */
+  writeCache?: boolean
   timeoutMs?: number
   rate?: FetchRateControls
   signal?: AbortSignal

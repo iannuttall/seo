@@ -146,7 +146,7 @@ export async function crawlSite(
   const checkMemoryPressure = (): void => {
     if (memoryLimited) return
     memoryLimited = crawlMemoryPressure({
-      rssBytes: deps.memoryUsage().rss,
+      memoryUsage: deps.memoryUsage(),
       totalMemoryBytes: deps.totalMemory(),
     })
   }
@@ -331,6 +331,7 @@ export async function crawlSite(
           timeoutMs: config.timeoutMs,
           rate: config.fetchRate,
           signal,
+          writeCache: false,
           respectRobots: config.respectRobots,
           robotsResolver,
           renderer,

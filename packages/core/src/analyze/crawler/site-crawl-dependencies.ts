@@ -31,7 +31,7 @@ export type ResolvedCrawlSiteDependencies = {
   landingValueForUrl: typeof landingValueForUrl
   collectAgentDiscovery: typeof collectAgentDiscovery
   now: () => Date
-  memoryUsage: () => Pick<NodeJS.MemoryUsage, 'rss'>
+  memoryUsage: () => Pick<NodeJS.MemoryUsage, 'rss' | 'heapUsed' | 'external'>
   totalMemory: () => number
 }
 

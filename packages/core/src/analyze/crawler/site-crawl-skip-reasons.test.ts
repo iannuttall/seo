@@ -183,9 +183,14 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
         throw new Error('agent discovery should not run')
       },
       totalMemory: () => 16 * 1024 * 1024 * 1024,
-      memoryUsage: () => ({
-        rss: memoryChecks++ === 0 ? 128 * 1024 * 1024 : 800 * 1024 * 1024,
-      }),
+      memoryUsage: () => {
+        const pressured = memoryChecks++ > 0
+        return {
+          rss: (pressured ? 900 : 128) * 1024 * 1024,
+          heapUsed: (pressured ? 700 : 100) * 1024 * 1024,
+          external: 1 * 1024 * 1024,
+        }
+      },
     },
   )
 

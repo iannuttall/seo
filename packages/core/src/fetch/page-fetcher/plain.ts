@@ -68,6 +68,7 @@ export async function fetchPlain(
   rate: NormalizedFetchRateControls,
   signal?: AbortSignal,
   respectRobots = false,
+  writeCache = true,
 ): Promise<PageFetchResult> {
   const startedAt = Date.now()
   const db = getDb()
@@ -236,7 +237,7 @@ export async function fetchPlain(
     robotsTxt: pageRobotsEvidence(robots),
   }
 
-  if (!accessBlock) {
+  if (!accessBlock && writeCache) {
     db.prepare(
       `INSERT OR REPLACE INTO http_cache
       (url_hash, url, status, headers_json, body_blob, metadata_json, etag, fetched_at, expires_at)

@@ -22,12 +22,12 @@
   {
     "id": "properties",
     "file": "12-analytics-properties.wav",
-    "text": "Property discovery uses the Analytics permission to read the accounts and properties available to this user. Example Site is property ID three seven five, eight eight five, two two six."
+    "text": "Property discovery uses the Analytics permission to read the accounts and properties available to this user. Example Site is property ID one two three, four five six, seven eight nine."
   },
   {
     "id": "streams",
     "file": "13-web-stream-matching.wav",
-    "text": "Setup uses the Analytics permission to read Google Analytics hostnames. It matches example site dot com to the Example Site property and saves its property ID locally."
+    "text": "Setup uses the Analytics permission to read Google Analytics hostnames. It matches example dot com to the Example Site property and saves its property ID locally."
   },
   {
     "id": "main-report",

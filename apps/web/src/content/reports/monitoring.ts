@@ -327,6 +327,50 @@ export const monitoringReports = [
     sources: ['search-analytics', 'redirects', 'canonical'],
   },
   {
+    id: 'server-log-analysis',
+    name: 'Server log crawler analysis',
+    category: 'monitoring',
+    summary:
+      'Stream a local access log into bounded search and AI crawler activity, response status, and path evidence.',
+    question:
+      'Which known crawler user agents reached the server, and where did they receive redirects or errors?',
+    useWhen: [
+      'You have a combined or JSONL access log and need evidence of real server requests.',
+      'Crawler-facing 4xx or 5xx responses need a focused investigation.',
+    ],
+    avoidWhen: [
+      'You need verified crawler identity from reverse DNS or source IP validation.',
+      'You need durable raw-event storage and arbitrary log search.',
+    ],
+    evidence: [
+      'Method, path, timestamp, response status, response bytes, and user agent parsed from an explicit local file.',
+    ],
+    methodology: [
+      'Streams combined logs or newline-delimited JSON without retaining raw requests, strips query strings from path aggregates, and classifies a narrow list of known crawler user-agent tokens.',
+      'Bounds parsed rows, input bytes, unique crawler-path aggregates, line length, and returned rows. Overall status and crawler totals continue when only path tracking reaches its limit.',
+    ],
+    exampleParams: {
+      file: './access.log',
+      format: 'combined',
+      rowLimit: 1000000,
+      pathLimit: 25000,
+      limit: 100,
+    },
+    interpretation: [
+      'Start with file coverage and warnings. Investigate repeated crawler 4xx or 5xx paths against the original log and current server behavior.',
+    ],
+    caveats: [
+      'User-agent strings can be absent or spoofed, and the supplied file may omit servers, requests, or time periods.',
+      'Path rankings cover retained aggregates only when the path limit is reached.',
+    ],
+    nextSteps: [
+      'Trace an important redirecting or failing path against the live site.',
+      'Check deployment, firewall, CDN, and server configuration for repeated crawler errors.',
+    ],
+    related: ['site-crawl', 'redirect-trace', 'crawler-rules'],
+    sources: ['server-logs'],
+  },
+  {
     id: 'redirect-trace',
     name: 'Redirect trace',
     category: 'monitoring',

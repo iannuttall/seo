@@ -123,6 +123,27 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
   }
 })
 
+test('server log analysis bounds streamed work and returned rows', () => {
+  const schema = reportSchema('server-log-analysis')
+  assert.equal(
+    schema.safeParse({
+      file: './access.log',
+      format: 'combined',
+      rowLimit: 10_000_000,
+      pathLimit: 100_000,
+      limit: 500,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { file: './access.log', rowLimit: 10_000_001 },
+    { file: './access.log', pathLimit: 100_001 },
+    { file: './access.log', limit: 501 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('technical-watch accepts active components and rejects a true no-op', async () => {
   const schema = reportSchema('technical-watch')
   for (const input of [

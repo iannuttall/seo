@@ -43,6 +43,7 @@ export const reportCollections = [
       ['index-watch', 'Index watch'],
       ['bing-webmaster-overview', 'Bing Webmaster overview'],
       ['link-evidence', 'Referring link evidence'],
+      ['server-log-analysis', 'Server log crawler analysis'],
       ['technical-watch', 'Technical watch'],
     ],
   },

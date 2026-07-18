@@ -61,6 +61,11 @@ export const reportSources = {
     label: 'Search Console Search Analytics API guidance',
     url: 'https://developers.google.com/webmaster-tools/v1/how-tos/search_analytics',
   },
+  'server-logs': {
+    key: 'server-logs',
+    label: 'NGINX access log format reference',
+    url: 'https://nginx.org/en/docs/http/ngx_http_log_module.html',
+  },
   sitemaps: {
     key: 'sitemaps',
     label: 'Google sitemap guidance',

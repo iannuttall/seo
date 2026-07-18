@@ -1,0 +1,29 @@
+{
+  "subject": "server-log-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Agent task: analyze ./access.log and tell me which search crawlers are hitting errors.",
+      "expected_output": "Should route to report id server-log-analysis and describe it before the first run. Should run seo server-logs analyze --file ./access.log --json or the structured report with bounded row, path, and output limits. Should read dataStatus, provenance coverage, warnings, caveats, statusCodes, crawlers, and selection before listing crawler paths. Should treat user-agent classification as observed but unverified and should verify important errors against the original log and server configuration.",
+      "assertions": [
+        "Uses report id server-log-analysis",
+        "Reads file coverage and limits before crawler path rows",
+        "Does not treat a user-agent match as verified crawler identity",
+        "Recommends checking important errors against the source evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: load this huge JSONL access log and keep every raw request so we can search it later.",
+      "expected_output": "Should explain that server-log-analysis is a one-shot streaming aggregate and does not retain raw requests or build a local log database. Should use explicit row, path, and output bounds, then report any capped, malformed, or untracked evidence. Should recommend a dedicated log platform if durable raw-event search is required.",
+      "assertions": [
+        "Uses streaming bounded aggregation",
+        "Does not claim raw log retention",
+        "Keeps capped and malformed evidence visible",
+        "Does not load the whole file into memory"
+      ],
+      "files": []
+    }
+  ]
+}

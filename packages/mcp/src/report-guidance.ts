@@ -149,6 +149,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded, deduplicated link list with target-page counts and explicit source coverage.',
   },
+  'server-log-analysis': {
+    name: 'Server log crawler analysis',
+    description:
+      'Stream a local access log to see observed search and AI crawler requests, statuses, and paths.',
+    useWhen: [
+      'You need evidence of crawler requests that reached the web server.',
+      'You want to find crawler-facing 4xx or 5xx responses in a local access log.',
+    ],
+    avoidWhen: [
+      'You do not have a combined or JSONL access log.',
+      'You need to prove crawler identity from a user-agent string alone.',
+    ],
+    outcome:
+      'Bounded crawler, status, and path aggregates with file coverage and parser limits kept visible.',
+  },
   cannibalisation: {
     name: 'Query and URL overlap',
     description:

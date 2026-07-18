@@ -72,6 +72,7 @@ its evidence, then decide; do not run a whole chain blindly.
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
 | Review Bing search and crawl evidence | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
 | See who links to the site | `link-evidence`, then verify selected referring URLs directly |
+| Review real crawler requests in a server log | `server-log-analysis`, then verify important errors against the original log and server configuration |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
 | Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
 

@@ -173,6 +173,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Review bounded referring URLs, target pages and anchor text from Bing Webmaster or a local CSV, JSON or JSONL export, with source limits kept visible.',
     lead: 'See which retained pages link to the site without downloading a giant backlink index. The report keeps source coverage and limits visible, so a missing row never becomes proof that no link exists.',
   },
+  'server-log-analysis': {
+    title: 'Server log crawler analysis',
+    description:
+      'Stream a local combined or JSONL access log to review observed search and AI crawler requests, response errors and paths without retaining raw events.',
+    lead: 'See which known crawler user agents reached the server and where they met redirects or errors. The report aggregates the file as it reads, keeps memory and output bounded, and shows when limits or malformed rows reduced coverage.',
+  },
   'crawl-history': {
     title: 'SEO crawl history',
     description:

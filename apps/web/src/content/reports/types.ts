@@ -25,6 +25,7 @@ export type ReportSourceKey =
   | 'robots'
   | 'robots-meta'
   | 'search-analytics'
+  | 'server-logs'
   | 'sitemaps'
   | 'structured-data'
   | 'url-inspection'

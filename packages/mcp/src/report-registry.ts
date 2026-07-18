@@ -14,6 +14,7 @@ import {
   type RelatedReport,
 } from './report-guidance.js'
 import { registerReportTools } from './report-tools.js'
+import { registerServerLogTools } from './server-log-tools.js'
 import type { ToolResult } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
 
@@ -131,6 +132,11 @@ const reportGroups: readonly ReportGroup[] = [
     category: 'monitoring',
     register: registerProviderTools,
     names: ['seo_bing_webmaster_overview', 'seo_link_evidence'],
+  },
+  {
+    category: 'monitoring',
+    register: registerServerLogTools,
+    names: ['seo_server_log_analysis'],
   },
   {
     category: 'reporting',

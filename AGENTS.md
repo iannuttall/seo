@@ -328,6 +328,40 @@ Root help must keep this curated path:
 
 Do not let `seo help` return `Unknown command help`.
 
+## Performance And Local Resource Safety
+
+Every implementation that fetches, iterates, stores, joins, or serializes data
+whose size depends on a site or provider must define its resource bounds before
+it is considered complete.
+
+- Test realistic large fixtures as well as small correctness fixtures. A path
+  that works for ten pages or rows is not evidence that it works for ten
+  thousand.
+- Bound network acquisition before downloading work. Limits applied only after
+  every sitemap, page, provider row, or response body has been loaded do not
+  count as limits.
+- Keep peak memory tied to the active worker window, not total crawl or provider
+  size. Prefer streaming, bounded queues, incremental aggregation, and
+  disk-backed intermediate state over retaining whole datasets in memory.
+- Avoid nested full-dataset scans. Add a deterministic operation-count or
+  scaling regression test for algorithms that process large row sets; do not
+  rely only on flaky wall-clock assertions.
+- Define disk ownership and retention for every new cache, snapshot, report,
+  log, or temporary artifact. Tests must cover cleanup and the maximum expected
+  database or filesystem growth.
+- Enforce one total structured-output budget for agent-facing reports. Per-list
+  limits are insufficient when an envelope contains several bounded lists.
+- For crawl, provider, export, or report changes with material scale risk, run
+  the repository resource harness against a representative large fixture and
+  record peak RSS, elapsed time, bytes read or written, and output size in the
+  verification evidence.
+- Treat unexplained superlinear CPU growth, memory that rises with completed
+  work, acquisition beyond a stated limit, or unbounded disk growth as a
+  release blocker.
+
+Performance checks supplement the four repository gates below; they do not
+replace correctness tests.
+
 ## Verification And Commits
 
 Record every product or CLI issue discovered during development in

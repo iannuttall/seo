@@ -5,6 +5,12 @@ import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import { printNextCommand } from '../output.js'
+import {
+  printReportHtmlPath,
+  reportHtmlArgs,
+  reportHtmlOptions,
+  writeReportHtml,
+} from '../report-html.js'
 import { cliReportArgs } from '../report-options.js'
 import {
   reportFetchArgs,
@@ -41,9 +47,11 @@ export const reportNarrativeCommand = defineCommand({
       description: 'Maximum saved changes to measure. Defaults to 5.',
     },
     ...reportFetchArgs,
+    ...reportHtmlArgs,
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const html = reportHtmlOptions(args)
     const selectionInput = reportSelectionInput(args)
     const selection = await resolveClientSelection({
       client: selectionInput.client,
@@ -65,6 +73,17 @@ export const reportNarrativeCommand = defineCommand({
 
     if (json) {
       printJson(report)
+      return
+    }
+    if (html) {
+      const path = await writeReportHtml({
+        report,
+        reportName: 'narrative-report',
+        title: 'SEO narrative report',
+        options: html,
+        projectId: selection.client?.id,
+      })
+      printReportHtmlPath(path)
       return
     }
     process.stdout.write(`${report.markdown}\n`)

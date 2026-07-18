@@ -84,9 +84,9 @@ skills/         packaged agent skills
   registry.
 - `evals/`: behaviour evals keyed by report id or job, shipped in the package.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
-- `docs`: human usage documentation.
-- Working plans live in the git-ignored `plans/` directory at the repository
-  root. Never depend on them for product behavior or durable context.
+- `docs`: git-ignored local notes, audit evidence, and working material.
+- Working plans live in the git-ignored `docs/plans/` directory. Never depend
+  on local docs or plans for product behavior or durable context.
 - `dist`: generated public package bundles. Do not hand-edit or commit them.
 
 Changes anywhere under `apps/web` must also follow `apps/web/AGENTS.md`. Read
@@ -364,10 +364,11 @@ replace correctness tests.
 
 ## Verification And Commits
 
-Record every product or CLI issue discovered during development in
-`docs/known-issues.md` as soon as there is reproducible evidence. Keep the
+Record every product or CLI issue discovered during development in the local
+`docs/known-issues.md` log as soon as there is reproducible evidence. Keep the
 original observation, update its status instead of deleting it, and add the
-fix commit plus verification evidence when it is resolved.
+fix commit plus verification evidence when it is resolved. This log is local
+working material and must not be committed.
 
 Every implementation slice needs proportionate tests plus all four repository
 gates before it is considered finished:

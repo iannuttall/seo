@@ -117,7 +117,6 @@ test('public support and security routes stay on GitHub', async () => {
     'SECURITY.md',
     'TERMS.md',
     'TRADEMARKS.md',
-    'docs/release.md',
   ]
   const sources = await Promise.all(
     publicFiles.map((file) => readFile(file, 'utf8')),

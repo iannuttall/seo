@@ -5,5 +5,5 @@ node_modules
 dist
 coverage
 *.tsbuildinfo
-/plans/
+/docs/
 /apps/web/public/.well-known/agent-skills/

@@ -917,7 +917,7 @@ test('telemetry prose and stats keep a stable readable first render', () => {
 test('published guidance does not teach disposable npx CLI installs', () => {
   const guides = [
     resolve(repoRoot, 'README.md'),
-    resolve(repoRoot, 'docs/mcp.md'),
+    resolve(appRoot, 'src/content/docs/docs/mcp.mdx'),
     resolve(repoRoot, 'apps/web/AGENTS.md'),
     resolve(repoRoot, 'AGENTS.md'),
     resolve(appRoot, 'assets/og-source.svg'),

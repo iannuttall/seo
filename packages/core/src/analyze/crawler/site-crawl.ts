@@ -588,10 +588,13 @@ export async function crawlSite(
       incomingLinkCounts,
       fetchedAliases,
     )
-    const maxInlinks = Math.max(
-      0,
-      ...pages.map((page) => resolvedInlinkCounts.get(page.finalUrl) ?? 0),
-    )
+    let maxInlinks = 0
+    for (const page of pages) {
+      maxInlinks = Math.max(
+        maxInlinks,
+        resolvedInlinkCounts.get(page.finalUrl) ?? 0,
+      )
+    }
     for (const page of pages) {
       const internalInlinkCount = resolvedInlinkCounts.get(page.finalUrl) ?? 0
       page.internalInlinkCount = internalInlinkCount

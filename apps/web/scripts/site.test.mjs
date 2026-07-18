@@ -140,6 +140,19 @@ test('every non-home page suffixes the site name', () => {
   }
 })
 
+test('stats page uses the canonical report names', () => {
+  const html = readFileSync(resolve(dist, 'stats/index.html'), 'utf8')
+  const encoded = html.match(/data-report-labels="([^"]+)"/)?.[1]
+  assert.ok(encoded, 'Missing report labels on the stats page.')
+  const labels = JSON.parse(
+    encoded.replaceAll('&quot;', '"').replaceAll('&amp;', '&'),
+  )
+
+  assert.equal(labels['ai-readiness'], 'AI search readiness')
+  assert.equal(labels['ctr-underperformers'], 'CTR underperformers')
+  assert.equal(labels['affected-urls'], 'Affected URLs')
+})
+
 test('legal and error pages are noindex but remain crawlable', () => {
   for (const page of [
     'privacy',
@@ -874,7 +887,7 @@ test('telemetry prose and stats keep a stable readable first render', () => {
     /<code>firstRunAt<\/code> is used only on your machine/u,
   )
 
-  assert.match(stats, /data-stats-root aria-busy="true"/u)
+  assert.match(stats, /data-stats-root[^>]*aria-busy="true"/u)
   assert.equal(
     matches(stats, /data-stat="[^"]+" data-stats-loading>0%?</gu).length,
     6,

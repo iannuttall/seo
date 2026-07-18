@@ -41,6 +41,7 @@ export const reportCollections = [
       ['index-coverage-plan', 'Index plan'],
       ['index-monitor', 'Index monitor'],
       ['index-watch', 'Index watch'],
+      ['bing-webmaster-overview', 'Bing Webmaster overview'],
       ['technical-watch', 'Technical watch'],
     ],
   },

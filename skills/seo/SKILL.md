@@ -6,8 +6,8 @@ description: Use and read this skill immediately if the user request is in any w
 # seo
 
 `seo` is a local CLI, MCP server, and report engine. It answers SEO questions
-with evidence from three sources: its own crawl of the site, Google Search
-Console, and Google Analytics. Every report returns structured JSON with the observed
+with evidence from its own crawl, Google Search Console, Google Analytics, and
+optional Bing Webmaster data. Every report returns structured JSON with the observed
 evidence, derived findings, caveats, and provenance kept separate. Nothing is
 hosted; data stays on the machine.
 
@@ -70,6 +70,7 @@ its evidence, then decide; do not run a whole chain blindly.
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
+| Review Bing search and crawl evidence | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
 | Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
 
@@ -118,7 +119,9 @@ rule. Never recommend a broad User-Agent-only bypass.
 The CLI also has direct commands for raw provider access and administration:
 `seo gsc-query`, `seo url-inspect`, `seo analytics google properties`,
 `seo analytics google report`, `seo updates`, `seo crawl`, `seo export`, and
-`seo projects`. Use `seo help all` to list everything. Prefer a registered
+`seo projects`. Bing setup and saved-project reports use `seo providers bing`.
+Agents and CI can set `SEO_BING_API_KEY` without saving it. Use `seo help all`
+to list everything. Prefer a registered
 report when one covers the question, because reports carry provenance and
 caveats that raw queries do not.
 

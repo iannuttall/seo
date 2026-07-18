@@ -10,6 +10,7 @@ const paths = [
   '/docs/agents',
   '/docs/ai-search',
   '/docs/ai-visibility',
+  '/docs/bing',
   '/docs/cli',
   '/docs/crawler',
   '/docs/getting-started',

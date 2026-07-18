@@ -1,0 +1,100 @@
+---
+title: Bing Webmaster data
+description: Connect a verified Bing site, run bounded search and crawl reports, and keep provider limits visible.
+---
+
+Bing Webmaster adds a second search-engine view to the evidence you already
+have. Its report covers Bing search traffic and crawl statistics for a verified
+site. It does not replace a live crawl or prove that one URL is indexed.
+
+## Connect a verified site
+
+Open Bing Webmaster Tools, go to Settings, then API Access, and generate an API
+key. Run the guided connection in a terminal:
+
+```sh
+seo providers bing connect
+```
+
+The prompt masks the key, validates it by listing the sites available to the
+account, and asks you to choose a verified site when the project hostname does
+not identify one on its own. The selected Bing site is saved on the local
+project profile.
+
+The key stays on your machine. The system keychain is used when available. A
+private file with `0600` permissions is the fallback for headless machines and
+locked keychains.
+
+Check or remove the connection later:
+
+```sh
+seo providers bing status --project example
+seo providers bing sites
+seo providers bing disconnect
+```
+
+Disconnecting removes the saved credential. It keeps the harmless site mapping
+on the project so a later reconnect can reuse it.
+
+Microsoft's
+<a href="https://learn.microsoft.com/en-us/bingwebmaster/getting-access" target="_blank" rel="noreferrer">Bing Webmaster API access guide</a>
+explains where the API key is generated and how it applies to the verified
+sites owned by that account.
+
+## Run the report
+
+Use the site attached during connection:
+
+```sh
+seo providers bing report --project example
+```
+
+Or pass a verified Bing site directly:
+
+```sh
+seo providers bing report --site https://example.com/ --json
+```
+
+The same core report is available to agents through the report catalog:
+
+```sh
+seo reports describe bing-webmaster-overview --json
+seo reports run bing-webmaster-overview \
+  --params '{"site":"https://example.com/"}' \
+  --json
+```
+
+The report requests Bing's daily search traffic and crawl statistics without
+writing either response to the local cache. Responses have a hard byte limit,
+and each statistics section keeps at most 400 rows. The result exposes returned
+rows, excluded invalid rows, caps, method names, observation time, and the
+credential source.
+
+Read `dataStatus` before the totals. One failed section makes the result
+partial. Two failed sections make it unavailable. Invalid or capped rows also
+prevent a complete result.
+
+## Keep the claims narrow
+
+Bing's search traffic includes data observed by Bing. It is not Google Search
+Console data and it does not describe the whole search market.
+
+The crawl response can include an `inIndex` statistic. Treat that as a
+provider-reported site statistic for the observed date. It is not independent
+proof that a particular URL is indexed now. Run a [live crawl](/docs/crawler)
+when you need current status, redirect, robots, canonical, or page evidence.
+
+## Use an environment secret for agents and CI
+
+Agents and unattended jobs do not prompt. Pass the key through the process
+environment:
+
+```sh
+SEO_BING_API_KEY=your-key \
+  seo providers bing report --site https://example.com/ --json
+```
+
+Store the value in the platform's secret manager. Do not put it in a script,
+repository, report parameter, or command-line flag. The structured provenance
+shows that the environment supplied the credential, but never includes the
+key.

@@ -297,6 +297,49 @@ export const reportGuideOverridesAF: Partial<
       supportingKeywords: ['bulk URL checker'],
     },
   },
+  'bing-webmaster-overview': {
+    name: 'Review Bing search and crawl evidence',
+    summary:
+      'Read bounded Bing Webmaster traffic and crawl statistics for one verified site without crawling page bodies.',
+    inputs: [
+      {
+        label: 'Verified Bing Webmaster site',
+        source: 'bing-webmaster',
+        role: 'Defines the exact site and provider account evidence to request.',
+      },
+      {
+        label: 'Local Bing credential',
+        role: 'Authorizes the request without including the secret in report output.',
+      },
+    ],
+    checks: [
+      'Requests traffic and crawl statistics in parallel with strict response, time, and row limits.',
+      'Validates and orders provider rows, preserves invalid and capped counts, and keeps failed sections separate.',
+      'Limits agent detail to recent rows while retaining totals, ranges, latest crawl evidence, and omission counts.',
+    ],
+    returns: [
+      'Traffic totals and recent daily rows with explicit provider coverage.',
+      'Recent crawl statistics, latest evidence, section status, warnings, provenance, and caveats.',
+    ],
+    alternatives: [
+      {
+        when: 'You need Google search performance evidence for the same site.',
+        reportId: 'search-performance-overview',
+        doInstead:
+          'Run the search performance overview. It uses Search Console evidence and keeps its provider scope separate from Bing.',
+      },
+      {
+        when: 'You need to inspect current pages and technical findings rather than provider statistics.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a bounded site crawl. It fetches current page evidence and groups repeated technical findings.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'Bing Webmaster report',
+      supportingKeywords: ['Bing crawl stats', 'Bing search traffic'],
+    },
+  },
   cannibalisation: {
     name: 'Review query overlap and cannibalisation',
     summary:

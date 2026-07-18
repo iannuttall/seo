@@ -6,6 +6,7 @@ import { registerDiagnosisTools } from './diagnosis-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
+import { registerProviderTools } from './provider-tools.js'
 import { registerPseoTools } from './pseo-tools.js'
 import {
   getReportGuidance,
@@ -125,6 +126,11 @@ const reportGroups: readonly ReportGroup[] = [
       'seo_link_recover',
       'seo_redirect_trace',
     ],
+  },
+  {
+    category: 'monitoring',
+    register: registerProviderTools,
+    names: ['seo_bing_webmaster_overview'],
   },
   {
     category: 'reporting',

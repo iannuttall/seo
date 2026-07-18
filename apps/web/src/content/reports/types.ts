@@ -14,6 +14,7 @@ export type ReportCategory = (typeof reportCategories)[number]
 
 export type ReportSourceKey =
   | 'ai-features'
+  | 'bing-webmaster'
   | 'canonical'
   | 'core-web-vitals'
   | 'crawlable-links'

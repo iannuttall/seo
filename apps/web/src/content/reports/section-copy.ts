@@ -13,6 +13,8 @@ export const reportNextStepIntros: Record<string, string> = {
     "Choose the finding that affects this page's actual purpose, make one supported change and audit the URL again. A fresh page check is more useful than carrying an old crawl observation into the next decision.",
   'audit-urls':
     'Separate repeated template problems from failures that affect one URL. Fix a representative page first, then run the same bounded URL list again before changing the rest of the batch.',
+  'bing-webmaster-overview':
+    'Compare the exact dates behind a search or crawl change in Bing Webmaster Tools. Run a current site crawl when you need page evidence because provider statistics cannot explain the cause on their own.',
   cannibalisation:
     'Compare the competing pages and the intent each one serves before consolidating anything. Merge, redirect or differentiate a page only when the returned query evidence and the live content support that choice.',
   'community-intent':

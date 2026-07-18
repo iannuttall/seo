@@ -3,7 +3,13 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, test } from 'node:test'
-import { deleteClient, saveClient } from './clients.js'
+import {
+  bingWebmasterSiteUrl,
+  deleteClient,
+  getClient,
+  saveClient,
+  setClientBingSite,
+} from './clients.js'
 import { readConfig } from './storage/config.js'
 
 let configDir: string
@@ -58,4 +64,23 @@ test('deleting one project keeps the default site another project still uses', (
   const config = readConfig()
   assert.equal(config.defaultSite, 'sc-domain:example.com')
   assert.equal(config.clients.length, 1)
+})
+
+test('saving a Bing site preserves the rest of the project profile', () => {
+  saveClient({
+    id: 'example',
+    name: 'Example',
+    siteUrl: 'sc-domain:example.com',
+    startUrl: 'https://example.com/',
+    analytics: { google: { propertyId: '123' } },
+  })
+
+  const client = setClientBingSite('example', 'https://example.com/')
+  assert.equal(bingWebmasterSiteUrl(client), 'https://example.com/')
+  assert.equal(client.startUrl, 'https://example.com/')
+  assert.equal(client.analytics.google?.propertyId, '123')
+  assert.equal(
+    bingWebmasterSiteUrl(getClient('example')),
+    'https://example.com/',
+  )
 })

@@ -6,6 +6,11 @@ export const reportSources = {
     label: 'Google guidance for AI features and websites',
     url: 'https://developers.google.com/search/docs/appearance/ai-features',
   },
+  'bing-webmaster': {
+    key: 'bing-webmaster',
+    label: 'Bing Webmaster API guidance',
+    url: 'https://learn.microsoft.com/en-us/bingwebmaster/getting-access',
+  },
   canonical: {
     key: 'canonical',
     label: 'Google canonical URL guidance',

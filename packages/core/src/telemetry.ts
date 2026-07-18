@@ -44,6 +44,7 @@ export const TELEMETRY_REPORTS = [
   'ai-search-scorecard',
   'audit-page',
   'audit-urls',
+  'bing-webmaster-overview',
   'cannibalisation',
   'community-intent',
   'compare-crawls',

@@ -181,6 +181,25 @@ seo analytics google properties
 seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 ```
 
+Bing Webmaster is optional. Connect it when you want Bing search and crawl
+statistics beside your Google evidence:
+
+```sh
+seo providers bing connect
+seo providers bing report --project example
+```
+
+The guided connection asks for the API key from Bing Webmaster Tools Settings,
+then API Access. It validates the key, lists verified sites, matches one to the
+selected project when the hostname is unambiguous, and stores the key in the
+system keychain with a private local file fallback. Agents and CI can set
+`SEO_BING_API_KEY` and run the report without saving the key.
+
+The report keeps Bing traffic and crawl rows bounded and uncached. It labels
+invalid, partial, capped, and unavailable provider evidence instead of turning
+it into a zero. Bing's `inIndex` crawl statistic is provider evidence, not
+URL-level proof that a page is indexed.
+
 ## Crawl a site
 
 For a large or unfamiliar site, start with the sitemap health pass:

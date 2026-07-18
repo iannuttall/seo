@@ -1,17 +1,61 @@
 # Record the Google OAuth verification video
 
-Google needs to see the complete OAuth flow and the product feature that uses
+Google needs to see the complete OAuth flow and every distinct product use of
 the sensitive Google Analytics scope. Record the whole screen so the video
 includes Google Cloud Console, the browser consent flow, and the `seo` terminal
 commands.
 
-Aim for three to five minutes. Explain what is happening as you go. A short,
-clear recording is easier to review than a polished product demo.
+Aim for six to ten minutes. Explain what is happening as you go. Keep the
+outputs bounded and readable.
 
 The functionality demonstration only needs to cover Google Analytics. The
 `analytics.readonly` scope is sensitive, not restricted. The complete consent
 screen still needs to be visible so Google can confirm that the grant matches
 the scopes configured for the OAuth client.
+
+Google exposes no narrower user OAuth scope for these features. The Google
+Analytics Data API accepts `analytics.readonly` or the broader `analytics`
+scope. The Admin API reads used here accept `analytics.readonly` or the broader
+`analytics.edit` scope. The video must say this plainly.
+
+## Check the complete demo before recording
+
+The guided runner invokes the globally installed production package and pauses
+between scenes for narration. It does not use the uncommitted source build.
+
+From the repository root run:
+
+```sh
+node scripts/oauth-verification-demo.mjs --print
+```
+
+Check the property, site, and generated change date. Override them when needed:
+
+```sh
+node scripts/oauth-verification-demo.mjs \
+  --property 123456789 \
+  --site sc-domain:seoskill.dev \
+  --url https://seoskill.dev \
+  --change-date 2026-06-27
+```
+
+The runner opens the browser pages and runs the commands. Account selection,
+revoking the old grant, expanding the consent screen, and choosing a property
+remain manual. Those steps need to be slow and readable on the recording.
+
+The demo covers each distinct use of the scope:
+
+| Google API use | User-facing feature shown |
+| --- | --- |
+| List account and property summaries | `seo analytics google properties` and project setup |
+| List web streams and read their hostnames | Automatic Google Analytics matching in `seo start` |
+| Read landing-page sessions, users, and conversions | Main report, direct Analytics report, and priority workflow |
+| Read source, date, landing-page, session, event, and user data | AI referral report |
+| Read daily sessions, engagement, conversions, and revenue | Before and after SEO test report |
+
+The MCP server and TypeScript library call the same core functions. The CLI
+demonstration is enough to show the data access because those alternate
+surfaces do not request extra scopes or call different Google methods.
 
 ## Prepare the recording
 
@@ -25,8 +69,9 @@ the scopes configured for the OAuth client.
 6. Revoke the existing SEO Skill connection from
    [Google Account connections](https://myaccount.google.com/connections).
    This forces Google to show the complete consent flow again.
-7. Run `seo auth logout` to remove the locally stored token.
-8. Check that the consent screen language is English.
+7. Check that the consent screen language is English.
+8. Run the guided demo once before recording so a missing property or sparse
+   report does not become a surprise halfway through.
 
 Use `Cmd + Shift + 5` on macOS and choose **Record Entire Screen**. Turn on the
 microphone. You can upload the finished recording to YouTube as **Unlisted**.
@@ -58,14 +103,28 @@ Say:
 > SEO Skill runs locally and connects optional Google Analytics data to SEO
 > audits. Tokens and report data remain on the user's computer.
 
-## Start from a logged-out CLI
+## Run the guided recording
 
-Run:
+Start the runner from the repository root:
 
 ```sh
-seo --version
-seo auth status
+node scripts/oauth-verification-demo.mjs
+```
+
+It prints each command before running it and supplies a short talk-over cue.
+The production `seo` command performs all application actions. The repository
+script only sequences them.
+
+The remaining sections explain what the reviewer should see during each scene.
+
+## Start from a logged-out command
+
+The runner shows the installed version, opens Google Account connections, and
+runs:
+
+```sh
 seo auth logout
+seo auth status
 seo auth login
 ```
 
@@ -116,7 +175,7 @@ Say:
 > The OpenID and email scopes identify which Google account is connected. They
 > are not used to access Gmail or other Google content.
 
-## Demonstrate Google Analytics access
+## Demonstrate Admin API discovery
 
 List the Google Analytics properties available to the connected account:
 
@@ -124,23 +183,45 @@ List the Google Analytics properties available to the connected account:
 seo analytics google properties
 ```
 
-Run a small landing-page report for the SEO Skill Google Analytics property:
+Run setup to show automatic web stream matching for the SEO Skill site:
 
 ```sh
-seo analytics google report \
-  --property "123456789" \
-  --start-date 28daysAgo \
-  --end-date yesterday \
-  --dimensions landingPage \
-  --metrics sessions,totalUsers \
-  --limit 20
+seo start \
+  --id oauth-verification-demo \
+  --name "OAuth verification demo" \
+  --site sc-domain:seoskill.dev \
+  --url https://seoskill.dev \
+  --skip-mcp \
+  --skip-skill \
+  --refresh
 ```
 
 Say:
 
 > The Analytics read-only scope lists the Google Analytics properties available to the user
-> and runs reports for the property they select. The CLI cannot change Analytics
-> accounts, properties, or events.
+> and reads web stream names and hostnames during setup. The app uses the web
+> stream to match the selected site to the correct Analytics property. It saves
+> only the selected numeric property ID in the local project profile.
+
+## Demonstrate Data API reports
+
+The runner next shows the main report, a direct Analytics report, AI referrals,
+the priority workflow, and a before and after measurement. Keep each output on
+screen long enough for its heading and metrics to be readable.
+
+Say:
+
+> These features read landing-page traffic, engagement, conversions, revenue,
+> and measured referral sources from the selected Analytics property. The data
+> is used for the report the user requested. The app cannot change Analytics
+> accounts, properties, streams, events, or reports.
+
+After the last report say:
+
+> Google exposes `analytics.readonly` as the only read-only user OAuth scope for
+> both these Admin API reads and Data API reports. The alternatives allow
+> editing or management. SEO Skill requests no Analytics write, edit,
+> user-management, provisioning, or deletion scope.
 
 ## Finish the recording
 
@@ -162,13 +243,20 @@ Before submitting the video check that it shows:
 - The complete permission list in English.
 - `seo auth whoami` identifying the connected account.
 - Google Analytics property discovery and a real Google Analytics report.
+- Google Analytics web stream matching during project setup.
+- Landing-page, AI referral, prioritisation, and before and after features.
 - A clear explanation of how the sensitive Google Analytics scope is used.
+- A clear explanation that Google provides no narrower scope for these reads.
 - A clear explanation that access is read-only and data stays local.
 
 Google's current requirements are covered in the
 [OAuth demo video guide](https://support.google.com/cloud/answer/13804565?hl=en)
 and the
 [sensitive scope verification guide](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification).
+Google's
+[privacy policy review guide](https://support.google.com/cloud/answer/13806988?hl=en)
+lists data protection, retention, and deletion as separate required
+disclosures.
 
 ## Scope justification for the verification form
 
@@ -182,19 +270,22 @@ Copy this into the scope justification field:
 > This helps users investigate changes in clicks, impressions, CTR, and position,
 > then check Google's recorded indexing status for affected pages.
 >
-> The Google Analytics read-only scope lists the user's Google Analytics accounts and
-> properties and runs reports for the property they select. This provides
-> evidence such as landing-page traffic, engagement, conversions, and
-> identifiable AI referral sessions.
+> The Google Analytics read-only scope lists the user's Google Analytics accounts,
+> properties, and web streams, then runs reports for the property they select.
+> Web stream hostnames let project setup match a Search Console site to the
+> correct Analytics property. Data API reports provide landing-page sessions and
+> users, engagement, conversions, revenue, and identifiable AI referral
+> sessions.
 >
 > The OpenID and email scopes identify the connected Google account so the CLI
 > can show the user which account is active and associate it with the correct
 > locally stored OAuth credentials.
 >
-> SEO Skill requests read-only access because Google does not provide narrower
-> scopes containing the Search Console performance, URL Inspection, Google Analytics
-> property, and Google Analytics reporting data required by these features. The application
-> does not request permission to edit Search Console or Analytics data.
+> SEO Skill requests read-only access because Google does not provide a narrower
+> Google Analytics user OAuth scope for Admin API account, property, and web
+> stream reads or Data API reporting. The available alternatives grant broader
+> edit or management access. The application does not request permission to
+> edit Search Console or Analytics data.
 >
 > SEO Skill runs on the user's computer. OAuth tokens, API responses, reports,
 > and caches remain on that computer and are not sent to the project maintainer.

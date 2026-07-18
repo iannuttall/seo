@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 16 July 2026
+Last updated: 18 July 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -34,17 +34,45 @@ The use of information received from Google APIs follows the [Google API
 Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy),
 including its Limited Use requirements.
 
-## What stays on your machine
+## How Google data is protected
 
-The software stores project profiles, settings, OAuth tokens, caches, logs, and
-saved reports in local user directories. `seo privacy` prints the relevant
-paths and file permissions.
+The software stores project profiles, settings, OAuth tokens, cached API
+responses, logs, and saved reports in local user directories. It does not send
+Google user data to a hosted SEO account or database. Requests go directly from
+your machine to Google APIs over HTTPS.
 
 OAuth tokens use the operating system keychain when that option is enabled.
 The fallback token file and any bring-your-own OAuth client file are written
-with user-only file permissions. You are responsible for the security of your
+with user-only file permissions. Config, cache, and log directories are also
+created with user-only permissions on supported systems. `seo privacy` prints
+the relevant local paths and file permissions so you can inspect them.
+
+The local cache is not a substitute for device security or disk encryption. A
+person or process with access to your operating system account may be able to
+read local reports and caches. You are responsible for the security of your
 device, backups, shell history, exported reports, and any environment variables
 you create.
+
+## How long Google data is kept
+
+OAuth tokens remain on your machine until you run `seo auth logout` or
+`seo reset --yes`. Revoking SEO Skill from your Google Account invalidates the
+grant. You should still run `seo auth logout` if you also want to remove the
+local token record.
+
+Google Analytics and Search Console API responses are cached locally so repeat
+commands do not make the same request unnecessarily. A cached response is
+eligible for reuse for up to 24 hours. Expired cache rows are removed during
+automatic cache maintenance, which also removes cache rows older than 30 days
+and enforces local size limits. On a machine where the command is no longer
+run, expired rows may remain in the local cache file until you delete them.
+
+Run `seo cache clear --provider google-analytics` to remove cached Google
+Analytics responses immediately. Run `seo cache clear --provider gsc` to do
+the same for Search Console. Project profiles and reports that you deliberately
+save remain until you delete them with the relevant command or run
+`seo reset --yes`. The reset command removes all configuration, tokens, caches,
+logs, and saved data managed by the software.
 
 ## Network requests
 
@@ -114,11 +142,7 @@ ask it to inspect.
 No local report is shared with another person or service unless you export,
 copy, publish, or transmit it yourself.
 
-## Removing local data and Google access
-
-`seo auth logout` removes locally stored Google tokens. `seo reset --yes`
-removes local SEO configuration, tokens, caches, logs, and saved data managed by
-the tool.
+## Removing Google access
 
 You can also revoke the app from your [Google Account connections](https://myaccount.google.com/connections).
 Deleting local files does not delete data held by Google, npm, GitHub, a site

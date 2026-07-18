@@ -214,6 +214,41 @@ test('extractPage skips malformed links without discarding page evidence', async
   )
 })
 
+test('crawler extraction keeps aggregates without full link objects', async () => {
+  const links = Array.from(
+    { length: 1_000 },
+    (_, index) => `<a href="/page-${index}">Page ${index}</a>`,
+  ).join('')
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head><title>Crawler fixture</title></head>
+      <body><main>
+        <h1>How does compact crawling work?</h1>
+        <h2>Link evidence</h2>
+        <h3>Bounded samples</h3>
+        ${links}
+        <a href="https://www.linkedin.com/company/example#about">Company profile</a>
+      </main></body></html>`),
+    'crawler',
+  )
+
+  assert.deepEqual(page.headings, [])
+  assert.deepEqual(page.links, [])
+  assert.deepEqual(page.jsonLd, [])
+  assert.equal(page.crawlerEvidence?.h1, 'How does compact crawling work?')
+  assert.equal(page.crawlerEvidence?.h1Count, 1)
+  assert.equal(page.crawlerEvidence?.h2Count, 1)
+  assert.equal(page.crawlerEvidence?.h3Count, 1)
+  assert.equal(page.crawlerEvidence?.questionHeadings, 1)
+  assert.equal(page.crawlerEvidence?.internalLinks.length, 1_000)
+  assert.equal(page.crawlerEvidence?.internalAnchorSamples.length, 25)
+  assert.deepEqual(page.crawlerEvidence?.externalLinks, [
+    'https://www.linkedin.com/company/example#about',
+  ])
+  assert.deepEqual(page.crawlerEvidence?.socialProfileLinks, [
+    'https://www.linkedin.com/company/example',
+  ])
+})
+
 test('structured data preserves graph context and subject provenance', async () => {
   const page = await extractPage(
     fetchResult(`<!doctype html><html><head>

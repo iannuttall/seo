@@ -150,6 +150,7 @@ export function isValidStructuredDate(value: unknown): boolean {
 function parseJsonLd(
   blocks: string[],
   baseUrl: string,
+  retainJsonLd: boolean,
 ): Omit<StructuredDataExtraction, 'formats'> {
   const jsonLd: unknown[] = []
   const invalidJsonLdSamples: Array<{ snippet: string; error: string }> = []
@@ -236,7 +237,7 @@ function parseJsonLd(
   blocks.forEach((block, index) => {
     try {
       const parsed: unknown = JSON.parse(block)
-      jsonLd.push(parsed)
+      if (retainJsonLd) jsonLd.push(parsed)
       visit(parsed, { prefixes: new Map() }, index, '$')
     } catch (error) {
       invalidJsonLdSamples.push({
@@ -319,12 +320,14 @@ function usableElementValue($: CheerioAPI, selector: string): boolean {
 export function extractStructuredData(
   $: CheerioAPI,
   baseUrl: string,
+  options: { retainJsonLd?: boolean } = {},
 ): StructuredDataExtraction {
   const parsed = parseJsonLd(
     $('script[type="application/ld+json"]')
       .toArray()
       .map((element) => $(element).html() ?? ''),
     baseUrl,
+    options.retainJsonLd ?? true,
   )
   const microdata = microdataTypes($)
   const rdfa = rdfaTypes($)

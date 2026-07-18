@@ -32,7 +32,9 @@ test('automatic baselines stay bounded without deleting saved reports', () => {
   ) {
     const report = createCrawlReport({
       site,
-      generatedAt: new Date(Date.UTC(2026, 5, 19, 0, index)).toISOString(),
+      // Keep this site's fixtures newer than unrelated concurrent baseline
+      // tests so the global retention cap cannot prune the rows under test.
+      generatedAt: new Date(Date.UTC(2200, 5, 19, 0, index)).toISOString(),
       config: { url: `https://${host}/` },
     })
     saveCrawlReport(report, undefined, { retention: 'baseline' })

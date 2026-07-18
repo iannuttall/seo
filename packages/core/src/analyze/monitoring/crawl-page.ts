@@ -394,7 +394,7 @@ export async function crawlOne(
   }
 
   try {
-    const extracted = await extractPage(fetched)
+    const extracted = await extractPage(fetched, 'crawler')
     const base = new URL(extracted.finalUrl)
     const internalLinks = extracted.links
       .map((link) => sameOriginUrl(link.href, base))

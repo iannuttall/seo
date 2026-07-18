@@ -205,7 +205,7 @@ test('crawlSite deduplicates redirected and directly requested documents', async
   }
 })
 
-test('crawlSite merges redirect aliases independently of completion order', async () => {
+test('crawlSite prefers direct destination evidence independently of completion order', async () => {
   const run = async (oldDelayMs: number, directDelayMs: number) =>
     crawlSite(
       {
@@ -279,9 +279,9 @@ test('crawlSite merges redirect aliases independently of completion order', asyn
   assert.deepEqual(
     oldFirst.pages.find((page) => page.url.endsWith('/new'))
       ?.sampleInternalLinks,
-    ['https://example.com/child-a', 'https://example.com/child-b'],
+    ['https://example.com/child-b'],
   )
-  assert.equal(oldFirst.summary.observedInternalLinks, 4)
+  assert.equal(oldFirst.summary.observedInternalLinks, 3)
 })
 
 test('crawlSite counts links to a fetched redirect destination', async () => {

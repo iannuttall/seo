@@ -400,8 +400,8 @@ export const crawlPageSnapshotSchema = z.object({
   wordCount: z.number().int(),
   contentExtraction: z
     .object({
-      requested: z.enum(['defuddle', 'readability']),
-      used: z.enum(['defuddle', 'readability']),
+      requested: z.enum(['crawler', 'defuddle', 'readability']),
+      used: z.enum(['crawler', 'defuddle', 'readability']),
       fallback: z.boolean(),
       fallbackReason: z.enum(['defuddle_error', 'defuddle_empty']).optional(),
       fallbackDetail: z.string().optional(),

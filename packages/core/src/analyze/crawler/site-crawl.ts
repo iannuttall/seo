@@ -4,10 +4,10 @@ import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import { crawlCaveats } from './crawl-caveats.js'
 import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
-import { shortestCrawlDepths } from './crawl-depths.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
+import { CrawlUrlQueue, type CrawlUrlQueueItem } from './crawl-url-queue.js'
 import { verifyExternalLinks } from './external-link-checks.js'
-import { resolveLinkGraphAliases } from './link-graph.js'
+import { resolveLinkCountAliases } from './link-graph.js'
 import type {
   CrawlConfigInput,
   CrawlReport,
@@ -32,12 +32,7 @@ import {
 } from './site-crawl-dependencies.js'
 import { sitemapSeeds } from './sitemap-discovery.js'
 
-type QueueItem = {
-  url: string
-  depth: number
-}
-
-type CrawlTask = QueueItem & {
+type CrawlTask = CrawlUrlQueueItem & {
   promise: Promise<{
     task: CrawlTask
     result: CrawlOneResult
@@ -109,11 +104,10 @@ export async function crawlSite(
   const site = input.site
   const origin = new URL(config.url).origin
   const warnings: string[] = []
-  const queue: QueueItem[] = []
+  const queue = new CrawlUrlQueue()
   const visited = new Set<string>()
-  const queued = new Set<string>()
   const discovered = new Set<string>()
-  const linkGraph: Record<string, string[]> = {}
+  const incomingLinkCounts = new Map<string, number>()
   const fetchedAliases = new Map<string, string>()
   const pages: CrawlReport['pages'] = []
   const requests: CrawlReport['requests'] = []
@@ -123,7 +117,7 @@ export async function crawlSite(
       index: number
       directlyRequested: boolean
       sourceRequest: string
-      links: Set<string>
+      pendingAliasLinks?: Set<string>
       minDepth: number
     }
   >()
@@ -160,7 +154,7 @@ export async function crawlSite(
       generatedAt: deps.now().toISOString(),
       discoveredUrls: discovered.size,
       queuedUrls,
-      pendingUrls: queue.length,
+      pendingUrls: queue.size,
       inFlightUrls: inFlight.size,
       crawledUrls: pages.length,
       skippedUrls,
@@ -225,16 +219,9 @@ export async function crawlSite(
         })
         return
       }
-      discovered.add(normalized)
       if (visited.has(normalized)) return
-      if (queued.has(normalized)) {
-        const existing = queue.find((item) => item.url === normalized)
-        if (existing && depth < existing.depth) existing.depth = depth
-        queue.sort(
-          (left, right) =>
-            left.depth - right.depth ||
-            (left.url < right.url ? -1 : left.url > right.url ? 1 : 0),
-        )
+      if (queue.has(normalized)) {
+        queue.decreaseDepth(normalized, depth)
         return
       }
       if (!sameOrigin(normalized, origin)) {
@@ -264,7 +251,7 @@ export async function crawlSite(
         })
         return
       }
-      if (queue.length + visited.size + inFlight.size >= config.maxPages * 5) {
+      if (queue.size + visited.size + inFlight.size >= config.maxPages * 5) {
         recordSkip('queue-safety-limit')
         queueSafetySkippedUrls += 1
         emitStatus('url_skipped', {
@@ -274,14 +261,9 @@ export async function crawlSite(
         })
         return
       }
-      queued.add(normalized)
+      discovered.add(normalized)
       queuedUrls += 1
       queue.push({ url: normalized, depth })
-      queue.sort(
-        (left, right) =>
-          left.depth - right.depth ||
-          (left.url < right.url ? -1 : left.url > right.url ? 1 : 0),
-      )
       emitStatus('url_queued', { url: normalized, depth })
     }
 
@@ -311,9 +293,9 @@ export async function crawlSite(
       sitemapDiscovery = sitemap.discovery
     }
 
-    const nextQueueItem = (): QueueItem | undefined => {
-      while (queue.length) {
-        const item = queue.shift()
+    const nextQueueItem = (): CrawlUrlQueueItem | undefined => {
+      while (queue.size) {
+        const item = queue.take()
         if (!item) continue
         const normalized = normalizeUrl(item.url, config.url)
         if (!normalized) continue
@@ -324,7 +306,7 @@ export async function crawlSite(
       return undefined
     }
 
-    const startTask = (item: QueueItem): void => {
+    const startTask = (item: CrawlUrlQueueItem): void => {
       let task: CrawlTask
       const fetcher = healthStrategy ? deps.fetchStatusPage : deps.fetchPage
       task = {
@@ -364,7 +346,7 @@ export async function crawlSite(
 
     while (
       !isCancelled() &&
-      (queue.length || inFlight.size) &&
+      (queue.size || inFlight.size) &&
       pages.length < config.maxPages
     ) {
       while (
@@ -505,47 +487,68 @@ export async function crawlSite(
         }
         const existing = documentIndexes.get(finalUrl)
         if (existing) {
-          const links = new Set([...existing.links, ...normalizedLinks])
           const minDepth = Math.min(existing.minDepth, task.depth)
           const replace =
             (!existing.directlyRequested && directlyRequested) ||
             (existing.directlyRequested === directlyRequested &&
               sourceRequest < existing.sourceRequest)
           if (replace) {
+            const existingPage = pages[existing.index]
+            const previousLinks =
+              existing.pendingAliasLinks ??
+              (existingPage &&
+              existingPage.outgoingInternalCount ===
+                existingPage.sampleInternalLinks?.length
+                ? new Set(existingPage.sampleInternalLinks)
+                : undefined)
+            const links = new Set(normalizedLinks)
+            if (previousLinks) {
+              for (const target of previousLinks) {
+                const nextCount = (incomingLinkCounts.get(target) ?? 0) - 1
+                if (nextCount > 0) incomingLinkCounts.set(target, nextCount)
+                else incomingLinkCounts.delete(target)
+              }
+              observedInternalLinks -= previousLinks.size
+            }
+            for (const target of links) {
+              incomingLinkCounts.set(
+                target,
+                (incomingLinkCounts.get(target) ?? 0) + 1,
+              )
+            }
+            observedInternalLinks += links.size
+            syncLinkEvidence(page, links)
             page.crawlDepth = minDepth
             pages[existing.index] = page
           } else {
             const existingPage = pages[existing.index]
             if (existingPage) existingPage.crawlDepth = minDepth
           }
-          const retainedPage = pages[existing.index]
-          if (retainedPage) syncLinkEvidence(retainedPage, links)
-          observedInternalLinks += links.size - existing.links.size
           documentIndexes.set(finalUrl, {
             ...existing,
             directlyRequested: existing.directlyRequested || directlyRequested,
             sourceRequest: replace ? sourceRequest : existing.sourceRequest,
-            links,
+            pendingAliasLinks: undefined,
             minDepth,
           })
-          linkGraph[finalUrl] = [...links].sort((left, right) =>
-            left < right ? -1 : left > right ? 1 : 0,
-          )
         } else {
           const links = new Set(normalizedLinks)
           syncLinkEvidence(page, links)
           pages.push(page)
           observedInternalLinks += links.size
+          for (const target of links) {
+            incomingLinkCounts.set(
+              target,
+              (incomingLinkCounts.get(target) ?? 0) + 1,
+            )
+          }
           documentIndexes.set(finalUrl, {
             index: pages.length - 1,
             directlyRequested,
             sourceRequest,
-            links,
+            pendingAliasLinks: !directlyRequested ? links : undefined,
             minDepth: task.depth,
           })
-          linkGraph[finalUrl] = [...links].sort((left, right) =>
-            left < right ? -1 : left > right ? 1 : 0,
-          )
         }
       }
 
@@ -581,10 +584,20 @@ export async function crawlSite(
       }
     }
 
-    const resolvedLinkGraph = resolveLinkGraphAliases(linkGraph, fetchedAliases)
-    const depths = shortestCrawlDepths(pages, resolvedLinkGraph)
-    for (const [index, page] of pages.entries()) {
-      page.crawlDepth = depths[index]
+    const resolvedInlinkCounts = resolveLinkCountAliases(
+      incomingLinkCounts,
+      fetchedAliases,
+    )
+    const maxInlinks = Math.max(
+      0,
+      ...pages.map((page) => resolvedInlinkCounts.get(page.finalUrl) ?? 0),
+    )
+    for (const page of pages) {
+      const internalInlinkCount = resolvedInlinkCounts.get(page.finalUrl) ?? 0
+      page.internalInlinkCount = internalInlinkCount
+      page.internalLinkAuthorityScore = maxInlinks
+        ? Math.round((internalInlinkCount / maxInlinks) * 100)
+        : 0
     }
 
     cancelled = isCancelled()
@@ -603,7 +616,7 @@ export async function crawlSite(
     }
 
     const pageLimitReached =
-      pages.length >= config.maxPages && (queue.length > 0 || inFlight.size > 0)
+      pages.length >= config.maxPages && (queue.size > 0 || inFlight.size > 0)
     const sitemapEvidencePartial = sitemapDiscovery?.dataStatus === 'partial'
     const accessEvidencePartial = requests.some(
       (request) => request.outcome === 'response' && request.accessBlock,
@@ -618,7 +631,7 @@ export async function crawlSite(
       robotsDeferredUrls > 0 ||
       originBackpressureSkippedUrls > 0 ||
       queueSafetySkippedUrls > 0 ||
-      queue.length > 0 ||
+      queue.size > 0 ||
       inFlight.size > 0 ||
       sitemapEvidencePartial ||
       accessEvidencePartial ||
@@ -710,7 +723,6 @@ export async function crawlSite(
       pages,
       requests,
       requestEvidenceStatus,
-      linkGraph: resolvedLinkGraph,
       ...(!healthStrategy
         ? {
             ai: {

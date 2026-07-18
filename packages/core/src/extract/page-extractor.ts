@@ -1,4 +1,4 @@
-import { load } from 'cheerio'
+import { type CheerioAPI, load } from 'cheerio'
 import { combineRobotsValues } from '../robots-directives.js'
 import type {
   ContentExtractor,
@@ -7,6 +7,7 @@ import type {
 } from '../types.js'
 import { extractCanonicalEvidence } from './canonical.js'
 import {
+  countCjkAwareWords,
   extractMainContent,
   type MainContentDependencies,
 } from './main-content.js'
@@ -49,8 +50,11 @@ function httpUrl(value: string | undefined, base: string): string | undefined {
   return protocol === 'http:' || protocol === 'https:' ? resolved : undefined
 }
 
-function sanitizedContentHtml(html: string, base: string): string {
-  const $ = load(html)
+function sanitizedContentHtml(
+  $: CheerioAPI,
+  html: string,
+  base: string,
+): string {
   let changed = false
   for (const element of $('[href], [src]').toArray()) {
     for (const attribute of ['href', 'src'] as const) {
@@ -62,6 +66,28 @@ function sanitizedContentHtml(html: string, base: string): string {
     }
   }
   return changed ? $.html() : html
+}
+
+function crawlerMainContent($: CheerioAPI, baseUrl: string) {
+  const selected = $('main').first().length
+    ? $('main').first()
+    : $('article').first().length
+      ? $('article').first()
+      : $('body').first()
+  const text = selected.text().replace(/\s+/g, ' ').trim()
+  return {
+    text,
+    excerpt: safeText($('meta[name="description"]').attr('content')),
+    wordCount: countCjkAwareWords(text),
+    diagnostics: {
+      requested: 'crawler' as const,
+      used: 'crawler' as const,
+      fallback: false,
+      wordCountSource: 'local_cjk_aware' as const,
+      baseUrl,
+    },
+    warnings: [],
+  }
 }
 
 function numericAttribute(value: string | undefined): number | undefined {
@@ -99,16 +125,12 @@ export async function extractPage(
   extractor: ContentExtractor = 'defuddle',
   dependencies: MainContentDependencies = {},
 ): Promise<ExtractedPage> {
-  const $ = load(fetchResult.html)
-  const content = extractMainContent(
-    {
-      ...fetchResult,
-      html: sanitizedContentHtml(fetchResult.html, fetchResult.finalUrl),
-    },
-    extractor,
-    dependencies,
-  )
-  const { text, excerpt } = content
+  const $ =
+    extractor === 'crawler' && /<html(?:\s|>)/i.test(fetchResult.html)
+      ? load(fetchResult.html, {
+          xml: { xmlMode: false, decodeEntities: true },
+        })
+      : load(fetchResult.html)
   const url = new URL(fetchResult.finalUrl)
   const canonicalEvidence = extractCanonicalEvidence(
     $,
@@ -316,6 +338,22 @@ export async function extractPage(
       })
       .map((element) => $(element).attr('content')),
   )
+  const content =
+    extractor === 'crawler'
+      ? crawlerMainContent($, fetchResult.finalUrl)
+      : extractMainContent(
+          {
+            ...fetchResult,
+            html: sanitizedContentHtml(
+              $,
+              fetchResult.html,
+              fetchResult.finalUrl,
+            ),
+          },
+          extractor,
+          dependencies,
+        )
+  const { text, excerpt } = content
 
   return {
     url: fetchResult.url,

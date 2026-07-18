@@ -246,7 +246,7 @@ export interface QueryContentCoverage {
   summary: string
 }
 
-export type ContentExtractor = 'defuddle' | 'readability'
+export type ContentExtractor = 'crawler' | 'defuddle' | 'readability'
 
 export interface ContentExtractionDiagnostics {
   requested: ContentExtractor

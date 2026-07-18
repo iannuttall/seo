@@ -39,7 +39,7 @@ function normalizedText(value?: string | null): string | undefined {
   return text || undefined
 }
 
-function countCjkAwareWords(text: string): number {
+export function countCjkAwareWords(text: string): number {
   let count = 0
   let inWord = false
 
@@ -133,7 +133,7 @@ function defaultParseDefuddle(
 
 export function extractMainContent(
   fetchResult: PageFetchResult,
-  extractor: ContentExtractor = 'defuddle',
+  extractor: Exclude<ContentExtractor, 'crawler'> = 'defuddle',
   dependencies: MainContentDependencies = {},
 ): MainContentResult {
   if (extractor === 'readability') {

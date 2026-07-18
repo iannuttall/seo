@@ -1,4 +1,4 @@
-function resolveFetchedAlias(
+export function resolveFetchedAlias(
   url: string,
   aliases: ReadonlyMap<string, string>,
 ): string {
@@ -11,6 +11,18 @@ function resolveFetchedAlias(
     current = next
   }
   return current
+}
+
+export function resolveLinkCountAliases(
+  counts: ReadonlyMap<string, number>,
+  aliases: ReadonlyMap<string, string>,
+): Map<string, number> {
+  const resolved = new Map<string, number>()
+  for (const [url, count] of counts) {
+    const target = resolveFetchedAlias(url, aliases)
+    resolved.set(target, (resolved.get(target) ?? 0) + count)
+  }
+  return resolved
 }
 
 export function resolveLinkGraphAliases(

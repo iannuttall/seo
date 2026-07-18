@@ -262,6 +262,31 @@ test('CTR benchmark caps unusually strong site samples', () => {
   assert.equal(benchmark.ctr, 0.025)
 })
 
+test('CTR URL benchmarks use one index pass instead of rescanning source rows', () => {
+  const rows = Array.from({ length: 20_000 }, (_, index) =>
+    row({
+      query: `large property query ${index}`,
+      url: `https://example.com/page-${index % 2_000}`,
+      clicks: index % 7,
+      impressions: 100,
+      position: 4 + (index % 7),
+    }),
+  )
+  const context = createCtrBenchmarkContext(rows, {
+    samplePopulation: 'all_qualified_url_samples',
+  })
+
+  for (const candidate of rows.slice(0, 1_000)) {
+    context.forUrl(candidate)
+  }
+
+  assert.deepEqual(context.diagnostics, {
+    indexRowVisits: rows.length,
+    urlLookups: 1_000,
+    fallbackRowScans: 0,
+  })
+})
+
 test('query coverage tokenizes non-Latin queries', () => {
   const query = 'تويتر بحث بدون حساب'
   const coverage = queryFieldCoverage(query, {

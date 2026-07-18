@@ -20,7 +20,7 @@ export type PageTechnicalSignal = Extract<
   | 'canonical-mismatch'
 >
 
-function normalizedUrl(value: string): string {
+export function normalizePageUrl(value: string): string {
   try {
     const parsed = new URL(value)
     parsed.hash = ''
@@ -34,7 +34,7 @@ function normalizedUrl(value: string): string {
 }
 
 export function samePageUrl(left: string, right: string): boolean {
-  return normalizedUrl(left) === normalizedUrl(right)
+  return normalizePageUrl(left) === normalizePageUrl(right)
 }
 
 function absoluteUrl(value: string, base: string): string {

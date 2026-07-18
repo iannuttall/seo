@@ -16,6 +16,11 @@ export const CTR_BASELINE: Record<number, number> = {
   10: 0.012,
 }
 
+const WORD_SEGMENTER =
+  typeof Intl !== 'undefined' && 'Segmenter' in Intl
+    ? new Intl.Segmenter('und', { granularity: 'word' })
+    : undefined
+
 export function normalizeText(value: string): string {
   return value
     .normalize('NFKD')
@@ -29,9 +34,8 @@ export function normalizeText(value: string): string {
 export function unicodeTokens(value: string): string[] {
   const normalized = normalizeText(value)
 
-  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-    const segmenter = new Intl.Segmenter('und', { granularity: 'word' })
-    return [...segmenter.segment(normalized)]
+  if (WORD_SEGMENTER) {
+    return [...WORD_SEGMENTER.segment(normalized)]
       .filter((part) => part.isWordLike)
       .map((part) => part.segment.trim())
       .filter((token) => token.length > 1)

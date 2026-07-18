@@ -1,4 +1,4 @@
-import { samePageUrl } from './page-technical-signals.js'
+import { normalizePageUrl } from './page-technical-signals.js'
 import { CTR_BASELINE, unicodeTokens } from './shared.js'
 
 export { unicodeTokens } from './shared.js'
@@ -38,6 +38,7 @@ const MIN_BENCHMARK_URL_SAMPLES = 5
 const MIN_POSITIVE_URL_SAMPLES = 3
 const SITE_BENCHMARK_FLOOR_MULTIPLIER = 0.5
 const SITE_BENCHMARK_CAP_MULTIPLIER = 1.5
+const URL_BENCHMARK_CACHE_LIMIT = 10_000
 
 export function roundedPosition(position: number): number {
   return Math.max(1, Math.min(10, Math.round(position)))
@@ -75,7 +76,9 @@ function bucketBenchmark(input: {
   const byUrl = new Map<string, { clicks: number; impressions: number }>()
 
   for (const row of peerRows) {
-    const key = row.keys?.[1] || `${row.keys?.[0] ?? 'query'}:${row.position}`
+    const rawKey =
+      row.keys?.[1] || `${row.keys?.[0] ?? 'query'}:${row.position}`
+    const key = row.keys?.[1] ? normalizePageUrl(rawKey) : rawKey
     const current = byUrl.get(key) ?? { clicks: 0, impressions: 0 }
     current.clicks += row.clicks
     current.impressions += row.impressions
@@ -134,6 +137,165 @@ function bucketBenchmark(input: {
   }
 }
 
+type IndexedUrlSample = {
+  key: string
+  clicks: number
+  impressions: number
+  rows: number
+  ctr: number
+}
+
+type IndexedPositionBucket = {
+  rows: number
+  impressions: number
+  byUrl: Map<string, IndexedUrlSample>
+  qualified: IndexedUrlSample[]
+  qualifiedIndexes: Map<string, number>
+  positive: IndexedUrlSample[]
+  positiveIndexes: Map<string, number>
+  qualifiedImpressions: number
+}
+
+function indexedPositionBucket(
+  rows: OpportunityBenchmarkRow[],
+): IndexedPositionBucket {
+  const byUrl = new Map<string, IndexedUrlSample>()
+  let impressions = 0
+  for (const row of rows) {
+    impressions += row.impressions
+    const rawKey =
+      row.keys?.[1] || `${row.keys?.[0] ?? 'query'}:${row.position}`
+    const key = row.keys?.[1] ? normalizePageUrl(rawKey) : rawKey
+    const current = byUrl.get(key) ?? {
+      key,
+      clicks: 0,
+      impressions: 0,
+      rows: 0,
+      ctr: 0,
+    }
+    current.clicks += row.clicks
+    current.impressions += row.impressions
+    current.rows += 1
+    current.ctr = current.impressions ? current.clicks / current.impressions : 0
+    byUrl.set(key, current)
+  }
+  const compareSample = (left: IndexedUrlSample, right: IndexedUrlSample) =>
+    left.ctr - right.ctr ||
+    (left.key < right.key ? -1 : left.key > right.key ? 1 : 0)
+  const qualified = [...byUrl.values()]
+    .filter((sample) => sample.impressions >= MIN_BENCHMARK_URL_IMPRESSIONS)
+    .sort(compareSample)
+  const positive = qualified
+    .filter((sample) => sample.ctr > 0)
+    .sort(compareSample)
+  return {
+    rows: rows.length,
+    impressions,
+    byUrl,
+    qualified,
+    qualifiedIndexes: new Map(
+      qualified.map((sample, index) => [sample.key, index]),
+    ),
+    positive,
+    positiveIndexes: new Map(
+      positive.map((sample, index) => [sample.key, index]),
+    ),
+    qualifiedImpressions: qualified.reduce(
+      (sum, sample) => sum + sample.impressions,
+      0,
+    ),
+  }
+}
+
+function indexedPercentile(
+  samples: IndexedUrlSample[],
+  indexes: ReadonlyMap<string, number>,
+  excludedKey: string,
+  percentileValue: number,
+): number | undefined {
+  const excludedIndex = indexes.get(excludedKey)
+  const length = samples.length - (excludedIndex === undefined ? 0 : 1)
+  if (length === 0) return undefined
+  const rank = Math.min(
+    length - 1,
+    Math.max(0, Math.ceil((percentileValue / 100) * length) - 1),
+  )
+  const sourceIndex =
+    excludedIndex !== undefined && rank >= excludedIndex ? rank + 1 : rank
+  return samples[sourceIndex]?.ctr
+}
+
+function indexedBucketBenchmark(input: {
+  bucket: IndexedPositionBucket
+  position: number
+  excludedKey: string
+  sourceSuffix: string
+  samplePopulation?: PositionBenchmark['samplePopulation']
+  fallbackSource?: string
+}): PositionBenchmark {
+  const excluded = input.bucket.byUrl.get(input.excludedKey)
+  const excludesQualified =
+    excluded && excluded.impressions >= MIN_BENCHMARK_URL_IMPRESSIONS
+      ? excluded
+      : undefined
+  const rows = input.bucket.rows - (excluded?.rows ?? 0)
+  const impressions = input.bucket.impressions - (excluded?.impressions ?? 0)
+  const qualifiedImpressions =
+    input.bucket.qualifiedImpressions - (excludesQualified?.impressions ?? 0)
+  const urlSamples = input.bucket.qualified.length - (excludesQualified ? 1 : 0)
+  const excludesPositive = Boolean(
+    excludesQualified && excludesQualified.ctr > 0,
+  )
+  const positiveUrlSamples =
+    input.bucket.positive.length - (excludesPositive ? 1 : 0)
+  const hasEnoughSiteData =
+    qualifiedImpressions >= MIN_BENCHMARK_IMPRESSIONS &&
+    urlSamples >= MIN_BENCHMARK_URL_SAMPLES &&
+    positiveUrlSamples >= MIN_POSITIVE_URL_SAMPLES
+  const samplePopulation = input.samplePopulation ?? 'positive_url_samples'
+  const rawSiteCtr = hasEnoughSiteData
+    ? samplePopulation === 'all_qualified_url_samples'
+      ? indexedPercentile(
+          input.bucket.qualified,
+          input.bucket.qualifiedIndexes,
+          input.excludedKey,
+          75,
+        )
+      : indexedPercentile(
+          input.bucket.positive,
+          input.bucket.positiveIndexes,
+          input.excludedKey,
+          75,
+        )
+    : undefined
+  const fallbackCtr = expectedCtrForPosition(input.position)
+  const floorCtr = fallbackCtr * SITE_BENCHMARK_FLOOR_MULTIPLIER
+  const capCtr = fallbackCtr * SITE_BENCHMARK_CAP_MULTIPLIER
+  const hasSiteCtr = rawSiteCtr !== undefined
+  const ctr = hasSiteCtr
+    ? Math.max(floorCtr, Math.min(rawSiteCtr, capCtr))
+    : fallbackCtr
+  const adjustment =
+    hasSiteCtr && rawSiteCtr < floorCtr
+      ? '_floored'
+      : hasSiteCtr && rawSiteCtr > capCtr
+        ? '_capped'
+        : ''
+  const source = hasSiteCtr
+    ? `site_gsc_position_bucket_robust_p75${samplePopulation === 'all_qualified_url_samples' ? '_all_samples' : ''}${input.sourceSuffix}${adjustment}`
+    : (input.fallbackSource ?? 'default_position_curve')
+  return {
+    ctr: Number(ctr.toFixed(4)),
+    source,
+    samplePopulation,
+    rows,
+    impressions,
+    qualifiedImpressions,
+    urlSamples,
+    positiveUrlSamples,
+  }
+}
+
 function smoothMonotonicBenchmarks(
   input: Record<number, PositionBenchmark>,
 ): Record<string, PositionBenchmark> {
@@ -166,10 +328,31 @@ export function createCtrBenchmarkContext(
   } = {},
 ) {
   const buckets = new Map<number, OpportunityBenchmarkRow[]>()
+  const diagnostics = {
+    indexRowVisits: 0,
+    urlLookups: 0,
+    fallbackRowScans: 0,
+  }
 
   for (const row of rows) {
     const position = roundedPosition(row.position)
-    buckets.set(position, [...(buckets.get(position) ?? []), row])
+    const bucket = buckets.get(position) ?? []
+    bucket.push(row)
+    buckets.set(position, bucket)
+    diagnostics.indexRowVisits += 1
+  }
+  const indexedBuckets = new Map(
+    [...buckets].map(([position, bucketRows]) => [
+      position,
+      indexedPositionBucket(bucketRows),
+    ]),
+  )
+  const emptyIndexedBucket = indexedPositionBucket([])
+  const urlBenchmarkCache = new Map<string, Map<number, PositionBenchmark>>()
+  const urlRowCounts = new Map<string, number>()
+  for (const row of rows) {
+    const key = normalizePageUrl(row.keys?.[1] ?? '')
+    urlRowCounts.set(key, (urlRowCounts.get(key) ?? 0) + 1)
   }
 
   const raw: Record<number, PositionBenchmark> = {}
@@ -189,6 +372,7 @@ export function createCtrBenchmarkContext(
     excludedRows: OpportunityBenchmarkRow[],
     sourceSuffix?: string,
   ): PositionBenchmark {
+    diagnostics.fallbackRowScans += rows.length
     const position = roundedPosition(row.position)
     const excludedSet = new Set(excludedRows)
     const rowRaw: Record<number, PositionBenchmark> = {}
@@ -211,19 +395,55 @@ export function createCtrBenchmarkContext(
     )
   }
 
+  function benchmarkForUrl(row: OpportunityBenchmarkRow): PositionBenchmark {
+    diagnostics.urlLookups += 1
+    const position = roundedPosition(row.position)
+    const excludedKey = normalizePageUrl(row.keys?.[1] ?? '')
+    const cached = excludedKey
+      ? urlBenchmarkCache.get(excludedKey)?.get(position)
+      : undefined
+    if (cached) return cached
+    const rowRaw: Record<number, PositionBenchmark> = {}
+    for (const bucketPosition of Object.keys(CTR_BASELINE).map(Number)) {
+      rowRaw[bucketPosition] = indexedBucketBenchmark({
+        bucket: indexedBuckets.get(bucketPosition) ?? emptyIndexedBucket,
+        position: bucketPosition,
+        excludedKey,
+        sourceSuffix: '_leave_target_url_out',
+        samplePopulation: options.samplePopulation,
+        fallbackSource: options.fallbackSource,
+      })
+    }
+    const benchmark =
+      smoothMonotonicBenchmarks(rowRaw)[String(position)] ??
+      byPosition[String(position)] ??
+      bucketBenchmark({ rows: [], position })
+    let byPositionForUrl = excludedKey
+      ? urlBenchmarkCache.get(excludedKey)
+      : undefined
+    if (
+      excludedKey &&
+      !byPositionForUrl &&
+      urlBenchmarkCache.size < URL_BENCHMARK_CACHE_LIMIT
+    ) {
+      byPositionForUrl = new Map()
+      urlBenchmarkCache.set(excludedKey, byPositionForUrl)
+    }
+    byPositionForUrl?.set(position, benchmark)
+    return benchmark
+  }
+
   return {
     byPosition,
     forRow(row: OpportunityBenchmarkRow): PositionBenchmark {
       return benchmarkForRow(row, [row], '_leave_one_out')
     },
     forUrl(row: OpportunityBenchmarkRow): PositionBenchmark {
-      const url = row.keys?.[1]
-      const excludedRows = url
-        ? rows.filter((candidate) =>
-            samePageUrl(candidate.keys?.[1] ?? '', url),
-          )
-        : [row]
-      return benchmarkForRow(row, excludedRows, '_leave_target_url_out')
+      return benchmarkForUrl(row)
+    },
+    urlRowCount(row: OpportunityBenchmarkRow): number {
+      const key = normalizePageUrl(row.keys?.[1] ?? '')
+      return urlRowCounts.get(key) ?? 0
     },
     forAggregate(
       row: OpportunityBenchmarkRow,
@@ -235,6 +455,7 @@ export function createCtrBenchmarkContext(
         excludedRows.length ? '_leave_group_out' : undefined,
       )
     },
+    diagnostics,
   }
 }
 

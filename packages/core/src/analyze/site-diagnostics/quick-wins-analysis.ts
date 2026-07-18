@@ -1,5 +1,4 @@
 import { createCtrBenchmarkContext } from '../opportunity-primitives.js'
-import { samePageUrl } from '../page-technical-signals.js'
 import { CTR_BASELINE } from '../shared.js'
 import {
   boundedInteger,
@@ -53,10 +52,7 @@ export function analyzeQuickWinsFromRows(
       selected.selection.belowMinimumRows++
       continue
     }
-    const targetUrl = row.keys[1] ?? ''
-    const excludedTargetRows = selected.rows.filter((candidate) =>
-      samePageUrl(candidate.keys[1] ?? '', targetUrl),
-    ).length
+    const excludedTargetRows = benchmarkContext.urlRowCount(row)
     const benchmark = benchmarkContext.forUrl(row)
     if (row.ctr >= benchmark.ctr) {
       selected.selection.atOrAboveTargetRows++

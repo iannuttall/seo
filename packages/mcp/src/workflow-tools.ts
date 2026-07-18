@@ -10,6 +10,7 @@ import {
   workflowPresentation,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { calendarMonthSchema, resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -56,16 +57,14 @@ const technicalWatchInputSchema = z
   })
 
 function workflowSuccess(result: WorkflowReport<unknown>) {
-  return toolSuccess(
-    result.summary,
-    {
-      ...result,
-      presentation: workflowPresentation(result),
-    },
-    {
-      markdown: renderWorkflowMarkdown(result),
-    },
-  )
+  const presentation = workflowPresentation(result)
+  const structured = compactAgentWorkflowOutput({
+    ...result,
+    presentation,
+  })
+  return toolSuccess(result.summary, structured, {
+    markdown: renderWorkflowMarkdown(result),
+  })
 }
 
 export function registerWorkflowTools(server: McpServer): void {

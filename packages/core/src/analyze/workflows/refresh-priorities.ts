@@ -102,7 +102,10 @@ export async function refreshPrioritiesWorkflow(input: {
   const diagnosis = await diagnoseProperty({
     ...input,
     verifyContent: input.verifyContent ?? true,
-    verifyLimit: input.verifyLimit ?? Math.min(input.limit ?? 5, 5),
+    verifyLimit:
+      input.verifyContent === false
+        ? undefined
+        : (input.verifyLimit ?? Math.min(input.limit ?? 5, 5)),
   })
   const range = defaultDateRange(input.days ?? 28)
   const analytics = await fetchLandingPageValues({

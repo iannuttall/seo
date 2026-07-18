@@ -205,7 +205,8 @@ export async function strikingDistance(
     analysis.limit,
   )
   const verificationRequested =
-    input.verifyContent === true || input.verifyLimit !== undefined
+    input.verifyContent === true ||
+    (input.verifyContent !== false && input.verifyLimit !== undefined)
   const attempted = verificationRequested
     ? Math.min(verifyLimit, analysis.items.length)
     : 0

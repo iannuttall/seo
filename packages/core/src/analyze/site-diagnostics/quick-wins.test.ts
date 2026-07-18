@@ -165,6 +165,32 @@ test('deduplicates page fetches while evaluating each query', async () => {
   )
 })
 
+test('verifyContent false takes precedence over a verification limit', async () => {
+  let fetches = 0
+  const report = await quickWinsReport(
+    { site, verifyContent: false, verifyLimit: 3 },
+    dependencies(
+      [
+        row({
+          query: 'technical seo audit',
+          url: 'https://example.com/audit',
+        }),
+        ...peers(),
+      ],
+      {
+        fetch: async (url) => {
+          fetches++
+          return fetched(url)
+        },
+      },
+    ),
+  )
+
+  assert.equal(fetches, 0)
+  assert.equal(report.verification.requested, false)
+  assert.equal(report.verification.attemptedRows, 0)
+})
+
 test('technical evidence overrides CTR and content-edit advice', async () => {
   const report = await quickWinsReport(
     { site, verifyContent: true, verifyLimit: 1 },

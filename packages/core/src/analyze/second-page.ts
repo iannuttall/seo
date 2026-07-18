@@ -238,7 +238,8 @@ export async function secondPage(
   const generatedAt = now.toISOString()
   const warnings: SecondPageReport['warnings'] = []
   const verificationRequested =
-    input.verifyContent === true || input.verifyLimit !== undefined
+    input.verifyContent === true ||
+    (input.verifyContent !== false && input.verifyLimit !== undefined)
   const verificationItems = verificationRequested
     ? analysis.items.slice(0, verifyLimit)
     : []

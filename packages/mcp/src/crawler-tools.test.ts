@@ -271,8 +271,17 @@ test('crawler MCP structured output schema stays stable', async () => {
 
     const topFixTool = tools.get('seo_top_fixes')
     const affectedTool = tools.get('seo_affected_urls')
+    const listRulesTool = tools.get('seo_list_rules')
     assert.ok(topFixTool)
     assert.ok(affectedTool)
+    assert.ok(listRulesTool)
+    const singularRulesResult = await listRulesTool.handler({
+      category: 'headings',
+    })
+    assert.equal(
+      String((singularRulesResult.content as Array<JsonRecord>)[0]?.text),
+      'Found 1 crawler rule.',
+    )
     const topFixResult = await topFixTool.handler({
       url: fixture.baseUrl,
       maxPages: 1,
@@ -447,6 +456,40 @@ test('crawler MCP structured output schema stays stable', async () => {
       'sourceUrl',
       'warnings',
     ])
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('top fixes warns when crawl coverage is partial', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/llms.txt') {
+      res.statusCode = 404
+      res.end('missing')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    res.end(
+      '<title>Partial crawl fixture</title><h1>Partial crawl fixture</h1><a href="/next">Next page</a>',
+    )
+  })
+
+  try {
+    const topFixTool = captureCrawlerTools().get('seo_top_fixes')
+    assert.ok(topFixTool)
+    const result = await topFixTool.handler({
+      url: fixture.baseUrl,
+      maxPages: 1,
+    })
+    const text = String((result.content as Array<JsonRecord>)[0]?.text)
+
+    assert.match(text, /Coverage is partial: 1 URL crawled/)
+    assert.match(text, /before treating this as sitewide/)
   } finally {
     await fixture.close()
   }

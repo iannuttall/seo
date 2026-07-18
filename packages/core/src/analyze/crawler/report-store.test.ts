@@ -167,6 +167,27 @@ test('crawl report store never replaces an existing run id', () => {
   assert.equal(loadCrawlReport(id)?.generatedAt, original.generatedAt)
 })
 
+test('crawl report history finds profile-free reports by URL and hostname', () => {
+  const host = `crawl-only-${randomUUID()}.example`
+  const report = createCrawlReport({
+    generatedAt: '2026-06-19T00:02:30.000Z',
+    config: { url: `https://${host}/docs/start` },
+  })
+  saveCrawlReport(report)
+
+  assert.deepEqual(
+    listCrawlReports({ site: `https://${host}`, limit: 5 }).map(
+      (item) => item.id,
+    ),
+    [report.id],
+  )
+  assert.deepEqual(
+    listCrawlReports({ site: host, limit: 5 }).map((item) => item.id),
+    [report.id],
+  )
+  assert.equal(latestCrawlReport(`https://${host}`)?.id, report.id)
+})
+
 test('crawl report store recomputes derived fields on load', () => {
   const site = `sc-domain:legacy-${randomUUID()}.example`
   const page: CrawlPageSnapshot = {

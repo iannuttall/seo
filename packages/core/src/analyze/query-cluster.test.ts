@@ -178,6 +178,21 @@ test('page-two query clusters do not claim CTR-only click lift', () => {
   assert.equal((result.clusters[0]?.opportunityScore ?? 0) > 0, true)
 })
 
+test('query cluster summaries inflect singular counts', () => {
+  const result = analyzeQueryClustersFromRows({
+    rows: [
+      row('single result guide', { clicks: 1, impressions: 50 }),
+      row('single result tutorial', { clicks: 0, impressions: 50 }),
+    ],
+    minImpressions: 1,
+  })
+
+  assert.equal(
+    result.clusters[0]?.summary,
+    '2 queries, 100 impressions, 1 click, average position 10.0.',
+  )
+})
+
 function row(
   query: string,
   input: {

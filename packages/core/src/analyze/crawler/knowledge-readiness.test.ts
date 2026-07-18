@@ -401,6 +401,39 @@ test('llms audit and generator use crawl inventory', () => {
   assert.equal(generated.includedUrls, 2)
 })
 
+test('llms generator preserves partial source coverage and readable truncation', () => {
+  const report = fixtureReport()
+  report.status = 'partial'
+  report.summary.discoveredUrls = 164
+  report.summary.crawledUrls = 10
+  report.warnings = ['Sitemap inventory is incomplete.']
+  const first = report.pages[0]
+  assert.ok(first)
+  first.metaDescription =
+    'A long description about TypeScript reports and reliable crawl evidence that should stop on a complete word instead of producing an unfinished fragment for users.'
+  const second = report.pages[1]
+  assert.ok(second)
+  second.metaDescription = 'x'.repeat(200)
+
+  const generated = generateLlmsTxt(report, { tokenBudget: 2_000 })
+
+  assert.equal(generated.source.status, 'partial')
+  assert.equal(generated.source.crawledUrls, 10)
+  assert.equal(generated.source.discoveredUrls, 164)
+  assert.deepEqual(generated.source.warnings, [
+    'Sitemap inventory is incomplete.',
+  ])
+  assert.match(generated.content, /Crawl coverage: partial/)
+  assert.match(generated.content, /retained 10 of 164 discovered URLs/)
+  assert.match(generated.content, /Source warning: Sitemap inventory/)
+  assert.doesNotMatch(generated.content, /unfinished frag\b/)
+  assert.doesNotMatch(generated.content, /x{20}/)
+  assert.match(
+    generated.content,
+    /\[Docs\]\(https:\/\/example\.com\/docs\) - \.\.\./,
+  )
+})
+
 test('llms.txt remains an informational AI-search observation', () => {
   const missing = fixtureReport()
   const present = fixtureReport()
@@ -565,6 +598,18 @@ test('OKF bundle builds concept files and validates frontmatter', () => {
   assert.match(explanation.summary, /passes seo OKF checks/)
   assert.equal(bundle.generatedAt, '2026-06-20T00:00:00.000Z')
   assert.equal(bundle.selection.eligiblePages, 2)
+})
+
+test('OKF validation summaries inflect one concept', () => {
+  const report = fixtureReport()
+  report.pages = [fixturePage(report, 0)]
+  const validation = validateOkfFiles(buildOkfBundle(report).files)
+
+  assert.match(explainOkfValidation(validation).summary, /1 concept file/)
+  assert.doesNotMatch(
+    explainOkfValidation(validation).summary,
+    /1 concept files/,
+  )
 })
 
 test('OKF concept paths stay unique when readable URL prefixes collide', () => {

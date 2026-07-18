@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
+import { countLabel } from '../../phrasing.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type { CrawlReport } from './report.js'
 
@@ -564,8 +565,8 @@ export function explainOkfValidation(
     title: 'OKF bundle',
     valid: validation.valid,
     summary: validation.valid
-      ? `This bundle passes seo OKF checks with ${validation.concepts} concept files.`
-      : `This OKF bundle has ${errors.length} validation error${errors.length === 1 ? '' : 's'}.`,
+      ? `This bundle passes seo OKF checks with ${countLabel(validation.concepts, 'concept file')}.`
+      : `This OKF bundle has ${countLabel(errors.length, 'validation error')}.`,
     files: validation.files,
     concepts: validation.concepts,
     errors: errors.length,

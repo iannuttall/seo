@@ -74,8 +74,8 @@
     "security:check": "pnpm run security:audit && pnpm run security:secrets",
     "security:secrets": "node scripts/security-secrets.mjs",
     "skills:validate": "node scripts/validate-skills.mjs",
-    "test": "turbo run test && pnpm run build:package && node --test scripts/package.test.mjs scripts/dogfood-summary.test.mjs && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && pnpm run skills:validate",
-    "test:resources": "pnpm run build:package && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs",
+    "test": "turbo run test && pnpm run build:package && node --test scripts/package.test.mjs scripts/dogfood-summary.test.mjs && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && pnpm run skills:validate",
+    "test:resources": "pnpm run build:package && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs",
     "test:package-install": "pnpm run build:package && node --test scripts/installed-package.test.mjs",
     "typecheck": "turbo run typecheck"
   },

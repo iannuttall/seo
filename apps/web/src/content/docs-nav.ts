@@ -25,6 +25,12 @@ export const docsNav: DocsNavEntry[] = [
       'Connect one verified Bing site and add bounded Bing search and crawl evidence to a project.',
   },
   {
+    path: '/docs/indexnow',
+    label: 'IndexNow',
+    description:
+      'Generate and verify a local key, then notify participating search engines about a bounded list of changed URLs.',
+  },
+  {
     path: '/docs/cli',
     label: 'CLI',
     description:

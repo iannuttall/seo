@@ -32,6 +32,7 @@ import {
   testsCommand,
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
+import { indexNowCommand } from './commands/indexnow.js'
 import { initCommand } from './commands/init.js'
 import { linksCommand } from './commands/links.js'
 import { llmsCommand } from './commands/llms.js'
@@ -190,6 +191,7 @@ const allHelpSections: HelpSection[] = [
       ['seo crawl-diff', 'Compare crawl changes'],
       ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo index-watch', 'Check URL Inspection status'],
+      ['seo indexnow submit', 'Notify IndexNow about changed URLs'],
       ['seo link-recover', 'Find broken search-value URLs'],
       ['seo links', 'Review bounded referring-link evidence'],
       ['seo server-logs analyze', 'Review crawler requests in an access log'],
@@ -260,6 +262,7 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
+    indexnow: indexNowCommand,
     analytics: analyticsCommand,
     llms: llmsCommand,
     auth: authCommand,

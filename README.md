@@ -229,6 +229,27 @@ bounded, and any capped or malformed evidence stays visible. User-agent names
 can be spoofed, so the result describes observed request strings rather than
 verified crawler identity.
 
+## Notify IndexNow after a change
+
+Generate a key file in the public asset directory for your site, then deploy
+it before sending notifications:
+
+```sh
+seo indexnow setup --site https://example.com --output ./public
+seo indexnow verify --site https://example.com
+seo indexnow submit --site https://example.com --url https://example.com/changed-page
+```
+
+Use `--dry-run --json` to validate a submission without notifying IndexNow.
+The command accepts one URL, a comma-separated list, or a newline-delimited
+file. A run is limited to 1,000 unique URLs, every URL must use the configured
+host, and the public key file is checked before a live request. The local key
+mapping stays in the system keychain with a private file fallback. Agents and
+CI can set `SEO_INDEXNOW_KEY` for the current process instead.
+
+An accepted IndexNow request confirms receipt only. It does not prove that a
+URL was crawled, indexed, ranked, or shown in search results.
+
 ## Crawl a site
 
 For a large or unfamiliar site, start with the sitemap health pass:

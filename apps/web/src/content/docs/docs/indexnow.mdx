@@ -1,0 +1,80 @@
+---
+title: IndexNow URL notifications
+description: Generate a local IndexNow key, verify its public key file and submit a bounded list of changed URLs without claiming they were indexed.
+---
+
+IndexNow tells participating search engines that a URL was added, updated, or
+deleted. It is a change notification, not an indexing request or a ranking
+signal you can verify from the response.
+
+## Set up one host
+
+Choose the public asset directory that your site deploys at its root:
+
+```sh
+seo indexnow setup --site https://example.com --output ./public
+```
+
+The command generates a key, writes `<key>.txt` into that directory, and stores
+the key locally. It does not deploy the file. Deploy the site, then check the
+public file:
+
+```sh
+seo indexnow verify --site https://example.com
+```
+
+The local key mapping is stored in the system keychain when available, with a
+private file fallback. `seo indexnow status` lists configured hosts and public
+key locations. `seo indexnow remove --site https://example.com` removes the
+local mapping but leaves the deployed file alone.
+
+## Validate before notifying search engines
+
+Start with a dry run:
+
+```sh
+seo indexnow submit \
+  --site https://example.com \
+  --url https://example.com/changed-page \
+  --dry-run \
+  --json
+```
+
+The dry run validates the key, host, URLs, duplicates, and local limits. It
+does not fetch the key file or contact IndexNow.
+
+Remove `--dry-run` after the key file is public and the URLs have genuinely
+changed:
+
+```sh
+seo indexnow submit \
+  --site https://example.com \
+  --url https://example.com/changed-page
+```
+
+You can also pass comma-separated `--urls` or a newline-delimited `--file`.
+Each run accepts at most 1,000 unique URLs, and every URL must belong to the
+configured host. The command verifies the public key file before it sends the
+bounded JSON request to the fixed IndexNow endpoint.
+
+Agents and CI can set `SEO_INDEXNOW_KEY` for one process instead of saving a
+key. Keep JSON mode explicit so the command never prompts:
+
+```sh
+SEO_INDEXNOW_KEY=<key> seo indexnow submit \
+  --site https://example.com \
+  --file ./changed-urls.txt \
+  --dry-run \
+  --json
+```
+
+## Read the response accurately
+
+HTTP 200 means the URLs were received. HTTP 202 means the URLs were received
+while key validation is pending. Neither response proves crawling, indexing,
+ranking, or traffic.
+
+The implementation follows the
+<a href="https://www.indexnow.org/documentation" target="_blank" rel="noreferrer">IndexNow protocol documentation</a>.
+The local 1,000 URL limit is deliberately lower than the protocol maximum so
+one accidental command cannot send a very large update.

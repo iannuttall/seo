@@ -19,6 +19,7 @@ answer.
 | Check crawl and index monitoring evidence | `seo technical-watch` |
 | Audit one live URL | `seo audit-page --url <url>` |
 | Build a technical site baseline | `seo crawl <url> --save` |
+| Notify search engines about changed URLs | `seo indexnow submit --dry-run` |
 
 Run `seo report` first when the request is broad. Pick a focused command when
 the question already names the job. A one-page audit takes you straight to the

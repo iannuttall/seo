@@ -126,6 +126,11 @@ test('crawl-scoped robots resolver fetches once and writes no cache entry', asyn
   origin = fixture.origin
 
   try {
+    const key = hashKey([
+      'robots',
+      new URL('/robots.txt', fixture.origin).toString(),
+    ])
+    getDb().prepare('DELETE FROM http_cache WHERE url_hash = ?').run(key)
     const session = createRobotsSession({
       refresh: true,
       writeCache: false,
@@ -134,10 +139,6 @@ test('crawl-scoped robots resolver fetches once and writes no cache entry', asyn
       session.resolve(fixture.origin, `${fixture.origin}/public`),
       session.resolve(fixture.origin, `${fixture.origin}/private/page`),
       session.sitemapUrls(fixture.origin),
-    ])
-    const key = hashKey([
-      'robots',
-      new URL('/robots.txt', fixture.origin).toString(),
     ])
     const cached = getDb()
       .prepare('SELECT 1 FROM http_cache WHERE url_hash = ?')

@@ -466,6 +466,53 @@ test('duplicate nested locs do not exhaust scheduling and an exact sitemap bound
   }
 })
 
+test('stops fetching sibling sitemap documents once the URL budget is full', async () => {
+  const calls: string[] = []
+  const fixture = await sitemapServer((request, response) => {
+    const path = request.url ?? '/'
+    calls.push(path)
+    const origin = `http://${request.headers.host}`
+    if (path === '/root.xml') {
+      xml(
+        response,
+        sitemapIndex(
+          Array.from(
+            { length: 40 },
+            (_, index) => `${origin}/child-${index}.xml`,
+          ),
+        ),
+      )
+      return
+    }
+    const child = Number(path.match(/child-(\d+)\.xml/)?.[1] ?? 0)
+    xml(
+      response,
+      urlset(
+        Array.from(
+          { length: 100 },
+          (_, index) => `${origin}/page-${child}-${index}`,
+        ),
+      ),
+    )
+  })
+  try {
+    const result = await fetchSitemapUrls({
+      sitemapUrl: `${fixture.origin}/root.xml`,
+      limit: 25,
+    })
+
+    assert.deepEqual(calls, ['/root.xml', '/child-0.xml'])
+    assert.equal(result.urls.length, 25)
+    assert.equal(result.source.sitemapsFetched, 2)
+    assert.equal(result.truncation.urlLimitExceeded, true)
+    assert.equal(result.truncation.unprocessedSitemaps, 39)
+    assert.equal(result.truncation.possiblyTruncated, true)
+    assert.equal(result.dataStatus, 'partial')
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('unscheduled nested sitemaps and invalid locs have structured evidence', async () => {
   const calls: string[] = []
   const fixture = await sitemapServer((request, response) => {

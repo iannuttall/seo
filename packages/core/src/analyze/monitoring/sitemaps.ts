@@ -435,6 +435,7 @@ export async function fetchSitemapUrls(input: {
   const nestedSitemaps: string[] = []
   const discoveredSitemaps = new Set<string>()
   const scheduledSitemaps = new Set<string>()
+  const fetchedSitemaps = new Set<string>()
   const invalidLocSamples: SitemapInvalidLoc[] = []
   const malformedLastmodSamples: SitemapLastmodObservation[] = []
   const futureLastmodSamples: SitemapLastmodObservation[] = []
@@ -495,6 +496,7 @@ export async function fetchSitemapUrls(input: {
     if (!sitemapUrl) continue
 
     const fetched = await fetchSitemapXml(sitemapUrl)
+    fetchedSitemaps.add(sitemapUrl)
     documents.push(fetched.document)
     if (fetched.document.warning) warnings.push(fetched.document.warning)
     if (fetched.document.dataStatus !== 'unavailable') sitemapsFetched += 1
@@ -504,6 +506,11 @@ export async function fetchSitemapUrls(input: {
     const urlEntrySelector =
       fetched.document.root === 'urlset' ? 'urlset > url' : ''
     $(urlEntrySelector).each((_, element) => {
+      if (urls.length >= limit) {
+        urlLimitExceeded = true
+        omittedUrlsAtLeast += 1
+        return false
+      }
       urlLocs += 1
       const entry = $(element)
       const value = entry.children('loc').first().text().trim()
@@ -526,12 +533,7 @@ export async function fetchSitemapUrls(input: {
         return
       }
       seenUrls.add(url)
-      if (urls.length < limit) {
-        urls.push(url)
-        return
-      }
-      urlLimitExceeded = true
-      omittedUrlsAtLeast += 1
+      urls.push(url)
     })
 
     const sitemapEntrySelector =
@@ -567,10 +569,16 @@ export async function fetchSitemapUrls(input: {
         nestedSitemapLimitExceeded = true
       }
     })
+
+    if (urls.length >= limit && queue.length > 0) {
+      urlLimitExceeded = true
+      omittedUrlsAtLeast = Math.max(omittedUrlsAtLeast, 1)
+      break
+    }
   }
 
   const unprocessedSitemaps = nestedSitemaps.filter(
-    (sitemap) => !scheduledSitemaps.has(sitemap),
+    (sitemap) => !fetchedSitemaps.has(sitemap),
   ).length
   const possiblyTruncated =
     urlLimitExceeded || nestedSitemapLimitExceeded || unprocessedSitemaps > 0

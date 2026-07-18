@@ -68,7 +68,7 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.pages[0]?.geo?.listCount, 1)
     assert.equal(report.pages[0]?.geo?.tableCount, 1)
     assert.equal(report.pages[0]?.outgoingExternalCount, 1)
-    assert.equal(report.pages[0]?.contentExtraction?.requested, 'defuddle')
+    assert.equal(report.pages[0]?.contentExtraction?.requested, 'crawler')
     assert.equal(
       report.pages[0]?.contentExtraction?.baseUrl,
       `${fixture.baseUrl}/`,
@@ -83,6 +83,45 @@ test('crawlSite follows same-origin links within depth and page limits', async (
     assert.equal(report.pages[1]?.internalLinkAuthorityScore, 100)
     assert.equal(report.pages[1]?.crawlDepth, 1)
     assert.equal(report.status, 'completed')
+  } finally {
+    await fixture.close()
+  }
+})
+
+test('crawlSite keeps link evidence bounded on link-heavy pages', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    if (req.url === '/llms.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('# Test site\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    const links = Array.from(
+      { length: 1_000 },
+      (_, index) => `<a href="/page-${index}">Page ${index}</a>`,
+    ).join('')
+    res.end(`<title>Link inventory</title><h1>Link inventory</h1>${links}`)
+  })
+
+  try {
+    const report = await crawlSite({
+      url: fixture.baseUrl,
+      useSitemap: false,
+      maxDepth: 0,
+      maxPages: 1,
+      concurrency: 1,
+      checkExternal: false,
+      refresh: true,
+    })
+
+    assert.equal(report.pages[0]?.outgoingInternalCount, 1_000)
+    assert.equal(report.pages[0]?.sampleInternalLinks?.length, 25)
+    assert.equal(report.summary.observedInternalLinks, 1_000)
   } finally {
     await fixture.close()
   }

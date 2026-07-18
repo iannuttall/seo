@@ -103,6 +103,16 @@ test('health strategy uses an explicit sitemap and limits analysis to responses'
   assert.equal(report.ai, undefined)
   assert.equal(report.externalLinkVerification, undefined)
   assert.equal(report.agentDiscovery, undefined)
+  assert.equal(report.pages[0]?.responseHeaders, undefined)
+  assert.equal(report.pages[0]?.fetchDiagnostics, undefined)
+  assert.equal(report.pages[0]?.robotsTxt, undefined)
+  assert.ok(
+    report.requests.some(
+      (request) =>
+        request.outcome === 'response' &&
+        request.redirectChain?.[0]?.status === 301,
+    ),
+  )
   assert.deepEqual(
     [...new Set(report.issues.map((issue) => issue.ruleId))].sort(),
     ['client_error', 'redirected_url'],
@@ -173,7 +183,6 @@ test('health strategy marks access-blocked evidence partial', async () => {
         if (result.request?.outcome === 'response') {
           result.request.accessBlock = accessBlock
         }
-        if (result.page) result.page.accessBlock = accessBlock
         return result
       },
     },

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "production",
+    "file": "01-production.wav",
+    "text": "This is the published S-E-O command submitted for review. Users install it with N P M install dash G S-E-O."
+  },
+  {
+    "id": "scopes",
+    "file": "06-configured-scopes.wav",
+    "text": "This Google Cloud page shows the permissions configured for the OAuth app. The Analytics permission can only view and download data. It cannot make changes."
+  },
+  {
+    "id": "consent",
+    "file": "10-consent-flow.wav",
+    "text": "This is the OAuth flow users see during onboarding. Every requested permission is expanded and clearly shown before the user approves access."
+  },
+  {
+    "id": "account",
+    "file": "11-connected-account.wav",
+    "text": "The command confirms the connected Google account."
+  },
+  {
+    "id": "properties",
+    "file": "12-analytics-properties.wav",
+    "text": "Property discovery uses the Analytics permission to read the accounts and properties available to this user. Example Site is property ID three seven five, eight eight five, two two six."
+  },
+  {
+    "id": "streams",
+    "file": "13-web-stream-matching.wav",
+    "text": "Setup uses the Analytics permission to read Google Analytics hostnames. It matches example site dot com to the Example Site property and saves its property ID locally."
+  },
+  {
+    "id": "main-report",
+    "file": "14-main-report.wav",
+    "text": "The main report uses the Analytics permission to read sessions, users, and conversions. It adds those metrics to matching Example Site pages so users can prioritize their work."
+  },
+  {
+    "id": "raw-report",
+    "file": "15-direct-analytics-report.wav",
+    "text": "The Google Analytics report uses the Analytics permission to read Example Site landing pages, sessions, users, and conversions. It shows which pages receive traffic and produce conversions."
+  },
+  {
+    "id": "ai-referrals",
+    "file": "16-ai-referrals.wav",
+    "text": "The AI referrals report uses the Analytics permission to read sources, dates, landing pages, sessions, events, and users. It identifies measured traffic from AI services."
+  },
+  {
+    "id": "measurement",
+    "file": "18-before-after-report.wav",
+    "text": "The before and after report uses the Analytics permission to read daily sessions, engaged sessions, conversions, and revenue. It measures how those metrics changed after recorded work."
+  },
+  {
+    "id": "branding",
+    "file": "19-submitted-domains.wav",
+    "text": "The submitted app branding uses S-E-O skill dot dev for the homepage, privacy policy, terms, and authorized domain."
+  },
+  {
+    "id": "scope",
+    "file": "20-least-privilege.wav",
+    "text": "Google Analytics is optional. OAuth simplifies setup for nontechnical users by listing the properties they can access. Analytics dot read-only is the narrowest permission critical to these production features. Google offers no narrower permission for the Admin API reads or Data API reports shown here. This app cannot write or delete Analytics data, so source account impact does not apply."
+  }
+]

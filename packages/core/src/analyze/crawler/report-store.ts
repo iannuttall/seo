@@ -136,6 +136,34 @@ function pruneAutomaticBaselines(): void {
     .run(AUTOMATIC_BASELINE_SITE_RETENTION, AUTOMATIC_BASELINE_TOTAL_RETENTION)
 }
 
+function crawlReportSiteWhere(value: string): {
+  sql: string
+  params: string[]
+} {
+  const siteValues = new Set([value])
+  const origins = new Set<string>()
+  try {
+    origins.add(new URL(value).origin)
+  } catch {
+    const host = value.replace(/^sc-domain:/, '').replace(/\/$/, '')
+    if (host && !host.includes('/')) {
+      siteValues.add(`sc-domain:${host}`)
+      origins.add(`https://${host}`)
+      origins.add(`http://${host}`)
+    }
+  }
+  const clauses = [...siteValues].map(() => 'site_url = ?')
+  const params = [...siteValues]
+  for (const origin of origins) {
+    clauses.push('url = ?', 'url LIKE ?')
+    params.push(`${origin}/`, `${origin}/%`)
+  }
+  return {
+    sql: `(${clauses.join(' OR ')})`,
+    params,
+  }
+}
+
 function saveCrawlReportToSqlite(
   report: CrawlReport,
   options: CrawlReportSaveOptions = {},
@@ -187,14 +215,17 @@ function listCrawlReportsFromSqlite(
 ): CrawlReportMeta[] {
   const limit = input.limit ?? 20
   const rows = input.site
-    ? (getDb()
-        .prepare(
-          `SELECT * FROM crawl_reports
-          WHERE site_url = ?
-          ORDER BY created_at DESC, id DESC
-          LIMIT ?`,
-        )
-        .all(input.site, limit) as CrawlReportRow[])
+    ? (() => {
+        const where = crawlReportSiteWhere(input.site)
+        return getDb()
+          .prepare(
+            `SELECT * FROM crawl_reports
+            WHERE ${where.sql}
+            ORDER BY created_at DESC, id DESC
+            LIMIT ?`,
+          )
+          .all(...where.params, limit) as CrawlReportRow[]
+      })()
     : (getDb()
         .prepare(
           `SELECT * FROM crawl_reports
@@ -222,14 +253,17 @@ function deleteCrawlReportFromSqlite(id: string): boolean {
 
 function latestCrawlReportFromSqlite(site?: string): CrawlReport | undefined {
   const row = site
-    ? (getDb()
-        .prepare(
-          `SELECT report_json FROM crawl_reports
-          WHERE site_url = ?
-          ORDER BY created_at DESC, id DESC
-          LIMIT 1`,
-        )
-        .get(site) as { report_json: string } | undefined)
+    ? (() => {
+        const where = crawlReportSiteWhere(site)
+        return getDb()
+          .prepare(
+            `SELECT report_json FROM crawl_reports
+            WHERE ${where.sql}
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1`,
+          )
+          .get(...where.params) as { report_json: string } | undefined
+      })()
     : (getDb()
         .prepare(
           `SELECT report_json FROM crawl_reports

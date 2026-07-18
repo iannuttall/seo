@@ -6,6 +6,7 @@ import {
   auditLlmsTxt,
   buildOkfBundle,
   compareCrawlReports,
+  countLabel,
   crawlerRuleCategorySchema,
   crawlSite,
   entityReadiness,
@@ -269,8 +270,12 @@ export function registerCrawlerTools(server: McpServer): void {
           )
         }
         const groups = topFixes(report, { category, limit })
+        const coverage =
+          report.status === 'completed'
+            ? ''
+            : ` Coverage is ${report.status}: ${countLabel(report.summary.crawledUrls, 'URL')} crawled from ${countLabel(report.summary.discoveredUrls, 'discovered URL')}. Review the returned warnings and caveats before treating this as sitewide.`
         return toolSuccess(
-          `Found ${groups.length} top fix groups for ${report.config.url}.`,
+          `Found ${countLabel(groups.length, 'top fix group')} for ${report.config.url}.${coverage}`,
           {
             url: report.config.url,
             reportId: report.id,
@@ -318,7 +323,7 @@ export function registerCrawlerTools(server: McpServer): void {
       const rules = listRules().filter((rule) =>
         category ? rule.category === category : true,
       )
-      return toolSuccess(`Found ${rules.length} crawler rules.`, {
+      return toolSuccess(`Found ${countLabel(rules.length, 'crawler rule')}.`, {
         rules,
       })
     },

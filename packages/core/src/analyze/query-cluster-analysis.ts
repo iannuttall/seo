@@ -1,3 +1,4 @@
+import { countLabel } from '../phrasing.js'
 import type { QueryCluster } from '../types.js'
 import {
   createCtrBenchmarkContext,
@@ -134,7 +135,7 @@ function clusterSummary(input: {
   clicks: number
   position: number
 }): string {
-  return `${input.queries} queries, ${input.impressions.toFixed(0)} impressions, ${input.clicks.toFixed(0)} clicks, average position ${input.position.toFixed(1)}.`
+  return `${countLabel(input.queries, 'query', 'queries')}, ${countLabel(input.impressions, 'impression')}, ${countLabel(input.clicks, 'click')}, average position ${input.position.toFixed(1)}.`
 }
 
 function clusterLabel(

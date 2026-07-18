@@ -43,6 +43,16 @@ export type GeneratedLlmsTxt = {
   includedUrls: number
   estimatedTokens: number
   sections: Record<string, number>
+  source: {
+    reportId: string
+    status: CrawlReport['status']
+    crawledUrls: number
+    discoveredUrls: number
+    sitemapUrlsReturned?: number
+    warnings: string[]
+    warningCount: number
+    warningsTruncated: boolean
+  }
 }
 
 function estimatedTokens(value: string): number {
@@ -57,6 +67,17 @@ function cleanTitle(page: CrawlPageSnapshot): string {
   return (
     page.title ?? page.h1 ?? (new URL(page.finalUrl).pathname || page.finalUrl)
   )
+}
+
+function truncateAtWord(value: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  if (normalized.length <= maxLength) return normalized
+  const room = Math.max(1, maxLength - 3)
+  const prefix = normalized.slice(0, room)
+  const boundary = prefix.lastIndexOf(' ')
+  if (boundary < 0) return '...'
+  const retained = prefix.slice(0, boundary)
+  return `${retained.trimEnd()}...`
 }
 
 function sectionForPage(page: CrawlPageSnapshot): string {
@@ -265,7 +286,7 @@ export function generateLlmsTxt(
     for (const page of sectionPages) {
       const title = cleanTitle(page).replace(/\]/g, '\\]')
       const note = page.metaDescription
-        ? ` - ${page.metaDescription.replace(/\s+/g, ' ').slice(0, 160)}`
+        ? ` - ${truncateAtWord(page.metaDescription, 160)}`
         : ''
       const line = `- [${title}](${page.finalUrl})${note}`
       const projected = [...lines, ...sectionLines, line, ''].join('\n')
@@ -288,9 +309,27 @@ export function generateLlmsTxt(
     '- [Google Search guidance](https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files) says llms.txt does not affect visibility or rankings.',
     `- Generated from crawl report ${report.id}.`,
     `- Crawl generated at ${report.generatedAt}.`,
+    `- Crawl coverage: ${report.status}; retained ${report.summary.crawledUrls} of ${report.summary.discoveredUrls} discovered URLs.`,
   )
+  if (report.sitemapDiscovery) {
+    lines.push(
+      `- Sitemap discovery: ${report.sitemapDiscovery.dataStatus}; returned ${report.sitemapDiscovery.urlsReturned} URLs.`,
+    )
+  }
   if (report.caveats.length) {
     lines.push(...report.caveats.map((caveat) => `- Caveat: ${caveat}`))
+  }
+  if (report.warnings.length) {
+    lines.push(
+      ...report.warnings
+        .slice(0, 10)
+        .map((warning) => `- Source warning: ${warning}`),
+    )
+    if (report.warnings.length > 10) {
+      lines.push(
+        `- Source warnings: ${report.warnings.length - 10} more warnings remain in crawl report ${report.id}.`,
+      )
+    }
   }
 
   const content = `${lines.join('\n')}\n`
@@ -299,5 +338,15 @@ export function generateLlmsTxt(
     includedUrls,
     estimatedTokens: estimatedTokens(content),
     sections: counts,
+    source: {
+      reportId: report.id,
+      status: report.status,
+      crawledUrls: report.summary.crawledUrls,
+      discoveredUrls: report.summary.discoveredUrls,
+      sitemapUrlsReturned: report.sitemapDiscovery?.urlsReturned,
+      warnings: report.warnings.slice(0, 10),
+      warningCount: report.warnings.length,
+      warningsTruncated: report.warnings.length > 10,
+    },
   }
 }

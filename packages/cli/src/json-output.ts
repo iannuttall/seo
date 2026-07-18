@@ -1,8 +1,8 @@
 import { createWriteStream } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { finished } from 'node:stream/promises'
 import type { Writable } from 'node:stream'
+import { finished } from 'node:stream/promises'
 
 const BUFFER_SIZE = 64 * 1024
 

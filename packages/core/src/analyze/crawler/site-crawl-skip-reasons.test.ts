@@ -130,3 +130,87 @@ test('crawlSite classifies origin backpressure as coverage-affecting', async () 
   )
   assert.match(report.caveats.join('\n'), /incomplete crawl evidence/)
 })
+
+test('crawlSite returns partial evidence before memory use becomes unsafe', async () => {
+  const root = 'https://example.com/'
+  const urls = [root, 'https://example.com/a', 'https://example.com/b']
+  const externalUrl = 'https://external.example/link'
+  let memoryChecks = 0
+  let providerCalls = 0
+  let agentDiscoveryCalls = 0
+  let externalLinkCalls = 0
+  const report = await crawlSite(
+    {
+      url: root,
+      mode: 'list',
+      urls,
+      site: 'sc-domain:example.com',
+      googleAnalyticsPropertyId: 'properties/123',
+      useSitemap: false,
+      checkExternal: true,
+      checkAgentDiscovery: true,
+      maxPages: urls.length,
+      concurrency: 1,
+    },
+    {
+      fetch: async (url) => {
+        if (String(url) === externalUrl) externalLinkCalls += 1
+        return new Response('', {
+          status: 404,
+          headers: { 'content-type': 'text/plain' },
+        })
+      },
+      fetchPage: async (url) => ({
+        urls: [],
+        page: crawlPageSnapshot(url, {
+          sampleExternalLinks: [externalUrl],
+        }),
+      }),
+      queryPageMetrics: async () => {
+        providerCalls += 1
+        return undefined
+      },
+      queryPageTopQuery: async () => {
+        providerCalls += 1
+        return undefined
+      },
+      fetchLandingPageValues: async () => {
+        providerCalls += 1
+        throw new Error('analytics provider should not run')
+      },
+      collectAgentDiscovery: async () => {
+        agentDiscoveryCalls += 1
+        throw new Error('agent discovery should not run')
+      },
+      totalMemory: () => 16 * 1024 * 1024 * 1024,
+      memoryUsage: () => ({
+        rss: memoryChecks++ === 0 ? 128 * 1024 * 1024 : 800 * 1024 * 1024,
+      }),
+    },
+  )
+
+  assert.equal(report.status, 'partial')
+  assert.equal(report.summary.totalPages, 1)
+  assert.deepEqual(report.summary.skipReasons, [
+    {
+      reason: 'memory-pressure',
+      impact: 'coverage-affecting',
+      count: 2,
+    },
+  ])
+  assert.equal(providerCalls, 0)
+  assert.equal(agentDiscoveryCalls, 0)
+  assert.equal(externalLinkCalls, 0)
+  assert.equal(report.externalLinkVerification, undefined)
+  assert.equal(report.agentDiscovery, undefined)
+  assert.match(
+    report.dataSources?.searchConsole.warning ?? '',
+    /memory safety limit/,
+  )
+  assert.match(
+    report.dataSources?.analytics.warning ?? '',
+    /memory safety limit/,
+  )
+  assert.match(report.warnings.join('\n'), /memory use could become unsafe/)
+  assert.match(report.caveats.join('\n'), /Left 2 eligible URLs unchecked/)
+})

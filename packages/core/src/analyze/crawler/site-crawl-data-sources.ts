@@ -43,7 +43,7 @@ export function crawlProviderLimits(input: {
 }
 
 export async function crawlDataSources(input: {
-  cancelled: boolean
+  skipReason?: 'cancelled' | 'memory-pressure'
   site?: string
   googleAnalyticsPropertyId?: string
   pages: CrawlReport['pages']
@@ -61,6 +61,7 @@ export async function crawlDataSources(input: {
   landingValueForUrl: typeof landingValueForUrl
 }): Promise<CrawlReportDataSources> {
   const window = crawlMetricsWindow(input.now())
+  const skippedForMemory = input.skipReason === 'memory-pressure'
   const dataSources: CrawlReportDataSources = {
     searchConsole: {
       status: 'skipped',
@@ -71,9 +72,11 @@ export async function crawlDataSources(input: {
       pageLimit: input.searchMetricsLimit,
       pageLimitReached: false,
       retainedRowLimitReached: false,
-      warning: input.cancelled
-        ? 'Search Console join skipped because the crawl was cancelled.'
-        : 'Search Console join skipped because no property was selected.',
+      warning: skippedForMemory
+        ? 'Search Console join skipped after the local memory safety limit was reached.'
+        : input.skipReason === 'cancelled'
+          ? 'Search Console join skipped because the crawl was cancelled.'
+          : 'Search Console join skipped because no property was selected.',
     },
     analytics: {
       status: 'skipped',
@@ -82,13 +85,15 @@ export async function crawlDataSources(input: {
       joinedPages: 0,
       retainedRowLimit: input.analyticsLimit,
       retainedRowLimitReached: false,
-      warning: input.cancelled
-        ? 'Google Analytics join skipped because the crawl was cancelled.'
-        : 'Google Analytics join skipped because no property was selected.',
+      warning: skippedForMemory
+        ? 'Google Analytics join skipped after the local memory safety limit was reached.'
+        : input.skipReason === 'cancelled'
+          ? 'Google Analytics join skipped because the crawl was cancelled.'
+          : 'Google Analytics join skipped because no property was selected.',
     },
   }
 
-  if (!input.cancelled && input.site) {
+  if (!input.skipReason && input.site) {
     dataSources.searchConsole = await joinSearchMetrics({
       site: input.site,
       pages: input.pages,
@@ -103,7 +108,7 @@ export async function crawlDataSources(input: {
       queryPagesTopQueriesBatch: input.queryPagesTopQueriesBatch,
     })
   }
-  if (!input.cancelled && input.googleAnalyticsPropertyId) {
+  if (!input.skipReason && input.googleAnalyticsPropertyId) {
     dataSources.analytics = await joinAnalytics({
       propertyId: input.googleAnalyticsPropertyId,
       pages: input.pages,

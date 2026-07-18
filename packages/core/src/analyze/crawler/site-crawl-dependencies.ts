@@ -1,3 +1,4 @@
+import { totalmem } from 'node:os'
 import { publicHttpFetch } from '../../fetch/http-client.js'
 import {
   queryPageMetrics,
@@ -30,6 +31,8 @@ export type ResolvedCrawlSiteDependencies = {
   landingValueForUrl: typeof landingValueForUrl
   collectAgentDiscovery: typeof collectAgentDiscovery
   now: () => Date
+  memoryUsage: () => Pick<NodeJS.MemoryUsage, 'rss'>
+  totalMemory: () => number
 }
 
 export type CrawlSiteDependencies = Partial<ResolvedCrawlSiteDependencies>
@@ -99,5 +102,7 @@ export function resolveCrawlSiteDependencies(
     collectAgentDiscovery:
       dependencies.collectAgentDiscovery ?? collectAgentDiscovery,
     now: dependencies.now ?? (() => new Date()),
+    memoryUsage: dependencies.memoryUsage ?? (() => process.memoryUsage()),
+    totalMemory: dependencies.totalMemory ?? totalmem,
   }
 }

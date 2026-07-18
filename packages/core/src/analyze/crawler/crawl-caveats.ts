@@ -4,6 +4,7 @@ export function crawlCaveats(input: {
   maxPages: number
   queueSafetySkippedUrls: number
   originBackpressureSkippedUrls: number
+  memoryPressureSkippedUrls: number
 }): string[] {
   const caveats = input.cancelled
     ? ['Crawl cancelled before all queued URLs finished.']
@@ -18,6 +19,11 @@ export function crawlCaveats(input: {
   if (input.originBackpressureSkippedUrls > 0) {
     caveats.push(
       `Stopped ${input.originBackpressureSkippedUrls} queued URL${input.originBackpressureSkippedUrls === 1 ? '' : 's'} because the origin stayed slow. This is incomplete crawl evidence, not a failed URL check.`,
+    )
+  }
+  if (input.memoryPressureSkippedUrls > 0) {
+    caveats.push(
+      `Left ${input.memoryPressureSkippedUrls} eligible URL${input.memoryPressureSkippedUrls === 1 ? '' : 's'} unchecked after the local memory safety limit was reached. Start with --health or lower --max-pages.`,
     )
   }
   return caveats

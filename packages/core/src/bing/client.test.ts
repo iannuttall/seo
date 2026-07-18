@@ -76,3 +76,39 @@ test('Bing client errors never expose the API key', async () => {
       !error.message.includes('do-not-print'),
   )
 })
+
+test('Bing client normalizes link count and referring URL pages', async () => {
+  const api = client({
+    GetLinkCounts: {
+      Links: [
+        { Url: 'https://example.com/a', Count: 12 },
+        { Url: 123, Count: 2 },
+      ],
+      TotalPages: 3,
+    },
+    GetUrlLinks: {
+      Details: [
+        { Url: 'https://source.example/a', AnchorText: ' Example ' },
+        { Url: false },
+      ],
+      TotalPages: 2,
+    },
+  })
+  assert.deepEqual(await api.getLinkCounts('https://example.com/', 0), {
+    rows: [{ url: 'https://example.com/a', count: 12 }],
+    totalPages: 3,
+    invalidRows: 1,
+    capped: false,
+    returnedRows: 1,
+  })
+  assert.deepEqual(
+    await api.getUrlLinks('https://example.com/', 'https://example.com/a', 0),
+    {
+      rows: [{ url: 'https://source.example/a', anchorText: 'Example' }],
+      totalPages: 2,
+      invalidRows: 1,
+      capped: false,
+      returnedRows: 1,
+    },
+  )
+})

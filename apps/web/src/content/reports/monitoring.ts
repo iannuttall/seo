@@ -79,6 +79,46 @@ export const monitoringReports = [
     sources: ['robots', 'javascript'],
   },
   {
+    id: 'link-evidence',
+    name: 'Referring link evidence',
+    category: 'monitoring',
+    summary:
+      'Review bounded referring URLs and target pages from Bing Webmaster or a local link export.',
+    question:
+      'Which retained pages link to this site, and where do they point?',
+    useWhen: [
+      'You need concrete referring URLs and anchor text where the source provides it.',
+      'You have Bing Webmaster connected or a CSV, JSON, or JSONL link export.',
+    ],
+    avoidWhen: [
+      'You need a complete web-scale backlink index or a third-party authority score.',
+    ],
+    evidence: [
+      'Bounded Bing Webmaster link rows or normalized rows read from an explicit local export.',
+    ],
+    methodology: [
+      'Validates HTTP URLs, normalizes common field names, deduplicates rows, and applies strict provider, file, and output limits.',
+      'Streams CSV and JSONL files. Regular JSON arrays have a smaller byte limit so large imports do not create an unexpected memory spike.',
+    ],
+    exampleParams: {
+      file: './links.csv',
+      rowLimit: 10000,
+      limit: 100,
+    },
+    interpretation: [
+      'Read provenance and selection before the link list. Open a referring page to confirm that an important link still exists.',
+    ],
+    caveats: [
+      'The retained rows are not a complete backlink index and do not measure link quality, authority, value, or ranking impact.',
+    ],
+    nextSteps: [
+      'Verify a selected referring URL directly.',
+      'Trace a target URL when it redirects or no longer serves the expected page.',
+    ],
+    related: ['link-recovery', 'redirect-trace', 'site-crawl'],
+    sources: ['bing-webmaster'],
+  },
+  {
     id: 'index-coverage',
     name: 'Index coverage signals',
     category: 'monitoring',

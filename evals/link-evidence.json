@@ -1,0 +1,29 @@
+{
+  "subject": "link-evidence",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Agent task: show me who links to this site using the connected Bing project.",
+      "expected_output": "Should route to report id link-evidence and describe it before the first run. Should run seo links --project <project> --json or seo_run_report with the verified Bing site. Should read dataStatus, provenance, warnings, caveats, and selection before listing rows. Should call the result bounded Bing evidence, not a complete backlink profile, and should recommend opening selected referring URLs to confirm that the links still exist.",
+      "assertions": [
+        "Uses report id link-evidence",
+        "Reads coverage and limits before link rows",
+        "Does not claim complete backlink coverage or link quality",
+        "Recommends direct verification of selected referring URLs"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: import ./links.csv and give me every backlink plus domain authority scores.",
+      "expected_output": "Should run report id link-evidence with file ./links.csv and bounded row and output limits, or use seo links --file ./links.csv --json. Should explain that the import can normalize and deduplicate retained rows but cannot create domain authority scores or guarantee every backlink. Should read suppliedRows, validRows, invalidRows, duplicateRows, capped, selection, warnings, and caveats before summarising.",
+      "assertions": [
+        "Uses the bounded file import path",
+        "Reads import provenance and output selection",
+        "Declines to invent domain authority scores",
+        "Does not call the retained rows every backlink"
+      ],
+      "files": []
+    }
+  ]
+}

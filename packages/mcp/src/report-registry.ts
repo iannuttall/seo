@@ -130,7 +130,7 @@ const reportGroups: readonly ReportGroup[] = [
   {
     category: 'monitoring',
     register: registerProviderTools,
-    names: ['seo_bing_webmaster_overview'],
+    names: ['seo_bing_webmaster_overview', 'seo_link_evidence'],
   },
   {
     category: 'reporting',

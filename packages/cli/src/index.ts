@@ -34,6 +34,7 @@ import {
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
 import { llmsCommand } from './commands/llms.js'
+import { linksCommand } from './commands/links.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -189,6 +190,7 @@ const allHelpSections: HelpSection[] = [
       ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo index-watch', 'Check URL Inspection status'],
       ['seo link-recover', 'Find broken search-value URLs'],
+      ['seo links', 'Review bounded referring-link evidence'],
       ['seo redirect-trace', 'Trace redirects'],
       ['seo gsc-query', 'Run a raw GSC query'],
       ['seo url-inspect', 'Run URL Inspection'],
@@ -285,6 +287,7 @@ const main = defineCommand({
     'index-coverage': indexCoverageCommand,
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
+    links: linksCommand,
     'monthly-report': monthlyReportCommand,
     monitoring: monitoringCommand,
     'report-narrative': reportNarrativeCommand,
@@ -364,6 +367,7 @@ const directReportIds = new Set([
   'index-coverage',
   'index-watch',
   'internal-links',
+  'link-evidence',
   'page-opportunities',
   'quick-wins',
   'redirect-trace',
@@ -391,6 +395,7 @@ function telemetryReportId(args: string[]): string | undefined {
     return 'measure-change'
   }
   if (command === 'llms' && subcommand === 'audit') return 'llms-txt-audit'
+  if (command === 'links') return 'link-evidence'
   if (command === 'llms' && subcommand === 'generate') {
     return 'generate-llms-txt'
   }

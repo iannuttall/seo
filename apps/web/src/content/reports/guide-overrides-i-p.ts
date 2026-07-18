@@ -274,6 +274,48 @@ export const reportGuideOverridesIP: Partial<
       supportingKeywords: ['technical SEO audit', 'seo audit'],
     },
   },
+  'link-evidence': {
+    name: 'Review referring link evidence',
+    summary:
+      'Normalize a bounded set of referring URLs from Bing Webmaster or a local export without downloading a web-scale index.',
+    inputs: [
+      {
+        label: 'Bing Webmaster link data or a local link export',
+        source: 'bing-webmaster',
+        role: 'Provides the referring URL, target URL, and optional anchor text observed by the selected source.',
+      },
+      {
+        label: 'Explicit work and output limits',
+        role: 'Bounds provider pages, target pages, file rows, retained rows, parallel requests, and returned detail.',
+      },
+    ],
+    checks: [
+      'Validates HTTP URLs, normalizes common import fields, deduplicates stable row keys, and preserves invalid and duplicate counts.',
+      'Streams CSV and JSONL files and rejects oversized regular JSON before reading it into memory.',
+      'Keeps provider pagination, file bytes, row limits, output omissions, warnings, and caveats beside the retained links.',
+    ],
+    returns: [
+      'A bounded list of referring URLs, target URLs, source domains, and anchor text where the source provided it.',
+      'Target-page counts, source provenance, validation counts, limit status, warnings, and narrow interpretation caveats.',
+    ],
+    alternatives: [
+      {
+        when: 'You need to find broken internal links or discover links across the current site.',
+        reportId: 'site-crawl',
+        doInstead:
+          'Run a bounded site crawl. It follows current internal links and records broken responses rather than importing external referring-link evidence.',
+      },
+      {
+        when: 'You need a complete backlink index, authority score, or link value estimate.',
+        doInstead:
+          'Use a specialist provider and keep its coverage and scoring method explicit. This report does not invent metrics that Bing or the imported file did not supply.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'backlink checker',
+      supportingKeywords: ['backlink report', 'referring domains'],
+    },
+  },
   'crawl-history': {
     name: 'Find a saved crawl report',
     summary:

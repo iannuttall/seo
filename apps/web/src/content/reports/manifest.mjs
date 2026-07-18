@@ -25,6 +25,7 @@ export const reportIds = [
   'index-monitor',
   'index-watch',
   'internal-links',
+  'link-evidence',
   'link-recovery',
   'crawl-history',
   'crawler-rules',

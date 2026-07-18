@@ -82,6 +82,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'index-monitor',
     'index-watch',
     'internal-links',
+    'link-evidence',
     'link-recovery',
     'llms-txt-audit',
     'measure-change',

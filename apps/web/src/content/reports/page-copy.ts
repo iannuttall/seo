@@ -167,6 +167,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Find broken URLs and weak redirects that still have Search Console value, then decide which pages to restore, redirect or leave alone using search evidence.',
     lead: 'Combine crawl failures with returned Search Console evidence to find broken URLs that may still matter. The report helps you choose between restoring, redirecting or deliberately leaving a URL gone.',
   },
+  'link-evidence': {
+    title: 'Backlink evidence report',
+    description:
+      'Review bounded referring URLs, target pages and anchor text from Bing Webmaster or a local CSV, JSON or JSONL export, with source limits kept visible.',
+    lead: 'See which retained pages link to the site without downloading a giant backlink index. The report keeps source coverage and limits visible, so a missing row never becomes proof that no link exists.',
+  },
   'crawl-history': {
     title: 'SEO crawl history',
     description:

@@ -131,7 +131,8 @@ export async function quickWinsReport(
     includeBrand: input.includeBrand,
   })
   const verificationRequested =
-    input.verifyContent === true || input.verifyLimit !== undefined
+    input.verifyContent === true ||
+    (input.verifyContent !== false && input.verifyLimit !== undefined)
   const verificationItems = verificationRequested
     ? analysis.items.slice(0, verifyLimit)
     : []

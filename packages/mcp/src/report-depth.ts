@@ -198,6 +198,28 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'site-crawl', reason: 'Checks internal links and live pages.' },
     ],
   },
+  'server-log-analysis': {
+    readOrder: [
+      'dataStatus, provenance coverage, warnings, and caveats',
+      'summary and statusCodes',
+      'crawlers, then the bounded crawlerPaths list and selection',
+    ],
+    doNotClaim: [
+      'A user-agent match does not verify the crawler identity or source IP.',
+      'The supplied file does not prove that every server or time period is represented.',
+      'Path rankings are partial when path tracking reached its limit.',
+    ],
+    verify:
+      'Check important crawler errors against the original log line and deployment or server configuration before changing the site.',
+    related: [
+      { id: 'site-crawl', reason: 'Checks the current site directly.' },
+      { id: 'crawler-rules', reason: 'Explains current crawl checks.' },
+      {
+        id: 'redirect-trace',
+        reason: 'Traces one failing or redirecting path.',
+      },
+    ],
+  },
   cannibalisation: {
     readOrder: [
       'dataStatus and both source.pageExposure and source.propertyDemand with validation counts and completeness',

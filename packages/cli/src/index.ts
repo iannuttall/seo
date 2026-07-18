@@ -33,8 +33,8 @@ import {
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
-import { llmsCommand } from './commands/llms.js'
 import { linksCommand } from './commands/links.js'
+import { llmsCommand } from './commands/llms.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -77,6 +77,7 @@ import {
 } from './commands/reports.js'
 import { explainCommand, rulesCommand } from './commands/rules.js'
 import { scheduleCommand } from './commands/schedule.js'
+import { serverLogsCommand } from './commands/server-logs.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
 import { skillsCommand } from './commands/skills.js'
 import {
@@ -191,6 +192,7 @@ const allHelpSections: HelpSection[] = [
       ['seo index-watch', 'Check URL Inspection status'],
       ['seo link-recover', 'Find broken search-value URLs'],
       ['seo links', 'Review bounded referring-link evidence'],
+      ['seo server-logs analyze', 'Review crawler requests in an access log'],
       ['seo redirect-trace', 'Trace redirects'],
       ['seo gsc-query', 'Run a raw GSC query'],
       ['seo url-inspect', 'Run URL Inspection'],
@@ -296,6 +298,7 @@ const main = defineCommand({
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,
+    'server-logs': serverLogsCommand,
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,

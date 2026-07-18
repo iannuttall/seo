@@ -213,6 +213,22 @@ file limit to avoid a memory spike. Every result includes the number of rows
 read, rejected, deduplicated, omitted, or stopped by a limit. It is evidence
 from the selected source, not a complete backlink index or an authority score.
 
+## Analyze crawler traffic in server logs
+
+Stream a local NGINX or Apache-style combined access log without importing or
+retaining every raw request:
+
+```sh
+seo server-logs analyze --file ./access.log --json
+seo server-logs analyze --file ./access.jsonl --format jsonl --json
+```
+
+The report groups observed search and AI crawler user agents by response class
+and path. Input bytes, rows, line size, unique paths, and returned detail are
+bounded, and any capped or malformed evidence stays visible. User-agent names
+can be spoofed, so the result describes observed request strings rather than
+verified crawler identity.
+
 ## Crawl a site
 
 For a large or unfamiliar site, start with the sitemap health pass:

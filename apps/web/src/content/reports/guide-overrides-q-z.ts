@@ -3,6 +3,48 @@ import type { ReportGuideOverride } from './guide-types'
 export const reportGuideOverridesQZ: Partial<
   Record<string, ReportGuideOverride>
 > = {
+  'server-log-analysis': {
+    name: 'Review crawler activity in server logs',
+    summary:
+      'Stream a local access log into bounded crawler, status, and path evidence without building another raw log database.',
+    inputs: [
+      {
+        label: 'Combined or JSONL access log',
+        source: 'server-logs',
+        role: 'Provides timestamps, request paths, response statuses, bytes, and user-agent strings from the selected local file.',
+      },
+      {
+        label: 'Explicit work and output limits',
+        role: 'Bounds input bytes, rows, line length, unique crawler-path aggregates, and returned detail.',
+      },
+    ],
+    checks: [
+      'Parses common combined log fields or supported JSON aliases and records malformed rows separately.',
+      'Groups a narrow list of known search and AI crawler user-agent tokens, response classes, and normalized paths without retaining raw requests.',
+      'Keeps full-file, row, byte, path, parser, and output coverage visible beside the aggregates.',
+    ],
+    returns: [
+      'Observed crawler request totals with 2xx, 3xx, 4xx, and 5xx breakdowns and latest timestamps.',
+      'A bounded list of crawler and path aggregates, file provenance, warnings, and explicit omissions.',
+    ],
+    alternatives: [
+      {
+        when: 'You need to check the current response and page controls for a path from the log.',
+        reportId: 'audit-page',
+        doInstead:
+          'Audit the live URL after reviewing the source log evidence. The live check can inspect the current response and page controls, but it cannot recreate the historical server request.',
+      },
+      {
+        when: 'You need durable raw-event storage, arbitrary searches, or identity verification from source networks.',
+        doInstead:
+          'Use the server or a dedicated log platform for that job. This report deliberately performs one bounded local aggregation and does not retain raw events or verify crawler source IPs.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'seo log file analysis',
+      supportingKeywords: ['technical SEO audit'],
+    },
+  },
   'quick-wins': {
     name: 'Find SEO quick wins',
     summary:

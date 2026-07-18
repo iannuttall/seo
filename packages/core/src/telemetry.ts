@@ -64,6 +64,7 @@ export const TELEMETRY_REPORTS = [
   'index-watch',
   'internal-links',
   'link-evidence',
+  'server-log-analysis',
   'link-recovery',
   'crawl-history',
   'crawler-rules',

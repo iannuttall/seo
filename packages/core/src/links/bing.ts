@@ -1,5 +1,6 @@
 import type {
   BingLinkCountRow,
+  BingLinkPage,
   BingUrlLinkRow,
   BingWebmasterClient,
 } from '../bing/client.js'
@@ -82,7 +83,7 @@ async function targetDetails(input: {
   let totalPages = 0
   for (let page = 0; page < input.pages; page += 1) {
     requestedPages += 1
-    let response
+    let response: BingLinkPage<BingUrlLinkRow>
     try {
       response = await input.client.getUrlLinks(
         input.site,

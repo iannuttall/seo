@@ -572,3 +572,368 @@ and that confirmed challenge bodies do not enter the page cache.
 The full build, typecheck, test, and lint gates pass. Skill, README, CLI help,
 report guidance, and website documentation all expose the same identity and
 safe access policy.
+
+## SEO-016: crawl memory grows far beyond the active page window
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `d103400`
+
+### What failed
+
+Six-site dogfood crawls peaked between 462 MB and 1.27 GB RSS. The largest run
+retained only five pages, used no JavaScript rendering, and processed about
+9.65 MB of HTML with 18,303 observed internal links.
+
+### Impact
+
+Large sites cannot be crawled safely even with a tiny page limit. A full crawl
+can slow or terminate the user's machine before the configured boundary is
+useful.
+
+### Cause and fix
+
+The crawl path performed deep article extraction, reparsed page HTML, retained
+every outgoing link in a crawl-wide graph, and repeatedly searched, shifted,
+and sorted the URL queue. Crawls now reuse one parsed document, use a lightweight
+crawl-specific content extractor, retain only counts and 25-link samples, and
+aggregate incoming-link evidence incrementally. A deterministic indexed
+min-heap keeps queue insertion, depth reduction, and removal logarithmic.
+
+### Verification
+
+The resource gate crawls 100 pages of 256 KiB HTML with 100 links per page. It
+completed in 14.2 seconds with 283.4 MiB incremental peak RSS, 178.1 MiB
+incremental heap, 26.8 MiB of local data, and no link sample above 25 URLs. A
+10-page Example Site canary completed in 6.1 seconds at 386.4 MiB total peak RSS,
+below the 462 MiB to 1.27 GB dogfood range. Crawl, extraction, redirect,
+malformed-link, and resource regression tests pass.
+
+## SEO-017: maxPages does not bound sitemap index acquisition
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `d103400`
+
+### What failed
+
+A health crawl with `maxPages: 25` fetched all 37 sitemap documents for
+example.org, reading 84.6 MB and peaking at 1.13 GB RSS before returning
+25 URL probes.
+
+### Impact
+
+A small health check can still download and parse a complete large sitemap
+tree. The stated page limit does not protect network, memory, or elapsed time.
+
+### Cause and fix
+
+Sitemap discovery queued and fetched the complete index before applying the URL
+limit. Acquisition now stops as soon as the requested unique URL inventory is
+full. Discovered but unfetched sitemap documents remain explicit partial
+evidence instead of disappearing.
+
+### Verification
+
+A 40-child sitemap fixture fetches only the root and first useful child when one
+child fills the URL budget, and reports the other 39 documents as unprocessed.
+The full resource gate independently confirms exactly two sitemap requests for
+its 100-page budget.
+
+## SEO-018: large-property opportunity analysis is quadratic
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `592e3ac`
+
+### What failed
+
+`quick-wins` repeatedly scanned 78,766 retained query/page rows for every
+candidate URL. It held about 100% CPU and 700 to 788 MB RSS for more than six
+minutes before termination. `ctr-underperformers` showed the same pattern.
+
+### Impact
+
+Normal reports can become unusable on large Search Console properties.
+
+### Cause and fix
+
+Each candidate URL filtered the complete retained-row set and rebuilt position
+benchmarks. The analyzer now builds normalized URL and position indexes once,
+uses leave-target-out aggregate math, reuses sorted percentile samples, and
+bounds its per-URL benchmark cache.
+
+### Verification
+
+A deterministic 20,000-row test records one indexing pass and 1,000 indexed URL
+lookups with zero fallback full-row scans. The resource gate analyzes 80,000
+rows in 1.5 seconds, returns the requested 25 results, and uses 254.9 MiB
+incremental RSS. The original run exceeded six minutes.
+
+## SEO-019: verifyContent false still fetches pages
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `5721ed9`
+
+### What failed
+
+`refresh-priorities` received `verifyContent: false` but still made ten live
+page requests because a default `verifyLimit` was interpreted as permission to
+verify content.
+
+### Impact
+
+Callers cannot prevent unexpected network traffic, crawl load, cache reads, or
+latency on a provider-only workflow.
+
+### Cause and fix
+
+Verification limits were treated as an independent request to fetch content.
+An explicit `verifyContent: false` now takes precedence over defaults and
+supplied limits in refresh-priorities, quick-wins, second-page, and
+striking-distance workflows.
+
+### Verification
+
+Regression coverage passes `verifyContent: false` together with a positive
+verification limit, asserts zero fetches, and confirms the report records that
+verification was not requested.
+
+## SEO-020: bounded workflow reports can return unbounded agent JSON
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `5721ed9`
+
+### What failed
+
+Reports with `limit: 25` returned 277 to 389 KB of structured JSON because the
+limit applied independently to several nested report sections.
+
+### Impact
+
+A single normal report can consume roughly 70,000 to 100,000 agent tokens and
+crowd the task evidence out of context.
+
+### Cause and fix
+
+Each nested list had its own limit but the MCP envelope had no total limit.
+Workflow tool results now enforce a 96 KiB structured-output budget, remove a
+duplicate embedded Markdown representation, compact arrays and strings, and
+publish original and returned byte counts plus explicit omissions. A final
+fallback still retains source provenance, caveats, warnings, selection, and
+totals.
+
+### Verification
+
+Large multi-section and forced-fallback tests stay at or below 96 KiB, disclose
+every truncation mode, and retain provenance and caveats. The separately
+rendered MCP Markdown still uses the complete report evidence.
+
+## SEO-021: generated llms.txt drops partial crawl provenance
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `ba9f612`
+
+### What failed
+
+An `llms.txt` draft generated from 10 of 164 sitemap URLs omitted the source
+crawl's partial status, cap, and warnings.
+
+### Impact
+
+Users and agents can mistake a sampled draft for a sitewide inventory.
+
+### Cause and fix
+
+Generation copied selected pages without carrying the source crawl state. The
+structured result and generated Notes now include the source report id, status,
+crawled and discovered counts, sitemap coverage, warning totals, retained
+warnings, and whether warning evidence was truncated.
+
+### Verification
+
+A capped 10-of-164 fixture remains `partial` in structured output and states
+the exact coverage and sitemap warning inside the generated file.
+
+## SEO-022: pretty top-fixes output hides incomplete coverage
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `ba9f612`
+
+### What failed
+
+Pretty output printed `Found 0 top fix groups` for crawls covering 10 of 164
+and 5 of 16,620 sitemap URLs without showing the JSON coverage warning.
+
+### Impact
+
+A bounded sample is presented as a sitewide zero on the human path.
+
+### Cause and fix
+
+The human summary used only the returned group count. It now checks crawl
+coverage before making that statement and includes the exact crawled and
+discovered URL counts plus a warning against sitewide inference when evidence
+is partial.
+
+### Verification
+
+MCP crawler-tool tests cover partial crawls and confirm the compact summary,
+structured result, and warning retain the same incomplete-coverage evidence.
+
+## SEO-023: crawl-history site filtering excludes profile-free crawls
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `ba9f612`
+
+### What failed
+
+Filtering crawl history by `https://keep.md` returned no rows even though a
+saved crawl for that URL existed. The query matched only the optional Search
+Console site field.
+
+### Impact
+
+Users cannot find ordinary crawl-only reports with the documented site filter.
+
+### Cause and fix
+
+The store filtered only the optional Search Console `site` field. It now also
+matches normalized crawl start URLs by exact URL, origin, hostname, domain
+property, and safe URL-prefix forms without broad cross-site substring matches.
+
+### Verification
+
+Store tests save a profile-free crawl and find it by full URL and hostname while
+preserving existing provider-linked filtering.
+
+## SEO-024: generated descriptions can end mid-word
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `ba9f612`
+
+### What failed
+
+Generated `llms.txt` descriptions ended in fragments including `TypeScri`,
+`limi`, and `re` because text was cut at a raw character boundary.
+
+### Impact
+
+Generated artifacts look corrupted and require avoidable manual cleanup.
+
+### Cause and fix
+
+Description text used a raw character slice. It now normalizes whitespace,
+cuts at the final complete word inside the limit, adds an ellipsis, and emits
+only the ellipsis when a single token is longer than the whole allowance.
+
+### Verification
+
+Generation tests cover normal long prose and a 200-character unbroken token.
+Neither can leave a word fragment in the generated file, and both disclose the
+omission with an ellipsis.
+
+## SEO-025: singular count grammar is inconsistent across shared surfaces
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `ba9f612`
+
+### What failed
+
+Dogfood output included `Found 1 crawler rules`, `1 concept files`, and
+`1 clicks` after SEO-006 was verified for a narrower report family.
+
+### Impact
+
+Human and agent summaries still look unfinished and the count helper is not
+the shared product contract it was intended to be.
+
+### Cause and fix
+
+Several newer summaries manually joined numbers and plural nouns. Crawler rule,
+OKF concept, and query-click summaries now use the shared count formatter with
+explicit singular and plural forms.
+
+### Verification
+
+Crawler MCP, OKF, and query-cluster tests cover singular output alongside the
+existing zero and plural report coverage.
+
+## SEO-026: query tokenization creates one ICU segmenter per row
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `592e3ac`
+
+### What failed
+
+An 80,000-row quick-wins canary peaked near 925 MB RSS even after the
+quadratic benchmark scan was removed. The shared tokenizer constructed a new
+`Intl.Segmenter` for every tokenization call, repeatedly allocating the same
+native ICU state across large provider datasets.
+
+### Impact
+
+Linear provider analysis still consumes excessive native memory and can make
+large Search Console properties unsafe to process locally.
+
+### Cause and fix
+
+The tokenizer constructed identical native ICU segmentation state on every
+call. It now reuses one module-wide word segmenter while preserving the same
+Unicode-aware token contract.
+
+### Verification
+
+The 80,000-row canary dropped from about 925 MiB total peak RSS before this fix
+to 254.9 MiB incremental RSS in the isolated gate and completed in 1.5 seconds.
+The full multilingual analysis and tokenizer regression suite passes.
+
+## SEO-027: report names lose acronym casing on the stats page
+
+- Status: Verified
+- Observed: 2026-07-18
+- Affected version: 0.2.8
+- Fix commit: `0a6521e`
+
+### What failed
+
+The live stats page derived labels by capitalising the first character of each
+report id segment. It rendered names such as `Ai Readiness`, `Ctr
+Underperformers`, and `Affected Urls`.
+
+### Impact
+
+Public report names looked inconsistent with the report catalog and normal SEO
+terminology.
+
+### Cause and fix
+
+The client recreated report names from machine ids instead of using the site's
+canonical report catalog. The static page now embeds the catalog's id-to-name
+map and uses the derived label only as a fallback for an unknown historical id.
+
+### Verification
+
+The site regression test checks the built stats page for `AI search readiness`,
+`CTR underperformers`, and `Affected URLs`. A browser check with mocked live
+stats confirmed the canonical names at 1440-pixel and 390-pixel widths with no
+horizontal page overflow.

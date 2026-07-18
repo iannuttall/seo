@@ -4,6 +4,7 @@ import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import { crawlCaveats } from './crawl-caveats.js'
 import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
+import { crawlMemoryPressure } from './crawl-memory.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
 import { CrawlUrlQueue, type CrawlUrlQueueItem } from './crawl-url-queue.js'
 import { verifyExternalLinks } from './external-link-checks.js'
@@ -129,15 +130,26 @@ export async function crawlSite(
   let queuedUrls = 0
   let skippedUrls = 0
   const skipReasonCounts: Partial<Record<CrawlSkipReason, number>> = {}
-  const recordSkip = (reason: CrawlSkipReason): void => {
-    skippedUrls += 1
-    skipReasonCounts[reason] = (skipReasonCounts[reason] ?? 0) + 1
+  const recordSkips = (reason: CrawlSkipReason, count = 1): void => {
+    if (count <= 0) return
+    skippedUrls += count
+    skipReasonCounts[reason] = (skipReasonCounts[reason] ?? 0) + count
   }
+  const recordSkip = (reason: CrawlSkipReason): void => recordSkips(reason)
   let robotsDeferredUrls = 0
   let originBackpressureSkippedUrls = 0
   let queueSafetySkippedUrls = 0
   let failedUrls = 0
   let observedInternalLinks = 0
+  let memoryLimited = false
+  const memoryDeferredUrls = new Set<string>()
+  const checkMemoryPressure = (): void => {
+    if (memoryLimited) return
+    memoryLimited = crawlMemoryPressure({
+      rssBytes: deps.memoryUsage().rss,
+      totalMemoryBytes: deps.totalMemory(),
+    })
+  }
   let sitemapDiscovery: CrawlSitemapDiscovery | undefined
   let externalLinkVerification:
     | CrawlReport['externalLinkVerification']
@@ -293,6 +305,8 @@ export async function crawlSite(
       sitemapDiscovery = sitemap.discovery
     }
 
+    checkMemoryPressure()
+
     const nextQueueItem = (): CrawlUrlQueueItem | undefined => {
       while (queue.size) {
         const item = queue.take()
@@ -347,10 +361,12 @@ export async function crawlSite(
     while (
       !isCancelled() &&
       (queue.size || inFlight.size) &&
+      (!memoryLimited || inFlight.size > 0) &&
       pages.length < config.maxPages
     ) {
       while (
         !isCancelled() &&
+        !memoryLimited &&
         inFlight.size < activeConcurrency &&
         pages.length + inFlight.size < config.maxPages
       ) {
@@ -402,6 +418,7 @@ export async function crawlSite(
           activeConcurrency = 1
         }
       }
+      checkMemoryPressure()
 
       if (request.outcome === 'skipped') {
         recordSkip(
@@ -578,10 +595,38 @@ export async function crawlSite(
       })
 
       if (followLinks && task.depth < config.maxDepth) {
-        for (const url of result.urls) {
-          enqueue(url, task.depth + 1)
+        if (memoryLimited) {
+          for (const value of result.urls) {
+            const normalized = normalizeUrl(value, finalUrl)
+            if (
+              normalized &&
+              sameOrigin(normalized, origin) &&
+              !isLikelyAsset(normalized) &&
+              passesFilters(normalized, config.include, config.exclude) &&
+              !visited.has(normalized) &&
+              !queue.has(normalized)
+            ) {
+              discovered.add(normalized)
+              memoryDeferredUrls.add(normalized)
+            }
+          }
+        } else {
+          for (const url of result.urls) {
+            enqueue(url, task.depth + 1)
+          }
         }
       }
+    }
+
+    const memoryPressureSkippedUrls = memoryLimited
+      ? queue.size + memoryDeferredUrls.size
+      : 0
+    const stoppedForMemory = memoryPressureSkippedUrls > 0
+    if (stoppedForMemory) {
+      recordSkips('memory-pressure', memoryPressureSkippedUrls)
+      warnings.push(
+        'Crawl stopped before local memory use could become unsafe. The retained report is partial.',
+      )
     }
 
     const resolvedInlinkCounts = resolveLinkCountAliases(
@@ -636,6 +681,7 @@ export async function crawlSite(
       queueSafetySkippedUrls > 0 ||
       queue.size > 0 ||
       inFlight.size > 0 ||
+      stoppedForMemory ||
       sitemapEvidencePartial ||
       accessEvidencePartial ||
       requiredSitemapUnavailable
@@ -649,7 +695,11 @@ export async function crawlSite(
       cancelled && inFlight.size > 0 ? 'partial' : 'available'
 
     const dataSources = await crawlDataSources({
-      cancelled,
+      skipReason: cancelled
+        ? 'cancelled'
+        : stoppedForMemory
+          ? 'memory-pressure'
+          : undefined,
       site: healthStrategy ? undefined : site,
       googleAnalyticsPropertyId: healthStrategy
         ? undefined
@@ -677,7 +727,7 @@ export async function crawlSite(
       : partial || sourceEvidencePartial
         ? 'partial'
         : 'completed'
-    if (!cancelled && config.checkExternal) {
+    if (!cancelled && !stoppedForMemory && config.checkExternal) {
       emitStatus('external_links_started', {
         url: config.url,
         message: 'Started external link checks.',
@@ -696,7 +746,7 @@ export async function crawlSite(
     }
 
     const agentDiscovery =
-      !cancelled && config.checkAgentDiscovery
+      !cancelled && !stoppedForMemory && config.checkAgentDiscovery
         ? await deps.collectAgentDiscovery({
             startUrl: config.url,
             pages,
@@ -746,6 +796,7 @@ export async function crawlSite(
         maxPages: config.maxPages,
         queueSafetySkippedUrls,
         originBackpressureSkippedUrls,
+        memoryPressureSkippedUrls,
       }),
       stats: {
         discoveredUrls: discovered.size,

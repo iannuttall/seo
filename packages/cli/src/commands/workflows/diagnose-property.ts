@@ -1,6 +1,7 @@
 import {
   type CrawlReport,
   diagnosePropertyWorkflow,
+  type ReportHtmlSection,
   resolveTechnicalBaseline,
   reviewObservations,
   SeoError,
@@ -20,6 +21,12 @@ import {
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { truncate } from '../output.js'
+import {
+  printReportHtmlPath,
+  reportHtmlArgs,
+  reportHtmlOptions,
+  writeReportHtml,
+} from '../report-html.js'
 import { cliReportArgs } from '../report-options.js'
 import { startUrlForSite } from '../shared.js'
 import { printWorkflow } from './output.js'
@@ -282,6 +289,43 @@ function printSkippedProviderSections(
   )
 }
 
+function mainReportHtmlSections(input: {
+  technicalCrawl?: ReturnType<typeof technicalSection>
+  followups?: Array<{ command: string; why: string }>
+}): ReportHtmlSection[] {
+  const sections: ReportHtmlSection[] = []
+  const technical = input.technicalCrawl
+  if (technical) {
+    if ('topFixes' in technical) {
+      sections.push({
+        title: 'Technical crawl evidence',
+        summary: `${technical.summary.crawledUrls} pages were included in the ${technical.status === 'reused' ? 'saved' : 'new'} crawl evidence.`,
+        items: [
+          ...technical.topFixes.map(
+            (fix) =>
+              `${fix.ruleId}: ${fix.title}. ${fix.count} affected URLs. ${fix.recommendation}`,
+          ),
+          ...crawlDataSourceLines(technical.dataSources),
+        ],
+      })
+    } else {
+      sections.push({
+        title: 'Technical crawl evidence',
+        summary:
+          technical.reason ?? `Technical evidence was ${technical.status}.`,
+        items: [],
+      })
+    }
+  }
+  if (input.followups?.length) {
+    sections.push({
+      title: 'Recommended next commands',
+      items: input.followups.map((item) => `${item.command}: ${item.why}`),
+    })
+  }
+  return sections
+}
+
 function technicalFirstSummary(
   section: ReturnType<typeof technicalSection>,
 ): string {
@@ -540,6 +584,7 @@ function workflowCommandMeta(input: {
               description:
                 'Include the full report in JSON output. Default JSON is a compact summary for agents.',
             },
+            ...reportHtmlArgs,
           }
         : {}),
       json: {
@@ -550,6 +595,7 @@ function workflowCommandMeta(input: {
     },
     run: async ({ args }) => {
       const json = jsonFlag(args)
+      const html = input.printFollowups ? reportHtmlOptions(args) : undefined
       const full = input.printFollowups && booleanArg(args.full)
       const project = projectArg(args)
       const explicitSite = stringArg(args.site)
@@ -638,6 +684,21 @@ function workflowCommandMeta(input: {
               }
             : jsonReport,
         )
+        return
+      }
+      if (html) {
+        const path = await writeReportHtml({
+          report: outputReport.output.narrative,
+          reportName: 'report',
+          title: useSearchData ? 'SEO report' : 'Technical SEO report',
+          options: html,
+          projectId: selection?.client?.id,
+          additionalSections: mainReportHtmlSections({
+            technicalCrawl,
+            followups,
+          }),
+        })
+        printReportHtmlPath(path)
         return
       }
       if (useSearchData) {

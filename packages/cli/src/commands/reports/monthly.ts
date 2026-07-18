@@ -5,6 +5,12 @@ import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import { printNextCommand } from '../output.js'
+import {
+  printReportHtmlPath,
+  reportHtmlArgs,
+  reportHtmlOptions,
+  writeReportHtml,
+} from '../report-html.js'
 import { cliReportArgs } from '../report-options.js'
 import {
   reportFetchArgs,
@@ -31,9 +37,11 @@ export const monthlyReportCommand = defineCommand({
       },
     }),
     ...reportFetchArgs,
+    ...reportHtmlArgs,
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const html = reportHtmlOptions(args)
     const selectionInput = reportSelectionInput(args)
     const selection = await resolveClientSelection({
       client: selectionInput.client,
@@ -51,6 +59,17 @@ export const monthlyReportCommand = defineCommand({
 
     if (json) {
       printJson(report)
+      return
+    }
+    if (html) {
+      const path = await writeReportHtml({
+        report,
+        reportName: 'monthly-report',
+        title: `Monthly SEO report for ${report.month}`,
+        options: html,
+        projectId: selection.client?.id,
+      })
+      printReportHtmlPath(path)
       return
     }
     process.stdout.write(`${report.markdown}\n`)

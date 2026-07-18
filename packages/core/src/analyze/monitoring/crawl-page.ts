@@ -20,18 +20,6 @@ import type {
   CrawlResponseObservation,
 } from './types.js'
 
-function sameOriginUrl(href: string, base: URL): string | undefined {
-  try {
-    const url = new URL(href, base)
-    url.hash = ''
-    if (url.origin !== base.origin) return undefined
-    if (!['http:', 'https:'].includes(url.protocol)) return undefined
-    return url.toString()
-  } catch {
-    return undefined
-  }
-}
-
 function resolvedUrl(
   href: string | undefined,
   base: string,
@@ -80,55 +68,6 @@ function safeResponseHeaders(
 
 function truncate(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value
-}
-
-function anchorSamples(
-  links: Array<{ href: string; text: string; internal: boolean }>,
-  internal: boolean,
-): Array<{ href: string; text: string }> {
-  const seen = new Set<string>()
-  const samples: Array<{ href: string; text: string }> = []
-  for (const link of links) {
-    if (link.internal !== internal) continue
-    const text = truncate(link.text.replace(/\s+/g, ' ').trim(), 120)
-    if (!text) continue
-    const key = `${link.href}\n${text}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    samples.push({ href: link.href, text })
-    if (samples.length >= 25) break
-  }
-  return samples
-}
-
-function socialProfileLinks(
-  links: Array<{ href: string; internal: boolean }>,
-): string[] {
-  const hosts = [
-    'facebook.com',
-    'instagram.com',
-    'linkedin.com',
-    'pinterest.com',
-    'tiktok.com',
-    'twitter.com',
-    'x.com',
-    'youtube.com',
-  ]
-  const profiles = new Set<string>()
-  for (const link of links) {
-    if (link.internal) continue
-    try {
-      const url = new URL(link.href)
-      const host = url.hostname.replace(/^www\./, '').toLowerCase()
-      if (hosts.some((value) => host === value || host.endsWith(`.${value}`))) {
-        url.hash = ''
-        profiles.add(url.toString())
-      }
-    } catch {
-      // Ignore malformed outgoing links.
-    }
-  }
-  return [...profiles].slice(0, 50)
 }
 
 function sameDocumentUrl(left?: string, right?: string): boolean {
@@ -386,17 +325,13 @@ export async function crawlOne(
 
   try {
     const extracted = await extractPage(fetched, 'crawler')
-    const base = new URL(extracted.finalUrl)
-    const internalLinks = extracted.links
-      .map((link) => sameOriginUrl(link.href, base))
-      .filter((value): value is string => Boolean(value))
-    const externalLinks = extracted.links
-      .filter((link) => !link.internal)
-      .map((link) => link.href)
-      .filter((href) => /^https?:\/\//.test(href))
-    const h1 = extracted.headings.find((heading) => heading.level === 1)?.text
-    const uniqueInternalLinks = [...new Set(internalLinks)]
-    const uniqueExternalLinks = [...new Set(externalLinks)]
+    const crawlerEvidence = extracted.crawlerEvidence
+    if (!crawlerEvidence) {
+      throw new Error('Crawler extraction did not return crawl evidence.')
+    }
+    const h1 = crawlerEvidence.h1
+    const uniqueInternalLinks = crawlerEvidence.internalLinks
+    const uniqueExternalLinks = crawlerEvidence.externalLinks
     const canonical =
       extracted.canonicalEvidence?.selectedUrl ??
       resolvedUrl(extracted.canonical, extracted.finalUrl)
@@ -429,12 +364,9 @@ export async function crawlOne(
       metaRobots: extracted.metaRobots,
       xRobotsTag: extracted.xRobotsTag,
       h1,
-      h1Count: extracted.headings.filter((heading) => heading.level === 1)
-        .length,
-      h2Count: extracted.headings.filter((heading) => heading.level === 2)
-        .length,
-      h3Count: extracted.headings.filter((heading) => heading.level === 3)
-        .length,
+      h1Count: crawlerEvidence.h1Count,
+      h2Count: crawlerEvidence.h2Count,
+      h3Count: crawlerEvidence.h3Count,
       indexable: false,
       extractionStatus: 'complete',
       wordCount: extracted.wordCount,
@@ -485,8 +417,8 @@ export async function crawlOne(
       outgoingExternalCount: uniqueExternalLinks.length,
       sampleInternalLinks: uniqueInternalLinks.slice(0, 25),
       sampleExternalLinks: uniqueExternalLinks.slice(0, 25),
-      internalAnchorSamples: anchorSamples(extracted.links, true),
-      externalAnchorSamples: anchorSamples(extracted.links, false),
+      internalAnchorSamples: crawlerEvidence.internalAnchorSamples,
+      externalAnchorSamples: crawlerEvidence.externalAnchorSamples,
       markdownAlternates: extracted.markdownAlternates,
       schemaTypes: extracted.schemaTypes,
       structuredDataFormats: extracted.structuredDataFormats ?? [],
@@ -501,7 +433,7 @@ export async function crawlOne(
       ].slice(0, 50),
       schemaSameAsEvidence: (extracted.schemaSameAsEvidence ?? []).slice(0, 50),
       invalidSchemaSameAs: (extracted.invalidSchemaSameAs ?? []).slice(0, 25),
-      socialProfileLinks: socialProfileLinks(extracted.links),
+      socialProfileLinks: crawlerEvidence.socialProfileLinks,
       invalidJsonLdCount: extracted.invalidJsonLdCount,
       invalidJsonLdSamples: extracted.invalidJsonLdSamples,
       unrecognizedJsonLdTypes: extracted.unrecognizedJsonLdTypes ?? [],

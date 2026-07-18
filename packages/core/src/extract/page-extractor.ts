@@ -16,6 +16,34 @@ import {
   isValidStructuredDate,
 } from './structured-data.js'
 
+type CrawlerExtractionEvidence = {
+  h1?: string
+  h1Count: number
+  h2Count: number
+  h3Count: number
+  questionHeadings: number
+  internalLinks: string[]
+  externalLinks: string[]
+  internalAnchorSamples: Array<{ href: string; text: string }>
+  externalAnchorSamples: Array<{ href: string; text: string }>
+  socialProfileLinks: string[]
+}
+
+type PageExtraction = ExtractedPage & {
+  crawlerEvidence?: CrawlerExtractionEvidence
+}
+
+const SOCIAL_PROFILE_HOSTS = [
+  'facebook.com',
+  'instagram.com',
+  'linkedin.com',
+  'pinterest.com',
+  'tiktok.com',
+  'twitter.com',
+  'x.com',
+  'youtube.com',
+]
+
 function safeText(value?: string | null): string | undefined {
   const trimmed = value?.replace(/\s+/g, ' ').trim()
   return trimmed ? trimmed : undefined
@@ -120,11 +148,43 @@ function imageDimensionsFromUrl(
   return { width, height }
 }
 
+function addAnchorSample(
+  samples: Array<{ href: string; text: string }>,
+  seen: Set<string>,
+  href: string,
+  text: string,
+): void {
+  if (samples.length >= 25 || !text) return
+  const sampleText = text.length > 120 ? text.slice(0, 120).trimEnd() : text
+  const key = `${href}\n${sampleText}`
+  if (seen.has(key)) return
+  seen.add(key)
+  samples.push({ href, text: sampleText })
+}
+
+function addSocialProfile(profiles: Set<string>, href: string): void {
+  if (profiles.size >= 50) return
+  try {
+    const url = new URL(href)
+    const host = url.hostname.replace(/^www\./, '').toLowerCase()
+    if (
+      SOCIAL_PROFILE_HOSTS.some(
+        (value) => host === value || host.endsWith(`.${value}`),
+      )
+    ) {
+      url.hash = ''
+      profiles.add(url.toString())
+    }
+  } catch {
+    // Ignore malformed outgoing links.
+  }
+}
+
 export async function extractPage(
   fetchResult: PageFetchResult,
   extractor: ContentExtractor = 'defuddle',
   dependencies: MainContentDependencies = {},
-): Promise<ExtractedPage> {
+): Promise<PageExtraction> {
   const $ =
     extractor === 'crawler' && /<html(?:\s|>)/i.test(fetchResult.html)
       ? load(fetchResult.html, {
@@ -138,42 +198,83 @@ export async function extractPage(
     fetchResult.finalUrl,
   )
 
-  const headings = $('h1, h2, h3, h4, h5, h6')
-    .toArray()
-    .map((element) => ({
-      level: Number.parseInt(element.tagName.slice(1), 10),
-      text: $(element).text().replace(/\s+/g, ' ').trim(),
-    }))
-    .filter((heading) => heading.text.length > 0)
+  const headings: ExtractedPage['headings'] = []
+  let crawlerH1: string | undefined
+  let crawlerH1Count = 0
+  let crawlerH2Count = 0
+  let crawlerH3Count = 0
+  let questionHeadings = 0
+  $('h1, h2, h3, h4, h5, h6').each((_index, element) => {
+    const level = Number.parseInt(element.tagName.slice(1), 10)
+    const text = $(element).text().replace(/\s+/g, ' ').trim()
+    if (!text) return
+    if (text.trimEnd().endsWith('?')) questionHeadings += 1
+    if (level === 1) {
+      crawlerH1 ??= text
+      crawlerH1Count += 1
+    } else if (level === 2) {
+      crawlerH2Count += 1
+    } else if (level === 3) {
+      crawlerH3Count += 1
+    }
+    if (extractor !== 'crawler') headings.push({ level, text })
+  })
 
   const links: ExtractedPage['links'] = []
+  const crawlerInternalLinks = new Set<string>()
+  const crawlerExternalLinks = new Set<string>()
+  const internalAnchorSamples: Array<{ href: string; text: string }> = []
+  const externalAnchorSamples: Array<{ href: string; text: string }> = []
+  const internalAnchorKeys = new Set<string>()
+  const externalAnchorKeys = new Set<string>()
+  const socialProfileLinks = new Set<string>()
   let invalidLinkCount = 0
   let unsupportedLinkCount = 0
-  for (const element of $('a[href]').toArray()) {
+  $('a[href]').each((_index, element) => {
     const href = $(element).attr('href') ?? ''
     try {
       const absolute = new URL(href, fetchResult.finalUrl)
       if (!['http:', 'https:'].includes(absolute.protocol)) {
         unsupportedLinkCount += 1
-        continue
+        return
       }
-      links.push({
-        href: absolute.toString(),
-        text: $(element).text().replace(/\s+/g, ' ').trim(),
-        rel: ($(element).attr('rel') ?? '').split(/\s+/).filter(Boolean),
-        internal: absolute.host === url.host,
-        location: $(element).closest('nav, header').length
-          ? ('navigation' as const)
-          : $(element).closest('footer').length
-            ? ('footer' as const)
-            : $(element).closest('main, article').length
-              ? ('main-content' as const)
-              : ('other' as const),
-      })
+      const absoluteHref = absolute.toString()
+      const text = $(element).text().replace(/\s+/g, ' ').trim()
+      const internal = absolute.host === url.host
+      if (extractor === 'crawler') {
+        if (absolute.origin === url.origin) {
+          absolute.hash = ''
+          crawlerInternalLinks.add(absolute.toString())
+        }
+        if (!internal) {
+          crawlerExternalLinks.add(absoluteHref)
+          addSocialProfile(socialProfileLinks, absoluteHref)
+        }
+        addAnchorSample(
+          internal ? internalAnchorSamples : externalAnchorSamples,
+          internal ? internalAnchorKeys : externalAnchorKeys,
+          absoluteHref,
+          text,
+        )
+      } else {
+        links.push({
+          href: absoluteHref,
+          text,
+          rel: ($(element).attr('rel') ?? '').split(/\s+/).filter(Boolean),
+          internal,
+          location: $(element).closest('nav, header').length
+            ? ('navigation' as const)
+            : $(element).closest('footer').length
+              ? ('footer' as const)
+              : $(element).closest('main, article').length
+                ? ('main-content' as const)
+                : ('other' as const),
+        })
+      }
     } catch {
       invalidLinkCount += 1
     }
-  }
+  })
 
   const hreflang: ExtractedPage['hreflang'] = []
   let invalidHreflangCount = 0
@@ -222,7 +323,9 @@ export async function extractPage(
       .filter(([key, value]) => key && value),
   )
 
-  const structuredData = extractStructuredData($, fetchResult.finalUrl)
+  const structuredData = extractStructuredData($, fetchResult.finalUrl, {
+    retainJsonLd: extractor !== 'crawler',
+  })
   const hasDate =
     structuredData.hasDate ||
     isValidStructuredDate(
@@ -242,9 +345,6 @@ export async function extractPage(
       .toArray()
       .some((element) => Boolean(safeText($(element).text())))
   const semanticHtml = $('main, article').length > 0
-  const questionHeadings = headings.filter((heading) =>
-    heading.text.trimEnd().endsWith('?'),
-  ).length
   const listCount = $('ul, ol').length
   const tableCount = $('table').length
   const structuredBlocks = listCount + tableCount
@@ -260,53 +360,54 @@ export async function extractPage(
           .split(/\s+/)
           .filter(Boolean).length >= 25,
     )
-  const imageElements = $('img').toArray()
-  const oversizedImageCandidates = imageElements
-    .map((element) => {
-      const src = absoluteUrl($(element).attr('src'), fetchResult.finalUrl)
-      if (!src) return undefined
-      const width = numericAttribute($(element).attr('width'))
-      const height = numericAttribute($(element).attr('height'))
-      const srcsetWidth = largestSrcsetWidth($(element).attr('srcset'))
-      const filenameDimensions = imageDimensionsFromUrl(src)
-      const maxDetected = Math.max(
-        width ?? 0,
-        height ?? 0,
-        srcsetWidth ?? 0,
-        filenameDimensions?.width ?? 0,
-        filenameDimensions?.height ?? 0,
-      )
-      if (maxDetected < 2000) return undefined
-      const detectedFrom = [
-        width && width >= 2000 ? 'width' : undefined,
-        height && height >= 2000 ? 'height' : undefined,
-        srcsetWidth && srcsetWidth >= 2000 ? 'srcset' : undefined,
-        filenameDimensions &&
-        (filenameDimensions.width >= 2000 || filenameDimensions.height >= 2000)
-          ? 'filename'
-          : undefined,
-      ]
-        .filter(Boolean)
-        .join(',')
-      const candidateWidth = Math.max(
-        width ?? 0,
-        srcsetWidth ?? 0,
-        filenameDimensions?.width ?? 0,
-      )
-      const candidateHeight = Math.max(
-        height ?? 0,
-        filenameDimensions?.height ?? 0,
-      )
-      return {
-        src,
-        detectedFrom,
-        ...(candidateWidth > 0 ? { width: candidateWidth } : {}),
-        ...(candidateHeight > 0 ? { height: candidateHeight } : {}),
-      }
-    })
-    .filter((candidate): candidate is NonNullable<typeof candidate> =>
-      Boolean(candidate),
+  let imagesTotal = 0
+  let imagesMissingAlt = 0
+  const oversizedImageCandidates: ExtractedPage['oversizedImageCandidates'] = []
+  $('img').each((_index, element) => {
+    imagesTotal += 1
+    if ($(element).attr('alt') === undefined) imagesMissingAlt += 1
+    if (oversizedImageCandidates.length >= 25) return
+    const src = absoluteUrl($(element).attr('src'), fetchResult.finalUrl)
+    if (!src) return
+    const width = numericAttribute($(element).attr('width'))
+    const height = numericAttribute($(element).attr('height'))
+    const srcsetWidth = largestSrcsetWidth($(element).attr('srcset'))
+    const filenameDimensions = imageDimensionsFromUrl(src)
+    const maxDetected = Math.max(
+      width ?? 0,
+      height ?? 0,
+      srcsetWidth ?? 0,
+      filenameDimensions?.width ?? 0,
+      filenameDimensions?.height ?? 0,
     )
+    if (maxDetected < 2000) return
+    const detectedFrom = [
+      width && width >= 2000 ? 'width' : undefined,
+      height && height >= 2000 ? 'height' : undefined,
+      srcsetWidth && srcsetWidth >= 2000 ? 'srcset' : undefined,
+      filenameDimensions &&
+      (filenameDimensions.width >= 2000 || filenameDimensions.height >= 2000)
+        ? 'filename'
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(',')
+    const candidateWidth = Math.max(
+      width ?? 0,
+      srcsetWidth ?? 0,
+      filenameDimensions?.width ?? 0,
+    )
+    const candidateHeight = Math.max(
+      height ?? 0,
+      filenameDimensions?.height ?? 0,
+    )
+    oversizedImageCandidates.push({
+      src,
+      detectedFrom,
+      ...(candidateWidth > 0 ? { width: candidateWidth } : {}),
+      ...(candidateHeight > 0 ? { height: candidateHeight } : {}),
+    })
+  })
   const mixedContentUrls =
     url.protocol === 'https:'
       ? [
@@ -368,6 +469,22 @@ export async function extractPage(
     hasViewport: Boolean($('meta[name="viewport"]').attr('content')),
     headings,
     links,
+    ...(extractor === 'crawler'
+      ? {
+          crawlerEvidence: {
+            h1: crawlerH1,
+            h1Count: crawlerH1Count,
+            h2Count: crawlerH2Count,
+            h3Count: crawlerH3Count,
+            questionHeadings,
+            internalLinks: [...crawlerInternalLinks],
+            externalLinks: [...crawlerExternalLinks],
+            internalAnchorSamples,
+            externalAnchorSamples,
+            socialProfileLinks: [...socialProfileLinks],
+          },
+        }
+      : {}),
     markdownAlternates,
     hreflang,
     jsonLd: structuredData.jsonLd,
@@ -379,20 +496,23 @@ export async function extractPage(
     ),
     structuredDataFormats: structuredData.formats,
     googleRichResults: structuredData.googleRichResults,
-    schemaSameAsEvidence: structuredData.sameAs,
-    invalidSchemaSameAs: structuredData.invalidSameAs,
+    schemaSameAsEvidence:
+      extractor === 'crawler'
+        ? structuredData.sameAs.slice(0, 50)
+        : structuredData.sameAs,
+    invalidSchemaSameAs:
+      extractor === 'crawler'
+        ? structuredData.invalidSameAs.slice(0, 25)
+        : structuredData.invalidSameAs,
     schemaTypes: structuredData.schemaTypes,
     openGraph,
     twitter,
     author,
     hasAuthor,
     hasDate,
-    imagesTotal: imageElements.length,
-    imagesMissingAlt: imageElements.filter((element) => {
-      const alt = $(element).attr('alt')
-      return alt === undefined
-    }).length,
-    oversizedImageCandidates: oversizedImageCandidates.slice(0, 25),
+    imagesTotal,
+    imagesMissingAlt,
+    oversizedImageCandidates,
     mixedContentUrls,
     semanticHtml,
     questionHeadings,
@@ -400,7 +520,8 @@ export async function extractPage(
     tableCount,
     structuredBlocks,
     answerable,
-    contentText: text.replace(/\s+/g, ' ').trim(),
+    contentText:
+      extractor === 'crawler' ? text : text.replace(/\s+/g, ' ').trim(),
     excerpt,
     wordCount: content.wordCount,
     contentExtraction: content.diagnostics,

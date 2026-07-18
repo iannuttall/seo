@@ -66,6 +66,7 @@ import {
   segmentImpactCommand,
   strikingDistanceCommand,
 } from './commands/product/index.js'
+import { providersCommand } from './commands/providers/index.js'
 import { pseoCommand } from './commands/pseo/index.js'
 import { aiReadinessCommand } from './commands/readiness.js'
 import { reportCatalogCommand } from './commands/report-catalog.js'
@@ -209,6 +210,7 @@ const allHelpSections: HelpSection[] = [
       ['seo content-groups', 'Manage reusable page/query groups'],
       ['seo pseo', 'Audit programmatic SEO templates'],
       ['seo auth', 'Manage Google auth'],
+      ['seo providers bing', 'Connect and report on Bing Webmaster'],
       ['seo cache', 'Manage local cache'],
       ['seo privacy', 'Show local storage paths'],
       ['seo telemetry status', 'Check anonymous usage telemetry'],
@@ -272,6 +274,7 @@ const main = defineCommand({
     content: contentCommand,
     project: projectCommand,
     projects: projectCommand,
+    providers: providersCommand,
     'change-log': changeLogCommand,
     tests: testsCommand,
     'content-groups': contentGroupsCommand,

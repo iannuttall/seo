@@ -119,6 +119,21 @@ export const REPORT_GUIDANCE = {
     ],
     outcome: 'Consistent technical checks for each supplied URL.',
   },
+  'bing-webmaster-overview': {
+    name: 'Bing Webmaster overview',
+    description:
+      'Review bounded Bing search and crawl statistics for one verified site.',
+    useWhen: [
+      'You want search and crawl evidence observed by Bing.',
+      'You need a second search-engine view beside Search Console.',
+    ],
+    avoidWhen: [
+      'Bing Webmaster is not connected for this installation.',
+      'You need URL-level backlink rows or proof that a page is indexed.',
+    ],
+    outcome:
+      'A bounded traffic and crawl summary with provider coverage and caveats.',
+  },
   cannibalisation: {
     name: 'Query and URL overlap',
     description:

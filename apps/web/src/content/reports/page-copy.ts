@@ -47,6 +47,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Run the same technical SEO checks across an exact list of URLs for a release, migration or template sample without opening the crawl to the whole site.',
     lead: 'Audit a list of pages you already know about without opening the crawl to the rest of the site. This works well for launch checks, migration batches and representative template pages.',
   },
+  'bing-webmaster-overview': {
+    title: 'Bing Webmaster report',
+    description:
+      'Review bounded Bing search traffic and crawl statistics for one verified site with explicit provider coverage, row limits and partial data warnings.',
+    lead: 'See what Bing reported for recent search traffic and crawl activity without fetching the site. Read the provider coverage first because this evidence describes Bing only.',
+  },
   cannibalisation: {
     title: 'Keyword cannibalization report',
     description:

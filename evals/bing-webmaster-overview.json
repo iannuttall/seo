@@ -1,0 +1,30 @@
+{
+  "subject": "bing-webmaster-overview",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me how our site is doing in Bing and whether Bing is crawling it cleanly.",
+      "expected_output": "Should use report id bing-webmaster-overview for bounded Bing search and crawl evidence. Should follow the discovery flow with seo_list_reports, seo_describe_report, then seo_run_report using the verified Bing site URL. Should read dataStatus and provenance before traffic and crawl totals. Should state that Bing evidence does not describe Google or the whole search market and that the inIndex statistic is not URL-level proof of indexing.",
+      "assertions": [
+        "Uses report id bing-webmaster-overview",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Passes the verified Bing site URL",
+        "Reads dataStatus and provenance before totals",
+        "Does not present Bing inIndex as URL-level proof of indexing"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The Bing report is partial and capped but the returned crawl rows show no 4xx errors. Can we call the site clean?",
+      "expected_output": "Should refuse the all-clear. Should explain that partial or capped evidence only describes the retained Bing rows, that invalid or unavailable rows stay visible, and that Bing is one provider rather than a complete live crawl. Should recommend a bounded live site crawl to verify current response and page evidence.",
+      "assertions": [
+        "Refuses to call the site clean from partial capped evidence",
+        "Keeps capped invalid and unavailable rows visible",
+        "States Bing is one provider rather than a complete live crawl",
+        "Recommends a bounded live crawl for current evidence"
+      ],
+      "files": []
+    }
+  ]
+}

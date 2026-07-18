@@ -19,6 +19,12 @@ export const docsNav: DocsNavEntry[] = [
       'Connect read-only Search Console and optional Google Analytics data without treating partial rows as complete evidence.',
   },
   {
+    path: '/docs/bing',
+    label: 'Bing Webmaster',
+    description:
+      'Connect one verified Bing site and add bounded Bing search and crawl evidence to a project.',
+  },
+  {
     path: '/docs/cli',
     label: 'CLI',
     description:

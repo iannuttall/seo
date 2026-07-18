@@ -155,6 +155,30 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'redirect-trace', reason: 'Traces a redirecting URL.' },
     ],
   },
+  'bing-webmaster-overview': {
+    readOrder: [
+      'dataStatus and provenance',
+      'outputBudget and per-section outputSelection',
+      'traffic status, range, totals, returnedRows, invalidRows, and capped',
+      'crawl status, range, latest row, returnedRows, invalidRows, and capped',
+      'caveats',
+    ],
+    doNotClaim: [
+      'Bing evidence does not describe Google or the whole search market.',
+      'The provider inIndex statistic is not URL-level proof of indexing.',
+      'Partial, capped, invalid, or unavailable rows cannot support an all-clear.',
+    ],
+    verify:
+      'Check the same verified site in Bing Webmaster Tools and investigate the exact dates behind any crawl or traffic change.',
+    related: [
+      {
+        id: 'search-performance-overview',
+        reason: 'Adds Search Console evidence.',
+      },
+      { id: 'site-crawl', reason: 'Checks the current site directly.' },
+      { id: 'link-recovery', reason: 'Finds broken search-value URLs.' },
+    ],
+  },
   cannibalisation: {
     readOrder: [
       'dataStatus and both source.pageExposure and source.propertyDemand with validation counts and completeness',

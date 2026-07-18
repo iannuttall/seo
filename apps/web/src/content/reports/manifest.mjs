@@ -6,6 +6,7 @@ export const reportIds = [
   'ai-search-scorecard',
   'audit-page',
   'audit-urls',
+  'bing-webmaster-overview',
   'cannibalisation',
   'community-intent',
   'compare-crawls',

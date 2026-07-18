@@ -9,6 +9,7 @@ export interface SeoCliPaths {
   configFile: string
   tokensFile: string
   oauthClientFile: string
+  providerSecretsFile: string
   telemetryStateFile: string
   cacheDbFile: string
 }
@@ -87,6 +88,7 @@ export function resolveSeoCliPaths(input: SeoCliPathOptions = {}): SeoCliPaths {
     configFile: join(configDir, 'config.json'),
     tokensFile: join(configDir, 'tokens.json'),
     oauthClientFile: join(configDir, 'oauth-client.json'),
+    providerSecretsFile: join(configDir, 'provider-secrets.json'),
     telemetryStateFile: join(configDir, 'telemetry.json'),
     cacheDbFile: join(cacheDir, 'cache.db'),
   }

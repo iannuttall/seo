@@ -2,6 +2,45 @@ import type { ReportEditorial } from './types'
 
 export const monitoringReports = [
   {
+    id: 'bing-webmaster-overview',
+    name: 'Bing Webmaster overview',
+    category: 'monitoring',
+    summary:
+      'Review recent Bing search and crawl statistics for one verified site with explicit provider coverage and limits.',
+    question:
+      'What search traffic and crawl activity did Bing report for this verified site?',
+    useWhen: [
+      'You want Bing search and crawl evidence beside your other site evidence.',
+      'You need a small repeatable provider check without crawling the site.',
+    ],
+    avoidWhen: [
+      'You need URL level indexing proof or a complete view across every search engine.',
+    ],
+    evidence: [
+      'Bing Webmaster traffic and crawl statistics returned for the selected verified site.',
+    ],
+    methodology: [
+      'Requests traffic and crawl statistics in parallel, validates provider rows, sorts dates consistently, and keeps each section bounded.',
+      'Returns totals and coverage metadata while limiting agent output to the most recent rows.',
+    ],
+    exampleParams: {
+      site: 'https://example.com/',
+    },
+    interpretation: [
+      'Read provider status and coverage before using totals. Compare exact dates when a traffic or crawl value changes.',
+    ],
+    caveats: [
+      'Bing evidence describes Bing only. Its inIndex statistic is not independent URL level proof of indexing.',
+      'Partial, capped, invalid, or unavailable evidence cannot support an all clear.',
+    ],
+    nextSteps: [
+      'Check the same date range in Bing Webmaster Tools.',
+      'Run a site crawl when current page evidence is needed.',
+    ],
+    related: ['search-performance-overview', 'site-crawl', 'link-recovery'],
+    sources: ['bing-webmaster'],
+  },
+  {
     id: 'crawl-diff',
     name: 'Crawl diff',
     category: 'monitoring',

@@ -287,6 +287,12 @@ export function getPrivacySnapshot(): Array<{
       sizeBytes: sizeOf(paths.oauthClientFile),
     },
     {
+      label: 'Provider secrets',
+      path: paths.providerSecretsFile,
+      mode: fileMode(paths.providerSecretsFile),
+      sizeBytes: sizeOf(paths.providerSecretsFile),
+    },
+    {
       label: 'Telemetry state',
       path: paths.telemetryStateFile,
       mode: fileMode(paths.telemetryStateFile),

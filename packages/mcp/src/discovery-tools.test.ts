@@ -62,6 +62,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'ai-search-scorecard',
     'audit-page',
     'audit-urls',
+    'bing-webmaster-overview',
     'cannibalisation',
     'community-intent',
     'compare-crawls',

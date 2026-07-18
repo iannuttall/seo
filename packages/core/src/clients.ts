@@ -10,6 +10,7 @@ export type ClientProfileInput = {
   watchUrls?: string[]
   brandTerms?: string[]
   analytics?: ClientProfile['analytics']
+  searchEngines?: ClientProfile['searchEngines']
   reportDay?: number
   technicalWeekday?: number
   isDefault?: boolean
@@ -19,6 +20,12 @@ export function googleAnalyticsPropertyId(
   client: Pick<ClientProfile, 'analytics'> | undefined,
 ): string | undefined {
   return client?.analytics.google?.propertyId
+}
+
+export function bingWebmasterSiteUrl(
+  client: Pick<ClientProfile, 'searchEngines'> | undefined,
+): string | undefined {
+  return client?.searchEngines?.bing?.siteUrl
 }
 
 function slug(value: string): string {
@@ -78,6 +85,7 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
         }),
     ),
     analytics: input.analytics ?? existing?.analytics ?? {},
+    searchEngines: input.searchEngines ?? existing?.searchEngines,
     reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,
     isDefault: input.isDefault ?? existing?.isDefault,
@@ -93,6 +101,23 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
   config.clients = [...clients, client]
   writeConfig(config)
   return client
+}
+
+export function setClientBingSite(
+  idOrName: string,
+  siteUrl: string,
+): ClientProfile {
+  const client = getClient(idOrName)
+  if (!client) throw new Error(`Client not found: ${idOrName}`)
+  return saveClient({
+    id: client.id,
+    name: client.name,
+    siteUrl: client.siteUrl,
+    searchEngines: {
+      ...client.searchEngines,
+      bing: { siteUrl },
+    },
+  })
 }
 
 export function deleteClient(idOrName: string): boolean {

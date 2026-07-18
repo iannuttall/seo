@@ -1,6 +1,11 @@
 ---
 import DottedCard from '@/components/DottedCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import { reports } from '@/content/reports'
+
+const reportLabelsJson = JSON.stringify(
+  Object.fromEntries(reports.map((report) => [report.id, report.name])),
+)
 
 const metrics = [
   ['installs', 'Recorded installs'],
@@ -12,7 +17,7 @@ const metrics = [
 ] as const
 ---
 
-<div data-stats-root aria-busy="true">
+<div data-stats-root data-report-labels={reportLabelsJson} aria-busy="true">
   <PageHeader
     title="Anonymous usage stats"
     description="Aggregate event counts from installs that leave anonymous telemetry enabled. No user, machine, site, URL, report content, Google data, or location is attached to any event."
@@ -221,7 +226,20 @@ const metrics = [
   const reportPath = (report: string) =>
     `/docs/reports/${report === 'index-coverage-plan' ? 'index-plan' : report}`
 
+  const reportLabels = (() => {
+    const value = document
+      .querySelector('[data-stats-root]')
+      ?.getAttribute('data-report-labels')
+    if (!value) return {} as Record<string, string>
+    try {
+      return JSON.parse(value) as Record<string, string>
+    } catch {
+      return {} as Record<string, string>
+    }
+  })()
+
   const reportLabel = (report: string) =>
+    reportLabels[report] ??
     report
       .split('-')
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))

@@ -300,7 +300,7 @@ export const reportGuideOverridesAF: Partial<
   'bing-webmaster-overview': {
     name: 'Review Bing search and crawl evidence',
     summary:
-      'Read bounded Bing Webmaster traffic and crawl statistics for one verified site without crawling page bodies.',
+      'Find bounded Bing traffic trends, crawl changes, and query and page opportunities without crawling page bodies.',
     inputs: [
       {
         label: 'Verified Bing Webmaster site',
@@ -313,13 +313,14 @@ export const reportGuideOverridesAF: Partial<
       },
     ],
     checks: [
-      'Requests traffic and crawl statistics in parallel with strict response, time, and row limits.',
+      'Requests traffic, crawl, query, and page statistics in parallel with strict response, time, and row limits.',
       'Validates and orders provider rows, preserves invalid and capped counts, and keeps failed sections separate.',
-      'Limits agent detail to recent rows while retaining totals, ranges, latest crawl evidence, and omission counts.',
+      'Compares matched traffic periods and crawl snapshots without hiding missing dates.',
+      'Compares movements only for query and page entries observed in every weekly top list in both periods and keeps incomplete coverage visible.',
     ],
     returns: [
-      'Traffic totals and recent daily rows with explicit provider coverage.',
-      'Recent crawl statistics, latest evidence, section status, warnings, provenance, and caveats.',
+      'Prioritized findings with observed evidence, cautious interpretation, and a verification step.',
+      'Traffic trends, crawl changes, and bounded query and page opportunities with explicit provider coverage.',
     ],
     alternatives: [
       {

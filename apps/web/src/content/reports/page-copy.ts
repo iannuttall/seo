@@ -50,8 +50,8 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'bing-webmaster-overview': {
     title: 'Bing Webmaster report',
     description:
-      'Review bounded Bing search traffic and crawl statistics for one verified site with explicit provider coverage, row limits and partial data warnings.',
-    lead: 'See what Bing reported for recent search traffic and crawl activity without fetching the site. Read the provider coverage first because this evidence describes Bing only.',
+      'Find meaningful Bing traffic trends, crawl changes, and query and page opportunities with explicit provider coverage, limits, and clear verification steps.',
+    lead: 'See what changed in Bing and what deserves attention without fetching the site. Read provider coverage first, then verify important findings against current page or crawl evidence.',
   },
   cannibalisation: {
     title: 'Keyword cannibalization report',

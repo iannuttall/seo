@@ -1,11 +1,12 @@
 ---
 title: Bing Webmaster data
-description: Connect a verified Bing site, run bounded search and crawl reports, and keep provider limits visible.
+description: Connect a verified Bing site, review useful search and crawl insights, and keep provider limits visible.
 ---
 
 Bing Webmaster adds a second search-engine view to the evidence you already
-have. Its report covers Bing search traffic and crawl statistics for a verified
-site. It does not replace a live crawl or prove that one URL is indexed.
+have. Its report compares traffic periods, highlights crawl changes, and finds
+query and page opportunities for a verified site. It does not replace a live
+crawl or prove that one URL is indexed.
 
 ## Connect a verified site
 
@@ -64,15 +65,34 @@ seo reports run bing-webmaster-overview \
   --json
 ```
 
-The report requests Bing's daily search traffic and crawl statistics without
-writing either response to the local cache. Responses have a hard byte limit,
-and each statistics section keeps at most 400 rows. The result exposes returned
-rows, excluded invalid rows, caps, method names, observation time, and the
-credential source.
+The report requests Bing's daily search traffic and crawl statistics plus its
+weekly top query and page lists. It does not write these responses to the local
+cache. Every response has a hard byte limit. Daily sections keep at most 400
+rows and weekly sections keep at most 8,000 validated source rows before
+reducing them to bounded insights. Structured output retains at most 14 recent
+daily rows per section, 10 items per insight list, and 40 query and page insight
+items across the report.
 
-Read `dataStatus` before the totals. One failed section makes the result
-partial. Two failed sections make it unavailable. Invalid or capped rows also
-prevent a complete result.
+The useful parts come first:
+
+- `findings` ranks traffic changes, crawl regressions, and query or page review
+  opportunities with the evidence and a verification step.
+- `traffic.analysis` compares the latest 28 days with the previous 28 days. It
+  shows missing days rather than silently comparing incomplete periods.
+- `crawl.analysis` compares the latest daily snapshot with the snapshot on or
+  before the 28-day boundary.
+- `queries.analysis` and `pages.analysis` aggregate four weekly top lists,
+  compare movements only for entries observed in every week of both periods,
+  and return a small review list.
+
+The structured result also exposes returned rows, excluded invalid rows, caps,
+method names, observation time, and the credential source.
+
+Read `dataStatus`, provenance, and section coverage before the findings. Bing's
+query and page endpoints return weekly top lists, not complete exports, so
+those sections remain partial by design. An entry missing from one period is
+unknown and is never treated as zero. Invalid, capped, or failed sections also
+stay visible.
 
 ## Review referring links
 
@@ -109,6 +129,10 @@ still present before acting on it.
 
 Bing's search traffic includes data observed by Bing. It is not Google Search
 Console data and it does not describe the whole search market.
+
+The query and page opportunity range is a prioritization heuristic. It helps
+choose what to review first, but it is not a Bing requirement or a forecast.
+Check query intent and the live page before changing content.
 
 The crawl response can include an `inIndex` statistic. Treat that as a
 provider-reported site statistic for the observed date. It is not independent

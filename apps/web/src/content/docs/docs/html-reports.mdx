@@ -1,0 +1,91 @@
+---
+title: HTML reports for clients
+description: Create a standalone SEO report with the built-in renderer, or let your agent design one from structured evidence without weakening the data contract.
+---
+
+There are two ways to create an HTML report. Use the built-in renderer when you
+need a predictable file quickly. Ask your agent to design the page when the
+audience, brand, or story needs a more considered presentation.
+
+Both routes use the same report evidence. Changing the layout must not change
+what the data can prove.
+
+## Generate the built-in report
+
+The main, monthly, and narrative reports can write a standalone HTML file:
+
+```sh
+seo report --project example --format html
+seo monthly-report --project example --format html
+seo report-narrative --project example --format html
+```
+
+A dated filename is created in the current directory. Pass an output path when
+the report belongs somewhere specific:
+
+```sh
+seo report --project example \
+  --format html \
+  --output ./reports/client-report.html
+```
+
+Client view is the default. It keeps priorities and conclusions concise.
+Analyst view adds evidence coverage and unavailable sections:
+
+```sh
+seo report --project example --format html --view analyst
+```
+
+The result is one local file with embedded CSS. It works offline, adapts to
+smaller screens, prints cleanly, and includes `noindex,nofollow`. No AI model is
+called to generate or rewrite it.
+
+## Let an agent design the report
+
+Use structured JSON when you want the agent to choose the information design,
+visual hierarchy, and styling:
+
+```sh
+seo report --project example --full --json > seo-report.json
+```
+
+Start with compact JSON when the report only needs the main priorities. Add
+`--full` when the intended page needs deeper sections or supporting evidence.
+A focused report may be better than the main report when the client only needs
+one decision, such as crawl regressions or lost search traffic.
+
+Give the agent this request:
+
+```text
+Create one polished, standalone HTML report from seo-report.json for a client.
+Design the page for these findings instead of using a generic dashboard layout.
+Keep the site, reporting period, generated date, provider labels, data status,
+priorities, evidence, limitations, and verification steps visible. Keep observed
+evidence separate from interpretation. Do not invent missing values, forecasts,
+causes, scores, or conclusions. Preserve partial, capped, sampled, missing, and
+skipped states. Use semantic accessible HTML, embedded CSS, responsive and print
+styles, no remote scripts, and noindex,nofollow. Save the result locally and
+open it for review.
+```
+
+The installed agent skill carries the same instructions, so a shorter request
+such as "make a client-ready HTML report from this audit" is enough when the
+skill is active.
+
+## Keep the evidence intact
+
+The agent can rearrange sections, use charts, shorten labels, and match supplied
+brand direction. It cannot make the result more certain than the source.
+
+Search Console, Google Analytics, Bing Webmaster, and crawl evidence describe
+different things. Keep their labels and date windows visible. Do not blend them
+into an invented health score or imply that one provider explains another.
+
+Partial or capped evidence cannot support an all-clear. A missing row is not
+zero. A recommendation marked as a heuristic is not a forecast. Important
+actions should retain the report's verification step so the reader knows how to
+check the finding before or after a change.
+
+Keep tokens, credentials, account identifiers, and unnecessary raw rows out of
+the page. The report file is local, but anyone who receives it can read every
+value embedded in it.

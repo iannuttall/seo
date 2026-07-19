@@ -52,6 +52,21 @@ evidence. Add `--full` only when the agent needs every report section.
 Use `seo reports describe <id> --json` before constructing `params`. The schema
 is the current contract. A command copied from an old prompt is not.
 
+## Ask the agent to design the HTML report
+
+When the deliverable is for a client or stakeholder, the agent can turn the
+structured result into its own standalone HTML page. It should design for the
+actual findings and audience instead of copying the built-in layout.
+
+The visual treatment is flexible. The evidence is not. Require the page to keep
+provider labels, reporting dates, data status, caveats, skipped sections, and
+verification steps visible. Missing or partial data must not become zero, and
+the agent must not invent forecasts, causes, scores, or conclusions.
+
+The [HTML report guide](/docs/html-reports) includes the JSON command, a complete
+agent request, and the built-in renderer for cases where a fixed layout is more
+useful.
+
 ## Keep MCP discovery compact
 
 The local MCP server exposes three tools:

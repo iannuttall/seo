@@ -14,7 +14,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 import { site } from '@/lib/site'
 
 const catalogIds = reports.map((report) => report.id)
-const reportCountLabel = '50+'
+const reportCountLabel = String(reports.length)
 if (
   new Set(reportCollectionIds).size !== reportCollectionIds.length ||
   [...reportCollectionIds].sort().join('\n') !== [...catalogIds].sort().join('\n')

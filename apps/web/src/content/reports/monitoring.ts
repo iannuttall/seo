@@ -6,31 +6,32 @@ export const monitoringReports = [
     name: 'Bing Webmaster overview',
     category: 'monitoring',
     summary:
-      'Review recent Bing search and crawl statistics for one verified site with explicit provider coverage and limits.',
+      'Review Bing traffic trends, crawl changes, and query and page opportunities for one verified site.',
     question:
-      'What search traffic and crawl activity did Bing report for this verified site?',
+      'What changed in Bing, what needs review, and which evidence should I verify next?',
     useWhen: [
-      'You want Bing search and crawl evidence beside your other site evidence.',
+      'You want processed Bing search and crawl insights beside your other site evidence.',
       'You need a small repeatable provider check without crawling the site.',
     ],
     avoidWhen: [
       'You need URL level indexing proof or a complete view across every search engine.',
     ],
     evidence: [
-      'Bing Webmaster traffic and crawl statistics returned for the selected verified site.',
+      'Bing Webmaster daily traffic and crawl statistics plus weekly top query and page lists.',
     ],
     methodology: [
-      'Requests traffic and crawl statistics in parallel, validates provider rows, sorts dates consistently, and keeps each section bounded.',
-      'Returns totals and coverage metadata while limiting agent output to the most recent rows.',
+      'Requests four provider sections in parallel, validates rows, sorts dates consistently, and keeps responses and output bounded.',
+      'Compares matched traffic periods and crawl snapshots, then compares movements only for query and page entries observed in every weekly top list in both periods.',
     ],
     exampleParams: {
       site: 'https://example.com/',
     },
     interpretation: [
-      'Read provider status and coverage before using totals. Compare exact dates when a traffic or crawl value changes.',
+      'Read provider status and coverage before findings. Verify important traffic or crawl changes against the exact dates and live site.',
     ],
     caveats: [
       'Bing evidence describes Bing only. Its inIndex statistic is not independent URL level proof of indexing.',
+      'A query or page missing from a weekly top list is unknown, not zero.',
       'Partial, capped, invalid, or unavailable evidence cannot support an all clear.',
     ],
     nextSteps: [

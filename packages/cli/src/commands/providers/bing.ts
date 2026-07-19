@@ -263,7 +263,7 @@ const sitesCommand = defineCommand({
 const reportCommand = defineCommand({
   meta: {
     name: 'report',
-    description: 'Report bounded Bing search and crawl evidence',
+    description: 'Find Bing traffic, crawl, query, and page insights',
   },
   args: {
     ...selectionArgs,
@@ -295,11 +295,32 @@ const reportCommand = defineCommand({
       report.traffic.status === 'unavailable' ? undefined : report.traffic.data
     const crawl =
       report.crawl.status === 'unavailable' ? undefined : report.crawl.data
+    const comparison = traffic?.analysis
     printKeyValue([
       ['Site', report.site],
       ['Data status', report.dataStatus],
-      ['Clicks', traffic ? String(traffic.clicks) : 'unavailable'],
-      ['Impressions', traffic ? String(traffic.impressions) : 'unavailable'],
+      [
+        'Latest 28-day clicks',
+        comparison ? String(comparison.current.clicks) : 'unavailable',
+      ],
+      [
+        'Click change',
+        comparison?.changes.clicksPercent === null ||
+        comparison?.changes.clicksPercent === undefined
+          ? 'unavailable'
+          : `${comparison.changes.clicksPercent.toFixed(1)}%`,
+      ],
+      [
+        'Latest 28-day impressions',
+        comparison ? String(comparison.current.impressions) : 'unavailable',
+      ],
+      [
+        'Impression change',
+        comparison?.changes.impressionsPercent === null ||
+        comparison?.changes.impressionsPercent === undefined
+          ? 'unavailable'
+          : `${comparison.changes.impressionsPercent.toFixed(1)}%`,
+      ],
       [
         'Latest crawled pages',
         crawl?.latest?.crawledPages === undefined
@@ -312,7 +333,14 @@ const reportCommand = defineCommand({
           ? 'unavailable'
           : String(crawl.latest.code4xx),
       ],
+      ['Findings', String(report.summary.findings)],
     ])
+    if (report.findings.length) {
+      process.stdout.write('\nReview first\n')
+      for (const finding of report.findings.slice(0, 5)) {
+        process.stdout.write(`- ${finding.title}\n  ${finding.verification}\n`)
+      }
+    }
     for (const caveat of report.caveats) process.stdout.write(`\n${caveat}\n`)
   },
 })

@@ -8,6 +8,7 @@ import {
 const DEFAULT_BASE_URL = 'https://ssl.bing.com/webmaster/api.svc/json'
 const MAX_RESPONSE_BYTES = 2_000_000
 const MAX_STAT_ROWS = 400
+const MAX_DIMENSION_ROWS = 8_000
 const MAX_LINK_ROWS = 200
 
 export type BingWebmasterCredentials =
@@ -41,6 +42,15 @@ export type BingCrawlRow = {
   dnsFailures?: number
   containsMalware?: number
   allOtherCodes?: number
+}
+
+export type BingDimensionRow = {
+  date: string
+  value: string
+  clicks: number
+  impressions: number
+  avgClickPosition?: number
+  avgImpressionPosition?: number
 }
 
 export type BingRows<T> = {
@@ -91,6 +101,19 @@ function nonnegativeNumber(value: unknown): number | undefined {
     : undefined
 }
 
+function positionNumber(value: unknown): {
+  valid: boolean
+  value?: number
+} {
+  if (value === undefined || value === null || value === -1) {
+    return { valid: true }
+  }
+  const number = nonnegativeNumber(value)
+  return number === undefined
+    ? { valid: false }
+    : { valid: true, value: number }
+}
+
 function isHttpUrl(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 2_000) return false
   try {
@@ -101,14 +124,26 @@ function isHttpUrl(value: unknown): value is string {
   }
 }
 
-function boundedRows<T>(rows: T[], invalidRows: number): BingRows<T> {
-  const capped = rows.length > MAX_STAT_ROWS
+function boundedRows<T>(
+  rows: T[],
+  invalidRows: number,
+  limit = MAX_STAT_ROWS,
+): BingRows<T> {
+  const capped = rows.length > limit
   return {
-    rows: capped ? rows.slice(-MAX_STAT_ROWS) : rows,
+    rows: capped ? rows.slice(-limit) : rows,
     invalidRows,
     capped,
     returnedRows: rows.length,
   }
+}
+
+function dimensionValue(value: unknown, kind: 'query' | 'page') {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim()
+  if (!normalized || normalized.length > 2_000) return undefined
+  if (kind === 'page' && !isHttpUrl(normalized)) return undefined
+  return normalized
 }
 
 function errorMessage(body: string): string | undefined {
@@ -334,6 +369,68 @@ export class BingWebmasterClient {
     }
     rows.sort((a, b) => a.date.localeCompare(b.date, 'en'))
     return boundedRows(rows, invalidRows)
+  }
+
+  async getQueryStats(siteUrl: string): Promise<BingRows<BingDimensionRow>> {
+    return this.getDimensionStats('GetQueryStats', siteUrl, 'query')
+  }
+
+  async getPageStats(siteUrl: string): Promise<BingRows<BingDimensionRow>> {
+    return this.getDimensionStats('GetPageStats', siteUrl, 'page')
+  }
+
+  private async getDimensionStats(
+    method: 'GetQueryStats' | 'GetPageStats',
+    siteUrl: string,
+    kind: 'query' | 'page',
+  ): Promise<BingRows<BingDimensionRow>> {
+    const data = await this.request(method, { siteUrl })
+    if (!Array.isArray(data)) {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        `Bing Webmaster returned invalid ${kind} statistics.`,
+      )
+    }
+    const rows: BingDimensionRow[] = []
+    let invalidRows = 0
+    for (const item of data) {
+      if (!item || typeof item !== 'object') {
+        invalidRows += 1
+        continue
+      }
+      const source = item as Record<string, unknown>
+      const date = bingDate(source.Date)
+      const value = dimensionValue(source.Query, kind)
+      const clicks = nonnegativeNumber(source.Clicks)
+      const impressions = nonnegativeNumber(source.Impressions)
+      const clickPosition = positionNumber(source.AvgClickPosition)
+      const impressionPosition = positionNumber(source.AvgImpressionPosition)
+      if (
+        !date ||
+        !value ||
+        clicks === undefined ||
+        impressions === undefined ||
+        !clickPosition.valid ||
+        !impressionPosition.valid
+      ) {
+        invalidRows += 1
+        continue
+      }
+      rows.push({
+        date,
+        value,
+        clicks,
+        impressions,
+        avgClickPosition: clickPosition.value,
+        avgImpressionPosition: impressionPosition.value,
+      })
+    }
+    rows.sort(
+      (a, b) =>
+        a.date.localeCompare(b.date, 'en') ||
+        a.value.localeCompare(b.value, 'en'),
+    )
+    return boundedRows(rows, invalidRows, MAX_DIMENSION_ROWS)
   }
 
   async getLinkCounts(

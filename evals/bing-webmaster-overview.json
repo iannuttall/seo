@@ -4,12 +4,13 @@
     {
       "id": 1,
       "prompt": "Show me how our site is doing in Bing and whether Bing is crawling it cleanly.",
-      "expected_output": "Should use report id bing-webmaster-overview for bounded Bing search and crawl evidence. Should follow the discovery flow with seo_list_reports, seo_describe_report, then seo_run_report using the verified Bing site URL. Should read dataStatus and provenance before traffic and crawl totals. Should state that Bing evidence does not describe Google or the whole search market and that the inIndex statistic is not URL-level proof of indexing.",
+      "expected_output": "Should use report id bing-webmaster-overview for bounded Bing traffic, crawl, query, and page insights. Should follow the discovery flow with seo_list_reports, seo_describe_report, then seo_run_report using the verified Bing site URL. Should read dataStatus and provenance before findings, traffic comparisons, crawl changes, and opportunities. Should inspect query and page coverage before movements because weekly top-list entries missing from a period are unknown, not zero. Movement comparisons require the entry in every weekly top list in both periods. Should state that Bing evidence does not describe Google or the whole search market and that the inIndex statistic is not URL-level proof of indexing.",
       "assertions": [
         "Uses report id bing-webmaster-overview",
         "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
         "Passes the verified Bing site URL",
-        "Reads dataStatus and provenance before totals",
+        "Reads dataStatus and provenance before findings",
+        "Treats dimensions missing from weekly top lists as unknown rather than zero",
         "Does not present Bing inIndex as URL-level proof of indexing"
       ],
       "files": []

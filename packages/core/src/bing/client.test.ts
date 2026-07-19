@@ -59,6 +59,90 @@ test('Bing client normalizes traffic and crawl dates with invalid-row provenance
   ])
 })
 
+test('Bing client validates query and page top-list rows', async () => {
+  const api = client({
+    GetQueryStats: [
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: ' useful query ',
+        Clicks: 3,
+        Impressions: 40,
+        AvgClickPosition: 4.5,
+        AvgImpressionPosition: 6.5,
+      },
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: '',
+        Clicks: 1,
+        Impressions: 2,
+      },
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: 'provider sentinel',
+        Clicks: 1,
+        Impressions: 2,
+        AvgClickPosition: -1,
+        AvgImpressionPosition: 4,
+      },
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: 'invalid negative',
+        Clicks: 1,
+        Impressions: 2,
+        AvgClickPosition: -2,
+      },
+    ],
+    GetPageStats: [
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: 'https://example.com/page',
+        Clicks: 5,
+        Impressions: 50,
+        AvgImpressionPosition: 8,
+      },
+      {
+        Date: '2026-07-10T00:00:00Z',
+        Query: 'not-a-url',
+        Clicks: 1,
+        Impressions: 2,
+      },
+    ],
+  })
+  assert.deepEqual(await api.getQueryStats('https://example.com/'), {
+    rows: [
+      {
+        date: '2026-07-10',
+        value: 'provider sentinel',
+        clicks: 1,
+        impressions: 2,
+        avgClickPosition: undefined,
+        avgImpressionPosition: 4,
+      },
+      {
+        date: '2026-07-10',
+        value: 'useful query',
+        clicks: 3,
+        impressions: 40,
+        avgClickPosition: 4.5,
+        avgImpressionPosition: 6.5,
+      },
+    ],
+    invalidRows: 2,
+    capped: false,
+    returnedRows: 2,
+  })
+  assert.deepEqual((await api.getPageStats('https://example.com/')).rows, [
+    {
+      date: '2026-07-10',
+      value: 'https://example.com/page',
+      clicks: 5,
+      impressions: 50,
+      avgClickPosition: undefined,
+      avgImpressionPosition: 8,
+    },
+  ])
+})
+
 test('Bing client errors never expose the API key', async () => {
   const api = new BingWebmasterClient(
     { apiKey: 'do-not-print' },
@@ -74,6 +158,22 @@ test('Bing client errors never expose the API key', async () => {
     (error: Error) =>
       /providers bing connect/.test(error.message) &&
       !error.message.includes('do-not-print'),
+  )
+})
+
+test('Bing client rejects oversized provider responses before parsing rows', async () => {
+  const api = new BingWebmasterClient(
+    { apiKey: 'secret-key' },
+    {
+      fetchImpl: async () =>
+        new Response(JSON.stringify({ d: 'x'.repeat(2_100_000) }), {
+          headers: { 'content-type': 'application/json' },
+        }),
+    },
+  )
+  await assert.rejects(
+    () => api.getQueryStats('https://example.com/'),
+    /exceeds the 2000000-byte response limit/i,
   )
 })
 

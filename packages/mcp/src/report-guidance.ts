@@ -122,9 +122,9 @@ export const REPORT_GUIDANCE = {
   'bing-webmaster-overview': {
     name: 'Bing Webmaster overview',
     description:
-      'Review bounded Bing search and crawl statistics for one verified site.',
+      'Review bounded Bing traffic trends, crawl changes, and query and page opportunities for one verified site.',
     useWhen: [
-      'You want search and crawl evidence observed by Bing.',
+      'You want processed search and crawl insights observed by Bing.',
       'You need a second search-engine view beside Search Console.',
     ],
     avoidWhen: [
@@ -132,7 +132,7 @@ export const REPORT_GUIDANCE = {
       'You need URL-level backlink rows or proof that a page is indexed.',
     ],
     outcome:
-      'A bounded traffic and crawl summary with provider coverage and caveats.',
+      'Prioritized Bing findings with traffic comparisons, crawl changes, query and page opportunities, provider coverage, and caveats.',
   },
   'link-evidence': {
     name: 'Referring link evidence',

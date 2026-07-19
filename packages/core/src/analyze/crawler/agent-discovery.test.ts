@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { test } from 'node:test'
+import { Headers as UndiciHeaders } from 'undici'
 import { contentSketch } from '../../extract/content-sketch.js'
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
@@ -264,6 +265,68 @@ copy to exercise the clean quality path without relying on an explicit route.
   assert.equal(
     readiness.checks.find((item) => item.id === 'markdown-tab-serialization')
       ?.status,
+    'notApplicable',
+  )
+})
+
+test('HTML fallbacks are not evaluated as Markdown representations', async () => {
+  const htmlOnlyPage: CrawlPageSnapshot = {
+    ...page,
+    responseHeaders: {},
+    markdownAlternates: [],
+  }
+  const htmlOnlyFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    const accept = new UndiciHeaders(input?.headers).get('accept') ?? ''
+    if (
+      requestedUrl === 'https://example.com/' &&
+      accept.startsWith('text/markdown') &&
+      !accept.includes('text/markdown;q=0')
+    ) {
+      return response('<h1>Example</h1><p>HTML only.</p>', 200, {
+        'content-type': 'text/html; charset=utf-8',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [htmlOnlyPage],
+    timeoutMs: 1_000,
+    fetch: htmlOnlyFetch,
+  })
+
+  assert.equal(discovery.dataStatus, 'partial')
+  assert.equal(discovery.markdownAlternates.evaluatedPages, 0)
+  assert.equal(discovery.markdownAlternates.stableResponses, 0)
+  assert.equal(discovery.markdownAlternates.pages[0]?.quality, undefined)
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [htmlOnlyPage],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+  const checks = new Map(
+    agentReadiness(crawl).checks.map((item) => [item.id, item]),
+  )
+
+  assert.equal(checks.get('markdown-coverage')?.status, 'fail')
+  for (const id of [
+    'markdown-token-estimates',
+    'markdown-size',
+    'markdown-content-parity',
+    'markdown-determinism',
+    'markdown-quality',
+  ]) {
+    assert.equal(checks.get(id)?.status, 'unknown', id)
+  }
+  assert.equal(
+    checks.get('markdown-tab-serialization')?.status,
     'notApplicable',
   )
 })

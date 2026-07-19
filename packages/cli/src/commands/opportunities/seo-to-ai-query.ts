@@ -9,11 +9,12 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -94,15 +95,28 @@ export const seoToAiQueryCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Property', report.site],
-      ['Status', report.dataStatus],
-      ['Verdict', report.summary.verdict],
-      ['Eligible queries', formatCount(report.summary.eligibleQueries)],
-      ['Returned queries', formatCount(report.summary.returnedQueries)],
-      ['Prompts', formatCount(report.summary.prompts)],
-      ['GSC completeness', report.source.completeness],
-    ])
+    printReportSummary({
+      title: 'SEO to AI query prompts',
+      target: report.site,
+      status:
+        report.dataStatus === 'available' || report.dataStatus === 'empty'
+          ? 'info'
+          : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Eligible queries',
+          value: formatCount(report.summary.eligibleQueries),
+        },
+        {
+          label: 'Returned queries',
+          value: formatCount(report.summary.returnedQueries),
+        },
+        { label: 'Prompts', value: formatCount(report.summary.prompts) },
+        { label: 'GSC completeness', value: report.source.completeness },
+      ],
+    })
 
     printLimitedTable(
       ['Query', 'Impr', 'Prompt'],

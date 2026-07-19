@@ -9,8 +9,8 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { truncate } from '../output.js'
+import { printJson, printTable } from '../../utils.js'
+import { printNotes, printReportSummary, truncate } from '../output.js'
 
 export const indexCoverageCommand = defineCommand({
   meta: {
@@ -93,36 +93,48 @@ export const indexCoverageCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Project site', report.site],
-      ['Crawl report', report.input.crawlReport.id],
-      ['Crawl evidence', report.sources.crawl.completeness],
-      ['Sitemap evidence', report.sources.sitemap.completeness],
-      [
-        'Search Console window',
-        `${report.sources.searchConsole.startDate} to ${report.sources.searchConsole.endDate}`,
+    printReportSummary({
+      title: 'Index coverage',
+      target: report.site,
+      status:
+        report.sources.crawl.completeness === 'complete' &&
+        report.sources.searchConsole.completeness === 'complete'
+          ? report.summary.crawlableCandidatesWithoutRetainedSearchVisibility >
+            0
+            ? 'warning'
+            : 'pass'
+          : 'unknown',
+      summary: `${report.summary.crawlableCandidatesWithoutRetainedSearchVisibility} crawlable pages need URL Inspection review.`,
+      metrics: [
+        { label: 'Crawl report', value: report.input.crawlReport.id },
+        { label: 'Crawl evidence', value: report.sources.crawl.completeness },
+        {
+          label: 'Sitemap evidence',
+          value: report.sources.sitemap.completeness,
+        },
+        {
+          label: 'Search evidence',
+          value: report.sources.searchConsole.completeness,
+        },
+        {
+          label: 'Search window',
+          value: `${report.sources.searchConsole.startDate} to ${report.sources.searchConsole.endDate}`,
+        },
+        {
+          label: 'Search-visible pages',
+          value: report.summary.retainedSearchVisibleUrls,
+        },
+        {
+          label: 'Blocked/non-indexable',
+          value: report.summary.blockedOrNonIndexableCrawlUrls,
+        },
+        { label: 'Sitemap only', value: report.summary.sitemapOnlyUrls },
+        {
+          label: 'Search Console only',
+          value: report.summary.searchConsoleOnlyUrls,
+        },
       ],
-      ['Search Console evidence', report.sources.searchConsole.completeness],
-      [
-        'Pages in returned Search Console data',
-        String(report.summary.retainedSearchVisibleUrls),
-      ],
-      [
-        'Crawlable pages to review',
-        String(
-          report.summary.crawlableCandidatesWithoutRetainedSearchVisibility,
-        ),
-      ],
-      [
-        'Blocked or non-indexable crawl pages',
-        String(report.summary.blockedOrNonIndexableCrawlUrls),
-      ],
-      ['Sitemap-only pages', String(report.summary.sitemapOnlyUrls)],
-      [
-        'Search Console-only pages',
-        String(report.summary.searchConsoleOnlyUrls),
-      ],
-    ])
+    })
 
     if (report.crawlableWithoutRetainedSearchVisibility.items.length) {
       process.stdout.write('\nRepresentative URL Inspection candidates\n')
@@ -136,11 +148,6 @@ export const indexCoverageCommand = defineCommand({
       )
     }
 
-    if (report.caveats.length) {
-      process.stdout.write('\nHow to read this report\n')
-      for (const caveat of report.caveats) {
-        process.stdout.write(`- ${caveat}\n`)
-      }
-    }
+    printNotes('How to read this report', report.caveats)
   },
 })

@@ -8,8 +8,8 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { printNotes } from '../output.js'
+import { printJson, printTable } from '../../utils.js'
+import { printNotes, printReportSummary } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 
 const segmentDimension = (value: unknown): SegmentDimension => {
@@ -119,14 +119,24 @@ export const segmentImpactCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Property', report.site],
-      ['Dimension', report.dimension],
-      ['Status', report.dataStatus],
-      ['Before', `${report.before.startDate} to ${report.before.endDate}`],
-      ['After', `${report.after.startDate} to ${report.after.endDate}`],
-      ['Verdict', report.summary.verdict],
-    ])
+    printReportSummary({
+      title: 'Segment impact',
+      target: report.site,
+      status: report.dataStatus === 'complete' ? 'info' : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Dimension', value: report.dimension },
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Before',
+          value: `${report.before.startDate} to ${report.before.endDate}`,
+        },
+        {
+          label: 'After',
+          value: `${report.after.startDate} to ${report.after.endDate}`,
+        },
+      ],
+    })
     printTable(
       ['Segment', 'Clicks before', 'Clicks after', 'Delta', 'Pos delta'],
       report.items.map((item) => [

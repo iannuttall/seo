@@ -21,13 +21,13 @@ import {
 } from '../args.js'
 import { printCrawlHuman } from '../presentation/crawl-report.js'
 import { resolveClientSelection } from '../selection.js'
+import { printJson, printSummaryList, printTable } from '../utils.js'
 import {
-  printJson,
-  printKeyValue,
-  printSummaryList,
-  printTable,
-} from '../utils.js'
-import { printNotes, truncate } from './output.js'
+  printActionDetails,
+  printNotes,
+  printReportSummary,
+  truncate,
+} from './output.js'
 
 async function reportSiteFilter(args: Record<string, unknown>, json: boolean) {
   const project = projectArg(args)
@@ -63,37 +63,56 @@ function printReport(report: CrawlReport): void {
 }
 
 function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {
-  printKeyValue([
-    ['Before', `${report.before.id} (${report.before.generatedAt})`],
-    ['After', `${report.after.id} (${report.after.generatedAt})`],
-    ['Comparability', report.comparability.status],
-    ['Completeness', report.completeness.status],
-    ['Truncated', report.completeness.truncated ? 'yes' : 'no'],
-    ['Headline', report.headline],
-    [
-      'Pages',
-      `${report.after.summary.totalPages} (${report.summary.pageDelta >= 0 ? '+' : ''}${report.summary.pageDelta})`,
+  printReportSummary({
+    title: 'Crawl report comparison',
+    target: report.after.url,
+    status:
+      report.comparability.status !== 'comparable' ||
+      report.completeness.status !== 'complete'
+        ? 'unknown'
+        : report.summary.newStatusErrors > 0 ||
+            report.summary.issueGroupsWorse > 0
+          ? 'warning'
+          : 'pass',
+    summary: report.headline,
+    metrics: [
+      {
+        label: 'Before',
+        value: `${report.before.id} (${report.before.generatedAt})`,
+      },
+      {
+        label: 'After',
+        value: `${report.after.id} (${report.after.generatedAt})`,
+      },
+      { label: 'Comparability', value: report.comparability.status },
+      { label: 'Completeness', value: report.completeness.status },
+      {
+        label: 'Pages',
+        value: `${report.after.summary.totalPages} (${report.summary.pageDelta >= 0 ? '+' : ''}${report.summary.pageDelta})`,
+      },
+      {
+        label: 'Issues',
+        value: `${report.after.summary.highIssues + report.after.summary.mediumIssues + report.after.summary.lowIssues} (${report.summary.issueDelta >= 0 ? '+' : ''}${report.summary.issueDelta})`,
+      },
+      { label: 'New status errors', value: report.summary.newStatusErrors },
+      { label: 'Fixed status errors', value: report.summary.fixedStatusErrors },
+      { label: 'Issue groups worse', value: report.summary.issueGroupsWorse },
+      { label: 'Issue groups better', value: report.summary.issueGroupsBetter },
+      { label: 'Changed pages', value: report.summary.changedPages },
+      { label: 'Added pages', value: report.summary.addedPages },
+      { label: 'Removed pages', value: report.summary.removedPages },
     ],
-    [
-      'Issues',
-      `${report.after.summary.highIssues + report.after.summary.mediumIssues + report.after.summary.lowIssues} (${report.summary.issueDelta >= 0 ? '+' : ''}${report.summary.issueDelta})`,
-    ],
-    ['New status errors', String(report.summary.newStatusErrors)],
-    ['Fixed status errors', String(report.summary.fixedStatusErrors)],
-    ['Issue groups worse', String(report.summary.issueGroupsWorse)],
-    ['Issue groups better', String(report.summary.issueGroupsBetter)],
-    ['Changed pages', String(report.summary.changedPages)],
-    ['Added pages', String(report.summary.addedPages)],
-    ['Removed pages', String(report.summary.removedPages)],
-  ])
+  })
 
-  if (report.topActions.length) {
-    process.stdout.write('\nTop actions\n')
-    for (const [index, action] of report.topActions.entries()) {
-      process.stdout.write(`${index + 1}. ${action.title}: ${action.action}\n`)
-      process.stdout.write(`   ${action.plainEnglish}\n`)
-    }
-  }
+  printActionDetails(
+    'Top actions',
+    report.topActions.map((action) => ({
+      label: action.title,
+      context: action.plainEnglish,
+      action: action.action,
+    })),
+    report.topActions.length,
+  )
 
   if (report.pageChanges.length) {
     process.stdout.write('\nChanged pages\n')

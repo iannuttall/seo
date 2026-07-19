@@ -9,12 +9,13 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -95,16 +96,32 @@ export const communityIntentCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Property', report.site],
-      ['Status', report.dataStatus],
-      ['Verdict', report.summary.verdict],
-      ['Classified queries', formatCount(report.summary.classifiedQueries)],
-      ['Returned queries', formatCount(report.summary.returnedQueries)],
-      ['Returned impressions', formatCount(report.summary.returnedImpressions)],
-      ['Returned clicks', formatCount(report.summary.returnedClicks)],
-      ['GSC completeness', report.source.completeness],
-    ])
+    printReportSummary({
+      title: 'Community intent report',
+      target: report.site,
+      status:
+        report.dataStatus === 'available' || report.dataStatus === 'empty'
+          ? 'info'
+          : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Classified queries',
+          value: formatCount(report.summary.classifiedQueries),
+        },
+        {
+          label: 'Returned queries',
+          value: formatCount(report.summary.returnedQueries),
+        },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.returnedImpressions),
+        },
+        { label: 'Clicks', value: formatCount(report.summary.returnedClicks) },
+        { label: 'GSC completeness', value: report.source.completeness },
+      ],
+    })
 
     printLimitedTable(
       ['Intent', 'Query', 'Impr', 'Clicks', 'Confidence', 'Action'],

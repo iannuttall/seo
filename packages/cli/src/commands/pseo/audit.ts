@@ -3,7 +3,7 @@ import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, projectArg, stringArg } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
@@ -11,6 +11,7 @@ import {
   printLimitedTable,
   printNextCommand,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -249,22 +250,36 @@ export const pseoAuditCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Property', report.site],
-      ['Templates', formatCount(report.summary.templates)],
-      ['GSC pages', formatCount(report.summary.gscPages)],
-      ['Sitemap URLs', formatCount(report.summary.sitemapUrls)],
-      ['Clicks', formatCount(report.summary.clicks)],
-      ['Impressions', formatCount(report.summary.impressions)],
-      [
-        'Usable crawls',
-        `${formatCount(report.summary.crawledUrls)}/${formatCount(report.summary.crawlAttempts)}`,
+    printReportSummary({
+      title: 'Programmatic SEO audit',
+      target: report.site,
+      status: report.templates.length > 0 ? 'info' : 'unknown',
+      summary:
+        report.templates.length > 0
+          ? `${formatCount(report.summary.templates)} page templates were analysed.`
+          : 'No page templates could be established from the available evidence.',
+      metrics: [
+        { label: 'Templates', value: formatCount(report.summary.templates) },
+        { label: 'GSC pages', value: formatCount(report.summary.gscPages) },
+        {
+          label: 'Sitemap URLs',
+          value: formatCount(report.summary.sitemapUrls),
+        },
+        { label: 'Clicks', value: formatCount(report.summary.clicks) },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.impressions),
+        },
+        {
+          label: 'Usable crawls',
+          value: `${formatCount(report.summary.crawledUrls)}/${formatCount(report.summary.crawlAttempts)}`,
+        },
+        {
+          label: 'Inspections',
+          value: `${formatCount(report.summary.inspectedUrls)}/${formatCount(report.summary.inspectionAttempts)}`,
+        },
       ],
-      [
-        'Inspection responses',
-        `${formatCount(report.summary.inspectedUrls)}/${formatCount(report.summary.inspectionAttempts)}`,
-      ],
-    ])
+    })
     printNotes('Report caveats', report.caveats)
 
     if (!report.templates.length) {

@@ -1,8 +1,13 @@
 import { importServerLog, SeoError, serverLogReport } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, strictNumberArg, stringArg } from '../args.js'
-import { printJson, printKeyValue } from '../utils.js'
-import { formatCount, printLimitedTable, truncate } from './output.js'
+import { printJson } from '../utils.js'
+import {
+  formatCount,
+  printLimitedTable,
+  printReportSummary,
+  truncate,
+} from './output.js'
 
 const analyzeCommand = defineCommand({
   meta: {
@@ -59,17 +64,39 @@ const analyzeCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Evidence', report.dataStatus],
-      ['Parsed requests', formatCount(report.summary.parsedRows)],
-      ['Crawler requests', formatCount(report.summary.crawlerRows)],
-      ['Crawler families', formatCount(report.crawlers.length)],
-      ['Invalid rows', formatCount(report.summary.invalidRows)],
-      [
-        'Returned paths',
-        `${formatCount(report.selection.returnedCrawlerPaths)} of ${formatCount(report.selection.availableCrawlerPaths)}`,
+    printReportSummary({
+      title: 'Server log report',
+      status:
+        report.dataStatus === 'complete'
+          ? report.summary.invalidRows > 0
+            ? 'warning'
+            : 'info'
+          : 'unknown',
+      summary: `${formatCount(report.summary.crawlerRows)} crawler requests found in ${formatCount(report.summary.parsedRows)} parsed requests.`,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Parsed requests',
+          value: formatCount(report.summary.parsedRows),
+        },
+        {
+          label: 'Crawler requests',
+          value: formatCount(report.summary.crawlerRows),
+        },
+        {
+          label: 'Crawler families',
+          value: formatCount(report.crawlers.length),
+        },
+        {
+          label: 'Invalid rows',
+          value: formatCount(report.summary.invalidRows),
+        },
+        {
+          label: 'Returned paths',
+          value: `${formatCount(report.selection.returnedCrawlerPaths)} of ${formatCount(report.selection.availableCrawlerPaths)}`,
+        },
       ],
-    ])
+    })
     if (report.crawlers.length) {
       process.stdout.write('\nCrawler activity\n')
       printLimitedTable(

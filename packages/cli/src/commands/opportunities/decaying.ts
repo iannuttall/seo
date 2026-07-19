@@ -9,7 +9,7 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
@@ -17,6 +17,7 @@ import {
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -107,30 +108,47 @@ export const decayingCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Status', report.dataStatus],
-      ['Comparison', report.comparison],
-      [
-        'Observed query/page declines',
-        formatCount(report.summary.returnedRows),
+    printReportSummary({
+      title: 'Decaying pages',
+      target: report.site,
+      status:
+        report.dataStatus === 'complete'
+          ? report.summary.returnedRows > 0
+            ? 'warning'
+            : 'pass'
+          : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        { label: 'Comparison', value: report.comparison },
+        {
+          label: 'Observed declines',
+          value: formatCount(report.summary.returnedRows),
+        },
+        {
+          label: 'Eligible declines',
+          value: formatCount(report.summary.eligibleRows),
+        },
+        { label: 'Decay clusters', value: formatCount(report.summary.groups) },
+        {
+          label: 'Observed click decline',
+          value: formatCount(
+            report.summary.returnedObservedRetainedQueryClickLoss,
+          ),
+        },
+        {
+          label: 'Eligible click decline',
+          value: formatCount(report.summary.observedRetainedQueryClickLoss),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
+        { label: 'Minimum drop', value: `${report.filters.minDropPct}%` },
+        {
+          label: 'Minimum previous clicks',
+          value: formatCount(report.filters.minPreviousClicks),
+        },
+        { label: 'GSC completeness', value: report.source.completeness },
       ],
-      ['Eligible declines', formatCount(report.summary.eligibleRows)],
-      ['Decay clusters', formatCount(report.summary.groups)],
-      [
-        'Eligible observed click decline',
-        formatCount(report.summary.observedRetainedQueryClickLoss),
-      ],
-      [
-        'Returned observed click decline',
-        formatCount(report.summary.returnedObservedRetainedQueryClickLoss),
-      ],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Min drop', `${report.filters.minDropPct}%`],
-      ['Min previous clicks', formatCount(report.filters.minPreviousClicks)],
-      ['GSC completeness', report.source.completeness],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'This report compares retained query/page rows and only counts declines observed in both windows.',
       'Position, CTR, and impression movements are signals for investigation, not proof of cause.',

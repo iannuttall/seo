@@ -2,7 +2,7 @@ import { redirectTrace } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { truncate } from '../output.js'
+import { printNotes, printReportSummary, truncate } from '../output.js'
 
 export const redirectTraceCommand = defineCommand({
   meta: {
@@ -48,26 +48,34 @@ export const redirectTraceCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['URL', report.url],
-      ['Final URL', report.finalUrl],
-      ['Final status', String(report.summary.finalStatus)],
-      [
-        'Indexable',
-        report.summary.finalIndexable === undefined
-          ? 'unknown'
-          : report.summary.finalIndexable
-            ? 'yes'
-            : 'no',
-      ],
-      ['Hops', String(report.summary.hops)],
-      [
-        'Issues',
-        report.summary.issues.length
+    printReportSummary({
+      title: 'Redirect trace',
+      target: report.url,
+      status:
+        report.summary.issues.length > 0
+          ? 'warning'
+          : report.summary.finalIndexable === undefined
+            ? 'unknown'
+            : 'pass',
+      summary:
+        report.summary.issues.length > 0
           ? report.summary.issues.join(', ')
-          : 'none',
+          : `${report.summary.hops} redirect hops ended at HTTP ${report.summary.finalStatus}.`,
+      metrics: [
+        { label: 'Final URL', value: report.finalUrl },
+        { label: 'Final status', value: report.summary.finalStatus },
+        {
+          label: 'Indexable',
+          value:
+            report.summary.finalIndexable === undefined
+              ? 'Unknown'
+              : report.summary.finalIndexable
+                ? 'Yes'
+                : 'No',
+        },
+        { label: 'Hops', value: report.summary.hops },
       ],
-    ])
+    })
     printTable(
       ['#', 'Status', 'URL', 'Next'],
       report.chain.map((step, index) => [
@@ -85,11 +93,6 @@ export const redirectTraceCommand = defineCommand({
         ['Meta robots', report.finalPage.metaRobots ?? '-'],
       ])
     }
-    if (report.warnings.length) {
-      process.stdout.write('\nWarnings\n')
-      for (const warning of report.warnings.slice(0, 10)) {
-        process.stdout.write(`- ${warning}\n`)
-      }
-    }
+    printNotes('Warnings', report.warnings.slice(0, 10))
   },
 })

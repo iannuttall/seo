@@ -9,7 +9,7 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
@@ -17,6 +17,7 @@ import {
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -90,16 +91,33 @@ export const strikingDistanceCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Eligible rows', formatCount(report.summary.eligibleRows)],
-      ['Returned rows', formatCount(report.summary.returnedRows)],
-      ['Template groups', formatCount(report.summary.groups)],
-      ['Eligible impressions', formatCount(report.summary.eligibleImpressions)],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Verification', report.verification.requested ? 'requested' : 'off'],
-      ['Verdict', report.summary.verdict],
-    ])
+    printReportSummary({
+      title: 'Striking-distance opportunities',
+      target: report.site,
+      status: report.source.possiblyTruncated ? 'unknown' : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        {
+          label: 'Eligible rows',
+          value: formatCount(report.summary.eligibleRows),
+        },
+        {
+          label: 'Returned rows',
+          value: formatCount(report.summary.returnedRows),
+        },
+        { label: 'Template groups', value: formatCount(report.summary.groups) },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.eligibleImpressions),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
+        {
+          label: 'Verification',
+          value: report.verification.requested ? 'Requested' : 'Off',
+        },
+        { label: 'Evidence', value: report.dataStatus },
+      ],
+    })
     printNotes('Why this matters', [
       'These rows have a GSC average position above 10 and at most 20. Treat them as candidates for investigation, not guaranteed page-two rankings.',
       'Groups use all eligible rows. A shared-template label is only a candidate until recurring evidence is verified across distinct URLs.',

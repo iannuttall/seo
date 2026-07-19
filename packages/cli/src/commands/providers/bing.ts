@@ -23,6 +23,7 @@ import {
   printKeyValue,
   printTable,
 } from '../../utils.js'
+import { printReportSummary } from '../output.js'
 
 function verifiedSites(sites: BingWebmasterSite[]): BingWebmasterSite[] {
   return sites.filter((site) => site.isVerified)
@@ -296,52 +297,68 @@ const reportCommand = defineCommand({
     const crawl =
       report.crawl.status === 'unavailable' ? undefined : report.crawl.data
     const comparison = traffic?.analysis
-    printKeyValue([
-      ['Site', report.site],
-      ['Data status', report.dataStatus],
-      [
-        'Latest 28-day clicks',
-        comparison ? String(comparison.current.clicks) : 'unavailable',
+    printReportSummary({
+      title: 'Bing Webmaster report',
+      target: report.site,
+      status:
+        report.dataStatus === 'complete'
+          ? report.summary.warnings > 0
+            ? 'warning'
+            : 'pass'
+          : 'unknown',
+      summary:
+        report.summary.findings > 0
+          ? `${report.summary.findings} findings need review across Bing traffic and crawl evidence.`
+          : 'No findings were returned by the available Bing evidence.',
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: '28-day clicks',
+          value: comparison?.current.clicks ?? 'Unavailable',
+        },
+        {
+          label: 'Click change',
+          value:
+            comparison?.changes.clicksPercent === null ||
+            comparison?.changes.clicksPercent === undefined
+              ? 'Unavailable'
+              : `${comparison.changes.clicksPercent.toFixed(1)}%`,
+        },
+        {
+          label: '28-day impressions',
+          value: comparison?.current.impressions ?? 'Unavailable',
+        },
+        {
+          label: 'Impression change',
+          value:
+            comparison?.changes.impressionsPercent === null ||
+            comparison?.changes.impressionsPercent === undefined
+              ? 'Unavailable'
+              : `${comparison.changes.impressionsPercent.toFixed(1)}%`,
+        },
+        {
+          label: 'Crawled pages',
+          value: crawl?.latest?.crawledPages ?? 'Unavailable',
+        },
+        {
+          label: '4xx responses',
+          value: crawl?.latest?.code4xx ?? 'Unavailable',
+        },
+        { label: 'Findings', value: report.summary.findings },
       ],
-      [
-        'Click change',
-        comparison?.changes.clicksPercent === null ||
-        comparison?.changes.clicksPercent === undefined
-          ? 'unavailable'
-          : `${comparison.changes.clicksPercent.toFixed(1)}%`,
+      diagnostics: [
+        {
+          title: 'Review first',
+          items: report.findings.slice(0, 5).map((finding) => ({
+            status: finding.severity === 'warning' ? 'warning' : 'info',
+            title: finding.title,
+            explanation: finding.interpretation,
+            evidence: [finding.verification],
+          })),
+        },
       ],
-      [
-        'Latest 28-day impressions',
-        comparison ? String(comparison.current.impressions) : 'unavailable',
-      ],
-      [
-        'Impression change',
-        comparison?.changes.impressionsPercent === null ||
-        comparison?.changes.impressionsPercent === undefined
-          ? 'unavailable'
-          : `${comparison.changes.impressionsPercent.toFixed(1)}%`,
-      ],
-      [
-        'Latest crawled pages',
-        crawl?.latest?.crawledPages === undefined
-          ? 'unavailable'
-          : String(crawl.latest.crawledPages),
-      ],
-      [
-        'Latest 4xx responses',
-        crawl?.latest?.code4xx === undefined
-          ? 'unavailable'
-          : String(crawl.latest.code4xx),
-      ],
-      ['Findings', String(report.summary.findings)],
-    ])
-    if (report.findings.length) {
-      process.stdout.write('\nReview first\n')
-      for (const finding of report.findings.slice(0, 5)) {
-        process.stdout.write(`- ${finding.title}\n  ${finding.verification}\n`)
-      }
-    }
-    for (const caveat of report.caveats) process.stdout.write(`\n${caveat}\n`)
+      notes: report.caveats,
+    })
   },
 })
 

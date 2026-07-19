@@ -2,7 +2,8 @@ import { auditPage } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
 import { resolveClient } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { printJson } from '../utils.js'
+import { printReportSummary } from './output.js'
 import { formatFetchDiagnostics } from './shared.js'
 
 export const auditPageCommand = defineCommand({
@@ -62,25 +63,41 @@ export const auditPageCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['URL', report.url],
-      ['Final URL', report.page.finalUrl],
-      ['Title', report.page.title ?? 'missing'],
-      ['Meta description', report.page.metaDescription ?? 'missing'],
-      ['Word count', String(report.page.wordCount)],
-      ['Fetch', formatFetchDiagnostics(report.fetchDiagnostics)],
-    ])
-    if (report.issues.length) {
-      process.stdout.write('\nIssues\n')
-      printTable(
-        ['Code', 'Severity', 'Principle', 'Detail'],
-        report.issues.map((issue) => [
-          issue.code,
-          issue.severity,
-          issue.principle,
-          issue.detail,
-        ]),
-      )
-    }
+    printReportSummary({
+      title: 'Page audit',
+      target: report.url,
+      status: report.issues.some((issue) => issue.severity === 'high')
+        ? 'fail'
+        : report.issues.length > 0
+          ? 'warning'
+          : 'pass',
+      summary:
+        report.issues.length > 0
+          ? `${report.issues.length} ${report.issues.length === 1 ? 'issue needs' : 'issues need'} review.`
+          : 'No page issues were found by the available checks.',
+      metrics: [
+        { label: 'Final URL', value: report.page.finalUrl },
+        { label: 'Title', value: report.page.title ?? 'Missing' },
+        {
+          label: 'Meta description',
+          value: report.page.metaDescription ?? 'Missing',
+        },
+        { label: 'Words', value: report.page.wordCount },
+        {
+          label: 'Fetch',
+          value: formatFetchDiagnostics(report.fetchDiagnostics),
+        },
+      ],
+      diagnostics: [
+        {
+          title: 'Issues',
+          items: report.issues.map((issue) => ({
+            status: issue.severity === 'high' ? 'fail' : 'warning',
+            title: `${issue.code}: ${issue.principle}`,
+            explanation: issue.detail,
+          })),
+        },
+      ],
+    })
   },
 })

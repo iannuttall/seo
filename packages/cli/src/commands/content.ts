@@ -9,12 +9,13 @@ import {
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue } from '../utils.js'
+import { printJson } from '../utils.js'
 import {
   formatCount,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from './output.js'
 
@@ -91,17 +92,29 @@ export const contentCommand = defineCommand({
           return
         }
 
-        printKeyValue([
-          ['Property', report.site],
-          ['URL', report.url],
-          ['Score', `${report.summary.score}/100`],
-          ['Primary intent', report.summary.primaryIntent],
-          ['Primary query', report.summary.primaryQuery ?? 'none'],
-          ['Queries', formatCount(report.summary.queries)],
-          ['Opportunities', formatCount(report.summary.opportunities)],
-          ['Estimated lift', formatCount(report.summary.estimatedClickLift)],
-          ['Verdict', report.summary.verdict],
-        ])
+        printReportSummary({
+          title: 'Content optimization',
+          target: report.url,
+          status: 'info',
+          summary: report.summary.verdict,
+          metrics: [
+            { label: 'Score', value: `${report.summary.score}/100` },
+            { label: 'Primary intent', value: report.summary.primaryIntent },
+            {
+              label: 'Primary query',
+              value: report.summary.primaryQuery ?? 'None',
+            },
+            { label: 'Queries', value: formatCount(report.summary.queries) },
+            {
+              label: 'Opportunities',
+              value: formatCount(report.summary.opportunities),
+            },
+            {
+              label: 'Estimated lift',
+              value: formatCount(report.summary.estimatedClickLift),
+            },
+          ],
+        })
 
         printActionDetails(
           'Top actions',

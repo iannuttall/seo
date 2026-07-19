@@ -1,6 +1,11 @@
 import type { MonitoringStatusReport, technicalWatchWorkflow } from '@seo/core'
-import { printKeyValue, printTable } from '../../utils.js'
-import { formatCount, printActionDetails, truncate } from '../output.js'
+import { printTable } from '../../utils.js'
+import {
+  formatCount,
+  printActionDetails,
+  printReportSummary,
+  truncate,
+} from '../output.js'
 import { printWorkflow } from '../workflows/output.js'
 
 type TechnicalWatchReport = Awaited<ReturnType<typeof technicalWatchWorkflow>>
@@ -84,13 +89,28 @@ export function printMonitoringRun(report: TechnicalWatchReport): void {
 }
 
 export function printMonitoringStatus(report: MonitoringStatusReport): void {
-  printKeyValue([
-    ['Property', report.site],
-    ['Health', report.health],
-    ['Attention', String(report.summary.attention)],
-    ['Stale', String(report.summary.stale)],
-    ['Not run', String(report.summary.notRun)],
-  ])
+  printReportSummary({
+    title: 'Technical monitoring status',
+    target: report.site,
+    status:
+      report.health === 'clear'
+        ? 'pass'
+        : report.health === 'attention'
+          ? 'warning'
+          : 'unknown',
+    summary:
+      report.summary.attention > 0
+        ? `${report.summary.attention} checks need attention.`
+        : report.summary.stale > 0 || report.summary.notRun > 0
+          ? `${report.summary.stale} checks are stale and ${report.summary.notRun} have not run.`
+          : 'No monitoring checks currently need attention.',
+    metrics: [
+      { label: 'Health', value: report.health },
+      { label: 'Attention', value: report.summary.attention },
+      { label: 'Stale', value: report.summary.stale },
+      { label: 'Not run', value: report.summary.notRun },
+    ],
+  })
 
   printTable(
     ['Check', 'Status', 'Last run', 'Summary'],

@@ -1,5 +1,10 @@
 import { truncateText } from '../presentation/context.js'
-import { printTable } from '../utils.js'
+import type {
+  SemanticDiagnostic,
+  SemanticReportView,
+  SemanticStatus,
+} from '../presentation/report.js'
+import { printSemanticReport, printTable } from '../utils.js'
 
 const HUMAN_ROW_LIMIT = 25
 type TableRow = Array<string | number>
@@ -7,6 +12,25 @@ type ActionDetail = {
   label: string
   action: string
   context?: string
+}
+
+type ReportMetric = {
+  label: string
+  value: string | number
+  status?: SemanticStatus
+}
+
+type ReportSummary = {
+  title: string
+  target?: string
+  status: SemanticStatus
+  summary: string
+  metrics?: ReportMetric[]
+  diagnostics?: {
+    title: string
+    items: SemanticDiagnostic[]
+  }[]
+  notes?: string[]
 }
 
 export function formatCount(value: number): string {
@@ -32,6 +56,25 @@ export function verificationSummary(report: {
   return `${report.verification.verified} checked, ${report.verification.failed} failed`
 }
 
+export function reportSummaryView(summary: ReportSummary): SemanticReportView {
+  return {
+    title: summary.title,
+    target: summary.target,
+    status: summary.status,
+    summary: summary.summary,
+    metrics: summary.metrics,
+    sections: (summary.diagnostics ?? []).map((section) => ({
+      title: section.title,
+      diagnostics: section.items,
+    })),
+    notes: summary.notes,
+  }
+}
+
+export function printReportSummary(summary: ReportSummary): void {
+  printSemanticReport(reportSummaryView(summary))
+}
+
 export function printLimitedTable(head: string[], rows: TableRow[]): void {
   printTable(head, rows.slice(0, HUMAN_ROW_LIMIT))
   if (rows.length > HUMAN_ROW_LIMIT) {
@@ -49,19 +92,39 @@ export function printActionDetails(
   const visible = actions
     .filter((item) => item.action.trim().length > 0)
     .slice(0, limit)
-  if (!visible.length) return
+  const report = actionDetailsView(title, visible)
+  if (!report) return
 
-  process.stdout.write(`\n${title}\n`)
-  for (const [index, item] of visible.entries()) {
-    const context = item.context ? ` (${item.context})` : ''
-    process.stdout.write(
-      `${index + 1}. ${item.label}${context}: ${item.action}\n`,
-    )
-  }
+  process.stdout.write('\n')
+  printSemanticReport(report)
   if (actions.length > visible.length) {
     process.stdout.write(
       `Showing ${visible.length} of ${actions.length}. Use --json for full data.\n`,
     )
+  }
+}
+
+export function actionDetailsView(
+  title: string,
+  actions: ActionDetail[],
+): SemanticReportView | undefined {
+  if (!actions.length) return undefined
+  return {
+    title,
+    status: 'info',
+    summary: `${actions.length} ${actions.length === 1 ? 'action' : 'actions'} shown.`,
+    sections: [
+      {
+        title: 'Actions',
+        diagnostics: actions.map((item) => ({
+          status: 'info',
+          title: item.label,
+          explanation:
+            item.context ?? 'Review the evidence before making changes.',
+          fix: item.action,
+        })),
+      },
+    ],
   }
 }
 

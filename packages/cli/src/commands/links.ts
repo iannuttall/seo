@@ -9,8 +9,14 @@ import {
 import { defineCommand } from 'citty'
 import { jsonFlag, projectArg, strictNumberArg, stringArg } from '../args.js'
 import { resolveClient } from '../selection.js'
-import { printJson, printKeyValue } from '../utils.js'
-import { formatCount, printLimitedTable, truncate } from './output.js'
+import { printJson } from '../utils.js'
+import {
+  formatCount,
+  printLimitedTable,
+  printNotes,
+  printReportSummary,
+  truncate,
+} from './output.js'
 
 export const linksCommand = defineCommand({
   meta: {
@@ -100,17 +106,31 @@ export const linksCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Source', report.provenance.provider],
-      ['Evidence', report.dataStatus],
-      ['Observed links', formatCount(report.summary.observedLinks)],
-      ['Referring domains', formatCount(report.summary.referringDomains)],
-      ['Target pages', formatCount(report.summary.targetPages)],
-      [
-        'Returned rows',
-        `${formatCount(report.selection.returnedRows)} of ${formatCount(report.selection.availableRows)}`,
+    printReportSummary({
+      title: 'Inbound link evidence',
+      target: report.provenance.provider,
+      status: report.dataStatus === 'complete' ? 'info' : 'unknown',
+      summary: `${formatCount(report.summary.observedLinks)} observed links from ${formatCount(report.summary.referringDomains)} referring domains.`,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Observed links',
+          value: formatCount(report.summary.observedLinks),
+        },
+        {
+          label: 'Referring domains',
+          value: formatCount(report.summary.referringDomains),
+        },
+        {
+          label: 'Target pages',
+          value: formatCount(report.summary.targetPages),
+        },
+        {
+          label: 'Returned rows',
+          value: `${formatCount(report.selection.returnedRows)} of ${formatCount(report.selection.availableRows)}`,
+        },
       ],
-    ])
+    })
     if (report.links.length) {
       printLimitedTable(
         ['Source', 'Target', 'Anchor'],
@@ -121,9 +141,7 @@ export const linksCommand = defineCommand({
         ]),
       )
     }
-    for (const warning of report.warnings) {
-      process.stdout.write(`\nWarning: ${warning}\n`)
-    }
-    process.stdout.write(`\nNote: ${report.caveats[0]}\n`)
+    printNotes('Warnings', report.warnings)
+    printNotes('Report caveats', report.caveats)
   },
 })

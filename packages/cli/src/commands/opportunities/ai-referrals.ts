@@ -5,11 +5,12 @@ import {
   resolveClient,
   resolveGoogleAnalyticsProperty,
 } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
   printLimitedTable,
+  printReportSummary,
   truncate,
 } from '../output.js'
 
@@ -81,28 +82,40 @@ export const aiReferralsCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Property', report.property],
-      ['Evidence', report.dataStatus === 'complete' ? 'Complete' : 'Partial'],
-      ['Verdict', report.summary.verdict],
-      ['AI sessions', formatCount(report.summary.sessions)],
-      [
-        'AI users',
-        report.summary.totalUsers === null
-          ? 'Unavailable'
-          : formatCount(report.summary.totalUsers),
+    printReportSummary({
+      title: 'AI referral report',
+      target: report.property,
+      status: report.dataStatus === 'complete' ? 'info' : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        {
+          label: 'Evidence',
+          value: report.dataStatus === 'complete' ? 'Complete' : 'Partial',
+          status: report.dataStatus === 'complete' ? 'pass' : 'unknown',
+        },
+        { label: 'AI sessions', value: formatCount(report.summary.sessions) },
+        {
+          label: 'AI users',
+          value:
+            report.summary.totalUsers === null
+              ? 'Unavailable'
+              : formatCount(report.summary.totalUsers),
+        },
+        { label: 'Sources', value: formatCount(report.summary.sources) },
+        {
+          label: 'Landing pages',
+          value: formatCount(report.summary.landingPages),
+        },
+        {
+          label: 'Landing-page output',
+          value: `${formatCount(report.selection.landingPages.returnedRows)} returned / ${formatCount(report.selection.landingPages.retainedRows)} retained`,
+        },
+        {
+          label: 'Source rows',
+          value: formatCount(report.dataSource.sourceDiscovery.returnedRows),
+        },
       ],
-      ['Sources', formatCount(report.summary.sources)],
-      ['Landing pages', formatCount(report.summary.landingPages)],
-      [
-        'Landing-page output',
-        `${formatCount(report.selection.landingPages.returnedRows)} returned / ${formatCount(report.selection.landingPages.retainedRows)} retained`,
-      ],
-      [
-        'Source rows',
-        formatCount(report.dataSource.sourceDiscovery.returnedRows),
-      ],
-    ])
+    })
 
     if (report.sources.length) {
       process.stdout.write('\nAI sources\n')

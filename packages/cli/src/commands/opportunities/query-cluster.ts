@@ -8,13 +8,14 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -62,22 +63,32 @@ export const queryClusterCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Scope', report.scope ?? 'all pages'],
-      ['Clusters', formatCount(report.summary.clusters)],
-      ['Queries', formatCount(report.summary.queries)],
-      ['Impressions', formatCount(report.summary.impressions)],
-      ['Clicks', formatCount(report.summary.clicks)],
-      ['Minimum impressions', formatCount(report.summary.minImpressions)],
-      ['Result limit', formatCount(report.summary.limit)],
-      ['Brand queries', report.summary.brandFiltering],
-      [
-        'High-opportunity clusters',
-        formatCount(report.summary.highOpportunityClusters),
+    printReportSummary({
+      title: 'Query clusters',
+      target: report.site,
+      status: 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Scope', value: report.scope ?? 'All pages' },
+        { label: 'Clusters', value: formatCount(report.summary.clusters) },
+        { label: 'Queries', value: formatCount(report.summary.queries) },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.impressions),
+        },
+        { label: 'Clicks', value: formatCount(report.summary.clicks) },
+        {
+          label: 'Minimum impressions',
+          value: formatCount(report.summary.minImpressions),
+        },
+        { label: 'Result limit', value: formatCount(report.summary.limit) },
+        {
+          label: 'High opportunity',
+          value: formatCount(report.summary.highOpportunityClusters),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
       ],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'Clusters show repeated demand themes, so they are better inputs for page sections, hubs, and templates than one-off query exports.',
       'Prioritise clusters with high impressions and low clicks; they usually reveal unclear intent coverage or weak SERP framing.',

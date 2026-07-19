@@ -290,6 +290,6 @@ test('crawlSite stays partial when queue safety excludes URLs before the page li
   assert.equal(report.status, 'partial')
   assert.match(
     report.caveats.join('\n'),
-    /Left 26 eligible same-origin URLs unqueued to keep this crawl bounded/,
+    /Left 26 unique eligible same-origin URLs unqueued to keep this crawl bounded/,
   )
 })

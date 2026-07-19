@@ -140,6 +140,12 @@ export async function crawlSite(
   let robotsDeferredUrls = 0
   let originBackpressureSkippedUrls = 0
   let queueSafetySkippedUrls = 0
+  const queueSafetyDeferredUrls = new Set<string>()
+  const maxTrackedQueueSafetyUrls = Math.min(
+    50_000,
+    Math.max(1_000, config.maxPages * 5),
+  )
+  let queueSafetyInventoryCapped = false
   let failedUrls = 0
   let observedInternalLinks = 0
   let memoryLimited = false
@@ -265,13 +271,20 @@ export async function crawlSite(
         return
       }
       if (queue.size + visited.size + inFlight.size >= config.maxPages * 5) {
-        recordSkip('queue-safety-limit')
-        queueSafetySkippedUrls += 1
-        emitStatus('url_skipped', {
-          url: normalized,
-          depth,
-          reason: 'queue_safety_limit',
-        })
+        if (!queueSafetyDeferredUrls.has(normalized)) {
+          if (queueSafetyDeferredUrls.size < maxTrackedQueueSafetyUrls) {
+            queueSafetyDeferredUrls.add(normalized)
+            queueSafetySkippedUrls = queueSafetyDeferredUrls.size
+            recordSkip('queue-safety-limit')
+            emitStatus('url_skipped', {
+              url: normalized,
+              depth,
+              reason: 'queue_safety_limit',
+            })
+          } else {
+            queueSafetyInventoryCapped = true
+          }
+        }
         return
       }
       discovered.add(normalized)
@@ -814,6 +827,7 @@ export async function crawlSite(
         pageLimitReached,
         maxPages: config.maxPages,
         queueSafetySkippedUrls,
+        queueSafetyInventoryCapped,
         originBackpressureSkippedUrls,
         memoryPressureSkippedUrls,
       }),

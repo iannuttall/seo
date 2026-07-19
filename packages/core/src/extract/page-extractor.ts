@@ -29,6 +29,10 @@ type CrawlerExtractionEvidence = {
   externalAnchorSamples: Array<{ href: string; text: string }>
   socialProfileLinks: string[]
   contentSketch: ContentSketch
+  metaRefresh?: {
+    targetUrl: string
+    delaySeconds: number
+  }
   softAuthenticationGate?: {
     kind: 'login-form'
     indicators: string[]
@@ -44,6 +48,37 @@ type CrawlerExtractionEvidence = {
       sketch: ContentSketch
     }>
   }
+}
+
+function metaRefresh(
+  $: CheerioAPI,
+  finalUrl: string,
+): CrawlerExtractionEvidence['metaRefresh'] {
+  for (const element of $('meta[http-equiv]').toArray()) {
+    if ($(element).attr('http-equiv')?.trim().toLowerCase() !== 'refresh') {
+      continue
+    }
+    const content = $(element).attr('content')?.trim()
+    const match = content?.match(
+      /^([0-9]+(?:\.[0-9]+)?)\s*;\s*url\s*=\s*(?:"([^"]*)"|'([^']*)'|(.+))$/iu,
+    )
+    if (!match) continue
+    try {
+      const target = new URL(
+        (match[2] ?? match[3] ?? match[4] ?? '').trim(),
+        finalUrl,
+      )
+      if (!['http:', 'https:'].includes(target.protocol)) continue
+      target.hash = ''
+      return {
+        targetUrl: target.toString(),
+        delaySeconds: Number(match[1]),
+      }
+    } catch {
+      // Ignore malformed refresh targets and retain the page evidence.
+    }
+  }
+  return undefined
 }
 
 type PageExtraction = ExtractedPage & {
@@ -535,6 +570,14 @@ export async function extractPage(
         )
   const { text, excerpt } = content
   const title = safeText($('title').first().text())
+  const crawlerMetaRefresh =
+    extractor === 'crawler' ? metaRefresh($, fetchResult.finalUrl) : undefined
+  if (
+    crawlerMetaRefresh &&
+    new URL(crawlerMetaRefresh.targetUrl).origin === url.origin
+  ) {
+    crawlerInternalLinks.add(crawlerMetaRefresh.targetUrl)
+  }
 
   return {
     url: fetchResult.url,
@@ -563,6 +606,7 @@ export async function extractPage(
             externalAnchorSamples,
             socialProfileLinks: [...socialProfileLinks],
             contentSketch: contentSketch(text),
+            metaRefresh: crawlerMetaRefresh,
             softAuthenticationGate: softAuthenticationGate(
               $,
               fetchResult.finalUrl,

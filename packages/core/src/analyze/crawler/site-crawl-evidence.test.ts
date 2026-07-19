@@ -104,6 +104,76 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
   }
 })
 
+test('crawlSite follows meta refreshes without auditing the redirect stub', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.setHeader('content-type', 'text/plain')
+      res.end('User-agent: *\nAllow: /\n')
+      return
+    }
+    res.setHeader('content-type', 'text/html')
+    if (req.url === '/') {
+      res.end(
+        '<!doctype html><meta http-equiv="refresh" content="0;url=/en/getting-started/">',
+      )
+      return
+    }
+    if (req.url === '/en/getting-started/') {
+      res.end(`<!doctype html><html lang="en"><head>
+        <title>Getting started documentation</title>
+        <meta name="description" content="Start using the documentation with this practical introduction.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="canonical" href="/en/getting-started/">
+      </head><body><main><h1>Getting started</h1><p>Useful documentation content for the target page.</p></main></body></html>`)
+      return
+    }
+    res.statusCode = 404
+    res.end('Not found')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/`,
+      mode: 'site',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 2,
+      concurrency: 1,
+    })
+    const redirectPage = report.pages.find(
+      (page) => page.url === `${fixture.baseUrl}/`,
+    )
+    const target = `${fixture.baseUrl}/en/getting-started/`
+    const redirectIssues = report.issues.filter(
+      (issue) => issue.url === `${fixture.baseUrl}/`,
+    )
+
+    assert.deepEqual(redirectPage?.metaRefresh, {
+      targetUrl: target,
+      delaySeconds: 0,
+    })
+    assert.equal(redirectPage?.indexable, false)
+    assert.equal(redirectPage?.declaredIndexability, 'meta-refresh')
+    assert.equal(
+      report.pages.some((page) => page.url === target),
+      true,
+    )
+    assert.deepEqual(
+      redirectIssues.map((issue) => issue.ruleId),
+      ['redirected_url'],
+    )
+    assert.deepEqual(redirectIssues[0]?.evidence, {
+      requestedUrl: `${fixture.baseUrl}/`,
+      finalUrl: target,
+      status: 200,
+      redirectType: 'meta-refresh',
+      delaySeconds: 0,
+    })
+  } finally {
+    await fixture.close()
+  }
+})
+
 test('crawlSite preserves fetch failures as structured request evidence', async () => {
   const url = 'https://missing.example/'
   const report = await crawlSite(

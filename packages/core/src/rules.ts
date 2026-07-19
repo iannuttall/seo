@@ -383,7 +383,12 @@ const RULE_DEFINITIONS = [
     howToVerify:
       'Re-run the crawl and confirm the requested URL is the same as the final URL, or that the redirect is intentional.',
     agentHints: {
-      evidenceFields: ['page.url', 'page.finalUrl', 'page.status'],
+      evidenceFields: [
+        'page.url',
+        'page.finalUrl',
+        'page.status',
+        'page.metaRefresh',
+      ],
       suggestedCommands: ['seo redirect-trace --url <url> --json'],
     },
   },

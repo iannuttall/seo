@@ -2,6 +2,7 @@ import type {
   AgentEndpointObservation,
   CrawlAgentDiscovery,
 } from './agent-discovery.js'
+import { markdownChecks } from './agent-readiness-markdown.js'
 import type { CrawlReport } from './report.js'
 
 export type AgentReadinessCheckStatus =
@@ -68,47 +69,6 @@ function section(
   return { id, title, checks }
 }
 
-function failedMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
-  return discovery.markdownAlternates.pages
-    .filter((page) => {
-      const negotiatedOk =
-        page.negotiated?.status === 200 &&
-        /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? '') &&
-        page.negotiated.varyAccept
-      const explicitOk = !page.htmlAlternateUnique
-        ? true
-        : page.httpAlternateUrls.length === 1 &&
-          page.explicit?.status === 200 &&
-          /^\s*text\/markdown\b/iu.test(page.explicit.contentType ?? '') &&
-          page.explicitMatchesNegotiated === true &&
-          page.markdownCanonicalMatchesHtml === true
-      return !negotiatedOk || !explicitOk || page.repeatedHashStable !== true
-    })
-    .map((page) => page.htmlUrl)
-}
-
-function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
-  return discovery.markdownAlternates.pages
-    .filter((page) => {
-      const quality = page.quality
-      if (!quality) return true
-      return (
-        !quality.frontmatterTitle ||
-        quality.h1Count !== 1 ||
-        !quality.codeFenceBalanced ||
-        quality.rawHtmlTags > 0 ||
-        quality.rawSvgTags > 0 ||
-        quality.rawScriptTags > 0 ||
-        quality.rawStyleTags > 0 ||
-        quality.navigationOnly ||
-        quality.repeatedLines > 0 ||
-        (quality.wordRetentionRatio !== null &&
-          quality.wordRetentionRatio < 0.4)
-      )
-    })
-    .map((page) => page.htmlUrl)
-}
-
 function profileChecks(
   discovery: Pick<CrawlAgentDiscovery, 'profile' | 'profileApplicability'>,
 ): AgentReadinessCheck[] {
@@ -139,152 +99,6 @@ function summariseChecks(
     information: count('info'),
     notApplicable: count('notApplicable'),
   }
-}
-
-function markdownChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
-  const markdown = discovery.markdownAlternates
-  const failedUrls = failedMarkdownUrls(discovery)
-  const qualityUrls = qualityFailureUrls(discovery)
-  const negotiatedPages = markdown.pages.filter(
-    (page) =>
-      page.negotiated?.status === 200 &&
-      /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? ''),
-  ).length
-  const explicitPages = markdown.pages.filter(
-    (page) => page.htmlAlternateUnique,
-  ).length
-  const coverageComplete =
-    markdown.eligibleHtmlPages > 0 &&
-    markdown.evaluatedPages === markdown.eligibleHtmlPages
-  const negotiationComplete =
-    markdown.eligibleHtmlPages > 0 &&
-    negotiatedPages === markdown.eligibleHtmlPages &&
-    markdown.pages.every((page) => page.negotiated?.varyAccept) &&
-    markdown.pages.every(
-      (page) =>
-        !page.htmlAlternateUnique || page.explicitMatchesNegotiated === true,
-    )
-  const stable =
-    markdown.eligibleHtmlPages > 0 &&
-    markdown.stableResponses === markdown.eligibleHtmlPages
-  const tokenHeaders = markdown.pages.filter((page) => {
-    const primary = page.explicit ?? page.negotiated
-    return (
-      primary?.markdownTokens !== undefined &&
-      (!page.explicit ||
-        !page.negotiated ||
-        page.explicit.markdownTokens === page.negotiated.markdownTokens)
-    )
-  }).length
-  return [
-    check('representations', {
-      id: 'markdown-coverage',
-      status:
-        markdown.eligibleHtmlPages === 0
-          ? 'unknown'
-          : coverageComplete
-            ? 'pass'
-            : 'fail',
-      title: coverageComplete
-        ? 'Every successful HTML page has a Markdown representation'
-        : 'Markdown representation coverage is incomplete',
-      plainEnglish: `${markdown.evaluatedPages} of ${markdown.eligibleHtmlPages} successful HTML pages returned Markdown. ${explicitPages} advertised an explicit alternative and ${negotiatedPages} supported content negotiation.`,
-      action: coverageComplete
-        ? 'Keep the negotiated or explicit Markdown response stable as routes change.'
-        : 'Return text/markdown through content negotiation or advertise one working Markdown alternative for each public HTML page.',
-      evidence: {
-        eligibleHtmlPages: markdown.eligibleHtmlPages,
-        advertisedPages: markdown.advertisedPages,
-        negotiatedPages,
-        evaluatedPages: markdown.evaluatedPages,
-      },
-      urls: failedUrls.slice(0, 25),
-    }),
-    check('representations', {
-      id: 'markdown-token-estimates',
-      status:
-        markdown.evaluatedPages === 0
-          ? 'unknown'
-          : tokenHeaders === markdown.evaluatedPages
-            ? 'pass'
-            : 'warning',
-      title:
-        tokenHeaders === markdown.evaluatedPages
-          ? 'Every Markdown response includes a token estimate'
-          : 'Some Markdown responses are missing a stable token estimate',
-      plainEnglish: `${tokenHeaders} of ${markdown.evaluatedPages} evaluated pages returned X-Markdown-Tokens. Paired explicit and negotiated responses agreed where both existed. The value is an estimate, not an exact model-specific token count.`,
-      action:
-        'Return a stable token estimate and keep it consistent when both explicit and negotiated responses exist.',
-      urls: markdown.pages
-        .filter((page) => {
-          const primary = page.explicit ?? page.negotiated
-          return (
-            primary?.markdownTokens === undefined ||
-            (page.explicit !== undefined &&
-              page.negotiated !== undefined &&
-              page.explicit.markdownTokens !== page.negotiated.markdownTokens)
-          )
-        })
-        .map((page) => page.htmlUrl)
-        .slice(0, 25),
-    }),
-    check('representations', {
-      id: 'markdown-negotiation',
-      status:
-        markdown.eligibleHtmlPages === 0
-          ? 'unknown'
-          : negotiationComplete && discovery.contentNegotiation.qZeroHonoured
-            ? 'pass'
-            : 'fail',
-      title:
-        negotiationComplete && discovery.contentNegotiation.qZeroHonoured
-          ? 'Markdown content negotiation works across the site'
-          : 'Markdown content negotiation needs attention',
-      plainEnglish: `${negotiatedPages} of ${markdown.eligibleHtmlPages} pages returned negotiated Markdown. ${markdown.exactByteMatches} of ${explicitPages} paired explicit responses matched byte for byte. A request that refuses Markdown ${discovery.contentNegotiation.qZeroHonoured ? 'received HTML' : 'did not produce confirmed HTML evidence'}.`,
-      action:
-        'Honour Accept q-values, send Vary: Accept, and keep paired explicit and negotiated responses identical when both exist.',
-      evidence: {
-        negotiatedPages,
-        explicitPages,
-        exactByteMatches: markdown.exactByteMatches,
-        qZero: discovery.contentNegotiation,
-      },
-      urls: failedUrls.slice(0, 25),
-    }),
-    check('representations', {
-      id: 'markdown-determinism',
-      status:
-        markdown.eligibleHtmlPages === 0 ? 'unknown' : stable ? 'pass' : 'fail',
-      title: stable
-        ? 'Repeated Markdown responses are stable'
-        : 'Repeated Markdown responses changed during the audit',
-      plainEnglish: `${markdown.stableResponses} of ${markdown.eligibleHtmlPages} repeated Markdown responses kept the same SHA-256 digest.`,
-      action:
-        'Remove timestamps, random output, or other runtime rewriting that changes the same Markdown response between requests.',
-      evidence: { stableResponses: markdown.stableResponses },
-      urls: failedUrls.slice(0, 25),
-    }),
-    check('representations', {
-      id: 'markdown-quality',
-      status:
-        markdown.evaluatedPages === 0
-          ? 'unknown'
-          : qualityUrls.length === 0
-            ? 'pass'
-            : 'warning',
-      title:
-        qualityUrls.length === 0
-          ? 'Markdown keeps the useful document structure cleanly'
-          : 'Some Markdown alternatives need an extraction review',
-      plainEnglish:
-        qualityUrls.length === 0
-          ? 'The evaluated alternatives retained one H1, frontmatter titles, balanced code fences, useful copy, and no leaked SVG, script, style, or layout tags.'
-          : `${qualityUrls.length} Markdown alternative${qualityUrls.length === 1 ? '' : 's'} lost important structure, looked navigation-only, or leaked presentation markup.`,
-      action:
-        'Open the affected Markdown directly and fix the shared converter or component exclusion rules rather than patching generated files.',
-      urls: qualityUrls.slice(0, 25),
-    }),
-  ]
 }
 
 function contentSignalsCheck(
@@ -457,10 +271,10 @@ function discoveryChecks(
           ? 'pass'
           : 'warning',
       title: discovery.routeManifest.valid
-        ? 'The public route manifest agrees with the crawl'
+        ? 'The public route manifest is valid'
         : 'No public route manifest was available',
       plainEnglish: discovery.routeManifest.valid
-        ? `The manifest declared ${discovery.routeManifest.declaredHtmlRoutes.length} HTML routes and ${discovery.routeManifest.declaredMarkdownRoutes.length} Markdown routes. Missing or orphan routes are listed in the evidence.`
+        ? `The manifest declared ${discovery.routeManifest.declaredHtmlRoutes.length} HTML routes and ${discovery.routeManifest.declaredMarkdownRoutes.length} Markdown routes. This bounded crawl did not treat unvisited routes as missing.`
         : 'A public route manifest is optional. Without one, this crawl cannot prove that no orphan Markdown files were deployed.',
       action:
         'Generate one deterministic route inventory from the build when exact HTML and Markdown parity matters.',
@@ -688,6 +502,12 @@ function accessChecks(
     report.ai?.robotsTxt?.availability === 'available' ||
     report.ai?.robotsTxt?.availability === 'absent'
   const protocol = discovery.protocolVariants
+  const authenticationGates = report.issues.filter(
+    (issue) => issue.ruleId === 'soft_authentication_gate',
+  )
+  const clientRenderedPages = report.issues.filter(
+    (issue) => issue.ruleId === 'client_rendered_content',
+  )
   return [
     check('access', {
       id: 'crawler-access',
@@ -709,6 +529,29 @@ function accessChecks(
         blocked,
         botAccess: bots,
       },
+    }),
+    check('access', {
+      id: 'public-content-access',
+      status:
+        authenticationGates.length > 0 || clientRenderedPages.length > 0
+          ? 'warning'
+          : 'pass',
+      title:
+        authenticationGates.length > 0 || clientRenderedPages.length > 0
+          ? 'Some public content may be difficult for constrained clients to reach'
+          : 'No login gate or empty initial document was detected',
+      plainEnglish: `${authenticationGates.length} crawled pages looked like login gates and ${clientRenderedPages.length} relied on JavaScript to replace an empty or near-empty initial document. These are general site-health observations reused here because they affect agents that do not maintain sessions or run JavaScript.`,
+      action:
+        authenticationGates.length > 0 || clientRenderedPages.length > 0
+          ? 'Make intended public content available without a session and include its important document content in the initial HTML or a complete server-generated representation.'
+          : 'Keep important public content available without a session or client-side rendering requirement.',
+      evidence: {
+        authenticationGates: authenticationGates.length,
+        clientRenderedPages: clientRenderedPages.length,
+      },
+      urls: [...authenticationGates, ...clientRenderedPages]
+        .map((issue) => issue.url)
+        .slice(0, 25),
     }),
     check('access', {
       id: 'protocol-canonicalization',

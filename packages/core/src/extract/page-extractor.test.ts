@@ -249,6 +249,34 @@ test('crawler extraction keeps aggregates without full link objects', async () =
   ])
 })
 
+test('crawler extraction keeps bounded login and accessible tab evidence', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html><html><head><title>Sign in to continue</title></head>
+      <body><main>
+        <h1>Sign in</h1>
+        <form action="/auth/login"><input type="password" name="password"></form>
+        <div role="tablist"><button id="overview-tab" role="tab">Overview</button></div>
+        <section role="tabpanel" aria-labelledby="overview-tab">
+          The overview panel contains enough useful words to produce a stable bounded content sketch for later comparison.
+        </section>
+      </main></body></html>`),
+    'crawler',
+  )
+
+  assert.deepEqual(page.crawlerEvidence?.softAuthenticationGate, {
+    kind: 'login-form',
+    indicators: ['login-title', 'login-form-action'],
+    formActionPath: '/auth/login',
+  })
+  assert.equal(page.crawlerEvidence?.tabbedContent?.groups, 1)
+  assert.equal(page.crawlerEvidence?.tabbedContent?.panels, 1)
+  assert.equal(
+    page.crawlerEvidence?.tabbedContent?.panelSketches[0]?.label,
+    'Overview',
+  )
+  assert.ok((page.crawlerEvidence?.contentSketch.hashes.length ?? 0) > 0)
+})
+
 test('structured data preserves graph context and subject provenance', async () => {
   const page = await extractPage(
     fetchResult(`<!doctype html><html><head>

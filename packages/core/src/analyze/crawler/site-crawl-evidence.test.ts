@@ -360,7 +360,7 @@ test('crawlSite keeps non-HTML responses out of HTML audits', async () => {
     assert.equal(report.requests[0]?.extraction, 'not-applicable')
     assert.deepEqual(
       report.issues.map((item) => item.ruleId),
-      ['http_not_secure', 'x_robots_noindex'],
+      ['http_not_secure', 'x_robots_noindex', 'soft_404'],
     )
   } finally {
     await fixture.close()

@@ -127,6 +127,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'requestEvidenceStatus',
         'requests',
         'reviewObservations',
+        'siteChecks',
         'status',
         'summary',
         'topFixes',

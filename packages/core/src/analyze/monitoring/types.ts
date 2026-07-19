@@ -1,3 +1,4 @@
+import type { ContentSketch } from '../../extract/content-sketch.js'
 import type {
   AccessBlockEvidence,
   ContentExtractionDiagnostics,
@@ -76,6 +77,22 @@ export type CrawlPageSnapshot = {
   mainContentHash?: string
   textRatio?: number
   contentSample?: string
+  contentSketch?: ContentSketch
+  softAuthenticationGate?: {
+    kind: 'login-form'
+    indicators: string[]
+    formActionPath?: string
+  }
+  tabbedContent?: {
+    groups: number
+    panels: number
+    retainedPanels: number
+    truncated: boolean
+    panelSketches: Array<{
+      label?: string
+      sketch: ContentSketch
+    }>
+  }
   lang?: string
   hasViewport?: boolean
   isHttps?: boolean

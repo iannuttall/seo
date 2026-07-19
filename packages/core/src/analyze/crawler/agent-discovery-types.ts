@@ -12,6 +12,8 @@ export type AgentRepresentationResponse = {
   status?: number
   contentType?: string
   bytes?: number
+  characters?: number
+  estimatedTokens?: number
   sha256?: string
   canonicalUrl?: string
   alternateUrl?: string
@@ -38,6 +40,14 @@ export type MarkdownQualityObservation = {
   wordRetentionRatio: number | null
   introductoryCopyRetained: boolean | null
   navigationOnly: boolean
+  contentSketchCoverage?: number | null
+  tabbedContent?: {
+    detectedPanels: number
+    evaluatedPanels: number
+    retainedPanels: number
+    missingPanels: number
+    complete: boolean | null
+  }
 }
 
 export type MarkdownAlternateObservation = {
@@ -141,6 +151,7 @@ export type CrawlAgentDiscovery = {
     missingHtmlRoutes: string[]
     missingMarkdownRoutes: string[]
     orphanMarkdownRoutes: string[]
+    comparisonStatus?: 'complete' | 'partial' | 'not-applicable'
     error?: string
   }
   agentSkills: {

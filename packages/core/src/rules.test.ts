@@ -7,7 +7,7 @@ test('rule registry has unique ids and complete guidance', () => {
   const rules = listRules()
   const ids = new Set<string>()
 
-  assert.equal(rules.length, 51)
+  assert.equal(rules.length, 54)
   for (const rule of rules) {
     assert.equal(ids.has(rule.id), false, `duplicate rule id: ${rule.id}`)
     ids.add(rule.id)

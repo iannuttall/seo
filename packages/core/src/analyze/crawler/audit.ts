@@ -56,6 +56,42 @@ const WEAK_VALUABLE_INLINKS = 1
 const QUERY_COVERAGE_MIN_IMPRESSIONS = 50
 const QUERY_COVERAGE_MIN = 0.6
 const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
+const EMPTY_INITIAL_HTML_CHARACTERS = 200
+const SUBSTANTIVE_RENDERED_CHARACTERS = 500
+
+function clientRenderedContentEvidence(
+  page: CrawlPageSnapshot,
+): Record<string, unknown> | undefined {
+  const rendering = page.fetchDiagnostics?.rendering
+  const difference = rendering?.documentDifference
+  if (
+    rendering?.status !== 'rendered' ||
+    !difference?.changed.includes('content')
+  ) {
+    return undefined
+  }
+  const rawCharacters = difference.raw.content.characters
+  const renderedCharacters = difference.rendered.content.characters
+  if (
+    rawCharacters >= EMPTY_INITIAL_HTML_CHARACTERS ||
+    renderedCharacters < SUBSTANTIVE_RENDERED_CHARACTERS ||
+    renderedCharacters < rawCharacters * 3
+  ) {
+    return undefined
+  }
+  return {
+    rawCharacters,
+    rawWords: difference.raw.content.wordCount,
+    renderedCharacters,
+    renderedWords: difference.rendered.content.wordCount,
+    changed: difference.changed,
+    thresholds: {
+      emptyInitialHtmlCharacters: EMPTY_INITIAL_HTML_CHARACTERS,
+      substantiveRenderedCharacters: SUBSTANTIVE_RENDERED_CHARACTERS,
+      minimumGrowthRatio: 3,
+    },
+  }
+}
 
 function issue(
   ruleId: RuleId,
@@ -411,6 +447,28 @@ export function auditCrawlPages(
     }
     if (page.auditScope === 'status') continue
     if (redirected) continue
+
+    if (page.softAuthenticationGate) {
+      issues.push(
+        issue(
+          'soft_authentication_gate',
+          page,
+          'A password form and login-specific page signals were observed.',
+          page.softAuthenticationGate,
+        ),
+      )
+    }
+    const renderedContent = clientRenderedContentEvidence(page)
+    if (renderedContent) {
+      issues.push(
+        issue(
+          'client_rendered_content',
+          page,
+          'The raw response was an empty or near-empty shell.',
+          renderedContent,
+        ),
+      )
+    }
 
     if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {
       issues.push(

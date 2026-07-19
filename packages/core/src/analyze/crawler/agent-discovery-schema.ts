@@ -6,6 +6,8 @@ const agentRepresentationResponseSchema = z.object({
   status: z.number().int().optional(),
   contentType: z.string().optional(),
   bytes: z.number().int().nonnegative().optional(),
+  characters: z.number().int().nonnegative().optional(),
+  estimatedTokens: z.number().int().nonnegative().optional(),
   sha256: z.string().optional(),
   canonicalUrl: z.string().url().optional(),
   alternateUrl: z.string().url().optional(),
@@ -61,6 +63,21 @@ export const agentDiscoverySchema = z.object({
             wordRetentionRatio: z.number().nonnegative().nullable(),
             introductoryCopyRetained: z.boolean().nullable(),
             navigationOnly: z.boolean(),
+            contentSketchCoverage: z
+              .number()
+              .min(0)
+              .max(1)
+              .nullable()
+              .optional(),
+            tabbedContent: z
+              .object({
+                detectedPanels: z.number().int().nonnegative(),
+                evaluatedPanels: z.number().int().nonnegative(),
+                retainedPanels: z.number().int().nonnegative(),
+                missingPanels: z.number().int().nonnegative(),
+                complete: z.boolean().nullable(),
+              })
+              .optional(),
           })
           .optional(),
       }),
@@ -81,6 +98,9 @@ export const agentDiscoverySchema = z.object({
     missingHtmlRoutes: z.array(z.string()),
     missingMarkdownRoutes: z.array(z.string()),
     orphanMarkdownRoutes: z.array(z.string()),
+    comparisonStatus: z
+      .enum(['complete', 'partial', 'not-applicable'])
+      .optional(),
     error: z.string().optional(),
   }),
   agentSkills: z.object({

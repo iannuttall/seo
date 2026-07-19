@@ -400,6 +400,9 @@ export async function crawlOne(
         ? Math.min(1, extracted.contentText.length / fetched.html.length)
         : undefined,
       contentSample: truncate(extracted.contentText, 300),
+      contentSketch: crawlerEvidence.contentSketch,
+      softAuthenticationGate: crawlerEvidence.softAuthenticationGate,
+      tabbedContent: crawlerEvidence.tabbedContent,
       lang: extracted.lang,
       hasViewport: extracted.hasViewport,
       isHttps: new URL(extracted.finalUrl).protocol === 'https:',

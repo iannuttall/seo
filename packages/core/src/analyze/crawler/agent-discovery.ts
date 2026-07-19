@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import PQueue from 'p-queue'
+import { contentSketchCoverage } from '../../extract/content-sketch.js'
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type {
@@ -167,6 +168,15 @@ function markdownQuality(
   const codeFences = markdown.match(/^```/gmu)?.length ?? 0
   const wordCount = bodyWordCount(markdown)
   const sourceWordCount = page.wordCount ?? 0
+  const panelCoverage = (page.tabbedContent?.panelSketches ?? []).map((panel) =>
+    contentSketchCoverage(panel.sketch, markdown),
+  )
+  const evaluatedPanels = panelCoverage.filter(
+    (coverage): coverage is number => coverage !== null,
+  )
+  const retainedPanels = evaluatedPanels.filter(
+    (coverage) => coverage >= 0.6,
+  ).length
   return {
     frontmatterTitle: /^---[\s\S]*?^title:\s*.+$/mu.test(markdown),
     h1Count: markdown.match(/^#\s+\S.+$/gmu)?.length ?? 0,
@@ -192,6 +202,17 @@ function markdownQuality(
       ? normalizedMarkdown.includes(introProbe)
       : null,
     navigationOnly: bodyWordCount(markdown) < 25,
+    contentSketchCoverage: contentSketchCoverage(page.contentSketch, markdown),
+    tabbedContent: {
+      detectedPanels: page.tabbedContent?.panels ?? 0,
+      evaluatedPanels: evaluatedPanels.length,
+      retainedPanels,
+      missingPanels: Math.max(0, evaluatedPanels.length - retainedPanels),
+      complete:
+        evaluatedPanels.length === 0
+          ? null
+          : retainedPanels === evaluatedPanels.length,
+    },
   }
 }
 
@@ -264,6 +285,8 @@ async function fetchRepresentation(input: {
         status: response.status,
         contentType: response.headers.get('content-type') ?? undefined,
         bytes: Buffer.byteLength(body),
+        characters: body.length,
+        estimatedTokens: Math.ceil(body.length / 4),
         sha256: sha256(body),
         canonicalUrl: link.find((entry) => entry.rel.includes('canonical'))
           ?.url,
@@ -681,8 +704,6 @@ async function inspectLlmsTxt(input: {
 
 async function inspectRouteManifest(input: {
   origin: string
-  pages: CrawlPageSnapshot[]
-  observations: MarkdownAlternateObservation[]
   timeoutMs: number
   fetch: typeof publicHttpFetch
   signal?: AbortSignal
@@ -708,33 +729,16 @@ async function inspectRouteManifest(input: {
       .map((page) => page.markdownPath)
       .filter((path): path is string => typeof path === 'string')
       .sort()
-    const crawledHtmlRoutes = new Set(
-      input.pages.map(
-        (page) => new URL(page.finalUrl).pathname.replace(/\/$/u, '') || '/',
-      ),
-    )
-    const observedMarkdownRoutes = new Set(
-      input.observations.flatMap((page) =>
-        page.advertisedUrls.map((value) => new URL(value).pathname),
-      ),
-    )
     return {
       url,
       status: result.response.status,
       valid: Array.isArray(parsed.pages),
       declaredHtmlRoutes,
       declaredMarkdownRoutes,
-      missingHtmlRoutes: declaredHtmlRoutes
-        .filter(
-          (path) => !crawledHtmlRoutes.has(path.replace(/\/$/u, '') || '/'),
-        )
-        .sort(),
-      missingMarkdownRoutes: declaredMarkdownRoutes
-        .filter((path) => !observedMarkdownRoutes.has(path))
-        .sort(),
-      orphanMarkdownRoutes: [...observedMarkdownRoutes]
-        .filter((path) => !declaredMarkdownRoutes.includes(path))
-        .sort(),
+      missingHtmlRoutes: [],
+      missingMarkdownRoutes: [],
+      orphanMarkdownRoutes: [],
+      comparisonStatus: 'partial',
     }
   } catch (error) {
     return {
@@ -745,6 +749,7 @@ async function inspectRouteManifest(input: {
       missingHtmlRoutes: [],
       missingMarkdownRoutes: [],
       orphanMarkdownRoutes: [],
+      comparisonStatus: 'not-applicable',
       error: safeError(error),
     }
   }
@@ -809,7 +814,7 @@ export async function collectAgentDiscovery(input: {
     await Promise.all([
       inspectAgentSkills({ ...input, origin }),
       inspectLlmsTxt({ ...input, origin, pages }),
-      inspectRouteManifest({ ...input, origin, pages, observations }),
+      inspectRouteManifest({ ...input, origin }),
       inspectAgentEndpoints({ ...input, origin }),
     ])
   const qZero = await fetchRepresentation({

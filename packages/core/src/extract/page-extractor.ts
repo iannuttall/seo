@@ -6,6 +6,7 @@ import type {
   PageFetchResult,
 } from '../types.js'
 import { extractCanonicalEvidence } from './canonical.js'
+import { type ContentSketch, contentSketch } from './content-sketch.js'
 import {
   countCjkAwareWords,
   extractMainContent,
@@ -27,6 +28,22 @@ type CrawlerExtractionEvidence = {
   internalAnchorSamples: Array<{ href: string; text: string }>
   externalAnchorSamples: Array<{ href: string; text: string }>
   socialProfileLinks: string[]
+  contentSketch: ContentSketch
+  softAuthenticationGate?: {
+    kind: 'login-form'
+    indicators: string[]
+    formActionPath?: string
+  }
+  tabbedContent?: {
+    groups: number
+    panels: number
+    retainedPanels: number
+    truncated: boolean
+    panelSketches: Array<{
+      label?: string
+      sketch: ContentSketch
+    }>
+  }
 }
 
 type PageExtraction = ExtractedPage & {
@@ -43,6 +60,68 @@ const SOCIAL_PROFILE_HOSTS = [
   'x.com',
   'youtube.com',
 ]
+
+const LOGIN_PATH_PATTERN =
+  /(?:^|\/)(?:auth|login|log-in|signin|sign-in|sso)(?:\/|$)/iu
+const LOGIN_TITLE_PATTERN = /\b(?:authenticate|log[ -]?in|sign[ -]?in)\b/iu
+
+function softAuthenticationGate(
+  $: CheerioAPI,
+  finalUrl: string,
+  title?: string,
+): CrawlerExtractionEvidence['softAuthenticationGate'] {
+  const passwordForms = $('form')
+    .toArray()
+    .filter((form) => $(form).find('input[type="password" i]').length > 0)
+  if (passwordForms.length === 0) return undefined
+
+  const pagePath = new URL(finalUrl).pathname
+  const action = $(passwordForms[0]).attr('action')
+  const actionUrl = action ? httpUrl(action, finalUrl) : undefined
+  const actionPath = actionUrl ? new URL(actionUrl).pathname : undefined
+  const indicators = [
+    ...(LOGIN_PATH_PATTERN.test(pagePath) ? ['login-path'] : []),
+    ...(LOGIN_TITLE_PATTERN.test(title ?? '') ? ['login-title'] : []),
+    ...(LOGIN_PATH_PATTERN.test(actionPath ?? '') ? ['login-form-action'] : []),
+  ]
+  if (indicators.length === 0) return undefined
+  return {
+    kind: 'login-form',
+    indicators,
+    ...(actionPath ? { formActionPath: actionPath } : {}),
+  }
+}
+
+function tabbedContent(
+  $: CheerioAPI,
+): CrawlerExtractionEvidence['tabbedContent'] {
+  const groups = $('[role="tablist" i]').length
+  const panels = $('[role="tabpanel" i]').toArray()
+  if (groups === 0 || panels.length === 0) return undefined
+  const panelSketches = panels.slice(0, 12).map((panel) => {
+    const labelledBy = $(panel).attr('aria-labelledby')
+    const labelledElement = labelledBy
+      ? $('[id]')
+          .toArray()
+          .find((element) => $(element).attr('id') === labelledBy)
+      : undefined
+    const label = safeText(
+      $(panel).attr('aria-label') ??
+        (labelledElement ? $(labelledElement).text() : undefined),
+    )
+    return {
+      ...(label ? { label: label.slice(0, 80) } : {}),
+      sketch: contentSketch($(panel).text()),
+    }
+  })
+  return {
+    groups,
+    panels: panels.length,
+    retainedPanels: panelSketches.length,
+    truncated: panels.length > panelSketches.length,
+    panelSketches,
+  }
+}
 
 function safeText(value?: string | null): string | undefined {
   const trimmed = value?.replace(/\s+/g, ' ').trim()
@@ -455,11 +534,12 @@ export async function extractPage(
           dependencies,
         )
   const { text, excerpt } = content
+  const title = safeText($('title').first().text())
 
   return {
     url: fetchResult.url,
     finalUrl: fetchResult.finalUrl,
-    title: safeText($('title').first().text()),
+    title,
     metaDescription: safeText($('meta[name="description"]').attr('content')),
     metaRobots,
     xRobotsTag: safeText(headerValue(fetchResult.headers, 'x-robots-tag')),
@@ -482,6 +562,13 @@ export async function extractPage(
             internalAnchorSamples,
             externalAnchorSamples,
             socialProfileLinks: [...socialProfileLinks],
+            contentSketch: contentSketch(text),
+            softAuthenticationGate: softAuthenticationGate(
+              $,
+              fetchResult.finalUrl,
+              title,
+            ),
+            tabbedContent: tabbedContent($),
           },
         }
       : {}),

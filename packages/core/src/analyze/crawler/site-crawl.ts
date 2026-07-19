@@ -22,6 +22,7 @@ import {
   normalizeCrawlConfig,
 } from './report.js'
 import { observationFromPage } from './request-evidence.js'
+import { collectCrawlSiteChecks } from './site-checks.js'
 import { collectCrawlAiSignals } from './site-crawl-ai-signals.js'
 import {
   crawlDataSources,
@@ -758,6 +759,17 @@ export async function crawlSite(
           })
         : undefined
 
+    const siteCheckResult =
+      !healthStrategy && !cancelled && !stoppedForMemory
+        ? await collectCrawlSiteChecks({
+            startUrl: config.url,
+            timeoutMs: config.timeoutMs,
+            fetchStatusPage: deps.fetchStatusPage,
+            respectRobots: config.respectRobots,
+            signal,
+          })
+        : undefined
+
     for (const page of pages) {
       if (!page.geo || !llmsTxt) continue
       page.geo = {
@@ -788,6 +800,12 @@ export async function crawlSite(
         : {}),
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
+      ...(siteCheckResult
+        ? {
+            siteChecks: siteCheckResult.checks,
+            additionalIssues: siteCheckResult.issues,
+          }
+        : {}),
       ...(agentDiscovery ? { agentDiscovery } : {}),
       status: reportStatus,
       warnings,

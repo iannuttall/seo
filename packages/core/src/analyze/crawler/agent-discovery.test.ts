@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { test } from 'node:test'
+import { contentSketch } from '../../extract/content-sketch.js'
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { collectAgentDiscovery } from './agent-discovery.js'
@@ -165,6 +166,9 @@ const page: CrawlPageSnapshot = {
   contentHash: 'html',
   contentSample:
     'Intro copy explains the useful page clearly enough for an agent to retain it.',
+  contentSketch: contentSketch(
+    'Intro copy explains the useful page clearly enough for an agent to retain it.',
+  ),
   outgoingInternalCount: 0,
   markdownAlternates: ['https://example.com/index.md'],
   hasHsts: true,
@@ -248,6 +252,8 @@ copy to exercise the clean quality path without relying on an explicit route.
     'markdown-negotiation',
     'markdown-determinism',
     'markdown-quality',
+    'markdown-size',
+    'markdown-content-parity',
   ]) {
     assert.equal(
       readiness.checks.find((item) => item.id === id)?.status,
@@ -255,6 +261,11 @@ copy to exercise the clean quality path without relying on an explicit route.
       id,
     )
   }
+  assert.equal(
+    readiness.checks.find((item) => item.id === 'markdown-tab-serialization')
+      ?.status,
+    'notApplicable',
+  )
 })
 
 test('markdown quality ignores repeated commands and weak intro samples', async () => {
@@ -287,6 +298,7 @@ seo projects list
   const variantPage: CrawlPageSnapshot = {
     ...page,
     wordCount: 12,
+    contentSketch: undefined,
     contentSample:
       'Unrelated visual navigation text that is not part of the useful document intro.',
   }
@@ -391,7 +403,7 @@ test('agentReadiness reports evidence without scoring irrelevant profiles', asyn
   assert.equal(readiness.profile, 'content')
   assert.equal(readiness.assessment, 'evidence-only')
   assert.equal(readiness.summary.failed, 0)
-  assert.equal(readiness.summary.notApplicable, 3)
+  assert.equal(readiness.summary.notApplicable, 4)
   assert.equal(
     readiness.summary.checks,
     readiness.summary.passed +

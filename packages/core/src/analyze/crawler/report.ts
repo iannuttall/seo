@@ -27,6 +27,9 @@ import {
   crawlSkipReasonCountsFromRecord,
   normalizeCrawlSkipReasonCounts,
 } from './crawl-skip-reasons.js'
+import type { CrawlSiteChecks } from './site-checks.js'
+
+export type { CrawlSiteChecks } from './site-checks.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 export type CrawlStrategy = 'full' | 'health'
@@ -323,6 +326,7 @@ export type CrawlReport = {
   ai?: CrawlAiSignals
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
+  siteChecks?: CrawlSiteChecks
   agentDiscovery?: CrawlAgentDiscovery
   warnings: string[]
   caveats: string[]
@@ -895,6 +899,7 @@ export function createCrawlReport(input: {
   requests?: CrawlRequestObservation[]
   requestEvidenceStatus?: CrawlReport['requestEvidenceStatus']
   issues?: CrawlIssue[]
+  additionalIssues?: CrawlIssue[]
   linkGraph?: CrawlLinkGraph
   ai?: CrawlAiSignals
   projectId?: string
@@ -903,6 +908,7 @@ export function createCrawlReport(input: {
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
+  siteChecks?: CrawlSiteChecks
   agentDiscovery?: CrawlAgentDiscovery
   status?: CrawlReport['status']
   warnings?: string[]
@@ -932,9 +938,12 @@ export function createCrawlReport(input: {
       'Unavailable request evidence cannot include request observations.',
     )
   }
-  const issues = input.issues ?? [
-    ...auditCrawlRequests(requests),
-    ...auditCrawlPages(safePagesWithLinks, { startUrl: config.url }),
+  const issues = [
+    ...(input.issues ?? [
+      ...auditCrawlRequests(requests),
+      ...auditCrawlPages(safePagesWithLinks, { startUrl: config.url }),
+    ]),
+    ...(input.additionalIssues ?? []),
   ]
   const safeIssues = sanitizeIssues(issues)
   const pages = safePagesWithLinks
@@ -983,6 +992,11 @@ export function createCrawlReport(input: {
           externalLinkVerification: sanitizeTenantValue(
             input.externalLinkVerification,
           ) as CrawlExternalLinkVerification,
+        }
+      : {}),
+    ...(input.siteChecks
+      ? {
+          siteChecks: sanitizeTenantValue(input.siteChecks) as CrawlSiteChecks,
         }
       : {}),
     ...(input.agentDiscovery

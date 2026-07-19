@@ -2,8 +2,8 @@ import { performanceAudit, SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
 import { resolveClient } from '../selection.js'
-import { printJson, printKeyValue } from '../utils.js'
-import { printActionDetails, printNotes } from './output.js'
+import { printJson } from '../utils.js'
+import { printActionDetails, printNotes, printReportSummary } from './output.js'
 
 function strategy(value: unknown): 'mobile' | 'desktop' {
   const selected = stringArg(value) ?? 'mobile'
@@ -101,50 +101,85 @@ export const performanceCommand = defineCommand({
           printJson(report)
           return
         }
-        printKeyValue([
-          ['URL', report.url],
-          ['Source', report.source],
-          ['Strategy', report.strategy],
-          [
-            'Lab score',
-            report.score === undefined ? 'unknown' : `${report.score}/100`,
+        printReportSummary({
+          title: 'Performance report',
+          target: report.url,
+          status:
+            report.dataStatus === 'partial'
+              ? 'unknown'
+              : report.grade === 'good'
+                ? 'pass'
+                : 'warning',
+          summary: report.headline,
+          metrics: [
+            { label: 'Source', value: report.source },
+            { label: 'Strategy', value: report.strategy },
+            {
+              label: 'Lab score',
+              value:
+                report.score === undefined ? 'Unknown' : `${report.score}/100`,
+            },
+            { label: 'Lab grade', value: report.grade },
+            { label: 'Evidence', value: report.dataStatus },
+            {
+              label: 'FCP',
+              value: metric(report.metrics.firstContentfulPaint),
+            },
+            {
+              label: 'LCP',
+              value: metric(report.metrics.largestContentfulPaint),
+            },
+            { label: 'TBT', value: metric(report.metrics.totalBlockingTime) },
+            {
+              label: 'CLS',
+              value: metric(report.metrics.cumulativeLayoutShift),
+            },
+            {
+              label: 'INP',
+              value: metric(report.metrics.interactionToNextPaint),
+            },
+            {
+              label: 'Server response',
+              value: metric(report.metrics.serverResponseTime),
+            },
+            {
+              label: 'Fallback fetch',
+              value: metric(report.metrics.fallbackFetchDuration),
+            },
+            {
+              label: 'Field data',
+              value: report.fieldData
+                ? `${report.fieldData.scope} ${report.fieldData.formFactor.toLowerCase()} (${report.fieldData.assessment.status})`
+                : report.fieldDataStatus.status,
+            },
+            {
+              label: 'Field LCP p75',
+              value: fieldMetric(
+                report.fieldData?.metrics.largestContentfulPaint,
+              ),
+            },
+            {
+              label: 'Field INP p75',
+              value: fieldMetric(
+                report.fieldData?.metrics.interactionToNextPaint,
+              ),
+            },
+            {
+              label: 'Field CLS p75',
+              value: fieldMetric(
+                report.fieldData?.metrics.cumulativeLayoutShift,
+              ),
+            },
+            {
+              label: 'Field period',
+              value:
+                report.fieldData?.collectionPeriod?.firstDate &&
+                report.fieldData.collectionPeriod.lastDate
+                  ? `${report.fieldData.collectionPeriod.firstDate} to ${report.fieldData.collectionPeriod.lastDate}`
+                  : 'Unavailable',
+            },
           ],
-          ['Lab grade', report.grade],
-          ['Data status', report.dataStatus],
-          ['Headline', report.headline],
-          ['FCP', metric(report.metrics.firstContentfulPaint)],
-          ['LCP', metric(report.metrics.largestContentfulPaint)],
-          ['TBT', metric(report.metrics.totalBlockingTime)],
-          ['CLS', metric(report.metrics.cumulativeLayoutShift)],
-          ['INP', metric(report.metrics.interactionToNextPaint)],
-          ['Server response', metric(report.metrics.serverResponseTime)],
-          ['Fallback fetch', metric(report.metrics.fallbackFetchDuration)],
-          [
-            'Field data',
-            report.fieldData
-              ? `${report.fieldData.scope} ${report.fieldData.formFactor.toLowerCase()} (${report.fieldData.assessment.status})`
-              : report.fieldDataStatus.status,
-          ],
-          [
-            'Field period',
-            report.fieldData?.collectionPeriod?.firstDate &&
-            report.fieldData.collectionPeriod.lastDate
-              ? `${report.fieldData.collectionPeriod.firstDate} to ${report.fieldData.collectionPeriod.lastDate}`
-              : 'not available',
-          ],
-          [
-            'Field LCP p75',
-            fieldMetric(report.fieldData?.metrics.largestContentfulPaint),
-          ],
-          [
-            'Field INP p75',
-            fieldMetric(report.fieldData?.metrics.interactionToNextPaint),
-          ],
-          [
-            'Field CLS p75',
-            fieldMetric(report.fieldData?.metrics.cumulativeLayoutShift),
-          ],
-        ])
+        })
         printActionDetails(
           'Top actions',
           report.topActions.map((action) => ({

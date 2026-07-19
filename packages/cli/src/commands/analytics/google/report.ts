@@ -16,7 +16,8 @@ import {
   resolveClient,
   resolveGoogleAnalyticsProperty,
 } from '../../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../../utils.js'
+import { printJson, printTable } from '../../../utils.js'
+import { printReportSummary } from '../../output.js'
 
 type GoogleAnalyticsPropertySelectionDependencies = {
   resolveClient: typeof resolveClient
@@ -113,10 +114,16 @@ export const googleAnalyticsReportCommand = defineCommand({
       return
     }
     const rows = ga4RowsToObjects(result)
-    printKeyValue([
-      ['Property', property],
-      ['Rows', String(result.rowCount ?? rows.length)],
-    ])
+    printReportSummary({
+      title: 'Google Analytics report',
+      target: property,
+      status: 'info',
+      summary: `${result.rowCount ?? rows.length} rows returned for the requested dimensions and metrics.`,
+      metrics: [
+        { label: 'Rows', value: result.rowCount ?? rows.length },
+        { label: 'Displayed', value: Math.min(rows.length, 25) },
+      ],
+    })
     if (rows.length) {
       const headings = Object.keys(rows[0] ?? {})
       printTable(

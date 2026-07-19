@@ -9,8 +9,8 @@ import {
 } from '../../args.js'
 import { createProgressReporter } from '../../progress.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { printActionDetails } from '../output.js'
+import { printJson, printTable } from '../../utils.js'
+import { printActionDetails, printReportSummary } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 
 export const diagnoseCommand = defineCommand({
@@ -69,17 +69,39 @@ export const diagnoseCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Property', report.site],
-      ['Data status', report.dataStatus],
-      ['Update overlap', report.summary.updateAttribution.replaceAll('-', ' ')],
-      ['Significant anomalies', String(report.summary.significantAnomalies)],
-      ['Update matches', String(report.summary.updateMatches)],
-      ['Decay items', String(report.summary.decayItems)],
-      ['Cannibal items', String(report.summary.cannibalItems)],
-      ['Striking distance', String(report.summary.strikingDistanceItems)],
-      ['Quick wins', String(report.summary.quickWinItems)],
-    ])
+    printReportSummary({
+      title: 'SEO diagnosis',
+      target: report.site,
+      status:
+        report.dataStatus === 'complete'
+          ? report.priorities.length > 0
+            ? 'warning'
+            : 'pass'
+          : 'unknown',
+      summary:
+        report.priorities.length > 0
+          ? `${report.priorities.length} priorities need review.`
+          : 'No priorities were returned by the available evidence.',
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Update overlap',
+          value: report.summary.updateAttribution.replaceAll('-', ' '),
+        },
+        {
+          label: 'Significant anomalies',
+          value: report.summary.significantAnomalies,
+        },
+        { label: 'Update matches', value: report.summary.updateMatches },
+        { label: 'Decay items', value: report.summary.decayItems },
+        { label: 'Cannibal items', value: report.summary.cannibalItems },
+        {
+          label: 'Striking distance',
+          value: report.summary.strikingDistanceItems,
+        },
+        { label: 'Quick wins', value: report.summary.quickWinItems },
+      ],
+    })
     printTable(
       ['Priority', 'Confidence', 'Reason', 'Action'],
       report.priorities.map((priority) => [

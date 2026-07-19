@@ -9,13 +9,14 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -82,23 +83,39 @@ export const pageOpportunitiesCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Property', report.site],
-      ['URL', report.url],
-      ['Title', report.page?.title ?? 'not fetched'],
-      ['Fetch', formatFetchDiagnostics(report.page?.fetchDiagnostics)],
-      ['Verification', report.verification.status],
-      [
-        'Rows',
-        `${formatCount(report.selection.returnedRows)} returned / ${formatCount(report.selection.eligibleRows)} eligible / ${formatCount(report.selection.sourceRows)} source`,
+    printReportSummary({
+      title: 'Page opportunities',
+      target: report.url,
+      status: report.verification.status === 'failed' ? 'unknown' : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Title', value: report.page?.title ?? 'Not fetched' },
+        {
+          label: 'Fetch',
+          value: formatFetchDiagnostics(report.page?.fetchDiagnostics),
+        },
+        { label: 'Verification', value: report.verification.status },
+        {
+          label: 'Rows',
+          value: `${formatCount(report.selection.returnedRows)} returned / ${formatCount(report.selection.eligibleRows)} eligible / ${formatCount(report.selection.sourceRows)} source`,
+        },
+        { label: 'Queries', value: formatCount(report.summary.queries) },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.impressions),
+        },
+        {
+          label: 'Opportunities',
+          value: formatCount(report.summary.opportunities),
+        },
+        {
+          label: 'CTR shortfall',
+          value: formatCount(report.summary.estimatedCtrClickShortfall),
+        },
+        { label: 'Focus', value: report.summary.focus },
+        { label: 'Evidence', value: report.dataStatus },
       ],
-      ['Queries', formatCount(report.summary.queries)],
-      ['Impressions', formatCount(report.summary.impressions)],
-      ['Opportunities', formatCount(report.summary.opportunities)],
-      ['CTR shortfall', formatCount(report.summary.estimatedCtrClickShortfall)],
-      ['Focus', report.summary.focus],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'This report starts from queries where this exact URL already has impressions, so recommendations stay tied to first-party demand.',
       'Content verification separates body gaps from title/meta framing issues, which helps avoid adding copy when the page already covers the query.',

@@ -7,11 +7,13 @@ import {
   projectArg,
   stringArg,
 } from '../../args.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   printActionDetails,
   printLimitedTable,
+  printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -73,15 +75,40 @@ export const linkRecoverCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Site', report.site],
-      ['Range', `${report.range.startDate} to ${report.range.endDate}`],
-      ['Checked', formatCount(report.summary.checked)],
-      ['Recoverable', formatCount(report.summary.recoverable)],
-      ['High severity', formatCount(report.summary.high)],
-      ['Clicks at risk', formatCount(report.summary.clicksAtRisk)],
-      ['Impressions at risk', formatCount(report.summary.impressionsAtRisk)],
-    ])
+    printReportSummary({
+      title: 'Link recovery',
+      target: report.site,
+      status:
+        report.warnings.length > 0
+          ? 'unknown'
+          : report.summary.recoverable > 0
+            ? 'warning'
+            : 'pass',
+      summary:
+        report.summary.recoverable > 0
+          ? `${formatCount(report.summary.recoverable)} previously visible URLs need recovery review.`
+          : 'No recoverable URLs were found in the retained evidence.',
+      metrics: [
+        {
+          label: 'Range',
+          value: `${report.range.startDate} to ${report.range.endDate}`,
+        },
+        { label: 'Checked', value: formatCount(report.summary.checked) },
+        {
+          label: 'Recoverable',
+          value: formatCount(report.summary.recoverable),
+        },
+        { label: 'High severity', value: formatCount(report.summary.high) },
+        {
+          label: 'Clicks at risk',
+          value: formatCount(report.summary.clicksAtRisk),
+        },
+        {
+          label: 'Impressions at risk',
+          value: formatCount(report.summary.impressionsAtRisk),
+        },
+      ],
+    })
     if (report.items.length) {
       printLimitedTable(
         ['Severity', 'Issue', 'Clicks', 'Impr', 'URL', 'Action'],
@@ -103,11 +130,6 @@ export const linkRecoverCommand = defineCommand({
         })),
       )
     }
-    if (report.warnings.length) {
-      process.stdout.write('\nWarnings\n')
-      for (const warning of report.warnings.slice(0, 10)) {
-        process.stdout.write(`- ${warning}\n`)
-      }
-    }
+    printNotes('Warnings', report.warnings.slice(0, 10))
   },
 })

@@ -15,7 +15,7 @@ import {
 } from '../../args.js'
 import { resolveSite } from '../../selection.js'
 import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { printNotes } from '../output.js'
+import { printNotes, printReportSummary } from '../output.js'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -184,19 +184,28 @@ export const changeLogCommand = defineCommand({
           printJson(report)
           return
         }
-        printKeyValue([
-          ['Change', report.change.title],
-          ['Data status', report.dataStatus],
-          ['Verdict', report.verdict],
-          ['Confidence', report.confidence],
-          ['Before', `${report.before.startDate} to ${report.before.endDate}`],
-          ['After', `${report.after.startDate} to ${report.after.endDate}`],
-          [
-            'Window',
-            `${report.window.effectiveDays}/${report.window.requestedDays} finalized days`,
+        printReportSummary({
+          title: 'Change measurement',
+          target: report.change.title,
+          status: report.dataStatus === 'complete' ? 'info' : 'unknown',
+          summary: report.note,
+          metrics: [
+            { label: 'Verdict', value: report.verdict },
+            { label: 'Confidence', value: report.confidence },
+            {
+              label: 'Before',
+              value: `${report.before.startDate} to ${report.before.endDate}`,
+            },
+            {
+              label: 'After',
+              value: `${report.after.startDate} to ${report.after.endDate}`,
+            },
+            {
+              label: 'Window',
+              value: `${report.window.effectiveDays}/${report.window.requestedDays} finalized days`,
+            },
           ],
-          ['Note', report.note],
-        ])
+        })
         printTable(
           ['Metric', 'Before', 'After', 'Delta'],
           [

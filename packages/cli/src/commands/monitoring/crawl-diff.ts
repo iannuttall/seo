@@ -1,8 +1,8 @@
 import { crawlDiff } from '@seo/core'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { printActionDetails, truncate } from '../output.js'
+import { printJson, printTable } from '../../utils.js'
+import { printActionDetails, printReportSummary, truncate } from '../output.js'
 
 export const crawlDiffCommand = defineCommand({
   meta: {
@@ -52,21 +52,37 @@ export const crawlDiffCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Run', report.run.id],
-      ['Start URL', report.run.startUrl],
-      ['Crawled', String(report.summary.crawled)],
-      ['Previous run', report.previousRun?.id ?? 'none'],
-      ['Added', String(report.summary.added)],
-      ['Removed', String(report.summary.removed)],
-      ['Changed', String(report.summary.changed)],
-      ['New errors', String(report.summary.newErrors)],
-      ['Indexability flips', String(report.summary.indexabilityFlips)],
-      [
-        'High-priority actions',
-        String(report.summary.highPriorityRecommendations),
+    printReportSummary({
+      title: 'Crawl history comparison',
+      target: report.run.startUrl,
+      status:
+        report.previousRun === undefined
+          ? 'unknown'
+          : report.summary.newErrors > 0 || report.summary.indexabilityFlips > 0
+            ? 'warning'
+            : 'pass',
+      summary:
+        report.previousRun === undefined
+          ? 'No previous crawl was available for comparison.'
+          : `${report.summary.changed} changed, ${report.summary.added} added, and ${report.summary.removed} removed URLs.`,
+      metrics: [
+        { label: 'Run', value: report.run.id },
+        { label: 'Crawled', value: report.summary.crawled },
+        { label: 'Previous run', value: report.previousRun?.id ?? 'None' },
+        { label: 'Added', value: report.summary.added },
+        { label: 'Removed', value: report.summary.removed },
+        { label: 'Changed', value: report.summary.changed },
+        { label: 'New errors', value: report.summary.newErrors },
+        {
+          label: 'Indexability flips',
+          value: report.summary.indexabilityFlips,
+        },
+        {
+          label: 'High priority',
+          value: report.summary.highPriorityRecommendations,
+        },
       ],
-    ])
+    })
     if (report.recommendations.length) {
       process.stdout.write('\nRecommended actions\n')
       printTable(

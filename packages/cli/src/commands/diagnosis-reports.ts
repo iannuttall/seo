@@ -7,8 +7,13 @@ import {
   projectArg,
   stringArg,
 } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printLimitedTable, printNextCommand, printNotes } from './output.js'
+import { printJson, printTable } from '../utils.js'
+import {
+  printLimitedTable,
+  printNextCommand,
+  printNotes,
+  printReportSummary,
+} from './output.js'
 import { cliReportArgs } from './report-options.js'
 import { selectedSiteOrThrow } from './shared.js'
 
@@ -66,6 +71,35 @@ export const trafficAnomalyCommand = defineCommand({
       printJson(report)
       return
     }
+    printReportSummary({
+      title: 'Traffic anomaly report',
+      target: report.site,
+      status:
+        report.coverage?.status !== 'complete'
+          ? 'unknown'
+          : report.anomalies.some((anomaly) => anomaly.significant)
+            ? 'warning'
+            : 'pass',
+      summary: report.anomalies.some((anomaly) => anomaly.significant)
+        ? 'At least one recent metric moved beyond the report threshold.'
+        : 'No significant recent movement was found in the retained evidence.',
+      metrics: [
+        { label: 'Metrics checked', value: report.anomalies.length },
+        {
+          label: 'Significant',
+          value: report.anomalies.filter((anomaly) => anomaly.significant)
+            .length,
+        },
+        {
+          label: 'Observed days',
+          value: report.coverage?.observedDays ?? 'Unavailable',
+        },
+        {
+          label: 'Expected days',
+          value: report.coverage?.expectedDays ?? 'Unavailable',
+        },
+      ],
+    })
     printLimitedTable(
       [
         'Metric',
@@ -158,15 +192,26 @@ export const updateCorrelateCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Classification', report.classification.replaceAll('-', ' ')],
-      ['Causal attribution', report.attribution.replaceAll('-', ' ')],
-      ['Causal confidence', report.confidence],
-      ['Updates matched', String(report.overlappingUpdates.length)],
-      ['Known confounders', String(report.confounders.length)],
-      ['Source', report.source.name],
-    ])
-    process.stdout.write(`\n${report.summary}\n`)
+    printReportSummary({
+      title: 'Google update correlation',
+      target: report.site,
+      status: 'unknown',
+      summary: report.summary,
+      metrics: [
+        {
+          label: 'Classification',
+          value: report.classification.replaceAll('-', ' '),
+        },
+        {
+          label: 'Attribution',
+          value: report.attribution.replaceAll('-', ' '),
+        },
+        { label: 'Confidence', value: report.confidence },
+        { label: 'Updates matched', value: report.overlappingUpdates.length },
+        { label: 'Known confounders', value: report.confounders.length },
+        { label: 'Source', value: report.source.name },
+      ],
+    })
     printNotes('Evidence', report.evidence)
     printNotes('Report caveats', report.caveats)
     printNotes('Recommended next checks', report.actions)

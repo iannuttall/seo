@@ -9,7 +9,8 @@ import {
   projectArg,
   stringArg,
 } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
+import { printJson, printTable } from '../utils.js'
+import { printReportSummary } from './output.js'
 import { selectedSiteOrThrow } from './shared.js'
 
 export const gscQueryCommand = defineCommand({
@@ -92,12 +93,17 @@ export const gscQueryCommand = defineCommand({
       })
       return
     }
-    printKeyValue([
-      ['Property', site],
-      ['Rows returned', String(rows.length)],
-      ['Rows fetched', String(result.rowsFetched)],
-      ['API calls', String(result.calls)],
-    ])
+    printReportSummary({
+      title: 'Search Console query',
+      target: site,
+      status: result.rowsFetched > rows.length ? 'unknown' : 'info',
+      summary: `${rows.length} rows returned from ${result.rowsFetched} fetched rows.`,
+      metrics: [
+        { label: 'Rows returned', value: rows.length },
+        { label: 'Rows fetched', value: result.rowsFetched },
+        { label: 'API calls', value: result.calls },
+      ],
+    })
     printTable(
       ['Keys', 'Clicks', 'Impr', 'CTR', 'Pos'],
       rows
@@ -160,14 +166,28 @@ export const urlInspectCommand = defineCommand({
       return
     }
     const indexStatus = result.inspectionResult?.indexStatusResult
-    printKeyValue([
-      ['Property', siteUrl],
-      ['URL', inspectionUrl],
-      ['Verdict', indexStatus?.verdict ?? 'unknown'],
-      ['Coverage', indexStatus?.coverageState ?? 'unknown'],
-      ['Robots', indexStatus?.robotsTxtState ?? 'unknown'],
-      ['Last crawl', indexStatus?.lastCrawlTime ?? 'unknown'],
-      ['Google canonical', indexStatus?.googleCanonical ?? 'unknown'],
-    ])
+    printReportSummary({
+      title: 'URL Inspection',
+      target: inspectionUrl,
+      status:
+        indexStatus === undefined
+          ? 'unknown'
+          : indexStatus.verdict === 'PASS'
+            ? 'pass'
+            : 'warning',
+      summary:
+        indexStatus === undefined
+          ? 'Google did not return index status evidence for this URL.'
+          : `${indexStatus.verdict ?? 'Unknown'}: ${indexStatus.coverageState ?? 'Coverage state unavailable'}.`,
+      metrics: [
+        { label: 'Property', value: siteUrl },
+        { label: 'Robots', value: indexStatus?.robotsTxtState ?? 'Unknown' },
+        { label: 'Last crawl', value: indexStatus?.lastCrawlTime ?? 'Unknown' },
+        {
+          label: 'Google canonical',
+          value: indexStatus?.googleCanonical ?? 'Unknown',
+        },
+      ],
+    })
   },
 })

@@ -9,12 +9,13 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -69,23 +70,36 @@ export const cannibalCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Status', report.dataStatus],
-      ['Range', `${report.range.startDate} to ${report.range.endDate}`],
-      ['Eligible candidates', formatCount(report.summary.eligibleClusters)],
-      ['Returned candidates', formatCount(report.summary.returnedClusters)],
-      [
-        'Suppressed brand queries',
-        formatCount(report.summary.suppressedQueries),
+    printReportSummary({
+      title: 'Cannibalisation report',
+      target: report.site,
+      status: report.dataStatus === 'complete' ? 'info' : 'unknown',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Evidence', value: report.dataStatus },
+        {
+          label: 'Range',
+          value: `${report.range.startDate} to ${report.range.endDate}`,
+        },
+        {
+          label: 'Eligible',
+          value: formatCount(report.summary.eligibleClusters),
+        },
+        {
+          label: 'Returned',
+          value: formatCount(report.summary.returnedClusters),
+        },
+        {
+          label: 'Suppressed brand queries',
+          value: formatCount(report.summary.suppressedQueries),
+        },
+        { label: 'GSC completeness', value: report.source.completeness },
+        {
+          label: 'Brand queries',
+          value: booleanArg(args['include-brand']) ? 'included' : 'excluded',
+        },
       ],
-      ['GSC completeness', report.source.completeness],
-      [
-        'Brand queries',
-        booleanArg(args['include-brand']) ? 'included' : 'excluded',
-      ],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printLimitedTable(
       ['Query', 'URLs', 'Property impr', 'Exposure', 'HHI', 'Review first'],
       report.items.map((item) => [

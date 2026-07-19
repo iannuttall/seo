@@ -10,12 +10,13 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -96,27 +97,58 @@ export const internalLinksCommand = defineCommand({
       return
     }
 
-    printKeyValue([
-      ['Site', report.site],
-      ['Target', report.targetUrl],
-      ['Preferred target', report.target.preferredUrl],
-      ['Target state', report.target.verification],
-      ['Target queries', formatCount(report.summary.targetQueries)],
-      ['Matched sources', formatCount(report.summary.candidateSources)],
-      ['Attempted sources', formatCount(report.summary.attemptedSources)],
-      ['Checked sources', formatCount(report.summary.checkedSources)],
-      ['Review candidates', formatCount(report.summary.returnedSources)],
-      [
-        'Existing contextual links',
-        formatCount(report.summary.existingLinksObserved),
+    printReportSummary({
+      title: 'Internal link opportunities',
+      target: report.targetUrl,
+      status:
+        report.summary.failedChecks > 0 ||
+        report.summary.uncheckedCandidates > 0
+          ? 'unknown'
+          : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        { label: 'Target state', value: report.target.verification },
+        { label: 'Preferred target', value: report.target.preferredUrl },
+        {
+          label: 'Target queries',
+          value: formatCount(report.summary.targetQueries),
+        },
+        {
+          label: 'Matched sources',
+          value: formatCount(report.summary.candidateSources),
+        },
+        {
+          label: 'Checked sources',
+          value: formatCount(report.summary.checkedSources),
+        },
+        {
+          label: 'Attempted sources',
+          value: formatCount(report.summary.attemptedSources),
+        },
+        {
+          label: 'Review candidates',
+          value: formatCount(report.summary.returnedSources),
+        },
+        {
+          label: 'Technical exclusions',
+          value: formatCount(report.summary.technicalExclusions),
+        },
+        {
+          label: 'Existing links',
+          value: formatCount(report.summary.existingLinksObserved),
+        },
+        {
+          label: 'Failed checks',
+          value: formatCount(report.summary.failedChecks),
+        },
+        {
+          label: 'Unchecked sources',
+          value: formatCount(report.summary.uncheckedCandidates),
+        },
+        { label: 'GSC completeness', value: report.source.completeness },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
       ],
-      ['Technical exclusions', formatCount(report.summary.technicalExclusions)],
-      ['Failed checks', formatCount(report.summary.failedChecks)],
-      ['Unchecked sources', formatCount(report.summary.uncheckedCandidates)],
-      ['GSC completeness', report.source.completeness],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'Exact-query overlap is useful affinity evidence; precision lexical matches are review evidence only.',
       'Source and target pages are checked for redirects, indexability, canonicals, and existing link placement before an action is returned.',

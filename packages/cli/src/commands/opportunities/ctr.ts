@@ -8,7 +8,7 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
@@ -16,6 +16,7 @@ import {
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -54,16 +55,25 @@ export const ctrUnderperformersCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Underperformers', formatCount(report.summary.underperformers)],
-      [
-        'Estimated click gap',
-        formatCount(report.summary.estimatedClickShortfall),
+    printReportSummary({
+      title: 'CTR underperformers',
+      target: report.site,
+      status: report.dataStatus === 'partial' ? 'unknown' : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        {
+          label: 'Underperformers',
+          value: formatCount(report.summary.underperformers),
+        },
+        {
+          label: 'Estimated click gap',
+          value: formatCount(report.summary.estimatedClickShortfall),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
+        { label: 'Evidence', value: report.dataStatus },
+        { label: 'GSC completeness', value: report.source.completeness },
       ],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'These queries already have visibility; the fastest win is usually better SERP framing, not new content.',
       'Start with high-impression rows where actual CTR is far below the expected CTR for that ranking position.',

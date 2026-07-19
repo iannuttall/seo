@@ -13,7 +13,8 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveSite } from '../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
+import { printJson, printTable } from '../../utils.js'
+import { printNotes, printReportSummary } from '../output.js'
 
 export const indexWatchCommand = defineCommand({
   meta: {
@@ -102,18 +103,25 @@ export const indexWatchCommand = defineCommand({
         printJson(report)
         return
       }
-      printKeyValue([
-        ['Project site', report.site],
-        ['Sitemap URLs', String(report.summary.urlCount)],
-        ['Properties used', String(report.summary.properties)],
-        ['Daily capacity', String(report.summary.dailyCapacity)],
-        [
-          'Estimated cycle',
-          countLabel(report.summary.estimatedCycleDays, 'day'),
+      printReportSummary({
+        title: 'Index monitoring plan',
+        target: report.site,
+        status: report.warnings.length > 0 ? 'warning' : 'info',
+        summary: `${report.summary.urlCount} sitemap URLs can be checked in an estimated ${countLabel(report.summary.estimatedCycleDays, 'day')}.`,
+        metrics: [
+          { label: 'Sitemap URLs', value: report.summary.urlCount },
+          { label: 'Properties', value: report.summary.properties },
+          { label: 'Daily capacity', value: report.summary.dailyCapacity },
+          {
+            label: 'Target cycle',
+            value: countLabel(report.summary.targetCycleDays, 'day'),
+          },
+          {
+            label: 'Suggested properties',
+            value: report.summary.suggestedProperties,
+          },
         ],
-        ['Target cycle', countLabel(report.summary.targetCycleDays, 'day')],
-        ['Suggested properties', String(report.summary.suggestedProperties)],
-      ])
+      })
       if (report.properties.length) {
         printTable(
           ['Property', 'URLs', 'Cycle', 'Sample URL'],
@@ -138,12 +146,7 @@ export const indexWatchCommand = defineCommand({
           ]),
         )
       }
-      if (report.warnings.length) {
-        process.stdout.write('\nWarnings\n')
-        for (const warning of report.warnings.slice(0, 10)) {
-          process.stdout.write(`- ${warning}\n`)
-        }
-      }
+      printNotes('Warnings', report.warnings.slice(0, 10))
       return
     }
 
@@ -163,33 +166,30 @@ export const indexWatchCommand = defineCommand({
         printJson(report)
         return
       }
-      printKeyValue([
-        ['Project site', report.site],
-        ['Discovered sitemap URLs', String(report.source.discoveredUrls)],
-        ['Invalid sitemap URLs', String(report.source.invalidUrls)],
-        ['Inventory URLs', String(report.summary.inventoryUrls)],
-        ['Properties used', String(report.summary.properties)],
-        ['Daily capacity', String(report.summary.dailyCapacity)],
-        ['Never attempted', String(report.summary.neverAttempted)],
-        ['Never succeeded', String(report.summary.neverSucceeded)],
-        ['Retry waiting', String(report.summary.retryWaiting)],
-        ['Fresh', String(report.summary.fresh)],
-        ['Stale', String(report.summary.stale)],
-        ['Due', String(report.summary.due)],
-        ['Selected this run', String(report.summary.selected)],
-        ['Due but not selected', String(report.summary.unselectedDue)],
-        ['Attempted', String(report.summary.attempted)],
-        ['Inspected', String(report.summary.inspected)],
-        ['Failed', String(report.summary.failed)],
-        ['Quota blocked', String(report.summary.quotaBlocked)],
-        ['Deferred', String(report.summary.deferred)],
-        ['Current reviews', String(report.summary.currentIssues)],
-        ['Regressions', String(report.summary.regressions)],
-        ['Recoveries', String(report.summary.recoveries)],
-        ['Changed', String(report.summary.changed)],
-        ['New alerts', String(report.summary.alerts)],
-        ['Skipped', String(report.summary.skipped)],
-      ])
+      printReportSummary({
+        title: 'Index monitoring run',
+        target: report.site,
+        status:
+          report.summary.failed > 0 || report.summary.quotaBlocked > 0
+            ? 'unknown'
+            : report.summary.alerts > 0 || report.summary.regressions > 0
+              ? 'warning'
+              : report.summary.attempted > 0
+                ? 'pass'
+                : 'info',
+        summary: `${report.summary.inspected} URLs inspected, with ${report.summary.alerts} new alerts and ${report.summary.regressions} regressions.`,
+        metrics: [
+          { label: 'Inventory URLs', value: report.summary.inventoryUrls },
+          { label: 'Selected', value: report.summary.selected },
+          { label: 'Inspected', value: report.summary.inspected },
+          { label: 'Failed', value: report.summary.failed },
+          { label: 'Quota blocked', value: report.summary.quotaBlocked },
+          { label: 'Current reviews', value: report.summary.currentIssues },
+          { label: 'Regressions', value: report.summary.regressions },
+          { label: 'Recoveries', value: report.summary.recoveries },
+          { label: 'New alerts', value: report.summary.alerts },
+        ],
+      })
       if (report.properties.length) {
         printTable(
           [
@@ -233,12 +233,7 @@ export const indexWatchCommand = defineCommand({
           ]),
         )
       }
-      if (report.warnings.length) {
-        process.stdout.write('\nWarnings\n')
-        for (const warning of report.warnings.slice(0, 10)) {
-          process.stdout.write(`- ${warning}\n`)
-        }
-      }
+      printNotes('Warnings', report.warnings.slice(0, 10))
       return
     }
 
@@ -254,20 +249,30 @@ export const indexWatchCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Project site', report.site],
-      ['Inspection property', report.source.property],
-      ['Attempted', String(report.summary.attempted)],
-      ['Inspected', String(report.summary.inspected)],
-      ['Failed', String(report.summary.failed)],
-      ['Quota blocked', String(report.summary.quotaBlocked)],
-      ['Deferred', String(report.summary.deferred)],
-      ['Current reviews', String(report.summary.currentIssues)],
-      ['Regressions', String(report.summary.regressions)],
-      ['Recoveries', String(report.summary.recoveries)],
-      ['Changed', String(report.summary.changed)],
-      ['New alerts', String(report.summary.alerts)],
-    ])
+    printReportSummary({
+      title: 'Index watch',
+      target: report.site,
+      status:
+        report.summary.failed > 0 || report.summary.quotaBlocked > 0
+          ? 'unknown'
+          : report.summary.alerts > 0 || report.summary.regressions > 0
+            ? 'warning'
+            : report.summary.attempted > 0
+              ? 'pass'
+              : 'info',
+      summary: `${report.summary.inspected} URLs inspected, with ${report.summary.alerts} new alerts.`,
+      metrics: [
+        { label: 'Property', value: report.source.property },
+        { label: 'Attempted', value: report.summary.attempted },
+        { label: 'Inspected', value: report.summary.inspected },
+        { label: 'Failed', value: report.summary.failed },
+        { label: 'Quota blocked', value: report.summary.quotaBlocked },
+        { label: 'Current reviews', value: report.summary.currentIssues },
+        { label: 'Regressions', value: report.summary.regressions },
+        { label: 'Recoveries', value: report.summary.recoveries },
+        { label: 'New alerts', value: report.summary.alerts },
+      ],
+    })
     printTable(
       ['Check', 'Change', 'Index state', 'Evidence', 'URL'],
       report.items.map((item) => [

@@ -3,8 +3,8 @@ import { dirname } from 'node:path'
 import { auditLlmsTxt, generateLlmsTxt } from '@seo/core'
 import { defineCommand } from 'citty'
 import { csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printNotes, truncate } from './output.js'
+import { printJson, printKeyValue } from '../utils.js'
+import { printNotes, printReportSummary } from './output.js'
 import { resolveSavedCrawlReport } from './readiness.js'
 
 async function writeOrPrint(path: string | undefined, content: string) {
@@ -56,26 +56,33 @@ export const llmsAuditCommand = defineCommand({
       return
     }
 
-    process.stdout.write(`llms.txt audit for ${audit.url}\n\n`)
-    printKeyValue([
-      ['SEO impact', audit.googleSearchImpact],
-      ['Optional', audit.optional ? 'yes' : 'no'],
-      ['Found', audit.exists ? 'yes' : 'no'],
-      ['URL', audit.llmsTxtUrl],
-      ['Status', audit.status ? String(audit.status) : '-'],
-    ])
-    process.stdout.write(`\n${audit.headline}\n`)
-    if (audit.issues.length) {
-      process.stdout.write('\nIssues\n')
-      printTable(
-        ['Severity', 'Issue', 'Action'],
-        audit.issues.map((issue) => [
-          issue.severity,
-          issue.title,
-          truncate(issue.action, 96),
-        ]),
-      )
-    }
+    printReportSummary({
+      title: 'llms.txt audit',
+      target: audit.url,
+      status: audit.issues.length > 0 ? 'warning' : 'pass',
+      summary: audit.headline,
+      metrics: [
+        { label: 'SEO impact', value: audit.googleSearchImpact },
+        { label: 'Optional', value: audit.optional ? 'Yes' : 'No' },
+        { label: 'Found', value: audit.exists ? 'Yes' : 'No' },
+        { label: 'URL', value: audit.llmsTxtUrl },
+        {
+          label: 'HTTP status',
+          value: audit.status ? String(audit.status) : 'Unavailable',
+        },
+      ],
+      diagnostics: [
+        {
+          title: 'Issues',
+          items: audit.issues.map((issue) => ({
+            status: issue.severity === 'high' ? 'fail' : 'warning',
+            title: issue.title,
+            explanation: issue.plainEnglish,
+            fix: issue.action,
+          })),
+        },
+      ],
+    })
     printNotes(
       'Recommended pages',
       audit.recommendedPages

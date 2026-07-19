@@ -8,8 +8,8 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue, printTable } from '../../utils.js'
-import { printNextCommand, printNotes } from '../output.js'
+import { printJson, printTable } from '../../utils.js'
+import { printNextCommand, printNotes, printReportSummary } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 
 type SegmentSplit = Awaited<
@@ -182,17 +182,23 @@ export const updatePostmortemCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Workflow', report.workflow],
-      ['Property', report.site],
-      ['Summary', report.summary],
-      [
-        'Causal attribution',
-        report.output.update.attribution.replaceAll('-', ' '),
+    printReportSummary({
+      title: 'Update postmortem',
+      target: report.site,
+      status: 'unknown',
+      summary: report.summary,
+      metrics: [
+        {
+          label: 'Attribution',
+          value: report.output.update.attribution.replaceAll('-', ' '),
+        },
+        { label: 'Confidence', value: report.output.update.confidence },
+        {
+          label: 'Known confounders',
+          value: report.output.update.confounders.length,
+        },
       ],
-      ['Confidence', report.output.update.confidence],
-      ['Known confounders', String(report.output.update.confounders.length)],
-    ])
+    })
     printNotes(
       'Recommended actions',
       report.actions.map(

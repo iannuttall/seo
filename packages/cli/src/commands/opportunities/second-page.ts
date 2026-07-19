@@ -9,13 +9,14 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPosition,
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   verificationSummary,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -79,19 +80,48 @@ export const secondPageCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Eligible pages', formatCount(report.summary.eligiblePages)],
-      ['Returned pages', formatCount(report.summary.returnedPages)],
-      ['Eligible queries', formatCount(report.summary.eligibleQueries)],
-      ['Eligible impressions', formatCount(report.summary.eligibleImpressions)],
-      ['Content issues', formatCount(report.summary.contentIssues)],
-      ['Technical issues', formatCount(report.summary.technicalIssues)],
-      ['Fetch failures', formatCount(report.summary.fetchFailures)],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Verification', verificationSummary(report)],
-      ['Verdict', report.summary.verdict],
-    ])
+    printReportSummary({
+      title: 'Second-page opportunities',
+      target: report.site,
+      status:
+        report.source.possiblyTruncated || report.summary.fetchFailures > 0
+          ? 'unknown'
+          : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        {
+          label: 'Eligible pages',
+          value: formatCount(report.summary.eligiblePages),
+        },
+        {
+          label: 'Returned pages',
+          value: formatCount(report.summary.returnedPages),
+        },
+        {
+          label: 'Eligible queries',
+          value: formatCount(report.summary.eligibleQueries),
+        },
+        {
+          label: 'Impressions',
+          value: formatCount(report.summary.eligibleImpressions),
+        },
+        {
+          label: 'Content issues',
+          value: formatCount(report.summary.contentIssues),
+        },
+        {
+          label: 'Technical issues',
+          value: formatCount(report.summary.technicalIssues),
+        },
+        {
+          label: 'Fetch failures',
+          value: formatCount(report.summary.fetchFailures),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
+        { label: 'Evidence', value: report.dataStatus },
+        { label: 'Verification', value: verificationSummary(report) },
+      ],
+    })
     printNotes('Recommended actions', report.recommendations)
     printNotes('Report caveats', report.caveats)
     if (!report.items.length) {

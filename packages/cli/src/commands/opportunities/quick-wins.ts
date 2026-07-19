@@ -10,7 +10,7 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
-import { printJson, printKeyValue } from '../../utils.js'
+import { printJson } from '../../utils.js'
 import {
   formatCount,
   formatPercent,
@@ -18,6 +18,7 @@ import {
   printActionDetails,
   printLimitedTable,
   printNotes,
+  printReportSummary,
   truncate,
   verificationSummary,
 } from '../output.js'
@@ -82,23 +83,37 @@ export const quickWinsCommand = defineCommand({
       printJson(report)
       return
     }
-    printKeyValue([
-      ['Site', report.site],
-      ['Eligible rows', formatCount(report.summary.eligibleRows)],
-      ['Returned rows', formatCount(report.summary.returnedRows)],
-      [
-        'Repeated-query clusters',
-        formatCount(report.summary.repeatedQueryGroups),
+    printReportSummary({
+      title: 'Quick wins',
+      target: report.site,
+      status: report.source.possiblyTruncated ? 'unknown' : 'info',
+      summary: report.summary.verdict,
+      metrics: [
+        {
+          label: 'Eligible rows',
+          value: formatCount(report.summary.eligibleRows),
+        },
+        {
+          label: 'Returned rows',
+          value: formatCount(report.summary.returnedRows),
+        },
+        {
+          label: 'Query clusters',
+          value: formatCount(report.summary.repeatedQueryGroups),
+        },
+        {
+          label: 'Template patterns',
+          value: formatCount(report.summary.templatePatterns),
+        },
+        {
+          label: 'CTR click shortfall',
+          value: formatCount(report.summary.returnedEstimatedCtrClickShortfall),
+        },
+        { label: 'Brand queries', value: report.summary.brandFiltering },
+        { label: 'Evidence', value: report.dataStatus },
+        { label: 'Verification', value: verificationSummary(report) },
       ],
-      ['Template patterns', formatCount(report.summary.templatePatterns)],
-      [
-        'CTR click shortfall',
-        formatCount(report.summary.returnedEstimatedCtrClickShortfall),
-      ],
-      ['Brand queries', report.summary.brandFiltering],
-      ['Verification', verificationSummary(report)],
-      ['Verdict', report.summary.verdict],
-    ])
+    })
     printNotes('Why this matters', [
       'These rows have GSC average positions from 4 to 10 and observed CTR below a site-peer or versioned fallback target.',
       'Page evidence is needed before treating a CTR shortfall as a title, content, or technical finding.',

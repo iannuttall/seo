@@ -27,6 +27,16 @@ function failedMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
     .map((page) => page.htmlUrl)
 }
 
+function unstableMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
+  return discovery.markdownAlternates.pages
+    .filter(
+      (page) =>
+        confirmedMarkdown(page) !== undefined &&
+        page.repeatedHashStable !== true,
+    )
+    .map((page) => page.htmlUrl)
+}
+
 function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
   return discovery.markdownAlternates.pages
     .filter((page) => {
@@ -74,7 +84,10 @@ export function markdownChecks(
 ): AgentReadinessCheck[] {
   const markdown = discovery.markdownAlternates
   const failedUrls = failedMarkdownUrls(discovery)
+  const unstableUrls = unstableMarkdownUrls(discovery)
   const qualityUrls = qualityFailureUrls(discovery)
+  const hasEligibleHtml = markdown.eligibleHtmlPages > 0
+  const hasEvaluatedMarkdown = markdown.evaluatedPages > 0
   const negotiatedPages = markdown.pages.filter(
     (page) =>
       page.negotiated?.status === 200 &&
@@ -154,18 +167,24 @@ export function markdownChecks(
             : 'fail',
       title: coverageComplete
         ? 'Every successful HTML page has a Markdown representation'
-        : 'Markdown representation coverage is incomplete',
-      plainEnglish: `${markdown.evaluatedPages} of ${markdown.eligibleHtmlPages} successful HTML pages returned Markdown. ${explicitPages} advertised an explicit alternative and ${negotiatedPages} supported content negotiation.`,
-      action: coverageComplete
-        ? 'Keep the negotiated or explicit Markdown response stable as routes change.'
-        : 'Return text/markdown through content negotiation or advertise one working Markdown alternative for each public HTML page.',
+        : !hasEligibleHtml
+          ? 'Markdown representation coverage was not evaluated'
+          : 'Markdown representation coverage is incomplete',
+      plainEnglish: hasEligibleHtml
+        ? `${markdown.evaluatedPages} of ${markdown.eligibleHtmlPages} successful HTML pages returned Markdown. ${explicitPages} advertised an explicit alternative and ${negotiatedPages} supported content negotiation.`
+        : 'No successful HTML page was available, so Markdown representation coverage could not be evaluated.',
+      action: !hasEligibleHtml
+        ? 'Resolve the crawl or page-fetch failure, then run this check again.'
+        : coverageComplete
+          ? 'Keep the negotiated or explicit Markdown response stable as routes change.'
+          : 'Return text/markdown through content negotiation or advertise one working Markdown alternative for each public HTML page.',
       evidence: {
         eligibleHtmlPages: markdown.eligibleHtmlPages,
         advertisedPages: markdown.advertisedPages,
         negotiatedPages,
         evaluatedPages: markdown.evaluatedPages,
       },
-      urls: failedUrls.slice(0, 25),
+      urls: hasEligibleHtml ? failedUrls.slice(0, 25) : [],
     }),
     check('representations', {
       id: 'markdown-token-estimates',
@@ -175,23 +194,34 @@ export function markdownChecks(
           : tokenHeaders === markdown.evaluatedPages
             ? 'pass'
             : 'info',
-      title:
-        tokenHeaders === markdown.evaluatedPages
+      title: !hasEvaluatedMarkdown
+        ? 'Markdown token estimates were not evaluated'
+        : tokenHeaders === markdown.evaluatedPages
           ? 'Every Markdown response includes a token estimate'
           : 'Some Markdown responses are missing a stable token estimate',
-      plainEnglish: `${tokenHeaders} of ${markdown.evaluatedPages} evaluated pages returned X-Markdown-Tokens. Paired explicit and negotiated responses agreed where both existed. The value is an estimate, not an exact model-specific token count.`,
-      action:
-        tokenHeaders === markdown.evaluatedPages
+      plainEnglish: hasEvaluatedMarkdown
+        ? `${tokenHeaders} of ${markdown.evaluatedPages} evaluated pages returned X-Markdown-Tokens. Paired explicit and negotiated responses agreed where both existed. The value is an estimate, not an exact model-specific token count.`
+        : 'No confirmed Markdown response was available, so optional server token estimates could not be evaluated.',
+      action: !hasEvaluatedMarkdown
+        ? 'Confirm a successful text/markdown representation, then run this check again.'
+        : tokenHeaders === markdown.evaluatedPages
           ? 'Keep the estimate stable when both explicit and negotiated responses exist.'
           : 'No change is required. X-Markdown-Tokens is optional; local size estimates are reported separately.',
       urls: markdown.pages
         .filter((page) => {
           const primary = confirmedMarkdown(page)
+          if (!primary) return false
+          const paired = [page.explicit, page.negotiated].filter(
+            (response) =>
+              response?.status !== undefined &&
+              response.status >= 200 &&
+              response.status < 300 &&
+              /^\s*text\/markdown\b/iu.test(response.contentType ?? ''),
+          )
           return (
             primary?.markdownTokens === undefined ||
-            (page.explicit !== undefined &&
-              page.negotiated !== undefined &&
-              page.explicit.markdownTokens !== page.negotiated.markdownTokens)
+            (paired.length === 2 &&
+              paired[0]?.markdownTokens !== paired[1]?.markdownTokens)
           )
         })
         .map((page) => page.htmlUrl)
@@ -213,9 +243,11 @@ export function markdownChecks(
             : 'Some Markdown representations are large enough to review',
       plainEnglish: `${sizedPages.length} Markdown responses were measured locally. ${largePages.length} exceeded 50,000 characters and ${veryLargePages.length} exceeded 100,000 characters. These are processing-risk thresholds, not universal model limits.`,
       action:
-        largePages.length === 0
-          ? 'Keep important content early and retain stable section structure as pages grow.'
-          : 'Split genuinely separate topics, keep navigation and repeated chrome out of Markdown, and put the most useful content early. Do not remove necessary detail just to hit a threshold.',
+        sizedPages.length === 0
+          ? 'Confirm a successful text/markdown representation, then run this check again.'
+          : largePages.length === 0
+            ? 'Keep important content early and retain stable section structure as pages grow.'
+            : 'Split genuinely separate topics, keep navigation and repeated chrome out of Markdown, and put the most useful content early. Do not remove necessary detail just to hit a threshold.',
       evidence: {
         measuredPages: sizedPages.length,
         reviewThresholdCharacters: 50_000,
@@ -244,9 +276,11 @@ export function markdownChecks(
             : 'Some Markdown responses may omit important HTML content',
       plainEnglish: `${parityPages.length} pages were compared using bounded hashes sampled across the main HTML content. ${parityFailures.length} retained less than 60% of that sample. This detects likely omissions without storing full page bodies.`,
       action:
-        parityFailures.length === 0
-          ? 'Keep the shared conversion path covered as templates and components change.'
-          : 'Compare the affected HTML and Markdown around the missing sections, then fix the shared converter or component serialization.',
+        parityPages.length === 0
+          ? 'Confirm a successful text/markdown representation, then run this check again.'
+          : parityFailures.length === 0
+            ? 'Keep the shared conversion path covered as templates and components change.'
+            : 'Compare the affected HTML and Markdown around the missing sections, then fix the shared converter or component serialization.',
       evidence: {
         evaluatedPages: parityPages.length,
         failedPages: parityFailures.length,
@@ -300,33 +334,44 @@ export function markdownChecks(
           : negotiationComplete && discovery.contentNegotiation.qZeroHonoured
             ? 'pass'
             : 'fail',
-      title:
-        negotiationComplete && discovery.contentNegotiation.qZeroHonoured
+      title: !hasEligibleHtml
+        ? 'Markdown content negotiation was not evaluated'
+        : negotiationComplete && discovery.contentNegotiation.qZeroHonoured
           ? 'Markdown content negotiation works across the site'
           : 'Markdown content negotiation needs attention',
-      plainEnglish: `${negotiatedPages} of ${markdown.eligibleHtmlPages} pages returned negotiated Markdown. ${markdown.exactByteMatches} of ${explicitPages} paired explicit responses matched byte for byte. A request that refuses Markdown ${discovery.contentNegotiation.qZeroHonoured ? 'received HTML' : 'did not produce confirmed HTML evidence'}.`,
-      action:
-        'Honour Accept q-values, send Vary: Accept, and keep paired explicit and negotiated responses identical when both exist.',
+      plainEnglish: hasEligibleHtml
+        ? `${negotiatedPages} of ${markdown.eligibleHtmlPages} pages returned negotiated Markdown. ${markdown.exactByteMatches} of ${explicitPages} paired explicit responses matched byte for byte. A request that refuses Markdown ${discovery.contentNegotiation.qZeroHonoured ? 'received HTML' : 'did not produce confirmed HTML evidence'}.`
+        : 'No successful HTML page was available, so content negotiation could not be evaluated.',
+      action: hasEligibleHtml
+        ? 'Honour Accept q-values, send Vary: Accept, and keep paired explicit and negotiated responses identical when both exist.'
+        : 'Resolve the crawl or page-fetch failure, then run this check again.',
       evidence: {
         negotiatedPages,
         explicitPages,
         exactByteMatches: markdown.exactByteMatches,
         qZero: discovery.contentNegotiation,
       },
-      urls: failedUrls.slice(0, 25),
+      urls: hasEligibleHtml ? failedUrls.slice(0, 25) : [],
     }),
     check('representations', {
       id: 'markdown-determinism',
       status:
         markdown.evaluatedPages === 0 ? 'unknown' : stable ? 'pass' : 'fail',
-      title: stable
-        ? 'Repeated Markdown responses are stable'
-        : 'Repeated Markdown responses changed during the audit',
-      plainEnglish: `${markdown.stableResponses} of ${markdown.evaluatedPages} repeated Markdown responses kept the same SHA-256 digest.`,
-      action:
-        'Remove timestamps, random output, or other runtime rewriting that changes the same Markdown response between requests.',
+      title: !hasEvaluatedMarkdown
+        ? 'Markdown response stability was not evaluated'
+        : stable
+          ? 'Repeated Markdown responses are stable'
+          : 'Repeated Markdown responses changed during the audit',
+      plainEnglish: hasEvaluatedMarkdown
+        ? `${markdown.stableResponses} of ${markdown.evaluatedPages} repeated Markdown responses kept the same SHA-256 digest.`
+        : 'No confirmed Markdown response was available for a repeated stability check.',
+      action: !hasEvaluatedMarkdown
+        ? 'Confirm a successful text/markdown representation, then run this check again.'
+        : stable
+          ? 'Keep repeated Markdown responses byte-stable as templates and data change.'
+          : 'Remove timestamps, random output, or other runtime rewriting that changes the same Markdown response between requests.',
       evidence: { stableResponses: markdown.stableResponses },
-      urls: failedUrls.slice(0, 25),
+      urls: unstableUrls.slice(0, 25),
     }),
     check('representations', {
       id: 'markdown-quality',
@@ -336,16 +381,21 @@ export function markdownChecks(
           : qualityUrls.length === 0
             ? 'pass'
             : 'warning',
-      title:
-        qualityUrls.length === 0
+      title: !hasEvaluatedMarkdown
+        ? 'Markdown quality was not evaluated'
+        : qualityUrls.length === 0
           ? 'Markdown keeps the useful document structure cleanly'
           : 'Some Markdown alternatives need an extraction review',
-      plainEnglish:
-        qualityUrls.length === 0
+      plainEnglish: !hasEvaluatedMarkdown
+        ? 'No confirmed Markdown response was available for structure and extraction checks.'
+        : qualityUrls.length === 0
           ? 'The evaluated alternatives retained one H1, frontmatter titles, balanced code fences, useful copy, and no leaked SVG, script, style, or layout tags.'
           : `${qualityUrls.length} Markdown alternative${qualityUrls.length === 1 ? '' : 's'} lost important structure, looked navigation-only, or leaked presentation markup.`,
-      action:
-        'Open the affected Markdown directly and fix the shared converter or component exclusion rules rather than patching generated files.',
+      action: !hasEvaluatedMarkdown
+        ? 'Confirm a successful text/markdown representation, then run this check again.'
+        : qualityUrls.length === 0
+          ? 'Keep the shared Markdown conversion path covered as templates and components change.'
+          : 'Open the affected Markdown directly and fix the shared converter or component exclusion rules rather than patching generated files.',
       urls: qualityUrls.slice(0, 25),
     }),
   ]

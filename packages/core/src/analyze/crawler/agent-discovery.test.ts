@@ -267,6 +267,16 @@ copy to exercise the clean quality path without relying on an explicit route.
       ?.status,
     'notApplicable',
   )
+  assert.match(
+    readiness.checks.find((item) => item.id === 'markdown-determinism')
+      ?.action ?? '',
+    /^Keep repeated Markdown responses/u,
+  )
+  assert.match(
+    readiness.checks.find((item) => item.id === 'markdown-quality')?.action ??
+      '',
+    /^Keep the shared Markdown conversion path/u,
+  )
 })
 
 test('HTML fallbacks are not evaluated as Markdown representations', async () => {
@@ -323,8 +333,23 @@ test('HTML fallbacks are not evaluated as Markdown representations', async () =>
     'markdown-determinism',
     'markdown-quality',
   ]) {
-    assert.equal(checks.get(id)?.status, 'unknown', id)
+    const check = checks.get(id)
+    assert.equal(check?.status, 'unknown', id)
+    assert.match(check?.title ?? '', /not (evaluated|measured)/u, id)
+    assert.deepEqual(check?.urls, [], id)
   }
+  assert.match(
+    checks.get('markdown-token-estimates')?.plainEnglish ?? '',
+    /could not be evaluated/u,
+  )
+  assert.match(
+    checks.get('markdown-determinism')?.plainEnglish ?? '',
+    /No confirmed Markdown response/u,
+  )
+  assert.match(
+    checks.get('markdown-quality')?.plainEnglish ?? '',
+    /No confirmed Markdown response/u,
+  )
   assert.equal(
     checks.get('markdown-tab-serialization')?.status,
     'notApplicable',

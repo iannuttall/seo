@@ -58,9 +58,39 @@ function canRenderTable(
   context: TerminalContext,
 ): boolean {
   if (head.length === 0 || head.length > 4) return false
+  const numericColumns = head.map((_, column) =>
+    rows.every((row) =>
+      /^-?(?:\d+(?:\.\d+)?|\d+(?:\.\d+)?%)$/u.test(
+        stringCell(row[column]).trim(),
+      ),
+    ),
+  )
+  if (!numericColumns.some(Boolean)) return false
   const widths = naturalColumnWidths(head, rows)
   const tableWidth = widths.reduce((total, width) => total + width + 2, 0)
   return tableWidth <= context.columns
+}
+
+function styledValue(
+  label: string,
+  value: string,
+  context: TerminalContext,
+): string {
+  if (!/(?:status|state|assessment|data|allowed)/iu.test(label)) return value
+  const normalized = value.trim().toLowerCase()
+  if (['pass', 'passed', 'completed', 'allowed', 'yes'].includes(normalized)) {
+    return context.colors.green(value)
+  }
+  if (['warn', 'warning', 'review', 'partial'].includes(normalized)) {
+    return context.colors.yellow(value)
+  }
+  if (['fail', 'failed', 'blocked', 'no'].includes(normalized)) {
+    return context.colors.red(value)
+  }
+  if (['unknown', 'unavailable'].includes(normalized)) {
+    return context.colors.blue(value)
+  }
+  return value
 }
 
 function renderDenseTable(
@@ -83,9 +113,9 @@ function renderDenseTable(
   })
   for (const row of rows) {
     table.push(
-      head.map((_, column) =>
+      head.map((label, column) =>
         wrapText(
-          stringCell(row[column]),
+          styledValue(label, stringCell(row[column]), context),
           Math.max(1, (widths[column] ?? 3) - 2),
         ).join('\n'),
       ),
@@ -126,7 +156,7 @@ export function renderRecords(
     28,
     Math.max(...head.map((label) => visibleWidth(label)), 0),
   )
-  const showNumbers = options.rowNumbers ?? rows.length > 1
+  const showNumbers = options.rowNumbers ?? false
   const digits = String(rows.length).length
   const blocks = rows.map((row, index) => {
     const lines: string[] = []
@@ -137,7 +167,7 @@ export function renderRecords(
       lines.push(
         ...renderRecordValue(
           label,
-          stringCell(row[column]),
+          styledValue(label, stringCell(row[column]), context),
           labelWidth,
           context,
         ),

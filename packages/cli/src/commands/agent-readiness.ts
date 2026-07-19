@@ -9,8 +9,7 @@ import {
   stringArg,
 } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printNotes, truncate } from './output.js'
+import { printJson, printSemanticReport } from '../utils.js'
 import { resolveSavedCrawlReport } from './readiness.js'
 
 function inputUrl(args: Record<string, unknown>): string | undefined {
@@ -23,43 +22,46 @@ function inputUrl(args: Record<string, unknown>): string | undefined {
 }
 
 function printAgentReadiness(report: AgentReadinessReport): void {
-  process.stdout.write(`AI agent readiness for ${report.url}\n\n`)
-  printKeyValue([
-    ['Profile', report.profile],
-    ['Assessment', 'evidence only'],
-    ['Data', report.dataStatus],
-    ['Report', report.reportId],
-    ['Passed', String(report.summary.passed)],
-    ['Needs review', String(report.summary.warnings)],
-    ['Failed', String(report.summary.failed)],
-    ['Unknown', String(report.summary.unknown)],
-    ['Information', String(report.summary.information)],
-  ])
-  process.stdout.write(`\n${report.headline}\n`)
-
-  process.stdout.write('\nProfile scope\n')
-  printTable(
-    ['Profile', 'Status', 'Reason'],
-    Object.entries(report.profileApplicability).map(([profile, value]) => [
-      profile,
-      value.status === 'notApplicable' ? 'not applicable' : value.status,
-      truncate(value.reason, 96),
-    ]),
-  )
-
-  if (report.topActions.length) {
-    process.stdout.write('\nWhat to check next\n')
-    printTable(
-      ['Status', 'Check', 'Action'],
-      report.topActions.map((action) => [
-        action.status,
-        action.title,
-        truncate(action.action, 96),
-      ]),
-    )
-  }
-
-  printNotes('Caveats', report.caveats)
+  const status =
+    report.summary.failed > 0
+      ? 'fail'
+      : report.summary.warnings > 0
+        ? 'warning'
+        : report.summary.unknown > 0
+          ? 'unknown'
+          : 'pass'
+  printSemanticReport({
+    title: 'AI agent readiness',
+    target: report.url,
+    status,
+    summary: report.headline,
+    metrics: [
+      { label: 'Passed', value: report.summary.passed, status: 'pass' },
+      {
+        label: 'Review',
+        value: report.summary.warnings,
+        status: 'warning',
+      },
+      { label: 'Failed', value: report.summary.failed, status: 'fail' },
+      { label: 'Unknown', value: report.summary.unknown, status: 'unknown' },
+    ],
+    sections: report.sections.map((section) => ({
+      title: section.title,
+      diagnostics: section.checks
+        .filter((check) => !['info', 'notApplicable'].includes(check.status))
+        .map((check) => ({
+          status: check.status,
+          title: check.title,
+          explanation: check.plainEnglish,
+          fix: check.status === 'pass' ? undefined : check.action,
+          evidence: (check.urls ?? []).slice(0, 5),
+        })),
+    })),
+    notes: [
+      `Profile: ${report.profile}. Data: ${report.dataStatus}. Report: ${report.reportId}.`,
+      ...report.caveats,
+    ],
+  })
 }
 
 export const agentReadinessCommand = defineCommand({

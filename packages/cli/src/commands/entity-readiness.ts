@@ -1,36 +1,41 @@
 import { type EntityReadinessReport, entityReadiness } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag } from '../args.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printNotes } from './output.js'
+import { printJson, printSemanticReport } from '../utils.js'
 import { resolveSavedCrawlReport } from './readiness.js'
 
 function printEntityReadiness(report: EntityReadinessReport): void {
-  process.stdout.write(`Entity evidence for ${report.url}\n\n`)
-  printKeyValue([
-    ['Assessment', 'evidence only'],
-    ['Data', report.dataStatus],
-    ['Evaluated pages', `${report.evaluatedPages}/${report.crawlPages}`],
-    ['Report', report.reportId],
-    ['sameAs profiles', String(report.entities.sameAs.length)],
-    ['Social profiles', String(report.entities.socialProfiles.length)],
-    ['Authors', String(report.entities.authors.length)],
-  ])
-  process.stdout.write(`\n${report.headline}\n`)
-
-  const schemaRows = Object.entries(report.entities.schemaTypes)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-  if (schemaRows.length) {
-    process.stdout.write('\nSchema types\n')
-    printTable(
-      ['Type', 'Pages'],
-      schemaRows.map(([type, count]) => [type, String(count)]),
-    )
-  }
-
-  printNotes('sameAs', report.entities.sameAs.slice(0, 10))
-  printNotes('Social profiles', report.entities.socialProfiles.slice(0, 10))
+  printSemanticReport({
+    title: 'Entity evidence',
+    target: report.url,
+    status: report.dataStatus === 'partial' ? 'unknown' : 'info',
+    summary: report.headline,
+    metrics: [
+      {
+        label: 'Pages',
+        value: `${report.evaluatedPages}/${report.crawlPages}`,
+      },
+      { label: 'sameAs', value: report.entities.sameAs.length },
+      { label: 'Social', value: report.entities.socialProfiles.length },
+      { label: 'Authors', value: report.entities.authors.length },
+    ],
+    sections: [
+      {
+        title: 'Observed entity signals',
+        diagnostics: report.checks.map((check) => ({
+          status: check.status,
+          title: check.title,
+          explanation: check.plainEnglish,
+          fix: check.action,
+          evidence: (check.urls ?? []).slice(0, 5),
+        })),
+      },
+    ],
+    notes: [
+      `Data: ${report.dataStatus}. Report: ${report.reportId}.`,
+      ...report.caveats,
+    ],
+  })
 }
 
 export const entityReadinessCommand = defineCommand({

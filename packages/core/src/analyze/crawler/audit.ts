@@ -420,11 +420,18 @@ export function auditCrawlPages(
 
     const redirected = isRedirectedPage(page)
     if (redirected) {
+      const redirectTarget = page.metaRefresh?.targetUrl ?? page.finalUrl
       issues.push(
-        issue('redirected_url', page, `Final URL: ${page.finalUrl}`, {
+        issue('redirected_url', page, `Final URL: ${redirectTarget}`, {
           requestedUrl: page.url,
-          finalUrl: page.finalUrl,
+          finalUrl: redirectTarget,
           status: page.status,
+          ...(page.metaRefresh
+            ? {
+                redirectType: 'meta-refresh',
+                delaySeconds: page.metaRefresh.delaySeconds,
+              }
+            : {}),
         }),
       )
     }

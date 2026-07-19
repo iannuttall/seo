@@ -402,6 +402,7 @@ export async function crawlOne(
       contentSample: truncate(extracted.contentText, 300),
       contentSketch: crawlerEvidence.contentSketch,
       softAuthenticationGate: crawlerEvidence.softAuthenticationGate,
+      metaRefresh: crawlerEvidence.metaRefresh,
       tabbedContent: crawlerEvidence.tabbedContent,
       lang: extracted.lang,
       hasViewport: extracted.hasViewport,
@@ -460,11 +461,14 @@ export async function crawlOne(
         hasQapageSchema: extracted.schemaTypes.includes('QAPage'),
       },
     }
-    page.indexability = indexabilityReason(page)
+    page.indexability = page.metaRefresh
+      ? `Meta refresh to ${page.metaRefresh.targetUrl}`
+      : indexabilityReason(page)
     page.indexable = !page.indexability
-    page.declaredIndexability =
-      hasMetaRobotsDirective(page.metaRobots, 'noindex') ||
-      hasXRobotsDirective(page.xRobotsTag, 'noindex')
+    page.declaredIndexability = page.metaRefresh
+      ? 'meta-refresh'
+      : hasMetaRobotsDirective(page.metaRobots, 'noindex') ||
+          hasXRobotsDirective(page.xRobotsTag, 'noindex')
         ? 'noindex'
         : page.robotsTxt?.allowed === false
           ? 'robots-blocked'

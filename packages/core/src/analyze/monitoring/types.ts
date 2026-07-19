@@ -62,6 +62,7 @@ export type CrawlPageSnapshot = {
     | 'robots-blocked'
     | 'canonical-conflict'
     | 'canonical-hint-other'
+    | 'meta-refresh'
     | 'not-html'
     | 'unknown'
   extractionStatus?:
@@ -82,6 +83,10 @@ export type CrawlPageSnapshot = {
     kind: 'login-form'
     indicators: string[]
     formActionPath?: string
+  }
+  metaRefresh?: {
+    targetUrl: string
+    delaySeconds: number
   }
   tabbedContent?: {
     groups: number

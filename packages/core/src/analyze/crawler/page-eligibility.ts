@@ -12,6 +12,7 @@ function comparableUrl(value?: string): string | undefined {
 }
 
 export function isRedirectedPage(page: CrawlPageSnapshot): boolean {
+  if (page.metaRefresh) return true
   const requested = comparableUrl(page.url)
   const final = comparableUrl(page.finalUrl)
   return Boolean(requested && final && requested !== final)

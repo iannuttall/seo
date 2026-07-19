@@ -390,6 +390,7 @@ export const crawlPageSnapshotSchema = z.object({
       'robots-blocked',
       'canonical-conflict',
       'canonical-hint-other',
+      'meta-refresh',
       'not-html',
       'unknown',
     ])
@@ -430,6 +431,12 @@ export const crawlPageSnapshotSchema = z.object({
       kind: z.literal('login-form'),
       indicators: z.array(z.string()),
       formActionPath: z.string().optional(),
+    })
+    .optional(),
+  metaRefresh: z
+    .object({
+      targetUrl: z.string().url(),
+      delaySeconds: z.number().nonnegative(),
     })
     .optional(),
   tabbedContent: z

@@ -14,7 +14,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'audit-urls':
     'Separate repeated template problems from failures that affect one URL. Fix a representative page first, then run the same bounded URL list again before changing the rest of the batch.',
   'bing-webmaster-overview':
-    'Compare the exact dates behind a search or crawl change in Bing Webmaster Tools. Run a current site crawl when you need page evidence because provider statistics cannot explain the cause on their own.',
+    'Start with the highest-priority finding, then check its exact dates and source coverage. Run a current site crawl or page audit before changing anything because provider statistics cannot explain the cause on their own.',
   cannibalisation:
     'Compare the competing pages and the intent each one serves before consolidating anything. Merge, redirect or differentiate a page only when the returned query evidence and the live content support that choice.',
   'community-intent':

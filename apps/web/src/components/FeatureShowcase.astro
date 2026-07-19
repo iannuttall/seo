@@ -1,5 +1,6 @@
 ---
 import FeatureDemo from '@/components/FeatureDemo.astro'
+import { productFacts } from '@/lib/facts'
 
 const features = [
   {
@@ -16,8 +17,7 @@ const features = [
   },
   {
     title: 'Run a complete SEO audit and know what to fix next.',
-    description:
-      'Run 50+ reports across crawl health, content, search performance, and AI visibility. Each result shows the affected pages and gives your agent the evidence it needs to act.',
+    description: `Run ${productFacts.reports} reports across crawl health, content, search performance, and AI visibility. Each result shows the affected pages and gives your agent the evidence it needs to act.`,
     demo: 'crawl',
   },
   {

@@ -22,7 +22,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/bing',
     label: 'Bing Webmaster',
     description:
-      'Connect one verified Bing site and add bounded Bing search and crawl evidence to a project.',
+      'Connect one verified Bing site and review bounded traffic trends, crawl changes, and search opportunities.',
   },
   {
     path: '/docs/indexnow',
@@ -53,6 +53,12 @@ export const docsNav: DocsNavEntry[] = [
     label: 'SEO reports',
     description:
       'Choose the report that answers your question and learn what its evidence can and cannot establish.',
+  },
+  {
+    path: '/docs/html-reports',
+    label: 'HTML reports',
+    description:
+      'Generate a standalone report, or let an agent design one without weakening the evidence contract.',
   },
   {
     path: '/docs/ai-search',

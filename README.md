@@ -181,8 +181,8 @@ seo analytics google properties
 seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 ```
 
-Bing Webmaster is optional. Connect it when you want Bing search and crawl
-statistics beside your Google evidence:
+Bing Webmaster is optional. Connect it when you want Bing traffic trends,
+crawl changes, and query and page opportunities beside your Google evidence:
 
 ```sh
 seo providers bing connect
@@ -195,10 +195,12 @@ selected project when the hostname is unambiguous, and stores the key in the
 system keychain with a private local file fallback. Agents and CI can set
 `SEO_BING_API_KEY` and run the report without saving the key.
 
-The report keeps Bing traffic and crawl rows bounded and uncached. It labels
-invalid, partial, capped, and unavailable provider evidence instead of turning
-it into a zero. Bing's `inIndex` crawl statistic is provider evidence, not
-URL-level proof that a page is indexed.
+The report compares recent traffic periods, highlights material crawl changes,
+and returns bounded query and page review lists. Provider responses stay
+uncached and byte limited. Invalid, partial, capped, unavailable, and sampled
+evidence remain distinct. Bing's `inIndex` crawl statistic is provider
+evidence, not URL-level proof that a page is indexed. A query or page missing
+from a weekly top list is unknown, not zero.
 
 Use the same connection to review a bounded set of referring links, or import
 an export from another source:
@@ -212,6 +214,35 @@ CSV and JSONL imports stream from disk. Regular JSON arrays have a smaller
 file limit to avoid a memory spike. Every result includes the number of rows
 read, rejected, deduplicated, omitted, or stopped by a limit. It is evidence
 from the selected source, not a complete backlink index or an authority score.
+
+## Create an HTML report for a client
+
+The built-in renderer creates a standalone report when you need a predictable
+file without asking an agent to design it:
+
+```sh
+seo report --project example --format html
+seo monthly-report --project example --format html
+seo report-narrative --project example --format html --view analyst
+```
+
+Client view keeps the presentation concise. Analyst view adds evidence coverage
+and unavailable sections. Use `--output ./report.html` to choose the file path.
+The file contains its own CSS, works offline, prints cleanly, and is marked
+`noindex,nofollow`.
+
+An agent can instead design its own report from the structured result:
+
+```sh
+seo report --project example --full --json > seo-report.json
+```
+
+Ask the agent to turn that evidence into one responsive, print-friendly HTML
+file for the intended audience. It can choose the layout and visual style, but
+it must keep provider labels, reporting dates, data status, limitations, and
+verification steps visible. Missing or partial data must not become zero, and
+the presentation must not invent forecasts, causes, scores, or conclusions.
+The installed skill teaches agents this contract automatically.
 
 ## Analyze crawler traffic in server logs
 

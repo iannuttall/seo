@@ -5,25 +5,20 @@ description: Use and read this skill immediately if the user request is in any w
 
 # seo
 
-`seo` is a local CLI, MCP server, and report engine. It answers SEO questions
-with evidence from its own crawl, Google Search Console, Google Analytics, and
-optional Bing Webmaster data. Every report returns structured JSON with the observed
-evidence, derived findings, caveats, and provenance kept separate. Nothing is
-hosted; data stays on the machine.
-
-You do not need to memorise reports. Discover them at runtime.
+`seo` is a local CLI, MCP server, and report engine using crawl, Search Console,
+Google Analytics, and optional Bing evidence. Reports keep observations,
+findings, caveats, and provenance separate. Data stays local. Discover reports
+at runtime instead of memorising them.
 
 ## Discover, describe, run
 
 With the MCP server (preferred):
 
-1. `seo_list_reports` returns every report id with a one-line purpose,
-   optionally by category.
-2. `seo_describe_report` with one id returns when to use it, when to avoid it,
-   its exact JSON Schema, the order to read its output in, what its evidence
-   cannot support, one verification step, and related report ids.
-3. `seo_run_report` with the id and a bounded `params` object. Read
-   `structuredContent`, not the display text.
+1. `seo_list_reports` returns report ids and purposes, optionally by category.
+2. `seo_describe_report` returns one report's usage, schema, reading order,
+   limits, verification, and related ids.
+3. `seo_run_report` runs bounded `params`. Read `structuredContent`, not display
+   text.
 
 The same catalog exists without MCP:
 
@@ -33,32 +28,22 @@ seo reports describe <report-id> --json
 seo reports run <report-id> --params '<json>' --json
 ```
 
-Always describe a report before its first run in a session. The describe
-response is the per-report manual: follow its `readOrder`, respect its
-`doNotClaim` limits, and use its `related` ids to decide what to run next.
-Reuse the schema for repeated runs. Do not guess parameters.
-
-When a describe response lists `fixableChecks`, the report also serves fix
-guidance per check. After a run, take each failed or warning check id from
-`topActions` and call `seo_describe_report` with `id` and `check` (CLI:
-`seo reports describe <report-id> --check <check-id>`). The result contains
-the goal, fix steps, a ready-to-use agent prompt, spec links, and a
-verification step for that one check. Fetch guidance only for checks you are
-actually going to fix.
+Describe a report before its first run. Follow `readOrder`, `doNotClaim`, and
+`related`; reuse its schema and do not guess parameters. When `fixableChecks`
+exists, fetch guidance only for failed or warning ids in `topActions` with
+`seo_describe_report` using `id` and `check` (CLI:
+`seo reports describe <report-id> --check <check-id>`).
 
 ## Setup and selection
 
-Run the `setup-check` report (or `seo doctor`) if auth state is unknown.
-Saved project profiles are selected with `--project <id>`; list them with
-`seo projects list --json`. Without a profile, pass `--site sc-domain:example.com`
-for Search Console reports or `--url https://example.com` for crawl-only
-reports. Crawl and page audits work with no Google connection at all. Always
-pass `--json`; JSON mode never prompts.
+Use `setup-check` or `seo doctor` when auth is unknown. Select profiles with
+`--project <id>` and list them with `seo projects list --json`. Without one,
+pass `--site sc-domain:example.com` or `--url https://example.com`. Crawl audits
+need no Google connection. Agent commands use `--json`, which never prompts.
 
 ## Common jobs
 
-Each job lists report ids in a sensible starting order. Run the first, read
-its evidence, then decide; do not run a whole chain blindly.
+Run the first report, read it, then decide. Do not run a whole chain blindly.
 
 | Job | Reports |
 |---|---|
@@ -70,36 +55,39 @@ its evidence, then decide; do not run a whole chain blindly.
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
-| Review Bing search and crawl evidence | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
+| Review Bing traffic, crawl, query, and page insights | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
 | See who links to the site | `link-evidence`, then verify selected referring URLs directly |
 | Review real crawler requests in a server log | `server-log-analysis`, then verify important errors against the original log and server configuration |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
 | Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
 
-A single page complaint usually needs both angles: the index evidence for that
-URL and an `audit-page` pass for content or technical problems on the page
-itself.
+Use `seo report` first for a broad performance question with a known project.
+For a large or unfamiliar URL, run sitemap health before a full crawl.
 
-The main human report is the `seo report` command. It is the right first move
-for a broad performance question with a known project and available search
-evidence. For a broad technical audit of a large or unfamiliar URL, run the
-sitemap health pass before any full crawl. The focused reports above are for
-specific symptoms.
+## Create a client HTML report
 
-For a large or unfamiliar site, do not open with a full crawl. Describe and run
-`site-crawl` with `health: true` and an explicit `sitemapUrl` when known. This
-first pass checks sitemap URL responses, redirects, robots decisions, and
-access blocks without downloading, parsing, rendering, or caching page bodies.
-Read `config.strategy`, `access`, failures, limits, and sitemap completeness.
-Run the full `site-crawl` second only when the question needs page content,
-metadata, canonicals, internal links, structured data, or rendered HTML.
+For a polished or branded report, create one standalone HTML file from
+structured data. Built-in `--format html` is a predictable fallback. Start with
+compact JSON and request `--full` only when deeper evidence is needed. Follow
+supplied brand direction and design for the findings. Use responsive,
+accessible, print-friendly HTML, embedded CSS, `noindex,nofollow`, and no remote
+scripts or assets.
 
-The crawler identifies every HTTP and browser request as
-`SEO-Skill/<version> (+https://seoskill.dev)`. If `access.blockedRequests` is
-non-zero, give the user the provider evidence and exact User-Agent. A
-User-Agent is spoofable, so ask for a temporary exception scoped to the audit
-machine source IP, hostname or required paths, and only the blocking security
-rule. Never recommend a broad User-Agent-only bypass.
+Show site, period, generated date, provider labels, data status, priorities,
+limitations, and verification. Preserve partial, capped, sampled, missing, and
+skipped states. Keep observations separate from interpretation and providers
+separate from each other. Never invent scores, forecasts, causes, or missing
+values. Omit secrets and unnecessary raw rows. Save locally and report the path.
+
+For a large site, run `site-crawl` with `health: true` and an explicit
+`sitemapUrl` when known. Read `config.strategy`, `access`, failures, limits, and
+sitemap completeness. Full crawl second only for page content, metadata,
+canonicals, links, structured data, or rendered HTML.
+
+Requests use `SEO-Skill/<version> (+https://seoskill.dev)`. For
+`access.blockedRequests`, show provider evidence and the identity. Ask for a
+temporary exception scoped by audit IP, host or paths, and blocking rule. Never
+recommend a User-Agent-only bypass.
 
 ## Evidence rules
 
@@ -118,20 +106,11 @@ rule. Never recommend a broad User-Agent-only bypass.
 
 ## Beyond the report catalog
 
-The CLI also has direct commands for raw provider access and administration:
-`seo gsc-query`, `seo url-inspect`, `seo analytics google properties`,
-`seo analytics google report`, `seo updates`, `seo crawl`, `seo export`, and
-`seo projects`. Bing setup and saved-project reports use `seo providers bing`.
-Use `seo links --project <id> --json` for bounded Bing link evidence, or
-`seo links --file <path> --json` for CSV, JSON, or JSONL imports.
-Agents and CI can set `SEO_BING_API_KEY` without saving it. Use `seo help all`
-to list everything. IndexNow is an external write action, not a report. Use
-`seo indexnow submit --dry-run --json` to validate the exact changed URLs, and
-only remove `--dry-run` when the user has asked to notify search engines. A
-successful response proves receipt, not crawling or indexing. Prefer a registered
-report when one covers the question, because reports carry provenance and
-caveats that raw queries do not.
+Use `seo help all` for direct provider and administration commands. Bing setup
+uses `seo providers bing`; link evidence uses `seo links --project <id> --json`
+or `seo links --file <path> --json`. IndexNow writes externally: validate with
+`seo indexnow submit --dry-run --json` and remove dry run only when authorised.
+Receipt does not prove crawling or indexing. Prefer registered reports.
 
-Full report output is cached locally. Pass `refresh: true` (or `--refresh`)
-only when the user explicitly wants a fresh fetch. The sitemap health strategy
-always bypasses page-body cache and never writes page responses to it.
+Use `refresh: true` or `--refresh` only when fresh data is requested. Sitemap
+health always bypasses page-body cache and never writes page responses.

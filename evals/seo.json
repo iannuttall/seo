@@ -82,6 +82,22 @@
         "Offers a bounded live verification instead of asserting the rank"
       ],
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Make a polished HTML report from our latest SEO audit that I can send to a client. The normal generated template looks too generic.",
+      "expected_output": "Should use structured report evidence and create one local standalone HTML file rather than treating the built-in renderer as the required design. Should start from `seo report --project <project> --json` and request `--full` only when the intended layout needs deeper sections. The page should be responsive, accessible, print friendly, self contained, and marked noindex,nofollow. It should visibly preserve the site, reporting period, generated date, provider labels, data status, priorities, caveats, skipped or partial evidence, and verification steps. It may choose a visual style for the audience but must not invent missing values, forecasts, causation, scores, or stronger conclusions. It should keep provider evidence separate, omit secrets and unnecessary raw rows, save the file locally, and tell the user where it was written.",
+      "assertions": [
+        "Creates a local standalone HTML file from structured report evidence",
+        "Uses compact JSON first and requests full detail only when the layout needs it",
+        "Treats layout and visual style as flexible rather than copying the built-in renderer",
+        "Keeps provider labels, dates, data status, caveats, partial states, and verification steps visible",
+        "Does not invent missing values, forecasts, causation, scores, or stronger conclusions",
+        "Keeps provider evidence separate and omits secrets and unnecessary raw rows",
+        "Makes the page responsive, accessible, print friendly, self contained, and noindex",
+        "Saves the file locally and reports its path"
+      ],
+      "files": []
     }
   ]
 }

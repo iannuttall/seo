@@ -15,6 +15,8 @@ const paths = [
   '/docs/crawler',
   '/docs/getting-started',
   '/docs/google',
+  '/docs/html-reports',
+  '/docs/indexnow',
   '/docs/typescript',
   '/docs/mcp',
   '/docs/reports',

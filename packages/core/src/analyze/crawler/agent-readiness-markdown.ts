@@ -31,7 +31,7 @@ function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
   return discovery.markdownAlternates.pages
     .filter((page) => {
       const quality = page.quality
-      if (!quality) return true
+      if (!quality) return false
       return (
         !quality.frontmatterTitle ||
         quality.h1Count !== 1 ||
@@ -51,6 +51,22 @@ function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
       )
     })
     .map((page) => page.htmlUrl)
+}
+
+function confirmedMarkdown(
+  page: CrawlAgentDiscovery['markdownAlternates']['pages'][number],
+) {
+  for (const response of [page.explicit, page.negotiated]) {
+    if (
+      response?.status !== undefined &&
+      response.status >= 200 &&
+      response.status < 300 &&
+      /^\s*text\/markdown\b/iu.test(response.contentType ?? '')
+    ) {
+      return response
+    }
+  }
+  return undefined
 }
 
 export function markdownChecks(
@@ -79,10 +95,10 @@ export function markdownChecks(
         !page.htmlAlternateUnique || page.explicitMatchesNegotiated === true,
     )
   const stable =
-    markdown.eligibleHtmlPages > 0 &&
-    markdown.stableResponses === markdown.eligibleHtmlPages
+    markdown.evaluatedPages > 0 &&
+    markdown.stableResponses === markdown.evaluatedPages
   const tokenHeaders = markdown.pages.filter((page) => {
-    const primary = page.explicit ?? page.negotiated
+    const primary = confirmedMarkdown(page)
     return (
       primary?.markdownTokens !== undefined &&
       (!page.explicit ||
@@ -91,28 +107,24 @@ export function markdownChecks(
     )
   }).length
   const sizedPages = markdown.pages.filter((page) => {
-    const primary = page.explicit ?? page.negotiated
+    const primary = confirmedMarkdown(page)
     return primary?.characters !== undefined
   })
   const largePages = sizedPages.filter((page) => {
-    const primary = page.explicit ?? page.negotiated
+    const primary = confirmedMarkdown(page)
     return (primary?.characters ?? 0) > 50_000
   })
   const veryLargePages = sizedPages.filter((page) => {
-    const primary = page.explicit ?? page.negotiated
+    const primary = confirmedMarkdown(page)
     return (primary?.characters ?? 0) > 100_000
   })
   const maxCharacters = Math.max(
     0,
-    ...sizedPages.map(
-      (page) => (page.explicit ?? page.negotiated)?.characters ?? 0,
-    ),
+    ...sizedPages.map((page) => confirmedMarkdown(page)?.characters ?? 0),
   )
   const maxEstimatedTokens = Math.max(
     0,
-    ...sizedPages.map(
-      (page) => (page.explicit ?? page.negotiated)?.estimatedTokens ?? 0,
-    ),
+    ...sizedPages.map((page) => confirmedMarkdown(page)?.estimatedTokens ?? 0),
   )
   const parityPages = markdown.pages.filter(
     (page) =>
@@ -174,7 +186,7 @@ export function markdownChecks(
           : 'No change is required. X-Markdown-Tokens is optional; local size estimates are reported separately.',
       urls: markdown.pages
         .filter((page) => {
-          const primary = page.explicit ?? page.negotiated
+          const primary = confirmedMarkdown(page)
           return (
             primary?.markdownTokens === undefined ||
             (page.explicit !== undefined &&
@@ -306,11 +318,11 @@ export function markdownChecks(
     check('representations', {
       id: 'markdown-determinism',
       status:
-        markdown.eligibleHtmlPages === 0 ? 'unknown' : stable ? 'pass' : 'fail',
+        markdown.evaluatedPages === 0 ? 'unknown' : stable ? 'pass' : 'fail',
       title: stable
         ? 'Repeated Markdown responses are stable'
         : 'Repeated Markdown responses changed during the audit',
-      plainEnglish: `${markdown.stableResponses} of ${markdown.eligibleHtmlPages} repeated Markdown responses kept the same SHA-256 digest.`,
+      plainEnglish: `${markdown.stableResponses} of ${markdown.evaluatedPages} repeated Markdown responses kept the same SHA-256 digest.`,
       action:
         'Remove timestamps, random output, or other runtime rewriting that changes the same Markdown response between requests.',
       evidence: { stableResponses: markdown.stableResponses },

@@ -375,20 +375,33 @@ async function inspectMarkdownPage(input: {
   if (explicit) observation.explicit = explicit.observation
   observation.negotiated = negotiated.observation
   observation.repeated = repeated.observation
+
+  const isMarkdown = (
+    result: Awaited<ReturnType<typeof fetchRepresentation>> | undefined,
+  ): result is Awaited<ReturnType<typeof fetchRepresentation>> =>
+    result?.observation.status !== undefined &&
+    result.observation.status >= 200 &&
+    result.observation.status < 300 &&
+    /^\s*text\/markdown\b/iu.test(result.observation.contentType ?? '')
+  const explicitMarkdown = isMarkdown(explicit) ? explicit : undefined
+  const negotiatedMarkdown = isMarkdown(negotiated) ? negotiated : undefined
+  const repeatedMarkdown = isMarkdown(repeated) ? repeated : undefined
   observation.explicitMatchesNegotiated =
-    explicit?.observation.sha256 && negotiated.observation.sha256
-      ? explicit.observation.sha256 === negotiated.observation.sha256
+    explicitMarkdown?.observation.sha256 &&
+    negotiatedMarkdown?.observation.sha256
+      ? explicitMarkdown.observation.sha256 ===
+        negotiatedMarkdown.observation.sha256
       : null
-  const primary = explicit ?? negotiated
+  const primary = explicitMarkdown ?? negotiatedMarkdown
   observation.repeatedHashStable =
-    primary.observation.sha256 && repeated.observation.sha256
-      ? primary.observation.sha256 === repeated.observation.sha256
+    primary?.observation.sha256 && repeatedMarkdown?.observation.sha256
+      ? primary.observation.sha256 === repeatedMarkdown.observation.sha256
       : null
   observation.markdownCanonicalMatchesHtml = sameDocument(
-    primary.observation.canonicalUrl,
+    primary?.observation.canonicalUrl,
     input.page.finalUrl,
   )
-  if (primary.body) {
+  if (primary?.body) {
     observation.quality = markdownQuality(primary.body, input.page)
   }
   return observation

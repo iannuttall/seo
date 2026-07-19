@@ -26,6 +26,7 @@ import {
   stringArg,
 } from '../args.js'
 import { writeJsonOutput } from '../json-output.js'
+import { printCrawlHuman } from '../presentation/crawl-report.js'
 import { resolveClientSelection } from '../selection.js'
 import { printKeyValue } from '../utils.js'
 import { startUrlForSite } from './shared.js'
@@ -323,7 +324,7 @@ export const crawlCommand = defineCommand({
       return
     }
 
-    process.stdout.write(renderCrawlPretty(report, rankedFixes))
+    printCrawlHuman(report, rankedFixes)
     if (saved || failOn) {
       process.stdout.write('\nRun metadata\n')
       printKeyValue([

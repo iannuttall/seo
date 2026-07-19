@@ -79,7 +79,7 @@ test('wide prose tables become readable stacked records', () => {
   }
 })
 
-test('short scalar tables stay compact', () => {
+test('non-numeric scalar tables use readable records', () => {
   const context = createTerminalContext({ color: false, columns: 80 })
   const output = renderTable(
     ['Check', 'Status', 'Detail'],
@@ -89,11 +89,25 @@ test('short scalar tables stay compact', () => {
     ],
     context,
   )
-  assert.match(output, /^Check\s+Status\s+Detail/m)
+  assert.match(output, /^Check\s+Config directory/m)
+  assert.match(output, /^Status\s+pass/m)
   assert.equal(output.includes('01'), false)
   for (const line of output.split('\n')) {
     assert.ok(visibleWidth(line) <= 80, `${visibleWidth(line)} > 80: ${line}`)
   }
+})
+
+test('numeric comparison tables stay compact', () => {
+  const context = createTerminalContext({ color: false, columns: 80 })
+  const output = renderTable(
+    ['Type', 'Pages', 'Issues'],
+    [
+      ['Article', '12', '2'],
+      ['Product', '8', '1'],
+    ],
+    context,
+  )
+  assert.match(output, /^Type\s+Pages\s+Issues/m)
 })
 
 test('callouts are deterministic and width-bound', () => {

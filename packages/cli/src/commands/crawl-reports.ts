@@ -19,6 +19,7 @@ import {
   projectArg,
   stringArg,
 } from '../args.js'
+import { printCrawlHuman } from '../presentation/crawl-report.js'
 import { resolveClientSelection } from '../selection.js'
 import {
   printJson,
@@ -58,50 +59,7 @@ function printReportList(reports: CrawlReportMeta[]): void {
 }
 
 function printReport(report: CrawlReport): void {
-  const rows: Array<[string, string]> = [
-    ['ID', report.id],
-    ['URL', report.config.url],
-    ['Site', report.site ?? '-'],
-    ['Status', report.status],
-    ['Generated', report.generatedAt],
-    ['Pages', String(report.summary.totalPages)],
-    ['Discovered', String(report.summary.discoveredUrls)],
-    ['Queued', String(report.summary.queuedUrls)],
-    ['Skipped', String(report.summary.skippedUrls)],
-    ['Failed fetches', String(report.summary.failedUrls)],
-    ['Observed internal links', String(report.summary.observedInternalLinks)],
-    ['Indexable', String(report.summary.indexablePages)],
-    ['Issues', String(report.issues.length)],
-    ['High', String(report.summary.highIssues)],
-    ['Medium', String(report.summary.mediumIssues)],
-    ['Low', String(report.summary.lowIssues)],
-  ]
-  if (report.externalLinkVerification) {
-    const external = report.externalLinkVerification
-    rows.push([
-      'External links',
-      `${external.fetchedUrls} fetched, ${external.failedUrls} failed, ${external.deferredUrls} deferred (${external.dataStatus})`,
-    ])
-  }
-  printKeyValue(rows)
-
-  if (report.issueGroups.length) {
-    process.stdout.write('\nTop issues\n')
-    printTable(
-      ['Severity', 'Rule', 'Count', 'Sample URL'],
-      report.issueGroups
-        .slice(0, 10)
-        .map((group) => [
-          group.severity,
-          group.ruleId,
-          String(group.count),
-          truncate(group.sampleUrls[0] ?? '', 64),
-        ]),
-    )
-  }
-
-  printNotes('Warnings', report.warnings.slice(0, 10))
-  printNotes('Caveats', report.caveats)
+  printCrawlHuman(report)
 }
 
 function printReportDiff(report: ReturnType<typeof compareCrawlReports>): void {

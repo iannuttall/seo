@@ -5,6 +5,10 @@ import {
   renderTable,
 } from './presentation/render.js'
 import {
+  renderSemanticReport,
+  type SemanticReportView,
+} from './presentation/report.js'
+import {
   type CatalogItemView,
   type CheckView,
   type ParameterView,
@@ -59,6 +63,12 @@ export function printHeading(title: string, summary?: string): void {
 
 export function printChecks(checks: CheckView[]): void {
   process.stdout.write(`${renderChecks(checks, createTerminalContext())}\n`)
+}
+
+export function printSemanticReport(report: SemanticReportView): void {
+  process.stdout.write(
+    `${renderSemanticReport(report, createTerminalContext())}\n`,
+  )
 }
 
 export function printCatalog(

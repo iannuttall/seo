@@ -8,8 +8,7 @@ import {
 import { defineCommand } from 'citty'
 import { jsonFlag, projectArg, stringArg } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
-import { printJson, printKeyValue, printTable } from '../utils.js'
-import { printNotes, truncate } from './output.js'
+import { printJson, printSemanticReport } from '../utils.js'
 
 export async function resolveSavedCrawlReport(
   args: Record<string, unknown>,
@@ -44,39 +43,45 @@ export async function resolveSavedCrawlReport(
 }
 
 function printAiReadiness(report: AiReadinessReport): void {
-  process.stdout.write(`AI-search evidence for ${report.url}\n\n`)
-  printKeyValue([
-    ['Assessment', 'evidence only'],
-    ['Data', report.dataStatus],
-    ['Report', report.reportId],
-  ])
-  process.stdout.write(`\n${report.headline}\n`)
-
-  if (report.topActions.length) {
-    process.stdout.write('\nTop actions\n')
-    printTable(
-      ['Status', 'Check', 'Action'],
-      report.topActions.map((action) => [
-        action.status,
-        action.title,
-        truncate(action.action, 96),
-      ]),
-    )
-  }
-
-  if (report.botAccess.length) {
-    process.stdout.write('\nBot access\n')
-    printTable(
-      ['User agent', 'Allowed', 'Declared'],
-      report.botAccess.map((bot) => [
-        bot.userAgent,
-        bot.allowed === null ? 'unknown' : bot.allowed ? 'yes' : 'no',
-        bot.declared ? 'yes' : bot.coveredByWildcard ? 'wildcard' : 'no',
-      ]),
-    )
-  }
-
-  printNotes('Caveats', report.caveats)
+  const count = (status: string) =>
+    report.checks.filter((check) => check.status === status).length
+  const failed = count('fail')
+  const warnings = count('warning')
+  const unknown = count('unknown')
+  const passed = count('pass')
+  const status = failed
+    ? 'fail'
+    : warnings
+      ? 'warning'
+      : unknown
+        ? 'unknown'
+        : 'pass'
+  printSemanticReport({
+    title: 'AI search evidence',
+    target: report.url,
+    status,
+    summary: report.headline,
+    metrics: [
+      { label: 'Passed', value: passed, status: 'pass' },
+      { label: 'Review', value: warnings, status: 'warning' },
+      { label: 'Failed', value: failed, status: 'fail' },
+      { label: 'Unknown', value: unknown, status: 'unknown' },
+    ],
+    sections: report.sections.map((section) => ({
+      title: section.title,
+      diagnostics: section.checks.map((check) => ({
+        status: check.status,
+        title: check.title,
+        explanation: check.plainEnglish,
+        fix: check.status === 'pass' ? undefined : check.action,
+        evidence: (check.urls ?? []).slice(0, 5),
+      })),
+    })),
+    notes: [
+      `Data: ${report.dataStatus}. Report: ${report.reportId}.`,
+      ...report.caveats,
+    ],
+  })
 }
 
 export const aiReadinessCommand = defineCommand({

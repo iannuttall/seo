@@ -3,6 +3,7 @@ export function crawlCaveats(input: {
   pageLimitReached: boolean
   maxPages: number
   queueSafetySkippedUrls: number
+  queueSafetyInventoryCapped?: boolean
   originBackpressureSkippedUrls: number
   memoryPressureSkippedUrls: number
 }): string[] {
@@ -13,7 +14,9 @@ export function crawlCaveats(input: {
       : []
   if (input.queueSafetySkippedUrls > 0) {
     caveats.push(
-      `Left ${input.queueSafetySkippedUrls} eligible same-origin URLs unqueued to keep this crawl bounded. Increase --max-pages to inspect more.`,
+      input.queueSafetyInventoryCapped
+        ? `Left at least ${input.queueSafetySkippedUrls} unique eligible same-origin URLs unqueued to keep this crawl bounded. The excluded-URL inventory reached its reporting cap. Increase --max-pages to inspect more.`
+        : `Left ${input.queueSafetySkippedUrls} unique eligible same-origin URLs unqueued to keep this crawl bounded. Increase --max-pages to inspect more.`,
     )
   }
   if (input.originBackpressureSkippedUrls > 0) {

@@ -75,8 +75,56 @@ test('crawlSite classifies bounded queue skips separately from deliberate skips'
   assert.equal(calls.length, 3)
   assert.match(
     report.caveats.join('\n'),
-    /Left 26 eligible same-origin URLs unqueued to keep this crawl bounded/,
+    /Left 26 unique eligible same-origin URLs unqueued to keep this crawl bounded/,
   )
+})
+
+test('crawlSite counts each queue-safety URL once across source pages', async () => {
+  const repeatedUrls = Array.from(
+    { length: 20 },
+    (_, index) => `https://docs.example.test/deferred-${index}`,
+  )
+  const report = await crawlSite(
+    {
+      url: 'https://docs.example.test/',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 2,
+      concurrency: 1,
+      respectRobots: false,
+      js: 'off',
+    },
+    {
+      fetch: async () => new Response('', { status: 404 }),
+      fetchStatusPage: async (url) => ({
+        request: {
+          requestedUrl: url,
+          outcome: 'response',
+          finalUrl: url,
+          status: 404,
+          extraction: 'not-applicable',
+        },
+        urls: [],
+      }),
+      fetchPage: async (url) => ({
+        page: crawlPageSnapshot(url, {
+          outgoingInternalCount: repeatedUrls.length,
+          sampleInternalLinks: repeatedUrls,
+        }),
+        urls: repeatedUrls,
+      }),
+    },
+  )
+
+  assert.equal(report.summary.queuedUrls, 10)
+  assert.equal(report.summary.skippedUrls, 11)
+  assert.deepEqual(report.summary.skipReasons, [
+    {
+      reason: 'queue-safety-limit',
+      impact: 'coverage-affecting',
+      count: 11,
+    },
+  ])
 })
 
 test('crawlSite classifies origin backpressure as coverage-affecting', async () => {

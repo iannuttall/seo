@@ -158,14 +158,16 @@ const REPORT_DEPTH_PRIMARY = {
   'bing-webmaster-overview': {
     readOrder: [
       'dataStatus and provenance',
-      'outputBudget and per-section outputSelection',
-      'traffic status, range, totals, returnedRows, invalidRows, and capped',
-      'crawl status, range, latest row, returnedRows, invalidRows, and capped',
-      'caveats',
+      'summary and findings, including verification steps',
+      'traffic analysis current and previous periods, then changes',
+      'crawl analysis current and previous snapshots, then changes',
+      'query and page coverage before movements or opportunities',
+      'outputBudget, per-section outputSelection, and caveats',
     ],
     doNotClaim: [
-      'Bing evidence does not describe Google or the whole search market.',
-      'The provider inIndex statistic is not URL-level proof of indexing.',
+      'Bing evidence does not describe Google or the whole search market, and inIndex is not URL-level proof of indexing.',
+      'A missing weekly top-list entry is not zero traffic, and movements require observation in every week of both periods.',
+      'Opportunity thresholds prioritize review and are not Bing requirements.',
       'Partial, capped, invalid, or unavailable rows cannot support an all-clear.',
     ],
     verify:

@@ -13,7 +13,20 @@ const MAX_AGENT_ROWS_PER_SECTION = 14
 
 type BingOverview = Awaited<ReturnType<typeof bingWebmasterOverview>>
 
-function compactRows<T extends { rows: unknown[] }>(data: T) {
+function compactRows<
+  T extends {
+    rows: unknown[]
+    outputSelection?: {
+      strategy: 'most-recent'
+      availableRows: number
+      returnedRows: number
+      omittedRows: number
+    }
+  },
+>(data: T) {
+  if (data.rows.length <= MAX_AGENT_ROWS_PER_SECTION && data.outputSelection) {
+    return data
+  }
   const rows = data.rows.slice(-MAX_AGENT_ROWS_PER_SECTION)
   return {
     ...data,
@@ -44,10 +57,7 @@ export function compactBingWebmasterOverview(result: BingOverview) {
             ...result.crawl,
             data: compactRows(result.crawl.data),
           },
-    outputBudget: {
-      maxRowsPerSection: MAX_AGENT_ROWS_PER_SECTION,
-      strategy: 'most-recent' as const,
-    },
+    outputBudget: result.outputBudget,
   }
 }
 
@@ -56,7 +66,7 @@ export function registerProviderTools(server: McpServer): void {
     'seo_bing_webmaster_overview',
     {
       description:
-        'Report bounded Bing Webmaster search and crawl evidence for one verified site',
+        'Find bounded Bing traffic, crawl, query, and page insights for one verified site',
       inputSchema: {
         site: z.string().url().max(2_000),
       },
@@ -64,12 +74,9 @@ export function registerProviderTools(server: McpServer): void {
     async ({ site }) => {
       try {
         const result = await bingWebmasterOverview({ site })
-        const clicks =
-          result.traffic.status === 'unavailable'
-            ? 'unavailable'
-            : String(result.traffic.data.clicks)
+        const firstFinding = result.findings[0]?.title
         return toolSuccess(
-          `Bing evidence is ${result.dataStatus}. Observed clicks: ${clicks}.`,
+          `Bing evidence is ${result.dataStatus} with ${result.summary.findings} findings.${firstFinding ? ` Review first: ${firstFinding}.` : ''}`,
           compactBingWebmasterOverview(result),
         )
       } catch (error) {

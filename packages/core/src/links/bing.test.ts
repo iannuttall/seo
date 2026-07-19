@@ -124,3 +124,25 @@ test('Bing link evidence does not mark fully read pagination as capped', async (
   assert.equal(evidence.provenance.completeness, 'unknown')
   assert.deepEqual(evidence.warnings, [])
 })
+
+test('Bing link evidence makes an empty provider response explicitly inconclusive', async () => {
+  const client = {
+    authentication: 'api-key',
+    async getLinkCounts() {
+      return {
+        rows: [],
+        totalPages: 0,
+        invalidRows: 0,
+        capped: false,
+        returnedRows: 0,
+      }
+    },
+  } as unknown as BingWebmasterClient
+
+  const evidence = await collectBingLinkEvidence({
+    site: 'https://target.example/',
+    client,
+  })
+  assert.equal(evidence.provenance.completeness, 'unknown')
+  assert.match(evidence.warnings[0] ?? '', /does not prove/i)
+})

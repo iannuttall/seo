@@ -280,6 +280,11 @@ export async function collectBingLinkEvidence(input: {
       },
     },
     warnings: [
+      ...(countRowsReturned === 0
+        ? [
+            'Bing returned no target-link rows. This does not prove that the site has no links.',
+          ]
+        : []),
       ...(partial
         ? [
             'Bing link evidence was bounded by provider pagination, failed requests, or report limits.',

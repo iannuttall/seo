@@ -285,6 +285,63 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'soft_authentication_gate',
+    title: 'Page appears to be an authentication gate',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The URL returned a successful HTML response, but the visible document looks like a login gate rather than the intended public page. Users and crawlers may receive a 200 response without the content they expected.',
+    howToFix:
+      'Confirm whether authentication is intentional. Public URLs should return their public content without a login form. Protected URLs should use a clear 401 or 403 response where appropriate and should not appear in public sitemaps or internal crawl paths.',
+    impactIfIgnored:
+      'A login page can be mistaken for the intended content, producing misleading crawl results and weak search or agent access.',
+    howToVerify:
+      'Fetch the affected URL without a session and confirm it returns the intended public page, or a deliberate authentication status for protected content.',
+    agentHints: {
+      evidenceFields: ['page.softAuthenticationGate', 'page.finalUrl'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'client_rendered_content',
+    title: 'Important content requires JavaScript rendering',
+    category: 'response',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The raw HTML contained very little content and the useful document appeared only after JavaScript rendering. Some crawlers, agents, previews, and constrained clients do not run the page JavaScript.',
+    howToFix:
+      'Render the important page content into the initial HTML, or publish a complete server-generated representation such as negotiated Markdown. Keep navigation, headings, canonicals, and indexability signals available without client execution.',
+    impactIfIgnored:
+      'Clients that do not execute JavaScript may see an empty shell or miss important content and links.',
+    howToVerify:
+      'Re-run the crawl and confirm the raw and rendered content observations contain the same important document content.',
+    agentHints: {
+      evidenceFields: [
+        'page.fetchDiagnostics.rendering.documentDifference',
+        'page.usedJs',
+      ],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'soft_404',
+    title: 'Unknown URLs return a successful response',
+    category: 'response',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'Known-nonexistent URLs returned a successful response or redirected to another successful page. Search engines and users cannot reliably distinguish missing content from a real page.',
+    howToFix:
+      'Return 404 or 410 for missing URLs. If a replacement exists, redirect only the specific retired URL to its closest relevant replacement rather than sending every unknown path to a generic page.',
+    impactIfIgnored:
+      'Missing URLs can remain in crawl queues, waste crawl attention, and create confusing search or monitoring evidence.',
+    howToVerify:
+      'Request several known-nonexistent paths and confirm each returns 404 or 410 without redirecting to a generic successful page.',
+    agentHints: {
+      evidenceFields: ['report.siteChecks.soft404'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'client_error',
     title: 'Client error',
     category: 'response',
@@ -926,6 +983,8 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   x_robots_noindex: 'review',
   robots_blocked: 'review',
   crawler_access_blocked: 'review',
+  soft_authentication_gate: 'review',
+  client_rendered_content: 'review',
   orphan_page: 'review',
   redirected_url: 'review',
   slow_response: 'review',

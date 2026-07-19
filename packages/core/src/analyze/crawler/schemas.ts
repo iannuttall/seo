@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { listRules } from '../../rules.js'
 import { agentDiscoverySchema } from './agent-discovery-schema.js'
 import { CRAWL_SKIP_REASONS } from './crawl-skip-reasons.js'
+import { crawlSiteChecksSchema } from './site-checks-schema.js'
 
 export const crawlerRuleSeveritySchema = z.enum(['low', 'medium', 'high'])
 export const crawlerRuleRecommendationSchema = z.enum(['fix', 'review'])
@@ -415,6 +416,42 @@ export const crawlPageSnapshotSchema = z.object({
   mainContentHash: z.string().optional(),
   textRatio: z.number().min(0).max(1).optional(),
   contentSample: z.string().optional(),
+  contentSketch: z
+    .object({
+      version: z.literal(1),
+      wordCount: z.number().int().nonnegative(),
+      shingleSize: z.number().int().positive(),
+      sampledShingles: z.number().int().nonnegative(),
+      hashes: z.array(z.string()),
+    })
+    .optional(),
+  softAuthenticationGate: z
+    .object({
+      kind: z.literal('login-form'),
+      indicators: z.array(z.string()),
+      formActionPath: z.string().optional(),
+    })
+    .optional(),
+  tabbedContent: z
+    .object({
+      groups: z.number().int().positive(),
+      panels: z.number().int().positive(),
+      retainedPanels: z.number().int().nonnegative(),
+      truncated: z.boolean(),
+      panelSketches: z.array(
+        z.object({
+          label: z.string().optional(),
+          sketch: z.object({
+            version: z.literal(1),
+            wordCount: z.number().int().nonnegative(),
+            shingleSize: z.number().int().positive(),
+            sampledShingles: z.number().int().nonnegative(),
+            hashes: z.array(z.string()),
+          }),
+        }),
+      ),
+    })
+    .optional(),
   lang: z.string().optional(),
   hasViewport: z.boolean().optional(),
   isHttps: z.boolean().optional(),
@@ -943,6 +980,7 @@ const crawlReportBaseSchema = z.object({
   ai: crawlAiSignalsSchema.optional(),
   sitemapDiscovery: crawlSitemapDiscoverySchema.optional(),
   externalLinkVerification: crawlExternalLinkVerificationSchema.optional(),
+  siteChecks: crawlSiteChecksSchema.optional(),
   agentDiscovery: agentDiscoverySchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),

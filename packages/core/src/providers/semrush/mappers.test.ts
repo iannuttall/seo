@@ -34,8 +34,8 @@ test('Semrush keyword rows keep missing and invalid numbers unavailable', () => 
         cpc: undefined,
         competition: undefined,
         position: undefined,
-        url: '',
-        domain: '',
+        url: undefined,
+        domain: undefined,
       },
       {
         phrase: 'zero query',

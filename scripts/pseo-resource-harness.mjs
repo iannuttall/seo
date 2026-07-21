@@ -1,11 +1,32 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 
 const MEBIBYTE = 1024 * 1024
+const HEAP_LIMIT_MIB = 192
+const WORKER_ENV = 'SEO_PSEO_RESOURCE_HARNESS_WORKER'
 const PAGE_COUNT = 8_000
 const QUERY_PAGE_COUNT = 50_000
 const MAX_DURATION_MS = 10_000
 const MAX_RSS_GROWTH = 384 * MEBIBYTE
 const MAX_OUTPUT_BYTES = MEBIBYTE
+
+if (process.env[WORKER_ENV] !== '1') {
+  const child = spawnSync(
+    process.execPath,
+    [
+      ...process.execArgv,
+      `--max-old-space-size=${HEAP_LIMIT_MIB}`,
+      fileURLToPath(import.meta.url),
+    ],
+    {
+      env: { ...process.env, [WORKER_ENV]: '1' },
+      stdio: 'inherit',
+    },
+  )
+  if (child.error) throw child.error
+  process.exit(child.status ?? 1)
+}
 
 const {
   buildPseoAuditReportFromRows,
@@ -92,6 +113,7 @@ console.log(
     report: 'pseo-opportunities',
     queryPageRows: queryPageRows.length,
     pageRows: pageRows.length,
+    heapLimitMiB: HEAP_LIMIT_MIB,
     durationMs: Math.round(durationMs),
     peakRssGrowthMiB: Number((rssGrowthBytes / MEBIBYTE).toFixed(1)),
     bytesRead: 0,

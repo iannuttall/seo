@@ -1,7 +1,7 @@
 {
   "name": "seo",
-  "version": "0.2.18",
-  "description": "The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and Google Analytics data.",
+  "version": "0.2.19",
+  "description": "The SEO command for AI agents. Audit sites and research search opportunities with local, evidence-backed reports.",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Ian Nuttall",
@@ -18,6 +18,8 @@
     "seo",
     "search-console",
     "google-analytics",
+    "keyword-research",
+    "competitor-analysis",
     "crawler",
     "cli",
     "mcp"

@@ -291,6 +291,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
+    database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
     ensureColumn(

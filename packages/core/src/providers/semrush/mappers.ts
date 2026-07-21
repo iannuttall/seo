@@ -1,5 +1,16 @@
 import type { KeywordOverview, KeywordRow } from '../../types.js'
 
+function optionalFiniteNumber(value: string | undefined): number | undefined {
+  if (value === undefined || value.trim() === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function optionalText(value: string | undefined): string | undefined {
+  const normalized = value?.trim()
+  return normalized ? normalized : undefined
+}
+
 export function mapOverview(rows: string[][]): KeywordOverview {
   const [header, first] = rows
   if (!header || !first) {
@@ -11,11 +22,11 @@ export function mapOverview(rows: string[][]): KeywordOverview {
   )
   return {
     phrase: record.Ph ?? '',
-    volume: Number(record.Nq ?? 0) || undefined,
-    cpc: Number(record.Cp ?? 0) || undefined,
-    competition: Number(record.Co ?? 0) || undefined,
-    difficulty: Number(record.Kd ?? 0) || undefined,
-    results: Number(record.Nr ?? 0) || undefined,
+    volume: optionalFiniteNumber(record.Nq),
+    cpc: optionalFiniteNumber(record.Cp),
+    competition: optionalFiniteNumber(record.Co),
+    difficulty: optionalFiniteNumber(record.Kd),
+    results: optionalFiniteNumber(record.Nr),
   }
 }
 
@@ -31,13 +42,13 @@ export function mapKeywordRows(rows: string[][]): KeywordRow[] {
     )
     return {
       phrase: record.Ph ?? '',
-      volume: Number(record.Nq ?? 0) || undefined,
-      difficulty: Number(record.Kd ?? 0) || undefined,
-      cpc: Number(record.Cp ?? 0) || undefined,
-      competition: Number(record.Co ?? 0) || undefined,
-      url: record.Ur,
-      domain: record.Dn,
-      position: Number(record.Po ?? 0) || undefined,
+      volume: optionalFiniteNumber(record.Nq),
+      difficulty: optionalFiniteNumber(record.Kd),
+      cpc: optionalFiniteNumber(record.Cp),
+      competition: optionalFiniteNumber(record.Co),
+      url: optionalText(record.Ur),
+      domain: optionalText(record.Dn),
+      position: optionalFiniteNumber(record.Po),
     }
   })
 }

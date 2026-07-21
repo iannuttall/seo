@@ -18,7 +18,7 @@ import {
   markRankTasksPosting,
   rankTrackingTasks,
   recoverRankTaskReceipt,
-  saveRankObservation,
+  saveRankObservations,
   failRankTrackingTask,
   startRankTrackingRun,
   targetMatchesDomain,
@@ -177,16 +177,12 @@ async function collectLive(
   dependencies: RankTrackingExecutionDependencies,
 ): Promise<{ collected: number; warnings: string[] }> {
   const tasks = rankTrackingTasks(run.id, ['pending'], dependencies)
-  let collected = 0
+  const observations: RankObservation[] = []
   const warnings: string[] = []
   await inBoundedParallel(tasks, 3, async (task) => {
     try {
       const evidence = await collector.live(requestForTask(configuration, task))
-      saveRankObservation(
-        observationFromEvidence(configuration, task, evidence),
-        dependencies,
-      )
-      collected += 1
+      observations.push(observationFromEvidence(configuration, task, evidence))
     } catch (error) {
       const mapped = providerError(error)
       failRankTrackingTask(
@@ -198,7 +194,8 @@ async function collectLive(
       )
     }
   })
-  return { collected, warnings }
+  saveRankObservations(observations, dependencies)
+  return { collected: observations.length, warnings }
 }
 
 async function collectQueued(
@@ -218,7 +215,7 @@ async function collectQueued(
     )
   }
   const warnings: string[] = []
-  let collected = 0
+  const observations: RankObservation[] = []
   let posted = 0
   let ready: Awaited<ReturnType<NonNullable<RankTrackingCollector['ready']>>> =
     []
@@ -251,11 +248,7 @@ async function collectQueued(
         request: requestForTask(configuration, task),
       })
       if (!evidence) return
-      saveRankObservation(
-        observationFromEvidence(configuration, task, evidence),
-        dependencies,
-      )
-      collected += 1
+      observations.push(observationFromEvidence(configuration, task, evidence))
     } catch (error) {
       const mapped = providerError(error)
       warnings.push(
@@ -263,6 +256,7 @@ async function collectQueued(
       )
     }
   })
+  saveRankObservations(observations, dependencies)
 
   const pending = rankTrackingTasks(run.id, ['pending'], dependencies)
   for (
@@ -322,7 +316,7 @@ async function collectQueued(
       break
     }
   }
-  return { collected, posted, warnings }
+  return { collected: observations.length, posted, warnings }
 }
 
 function due(configuration: RankTrackingConfiguration, now: Date): boolean {

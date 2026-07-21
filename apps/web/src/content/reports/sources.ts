@@ -41,6 +41,11 @@ export const reportSources = {
     label: 'Google JavaScript SEO guidance',
     url: 'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics',
   },
+  'keyword-provider-metrics': {
+    key: 'keyword-provider-metrics',
+    label: 'DataForSEO keyword overview API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-keyword_overview-live/',
+  },
   redirects: {
     key: 'redirects',
     label: 'Google guidance for redirects',

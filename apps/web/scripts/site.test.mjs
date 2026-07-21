@@ -202,7 +202,7 @@ test('every content page has one deterministic Markdown alternative', () => {
   assert.equal(
     manifest.pages.filter((page) => page.htmlPath.startsWith('/docs/reports/'))
       .length,
-    56,
+    routeReportIds.length,
   )
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),

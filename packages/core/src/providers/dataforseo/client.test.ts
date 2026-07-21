@@ -135,7 +135,12 @@ function spendLimits(
 }
 
 function keywordOverviewFixture(
-  input: { statusCode?: number; tasksError?: number; cost?: number } = {},
+  input: {
+    statusCode?: number
+    tasksError?: number
+    cost?: number
+    items?: unknown[]
+  } = {},
 ) {
   const statusCode = input.statusCode ?? 20000
   return {
@@ -156,7 +161,7 @@ function keywordOverviewFixture(
             ? [
                 {
                   items_count: 2,
-                  items: [
+                  items: input.items ?? [
                     { keyword: 'first query' },
                     { keyword: 'second query' },
                   ],
@@ -380,6 +385,105 @@ test('keyword overview reserves estimated spend, records actual cost, and caches
     false,
   )
   assert.equal(String(cache.credential_scope).length, 64)
+})
+
+test('keyword overview accepts a named location and requests SERP evidence', async () => {
+  let paidBody: unknown
+  const client = new DataForSeoClient({
+    database: database(),
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url, init) => {
+      if (String(url).includes('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      paidBody = JSON.parse(String(init?.body))
+      return new Response(JSON.stringify(keywordOverviewFixture()))
+    },
+  })
+
+  await client.keywordOverview(
+    keywordRequest({
+      locationCode: undefined,
+      locationName: 'United Kingdom',
+      includeSerpInfo: true,
+    }),
+  )
+  assert.deepEqual(paidBody, [
+    {
+      keywords: ['first query', 'second query'],
+      language_code: 'en',
+      location_name: 'United Kingdom',
+      include_serp_info: true,
+    },
+  ])
+})
+
+test('keyword overview accepts bounded extended monthly histories', async () => {
+  const monthlySearches = Array.from({ length: 36 }, (_, index) => ({
+    year: 2023 + Math.floor(index / 12),
+    month: (index % 12) + 1,
+    search_volume: index,
+  }))
+  const client = new DataForSeoClient({
+    database: database(),
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url) =>
+      new Response(
+        JSON.stringify(
+          String(url).includes('/appendix/user_data')
+            ? userDataFixture()
+            : keywordOverviewFixture({
+                items: [
+                  {
+                    keyword: 'first query',
+                    keyword_info: { monthly_searches: monthlySearches },
+                  },
+                ],
+              }),
+        ),
+      ),
+  })
+
+  const result = await client.keywordOverview(
+    keywordRequest({ keywords: ['first query'] }),
+  )
+  const rows =
+    result.response.tasks[0]?.result?.[0]?.items?.[0]?.keyword_info
+      ?.monthly_searches
+  assert.equal(rows?.length, 36)
+})
+
+test('keyword overview rejects invalid keyword and location bounds before acquisition', async () => {
+  let calls = 0
+  const client = new DataForSeoClient({
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async () => {
+      calls += 1
+      return new Response('{}')
+    },
+  })
+
+  await assert.rejects(
+    client.keywordOverview(
+      keywordRequest({
+        keywords: ['one two three four five six seven eight nine ten eleven'],
+      }),
+    ),
+    /at most 80 characters and 10 words/,
+  )
+  await assert.rejects(
+    client.keywordOverview(keywordRequest({ locationName: 'United States' })),
+    /exactly one location code or location name/,
+  )
+  await assert.rejects(
+    client.keywordOverview(
+      keywordRequest({ locationCode: undefined, locationName: undefined }),
+    ),
+    /exactly one location code or location name/,
+  )
+  assert.equal(calls, 0)
 })
 
 test('keyword overview blocks paid acquisition when pricing or budget evidence is unsafe', async () => {

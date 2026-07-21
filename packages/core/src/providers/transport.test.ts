@@ -28,11 +28,32 @@ test('provider transport validates JSON before returning it', async () => {
   await assert.rejects(
     providerRequestJson({
       ...base,
-      fetch: async () => new Response('{"value":"no"}'),
-      schema: z.object({ value: z.number() }).strict(),
+      fetch: async () =>
+        new Response(
+          '{"tasks":[{"result":[{"items":[{"cost":"do-not-log-this-value"}]}]}]}',
+        ),
+      schema: z
+        .object({
+          tasks: z.array(
+            z.object({
+              result: z.array(
+                z.object({ items: z.array(z.object({ cost: z.number() })) }),
+              ),
+            }),
+          ),
+        })
+        .strict(),
     }),
-    (error) =>
-      error instanceof ProviderError && error.code === 'invalid-response',
+    (error) => {
+      assert.ok(error instanceof ProviderError)
+      assert.equal(error.code, 'invalid-response')
+      assert.match(
+        error.message,
+        /tasks\[0\]\.result\[0\]\.items\[0\]\.cost \(invalid_type\)/,
+      )
+      assert.doesNotMatch(error.message, /do-not-log-this-value/)
+      return true
+    },
   )
 })
 

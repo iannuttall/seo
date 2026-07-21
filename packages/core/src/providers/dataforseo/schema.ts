@@ -1,10 +1,20 @@
 import { z } from 'zod'
 
+const MAX_PROVIDER_MONTHLY_SEARCH_ROWS = 120
+
 const nullableNumber = z.number().finite().nullable().optional()
 const nullableCount = z
   .union([z.number().finite(), z.string().trim().min(1)])
   .nullable()
   .optional()
+
+const monthlySearchSchema = z
+  .object({
+    year: z.number().int(),
+    month: z.number().int(),
+    search_volume: z.number().finite().nullable().optional(),
+  })
+  .passthrough()
 
 const keywordOverviewItemSchema = z
   .object({
@@ -14,6 +24,11 @@ const keywordOverviewItemSchema = z
         search_volume: nullableNumber,
         cpc: nullableNumber,
         competition: nullableNumber,
+        monthly_searches: z
+          .array(monthlySearchSchema)
+          .max(MAX_PROVIDER_MONTHLY_SEARCH_ROWS)
+          .nullish(),
+        last_updated_time: z.string().trim().min(1).nullable().optional(),
       })
       .nullish(),
     keyword_properties: z
@@ -73,6 +88,14 @@ export const dataForSeoKeywordOverviewResponseSchema = z
 
 export type DataForSeoKeywordOverviewResponse = z.infer<
   typeof dataForSeoKeywordOverviewResponseSchema
+>
+
+export type DataForSeoKeywordOverviewItem = NonNullable<
+  NonNullable<
+    NonNullable<
+      DataForSeoKeywordOverviewResponse['tasks'][number]['result']
+    >[number]['items']
+  >[number]
 >
 
 export function firstKeywordOverviewItem(

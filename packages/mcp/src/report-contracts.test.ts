@@ -123,6 +123,80 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
   }
 })
 
+test('keyword metrics bounds market and keyword acquisition inputs', () => {
+  const schema = reportSchema('keyword-metrics')
+  assert.equal(
+    schema.safeParse({
+      keywords: ['seo audit tool', 'technical seo audit'],
+      countryCode: 'GB',
+      languageCode: 'en-GB',
+      location: { name: 'London,England,United Kingdom' },
+      device: 'mobile',
+      provider: 'dataforseo',
+    }).success,
+    true,
+  )
+  for (const input of [
+    { keywords: [], countryCode: 'GB', languageCode: 'en' },
+    {
+      keywords: Array.from({ length: 51 }, (_, index) => `keyword ${index}`),
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      keywords: ['one two three four five six seven eight nine ten eleven'],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    { keywords: ['keyword'], countryCode: 'GBR', languageCode: 'en' },
+    { keywords: ['keyword'], countryCode: 'GB', languageCode: 'english' },
+    {
+      keywords: ['keyword'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: {},
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('keyword opportunities keeps external acquisition explicit and bounded', () => {
+  const schema = reportSchema('keyword-opportunities')
+  assert.equal(
+    schema.safeParse({ site: 'sc-domain:example.com' }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: {
+        code: 1006886,
+        name: 'London,England,United Kingdom',
+      },
+      limit: 25,
+      keywordLimit: 50,
+      queriesPerPage: 5,
+      clusterLimit: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', includeExternal: true },
+    { site: 'sc-domain:example.com', countryCode: 'GB', languageCode: 'en' },
+    { site: 'sc-domain:example.com', provider: 'dataforseo' },
+    { site: 'sc-domain:example.com', limit: 26 },
+    { site: 'sc-domain:example.com', keywordLimit: 51 },
+    { site: 'sc-domain:example.com', queriesPerPage: 6 },
+    { site: 'sc-domain:example.com', clusterLimit: 21 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('server log analysis bounds streamed work and returned rows', () => {
   const schema = reportSchema('server-log-analysis')
   assert.equal(

@@ -21,6 +21,7 @@ export type ReportSourceKey =
   | 'google-analytics-acquisition'
   | 'google-updates'
   | 'javascript'
+  | 'keyword-provider-metrics'
   | 'redirects'
   | 'robots'
   | 'robots-meta'

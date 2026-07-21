@@ -33,6 +33,10 @@ agent instructions.
 - The product is local first. Do not add a required hosted backend, account,
   database, job queue, or telemetry service.
 - Reports, tokens, project profiles, and caches stay on the user's machine.
+- Optional research providers extend first-party evidence with keyword,
+  result, domain, competitor, and link estimates. They must never replace or
+  silently blend with Search Console, Google Analytics, crawl, or live result
+  evidence.
 - A future hosted API or remote MCP may live in this monorepo and deploy to
   Cloudflare, but local CLI and library use must remain first class.
 - Report accuracy, deterministic output, and simple onboarding matter more than
@@ -220,6 +224,10 @@ Every report must be technically defensible and useful to another program.
 - Remove real duplication, but do not merge reports that need different source
   semantics or provenance.
 - Keep terminal output concise and action oriented.
+- Keep provider-neutral report and storage contracts inside the package.
+  Provider adapters map external fields, capabilities, costs, and errors at the
+  boundary. A report must not expose a provider payload or require a
+  provider-named implementation type.
 - Use ASCII unless the file already needs non-ASCII text.
 - Keep dependencies lean. Prefer a small, tested local implementation when the
   behavior is stable and importing a package would add more surface than value.

@@ -23,7 +23,7 @@ export const reportCategoryEditorial = [
     id: 'opportunities',
     label: 'Search opportunities',
     introduction:
-      'Turn existing search visibility into limited page, query, and link review queues.',
+      'Combine first-party visibility with bounded keyword, domain, competitor, page, and link research.',
   },
   {
     id: 'crawl',

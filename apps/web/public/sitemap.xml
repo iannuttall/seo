@@ -29,11 +29,13 @@
   <url><loc>https://seoskill.dev/docs/reports/cannibalisation</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/community-intent</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/compare-crawls</loc></url>
+  <url><loc>https://seoskill.dev/docs/reports/competitor-keyword-gap</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/content-optimization</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/crawl-diff</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/site-crawl</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/ctr-underperformers</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/decaying-pages</loc></url>
+  <url><loc>https://seoskill.dev/docs/reports/domain-overview</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/setup-check</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/entity-readiness</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/explain-crawl-issue</loc></url>
@@ -66,11 +68,14 @@
   <url><loc>https://seoskill.dev/docs/reports/query-clusters</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/quick-wins</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/rank-tracking</loc></url>
+  <url><loc>https://seoskill.dev/docs/reports/ranked-keywords</loc></url>
+  <url><loc>https://seoskill.dev/docs/reports/ranking-pages</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/redirect-trace</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/narrative-report</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/second-page</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/segment-impact</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/serp-results</loc></url>
+  <url><loc>https://seoskill.dev/docs/reports/serp-competitors</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/striking-distance</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/seo-to-ai-query</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/top-fixes</loc></url>

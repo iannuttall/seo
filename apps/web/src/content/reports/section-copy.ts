@@ -21,6 +21,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Review the wording of the returned queries and the result formats already serving them. Use that evidence to decide whether the page needs first-hand experience, comparison detail or a different content format.',
   'compare-crawls':
     'Confirm that both crawls covered comparable pages before calling a difference a regression or recovery. Audit representative changes directly, then use affected URLs when the same rule spans a larger group.',
+  'competitor-keyword-gap':
+    'Start with relevant candidates whose source coverage is usable, then inspect the current results and representative pages. Complete the data-source checks before approving a programmatic template, and keep no new page as a valid outcome.',
   'content-optimization':
     "Choose the gaps supported by returned queries and the page's existing purpose. Update the page around a focused intent, then measure the same query and page set after enough Search Console data has arrived.",
   'crawl-diff':
@@ -31,6 +33,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Inspect the live search result and query intent before rewriting a title or description. Record the change, leave the page long enough to collect comparable data and check the same query set again.',
   'decaying-pages':
     'Confirm that the decline survives a matched date and segment comparison before refreshing the page. Use the page opportunity report to choose a supported update, then measure the change against the same demand.',
+  'domain-overview':
+    'Use the footprint to choose a narrower domain, page or keyword investigation. Keep provider estimates separate from Search Console measurements, and check current results before changing priorities.',
   'setup-check':
     'Fix the first failed setup check because later failures may be a consequence of it. Run the setup check again after each change until the saved project and Google connection pass together.',
   'entity-readiness':
@@ -67,6 +71,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Check important crawler errors against the original log and current server configuration. Confirm crawler identity separately when the decision depends on more than the observed user-agent string.',
   'serp-results':
     'Open representative ranking pages and confirm the query intent. Match market, device, query and observation time before comparing the exact snapshot with first-party average position or a later check.',
+  'serp-competitors':
+    'Review every unknown site type before choosing competitors for deeper research. Keep publishers, directories, communities and marketplaces distinct, then compare a small relevant set instead of treating result overlap as business equivalence.',
   'crawl-history':
     'Choose snapshots with the date and crawl scope needed for the decision. Open one report for a focused investigation or compare two compatible runs when you need evidence of change.',
   'crawler-rules':
@@ -97,6 +103,10 @@ export const reportNextStepIntros: Record<string, string> = {
     'Inspect the current result and page intent before changing its snippet. Record the exact title or description update and compare the same queries after a complete data window.',
   'rank-tracking':
     'Check market, device, depth, coverage and cost before reading the position changes. Inspect changed ranking URLs and add Search Console evidence before deciding that a movement deserves work.',
+  'ranked-keywords':
+    'Shortlist terms whose provider row, ranking page and first-party match state support another look. Check current results before changing a page, and do not treat absence from retained Search Console rows as zero.',
+  'ranking-pages':
+    'Open representative pages from each useful path pattern and inspect their queries, fields, source data and page value. Run the programmatic audit before expanding a first-party template, and research the data source before proposing a new one.',
   'redirect-trace':
     "Fix loops, unnecessary hops and destinations that do not match the original URL's purpose. Update internal links to the final URL and trace the path again after deployment.",
   'narrative-report':

@@ -26,7 +26,7 @@ const faqs = [
   {
     question: 'Does the SEO skill include an AI agent?',
     answer:
-      'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work, and the CLI provides the crawl data, Search Console data, Google Analytics data, and report evidence.',
+      'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work. The CLI supplies crawl, Search Console, Google Analytics, and optional research-provider evidence.',
   },
   {
     question: 'Why not build another SEO dashboard?',
@@ -47,6 +47,11 @@ const faqs = [
     question: 'Is Google Analytics required?',
     answer:
       'No. Crawls and Search Console reports work without Google Analytics. Connect it when traffic, landing-page, engagement, or conversion context would change how you prioritise the work.',
+  },
+  {
+    question: 'Do keyword and competitor reports cost money?',
+    answer:
+      'Some optional provider requests are charged by the provider. The CLI shows estimated and actual cost, uses a local cache, and enforces local daily, monthly, request, and row limits. Crawl and Google reports do not require a research provider.',
   },
   {
     question: 'Does my site data leave my machine?',
@@ -103,9 +108,9 @@ const faqs = [
             The only SEO skill your agent needs
           </h1>
           <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
-            One SEO skill and {reportCountLabel} audit tools for AI agents to fix
-            issues, measure performance, and grow your organic and AI search
-            visibility.
+            One SEO skill and {reportCountLabel} reports and tools for AI agents
+            to fix issues, measure performance, research search opportunities,
+            and improve organic and AI search visibility.
           </p>
         </div>
         <InstallPicker />
@@ -122,8 +127,8 @@ const faqs = [
               Reports for a complete SEO audit
             </h2>
             <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-panel-foreground/70 sm:text-xl sm:leading-8">
-              {reportCountLabel} reports and tools across crawl health, Search Console and Google Analytics,
-              opportunities, AI readiness, and monitoring.
+              {reportCountLabel} reports and tools across crawl health, first-party performance,
+              keywords, competitors, programmatic SEO, AI readiness, and monitoring.
             </p>
           </div>
           <div class="grid grid-cols-1 gap-x-10 gap-y-8 sm:auto-rows-fr sm:grid-cols-2">

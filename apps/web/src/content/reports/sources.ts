@@ -26,6 +26,26 @@ export const reportSources = {
     label: 'Google guidance for crawlable links',
     url: 'https://developers.google.com/search/docs/crawling-indexing/links-crawlable',
   },
+  'domain-provider-competitors': {
+    key: 'domain-provider-competitors',
+    label: 'DataForSEO SERP competitors API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-serp_competitors-live/',
+  },
+  'domain-provider-keywords': {
+    key: 'domain-provider-keywords',
+    label: 'DataForSEO ranked keywords API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-ranked_keywords-live/',
+  },
+  'domain-provider-overview': {
+    key: 'domain-provider-overview',
+    label: 'DataForSEO domain rank overview API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-domain_rank_overview-live/',
+  },
+  'domain-provider-pages': {
+    key: 'domain-provider-pages',
+    label: 'DataForSEO relevant pages API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-relevant_pages-live/',
+  },
   'google-analytics-acquisition': {
     key: 'google-analytics-acquisition',
     label: 'Google Analytics traffic acquisition guidance',

@@ -8,7 +8,7 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and Google Analytics data.
+  The only SEO skill your agent needs. Audit sites, find search opportunities, research competitors, and verify the work from one local CLI and MCP server.
 </p>
 
 <p align="center">
@@ -38,17 +38,18 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-The `seo` command runs a full SEO audit from your terminal, turning a local
-crawl and your own search data into work you can inspect and ship. Find
-technical blockers, recover search demand, improve pages already close to more
-clicks, and catch regressions after a release.
+The `seo` command turns crawl, Search Console, Google Analytics, and optional
+research-provider data into work you can inspect and ship. Find technical
+blockers, recover existing demand, research new keywords and competitors,
+review programmatic page patterns, and catch regressions after a release.
 
 ## Who this is for
 
 - People running their own sites who want a clear audit and a ranked list of
   fixes, without learning a heavy dashboard.
-- AI agents that need real crawl, Search Console, and Google Analytics evidence through MCP
-  and one packaged SEO skill instead of screenshots or guesses.
+- AI agents that need real crawl, Search Console, Google Analytics, keyword,
+  result, domain, competitor, and link evidence through MCP and one packaged
+  SEO skill instead of screenshots or guesses.
 - Developers who want to embed the same report engine in a script, a CI job, or
   a TypeScript app.
 
@@ -66,6 +67,10 @@ The setup walks you through Google sign-in, your Search Console property, an
 optional Google Analytics property, and a local project profile. Public releases can include
 the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
+
+Research providers are optional and connected separately. Start with the main
+report, then add DataForSEO when keyword estimates, live results, domain
+footprints, ranking pages, or competitor research would change the decision.
 
 That is the normal path. The `seo` command is then available in every terminal,
 script, CI job, and local MCP client on the machine.
@@ -121,6 +126,13 @@ Use `seo help all` for the longer command list.
   to verify the change.
 - Save and compare crawl reports without running the same crawl again.
 - Measure SEO changes with matched before and after Search Console windows.
+- Discover keyword ideas, compare market estimates, inspect current results,
+  and keep useful terms in local saved sets.
+- Find recurring search competitors, inspect their ranking pages, and filter
+  possible keyword gaps through first-party evidence and existing provider
+  ranks.
+- Detect repeated first-party and competitor page patterns, then return bounded
+  data-source research briefs before proposing a new programmatic template.
 - Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
   compact local MCP surface.
 
@@ -172,6 +184,61 @@ pretend to know traffic, queries, or rankings until you add a Search Console
 property with `seo start`.
 
 Run `seo help` for the short path or `seo help all` for the full command list.
+
+## Research keywords and competitors
+
+Connect DataForSEO when you need independent market estimates or competitor
+evidence. The connection is local and separate from Google sign-in:
+
+```sh
+seo providers dataforseo connect
+seo providers dataforseo status --check
+seo providers dataforseo limits
+```
+
+Credentials use the system keychain when available, with a private local file
+fallback. Paid requests read current endpoint prices, reserve estimated spend
+before acquisition, record actual cost, and use local daily, monthly, request,
+and row limits. Cached results avoid repeating paid work during their retention
+window.
+
+Use the existing report catalog. There are no separate provider-named report
+commands:
+
+```sh
+seo reports describe keyword-research --json
+seo reports describe domain-overview --json
+seo reports describe competitor-keyword-gap --json
+
+seo reports run domain-overview \
+  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
+  --json
+```
+
+The research flow now covers:
+
+- `keyword-research`, `keyword-metrics`, and `saved-keywords` for discovery,
+  estimates, and local persistence;
+- `serp-results` and `rank-tracking` for current or repeated exact market and
+  device-specific observations;
+- `domain-overview`, `ranked-keywords`, and `ranking-pages` for country-level
+  domain, term, page, and repeated path evidence;
+- `serp-competitors` for finding domains that recur across an explicit keyword
+  set without guessing whether they are a business, publisher, directory,
+  community, or marketplace;
+- `competitor-keyword-gap` for comparing up to three relevant domains with
+  retained Search Console themes, the site's provider-observed rankings, and
+  programmatic page patterns.
+
+Provider traffic, volume, difficulty, intent, visibility, and ranking history
+are estimates. Search Console remains the evidence for measured search
+performance on a property you own. A live result snapshot remains the evidence
+for one query, market, device, and observation time. Reports can combine these
+sources without blending their meanings or turning a missing row into zero.
+
+Read the [research provider guide](https://seoskill.dev/docs/research-providers)
+for setup, costs, caching, country-level limits, competitor classification, and
+programmatic data-source checks.
 
 Google Analytics commands sit under their provider namespace. List the properties available
 to the connected account, then run a report with the property you need:
@@ -376,8 +443,8 @@ drift.
 ## Use it with AI agents
 
 Your agent carries one short SEO skill, and the CLI and MCP server do the
-heavy lifting. The skill teaches an agent how to discover the 50+ audit and
-report tools at runtime, and the agent asks the CLI for the detail on each
+heavy lifting. The skill teaches an agent how to discover the full audit and
+research catalog at runtime, and the agent asks the CLI for the detail on each
 tool only when it is about to run it. You get the whole toolkit without fifty
 skill files sitting in the context window on every session.
 
@@ -535,8 +602,10 @@ local technical crawl with no Google connection at all.
 ### What does it cost?
 
 The `seo` package is free and open source under Apache-2.0. It calls Google APIs
-you already have access to, so there is no separate subscription. Your own API
-quotas still apply.
+you already have access to, so the core crawl and Google workflows need no
+separate subscription. Optional research providers can charge for API
+requests. Their estimated and actual costs, local spend limits, cache state,
+and request bounds stay visible in each supported report.
 
 ### How is this different from a paid SEO tool?
 
@@ -556,6 +625,7 @@ vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 - [CLI commands](https://seoskill.dev/docs/cli)
 - [Crawler](https://seoskill.dev/docs/crawler)
 - [Reports and data](https://seoskill.dev/docs/reports)
+- [Keyword and competitor research](https://seoskill.dev/docs/research-providers)
 - [MCP and agents](https://seoskill.dev/docs/agents)
 - [AI-search evidence](https://seoskill.dev/docs/ai-search)
 - [Privacy policy](https://seoskill.dev/privacy)

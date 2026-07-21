@@ -1,14 +1,15 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, Search Console or Google Analytics questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to 50+ evidence-backed local reports through the SEO CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, keyword research, competitors, backlinks, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, programmatic SEO, local search, Search Console or Google Analytics questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to evidence-backed local reports through the SEO CLI and MCP server.
 ---
 
 # seo
 
 `seo` is a local CLI, MCP server, and report engine using crawl, Search Console,
-Google Analytics, and optional Bing evidence. Reports keep observations,
-findings, caveats, and provenance separate. Data stays local. Discover reports
-at runtime instead of memorising them.
+Google Analytics, optional Bing evidence, and optional research providers.
+Reports keep observations, estimates, findings, caveats, costs, and provenance
+separate. Data stays local. Discover reports at runtime instead of memorising
+them.
 
 ## Discover, describe, run
 
@@ -54,6 +55,9 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 | AI agent readiness for a content site | `agent-readiness`, `ai-readiness`, `entity-readiness`, `llms-txt-audit` |
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
+| Research keywords and current results | `keyword-research`, `keyword-metrics`, `saved-keywords`, `serp-results` |
+| Find search competitors and plausible gaps | `serp-competitors`, `domain-overview`, `ranking-pages`, `ranked-keywords`, `competitor-keyword-gap` |
+| Research programmatic SEO opportunities | `keyword-opportunities`, `pseo-opportunities`, `ranking-pages`, `competitor-keyword-gap`, then `pseo-audit` for an existing site |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
 | Track exact keyword positions | `rank-tracking` for a saved set and fixed market/device; `serp-results` for one current query |
 | Review Bing traffic, crawl, query, and page insights | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
@@ -104,6 +108,9 @@ recommend a User-Agent-only bypass.
 - If a report returns no rows, say so plainly.
 - Intentional controls such as `noindex`, canonicals, and robots rules are
   observations until the user confirms they are unintended.
+- Provider traffic, volume, difficulty, visibility, intent, authority, and
+  ranking history are estimates. Keep them separate from Search Console,
+  Google Analytics, crawl, and live result evidence.
 
 ## Beyond the report catalog
 

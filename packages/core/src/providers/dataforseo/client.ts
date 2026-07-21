@@ -35,6 +35,9 @@ import type {
   DataForSeoKeywordOverviewSnapshot,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
+  DataForSeoSerpTaskInput,
+  DataForSeoSerpTaskPostSnapshot,
+  DataForSeoSerpReadyTask,
 } from './client-types.js'
 import type { DataForSeoCredentials } from './credentials.js'
 import { readDataForSeoCredentials } from './credentials.js'
@@ -55,6 +58,10 @@ import {
   type DataForSeoSerpResponse,
   dataForSeoSerpResponseSchema,
 } from './serp-schema.js'
+import {
+  dataForSeoSerpTaskPostResponseSchema,
+  dataForSeoSerpTasksReadyResponseSchema,
+} from './serp-task-schema.js'
 
 const DEFAULT_BASE_URL = 'https://api.dataforseo.com/'
 const USER_DATA_PATH = 'v3/appendix/user_data'
@@ -65,6 +72,9 @@ const KEYWORD_DISCOVERY_PATHS = {
   suggestions: 'v3/dataforseo_labs/google/keyword_suggestions/live',
 } as const satisfies Record<KeywordDiscoverySource, string>
 const SERP_LIVE_ADVANCED_PATH = 'v3/serp/google/organic/live/advanced'
+const SERP_TASK_POST_PATH = 'v3/serp/google/organic/task_post'
+const SERP_TASKS_READY_PATH = 'v3/serp/google/organic/tasks_ready'
+const SERP_TASK_GET_ADVANCED_PATH = 'v3/serp/google/organic/task_get/advanced/'
 const DEFAULT_TIMEOUT_MS = 15_000
 const MAX_USER_DATA_RESPONSE_BYTES = 5 * 1024 * 1024
 const DEFAULT_KEYWORD_OVERVIEW_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -77,6 +87,69 @@ const MAX_KEYWORD_WORDS = 10
 const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
 const MAX_SERP_DEPTH = 100
+const MAX_SERP_TASKS_PER_POST = 100
+
+function validateSerpInput(
+  input: Omit<DataForSeoSerpRequest, 'refresh' | 'context'>,
+): { keyword: string; locationName: string | undefined } {
+  const keyword = input.keyword.trim().replace(/\s+/gu, ' ')
+  if (
+    keyword.length < 1 ||
+    keyword.length > MAX_KEYWORD_CHARACTERS ||
+    keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
+    })
+  }
+  if (
+    /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
+      keyword,
+    )
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message:
+        'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
+    })
+  }
+  if (
+    !Number.isSafeInteger(input.depth) ||
+    input.depth < 1 ||
+    input.depth > MAX_SERP_DEPTH
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
+    })
+  }
+  if (!/^[a-z]{2}$/.test(input.languageCode)) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: 'DataForSEO language code must contain two lowercase letters.',
+    })
+  }
+  const locationName = input.locationName?.trim()
+  if ((input.locationCode !== undefined) === Boolean(locationName)) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message:
+        'DataForSEO SERP snapshots require exactly one location code or location name.',
+    })
+  }
+  return { keyword, locationName }
+}
 
 export type {
   DataForSeoAccountSnapshot,
@@ -144,6 +217,10 @@ function keywordDiscoveryPrices(
 
 function serpLiveAdvancedPrice(account: UserDataAccount): DataForSeoUnitPrice {
   return unitPrice(account.price?.serp?.live?.advanced?.priority_normal)
+}
+
+function serpTaskPostPrice(account: UserDataAccount): DataForSeoUnitPrice {
+  return unitPrice(account.price?.serp?.task_post?.priority_normal)
 }
 
 function taskErrorCode(
@@ -372,6 +449,7 @@ export class DataForSeoClient {
       keywordOverviewPrice: keywordOverviewPrice(account),
       keywordDiscoveryPrices: keywordDiscoveryPrices(account),
       serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
+      serpTaskPostPrice: serpTaskPostPrice(account),
       backlinksSubscriptionExpiresAt:
         account.backlinks_subscription_expiry_date ?? null,
       aiMentionsSubscriptionExpiresAt:
@@ -847,62 +925,7 @@ export class DataForSeoClient {
   async serpLive(
     input: DataForSeoSerpRequest,
   ): Promise<DataForSeoSerpSnapshot> {
-    const keyword = input.keyword.trim()
-    if (
-      keyword.length < 1 ||
-      keyword.length > MAX_KEYWORD_CHARACTERS ||
-      keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
-      })
-    }
-    if (
-      /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
-        keyword,
-      )
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message:
-          'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
-      })
-    }
-    if (
-      !Number.isSafeInteger(input.depth) ||
-      input.depth < 1 ||
-      input.depth > MAX_SERP_DEPTH
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
-      })
-    }
-    if (!/^[a-z]{2}$/.test(input.languageCode)) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: 'DataForSEO language code must contain two lowercase letters.',
-      })
-    }
-    const locationName = input.locationName?.trim()
-    if ((input.locationCode !== undefined) === Boolean(locationName)) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message:
-          'DataForSEO SERP snapshots require exactly one location code or location name.',
-      })
-    }
+    const { keyword, locationName } = validateSerpInput(input)
     const request = {
       keyword,
       language_code: input.languageCode,
@@ -927,5 +950,269 @@ export class DataForSeoClient {
       refresh: input.refresh,
       rowCount: serpRows,
     })
+  }
+
+  async serpTaskPost(input: {
+    tasks: DataForSeoSerpTaskInput[]
+    context: ProviderRequestContext
+  }): Promise<DataForSeoSerpTaskPostSnapshot> {
+    if (
+      input.tasks.length < 1 ||
+      input.tasks.length > MAX_SERP_TASKS_PER_POST
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-post',
+        code: 'configuration',
+        message: `A queued SERP post requires 1 to ${MAX_SERP_TASKS_PER_POST} tasks.`,
+      })
+    }
+    const requests = input.tasks.map((task) => {
+      const validated = validateSerpInput(task)
+      return {
+        keyword: validated.keyword,
+        language_code: task.languageCode,
+        ...(task.locationCode !== undefined
+          ? { location_code: task.locationCode }
+          : { location_name: validated.locationName }),
+        device: task.device,
+        depth: task.depth,
+        tag: task.tag,
+        priority: 1,
+        remove_from_url: ['srsltid'],
+      }
+    })
+    const credentials = await this.getCredentials('serp-task-post')
+    const credentialScope = providerCredentialScope(
+      'dataforseo',
+      credentials.login,
+    )
+    const price = (
+      await this.pricingForCredentials(credentials, credentialScope)
+    ).serpTaskPostPrice
+    if (price.perRequestMicros === null || price.perResultMicros === null) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-post',
+        code: 'invalid-response',
+        message:
+          'DataForSEO Standard SERP pricing is unavailable, so queued tasks were not posted.',
+      })
+    }
+    const requestUnits = input.tasks.reduce(
+      (total, task) => total + Math.ceil(task.depth / 10),
+      0,
+    )
+    const estimatedCostMicros =
+      price.perRequestMicros * requestUnits +
+      price.perResultMicros * input.tasks.length
+    const reservation = reserveProviderSpend(
+      {
+        provider: 'dataforseo',
+        capability: 'serp-snapshot',
+        endpoint: SERP_TASK_POST_PATH,
+        projectId: input.context.projectId,
+        reportId: input.context.reportId,
+        reportRunId: input.context.reportRunId,
+        requestedRows: input.tasks.length,
+        estimatedCostMicros,
+      },
+      {
+        database: this.database,
+        limits: this.spendLimits,
+        now: this.now().getTime(),
+      },
+    )
+    let response
+    try {
+      response = await providerRequestJson({
+        provider: 'dataforseo',
+        operation: 'serp-task-post',
+        url: new URL(SERP_TASK_POST_PATH, this.baseUrl),
+        fetch: this.fetch,
+        maxResponseBytes: this.maxResponseBytes,
+        timeoutMs: this.timeoutMs,
+        retry: 'never',
+        schema: dataForSeoSerpTaskPostResponseSchema,
+        init: {
+          method: 'POST',
+          headers: {
+            authorization: this.authorization(credentials),
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(requests),
+        },
+      })
+    } catch (error) {
+      finalizeProviderSpend(
+        reservation.id,
+        {
+          provider: 'dataforseo',
+          state: 'failed',
+          actualCostMicros: null,
+          returnedRows: null,
+          taskIds: [],
+        },
+        {
+          database: this.database,
+          limits: this.spendLimits,
+          now: this.now().getTime(),
+        },
+      )
+      throw error
+    }
+    const taskReceipts = response.tasks.flatMap((task) =>
+      task.id && task.data?.tag
+        ? [{ providerTaskId: task.id, tag: task.data.tag }]
+        : [],
+    )
+    const taskIds = taskReceipts.map((receipt) => receipt.providerTaskId)
+    const expectedTags = new Set(input.tasks.map((task) => task.tag))
+    const returnedTags = new Set(taskReceipts.map((receipt) => receipt.tag))
+    const receiptsMatch =
+      expectedTags.size === input.tasks.length &&
+      returnedTags.size === expectedTags.size &&
+      [...expectedTags].every((tag) => returnedTags.has(tag))
+    const failedTasks = response.tasks.filter(
+      (task) => task.status_code !== 20100 || !task.id || !task.data?.tag,
+    )
+    const actualCostMicros = responseCostMicros(response)
+    const state =
+      failedTasks.length === 0 && response.tasks_error === 0
+        ? 'succeeded'
+        : failedTasks.length < response.tasks.length
+          ? 'partial'
+          : 'failed'
+    const spendNotice = finalizeProviderSpend(
+      reservation.id,
+      {
+        provider: 'dataforseo',
+        state,
+        actualCostMicros,
+        returnedRows: taskIds.length,
+        taskIds,
+      },
+      {
+        database: this.database,
+        limits: this.spendLimits,
+        now: this.now().getTime(),
+      },
+    )
+    if (
+      response.status_code !== 20000 ||
+      failedTasks.length > 0 ||
+      taskIds.length !== input.tasks.length ||
+      !receiptsMatch
+    ) {
+      const statusCode = failedTasks[0]?.status_code ?? response.status_code
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-post',
+        code: taskErrorCode(statusCode),
+        message: `DataForSEO accepted ${taskIds.length} of ${input.tasks.length} queued SERP tasks (${statusCode}).`,
+      })
+    }
+    return {
+      taskIds,
+      taskReceipts,
+      estimatedCostMicros,
+      actualCostMicros,
+      spendNotice,
+      warnings: [],
+      observedAt: this.now().toISOString(),
+    }
+  }
+
+  async serpTasksReady(): Promise<DataForSeoSerpReadyTask[]> {
+    const credentials = await this.getCredentials('serp-tasks-ready')
+    const response = await providerRequestJson({
+      provider: 'dataforseo',
+      operation: 'serp-tasks-ready',
+      url: new URL(SERP_TASKS_READY_PATH, this.baseUrl),
+      fetch: this.fetch,
+      maxResponseBytes: this.maxResponseBytes,
+      timeoutMs: this.timeoutMs,
+      retry: 'safe',
+      schema: dataForSeoSerpTasksReadyResponseSchema,
+      init: {
+        method: 'GET',
+        headers: { authorization: this.authorization(credentials) },
+      },
+    })
+    const failedTask = response.tasks.find((task) => task.status_code !== 20000)
+    if (response.status_code !== 20000 || failedTask) {
+      const statusCode = failedTask?.status_code ?? response.status_code
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-tasks-ready',
+        code: taskErrorCode(statusCode),
+        message: `DataForSEO could not list ready SERP tasks (${statusCode}).`,
+        retryable: statusCode === 40202,
+      })
+    }
+    return response.tasks.flatMap((task) =>
+      (task.result ?? []).map((result) => ({
+        providerTaskId: result.id,
+        tag: result.tag ?? null,
+      })),
+    )
+  }
+
+  async serpTaskGet(providerTaskId: string): Promise<DataForSeoSerpSnapshot> {
+    if (!/^[a-zA-Z0-9-]{1,100}$/u.test(providerTaskId)) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-get',
+        code: 'configuration',
+        message: 'Use a valid queued SERP task id.',
+      })
+    }
+    const credentials = await this.getCredentials('serp-task-get')
+    const response = await providerRequestJson({
+      provider: 'dataforseo',
+      operation: 'serp-task-get',
+      url: new URL(
+        `${SERP_TASK_GET_ADVANCED_PATH}${providerTaskId}`,
+        this.baseUrl,
+      ),
+      fetch: this.fetch,
+      maxResponseBytes: this.maxResponseBytes,
+      timeoutMs: this.timeoutMs,
+      retry: 'safe',
+      schema: dataForSeoSerpResponseSchema,
+      init: {
+        method: 'GET',
+        headers: { authorization: this.authorization(credentials) },
+      },
+    })
+    const failedTask = response.tasks.find((task) => task.status_code !== 20000)
+    if (response.status_code !== 20000 || failedTask) {
+      const statusCode = failedTask?.status_code ?? response.status_code
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-get',
+        code: taskErrorCode(statusCode),
+        message: `DataForSEO could not collect queued SERP task ${providerTaskId} (${statusCode}).`,
+        retryable: statusCode === 40202,
+      })
+    }
+    return {
+      response,
+      observedAt: this.now().toISOString(),
+      returnedRows: serpRows(response),
+      cache: {
+        status: 'bypass',
+        storedAt: null,
+        expiresAt: null,
+      },
+      cost: {
+        currency: 'USD',
+        estimatedMicros: 0,
+        actualMicros: responseCostMicros(response) ?? 0,
+        taskIds: [providerTaskId],
+      },
+      spendNotice: null,
+      warnings: [],
+    }
   }
 }

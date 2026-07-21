@@ -105,7 +105,7 @@
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
     "schema-dts": "^2.0.0",
-    "string-width": "^7.2.0",
+    "string-width": "^8.2.2",
     "undici": "^8.8.0",
     "update-notifier": "^7.3.1",
     "zod": "^4.4.3"

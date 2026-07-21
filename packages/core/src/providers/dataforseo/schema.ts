@@ -6,6 +6,14 @@ const nullableCount = z
   .nullable()
   .optional()
 
+const monthlySearchSchema = z
+  .object({
+    year: z.number().int(),
+    month: z.number().int(),
+    search_volume: z.number().finite().nullable().optional(),
+  })
+  .passthrough()
+
 const keywordOverviewItemSchema = z
   .object({
     keyword: z.string().trim().min(1),
@@ -14,6 +22,8 @@ const keywordOverviewItemSchema = z
         search_volume: nullableNumber,
         cpc: nullableNumber,
         competition: nullableNumber,
+        monthly_searches: z.array(monthlySearchSchema).nullish(),
+        last_updated_time: z.string().trim().min(1).nullable().optional(),
       })
       .nullish(),
     keyword_properties: z
@@ -73,6 +83,14 @@ export const dataForSeoKeywordOverviewResponseSchema = z
 
 export type DataForSeoKeywordOverviewResponse = z.infer<
   typeof dataForSeoKeywordOverviewResponseSchema
+>
+
+export type DataForSeoKeywordOverviewItem = NonNullable<
+  NonNullable<
+    NonNullable<
+      DataForSeoKeywordOverviewResponse['tasks'][number]['result']
+    >[number]['items']
+  >[number]
 >
 
 export function firstKeywordOverviewItem(

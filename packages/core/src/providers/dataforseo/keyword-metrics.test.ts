@@ -72,6 +72,10 @@ function accountPricing(): DataForSeoAccountSnapshot {
       perRequestMicros: null,
       perResultMicros: null,
     },
+    serpTaskPostPrice: {
+      perRequestMicros: null,
+      perResultMicros: null,
+    },
     backlinksSubscriptionExpiresAt: null,
     aiMentionsSubscriptionExpiresAt: null,
     apiVersion: '3',

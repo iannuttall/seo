@@ -9,7 +9,11 @@ import type {
 } from '../contracts.js'
 import { searchMarketSchema } from '../contracts.js'
 import { ProviderError } from '../errors.js'
-import { DataForSeoClient, type DataForSeoClientOptions } from './client.js'
+import {
+  DataForSeoClient,
+  type DataForSeoClientOptions,
+  type DataForSeoSerpSnapshot,
+} from './client.js'
 import {
   compareCodepoints,
   locationRequest,
@@ -87,6 +91,141 @@ function checkedAt(value: string, fallback: string): string {
     : fallback
 }
 
+export function mapDataForSeoSerpSnapshot(
+  input: SerpSnapshotRequest,
+  snapshot: DataForSeoSerpSnapshot,
+  endpoint = SERP_ENDPOINT,
+): ProviderEvidence<SerpSnapshot> {
+  const market = searchMarketSchema.parse(input.market)
+  const keyword = normalizedKeyword(input.keyword)
+  const location = locationRequest(market, 'serp-snapshot')
+  const result = snapshot.response.tasks
+    .flatMap((task) => task.result ?? [])
+    .find((item) => normalizedKeyword(item.keyword) === keyword)
+  if (!result) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'invalid-response',
+      message: 'DataForSEO returned no matching SERP result.',
+    })
+  }
+
+  const warnings: ProviderWarning[] = [...snapshot.warnings]
+  const items = result.items ?? []
+  const organicItems = items.filter((item) => item.type === 'organic')
+  const mappedOrganicResults = organicItems
+    .flatMap((item) => {
+      const mapped = organicResult(item)
+      return mapped ? [mapped] : []
+    })
+    .sort(
+      (left, right) =>
+        left.rankAbsolute - right.rankAbsolute ||
+        left.rankGroup - right.rankGroup ||
+        compareCodepoints(left.url, right.url),
+    )
+  const organicResults = mappedOrganicResults.slice(0, input.depth)
+  const invalidRows = organicItems.length - mappedOrganicResults.length
+  const resultCapped = mappedOrganicResults.length > input.depth
+  const invalidResultCount =
+    result.se_results_count !== null &&
+    result.se_results_count !== undefined &&
+    result.se_results_count < organicResults.length
+  if (invalidRows > 0) {
+    warnings.push({
+      code: 'invalid-organic-results',
+      field: 'organicResults',
+      message: `DataForSEO returned ${invalidRows} organic result${invalidRows === 1 ? '' : 's'} without a valid rank, domain, or URL.`,
+    })
+  }
+  if (!Number.isFinite(Date.parse(result.datetime))) {
+    warnings.push({
+      code: 'invalid-serp-observation-time',
+      field: 'checkedAt',
+      message:
+        'DataForSEO returned an invalid SERP observation time; the local response time was retained.',
+    })
+  }
+  const checkUrl = safeUrl(result.check_url)
+  if (result.check_url && !checkUrl) {
+    warnings.push({
+      code: 'invalid-serp-check-url',
+      field: 'checkUrl',
+      message: 'DataForSEO returned an invalid SERP check URL.',
+    })
+  }
+  if (invalidResultCount) {
+    warnings.push({
+      code: 'invalid-serp-result-count',
+      field: 'resultCount',
+      message:
+        'DataForSEO returned an estimated result count below the retained organic result count; the estimate was discarded.',
+    })
+  }
+  const features = [
+    ...new Set([
+      ...(result.item_types ?? []),
+      ...items.map((item) => item.type),
+    ]),
+  ].sort(compareCodepoints)
+  const data: SerpSnapshot = {
+    keyword,
+    effectiveKeyword: normalizedKeyword(
+      result.spell?.keyword ?? result.keyword,
+    ),
+    searchEngineDomain: result.se_domain?.trim().toLowerCase() ?? null,
+    checkedAt: checkedAt(result.datetime, snapshot.observedAt),
+    checkUrl,
+    resultCount: invalidResultCount ? null : (result.se_results_count ?? null),
+    pagesCount: result.pages_count === undefined ? null : result.pages_count,
+    features,
+    organicResults,
+  }
+
+  return {
+    schemaVersion: 1,
+    provider: 'dataforseo',
+    capability: 'serp-snapshot',
+    data,
+    observedAt: snapshot.observedAt,
+    market: { ...market, device: market.device ?? 'desktop' },
+    coverage: {
+      requestedRows: input.depth,
+      returnedRows: snapshot.returnedRows,
+      retainedRows: organicResults.length,
+      invalidRows,
+      providerTotalRows: invalidResultCount
+        ? null
+        : (result.se_results_count ?? null),
+      completeness:
+        invalidRows > 0 || invalidResultCount
+          ? 'partial'
+          : resultCapped
+            ? 'capped'
+            : 'complete',
+      nextCursor: null,
+    },
+    cache: snapshot.cache,
+    cost: snapshot.cost,
+    request: {
+      operation: 'serp-snapshot',
+      endpoint,
+      limit: input.depth,
+      filters: {
+        countryCode: market.countryCode,
+        languageCode: market.languageCode,
+        device: market.device ?? 'desktop',
+        ...(location.locationCode !== undefined
+          ? { locationCode: location.locationCode }
+          : { locationName: location.locationName }),
+      },
+      sort: ['rankAbsolute:ascending', 'url:codepoint-ascending'],
+    },
+    warnings,
+  }
+}
+
 export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
   readonly provider = 'dataforseo' as const
   readonly capabilitySupport = [
@@ -157,132 +296,6 @@ export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
       refresh: input.refresh,
       context,
     })
-    const result = snapshot.response.tasks
-      .flatMap((task) => task.result ?? [])
-      .find((item) => normalizedKeyword(item.keyword) === keyword)
-    if (!result) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'invalid-response',
-        message: 'DataForSEO returned no matching SERP result.',
-      })
-    }
-
-    const warnings: ProviderWarning[] = [...snapshot.warnings]
-    const items = result.items ?? []
-    const organicItems = items.filter((item) => item.type === 'organic')
-    const mappedOrganicResults = organicItems
-      .flatMap((item) => {
-        const mapped = organicResult(item)
-        return mapped ? [mapped] : []
-      })
-      .sort(
-        (left, right) =>
-          left.rankAbsolute - right.rankAbsolute ||
-          left.rankGroup - right.rankGroup ||
-          compareCodepoints(left.url, right.url),
-      )
-    const organicResults = mappedOrganicResults.slice(0, input.depth)
-    const invalidRows = organicItems.length - mappedOrganicResults.length
-    const resultCapped = mappedOrganicResults.length > input.depth
-    const invalidResultCount =
-      result.se_results_count !== null &&
-      result.se_results_count !== undefined &&
-      result.se_results_count < organicResults.length
-    if (invalidRows > 0) {
-      warnings.push({
-        code: 'invalid-organic-results',
-        field: 'organicResults',
-        message: `DataForSEO returned ${invalidRows} organic result${invalidRows === 1 ? '' : 's'} without a valid rank, domain, or URL.`,
-      })
-    }
-    if (!Number.isFinite(Date.parse(result.datetime))) {
-      warnings.push({
-        code: 'invalid-serp-observation-time',
-        field: 'checkedAt',
-        message:
-          'DataForSEO returned an invalid SERP observation time; the local response time was retained.',
-      })
-    }
-    const checkUrl = safeUrl(result.check_url)
-    if (result.check_url && !checkUrl) {
-      warnings.push({
-        code: 'invalid-serp-check-url',
-        field: 'checkUrl',
-        message: 'DataForSEO returned an invalid SERP check URL.',
-      })
-    }
-    if (invalidResultCount) {
-      warnings.push({
-        code: 'invalid-serp-result-count',
-        field: 'resultCount',
-        message:
-          'DataForSEO returned an estimated result count below the retained organic result count; the estimate was discarded.',
-      })
-    }
-    const features = [
-      ...new Set([
-        ...(result.item_types ?? []),
-        ...items.map((item) => item.type),
-      ]),
-    ].sort(compareCodepoints)
-    const data: SerpSnapshot = {
-      keyword,
-      effectiveKeyword: normalizedKeyword(
-        result.spell?.keyword ?? result.keyword,
-      ),
-      searchEngineDomain: result.se_domain?.trim().toLowerCase() ?? null,
-      checkedAt: checkedAt(result.datetime, snapshot.observedAt),
-      checkUrl,
-      resultCount: invalidResultCount
-        ? null
-        : (result.se_results_count ?? null),
-      pagesCount: result.pages_count === undefined ? null : result.pages_count,
-      features,
-      organicResults,
-    }
-
-    return {
-      schemaVersion: 1,
-      provider: 'dataforseo',
-      capability: 'serp-snapshot',
-      data,
-      observedAt: snapshot.observedAt,
-      market: { ...market, device: market.device ?? 'desktop' },
-      coverage: {
-        requestedRows: input.depth,
-        returnedRows: snapshot.returnedRows,
-        retainedRows: organicResults.length,
-        invalidRows,
-        providerTotalRows: invalidResultCount
-          ? null
-          : (result.se_results_count ?? null),
-        completeness:
-          invalidRows > 0 || invalidResultCount
-            ? 'partial'
-            : resultCapped
-              ? 'capped'
-              : 'complete',
-        nextCursor: null,
-      },
-      cache: snapshot.cache,
-      cost: snapshot.cost,
-      request: {
-        operation: 'serp-snapshot',
-        endpoint: SERP_ENDPOINT,
-        limit: input.depth,
-        filters: {
-          countryCode: market.countryCode,
-          languageCode: market.languageCode,
-          device: market.device ?? 'desktop',
-          ...(location.locationCode !== undefined
-            ? { locationCode: location.locationCode }
-            : { locationName: location.locationName }),
-        },
-        sort: ['rankAbsolute:ascending', 'url:codepoint-ascending'],
-      },
-      warnings,
-    }
+    return mapDataForSeoSerpSnapshot(input, snapshot)
   }
 }

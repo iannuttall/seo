@@ -110,6 +110,9 @@ function userDataFixture(): UserDataFixture {
                 },
               },
               serp: {
+                task_post: {
+                  priority_normal: [{ cost_type: 'per_request', cost: 0.0006 }],
+                },
                 live: {
                   advanced: {
                     priority_normal: [
@@ -334,6 +337,10 @@ test('user data uses the free account endpoint and returns owned fields', async 
     },
     serpLiveAdvancedPrice: {
       perRequestMicros: 2_000,
+      perResultMicros: 0,
+    },
+    serpTaskPostPrice: {
+      perRequestMicros: 600,
       perResultMicros: 0,
     },
     backlinksSubscriptionExpiresAt: null,
@@ -729,6 +736,167 @@ test('live SERP rejects multiplied-price operators before acquisition', async ()
     /multiplied provider pricing/,
   )
   assert.equal(calls, 0)
+})
+
+test('queued SERP posts bounded normal-priority tasks with reserved spend', async () => {
+  const db = database()
+  let requestBody: unknown
+  const client = new DataForSeoClient({
+    database: db,
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url, init) => {
+      if (String(url).includes('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      requestBody = JSON.parse(String(init?.body))
+      return new Response(
+        JSON.stringify({
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0.0024,
+          tasks_count: 2,
+          tasks_error: 0,
+          tasks: [
+            {
+              id: 'remote-1',
+              status_code: 20100,
+              status_message: 'Task Created.',
+              cost: 0.0012,
+              result_count: 0,
+              data: { tag: 'local-1' },
+            },
+            {
+              id: 'remote-2',
+              status_code: 20100,
+              status_message: 'Task Created.',
+              cost: 0.0012,
+              result_count: 0,
+              data: { tag: 'local-2' },
+            },
+          ],
+        }),
+      )
+    },
+  })
+
+  const result = await client.serpTaskPost({
+    tasks: [
+      {
+        tag: 'local-1',
+        keyword: 'first query',
+        languageCode: 'en',
+        locationCode: 2826,
+        device: 'desktop',
+        depth: 20,
+      },
+      {
+        tag: 'local-2',
+        keyword: 'second query',
+        languageCode: 'en',
+        locationCode: 2826,
+        device: 'mobile',
+        depth: 20,
+      },
+    ],
+    context: {
+      projectId: 'project-1',
+      reportId: 'rank-tracking',
+      reportRunId: 'run-1',
+    },
+  })
+
+  assert.deepEqual(requestBody, [
+    {
+      keyword: 'first query',
+      language_code: 'en',
+      location_code: 2826,
+      device: 'desktop',
+      depth: 20,
+      tag: 'local-1',
+      priority: 1,
+      remove_from_url: ['srsltid'],
+    },
+    {
+      keyword: 'second query',
+      language_code: 'en',
+      location_code: 2826,
+      device: 'mobile',
+      depth: 20,
+      tag: 'local-2',
+      priority: 1,
+      remove_from_url: ['srsltid'],
+    },
+  ])
+  assert.deepEqual(result.taskIds, ['remote-1', 'remote-2'])
+  assert.deepEqual(result.taskReceipts, [
+    { providerTaskId: 'remote-1', tag: 'local-1' },
+    { providerTaskId: 'remote-2', tag: 'local-2' },
+  ])
+  assert.equal(result.estimatedCostMicros, 2_400)
+  assert.equal(result.actualCostMicros, 2_400)
+  const ledger = db
+    .prepare('SELECT * FROM provider_spend_ledger')
+    .all() as Array<Record<string, unknown>>
+  assert.equal(ledger.length, 1)
+  assert.equal(ledger[0]?.endpoint, 'v3/serp/google/organic/task_post')
+  assert.equal(ledger[0]?.state, 'succeeded')
+})
+
+test('queued SERP lists ready tags and collects advanced results for free', async () => {
+  const urls: string[] = []
+  const client = new DataForSeoClient({
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url) => {
+      urls.push(String(url))
+      if (String(url).endsWith('/tasks_ready')) {
+        return new Response(
+          JSON.stringify({
+            status_code: 20000,
+            status_message: 'Ok.',
+            cost: 0,
+            tasks_count: 1,
+            tasks_error: 0,
+            tasks: [
+              {
+                id: 'ready-list',
+                status_code: 20000,
+                status_message: 'Ok.',
+                cost: 0,
+                result: [
+                  {
+                    id: 'remote-1',
+                    tag: 'local-1',
+                    se: 'google',
+                    se_type: 'organic',
+                    endpoint_advanced:
+                      '/v3/serp/google/organic/task_get/advanced/remote-1',
+                  },
+                ],
+              },
+            ],
+          }),
+        )
+      }
+      const fixture = serpFixture()
+      fixture.cost = 0
+      fixture.tasks[0]!.id = 'remote-1'
+      fixture.tasks[0]!.cost = 0
+      return new Response(JSON.stringify(fixture))
+    },
+  })
+
+  assert.deepEqual(await client.serpTasksReady(), [
+    { providerTaskId: 'remote-1', tag: 'local-1' },
+  ])
+  const result = await client.serpTaskGet('remote-1')
+  assert.equal(result.returnedRows, 2)
+  assert.equal(result.cost.actualMicros, 0)
+  assert.deepEqual(result.cost.taskIds, ['remote-1'])
+  assert.deepEqual(urls, [
+    'https://api.dataforseo.com/v3/serp/google/organic/tasks_ready',
+    'https://api.dataforseo.com/v3/serp/google/organic/task_get/advanced/remote-1',
+  ])
 })
 
 test('keyword overview rejects invalid keyword and location bounds before acquisition', async () => {

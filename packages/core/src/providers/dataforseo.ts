@@ -6,12 +6,12 @@ import type {
   ProviderOpts,
   ProviderResult,
 } from '../types.js'
-import { ProviderError } from './errors.js'
 import {
   dataForSeoKeywordOverviewResponseSchema,
   firstKeywordOverviewItem,
   optionalResultCount,
 } from './dataforseo/schema.js'
+import { ProviderError } from './errors.js'
 import { type ProviderFetch, providerRequestJson } from './transport.js'
 
 const ENDPOINT =

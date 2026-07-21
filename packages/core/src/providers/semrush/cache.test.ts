@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import test from 'node:test'
 import { Response } from 'undici'
 import { writeConfig } from '../../storage/config.js'
 import { getDb } from '../../storage/database.js'
+import Database from '../../storage/sqlite.js'
 import { configSchema } from '../../types.js'
 import { ProviderError } from '../errors.js'
 import { cachedSemrushCall } from './cache.js'
@@ -17,6 +18,38 @@ const previousConfigDir = process.env.SEO_CONFIG_DIR
 const previousCacheDir = process.env.SEO_CACHE_DIR
 process.env.SEO_CONFIG_DIR = join(root, 'config')
 process.env.SEO_CACHE_DIR = join(root, 'cache')
+
+const cacheFile = join(root, 'cache', 'cache.db')
+mkdirSync(dirname(cacheFile), { recursive: true })
+const legacyDatabase = new Database(cacheFile)
+legacyDatabase.exec(`
+  CREATE TABLE semrush_cache (
+    endpoint TEXT,
+    query_hash TEXT,
+    request_json TEXT,
+    response_json TEXT,
+    credits_used INTEGER,
+    fetched_at INTEGER,
+    expires_at INTEGER,
+    PRIMARY KEY(endpoint, query_hash)
+  ) WITHOUT ROWID;
+`)
+legacyDatabase
+  .prepare(
+    `INSERT INTO semrush_cache
+      (endpoint, query_hash, request_json, response_json, credits_used, fetched_at, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  )
+  .run(
+    'phrase_this',
+    'legacy-query',
+    JSON.stringify({ key: 'legacy-sem-rush-key', phrase: 'unsafe query' }),
+    '[]',
+    0,
+    Date.now(),
+    Date.now() + 60_000,
+  )
+legacyDatabase.close()
 
 test.after(() => {
   if (previousConfigDir === undefined) delete process.env.SEO_CONFIG_DIR
@@ -36,6 +69,11 @@ function configure(apiKey: string): void {
 }
 
 test('Semrush validates responses and caches without storing credentials', async () => {
+  const legacyRows = getDb()
+    .prepare('SELECT COUNT(*) AS count FROM semrush_cache')
+    .get() as { count: number }
+  assert.equal(legacyRows.count, 0)
+
   const firstKey = 'semrush-local-secret-one'
   const secondKey = 'semrush-local-secret-two'
   let fetchCalls = 0

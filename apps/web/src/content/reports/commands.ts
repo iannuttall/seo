@@ -120,6 +120,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
         'seo reports run keyword-research --params \'{"seeds":["local seo software"],"countryCode":"US","languageCode":"en"}\' --json',
       note: 'Discover a bounded market-specific keyword shortlist.',
     },
+    'saved-keywords': {
+      command:
+        'seo reports run saved-keywords --params \'{"projectId":"example","set":"Priority"}\' --json',
+      note: 'Review one local saved research set without provider acquisition.',
+    },
     'link-recovery': {
       command: 'seo link-recover --project example',
       note: 'Find broken or poorly redirected URLs with returned search value.',

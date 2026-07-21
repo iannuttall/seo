@@ -12,12 +12,18 @@ const MAX_DURATION_MS = 10_000
 const cacheDir = mkdtempSync(join(tmpdir(), 'seo-provider-resource-'))
 process.env.SEO_CACHE_DIR = cacheDir
 process.env.SEO_CONFIG_DIR = cacheDir
+process.once('exit', () => rmSync(cacheDir, { recursive: true, force: true }))
 
 const {
+  addKeywordsToSet,
   analyzeQuickWinsFromRows,
   clearCache,
+  createKeywordSet,
   DataForSeoClient,
   getCacheStats,
+  KEYWORD_SET_LIMITS,
+  keywordSetLogicalBytes,
+  savedKeywordSetReport,
 } = await import('../dist/index.js')
 const rows = Array.from({ length: ROW_COUNT }, (_, index) => ({
   keys: [
@@ -58,6 +64,73 @@ assert.ok(
   rssGrowthBytes <= MAX_RSS_GROWTH,
   `provider analysis RSS grew by ${(rssGrowthBytes / MEBIBYTE).toFixed(1)} MiB`,
 )
+
+const KEYWORD_SET_ROWS = 10_000
+const KEYWORD_SET_BATCH_SIZE = 1_000
+const KEYWORD_SET_MAX_DURATION_MS = 10_000
+const KEYWORD_SET_MAX_RSS_GROWTH = 256 * MEBIBYTE
+const KEYWORD_SET_MAX_OUTPUT_BYTES = MEBIBYTE
+const keywordSetBaselineRss = process.memoryUsage().rss
+const keywordSetStartedAt = performance.now()
+createKeywordSet({
+  projectId: 'resource-project',
+  name: 'Large fixture',
+  market: {
+    searchEngine: 'google',
+    countryCode: 'GB',
+    languageCode: 'en',
+  },
+})
+for (
+  let offset = 0;
+  offset < KEYWORD_SET_ROWS;
+  offset += KEYWORD_SET_BATCH_SIZE
+) {
+  addKeywordsToSet({
+    projectId: 'resource-project',
+    idOrName: 'Large fixture',
+    items: Array.from({ length: KEYWORD_SET_BATCH_SIZE }, (_, index) => ({
+      keyword: `bounded saved keyword ${offset + index}`,
+      tags: [`group-${(offset + index) % 20}`],
+    })),
+  })
+}
+const keywordSetReport = savedKeywordSetReport({
+  projectId: 'resource-project',
+  idOrName: 'Large fixture',
+  limit: KEYWORD_SET_LIMITS.outputRows,
+})
+const keywordSetDurationMs = performance.now() - keywordSetStartedAt
+const keywordSetRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - keywordSetBaselineRss,
+)
+const keywordSetOutputBytes = Buffer.byteLength(
+  JSON.stringify(keywordSetReport),
+)
+const keywordSetLogicalSize = keywordSetLogicalBytes()
+console.log(
+  JSON.stringify({
+    report: 'saved-keywords',
+    storedRows: KEYWORD_SET_ROWS,
+    mutationBatches: KEYWORD_SET_ROWS / KEYWORD_SET_BATCH_SIZE,
+    returnedRows: keywordSetReport.summary.returnedKeywords,
+    durationMs: Math.round(keywordSetDurationMs),
+    peakRssGrowthMiB: Number((keywordSetRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    logicalBytesWritten: keywordSetLogicalSize,
+    outputBytes: keywordSetOutputBytes,
+  }),
+)
+assert.equal(keywordSetReport.dataStatus, 'partial')
+assert.equal(keywordSetReport.summary.totalKeywords, KEYWORD_SET_ROWS)
+assert.equal(
+  keywordSetReport.summary.returnedKeywords,
+  KEYWORD_SET_LIMITS.outputRows,
+)
+assert.ok(keywordSetDurationMs <= KEYWORD_SET_MAX_DURATION_MS)
+assert.ok(keywordSetRssGrowthBytes <= KEYWORD_SET_MAX_RSS_GROWTH)
+assert.ok(keywordSetLogicalSize <= KEYWORD_SET_LIMITS.logicalBytes)
+assert.ok(keywordSetOutputBytes <= KEYWORD_SET_MAX_OUTPUT_BYTES)
 
 const BATCHES = 20
 const KEYWORDS_PER_BATCH = 100

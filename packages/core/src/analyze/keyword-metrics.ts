@@ -184,6 +184,14 @@ function providerResolutionError(input: {
       'No connected provider can supply keyword metrics. Run `seo providers dataforseo connect` first.',
     )
   }
+  if (input.provider && input.reason === 'market-not-supported') {
+    return new SeoError(
+      'INVALID_INPUT',
+      input.provider === 'dataforseo'
+        ? 'DataForSEO keyword metrics uses country-level Labs data. Omit location and keep countryCode, then run serp-results separately for a local snapshot.'
+        : `${input.provider} cannot supply keyword metrics for this market.`,
+    )
+  }
   if (input.provider) {
     return new SeoError(
       'PROVIDER_UNAVAILABLE',

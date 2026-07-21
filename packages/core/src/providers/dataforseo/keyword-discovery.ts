@@ -173,7 +173,7 @@ export class DataForSeoKeywordDiscoveryProvider
       markets: [
         {
           searchEngines: ['google'] as const,
-          location: 'any' as const,
+          location: 'country-only' as const,
         },
       ],
     },
@@ -195,6 +195,15 @@ export class DataForSeoKeywordDiscoveryProvider
         operation: 'keyword-discovery',
         code: 'configuration',
         message: 'DataForSEO keyword discovery currently supports Google.',
+      })
+    }
+    if (market.location) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message:
+          'DataForSEO Labs keyword discovery supports country-level markets; omit market.location and use countryCode.',
       })
     }
     const seeds = [...new Set(input.seeds.map(normalizedKeyword))]

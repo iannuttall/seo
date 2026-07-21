@@ -186,6 +186,10 @@ export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
     const organicResults = mappedOrganicResults.slice(0, input.depth)
     const invalidRows = organicItems.length - mappedOrganicResults.length
     const resultCapped = mappedOrganicResults.length > input.depth
+    const invalidResultCount =
+      result.se_results_count !== null &&
+      result.se_results_count !== undefined &&
+      result.se_results_count < organicResults.length
     if (invalidRows > 0) {
       warnings.push({
         code: 'invalid-organic-results',
@@ -209,6 +213,14 @@ export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
         message: 'DataForSEO returned an invalid SERP check URL.',
       })
     }
+    if (invalidResultCount) {
+      warnings.push({
+        code: 'invalid-serp-result-count',
+        field: 'resultCount',
+        message:
+          'DataForSEO returned an estimated result count below the retained organic result count; the estimate was discarded.',
+      })
+    }
     const features = [
       ...new Set([
         ...(result.item_types ?? []),
@@ -223,8 +235,9 @@ export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
       searchEngineDomain: result.se_domain?.trim().toLowerCase() ?? null,
       checkedAt: checkedAt(result.datetime, snapshot.observedAt),
       checkUrl,
-      resultCount:
-        result.se_results_count === undefined ? null : result.se_results_count,
+      resultCount: invalidResultCount
+        ? null
+        : (result.se_results_count ?? null),
       pagesCount: result.pages_count === undefined ? null : result.pages_count,
       features,
       organicResults,
@@ -242,9 +255,15 @@ export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
         returnedRows: snapshot.returnedRows,
         retainedRows: organicResults.length,
         invalidRows,
-        providerTotalRows: result.se_results_count ?? null,
+        providerTotalRows: invalidResultCount
+          ? null
+          : (result.se_results_count ?? null),
         completeness:
-          invalidRows > 0 ? 'partial' : resultCapped ? 'capped' : 'complete',
+          invalidRows > 0 || invalidResultCount
+            ? 'partial'
+            : resultCapped
+              ? 'capped'
+              : 'complete',
         nextCursor: null,
       },
       cache: snapshot.cache,

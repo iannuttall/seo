@@ -25,6 +25,36 @@ export type ProviderRequestInput = {
   retryDelayMs?: number
 }
 
+function schemaIssueSummary(error: z.ZodError): string {
+  const issues = error.issues.slice(0, 3).map((issue) => {
+    const path = issue.path
+      .flatMap((segment) => {
+        if (typeof segment === 'number' && Number.isSafeInteger(segment)) {
+          return [`[${segment}]`]
+        }
+        if (
+          typeof segment === 'string' &&
+          segment.length <= 64 &&
+          /^[a-zA-Z0-9_-]+$/u.test(segment)
+        ) {
+          return [segment]
+        }
+        return []
+      })
+      .reduce(
+        (result, segment) =>
+          segment.startsWith('[')
+            ? `${result}${segment}`
+            : result
+              ? `${result}.${segment}`
+              : segment,
+        '',
+      )
+    return `${path || '<root>'} (${issue.code})`
+  })
+  return [...new Set(issues)].join(', ')
+}
+
 function httpError(input: ProviderRequestInput, status: number): ProviderError {
   if (status === 401 || status === 403) {
     return new ProviderError({
@@ -146,11 +176,12 @@ export async function providerRequestJson<T>(
 
   const parsed = input.schema.safeParse(value)
   if (!parsed.success) {
+    const issueSummary = schemaIssueSummary(parsed.error)
     throw new ProviderError({
       provider: input.provider,
       operation: input.operation,
       code: 'invalid-response',
-      message: `${input.provider} returned data that does not match the expected response schema.`,
+      message: `${input.provider} returned data that does not match the expected response schema${issueSummary ? ` at ${issueSummary}` : ''}.`,
       cause: parsed.error,
     })
   }

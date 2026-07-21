@@ -191,6 +191,47 @@ test('keyword metrics marks omitted, unexpected, and corrupt provider data', asy
   )
 })
 
+test('keyword metrics retains recent bounded history and reports omissions', async () => {
+  const provider = new DataForSeoKeywordMetricsProvider({
+    client: {
+      keywordOverview: async () =>
+        snapshot([
+          {
+            keyword: 'query',
+            keyword_info: {
+              monthly_searches: Array.from({ length: 36 }, (_, index) => ({
+                year: 2023 + Math.floor(index / 12),
+                month: (index % 12) + 1,
+                search_volume: index,
+              })),
+            },
+          },
+        ]),
+    },
+  })
+
+  const result = await provider.keywordMetrics({
+    keywords: ['query'],
+    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+  })
+
+  const history = result.data[0]?.monthlySearches
+  assert.equal(history?.state, 'observed')
+  assert.equal(history?.state === 'observed' ? history.value.length : 0, 24)
+  assert.deepEqual(history?.state === 'observed' ? history.value[0] : null, {
+    year: 2024,
+    month: 1,
+    searchVolume: 12,
+  })
+  assert.equal(
+    result.warnings.some(
+      (warning) => warning.code === 'monthly-search-history-truncated',
+    ),
+    true,
+  )
+  assert.equal(result.request.filters.retainedMonthlyHistoryRows, 24)
+})
+
 test('duplicate provider rows resolve deterministically and expose conflicts', async () => {
   const rows = [
     {

@@ -135,7 +135,12 @@ function spendLimits(
 }
 
 function keywordOverviewFixture(
-  input: { statusCode?: number; tasksError?: number; cost?: number } = {},
+  input: {
+    statusCode?: number
+    tasksError?: number
+    cost?: number
+    items?: unknown[]
+  } = {},
 ) {
   const statusCode = input.statusCode ?? 20000
   return {
@@ -156,7 +161,7 @@ function keywordOverviewFixture(
             ? [
                 {
                   items_count: 2,
-                  items: [
+                  items: input.items ?? [
                     { keyword: 'first query' },
                     { keyword: 'second query' },
                   ],
@@ -412,6 +417,42 @@ test('keyword overview accepts a named location and requests SERP evidence', asy
       include_serp_info: true,
     },
   ])
+})
+
+test('keyword overview accepts bounded extended monthly histories', async () => {
+  const monthlySearches = Array.from({ length: 36 }, (_, index) => ({
+    year: 2023 + Math.floor(index / 12),
+    month: (index % 12) + 1,
+    search_volume: index,
+  }))
+  const client = new DataForSeoClient({
+    database: database(),
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url) =>
+      new Response(
+        JSON.stringify(
+          String(url).includes('/appendix/user_data')
+            ? userDataFixture()
+            : keywordOverviewFixture({
+                items: [
+                  {
+                    keyword: 'first query',
+                    keyword_info: { monthly_searches: monthlySearches },
+                  },
+                ],
+              }),
+        ),
+      ),
+  })
+
+  const result = await client.keywordOverview(
+    keywordRequest({ keywords: ['first query'] }),
+  )
+  const rows =
+    result.response.tasks[0]?.result?.[0]?.items?.[0]?.keyword_info
+      ?.monthly_searches
+  assert.equal(rows?.length, 36)
 })
 
 test('keyword overview rejects invalid keyword and location bounds before acquisition', async () => {

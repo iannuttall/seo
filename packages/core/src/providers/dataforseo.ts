@@ -1,11 +1,14 @@
 import { fetch } from 'undici'
-import { readConfig } from '../storage/config.js'
 import type {
   KeywordDataProvider,
   KeywordOverview,
   ProviderOpts,
   ProviderResult,
 } from '../types.js'
+import {
+  type DataForSeoCredentials,
+  readDataForSeoCredentials,
+} from './dataforseo/credentials.js'
 import {
   dataForSeoKeywordOverviewResponseSchema,
   firstKeywordOverviewItem,
@@ -21,7 +24,10 @@ const DEFAULT_TIMEOUT_MS = 20_000
 
 type DataForSeoProviderOptions = {
   fetch?: ProviderFetch
-  credentials?: () => { login: string; password: string } | undefined
+  credentials?: () =>
+    | DataForSeoCredentials
+    | undefined
+    | Promise<DataForSeoCredentials | undefined>
   timeoutMs?: number
   maxResponseBytes?: number
 }
@@ -34,27 +40,21 @@ export class DataForSeoProvider implements KeywordDataProvider {
 
   private readonly fetch: ProviderFetch
   private readonly credentials: () =>
-    | { login: string; password: string }
+    | DataForSeoCredentials
     | undefined
+    | Promise<DataForSeoCredentials | undefined>
   private readonly timeoutMs: number
   private readonly maxResponseBytes: number
 
   constructor(options: DataForSeoProviderOptions = {}) {
     this.fetch = options.fetch ?? fetch
-    this.credentials =
-      options.credentials ??
-      (() => {
-        const config = readConfig()
-        const login = config.providers.dataForSeoLogin
-        const password = config.providers.dataForSeoPassword
-        return login && password ? { login, password } : undefined
-      })
+    this.credentials = options.credentials ?? readDataForSeoCredentials
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
     this.maxResponseBytes = options.maxResponseBytes ?? MAX_RESPONSE_BYTES
   }
 
-  private getAuthHeader(): string {
-    const credentials = this.credentials()
+  private async getAuthHeader(): Promise<string> {
+    const credentials = await this.credentials()
     if (!credentials) {
       throw new ProviderError({
         provider: 'dataforseo',
@@ -84,7 +84,7 @@ export class DataForSeoProvider implements KeywordDataProvider {
       init: {
         method: 'POST',
         headers: {
-          authorization: this.getAuthHeader(),
+          authorization: await this.getAuthHeader(),
           'content-type': 'application/json',
         },
         body: JSON.stringify([

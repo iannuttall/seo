@@ -3,7 +3,61 @@ import { z } from 'zod'
 const userDataMoneySchema = z
   .object({
     total: z.number().finite().nonnegative().optional(),
-    balance: z.number().finite().nonnegative().optional(),
+    balance: z.number().finite().optional(),
+    limits: z
+      .object({
+        day: z
+          .object({
+            total: z.number().finite().nonnegative().optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+    statistics: z
+      .object({
+        day: z
+          .object({
+            total: z.number().finite().nonnegative().optional(),
+            value: z.string().max(100).optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough()
+
+const priceComponentSchema = z
+  .object({
+    cost_type: z.enum(['per_request', 'per_result']),
+    cost: z.number().finite().nonnegative(),
+  })
+  .passthrough()
+
+const userDataPriceSchema = z
+  .object({
+    dataforseo_labs: z
+      .object({
+        keyword_overview: z
+          .object({
+            live: z
+              .object({
+                priority_normal: z
+                  .array(priceComponentSchema)
+                  .max(20)
+                  .optional(),
+              })
+              .passthrough()
+              .optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
   })
   .passthrough()
 
@@ -12,6 +66,7 @@ const userDataResultSchema = z
     login: z.string().min(1).max(320),
     timezone: z.string().min(1).max(100).optional(),
     money: userDataMoneySchema.optional(),
+    price: userDataPriceSchema.optional(),
     backlinks_subscription_expiry_date: z.string().nullable().optional(),
     llm_mentions_subscription_expiry_date: z.string().nullable().optional(),
   })

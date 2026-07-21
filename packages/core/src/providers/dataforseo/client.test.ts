@@ -12,6 +12,7 @@ type UserDataAccountFixture = {
     total?: number
     balance?: number
     limits?: unknown
+    statistics?: unknown
   }
   price: unknown
   backlinks_subscription_expiry_date: string | null
@@ -63,8 +64,22 @@ function userDataFixture(): UserDataFixture {
               total: 25.5,
               balance: 7.125001,
               limits: { day: { total: 5 } },
+              statistics: {
+                day: { total: 0.557935, value: '2026-07-21' },
+              },
             },
-            price: { dataforseo_labs: { google: {} } },
+            price: {
+              dataforseo_labs: {
+                keyword_overview: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.0001 },
+                      { cost_type: 'per_request', cost: 0.01 },
+                    ],
+                  },
+                },
+              },
+            },
             backlinks_subscription_expiry_date: null,
             llm_mentions_subscription_expiry_date: '2026-08-01 00:00:00 +00:00',
           },
@@ -112,6 +127,13 @@ test('user data uses the free account endpoint and returns owned fields', async 
     timezone: 'Europe/London',
     balanceMicros: 7_125_001,
     depositedMicros: 25_500_000,
+    accountDailySpendMicros: 557_935,
+    accountDailySpendPeriod: '2026-07-21',
+    accountDailyLimitMicros: 5_000_000,
+    keywordOverviewPrice: {
+      perRequestMicros: 10_000,
+      perResultMicros: 100,
+    },
     backlinksSubscriptionExpiresAt: null,
     aiMentionsSubscriptionExpiresAt: '2026-08-01 00:00:00 +00:00',
     apiVersion: '0.1.test',
@@ -141,6 +163,17 @@ test('user data keeps missing optional money distinct from zero', async () => {
   assert.equal(account.balanceMicros, null)
   assert.equal(account.depositedMicros, null)
   assert.equal(account.requestCostMicros, 0)
+})
+
+test('user data accepts a provider-reported negative balance', async () => {
+  const fixture = userDataFixture()
+  firstAccount(fixture).money.balance = -3.25
+  const client = new DataForSeoClient({
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async () => new Response(JSON.stringify(fixture)),
+  })
+
+  assert.equal((await client.userData()).balanceMicros, -3_250_000)
 })
 
 test('user data reports missing and rejected credentials safely', async () => {

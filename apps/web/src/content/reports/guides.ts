@@ -1,4 +1,5 @@
 import { reportGuideOverridesAF } from './guide-overrides-a-f'
+import { domainResearchGuideOverrides } from './guide-overrides-domain-research'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
 import { reportGuideOverridesPseo } from './guide-overrides-pseo'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
@@ -28,6 +29,7 @@ export const reportGuideOverrides: Partial<
   Record<string, ReportGuideOverride>
 > = {
   ...reportGuideOverridesAF,
+  ...domainResearchGuideOverrides,
   ...reportGuideOverridesIP,
   ...reportGuideOverridesPseo,
   ...reportGuideOverridesQZ,

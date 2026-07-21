@@ -2,6 +2,7 @@ import { aiSearchReports } from './ai-search'
 import { orderReportsForReaders } from './categories'
 import { crawlReports } from './crawl'
 import { diagnosisReports } from './diagnosis'
+import { domainResearchReports } from './domain-research'
 import { experimentReports } from './experiments'
 import { legacyReportAliases, reportIds, reportSlugs } from './manifest.mjs'
 import { monitoringReports } from './monitoring'
@@ -15,6 +16,7 @@ const catalog = [
   ...aiSearchReports,
   ...crawlReports,
   ...diagnosisReports,
+  ...domainResearchReports,
   ...experimentReports,
   ...monitoringReports,
   ...opportunityReports,

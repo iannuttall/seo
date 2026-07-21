@@ -1,0 +1,177 @@
+---
+title: Keyword and competitor research providers
+description: Connect DataForSEO locally, control paid requests and combine keyword, domain, competitor and page estimates with Search Console evidence.
+---
+
+Research a market without replacing the evidence from your own site. Optional
+providers add keyword estimates, result snapshots, domain footprints, ranking
+pages and competitor rows. Search Console still supplies owner-verified search
+performance. Crawls still supply current page and technical evidence.
+
+DataForSEO supports the current research reports. The report contracts are
+provider neutral, so another adapter can support the same capability later
+without changing how an agent reads the result. A report fails clearly when a
+selected provider does not support its operation or market.
+
+## Connect DataForSEO on this computer
+
+Create an API login and API password in DataForSEO, then run:
+
+```sh
+seo providers dataforseo connect
+seo providers dataforseo status --check
+```
+
+The first command validates the credentials with the free account endpoint.
+The second command can repeat that check and show the connection state. The
+password is saved in the system keychain when available, with a private local
+file fallback. It is not stored in a project profile, report, cache entry or
+spend record.
+
+Agents and CI can use environment variables without saving credentials:
+
+```sh
+export SEO_DATAFORSEO_LOGIN='your-dataforseo-login'
+export SEO_DATAFORSEO_PASSWORD='api-password'
+seo providers dataforseo status --check --json
+```
+
+Do not put these values in a repository, command history, report parameters or
+an issue. Remove locally saved credentials with:
+
+```sh
+seo providers dataforseo disconnect
+```
+
+## Set local cost and work limits first
+
+Provider calls can be charged. Inspect the current local limits and account
+context before running broad research:
+
+```sh
+seo providers dataforseo limits
+seo providers dataforseo spend
+```
+
+Set hard daily and monthly limits in US dollars, plus maximum requests and
+requested rows per report:
+
+```sh
+seo providers dataforseo limits \
+  --daily-notice 1 \
+  --daily-limit 5 \
+  --monthly-limit 25 \
+  --requests 20 \
+  --rows 10000
+```
+
+The CLI reads current endpoint prices from the free account response, reserves
+estimated spend before a paid request, and records the actual provider cost
+afterward. Unknown or unsafe price evidence blocks paid work instead of
+assuming it is free. Local request and row limits also stop accidental fanout
+inside one report.
+
+Cached results avoid repeating paid work during their retention window. A
+report includes cache hit, miss or bypass state, observation time, estimated
+cost, actual cost and provider task ids. Use `refresh: true` only when the
+decision needs newer provider evidence.
+
+## Discover the research reports
+
+The normal CLI and MCP discovery flow exposes the same reports:
+
+```sh
+seo reports list --category opportunities --json
+seo reports describe domain-overview --json
+seo reports describe competitor-keyword-gap --json
+```
+
+Run a report through the existing catalog command. There are no separate
+provider-named report commands.
+
+```sh
+seo reports run domain-overview \
+  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
+  --json
+
+seo reports run serp-competitors \
+  --params '{"keywords":["blue widget","red widget"],"targetDomain":"example.com","countryCode":"GB","languageCode":"en"}' \
+  --json
+```
+
+The current domain research endpoints use country and language. They do not
+accept a city, postcode or device. Use `serp-results` when you need a current
+location and device-specific result snapshot.
+
+## Start with first-party opportunities
+
+Use `keyword-opportunities` when the question starts with your own Search
+Console data. It combines quick wins, second-page evidence, query clusters,
+repeated first-party URL patterns and optional provider metrics in one bounded
+review queue.
+
+Use the provider-led reports for different questions:
+
+- `domain-overview` gives a quick country-level estimated footprint.
+- `ranked-keywords` opens bounded keyword and ranking-page rows.
+- `ranking-pages` finds pages behind the footprint and repeated path patterns.
+- `serp-competitors` finds domains that recur across an explicit keyword set.
+- `competitor-keyword-gap` compares up to three relevant competitors with
+  retained Search Console themes and the provider footprint for your site.
+
+Pass a Search Console property only when it matches a site you own. Competitor
+domains stay provider-only. The report never pretends to have first-party
+evidence for somebody else's site.
+
+## Classify competitors before comparing gaps
+
+A recurring result domain can be a publisher, directory, community,
+marketplace or business. `serp-competitors` leaves undeclared site types as
+`unknown`. Review those domains, then pass a small relevant set to
+`competitor-keyword-gap`.
+
+The gap report does not label every competitor term an opportunity. It keeps
+four states separate:
+
+1. Already observed in retained Search Console rows.
+2. Already ranked in the provider footprint for the site.
+3. Relevant gap candidate based on bounded first-party theme overlap and
+   competitor evidence.
+4. Unverified competitor term.
+
+An absent Search Console row means only that the bounded retained data did not
+contain it. Search Console can omit anonymised queries, and row caps or the date
+range can hide evidence.
+
+## Review programmatic SEO patterns carefully
+
+Ranking pages and competitor gaps inspect repeated URL structures. That helps
+an agent find possible page families without downloading a whole domain. A
+path pattern does not prove shared intent, quality, useful data or that more
+pages should be created.
+
+For a plausible new template, the gap report returns a bounded data-source
+brief. Check:
+
+- stable identifiers, fields, units and geographic coverage;
+- update frequency, missing values, duplicates and malformed records;
+- access rights, attribution, rate limits and local cache retention;
+- the useful information that makes each generated page distinct;
+- representative sparse, stale and boundary records before scaling.
+
+For an existing first-party template, run `pseo-audit` before adding variants.
+For a new family, inspect current results and representative competitor pages,
+then complete the data-source research before implementation.
+
+## Read each source by what it can establish
+
+Provider volume, difficulty, traffic, intent and visibility are estimates.
+Search Console clicks and impressions are first-party measurements for the
+selected property and dates. A crawl observes the current site version. A live
+result report observes one query, market, device and time.
+
+Useful analysis can combine these sources, but it should not blend their
+numbers into one unexplained score. Read source coverage, request filters,
+observation dates, cost, warnings and caveats before the findings. Verify a
+shortlisted keyword with current results before changing content or a
+programmatic template.

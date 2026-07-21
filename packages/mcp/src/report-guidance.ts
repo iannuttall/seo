@@ -781,6 +781,22 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded result snapshot with exact retained ranks, domain repetition, query corrections, features, cost, and coverage.',
   },
+  'rank-tracking': {
+    name: 'Exact rank tracking',
+    description:
+      'Collect and compare exact organic positions for a saved keyword set without mixing markets, devices, or Search Console averages.',
+    useWhen: [
+      'You need repeatable exact-rank snapshots for a fixed market and device.',
+      'You want new, lost, improved, declined, or ranking URL change evidence over time.',
+      'A recurring set should use cheaper queued collection and local history.',
+    ],
+    avoidWhen: [
+      'You need first-party clicks, impressions, or average position; use a Search Console report.',
+      'One current query needs result-page inspection but no history; use live search results.',
+    ],
+    outcome:
+      'A bounded exact-rank comparison with explicit depth, pending and failed states, provider cost, and local retention evidence.',
+  },
   'segment-impact': {
     name: 'Search impact by segment',
     description:

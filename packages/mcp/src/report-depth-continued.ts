@@ -417,6 +417,32 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'content-optimization', reason: 'Builds a page brief.' },
     ],
   },
+  'rank-tracking': {
+    readOrder: [
+      'dataStatus, configuration market, devices, targetDomain, depth, collection method, cadence, and run state',
+      'coverage, pending and failed counts, provider cost, warnings, and caveats',
+      'comparison prior run and per-item current and previous observation states',
+      'organic position change, absolute position, ranking URL changes, and checkedAt',
+      'nextSteps for first-party context, template review, or queued collection',
+    ],
+    doNotClaim: [
+      'Not observed within the configured depth is not proof that the domain does not rank.',
+      'Exact snapshots must not be substituted for Search Console average position or blended across markets and devices.',
+      'A ranking change alone does not establish causation, traffic impact, or future performance.',
+      'Pending or failed tasks cannot be treated as losses or zero rankings.',
+    ],
+    verify:
+      'Confirm the same market, device, depth, and target-domain scope, then inspect the ranking URL and Search Console evidence before acting.',
+    related: [
+      { id: 'serp-results', reason: 'Inspects the current result page.' },
+      { id: 'saved-keywords', reason: 'Reviews the tracked keyword set.' },
+      { id: 'quick-wins', reason: 'Adds first-party opportunity evidence.' },
+      {
+        id: 'striking-distance',
+        reason: 'Adds first-party average-position evidence.',
+      },
+    ],
+  },
   'segment-impact': {
     readOrder: [
       'before, after, and rangeDays',

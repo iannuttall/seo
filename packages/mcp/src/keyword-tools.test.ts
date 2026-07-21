@@ -8,6 +8,61 @@ type ToolResult = {
 
 type ToolHandler = (input: Record<string, unknown>) => Promise<ToolResult>
 
+test('rank tracking MCP forwards one bounded local configuration', async () => {
+  const handlers = new Map<string, ToolHandler>()
+  let captured: unknown
+  registerKeywordTools(
+    {
+      registerTool(name: string, _config: unknown, handler: ToolHandler) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      rankTrackingReport: async (input) => {
+        captured = input
+        return {
+          schemaVersion: 1,
+          generatedAt: '2026-07-21T12:00:00.000Z',
+          dataStatus: 'pending',
+          summary: { verdict: 'Two queued snapshots remain pending.' },
+          configuration: {},
+          run: {},
+          comparison: {},
+          items: [],
+          coverage: {},
+          cost: {},
+          operationalWarnings: [],
+          caveats: [],
+          nextSteps: [],
+        } as never
+      },
+    },
+  )
+
+  const input = {
+    projectId: 'example-project',
+    set: 'local-priorities',
+    targetDomain: 'example.com',
+    tag: 'service',
+    devices: ['desktop', 'mobile'],
+    provider: 'dataforseo',
+    collectionMethod: 'queued',
+    cadence: 'weekly',
+    depth: 50,
+    keywordLimit: 100,
+    start: true,
+    outputLimit: 50,
+  }
+  const result = await handlers.get('seo_rank_tracking')?.(input)
+  assert.deepEqual(captured, input)
+  assert.equal(result?.structuredContent?.dataStatus, 'pending')
+  assert.equal(
+    (result?.structuredContent?.outputBudget as Record<string, unknown>)
+      ?.maxBytes,
+    98_304,
+  )
+})
+
 test('saved keywords MCP forwards one bounded local set view', async () => {
   const handlers = new Map<string, ToolHandler>()
   let captured: unknown

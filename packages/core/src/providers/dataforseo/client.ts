@@ -33,8 +33,11 @@ import type {
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoSerpReadyTask,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
+  DataForSeoSerpTaskInput,
+  DataForSeoSerpTaskPostSnapshot,
 } from './client-types.js'
 import type { DataForSeoCredentials } from './credentials.js'
 import { readDataForSeoCredentials } from './credentials.js'
@@ -48,13 +51,24 @@ import {
   dataForSeoPaidPost,
 } from './paid-request.js'
 import {
+  dataForSeoResponseCostMicros,
+  dataForSeoTaskErrorCode,
+  dataForSeoUsdToMicros,
+} from './response.js'
+import {
   type DataForSeoKeywordOverviewResponse,
   dataForSeoKeywordOverviewResponseSchema,
 } from './schema.js'
+import { dataForSeoSerpResponseSchema } from './serp-schema.js'
 import {
-  type DataForSeoSerpResponse,
-  dataForSeoSerpResponseSchema,
-} from './serp-schema.js'
+  type DataForSeoQueuedSerpRequest,
+  dataForSeoSerpRows,
+  getDataForSeoSerpTask,
+  listReadyDataForSeoSerpTasks,
+  MAX_SERP_TASKS_PER_POST,
+  postDataForSeoSerpTasks,
+  validateDataForSeoSerpTaskId,
+} from './serp-tasks.js'
 
 const DEFAULT_BASE_URL = 'https://api.dataforseo.com/'
 const USER_DATA_PATH = 'v3/appendix/user_data'
@@ -78,6 +92,68 @@ const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
 const MAX_SERP_DEPTH = 100
 
+function validateSerpInput(
+  input: Omit<DataForSeoSerpRequest, 'refresh' | 'context'>,
+): { keyword: string; locationName: string | undefined } {
+  const keyword = input.keyword.trim().replace(/\s+/gu, ' ')
+  if (
+    keyword.length < 1 ||
+    keyword.length > MAX_KEYWORD_CHARACTERS ||
+    keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
+    })
+  }
+  if (
+    /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
+      keyword,
+    )
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message:
+        'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
+    })
+  }
+  if (
+    !Number.isSafeInteger(input.depth) ||
+    input.depth < 1 ||
+    input.depth > MAX_SERP_DEPTH
+  ) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
+    })
+  }
+  if (!/^[a-z]{2}$/.test(input.languageCode)) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message: 'DataForSEO language code must contain two lowercase letters.',
+    })
+  }
+  const locationName = input.locationName?.trim()
+  if ((input.locationCode !== undefined) === Boolean(locationName)) {
+    throw new ProviderError({
+      provider: 'dataforseo',
+      operation: 'serp-snapshot',
+      code: 'configuration',
+      message:
+        'DataForSEO SERP snapshots require exactly one location code or location name.',
+    })
+  }
+  return { keyword, locationName }
+}
+
 export type {
   DataForSeoAccountSnapshot,
   DataForSeoClientOptions,
@@ -92,11 +168,6 @@ export type {
 type UserDataAccount = NonNullable<
   DataForSeoUserDataResponse['tasks'][number]['result']
 >[number]
-
-function usdToMicros(value: number | undefined): number | null {
-  if (value === undefined) return null
-  return Math.round(value * 1_000_000)
-}
 
 function unitPrice(
   components: Array<{ cost_type: string; cost: number }> | null | undefined,
@@ -146,27 +217,14 @@ function serpLiveAdvancedPrice(account: UserDataAccount): DataForSeoUnitPrice {
   return unitPrice(account.price?.serp?.live?.advanced?.priority_normal)
 }
 
-function taskErrorCode(
-  statusCode: number,
-): 'authentication' | 'rate-limit' | 'remote-error' {
-  if (statusCode >= 40100 && statusCode < 40200) return 'authentication'
-  if (statusCode === 40202) return 'rate-limit'
-  return 'remote-error'
+function serpTaskPostPrice(account: UserDataAccount): DataForSeoUnitPrice {
+  return unitPrice(account.price?.serp?.task_post?.priority_normal)
 }
 
 function responseTaskIds(response: DataForSeoPaidResponse): string[] {
   return [
     ...new Set(response.tasks.flatMap((task) => (task.id ? [task.id] : []))),
   ].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
-}
-
-function responseCostMicros(response: DataForSeoPaidResponse): number | null {
-  if (response.cost !== undefined) return usdToMicros(response.cost)
-  if (response.tasks.some((task) => task.cost === undefined)) return null
-  return response.tasks.reduce(
-    (sum, task) => sum + (usdToMicros(task.cost) ?? 0),
-    0,
-  )
 }
 
 function responseRows(response: DataForSeoKeywordOverviewResponse): number {
@@ -213,18 +271,6 @@ function discoveryNextCursor(
     ),
   )
   return cursors.length === 1 ? (cursors[0] ?? null) : null
-}
-
-function serpRows(response: DataForSeoSerpResponse): number {
-  return response.tasks.reduce(
-    (taskTotal, task) =>
-      taskTotal +
-      (task.result ?? []).reduce(
-        (resultTotal, result) => resultTotal + (result.items?.length ?? 0),
-        0,
-      ),
-    0,
-  )
 }
 
 export class DataForSeoClient {
@@ -298,6 +344,19 @@ export class DataForSeoClient {
     ).toString('base64')}`
   }
 
+  private serpTaskTransport(credentials: DataForSeoCredentials) {
+    return {
+      authorization: this.authorization(credentials),
+      baseUrl: this.baseUrl,
+      fetch: this.fetch,
+      maxResponseBytes: this.maxResponseBytes,
+      timeoutMs: this.timeoutMs,
+      now: this.now,
+      database: this.database,
+      spendLimits: this.spendLimits,
+    }
+  }
+
   private async userDataForCredentials(
     credentials: DataForSeoCredentials,
   ): Promise<DataForSeoAccountSnapshot> {
@@ -342,7 +401,7 @@ export class DataForSeoClient {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'account-status',
-        code: taskErrorCode(statusCode),
+        code: dataForSeoTaskErrorCode(statusCode),
         message: `DataForSEO could not return account status (${statusCode}).`,
         retryable: statusCode === 40202,
       })
@@ -362,22 +421,25 @@ export class DataForSeoClient {
       provider: 'dataforseo',
       login: account.login,
       timezone: account.timezone ?? null,
-      balanceMicros: usdToMicros(account.money?.balance),
-      depositedMicros: usdToMicros(account.money?.total),
-      accountDailySpendMicros: usdToMicros(
+      balanceMicros: dataForSeoUsdToMicros(account.money?.balance),
+      depositedMicros: dataForSeoUsdToMicros(account.money?.total),
+      accountDailySpendMicros: dataForSeoUsdToMicros(
         account.money?.statistics?.day?.total,
       ),
       accountDailySpendPeriod: account.money?.statistics?.day?.value ?? null,
-      accountDailyLimitMicros: usdToMicros(account.money?.limits?.day?.total),
+      accountDailyLimitMicros: dataForSeoUsdToMicros(
+        account.money?.limits?.day?.total,
+      ),
       keywordOverviewPrice: keywordOverviewPrice(account),
       keywordDiscoveryPrices: keywordDiscoveryPrices(account),
       serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
+      serpTaskPostPrice: serpTaskPostPrice(account),
       backlinksSubscriptionExpiresAt:
         account.backlinks_subscription_expiry_date ?? null,
       aiMentionsSubscriptionExpiresAt:
         account.llm_mentions_subscription_expiry_date ?? null,
       apiVersion: response.version ?? null,
-      requestCostMicros: usdToMicros(response.cost) ?? 0,
+      requestCostMicros: dataForSeoUsdToMicros(response.cost) ?? 0,
       taskIds: response.tasks.flatMap((task) => (task.id ? [task.id] : [])),
       observedAt: this.now().toISOString(),
     }
@@ -654,7 +716,7 @@ export class DataForSeoClient {
       throw error
     }
 
-    const actualCostMicros = responseCostMicros(response)
+    const actualCostMicros = dataForSeoResponseCostMicros(response)
     const returnedRows = responseRows(response)
     const taskIds = responseTaskIds(response)
     const failedTasks = response.tasks.filter(
@@ -689,7 +751,7 @@ export class DataForSeoClient {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'keyword-metrics',
-        code: taskErrorCode(statusCode),
+        code: dataForSeoTaskErrorCode(statusCode),
         message: `DataForSEO could not complete the keyword metrics task (${statusCode}).`,
         retryable: statusCode === 40202,
       })
@@ -847,62 +909,7 @@ export class DataForSeoClient {
   async serpLive(
     input: DataForSeoSerpRequest,
   ): Promise<DataForSeoSerpSnapshot> {
-    const keyword = input.keyword.trim()
-    if (
-      keyword.length < 1 ||
-      keyword.length > MAX_KEYWORD_CHARACTERS ||
-      keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
-      })
-    }
-    if (
-      /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
-        keyword,
-      )
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message:
-          'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
-      })
-    }
-    if (
-      !Number.isSafeInteger(input.depth) ||
-      input.depth < 1 ||
-      input.depth > MAX_SERP_DEPTH
-    ) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
-      })
-    }
-    if (!/^[a-z]{2}$/.test(input.languageCode)) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message: 'DataForSEO language code must contain two lowercase letters.',
-      })
-    }
-    const locationName = input.locationName?.trim()
-    if ((input.locationCode !== undefined) === Boolean(locationName)) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-snapshot',
-        code: 'configuration',
-        message:
-          'DataForSEO SERP snapshots require exactly one location code or location name.',
-      })
-    }
+    const { keyword, locationName } = validateSerpInput(input)
     const request = {
       keyword,
       language_code: input.languageCode,
@@ -925,7 +932,78 @@ export class DataForSeoClient {
       context: input.context,
       ttlMs: this.serpTtlMs,
       refresh: input.refresh,
-      rowCount: serpRows,
+      rowCount: dataForSeoSerpRows,
     })
+  }
+
+  async serpTaskPost(input: {
+    tasks: DataForSeoSerpTaskInput[]
+    context: ProviderRequestContext
+  }): Promise<DataForSeoSerpTaskPostSnapshot> {
+    if (
+      input.tasks.length < 1 ||
+      input.tasks.length > MAX_SERP_TASKS_PER_POST
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-task-post',
+        code: 'configuration',
+        message: `A queued SERP post requires 1 to ${MAX_SERP_TASKS_PER_POST} tasks.`,
+      })
+    }
+    const requests: DataForSeoQueuedSerpRequest[] = input.tasks.map((task) => {
+      const validated = validateSerpInput(task)
+      return {
+        keyword: validated.keyword,
+        language_code: task.languageCode,
+        ...(task.locationCode !== undefined
+          ? { location_code: task.locationCode }
+          : { location_name: validated.locationName }),
+        device: task.device,
+        depth: task.depth,
+        tag: task.tag,
+        priority: 1,
+        remove_from_url: ['srsltid'],
+      }
+    })
+    const credentials = await this.getCredentials('serp-task-post')
+    const credentialScope = providerCredentialScope(
+      'dataforseo',
+      credentials.login,
+    )
+    const price = (
+      await this.pricingForCredentials(credentials, credentialScope)
+    ).serpTaskPostPrice
+    return postDataForSeoSerpTasks(
+      {
+        requests,
+        context: input.context,
+        price,
+      },
+      {
+        authorization: this.authorization(credentials),
+        baseUrl: this.baseUrl,
+        fetch: this.fetch,
+        maxResponseBytes: this.maxResponseBytes,
+        timeoutMs: this.timeoutMs,
+        now: this.now,
+        database: this.database,
+        spendLimits: this.spendLimits,
+      },
+    )
+  }
+
+  async serpTasksReady(): Promise<DataForSeoSerpReadyTask[]> {
+    const credentials = await this.getCredentials('serp-tasks-ready')
+    return listReadyDataForSeoSerpTasks(this.serpTaskTransport(credentials))
+  }
+
+  async serpTaskGet(providerTaskId: string): Promise<DataForSeoSerpSnapshot> {
+    validateDataForSeoSerpTaskId(providerTaskId)
+    const credentials = await this.getCredentials('serp-task-get')
+    return getDataForSeoSerpTask(
+      providerTaskId,
+      this.serpTaskTransport(credentials),
+    )
   }
 }

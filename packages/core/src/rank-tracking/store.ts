@@ -36,7 +36,7 @@ export function activeRankTrackingRun(
     .prepare(
       `SELECT * FROM rank_tracking_runs
        WHERE config_id = ? AND completed_at IS NULL
-       ORDER BY started_at DESC, id DESC LIMIT 1`,
+       ORDER BY scheduled_for DESC, id DESC LIMIT 1`,
     )
     .get(configId) as RunRow | undefined
   return row ? runFromRow(row) : null
@@ -240,12 +240,29 @@ export function saveRankObservation(
   observation: RankObservation,
   options: RankTrackingStoreOptions = {},
 ): void {
+  saveRankObservations([observation], options)
+}
+
+export function saveRankObservations(
+  observations: RankObservation[],
+  options: RankTrackingStoreOptions = {},
+): void {
+  if (observations.length === 0) return
+  const runId = observations[0]?.runId
+  if (
+    !runId ||
+    observations.some((observation) => observation.runId !== runId)
+  ) {
+    throw new SeoError(
+      'INTERNAL_ERROR',
+      'A rank observation batch must belong to one run.',
+    )
+  }
   const db = database(options)
   const now = (options.now ?? (() => new Date()))().getTime()
   const save = db.transaction(() => {
-    const inserted = db
-      .prepare(
-        `INSERT OR IGNORE INTO rank_tracking_snapshots
+    const insertSnapshot = db.prepare(
+      `INSERT OR IGNORE INTO rank_tracking_snapshots
        (task_id, run_id, normalized_keyword, display_keyword, device,
         observation_state, organic_position, absolute_position, ranking_url,
         observed_features_json, checked_at, provider, provider_task_id,
@@ -253,8 +270,24 @@ export function saveRankObservation(
         completeness, estimated_cost_micros, actual_cost_micros, warnings_json,
         created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
+    )
+    const completeTask = db.prepare(
+      `UPDATE rank_tracking_tasks
+       SET state = 'complete', collected_at = ?, error_code = NULL,
+           error_message = NULL WHERE id = ?`,
+    )
+    const addLiveCost = db.prepare(
+      `UPDATE rank_tracking_runs
+       SET estimated_cost_micros = CASE
+             WHEN ? IS NULL THEN estimated_cost_micros
+             ELSE COALESCE(estimated_cost_micros, 0) + ? END,
+           actual_cost_micros = CASE
+             WHEN ? IS NULL THEN actual_cost_micros
+             ELSE COALESCE(actual_cost_micros, 0) + ? END
+       WHERE id = ? AND collection_method = 'live'`,
+    )
+    for (const observation of observations) {
+      const inserted = insertSnapshot.run(
         observation.taskId,
         observation.runId,
         observation.normalizedKeyword,
@@ -278,32 +311,20 @@ export function saveRankObservation(
         JSON.stringify(observation.warnings),
         now,
       )
-    db.prepare(
-      `UPDATE rank_tracking_tasks
-       SET state = 'complete', collected_at = ?, error_code = NULL,
-           error_message = NULL WHERE id = ?`,
-    ).run(now, observation.taskId)
-    if (inserted.changes === 1) {
-      db.prepare(
-        `UPDATE rank_tracking_runs
-         SET estimated_cost_micros = CASE
-               WHEN ? IS NULL THEN estimated_cost_micros
-               ELSE COALESCE(estimated_cost_micros, 0) + ? END,
-             actual_cost_micros = CASE
-               WHEN ? IS NULL THEN actual_cost_micros
-               ELSE COALESCE(actual_cost_micros, 0) + ? END
-         WHERE id = ? AND collection_method = 'live'`,
-      ).run(
-        observation.estimatedCostMicros,
-        observation.estimatedCostMicros,
-        observation.actualCostMicros,
-        observation.actualCostMicros,
-        observation.runId,
-      )
+      completeTask.run(now, observation.taskId)
+      if (inserted.changes === 1) {
+        addLiveCost.run(
+          observation.estimatedCostMicros,
+          observation.estimatedCostMicros,
+          observation.actualCostMicros,
+          observation.actualCostMicros,
+          observation.runId,
+        )
+      }
     }
   })
   save.immediate()
-  refreshRankTrackingRun(observation.runId, { database: db, now: options.now })
+  refreshRankTrackingRun(runId, { database: db, now: options.now })
 }
 
 export function failRankTrackingTask(
@@ -385,7 +406,7 @@ function pruneRankTrackingRuns(
      WHERE config_id = ? AND id IN (
        SELECT id FROM rank_tracking_runs
        WHERE config_id = ? AND completed_at IS NOT NULL
-       ORDER BY started_at DESC, id DESC LIMIT -1 OFFSET ?
+       ORDER BY scheduled_for DESC, id DESC LIMIT -1 OFFSET ?
      )`,
   ).run(
     row.config_id,
@@ -399,7 +420,7 @@ function pruneRankTrackingRuns(
         `SELECT id FROM rank_tracking_runs
          WHERE config_id = ? AND id <> ?
            AND completed_at IS NOT NULL
-         ORDER BY started_at, id LIMIT 1`,
+         ORDER BY scheduled_for, id LIMIT 1`,
       )
       .get(row.config_id, runId) as { id: string } | undefined
     if (!oldest) break
@@ -415,7 +436,7 @@ export function latestRankTrackingRun(
   const row = database(options)
     .prepare(
       `SELECT * FROM rank_tracking_runs WHERE config_id = ?
-       ORDER BY started_at DESC, id DESC LIMIT 1`,
+       ORDER BY scheduled_for DESC, id DESC LIMIT 1`,
     )
     .get(configId) as RunRow | undefined
   return row ? runFromRow(row) : null
@@ -431,9 +452,9 @@ export function priorComparableRankTrackingRun(
       `SELECT previous.* FROM rank_tracking_runs previous
        JOIN rank_tracking_runs current ON current.id = ?
        WHERE previous.config_id = ? AND previous.id <> current.id
-         AND previous.started_at < current.started_at
+         AND previous.scheduled_for < current.scheduled_for
          AND previous.snapshot_count > 0
-       ORDER BY previous.started_at DESC, previous.id DESC LIMIT 1`,
+       ORDER BY previous.scheduled_for DESC, previous.id DESC LIMIT 1`,
     )
     .get(currentRunId, configId) as RunRow | undefined
   return row ? runFromRow(row) : null

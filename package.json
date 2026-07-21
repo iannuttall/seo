@@ -76,6 +76,7 @@
     "skills:validate": "node scripts/validate-skills.mjs",
     "test": "turbo run test && pnpm run build:package && node --test scripts/package.test.mjs scripts/dogfood-summary.test.mjs && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/pseo-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && pnpm run skills:validate",
     "test:resources": "pnpm run build:package && node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/pseo-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs",
+    "test:rank-resources": "pnpm run build:package && node scripts/rank-tracking-resource-harness.mjs",
     "test:package-install": "pnpm --filter @seo/core build && pnpm --filter @seo/mcp build && pnpm run build:package && node --test scripts/installed-package.test.mjs",
     "typecheck": "turbo run typecheck"
   },

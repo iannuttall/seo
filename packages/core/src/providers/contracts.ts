@@ -122,7 +122,15 @@ export type ProviderCapabilitySupport = {
   capability: ProviderCapability
   status: 'available' | 'unavailable'
   reason?: string
-  markets: 'all' | SearchMarket[]
+  markets: 'all' | readonly ProviderMarketSupport[]
+}
+
+export type ProviderMarketSupport = {
+  searchEngines?: readonly SearchMarket['searchEngine'][]
+  countryCodes?: readonly string[]
+  languageCodes?: readonly string[]
+  devices?: readonly NonNullable<SearchMarket['device']>[]
+  location?: 'any' | 'country-only' | 'canonical'
 }
 
 export interface ProviderAdapter {

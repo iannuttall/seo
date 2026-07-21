@@ -75,6 +75,23 @@ export function compactAgentWorkflowOutput(
   report: Record<string, unknown>,
 ): Record<string, unknown> {
   const originalBytes = jsonBytes(report)
+  const complete = {
+    ...report,
+    outputBudget: {
+      schemaVersion: 1,
+      maxBytes: AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
+      originalBytes,
+      returnedBytes: 0,
+      truncated: false,
+      omissions: [],
+      omissionsTruncated: false,
+      detail:
+        'The complete structured report fits within the agent output budget.',
+    },
+  }
+  if (setReturnedBytes(complete) <= AGENT_STRUCTURED_OUTPUT_MAX_BYTES) {
+    return complete
+  }
   const attempts: CompactOptions[] = [
     { arrayLimit: 10, stringLimit: 4_000 },
     { arrayLimit: 5, stringLimit: 2_000 },

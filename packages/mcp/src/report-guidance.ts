@@ -601,6 +601,37 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Template-level demand, quality, and index evidence with representative URLs.',
   },
+  'keyword-metrics': {
+    name: 'Keyword metrics',
+    description:
+      'Compare market-specific keyword demand, trend, cost, competition, difficulty, intent, and result-count estimates.',
+    useWhen: [
+      'You have a bounded keyword list and need independent market estimates.',
+      'You want recent demand history before deciding which terms deserve deeper research.',
+    ],
+    avoidWhen: [
+      'You need first-party evidence of how your own pages perform.',
+      'You need an exact current rank or a current result-page comparison.',
+    ],
+    outcome:
+      'Provider-neutral keyword evidence with missing values, costs, coverage, and trend heuristics kept visible.',
+  },
+  'keyword-opportunities': {
+    name: 'Enriched keyword opportunities',
+    description:
+      'Combine existing Search Console opportunity evidence with optional market estimates and programmatic SEO cluster context.',
+    useWhen: [
+      'You want quick-win, second-page, and striking-distance evidence from one bounded Search Console acquisition.',
+      'You want to add independent keyword estimates without replacing first-party evidence or its existing scores.',
+      'You need candidate query clusters and repeatable page patterns to validate before expanding a template.',
+    ],
+    avoidWhen: [
+      'You only need independent metrics for a supplied keyword list.',
+      'You need a current result snapshot, exact rank, competitor comparison, or external provider work without explicit paid-request intent.',
+    ],
+    outcome:
+      'Bounded first-party opportunity sections, optional typed provider evidence, discrepancy findings, and programmatic SEO validation prompts.',
+  },
   'query-clusters': {
     name: 'Search query clusters',
     description:

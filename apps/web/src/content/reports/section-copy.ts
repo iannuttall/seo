@@ -95,6 +95,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Open the queries and pages inside each useful cluster before changing site structure. Treat the groups as an investigation aid, then confirm intent and page overlap with live search evidence.',
   'quick-wins':
     'Inspect the current result and page intent before changing its snippet. Record the exact title or description update and compare the same queries after a complete data window.',
+  'rank-tracking':
+    'Check market, device, depth, coverage and cost before reading the position changes. Inspect changed ranking URLs and add Search Console evidence before deciding that a movement deserves work.',
   'redirect-trace':
     "Fix loops, unnecessary hops and destinations that do not match the original URL's purpose. Update internal links to the final URL and trace the path again after deployment.",
   'narrative-report':
@@ -150,6 +152,8 @@ export const reportScheduleNotes: Partial<Record<string, string>> = {
     'This is a natural monthly agent task. Have it build the plan after the latest crawl and Google data are complete, then keep unfinished work and missing evidence visible in the next run.',
   'monthly-report':
     'Your agent can prepare this on the same day each month and send you the new actions with their supporting evidence. Use complete reporting periods so a partial month does not look like a drop.',
+  'rank-tracking':
+    'Run the local collector daily so queued tasks are picked up before the provider ready list expires. The saved cadence controls when a new weekly or monthly run starts, while each poll resumes the same unfinished run.',
   'search-performance-overview':
     'Ask your agent to run this weekly or monthly and report the pages, queries, countries or devices that moved most. Compare complete periods with the same filters before treating a change as real.',
   'site-crawl':

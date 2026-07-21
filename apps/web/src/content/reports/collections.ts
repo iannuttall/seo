@@ -56,6 +56,7 @@ export const reportCollections = [
       ['keyword-metrics', 'Keyword metrics'],
       ['saved-keywords', 'Saved keyword set'],
       ['serp-results', 'Live search results'],
+      ['rank-tracking', 'Exact rank tracking'],
       ['keyword-opportunities', 'Keyword opportunities'],
       ['pseo-opportunities', 'Programmatic SEO opportunities'],
       ['quick-wins', 'Quick wins'],

@@ -287,6 +287,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Find page-one queries with useful impressions and weaker CTR evidence, then inspect the search result before changing titles, snippets or page copy.',
     lead: 'Find visible queries that may have a practical CTR opportunity without rewriting the whole page. The shortlist is fast to review, but the word quick does not make the evidence certain.',
   },
+  'rank-tracking': {
+    title: 'Keyword rank tracking report',
+    description:
+      'Track exact organic positions for a saved keyword set by location and device. Compare ranking changes with local history, coverage and provider cost.',
+    lead: 'Track the same saved keywords in a fixed market and device, then compare each exact snapshot with the prior compatible run. Results stay on your machine, including queued task state, cost and history.',
+  },
   'redirect-trace': {
     title: 'Redirect trace',
     description:

@@ -298,6 +298,59 @@ export const reportGuideOverridesQZ: Partial<
       supportingKeywords: ['SERP checker', 'search intent analysis'],
     },
   },
+  'rank-tracking': {
+    name: 'Track exact keyword positions',
+    summary:
+      'Collect exact organic positions for a saved keyword set, then compare compatible local snapshots with coverage, task state, and cost kept visible.',
+    inputs: [
+      {
+        label: 'Saved keyword set and target domain',
+        role: 'Select up to 50 keywords for live collection or 1,000 for queued collection, with an optional saved tag filter.',
+      },
+      {
+        label: 'Fixed search market and device',
+        role: 'Uses the saved country, language, location, and one or two explicit device configurations without blending their positions.',
+      },
+      {
+        label: 'Connected exact-rank provider',
+        source: 'serp-provider-results',
+        role: 'Posts or collects bounded search snapshots with task ids, exact ranks, requested depth, coverage, warnings, and cost.',
+      },
+    ],
+    checks: [
+      'Creates or resumes one local run for the exact keyword set, target domain, market, device, provider, depth, collection method, and cadence.',
+      'Records observed, not observed within depth, pending, and failed states separately for every keyword and device pair.',
+      'Compares the latest completed evidence with the prior compatible run for new, lost, improved, declined, unchanged, and ranking URL changes.',
+      'Retains bounded local history and caps report output without hiding omitted counts.',
+    ],
+    returns: [
+      'A run summary with tracked keywords, completed, pending and failed snapshots, exact position changes, ranking URL changes, and prior-run coverage.',
+      'A bounded item list with current and previous evidence plus fixed market, device, depth, provider task, local retention, cost, warning, and caveat context.',
+    ],
+    alternatives: [
+      {
+        when: 'You need clicks, impressions, CTR, or average position from searches associated with the site.',
+        reportId: 'quick-wins',
+        doInstead:
+          'Use a Search Console opportunity report for first-party performance evidence. Exact rank snapshots do not contain clicks or impressions and should not replace average position.',
+      },
+      {
+        when: 'You need to inspect one current result page but do not need saved history.',
+        reportId: 'serp-results',
+        doInstead:
+          'Run live search results for that query and market. It returns the retained result page and features without creating a recurring tracking configuration.',
+      },
+      {
+        when: 'You need proof that a ranking change caused a traffic change.',
+        doInstead:
+          'No rank tracker can establish that from position movement alone. Compare complete Search Console periods, inspect the live page and result set, and keep other releases or demand changes visible.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'keyword rank tracking',
+      supportingKeywords: ['SERP rank tracker', 'keyword position tracking'],
+    },
+  },
   'striking-distance': {
     name: 'Find striking-distance opportunities',
     summary:

@@ -62,6 +62,7 @@ const userDataPriceSchema = z
       .optional(),
     serp: z
       .object({
+        task_post: normalPriorityPriceSchema.optional(),
         live: z
           .object({
             advanced: normalPriorityPriceSchema.optional(),

@@ -84,6 +84,7 @@ export const TELEMETRY_REPORTS = [
   'pseo-opportunities',
   'query-clusters',
   'quick-wins',
+  'rank-tracking',
   'redirect-trace',
   'narrative-report',
   'second-page',

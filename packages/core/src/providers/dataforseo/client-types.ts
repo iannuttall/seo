@@ -27,6 +27,7 @@ export type DataForSeoAccountSnapshot = {
   keywordOverviewPrice: DataForSeoUnitPrice
   keywordDiscoveryPrices: Record<KeywordDiscoverySource, DataForSeoUnitPrice>
   serpLiveAdvancedPrice: DataForSeoUnitPrice
+  serpTaskPostPrice: DataForSeoUnitPrice
   backlinksSubscriptionExpiresAt: string | null
   aiMentionsSubscriptionExpiresAt: string | null
   apiVersion: string | null
@@ -118,4 +119,24 @@ export type DataForSeoSerpSnapshot = {
   cost: ProviderCostEvidence
   spendNotice: ProviderSpendNotice | null
   warnings: ProviderWarning[]
+}
+
+export type DataForSeoSerpTaskInput = Omit<
+  DataForSeoSerpRequest,
+  'refresh' | 'context'
+> & { tag: string }
+
+export type DataForSeoSerpTaskPostSnapshot = {
+  taskIds: string[]
+  taskReceipts: Array<{ providerTaskId: string; tag: string }>
+  estimatedCostMicros: number | null
+  actualCostMicros: number | null
+  spendNotice: ProviderSpendNotice | null
+  warnings: ProviderWarning[]
+  observedAt: string
+}
+
+export type DataForSeoSerpReadyTask = {
+  providerTaskId: string
+  tag: string | null
 }

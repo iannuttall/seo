@@ -26,7 +26,7 @@
     "@iannuttall/seo-graph-astro": "^0.0.4",
     "@iannuttall/seo-graph-core": "^0.0.2",
     "@tailwindcss/vite": "^4.3.1",
-    "astro": "^7.1.1"
+    "astro": "^7.1.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

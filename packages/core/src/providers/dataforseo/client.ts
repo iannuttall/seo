@@ -51,6 +51,11 @@ import {
   dataForSeoPaidPost,
 } from './paid-request.js'
 import {
+  dataForSeoResponseCostMicros,
+  dataForSeoTaskErrorCode,
+  dataForSeoUsdToMicros,
+} from './response.js'
+import {
   type DataForSeoKeywordOverviewResponse,
   dataForSeoKeywordOverviewResponseSchema,
 } from './schema.js'
@@ -59,9 +64,14 @@ import {
   dataForSeoSerpResponseSchema,
 } from './serp-schema.js'
 import {
-  dataForSeoSerpTaskPostResponseSchema,
-  dataForSeoSerpTasksReadyResponseSchema,
-} from './serp-task-schema.js'
+  type DataForSeoQueuedSerpRequest,
+  dataForSeoSerpRows,
+  getDataForSeoSerpTask,
+  listReadyDataForSeoSerpTasks,
+  MAX_SERP_TASKS_PER_POST,
+  postDataForSeoSerpTasks,
+  validateDataForSeoSerpTaskId,
+} from './serp-tasks.js'
 
 const DEFAULT_BASE_URL = 'https://api.dataforseo.com/'
 const USER_DATA_PATH = 'v3/appendix/user_data'
@@ -72,9 +82,6 @@ const KEYWORD_DISCOVERY_PATHS = {
   suggestions: 'v3/dataforseo_labs/google/keyword_suggestions/live',
 } as const satisfies Record<KeywordDiscoverySource, string>
 const SERP_LIVE_ADVANCED_PATH = 'v3/serp/google/organic/live/advanced'
-const SERP_TASK_POST_PATH = 'v3/serp/google/organic/task_post'
-const SERP_TASKS_READY_PATH = 'v3/serp/google/organic/tasks_ready'
-const SERP_TASK_GET_ADVANCED_PATH = 'v3/serp/google/organic/task_get/advanced/'
 const DEFAULT_TIMEOUT_MS = 15_000
 const MAX_USER_DATA_RESPONSE_BYTES = 5 * 1024 * 1024
 const DEFAULT_KEYWORD_OVERVIEW_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -87,7 +94,6 @@ const MAX_KEYWORD_WORDS = 10
 const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
 const MAX_SERP_DEPTH = 100
-const MAX_SERP_TASKS_PER_POST = 100
 
 function validateSerpInput(
   input: Omit<DataForSeoSerpRequest, 'refresh' | 'context'>,
@@ -166,11 +172,6 @@ type UserDataAccount = NonNullable<
   DataForSeoUserDataResponse['tasks'][number]['result']
 >[number]
 
-function usdToMicros(value: number | undefined): number | null {
-  if (value === undefined) return null
-  return Math.round(value * 1_000_000)
-}
-
 function unitPrice(
   components: Array<{ cost_type: string; cost: number }> | null | undefined,
 ): DataForSeoUnitPrice {
@@ -223,27 +224,10 @@ function serpTaskPostPrice(account: UserDataAccount): DataForSeoUnitPrice {
   return unitPrice(account.price?.serp?.task_post?.priority_normal)
 }
 
-function taskErrorCode(
-  statusCode: number,
-): 'authentication' | 'rate-limit' | 'remote-error' {
-  if (statusCode >= 40100 && statusCode < 40200) return 'authentication'
-  if (statusCode === 40202) return 'rate-limit'
-  return 'remote-error'
-}
-
 function responseTaskIds(response: DataForSeoPaidResponse): string[] {
   return [
     ...new Set(response.tasks.flatMap((task) => (task.id ? [task.id] : []))),
   ].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
-}
-
-function responseCostMicros(response: DataForSeoPaidResponse): number | null {
-  if (response.cost !== undefined) return usdToMicros(response.cost)
-  if (response.tasks.some((task) => task.cost === undefined)) return null
-  return response.tasks.reduce(
-    (sum, task) => sum + (usdToMicros(task.cost) ?? 0),
-    0,
-  )
 }
 
 function responseRows(response: DataForSeoKeywordOverviewResponse): number {
@@ -290,18 +274,6 @@ function discoveryNextCursor(
     ),
   )
   return cursors.length === 1 ? (cursors[0] ?? null) : null
-}
-
-function serpRows(response: DataForSeoSerpResponse): number {
-  return response.tasks.reduce(
-    (taskTotal, task) =>
-      taskTotal +
-      (task.result ?? []).reduce(
-        (resultTotal, result) => resultTotal + (result.items?.length ?? 0),
-        0,
-      ),
-    0,
-  )
 }
 
 export class DataForSeoClient {
@@ -375,6 +347,19 @@ export class DataForSeoClient {
     ).toString('base64')}`
   }
 
+  private serpTaskTransport(credentials: DataForSeoCredentials) {
+    return {
+      authorization: this.authorization(credentials),
+      baseUrl: this.baseUrl,
+      fetch: this.fetch,
+      maxResponseBytes: this.maxResponseBytes,
+      timeoutMs: this.timeoutMs,
+      now: this.now,
+      database: this.database,
+      spendLimits: this.spendLimits,
+    }
+  }
+
   private async userDataForCredentials(
     credentials: DataForSeoCredentials,
   ): Promise<DataForSeoAccountSnapshot> {
@@ -419,7 +404,7 @@ export class DataForSeoClient {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'account-status',
-        code: taskErrorCode(statusCode),
+        code: dataForSeoTaskErrorCode(statusCode),
         message: `DataForSEO could not return account status (${statusCode}).`,
         retryable: statusCode === 40202,
       })
@@ -439,13 +424,15 @@ export class DataForSeoClient {
       provider: 'dataforseo',
       login: account.login,
       timezone: account.timezone ?? null,
-      balanceMicros: usdToMicros(account.money?.balance),
-      depositedMicros: usdToMicros(account.money?.total),
-      accountDailySpendMicros: usdToMicros(
+      balanceMicros: dataForSeoUsdToMicros(account.money?.balance),
+      depositedMicros: dataForSeoUsdToMicros(account.money?.total),
+      accountDailySpendMicros: dataForSeoUsdToMicros(
         account.money?.statistics?.day?.total,
       ),
       accountDailySpendPeriod: account.money?.statistics?.day?.value ?? null,
-      accountDailyLimitMicros: usdToMicros(account.money?.limits?.day?.total),
+      accountDailyLimitMicros: dataForSeoUsdToMicros(
+        account.money?.limits?.day?.total,
+      ),
       keywordOverviewPrice: keywordOverviewPrice(account),
       keywordDiscoveryPrices: keywordDiscoveryPrices(account),
       serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
@@ -455,7 +442,7 @@ export class DataForSeoClient {
       aiMentionsSubscriptionExpiresAt:
         account.llm_mentions_subscription_expiry_date ?? null,
       apiVersion: response.version ?? null,
-      requestCostMicros: usdToMicros(response.cost) ?? 0,
+      requestCostMicros: dataForSeoUsdToMicros(response.cost) ?? 0,
       taskIds: response.tasks.flatMap((task) => (task.id ? [task.id] : [])),
       observedAt: this.now().toISOString(),
     }
@@ -732,7 +719,7 @@ export class DataForSeoClient {
       throw error
     }
 
-    const actualCostMicros = responseCostMicros(response)
+    const actualCostMicros = dataForSeoResponseCostMicros(response)
     const returnedRows = responseRows(response)
     const taskIds = responseTaskIds(response)
     const failedTasks = response.tasks.filter(
@@ -767,7 +754,7 @@ export class DataForSeoClient {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'keyword-metrics',
-        code: taskErrorCode(statusCode),
+        code: dataForSeoTaskErrorCode(statusCode),
         message: `DataForSEO could not complete the keyword metrics task (${statusCode}).`,
         retryable: statusCode === 40202,
       })
@@ -948,7 +935,7 @@ export class DataForSeoClient {
       context: input.context,
       ttlMs: this.serpTtlMs,
       refresh: input.refresh,
-      rowCount: serpRows,
+      rowCount: dataForSeoSerpRows,
     })
   }
 
@@ -967,7 +954,7 @@ export class DataForSeoClient {
         message: `A queued SERP post requires 1 to ${MAX_SERP_TASKS_PER_POST} tasks.`,
       })
     }
-    const requests = input.tasks.map((task) => {
+    const requests: DataForSeoQueuedSerpRequest[] = input.tasks.map((task) => {
       const validated = validateSerpInput(task)
       return {
         keyword: validated.keyword,
@@ -990,229 +977,36 @@ export class DataForSeoClient {
     const price = (
       await this.pricingForCredentials(credentials, credentialScope)
     ).serpTaskPostPrice
-    if (price.perRequestMicros === null || price.perResultMicros === null) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-task-post',
-        code: 'invalid-response',
-        message:
-          'DataForSEO Standard SERP pricing is unavailable, so queued tasks were not posted.',
-      })
-    }
-    const requestUnits = input.tasks.reduce(
-      (total, task) => total + Math.ceil(task.depth / 10),
-      0,
-    )
-    const estimatedCostMicros =
-      price.perRequestMicros * requestUnits +
-      price.perResultMicros * input.tasks.length
-    const reservation = reserveProviderSpend(
+    return postDataForSeoSerpTasks(
       {
-        provider: 'dataforseo',
-        capability: 'serp-snapshot',
-        endpoint: SERP_TASK_POST_PATH,
-        projectId: input.context.projectId,
-        reportId: input.context.reportId,
-        reportRunId: input.context.reportRunId,
-        requestedRows: input.tasks.length,
-        estimatedCostMicros,
+        requests,
+        context: input.context,
+        price,
       },
       {
-        database: this.database,
-        limits: this.spendLimits,
-        now: this.now().getTime(),
-      },
-    )
-    let response
-    try {
-      response = await providerRequestJson({
-        provider: 'dataforseo',
-        operation: 'serp-task-post',
-        url: new URL(SERP_TASK_POST_PATH, this.baseUrl),
+        authorization: this.authorization(credentials),
+        baseUrl: this.baseUrl,
         fetch: this.fetch,
         maxResponseBytes: this.maxResponseBytes,
         timeoutMs: this.timeoutMs,
-        retry: 'never',
-        schema: dataForSeoSerpTaskPostResponseSchema,
-        init: {
-          method: 'POST',
-          headers: {
-            authorization: this.authorization(credentials),
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify(requests),
-        },
-      })
-    } catch (error) {
-      finalizeProviderSpend(
-        reservation.id,
-        {
-          provider: 'dataforseo',
-          state: 'failed',
-          actualCostMicros: null,
-          returnedRows: null,
-          taskIds: [],
-        },
-        {
-          database: this.database,
-          limits: this.spendLimits,
-          now: this.now().getTime(),
-        },
-      )
-      throw error
-    }
-    const taskReceipts = response.tasks.flatMap((task) =>
-      task.id && task.data?.tag
-        ? [{ providerTaskId: task.id, tag: task.data.tag }]
-        : [],
-    )
-    const taskIds = taskReceipts.map((receipt) => receipt.providerTaskId)
-    const expectedTags = new Set(input.tasks.map((task) => task.tag))
-    const returnedTags = new Set(taskReceipts.map((receipt) => receipt.tag))
-    const receiptsMatch =
-      expectedTags.size === input.tasks.length &&
-      returnedTags.size === expectedTags.size &&
-      [...expectedTags].every((tag) => returnedTags.has(tag))
-    const failedTasks = response.tasks.filter(
-      (task) => task.status_code !== 20100 || !task.id || !task.data?.tag,
-    )
-    const actualCostMicros = responseCostMicros(response)
-    const state =
-      failedTasks.length === 0 && response.tasks_error === 0
-        ? 'succeeded'
-        : failedTasks.length < response.tasks.length
-          ? 'partial'
-          : 'failed'
-    const spendNotice = finalizeProviderSpend(
-      reservation.id,
-      {
-        provider: 'dataforseo',
-        state,
-        actualCostMicros,
-        returnedRows: taskIds.length,
-        taskIds,
-      },
-      {
+        now: this.now,
         database: this.database,
-        limits: this.spendLimits,
-        now: this.now().getTime(),
+        spendLimits: this.spendLimits,
       },
     )
-    if (
-      response.status_code !== 20000 ||
-      failedTasks.length > 0 ||
-      taskIds.length !== input.tasks.length ||
-      !receiptsMatch
-    ) {
-      const statusCode = failedTasks[0]?.status_code ?? response.status_code
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-task-post',
-        code: taskErrorCode(statusCode),
-        message: `DataForSEO accepted ${taskIds.length} of ${input.tasks.length} queued SERP tasks (${statusCode}).`,
-      })
-    }
-    return {
-      taskIds,
-      taskReceipts,
-      estimatedCostMicros,
-      actualCostMicros,
-      spendNotice,
-      warnings: [],
-      observedAt: this.now().toISOString(),
-    }
   }
 
   async serpTasksReady(): Promise<DataForSeoSerpReadyTask[]> {
     const credentials = await this.getCredentials('serp-tasks-ready')
-    const response = await providerRequestJson({
-      provider: 'dataforseo',
-      operation: 'serp-tasks-ready',
-      url: new URL(SERP_TASKS_READY_PATH, this.baseUrl),
-      fetch: this.fetch,
-      maxResponseBytes: this.maxResponseBytes,
-      timeoutMs: this.timeoutMs,
-      retry: 'safe',
-      schema: dataForSeoSerpTasksReadyResponseSchema,
-      init: {
-        method: 'GET',
-        headers: { authorization: this.authorization(credentials) },
-      },
-    })
-    const failedTask = response.tasks.find((task) => task.status_code !== 20000)
-    if (response.status_code !== 20000 || failedTask) {
-      const statusCode = failedTask?.status_code ?? response.status_code
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-tasks-ready',
-        code: taskErrorCode(statusCode),
-        message: `DataForSEO could not list ready SERP tasks (${statusCode}).`,
-        retryable: statusCode === 40202,
-      })
-    }
-    return response.tasks.flatMap((task) =>
-      (task.result ?? []).map((result) => ({
-        providerTaskId: result.id,
-        tag: result.tag ?? null,
-      })),
-    )
+    return listReadyDataForSeoSerpTasks(this.serpTaskTransport(credentials))
   }
 
   async serpTaskGet(providerTaskId: string): Promise<DataForSeoSerpSnapshot> {
-    if (!/^[a-zA-Z0-9-]{1,100}$/u.test(providerTaskId)) {
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-task-get',
-        code: 'configuration',
-        message: 'Use a valid queued SERP task id.',
-      })
-    }
+    validateDataForSeoSerpTaskId(providerTaskId)
     const credentials = await this.getCredentials('serp-task-get')
-    const response = await providerRequestJson({
-      provider: 'dataforseo',
-      operation: 'serp-task-get',
-      url: new URL(
-        `${SERP_TASK_GET_ADVANCED_PATH}${providerTaskId}`,
-        this.baseUrl,
-      ),
-      fetch: this.fetch,
-      maxResponseBytes: this.maxResponseBytes,
-      timeoutMs: this.timeoutMs,
-      retry: 'safe',
-      schema: dataForSeoSerpResponseSchema,
-      init: {
-        method: 'GET',
-        headers: { authorization: this.authorization(credentials) },
-      },
-    })
-    const failedTask = response.tasks.find((task) => task.status_code !== 20000)
-    if (response.status_code !== 20000 || failedTask) {
-      const statusCode = failedTask?.status_code ?? response.status_code
-      throw new ProviderError({
-        provider: 'dataforseo',
-        operation: 'serp-task-get',
-        code: taskErrorCode(statusCode),
-        message: `DataForSEO could not collect queued SERP task ${providerTaskId} (${statusCode}).`,
-        retryable: statusCode === 40202,
-      })
-    }
-    return {
-      response,
-      observedAt: this.now().toISOString(),
-      returnedRows: serpRows(response),
-      cache: {
-        status: 'bypass',
-        storedAt: null,
-        expiresAt: null,
-      },
-      cost: {
-        currency: 'USD',
-        estimatedMicros: 0,
-        actualMicros: responseCostMicros(response) ?? 0,
-        taskIds: [providerTaskId],
-      },
-      spendNotice: null,
-      warnings: [],
-    }
+    return getDataForSeoSerpTask(
+      providerTaskId,
+      this.serpTaskTransport(credentials),
+    )
   }
 }

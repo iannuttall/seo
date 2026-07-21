@@ -738,7 +738,7 @@ test('live SERP rejects multiplied-price operators before acquisition', async ()
   assert.equal(calls, 0)
 })
 
-test('queued SERP posts bounded normal-priority tasks with reserved spend', async () => {
+test('queued SERP posts bounded tasks and maps reordered receipts by tag', async () => {
   const db = database()
   let requestBody: unknown
   const client = new DataForSeoClient({
@@ -759,20 +759,20 @@ test('queued SERP posts bounded normal-priority tasks with reserved spend', asyn
           tasks_error: 0,
           tasks: [
             {
-              id: 'remote-1',
-              status_code: 20100,
-              status_message: 'Task Created.',
-              cost: 0.0012,
-              result_count: 0,
-              data: { tag: 'local-1' },
-            },
-            {
               id: 'remote-2',
               status_code: 20100,
               status_message: 'Task Created.',
               cost: 0.0012,
               result_count: 0,
               data: { tag: 'local-2' },
+            },
+            {
+              id: 'remote-1',
+              status_code: 20100,
+              status_message: 'Task Created.',
+              cost: 0.0012,
+              result_count: 0,
+              data: { tag: 'local-1' },
             },
           ],
         }),
@@ -828,10 +828,10 @@ test('queued SERP posts bounded normal-priority tasks with reserved spend', asyn
       remove_from_url: ['srsltid'],
     },
   ])
-  assert.deepEqual(result.taskIds, ['remote-1', 'remote-2'])
+  assert.deepEqual(result.taskIds, ['remote-2', 'remote-1'])
   assert.deepEqual(result.taskReceipts, [
-    { providerTaskId: 'remote-1', tag: 'local-1' },
     { providerTaskId: 'remote-2', tag: 'local-2' },
+    { providerTaskId: 'remote-1', tag: 'local-1' },
   ])
   assert.equal(result.estimatedCostMicros, 2_400)
   assert.equal(result.actualCostMicros, 2_400)

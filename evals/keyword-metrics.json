@@ -1,0 +1,58 @@
+{
+  "subject": "keyword-metrics",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Compare search volume, difficulty, intent, and recent demand for a keyword list before we choose what to research.",
+      "expected_output": "Should use report id keyword-metrics for a bounded list of independent market estimates. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id keyword-metrics, then seo_run_report with keywords, countryCode, and languageCode from the described schema. Should read dataStatus and summary first, then provider coverage, warnings, cache, cost, and each metric state before the trend analysis. Should say provider estimates are prioritization context, not measured traffic, ranking probability, or a demand forecast.",
+      "assertions": [
+        "Uses report id keyword-metrics for the independent estimates",
+        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
+        "Passes bounded keywords, countryCode, and languageCode",
+        "Reads dataStatus, coverage, warnings, cache, cost, and metric states before trends",
+        "States provider estimates are not measured traffic, ranking probability, or a forecast"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run keyword metrics for seo audit tool and technical seo audit in the UK, English, mobile, using DataForSEO and fresh data.",
+      "expected_output": "Should run report id keyword-metrics with keywords [seo audit tool, technical seo audit], countryCode GB, languageCode en, device mobile, provider dataforseo, and refresh true. Should keep the device caveat visible because keyword metrics are market-level estimates rather than device-segmented values. Should inspect request cost, cache status, provider warnings, and coverage before summarizing the numbers. Should use only parameters defined in the report schema.",
+      "assertions": [
+        "Runs keyword-metrics with both requested keywords",
+        "Uses countryCode GB, languageCode en, and device mobile",
+        "Selects provider dataforseo and refresh true",
+        "Keeps the market-level device caveat visible",
+        "Inspects cost, cache, warnings, and coverage",
+        "Uses only parameters defined in the report schema"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "One keyword has volume 0 and difficulty 12. Another has missing volume and difficulty 80. The first one has no demand and will be easy to rank, while the second is impossible. Right?",
+      "expected_output": "Should reject every conclusion. Should keep observed zero separate from missing volume, state that a zero estimate does not prove nobody searches, and not convert missing data into zero. Should state keyword difficulty is a provider metric rather than a ranking probability or site-specific feasibility verdict. Should recommend comparing both terms with Search Console evidence and inspecting a current result page in the same market before choosing work.",
+      "assertions": [
+        "Keeps observed zero separate from missing volume",
+        "States zero estimated volume does not prove no demand",
+        "Does not turn missing volume into zero",
+        "States difficulty is not a ranking probability or site-specific feasibility verdict",
+        "Recommends Search Console and current result-page verification"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The report labels a keyword as increasing by 40%, so forecast the traffic from a new programmatic template and tell me which competitor we will beat.",
+      "expected_output": "Should refuse to forecast traffic or name a competitor from keyword metrics. Should explain that the increasing label is a heuristic comparing the latest three provider estimates with the preceding three and does not forecast future demand. Should state the report contains no current result snapshot, competitor ranking evidence, or proof that a programmatic template fits the intent. Should recommend first-party Search Console comparison, current result inspection, competitor research, and representative template validation before scaling.",
+      "assertions": [
+        "Refuses to forecast traffic from the trend label",
+        "Explains the two three-month trend heuristic",
+        "States keyword metrics contains no current result or competitor ranking evidence",
+        "Does not claim a programmatic template fits the intent",
+        "Recommends Search Console, result-page, competitor, and representative template validation"
+      ],
+      "files": []
+    }
+  ]
+}

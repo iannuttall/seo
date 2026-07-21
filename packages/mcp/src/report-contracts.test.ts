@@ -123,6 +123,50 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
   }
 })
 
+test('keyword metrics bounds market and keyword acquisition inputs', () => {
+  const schema = reportSchema('keyword-metrics')
+  assert.equal(
+    schema.safeParse({
+      keywords: ['seo audit tool', 'technical seo audit'],
+      countryCode: 'GB',
+      languageCode: 'en-GB',
+      location: { name: 'London,England,United Kingdom' },
+      device: 'mobile',
+      provider: 'dataforseo',
+    }).success,
+    true,
+  )
+  for (const input of [
+    { keywords: [], countryCode: 'GB', languageCode: 'en' },
+    {
+      keywords: Array.from({ length: 51 }, (_, index) => `keyword ${index}`),
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      keywords: ['one two three four five six seven eight nine ten eleven'],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    { keywords: ['keyword'], countryCode: 'GBR', languageCode: 'en' },
+    { keywords: ['keyword'], countryCode: 'GB', languageCode: 'english' },
+    {
+      keywords: ['keyword'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: {},
+    },
+    {
+      keywords: ['keyword'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { code: 2826, name: 'United Kingdom' },
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('server log analysis bounds streamed work and returned rows', () => {
   const schema = reportSchema('server-log-analysis')
   assert.equal(

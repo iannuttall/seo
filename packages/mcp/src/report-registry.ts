@@ -4,6 +4,7 @@ import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
+import { registerKeywordTools } from './keyword-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerProviderTools } from './provider-tools.js'
@@ -74,6 +75,11 @@ const reportGroups: readonly ReportGroup[] = [
       'seo_query_cluster',
       'seo_quick_wins',
     ],
+  },
+  {
+    category: 'opportunities',
+    register: registerKeywordTools,
+    names: ['seo_keyword_metrics'],
   },
   {
     category: 'ai-search',

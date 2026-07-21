@@ -50,8 +50,9 @@ export const reportCollections = [
   {
     title: 'Search opportunities',
     introduction:
-      'Use the searches already bringing people to your site to choose pages, snippets, and links worth improving.',
+      'Combine searches already associated with the site and independent keyword estimates to choose what deserves a closer look.',
     reports: [
+      ['keyword-metrics', 'Keyword metrics'],
       ['quick-wins', 'Quick wins'],
       ['striking-distance', 'Striking distance'],
       ['second-page', 'Second page'],

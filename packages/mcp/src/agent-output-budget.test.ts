@@ -5,6 +5,27 @@ import {
   compactAgentWorkflowOutput,
 } from './agent-output-budget.js'
 
+test('workflow output preserves complete reports that fit the byte budget', () => {
+  const report = {
+    summary: 'Bounded keyword evidence.',
+    rows: Array.from({ length: 25 }, (_, index) => ({
+      keyword: `query ${index}`,
+      volume: index * 10,
+    })),
+  }
+
+  const output = compactAgentWorkflowOutput(report)
+  const budget = output.outputBudget as {
+    returnedBytes: number
+    truncated: boolean
+    omissions: unknown[]
+  }
+  assert.equal((output.rows as unknown[]).length, 25)
+  assert.equal(budget.truncated, false)
+  assert.deepEqual(budget.omissions, [])
+  assert.equal(budget.returnedBytes, Buffer.byteLength(JSON.stringify(output)))
+})
+
 test('workflow output uses one total agent byte budget', () => {
   const report = {
     workflow: 'diagnose-property',

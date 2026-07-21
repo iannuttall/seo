@@ -105,6 +105,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
         'seo internal-links --project example --url https://example.com/page',
       note: 'Find fetched pages that may deserve a link to the target.',
     },
+    'keyword-metrics': {
+      command:
+        'seo reports run keyword-metrics --params \'{"keywords":["seo audit tool"],"countryCode":"US","languageCode":"en"}\' --json',
+      note: 'Compare a limited keyword set in one country and language.',
+    },
     'link-recovery': {
       command: 'seo link-recover --project example',
       note: 'Find broken or poorly redirected URLs with returned search value.',

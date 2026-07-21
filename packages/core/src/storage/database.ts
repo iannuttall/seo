@@ -1,6 +1,7 @@
 import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
+import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import type { CacheStats } from '../types.js'
 import {
@@ -328,6 +329,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
     database.exec(KEYWORD_SET_SCHEMA_SQL)
+    database.exec(RANK_TRACKING_SCHEMA_SQL)
     database.exec(PROVIDER_SPEND_SCHEMA_SQL)
     database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')

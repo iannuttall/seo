@@ -28,6 +28,13 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   )
 })
 
+test('the clean package install check builds workspace dependencies', () => {
+  assert.match(
+    packageJson.scripts['test:package-install'],
+    /@seo\/core build.*@seo\/mcp build.*build:package/,
+  )
+})
+
 test('the public TypeScript library and MCP entry points load', async () => {
   const [core, mcp] = await Promise.all([
     import('../dist/index.js'),

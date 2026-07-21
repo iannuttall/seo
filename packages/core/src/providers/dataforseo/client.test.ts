@@ -175,7 +175,7 @@ function keywordOverviewFixture(
     statusCode?: number
     tasksError?: number
     cost?: number
-    items?: unknown[]
+    items?: unknown[] | null
   } = {},
 ) {
   const statusCode = input.statusCode ?? 20000
@@ -196,11 +196,14 @@ function keywordOverviewFixture(
           statusCode === 20000
             ? [
                 {
-                  items_count: 2,
-                  items: input.items ?? [
-                    { keyword: 'first query' },
-                    { keyword: 'second query' },
-                  ],
+                  items_count: input.items === null ? 0 : 2,
+                  items:
+                    input.items === undefined
+                      ? [
+                          { keyword: 'first query' },
+                          { keyword: 'second query' },
+                        ]
+                      : input.items,
                 },
               ]
             : null,
@@ -567,6 +570,35 @@ test('keyword overview accepts bounded extended monthly histories', async () => 
     result.response.tasks[0]?.result?.[0]?.items?.[0]?.keyword_info
       ?.monthly_searches
   assert.equal(rows?.length, 36)
+})
+
+test('keyword overview accepts a successful empty result with null items', async () => {
+  const db = database()
+  const client = new DataForSeoClient({
+    database: db,
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url) =>
+      new Response(
+        JSON.stringify(
+          String(url).includes('/appendix/user_data')
+            ? userDataFixture()
+            : keywordOverviewFixture({ items: null, cost: 0.01 }),
+        ),
+      ),
+  })
+
+  const result = await client.keywordOverview(
+    keywordRequest({ keywords: ['no provider row'] }),
+  )
+
+  assert.equal(result.returnedRows, 0)
+  assert.equal(result.response.tasks[0]?.result?.[0]?.items, null)
+  assert.equal(result.cost.actualMicros, 10_000)
+  const ledger = db
+    .prepare('SELECT state FROM provider_spend_ledger')
+    .get() as { state: string }
+  assert.equal(ledger.state, 'succeeded')
 })
 
 test('keyword discovery estimates cost and preserves pagination evidence', async () => {

@@ -1,6 +1,7 @@
 import { defineCommand } from 'citty'
 import { clientSetupCommand } from '../setup/index.js'
 import { clientBrandCommand } from './brand.js'
+import { keywordSetsCommand } from './keyword-sets/index.js'
 import { clientProfileCommands } from './profiles.js'
 
 export const clientCommand = defineCommand({
@@ -11,6 +12,7 @@ export const clientCommand = defineCommand({
   subCommands: {
     setup: clientSetupCommand,
     brand: clientBrandCommand,
+    'keyword-sets': keywordSetsCommand,
     ...clientProfileCommands,
   },
 })

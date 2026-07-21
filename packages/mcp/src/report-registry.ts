@@ -83,6 +83,7 @@ const reportGroups: readonly ReportGroup[] = [
       'seo_keyword_metrics',
       'seo_keyword_opportunities',
       'seo_keyword_research',
+      'seo_saved_keywords',
       'seo_serp_results',
     ],
   },

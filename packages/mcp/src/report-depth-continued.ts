@@ -247,6 +247,34 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'pseo-audit', reason: 'Validates repeated page templates.' },
     ],
   },
+  'saved-keywords': {
+    readOrder: [
+      'dataStatus, summary, evidence pagination, and any tag filter',
+      'the saved set market, source, refresh time, and keyword count',
+      'each item metric value state, observation time, tags, and page mapping',
+      'analysis groups, findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'User-managed tags do not prove shared intent or justify one page or template.',
+      'Provider metrics are estimates rather than first-party rankings or traffic, and a missing value differs from an observed zero.',
+      'A target or proposed page mapping does not prove that the page should exist, ranks, or is indexed.',
+      'A filtered, capped, or paginated view cannot support a conclusion about the complete set.',
+    ],
+    verify:
+      'Compare relevant terms with Search Console and inspect current results in the saved market before changing a page or template plan.',
+    related: [
+      { id: 'keyword-metrics', reason: 'Refreshes a supplied term list.' },
+      { id: 'keyword-research', reason: 'Discovers more candidate terms.' },
+      {
+        id: 'keyword-opportunities',
+        reason: 'Adds first-party opportunity evidence.',
+      },
+      {
+        id: 'pseo-opportunities',
+        reason: 'Reviews repeatable programmatic patterns.',
+      },
+    ],
+  },
   'query-clusters': {
     readOrder: [
       'summary cluster and query counts, clicks, impressions, threshold, limit, and brand filtering',

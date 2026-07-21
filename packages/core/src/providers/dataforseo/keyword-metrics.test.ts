@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type {
+  DataForSeoAccountSnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
 } from './client.js'
@@ -10,7 +11,7 @@ import type { DataForSeoKeywordOverviewItem } from './schema.js'
 type KeywordOverviewInput = DataForSeoKeywordOverviewRequest
 
 function snapshot(
-  items: DataForSeoKeywordOverviewItem[],
+  items: DataForSeoKeywordOverviewItem[] | null,
 ): DataForSeoKeywordOverviewSnapshot {
   return {
     response: {
@@ -26,12 +27,12 @@ function snapshot(
           status_message: 'Ok.',
           cost: 0.0102,
           result_count: 1,
-          result: [{ items_count: items.length, items }],
+          result: [{ items_count: items?.length ?? 0, items }],
         },
       ],
     },
     observedAt: '2026-07-21T12:00:00.000Z',
-    returnedRows: items.length,
+    returnedRows: items?.length ?? 0,
     cache: {
       status: 'miss',
       storedAt: null,
@@ -47,6 +48,83 @@ function snapshot(
     warnings: [],
   }
 }
+
+function accountPricing(): DataForSeoAccountSnapshot {
+  return {
+    provider: 'dataforseo',
+    login: 'fixture@example.test',
+    timezone: 'UTC',
+    balanceMicros: 1_000_000,
+    depositedMicros: 2_000_000,
+    accountDailySpendMicros: 0,
+    accountDailySpendPeriod: '2026-07-21',
+    accountDailyLimitMicros: null,
+    keywordOverviewPrice: {
+      perRequestMicros: 10_000,
+      perResultMicros: 200,
+    },
+    keywordDiscoveryPrices: {
+      ideas: { perRequestMicros: null, perResultMicros: null },
+      related: { perRequestMicros: null, perResultMicros: null },
+      suggestions: { perRequestMicros: null, perResultMicros: null },
+    },
+    serpLiveAdvancedPrice: {
+      perRequestMicros: null,
+      perResultMicros: null,
+    },
+    backlinksSubscriptionExpiresAt: null,
+    aiMentionsSubscriptionExpiresAt: null,
+    apiVersion: '3',
+    requestCostMicros: 0,
+    taskIds: ['account-task'],
+    observedAt: '2026-07-21T09:00:00.000Z',
+  }
+}
+
+test('keyword metric cost preview uses account pricing without paid work', async () => {
+  let paidCalls = 0
+  let accountCalls = 0
+  const provider = new DataForSeoKeywordMetricsProvider({
+    client: {
+      keywordOverview: async () => {
+        paidCalls += 1
+        return snapshot([])
+      },
+      userData: async () => {
+        accountCalls += 1
+        return accountPricing()
+      },
+    },
+  })
+  const estimate = await provider.estimateKeywordMetricsCost({
+    requestedRows: 60,
+    market: {
+      searchEngine: 'google',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+  })
+  assert.equal(estimate.requestCount, 2)
+  assert.equal(estimate.estimatedMicros, 32_000)
+  assert.equal(estimate.completeness, 'complete')
+  assert.equal(accountCalls, 1)
+  assert.equal(paidCalls, 0)
+
+  await assert.rejects(
+    provider.estimateKeywordMetricsCost({
+      requestedRows: 1,
+      market: {
+        searchEngine: 'google',
+        countryCode: 'GB',
+        languageCode: 'en',
+        location: { name: 'London,England,United Kingdom' },
+      },
+    }),
+    /country-level markets/,
+  )
+  assert.equal(accountCalls, 1)
+  assert.equal(paidCalls, 0)
+})
 
 test('keyword metrics translates a neutral market and preserves observed zero', async () => {
   let requested: KeywordOverviewInput | undefined
@@ -232,6 +310,28 @@ test('keyword metrics retains recent bounded history and reports omissions', asy
   assert.equal(result.request.filters.retainedMonthlyHistoryRows, 24)
 })
 
+test('keyword metrics maps a successful empty provider result to missing evidence', async () => {
+  const provider = new DataForSeoKeywordMetricsProvider({
+    client: { keywordOverview: async () => snapshot(null) },
+  })
+
+  const result = await provider.keywordMetrics({
+    keywords: ['no provider row'],
+    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+  })
+
+  assert.equal(result.coverage.returnedRows, 0)
+  assert.equal(result.coverage.retainedRows, 1)
+  assert.equal(result.coverage.completeness, 'partial')
+  assert.equal(result.data[0]?.monthlySearchVolume.state, 'missing')
+  assert.equal(
+    result.warnings.some(
+      (warning) => warning.code === 'provider-keywords-omitted',
+    ),
+    true,
+  )
+})
+
 test('duplicate provider rows resolve deterministically and expose conflicts', async () => {
   const rows = [
     {
@@ -279,29 +379,29 @@ test('duplicate provider rows resolve deterministically and expose conflicts', a
   )
 })
 
-test('keyword metrics prefers an explicit location code and rejects unsupported acquisition', async () => {
-  let requested: KeywordOverviewInput | undefined
+test('keyword metrics rejects non-country and unsupported acquisition before provider work', async () => {
   let calls = 0
   const provider = new DataForSeoKeywordMetricsProvider({
     client: {
-      keywordOverview: async (input) => {
+      keywordOverview: async () => {
         calls += 1
-        requested = input
         return snapshot([{ keyword: 'query' }])
       },
     },
   })
-  await provider.keywordMetrics({
-    keywords: ['query'],
-    market: {
-      searchEngine: 'google',
-      countryCode: 'GB',
-      languageCode: 'en',
-      location: { code: 1006886, name: 'London,England,United Kingdom' },
-    },
-  })
-  assert.equal(requested?.locationCode, 1006886)
-  assert.equal(requested?.locationName, undefined)
+
+  await assert.rejects(
+    provider.keywordMetrics({
+      keywords: ['query'],
+      market: {
+        searchEngine: 'google',
+        countryCode: 'GB',
+        languageCode: 'en',
+        location: { code: 1006886, name: 'London,England,United Kingdom' },
+      },
+    }),
+    /country-level markets/,
+  )
 
   await assert.rejects(
     provider.keywordMetrics({
@@ -317,5 +417,5 @@ test('keyword metrics prefers an explicit location code and rejects unsupported 
     }),
     /at most 80 characters and 10 words/,
   )
-  assert.equal(calls, 1)
+  assert.equal(calls, 0)
 })

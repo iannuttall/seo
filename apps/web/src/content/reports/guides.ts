@@ -2,6 +2,7 @@ import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
 import { reportGuideOverridesPseo } from './guide-overrides-pseo'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
+import { savedKeywordGuideOverrides } from './guide-overrides-saved-keywords'
 import type {
   ReportGuideAlternative,
   ReportGuideInput,
@@ -30,6 +31,7 @@ export const reportGuideOverrides: Partial<
   ...reportGuideOverridesIP,
   ...reportGuideOverridesPseo,
   ...reportGuideOverridesQZ,
+  ...savedKeywordGuideOverrides,
 }
 
 export function resolveReportGuide(

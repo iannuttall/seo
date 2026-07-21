@@ -5,7 +5,10 @@ import { PROVIDER_SPEND_SCHEMA_SQL } from '../../storage/provider-spend-schema.j
 import Database from '../../storage/sqlite.js'
 import type { ProviderSpendLimits } from '../cost-limits.js'
 import { ProviderError } from '../errors.js'
-import { DataForSeoClient } from './client.js'
+import {
+  DataForSeoClient,
+  type DataForSeoKeywordDiscoveryRequest,
+} from './client.js'
 
 type UserDataAccountFixture = {
   login: string
@@ -78,6 +81,39 @@ function userDataFixture(): UserDataFixture {
                     priority_normal: [
                       { cost_type: 'per_result', cost: 0.0001 },
                       { cost_type: 'per_request', cost: 0.01 },
+                    ],
+                  },
+                },
+                keyword_ideas: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.00012 },
+                      { cost_type: 'per_request', cost: 0.012 },
+                    ],
+                  },
+                },
+                keyword_suggestions: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.00012 },
+                      { cost_type: 'per_request', cost: 0.012 },
+                    ],
+                  },
+                },
+                related_keywords: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.00012 },
+                      { cost_type: 'per_request', cost: 0.012 },
+                    ],
+                  },
+                },
+              },
+              serp: {
+                live: {
+                  advanced: {
+                    priority_normal: [
+                      { cost_type: 'per_request', cost: 0.002 },
                     ],
                   },
                 },
@@ -173,6 +209,75 @@ function keywordOverviewFixture(
   }
 }
 
+function keywordDiscoveryFixture() {
+  return {
+    status_code: 20000,
+    status_message: 'Ok.',
+    cost: 0.01236,
+    tasks_count: 1,
+    tasks_error: 0,
+    tasks: [
+      {
+        id: 'discovery-task-id',
+        status_code: 20000,
+        status_message: 'Ok.',
+        cost: 0.01236,
+        result_count: 1,
+        result: [
+          {
+            seed_keywords: ['first query', 'second query'],
+            total_count: 300,
+            items_count: 3,
+            offset_token: 'next-page-token',
+            items: [
+              { keyword: 'first idea' },
+              { keyword: 'second idea' },
+              { keyword: 'third idea' },
+            ],
+          },
+        ],
+      },
+    ],
+  }
+}
+
+function serpFixture() {
+  return {
+    status_code: 20000,
+    status_message: 'Ok.',
+    cost: 0.004,
+    tasks_count: 1,
+    tasks_error: 0,
+    tasks: [
+      {
+        id: 'serp-task-id',
+        status_code: 20000,
+        status_message: 'Ok.',
+        cost: 0.004,
+        result_count: 1,
+        result: [
+          {
+            keyword: 'first query',
+            datetime: '2026-07-21 12:00:00 +00:00',
+            items_count: 2,
+            items: [
+              {
+                type: 'organic',
+                rank_group: 1,
+                rank_absolute: 1,
+                page: 1,
+                domain: 'example.test',
+                url: 'https://example.test/page',
+              },
+              { type: 'people_also_ask', rank_absolute: 2, page: 1 },
+            ],
+          },
+        ],
+      },
+    ],
+  }
+}
+
 function keywordRequest(
   overrides: Partial<Parameters<DataForSeoClient['keywordOverview']>[0]> = {},
 ) {
@@ -218,6 +323,15 @@ test('user data uses the free account endpoint and returns owned fields', async 
     keywordOverviewPrice: {
       perRequestMicros: 10_000,
       perResultMicros: 100,
+    },
+    keywordDiscoveryPrices: {
+      ideas: { perRequestMicros: 12_000, perResultMicros: 120 },
+      related: { perRequestMicros: 12_000, perResultMicros: 120 },
+      suggestions: { perRequestMicros: 12_000, perResultMicros: 120 },
+    },
+    serpLiveAdvancedPrice: {
+      perRequestMicros: 2_000,
+      perResultMicros: 0,
     },
     backlinksSubscriptionExpiresAt: null,
     aiMentionsSubscriptionExpiresAt: '2026-08-01 00:00:00 +00:00',
@@ -453,6 +567,136 @@ test('keyword overview accepts bounded extended monthly histories', async () => 
     result.response.tasks[0]?.result?.[0]?.items?.[0]?.keyword_info
       ?.monthly_searches
   assert.equal(rows?.length, 36)
+})
+
+test('keyword discovery estimates cost and preserves pagination evidence', async () => {
+  const db = database()
+  let calls = 0
+  let requestedUrl = ''
+  let requestBody: unknown
+  const client = new DataForSeoClient({
+    database: db,
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    now: () => new Date('2026-07-21T12:00:00.000Z'),
+    fetch: async (url, init) => {
+      calls += 1
+      if (String(url).includes('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      requestedUrl = String(url)
+      requestBody = JSON.parse(String(init?.body))
+      return new Response(JSON.stringify(keywordDiscoveryFixture()))
+    },
+  })
+
+  const request: DataForSeoKeywordDiscoveryRequest = {
+    source: 'ideas',
+    seeds: ['first query', 'second query'],
+    languageCode: 'en',
+    locationCode: 2840,
+    limit: 3,
+    context: { reportId: 'keyword-research', reportRunId: 'run-1' },
+  }
+  const result = await client.keywordDiscovery(request)
+
+  assert.equal(
+    requestedUrl,
+    'https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_ideas/live',
+  )
+  assert.deepEqual(requestBody, [
+    {
+      keywords: ['first query', 'second query'],
+      language_code: 'en',
+      location_code: 2840,
+      include_serp_info: true,
+      limit: 3,
+    },
+  ])
+  assert.equal(result.returnedRows, 3)
+  assert.equal(result.providerTotalRows, 300)
+  assert.equal(result.nextCursor, 'next-page-token')
+  assert.equal(result.cost.estimatedMicros, 12_360)
+  assert.equal(result.cost.actualMicros, 12_360)
+  assert.equal(calls, 2)
+
+  const cached = await client.keywordDiscovery(request)
+  assert.equal(cached.cache.status, 'hit')
+  assert.equal(cached.cost.estimatedMicros, 0)
+  assert.equal(cached.cost.actualMicros, 0)
+  assert.equal(calls, 2)
+
+  const ledger = db
+    .prepare('SELECT * FROM provider_spend_ledger')
+    .all() as Array<Record<string, unknown>>
+  assert.equal(ledger.length, 1)
+  assert.equal(ledger[0]?.state, 'succeeded')
+  assert.equal(ledger[0]?.estimated_cost_micros, 12_360)
+  assert.equal(ledger[0]?.actual_cost_micros, 12_360)
+})
+
+test('live SERP estimates each ten-result billing unit', async () => {
+  const db = database()
+  let requestBody: unknown
+  const client = new DataForSeoClient({
+    database: db,
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url, init) => {
+      if (String(url).includes('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      requestBody = JSON.parse(String(init?.body))
+      return new Response(JSON.stringify(serpFixture()))
+    },
+  })
+
+  const result = await client.serpLive({
+    keyword: 'first query',
+    languageCode: 'en',
+    locationName: 'United States',
+    device: 'mobile',
+    depth: 20,
+    context: { reportId: 'serp-results', reportRunId: 'run-1' },
+  })
+
+  assert.deepEqual(requestBody, [
+    {
+      keyword: 'first query',
+      language_code: 'en',
+      location_name: 'United States',
+      device: 'mobile',
+      depth: 20,
+      remove_from_url: ['srsltid'],
+    },
+  ])
+  assert.equal(result.returnedRows, 2)
+  assert.equal(result.cost.estimatedMicros, 4_000)
+  assert.equal(result.cost.actualMicros, 4_000)
+})
+
+test('live SERP rejects multiplied-price operators before acquisition', async () => {
+  let calls = 0
+  const client = new DataForSeoClient({
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async () => {
+      calls += 1
+      return new Response('{}')
+    },
+  })
+
+  await assert.rejects(
+    client.serpLive({
+      keyword: 'site:example.test query',
+      languageCode: 'en',
+      locationCode: 2840,
+      device: 'desktop',
+      depth: 10,
+      context: { reportId: 'serp-results', reportRunId: 'run-1' },
+    }),
+    /multiplied provider pricing/,
+  )
+  assert.equal(calls, 0)
 })
 
 test('keyword overview rejects invalid keyword and location bounds before acquisition', async () => {

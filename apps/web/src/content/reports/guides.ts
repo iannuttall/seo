@@ -1,5 +1,6 @@
 import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
+import { reportGuideOverridesPseo } from './guide-overrides-pseo'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
 import type {
   ReportGuideAlternative,
@@ -27,6 +28,7 @@ export const reportGuideOverrides: Partial<
 > = {
   ...reportGuideOverridesAF,
   ...reportGuideOverridesIP,
+  ...reportGuideOverridesPseo,
   ...reportGuideOverridesQZ,
 }
 

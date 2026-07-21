@@ -817,6 +817,52 @@ export const reportGuideOverridesIP: Partial<
       ],
     },
   },
+  'keyword-research': {
+    name: 'Discover keyword candidates',
+    summary:
+      'Expand a small seed list into bounded market-specific ideas while preserving the discovery method, metric state, provider coverage, cache status, and request cost.',
+    inputs: [
+      {
+        label: 'Seed keywords and discovery methods',
+        role: 'Set at most five seeds and choose ideas, related terms, suggestions, or a bounded combination.',
+      },
+      {
+        label: 'Connected keyword provider',
+        source: 'keyword-provider-discovery',
+        role: 'Returns candidate terms and available market estimates for the selected country, language, and optional location.',
+      },
+    ],
+    checks: [
+      'Bounds provider fanout before acquisition, normalises duplicate terms, and retains every observed seed and discovery method for each result.',
+      'Keeps zero, missing, invalid, partial, capped, and complete provider states distinct.',
+      'Labels source overlap and six-month trend comparisons as review signals rather than page or ranking recommendations.',
+    ],
+    returns: [
+      'A limited candidate list with sources, seed terms, available metrics, trend evidence, and stable ordering.',
+      'Provider, market, coverage, cache, request-cost, limit, warning, and caveat evidence for the full acquisition.',
+    ],
+    alternatives: [
+      {
+        when: 'You need queries already associated with the site rather than independent market candidates.',
+        reportId: 'query-clusters',
+        doInstead:
+          'Run query clusters for the Search Console property. It groups returned first-party query evidence and does not make a paid discovery request.',
+      },
+      {
+        when: 'You need to decide whether several terms deserve one page, separate pages, or no new page.',
+        reportId: 'serp-results',
+        doInstead:
+          'Inspect current result snapshots for a short list in the same market, then compare representative ranking pages and existing site evidence. Discovery overlap and estimated metrics cannot establish shared intent or page fit.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'keyword research',
+      supportingKeywords: [
+        'keyword research tool',
+        'programmatic SEO keyword research',
+      ],
+    },
+  },
   'keyword-opportunities': {
     name: 'Prioritise keyword opportunities',
     summary:

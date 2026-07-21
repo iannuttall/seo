@@ -96,6 +96,45 @@ test('CTR benchmark excludes grouped rows from aggregate peer buckets', () => {
   assert.equal(benchmark.rows, 5)
 })
 
+test('CTR aggregate indexing matches rebuilding peers after a partial URL exclusion', () => {
+  const target = row({
+    query: 'target query',
+    url: 'https://example.com/shared',
+    clicks: 0,
+    impressions: 900,
+    position: 8,
+  })
+  const sibling = row({
+    query: 'sibling query',
+    url: 'https://example.com/shared',
+    clicks: 10,
+    impressions: 100,
+    position: 8,
+  })
+  const peers = [20, 25, 30, 35, 40].map((clicks, index) =>
+    row({
+      query: `peer query ${index}`,
+      url: `https://example.com/peer-${index}`,
+      clicks,
+      impressions: 1000,
+      position: 8,
+    }),
+  )
+  const indexed = createCtrBenchmarkContext([
+    target,
+    sibling,
+    ...peers,
+  ]).forAggregate(target, [target])
+  const rebuilt = createCtrBenchmarkContext([sibling, ...peers]).byPosition['8']
+
+  assert.equal(indexed.ctr, rebuilt?.ctr)
+  assert.equal(indexed.rows, rebuilt?.rows)
+  assert.equal(indexed.impressions, rebuilt?.impressions)
+  assert.equal(indexed.qualifiedImpressions, rebuilt?.qualifiedImpressions)
+  assert.equal(indexed.urlSamples, rebuilt?.urlSamples)
+  assert.equal(indexed.positiveUrlSamples, rebuilt?.positiveUrlSamples)
+})
+
 test('CTR benchmark excludes a mixed-position group from every peer bucket', () => {
   const groupedRows = [
     row({
@@ -283,6 +322,29 @@ test('CTR URL benchmarks use one index pass instead of rescanning source rows', 
   assert.deepEqual(context.diagnostics, {
     indexRowVisits: rows.length,
     urlLookups: 1_000,
+    fallbackRowScans: 0,
+  })
+})
+
+test('CTR aggregate benchmarks use indexed exclusions instead of rescanning source rows', () => {
+  const rows = Array.from({ length: 20_000 }, (_, index) =>
+    row({
+      query: `large aggregate query ${index}`,
+      url: `https://example.com/page-${index % 2_000}`,
+      clicks: index % 7,
+      impressions: 100,
+      position: 4 + (index % 7),
+    }),
+  )
+  const context = createCtrBenchmarkContext(rows)
+
+  for (const candidate of rows.slice(0, 1_000)) {
+    context.forAggregate(candidate, [candidate])
+  }
+
+  assert.deepEqual(context.diagnostics, {
+    indexRowVisits: rows.length,
+    urlLookups: 0,
     fallbackRowScans: 0,
   })
 })

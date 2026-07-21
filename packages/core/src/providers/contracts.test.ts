@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  keywordDiscoverySourceSchema,
   observedValue,
   providerCapabilitySchema,
   providerIdSchema,
@@ -74,6 +75,8 @@ test('provider ids and capabilities stay an owned closed vocabulary', () => {
     providerCapabilitySchema.parse('keyword-metrics'),
     'keyword-metrics',
   )
+  assert.equal(keywordDiscoverySourceSchema.parse('ideas'), 'ideas')
   assert.throws(() => providerIdSchema.parse('vendor-row'))
   assert.throws(() => providerCapabilitySchema.parse('magic-score'))
+  assert.throws(() => keywordDiscoverySourceSchema.parse('provider-magic'))
 })

@@ -138,6 +138,130 @@ test('keyword metrics MCP schema bounds inputs before report work', () => {
   }
 })
 
+test('keyword research MCP forwards bounded discovery inputs', async () => {
+  const handlers = new Map<string, ToolHandler>()
+  let captured: unknown
+  registerKeywordTools(
+    {
+      registerTool(name: string, _config: unknown, handler: ToolHandler) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      keywordResearchReport: async (input) => {
+        captured = input
+        return {
+          schemaVersion: 1,
+          generatedAt: '2026-07-21T12:00:00.000Z',
+          dataStatus: 'complete',
+          market: input.market,
+          summary: { verdict: 'One keyword idea was retained.' },
+          evidence: { data: [] },
+          analysis: [],
+          findings: [],
+          caveats: [],
+          nextSteps: [],
+        } as never
+      },
+    },
+  )
+
+  const result = await handlers.get('seo_keyword_research')?.({
+    seeds: ['local seo'],
+    sources: ['ideas', 'suggestions'],
+    countryCode: 'GB',
+    languageCode: 'en',
+    searchEngine: 'google',
+    location: { name: 'London,England,United Kingdom' },
+    device: 'mobile',
+    limit: 25,
+    provider: 'dataforseo',
+    refresh: true,
+  })
+
+  assert.deepEqual(captured, {
+    seeds: ['local seo'],
+    sources: ['ideas', 'suggestions'],
+    market: {
+      countryCode: 'GB',
+      languageCode: 'en',
+      searchEngine: 'google',
+      location: { name: 'London,England,United Kingdom' },
+      device: 'mobile',
+    },
+    limit: 25,
+    provider: 'dataforseo',
+    refresh: true,
+  })
+  assert.equal(result?.structuredContent?.dataStatus, 'complete')
+  assert.equal(
+    (result?.structuredContent?.outputBudget as Record<string, unknown>)
+      ?.maxBytes,
+    98_304,
+  )
+})
+
+test('SERP results MCP forwards one bounded market snapshot', async () => {
+  const handlers = new Map<string, ToolHandler>()
+  let captured: unknown
+  registerKeywordTools(
+    {
+      registerTool(name: string, _config: unknown, handler: ToolHandler) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      serpResultsReport: async (input) => {
+        captured = input
+        return {
+          schemaVersion: 1,
+          generatedAt: '2026-07-21T12:00:00.000Z',
+          dataStatus: 'complete',
+          market: input.market,
+          summary: { verdict: 'Ten results were retained.' },
+          evidence: { data: {} },
+          domains: [],
+          findings: [],
+          caveats: [],
+          nextSteps: [],
+        } as never
+      },
+    },
+  )
+
+  const result = await handlers.get('seo_serp_results')?.({
+    keyword: 'local seo',
+    countryCode: 'GB',
+    languageCode: 'en',
+    searchEngine: 'google',
+    location: { name: 'London,England,United Kingdom' },
+    device: 'mobile',
+    depth: 20,
+    provider: 'dataforseo',
+    refresh: true,
+  })
+
+  assert.deepEqual(captured, {
+    keyword: 'local seo',
+    market: {
+      countryCode: 'GB',
+      languageCode: 'en',
+      searchEngine: 'google',
+      location: { name: 'London,England,United Kingdom' },
+      device: 'mobile',
+    },
+    depth: 20,
+    provider: 'dataforseo',
+    refresh: true,
+  })
+  assert.equal(result?.structuredContent?.dataStatus, 'complete')
+  assert.equal(
+    (result?.structuredContent?.outputBudget as Record<string, unknown>)
+      ?.maxBytes,
+    98_304,
+  )
+})
+
 test('keyword opportunities MCP forwards opt-in market context and budgets output', async () => {
   const handlers = new Map<string, ToolHandler>()
   let captured: unknown

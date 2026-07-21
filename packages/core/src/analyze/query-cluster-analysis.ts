@@ -6,8 +6,8 @@ import {
 } from './opportunity-primitives.js'
 import { clusterPseoTemplates } from './pseo/templates.js'
 import {
-  clusterQueryRows,
   compareQueryClusterText,
+  iterateQueryClusters,
   type QueryClusterPage,
   type QueryClusterRow,
 } from './query-cluster-primitives.js'
@@ -253,27 +253,33 @@ export function analyzeQueryClustersFromRows(input: {
     benchmarkRows.map((row) => [row.keys[0] ?? '', row]),
   )
   const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
-  const clusters: QueryCluster[] = []
+  type RankedCluster = {
+    rows: QueryClusterRow[]
+    label: string
+    totals: ReturnType<typeof clusterTotals>
+    benchmark: PositionBenchmark
+    estimatedClickLift?: number
+    opportunityScore: number
+  }
+  const rankedClusters: RankedCluster[] = []
+  const compareRankedClusters = (a: RankedCluster, b: RankedCluster) =>
+    b.opportunityScore - a.opportunityScore ||
+    b.totals.impressions - a.totals.impressions ||
+    b.rows.length - a.rows.length ||
+    compareQueryClusterText(a.label, b.label)
 
   const candidateRows = input.rows.filter(
     (row) => row.impressions >= minImpressions,
   )
-  for (const clusterRows of clusterQueryRows(candidateRows)) {
+  for (const clusterRows of iterateQueryClusters(candidateRows)) {
     const label = clusterLabel(clusterRows)
-    const intents = new Set(
-      clusterRows.map((row) => classifyIntent(row.query, input.brand)),
-    )
-    const [intent] = intents
-    const clusterIntent = intents.size === 1 && intent ? intent : 'mixed'
     const totals = clusterTotals({ queries: clusterRows })
-    const pages = clusterPages(clusterRows)
-    const topPages = pages.slice(0, 5)
     const excludedRows = clusterRows
       .map((row) => benchmarkRowsByQuery.get(row.query))
       .filter((row): row is (typeof benchmarkRows)[number] => Boolean(row))
     const benchmark = benchmarkContext.forAggregate(
       {
-        keys: [label, topPages[0]?.url ?? ''],
+        keys: [label],
         clicks: totals.clicks,
         impressions: totals.impressions,
         ctr: totals.ctr,
@@ -289,11 +295,39 @@ export function analyzeQueryClustersFromRows(input: {
             ).toFixed(2),
           )
         : undefined
+    const score = opportunityScore({
+      queries: clusterRows.length,
+      impressions: totals.impressions,
+      position: totals.averagePosition,
+      estimatedClickLift,
+    })
+    if (clusterRows.length >= 2 || totals.impressions >= minImpressions * 3) {
+      rankedClusters.push({
+        rows: clusterRows,
+        label,
+        totals,
+        benchmark,
+        estimatedClickLift,
+        opportunityScore: score,
+      })
+      rankedClusters.sort(compareRankedClusters)
+      if (rankedClusters.length > limit) rankedClusters.pop()
+    }
+  }
+
+  const sortedClusters: QueryCluster[] = rankedClusters.map((ranked) => {
+    const intents = new Set(
+      ranked.rows.map((row) => classifyIntent(row.query, input.brand)),
+    )
+    const [intent] = intents
+    const clusterIntent = intents.size === 1 && intent ? intent : 'mixed'
+    const pages = clusterPages(ranked.rows)
+    const topPages = pages.slice(0, 5)
     const template = clusterTemplate(pages)
-    clusters.push({
-      label,
+    return {
+      label: ranked.label,
       intent: clusterIntent,
-      queries: clusterRows
+      queries: ranked.rows
         .map((row) => ({
           query: row.query,
           impressions: row.impressions,
@@ -307,50 +341,32 @@ export function analyzeQueryClustersFromRows(input: {
         ),
       topPages,
       template,
-      totals,
-      benchmark: benchmarkDetails(benchmark),
-      ...(estimatedClickLift === undefined ? {} : { estimatedClickLift }),
-      opportunityScore: opportunityScore({
-        queries: clusterRows.length,
-        impressions: totals.impressions,
-        position: totals.averagePosition,
-        estimatedClickLift,
-      }),
+      totals: ranked.totals,
+      benchmark: benchmarkDetails(ranked.benchmark),
+      ...(ranked.estimatedClickLift === undefined
+        ? {}
+        : { estimatedClickLift: ranked.estimatedClickLift }),
+      opportunityScore: ranked.opportunityScore,
       summary: clusterSummary({
-        label,
-        queries: clusterRows.length,
-        impressions: totals.impressions,
-        clicks: totals.clicks,
-        position: totals.averagePosition,
+        label: ranked.label,
+        queries: ranked.rows.length,
+        impressions: ranked.totals.impressions,
+        clicks: ranked.totals.clicks,
+        position: ranked.totals.averagePosition,
       }),
       recommendation: clusterRecommendation({
-        label,
+        label: ranked.label,
         intent: clusterIntent,
-        queries: clusterRows.length,
-        impressions: totals.impressions,
-        clicks: totals.clicks,
-        position: totals.averagePosition,
-        expectedCtr: benchmark.ctr,
+        queries: ranked.rows.length,
+        impressions: ranked.totals.impressions,
+        clicks: ranked.totals.clicks,
+        position: ranked.totals.averagePosition,
+        expectedCtr: ranked.benchmark.ctr,
         topPage: topPages[0],
         template,
       }),
-    })
-  }
-
-  const sortedClusters = clusters
-    .filter(
-      (cluster) =>
-        cluster.queries.length >= 2 ||
-        (cluster.totals?.impressions ?? 0) >= minImpressions * 3,
-    )
-    .sort(
-      (a, b) =>
-        (b.opportunityScore ?? 0) - (a.opportunityScore ?? 0) ||
-        (b.totals?.impressions ?? 0) - (a.totals?.impressions ?? 0) ||
-        b.queries.length - a.queries.length ||
-        compareQueryClusterText(a.label, b.label),
-    )
-    .slice(0, limit)
+    }
+  })
   const totals = sortedClusters.reduce(
     (sum, cluster) => ({
       queries: sum.queries + cluster.queries.length,

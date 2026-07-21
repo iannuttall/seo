@@ -161,6 +161,86 @@ test('keyword metrics bounds market and keyword acquisition inputs', () => {
   }
 })
 
+test('keyword research bounds seeds, sources, market, and retained rows', () => {
+  const schema = reportSchema('keyword-research')
+  assert.equal(
+    schema.safeParse({
+      seeds: ['local seo', 'seo tools'],
+      sources: ['ideas', 'suggestions'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { name: 'London,England,United Kingdom' },
+      limit: 100,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { seeds: [], countryCode: 'GB', languageCode: 'en' },
+    {
+      seeds: ['one', 'two', 'three', 'four', 'five', 'six'],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      seeds: ['seed'],
+      sources: [],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      seeds: ['seed'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      limit: 101,
+    },
+    {
+      seeds: ['one', 'two', 'three'],
+      sources: ['related', 'suggestions'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      limit: 5,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('SERP results bounds query, market, device, and depth', () => {
+  const schema = reportSchema('serp-results')
+  assert.equal(
+    schema.safeParse({
+      keyword: 'local seo',
+      countryCode: 'GB',
+      languageCode: 'en',
+      device: 'mobile',
+      depth: 100,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { keyword: '', countryCode: 'GB', languageCode: 'en' },
+    {
+      keyword: 'one two three four five six seven eight nine ten eleven',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      keyword: 'query',
+      countryCode: 'GB',
+      languageCode: 'en',
+      depth: 101,
+    },
+    {
+      keyword: 'query',
+      countryCode: 'GB',
+      languageCode: 'en',
+      device: 'tablet',
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('keyword opportunities keeps external acquisition explicit and bounded', () => {
   const schema = reportSchema('keyword-opportunities')
   assert.equal(
@@ -192,6 +272,54 @@ test('keyword opportunities keeps external acquisition explicit and bounded', ()
     { site: 'sc-domain:example.com', keywordLimit: 51 },
     { site: 'sc-domain:example.com', queriesPerPage: 6 },
     { site: 'sc-domain:example.com', clusterLimit: 21 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('pSEO opportunities keeps provider work explicit and bounded', () => {
+  const schema = reportSchema('pseo-opportunities')
+  const defaults = schema.safeParse({ site: 'sc-domain:example.com' })
+  assert.equal(defaults.success, true)
+  if (defaults.success) {
+    assert.deepEqual(defaults.data.discoverySources, ['suggestions'])
+  }
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      discoverySources: ['ideas', 'related'],
+      discoveryLimit: 30,
+      candidateLimit: 25,
+      serpLimit: 3,
+      serpDepth: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', includeExternal: true },
+    { site: 'sc-domain:example.com', countryCode: 'GB', languageCode: 'en' },
+    { site: 'sc-domain:example.com', serpLimit: 1 },
+    { site: 'sc-domain:example.com', templateLimit: 26 },
+    { site: 'sc-domain:example.com', clusterLimit: 26 },
+    { site: 'sc-domain:example.com', discoveryLimit: 101 },
+    { site: 'sc-domain:example.com', candidateLimit: 26 },
+    {
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      serpLimit: 4,
+    },
+    {
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      serpDepth: 21,
+    },
   ]) {
     assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
   }

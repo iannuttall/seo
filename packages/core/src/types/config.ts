@@ -10,6 +10,16 @@ export const siteSchema = z.object({
 
 export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
+export const providerSpendLimitOverridesSchema = z
+  .object({
+    dailyNoticeMicros: z.number().int().nonnegative().optional(),
+    dailyHardLimitMicros: z.number().int().positive().nullable().optional(),
+    monthlyHardLimitMicros: z.number().int().positive().nullable().optional(),
+    maxRequestsPerReport: z.number().int().min(1).max(100).optional(),
+    maxRowsPerReport: z.number().int().min(1).max(100_000).optional(),
+  })
+  .strict()
+
 export const analyticsConnectionsSchema = z
   .object({
     google: z
@@ -72,6 +82,14 @@ export const configSchema = z.object({
       dataForSeoLogin: z.string().optional(),
       dataForSeoPassword: z.string().optional(),
       prefer: providerPreferenceSchema.default('cheap'),
+      costLimits: z
+        .object({
+          dataforseo: providerSpendLimitOverridesSchema.optional(),
+          semrush: providerSpendLimitOverridesSchema.optional(),
+          ahrefs: providerSpendLimitOverridesSchema.optional(),
+        })
+        .strict()
+        .optional(),
     })
     .default({ prefer: 'cheap' }),
   security: z

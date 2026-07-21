@@ -12,6 +12,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import { getSeoCliPaths } from '../paths.js'
+import {
+  DEFAULT_PROVIDER_SPEND_LIMITS,
+  getProviderSpendLimits,
+  setProviderSpendLimits,
+} from '../providers/cost-limits.js'
 import { configSchema, type StoredTokens } from '../types.js'
 import {
   deleteTokens,
@@ -109,6 +114,36 @@ test('config files stay private on write and read', () => {
   chmodSync(configFile, 0o644)
   assert.equal(readConfig().providers.semrushApiKey, 'secret')
   assert.equal(mode(configFile), 0o600)
+})
+
+test('provider spend limits use safe defaults and typed local overrides', () => {
+  resetStorage()
+  writeConfig(configSchema.parse({}))
+
+  assert.deepEqual(
+    getProviderSpendLimits('dataforseo'),
+    DEFAULT_PROVIDER_SPEND_LIMITS,
+  )
+  assert.deepEqual(
+    setProviderSpendLimits('dataforseo', {
+      dailyNoticeMicros: 2_500_000,
+      dailyHardLimitMicros: 10_000_000,
+      monthlyHardLimitMicros: null,
+      maxRequestsPerReport: 8,
+      maxRowsPerReport: 4_000,
+    }),
+    {
+      dailyNoticeMicros: 2_500_000,
+      dailyHardLimitMicros: 10_000_000,
+      monthlyHardLimitMicros: null,
+      maxRequestsPerReport: 8,
+      maxRowsPerReport: 4_000,
+    },
+  )
+  assert.equal(
+    readConfig().providers.costLimits?.dataforseo?.dailyHardLimitMicros,
+    10_000_000,
+  )
 })
 
 test('moves a private token file into the system keychain', async () => {

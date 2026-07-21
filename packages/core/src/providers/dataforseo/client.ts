@@ -19,6 +19,13 @@ export type DataForSeoAccountSnapshot = {
   timezone: string | null
   balanceMicros: number | null
   depositedMicros: number | null
+  accountDailySpendMicros: number | null
+  accountDailySpendPeriod: string | null
+  accountDailyLimitMicros: number | null
+  keywordOverviewPrice: {
+    perRequestMicros: number | null
+    perResultMicros: number | null
+  }
   backlinksSubscriptionExpiresAt: string | null
   aiMentionsSubscriptionExpiresAt: string | null
   apiVersion: string | null
@@ -39,9 +46,34 @@ export type DataForSeoClientOptions = {
   now?: () => Date
 }
 
+type UserDataAccount = NonNullable<
+  DataForSeoUserDataResponse['tasks'][number]['result']
+>[number]
+
 function usdToMicros(value: number | undefined): number | null {
   if (value === undefined) return null
   return Math.round(value * 1_000_000)
+}
+
+function keywordOverviewPrice(
+  account: UserDataAccount,
+): DataForSeoAccountSnapshot['keywordOverviewPrice'] {
+  const components =
+    account.price?.dataforseo_labs?.keyword_overview?.live?.priority_normal ??
+    []
+  const total = (type: 'per_request' | 'per_result') => {
+    const matching = components.filter((item) => item.cost_type === type)
+    return matching.length
+      ? matching.reduce(
+          (sum, item) => sum + Math.round(item.cost * 1_000_000),
+          0,
+        )
+      : null
+  }
+  return {
+    perRequestMicros: total('per_request'),
+    perResultMicros: total('per_result'),
+  }
 }
 
 function taskErrorCode(
@@ -153,6 +185,12 @@ export class DataForSeoClient {
       timezone: account.timezone ?? null,
       balanceMicros: usdToMicros(account.money?.balance),
       depositedMicros: usdToMicros(account.money?.total),
+      accountDailySpendMicros: usdToMicros(
+        account.money?.statistics?.day?.total,
+      ),
+      accountDailySpendPeriod: account.money?.statistics?.day?.value ?? null,
+      accountDailyLimitMicros: usdToMicros(account.money?.limits?.day?.total),
+      keywordOverviewPrice: keywordOverviewPrice(account),
       backlinksSubscriptionExpiresAt:
         account.backlinks_subscription_expiry_date ?? null,
       aiMentionsSubscriptionExpiresAt:

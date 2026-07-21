@@ -10,6 +10,7 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
+import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
 const CREATE_SQL = `
@@ -291,6 +292,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
+    database.exec(PROVIDER_SPEND_SCHEMA_SQL)
     database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')

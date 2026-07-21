@@ -158,3 +158,128 @@ test('DataForSEO disconnect leaves environment credentials explicit', async () =
     await rm(cacheDir, { recursive: true, force: true })
   }
 })
+
+test('DataForSEO limits store integer micros and bounded report ceilings', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-cache-'))
+  try {
+    const result = await runSeo(
+      [
+        'providers',
+        'dataforseo',
+        'limits',
+        '--daily-notice',
+        '2.5',
+        '--daily-limit',
+        '10',
+        '--monthly-limit',
+        'off',
+        '--requests',
+        '8',
+        '--rows',
+        '4000',
+        '--json',
+      ],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+        SEO_DATAFORSEO_LOGIN: '',
+        SEO_DATAFORSEO_PASSWORD: '',
+      },
+    )
+    assert.equal(result.exitCode, 0)
+    assert.deepEqual(JSON.parse(result.stdout), {
+      provider: 'dataforseo',
+      changed: true,
+      limits: {
+        dailyNoticeMicros: 2_500_000,
+        dailyHardLimitMicros: 10_000_000,
+        monthlyHardLimitMicros: null,
+        maxRequestsPerReport: 8,
+        maxRowsPerReport: 4_000,
+      },
+    })
+    const stored = JSON.parse(
+      await readFile(join(configDir, 'config.json'), 'utf8'),
+    )
+    assert.equal(
+      stored.providers.costLimits.dataforseo.dailyNoticeMicros,
+      2_500_000,
+    )
+
+    const disabledNotice = await runSeo(
+      ['providers', 'dataforseo', 'limits', '--daily-notice', 'off', '--json'],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+        SEO_DATAFORSEO_LOGIN: '',
+        SEO_DATAFORSEO_PASSWORD: '',
+      },
+    )
+    assert.equal(disabledNotice.exitCode, 0)
+    assert.equal(JSON.parse(disabledNotice.stdout).limits.dailyNoticeMicros, 0)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('DataForSEO limits reject unsafe values before writing config', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-cache-'))
+  try {
+    const result = await runSeo(
+      ['providers', 'dataforseo', 'limits', '--rows', '0', '--json'],
+      {
+        SEO_CONFIG_DIR: configDir,
+        SEO_CACHE_DIR: cacheDir,
+        SEO_DATAFORSEO_LOGIN: '',
+        SEO_DATAFORSEO_PASSWORD: '',
+      },
+    )
+    assert.notEqual(result.exitCode, 0)
+    const output = JSON.parse(result.stdout) as {
+      error: { code: string; message: string }
+    }
+    assert.equal(output.error.code, 'INVALID_INPUT')
+    assert.match(output.error.message, /--rows must be an integer from 1/)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('DataForSEO spend keeps local and account-wide states separate', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-dataforseo-cli-cache-'))
+  const env = {
+    SEO_CONFIG_DIR: configDir,
+    SEO_CACHE_DIR: cacheDir,
+    SEO_DATAFORSEO_LOGIN: '',
+    SEO_DATAFORSEO_PASSWORD: '',
+  }
+  try {
+    const localOnly = await runSeo(
+      ['providers', 'dataforseo', 'spend', '--no-account', '--json'],
+      env,
+    )
+    assert.equal(localOnly.exitCode, 0)
+    const localOutput = JSON.parse(localOnly.stdout)
+    assert.equal(localOutput.local.today.effectiveCostMicros, 0)
+    assert.equal(localOutput.local.month.requests, 0)
+    assert.equal(localOutput.local.periodTimezone, 'UTC')
+    assert.deepEqual(localOutput.account, { status: 'not-requested' })
+
+    const withAccount = await runSeo(
+      ['providers', 'dataforseo', 'spend', '--json'],
+      env,
+    )
+    assert.equal(withAccount.exitCode, 0)
+    const accountOutput = JSON.parse(withAccount.stdout)
+    assert.equal(accountOutput.account.status, 'unavailable')
+    assert.match(accountOutput.account.reason, /not connected/i)
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})

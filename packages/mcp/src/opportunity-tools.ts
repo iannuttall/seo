@@ -422,7 +422,7 @@ export function registerOpportunityTools(
     },
     async ({ endpoint, phrase }) => {
       try {
-        const provider = getKeywordProvider('authoritative')
+        const provider = await getKeywordProvider('authoritative')
         if (!provider) {
           throw new Error('No keyword provider configured.')
         }

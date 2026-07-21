@@ -11,6 +11,7 @@ type CacheTable =
   | 'gsc_cache'
   | 'ga4_cache'
   | 'semrush_cache'
+  | 'provider_cache'
   | 'http_cache'
   | 'performance_reports'
 
@@ -20,7 +21,8 @@ export const CACHE_LIMITS: CacheLimits = {
   gsc_cache: 48 * MEBIBYTE,
   ga4_cache: 24 * MEBIBYTE,
   semrush_cache: 16 * MEBIBYTE,
-  http_cache: 160 * MEBIBYTE,
+  provider_cache: 32 * MEBIBYTE,
+  http_cache: 128 * MEBIBYTE,
   performance_reports: 8 * MEBIBYTE,
 }
 
@@ -55,6 +57,20 @@ const CACHE_POLICIES: CachePolicy[] = [
     keys: ['endpoint', 'query_hash'],
     timestamp: 'fetched_at',
     sizeColumns: ['endpoint', 'query_hash', 'request_json', 'response_json'],
+  },
+  {
+    table: 'provider_cache',
+    keys: ['provider', 'credential_scope', 'operation', 'request_hash'],
+    timestamp: 'fetched_at',
+    sizeColumns: [
+      'provider',
+      'credential_scope',
+      'operation',
+      'request_hash',
+      'request_json',
+      'response_json',
+      'task_ids_json',
+    ],
   },
   {
     table: 'http_cache',

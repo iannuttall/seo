@@ -154,6 +154,8 @@ test('the release workflow automates trusted publishing, tagging, and release-on
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_ID/)
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_SECRET/)
   assert.doesNotMatch(ci, /SEO_GOOGLE_CLIENT_ID|SEO_GOOGLE_CLIENT_SECRET/)
+  assert.doesNotMatch(ci, /push:\n\s+branches: \[main\]/)
+  assert.doesNotMatch(release, /pnpm (?:build|typecheck|test|lint)\n/)
   for (const workflow of [release, ci]) {
     assert.match(workflow, /pnpm test:package-install/)
     assert.match(workflow, /gitleaks\/gitleaks-action@v3/)

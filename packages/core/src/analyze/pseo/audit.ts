@@ -359,10 +359,22 @@ async function inspectSample(input: {
   }
 }
 
-export async function pseoAuditReport(
+export type PseoAuditAcquisition = {
+  options: ReturnType<typeof pseoAuditOptions>
+  generatedAt: string
+  range: { startDate: string; endDate: string }
+  warnings: string[]
+  sitemapUrls: string[]
+  pageRows: PseoPageRow[]
+  queryPageRows: PseoQueryPageRow[]
+  pageRowsFetched: number
+  queryPageRowsFetched: number
+}
+
+export async function acquirePseoAuditEvidence(
   input: PseoAuditInput,
   dependencies: PseoDependencies = defaultDependencies,
-): Promise<PseoAuditReport> {
+): Promise<PseoAuditAcquisition> {
   const options = pseoAuditOptions(input)
   const now = dependencies.now()
   const generatedAt = now.toISOString()
@@ -419,44 +431,70 @@ export async function pseoAuditReport(
       position: row.position,
     }),
   )
-  const build = (evidence?: {
+
+  return {
+    options,
+    generatedAt,
+    range,
+    warnings,
+    sitemapUrls,
+    pageRows,
+    queryPageRows,
+    pageRowsFetched: pageResponse.rowsFetched,
+    queryPageRowsFetched: queryPageResponse.rowsFetched,
+  }
+}
+
+export function buildPseoAuditFromAcquisition(
+  input: PseoAuditInput,
+  acquisition: PseoAuditAcquisition,
+  evidence?: {
     crawl: PseoCrawlSample[]
     inspection: PseoInspectionSample[]
-  }) =>
-    buildPseoAuditReportFromRows({
-      site: input.site,
-      generatedAt,
-      range,
-      days: options.days,
-      queryPageRows,
-      pageRows,
-      sitemapUrls,
-      crawlSamples: evidence?.crawl,
-      inspectionSamples: evidence?.inspection,
-      templateLimit: options.templateLimit,
-      minimumTemplateUrls: options.minimumTemplateUrls,
-      minimumTemplateShare: options.minimumTemplateShare,
-      minimumTemplateImpressions: options.minimumTemplateImpressions,
-      crawlSamplesPerTemplate: options.crawlSamples,
-      inspectionSamplesPerTemplate: options.inspectSamples,
-      maxRowsPerRequest: MAX_GSC_ROWS,
-      pageRowsFetched: pageResponse.rowsFetched,
-      queryPageRowsFetched: queryPageResponse.rowsFetched,
-      sitemapsRequested: input.sitemaps?.length ?? 0,
-      maxUrlsPerSitemap: options.maxSitemapUrls,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-      warnings,
-      caveats: [
-        `Data freshness: ${input.refresh ? 'fresh fetch requested; caches bypassed where supported' : 'local cache allowed; use --refresh to bypass cached provider and HTTP data'}.`,
-        input.sitemaps?.length
-          ? `Sitemaps: ${countLabel(input.sitemaps.length, 'sitemap URL')} requested.`
-          : 'Sitemaps: none provided; template discovery used retained GSC page rows.',
-      ],
-    })
-  const initial = build()
+  },
+): PseoAuditReport {
+  const { options } = acquisition
+  return buildPseoAuditReportFromRows({
+    site: input.site,
+    generatedAt: acquisition.generatedAt,
+    range: acquisition.range,
+    days: options.days,
+    queryPageRows: acquisition.queryPageRows,
+    pageRows: acquisition.pageRows,
+    sitemapUrls: acquisition.sitemapUrls,
+    crawlSamples: evidence?.crawl,
+    inspectionSamples: evidence?.inspection,
+    templateLimit: options.templateLimit,
+    minimumTemplateUrls: options.minimumTemplateUrls,
+    minimumTemplateShare: options.minimumTemplateShare,
+    minimumTemplateImpressions: options.minimumTemplateImpressions,
+    crawlSamplesPerTemplate: options.crawlSamples,
+    inspectionSamplesPerTemplate: options.inspectSamples,
+    maxRowsPerRequest: MAX_GSC_ROWS,
+    pageRowsFetched: acquisition.pageRowsFetched,
+    queryPageRowsFetched: acquisition.queryPageRowsFetched,
+    sitemapsRequested: input.sitemaps?.length ?? 0,
+    maxUrlsPerSitemap: options.maxSitemapUrls,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+    warnings: acquisition.warnings,
+    caveats: [
+      `Data freshness: ${input.refresh ? 'fresh fetch requested; caches bypassed where supported' : 'local cache allowed; use --refresh to bypass cached provider and HTTP data'}.`,
+      input.sitemaps?.length
+        ? `Sitemaps: ${countLabel(input.sitemaps.length, 'sitemap URL')} requested.`
+        : 'Sitemaps: none provided; template discovery used retained GSC page rows.',
+    ],
+  })
+}
+
+export async function pseoAuditReport(
+  input: PseoAuditInput,
+  dependencies: PseoDependencies = defaultDependencies,
+): Promise<PseoAuditReport> {
+  const acquisition = await acquirePseoAuditEvidence(input, dependencies)
+  const initial = buildPseoAuditFromAcquisition(input, acquisition)
   const sampleUrls = pseoSampleUrls(initial)
-  const topQueries = topQueryByUrl(queryPageRows, input)
+  const topQueries = topQueryByUrl(acquisition.queryPageRows, input)
   const crawl: PseoCrawlSample[] = []
   for (const [index, url] of sampleUrls.crawl.entries()) {
     input.progress?.(
@@ -487,5 +525,8 @@ export async function pseoAuditReport(
     )
   }
   input.progress?.('Scoring pSEO template evidence')
-  return build({ crawl, inspection })
+  return buildPseoAuditFromAcquisition(input, acquisition, {
+    crawl,
+    inspection,
+  })
 }

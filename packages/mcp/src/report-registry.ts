@@ -167,7 +167,7 @@ const reportGroups: readonly ReportGroup[] = [
   {
     category: 'reporting',
     register: registerPseoTools,
-    names: ['seo_pseo_audit'],
+    names: ['seo_pseo_audit', 'seo_pseo_opportunities'],
   },
   {
     category: 'workflows',

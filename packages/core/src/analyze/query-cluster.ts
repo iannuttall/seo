@@ -8,6 +8,7 @@ import {
 } from './query-cluster-primitives.js'
 import { isLowActionabilityQuery } from './query-quality.js'
 import { defaultDateRange } from './shared.js'
+import { integerOption } from './site-diagnostics/quick-wins-report-input.js'
 
 export { analyzeQueryClustersFromRows } from './query-cluster-analysis.js'
 export {
@@ -17,7 +18,7 @@ export {
   queryClusterTokens,
 } from './query-cluster-primitives.js'
 
-type QueryClusterReport = {
+export type QueryClusterReport = {
   site: string
   scope?: string
   range: { startDate: string; endDate: string }
@@ -36,6 +37,43 @@ type QueryClusterReport = {
   clusters: QueryCluster[]
   caveats: string[]
   recommendations: string[]
+}
+
+export type QueryClusterSourceRow = Awaited<
+  ReturnType<typeof querySearchAnalytics>
+>['rows'][number]
+
+function* retainedQueryClusterRows(input: {
+  rows: QueryClusterSourceRow[]
+  site: string
+  brand?: string
+  brandTerms?: string[]
+  includeBrand?: boolean
+}) {
+  for (const row of input.rows) {
+    const query = row.keys[0] ?? ''
+    if (
+      !query ||
+      isLowActionabilityQuery(query) ||
+      shouldExcludeBrandQuery({
+        query,
+        siteUrl: input.site,
+        brandTerms:
+          input.brandTerms ?? (input.brand ? [input.brand] : undefined),
+        includeBrand: input.includeBrand,
+      })
+    ) {
+      continue
+    }
+    yield {
+      query,
+      impressions: row.impressions,
+      clicks: row.clicks,
+      position: row.position,
+      tokens: queryClusterTokens(query),
+      page: row.keys[1] ?? '',
+    }
+  }
 }
 
 function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
@@ -58,6 +96,7 @@ function reportVerdict(input: {
 
 export async function queryClusterReport(input: {
   site: string
+  days?: number
   scope?: string
   brand?: string
   brandTerms?: string[]
@@ -66,7 +105,14 @@ export async function queryClusterReport(input: {
   limit?: number
   refresh?: boolean
 }): Promise<QueryClusterReport> {
-  const range = defaultDateRange(28)
+  const days = integerOption({
+    value: input.days,
+    fallback: 28,
+    minimum: 1,
+    maximum: 548,
+    label: 'days',
+  })
+  const range = defaultDateRange(days)
   const filters = input.scope
     ? [
         {
@@ -93,28 +139,36 @@ export async function queryClusterReport(input: {
     { refresh: input.refresh },
   )
 
+  return buildQueryClusterReportFromRows({
+    ...input,
+    days,
+    range,
+    generatedAt: new Date().toISOString(),
+    rows,
+  })
+}
+
+export function buildQueryClusterReportFromRows(input: {
+  site: string
+  days: number
+  range: { startDate: string; endDate: string }
+  generatedAt: string
+  rows: QueryClusterSourceRow[]
+  scope?: string
+  brand?: string
+  brandTerms?: string[]
+  includeBrand?: boolean
+  minImpressions?: number
+  limit?: number
+}): QueryClusterReport {
   const queryRows = aggregateQueryClusterRows(
-    rows
-      .map((row) => ({
-        query: row.keys[0] ?? '',
-        impressions: row.impressions,
-        clicks: row.clicks,
-        position: row.position,
-        tokens: queryClusterTokens(row.keys[0] ?? ''),
-        page: row.keys[1] ?? '',
-      }))
-      .filter(
-        (row) =>
-          row.query &&
-          !isLowActionabilityQuery(row.query) &&
-          !shouldExcludeBrandQuery({
-            query: row.query,
-            siteUrl: input.site,
-            brandTerms:
-              input.brandTerms ?? (input.brand ? [input.brand] : undefined),
-            includeBrand: input.includeBrand,
-          }),
-      ),
+    retainedQueryClusterRows({
+      rows: input.rows,
+      site: input.site,
+      brand: input.brand,
+      brandTerms: input.brandTerms,
+      includeBrand: input.includeBrand,
+    }),
   )
   const { clusters, totals, highOpportunityClusters, minImpressions, limit } =
     analyzeQueryClustersFromRows({
@@ -127,8 +181,8 @@ export async function queryClusterReport(input: {
   return {
     site: input.site,
     scope: input.scope,
-    range,
-    generatedAt: new Date().toISOString(),
+    range: input.range,
+    generatedAt: input.generatedAt,
     summary: {
       clusters: clusters.length,
       queries: totals.queries,
@@ -145,7 +199,7 @@ export async function queryClusterReport(input: {
     },
     clusters,
     caveats: [
-      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
+      `Date window: ${input.range.startDate} to ${input.range.endDate} (${input.days} days), using final GSC data where available.`,
       input.scope
         ? `Scope: only pages containing "${input.scope}" were included.`
         : 'Scope: all pages in the selected GSC property were included.',

@@ -97,6 +97,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'page-opportunities',
     'performance-audit',
     'pseo-audit',
+    'pseo-opportunities',
     'query-clusters',
     'quick-wins',
     'redirect-trace',

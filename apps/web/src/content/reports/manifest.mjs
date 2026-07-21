@@ -42,6 +42,7 @@ export const reportIds = [
   'page-opportunities',
   'performance-audit',
   'pseo-audit',
+  'pseo-opportunities',
   'query-clusters',
   'quick-wins',
   'redirect-trace',

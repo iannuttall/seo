@@ -2,12 +2,80 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   countLabel,
   pseoAuditReport,
+  pseoOpportunitiesReport,
   pseoPresentation,
   renderPseoMarkdown,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { resolveJsOption } from './input-schemas.js'
+import {
+  providerCountryCodeInput,
+  providerDeviceInput,
+  providerIdInput,
+  providerLanguageCodeInput,
+  providerLocationInput,
+  providerSearchEngineInput,
+} from './provider-inputs.js'
 import { toolError, toolSuccess } from './tool-result.js'
+
+const pseoOpportunitiesInput = z
+  .strictObject({
+    site: z.string().trim().min(1).max(2_048),
+    days: z.number().int().min(1).max(548).optional(),
+    sitemaps: z.array(z.string().url()).max(20).optional(),
+    maxSitemapUrls: z.number().int().min(1).max(100_000).optional(),
+    templateLimit: z.number().int().min(1).max(25).optional(),
+    clusterLimit: z.number().int().min(1).max(25).optional(),
+    minimumTemplateUrls: z.number().int().min(2).max(100).optional(),
+    minimumTemplateShare: z.number().min(0).max(1).optional(),
+    minimumTemplateImpressions: z.number().min(0).max(1_000_000_000).optional(),
+    brandTerms: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
+    includeBrand: z.boolean().optional(),
+    includeExternal: z.boolean().default(false),
+    countryCode: providerCountryCodeInput.optional(),
+    languageCode: providerLanguageCodeInput.optional(),
+    searchEngine: providerSearchEngineInput,
+    location: providerLocationInput.optional(),
+    device: providerDeviceInput.optional(),
+    provider: providerIdInput.optional(),
+    discoverySources: z
+      .array(z.enum(['ideas', 'related', 'suggestions']))
+      .min(1)
+      .max(3)
+      .default(['ideas']),
+    discoveryLimit: z.number().int().min(1).max(100).optional(),
+    candidateLimit: z.number().int().min(1).max(25).optional(),
+    serpLimit: z.number().int().min(0).max(3).default(0),
+    serpDepth: z.number().int().min(1).max(20).optional(),
+    refresh: z.boolean().optional(),
+  })
+  .superRefine((input, context) => {
+    const hasExternalOptions = Boolean(
+      input.countryCode ||
+        input.languageCode ||
+        input.location ||
+        input.device ||
+        input.provider ||
+        input.serpLimit,
+    )
+    if (!input.includeExternal && hasExternalOptions) {
+      context.addIssue({
+        code: 'custom',
+        path: ['includeExternal'],
+        message:
+          'Set includeExternal to true before passing market, provider, or SERP options.',
+      })
+    }
+    if (input.includeExternal && (!input.countryCode || !input.languageCode)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['includeExternal'],
+        message:
+          'External pSEO research requires countryCode and languageCode.',
+      })
+    }
+  })
 
 export function compactPseoReport(
   result: Awaited<ReturnType<typeof pseoAuditReport>>,
@@ -51,7 +119,13 @@ export function compactPseoReport(
   }
 }
 
-export function registerPseoTools(server: McpServer): void {
+export function registerPseoTools(
+  server: McpServer,
+  dependencies: {
+    pseoAuditReport?: typeof pseoAuditReport
+    pseoOpportunitiesReport?: typeof pseoOpportunitiesReport
+  } = {},
+): void {
   server.registerTool(
     'seo_pseo_audit',
     {
@@ -103,7 +177,7 @@ export function registerPseoTools(server: McpServer): void {
       detail,
     }) => {
       try {
-        const result = await pseoAuditReport({
+        const result = await (dependencies.pseoAuditReport ?? pseoAuditReport)({
           site,
           days,
           sitemaps,
@@ -131,6 +205,85 @@ export function registerPseoTools(server: McpServer): void {
             ? { report: result, presentation: pseoPresentation(result) }
             : { report: compactPseoReport(result) },
           full ? { markdown: renderPseoMarkdown(result) } : undefined,
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_pseo_opportunities',
+    {
+      description:
+        'Combine bounded template, Search Console cluster, optional keyword discovery, live SERP, competitor pattern, cost, and data-source evidence for programmatic SEO research',
+      inputSchema: pseoOpportunitiesInput,
+    },
+    async ({
+      site,
+      days,
+      sitemaps,
+      maxSitemapUrls,
+      templateLimit,
+      clusterLimit,
+      minimumTemplateUrls,
+      minimumTemplateShare,
+      minimumTemplateImpressions,
+      brandTerms,
+      includeBrand,
+      includeExternal,
+      countryCode,
+      languageCode,
+      searchEngine,
+      location,
+      device,
+      provider,
+      discoverySources,
+      discoveryLimit,
+      candidateLimit,
+      serpLimit,
+      serpDepth,
+      refresh,
+    }) => {
+      try {
+        const report = await (
+          dependencies.pseoOpportunitiesReport ?? pseoOpportunitiesReport
+        )({
+          site,
+          days,
+          sitemaps,
+          maxSitemapUrls,
+          templateLimit,
+          clusterLimit,
+          minimumTemplateUrls,
+          minimumTemplateShare,
+          minimumTemplateImpressions,
+          brandTerms,
+          includeBrand,
+          includeExternal,
+          market:
+            countryCode && languageCode
+              ? {
+                  countryCode,
+                  languageCode,
+                  searchEngine,
+                  location,
+                  device,
+                }
+              : undefined,
+          provider,
+          discoverySources,
+          discoveryLimit,
+          candidateLimit,
+          serpLimit,
+          serpDepth,
+          refresh,
+        })
+        return toolSuccess(
+          report.summary.verdict,
+          compactAgentWorkflowOutput(
+            report as unknown as Record<string, unknown>,
+          ),
         )
       } catch (error) {
         return toolError(error)

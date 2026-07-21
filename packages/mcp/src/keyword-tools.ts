@@ -7,38 +7,16 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
+import {
+  providerCountryCodeInput as countryCodeInput,
+  providerKeywordInput as keywordInput,
+  providerLanguageCodeInput as languageCodeInput,
+  providerLocationInput as locationInput,
+  providerDeviceInput,
+  providerIdInput,
+  providerSearchEngineInput,
+} from './provider-inputs.js'
 import { toolError, toolSuccess } from './tool-result.js'
-
-const keywordInput = z
-  .string()
-  .trim()
-  .min(1)
-  .max(80)
-  .refine(
-    (value) => value.split(/\s+/u).length <= 10,
-    'Use at most 10 words per keyword.',
-  )
-
-const locationInput = z
-  .strictObject({
-    code: z.number().int().positive().optional(),
-    name: z.string().trim().min(1).max(500).optional(),
-  })
-  .refine((value) => value.code !== undefined || value.name !== undefined, {
-    message: 'A location needs a code or name.',
-  })
-
-const countryCodeInput = z
-  .string()
-  .trim()
-  .regex(/^[a-z]{2}$/i)
-
-const languageCodeInput = z
-  .string()
-  .trim()
-  .min(2)
-  .max(35)
-  .regex(/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i)
 
 const keywordResearchInput = z
   .strictObject({
@@ -50,11 +28,11 @@ const keywordResearchInput = z
       .default(['ideas', 'related', 'suggestions']),
     countryCode: countryCodeInput,
     languageCode: languageCodeInput,
-    searchEngine: z.enum(['google', 'bing']).default('google'),
+    searchEngine: providerSearchEngineInput,
     location: locationInput.optional(),
-    device: z.enum(['desktop', 'mobile']).optional(),
+    device: providerDeviceInput.optional(),
     limit: z.number().int().min(1).max(100).default(50),
-    provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+    provider: providerIdInput.optional(),
     refresh: z.boolean().optional(),
   })
   .superRefine((input, context) => {
@@ -81,11 +59,11 @@ const serpResultsInput = z.strictObject({
   keyword: keywordInput,
   countryCode: countryCodeInput,
   languageCode: languageCodeInput,
-  searchEngine: z.enum(['google', 'bing']).default('google'),
+  searchEngine: providerSearchEngineInput,
   location: locationInput.optional(),
-  device: z.enum(['desktop', 'mobile']).default('desktop'),
+  device: providerDeviceInput.default('desktop'),
   depth: z.number().int().min(1).max(100).default(10),
-  provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+  provider: providerIdInput.optional(),
   refresh: z.boolean().optional(),
 })
 
@@ -103,10 +81,10 @@ const keywordOpportunitiesInput = z
     includeExternal: z.boolean().default(false),
     countryCode: countryCodeInput.optional(),
     languageCode: languageCodeInput.optional(),
-    searchEngine: z.enum(['google', 'bing']).default('google'),
+    searchEngine: providerSearchEngineInput,
     location: locationInput.optional(),
-    device: z.enum(['desktop', 'mobile']).optional(),
-    provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+    device: providerDeviceInput.optional(),
+    provider: providerIdInput.optional(),
     refresh: z.boolean().optional(),
   })
   .superRefine((input, context) => {
@@ -153,10 +131,10 @@ export function registerKeywordTools(
         keywords: z.array(keywordInput).min(1).max(50),
         countryCode: countryCodeInput,
         languageCode: languageCodeInput,
-        searchEngine: z.enum(['google', 'bing']).default('google'),
+        searchEngine: providerSearchEngineInput,
         location: locationInput.optional(),
-        device: z.enum(['desktop', 'mobile']).optional(),
-        provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+        device: providerDeviceInput.optional(),
+        provider: providerIdInput.optional(),
         refresh: z.boolean().optional(),
       },
     },

@@ -87,6 +87,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Start with the highest-impact problem supported by the lab trace and test the fix on the same page and device profile. Rerun Lighthouse immediately, then wait for field data before claiming a Core Web Vitals improvement.',
   'pseo-audit':
     'Inspect representative pages from each template pattern before changing the generator. Fix shared problems at template level, recrawl the same sample and confirm that distinct pages still serve distinct intent.',
+  'pseo-opportunities':
+    'Review the first-party templates and clusters before adding external evidence. For the strongest candidates, inspect live results and complete the data-source checks before deciding to extend a template, create a different page type or do nothing.',
   'query-clusters':
     'Open the queries and pages inside each useful cluster before changing site structure. Treat the groups as an investigation aid, then confirm intent and page overlap with live search evidence.',
   'quick-wins':

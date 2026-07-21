@@ -1,0 +1,57 @@
+{
+  "subject": "pseo-opportunities",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find programmatic SEO opportunities from the templates and query clusters that already work on my site.",
+      "expected_output": "Should use report id pseo-opportunities through the shared discover, describe, and run flow. Should run the first-party pass without external acquisition unless the user explicitly asks for paid provider work. Should read pseoAudit and queryClusters before any candidate or action, keep returned subsets and heuristics visible, and recommend a small external rerun only when it would change the decision.",
+      "assertions": [
+        "Uses report id pseo-opportunities through the shared report flow",
+        "Runs the first-party pass without silently spending on a provider",
+        "Reads template and query-cluster evidence before recommendations",
+        "Keeps returned subsets and heuristics visible",
+        "Recommends bounded external research only when useful"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Enrich the strongest pSEO opportunities with UK mobile keyword discovery and three live result checks. Show me likely competitors and cost.",
+      "expected_output": "Should run pseo-opportunities with includeExternal true, countryCode GB, languageCode en, device mobile, serpLimit 3, and bounded discovery and result depth. Should inspect discovery and SERP coverage, warnings, cache, request, evidence states, and aggregate known versus unknown cost. Should treat repeated competitor domains and URL patterns as snapshot context, not authority, quality, or ranking feasibility.",
+      "assertions": [
+        "Uses explicit external market, device, discovery, and SERP limits",
+        "Reads provider coverage, warnings, cache, request, value states, and cost",
+        "Keeps Search Console evidence separate from provider estimates and live results",
+        "Treats competitor patterns as snapshot observations",
+        "Does not turn competitor frequency into authority or ranking feasibility"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The report found 200 related terms and a competitor with thousands of directory pages. Build all the combinations for us.",
+      "expected_output": "Should refuse to recommend combinatorial generation from term count or a competitor URL pattern. Should separate a search-evidenced template expansion from new-template research, inspect shared intent and representative result pages, and use the dataSourceBriefs to verify entities, fields, identifiers, coverage, freshness, rights, missing-value stop conditions, bounded inventory, duplicate prevention, crawl controls, and internal links before proposing pages.",
+      "assertions": [
+        "Does not recommend combinatorial page generation",
+        "Separates existing-template expansion from new-template research",
+        "Requires shared-intent and representative-result review",
+        "Uses the data-source brief as a research checklist rather than proof",
+        "Requires bounded inventory and technical controls before expansion"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "A discovered keyword is missing from Search Console and has volume 500, so this proves we need a new template, right?",
+      "expected_output": "Should reject the conclusion. Should explain that absence from retained Search Console rows is not a definitive zero and provider volume is an estimate. Should check whether the candidate came from a search-evidenced template seed or an unmapped query cluster, inspect the live results and existing pages, and validate a defensible data source before choosing a hub, editorial page, template extension, new template, or no page.",
+      "assertions": [
+        "Does not treat a missing retained Search Console row as zero",
+        "Does not treat provider volume as proof a new template is needed",
+        "Checks the candidate classification and supporting evidence",
+        "Requires live-result and existing-page review",
+        "Keeps no new page as a valid outcome"
+      ],
+      "files": []
+    }
+  ]
+}

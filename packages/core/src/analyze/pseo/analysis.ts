@@ -61,30 +61,37 @@ export type PseoDatasetInput = {
 }
 
 function retainedQueryRows(input: PseoDatasetInput) {
-  const invalid = input.queryPageRows.filter(
-    (row) => !validPseoQueryPageRow(row),
-  ).length
-  const valid = input.queryPageRows.filter(validPseoQueryPageRow)
-  const lowActionability = valid.filter((row) =>
-    isLowActionabilityQuery(row.query),
-  ).length
-  const actionable = valid.filter((row) => !isLowActionabilityQuery(row.query))
-  const classified = actionable.map((row) => ({
-    row,
-    isBrand: shouldExcludeBrandQuery({
-      query: row.query,
-      siteUrl: input.site,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-    }),
-  }))
+  let invalid = 0
+  let lowActionability = 0
+  let brand = 0
+  const retained: PseoQueryPageRow[] = []
+  for (const row of input.queryPageRows) {
+    if (!validPseoQueryPageRow(row)) {
+      invalid += 1
+      continue
+    }
+    if (isLowActionabilityQuery(row.query)) {
+      lowActionability += 1
+      continue
+    }
+    if (
+      shouldExcludeBrandQuery({
+        query: row.query,
+        siteUrl: input.site,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      })
+    ) {
+      brand += 1
+      continue
+    }
+    retained.push(row)
+  }
   return {
-    rows: aggregatePseoQueryPageRows(
-      classified.filter((item) => !item.isBrand).map((item) => item.row),
-    ),
+    rows: aggregatePseoQueryPageRows(retained),
     invalid,
     lowActionability,
-    brand: classified.filter((item) => item.isBrand).length,
+    brand,
   }
 }
 
@@ -95,7 +102,9 @@ function groupRowsByTemplate<T extends { page: string }>(
   const grouped = new Map<string, T[]>()
   for (const row of rows) {
     const signature = templateForUrl(row.page, clusters)
-    grouped.set(signature, [...(grouped.get(signature) ?? []), row])
+    const existing = grouped.get(signature)
+    if (existing) existing.push(row)
+    else grouped.set(signature, [row])
   }
   return grouped
 }
@@ -115,10 +124,9 @@ function buildTemplates(input: {
   const urlsByTemplate = new Map<string, string[]>()
   for (const url of input.allUrls) {
     const signature = templateForUrl(url, clusters)
-    urlsByTemplate.set(signature, [
-      ...(urlsByTemplate.get(signature) ?? []),
-      url,
-    ])
+    const existing = urlsByTemplate.get(signature)
+    if (existing) existing.push(url)
+    else urlsByTemplate.set(signature, [url])
   }
   const pageRowsByTemplate = groupRowsByTemplate(input.pageRows, clusters)
   const queryRowsByTemplate = groupRowsByTemplate(input.queryRows, clusters)

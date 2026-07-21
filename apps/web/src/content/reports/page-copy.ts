@@ -245,6 +245,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Audit programmatic SEO templates, repeated URL patterns and Search Console demand. Review representative pages before changing a whole template.',
     lead: 'Review repeated page patterns with crawl and Search Console evidence before scaling or deleting anything. One thin sample cannot condemn a template, so the audit keeps coverage and representative URLs visible.',
   },
+  'pseo-opportunities': {
+    title: 'Programmatic SEO opportunities',
+    description:
+      'Find programmatic SEO opportunities by joining template and Search Console evidence with optional keyword, live SERP, competitor and data-source research.',
+    lead: 'Start with repeated templates and query clusters already observed on the site. Add independent discovery and live results only when they help decide whether to extend a working template, research a different page type or stop.',
+  },
   'keyword-metrics': {
     title: 'Keyword metrics report',
     description:

@@ -245,6 +245,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Audit programmatic SEO templates, repeated URL patterns and Search Console demand. Review representative pages before changing a whole template.',
     lead: 'Review repeated page patterns with crawl and Search Console evidence before scaling or deleting anything. One thin sample cannot condemn a template, so the audit keeps coverage and representative URLs visible.',
   },
+  'keyword-metrics': {
+    title: 'Keyword metrics report',
+    description:
+      'Compare keyword search volume, monthly trends, CPC, competition, difficulty, intent and result counts for one country and language with cost and coverage.',
+    lead: 'Check a limited keyword set against independent market estimates before committing to deeper research. The report keeps missing data, request cost and provider coverage visible, so a neat number never looks more certain than it is.',
+  },
   'query-clusters': {
     title: 'Search query clustering report',
     description:

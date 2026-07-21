@@ -157,6 +157,27 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'content-optimization', reason: 'Builds a page brief.' },
     ],
   },
+  'keyword-metrics': {
+    readOrder: [
+      'dataStatus, summary, market, and caveats',
+      'evidence coverage, warnings, cache status, request, and cost',
+      'each evidence value state before using its number',
+      'analysis trend methodology and findings evidenceRef',
+      'nextSteps for first-party and result-page verification',
+    ],
+    doNotClaim: [
+      'Search volume and result counts are provider estimates, not measured traffic or complete inventories.',
+      'Keyword difficulty is not a ranking probability and does not establish whether this site can rank.',
+      'A trend heuristic does not forecast future demand, and a missing value is not zero.',
+    ],
+    verify:
+      'Compare the term with first-party Search Console evidence and inspect a current result page in the same market before choosing work.',
+    related: [
+      { id: 'query-clusters', reason: 'Groups first-party query themes.' },
+      { id: 'quick-wins', reason: 'Finds first-party CTR candidates.' },
+      { id: 'striking-distance', reason: 'Finds near-page-one evidence.' },
+    ],
+  },
   'query-clusters': {
     readOrder: [
       'summary cluster and query counts, clicks, impressions, threshold, limit, and brand filtering',

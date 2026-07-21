@@ -601,6 +601,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Template-level demand, quality, and index evidence with representative URLs.',
   },
+  'keyword-metrics': {
+    name: 'Keyword metrics',
+    description:
+      'Compare market-specific keyword demand, trend, cost, competition, difficulty, intent, and result-count estimates.',
+    useWhen: [
+      'You have a bounded keyword list and need independent market estimates.',
+      'You want recent demand history before deciding which terms deserve deeper research.',
+    ],
+    avoidWhen: [
+      'You need first-party evidence of how your own pages perform.',
+      'You need an exact current rank or a current result-page comparison.',
+    ],
+    outcome:
+      'Provider-neutral keyword evidence with missing values, costs, coverage, and trend heuristics kept visible.',
+  },
   'query-clusters': {
     name: 'Search query clusters',
     description:

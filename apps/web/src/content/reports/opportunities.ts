@@ -167,6 +167,46 @@ export const opportunityReports = [
     sources: ['search-analytics', 'crawlable-links'],
   },
   {
+    id: 'keyword-metrics',
+    name: 'Keyword metrics',
+    category: 'opportunities',
+    summary:
+      'Compare a limited keyword set using market-specific demand, trend, cost, competition, difficulty, intent, and result-count estimates.',
+    question:
+      'Which candidate keywords have enough independent demand evidence to justify a closer search and content review?',
+    useWhen: [
+      'You already have a keyword list and need estimates for a specific country and language.',
+      'You want recent monthly history kept beside current volume and difficulty estimates.',
+    ],
+    avoidWhen: [
+      'You need proof of how your own pages perform. Use a Search Console report for that.',
+      'You need an exact rank or a live comparison of the current results.',
+    ],
+    evidence: [
+      'A connected keyword provider, the requested market, provider coverage, cache status, local request cost, and typed metric values.',
+    ],
+    methodology: [
+      'Normalizes and deduplicates at most 50 keywords, keeps zero separate from missing data, and compares the latest three monthly estimates with the preceding three when six consecutive months exist.',
+    ],
+    exampleParams: {
+      keywords: ['seo audit tool', 'technical seo audit'],
+      countryCode: 'US',
+      languageCode: 'en',
+    },
+    interpretation: [
+      'Use volume and trend to choose what to investigate. Check Search Console and the current results before deciding that a term fits the site or deserves a new page.',
+    ],
+    caveats: [
+      'Every metric is a third-party estimate. Difficulty is not a ranking probability, result count is not a complete competitor set, and a trend is not a forecast.',
+    ],
+    nextSteps: [
+      'Compare the most promising terms with Search Console impressions, clicks, pages, and average position.',
+      'Inspect a current result page in the same market before choosing a content or programmatic template target.',
+    ],
+    related: ['query-clusters', 'quick-wins', 'striking-distance'],
+    sources: ['keyword-provider-metrics'],
+  },
+  {
     id: 'query-clusters',
     name: 'Query clusters',
     category: 'opportunities',

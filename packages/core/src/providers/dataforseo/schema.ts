@@ -22,7 +22,7 @@ const keywordOverviewItemSchema = z
         search_volume: nullableNumber,
         cpc: nullableNumber,
         competition: nullableNumber,
-        monthly_searches: z.array(monthlySearchSchema).nullish(),
+        monthly_searches: z.array(monthlySearchSchema).max(24).nullish(),
         last_updated_time: z.string().trim().min(1).nullable().optional(),
       })
       .nullish(),

@@ -773,6 +773,50 @@ export const reportGuideOverridesIP: Partial<
       supportingKeywords: ['pseo', 'programmatic seo tools'],
     },
   },
+  'keyword-metrics': {
+    name: 'Compare keyword metrics',
+    summary:
+      'Check a limited keyword set against independent market estimates while keeping missing fields, provider coverage, cache status, and local request cost visible.',
+    inputs: [
+      {
+        label: 'Keyword list and search market',
+        role: 'Sets at most 50 terms, one country, one language, and an optional location or device context.',
+      },
+      {
+        label: 'Connected keyword provider',
+        source: 'keyword-provider-metrics',
+        role: 'Returns market-level volume, monthly history, CPC, competition, difficulty, intent, and result-count estimates where available.',
+      },
+    ],
+    checks: [
+      'Normalises duplicate terms, validates every provider field, and keeps observed zero separate from missing or invalid data.',
+      'Compares the latest three monthly estimates with the preceding three only when six consecutive months exist.',
+    ],
+    returns: [
+      'Typed metrics for each retained keyword with provider, market, coverage, cache, cost, request, and warning evidence.',
+      'Limited trend findings with direct evidence references and no traffic, ranking, or future-demand forecast.',
+    ],
+    alternatives: [
+      {
+        when: 'You need evidence of searches already associated with your own pages.',
+        reportId: 'query-clusters',
+        doInstead:
+          'Run query clusters for the Search Console property. It groups returned first-party query evidence instead of estimating wider market demand.',
+      },
+      {
+        when: 'You need to know who ranks now or whether the result page matches the intended topic.',
+        doInstead:
+          'Inspect a current result page in the same country, language, location, and device. Keyword metrics alone cannot identify current competitors or prove intent fit.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'keyword metrics',
+      supportingKeywords: [
+        'keyword search volume',
+        'keyword difficulty checker',
+      ],
+    },
+  },
   'query-clusters': {
     name: 'Group related search queries',
     summary:

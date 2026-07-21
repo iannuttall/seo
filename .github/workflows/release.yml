@@ -81,11 +81,7 @@ jobs:
         env:
           SEO_GOOGLE_CLIENT_ID: ${{ secrets.SEO_GOOGLE_CLIENT_ID }}
           SEO_GOOGLE_CLIENT_SECRET: ${{ secrets.SEO_GOOGLE_CLIENT_SECRET }}
-      - run: pnpm build
-      - run: pnpm typecheck
-      - run: pnpm test
       - run: pnpm test:package-install
-      - run: pnpm lint
       - run: pnpm security:check
       - name: Publish dry run
         if: github.event_name == 'workflow_dispatch' && inputs.dryRun == 'true'

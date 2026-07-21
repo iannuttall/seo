@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ProviderAdapter, ProviderId } from './contracts.js'
 import {
-  resolveProvider,
   type ProviderCandidate,
   type ProviderResolution,
+  resolveProvider,
 } from './resolver.js'
 
 function candidate(input: {

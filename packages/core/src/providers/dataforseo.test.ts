@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Response } from 'undici'
-import { ProviderError } from './errors.js'
 import { DataForSeoProvider } from './dataforseo.js'
+import { ProviderError } from './errors.js'
 
 type FixtureItem = {
   keyword: string
@@ -86,8 +86,9 @@ test('DataForSEO sends the documented request and maps nested zero metrics', asy
     credentials: () => ({ login: 'local-user', password: 'local-password' }),
     fetch: async (_url, init) => {
       requestBody = JSON.parse(String(init?.body))
-      authorization = (init?.headers as Record<string, string> | undefined)
-        ?.authorization ?? null
+      authorization =
+        (init?.headers as Record<string, string> | undefined)?.authorization ??
+        null
       return new Response(JSON.stringify(responseFixture()))
     },
   })

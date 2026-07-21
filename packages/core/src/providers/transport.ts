@@ -1,9 +1,9 @@
 import { setTimeout as delay } from 'node:timers/promises'
-import { type RequestInit, type Response } from 'undici'
-import { z } from 'zod'
+import type { RequestInit, Response } from 'undici'
+import type { z } from 'zod'
 import {
-  readBoundedResponseText,
   ResponseSizeLimitError,
+  readBoundedResponseText,
 } from '../fetch/http-client.js'
 import type { ProviderId } from './contracts.js'
 import { ProviderError } from './errors.js'

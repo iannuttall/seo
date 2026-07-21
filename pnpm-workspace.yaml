@@ -6,6 +6,8 @@ overrides:
   "@hono/node-server": 2.0.11
   "@sentry/node": 10.60.0
   esbuild: 0.28.1
+  fast-uri: 3.1.4
+  sharp: 0.35.3
 
 # Exact transitive versions with upstream deprecation notices. Keep this list
 # narrow so upgrades surface new notices instead of hiding them globally.
@@ -15,7 +17,7 @@ allowedDeprecatedVersions:
 
 allowBuilds:
   esbuild@0.28.1: true
-  sharp@0.34.5: true
+  sharp@0.35.3: true
   workerd@1.20260714.1: true
 
 minimumReleaseAgeExclude:

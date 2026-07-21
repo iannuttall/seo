@@ -37,6 +37,8 @@ const MAX_USER_DATA_RESPONSE_BYTES = 5 * 1024 * 1024
 const DEFAULT_KEYWORD_OVERVIEW_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const DEFAULT_ACCOUNT_PRICING_TTL_MS = 5 * 60 * 1000
 const MAX_KEYWORDS_PER_OVERVIEW_REQUEST = 100
+const MAX_KEYWORD_CHARACTERS = 80
+const MAX_KEYWORD_WORDS = 10
 
 export type DataForSeoAccountSnapshot = {
   provider: 'dataforseo'
@@ -78,7 +80,9 @@ export type DataForSeoClientOptions = {
 export type DataForSeoKeywordOverviewRequest = {
   keywords: string[]
   languageCode: string
-  locationCode: number
+  locationCode?: number
+  locationName?: string
+  includeSerpInfo?: boolean
   includeClickstreamData?: boolean
   refresh?: boolean
   projectId?: string
@@ -361,13 +365,18 @@ export class DataForSeoClient {
     if (
       keywords.length < 1 ||
       keywords.length > MAX_KEYWORDS_PER_OVERVIEW_REQUEST ||
-      keywords.some((keyword) => keyword.length < 1 || keyword.length > 700)
+      keywords.some(
+        (keyword) =>
+          keyword.length < 1 ||
+          keyword.length > MAX_KEYWORD_CHARACTERS ||
+          keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS,
+      )
     ) {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'keyword-metrics',
         code: 'configuration',
-        message: `Keyword metrics requires 1 to ${MAX_KEYWORDS_PER_OVERVIEW_REQUEST} non-empty keywords of at most 700 characters.`,
+        message: `Keyword metrics requires 1 to ${MAX_KEYWORDS_PER_OVERVIEW_REQUEST} non-empty keywords of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
       })
     }
     if (!/^[a-z]{2}$/.test(input.languageCode)) {
@@ -378,12 +387,36 @@ export class DataForSeoClient {
         message: 'DataForSEO language code must contain two lowercase letters.',
       })
     }
-    if (!Number.isSafeInteger(input.locationCode) || input.locationCode <= 0) {
+    const hasLocationCode = input.locationCode !== undefined
+    const locationName = input.locationName?.trim()
+    const hasLocationName = Boolean(locationName)
+    if (hasLocationCode === hasLocationName) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics',
+        code: 'configuration',
+        message:
+          'DataForSEO keyword metrics requires exactly one location code or location name.',
+      })
+    }
+    if (
+      hasLocationCode &&
+      (!Number.isSafeInteger(input.locationCode) ||
+        (input.locationCode ?? 0) <= 0)
+    ) {
       throw new ProviderError({
         provider: 'dataforseo',
         operation: 'keyword-metrics',
         code: 'configuration',
         message: 'DataForSEO location code must be a positive integer.',
+      })
+    }
+    if (locationName && locationName.length > 500) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics',
+        code: 'configuration',
+        message: 'DataForSEO location name must be at most 500 characters.',
       })
     }
 
@@ -395,7 +428,10 @@ export class DataForSeoClient {
     const request = {
       keywords,
       language_code: input.languageCode,
-      location_code: input.locationCode,
+      ...(input.locationCode !== undefined
+        ? { location_code: input.locationCode }
+        : { location_name: locationName }),
+      ...(input.includeSerpInfo ? { include_serp_info: true } : {}),
       ...(input.includeClickstreamData
         ? { include_clickstream_data: true }
         : {}),

@@ -141,6 +141,8 @@ export interface ProviderAdapter {
 export type KeywordMetric = {
   keyword: string
   monthlySearchVolume: ProviderValue<number>
+  monthlySearches: ProviderValue<KeywordMonthlySearch[]>
+  searchVolumeUpdatedAt: ProviderValue<string>
   cpcUsd: ProviderValue<number>
   paidCompetition: ProviderValue<number>
   keywordDifficulty: ProviderValue<number>
@@ -148,10 +150,23 @@ export type KeywordMetric = {
   resultCount: ProviderValue<number>
 }
 
+export type KeywordMonthlySearch = {
+  year: number
+  month: number
+  searchVolume: number
+}
+
+export type ProviderRequestContext = {
+  projectId?: string
+  reportId: string
+  reportRunId: string
+}
+
 export type KeywordMetricsRequest = {
   keywords: string[]
   market: SearchMarket
   refresh?: boolean
+  context?: ProviderRequestContext
 }
 
 export interface KeywordMetricsProvider extends ProviderAdapter {

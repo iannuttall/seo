@@ -1,8 +1,3 @@
-import type {
-  RankObservation,
-  RankTrackingConfiguration,
-  RankTrackingRun,
-} from '../rank-tracking/types.js'
 import { SeoError } from '../errors.js'
 import {
   executeRankTracking,
@@ -14,6 +9,11 @@ import {
   rankObservations,
   rankTrackingTasks,
 } from '../rank-tracking/store.js'
+import type {
+  RankObservation,
+  RankTrackingConfiguration,
+  RankTrackingRun,
+} from '../rank-tracking/types.js'
 
 export type RankChange =
   | 'new'

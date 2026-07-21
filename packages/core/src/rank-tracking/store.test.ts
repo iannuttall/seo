@@ -10,8 +10,8 @@ import { RANK_TRACKING_SCHEMA_SQL } from './schema.js'
 import {
   activeRankTrackingRun,
   failRankTrackingTask,
-  getRankTrackingRun,
   getOrCreateRankTrackingConfiguration,
+  getRankTrackingRun,
   priorComparableRankTrackingRun,
   rankObservations,
   rankTrackingLogicalBytes,

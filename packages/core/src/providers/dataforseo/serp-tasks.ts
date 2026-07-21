@@ -22,6 +22,7 @@ import {
   dataForSeoSerpResponseSchema,
 } from './serp-schema.js'
 import {
+  type DataForSeoSerpTaskPostResponse,
   dataForSeoSerpTaskPostResponseSchema,
   dataForSeoSerpTasksReadyResponseSchema,
 } from './serp-task-schema.js'
@@ -119,7 +120,7 @@ export async function postDataForSeoSerpTasks(
       now: transport.now().getTime(),
     },
   )
-  let response
+  let response: DataForSeoSerpTaskPostResponse
   try {
     response = await providerRequestJson({
       provider: 'dataforseo',

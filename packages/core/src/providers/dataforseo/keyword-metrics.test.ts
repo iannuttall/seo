@@ -68,6 +68,12 @@ function accountPricing(): DataForSeoAccountSnapshot {
       related: { perRequestMicros: null, perResultMicros: null },
       suggestions: { perRequestMicros: null, perResultMicros: null },
     },
+    domainResearchPrices: {
+      domainOverview: { perRequestMicros: 10_000, perResultMicros: 100 },
+      rankedKeywords: { perRequestMicros: 10_000, perResultMicros: 100 },
+      rankingPages: { perRequestMicros: 10_000, perResultMicros: 100 },
+      serpCompetitors: { perRequestMicros: 10_000, perResultMicros: 100 },
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: null,
       perResultMicros: null,

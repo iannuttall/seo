@@ -60,7 +60,7 @@ export const keywordOverviewItemSchema = z
 const keywordOverviewResultSchema = z
   .object({
     items_count: z.number().int().nonnegative().optional(),
-    items: z.array(keywordOverviewItemSchema).optional(),
+    items: z.array(keywordOverviewItemSchema).nullable().optional(),
   })
   .passthrough()
 

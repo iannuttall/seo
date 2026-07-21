@@ -2,7 +2,7 @@
   "name": "seo",
   "displayName": "seo",
   "description": "Local-first SEO and AI-search diagnostics. Bundles the seo MCP server plus one SEO skill that gives an agent 50+ audit and report tools without filling its context window.",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "author": {
     "name": "Ian Nuttall"
   },

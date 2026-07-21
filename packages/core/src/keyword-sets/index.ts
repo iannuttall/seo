@@ -1,5 +1,6 @@
 export * from './limits.js'
 export * from './mutations.js'
+export * from './refresh.js'
 export type { KeywordSetStoreOptions } from './rows.js'
 export { keywordSetLogicalBytes } from './rows.js'
 export * from './schema.js'

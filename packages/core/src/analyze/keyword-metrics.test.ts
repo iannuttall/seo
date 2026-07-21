@@ -348,3 +348,42 @@ test('keyword metrics report rejects invalid and disconnected requests before pr
   )
   assert.equal(calls, 0)
 })
+
+test('keyword metrics reports an explicit provider market mismatch as non-retryable input', async () => {
+  let calls = 0
+  const provider: ProviderCandidate = {
+    connected: true,
+    priority: 1,
+    adapter: {
+      provider: 'dataforseo',
+      capabilitySupport: [
+        {
+          capability: 'keyword-metrics',
+          status: 'available',
+          markets: [{ searchEngines: ['google'], location: 'country-only' }],
+        },
+      ],
+      keywordMetrics: async () => {
+        calls += 1
+        return evidence([])
+      },
+    } as KeywordMetricsProvider,
+  }
+
+  await assert.rejects(
+    keywordMetricsReport(
+      {
+        keywords: ['query'],
+        market: { ...market, location: { name: 'London' } },
+        provider: 'dataforseo',
+      },
+      { candidates: [provider] },
+    ),
+    (error) =>
+      error instanceof Error &&
+      'code' in error &&
+      error.code === 'INVALID_INPUT' &&
+      /country-level Labs data/.test(error.message),
+  )
+  assert.equal(calls, 0)
+})

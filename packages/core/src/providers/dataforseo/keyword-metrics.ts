@@ -1,9 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import type {
   KeywordMetric,
+  KeywordMetricsCostEstimate,
+  KeywordMetricsCostEstimator,
   KeywordMetricsProvider,
   KeywordMetricsRequest,
   ProviderEvidence,
+  SearchMarket,
 } from '../contracts.js'
 import { searchMarketSchema } from '../contracts.js'
 import { ProviderError } from '../errors.js'
@@ -26,7 +29,8 @@ const MAX_KEYWORDS_PER_REPORT = 100
 const KEYWORD_OVERVIEW_ENDPOINT =
   'v3/dataforseo_labs/google/keyword_overview/live'
 
-type KeywordMetricsClient = Pick<DataForSeoClient, 'keywordOverview'>
+type KeywordMetricsClient = Pick<DataForSeoClient, 'keywordOverview'> &
+  Partial<Pick<DataForSeoClient, 'userData'>>
 
 export type DataForSeoKeywordMetricsProviderOptions =
   DataForSeoClientOptions & {
@@ -42,7 +46,7 @@ function responseItems(
 }
 
 export class DataForSeoKeywordMetricsProvider
-  implements KeywordMetricsProvider
+  implements KeywordMetricsProvider, KeywordMetricsCostEstimator
 {
   readonly provider = 'dataforseo' as const
   readonly capabilitySupport = [
@@ -52,7 +56,7 @@ export class DataForSeoKeywordMetricsProvider
       markets: [
         {
           searchEngines: ['google'] as const,
-          location: 'any' as const,
+          location: 'country-only' as const,
         },
       ],
     },
@@ -62,6 +66,70 @@ export class DataForSeoKeywordMetricsProvider
 
   constructor(options: DataForSeoKeywordMetricsProviderOptions = {}) {
     this.client = options.client ?? new DataForSeoClient(options)
+  }
+
+  async estimateKeywordMetricsCost(input: {
+    requestedRows: number
+    market: SearchMarket
+  }): Promise<KeywordMetricsCostEstimate> {
+    if (
+      !Number.isSafeInteger(input.requestedRows) ||
+      input.requestedRows < 1 ||
+      input.requestedRows > 10_000
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics-cost',
+        code: 'configuration',
+        message: 'Keyword metric cost estimates require 1 to 10000 rows.',
+      })
+    }
+    if (!searchMarketSchema.safeParse(input.market).success) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics-cost',
+        code: 'configuration',
+        message: 'Keyword metric cost estimates require a valid market.',
+      })
+    }
+    if (input.market.location) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics-cost',
+        code: 'configuration',
+        message:
+          'DataForSEO Labs keyword metrics supports country-level markets; omit market.location and use countryCode.',
+      })
+    }
+    if (!this.client.userData) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics-cost',
+        code: 'configuration',
+        message: 'Keyword metric cost estimation is unavailable.',
+      })
+    }
+    const account = await this.client.userData()
+    const { perRequestMicros, perResultMicros } = account.keywordOverviewPrice
+    const requestCount = Math.ceil(input.requestedRows / 50)
+    const complete = perRequestMicros !== null && perResultMicros !== null
+    return {
+      schemaVersion: 1,
+      provider: 'dataforseo',
+      capability: 'keyword-metrics',
+      currency: 'USD',
+      requestedRows: input.requestedRows,
+      requestCount,
+      estimatedMicros: complete
+        ? requestCount * perRequestMicros +
+          input.requestedRows * perResultMicros
+        : null,
+      observedAt: account.observedAt,
+      completeness: complete ? 'complete' : 'unavailable',
+      basis: complete
+        ? 'Current account pricing for normal-priority live keyword overview requests.'
+        : 'The provider account response did not include complete keyword overview pricing.',
+    }
   }
 
   async keywordMetrics(
@@ -75,6 +143,15 @@ export class DataForSeoKeywordMetricsProvider
         code: 'configuration',
         message:
           'DataForSEO keyword metrics currently supports Google markets.',
+      })
+    }
+    if (market.location) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-metrics',
+        code: 'configuration',
+        message:
+          'DataForSEO Labs keyword metrics supports country-level markets; omit market.location and use countryCode.',
       })
     }
 

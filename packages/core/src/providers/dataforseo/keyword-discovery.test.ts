@@ -201,6 +201,22 @@ test('keyword discovery bounds request fanout before acquisition', async () => {
     /limit of at least 3/,
   )
   assert.equal(calls, 0)
+
+  await assert.rejects(
+    provider.discoverKeywords({
+      seeds: ['query'],
+      sources: ['ideas'],
+      market: {
+        countryCode: 'GB',
+        languageCode: 'en',
+        searchEngine: 'google',
+        location: { name: 'London,England,United Kingdom' },
+      },
+      limit: 1,
+    }),
+    /country-level markets/,
+  )
+  assert.equal(calls, 0)
 })
 
 test('keyword discovery uses request lineage instead of echoed seed sets', async () => {

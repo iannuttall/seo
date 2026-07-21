@@ -8,6 +8,58 @@ type ToolResult = {
 
 type ToolHandler = (input: Record<string, unknown>) => Promise<ToolResult>
 
+test('saved keywords MCP forwards one bounded local set view', async () => {
+  const handlers = new Map<string, ToolHandler>()
+  let captured: unknown
+  registerKeywordTools(
+    {
+      registerTool(name: string, _config: unknown, handler: ToolHandler) {
+        handlers.set(name, handler)
+      },
+    } as never,
+    {
+      savedKeywordSetReport: (input) => {
+        captured = input
+        return {
+          schemaVersion: 1,
+          generatedAt: '2026-07-21T12:00:00.000Z',
+          dataStatus: 'partial',
+          summary: { verdict: 'One saved keyword was returned.' },
+          evidence: { items: [] },
+          analysis: { tagGroups: [], pageMappings: [] },
+          findings: [],
+          caveats: [],
+          nextSteps: [],
+        } as never
+      },
+    },
+  )
+
+  const result = await handlers.get('seo_saved_keywords')?.({
+    projectId: 'example-project',
+    set: 'priority',
+    tag: 'service',
+    limit: 25,
+    offset: 50,
+    staleDays: 60,
+  })
+
+  assert.deepEqual(captured, {
+    projectId: 'example-project',
+    idOrName: 'priority',
+    tag: 'service',
+    limit: 25,
+    offset: 50,
+    staleDays: 60,
+  })
+  assert.equal(result?.structuredContent?.dataStatus, 'partial')
+  assert.equal(
+    (result?.structuredContent?.outputBudget as Record<string, unknown>)
+      ?.maxBytes,
+    98_304,
+  )
+})
+
 test('keyword metrics MCP forwards a bounded neutral market and budgets output', async () => {
   const handlers = new Map<string, ToolHandler>()
   let captured: unknown

@@ -663,6 +663,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded keyword set with discovery sources, provider estimates, evidence states, and research follow-ups.',
   },
+  'saved-keywords': {
+    name: 'Saved keyword set',
+    description:
+      'Review one local keyword set with metric freshness, tags, page mappings, and explicit view limits.',
+    useWhen: [
+      'You want to continue earlier keyword research from a saved project set.',
+      'You need to review stale, unmapped, or tagged terms before deeper research.',
+    ],
+    avoidWhen: [
+      'You need independent keyword discovery or a current result snapshot.',
+      'You plan to treat user-managed tags as proof of shared search intent.',
+    ],
+    outcome:
+      'A bounded local research view with saved evidence, freshness state, planning mappings, and next steps.',
+  },
   'query-clusters': {
     name: 'Search query clusters',
     description:

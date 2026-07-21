@@ -234,6 +234,27 @@ test('keyword set commands reject unsafe files and destructive defaults', async 
     )
     assert.equal(deletion.exitCode, 2)
     assert.match(JSON.parse(deletion.stdout).error.message, /--yes/)
+
+    const invalidOffset = await runSeo(
+      [
+        'projects',
+        'keyword-sets',
+        'refresh',
+        '--project',
+        'example-project',
+        '--set',
+        'missing',
+        '--offset',
+        'later',
+        '--json',
+      ],
+      local.env,
+    )
+    assert.equal(invalidOffset.exitCode, 2)
+    assert.match(
+      JSON.parse(invalidOffset.stdout).error.message,
+      /--offset must be an integer/i,
+    )
   } finally {
     await rm(local.root, { recursive: true, force: true })
   }

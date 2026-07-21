@@ -4,6 +4,7 @@ import { keywordSetCreateCommand } from './create.js'
 import { keywordSetDeleteCommand } from './delete.js'
 import { keywordSetExportCommand } from './export.js'
 import { keywordSetListCommand } from './list.js'
+import { keywordSetRefreshCommand } from './refresh.js'
 import { keywordSetRemoveCommand } from './remove.js'
 import { keywordSetShowCommand } from './show.js'
 
@@ -18,6 +19,7 @@ export const keywordSetsCommand = defineCommand({
     show: keywordSetShowCommand,
     add: keywordSetAddCommand,
     remove: keywordSetRemoveCommand,
+    refresh: keywordSetRefreshCommand,
     export: keywordSetExportCommand,
     delete: keywordSetDeleteCommand,
   },

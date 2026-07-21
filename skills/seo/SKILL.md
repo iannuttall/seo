@@ -55,6 +55,7 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
+| Track exact keyword positions | `rank-tracking` for a saved set and fixed market/device; `serp-results` for one current query |
 | Review Bing traffic, crawl, query, and page insights | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
 | See who links to the site | `link-evidence`, then verify selected referring URLs directly |
 | Review real crawler requests in a server log | `server-log-analysis`, then verify important errors against the original log and server configuration |

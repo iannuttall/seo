@@ -266,6 +266,55 @@ test('SERP results bounds query, market, device, and depth', () => {
   }
 })
 
+test('rank tracking bounds local configuration, acquisition, and output', () => {
+  const schema = reportSchema('rank-tracking')
+  assert.equal(
+    schema.safeParse({
+      projectId: 'example-project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      devices: ['desktop', 'mobile'],
+      collectionMethod: 'queued',
+      cadence: 'weekly',
+      depth: 100,
+      keywordLimit: 1_000,
+      outputLimit: 250,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { projectId: '', set: 'priority', targetDomain: 'example.com' },
+    { projectId: 'project', set: '', targetDomain: 'example.com' },
+    { projectId: 'project', set: 'priority', targetDomain: '' },
+    {
+      projectId: 'project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      devices: ['desktop', 'desktop'],
+    },
+    {
+      projectId: 'project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      depth: 101,
+    },
+    {
+      projectId: 'project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      keywordLimit: 1_001,
+    },
+    {
+      projectId: 'project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      unknown: true,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('keyword opportunities keeps external acquisition explicit and bounded', () => {
   const schema = reportSchema('keyword-opportunities')
   assert.equal(

@@ -1,0 +1,40 @@
+{
+  "subject": "rank-tracking",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Track our saved local-priorities keyword set every week on desktop and mobile, and tell me what moved.",
+      "expected_output": "Should discover and describe rank-tracking, then run it with the saved project and set, target domain, separate desktop and mobile devices, queued collection, and weekly cadence. Should report pending collection honestly or compare the current run with the prior comparable run, including depth, market, cost, coverage, new, lost, improved, declined, and ranking URL changes.",
+      "assertions": [
+        "Uses report id rank-tracking through the discovery flow",
+        "Uses queued weekly collection for the recurring saved set",
+        "Keeps desktop and mobile observations separate",
+        "Checks run state, coverage, cost, caveats, and comparison before summarising movement"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The tracker says we disappeared because it did not see us in the top 50. Confirm that we no longer rank anywhere.",
+      "expected_output": "Should refuse the claim. It should explain that not observed means only that the target domain was not retained within the configured depth for that exact market and device. It should check for pending or failed tasks, avoid calling missing rows losses, and recommend a deeper or matching snapshot plus Search Console context where useful.",
+      "assertions": [
+        "Does not turn not-observed-within-depth into proof of no ranking",
+        "Checks pending and failed task states before calling a loss",
+        "Keeps exact snapshots separate from Search Console average position",
+        "Recommends verification in the same market and device"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Compare our London mobile ranks with our UK desktop history and average them so I can get one clean position number.",
+      "expected_output": "Should refuse to blend unlike configurations. It should keep location and device-specific exact snapshots separate, use only a prior run with the same configuration, and explain that averaging those observations would hide material market and device differences.",
+      "assertions": [
+        "Refuses to average London mobile and UK desktop exact ranks",
+        "Uses only a comparable prior run with the same configuration",
+        "Preserves location, device, depth, and provider provenance"
+      ],
+      "files": []
+    }
+  ]
+}

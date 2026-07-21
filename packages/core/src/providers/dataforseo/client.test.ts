@@ -1,301 +1,22 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Response } from 'undici'
-import { PROVIDER_SPEND_SCHEMA_SQL } from '../../storage/provider-spend-schema.js'
-import Database from '../../storage/sqlite.js'
-import type { ProviderSpendLimits } from '../cost-limits.js'
 import { ProviderError } from '../errors.js'
 import {
   DataForSeoClient,
   type DataForSeoKeywordDiscoveryRequest,
 } from './client.js'
-
-type UserDataAccountFixture = {
-  login: string
-  timezone: string
-  rates: unknown
-  money: {
-    total?: number
-    balance?: number
-    limits?: unknown
-    statistics?: unknown
-  }
-  price: unknown
-  backlinks_subscription_expiry_date: string | null
-  llm_mentions_subscription_expiry_date: string | null
-}
-
-type UserDataTaskFixture = {
-  id: string
-  status_code: number
-  status_message: string
-  cost: number
-  result_count: number
-  result: UserDataAccountFixture[]
-}
-
-type UserDataFixture = {
-  version: string
-  status_code: number
-  status_message: string
-  time: string
-  cost: number
-  tasks_count: number
-  tasks_error: number
-  tasks: UserDataTaskFixture[]
-}
-
-function userDataFixture(): UserDataFixture {
-  return {
-    version: '0.1.test',
-    status_code: 20000,
-    status_message: 'Ok.',
-    time: '0.1 sec.',
-    cost: 0,
-    tasks_count: 1,
-    tasks_error: 0,
-    tasks: [
-      {
-        id: 'account-task-id',
-        status_code: 20000,
-        status_message: 'Ok.',
-        cost: 0,
-        result_count: 1,
-        result: [
-          {
-            login: 'api-owner@example.test',
-            timezone: 'Europe/London',
-            rates: { limits: { minute: { total: 2000 } } },
-            money: {
-              total: 25.5,
-              balance: 7.125001,
-              limits: { day: { total: 5 } },
-              statistics: {
-                day: { total: 0.557935, value: '2026-07-21' },
-              },
-            },
-            price: {
-              dataforseo_labs: {
-                keyword_overview: {
-                  live: {
-                    priority_normal: [
-                      { cost_type: 'per_result', cost: 0.0001 },
-                      { cost_type: 'per_request', cost: 0.01 },
-                    ],
-                  },
-                },
-                keyword_ideas: {
-                  live: {
-                    priority_normal: [
-                      { cost_type: 'per_result', cost: 0.00012 },
-                      { cost_type: 'per_request', cost: 0.012 },
-                    ],
-                  },
-                },
-                keyword_suggestions: {
-                  live: {
-                    priority_normal: [
-                      { cost_type: 'per_result', cost: 0.00012 },
-                      { cost_type: 'per_request', cost: 0.012 },
-                    ],
-                  },
-                },
-                related_keywords: {
-                  live: {
-                    priority_normal: [
-                      { cost_type: 'per_result', cost: 0.00012 },
-                      { cost_type: 'per_request', cost: 0.012 },
-                    ],
-                  },
-                },
-              },
-              serp: {
-                task_post: {
-                  priority_normal: [{ cost_type: 'per_request', cost: 0.0006 }],
-                },
-                live: {
-                  advanced: {
-                    priority_normal: [
-                      { cost_type: 'per_request', cost: 0.002 },
-                    ],
-                  },
-                },
-              },
-            },
-            backlinks_subscription_expiry_date: null,
-            llm_mentions_subscription_expiry_date: '2026-08-01 00:00:00 +00:00',
-          },
-        ],
-      },
-    ],
-  }
-}
-
-function firstTask(fixture: UserDataFixture): UserDataTaskFixture {
-  const task = fixture.tasks[0]
-  assert.ok(task)
-  return task
-}
-
-function firstAccount(fixture: UserDataFixture): UserDataAccountFixture {
-  const account = firstTask(fixture).result[0]
-  assert.ok(account)
-  return account
-}
-
-function database(): Database.Database {
-  const db = new Database(':memory:')
-  db.exec(PROVIDER_SPEND_SCHEMA_SQL)
-  db.exec(`
-    CREATE TABLE provider_cache (
-      provider TEXT NOT NULL, credential_scope TEXT NOT NULL,
-      operation TEXT NOT NULL, request_hash TEXT NOT NULL,
-      request_json TEXT NOT NULL, response_json TEXT NOT NULL,
-      row_count INTEGER, source_cost_micros INTEGER,
-      task_ids_json TEXT NOT NULL, fetched_at INTEGER NOT NULL,
-      expires_at INTEGER NOT NULL,
-      PRIMARY KEY(provider, credential_scope, operation, request_hash)
-    ) WITHOUT ROWID;
-  `)
-  return db
-}
-
-function spendLimits(
-  overrides: Partial<ProviderSpendLimits> = {},
-): ProviderSpendLimits {
-  return {
-    dailyNoticeMicros: 5_000_000,
-    dailyHardLimitMicros: null,
-    monthlyHardLimitMicros: null,
-    maxRequestsPerReport: 20,
-    maxRowsPerReport: 10_000,
-    ...overrides,
-  }
-}
-
-function keywordOverviewFixture(
-  input: {
-    statusCode?: number
-    tasksError?: number
-    cost?: number
-    items?: unknown[] | null
-  } = {},
-) {
-  const statusCode = input.statusCode ?? 20000
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: input.cost ?? 0.0202,
-    tasks_count: 1,
-    tasks_error: input.tasksError ?? 0,
-    tasks: [
-      {
-        id: 'keyword-task-id',
-        status_code: statusCode,
-        status_message: statusCode === 20000 ? 'Ok.' : 'Task failed.',
-        cost: input.cost ?? 0.0202,
-        result_count: statusCode === 20000 ? 1 : 0,
-        result:
-          statusCode === 20000
-            ? [
-                {
-                  items_count: input.items === null ? 0 : 2,
-                  items:
-                    input.items === undefined
-                      ? [
-                          { keyword: 'first query' },
-                          { keyword: 'second query' },
-                        ]
-                      : input.items,
-                },
-              ]
-            : null,
-      },
-    ],
-  }
-}
-
-function keywordDiscoveryFixture() {
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: 0.01236,
-    tasks_count: 1,
-    tasks_error: 0,
-    tasks: [
-      {
-        id: 'discovery-task-id',
-        status_code: 20000,
-        status_message: 'Ok.',
-        cost: 0.01236,
-        result_count: 1,
-        result: [
-          {
-            seed_keywords: ['first query', 'second query'],
-            total_count: 300,
-            items_count: 3,
-            offset_token: 'next-page-token',
-            items: [
-              { keyword: 'first idea' },
-              { keyword: 'second idea' },
-              { keyword: 'third idea' },
-            ],
-          },
-        ],
-      },
-    ],
-  }
-}
-
-function serpFixture() {
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: 0.004,
-    tasks_count: 1,
-    tasks_error: 0,
-    tasks: [
-      {
-        id: 'serp-task-id',
-        status_code: 20000,
-        status_message: 'Ok.',
-        cost: 0.004,
-        result_count: 1,
-        result: [
-          {
-            keyword: 'first query',
-            datetime: '2026-07-21 12:00:00 +00:00',
-            items_count: 2,
-            items: [
-              {
-                type: 'organic',
-                rank_group: 1,
-                rank_absolute: 1,
-                page: 1,
-                domain: 'example.test',
-                url: 'https://example.test/page',
-              },
-              { type: 'people_also_ask', rank_absolute: 2, page: 1 },
-            ],
-          },
-        ],
-      },
-    ],
-  }
-}
-
-function keywordRequest(
-  overrides: Partial<Parameters<DataForSeoClient['keywordOverview']>[0]> = {},
-) {
-  return {
-    keywords: ['first query', 'second query'],
-    languageCode: 'en',
-    locationCode: 2840,
-    reportId: 'keyword-metrics',
-    reportRunId: 'run-1',
-    ...overrides,
-  }
-}
+import {
+  database,
+  firstAccount,
+  firstTask,
+  keywordDiscoveryFixture,
+  keywordOverviewFixture,
+  keywordRequest,
+  serpFixture,
+  spendLimits,
+  userDataFixture,
+} from './client-test-fixtures.js'
 
 test('user data uses the free account endpoint and returns owned fields', async () => {
   let requestedUrl = ''
@@ -334,6 +55,12 @@ test('user data uses the free account endpoint and returns owned fields', async 
       ideas: { perRequestMicros: 12_000, perResultMicros: 120 },
       related: { perRequestMicros: 12_000, perResultMicros: 120 },
       suggestions: { perRequestMicros: 12_000, perResultMicros: 120 },
+    },
+    domainResearchPrices: {
+      domainOverview: { perRequestMicros: 12_000, perResultMicros: 120 },
+      rankedKeywords: { perRequestMicros: 12_000, perResultMicros: 120 },
+      rankingPages: { perRequestMicros: 12_000, perResultMicros: 120 },
+      serpCompetitors: { perRequestMicros: 12_000, perResultMicros: 120 },
     },
     serpLiveAdvancedPrice: {
       perRequestMicros: 2_000,
@@ -672,6 +399,192 @@ test('keyword discovery estimates cost and preserves pagination evidence', async
   assert.equal(ledger[0]?.state, 'succeeded')
   assert.equal(ledger[0]?.estimated_cost_micros, 12_360)
   assert.equal(ledger[0]?.actual_cost_micros, 12_360)
+})
+
+test('domain research endpoints send bounded requests and record dynamic costs', async () => {
+  const requests = new Map<string, unknown>()
+  const paidResponse = (result: unknown) => ({
+    status_code: 20000,
+    status_message: 'Ok.',
+    cost: 0.01212,
+    tasks_count: 1,
+    tasks_error: 0,
+    tasks: [
+      {
+        id: 'domain-task-id',
+        status_code: 20000,
+        status_message: 'Ok.',
+        cost: 0.01212,
+        result_count: 1,
+        result: [result],
+      },
+    ],
+  })
+  const client = new DataForSeoClient({
+    database: database(),
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    now: () => new Date('2026-07-21T12:00:00.000Z'),
+    fetch: async (url, init) => {
+      const path = new URL(String(url)).pathname
+      if (path.endsWith('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      requests.set(path, JSON.parse(String(init?.body)))
+      if (path.endsWith('/domain_rank_overview/live')) {
+        return new Response(
+          JSON.stringify(
+            paidResponse({ target: 'example.com', metrics: { organic: {} } }),
+          ),
+        )
+      }
+      if (path.endsWith('/ranked_keywords/live')) {
+        return new Response(
+          JSON.stringify(
+            paidResponse({
+              target: 'example.com',
+              total_count: 1,
+              items_count: 1,
+              items: [
+                {
+                  keyword_data: { keyword: 'blue widget' },
+                  ranked_serp_element: {
+                    serp_item: {
+                      type: 'organic',
+                      rank_group: 4,
+                      rank_absolute: 4,
+                      url: 'https://example.com/blue',
+                    },
+                  },
+                },
+              ],
+            }),
+          ),
+        )
+      }
+      if (path.endsWith('/relevant_pages/live')) {
+        return new Response(
+          JSON.stringify(
+            paidResponse({
+              target: 'example.com',
+              total_count: 1,
+              items_count: 1,
+              items: [{ page_address: 'https://example.com/blue' }],
+            }),
+          ),
+        )
+      }
+      return new Response(
+        JSON.stringify(
+          paidResponse({
+            seed_keywords: ['blue widget', 'red widget'],
+            total_count: 1,
+            items_count: 1,
+            items: [{ domain: 'example.com', keywords_count: 2 }],
+          }),
+        ),
+      )
+    },
+  })
+  const context = { reportId: 'domain-overview', reportRunId: 'run-1' }
+  const snapshots = await Promise.all([
+    client.domainOverview({
+      target: 'example.com',
+      languageCode: 'en',
+      locationCode: 2826,
+      context,
+    }),
+    client.rankedKeywords({
+      target: 'example.com',
+      includeSubdomains: true,
+      resultTypes: ['organic'],
+      languageCode: 'en',
+      locationCode: 2826,
+      filters: [['keyword_data.keyword_info.search_volume', '>=', 10]],
+      orderBy: ['keyword_data.keyword,asc'],
+      limit: 25,
+      offset: 5,
+      context: { ...context, reportId: 'ranked-keywords' },
+    }),
+    client.rankingPages({
+      target: 'example.com',
+      languageCode: 'en',
+      locationCode: 2826,
+      filters: [['metrics.organic.etv', '>=', 1]],
+      orderBy: ['page_address,asc'],
+      limit: 20,
+      offset: 0,
+      context: { ...context, reportId: 'ranking-pages' },
+    }),
+    client.serpCompetitors({
+      keywords: ['blue widget', 'red widget'],
+      includeSubdomains: false,
+      resultTypes: ['organic'],
+      languageCode: 'en',
+      locationCode: 2826,
+      orderBy: ['domain,asc'],
+      limit: 10,
+      offset: 0,
+      context: { ...context, reportId: 'serp-competitors' },
+    }),
+  ])
+
+  assert.deepEqual(
+    requests.get('/v3/dataforseo_labs/google/domain_rank_overview/live'),
+    [{ target: 'example.com', language_code: 'en', location_code: 2826 }],
+  )
+  assert.deepEqual(
+    requests.get('/v3/dataforseo_labs/google/ranked_keywords/live'),
+    [
+      {
+        target: 'example.com',
+        language_code: 'en',
+        location_code: 2826,
+        include_subdomains: true,
+        item_types: ['organic'],
+        limit: 25,
+        offset: 5,
+        order_by: ['keyword_data.keyword,asc'],
+        filters: [['keyword_data.keyword_info.search_volume', '>=', 10]],
+      },
+    ],
+  )
+  assert.deepEqual(
+    requests.get('/v3/dataforseo_labs/google/relevant_pages/live'),
+    [
+      {
+        target: 'example.com',
+        language_code: 'en',
+        location_code: 2826,
+        limit: 20,
+        offset: 0,
+        order_by: ['page_address,asc'],
+        filters: [['metrics.organic.etv', '>=', 1]],
+      },
+    ],
+  )
+  assert.deepEqual(
+    requests.get('/v3/dataforseo_labs/google/serp_competitors/live'),
+    [
+      {
+        keywords: ['blue widget', 'red widget'],
+        language_code: 'en',
+        location_code: 2826,
+        include_subdomains: false,
+        item_types: ['organic'],
+        limit: 10,
+        offset: 0,
+        order_by: ['domain,asc'],
+      },
+    ],
+  )
+  assert.deepEqual(
+    snapshots.map((snapshot) => snapshot.cost.estimatedMicros),
+    [12_120, 15_000, 14_400, 13_200],
+  )
+  assert.ok(
+    snapshots.every((snapshot) => snapshot.cost.actualMicros === 12_120),
+  )
 })
 
 test('live SERP estimates each ten-result billing unit', async () => {

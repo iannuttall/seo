@@ -11,7 +11,16 @@ import type { ProviderSpendLimits } from '../cost-limits.js'
 import type { ProviderFetch } from '../transport.js'
 import type { DataForSeoCredentials } from './credentials.js'
 import type { DataForSeoDiscoveryResponse } from './discovery-schema.js'
-import type { DataForSeoUnitPrice } from './paid-request.js'
+import type {
+  DataForSeoDomainOverviewResponse,
+  DataForSeoRankedKeywordsResponse,
+  DataForSeoRankingPagesResponse,
+  DataForSeoSerpCompetitorsResponse,
+} from './domain-schema.js'
+import type {
+  DataForSeoPaidSnapshot,
+  DataForSeoUnitPrice,
+} from './paid-request.js'
 import type { DataForSeoKeywordOverviewResponse } from './schema.js'
 import type { DataForSeoSerpResponse } from './serp-schema.js'
 
@@ -26,6 +35,12 @@ export type DataForSeoAccountSnapshot = {
   accountDailyLimitMicros: number | null
   keywordOverviewPrice: DataForSeoUnitPrice
   keywordDiscoveryPrices: Record<KeywordDiscoverySource, DataForSeoUnitPrice>
+  domainResearchPrices: {
+    domainOverview: DataForSeoUnitPrice
+    rankedKeywords: DataForSeoUnitPrice
+    rankingPages: DataForSeoUnitPrice
+    serpCompetitors: DataForSeoUnitPrice
+  }
   serpLiveAdvancedPrice: DataForSeoUnitPrice
   serpTaskPostPrice: DataForSeoUnitPrice
   backlinksSubscriptionExpiresAt: string | null
@@ -52,6 +67,7 @@ export type DataForSeoClientOptions = {
   serpTtlMs?: number
   accountPricingTtlMs?: number
   spendLimits?: ProviderSpendLimits
+  domainResearchTtlMs?: number
 }
 
 export type DataForSeoKeywordOverviewRequest = {
@@ -135,6 +151,53 @@ export type DataForSeoSerpTaskPostSnapshot = {
   warnings: ProviderWarning[]
   observedAt: string
 }
+
+export type DataForSeoDomainRequestBase = {
+  languageCode: string
+  locationCode?: number
+  locationName?: string
+  limit?: number
+  offset?: number
+  refresh?: boolean
+  context: ProviderRequestContext
+}
+
+export type DataForSeoDomainOverviewRequest = DataForSeoDomainRequestBase & {
+  target: string
+}
+
+export type DataForSeoRankedKeywordsRequest = DataForSeoDomainRequestBase & {
+  target: string
+  includeSubdomains: boolean
+  resultTypes: string[]
+  filters?: unknown[]
+  orderBy: string[]
+  limit: number
+}
+
+export type DataForSeoRankingPagesRequest = DataForSeoDomainRequestBase & {
+  target: string
+  filters?: unknown[]
+  orderBy: string[]
+  limit: number
+}
+
+export type DataForSeoSerpCompetitorsRequest = DataForSeoDomainRequestBase & {
+  keywords: string[]
+  includeSubdomains: boolean
+  resultTypes: string[]
+  orderBy: string[]
+  limit: number
+}
+
+export type DataForSeoDomainOverviewSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoDomainOverviewResponse>
+export type DataForSeoRankedKeywordsSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoRankedKeywordsResponse>
+export type DataForSeoRankingPagesSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoRankingPagesResponse>
+export type DataForSeoSerpCompetitorsSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoSerpCompetitorsResponse>
 
 export type DataForSeoSerpReadyTask = {
   providerTaskId: string

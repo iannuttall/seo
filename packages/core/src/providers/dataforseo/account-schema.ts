@@ -57,6 +57,10 @@ const userDataPriceSchema = z
         keyword_ideas: livePriceSchema.optional(),
         keyword_suggestions: livePriceSchema.optional(),
         related_keywords: livePriceSchema.optional(),
+        domain_rank_overview: livePriceSchema.optional(),
+        ranked_keywords: livePriceSchema.optional(),
+        relevant_pages: livePriceSchema.optional(),
+        serp_competitors: livePriceSchema.optional(),
       })
       .passthrough()
       .optional(),

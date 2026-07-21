@@ -1,3 +1,4 @@
+/** @deprecated Use ProviderCostEvidence from providers/contracts. */
 export interface CreditUsage {
   provider: string
   units: number
@@ -7,6 +8,7 @@ export interface CreditUsage {
   cacheHits?: number
 }
 
+/** @deprecated Use ProviderEvidence from providers/contracts. */
 export interface ProviderResult<T> {
   data: T
   usage: CreditUsage
@@ -14,11 +16,13 @@ export interface ProviderResult<T> {
   cached?: boolean
 }
 
+/** @deprecated Use a capability-specific request type. */
 export interface ProviderOpts {
   database?: string
   refresh?: boolean
 }
 
+/** @deprecated Use KeywordMetric from providers/contracts. */
 export interface KeywordOverview {
   phrase: string
   volume?: number
@@ -29,6 +33,7 @@ export interface KeywordOverview {
   results?: number
 }
 
+/** @deprecated Use a capability-specific row type from providers/contracts. */
 export interface KeywordRow {
   phrase: string
   volume?: number
@@ -40,6 +45,11 @@ export interface KeywordRow {
   position?: number
 }
 
+/**
+ * @deprecated Use the small capability interfaces from providers/contracts.
+ * This compatibility contract remains until the registered reports replace
+ * the provider-specific MCP passthrough.
+ */
 export interface KeywordDataProvider {
   readonly name: string
   readonly capabilities: {
@@ -89,10 +99,12 @@ export interface KeywordDataProvider {
   }>
 }
 
+/** @deprecated Use a capability-specific provider contract. */
 export interface SerpProvider {
   readonly name: string
 }
 
+/** @deprecated Use a capability-specific provider contract. */
 export interface BacklinkProvider {
   readonly name: string
 }

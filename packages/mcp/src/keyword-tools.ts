@@ -1,5 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { keywordMetricsReport, keywordOpportunitiesReport } from '@seo/core'
+import {
+  keywordMetricsReport,
+  keywordOpportunitiesReport,
+  keywordResearchReport,
+  serpResultsReport,
+} from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -34,6 +39,55 @@ const languageCodeInput = z
   .min(2)
   .max(35)
   .regex(/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i)
+
+const keywordResearchInput = z
+  .strictObject({
+    seeds: z.array(keywordInput).min(1).max(5),
+    sources: z
+      .array(z.enum(['ideas', 'related', 'suggestions']))
+      .min(1)
+      .max(3)
+      .default(['ideas', 'related', 'suggestions']),
+    countryCode: countryCodeInput,
+    languageCode: languageCodeInput,
+    searchEngine: z.enum(['google', 'bing']).default('google'),
+    location: locationInput.optional(),
+    device: z.enum(['desktop', 'mobile']).optional(),
+    limit: z.number().int().min(1).max(100).default(50),
+    provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+    refresh: z.boolean().optional(),
+  })
+  .superRefine((input, context) => {
+    const seeds = new Set(
+      input.seeds.map((seed) =>
+        seed.trim().replace(/\s+/gu, ' ').toLowerCase(),
+      ),
+    ).size
+    const sources = new Set(input.sources)
+    const providerRequests = [...sources].reduce(
+      (total, source) => total + (source === 'ideas' ? 1 : seeds),
+      0,
+    )
+    if (input.limit < providerRequests) {
+      context.addIssue({
+        code: 'custom',
+        path: ['limit'],
+        message: `Use a limit of at least ${providerRequests} to sample every requested source and seed.`,
+      })
+    }
+  })
+
+const serpResultsInput = z.strictObject({
+  keyword: keywordInput,
+  countryCode: countryCodeInput,
+  languageCode: languageCodeInput,
+  searchEngine: z.enum(['google', 'bing']).default('google'),
+  location: locationInput.optional(),
+  device: z.enum(['desktop', 'mobile']).default('desktop'),
+  depth: z.number().int().min(1).max(100).default(10),
+  provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+  refresh: z.boolean().optional(),
+})
 
 const keywordOpportunitiesInput = z
   .strictObject({
@@ -86,6 +140,8 @@ export function registerKeywordTools(
   dependencies: {
     keywordMetricsReport?: typeof keywordMetricsReport
     keywordOpportunitiesReport?: typeof keywordOpportunitiesReport
+    keywordResearchReport?: typeof keywordResearchReport
+    serpResultsReport?: typeof serpResultsReport
   } = {},
 ): void {
   server.registerTool(
@@ -126,6 +182,100 @@ export function registerKeywordTools(
             location,
             device,
           },
+          provider,
+          refresh,
+        })
+        return toolSuccess(
+          report.summary.verdict,
+          compactAgentWorkflowOutput(
+            report as unknown as Record<string, unknown>,
+          ),
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_keyword_research',
+    {
+      description:
+        'Discover bounded keyword ideas with typed source, market, metric, coverage, cache, and cost evidence',
+      inputSchema: keywordResearchInput,
+    },
+    async ({
+      seeds,
+      sources,
+      countryCode,
+      languageCode,
+      searchEngine,
+      location,
+      device,
+      limit,
+      provider,
+      refresh,
+    }) => {
+      try {
+        const report = await (
+          dependencies.keywordResearchReport ?? keywordResearchReport
+        )({
+          seeds,
+          sources,
+          market: {
+            countryCode,
+            languageCode,
+            searchEngine,
+            location,
+            device,
+          },
+          limit,
+          provider,
+          refresh,
+        })
+        return toolSuccess(
+          report.summary.verdict,
+          compactAgentWorkflowOutput(
+            report as unknown as Record<string, unknown>,
+          ),
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_serp_results',
+    {
+      description:
+        'Inspect one bounded live result snapshot with exact organic ranks, domains, features, market, cache, and cost evidence',
+      inputSchema: serpResultsInput,
+    },
+    async ({
+      keyword,
+      countryCode,
+      languageCode,
+      searchEngine,
+      location,
+      device,
+      depth,
+      provider,
+      refresh,
+    }) => {
+      try {
+        const report = await (
+          dependencies.serpResultsReport ?? serpResultsReport
+        )({
+          keyword,
+          market: {
+            countryCode,
+            languageCode,
+            searchEngine,
+            location,
+            device,
+          },
+          depth,
           provider,
           refresh,
         })

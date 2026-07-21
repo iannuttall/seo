@@ -4,7 +4,11 @@ import type { DataForSeoSerpSnapshot } from './client.js'
 import { dataForSeoSerpResponseSchema } from './serp-schema.js'
 import { DataForSeoSerpSnapshotProvider } from './serp-snapshot.js'
 
-function snapshot(items: unknown[], keyword = 'query'): DataForSeoSerpSnapshot {
+function snapshot(
+  items: unknown[],
+  keyword = 'query',
+  seResultsCount = 1000,
+): DataForSeoSerpSnapshot {
   return {
     response: dataForSeoSerpResponseSchema.parse({
       status_code: 20000,
@@ -30,7 +34,7 @@ function snapshot(items: unknown[], keyword = 'query'): DataForSeoSerpSnapshot {
                 type: 'showing_results_for',
               },
               item_types: ['organic', 'people_also_ask'],
-              se_results_count: 1000,
+              se_results_count: seResultsCount,
               pages_count: 1,
               items_count: items.length,
               items,
@@ -179,4 +183,42 @@ test('SERP snapshots distinguish a requested depth cap from invalid rows', async
   assert.equal(result.coverage.invalidRows, 0)
   assert.equal(result.coverage.retainedRows, 1)
   assert.equal(result.coverage.completeness, 'capped')
+})
+
+test('SERP snapshots discard a provider result count below retained rows', async () => {
+  const provider = new DataForSeoSerpSnapshotProvider({
+    client: {
+      serpLive: async () =>
+        snapshot(
+          [
+            {
+              type: 'organic',
+              rank_group: 1,
+              rank_absolute: 1,
+              page: 1,
+              domain: 'example.test',
+              url: 'https://example.test/page',
+            },
+          ],
+          'query',
+          0,
+        ),
+    },
+  })
+
+  const result = await provider.serpSnapshot({
+    keyword: 'query',
+    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+    depth: 10,
+  })
+
+  assert.equal(result.data.resultCount, null)
+  assert.equal(result.coverage.providerTotalRows, null)
+  assert.equal(result.coverage.completeness, 'partial')
+  assert.equal(
+    result.warnings.some(
+      (warning) => warning.code === 'invalid-serp-result-count',
+    ),
+    true,
+  )
 })

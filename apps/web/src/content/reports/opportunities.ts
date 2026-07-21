@@ -300,6 +300,51 @@ export const opportunityReports = [
     sources: ['keyword-provider-discovery'],
   },
   {
+    id: 'saved-keywords',
+    name: 'Saved keyword set',
+    category: 'opportunities',
+    summary:
+      'Review one local keyword set with provider metric freshness, tags, page mappings, and exact view limits kept visible.',
+    question:
+      'Which saved terms are missing current evidence or still need a page-planning decision?',
+    useWhen: [
+      'You want to continue earlier keyword research without repeating provider acquisition.',
+      'You need to inspect stale metrics, user-managed groups, or unmapped terms in one project set.',
+    ],
+    avoidWhen: [
+      'You need new keyword discovery, a current result snapshot, or proof that saved tags share one search intent.',
+    ],
+    evidence: [
+      'One local project keyword set with its saved market, source, refresh time, typed metric snapshots, tags, and target or proposed page mappings.',
+    ],
+    methodology: [
+      'Reads at most 1,000 saved rows in stable order, keeps filters and pagination explicit, counts missing and stale snapshots separately, and groups tags and page mappings without inferring intent.',
+    ],
+    exampleParams: {
+      projectId: 'example',
+      set: 'Priority',
+      limit: 100,
+      staleDays: 45,
+    },
+    interpretation: [
+      'Use the set as a research workspace. Compare relevant terms with Search Console and current results before changing an existing page or approving a new page or template.',
+    ],
+    caveats: [
+      'Tags and page mappings record planning choices. Provider metrics are estimates, missing evidence is not zero, and a filtered or paginated view cannot describe the complete set.',
+    ],
+    nextSteps: [
+      'Preview the refresh cost before updating stale or missing provider snapshots.',
+      'Inspect current results in the saved market and compare relevant terms with first-party evidence.',
+    ],
+    related: [
+      'keyword-metrics',
+      'keyword-research',
+      'keyword-opportunities',
+      'pseo-opportunities',
+    ],
+    sources: ['keyword-provider-metrics'],
+  },
+  {
     id: 'pseo-opportunities',
     name: 'Programmatic SEO opportunities',
     category: 'opportunities',

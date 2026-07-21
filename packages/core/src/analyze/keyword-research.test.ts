@@ -233,3 +233,56 @@ test('keyword research rejects unsafe bounds before provider work', async () => 
   )
   assert.equal(calls, 0)
 })
+
+test('keyword research reports an explicit provider market mismatch as non-retryable input', async () => {
+  let calls = 0
+  await assert.rejects(
+    keywordResearchReport(
+      {
+        seeds: ['query'],
+        sources: ['ideas'],
+        market: {
+          countryCode: 'GB',
+          languageCode: 'en',
+          searchEngine: 'google',
+          location: { name: 'London' },
+        },
+        limit: 1,
+        provider: 'dataforseo',
+      },
+      {
+        candidates: [
+          {
+            connected: true,
+            priority: 10,
+            adapter: {
+              provider: 'dataforseo',
+              capabilitySupport: [
+                {
+                  capability: 'keyword-discovery',
+                  status: 'available',
+                  markets: [
+                    {
+                      searchEngines: ['google'],
+                      location: 'country-only',
+                    },
+                  ],
+                },
+              ],
+              discoverKeywords: async () => {
+                calls += 1
+                return evidence([])
+              },
+            } as KeywordDiscoveryProvider,
+          },
+        ],
+      },
+    ),
+    (error) =>
+      error instanceof Error &&
+      'code' in error &&
+      error.code === 'INVALID_INPUT' &&
+      /country-level Labs data/.test(error.message),
+  )
+  assert.equal(calls, 0)
+})

@@ -3,6 +3,7 @@ import {
   keywordMetricsReport,
   keywordOpportunitiesReport,
   keywordResearchReport,
+  savedKeywordSetReport,
   serpResultsReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
@@ -110,15 +111,49 @@ const keywordOpportunitiesInput = z
     }
   })
 
+const savedKeywordsInput = z.strictObject({
+  projectId: z.string().trim().min(1).max(80),
+  set: z.string().trim().min(1).max(80),
+  tag: z.string().trim().min(1).max(40).optional(),
+  limit: z.number().int().min(1).max(1_000).default(100),
+  offset: z.number().int().min(0).max(100_000).default(0),
+  staleDays: z.number().int().min(1).max(365).default(45),
+})
+
 export function registerKeywordTools(
   server: McpServer,
   dependencies: {
     keywordMetricsReport?: typeof keywordMetricsReport
     keywordOpportunitiesReport?: typeof keywordOpportunitiesReport
     keywordResearchReport?: typeof keywordResearchReport
+    savedKeywordSetReport?: typeof savedKeywordSetReport
     serpResultsReport?: typeof serpResultsReport
   } = {},
 ): void {
+  server.registerTool(
+    'seo_saved_keywords',
+    {
+      description:
+        'Review one bounded local keyword set with metric freshness, tags, page mappings, and evidence limits',
+      inputSchema: savedKeywordsInput,
+    },
+    async ({ projectId, set, tag, limit, offset, staleDays }) => {
+      try {
+        const report = (
+          dependencies.savedKeywordSetReport ?? savedKeywordSetReport
+        )({ projectId, idOrName: set, tag, limit, offset, staleDays })
+        return toolSuccess(
+          report.summary.verdict,
+          compactAgentWorkflowOutput(
+            report as unknown as Record<string, unknown>,
+          ),
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
   server.registerTool(
     'seo_keyword_metrics',
     {

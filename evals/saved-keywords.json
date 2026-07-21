@@ -1,0 +1,28 @@
+{
+  "subject": "saved-keywords",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me the saved keyword research in the Priority set for project example-project and tell me what needs attention.",
+      "expected_output": "Should use report id saved-keywords through seo_list_reports, seo_describe_report, and seo_run_report. Should inspect dataStatus, the complete set and returned view counts, metric freshness, missing versus observed-zero values, tags, page mappings, findings, and caveats before suggesting a small number of next steps.",
+      "assertions": [
+        "Uses report id saved-keywords through the discovery flow",
+        "Passes projectId example-project and set Priority",
+        "Distinguishes missing provider metrics from observed zero values",
+        "Treats tags and page mappings as planning evidence rather than proof of intent, rankings, or indexing"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Read page two of the service tag in my Priority keyword set and confirm the whole set has no gaps.",
+      "expected_output": "Should use saved-keywords with the service tag and a bounded offset, but refuse to call a filtered or paginated view a complete-set all-clear. Should state the returned and matched coverage and recommend reviewing the complete view before making a set-wide conclusion.",
+      "assertions": [
+        "Uses saved-keywords with the requested tag and bounded pagination",
+        "Does not call a filtered or paginated view a complete-set all-clear",
+        "Keeps returned rows, matched rows, and total saved keywords distinct"
+      ],
+      "files": []
+    }
+  ]
+}

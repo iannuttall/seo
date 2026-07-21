@@ -102,6 +102,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'quick-wins',
     'redirect-trace',
     'refresh-priorities',
+    'saved-keywords',
     'search-performance-overview',
     'second-page',
     'segment-impact',

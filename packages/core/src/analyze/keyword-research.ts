@@ -275,7 +275,15 @@ export async function keywordResearchReport(
         : validated.provider
           ? `${validated.provider} cannot discover keywords for this market.`
           : 'No configured provider can discover keywords for this market.'
-    throw new SeoError('PROVIDER_UNAVAILABLE', message)
+    throw new SeoError(
+      validated.provider && resolution.reason === 'market-not-supported'
+        ? 'INVALID_INPUT'
+        : 'PROVIDER_UNAVAILABLE',
+      validated.provider === 'dataforseo' &&
+        resolution.reason === 'market-not-supported'
+        ? 'DataForSEO keyword discovery uses country-level Labs data. Omit location and keep countryCode, then run serp-results separately for a local snapshot.'
+        : message,
+    )
   }
   const provider = discoveryProvider(resolution.provider)
   if (!provider) {

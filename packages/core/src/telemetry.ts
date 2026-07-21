@@ -66,6 +66,7 @@ export const TELEMETRY_REPORTS = [
   'keyword-metrics',
   'keyword-opportunities',
   'keyword-research',
+  'saved-keywords',
   'link-evidence',
   'server-log-analysis',
   'link-recovery',

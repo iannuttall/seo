@@ -269,6 +269,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Discover market-specific keyword ideas from a small seed list with search volume, difficulty, source overlap, provider coverage, cache status and cost.',
     lead: 'Expand a small seed list without turning the result into an automatic content plan. Every idea keeps its provider source, metric state, market, coverage and request cost visible.',
   },
+  'saved-keywords': {
+    title: 'Saved keyword set report',
+    description:
+      'Review saved keyword research, stale provider metrics, tags and page mappings from one local project set without repeating paid acquisition.',
+    lead: 'Continue a keyword investigation from local saved evidence. The report shows which returned terms have current metrics or page mappings while keeping missing values and partial views clear.',
+  },
   'query-clusters': {
     title: 'Search query clustering report',
     description:

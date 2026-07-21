@@ -175,6 +175,26 @@ export interface KeywordMetricsProvider extends ProviderAdapter {
   ): Promise<ProviderEvidence<KeywordMetric[]>>
 }
 
+export type KeywordMetricsCostEstimate = {
+  schemaVersion: 1
+  provider: ProviderId
+  capability: 'keyword-metrics'
+  currency: 'USD'
+  requestedRows: number
+  requestCount: number
+  estimatedMicros: number | null
+  observedAt: string
+  completeness: 'complete' | 'unavailable'
+  basis: string
+}
+
+export interface KeywordMetricsCostEstimator extends ProviderAdapter {
+  estimateKeywordMetricsCost(input: {
+    requestedRows: number
+    market: SearchMarket
+  }): Promise<KeywordMetricsCostEstimate>
+}
+
 export const keywordDiscoverySourceSchema = z.enum([
   'ideas',
   'related',

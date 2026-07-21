@@ -205,6 +205,31 @@ test('keyword research bounds seeds, sources, market, and retained rows', () => 
   }
 })
 
+test('saved keywords bounds local set views', () => {
+  const schema = reportSchema('saved-keywords')
+  assert.equal(
+    schema.safeParse({
+      projectId: 'example-project',
+      set: 'priority',
+      tag: 'service',
+      limit: 1_000,
+      offset: 100_000,
+      staleDays: 365,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { projectId: '', set: 'priority' },
+    { projectId: 'example-project', set: '' },
+    { projectId: 'example-project', set: 'priority', limit: 1_001 },
+    { projectId: 'example-project', set: 'priority', offset: 100_001 },
+    { projectId: 'example-project', set: 'priority', staleDays: 366 },
+    { projectId: 'example-project', set: 'priority', unknown: true },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('SERP results bounds query, market, device, and depth', () => {
   const schema = reportSchema('serp-results')
   assert.equal(

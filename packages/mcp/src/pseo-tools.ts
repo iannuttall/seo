@@ -43,7 +43,7 @@ const pseoOpportunitiesInput = z
       .array(z.enum(['ideas', 'related', 'suggestions']))
       .min(1)
       .max(3)
-      .default(['ideas']),
+      .default(['suggestions']),
     discoveryLimit: z.number().int().min(1).max(100).optional(),
     candidateLimit: z.number().int().min(1).max(25).optional(),
     serpLimit: z.number().int().min(0).max(3).default(0),

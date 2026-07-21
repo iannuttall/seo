@@ -11,10 +11,13 @@ import { DataForSeoKeywordDiscoveryProvider } from './keyword-discovery.js'
 function snapshot(input: {
   seed?: string
   seeds?: string[]
-  items: unknown[]
-  total?: number
+  items: unknown[] | null
+  total?: number | null
   observedAt?: string
 }): DataForSeoKeywordDiscoverySnapshot {
+  const returnedRows = input.items?.length ?? 0
+  const providerTotalRows =
+    input.total === undefined ? returnedRows : input.total
   return {
     response: dataForSeoDiscoveryResponseSchema.parse({
       status_code: 20000,
@@ -33,8 +36,8 @@ function snapshot(input: {
             {
               seed_keyword: input.seed,
               seed_keywords: input.seeds,
-              total_count: input.total ?? input.items.length,
-              items_count: input.items.length,
+              total_count: providerTotalRows,
+              items_count: returnedRows,
               items: input.items,
             },
           ],
@@ -42,8 +45,8 @@ function snapshot(input: {
       ],
     }),
     observedAt: input.observedAt ?? '2026-07-21T12:00:00.000Z',
-    returnedRows: input.items.length,
-    providerTotalRows: input.total ?? input.items.length,
+    returnedRows,
+    providerTotalRows,
     nextCursor: null,
     cache: { status: 'miss', storedAt: null, expiresAt: null },
     cost: {
@@ -101,13 +104,14 @@ test('keyword discovery combines explicit sources and duplicate evidence', async
     seeds: ['Second Seed', 'first seed'],
     sources: ['suggestions', 'ideas'],
     market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
-    limit: 6,
+    limit: 8,
   })
 
   assert.deepEqual(
     requests.map(({ source, seeds, limit }) => ({ source, seeds, limit })),
     [
-      { source: 'ideas', seeds: ['first seed', 'second seed'], limit: 2 },
+      { source: 'ideas', seeds: ['first seed'], limit: 2 },
+      { source: 'ideas', seeds: ['second seed'], limit: 2 },
       { source: 'suggestions', seeds: ['first seed'], limit: 2 },
       { source: 'suggestions', seeds: ['second seed'], limit: 2 },
     ],
@@ -121,11 +125,11 @@ test('keyword discovery combines explicit sources and duplicate evidence', async
   ])
   const zero = result.data.find((idea) => idea.keyword === 'zero idea')
   assert.deepEqual(zero?.monthlySearchVolume, { state: 'observed', value: 0 })
-  assert.equal(result.coverage.requestedRows, 6)
-  assert.equal(result.coverage.returnedRows, 6)
+  assert.equal(result.coverage.requestedRows, 8)
+  assert.equal(result.coverage.returnedRows, 8)
   assert.equal(result.coverage.retainedRows, 4)
   assert.equal(result.coverage.completeness, 'capped')
-  assert.equal(result.cost.actualMicros, 36_720)
+  assert.equal(result.cost.actualMicros, 48_960)
 })
 
 test('keyword discovery preserves successful calls when one seed fails', async () => {
@@ -186,4 +190,72 @@ test('keyword discovery bounds request fanout before acquisition', async () => {
     /limit of at least 6/,
   )
   assert.equal(calls, 0)
+
+  await assert.rejects(
+    provider.discoverKeywords({
+      seeds: ['one', 'two', 'three'],
+      sources: ['ideas'],
+      market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+      limit: 2,
+    }),
+    /limit of at least 3/,
+  )
+  assert.equal(calls, 0)
+})
+
+test('keyword discovery uses request lineage instead of echoed seed sets', async () => {
+  const provider = new DataForSeoKeywordDiscoveryProvider({
+    client: {
+      keywordDiscovery: async (input) =>
+        snapshot({
+          seeds: ['first seed', 'unrelated echoed seed'],
+          items: [{ keyword: `${input.seeds[0]} idea` }],
+        }),
+    },
+  })
+
+  const result = await provider.discoverKeywords({
+    seeds: ['first seed', 'second seed'],
+    sources: ['ideas'],
+    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+    limit: 2,
+  })
+
+  assert.deepEqual(
+    result.data.map((idea) => ({
+      keyword: idea.keyword,
+      sources: idea.sources,
+    })),
+    [
+      {
+        keyword: 'first seed idea',
+        sources: [{ seed: 'first seed', source: 'ideas' }],
+      },
+      {
+        keyword: 'second seed idea',
+        sources: [{ seed: 'second seed', source: 'ideas' }],
+      },
+    ],
+  )
+})
+
+test('keyword discovery preserves a successful provider empty state', async () => {
+  const provider = new DataForSeoKeywordDiscoveryProvider({
+    client: {
+      keywordDiscovery: async (input) =>
+        snapshot({ seed: input.seeds[0], total: null, items: null }),
+    },
+  })
+
+  const result = await provider.discoverKeywords({
+    seeds: ['no matching suggestions'],
+    sources: ['suggestions'],
+    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
+    limit: 1,
+  })
+
+  assert.deepEqual(result.data, [])
+  assert.equal(result.coverage.returnedRows, 0)
+  assert.equal(result.coverage.providerTotalRows, null)
+  assert.equal(result.coverage.completeness, 'complete')
 })

@@ -164,6 +164,7 @@ export async function pseoOpportunitiesReport(
     caveats: [
       'Search Console impressions, clicks, CTR, and average position remain first-party evidence. External search volume, difficulty, intent, and result counts remain provider estimates.',
       'Template and query-cluster matching uses bounded URL-pattern and lexical heuristics. It does not prove shared intent, page quality, or that more pages should exist.',
+      'Only phrase-matching suggestions tied to a template are classified as template expansion candidates. Category ideas and related-search terms remain new-template research until intent and page type are verified.',
       'A discovered term absent from retained Search Console rows is not proof that the site has no impressions for it; Search Console omits anonymized queries and both sources are bounded.',
       'Live result snapshots describe one market, location, language, device, and observation time. Repeated domains and URL patterns are not authority or ranking-feasibility scores.',
       'Data-source briefs are next-step research instructions. They do not establish that a dataset exists, may be reused, or can support differentiated pages.',

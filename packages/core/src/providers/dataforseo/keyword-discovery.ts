@@ -68,18 +68,15 @@ function responseRows(
 ): DiscoveryRow[] {
   return snapshot.response.tasks.flatMap((task) =>
     (task.result ?? []).flatMap((result) => {
-      const seeds = (
-        result.seed_keywords ??
-        (result.seed_keyword ? [result.seed_keyword] : call.seeds)
-      )
-        .map(normalizedKeyword)
-        .filter(Boolean)
       return (result.items ?? []).map((item) => {
         const row = discoveryItemRow(item)
         return {
           keyword: normalizedKeyword(row.keyword),
           row,
-          sources: seeds.map((seed) => ({ seed, source: call.source })),
+          sources: call.seeds.map((seed) => ({
+            seed,
+            source: call.source,
+          })),
         }
       })
     }),
@@ -96,10 +93,7 @@ function plannedCalls(
     seeds: string[]
   }> = []
   for (const source of sources) {
-    if (source === 'ideas') requests.push({ source, seeds })
-    else {
-      requests.push(...seeds.map((seed) => ({ source, seeds: [seed] })))
-    }
+    requests.push(...seeds.map((seed) => ({ source, seeds: [seed] })))
   }
   if (limit < requests.length) {
     throw new ProviderError({

@@ -198,7 +198,7 @@ function discoveryTotalRows(
 ): number | null {
   const totals = response.tasks.flatMap((task) =>
     (task.result ?? []).flatMap((result) =>
-      result.total_count === undefined ? [] : [result.total_count],
+      typeof result.total_count === 'number' ? [result.total_count] : [],
     ),
   )
   return totals.length ? totals.reduce((sum, value) => sum + value, 0) : null
@@ -811,7 +811,6 @@ export class DataForSeoClient {
             ...location,
             include_serp_info: true,
             limit: input.limit,
-            order_by: ['keyword_info.search_volume,desc'],
           }
         : {
             keyword: seeds[0],

@@ -277,6 +277,14 @@ function serpReport(
 
 const now = () => new Date('2026-07-21T10:00:00.000Z')
 
+test('pSEO opportunities defaults to phrase-matching discovery', () => {
+  assert.deepEqual(
+    validatePseoOpportunitiesInput({ site: 'sc-domain:example.com' })
+      .discoverySources,
+    ['suggestions'],
+  )
+})
+
 test('pSEO opportunities keeps external acquisition opt-in', async () => {
   let discoveryCalls = 0
   let serpCalls = 0
@@ -314,7 +322,12 @@ test('pSEO opportunities combines bounded discovery, SERPs, competitor patterns,
       seed: 'best widgets',
       volume: 400,
     }),
-    idea({ keyword: 'widget beta', seed: 'widget alpha', volume: 300 }),
+    idea({
+      keyword: 'widget beta',
+      seed: 'widget alpha',
+      volume: 300,
+      source: 'suggestions',
+    }),
     idea({ keyword: 'widget alpha', seed: 'widget alpha', volume: 200 }),
     ...Array.from({ length: 30 }, (_, index) =>
       idea({
@@ -382,6 +395,17 @@ test('pSEO opportunities combines bounded discovery, SERPs, competitor patterns,
   assert.equal(report.competitors[0]?.repeatedTemplates.length, 1)
   assert.ok(report.competitors.every((item) => item.domain !== 'example.com'))
   assert.equal(report.dataSourceBriefs.length, 3)
+  const mappedCandidate = report.source.external.discovery.candidates.find(
+    (candidate) => candidate.keyword === 'widget beta',
+  )
+  assert.deepEqual(mappedCandidate?.seedRefs, ['templates[0]'])
+  assert.deepEqual(mappedCandidate?.templateRefs, ['templates[0]'])
+  assert.equal(
+    report.source.external.discovery.candidates.find(
+      (candidate) => candidate.keyword === 'widget expansion 00',
+    )?.classification,
+    'new-template-research',
+  )
   assert.ok(
     report.dataSourceBriefs.every(
       (brief) => !brief.instruction.includes('ignore previous instructions'),

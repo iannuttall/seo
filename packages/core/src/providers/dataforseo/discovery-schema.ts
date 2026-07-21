@@ -19,10 +19,14 @@ const discoveryResultSchema = z
   .object({
     seed_keyword: z.string().trim().min(1).optional(),
     seed_keywords: z.array(z.string().trim().min(1)).max(20).optional(),
-    total_count: z.number().int().nonnegative().optional(),
+    total_count: z.number().int().nonnegative().nullable().optional(),
     items_count: z.number().int().nonnegative().optional(),
     offset_token: z.string().max(20_000).nullable().optional(),
-    items: z.array(dataForSeoDiscoveryItemSchema).max(500).optional(),
+    items: z
+      .array(dataForSeoDiscoveryItemSchema)
+      .max(500)
+      .nullable()
+      .optional(),
   })
   .passthrough()
 

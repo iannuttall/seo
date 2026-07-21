@@ -129,10 +129,7 @@ function validateInput(input: {
     input.seeds.map((seed) => seed.trim().replace(/\s+/gu, ' ').toLowerCase()),
   ).size
   const normalizedSources = [...new Set(input.sources)]
-  const providerRequests = normalizedSources.reduce(
-    (total, source) => total + (source === 'ideas' ? 1 : normalizedSeeds),
-    0,
-  )
+  const providerRequests = normalizedSources.length * normalizedSeeds
   if (input.limit < providerRequests) {
     throw new SeoError(
       'INVALID_INPUT',

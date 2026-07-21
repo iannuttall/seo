@@ -29,9 +29,11 @@ function projectCandidates(input: {
     input.seeds.map((seed) => [normalizePseoText(seed.keyword), seed]),
   )
   const candidates = input.report.evidence.data.map((idea) => {
-    const mappedSeeds = idea.sources
-      .map((source) => seedsByKeyword.get(normalizePseoText(source.seed)))
-      .filter((seed): seed is PseoResearchSeed => Boolean(seed))
+    const mappedSources = idea.sources.flatMap((source) => {
+      const seed = seedsByKeyword.get(normalizePseoText(source.seed))
+      return seed ? [{ source, seed }] : []
+    })
+    const mappedSeeds = mappedSources.map((item) => item.seed)
     const templateRefs = [
       ...new Set(
         mappedSeeds
@@ -42,11 +44,15 @@ function projectCandidates(input: {
     const seedRefs = [
       ...new Set(mappedSeeds.map((seed) => seed.evidenceRef)),
     ].sort(comparePseoOpportunityText)
+    const hasPhraseMatchedTemplate = mappedSources.some(
+      ({ source, seed }) =>
+        source.source === 'suggestions' && seed.templateRef !== null,
+    )
     const classification = input.knownQueries.has(
       normalizePseoText(idea.keyword),
     )
       ? 'existing-first-party-query'
-      : templateRefs.length
+      : hasPhraseMatchedTemplate
         ? 'search-evidenced-template-expansion'
         : 'new-template-research'
     return {
@@ -130,10 +136,8 @@ export async function acquirePseoDiscovery(input: {
         'No retained first-party template or query cluster supplied an eligible discovery seed.',
     }
   }
-  const providerRequests = input.options.discoverySources.reduce(
-    (total, source) => total + (source === 'ideas' ? 1 : input.seeds.length),
-    0,
-  )
+  const providerRequests =
+    input.options.discoverySources.length * input.seeds.length
   if (input.options.discoveryLimit < providerRequests) {
     throw new SeoError(
       'INVALID_INPUT',

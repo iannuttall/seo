@@ -611,7 +611,6 @@ test('keyword discovery estimates cost and preserves pagination evidence', async
       location_code: 2840,
       include_serp_info: true,
       limit: 3,
-      order_by: ['keyword_info.search_volume,desc'],
     },
   ])
   assert.equal(result.returnedRows, 3)

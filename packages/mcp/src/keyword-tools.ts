@@ -42,10 +42,7 @@ const keywordResearchInput = z
       ),
     ).size
     const sources = new Set(input.sources)
-    const providerRequests = [...sources].reduce(
-      (total, source) => total + (source === 'ideas' ? 1 : seeds),
-      0,
-    )
+    const providerRequests = sources.size * seeds
     if (input.limit < providerRequests) {
       context.addIssue({
         code: 'custom',

@@ -224,7 +224,10 @@ export function clusterPseoTemplates(
       sampleUrls: clusterUrls.sort(compareText).slice(0, sampleSize),
     }))
     .filter(
-      (cluster) => cluster.urlCount >= minUrls && cluster.share >= minShare,
+      (cluster) =>
+        cluster.shape.variableSegments.length > 0 &&
+        cluster.urlCount >= minUrls &&
+        cluster.share >= minShare,
     )
     .sort(
       (a, b) =>

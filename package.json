@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "description": "The only SEO skill your agent needs. 50+ SEO audit tools through a local CLI and MCP server, using your own crawl, Search Console, and Google Analytics data.",
   "type": "module",
   "license": "Apache-2.0",
@@ -92,9 +92,9 @@
     "debug": "^4.4.3",
     "defuddle": "^0.19.1",
     "jsonc-parser": "^3.3.1",
-    "lighthouse": "13.4.0",
-    "linkedom": "^0.18.13",
     "libsql": "^0.5.29",
+    "lighthouse": "13.4.1",
+    "linkedom": "^0.18.13",
     "open": "^11.0.0",
     "p-queue": "^9.3.1",
     "p-retry": "^8.0.0",
@@ -105,16 +105,16 @@
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
     "schema-dts": "^2.0.0",
-    "string-width": "^7.2.0",
-    "undici": "^8.7.0",
+    "string-width": "^8.2.2",
+    "undici": "^8.8.0",
     "update-notifier": "^7.3.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.3",
-    "@changesets/cli": "^2.31.0",
-    "tsdown": "^0.22.4",
-    "turbo": "^2.10.4",
+    "@biomejs/biome": "^2.5.4",
+    "@changesets/cli": "^2.31.1",
+    "tsdown": "^0.22.12",
+    "turbo": "^2.10.5",
     "typescript": "^6.0.3"
   }
 }

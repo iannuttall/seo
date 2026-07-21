@@ -817,6 +817,62 @@ export const reportGuideOverridesIP: Partial<
       ],
     },
   },
+  'keyword-opportunities': {
+    name: 'Prioritise keyword opportunities',
+    summary:
+      'Build one bounded queue from existing Search Console opportunities, then optionally add market estimates without changing the first-party priority scores.',
+    inputs: [
+      {
+        label: 'Search Console property and date range',
+        source: 'search-analytics',
+        role: 'Returns retained query and page rows for the selected property and finalised date window.',
+      },
+      {
+        label: 'Opportunity and output limits',
+        role: 'Bound quick-win, second-page, striking-distance, keyword, URL, cluster, and structured output sizes.',
+      },
+      {
+        label: 'Optional external market',
+        source: 'keyword-provider-metrics',
+        role: 'Adds provider estimates only when includeExternal is true and a country and language are supplied. This can make a paid request.',
+      },
+    ],
+    checks: [
+      'Runs quick-win, second-page, and striking-distance analysis from one bounded Search Console acquisition instead of fetching the same source three times.',
+      'Selects unique keywords across all three sections, keeps provider value states and cost visible, and does not blend external estimates into first-party scores.',
+      'Groups only the selected opportunity subset and flags repeated URL patterns for representative template and data-source review.',
+    ],
+    returns: [
+      'Separate first-party, external, and combined evidence with source coverage, limits, request cost, cache status, warnings, and caveats.',
+      'A bounded keyword queue, query clusters, programmatic patterns, evidence-linked findings, and up to three data-source validation prompts.',
+    ],
+    alternatives: [
+      {
+        when: 'You already have a keyword list and only need independent market estimates.',
+        reportId: 'keyword-metrics',
+        doInstead:
+          'Run keyword metrics with the exact terms, country, language, location, and device you need. It skips Search Console opportunity selection and reports provider evidence directly.',
+      },
+      {
+        when: 'A repeated URL pattern needs representative page and template evidence.',
+        reportId: 'pseo-audit',
+        doInstead:
+          'Run the programmatic SEO audit for the chosen scope. It reviews template population, samples, crawl findings, Search Console evidence, and optional inspection verdicts before you change the generator.',
+      },
+      {
+        when: 'You need exact rankings, current competitors, or result-page intent.',
+        doInstead:
+          'Collect a current result snapshot for the same query, country, language, location, and device. This report contains average Search Console position and optional market estimates, not a live result page.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'keyword opportunities',
+      supportingKeywords: [
+        'keyword opportunity analysis',
+        'programmatic SEO keyword research',
+      ],
+    },
+  },
   'query-clusters': {
     name: 'Group related search queries',
     summary:

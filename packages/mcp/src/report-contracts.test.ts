@@ -156,12 +156,42 @@ test('keyword metrics bounds market and keyword acquisition inputs', () => {
       languageCode: 'en',
       location: {},
     },
-    {
-      keywords: ['keyword'],
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('keyword opportunities keeps external acquisition explicit and bounded', () => {
+  const schema = reportSchema('keyword-opportunities')
+  assert.equal(
+    schema.safeParse({ site: 'sc-domain:example.com' }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
       countryCode: 'GB',
       languageCode: 'en',
-      location: { code: 2826, name: 'United Kingdom' },
-    },
+      location: {
+        code: 1006886,
+        name: 'London,England,United Kingdom',
+      },
+      limit: 25,
+      keywordLimit: 50,
+      queriesPerPage: 5,
+      clusterLimit: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', includeExternal: true },
+    { site: 'sc-domain:example.com', countryCode: 'GB', languageCode: 'en' },
+    { site: 'sc-domain:example.com', provider: 'dataforseo' },
+    { site: 'sc-domain:example.com', limit: 26 },
+    { site: 'sc-domain:example.com', keywordLimit: 51 },
+    { site: 'sc-domain:example.com', queriesPerPage: 6 },
+    { site: 'sc-domain:example.com', clusterLimit: 21 },
   ]) {
     assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
   }

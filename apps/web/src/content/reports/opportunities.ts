@@ -207,6 +207,51 @@ export const opportunityReports = [
     sources: ['keyword-provider-metrics'],
   },
   {
+    id: 'keyword-opportunities',
+    name: 'Keyword opportunities',
+    category: 'opportunities',
+    summary:
+      'Combine owner-verified Search Console opportunities with optional market estimates, query clusters, and programmatic template signals.',
+    question:
+      'Which existing search opportunities deserve deeper page, keyword, or programmatic SEO research?',
+    useWhen: [
+      'You want one bounded review queue across quick wins, second-page queries, and striking-distance evidence.',
+      'Independent market estimates would add useful context to Search Console evidence already associated with the site.',
+      'You need query clusters and repeated URL patterns that may justify a programmatic SEO investigation.',
+    ],
+    avoidWhen: [
+      'You need an exact rank, a current result snapshot, or a verified competitor list.',
+      'You want external metrics to replace Search Console evidence or automatically change first-party priorities.',
+    ],
+    evidence: [
+      'One bounded Search Console query and page acquisition, three existing opportunity analyses, and optional provider estimates for an explicit market.',
+    ],
+    methodology: [
+      'Selects at most 50 unique first-party opportunity keywords across quick-win, second-page, and striking-distance sections, then keeps optional external estimates separate from their existing scores.',
+      'Clusters only the returned opportunity subset and flags repeated URL patterns for representative template and data-source review.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      days: 90,
+      limit: 10,
+      keywordLimit: 30,
+      includeExternal: false,
+    },
+    interpretation: [
+      'Start with first-party impressions, pages, average position, and source sections. Use external volume or trend only as added context, then inspect the current result before choosing a target.',
+    ],
+    caveats: [
+      'Search Console omits anonymised queries and average position is not an exact rank. External metrics are estimates, and external acquisition may cost money when explicitly enabled.',
+      'Clusters and URL patterns use a selected subset. They can identify a useful programmatic SEO investigation, but cannot prove that more pages should exist.',
+    ],
+    nextSteps: [
+      'Audit the strongest existing page and inspect a current result snapshot for its query and market.',
+      'Run the programmatic SEO audit for a repeated template cluster before expanding it.',
+    ],
+    related: ['keyword-metrics', 'pseo-audit', 'query-clusters', 'audit-page'],
+    sources: ['search-analytics', 'keyword-provider-metrics'],
+  },
+  {
     id: 'query-clusters',
     name: 'Query clusters',
     category: 'opportunities',

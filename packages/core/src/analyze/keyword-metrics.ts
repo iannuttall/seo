@@ -5,6 +5,7 @@ import type {
   KeywordMetricsProvider,
   ProviderEvidence,
   ProviderId,
+  ProviderRequestContext,
   ProviderValue,
   SearchMarket,
 } from '../providers/contracts.js'
@@ -311,6 +312,7 @@ export async function keywordMetricsReport(
     market: SearchMarket
     provider?: ProviderId
     projectId?: string
+    context?: Partial<ProviderRequestContext>
     refresh?: boolean
   },
   dependencies: KeywordMetricsReportDependencies = {},
@@ -348,9 +350,9 @@ export async function keywordMetricsReport(
       market: validated.market,
       refresh: input.refresh,
       context: {
-        projectId: input.projectId,
-        reportId: 'keyword-metrics',
-        reportRunId: randomUUID(),
+        projectId: input.context?.projectId ?? input.projectId,
+        reportId: input.context?.reportId ?? 'keyword-metrics',
+        reportRunId: input.context?.reportRunId ?? randomUUID(),
       },
     })
   } catch (error) {

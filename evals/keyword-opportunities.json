@@ -1,0 +1,57 @@
+{
+  "subject": "keyword-opportunities",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find the best keyword opportunities already visible in Search Console and show me where repeated page patterns might matter.",
+      "expected_output": "Should use report id keyword-opportunities after discovery and description. Should run it with the site and bounded defaults without external enrichment unless the user explicitly asks for a paid provider request. Should read source completeness and the quick-win, second-page, and striking-distance selections before combined keywords or clusters. Should treat overlapping signals as views of the same retained rows rather than independent confirmations.",
+      "assertions": [
+        "Uses report id keyword-opportunities through discovery and description",
+        "Runs first-party analysis without silently requesting paid external data",
+        "Reads source completeness and all three selection states before combined output",
+        "Does not treat overlapping first-party signals as independent confirmations",
+        "Uses clusters as validation prompts rather than automatic page decisions"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Enrich my Search Console keyword opportunities with fresh UK mobile DataForSEO estimates and keep costs visible.",
+      "expected_output": "Should run keyword-opportunities with includeExternal true, countryCode GB, languageCode en, device mobile, provider dataforseo, and refresh true. Should inspect external status, selection, coverage, warnings, cache, request, and cost before using values. Should keep first-party evidence and provider estimates separate, preserve missing and zero states, and not alter the existing first-party priority scores.",
+      "assertions": [
+        "Uses explicit includeExternal true with the requested market, device, provider, and refresh",
+        "Reads external status, selection, coverage, warnings, cache, request, and cost",
+        "Keeps Search Console evidence separate from provider estimates",
+        "Preserves missing and observed-zero states",
+        "Does not blend external estimates into first-party priority scores"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The report found a keyword cluster across several repeated URLs. Create the whole programmatic section now.",
+      "expected_output": "Should not create or recommend scaling a template from the cluster alone. Should state the cluster comes from the returned opportunity-keyword subset and token or URL-pattern heuristics do not prove shared intent. Should use the dataSourcePrompts as a validation brief, then recommend checking stable entity IDs, source provenance, required fields, missing-value rules, page uniqueness, internal links, representative pages, and the pseo-audit report before expansion.",
+      "assertions": [
+        "Does not scale a template from cluster evidence alone",
+        "States the cluster population is the returned opportunity subset",
+        "States cluster and URL patterns do not prove shared intent",
+        "Uses the data-source prompt as a validation brief",
+        "Recommends representative validation and pseo-audit before expansion"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "A keyword has Search Console impressions, provider volume zero, and average position 7. That means the provider is wrong and we rank exactly seventh, right?",
+      "expected_output": "Should reject both conclusions. Should explain that Search Console impressions and an independent provider zero describe different datasets, so the discrepancy is useful review evidence but does not prove the provider is universally wrong. Should explain that Search Console average position is impression weighted and not an exact rank. Should recommend checking external provenance and market settings plus a current result snapshot before deciding.",
+      "assertions": [
+        "Does not declare the provider universally wrong",
+        "Explains that first-party impressions and provider zero have different source semantics",
+        "Does not claim average position is exact rank",
+        "Treats the discrepancy as review evidence",
+        "Recommends market, provenance, and current result verification"
+      ],
+      "files": []
+    }
+  ]
+}

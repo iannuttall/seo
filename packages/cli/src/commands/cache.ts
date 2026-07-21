@@ -1,6 +1,30 @@
-import { clearCache, getCacheStats } from '@seo/core'
+import { clearCache, getCacheStats, SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import { formatBytes, printKeyValue } from '../utils.js'
+
+const CACHE_PROVIDERS = [
+  'gsc',
+  'google-analytics',
+  'semrush',
+  'dataforseo',
+  'http',
+] as const
+
+function cacheProvider(
+  value: unknown,
+): (typeof CACHE_PROVIDERS)[number] | undefined {
+  if (value === undefined) return undefined
+  if (
+    typeof value === 'string' &&
+    CACHE_PROVIDERS.includes(value as (typeof CACHE_PROVIDERS)[number])
+  ) {
+    return value as (typeof CACHE_PROVIDERS)[number]
+  }
+  throw new SeoError(
+    'INVALID_INPUT',
+    `--provider must be one of: ${CACHE_PROVIDERS.join(', ')}.`,
+  )
+}
 
 export const cacheCommand = defineCommand({
   meta: { name: 'cache', description: 'Cache helpers' },
@@ -26,6 +50,7 @@ export const cacheCommand = defineCommand({
             String(stats.counts.google_analytics_cache ?? 0),
           ],
           ['Semrush', String(stats.counts.semrush_cache ?? 0)],
+          ['DataForSEO', String(stats.counts.provider_cache ?? 0)],
           ['HTTP', String(stats.counts.http_cache ?? 0)],
         ])
       },
@@ -39,18 +64,11 @@ export const cacheCommand = defineCommand({
         provider: {
           type: 'string',
           description:
-            'Optional cache provider: gsc, google-analytics, semrush, or http',
+            'Optional cache provider: gsc, google-analytics, semrush, dataforseo, or http',
         },
       },
       run: async ({ args }) => {
-        const removed = clearCache(
-          args.provider as
-            | 'gsc'
-            | 'google-analytics'
-            | 'semrush'
-            | 'http'
-            | undefined,
-        )
+        const removed = clearCache(cacheProvider(args.provider))
         process.stdout.write(`Removed ${removed} cached rows.\n`)
       },
     }),

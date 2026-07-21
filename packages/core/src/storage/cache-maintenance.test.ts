@@ -34,6 +34,12 @@ function cacheDatabase(input: { incremental?: boolean } = {}): {
       fetched_at INTEGER, expires_at INTEGER,
       PRIMARY KEY(endpoint, query_hash)
     );
+    CREATE TABLE provider_cache (
+      provider TEXT, credential_scope TEXT, operation TEXT, request_hash TEXT,
+      request_json TEXT, response_json TEXT, task_ids_json TEXT,
+      fetched_at INTEGER, expires_at INTEGER,
+      PRIMARY KEY(provider, credential_scope, operation, request_hash)
+    );
     CREATE TABLE http_cache (
       url_hash TEXT PRIMARY KEY, url TEXT, headers_json TEXT, body_blob BLOB,
       metadata_json TEXT, etag TEXT, fetched_at INTEGER, expires_at INTEGER
@@ -76,6 +82,31 @@ test('cache maintenance removes expired rows and keeps the newest rows within li
     [{ url_hash: 'new' }],
   )
   assert.ok(result.sizes.http_cache <= 1_000)
+  database.close()
+})
+
+test('provider response cache keeps the newest rows within its own allocation', () => {
+  const { database } = cacheDatabase()
+  const insert = database.prepare(
+    `INSERT INTO provider_cache (
+      provider, credential_scope, operation, request_hash, request_json,
+      response_json, task_ids_json, fetched_at, expires_at
+    ) VALUES ('dataforseo', 'scope', 'keyword-metrics', ?, '{}', ?, '[]', ?, ?)`,
+  )
+  insert.run('old', 'x'.repeat(500), 1, 1_000)
+  insert.run('new', 'x'.repeat(500), 2, 1_000)
+
+  const result = runCacheMaintenance(database, {
+    now: 100,
+    limits: { provider_cache: 1_000 },
+  })
+
+  assert.equal(result.removedByTable.provider_cache, 1)
+  assert.deepEqual(
+    database.prepare('SELECT request_hash FROM provider_cache').all(),
+    [{ request_hash: 'new' }],
+  )
+  assert.ok(result.sizes.provider_cache <= 1_000)
   database.close()
 })
 

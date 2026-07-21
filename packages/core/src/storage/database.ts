@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import type { CacheStats } from '../types.js'
@@ -10,7 +10,23 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
+import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
+
+const PRIVATE_DATABASE_FILE_MODE = 0o600
+const DATABASE_FILE_SUFFIXES = ['', '-wal', '-shm'] as const
+
+export function ensurePrivateDatabaseFiles(path: string): void {
+  for (const suffix of DATABASE_FILE_SUFFIXES) {
+    try {
+      chmodSync(`${path}${suffix}`, PRIVATE_DATABASE_FILE_MODE)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error
+      }
+    }
+  }
+}
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS sites (
@@ -56,6 +72,23 @@ CREATE TABLE IF NOT EXISTS semrush_cache (
   PRIMARY KEY(endpoint, query_hash)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_semrush_expires ON semrush_cache(expires_at);
+
+CREATE TABLE IF NOT EXISTS provider_cache (
+  provider TEXT NOT NULL,
+  credential_scope TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  request_json TEXT NOT NULL,
+  response_json TEXT NOT NULL,
+  row_count INTEGER,
+  source_cost_micros INTEGER,
+  task_ids_json TEXT NOT NULL DEFAULT '[]',
+  fetched_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  PRIMARY KEY(provider, credential_scope, operation, request_hash)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_provider_cache_expires
+  ON provider_cache(expires_at);
 
 CREATE TABLE IF NOT EXISTS http_cache (
   url_hash TEXT PRIMARY KEY,
@@ -261,8 +294,10 @@ CREATE INDEX IF NOT EXISTS idx_performance_reports_expires ON performance_report
 `
 
 let db: Database.Database | undefined
-let cacheWritesSinceMaintenance = 0
-let cacheBytesSinceMaintenance = 0
+const cacheMaintenanceCounters = new WeakMap<
+  Database.Database,
+  { writes: number; bytes: number }
+>()
 
 function ensureColumn(
   database: Database.Database,
@@ -291,6 +326,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
+    database.exec(PROVIDER_SPEND_SCHEMA_SQL)
     database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
@@ -338,24 +374,34 @@ export function getDb(): Database.Database {
   const path = getSeoCliPaths().cacheDbFile
   const isNewDatabase = !existsSync(path)
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  ensurePrivateDatabaseFiles(path)
   db = new Database(path)
+  ensurePrivateDatabaseFiles(path)
   initDb(db, isNewDatabase)
+  ensurePrivateDatabaseFiles(path)
   return db
 }
 
-export function noteCacheWrite(sizeBytes = 0): void {
-  cacheWritesSinceMaintenance += 1
-  cacheBytesSinceMaintenance += Math.max(0, sizeBytes)
+export function noteCacheWrite(
+  sizeBytes = 0,
+  database: Database.Database = getDb(),
+): void {
+  const counter = cacheMaintenanceCounters.get(database) ?? {
+    writes: 0,
+    bytes: 0,
+  }
+  counter.writes += 1
+  counter.bytes += Math.max(0, sizeBytes)
+  cacheMaintenanceCounters.set(database, counter)
   if (
-    cacheWritesSinceMaintenance < CACHE_MAINTENANCE_WRITE_COUNT &&
-    cacheBytesSinceMaintenance < CACHE_MAINTENANCE_WRITE_BYTES
+    counter.writes < CACHE_MAINTENANCE_WRITE_COUNT &&
+    counter.bytes < CACHE_MAINTENANCE_WRITE_BYTES
   ) {
     return
   }
 
-  runCacheMaintenance(getDb())
-  cacheWritesSinceMaintenance = 0
-  cacheBytesSinceMaintenance = 0
+  runCacheMaintenance(database)
+  cacheMaintenanceCounters.delete(database)
 }
 
 export function checkDatabaseReadiness(): { dbPath: string } {
@@ -391,6 +437,9 @@ export function getCacheStats(): CacheStats {
     semrush_cache: database
       .prepare('SELECT COUNT(*) AS count FROM semrush_cache')
       .get() as { count: number },
+    provider_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM provider_cache')
+      .get() as { count: number },
     http_cache: database
       .prepare('SELECT COUNT(*) AS count FROM http_cache')
       .get() as { count: number },
@@ -418,11 +467,22 @@ function databaseFootprint(path: string): number {
 }
 
 export function clearCache(
-  provider?: 'gsc' | 'google-analytics' | 'semrush' | 'http',
+  provider?: 'gsc' | 'google-analytics' | 'semrush' | 'dataforseo' | 'http',
   olderThanMs?: number,
 ): number {
   const database = getDb()
   const cutoff = olderThanMs ? Date.now() - olderThanMs : undefined
+
+  if (provider === 'dataforseo') {
+    const sql = cutoff
+      ? 'DELETE FROM provider_cache WHERE provider = ? AND fetched_at < ?'
+      : 'DELETE FROM provider_cache WHERE provider = ?'
+    const info = cutoff
+      ? database.prepare(sql).run('dataforseo', cutoff)
+      : database.prepare(sql).run('dataforseo')
+    compactCacheDatabase(database, { allowFullVacuum: true })
+    return info.changes
+  }
 
   const tables =
     provider === 'gsc'
@@ -433,7 +493,13 @@ export function clearCache(
           ? ['semrush_cache']
           : provider === 'http'
             ? ['http_cache']
-            : ['gsc_cache', 'ga4_cache', 'semrush_cache', 'http_cache']
+            : [
+                'gsc_cache',
+                'ga4_cache',
+                'semrush_cache',
+                'provider_cache',
+                'http_cache',
+              ]
 
   let removed = 0
 

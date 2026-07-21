@@ -1,23 +1,29 @@
 import { readConfig } from '../storage/config.js'
-import type { KeywordDataProvider } from '../types.js'
+import type { AppConfig, KeywordDataProvider } from '../types.js'
+import { readDataForSeoCredentials } from './dataforseo/credentials.js'
 import { DataForSeoProvider } from './dataforseo.js'
 import { SemrushProvider } from './semrush.js'
 
-export function getKeywordProvider(
+export async function getKeywordProvider(
   prefer?: 'cheap' | 'authoritative',
-): KeywordDataProvider | undefined {
-  const config = readConfig()
+  dependencies: {
+    readConfig?: () => AppConfig
+    hasDataForSeoCredentials?: () => boolean | Promise<boolean>
+  } = {},
+): Promise<KeywordDataProvider | undefined> {
+  const config = (dependencies.readConfig ?? readConfig)()
   const chosen = prefer ?? config.providers.prefer
 
   if (chosen === 'authoritative' && config.providers.semrushApiKey) {
     return new SemrushProvider()
   }
 
-  if (
-    chosen === 'cheap' &&
-    config.providers.dataForSeoLogin &&
-    config.providers.dataForSeoPassword
-  ) {
+  const hasDataForSeo = await (
+    dependencies.hasDataForSeoCredentials ??
+    (async () => Boolean(await readDataForSeoCredentials()))
+  )()
+
+  if (chosen === 'cheap' && hasDataForSeo) {
     return new DataForSeoProvider()
   }
 
@@ -25,7 +31,7 @@ export function getKeywordProvider(
     return new SemrushProvider()
   }
 
-  if (config.providers.dataForSeoLogin && config.providers.dataForSeoPassword) {
+  if (hasDataForSeo) {
     return new DataForSeoProvider()
   }
 

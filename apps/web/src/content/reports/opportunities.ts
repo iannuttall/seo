@@ -300,6 +300,62 @@ export const opportunityReports = [
     sources: ['keyword-provider-discovery'],
   },
   {
+    id: 'pseo-opportunities',
+    name: 'Programmatic SEO opportunities',
+    category: 'opportunities',
+    summary:
+      'Join observed template and query-cluster evidence with optional keyword discovery, live results, competitor URL patterns, costs, and data-source research briefs.',
+    question:
+      'Which existing template extensions or possible new page systems deserve evidence-led research?',
+    useWhen: [
+      'Repeated templates already earn impressions and need a careful expansion plan.',
+      'Query clusters suggest demand that may not fit an observed template.',
+      'Live result pages and competitor URL patterns would change the decision.',
+    ],
+    avoidWhen: [
+      'You want one generated page per keyword without checking shared intent or data quality.',
+      'You only need to audit the current technical and index state of existing pages.',
+    ],
+    evidence: [
+      'Bounded programmatic SEO audit and Search Console query-cluster evidence, plus optional provider discovery and live result snapshots for an explicit market.',
+    ],
+    methodology: [
+      'Selects at most five seeds from search-evidenced templates and retained query clusters, then keeps discovered candidates linked to those first-party references.',
+      'Separates existing-query evidence, observed-template expansion, and new-template research before selecting at most three live result checks.',
+      'Groups repeated domains and URL patterns from the retained snapshots without assigning authority, quality, or ranking-feasibility scores.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      includeExternal: false,
+      templateLimit: 10,
+      clusterLimit: 10,
+    },
+    interpretation: [
+      'Read the first-party templates and clusters first. Use provider metrics and live result patterns as added context, then complete the data-source brief before proposing any generated inventory.',
+    ],
+    caveats: [
+      'Search Console is bounded and omits anonymised queries. Provider metrics are estimates, while live results describe one market, device, and observation time.',
+      'A repeated competitor URL pattern is not proof of page quality, authority, reusable data, or a template another site should reproduce.',
+    ],
+    nextSteps: [
+      'Rerun with explicit external market and cost limits only when independent discovery would change the decision.',
+      'Inspect representative ranking pages and validate identifiers, fields, coverage, freshness, rights, missing-value rules, crawl controls, and internal links.',
+      'Run the programmatic SEO audit with bounded crawl and index samples before changing a generator.',
+    ],
+    related: [
+      'pseo-audit',
+      'keyword-research',
+      'serp-results',
+      'query-clusters',
+    ],
+    sources: [
+      'search-analytics',
+      'sitemaps',
+      'keyword-provider-discovery',
+      'serp-provider-results',
+    ],
+  },
+  {
     id: 'query-clusters',
     name: 'Query clusters',
     category: 'opportunities',

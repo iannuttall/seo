@@ -157,6 +157,29 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'content-optimization', reason: 'Builds a page brief.' },
     ],
   },
+  'pseo-opportunities': {
+    readOrder: [
+      'dataStatus, summary, market, selection, and caveats',
+      'source.pseoAudit and source.queryClusters before external evidence',
+      'source.external.discovery coverage, cache, cost, warnings, and candidate value states',
+      'source.external.serps observations and competitors with exact evidence references',
+      'dataSourceBriefs and nextSteps only after checking the supporting evidence',
+    ],
+    doNotClaim: [
+      'A discovered term absent from retained Search Console rows does not prove zero first-party visibility.',
+      'Keyword estimates, repeated domains, and repeated URL patterns do not prove authority, ranking feasibility, shared intent, or page quality.',
+      'A data-source brief does not establish that a dataset exists, may be reused, or can support differentiated pages.',
+      'Do not recommend one page per keyword or combinatorial page generation from volume alone.',
+    ],
+    verify:
+      'Inspect the retained live results and representative existing pages, then validate identifiers, fields, freshness, usage rights, missing-value rules, crawl controls, and internal links before expanding a template.',
+    related: [
+      { id: 'pseo-audit', reason: 'Validates existing template evidence.' },
+      { id: 'keyword-research', reason: 'Expands a supplied seed list.' },
+      { id: 'serp-results', reason: 'Inspects one live result snapshot.' },
+      { id: 'query-clusters', reason: 'Reviews first-party query groups.' },
+    ],
+  },
   'keyword-metrics': {
     readOrder: [
       'dataStatus, summary, market, and caveats',

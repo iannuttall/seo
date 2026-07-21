@@ -186,17 +186,16 @@ function queryThemeCandidates(query: string): string[] {
   return [...new Set(candidates)]
 }
 
-function learnedQueryThemeLabels(
+function learnedQueryThemeRanks(
   rows: Array<{
     query: string
     impressions: number
   }>,
-): Map<string, string> {
+): Map<string, number> {
   const phraseStats = new Map<
     string,
     { queryCount: number; impressions: number }
   >()
-  const queryCandidates = new Map<string, string[]>()
 
   const rowsByQuery = new Map<string, number>()
   for (const row of rows) {
@@ -208,7 +207,6 @@ function learnedQueryThemeLabels(
 
   for (const [query, impressions] of rowsByQuery) {
     const candidates = queryThemeCandidates(query)
-    queryCandidates.set(query, candidates)
     for (const candidate of candidates) {
       const existing = phraseStats.get(candidate) ?? {
         queryCount: 0,
@@ -233,15 +231,28 @@ function learnedQueryThemeLabels(
     .sort((a, b) => {
       const impressions = b[1].impressions - a[1].impressions
       if (impressions) return impressions
-      return b[0].length - a[0].length
+      return (
+        b[0].length - a[0].length || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)
+      )
     })
 
-  const labels = new Map<string, string>()
-  for (const [query, candidates] of queryCandidates) {
-    const match = scoredPhrases.find(([phrase]) => candidates.includes(phrase))
-    if (match) labels.set(query, `theme: ${match[0]}`)
+  return new Map(scoredPhrases.map(([phrase], rank) => [phrase, rank]))
+}
+
+function learnedQueryTheme(
+  query: string,
+  ranks: ReadonlyMap<string, number>,
+): string | undefined {
+  let selected: string | undefined
+  let selectedRank = Number.POSITIVE_INFINITY
+  for (const candidate of queryThemeCandidates(query)) {
+    const rank = ranks.get(candidate)
+    if (rank !== undefined && rank < selectedRank) {
+      selected = candidate
+      selectedRank = rank
+    }
   }
-  return labels
+  return selected ? `theme: ${selected}` : undefined
 }
 
 export function pseoQueryPatterns(
@@ -253,12 +264,12 @@ export function pseoQueryPatterns(
 ): PseoQueryPattern[] {
   const patterns = new Map<string, PseoQueryPattern>()
   const patternQueries = new Map<string, Set<string>>()
-  const learnedThemes = learnedQueryThemeLabels(rows)
+  const learnedThemes = learnedQueryThemeRanks(rows)
   for (const row of rows) {
     const intentLabel = queryPatternLabel(row.query)
     const label =
       intentLabel === 'general'
-        ? (learnedThemes.get(row.query) ?? intentLabel)
+        ? (learnedQueryTheme(row.query, learnedThemes) ?? intentLabel)
         : intentLabel
     const existing = patterns.get(label) ?? {
       label,

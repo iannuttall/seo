@@ -277,6 +277,53 @@ test('keyword opportunities keeps external acquisition explicit and bounded', ()
   }
 })
 
+test('pSEO opportunities keeps provider work explicit and bounded', () => {
+  const schema = reportSchema('pseo-opportunities')
+  assert.equal(
+    schema.safeParse({ site: 'sc-domain:example.com' }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      discoverySources: ['ideas', 'related'],
+      discoveryLimit: 30,
+      candidateLimit: 25,
+      serpLimit: 3,
+      serpDepth: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', includeExternal: true },
+    { site: 'sc-domain:example.com', countryCode: 'GB', languageCode: 'en' },
+    { site: 'sc-domain:example.com', serpLimit: 1 },
+    { site: 'sc-domain:example.com', templateLimit: 26 },
+    { site: 'sc-domain:example.com', clusterLimit: 26 },
+    { site: 'sc-domain:example.com', discoveryLimit: 101 },
+    { site: 'sc-domain:example.com', candidateLimit: 26 },
+    {
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      serpLimit: 4,
+    },
+    {
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      serpDepth: 21,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('server log analysis bounds streamed work and returned rows', () => {
   const schema = reportSchema('server-log-analysis')
   assert.equal(

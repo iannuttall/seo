@@ -81,3 +81,84 @@ test('pSEO MCP exposes bounded inputs and compact agent output', () => {
   assert.equal('samples' in template.crawl, false)
   assert.equal('samples' in template.inspection, false)
 })
+
+test('pSEO opportunity MCP validates paid inputs and forwards one typed report', async () => {
+  let schema: Schema | undefined
+  let handler:
+    | ((input: Record<string, unknown>) => Promise<unknown>)
+    | undefined
+  let received: Record<string, unknown> | undefined
+  registerPseoTools(
+    {
+      registerTool(
+        name: string,
+        config: { inputSchema: Schema },
+        run: (input: Record<string, unknown>) => Promise<unknown>,
+      ) {
+        if (name !== 'seo_pseo_opportunities') return
+        schema = config.inputSchema
+        handler = run
+      },
+    } as never,
+    {
+      pseoOpportunitiesReport: async (input) => {
+        received = input as unknown as Record<string, unknown>
+        return {
+          schemaVersion: 1,
+          summary: { verdict: 'Fixture pSEO research report.' },
+          source: {},
+        } as never
+      },
+    },
+  )
+
+  assert.ok(schema)
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+    }).success,
+    false,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeExternal: true,
+      countryCode: 'US',
+      languageCode: 'en',
+      serpLimit: 4,
+    }).success,
+    false,
+  )
+  const parsed = schema.safeParse({
+    site: 'sc-domain:example.com',
+    includeExternal: true,
+    countryCode: 'US',
+    languageCode: 'en',
+    device: 'mobile',
+    discoverySources: ['ideas'],
+    discoveryLimit: 30,
+    serpLimit: 2,
+  })
+  assert.equal(parsed.success, true)
+  assert.ok(handler)
+  await handler({
+    site: 'sc-domain:example.com',
+    includeExternal: true,
+    countryCode: 'US',
+    languageCode: 'en',
+    searchEngine: 'google',
+    device: 'mobile',
+    discoverySources: ['ideas'],
+    discoveryLimit: 30,
+    serpLimit: 2,
+  })
+  assert.deepEqual(received?.market, {
+    countryCode: 'US',
+    languageCode: 'en',
+    searchEngine: 'google',
+    location: undefined,
+    device: 'mobile',
+  })
+  assert.equal(received?.serpLimit, 2)
+})

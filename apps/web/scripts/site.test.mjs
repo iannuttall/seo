@@ -380,13 +380,11 @@ test('report library covers the live registry and keeps legacy routes', async ()
   const { legacyReportAliases, reportIds, reportSlugs } = await import(
     resolve(appRoot, 'src/content/reports/manifest.mjs')
   )
-  const guideSource = ['a-f', 'i-p', 'q-z']
-    .map((range) =>
-      readFileSync(
-        resolve(appRoot, `src/content/reports/guide-overrides-${range}.ts`),
-        'utf8',
-      ),
-    )
+  const guideDirectory = resolve(appRoot, 'src/content/reports')
+  const guideSource = readdirSync(guideDirectory)
+    .filter((name) => /^guide-overrides-.+\.ts$/.test(name))
+    .sort()
+    .map((name) => readFileSync(resolve(guideDirectory, name), 'utf8'))
     .join('\n')
   const liveIds = listReportDefinitions()
     .map(({ id }) => id)

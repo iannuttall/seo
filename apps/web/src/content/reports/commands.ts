@@ -165,6 +165,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo pseo audit --project example',
       note: 'Review repeated page templates with crawl and search evidence.',
     },
+    'pseo-opportunities': {
+      command:
+        'seo reports run pseo-opportunities --params \'{"site":"sc-domain:example.com","includeExternal":false}\' --json',
+      note: 'Research template expansion without making paid calls by default.',
+    },
     'query-clusters': {
       command: 'seo query-cluster --project example',
       note: 'Group returned Search Console queries into repeatable themes.',

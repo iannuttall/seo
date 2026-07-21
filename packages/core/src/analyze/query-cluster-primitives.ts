@@ -46,7 +46,7 @@ export function queryClusterTokens(query: string): string[] {
 }
 
 export function aggregateQueryClusterRows(
-  rows: Array<{
+  rows: Iterable<{
     query: string
     impressions: number
     clicks: number
@@ -110,7 +110,16 @@ export function aggregateQueryClusterRows(
 }
 
 export function clusterQueryRows(rows: QueryClusterRow[]): QueryClusterRow[][] {
-  if (rows.length <= 1) return rows.map((row) => [row])
+  return [...iterateQueryClusters(rows)]
+}
+
+export function* iterateQueryClusters(
+  rows: QueryClusterRow[],
+): Generator<QueryClusterRow[]> {
+  if (rows.length <= 1) {
+    for (const row of rows) yield [row]
+    return
+  }
 
   const normalizedRows = rows.map((row) => ({
     ...row,
@@ -132,7 +141,6 @@ export function clusterQueryRows(rows: QueryClusterRow[]): QueryClusterRow[][] {
   )
 
   const assigned = new Set<number>()
-  const groups: QueryClusterRow[][] = []
   const seedIds = normalizedRows
     .map((row, index) => ({
       index,
@@ -179,7 +187,6 @@ export function clusterQueryRows(rows: QueryClusterRow[]): QueryClusterRow[][] {
         assigned.add(candidateId)
       }
     }
-    groups.push(group)
+    yield group
   }
-  return groups
 }

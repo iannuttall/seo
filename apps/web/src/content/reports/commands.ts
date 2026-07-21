@@ -183,6 +183,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo quick-wins --project example',
       note: 'Find visible queries and pages that deserve a closer CTR review.',
     },
+    'rank-tracking': {
+      command:
+        'seo reports run rank-tracking --params \'{"projectId":"example","set":"Priority","targetDomain":"example.com","devices":["desktop"],"collectionMethod":"queued","cadence":"weekly"}\' --json',
+      note: 'Collect or resume one exact rank run for a saved keyword set.',
+    },
     'redirect-trace': {
       command: 'seo redirect-trace --url https://example.com/old-page',
       note: 'Follow every redirect hop to the final page.',

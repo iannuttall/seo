@@ -484,6 +484,59 @@ export const opportunityReports = [
     sources: ['search-analytics'],
   },
   {
+    id: 'rank-tracking',
+    name: 'Exact rank tracking',
+    category: 'opportunities',
+    summary:
+      'Collect exact organic positions for one saved keyword set and compare compatible local snapshots without blending markets, devices, or Search Console averages.',
+    question:
+      'Which tracked keywords changed position or ranking URL in the same market and device?',
+    useWhen: [
+      'A saved keyword set needs repeatable position checks for one fixed market and device.',
+      'You want new, lost, improved, declined, or ranking URL change evidence over time.',
+      'A recurring set should use lower-cost queued collection and local history.',
+    ],
+    avoidWhen: [
+      'You need clicks, impressions, or average position from Search Console.',
+      'You only need to inspect one current result page with no saved history.',
+    ],
+    evidence: [
+      'A local saved keyword set, target domain, fixed search market, separate device configuration, provider task evidence, exact retained positions, requested depth, coverage, cost, and prior compatible runs.',
+    ],
+    methodology: [
+      'Creates an immutable run for one provider-neutral configuration and keeps desktop and mobile observations separate.',
+      'Uses bounded live collection for small manual runs or queued tasks for larger recurring runs, then resumes saved provider tasks without reposting completed work.',
+      'Compares exact observations with the prior compatible run and labels pending, failed, observed, and not observed within depth as different states.',
+    ],
+    exampleParams: {
+      projectId: 'example',
+      set: 'Priority',
+      targetDomain: 'example.com',
+      devices: ['desktop'],
+      collectionMethod: 'queued',
+      cadence: 'weekly',
+      depth: 100,
+    },
+    interpretation: [
+      'Read market, device, depth, run state, coverage, and cost before the change list. Add Search Console evidence when clicks, impressions, or average position matter to the decision.',
+    ],
+    caveats: [
+      'Not observed within depth does not prove that the domain has no ranking. Search results can change between checks, and exact snapshots answer a different question from Search Console average position.',
+      'Pending or failed tasks cannot support a loss. A ranking change alone cannot establish cause, traffic impact, or future performance.',
+    ],
+    nextSteps: [
+      'Inspect the current result page and ranking URL when a change could reflect intent drift or a competing template.',
+      'Run a Search Console opportunity report before prioritising work from position movement alone.',
+    ],
+    related: [
+      'serp-results',
+      'saved-keywords',
+      'quick-wins',
+      'striking-distance',
+    ],
+    sources: ['serp-provider-results'],
+  },
+  {
     id: 'serp-results',
     name: 'Live search results',
     category: 'opportunities',

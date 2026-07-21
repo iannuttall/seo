@@ -46,6 +46,7 @@ export const reportIds = [
   'pseo-opportunities',
   'query-clusters',
   'quick-wins',
+  'rank-tracking',
   'redirect-trace',
   'narrative-report',
   'second-page',

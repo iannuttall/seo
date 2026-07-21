@@ -1,3 +1,5 @@
+import { chmodSync, existsSync } from 'node:fs'
+import { z } from 'zod'
 import { getSeoCliPaths } from '../paths.js'
 import { readConfig } from './config.js'
 import { readJsonFile, safeRemove, writeJsonAtomic } from './files.js'
@@ -15,6 +17,13 @@ type ProviderSecretsFile = {
   secrets: Record<string, string>
 }
 
+const providerSecretsFileSchema = z
+  .object({
+    version: z.literal(1),
+    secrets: z.record(z.string(), z.string()),
+  })
+  .strict()
+
 export type ProviderSecretSource = 'environment' | 'keychain' | 'file'
 
 export type ProviderSecret = {
@@ -26,13 +35,31 @@ function account(name: string): string {
   return `provider:${name}`
 }
 
+function tightenFilePermissions(path: string): void {
+  try {
+    chmodSync(path, PRIVATE_FILE_MODE)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+}
+
 function readFile(): ProviderSecretsFile {
-  return (
-    readJsonFile<ProviderSecretsFile>(getSeoCliPaths().providerSecretsFile) ?? {
+  const path = getSeoCliPaths().providerSecretsFile
+  tightenFilePermissions(path)
+  const raw = readJsonFile<unknown>(path)
+  if (raw === undefined && !existsSync(path)) {
+    return {
       version: 1,
       secrets: {},
     }
-  )
+  }
+  const parsed = providerSecretsFileSchema.safeParse(raw)
+  if (!parsed.success) {
+    throw new Error(
+      'Saved provider credentials are invalid. Remove the local provider secrets file, then reconnect the affected providers.',
+    )
+  }
+  return parsed.data
 }
 
 function writeFile(file: ProviderSecretsFile): void {

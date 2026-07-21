@@ -1,5 +1,12 @@
 import assert from 'node:assert/strict'
-import { existsSync, mkdtempSync, rmSync, statSync } from 'node:fs'
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
@@ -89,4 +96,30 @@ test('provider secrets fall back to a private file', async () => {
     value: 'secret',
     source: 'file',
   })
+})
+
+test('provider secret reads repair permissive file permissions', async () => {
+  keyring.unavailable = true
+  writeConfig(configSchema.parse({}))
+  await writeProviderSecret('bing-api-key', 'secret')
+  const path = getSeoCliPaths().providerSecretsFile
+  chmodSync(path, 0o644)
+
+  assert.deepEqual(await readProviderSecret({ name: 'bing-api-key' }), {
+    value: 'secret',
+    source: 'file',
+  })
+  assert.equal(statSync(path).mode & 0o777, 0o600)
+})
+
+test('corrupt provider secret files fail clearly', async () => {
+  keyring.unavailable = true
+  writeConfig(configSchema.parse({}))
+  const path = getSeoCliPaths().providerSecretsFile
+  writeFileSync(path, '{not-json', { mode: 0o600 })
+
+  await assert.rejects(
+    readProviderSecret({ name: 'bing-api-key' }),
+    /saved provider credentials are invalid/i,
+  )
 })

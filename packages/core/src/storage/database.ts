@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import type { CacheStats } from '../types.js'
@@ -12,6 +12,21 @@ import {
 } from './cache-maintenance.js'
 import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
+
+const PRIVATE_DATABASE_FILE_MODE = 0o600
+const DATABASE_FILE_SUFFIXES = ['', '-wal', '-shm'] as const
+
+export function ensurePrivateDatabaseFiles(path: string): void {
+  for (const suffix of DATABASE_FILE_SUFFIXES) {
+    try {
+      chmodSync(`${path}${suffix}`, PRIVATE_DATABASE_FILE_MODE)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error
+      }
+    }
+  }
+}
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS sites (
@@ -359,8 +374,11 @@ export function getDb(): Database.Database {
   const path = getSeoCliPaths().cacheDbFile
   const isNewDatabase = !existsSync(path)
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  ensurePrivateDatabaseFiles(path)
   db = new Database(path)
+  ensurePrivateDatabaseFiles(path)
   initDb(db, isNewDatabase)
+  ensurePrivateDatabaseFiles(path)
   return db
 }
 

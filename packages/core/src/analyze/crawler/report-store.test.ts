@@ -15,15 +15,28 @@ import {
   saveCrawlReport,
 } from './report-store.js'
 
-test('automatic baselines stay bounded without deleting saved reports', () => {
+test('automatic baselines stay bounded without deleting saved reports', (t) => {
   const site = `sc-domain:baseline-retention-${randomUUID()}.example`
   const host = site.slice('sc-domain:'.length)
+  const database = getDb()
+  t.after(() => {
+    database.prepare('DELETE FROM crawl_reports WHERE site_url = ?').run(site)
+  })
   const saved = createCrawlReport({
     site,
     generatedAt: '2026-06-18T00:00:00.000Z',
     config: { url: `https://${host}/saved/` },
   })
   saveCrawlReport(saved)
+
+  const newestBaseline = database
+    .prepare(
+      `SELECT COALESCE(MAX(created_at), 0) AS created_at
+       FROM crawl_reports
+       WHERE retention_class = 'baseline'`,
+    )
+    .get() as { created_at: number }
+  const fixtureStart = Math.max(Date.now(), newestBaseline.created_at) + 60_000
 
   for (
     let index = 0;
@@ -32,15 +45,15 @@ test('automatic baselines stay bounded without deleting saved reports', () => {
   ) {
     const report = createCrawlReport({
       site,
-      // Keep this site's fixtures newer than unrelated concurrent baseline
-      // tests so the global retention cap cannot prune the rows under test.
-      generatedAt: new Date(Date.UTC(2200, 5, 19, 0, index)).toISOString(),
+      // Keep this fixture newer than existing baselines so the global cap tests
+      // the new rows instead of pruning them before site retention is asserted.
+      generatedAt: new Date(fixtureStart + index * 60_000).toISOString(),
       config: { url: `https://${host}/` },
     })
     saveCrawlReport(report, undefined, { retention: 'baseline' })
   }
 
-  const rows = getDb()
+  const rows = database
     .prepare(
       `SELECT retention_class, COUNT(*) AS count
       FROM crawl_reports

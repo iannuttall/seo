@@ -7,6 +7,11 @@ import type {
 } from '../types.js'
 import { cachedSemrushCall } from './semrush/cache.js'
 import { mapKeywordRows, mapOverview } from './semrush/mappers.js'
+import {
+  semrushDifficultyRowsSchema,
+  semrushKeywordOverviewSchema,
+  semrushKeywordRowsSchema,
+} from './semrush/schemas.js'
 
 export class SemrushProvider implements KeywordDataProvider {
   readonly name = 'semrush'
@@ -34,6 +39,7 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Nq,Cp,Co,Nr,Td,Kd',
       },
       mapOverview,
+      semrushKeywordOverviewSchema,
       7 * 86_400_000,
       10,
       opts.refresh,
@@ -53,6 +59,7 @@ export class SemrushProvider implements KeywordDataProvider {
       },
       (rows) =>
         mapKeywordRows(rows).map((row) => ({ ...row, phrase: row.phrase })),
+      semrushKeywordRowsSchema,
       7 * 86_400_000,
       10,
       opts.refresh,
@@ -72,6 +79,7 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Nq,Kd,Cp,Co',
       },
       mapKeywordRows,
+      semrushKeywordRowsSchema,
       14 * 86_400_000,
       40,
       opts.refresh,
@@ -91,6 +99,7 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Nq,Kd,Cp,Co',
       },
       mapKeywordRows,
+      semrushKeywordRowsSchema,
       14 * 86_400_000,
       40,
       opts.refresh,
@@ -109,10 +118,12 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Kd',
       },
       (rows) =>
-        mapKeywordRows(rows).map((row) => ({
-          phrase: row.phrase,
-          kd: row.difficulty ?? 0,
-        })),
+        mapKeywordRows(rows).flatMap((row) =>
+          row.difficulty === undefined
+            ? []
+            : [{ phrase: row.phrase, kd: row.difficulty }],
+        ),
+      semrushDifficultyRowsSchema,
       7 * 86_400_000,
       50,
       opts.refresh,
@@ -132,6 +143,7 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Nq,Cp,Co,Kd,Po,Ur,Dn',
       },
       mapKeywordRows,
+      semrushKeywordRowsSchema,
       7 * 86_400_000,
       10,
       opts.refresh,
@@ -151,6 +163,7 @@ export class SemrushProvider implements KeywordDataProvider {
         export_columns: 'Ph,Nq,Cp,Co,Kd,Po,Ur,Dn',
       },
       mapKeywordRows,
+      semrushKeywordRowsSchema,
       7 * 86_400_000,
       10,
       opts.refresh,

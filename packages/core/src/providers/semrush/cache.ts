@@ -1,12 +1,23 @@
+import { createHash } from 'node:crypto'
 import { fetch } from 'undici'
-import { readBoundedResponseText } from '../../fetch/http-client.js'
+import type { ZodType } from 'zod'
 import { readConfig } from '../../storage/config.js'
 import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { ProviderResult } from '../../types.js'
+import { ProviderError } from '../errors.js'
+import { type ProviderFetch, providerRequestText } from '../transport.js'
 import { parseSemicolonCsv } from './csv.js'
 
 const BASE_URL = 'https://api.semrush.com/'
 const MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+const DEFAULT_TIMEOUT_MS = 15_000
+
+export type SemrushTransportOptions = {
+  fetch?: ProviderFetch
+  baseUrl?: string
+  maxResponseBytes?: number
+  timeoutMs?: number
+}
 
 function estimateUsd(units: number): number {
   return (units / 1000) * 0.05
@@ -16,24 +27,33 @@ export async function cachedSemrushCall<T>(
   endpoint: string,
   params: Record<string, string | number | undefined>,
   map: (rows: string[][]) => T,
+  schema: ZodType<T>,
   ttlMs: number,
   creditsPerLine: number,
   refresh = false,
+  transport: SemrushTransportOptions = {},
 ): Promise<ProviderResult<T>> {
   const config = readConfig()
   const apiKey = config.providers.semrushApiKey
   if (!apiKey) {
-    throw new Error('Semrush API key missing. Add it to config.json first.')
+    throw new ProviderError({
+      provider: 'semrush',
+      operation: endpoint,
+      code: 'configuration',
+      message: 'Semrush credentials are not configured.',
+    })
   }
 
-  const requestParams = Object.fromEntries(
-    Object.entries({ ...params, key: apiKey, type: endpoint }).filter(
+  const safeParams = Object.fromEntries(
+    Object.entries({ ...params, type: endpoint }).filter(
       ([, value]) => value !== undefined,
     ),
-  ) as Record<string, string>
+  ) as Record<string, string | number>
+  const requestParams = { ...safeParams, key: apiKey }
+  const credentialScope = createHash('sha256').update(apiKey).digest('hex')
 
   const db = getDb()
-  const queryHash = hashKey([endpoint, requestParams])
+  const queryHash = hashKey([endpoint, safeParams, credentialScope])
   const cached = db
     .prepare(
       'SELECT response_json, credits_used FROM semrush_cache WHERE endpoint = ? AND query_hash = ? AND expires_at > ?',
@@ -43,37 +63,68 @@ export async function cachedSemrushCall<T>(
     | undefined
 
   if (!refresh && cached?.response_json) {
-    return {
-      data: JSON.parse(cached.response_json) as T,
-      usage: {
-        provider: 'Semrush',
-        units: cached.credits_used ?? 0,
-        unitLabel: 'units',
-        estimatedUsd: estimateUsd(cached.credits_used ?? 0),
-        calls: 1,
-        cacheHits: 1,
-      },
-      cached: true,
+    try {
+      const parsed = schema.safeParse(JSON.parse(cached.response_json))
+      if (parsed.success) {
+        return {
+          data: parsed.data,
+          usage: {
+            provider: 'Semrush',
+            units: cached.credits_used ?? 0,
+            unitLabel: 'units',
+            estimatedUsd: estimateUsd(cached.credits_used ?? 0),
+            calls: 1,
+            cacheHits: 1,
+          },
+          cached: true,
+        }
+      }
+    } catch {
+      // A corrupt legacy row is a cache miss and will be replaced below.
     }
   }
 
-  const url = new URL(BASE_URL)
-  url.search = new URLSearchParams(requestParams).toString()
+  const url = new URL(transport.baseUrl ?? BASE_URL)
+  url.search = new URLSearchParams(
+    Object.entries(requestParams).map(([key, value]): [string, string] => [
+      key,
+      String(value),
+    ]),
+  ).toString()
 
-  const response = await fetch(url)
-  const text = await readBoundedResponseText(
-    response,
-    MAX_RESPONSE_BYTES,
-    'Semrush response',
-  )
-  if (!response.ok || text.startsWith('ERROR ::')) {
-    throw new Error(text || `Semrush request failed with ${response.status}.`)
+  const text = await providerRequestText({
+    provider: 'semrush',
+    operation: endpoint,
+    url,
+    fetch: transport.fetch ?? fetch,
+    maxResponseBytes: transport.maxResponseBytes ?? MAX_RESPONSE_BYTES,
+    timeoutMs: transport.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    retry: 'never',
+  })
+  if (text.startsWith('ERROR ::')) {
+    throw new ProviderError({
+      provider: 'semrush',
+      operation: endpoint,
+      code: 'remote-error',
+      message: 'Semrush rejected the report request.',
+    })
   }
 
   const rows = parseSemicolonCsv(text)
-  const data = map(rows)
+  const parsed = schema.safeParse(map(rows))
+  if (!parsed.success) {
+    throw new ProviderError({
+      provider: 'semrush',
+      operation: endpoint,
+      code: 'invalid-response',
+      message:
+        'Semrush returned data that does not match the expected response schema.',
+      cause: parsed.error,
+    })
+  }
+  const data = parsed.data
   const credits = Math.max(0, rows.length - 1) * creditsPerLine
-  const requestJson = JSON.stringify(requestParams)
+  const requestJson = JSON.stringify(safeParams)
   const responseJson = JSON.stringify(data)
 
   db.prepare(

@@ -55,12 +55,16 @@ export const reportNextStepIntros: Record<string, string> = {
     'Start with terms that combine useful estimated demand with a clear fit for the site. Compare them with first-party search evidence and inspect the current results before creating a page, expanding a template or promising an outcome.',
   'keyword-opportunities':
     'Start with the Search Console evidence and the report section that supplied each candidate. Use provider estimates as added context, inspect the current results, and audit representative pages before creating content or expanding a template.',
+  'keyword-research':
+    'Review source overlap and metric states, then inspect the current results for a short list. Compare relevant terms with first-party evidence and validate representative templates before adding pages at scale.',
   'link-recovery':
     "Inspect the broken URL's search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.",
   'link-evidence':
     'Open a selected referring page and confirm the link is still present before making a decision. Use a fresh export or Bing report later when you need to check whether the observed set changed.',
   'server-log-analysis':
     'Check important crawler errors against the original log and current server configuration. Confirm crawler identity separately when the decision depends on more than the observed user-agent string.',
+  'serp-results':
+    'Open representative ranking pages and confirm the query intent. Match market, device, query and observation time before comparing the exact snapshot with first-party average position or a later check.',
   'crawl-history':
     'Choose snapshots with the date and crawl scope needed for the decision. Open one report for a focused investigation or compare two compatible runs when you need evidence of change.',
   'crawler-rules':

@@ -632,6 +632,21 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Bounded first-party opportunity sections, optional typed provider evidence, discrepancy findings, and programmatic SEO validation prompts.',
   },
+  'keyword-research': {
+    name: 'Keyword research',
+    description:
+      'Expand a small seed list into market-specific keyword ideas with source, metric, coverage, and cost evidence.',
+    useWhen: [
+      'You need candidate terms beyond the queries already visible in Search Console.',
+      'You want to compare several bounded provider discovery methods before deeper result-page research.',
+    ],
+    avoidWhen: [
+      'You need exact current rankings or pages in the live results.',
+      'You plan to turn every discovered term into a page without checking intent or fit.',
+    ],
+    outcome:
+      'A bounded keyword set with discovery sources, provider estimates, evidence states, and research follow-ups.',
+  },
   'query-clusters': {
     name: 'Search query clusters',
     description:
@@ -719,6 +734,21 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A ranked URL list with query, click, impression, and position evidence.',
+  },
+  'serp-results': {
+    name: 'Live search results',
+    description:
+      'Inspect one location and device-specific search snapshot with exact organic ranks, domains, result features, and provider evidence.',
+    useWhen: [
+      'A keyword needs a current result-page review before content or targeting decisions.',
+      'You need exact snapshot ranks kept separate from Search Console average position.',
+    ],
+    avoidWhen: [
+      'You need rank history or scheduled tracking across many keywords.',
+      'You want a domain strength, content quality, or ranking feasibility verdict.',
+    ],
+    outcome:
+      'A bounded result snapshot with exact retained ranks, domain repetition, query corrections, features, cost, and coverage.',
   },
   'segment-impact': {
     name: 'Search impact by segment',

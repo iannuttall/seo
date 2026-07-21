@@ -202,6 +202,28 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'striking-distance', reason: 'Shows the full query rows.' },
     ],
   },
+  'keyword-research': {
+    readOrder: [
+      'dataStatus, summary, market, caveats, and requested source count',
+      'evidence coverage, warnings, cache status, request, and cost',
+      'each keyword sources array and provider value state before using a metric',
+      'analysis trend methodology and findings evidenceRef',
+      'nextSteps for intent, result-page, and first-party verification',
+    ],
+    doNotClaim: [
+      'Appearing in several discovery sources is not independent confirmation of demand, shared intent, or ranking feasibility.',
+      'Provider metrics are estimates, a missing value is not zero, and an observed zero does not prove no demand.',
+      'A discovered keyword does not justify a new page or programmatic template without content-fit and result-page review.',
+    ],
+    verify:
+      'Check shared intent in a live result snapshot and compare relevant terms with first-party evidence before choosing work.',
+    related: [
+      { id: 'serp-results', reason: 'Shows the current result snapshot.' },
+      { id: 'keyword-metrics', reason: 'Reviews a supplied keyword list.' },
+      { id: 'query-clusters', reason: 'Groups first-party query themes.' },
+      { id: 'pseo-audit', reason: 'Validates repeated page templates.' },
+    ],
+  },
   'query-clusters': {
     readOrder: [
       'summary cluster and query counts, clicks, impressions, threshold, limit, and brand filtering',
@@ -317,6 +339,31 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'striking-distance', reason: 'Covers positions 11-20.' },
       { id: 'quick-wins', reason: 'Ranks CTR opportunities.' },
       { id: 'page-opportunities', reason: 'Reviews one URL.' },
+    ],
+  },
+  'serp-results': {
+    readOrder: [
+      'dataStatus, summary, market, checkedAt, caveats, and corrected query state',
+      'evidence coverage, warnings, cache status, request, and cost',
+      'organicResults rankAbsolute, rankGroup, page, domain, URL, title, and snippet evidence',
+      'domains and findings for repeated domains or query correction',
+      'nextSteps for page, intent, and repeat-snapshot review',
+    ],
+    doNotClaim: [
+      'One snapshot is not rank history, and it does not establish a stable or personalized ranking.',
+      'Repeated domains and result features do not prove authority, quality, weakness, or site-specific ranking feasibility.',
+      'Provider result counts are estimates, and a bounded depth is not a complete result inventory.',
+    ],
+    verify:
+      'Open the retained pages, confirm the query intent, and repeat the same market and device snapshot when stability matters.',
+    related: [
+      { id: 'keyword-research', reason: 'Discovers candidate terms.' },
+      { id: 'keyword-metrics', reason: 'Adds independent estimates.' },
+      {
+        id: 'striking-distance',
+        reason: 'Shows first-party position evidence.',
+      },
+      { id: 'content-optimization', reason: 'Builds a page brief.' },
     ],
   },
   'segment-impact': {

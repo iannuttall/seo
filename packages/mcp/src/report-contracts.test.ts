@@ -161,6 +161,86 @@ test('keyword metrics bounds market and keyword acquisition inputs', () => {
   }
 })
 
+test('keyword research bounds seeds, sources, market, and retained rows', () => {
+  const schema = reportSchema('keyword-research')
+  assert.equal(
+    schema.safeParse({
+      seeds: ['local seo', 'seo tools'],
+      sources: ['ideas', 'suggestions'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { name: 'London,England,United Kingdom' },
+      limit: 100,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { seeds: [], countryCode: 'GB', languageCode: 'en' },
+    {
+      seeds: ['one', 'two', 'three', 'four', 'five', 'six'],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      seeds: ['seed'],
+      sources: [],
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      seeds: ['seed'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      limit: 101,
+    },
+    {
+      seeds: ['one', 'two', 'three'],
+      sources: ['related', 'suggestions'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      limit: 5,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
+test('SERP results bounds query, market, device, and depth', () => {
+  const schema = reportSchema('serp-results')
+  assert.equal(
+    schema.safeParse({
+      keyword: 'local seo',
+      countryCode: 'GB',
+      languageCode: 'en',
+      device: 'mobile',
+      depth: 100,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { keyword: '', countryCode: 'GB', languageCode: 'en' },
+    {
+      keyword: 'one two three four five six seven eight nine ten eleven',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    {
+      keyword: 'query',
+      countryCode: 'GB',
+      languageCode: 'en',
+      depth: 101,
+    },
+    {
+      keyword: 'query',
+      countryCode: 'GB',
+      languageCode: 'en',
+      device: 'tablet',
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('keyword opportunities keeps external acquisition explicit and bounded', () => {
   const schema = reportSchema('keyword-opportunities')
   assert.equal(

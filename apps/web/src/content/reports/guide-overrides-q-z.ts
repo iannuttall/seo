@@ -256,6 +256,48 @@ export const reportGuideOverridesQZ: Partial<
       supportingKeywords: ['seo report', 'search console queries'],
     },
   },
+  'serp-results': {
+    name: 'Inspect live search results',
+    summary:
+      'Inspect one bounded search snapshot with exact retained organic ranks, market context, result features, provider coverage, cache status, and request cost.',
+    inputs: [
+      {
+        label: 'Keyword and search market',
+        role: 'Set one query, country, language, optional location, device, and a result depth of at most 100.',
+      },
+      {
+        label: 'Connected result provider',
+        source: 'serp-provider-results',
+        role: 'Returns the observed result page, organic rows, result features, corrected query, coverage, and acquisition evidence.',
+      },
+    ],
+    checks: [
+      'Validates and sorts retained organic rows by exact absolute rank with stable tie-breakers.',
+      'Keeps the effective query, observation time, market, result features, invalid rows, provider limits, and omitted depth visible.',
+      'Summarises repeated domains as a property of this snapshot without turning frequency into an authority or feasibility score.',
+    ],
+    returns: [
+      'Exact retained organic ranks with URLs, domains, titles, snippets, result features, and corrected-query evidence where observed.',
+      'A bounded domain summary plus provider, market, coverage, cache, cost, warning, limit, and caveat evidence.',
+    ],
+    alternatives: [
+      {
+        when: 'You need independent demand estimates or related candidates rather than the current result page.',
+        reportId: 'keyword-research',
+        doInstead:
+          'Run keyword research to build a bounded shortlist, then inspect result snapshots only for the candidates that deserve an intent review.',
+      },
+      {
+        when: 'You need ranking history or a definitive explanation for why one page outranks another.',
+        doInstead:
+          'Use repeated, comparable snapshots for rank history and inspect the ranking pages directly. One snapshot cannot prove causation, domain strength, content quality, or future ranking feasibility.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'SERP analysis',
+      supportingKeywords: ['SERP checker', 'search intent analysis'],
+    },
+  },
   'striking-distance': {
     name: 'Find striking-distance opportunities',
     summary:

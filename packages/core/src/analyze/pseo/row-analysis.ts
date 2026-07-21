@@ -175,12 +175,20 @@ function entityFitForRows(
       matchedQueries += 1
       matchedImpressions += row.impressions
     } else {
-      weakExamples.push({
+      const example = {
         url: row.page,
         query: row.query,
         pathTerms: pathTerms.slice(0, 6),
         impressions: row.impressions,
-      })
+      }
+      weakExamples.push(example)
+      weakExamples.sort(
+        (left, right) =>
+          right.impressions - left.impressions ||
+          comparePseoText(left.query, right.query) ||
+          comparePseoText(left.url, right.url),
+      )
+      if (weakExamples.length > 5) weakExamples.pop()
     }
   }
   return {
@@ -191,14 +199,7 @@ function entityFitForRows(
     impressionShare: checkedImpressions
       ? matchedImpressions / checkedImpressions
       : 0,
-    weakExamples: weakExamples
-      .sort(
-        (left, right) =>
-          right.impressions - left.impressions ||
-          comparePseoText(left.query, right.query) ||
-          comparePseoText(left.url, right.url),
-      )
-      .slice(0, 5),
+    weakExamples,
   }
 }
 

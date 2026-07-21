@@ -37,21 +37,34 @@ const priceComponentSchema = z
   })
   .passthrough()
 
+const normalPriorityPriceSchema = z
+  .object({
+    priority_normal: z.array(priceComponentSchema).max(20).optional(),
+  })
+  .passthrough()
+
+const livePriceSchema = z
+  .object({
+    live: normalPriorityPriceSchema.optional(),
+  })
+  .passthrough()
+
 const userDataPriceSchema = z
   .object({
     dataforseo_labs: z
       .object({
-        keyword_overview: z
+        keyword_overview: livePriceSchema.optional(),
+        keyword_ideas: livePriceSchema.optional(),
+        keyword_suggestions: livePriceSchema.optional(),
+        related_keywords: livePriceSchema.optional(),
+      })
+      .passthrough()
+      .optional(),
+    serp: z
+      .object({
+        live: z
           .object({
-            live: z
-              .object({
-                priority_normal: z
-                  .array(priceComponentSchema)
-                  .max(20)
-                  .optional(),
-              })
-              .passthrough()
-              .optional(),
+            advanced: normalPriorityPriceSchema.optional(),
           })
           .passthrough()
           .optional(),

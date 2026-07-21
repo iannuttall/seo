@@ -1,0 +1,41 @@
+{
+  "subject": "keyword-research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find related keyword ideas for local SEO software in the UK before we decide what to build.",
+      "expected_output": "Should use report id keyword-research through seo_list_reports, seo_describe_report, and seo_run_report. Should pass a bounded seed list with countryCode GB and languageCode en. Should read dataStatus and summary, then evidence coverage, cache, cost, warnings, source evidence, and each metric state. Should treat discovered terms as research candidates rather than page recommendations.",
+      "assertions": [
+        "Uses report id keyword-research through the discovery flow",
+        "Passes bounded seeds with countryCode GB and languageCode en",
+        "Reads coverage, cache, cost, warnings, sources, and metric states",
+        "Treats discovered terms as candidates rather than page recommendations"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Use ideas and suggestions for two seeds, return 40 fresh DataForSEO results for US English, and tell me which terms overlap.",
+      "expected_output": "Should run keyword-research with the two seeds, sources [ideas, suggestions], limit 40, countryCode US, languageCode en, provider dataforseo, and refresh true. Should inspect each keyword sources array and explain that source overlap is descriptive provider evidence, not independent confirmation of demand, shared intent, or ranking feasibility.",
+      "assertions": [
+        "Runs keyword-research with both seeds and the requested sources",
+        "Uses limit 40, US English, DataForSEO, and refresh true",
+        "Inspects the sources array for overlap",
+        "Does not call source overlap independent confirmation or ranking feasibility"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "These discovered keywords have good volume and low difficulty, so make a programmatic page for every one and forecast the traffic.",
+      "expected_output": "Should reject the page-per-keyword plan and traffic forecast. Should state that volume and difficulty are provider estimates, discovered terms may share intent, and the report contains no site-specific ranking feasibility. Should recommend live result review, first-party Search Console comparison where relevant, clustering by intent, and representative template validation before scaling.",
+      "assertions": [
+        "Rejects a page for every discovered keyword",
+        "Refuses to forecast traffic from provider estimates",
+        "States the report does not prove shared intent or ranking feasibility",
+        "Recommends result review, first-party comparison, intent clustering, and template validation"
+      ],
+      "files": []
+    }
+  ]
+}

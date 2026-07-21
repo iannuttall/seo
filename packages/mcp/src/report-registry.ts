@@ -79,7 +79,12 @@ const reportGroups: readonly ReportGroup[] = [
   {
     category: 'opportunities',
     register: registerKeywordTools,
-    names: ['seo_keyword_metrics', 'seo_keyword_opportunities'],
+    names: [
+      'seo_keyword_metrics',
+      'seo_keyword_opportunities',
+      'seo_keyword_research',
+      'seo_serp_results',
+    ],
   },
   {
     category: 'ai-search',
@@ -162,7 +167,7 @@ const reportGroups: readonly ReportGroup[] = [
   {
     category: 'reporting',
     register: registerPseoTools,
-    names: ['seo_pseo_audit'],
+    names: ['seo_pseo_audit', 'seo_pseo_opportunities'],
   },
   {
     category: 'workflows',

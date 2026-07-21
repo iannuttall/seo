@@ -225,6 +225,89 @@ function indexedPercentile(
   return samples[sourceIndex]?.ctr
 }
 
+function compareIndexedSample(
+  left: IndexedUrlSample,
+  right: IndexedUrlSample,
+): number {
+  return (
+    left.ctr - right.ctr ||
+    (left.key < right.key ? -1 : left.key > right.key ? 1 : 0)
+  )
+}
+
+function adjustedIndexedPercentile(input: {
+  samples: IndexedUrlSample[]
+  indexes: ReadonlyMap<string, number>
+  replacements: IndexedUrlSample[]
+  affectedKeys: ReadonlySet<string>
+  percentileValue: number
+}): number | undefined {
+  const removedIndexes = [...input.affectedKeys]
+    .map((key) => input.indexes.get(key))
+    .filter((index): index is number => index !== undefined)
+    .sort((left, right) => left - right)
+  const length =
+    input.samples.length - removedIndexes.length + input.replacements.length
+  if (length === 0) return undefined
+
+  const rank = Math.min(
+    length - 1,
+    Math.max(0, Math.ceil((input.percentileValue / 100) * length) - 1),
+  )
+  const displacement = removedIndexes.length + input.replacements.length + 1
+  const start = Math.max(0, rank - displacement)
+  const end = Math.min(input.samples.length, rank + displacement + 1)
+  const removedBefore = removedIndexes.filter((index) => index < start).length
+  const candidates = [
+    ...input.samples
+      .slice(start, end)
+      .filter((sample) => !input.affectedKeys.has(sample.key)),
+    ...input.replacements,
+  ].sort(compareIndexedSample)
+  const candidateRank = rank - (start - removedBefore)
+  return candidates[candidateRank]?.ctr
+}
+
+function finalizeIndexedBenchmark(input: {
+  position: number
+  rows: number
+  impressions: number
+  qualifiedImpressions: number
+  urlSamples: number
+  positiveUrlSamples: number
+  rawSiteCtr?: number
+  sourceSuffix: string
+  samplePopulation: PositionBenchmark['samplePopulation']
+  fallbackSource?: string
+}): PositionBenchmark {
+  const fallbackCtr = expectedCtrForPosition(input.position)
+  const floorCtr = fallbackCtr * SITE_BENCHMARK_FLOOR_MULTIPLIER
+  const capCtr = fallbackCtr * SITE_BENCHMARK_CAP_MULTIPLIER
+  const hasSiteCtr = input.rawSiteCtr !== undefined
+  const ctr = hasSiteCtr
+    ? Math.max(floorCtr, Math.min(input.rawSiteCtr ?? 0, capCtr))
+    : fallbackCtr
+  const adjustment =
+    hasSiteCtr && (input.rawSiteCtr ?? 0) < floorCtr
+      ? '_floored'
+      : hasSiteCtr && (input.rawSiteCtr ?? 0) > capCtr
+        ? '_capped'
+        : ''
+  const source = hasSiteCtr
+    ? `site_gsc_position_bucket_robust_p75${input.samplePopulation === 'all_qualified_url_samples' ? '_all_samples' : ''}${input.sourceSuffix}${adjustment}`
+    : (input.fallbackSource ?? 'default_position_curve')
+  return {
+    ctr: Number(ctr.toFixed(4)),
+    source,
+    samplePopulation: input.samplePopulation,
+    rows: input.rows,
+    impressions: input.impressions,
+    qualifiedImpressions: input.qualifiedImpressions,
+    urlSamples: input.urlSamples,
+    positiveUrlSamples: input.positiveUrlSamples,
+  }
+}
+
 function indexedBucketBenchmark(input: {
   bucket: IndexedPositionBucket
   position: number
@@ -268,32 +351,124 @@ function indexedBucketBenchmark(input: {
           75,
         )
     : undefined
-  const fallbackCtr = expectedCtrForPosition(input.position)
-  const floorCtr = fallbackCtr * SITE_BENCHMARK_FLOOR_MULTIPLIER
-  const capCtr = fallbackCtr * SITE_BENCHMARK_CAP_MULTIPLIER
-  const hasSiteCtr = rawSiteCtr !== undefined
-  const ctr = hasSiteCtr
-    ? Math.max(floorCtr, Math.min(rawSiteCtr, capCtr))
-    : fallbackCtr
-  const adjustment =
-    hasSiteCtr && rawSiteCtr < floorCtr
-      ? '_floored'
-      : hasSiteCtr && rawSiteCtr > capCtr
-        ? '_capped'
-        : ''
-  const source = hasSiteCtr
-    ? `site_gsc_position_bucket_robust_p75${samplePopulation === 'all_qualified_url_samples' ? '_all_samples' : ''}${input.sourceSuffix}${adjustment}`
-    : (input.fallbackSource ?? 'default_position_curve')
-  return {
-    ctr: Number(ctr.toFixed(4)),
-    source,
-    samplePopulation,
+  return finalizeIndexedBenchmark({
+    position: input.position,
     rows,
     impressions,
     qualifiedImpressions,
     urlSamples,
     positiveUrlSamples,
+    rawSiteCtr,
+    sourceSuffix: input.sourceSuffix,
+    samplePopulation,
+    fallbackSource: input.fallbackSource,
+  })
+}
+
+function indexedAggregateBucketBenchmark(input: {
+  bucket: IndexedPositionBucket
+  position: number
+  excludedRows: OpportunityBenchmarkRow[]
+  sourceSuffix: string
+  samplePopulation?: PositionBenchmark['samplePopulation']
+  fallbackSource?: string
+}): PositionBenchmark {
+  const excludedByKey = new Map<
+    string,
+    { clicks: number; impressions: number; rows: number }
+  >()
+  let excludedImpressions = 0
+  for (const row of input.excludedRows) {
+    excludedImpressions += row.impressions
+    const rawKey =
+      row.keys?.[1] || `${row.keys?.[0] ?? 'query'}:${row.position}`
+    const key = row.keys?.[1] ? normalizePageUrl(rawKey) : rawKey
+    const current = excludedByKey.get(key) ?? {
+      clicks: 0,
+      impressions: 0,
+      rows: 0,
+    }
+    current.clicks += row.clicks
+    current.impressions += row.impressions
+    current.rows += 1
+    excludedByKey.set(key, current)
   }
+
+  const affectedKeys = new Set(excludedByKey.keys())
+  const qualifiedReplacements: IndexedUrlSample[] = []
+  const positiveReplacements: IndexedUrlSample[] = []
+  let removedQualified = 0
+  let removedPositive = 0
+  let qualifiedImpressions = input.bucket.qualifiedImpressions
+
+  for (const [key, excluded] of excludedByKey) {
+    const original = input.bucket.byUrl.get(key)
+    if (!original) continue
+    const originalQualified =
+      original.impressions >= MIN_BENCHMARK_URL_IMPRESSIONS
+    if (originalQualified) {
+      removedQualified += 1
+      qualifiedImpressions -= original.impressions
+      if (original.ctr > 0) removedPositive += 1
+    }
+    const impressions = Math.max(0, original.impressions - excluded.impressions)
+    const clicks = Math.max(0, original.clicks - excluded.clicks)
+    if (impressions < MIN_BENCHMARK_URL_IMPRESSIONS) continue
+    const replacement = {
+      key,
+      clicks,
+      impressions,
+      rows: Math.max(0, original.rows - excluded.rows),
+      ctr: impressions ? clicks / impressions : 0,
+    }
+    qualifiedReplacements.push(replacement)
+    qualifiedImpressions += impressions
+    if (replacement.ctr > 0) positiveReplacements.push(replacement)
+  }
+
+  const rows = input.bucket.rows - input.excludedRows.length
+  const impressions = input.bucket.impressions - excludedImpressions
+  const urlSamples =
+    input.bucket.qualified.length -
+    removedQualified +
+    qualifiedReplacements.length
+  const positiveUrlSamples =
+    input.bucket.positive.length - removedPositive + positiveReplacements.length
+  const hasEnoughSiteData =
+    qualifiedImpressions >= MIN_BENCHMARK_IMPRESSIONS &&
+    urlSamples >= MIN_BENCHMARK_URL_SAMPLES &&
+    positiveUrlSamples >= MIN_POSITIVE_URL_SAMPLES
+  const samplePopulation = input.samplePopulation ?? 'positive_url_samples'
+  const rawSiteCtr = hasEnoughSiteData
+    ? samplePopulation === 'all_qualified_url_samples'
+      ? adjustedIndexedPercentile({
+          samples: input.bucket.qualified,
+          indexes: input.bucket.qualifiedIndexes,
+          replacements: qualifiedReplacements,
+          affectedKeys,
+          percentileValue: 75,
+        })
+      : adjustedIndexedPercentile({
+          samples: input.bucket.positive,
+          indexes: input.bucket.positiveIndexes,
+          replacements: positiveReplacements,
+          affectedKeys,
+          percentileValue: 75,
+        })
+    : undefined
+
+  return finalizeIndexedBenchmark({
+    position: input.position,
+    rows,
+    impressions,
+    qualifiedImpressions,
+    urlSamples,
+    positiveUrlSamples,
+    rawSiteCtr,
+    sourceSuffix: input.sourceSuffix,
+    samplePopulation,
+    fallbackSource: input.fallbackSource,
+  })
 }
 
 function smoothMonotonicBenchmarks(
@@ -395,6 +570,36 @@ export function createCtrBenchmarkContext(
     )
   }
 
+  function benchmarkForAggregate(
+    row: OpportunityBenchmarkRow,
+    excludedRows: OpportunityBenchmarkRow[],
+  ): PositionBenchmark {
+    const position = roundedPosition(row.position)
+    const excludedByPosition = new Map<number, OpportunityBenchmarkRow[]>()
+    for (const excluded of excludedRows) {
+      const excludedPosition = roundedPosition(excluded.position)
+      const positionRows = excludedByPosition.get(excludedPosition) ?? []
+      positionRows.push(excluded)
+      excludedByPosition.set(excludedPosition, positionRows)
+    }
+    const rowRaw: Record<number, PositionBenchmark> = {}
+    for (const bucketPosition of Object.keys(CTR_BASELINE).map(Number)) {
+      rowRaw[bucketPosition] = indexedAggregateBucketBenchmark({
+        bucket: indexedBuckets.get(bucketPosition) ?? emptyIndexedBucket,
+        position: bucketPosition,
+        excludedRows: excludedByPosition.get(bucketPosition) ?? [],
+        sourceSuffix: excludedRows.length ? '_leave_group_out' : '',
+        samplePopulation: options.samplePopulation,
+        fallbackSource: options.fallbackSource,
+      })
+    }
+    return (
+      smoothMonotonicBenchmarks(rowRaw)[String(position)] ??
+      byPosition[String(position)] ??
+      bucketBenchmark({ rows: [], position })
+    )
+  }
+
   function benchmarkForUrl(row: OpportunityBenchmarkRow): PositionBenchmark {
     diagnostics.urlLookups += 1
     const position = roundedPosition(row.position)
@@ -449,11 +654,7 @@ export function createCtrBenchmarkContext(
       row: OpportunityBenchmarkRow,
       excludedRows: OpportunityBenchmarkRow[] = [],
     ): PositionBenchmark {
-      return benchmarkForRow(
-        row,
-        excludedRows,
-        excludedRows.length ? '_leave_group_out' : undefined,
-      )
+      return benchmarkForAggregate(row, excludedRows)
     },
     diagnostics,
   }

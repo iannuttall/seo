@@ -252,6 +252,110 @@ export const opportunityReports = [
     sources: ['search-analytics', 'keyword-provider-metrics'],
   },
   {
+    id: 'keyword-research',
+    name: 'Keyword research',
+    category: 'opportunities',
+    summary:
+      'Expand a small seed list into market-specific keyword ideas while keeping discovery sources, missing metrics, coverage, cache status, and request cost visible.',
+    question:
+      'Which related terms deserve an intent and result-page review before they enter a content plan?',
+    useWhen: [
+      'You need candidate terms beyond the queries already visible in Search Console.',
+      'You want several bounded discovery methods to feed a deeper research shortlist.',
+    ],
+    avoidWhen: [
+      'You plan to publish one page for every returned keyword without checking shared intent or page fit.',
+      'You need exact current rankings or a scheduled rank history.',
+    ],
+    evidence: [
+      'A connected keyword provider, explicit seed and discovery-source pairs, the selected market, typed metrics, provider coverage, cache status, and local request cost.',
+    ],
+    methodology: [
+      'Normalises at most five seeds, bounds provider fanout before acquisition, combines selected discovery methods, and deduplicates ideas while retaining every observed seed and source pair.',
+      'Keeps zero separate from missing or invalid estimates and labels trend changes only when six consecutive monthly values exist.',
+    ],
+    exampleParams: {
+      seeds: ['local seo software', 'local search tools'],
+      sources: ['ideas', 'suggestions'],
+      countryCode: 'US',
+      languageCode: 'en',
+      limit: 40,
+    },
+    interpretation: [
+      'Treat source overlap, volume, trend, and difficulty as ways to choose what to inspect next. They do not prove that two terms share intent or that the site can rank for them.',
+    ],
+    caveats: [
+      'Discovery methods use different expansion rules. Returned terms and metrics are provider evidence, not a complete market inventory, traffic forecast, or page recommendation.',
+    ],
+    nextSteps: [
+      'Inspect a current result snapshot for a short list in the same market.',
+      'Compare relevant candidates with Search Console evidence and validate representative programmatic templates before scaling.',
+    ],
+    related: [
+      'serp-results',
+      'keyword-metrics',
+      'query-clusters',
+      'pseo-audit',
+    ],
+    sources: ['keyword-provider-discovery'],
+  },
+  {
+    id: 'pseo-opportunities',
+    name: 'Programmatic SEO opportunities',
+    category: 'opportunities',
+    summary:
+      'Join observed template and query-cluster evidence with optional keyword discovery, live results, competitor URL patterns, costs, and data-source research briefs.',
+    question:
+      'Which existing template extensions or possible new page systems deserve evidence-led research?',
+    useWhen: [
+      'Repeated templates already earn impressions and need a careful expansion plan.',
+      'Query clusters suggest demand that may not fit an observed template.',
+      'Live result pages and competitor URL patterns would change the decision.',
+    ],
+    avoidWhen: [
+      'You want one generated page per keyword without checking shared intent or data quality.',
+      'You only need to audit the current technical and index state of existing pages.',
+    ],
+    evidence: [
+      'Bounded programmatic SEO audit and Search Console query-cluster evidence, plus optional provider discovery and live result snapshots for an explicit market.',
+    ],
+    methodology: [
+      'Selects at most five seeds from search-evidenced templates and retained query clusters, then keeps discovered candidates linked to those first-party references.',
+      'Separates existing-query evidence, observed-template expansion, and new-template research before selecting at most three live result checks.',
+      'Groups repeated domains and URL patterns from the retained snapshots without assigning authority, quality, or ranking-feasibility scores.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      includeExternal: false,
+      templateLimit: 10,
+      clusterLimit: 10,
+    },
+    interpretation: [
+      'Read the first-party templates and clusters first. Use provider metrics and live result patterns as added context, then complete the data-source brief before proposing any generated inventory.',
+    ],
+    caveats: [
+      'Search Console is bounded and omits anonymised queries. Provider metrics are estimates, while live results describe one market, device, and observation time.',
+      'A repeated competitor URL pattern is not proof of page quality, authority, reusable data, or a template another site should reproduce.',
+    ],
+    nextSteps: [
+      'Rerun with explicit external market and cost limits only when independent discovery would change the decision.',
+      'Inspect representative ranking pages and validate identifiers, fields, coverage, freshness, rights, missing-value rules, crawl controls, and internal links.',
+      'Run the programmatic SEO audit with bounded crawl and index samples before changing a generator.',
+    ],
+    related: [
+      'pseo-audit',
+      'keyword-research',
+      'serp-results',
+      'query-clusters',
+    ],
+    sources: [
+      'search-analytics',
+      'sitemaps',
+      'keyword-provider-discovery',
+      'serp-provider-results',
+    ],
+  },
+  {
     id: 'query-clusters',
     name: 'Query clusters',
     category: 'opportunities',
@@ -333,5 +437,52 @@ export const opportunityReports = [
     ],
     related: ['content-optimization', 'audit-page', 'measure-change'],
     sources: ['search-analytics'],
+  },
+  {
+    id: 'serp-results',
+    name: 'Live search results',
+    category: 'opportunities',
+    summary:
+      'Inspect one location and device-specific search snapshot with exact retained organic ranks, domains, result features, coverage, cache status, and request cost.',
+    question:
+      'What does the current bounded result page show for this query and market?',
+    useWhen: [
+      'A keyword needs a current intent and result-page review before a content decision.',
+      'You need exact snapshot ranks kept separate from Search Console average position.',
+    ],
+    avoidWhen: [
+      'You need scheduled rank history across many terms.',
+      'You want domain strength, content quality, or site-specific ranking feasibility inferred from one result page.',
+    ],
+    evidence: [
+      'One provider snapshot with keyword, effective query, observation time, search market, exact organic ranks, URLs, titles, snippets, result features, coverage, cache status, and local request cost.',
+    ],
+    methodology: [
+      'Requests at most 100 results for one bounded query, validates each organic row, sorts exact absolute ranks consistently, and summarizes repeated domains without assigning a strength score.',
+    ],
+    exampleParams: {
+      keyword: 'local seo software',
+      countryCode: 'US',
+      languageCode: 'en',
+      device: 'mobile',
+      depth: 20,
+    },
+    interpretation: [
+      'Review the retained pages, result types, and any corrected query. Repeated domains describe this snapshot; they do not prove authority or that another site cannot compete.',
+    ],
+    caveats: [
+      'Results can change between checks and may differ from signed-in or personalised searches. Provider result counts are estimates, and the requested depth is not a complete inventory.',
+    ],
+    nextSteps: [
+      'Open representative ranking pages and confirm the dominant intent before choosing an existing or new target page.',
+      'Match query, market, device, and date before comparing the snapshot with first-party position evidence.',
+    ],
+    related: [
+      'keyword-research',
+      'keyword-metrics',
+      'striking-distance',
+      'content-optimization',
+    ],
+    sources: ['serp-provider-results'],
   },
 ] as const satisfies readonly ReportEditorial[]

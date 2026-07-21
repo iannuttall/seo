@@ -115,6 +115,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
         'seo reports run keyword-opportunities --params \'{"site":"sc-domain:example.com","days":90}\' --json',
       note: 'Build a first-party opportunity queue without making a paid provider request.',
     },
+    'keyword-research': {
+      command:
+        'seo reports run keyword-research --params \'{"seeds":["local seo software"],"countryCode":"US","languageCode":"en"}\' --json',
+      note: 'Discover a bounded market-specific keyword shortlist.',
+    },
     'link-recovery': {
       command: 'seo link-recover --project example',
       note: 'Find broken or poorly redirected URLs with returned search value.',
@@ -160,6 +165,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo pseo audit --project example',
       note: 'Review repeated page templates with crawl and search evidence.',
     },
+    'pseo-opportunities': {
+      command:
+        'seo reports run pseo-opportunities --params \'{"site":"sc-domain:example.com","includeExternal":false}\' --json',
+      note: 'Research template expansion without making paid calls by default.',
+    },
     'query-clusters': {
       command: 'seo query-cluster --project example',
       note: 'Group returned Search Console queries into repeatable themes.',
@@ -183,6 +193,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'segment-impact': {
       command: 'seo segment-impact --project example',
       note: 'Compare matched periods by page, query, country, or device.',
+    },
+    'serp-results': {
+      command:
+        'seo reports run serp-results --params \'{"keyword":"local seo software","countryCode":"US","languageCode":"en","device":"mobile"}\' --json',
+      note: 'Inspect one bounded location and device-specific result snapshot.',
     },
     'seo-to-ai-query': {
       command: 'seo seo-to-ai-query --project example',

@@ -1,0 +1,41 @@
+{
+  "subject": "serp-results",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me the current mobile Google results for local SEO software in London.",
+      "expected_output": "Should use report id serp-results through seo_list_reports, seo_describe_report, and seo_run_report. Should pass one bounded keyword, a London location, device mobile, and the required country and language fields from the described schema. Should read dataStatus, summary, checkedAt, market, coverage, cache, cost, warnings, and exact organic ranks before describing the snapshot.",
+      "assertions": [
+        "Uses report id serp-results through the discovery flow",
+        "Passes one keyword with London and mobile market context",
+        "Reads checkedAt, coverage, cache, cost, warnings, and exact ranks",
+        "Describes the result as a snapshot"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Two results from the same domain appear in the top ten. That proves the domain is strong and we cannot compete, right?",
+      "expected_output": "Should reject both conclusions. Should say repeated-domain evidence only describes one bounded market and device snapshot. It does not prove authority, content quality, weakness, or site-specific ranking feasibility. Should recommend reviewing the retained pages and intent, adding separate domain or backlink evidence when available, and repeating the same snapshot if stability matters.",
+      "assertions": [
+        "Rejects strength and cannot-compete conclusions",
+        "Treats repeated domains as descriptive snapshot evidence",
+        "Does not infer authority, quality, or ranking feasibility",
+        "Recommends page, intent, separate authority evidence, and repeat-snapshot review"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Search Console says average position 8 but this report shows rank 3. Which rank is the real one?",
+      "expected_output": "Should keep the measurements separate. Should explain that Search Console average position aggregates observed impressions across time and contexts, while serp-results is one exact provider snapshot for a stated location, language, device, and time. Should not call either value universally real or use one to invalidate the other. Should recommend matching market, device, date, and query before comparing them.",
+      "assertions": [
+        "Keeps Search Console average position separate from snapshot rank",
+        "Explains the different source semantics",
+        "Does not declare one value universally real",
+        "Recommends matching market, device, date, and query"
+      ],
+      "files": []
+    }
+  ]
+}

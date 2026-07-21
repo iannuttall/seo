@@ -1,4 +1,5 @@
 import { fetch } from 'undici'
+import type { ZodType } from 'zod'
 import {
   finalizeProviderSpend,
   type ProviderSpendNotice,
@@ -11,8 +12,11 @@ import {
   writeProviderCache,
 } from '../cache.js'
 import type {
+  KeywordDiscoverySource,
   ProviderCacheEvidence,
+  ProviderCapability,
   ProviderCostEvidence,
+  ProviderRequestContext,
   ProviderWarning,
 } from '../contracts.js'
 import type { ProviderSpendLimits } from '../cost-limits.js'
@@ -22,83 +26,68 @@ import {
   type DataForSeoUserDataResponse,
   dataForSeoUserDataResponseSchema,
 } from './account-schema.js'
+import type {
+  DataForSeoAccountSnapshot,
+  DataForSeoClientOptions,
+  DataForSeoKeywordDiscoveryRequest,
+  DataForSeoKeywordDiscoverySnapshot,
+  DataForSeoKeywordOverviewRequest,
+  DataForSeoKeywordOverviewSnapshot,
+  DataForSeoSerpRequest,
+  DataForSeoSerpSnapshot,
+} from './client-types.js'
 import type { DataForSeoCredentials } from './credentials.js'
 import { readDataForSeoCredentials } from './credentials.js'
+import {
+  type DataForSeoDiscoveryResponse,
+  dataForSeoDiscoveryResponseSchema,
+} from './discovery-schema.js'
+import {
+  type DataForSeoPaidResponse,
+  type DataForSeoUnitPrice,
+  dataForSeoPaidPost,
+} from './paid-request.js'
 import {
   type DataForSeoKeywordOverviewResponse,
   dataForSeoKeywordOverviewResponseSchema,
 } from './schema.js'
+import {
+  type DataForSeoSerpResponse,
+  dataForSeoSerpResponseSchema,
+} from './serp-schema.js'
 
 const DEFAULT_BASE_URL = 'https://api.dataforseo.com/'
 const USER_DATA_PATH = 'v3/appendix/user_data'
 const KEYWORD_OVERVIEW_PATH = 'v3/dataforseo_labs/google/keyword_overview/live'
+const KEYWORD_DISCOVERY_PATHS = {
+  ideas: 'v3/dataforseo_labs/google/keyword_ideas/live',
+  related: 'v3/dataforseo_labs/google/related_keywords/live',
+  suggestions: 'v3/dataforseo_labs/google/keyword_suggestions/live',
+} as const satisfies Record<KeywordDiscoverySource, string>
+const SERP_LIVE_ADVANCED_PATH = 'v3/serp/google/organic/live/advanced'
 const DEFAULT_TIMEOUT_MS = 15_000
 const MAX_USER_DATA_RESPONSE_BYTES = 5 * 1024 * 1024
 const DEFAULT_KEYWORD_OVERVIEW_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const DEFAULT_KEYWORD_DISCOVERY_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const DEFAULT_SERP_TTL_MS = 24 * 60 * 60 * 1000
 const DEFAULT_ACCOUNT_PRICING_TTL_MS = 5 * 60 * 1000
 const MAX_KEYWORDS_PER_OVERVIEW_REQUEST = 100
 const MAX_KEYWORD_CHARACTERS = 80
 const MAX_KEYWORD_WORDS = 10
+const MAX_DISCOVERY_SEEDS = 5
+const MAX_DISCOVERY_ROWS = 100
+const MAX_SERP_DEPTH = 100
 
-export type DataForSeoAccountSnapshot = {
-  provider: 'dataforseo'
-  login: string
-  timezone: string | null
-  balanceMicros: number | null
-  depositedMicros: number | null
-  accountDailySpendMicros: number | null
-  accountDailySpendPeriod: string | null
-  accountDailyLimitMicros: number | null
-  keywordOverviewPrice: {
-    perRequestMicros: number | null
-    perResultMicros: number | null
-  }
-  backlinksSubscriptionExpiresAt: string | null
-  aiMentionsSubscriptionExpiresAt: string | null
-  apiVersion: string | null
-  requestCostMicros: number
-  taskIds: string[]
-  observedAt: string
-}
-
-export type DataForSeoClientOptions = {
-  fetch?: ProviderFetch
-  credentials?: () =>
-    | DataForSeoCredentials
-    | undefined
-    | Promise<DataForSeoCredentials | undefined>
-  baseUrl?: string
-  timeoutMs?: number
-  maxResponseBytes?: number
-  now?: () => Date
-  database?: Database.Database
-  keywordOverviewTtlMs?: number
-  accountPricingTtlMs?: number
-  spendLimits?: ProviderSpendLimits
-}
-
-export type DataForSeoKeywordOverviewRequest = {
-  keywords: string[]
-  languageCode: string
-  locationCode?: number
-  locationName?: string
-  includeSerpInfo?: boolean
-  includeClickstreamData?: boolean
-  refresh?: boolean
-  projectId?: string
-  reportId: string
-  reportRunId: string
-}
-
-export type DataForSeoKeywordOverviewSnapshot = {
-  response: DataForSeoKeywordOverviewResponse
-  observedAt: string
-  returnedRows: number
-  cache: ProviderCacheEvidence
-  cost: ProviderCostEvidence
-  spendNotice: ProviderSpendNotice | null
-  warnings: ProviderWarning[]
-}
+export type {
+  DataForSeoAccountSnapshot,
+  DataForSeoClientOptions,
+  DataForSeoKeywordDiscoveryRequest,
+  DataForSeoKeywordDiscoverySnapshot,
+  DataForSeoKeywordOverviewRequest,
+  DataForSeoKeywordOverviewSnapshot,
+  DataForSeoSerpRequest,
+  DataForSeoSerpSnapshot,
+} from './client-types.js'
 
 type UserDataAccount = NonNullable<
   DataForSeoUserDataResponse['tasks'][number]['result']
@@ -109,25 +98,52 @@ function usdToMicros(value: number | undefined): number | null {
   return Math.round(value * 1_000_000)
 }
 
-function keywordOverviewPrice(
-  account: UserDataAccount,
-): DataForSeoAccountSnapshot['keywordOverviewPrice'] {
-  const components =
-    account.price?.dataforseo_labs?.keyword_overview?.live?.priority_normal ??
-    []
+function unitPrice(
+  components: Array<{ cost_type: string; cost: number }> | null | undefined,
+): DataForSeoUnitPrice {
+  const prices = components ?? []
   const total = (type: 'per_request' | 'per_result') => {
-    const matching = components.filter((item) => item.cost_type === type)
+    const matching = prices.filter((item) => item.cost_type === type)
     return matching.length
       ? matching.reduce(
           (sum, item) => sum + Math.round(item.cost * 1_000_000),
           0,
         )
-      : null
+      : prices.length
+        ? 0
+        : null
   }
   return {
     perRequestMicros: total('per_request'),
     perResultMicros: total('per_result'),
   }
+}
+
+function keywordOverviewPrice(account: UserDataAccount): DataForSeoUnitPrice {
+  return unitPrice(
+    account.price?.dataforseo_labs?.keyword_overview?.live?.priority_normal,
+  )
+}
+
+function keywordDiscoveryPrices(
+  account: UserDataAccount,
+): DataForSeoAccountSnapshot['keywordDiscoveryPrices'] {
+  return {
+    ideas: unitPrice(
+      account.price?.dataforseo_labs?.keyword_ideas?.live?.priority_normal,
+    ),
+    related: unitPrice(
+      account.price?.dataforseo_labs?.related_keywords?.live?.priority_normal,
+    ),
+    suggestions: unitPrice(
+      account.price?.dataforseo_labs?.keyword_suggestions?.live
+        ?.priority_normal,
+    ),
+  }
+}
+
+function serpLiveAdvancedPrice(account: UserDataAccount): DataForSeoUnitPrice {
+  return unitPrice(account.price?.serp?.live?.advanced?.priority_normal)
 }
 
 function taskErrorCode(
@@ -138,17 +154,13 @@ function taskErrorCode(
   return 'remote-error'
 }
 
-function responseTaskIds(
-  response: DataForSeoKeywordOverviewResponse,
-): string[] {
+function responseTaskIds(response: DataForSeoPaidResponse): string[] {
   return [
     ...new Set(response.tasks.flatMap((task) => (task.id ? [task.id] : []))),
   ].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
 }
 
-function responseCostMicros(
-  response: DataForSeoKeywordOverviewResponse,
-): number | null {
+function responseCostMicros(response: DataForSeoPaidResponse): number | null {
   if (response.cost !== undefined) return usdToMicros(response.cost)
   if (response.tasks.some((task) => task.cost === undefined)) return null
   return response.tasks.reduce(
@@ -158,6 +170,52 @@ function responseCostMicros(
 }
 
 function responseRows(response: DataForSeoKeywordOverviewResponse): number {
+  return response.tasks.reduce(
+    (taskTotal, task) =>
+      taskTotal +
+      (task.result ?? []).reduce(
+        (resultTotal, result) => resultTotal + (result.items?.length ?? 0),
+        0,
+      ),
+    0,
+  )
+}
+
+function discoveryRows(response: DataForSeoDiscoveryResponse): number {
+  return response.tasks.reduce(
+    (taskTotal, task) =>
+      taskTotal +
+      (task.result ?? []).reduce(
+        (resultTotal, result) => resultTotal + (result.items?.length ?? 0),
+        0,
+      ),
+    0,
+  )
+}
+
+function discoveryTotalRows(
+  response: DataForSeoDiscoveryResponse,
+): number | null {
+  const totals = response.tasks.flatMap((task) =>
+    (task.result ?? []).flatMap((result) =>
+      typeof result.total_count === 'number' ? [result.total_count] : [],
+    ),
+  )
+  return totals.length ? totals.reduce((sum, value) => sum + value, 0) : null
+}
+
+function discoveryNextCursor(
+  response: DataForSeoDiscoveryResponse,
+): string | null {
+  const cursors = response.tasks.flatMap((task) =>
+    (task.result ?? []).flatMap((result) =>
+      result.offset_token ? [result.offset_token] : [],
+    ),
+  )
+  return cursors.length === 1 ? (cursors[0] ?? null) : null
+}
+
+function serpRows(response: DataForSeoSerpResponse): number {
   return response.tasks.reduce(
     (taskTotal, task) =>
       taskTotal +
@@ -181,6 +239,8 @@ export class DataForSeoClient {
   private readonly now: () => Date
   private readonly database: Database.Database | undefined
   private readonly keywordOverviewTtlMs: number
+  private readonly keywordDiscoveryTtlMs: number
+  private readonly serpTtlMs: number
   private readonly accountPricingTtlMs: number
   private readonly spendLimits: ProviderSpendLimits | undefined
   private accountPricing:
@@ -208,6 +268,9 @@ export class DataForSeoClient {
     this.database = options.database
     this.keywordOverviewTtlMs =
       options.keywordOverviewTtlMs ?? DEFAULT_KEYWORD_OVERVIEW_TTL_MS
+    this.keywordDiscoveryTtlMs =
+      options.keywordDiscoveryTtlMs ?? DEFAULT_KEYWORD_DISCOVERY_TTL_MS
+    this.serpTtlMs = options.serpTtlMs ?? DEFAULT_SERP_TTL_MS
     this.accountPricingTtlMs =
       options.accountPricingTtlMs ?? DEFAULT_ACCOUNT_PRICING_TTL_MS
     this.spendLimits = options.spendLimits
@@ -307,6 +370,8 @@ export class DataForSeoClient {
       accountDailySpendPeriod: account.money?.statistics?.day?.value ?? null,
       accountDailyLimitMicros: usdToMicros(account.money?.limits?.day?.total),
       keywordOverviewPrice: keywordOverviewPrice(account),
+      keywordDiscoveryPrices: keywordDiscoveryPrices(account),
+      serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
       backlinksSubscriptionExpiresAt:
         account.backlinks_subscription_expiry_date ?? null,
       aiMentionsSubscriptionExpiresAt:
@@ -356,6 +421,51 @@ export class DataForSeoClient {
         this.accountPricingRequest = undefined
       }
     }
+  }
+
+  private async paidPost<T extends DataForSeoPaidResponse>(input: {
+    operation: string
+    capability: ProviderCapability
+    endpoint: string
+    request: unknown
+    schema: ZodType<T>
+    requestedRows: number
+    estimatedRequestUnits?: number
+    price: (account: DataForSeoAccountSnapshot) => DataForSeoUnitPrice
+    context: ProviderRequestContext
+    ttlMs: number
+    refresh?: boolean
+    rowCount: (response: T) => number
+  }): Promise<{
+    response: T
+    observedAt: string
+    returnedRows: number
+    cache: ProviderCacheEvidence
+    cost: ProviderCostEvidence
+    spendNotice: ProviderSpendNotice | null
+    warnings: ProviderWarning[]
+  }> {
+    const credentials = await this.getCredentials(input.operation)
+    const credentialScope = providerCredentialScope(
+      'dataforseo',
+      credentials.login,
+    )
+    return dataForSeoPaidPost({
+      ...input,
+      credentials,
+      credentialScope,
+      price: async () =>
+        input.price(
+          await this.pricingForCredentials(credentials, credentialScope),
+        ),
+      baseUrl: this.baseUrl,
+      fetch: this.fetch,
+      maxResponseBytes: this.maxResponseBytes,
+      timeoutMs: this.timeoutMs,
+      now: this.now,
+      database: this.database,
+      spendLimits: this.spendLimits,
+    })
   }
 
   async keywordOverview(
@@ -624,5 +734,198 @@ export class DataForSeoClient {
       spendNotice,
       warnings,
     }
+  }
+
+  async keywordDiscovery(
+    input: DataForSeoKeywordDiscoveryRequest,
+  ): Promise<DataForSeoKeywordDiscoverySnapshot> {
+    const seeds = input.seeds.map((seed) => seed.trim())
+    if (
+      seeds.length < 1 ||
+      seeds.length > MAX_DISCOVERY_SEEDS ||
+      seeds.some(
+        (seed) =>
+          seed.length < 1 ||
+          seed.length > MAX_KEYWORD_CHARACTERS ||
+          seed.split(/\s+/u).length > MAX_KEYWORD_WORDS,
+      )
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message: `Keyword discovery requires 1 to ${MAX_DISCOVERY_SEEDS} seeds of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
+      })
+    }
+    if (
+      input.source !== 'ideas' &&
+      (seeds.length !== 1 || seeds[0] === undefined)
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message: `${input.source} discovery requires exactly one seed per provider request.`,
+      })
+    }
+    if (
+      !Number.isSafeInteger(input.limit) ||
+      input.limit < 1 ||
+      input.limit > MAX_DISCOVERY_ROWS
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message: `Keyword discovery limit must be from 1 to ${MAX_DISCOVERY_ROWS}.`,
+      })
+    }
+    if (!/^[a-z]{2}$/.test(input.languageCode)) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message: 'DataForSEO language code must contain two lowercase letters.',
+      })
+    }
+    const locationName = input.locationName?.trim()
+    if ((input.locationCode !== undefined) === Boolean(locationName)) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'keyword-discovery',
+        code: 'configuration',
+        message:
+          'DataForSEO keyword discovery requires exactly one location code or location name.',
+      })
+    }
+
+    const location =
+      input.locationCode !== undefined
+        ? { location_code: input.locationCode }
+        : { location_name: locationName }
+    const request =
+      input.source === 'ideas'
+        ? {
+            keywords: seeds,
+            language_code: input.languageCode,
+            ...location,
+            include_serp_info: true,
+            limit: input.limit,
+          }
+        : {
+            keyword: seeds[0],
+            language_code: input.languageCode,
+            ...location,
+            include_serp_info: true,
+            include_seed_keyword: false,
+            ...(input.source === 'related' ? { depth: 3 } : {}),
+            limit: input.limit,
+            order_by: [
+              `${input.source === 'related' ? 'keyword_data.' : ''}keyword_info.search_volume,desc`,
+            ],
+          }
+    const snapshot = await this.paidPost({
+      operation: `keyword-discovery-${input.source}`,
+      capability: 'keyword-discovery',
+      endpoint: KEYWORD_DISCOVERY_PATHS[input.source],
+      request,
+      schema: dataForSeoDiscoveryResponseSchema,
+      requestedRows: input.limit,
+      price: (account) => account.keywordDiscoveryPrices[input.source],
+      context: input.context,
+      ttlMs: this.keywordDiscoveryTtlMs,
+      refresh: input.refresh,
+      rowCount: discoveryRows,
+    })
+    return {
+      ...snapshot,
+      providerTotalRows: discoveryTotalRows(snapshot.response),
+      nextCursor: discoveryNextCursor(snapshot.response),
+    }
+  }
+
+  async serpLive(
+    input: DataForSeoSerpRequest,
+  ): Promise<DataForSeoSerpSnapshot> {
+    const keyword = input.keyword.trim()
+    if (
+      keyword.length < 1 ||
+      keyword.length > MAX_KEYWORD_CHARACTERS ||
+      keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
+      })
+    }
+    if (
+      /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
+        keyword,
+      )
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message:
+          'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
+      })
+    }
+    if (
+      !Number.isSafeInteger(input.depth) ||
+      input.depth < 1 ||
+      input.depth > MAX_SERP_DEPTH
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
+      })
+    }
+    if (!/^[a-z]{2}$/.test(input.languageCode)) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: 'DataForSEO language code must contain two lowercase letters.',
+      })
+    }
+    const locationName = input.locationName?.trim()
+    if ((input.locationCode !== undefined) === Boolean(locationName)) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message:
+          'DataForSEO SERP snapshots require exactly one location code or location name.',
+      })
+    }
+    const request = {
+      keyword,
+      language_code: input.languageCode,
+      ...(input.locationCode !== undefined
+        ? { location_code: input.locationCode }
+        : { location_name: locationName }),
+      device: input.device,
+      depth: input.depth,
+      remove_from_url: ['srsltid'],
+    }
+    return this.paidPost({
+      operation: 'serp-snapshot',
+      capability: 'serp-snapshot',
+      endpoint: SERP_LIVE_ADVANCED_PATH,
+      request,
+      schema: dataForSeoSerpResponseSchema,
+      requestedRows: input.depth,
+      estimatedRequestUnits: Math.ceil(input.depth / 10),
+      price: (account) => account.serpLiveAdvancedPrice,
+      context: input.context,
+      ttlMs: this.serpTtlMs,
+      refresh: input.refresh,
+      rowCount: serpRows,
+    })
   }
 }

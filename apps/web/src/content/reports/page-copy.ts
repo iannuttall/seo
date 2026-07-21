@@ -245,6 +245,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Audit programmatic SEO templates, repeated URL patterns and Search Console demand. Review representative pages before changing a whole template.',
     lead: 'Review repeated page patterns with crawl and Search Console evidence before scaling or deleting anything. One thin sample cannot condemn a template, so the audit keeps coverage and representative URLs visible.',
   },
+  'pseo-opportunities': {
+    title: 'Programmatic SEO opportunities',
+    description:
+      'Find programmatic SEO opportunities by joining template and Search Console evidence with optional keyword, live SERP, competitor and data-source research.',
+    lead: 'Start with repeated templates and query clusters already observed on the site. Add independent discovery and live results only when they help decide whether to extend a working template, research a different page type or stop.',
+  },
   'keyword-metrics': {
     title: 'Keyword metrics report',
     description:
@@ -256,6 +262,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     description:
       'Combine Search Console quick wins, second-page queries and striking-distance evidence with optional keyword estimates and programmatic SEO clusters.',
     lead: 'Build one bounded research queue from searches already associated with the site. Add independent market estimates only when they would change the next investigation, since external acquisition can cost money.',
+  },
+  'keyword-research': {
+    title: 'Keyword research report',
+    description:
+      'Discover market-specific keyword ideas from a small seed list with search volume, difficulty, source overlap, provider coverage, cache status and cost.',
+    lead: 'Expand a small seed list without turning the result into an automatic content plan. Every idea keeps its provider source, metric state, market, coverage and request cost visible.',
   },
   'query-clusters': {
     title: 'Search query clustering report',
@@ -292,6 +304,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     description:
       'Compare Search Console movement by page, query, country or device to find which segment explains a wider gain or loss across the selected dates.',
     lead: 'Break a Search Console change into the segment that actually moved. This is useful when a property total hides one page group, country or device going in the opposite direction.',
+  },
+  'serp-results': {
+    title: 'Live SERP results report',
+    description:
+      'Inspect exact organic ranks, domains, URLs, titles, snippets and result features for one keyword, location, language and device-specific search snapshot.',
+    lead: 'See the current bounded result page for one query and market. The snapshot keeps exact ranks separate from Search Console averages and does not turn repeated domains into a strength score.',
   },
   'striking-distance': {
     title: 'Striking distance SEO report',

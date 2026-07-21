@@ -41,6 +41,11 @@ export const reportSources = {
     label: 'Google JavaScript SEO guidance',
     url: 'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics',
   },
+  'keyword-provider-discovery': {
+    key: 'keyword-provider-discovery',
+    label: 'DataForSEO keyword ideas API reference',
+    url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-keyword_ideas-live/',
+  },
   'keyword-provider-metrics': {
     key: 'keyword-provider-metrics',
     label: 'DataForSEO keyword overview API reference',
@@ -70,6 +75,11 @@ export const reportSources = {
     key: 'server-logs',
     label: 'NGINX access log format reference',
     url: 'https://nginx.org/en/docs/http/ngx_http_log_module.html',
+  },
+  'serp-provider-results': {
+    key: 'serp-provider-results',
+    label: 'DataForSEO live Google SERP API reference',
+    url: 'https://docs.dataforseo.com/v3/serp-google-organic-live-advanced/',
   },
   sitemaps: {
     key: 'sitemaps',

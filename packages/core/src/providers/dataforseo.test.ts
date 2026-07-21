@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Response } from 'undici'
+import { PROVIDER_SPEND_SCHEMA_SQL } from '../storage/provider-spend-schema.js'
+import Database from '../storage/sqlite.js'
 import { DataForSeoProvider } from './dataforseo.js'
 import { ProviderError } from './errors.js'
+import type { ProviderFetch } from './transport.js'
 
 type FixtureItem = {
   keyword: string
@@ -79,18 +82,89 @@ function responseFixture(overrides: Partial<Fixture> = {}): Fixture {
   }
 }
 
+function accountFixture() {
+  return {
+    version: '0.1.test',
+    status_code: 20000,
+    status_message: 'Ok.',
+    cost: 0,
+    tasks_count: 1,
+    tasks_error: 0,
+    tasks: [
+      {
+        id: 'account-task',
+        status_code: 20000,
+        status_message: 'Ok.',
+        cost: 0,
+        result_count: 1,
+        result: [
+          {
+            login: 'local-user',
+            price: {
+              dataforseo_labs: {
+                keyword_overview: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_request', cost: 0.02 },
+                      { cost_type: 'per_result', cost: 0.0001 },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    ],
+  }
+}
+
+function database(): Database.Database {
+  const db = new Database(':memory:')
+  db.exec(PROVIDER_SPEND_SCHEMA_SQL)
+  db.exec(`
+    CREATE TABLE provider_cache (
+      provider TEXT NOT NULL, credential_scope TEXT NOT NULL,
+      operation TEXT NOT NULL, request_hash TEXT NOT NULL,
+      request_json TEXT NOT NULL, response_json TEXT NOT NULL,
+      row_count INTEGER, source_cost_micros INTEGER,
+      task_ids_json TEXT NOT NULL, fetched_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      PRIMARY KEY(provider, credential_scope, operation, request_hash)
+    ) WITHOUT ROWID;
+  `)
+  return db
+}
+
+function fixtureFetch(
+  keywordFixture: unknown,
+  onKeywordRequest?: (init: Parameters<ProviderFetch>[1]) => void,
+): ProviderFetch {
+  return async (url, init) => {
+    if (String(url).includes('/appendix/user_data')) {
+      return new Response(JSON.stringify(accountFixture()))
+    }
+    onKeywordRequest?.(init)
+    return new Response(
+      typeof keywordFixture === 'string'
+        ? keywordFixture
+        : JSON.stringify(keywordFixture),
+    )
+  }
+}
+
 test('DataForSEO sends the documented request and maps nested zero metrics', async () => {
   let requestBody: unknown
   let authorization: string | null = null
   const provider = new DataForSeoProvider({
+    database: database(),
     credentials: () => ({ login: 'local-user', password: 'local-password' }),
-    fetch: async (_url, init) => {
+    fetch: fixtureFetch(responseFixture(), (init) => {
       requestBody = JSON.parse(String(init?.body))
       authorization =
         (init?.headers as Record<string, string> | undefined)?.authorization ??
         null
-      return new Response(JSON.stringify(responseFixture()))
-    },
+    }),
   })
 
   const result = await provider.keywordOverview('zero query')
@@ -132,8 +206,9 @@ test('DataForSEO keeps documented null metrics unavailable', async () => {
   item.search_intent_info = { main_intent: null }
 
   const provider = new DataForSeoProvider({
+    database: database(),
     credentials: () => ({ login: 'user', password: 'password' }),
-    fetch: async () => new Response(JSON.stringify(fixture)),
+    fetch: fixtureFetch(fixture),
   })
   assert.deepEqual((await provider.keywordOverview('query')).data, {
     phrase: 'zero query',
@@ -148,8 +223,9 @@ test('DataForSEO keeps documented null metrics unavailable', async () => {
 
 test('DataForSEO rejects malformed payloads and task failures', async () => {
   const malformed = new DataForSeoProvider({
+    database: database(),
     credentials: () => ({ login: 'user', password: 'password' }),
-    fetch: async () => new Response('{"status_code":"wrong"}'),
+    fetch: fixtureFetch('{"status_code":"wrong"}'),
   })
   await assert.rejects(
     malformed.keywordOverview('query'),
@@ -158,22 +234,20 @@ test('DataForSEO rejects malformed payloads and task failures', async () => {
   )
 
   const failed = new DataForSeoProvider({
+    database: database(),
     credentials: () => ({ login: 'user', password: 'password' }),
-    fetch: async () =>
-      new Response(
-        JSON.stringify(
-          responseFixture({
-            tasks_error: 1,
-            tasks: [
-              {
-                status_code: 40501,
-                status_message: 'Task failed.',
-                result: null,
-              },
-            ],
-          }),
-        ),
-      ),
+    fetch: fixtureFetch(
+      responseFixture({
+        tasks_error: 1,
+        tasks: [
+          {
+            status_code: 40501,
+            status_message: 'Task failed.',
+            result: null,
+          },
+        ],
+      }),
+    ),
   })
   await assert.rejects(
     failed.keywordOverview('query'),

@@ -32,7 +32,7 @@ const userDataMoneySchema = z
 
 const priceComponentSchema = z
   .object({
-    cost_type: z.enum(['per_request', 'per_result']),
+    cost_type: z.string().min(1).max(100),
     cost: z.number().finite().nonnegative(),
   })
   .passthrough()

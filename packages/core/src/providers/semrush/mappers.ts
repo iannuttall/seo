@@ -6,6 +6,11 @@ function optionalFiniteNumber(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+function optionalText(value: string | undefined): string | undefined {
+  const normalized = value?.trim()
+  return normalized ? normalized : undefined
+}
+
 export function mapOverview(rows: string[][]): KeywordOverview {
   const [header, first] = rows
   if (!header || !first) {
@@ -41,8 +46,8 @@ export function mapKeywordRows(rows: string[][]): KeywordRow[] {
       difficulty: optionalFiniteNumber(record.Kd),
       cpc: optionalFiniteNumber(record.Cp),
       competition: optionalFiniteNumber(record.Co),
-      url: record.Ur,
-      domain: record.Dn,
+      url: optionalText(record.Ur),
+      domain: optionalText(record.Dn),
       position: optionalFiniteNumber(record.Po),
     }
   })

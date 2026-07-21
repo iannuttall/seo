@@ -114,7 +114,7 @@ export function validatePseoOpportunitiesInput(
   })
   const discoverySources: KeywordDiscoverySource[] = [
     ...new Set<KeywordDiscoverySource>(
-      input.discoverySources ?? (['ideas'] as const),
+      input.discoverySources ?? (['suggestions'] as const),
     ),
   ].sort(comparePseoOpportunityText)
   if (

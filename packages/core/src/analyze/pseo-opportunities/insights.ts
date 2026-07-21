@@ -64,7 +64,9 @@ export function buildPseoOpportunityFindings(input: {
       output.push({
         code: 'new-template-research-candidate',
         evidenceRefs: [candidate.evidenceRef],
-        detail: `${candidate.keyword} was returned from a query cluster without a mapped observed template.`,
+        detail: candidate.templateRefs.length
+          ? `${candidate.keyword} was returned by broad keyword discovery seeded from first-party template evidence, but no phrase-matching suggestion tied it to the existing template.`
+          : `${candidate.keyword} was returned from a query cluster without a mapped observed template.`,
         action:
           'Treat this as research for a possible hub, editorial page, or template. Do not choose the page type until intent, inventory, and data-source checks are complete.',
       })

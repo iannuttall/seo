@@ -279,10 +279,11 @@ test('keyword opportunities keeps external acquisition explicit and bounded', ()
 
 test('pSEO opportunities keeps provider work explicit and bounded', () => {
   const schema = reportSchema('pseo-opportunities')
-  assert.equal(
-    schema.safeParse({ site: 'sc-domain:example.com' }).success,
-    true,
-  )
+  const defaults = schema.safeParse({ site: 'sc-domain:example.com' })
+  assert.equal(defaults.success, true)
+  if (defaults.success) {
+    assert.deepEqual(defaults.data.discoverySources, ['suggestions'])
+  }
   assert.equal(
     schema.safeParse({
       site: 'sc-domain:example.com',

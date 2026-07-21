@@ -167,7 +167,7 @@ export const REPORT_DEPTH_CONTINUED = {
     ],
     doNotClaim: [
       'A discovered term absent from retained Search Console rows does not prove zero first-party visibility.',
-      'Keyword estimates, repeated domains, and repeated URL patterns do not prove authority, ranking feasibility, shared intent, or page quality.',
+      'Keyword estimates, category ideas, related-search terms, repeated domains, and repeated URL patterns do not prove authority, ranking feasibility, shared intent, page quality, or that an existing template should expand.',
       'A data-source brief does not establish that a dataset exists, may be reused, or can support differentiated pages.',
       'Do not recommend one page per keyword or combinatorial page generation from volume alone.',
     ],

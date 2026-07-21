@@ -46,6 +46,23 @@ test('clusterPseoTemplates excludes singleton static pages', () => {
   )
 })
 
+test('clusterPseoTemplates excludes repeated URLs without a variable path', () => {
+  assert.deepEqual(
+    clusterPseoTemplates(
+      [
+        'https://example.com/',
+        'https://example.com/?source=one',
+        'https://example.com/?source=two',
+        'https://example.com/about',
+        'https://example.com/about?source=one',
+        'https://example.com/about?source=two',
+      ],
+      { minShare: 0 },
+    ),
+    [],
+  )
+})
+
 test('clusterPseoTemplates keeps Unicode and numeric variable evidence', () => {
   const [cluster] = clusterPseoTemplates([
     'https://example.com/models/x5/東京',

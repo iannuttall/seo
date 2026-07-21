@@ -33,11 +33,11 @@ import type {
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoSerpReadyTask,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
   DataForSeoSerpTaskInput,
   DataForSeoSerpTaskPostSnapshot,
-  DataForSeoSerpReadyTask,
 } from './client-types.js'
 import type { DataForSeoCredentials } from './credentials.js'
 import { readDataForSeoCredentials } from './credentials.js'
@@ -59,10 +59,7 @@ import {
   type DataForSeoKeywordOverviewResponse,
   dataForSeoKeywordOverviewResponseSchema,
 } from './schema.js'
-import {
-  type DataForSeoSerpResponse,
-  dataForSeoSerpResponseSchema,
-} from './serp-schema.js'
+import { dataForSeoSerpResponseSchema } from './serp-schema.js'
 import {
   type DataForSeoQueuedSerpRequest,
   dataForSeoSerpRows,

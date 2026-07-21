@@ -880,8 +880,10 @@ test('queued SERP lists ready tags and collects advanced results for free', asyn
       }
       const fixture = serpFixture()
       fixture.cost = 0
-      fixture.tasks[0]!.id = 'remote-1'
-      fixture.tasks[0]!.cost = 0
+      const [task] = fixture.tasks
+      assert.ok(task)
+      task.id = 'remote-1'
+      task.cost = 0
       return new Response(JSON.stringify(fixture))
     },
   })

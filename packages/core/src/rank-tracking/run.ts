@@ -6,23 +6,23 @@ import type {
   SerpSnapshot,
   SerpSnapshotRequest,
 } from '../providers/contracts.js'
-import { ProviderError } from '../providers/errors.js'
 import { readDataForSeoCredentials } from '../providers/dataforseo/credentials.js'
+import { ProviderError } from '../providers/errors.js'
 import { DataForSeoRankTrackingCollector } from './dataforseo-collector.js'
 import { RANK_TRACKING_LIMITS } from './limits.js'
 import {
   activeRankTrackingRun,
+  failRankTrackingTask,
   getOrCreateRankTrackingConfiguration,
   latestRankTrackingRun,
   markRankTasksPosted,
   markRankTasksPosting,
+  type RankTrackingStoreOptions,
   rankTrackingTasks,
   recoverRankTaskReceipt,
   saveRankObservations,
-  failRankTrackingTask,
   startRankTrackingRun,
   targetMatchesDomain,
-  type RankTrackingStoreOptions,
 } from './store.js'
 import type {
   RankObservation,

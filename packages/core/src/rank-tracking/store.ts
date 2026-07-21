@@ -2,19 +2,19 @@ import { randomUUID } from 'node:crypto'
 import { SeoError } from '../errors.js'
 import { getDb } from '../storage/database.js'
 import type Database from '../storage/sqlite.js'
-import { RANK_TRACKING_LIMITS } from './limits.js'
 import {
   database,
   invalid,
   nextRunAt,
   observationFromRow,
-  runFromRow,
-  taskFromRow,
   type RankTrackingStoreOptions,
   type RunRow,
+  runFromRow,
   type SnapshotRow,
   type TaskRow,
+  taskFromRow,
 } from './configuration-store.js'
+import { RANK_TRACKING_LIMITS } from './limits.js'
 import type {
   RankObservation,
   RankTrackingConfiguration,
@@ -22,11 +22,11 @@ import type {
   RankTrackingTask,
 } from './types.js'
 
+export type { RankTrackingStoreOptions } from './configuration-store.js'
 export {
   getOrCreateRankTrackingConfiguration,
   targetMatchesDomain,
 } from './configuration-store.js'
-export type { RankTrackingStoreOptions } from './configuration-store.js'
 
 export function activeRankTrackingRun(
   configId: string,

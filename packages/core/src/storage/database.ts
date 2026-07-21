@@ -1,8 +1,8 @@
 import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
-import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
 import { fileSize, getSeoCliPaths } from '../paths.js'
+import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
 import type { CacheStats } from '../types.js'
 import {
   CACHE_MAINTENANCE_WRITE_BYTES,

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const MAX_PROVIDER_MONTHLY_SEARCH_ROWS = 120
+
 const nullableNumber = z.number().finite().nullable().optional()
 const nullableCount = z
   .union([z.number().finite(), z.string().trim().min(1)])
@@ -22,7 +24,10 @@ const keywordOverviewItemSchema = z
         search_volume: nullableNumber,
         cpc: nullableNumber,
         competition: nullableNumber,
-        monthly_searches: z.array(monthlySearchSchema).max(24).nullish(),
+        monthly_searches: z
+          .array(monthlySearchSchema)
+          .max(MAX_PROVIDER_MONTHLY_SEARCH_ROWS)
+          .nullish(),
         last_updated_time: z.string().trim().min(1).nullable().optional(),
       })
       .nullish(),

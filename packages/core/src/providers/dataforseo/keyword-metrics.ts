@@ -26,6 +26,7 @@ import {
 } from './schema.js'
 
 const MAX_KEYWORDS_PER_REPORT = 100
+const MAX_RETAINED_MONTHLY_SEARCH_ROWS = 24
 const KEYWORD_OVERVIEW_ENDPOINT =
   'v3/dataforseo_labs/google/keyword_overview/live'
 
@@ -153,7 +154,7 @@ function monthlySearchesValue(
         searchVolume: [...volumes][0] as number,
       }
     })
-  return observedValue(history)
+  return observedValue(history.slice(-MAX_RETAINED_MONTHLY_SEARCH_ROWS))
 }
 
 function resultCountValues(rows: DataForSeoKeywordOverviewItem[]): unknown[] {
@@ -365,8 +366,21 @@ export class DataForSeoKeywordMetricsProvider
         message: 'Duplicate keywords were normalized and requested once.',
       })
     }
+    const providerRows = responseItems(snapshot)
+    const extendedHistoryRows = providerRows.filter(
+      (row) =>
+        (row.keyword_info?.monthly_searches?.length ?? 0) >
+        MAX_RETAINED_MONTHLY_SEARCH_ROWS,
+    ).length
+    if (extendedHistoryRows > 0) {
+      warnings.push({
+        code: 'monthly-search-history-truncated',
+        field: 'monthlySearches',
+        message: `DataForSEO returned more than ${MAX_RETAINED_MONTHLY_SEARCH_ROWS} monthly history rows for ${extendedHistoryRows} keyword${extendedHistoryRows === 1 ? '' : 's'}; only the most recent ${MAX_RETAINED_MONTHLY_SEARCH_ROWS} months were retained.`,
+      })
+    }
     let unexpectedRows = 0
-    for (const [index, row] of responseItems(snapshot).entries()) {
+    for (const [index, row] of providerRows.entries()) {
       const keyword = normalizedKeyword(row.keyword)
       if (!requested.has(keyword)) {
         unexpectedRows += 1
@@ -432,6 +446,7 @@ export class DataForSeoKeywordMetricsProvider
             ? { locationCode: location.locationCode }
             : { locationName: location.locationName }),
           includeSerpInfo: true,
+          retainedMonthlyHistoryRows: MAX_RETAINED_MONTHLY_SEARCH_ROWS,
         },
         sort: ['keyword:codepoint-ascending'],
       },

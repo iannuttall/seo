@@ -228,6 +228,38 @@ test('keyword metrics report keeps provider evidence separate from derived findi
   assert.match(captured?.context?.reportRunId ?? '', /^[0-9a-f-]{36}$/)
 })
 
+test('keyword metrics report accepts an owning report spend context', async () => {
+  let captured:
+    | Parameters<KeywordMetricsProvider['keywordMetrics']>[0]
+    | undefined
+  await keywordMetricsReport(
+    {
+      keywords: ['query'],
+      market,
+      projectId: 'fallback-project',
+      context: {
+        projectId: 'owning-project',
+        reportId: 'keyword-opportunities',
+        reportRunId: 'report-run-1',
+      },
+    },
+    {
+      candidates: [
+        candidate(async (input) => {
+          captured = input
+          return evidence([metric('query')])
+        }),
+      ],
+    },
+  )
+
+  assert.deepEqual(captured?.context, {
+    projectId: 'owning-project',
+    reportId: 'keyword-opportunities',
+    reportRunId: 'report-run-1',
+  })
+})
+
 test('keyword metrics report preserves partial, unavailable, and provider error states', async () => {
   const partial = await keywordMetricsReport(
     { keywords: ['invalid'], market },

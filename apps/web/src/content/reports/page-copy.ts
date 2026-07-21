@@ -251,6 +251,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Compare keyword search volume, monthly trends, CPC, competition, difficulty, intent and result counts for one country and language with cost and coverage.',
     lead: 'Check a limited keyword set against independent market estimates before committing to deeper research. The report keeps missing data, request cost and provider coverage visible, so a neat number never looks more certain than it is.',
   },
+  'keyword-opportunities': {
+    title: 'Keyword opportunity report',
+    description:
+      'Combine Search Console quick wins, second-page queries and striking-distance evidence with optional keyword estimates and programmatic SEO clusters.',
+    lead: 'Build one bounded research queue from searches already associated with the site. Add independent market estimates only when they would change the next investigation, since external acquisition can cost money.',
+  },
   'query-clusters': {
     title: 'Search query clustering report',
     description:

@@ -616,6 +616,22 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Provider-neutral keyword evidence with missing values, costs, coverage, and trend heuristics kept visible.',
   },
+  'keyword-opportunities': {
+    name: 'Enriched keyword opportunities',
+    description:
+      'Combine existing Search Console opportunity evidence with optional market estimates and programmatic SEO cluster context.',
+    useWhen: [
+      'You want quick-win, second-page, and striking-distance evidence from one bounded Search Console acquisition.',
+      'You want to add independent keyword estimates without replacing first-party evidence or its existing scores.',
+      'You need candidate query clusters and repeatable page patterns to validate before expanding a template.',
+    ],
+    avoidWhen: [
+      'You only need independent metrics for a supplied keyword list.',
+      'You need a current result snapshot, exact rank, competitor comparison, or external provider work without explicit paid-request intent.',
+    ],
+    outcome:
+      'Bounded first-party opportunity sections, optional typed provider evidence, discrepancy findings, and programmatic SEO validation prompts.',
+  },
   'query-clusters': {
     name: 'Search query clusters',
     description:

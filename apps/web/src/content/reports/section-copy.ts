@@ -53,6 +53,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Open both the suggested source page and target page before adding a link. Keep the link only when it helps the reader in that exact context, then recrawl to confirm the relationship was recorded.',
   'keyword-metrics':
     'Start with terms that combine useful estimated demand with a clear fit for the site. Compare them with first-party search evidence and inspect the current results before creating a page, expanding a template or promising an outcome.',
+  'keyword-opportunities':
+    'Start with the Search Console evidence and the report section that supplied each candidate. Use provider estimates as added context, inspect the current results, and audit representative pages before creating content or expanding a template.',
   'link-recovery':
     "Inspect the broken URL's search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.",
   'link-evidence':

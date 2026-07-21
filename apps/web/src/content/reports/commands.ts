@@ -110,6 +110,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
         'seo reports run keyword-metrics --params \'{"keywords":["seo audit tool"],"countryCode":"US","languageCode":"en"}\' --json',
       note: 'Compare a limited keyword set in one country and language.',
     },
+    'keyword-opportunities': {
+      command:
+        'seo reports run keyword-opportunities --params \'{"site":"sc-domain:example.com","days":90}\' --json',
+      note: 'Build a first-party opportunity queue without making a paid provider request.',
+    },
     'link-recovery': {
       command: 'seo link-recover --project example',
       note: 'Find broken or poorly redirected URLs with returned search value.',

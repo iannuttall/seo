@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { keywordMetricsReport } from '@seo/core'
+import { keywordMetricsReport, keywordOpportunitiesReport } from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -19,14 +19,74 @@ const locationInput = z
     code: z.number().int().positive().optional(),
     name: z.string().trim().min(1).max(500).optional(),
   })
-  .refine(
-    (value) => (value.code === undefined) !== (value.name === undefined),
-    { message: 'Use exactly one location code or name.' },
-  )
+  .refine((value) => value.code !== undefined || value.name !== undefined, {
+    message: 'A location needs a code or name.',
+  })
+
+const countryCodeInput = z
+  .string()
+  .trim()
+  .regex(/^[a-z]{2}$/i)
+
+const languageCodeInput = z
+  .string()
+  .trim()
+  .min(2)
+  .max(35)
+  .regex(/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i)
+
+const keywordOpportunitiesInput = z
+  .strictObject({
+    site: z.string().trim().min(1).max(2_048),
+    days: z.number().int().min(1).max(548).optional(),
+    minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
+    limit: z.number().int().min(1).max(25).optional(),
+    keywordLimit: z.number().int().min(1).max(50).optional(),
+    queriesPerPage: z.number().int().min(1).max(5).optional(),
+    clusterLimit: z.number().int().min(1).max(20).optional(),
+    brandTerms: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
+    includeBrand: z.boolean().optional(),
+    includeExternal: z.boolean().default(false),
+    countryCode: countryCodeInput.optional(),
+    languageCode: languageCodeInput.optional(),
+    searchEngine: z.enum(['google', 'bing']).default('google'),
+    location: locationInput.optional(),
+    device: z.enum(['desktop', 'mobile']).optional(),
+    provider: z.enum(['dataforseo', 'semrush', 'ahrefs']).optional(),
+    refresh: z.boolean().optional(),
+  })
+  .superRefine((input, context) => {
+    const hasExternalOptions = Boolean(
+      input.countryCode ||
+        input.languageCode ||
+        input.location ||
+        input.device ||
+        input.provider,
+    )
+    if (!input.includeExternal && hasExternalOptions) {
+      context.addIssue({
+        code: 'custom',
+        path: ['includeExternal'],
+        message:
+          'Set includeExternal to true before passing market or provider options.',
+      })
+    }
+    if (input.includeExternal && (!input.countryCode || !input.languageCode)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['includeExternal'],
+        message:
+          'External keyword context requires countryCode and languageCode.',
+      })
+    }
+  })
 
 export function registerKeywordTools(
   server: McpServer,
-  dependencies: { keywordMetricsReport?: typeof keywordMetricsReport } = {},
+  dependencies: {
+    keywordMetricsReport?: typeof keywordMetricsReport
+    keywordOpportunitiesReport?: typeof keywordOpportunitiesReport
+  } = {},
 ): void {
   server.registerTool(
     'seo_keyword_metrics',
@@ -35,16 +95,8 @@ export function registerKeywordTools(
         'Compare bounded third-party keyword demand, cost, competition, difficulty, intent, result-count, and trend evidence',
       inputSchema: {
         keywords: z.array(keywordInput).min(1).max(50),
-        countryCode: z
-          .string()
-          .trim()
-          .regex(/^[a-z]{2}$/i),
-        languageCode: z
-          .string()
-          .trim()
-          .min(2)
-          .max(35)
-          .regex(/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i),
+        countryCode: countryCodeInput,
+        languageCode: languageCodeInput,
         searchEngine: z.enum(['google', 'bing']).default('google'),
         location: locationInput.optional(),
         device: z.enum(['desktop', 'mobile']).optional(),
@@ -74,6 +126,72 @@ export function registerKeywordTools(
             location,
             device,
           },
+          provider,
+          refresh,
+        })
+        return toolSuccess(
+          report.summary.verdict,
+          compactAgentWorkflowOutput(
+            report as unknown as Record<string, unknown>,
+          ),
+        )
+      } catch (error) {
+        return toolError(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'seo_keyword_opportunities',
+    {
+      description:
+        'Combine bounded Search Console opportunity evidence with optional provider-neutral keyword context and programmatic SEO clusters',
+      inputSchema: keywordOpportunitiesInput,
+    },
+    async ({
+      site,
+      days,
+      minImpressions,
+      limit,
+      keywordLimit,
+      queriesPerPage,
+      clusterLimit,
+      brandTerms,
+      includeBrand,
+      includeExternal,
+      countryCode,
+      languageCode,
+      searchEngine,
+      location,
+      device,
+      provider,
+      refresh,
+    }) => {
+      try {
+        const report = await (
+          dependencies.keywordOpportunitiesReport ?? keywordOpportunitiesReport
+        )({
+          site,
+          days,
+          minImpressions,
+          limit,
+          keywordLimit,
+          queriesPerPage,
+          clusterLimit,
+          brandTerms,
+          includeBrand,
+          includeExternal,
+          ...(includeExternal && countryCode && languageCode
+            ? {
+                market: {
+                  countryCode,
+                  languageCode,
+                  searchEngine,
+                  location,
+                  device,
+                },
+              }
+            : {}),
           provider,
           refresh,
         })

@@ -1,0 +1,269 @@
+import { randomUUID } from 'node:crypto'
+import type {
+  ProviderEvidence,
+  ProviderWarning,
+  SerpOrganicResult,
+  SerpSnapshot,
+  SerpSnapshotProvider,
+  SerpSnapshotRequest,
+} from '../contracts.js'
+import { searchMarketSchema } from '../contracts.js'
+import { ProviderError } from '../errors.js'
+import { DataForSeoClient, type DataForSeoClientOptions } from './client.js'
+import {
+  compareCodepoints,
+  locationRequest,
+  normalizedKeyword,
+} from './keyword-mapping.js'
+import type { DataForSeoSerpResponse } from './serp-schema.js'
+
+const MAX_SERP_DEPTH = 100
+const SERP_ENDPOINT = 'v3/serp/google/organic/live/advanced'
+
+type SerpClient = Pick<DataForSeoClient, 'serpLive'>
+
+export type DataForSeoSerpSnapshotProviderOptions = DataForSeoClientOptions & {
+  client?: SerpClient
+}
+
+type SerpResult = NonNullable<
+  NonNullable<DataForSeoSerpResponse['tasks'][number]['result']>[number]
+>
+type SerpItem = NonNullable<SerpResult['items']>[number]
+
+function safeUrl(value: string | null | undefined): string | null {
+  if (!value) return null
+  try {
+    const parsed = new URL(value)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null
+    parsed.username = ''
+    parsed.password = ''
+    return parsed.toString()
+  } catch {
+    return null
+  }
+}
+
+function validOrganic(item: SerpItem): item is SerpItem & {
+  rank_group: number
+  rank_absolute: number
+  page: number
+  domain: string
+  url: string
+} {
+  return (
+    item.type === 'organic' &&
+    Number.isSafeInteger(item.rank_group) &&
+    (item.rank_group ?? 0) > 0 &&
+    Number.isSafeInteger(item.rank_absolute) &&
+    (item.rank_absolute ?? 0) > 0 &&
+    Number.isSafeInteger(item.page) &&
+    (item.page ?? 0) > 0 &&
+    Boolean(item.domain?.trim()) &&
+    safeUrl(item.url) !== null
+  )
+}
+
+function organicResult(item: SerpItem): SerpOrganicResult | null {
+  if (!validOrganic(item)) return null
+  const url = safeUrl(item.url)
+  if (!url) return null
+  return {
+    rankGroup: item.rank_group,
+    rankAbsolute: item.rank_absolute,
+    page: item.page,
+    domain: item.domain.trim().toLowerCase(),
+    url,
+    title: item.title ?? null,
+    description: item.description ?? null,
+    isFeaturedSnippet: item.is_featured_snippet ?? null,
+  }
+}
+
+function checkedAt(value: string, fallback: string): string {
+  const timestamp = Date.parse(value)
+  return Number.isFinite(timestamp)
+    ? new Date(timestamp).toISOString()
+    : fallback
+}
+
+export class DataForSeoSerpSnapshotProvider implements SerpSnapshotProvider {
+  readonly provider = 'dataforseo' as const
+  readonly capabilitySupport = [
+    {
+      capability: 'serp-snapshot' as const,
+      status: 'available' as const,
+      markets: [
+        {
+          searchEngines: ['google'] as const,
+          devices: ['desktop', 'mobile'] as const,
+          location: 'any' as const,
+        },
+      ],
+    },
+  ] as const
+
+  private readonly client: SerpClient
+
+  constructor(options: DataForSeoSerpSnapshotProviderOptions = {}) {
+    this.client = options.client ?? new DataForSeoClient(options)
+  }
+
+  async serpSnapshot(
+    input: SerpSnapshotRequest,
+  ): Promise<ProviderEvidence<SerpSnapshot>> {
+    const market = searchMarketSchema.parse(input.market)
+    if (market.searchEngine !== 'google') {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: 'DataForSEO SERP snapshots currently support Google.',
+      })
+    }
+    if (
+      !Number.isSafeInteger(input.depth) ||
+      input.depth < 1 ||
+      input.depth > MAX_SERP_DEPTH
+    ) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: 'SERP depth must be from 1 to 100.',
+      })
+    }
+    const keyword = normalizedKeyword(input.keyword)
+    if (!keyword || keyword.length > 80 || keyword.split(/\s+/u).length > 10) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message:
+          'SERP snapshots require a keyword of at most 80 characters and 10 words.',
+      })
+    }
+    const context = input.context ?? {
+      reportId: 'serp-results',
+      reportRunId: randomUUID(),
+    }
+    const location = locationRequest(market, 'serp-snapshot')
+    const snapshot = await this.client.serpLive({
+      keyword,
+      languageCode: market.languageCode.split('-')[0] as string,
+      ...location,
+      device: market.device ?? 'desktop',
+      depth: input.depth,
+      refresh: input.refresh,
+      context,
+    })
+    const result = snapshot.response.tasks
+      .flatMap((task) => task.result ?? [])
+      .find((item) => normalizedKeyword(item.keyword) === keyword)
+    if (!result) {
+      throw new ProviderError({
+        provider: 'dataforseo',
+        operation: 'serp-snapshot',
+        code: 'invalid-response',
+        message: 'DataForSEO returned no matching SERP result.',
+      })
+    }
+
+    const warnings: ProviderWarning[] = [...snapshot.warnings]
+    const items = result.items ?? []
+    const organicItems = items.filter((item) => item.type === 'organic')
+    const mappedOrganicResults = organicItems
+      .flatMap((item) => {
+        const mapped = organicResult(item)
+        return mapped ? [mapped] : []
+      })
+      .sort(
+        (left, right) =>
+          left.rankAbsolute - right.rankAbsolute ||
+          left.rankGroup - right.rankGroup ||
+          compareCodepoints(left.url, right.url),
+      )
+    const organicResults = mappedOrganicResults.slice(0, input.depth)
+    const invalidRows = organicItems.length - mappedOrganicResults.length
+    const resultCapped = mappedOrganicResults.length > input.depth
+    if (invalidRows > 0) {
+      warnings.push({
+        code: 'invalid-organic-results',
+        field: 'organicResults',
+        message: `DataForSEO returned ${invalidRows} organic result${invalidRows === 1 ? '' : 's'} without a valid rank, domain, or URL.`,
+      })
+    }
+    if (!Number.isFinite(Date.parse(result.datetime))) {
+      warnings.push({
+        code: 'invalid-serp-observation-time',
+        field: 'checkedAt',
+        message:
+          'DataForSEO returned an invalid SERP observation time; the local response time was retained.',
+      })
+    }
+    const checkUrl = safeUrl(result.check_url)
+    if (result.check_url && !checkUrl) {
+      warnings.push({
+        code: 'invalid-serp-check-url',
+        field: 'checkUrl',
+        message: 'DataForSEO returned an invalid SERP check URL.',
+      })
+    }
+    const features = [
+      ...new Set([
+        ...(result.item_types ?? []),
+        ...items.map((item) => item.type),
+      ]),
+    ].sort(compareCodepoints)
+    const data: SerpSnapshot = {
+      keyword,
+      effectiveKeyword: normalizedKeyword(
+        result.spell?.keyword ?? result.keyword,
+      ),
+      searchEngineDomain: result.se_domain?.trim().toLowerCase() ?? null,
+      checkedAt: checkedAt(result.datetime, snapshot.observedAt),
+      checkUrl,
+      resultCount:
+        result.se_results_count === undefined ? null : result.se_results_count,
+      pagesCount: result.pages_count === undefined ? null : result.pages_count,
+      features,
+      organicResults,
+    }
+
+    return {
+      schemaVersion: 1,
+      provider: 'dataforseo',
+      capability: 'serp-snapshot',
+      data,
+      observedAt: snapshot.observedAt,
+      market: { ...market, device: market.device ?? 'desktop' },
+      coverage: {
+        requestedRows: input.depth,
+        returnedRows: snapshot.returnedRows,
+        retainedRows: organicResults.length,
+        invalidRows,
+        providerTotalRows: result.se_results_count ?? null,
+        completeness:
+          invalidRows > 0 ? 'partial' : resultCapped ? 'capped' : 'complete',
+        nextCursor: null,
+      },
+      cache: snapshot.cache,
+      cost: snapshot.cost,
+      request: {
+        operation: 'serp-snapshot',
+        endpoint: SERP_ENDPOINT,
+        limit: input.depth,
+        filters: {
+          countryCode: market.countryCode,
+          languageCode: market.languageCode,
+          device: market.device ?? 'desktop',
+          ...(location.locationCode !== undefined
+            ? { locationCode: location.locationCode }
+            : { locationName: location.locationName }),
+        },
+        sort: ['rankAbsolute:ascending', 'url:codepoint-ascending'],
+      },
+      warnings,
+    }
+  }
+}

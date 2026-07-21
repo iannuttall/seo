@@ -16,7 +16,7 @@ const monthlySearchSchema = z
   })
   .passthrough()
 
-const keywordOverviewItemSchema = z
+export const keywordOverviewItemSchema = z
   .object({
     keyword: z.string().trim().min(1),
     keyword_info: z

@@ -175,20 +175,72 @@ export interface KeywordMetricsProvider extends ProviderAdapter {
   ): Promise<ProviderEvidence<KeywordMetric[]>>
 }
 
-export type KeywordIdea = KeywordMetric & {
+export const keywordDiscoverySourceSchema = z.enum([
+  'ideas',
+  'related',
+  'suggestions',
+])
+export type KeywordDiscoverySource = z.infer<
+  typeof keywordDiscoverySourceSchema
+>
+
+export type KeywordIdeaSource = {
   seed: string
-  source: string
+  source: KeywordDiscoverySource
+}
+
+export type KeywordIdea = KeywordMetric & {
+  sources: KeywordIdeaSource[]
 }
 
 export type KeywordDiscoveryRequest = {
   seeds: string[]
+  sources: KeywordDiscoverySource[]
   market: SearchMarket
   limit: number
   refresh?: boolean
+  context?: ProviderRequestContext
 }
 
 export interface KeywordDiscoveryProvider extends ProviderAdapter {
   discoverKeywords(
     input: KeywordDiscoveryRequest,
   ): Promise<ProviderEvidence<KeywordIdea[]>>
+}
+
+export type SerpOrganicResult = {
+  rankGroup: number
+  rankAbsolute: number
+  page: number
+  domain: string
+  url: string
+  title: string | null
+  description: string | null
+  isFeaturedSnippet: boolean | null
+}
+
+export type SerpSnapshot = {
+  keyword: string
+  effectiveKeyword: string
+  searchEngineDomain: string | null
+  checkedAt: string
+  checkUrl: string | null
+  resultCount: number | null
+  pagesCount: number | null
+  features: string[]
+  organicResults: SerpOrganicResult[]
+}
+
+export type SerpSnapshotRequest = {
+  keyword: string
+  market: SearchMarket
+  depth: number
+  refresh?: boolean
+  context?: ProviderRequestContext
+}
+
+export interface SerpSnapshotProvider extends ProviderAdapter {
+  serpSnapshot(
+    input: SerpSnapshotRequest,
+  ): Promise<ProviderEvidence<SerpSnapshot>>
 }

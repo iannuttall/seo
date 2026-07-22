@@ -359,15 +359,33 @@ seo reports run local-search-demand \
 That path adds at most three current organic snapshots through the same cache,
 spend limits and provider-neutral result contract as `serp-results`. Read the
 recorded location, device, observation time, coverage, cache and cost for every
-snapshot. A local pack feature means the pack appeared in that snapshot. It
-does not show that the site or a particular business listing appeared, and it
-does not replace Maps, review, call, direction or business-profile data.
+snapshot. The report also groups recurring organic domains as unclassified
+search competitors and retains bounded local-pack listing rows with their
+observed rank, title, URL, phone, rating and provider identifier when returned.
+These rows do not prove listing ownership, complete Maps coverage or Google
+Business Profile performance.
+
+Add optional visitor geography only when it would change a landing-page or
+template decision:
+
+```sh
+seo reports run local-search-demand \
+  --params '{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"googleAnalyticsPropertyId":"123456789","analyticsLimit":5000}' \
+  --json
+```
+
+This makes one bounded Google Analytics request for landing page, country,
+region, city and sessions. Query strings are removed from the landing-page
+dimension before an exact path join. Unmatched, malformed, duplicate, capped
+and quality-warning states stay visible. The returned geography describes
+measured sessions for retained landing pages. It does not establish which
+Search Console query produced a session.
 
 A place in the query does not prove the searcher's physical location. Search
-Console average position is not an exact local rank. Google Analytics geography
-can describe sessions from a region, but it cannot prove which query produced
-them. Keep those sources separate when deciding whether to improve a current
-page, review overlapping pages or investigate a new local template.
+Console average position is not an exact local rank. Keep query wording,
+landing-page geography and exact live results separate when deciding whether to
+improve a current page, review overlapping pages or investigate a new local
+template.
 
 ## Review live referring-link evidence
 

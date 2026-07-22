@@ -61,6 +61,11 @@ export const reportSources = {
     label: 'Google Analytics traffic acquisition guidance',
     url: 'https://support.google.com/analytics/answer/12923437',
   },
+  'google-analytics-geography': {
+    key: 'google-analytics-geography',
+    label: 'Google Analytics dimensions and metrics reference',
+    url: 'https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema',
+  },
   'google-updates': {
     key: 'google-updates',
     label: 'Google Search Status Dashboard',

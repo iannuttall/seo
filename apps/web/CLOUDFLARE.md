@@ -16,7 +16,7 @@ Use these settings for the `seo-skill` Worker. Changing `name` in Wrangler creat
 | Deploy command | `pnpm deploy:web` |
 | Non-production deploy command | `pnpm --filter @seo/web exec wrangler versions upload` |
 
-The root `.node-version` file pins Node `22.20.0`. Agent markdown comes from the published `@iannuttall/seo-graph-astro` package, which also appends the per-file Markdown headers to `_headers` at build time.
+The root `.node-version` file pins Node `22.20.0`. Agent markdown comes from the published `@iannuttall/seo-graph-astro` package. The integration's per-file Cloudflare headers are disabled because they grow by one rule for every page. The tracked `_headers` file uses bounded wildcard rules instead.
 
 The Wrangler config declares both custom domains:
 
@@ -101,7 +101,9 @@ The `Accept` check is deliberately strict. It handles the normal agent header an
 
 ## Response headers
 
-`apps/web/public/_headers` contains the shared security, discovery, caching, and content-policy headers. The build then appends the exact Markdown token estimate and canonical link for each generated `.md` file.
+`apps/web/public/_headers` contains the shared security, discovery, caching, and content-policy headers. A small set of wildcard rules gives every generated `.md` file the Markdown content type and canonical link. This keeps the file below Cloudflare's 100-rule limit as the report catalog grows.
+
+Exact token estimates remain available in `agent-routes.json`. They do not need a separate response-header rule for every page.
 
 Cloudflare applies `_headers` directly to static asset responses returned through the assets binding. The API routes set their own minimal JSON security and cache headers in the Worker.
 
@@ -120,6 +122,6 @@ curl -sS -I https://www.seoskill.dev/docs/skill
 curl -sS -I http://seoskill.dev/docs/skill
 ```
 
-The negotiated and explicit Markdown requests should return `Content-Type: text/markdown`, the same token estimate, and the same bytes. The `q=0` request should return HTML. Both `www` and plain HTTP should return a permanent redirect to the apex HTTPS URL.
+The negotiated and explicit Markdown requests should return `Content-Type: text/markdown` and the same bytes. The `q=0` request should return HTML. Both `www` and plain HTTP should return a permanent redirect to the apex HTTPS URL.
 
 Cloudflare documents the underlying features in its [URL Rewrite Rules](https://developers.cloudflare.com/rules/transform/url-rewrite/) and [Static Assets headers](https://developers.cloudflare.com/workers/static-assets/headers/) guides.

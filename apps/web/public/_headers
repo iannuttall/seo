@@ -16,9 +16,18 @@
   Link: <https://seoskill.dev/docs.md>; rel="alternate"; type="text/markdown"
   Vary: Accept
 
-/docs/*
-  Link: <https://seoskill.dev/docs/:splat.md>; rel="alternate"; type="text/markdown"
+/*.md
+  Content-Type: text/markdown; charset=utf-8
   Vary: Accept
+
+/index.md
+  Link: <https://seoskill.dev/>; rel="canonical"
+
+/docs.md
+  Link: <https://seoskill.dev/docs>; rel="canonical"
+
+/docs/*.md
+  Link: <https://seoskill.dev/docs/:splat>; rel="canonical"
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
@@ -42,6 +51,7 @@
   X-Robots-Tag: noindex, follow
 
 /cookies.md
+  Link: <https://seoskill.dev/cookies>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /privacy
@@ -50,6 +60,7 @@
   X-Robots-Tag: noindex, follow
 
 /privacy.md
+  Link: <https://seoskill.dev/privacy>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /security
@@ -58,6 +69,7 @@
   X-Robots-Tag: noindex, follow
 
 /security.md
+  Link: <https://seoskill.dev/security>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /terms
@@ -66,6 +78,7 @@
   X-Robots-Tag: noindex, follow
 
 /terms.md
+  Link: <https://seoskill.dev/terms>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /trademarks
@@ -74,4 +87,11 @@
   X-Robots-Tag: noindex, follow
 
 /trademarks.md
+  Link: <https://seoskill.dev/trademarks>; rel="canonical"
   X-Robots-Tag: noindex, follow
+
+/stats.md
+  Link: <https://seoskill.dev/stats>; rel="canonical"
+
+/telemetry.md
+  Link: <https://seoskill.dev/telemetry>; rel="canonical"

@@ -314,7 +314,7 @@ export type CompetitorKeywordGapCandidate = {
     state: 'observed-overlap' | 'weak-overlap' | 'unavailable'
     sharedTokens: string[]
     matchedFirstPartyQueries: string[]
-    method: 'bounded-lexical-overlap-v1'
+    method: 'bounded-query-theme-overlap-v2'
   }
   pseo: {
     repeatedCompetitorPagePatterns: string[]

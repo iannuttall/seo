@@ -555,6 +555,97 @@ test('competitor gap removes existing coverage and proposes bounded pSEO researc
   assert.ok(report.processing.retainedTokenPostings <= 400)
 })
 
+test('competitor gap rejects generic and split-query token matches', async () => {
+  const competitorRows = [
+    metric('new social media apps', 'https://one.test/social-apps', 1),
+    metric('resource page link building', 'https://one.test/resources', 1),
+    metric(
+      'search engine optimization ranking factors',
+      'https://one.test/ranking-factors',
+      1,
+    ),
+    metric('red prices manchester', 'https://one.test/red-prices', 1),
+    metric('widget prices manchester', 'https://one.test/widget-prices', 1),
+    metric(
+      'https //www.seoquake.com/index.html',
+      'https://one.test/seoquake',
+      1,
+    ),
+  ]
+  const report = await competitorKeywordGapReport(
+    {
+      site: 'sc-domain:example.com',
+      competitors: [{ domain: 'one.test', siteType: 'publisher' }],
+      market,
+    },
+    {
+      candidates: [
+        candidate({
+          rankedKeywords: async (input) =>
+            evidence('ranked-keywords', {
+              target: input.target,
+              rows: input.target === 'example.com' ? [] : competitorRows,
+              totalRows:
+                input.target === 'example.com' ? 0 : competitorRows.length,
+            }),
+        }),
+      ],
+      now,
+      searchAnalytics: async () => ({
+        rows: [
+          gscRow('name census search', 'https://example.com/search'),
+          gscRow('common new york last names', 'https://example.com/new-york'),
+          gscRow('link last name origin', 'https://example.com/link'),
+          gscRow('is page a name', 'https://example.com/page'),
+          gscRow('red widgets', 'https://example.com/red'),
+          gscRow('blue prices', 'https://example.com/blue'),
+          gscRow('widget prices uk', 'https://example.com/prices/uk'),
+          gscRow(
+            'surname research -filetype:html -site:www.seoquake.com -site:link.example.com',
+            'https://example.com/research',
+          ),
+        ],
+        calls: 1,
+        rowsFetched: 8,
+      }),
+    },
+  )
+
+  const byKeyword = new Map(
+    report.candidates.map((item) => [item.keyword, item]),
+  )
+  assert.equal(report.summary.relevantGapCandidates, 1)
+  assert.equal(report.summary.unverifiedCompetitorTerms, 5)
+  assert.equal(
+    byKeyword.get('widget prices manchester')?.classification,
+    'relevant-gap-candidate',
+  )
+  assert.equal(
+    byKeyword.get('widget prices manchester')?.relevance.method,
+    'bounded-query-theme-overlap-v2',
+  )
+  assert.equal(
+    byKeyword.get('red prices manchester')?.relevance.state,
+    'weak-overlap',
+  )
+  assert.equal(
+    byKeyword.get('new social media apps')?.relevance.state,
+    'unavailable',
+  )
+  assert.equal(
+    byKeyword.get('resource page link building')?.classification,
+    'unverified-competitor-term',
+  )
+  assert.equal(
+    byKeyword.get('search engine optimization ranking factors')?.classification,
+    'unverified-competitor-term',
+  )
+  assert.equal(
+    byKeyword.get('https //www.seoquake.com/index.html')?.relevance.state,
+    'unavailable',
+  )
+})
+
 test('competitor gap is deterministic and marks capped first-party evidence partial', async () => {
   const make = (order: string[]) =>
     competitorKeywordGapReport(

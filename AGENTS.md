@@ -205,6 +205,9 @@ Every report must be technically defensible and useful to another program.
   complete states distinct.
 - Provider row limits, sampling, pagination, failed subqueries, invalid rows,
   and retained subsets must remain visible in structured provenance.
+- Keep provider-indexed AI mention datasets, fixed live prompt observations,
+  referral analytics, and technical eligibility as separate evidence types.
+  Never present one as proof of another.
 - A capped or partial source cannot support a definitive zero or all-clear.
 - GSC final-data dates use the `America/Los_Angeles` calendar and the shared
   final-data helper. Do not recreate date windows with naive UTC subtraction.
@@ -261,6 +264,10 @@ tables (`packages/mcp/src/report-depth*.ts`) and is served at runtime by
 - Skills and MCP must call the same core functions as the CLI.
 - Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
   tools when discovery plus a report id can cover them cleanly.
+- New reports must use the existing list, describe, and run tools. Do not add a
+  report-specific public MCP tool unless the product contract explicitly changes.
+- Define new reports directly in the shared registry. Do not register a fake MCP
+  tool only to capture its schema and handler for discovery.
 - Bound inputs and outputs. Large pages, issue inventories, and raw provider
   rows should be opt-in.
 - Preserve structured error and report schemas across CLI and MCP surfaces.

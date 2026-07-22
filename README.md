@@ -213,6 +213,7 @@ seo reports describe keyword-research --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
 seo reports describe local-search-demand --json
+seo reports describe ai-mention-research --json
 
 seo reports run domain-overview \
   --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
@@ -238,7 +239,10 @@ The research flow now covers:
   patterns, and optionally adding up to three exact local result snapshots;
 - `link-evidence` for a current link summary, one representative backlink per
   referring domain, and linked-target checks against saved crawl and Search
-  Console evidence.
+  Console evidence;
+- `ai-mention-research` for provider-indexed mentions, cited domains, and
+  bounded question samples in one exact AI surface and market, with optional
+  Search Console overlap for a property you own.
 
 Provider traffic, volume, difficulty, intent, visibility, and ranking history
 are estimates. Search Console remains the evidence for measured search
@@ -247,6 +251,8 @@ for one query, market, device, and observation time. Reports can combine these
 sources without blending their meanings or turning a missing row into zero.
 Local query wording does not establish the searcher's physical location, and an
 observed local pack does not establish that a particular listing appeared.
+Provider-indexed AI mentions are not live prompt observations, and neither one
+proves referral traffic or technical eligibility.
 
 Read the [research provider guide](https://seoskill.dev/docs/research-providers)
 for setup, costs, caching, country-level limits, competitor classification, and

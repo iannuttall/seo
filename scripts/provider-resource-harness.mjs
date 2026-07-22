@@ -16,6 +16,7 @@ process.once('exit', () => rmSync(cacheDir, { recursive: true, force: true }))
 
 const {
   addKeywordsToSet,
+  aiMentionResearchReport,
   analyzeQuickWinsFromRows,
   clearCache,
   competitorKeywordGapReport,
@@ -363,6 +364,174 @@ assert.ok(
 assert.ok(domainDurationMs <= DOMAIN_MAX_DURATION_MS)
 assert.ok(domainRssGrowthBytes <= DOMAIN_MAX_RSS_GROWTH)
 assert.ok(domainOutputBytes <= DOMAIN_MAX_OUTPUT_BYTES)
+
+const AI_MENTION_GSC_ROWS = 100_000
+const AI_MENTION_SAMPLES = 25
+const AI_MENTION_MAX_DURATION_MS = 10_000
+const AI_MENTION_MAX_RSS_GROWTH = 384 * MEBIBYTE
+const AI_MENTION_MAX_OUTPUT_BYTES = MEBIBYTE
+let aiMentionProviderCalls = 0
+const aiMentionGscRows = Array.from(
+  { length: AI_MENTION_GSC_ROWS },
+  (_, index) => ({
+    keys: [
+      `analytics platform question ${index}`,
+      `https://example.com/guides/${index % 10_000}`,
+    ],
+    clicks: index % 7,
+    impressions: 100 + (index % 100),
+    ctr: (index % 7) / (100 + (index % 100)),
+    position: 4 + (index % 20),
+  }),
+)
+const aiMentionMarket = {
+  surface: 'google-ai-overview',
+  countryCode: 'GB',
+  languageCode: 'en',
+  location: { code: 2826 },
+}
+function aiMentionEvidence(data, operation, retainedRows) {
+  return {
+    schemaVersion: 1,
+    provider: 'dataforseo',
+    capability: 'ai-mentions',
+    data,
+    observedAt: '2026-07-22T12:00:00.000Z',
+    market: aiMentionMarket,
+    coverage: {
+      requestedRows: retainedRows,
+      returnedRows: retainedRows,
+      retainedRows,
+      invalidRows: 0,
+      providerTotalRows: retainedRows,
+      completeness: 'complete',
+      nextCursor: null,
+    },
+    cache: { status: 'miss', storedAt: null, expiresAt: null },
+    cost: {
+      currency: 'USD',
+      estimatedMicros: 100_000,
+      actualMicros: 100_000,
+      taskIds: [`resource-${operation}`],
+    },
+    request: {
+      operation,
+      endpoint: 'resource-fixture',
+      limit: retainedRows,
+      filters: {},
+      sort: [],
+    },
+    warnings: [],
+  }
+}
+const aiMentionAdapter = {
+  provider: 'dataforseo',
+  capabilitySupport: [
+    { capability: 'ai-mentions', status: 'available', markets: 'all' },
+  ],
+  aiMentionMetrics: async (input) => {
+    aiMentionProviderCalls += 1
+    return aiMentionEvidence(
+      {
+        targets: [
+          {
+            target: input.target,
+            mentions: observedValue(50),
+            aiSearchVolume: observedValue(1_000),
+            sourceDomains: [],
+          },
+        ],
+        combined: {
+          mentions: observedValue(50),
+          aiSearchVolume: observedValue(1_000),
+          sourceDomains: [],
+        },
+      },
+      'ai-mention-metrics',
+      1,
+    )
+  },
+  aiMentionSamples: async () => {
+    aiMentionProviderCalls += 1
+    return aiMentionEvidence(
+      Array.from({ length: AI_MENTION_SAMPLES }, (_, index) => ({
+        question: `Which analytics platform answers question ${index}?`,
+        answerExcerpt: 'Bounded provider answer excerpt. '.repeat(60),
+        answerTruncated: false,
+        model: 'resource-fixture',
+        aiSearchVolume: observedValue(100 - index),
+        firstObservedAt: observedValue('2026-07-01T00:00:00.000Z'),
+        lastObservedAt: observedValue('2026-07-22T00:00:00.000Z'),
+        isWebSearchBased: observedValue(true),
+        sources: Array.from({ length: 10 }, (_, sourceIndex) => ({
+          rank: sourceIndex + 1,
+          domain: 'example.com',
+          url: `https://example.com/sources/${index}-${sourceIndex}`,
+          title: `Source ${sourceIndex}`,
+          sourceName: 'Example',
+        })),
+      })),
+      'ai-mention-samples',
+      AI_MENTION_SAMPLES,
+    )
+  },
+}
+const aiMentionBaselineRss = process.memoryUsage().rss
+const aiMentionStartedAt = performance.now()
+const aiMentionReport = await aiMentionResearchReport(
+  {
+    target: { label: 'Example Analytics' },
+    domain: 'example.com',
+    market: aiMentionMarket,
+    site: 'sc-domain:example.com',
+    sampleLimit: AI_MENTION_SAMPLES,
+  },
+  {
+    candidates: [{ adapter: aiMentionAdapter, connected: true, priority: 1 }],
+    now: () => new Date('2026-07-22T12:00:00.000Z'),
+    searchAnalytics: async () => ({
+      rows: aiMentionGscRows,
+      rowsFetched: AI_MENTION_GSC_ROWS,
+      calls: 20,
+    }),
+  },
+)
+const aiMentionDurationMs = performance.now() - aiMentionStartedAt
+const aiMentionRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - aiMentionBaselineRss,
+)
+const aiMentionOutputBytes = Buffer.byteLength(JSON.stringify(aiMentionReport))
+console.log(
+  JSON.stringify({
+    report: 'ai-mention-research',
+    sourceRows: AI_MENTION_GSC_ROWS,
+    providerCalls: aiMentionProviderCalls,
+    providerRows: AI_MENTION_SAMPLES + 1,
+    returnedSamples: aiMentionReport.samples.length,
+    durationMs: Math.round(aiMentionDurationMs),
+    rssGrowthMiB: Number((aiMentionRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    bytesRead: Buffer.byteLength(JSON.stringify(aiMentionGscRows)),
+    bytesWritten: 0,
+    outputBytes: aiMentionOutputBytes,
+  }),
+)
+assert.equal(aiMentionProviderCalls, 2)
+assert.equal(aiMentionReport.dataStatus, 'partial')
+assert.equal(aiMentionReport.source.firstParty.possiblyTruncated, true)
+assert.equal(aiMentionReport.samples.length, AI_MENTION_SAMPLES)
+assert.equal(aiMentionReport.processing.firstPartyRows, AI_MENTION_GSC_ROWS)
+assert.equal(
+  aiMentionReport.processing.firstPartyTermVisits,
+  AI_MENTION_GSC_ROWS * 4,
+)
+assert.ok(
+  aiMentionReport.processing.retainedTokenPostings <= AI_MENTION_GSC_ROWS + 300,
+)
+assert.ok(aiMentionReport.processing.candidateRowVisits <= 10_000)
+assert.ok(aiMentionDurationMs <= AI_MENTION_MAX_DURATION_MS)
+assert.ok(aiMentionRssGrowthBytes <= AI_MENTION_MAX_RSS_GROWTH)
+assert.ok(aiMentionOutputBytes <= AI_MENTION_MAX_OUTPUT_BYTES)
 
 const BATCHES = 20
 const KEYWORDS_PER_BATCH = 100

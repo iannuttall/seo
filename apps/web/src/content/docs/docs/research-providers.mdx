@@ -84,6 +84,7 @@ The normal CLI and MCP discovery flow exposes the same reports:
 seo reports list --category opportunities --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
+seo reports describe ai-mention-research --json
 ```
 
 Run a report through the existing catalog command. There are no separate
@@ -106,6 +107,56 @@ tool.
 The current domain research endpoints use country and language. They do not
 accept a city, postcode or device. Use `serp-results` when you need a current
 location and device-specific result snapshot.
+
+## Research indexed AI mentions and citations
+
+`ai-mention-research` checks one named target in a provider-indexed set of AI
+answers. It can compare up to five named competitors in the same dataset,
+return cited domains and bounded question samples, mark citations from an
+owned domain, and compare sample wording with retained Search Console queries.
+
+```sh
+seo reports run ai-mention-research \
+  --params '{"target":{"label":"Example Analytics","aliases":["Example"]},"competitors":[{"label":"Competitor Cloud"}],"domain":"example.com","surface":"google-ai-overview","countryCode":"GB","languageCode":"en","location":{"code":2826},"site":"sc-domain:example.com","sampleLimit":10}' \
+  --json
+```
+
+The default path makes two paid live API requests: one for metrics and one for
+question samples. Set `includeSamples` to `false` for a metrics-only run with
+one paid request. The report accepts one location and language per run, at most
+five competitors, at most five aliases per target, and at most 25 retained
+samples. Cached results use the local provider cache and do not repeat paid
+work until their retention window expires unless `refresh` is true.
+
+DataForSEO currently supports Google AI Overview and ChatGPT mention records.
+Its ChatGPT data is limited to United States English, so use country code `US`,
+language code `en`, and US location code `2840` for that surface. Other market
+combinations fail before a paid request.
+
+Read the result in this order:
+
+1. `dataStatus`, exact surface and market, source status, coverage, cache,
+   cost, task ids, and warnings.
+2. Provider metrics for each target, then `targetComparisonShare`. That share
+   describes only the supplied comparison set.
+3. Question samples, observation dates, model, answer truncation, cited URLs,
+   and `ownedSources`.
+4. Optional Search Console source limits and each sample's bounded lexical
+   matches.
+5. Repeated question patterns, data-source briefs, findings, caveats, and next
+   steps.
+
+Provider-indexed records are not live prompt observations or a complete census.
+Mention count and AI search volume do not prove traffic, sentiment, citation
+quality, authority, future visibility, or demand for a new page. Search Console
+overlap is a lexical heuristic over retained rows. Check the current answer
+with a fixed prompt observation when that answer would change the decision.
+
+For programmatic SEO, repeated question terms can reveal a useful research
+direction. They do not approve a template. Confirm shared intent, existing page
+coverage, data rights, stable identifiers, fields, geographic coverage, update
+frequency, missing values, duplicates, useful page variation, and
+representative output before increasing page count.
 
 ## Start a local search investigation with first-party evidence
 

@@ -51,6 +51,11 @@ export type DataForSeoAccountSnapshot = {
     backlinks: DataForSeoUnitPrice
     referringDomains: DataForSeoUnitPrice
   }
+  aiMentionPrices: {
+    targetMetrics: DataForSeoUnitPrice
+    multiTargetMetrics: DataForSeoUnitPrice
+    searchMentions: DataForSeoUnitPrice
+  }
   serpLiveAdvancedPrice: DataForSeoUnitPrice
   serpTaskPostPrice: DataForSeoUnitPrice
   backlinksSubscriptionExpiresAt: string | null
@@ -79,6 +84,7 @@ export type DataForSeoClientOptions = {
   spendLimits?: ProviderSpendLimits
   domainResearchTtlMs?: number
   linkTtlMs?: number
+  aiMentionTtlMs?: number
 }
 
 export type DataForSeoKeywordOverviewRequest = {

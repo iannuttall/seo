@@ -12,6 +12,10 @@ import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerProviderTools } from './provider-tools.js'
 import { registerPseoTools } from './pseo-tools.js'
 import {
+  aiMentionResearchInputSchema,
+  createAiMentionResearchHandler,
+} from './report-definitions/ai-mention-research.js'
+import {
   getReportGuidance,
   REPORT_GUIDANCE,
   type RelatedReport,
@@ -50,7 +54,23 @@ type ReportGroup = {
   register: (server: McpServer) => void
 }
 
-const reportGroups: readonly ReportGroup[] = [
+type DirectReport = {
+  id: string
+  category: ReportCategory
+  inputSchema: z.ZodObject<z.ZodRawShape>
+  handler: ReportHandler
+}
+
+const directReports: readonly DirectReport[] = [
+  {
+    id: 'ai-mention-research',
+    category: 'ai-search',
+    inputSchema: aiMentionResearchInputSchema,
+    handler: createAiMentionResearchHandler(),
+  },
+] as const
+
+const legacyReportGroups: readonly ReportGroup[] = [
   {
     category: 'setup',
     register: registerDiagnosisTools,
@@ -286,9 +306,17 @@ function createDefinitions(): ReportDefinition[] {
     ReportGroup['register'],
     Map<string, CapturedTool>
   >()
-  const definitions: ReportDefinition[] = []
+  const definitions: ReportDefinition[] = directReports.map((report) => {
+    const guidance = getReportGuidance(report.id)
+    if (!guidance) {
+      throw new Error(
+        `MCP report registry is missing guidance for ${report.id}.`,
+      )
+    }
+    return { ...report, ...guidance }
+  })
 
-  for (const group of reportGroups) {
+  for (const group of legacyReportGroups) {
     let captured = capturedByRegister.get(group.register)
     if (!captured) {
       captured = captureTools(group.register)

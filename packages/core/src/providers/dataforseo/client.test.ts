@@ -67,6 +67,14 @@ test('user data uses the free account endpoint and returns owned fields', async 
       backlinks: { perRequestMicros: 24_000, perResultMicros: 36 },
       referringDomains: { perRequestMicros: 24_000, perResultMicros: 36 },
     },
+    aiMentionPrices: {
+      targetMetrics: { perRequestMicros: 100_000, perResultMicros: 1_000 },
+      multiTargetMetrics: {
+        perRequestMicros: 100_000,
+        perResultMicros: 1_000,
+      },
+      searchMentions: { perRequestMicros: 100_000, perResultMicros: 1_000 },
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: 2_000,
       perResultMicros: 0,

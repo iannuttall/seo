@@ -155,8 +155,20 @@ For AI mention research, keep the surface and market fixed:
    before comparing mention counts.
 4. Read cited sources, question samples and optional Search Console overlap as
    separate evidence.
-5. Run a fixed-prompt observation when the current answer would change the
-   decision.
+5. Describe and run `ai-prompt-observations` for only the fixed prompts where a
+   current answer would change the decision.
+6. Read coverage, cache state, requested and effective model, citations, exact
+   returned cost, and comparison status before describing a mention or change.
+
+The requested model is the exact model passed to the report. The effective
+model is the model the provider says actually ran. Treat a mismatch as a new
+baseline, not a measured change.
+
+Do not choose an implicit latest model. Use an exact name from the provider's
+free current catalog. If a saved name is stale, the preflight error lists
+current choices and confirms that no paid request started. Cached observations,
+changed models, partial answers, and truncated answers do not support a
+before-and-after claim.
 
 For referring-link research, run `link-evidence` with one source. With
 DataForSEO, read provider summary and cost evidence before the representative

@@ -93,6 +93,7 @@ export const reportCollections = [
     reports: [
       ['agent-readiness', 'AI agent readiness'],
       ['ai-mention-research', 'AI mention research'],
+      ['ai-prompt-observations', 'AI prompt observations'],
       ['ai-search-scorecard', 'AI search scorecard'],
       ['ai-readiness', 'AI readiness'],
       ['entity-readiness', 'Entity readiness'],

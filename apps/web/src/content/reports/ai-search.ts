@@ -15,7 +15,7 @@ export const aiSearchReports = [
       'You want to compare bounded AI question samples with retained Search Console queries before planning content or a programmatic template.',
     ],
     avoidWhen: [
-      'You need the answer returned by a fixed prompt right now. Record a repeatable observation with the exact product, model, market, time, answer, and citations instead.',
+      'You need the answer returned by a fixed prompt right now. Use ai-prompt-observations with the exact surface, model, market label, time, answer, and citations instead.',
       'You need a complete census, a universal visibility score, sentiment, or proof that an AI product never mentions a target.',
     ],
     evidence: [
@@ -46,16 +46,89 @@ export const aiSearchReports = [
     ],
     nextSteps: [
       'Inspect cited pages and current results for the questions that would change a decision.',
-      'Use a fixed prompt observation for a small stable question set before making claims about current answers.',
+      'Use ai-prompt-observations for a small stable question set before making claims about current answers.',
       'Check existing pages, source rights, useful variation, and representative records before expanding a programmatic template.',
     ],
     related: [
       'seo-to-ai-query',
+      'ai-prompt-observations',
       'ai-referrals',
       'pseo-opportunities',
       'content-optimization',
     ],
     sources: ['ai-mention-provider', 'search-analytics'],
+  },
+  {
+    id: 'ai-prompt-observations',
+    name: 'AI prompt observations',
+    category: 'ai-search',
+    summary:
+      'Run a small fixed set of prompts against exact current AI models, retain answers and citations locally, and compare only like-for-like observations.',
+    question:
+      'What did these exact AI models return for a fixed prompt set now, and what changed under the same collection settings?',
+    useWhen: [
+      'You need the current answer, mentions, or citations for a small decision-critical prompt set.',
+      'You want repeatable observations across ChatGPT, Claude, Gemini, or Perplexity with exact model versions and costs.',
+      'You want to compare the supporting searches reported for an answer with retained Search Console demand before investigating content or programmatic templates.',
+    ],
+    avoidWhen: [
+      'You need a universal visibility score, an assistant ranking, or proof that a target never appears.',
+      'You need broad provider-indexed mention research rather than a maximum of 20 live answer requests.',
+    ],
+    evidence: [
+      'DataForSEO response evidence for each exact prompt, surface, chosen model, model the provider actually ran, market label, web-search setting, and collection time.',
+      'Optional retained Search Console query and landing-page rows for a property you own.',
+      'Earlier local observations with the same comparison key.',
+    ],
+    methodology: [
+      'Checks the free current model catalog before paid work, then runs no more than five prompts across four explicit models with concurrency capped at four.',
+      'Stores bounded answers, citations, supporting searches returned as fan-out queries, provider task ids, cache state, token use, base-price estimates, and exact returned task costs locally.',
+      'Compares only fresh, complete, untruncated observations with the same provider, prompt, requested and effective model, market label, web-search setting, and output-token limit.',
+      'Matches named targets and domains, then applies bounded word and phrase matching to supporting-search themes and optional Search Console rows without turning them into demand or page recommendations.',
+    ],
+    exampleParams: {
+      prompts: [
+        {
+          id: 'analytics-tools',
+          group: 'commercial',
+          prompt:
+            'Which privacy-friendly analytics tools suit a small publisher?',
+        },
+      ],
+      models: [{ surface: 'chatgpt', model: 'current-model-name' }],
+      target: {
+        label: 'Example Analytics',
+        aliases: ['Example'],
+        domains: ['example.com'],
+      },
+      competitors: [{ label: 'Competitor Cloud' }],
+      countryCode: 'GB',
+      languageCode: 'en',
+      site: 'sc-domain:example.com',
+    },
+    interpretation: [
+      'Read data status, source coverage, warnings, cache state, effective model, citations, exact returned cost, and first-party status before reading target matches or change findings.',
+      'Treat every answer as one observation under its recorded configuration. A missing mention applies only to that retained sample.',
+    ],
+    caveats: [
+      'The market and language label separates each fixed prompt set, but the provider does not expose the same location or language controls on every AI surface. Prompt wording remains the direct language instruction.',
+      'Supporting-search themes and Search Console word matches are bounded research leads. They do not prove shared intent, independent demand, a content gap, or the value of a programmatic template.',
+    ],
+    nextSteps: [
+      'Inspect the full answer, citations, effective model, cache state, and cost before acting on a target match.',
+      'Validate repeated themes with keyword metrics, current search results, and existing page evidence.',
+      'Check source rights, stable identifiers, field coverage, missing values, useful variation, and representative output before scaling a programmatic template.',
+      'Repeat only prompts that matter, using the same exact configuration. Start a new baseline when the effective model changes.',
+    ],
+    related: [
+      'ai-mention-research',
+      'seo-to-ai-query',
+      'keyword-metrics',
+      'serp-results',
+      'pseo-opportunities',
+      'ai-referrals',
+    ],
+    sources: ['ai-prompt-provider', 'search-analytics'],
   },
   {
     id: 'ai-referrals',

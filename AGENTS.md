@@ -209,6 +209,12 @@ Every report must be technically defensible and useful to another program.
   referral analytics, and technical eligibility as separate evidence types.
   Never present one as proof of another.
 - A capped or partial source cannot support a definitive zero or all-clear.
+- Treat each fixed AI prompt response as one observation under its exact prompt,
+  provider, requested and effective model, market label, settings, and time. It
+  is not a universal visibility score or assistant ranking.
+- Keep provider base-price estimates separate from exact task costs returned
+  after completion. Cached observations, changed models, partial answers, and
+  truncated answers cannot support before-and-after claims.
 - GSC final-data dates use the `America/Los_Angeles` calendar and the shared
   final-data helper. Do not recreate date windows with naive UTC subtraction.
 - Aggregate duplicate provider rows deterministically before ranking or

@@ -42,6 +42,7 @@ export const TELEMETRY_REPORTS = [
   'ai-readiness',
   'ai-referrals',
   'ai-mention-research',
+  'ai-prompt-observations',
   'ai-search-scorecard',
   'audit-page',
   'audit-urls',

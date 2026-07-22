@@ -35,6 +35,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Compare provider-indexed AI mentions, cited domains and question samples with optional Search Console evidence for one exact surface and market.',
     lead: 'See where a named brand or product appears in a provider-indexed set of AI answers, which domains are cited and whether retained questions overlap with searches already associated with your site. The report keeps indexed research separate from live prompt checks.',
   },
+  'ai-prompt-observations': {
+    title: 'AI prompt observation report',
+    description:
+      'Check fixed prompts against exact current AI models, retain answer and citation evidence locally, and compare only compatible observations over time.',
+    lead: 'See what a small set of AI models returned for the questions that matter now. Every answer keeps its prompt, model, settings, citations, cache state and exact cost, so later changes can be compared without inventing a visibility score.',
+  },
   'ai-search-scorecard': {
     title: 'AI search scorecard',
     description:

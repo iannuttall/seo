@@ -11,6 +11,8 @@ test('local search report definition passes first-party and local SERP inputs to
       assert.equal(input.site, 'sc-domain:example.com')
       assert.deepEqual(input.locationTerms, ['London'])
       assert.equal(input.includeSerps, true)
+      assert.equal(input.googleAnalyticsPropertyId, '123')
+      assert.equal(input.analyticsLimit, 500)
       assert.equal(
         input.market?.location?.name,
         'London,England,United Kingdom',
@@ -28,6 +30,8 @@ test('local search report definition passes first-party and local SERP inputs to
     languageCode: 'en',
     searchEngine: 'google' as const,
     location: { name: 'London,England,United Kingdom' },
+    googleAnalyticsPropertyId: '123',
+    analyticsLimit: 500,
   }
   assert.equal(localSearchDemandInputSchema.safeParse(input).success, true)
   await handler(input)
@@ -52,6 +56,11 @@ test('local search report schema keeps paid local SERPs explicit and bounded', (
       serpLimit: 4,
     },
     { site: 'sc-domain:example.com', maxRows: 50_001 },
+    { site: 'sc-domain:example.com', analyticsLimit: 500 },
+    {
+      site: 'sc-domain:example.com',
+      googleAnalyticsPropertyId: 'property-name',
+    },
     {
       site: 'sc-domain:example.com',
       locationTerms: Array.from({ length: 101 }, (_, index) => `area ${index}`),

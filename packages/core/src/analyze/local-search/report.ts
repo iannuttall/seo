@@ -10,7 +10,9 @@ import type {
 import { searchMarketSchema } from '../../providers/contracts.js'
 import { serpResultsReport } from '../serp-results.js'
 import { analyzeLocalSearchRows } from './analysis.js'
+import { localAnalyticsEvidence } from './analytics.js'
 import { normalizeLocationTerms } from './intent.js'
+import { buildLocalSerpInsights } from './serp-insights.js'
 import type {
   LocalSearchInput,
   LocalSearchReport,
@@ -23,6 +25,7 @@ const MAX_ROWS = 50_000
 export type LocalSearchDependencies = {
   searchAnalytics?: typeof querySearchAnalytics
   serpResults?: typeof serpResultsReport
+  analyticsEvidence?: typeof localAnalyticsEvidence
   now?: () => Date
 }
 
@@ -96,6 +99,24 @@ function validateInput(input: LocalSearchInput) {
       'Set includeSerps to true before passing market, provider, or SERP options.',
     )
   }
+  const googleAnalyticsPropertyId = input.googleAnalyticsPropertyId
+    ?.trim()
+    .replace(/^properties\//u, '')
+  if (
+    googleAnalyticsPropertyId &&
+    !/^\d{1,30}$/u.test(googleAnalyticsPropertyId)
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'googleAnalyticsPropertyId must be a numeric Google Analytics property id.',
+    )
+  }
+  if (input.analyticsLimit !== undefined && !googleAnalyticsPropertyId) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Pass googleAnalyticsPropertyId before setting analyticsLimit.',
+    )
+  }
   return {
     site,
     days: boundedInteger({
@@ -142,6 +163,14 @@ function validateInput(input: LocalSearchInput) {
       minimum: 1,
       maximum: 20,
       label: 'serpDepth',
+    }),
+    googleAnalyticsPropertyId,
+    analyticsLimit: boundedInteger({
+      value: input.analyticsLimit,
+      fallback: 5_000,
+      minimum: 1,
+      maximum: 10_000,
+      label: 'analyticsLimit',
     }),
   }
 }
@@ -315,17 +344,32 @@ export async function localSearchReport(
     minImpressions: options.minImpressions,
     limit: options.limit,
   })
-  const serpEvidence = await acquireSerps({
-    requested: options.includeSerps,
-    queries: analysis.opportunities.map((item) => item.query),
-    market: options.market,
-    provider: input.provider,
-    projectId: input.projectId,
-    refresh: input.refresh,
-    limit: options.serpLimit,
-    depth: options.serpDepth,
-    reportRunId: randomUUID(),
-    run: dependencies.serpResults ?? serpResultsReport,
+  const [serpEvidence, analyticsEvidence] = await Promise.all([
+    acquireSerps({
+      requested: options.includeSerps,
+      queries: analysis.opportunities.map((item) => item.query),
+      market: options.market,
+      provider: input.provider,
+      projectId: input.projectId,
+      refresh: input.refresh,
+      limit: options.serpLimit,
+      depth: options.serpDepth,
+      reportRunId: randomUUID(),
+      run: dependencies.serpResults ?? serpResultsReport,
+    }),
+    (dependencies.analyticsEvidence ?? localAnalyticsEvidence)({
+      propertyId: options.googleAnalyticsPropertyId,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      limit: options.analyticsLimit,
+      localPageUrls: analysis.eligiblePageUrls,
+      templates: analysis.templates,
+      refresh: input.refresh,
+    }),
+  ])
+  const serpInsights = buildLocalSerpInsights({
+    site: options.site,
+    reports: serpEvidence.reports,
   })
   const possiblyTruncated = source.rowsFetched >= options.maxRows
   const sourceEmpty = source.rows.length === 0
@@ -333,7 +377,9 @@ export async function localSearchReport(
   const partial =
     possiblyTruncated ||
     serpEvidence.status === 'partial' ||
-    serpEvidence.status === 'unavailable'
+    serpEvidence.status === 'unavailable' ||
+    analyticsEvidence.source.completeness === 'partial' ||
+    analyticsEvidence.status === 'unavailable'
   const opportunities = analysis.opportunities
   const localPackSnapshots = serpEvidence.reports.filter((report) =>
     report.evidence.data.features.includes('local_pack'),
@@ -362,6 +408,12 @@ export async function localSearchReport(
     )
   }
   if (serpEvidence.error) warnings.push(serpEvidence.error.message)
+  warnings.push(...analyticsEvidence.source.qualityWarnings)
+  if (analyticsEvidence.status === 'unavailable' && analyticsEvidence.reason) {
+    warnings.push(
+      `Google Analytics geography was unavailable: ${analyticsEvidence.reason}`,
+    )
+  }
   const nextSteps: string[] = []
   if (!options.includeSerps) {
     nextSteps.push(
@@ -370,6 +422,20 @@ export async function localSearchReport(
   } else if (serpEvidence.status === 'unavailable') {
     nextSteps.push(
       'Check the provider connection, market support, and local spend limits before retrying the missing SERP snapshots.',
+    )
+  }
+  if (!analyticsEvidence.requested && analysis.eligiblePageCount > 0) {
+    nextSteps.push(
+      'If visitor geography would change the page or service-area decision, rerun with a connected Google Analytics property. Geography is joined to landing pages, never inferred as the source of a Search Console query.',
+    )
+  } else if (analyticsEvidence.status === 'unavailable') {
+    nextSteps.push(
+      'Check the Google Analytics property connection before retrying the optional landing-page geography evidence.',
+    )
+  }
+  if (serpInsights.organicCompetitors.available > 0) {
+    nextSteps.push(
+      'Classify the repeated local result domains as businesses, directories, publishers, communities or marketplaces before using them in competitor research.',
     )
   }
   if (analysis.templates.length > 0) {
@@ -417,6 +483,8 @@ export async function localSearchReport(
       ],
       opportunityOrder: 'impressions-clicks-position-query-v1',
       templateMethod: 'pseo-url-template-clustering-v1',
+      analyticsJoinMethod: 'landing-page-path-geography-v1',
+      serpInsightMethod: 'local-serp-insights-v1',
     },
     selection: analysis.selection,
     summary: {
@@ -427,6 +495,10 @@ export async function localSearchReport(
       templates: analysis.templates.length,
       serpSnapshots: serpEvidence.reports.length,
       localPackSnapshots,
+      localPackListings: serpInsights.localPackListings.available,
+      organicCompetitors: serpInsights.organicCompetitors.available,
+      analyticsLocations: analyticsEvidence.locationCoverage.available,
+      analyticsMatchedPages: analyticsEvidence.source.matchedPages,
       verdict: sourceEmpty
         ? 'Search Console returned no retained query/page rows for this date window.'
         : filtered
@@ -436,13 +508,15 @@ export async function localSearchReport(
     opportunities,
     templates: analysis.templates,
     serpEvidence,
+    serpInsights,
+    analyticsEvidence,
     warnings,
     caveats: [
       'Search Console exposes retained top query/page rows and does not guarantee every query. A row cap means lower-volume local demand may be missing.',
       'Named-place, proximity, and postal-code matching are explicit heuristics. They can miss implicit local intent and postal-looking non-location terms.',
       "A place in a query describes query wording, not the searcher's physical location. Search Console average position is not an exact local rank.",
-      'A Google Analytics city or region describes measured users under Analytics rules; it is not joined here because it cannot prove which search query brought a user.',
-      'A local_pack feature in a live snapshot proves only that the result type appeared in that market, device, and observation. It does not expose or validate every business listing.',
+      'Google Analytics geography is joined only through an exact retained landing-page path. It describes measured users under Analytics rules and cannot prove which Search Console query brought a user.',
+      'Retained local-pack listings come from the requested market, device, and observation. They do not prove listing ownership, complete Maps coverage, or Google Business Profile performance.',
       'Repeated URL patterns and page overlap are review signals, not proof that more pages should exist or that consolidation is required.',
       input.includeBrand
         ? 'Brand queries were included when they matched the local-intent rules.'

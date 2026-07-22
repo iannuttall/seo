@@ -271,6 +271,33 @@ export type SerpOrganicResult = {
   isFeaturedSnippet: boolean | null
 }
 
+export type SerpLocalPackResult = {
+  rankGroup: number
+  rankAbsolute: number
+  page: number | null
+  title: string
+  domain: string | null
+  url: string | null
+  cid: string | null
+  phone: string | null
+  description: string | null
+  isPaid: boolean | null
+  rating: {
+    type: string | null
+    value: number | null
+    votesCount: number | null
+    maximum: number | null
+  } | null
+}
+
+export type SerpLocalPackEvidence = {
+  present: boolean
+  returnedRows: number
+  retainedRows: number
+  invalidRows: number
+  results: SerpLocalPackResult[]
+}
+
 export type SerpSnapshot = {
   keyword: string
   effectiveKeyword: string
@@ -281,6 +308,7 @@ export type SerpSnapshot = {
   pagesCount: number | null
   features: string[]
   organicResults: SerpOrganicResult[]
+  localPack: SerpLocalPackEvidence
 }
 
 export type SerpSnapshotRequest = {

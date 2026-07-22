@@ -33,6 +33,12 @@ export const localSearchDemandInputSchema = z
     provider: providerIdInput.optional(),
     serpLimit: z.number().int().min(1).max(3).optional(),
     serpDepth: z.number().int().min(1).max(20).optional(),
+    googleAnalyticsPropertyId: z
+      .string()
+      .trim()
+      .regex(/^(?:properties\/)?\d{1,30}$/u)
+      .optional(),
+    analyticsLimit: z.number().int().min(1).max(10_000).optional(),
     refresh: z.boolean().optional(),
   })
   .superRefine((input, context) => {
@@ -64,6 +70,14 @@ export const localSearchDemandInputSchema = z
           'Local SERP evidence requires countryCode, languageCode, and a canonical location.',
       })
     }
+    if (input.analyticsLimit && !input.googleAnalyticsPropertyId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['analyticsLimit'],
+        message:
+          'Pass googleAnalyticsPropertyId before setting analyticsLimit.',
+      })
+    }
   })
 
 export function createLocalSearchDemandHandler(
@@ -88,6 +102,8 @@ export function createLocalSearchDemandHandler(
       provider,
       serpLimit,
       serpDepth,
+      googleAnalyticsPropertyId,
+      analyticsLimit,
       refresh,
     } = localSearchDemandInputSchema.parse(input)
     try {
@@ -117,6 +133,8 @@ export function createLocalSearchDemandHandler(
         provider,
         serpLimit,
         serpDepth,
+        googleAnalyticsPropertyId,
+        analyticsLimit,
         refresh,
       })
       return toolSuccess(

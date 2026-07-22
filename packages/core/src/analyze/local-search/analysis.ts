@@ -287,6 +287,11 @@ export function analyzeLocalSearchRows(input: {
     eligiblePageCount: new Set(
       eligible.flatMap((item) => item.pages.map((page) => page.url)),
     ).size,
+    eligiblePageUrls: [
+      ...new Set(
+        eligible.flatMap((item) => item.pages.map((page) => page.url)),
+      ),
+    ].sort(compareText),
     opportunities: eligible.slice(0, input.limit).map((item) => ({
       ...item,
       pages: item.pages.slice(0, 3),

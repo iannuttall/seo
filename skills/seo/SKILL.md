@@ -69,8 +69,8 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 Without provider API access, describe `ranked-keywords`, `ranking-pages`,
 `serp-competitors`, or `competitor-keyword-gap` and pass one to four local
 ranked-keyword exports through `researchFiles`. Read `evidence.imports` before
-using the rows. File dates, hashes, included fields, rejected rows, and caps
-define the evidence boundary.
+using the rows. File dates, hashes, included fields, filtered historical rows,
+rejected rows, and caps define the evidence boundary.
 
 Use `seo report` first for a broad performance question with a known project.
 For a large or unfamiliar URL, run sitemap health before a full crawl.

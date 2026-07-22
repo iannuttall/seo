@@ -75,6 +75,7 @@ export const TELEMETRY_REPORTS = [
   'crawl-history',
   'crawler-rules',
   'llms-txt-audit',
+  'local-search-demand',
   'generate-llms-txt',
   'measure-change',
   'monthly-report',

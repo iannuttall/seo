@@ -4,6 +4,7 @@ import { crawlReports } from './crawl'
 import { diagnosisReports } from './diagnosis'
 import { domainResearchReports } from './domain-research'
 import { experimentReports } from './experiments'
+import { localSearchReports } from './local-search'
 import { legacyReportAliases, reportIds, reportSlugs } from './manifest.mjs'
 import { monitoringReports } from './monitoring'
 import { opportunityReports } from './opportunities'
@@ -18,6 +19,7 @@ const catalog = [
   ...diagnosisReports,
   ...domainResearchReports,
   ...experimentReports,
+  ...localSearchReports,
   ...monitoringReports,
   ...opportunityReports,
   ...reportingReports,

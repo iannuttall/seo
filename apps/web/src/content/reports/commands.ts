@@ -129,6 +129,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo link-recover --project example',
       note: 'Find broken or poorly redirected URLs with returned search value.',
     },
+    'local-search-demand': {
+      command:
+        'seo reports run local-search-demand --params \'{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"days":90}\' --json',
+      note: 'Find retained location-specific demand before requesting paid live results.',
+    },
     'llms-txt-audit': {
       command: 'seo llms audit --project example',
       note: 'Check an optional llms.txt file and its linked pages.',

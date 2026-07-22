@@ -211,8 +211,7 @@ export function domainOverviewPaidRequest(
     context: input.context,
     ttlMs,
     refresh: input.refresh,
-    rowCount: (response) =>
-      response.tasks.reduce((sum, task) => sum + (task.result?.length ?? 0), 0),
+    rowCount: domainRows,
   }
 }
 

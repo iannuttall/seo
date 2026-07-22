@@ -67,6 +67,7 @@ export const domainResearchReports = [
       'You need the keyword rows behind a domain or page footprint.',
       'You want to filter by rank, demand, result type, or excluded wording before paying for rows.',
       'You want provider rows compared with retained Search Console query evidence for a matching site you own.',
+      'You have a local ranked-keyword export but no provider API connection.',
     ],
     avoidWhen: [
       'You need a current exact result snapshot rather than a provider database row.',
@@ -76,6 +77,7 @@ export const domainResearchReports = [
       'Provider keyword, ranking URL, grouped and absolute rank, result type, estimated traffic, volume, difficulty, intent, and cost fields.',
       'Optional Search Console query and page rows, aggregated deterministically and matched by normalized query.',
       'Request filters, pagination, provider totals, invalid rows, cache state, warnings, and local request cost.',
+      'Optional local-file dates, hashes, included fields, row quality, duplicate counts, and caps.',
     ],
     methodology: [
       'Applies bounded filters before acquisition, rejects unsafe limits, validates each returned row, and collapses duplicates deterministically.',
@@ -105,7 +107,11 @@ export const domainResearchReports = [
       'Use keyword opportunities for first-party prioritisation and programmatic clusters.',
     ],
     related: ['serp-results', 'ranking-pages', 'keyword-opportunities'],
-    sources: ['domain-provider-keywords', 'search-analytics'],
+    sources: [
+      'domain-provider-keywords',
+      'local-research-files',
+      'search-analytics',
+    ],
   },
   {
     id: 'ranking-pages',
@@ -119,6 +125,7 @@ export const domainResearchReports = [
       "You want to see which pages carry a first-party or competitor domain's estimated organic footprint.",
       'You are researching programmatic page families and need representative URLs.',
       'You want matching Search Console page evidence for a site you own.',
+      'You want to group a local ranked-keyword export into pages and URL patterns.',
     ],
     avoidWhen: [
       'You plan to infer quality, intent, or a content generator from path structure alone.',
@@ -156,7 +163,11 @@ export const domainResearchReports = [
       'Use a current result snapshot when live competitors or intent would change the decision.',
     ],
     related: ['ranked-keywords', 'pseo-audit', 'competitor-keyword-gap'],
-    sources: ['domain-provider-pages', 'search-analytics'],
+    sources: [
+      'domain-provider-pages',
+      'local-research-files',
+      'search-analytics',
+    ],
   },
   {
     id: 'serp-competitors',
@@ -170,6 +181,7 @@ export const domainResearchReports = [
       'You want to discover search competitors before choosing a small set for deeper research.',
       'You need to separate your target, declared competitors, and other recurring result domains.',
       'You want publishers, directories, communities, and marketplaces kept distinct from business competitors.',
+      'Your ranked-keyword exports contain several domains across the requested terms.',
     ],
     avoidWhen: [
       'You have only one query or need a local, device-specific live result snapshot.',
@@ -206,7 +218,11 @@ export const domainResearchReports = [
       'Run competitor keyword gap only after excluding irrelevant site types.',
     ],
     related: ['ranking-pages', 'competitor-keyword-gap', 'serp-results'],
-    sources: ['domain-provider-competitors', 'serp-provider-results'],
+    sources: [
+      'domain-provider-competitors',
+      'local-research-files',
+      'serp-provider-results',
+    ],
   },
   {
     id: 'competitor-keyword-gap',
@@ -220,6 +236,7 @@ export const domainResearchReports = [
       'You have classified a small set of relevant competitors.',
       'You want existing Search Console coverage and provider-observed ranks removed from a possible gap list.',
       'You need pSEO pattern evidence and a bounded data-source research brief for plausible template ideas.',
+      'You have separate local ranked-keyword exports for the site and up to three competitors.',
     ],
     avoidWhen: [
       'You want every competitor keyword presented as relevant or missing from the site.',
@@ -266,6 +283,7 @@ export const domainResearchReports = [
     sources: [
       'domain-provider-keywords',
       'domain-provider-pages',
+      'local-research-files',
       'search-analytics',
     ],
   },

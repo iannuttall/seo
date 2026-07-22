@@ -18,13 +18,45 @@ export const REPORT_DEPTH_CONTINUED = {
     verify:
       'Inspect cited pages and current results, then run fixed prompt observations for a small stable question set before changing content or templates.',
     related: [
+      {
+        id: 'ai-prompt-observations',
+        reason: 'Records current answers for fixed prompts.',
+      },
       { id: 'ai-referrals', reason: 'Measures identifiable referral visits.' },
       { id: 'ai-readiness', reason: 'Checks technical access controls.' },
       {
         id: 'keyword-opportunities',
         reason: 'Starts from first-party demand.',
       },
-      { id: 'pseo-audit', reason: 'Validates existing repeated templates.' },
+    ],
+  },
+  'ai-prompt-observations': {
+    readOrder: [
+      'dataStatus, exact prompt and model combinations, market label, web-search setting, and request count',
+      'each observation evidence coverage, cache state, requested and effective model, checkedAt, answerTruncated, cost, and warnings',
+      'answer text, citations, target matches, and comparison status',
+      'firstParty source limits and each fan-out lexical overlap state',
+      'citedDomains, fanOutThemes, findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'A generated answer is one sample, not a census of what every user sees or proof of universal AI visibility.',
+      'not-observed applies only to the retained answer and supplied aliases. It is not proof of absence.',
+      'A citation does not prove that the source supports every answer claim, caused traffic, or will recur. Model changes, cache hits, partial evidence, and truncated answers are not comparable trend points.',
+      'Fan-out and Search Console lexical overlap do not prove shared intent, independent demand, or that a new page or programmatic template should be built.',
+    ],
+    verify:
+      'Inspect the answer and cited pages, validate research leads with keyword and current result evidence, and repeat only decision-critical prompts with the same effective model and complete evidence.',
+    related: [
+      {
+        id: 'ai-mention-research',
+        reason: 'Adds broader provider-indexed mention evidence.',
+      },
+      { id: 'ai-referrals', reason: 'Measures identifiable referral visits.' },
+      {
+        id: 'keyword-opportunities',
+        reason: 'Validates first-party demand and content coverage.',
+      },
+      { id: 'pseo-opportunities', reason: 'Researches viable template ideas.' },
     ],
   },
   'competitor-keyword-gap': {

@@ -23,6 +23,7 @@ function evidence(input: {
   answer?: string
   effectiveModel?: string
   cache?: 'hit' | 'miss' | 'bypass'
+  taskIds?: string[]
 }): AiPromptEvidence<AiPromptObservation> {
   return {
     schemaVersion: 1,
@@ -69,7 +70,7 @@ function evidence(input: {
       currency: 'USD',
       estimatedMicros: 600,
       actualMicros: 1_800,
-      taskIds: [`task-${input.checkedAt}`],
+      taskIds: input.taskIds ?? [`task-${input.checkedAt}`],
     },
     request: {
       operation: 'ai-prompt-observation',
@@ -92,6 +93,7 @@ function save(
     retainedPerComparison?: number
     retainedTotal?: number
     maxLogicalBytes?: number
+    taskIds?: string[]
   } = {},
 ) {
   return saveAiPromptObservation(
@@ -107,6 +109,7 @@ function save(
         checkedAt,
         answer: options.answer,
         effectiveModel: options.effectiveModel,
+        taskIds: options.taskIds,
       }),
     },
     {
@@ -143,6 +146,23 @@ test('AI prompt history deduplicates the same provider observation', () => {
     .prepare('SELECT COUNT(*) AS count FROM ai_prompt_observations')
     .get() as { count: number }
   assert.equal(repeated.id, first.id)
+  assert.equal(count.count, 1)
+})
+
+test('AI prompt history deduplicates one provider task across timestamp normalization', () => {
+  const db = database()
+  const first = save(db, '2026-07-22T10:00:00.002Z', {
+    taskIds: ['provider-task-1'],
+  })
+  const cached = save(db, '2026-07-22T10:00:00.000Z', {
+    taskIds: ['provider-task-1'],
+    now: '2026-07-22T11:00:00.000Z',
+  })
+  const count = db
+    .prepare('SELECT COUNT(*) AS count FROM ai_prompt_observations')
+    .get() as { count: number }
+
+  assert.equal(cached.id, first.id)
   assert.equal(count.count, 1)
 })
 

@@ -248,12 +248,15 @@ export function saveAiPromptObservation(
     webSearchRequested: input.evidence.data.webSearchRequested,
     maxOutputTokens: input.maxOutputTokens,
   })
-  const id = stableHash({
-    comparisonKey,
-    checkedAt: input.evidence.data.checkedAt,
-    taskIds: input.evidence.cost.taskIds,
-    answer: input.evidence.data.answer,
-  })
+  const taskIds = [...input.evidence.cost.taskIds].sort()
+  const providerIdentity =
+    taskIds.length > 0
+      ? { taskIds }
+      : {
+          checkedAt: input.evidence.data.checkedAt,
+          answer: input.evidence.data.answer,
+        }
+  const id = stableHash({ comparisonKey, providerIdentity })
   const now = (options.now ?? (() => new Date()))().getTime()
   const save = db.transaction(() => {
     db.prepare(

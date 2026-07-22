@@ -161,3 +161,44 @@ test('AI prompt provider rejects retired models before paid work', async () => {
   )
   assert.equal(paidCalls, 0)
 })
+
+test('AI prompt provider rejects an implausible future provider datetime', async () => {
+  const response = observationResponse()
+  const row = response.tasks[0]?.result?.[0]
+  if (row) row.datetime = '2026-07-22 17:30:00 +00:00'
+  const provider = new DataForSeoAiPromptObservationProvider({
+    client: {
+      aiPromptModels: async () => modelsResponse(),
+      aiPromptObservation: async () => ({
+        response,
+        observedAt: '2026-07-22T14:30:01.000Z',
+        returnedRows: 1,
+        cache: { status: 'miss', storedAt: null, expiresAt: null },
+        cost: {
+          currency: 'USD',
+          estimatedMicros: 600,
+          actualMicros: 1_800,
+          taskIds: ['task-1'],
+        },
+        spendNotice: null,
+        warnings: [],
+      }),
+    },
+  })
+
+  const evidence = await provider.observeAiPrompt({
+    prompt: 'Which option is best?',
+    surface: 'chatgpt',
+    model: 'model-current',
+    market: { countryCode: 'US', languageCode: 'en' },
+    webSearch: true,
+    maxOutputTokens: 2_048,
+  })
+
+  assert.equal(evidence.data.checkedAt, '2026-07-22T14:30:01.000Z')
+  assert.ok(
+    evidence.warnings.some(
+      (warning) => warning.code === 'provider-datetime-invalid',
+    ),
+  )
+})

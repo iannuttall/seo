@@ -356,3 +356,41 @@ test('partial provider failures preserve successful evidence and unknown total c
   assert.equal(report.cost.actualMicros, null)
   assert.equal(report.cost.actualCostState, 'partial-or-unknown')
 })
+
+test('capped Search Console context makes the report partial', async () => {
+  const adapter = provider({
+    observe: async (request) =>
+      evidence(request, {
+        answer: 'Target & Co is named.',
+        checkedAt: '2026-07-22T12:00:00.000Z',
+      }),
+  })
+  const report = await aiPromptObservationsReport(
+    {
+      ...baseInput,
+      models: [baseInput.models[0] as AiPromptModelInput],
+      site: 'sc-domain:target.example',
+    },
+    {
+      database: database(),
+      candidates: [candidate(adapter)],
+      searchAnalytics: async () => ({
+        rows: [
+          {
+            keys: ['best widget', 'https://target.example/widgets'],
+            clicks: 1,
+            impressions: 10,
+            ctr: 0.1,
+            position: 4,
+          },
+        ],
+        rowsFetched: 100_000,
+        calls: 20,
+      }),
+    },
+  )
+
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(report.source.firstParty.status, 'partial')
+  assert.equal(report.source.firstParty.possiblyTruncated, true)
+})

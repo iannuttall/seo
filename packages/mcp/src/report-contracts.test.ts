@@ -281,6 +281,48 @@ test('SERP results bounds query, market, device, and depth', () => {
   }
 })
 
+test('local search demand keeps provider work explicit and bounded', () => {
+  const schema = reportSchema('local-search-demand')
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      locationTerms: ['London', 'SW1A 1AA'],
+      limit: 100,
+      maxRows: 50_000,
+    }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      includeSerps: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { name: 'London,England,United Kingdom' },
+      device: 'mobile',
+      serpLimit: 3,
+      serpDepth: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', countryCode: 'GB' },
+    { site: 'sc-domain:example.com', includeSerps: true },
+    { site: 'sc-domain:example.com', limit: 101 },
+    { site: 'sc-domain:example.com', maxRows: 50_001 },
+    {
+      site: 'sc-domain:example.com',
+      includeSerps: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { name: 'London,England,United Kingdom' },
+      serpLimit: 4,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('rank tracking bounds local configuration, acquisition, and output', () => {
   const schema = reportSchema('rank-tracking')
   assert.equal(

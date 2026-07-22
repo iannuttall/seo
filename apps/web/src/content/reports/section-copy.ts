@@ -67,6 +67,8 @@ export const reportNextStepIntros: Record<string, string> = {
     "Inspect the broken URL's search evidence and the page you might use as its destination. Restore or redirect it only when the replacement serves the same intent, then trace the final response and links again.",
   'link-evidence':
     'Open a selected referring page and confirm the link is still present before making a decision. Use a fresh export or Bing report later when you need to check whether the observed set changed.',
+  'local-search-demand':
+    'Start with the retained local queries and their landing pages. Inspect repeated page families before expanding them, and request exact local results only for the few terms whose current intent, competitors or result features would change the work.',
   'server-log-analysis':
     'Check important crawler errors against the original log and current server configuration. Confirm crawler identity separately when the decision depends on more than the observed user-agent string.',
   'serp-results':

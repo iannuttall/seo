@@ -191,6 +191,9 @@ The guided flow should not ask humans for implementation details.
 Every report must be technically defensible and useful to another program.
 
 - Preserve observed evidence separately from derived findings and actions.
+- Keep local query wording, searcher location, Google Analytics geography,
+  exact SERP location, Maps results, and business-profile evidence separate.
+  None can stand in for another.
 - Label heuristics as heuristics. Do not turn conventions, correlations, or
   arbitrary thresholds into search-engine requirements.
 - Do not claim causation, ranking impact, indexing, crawler access, rich-result

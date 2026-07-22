@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.2.22",
+  "version": "0.2.23",
   "description": "The SEO command for AI agents. Audit sites and research search opportunities with local, evidence-backed reports.",
   "type": "module",
   "license": "Apache-2.0",

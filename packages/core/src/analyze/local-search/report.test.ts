@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { SeoError } from '../../errors.js'
 import type { SerpResultsReport } from '../serp-results.js'
+import { localAnalyticsEvidence } from './analytics.js'
 import { localSearchReport } from './report.js'
 
 function serpReport(keyword: string): SerpResultsReport {
@@ -20,11 +21,12 @@ function serpReport(keyword: string): SerpResultsReport {
       keyword,
       effectiveKeyword: keyword,
       requestedDepth: 10,
-      organicResults: 1,
-      uniqueDomains: 1,
+      organicResults: 2,
+      localPackResults: 1,
+      uniqueDomains: 2,
       observedFeatures: 2,
       correctedQuery: false,
-      verdict: 'One result retained.',
+      verdict: 'Fixture results retained.',
     },
     evidence: {
       schemaVersion: 1,
@@ -58,12 +60,48 @@ function serpReport(keyword: string): SerpResultsReport {
             description: null,
             isFeaturedSnippet: false,
           },
+          {
+            rankGroup: 2,
+            rankAbsolute: 3,
+            page: 1,
+            domain: 'directory.test',
+            url: 'https://directory.test/page',
+            title: 'Directory',
+            description: null,
+            isFeaturedSnippet: false,
+          },
         ],
+        localPack: {
+          present: true,
+          returnedRows: 1,
+          retainedRows: 1,
+          invalidRows: 0,
+          results: [
+            {
+              rankGroup: 1,
+              rankAbsolute: 1,
+              page: 1,
+              title: 'Example plumber',
+              domain: 'example-plumber.test',
+              url: 'https://example-plumber.test/',
+              cid: 'example-cid',
+              phone: null,
+              description: null,
+              isPaid: false,
+              rating: {
+                type: 'Max5',
+                value: 5,
+                votesCount: 20,
+                maximum: 5,
+              },
+            },
+          ],
+        },
       },
       coverage: {
         requestedRows: 10,
-        returnedRows: 2,
-        retainedRows: 1,
+        returnedRows: 3,
+        retainedRows: 2,
         invalidRows: 0,
         providerTotalRows: null,
         completeness: 'complete',
@@ -85,7 +123,10 @@ function serpReport(keyword: string): SerpResultsReport {
       },
       warnings: [],
     },
-    domains: [{ domain: 'example.com', resultCount: 1, ranks: [2] }],
+    domains: [
+      { domain: 'example.com', resultCount: 1, ranks: [2] },
+      { domain: 'directory.test', resultCount: 1, ranks: [3] },
+    ],
     findings: [],
     caveats: [],
     nextSteps: [],
@@ -155,8 +196,107 @@ test('combines first-party local demand with bounded opt-in SERPs', async () => 
   assert.equal(report.summary.localQueries, 3)
   assert.equal(report.summary.serpSnapshots, 2)
   assert.equal(report.summary.localPackSnapshots, 2)
+  assert.equal(report.summary.localPackListings, 1)
+  assert.equal(report.summary.organicCompetitors, 1)
+  assert.equal(
+    report.serpInsights.organicCompetitors.items[0]?.domain,
+    'directory.test',
+  )
+  assert.equal(
+    report.serpInsights.organicCompetitors.items[0]?.matchedQueries,
+    2,
+  )
+  assert.equal(
+    report.serpInsights.localPackListings.items[0]?.cid,
+    'example-cid',
+  )
   assert.equal(report.serpEvidence.selection.omittedQueries, 1)
   assert.equal(report.serpEvidence.cost.actualMicros, 4_000)
+})
+
+test('joins optional Analytics geography by local landing page without changing query evidence', async () => {
+  let analyticsPropertyId: string | undefined
+  const report = await localSearchReport(
+    {
+      site: 'sc-domain:example.com',
+      locationTerms: ['london', 'manchester'],
+      googleAnalyticsPropertyId: 'properties/123',
+      analyticsLimit: 100,
+    },
+    {
+      now: () => new Date('2026-07-22T12:00:00.000Z'),
+      searchAnalytics: async () => ({
+        rows: [
+          {
+            keys: ['plumber london', 'https://example.com/plumbers/london'],
+            clicks: 5,
+            impressions: 100,
+            ctr: 0.05,
+            position: 7,
+          },
+          {
+            keys: [
+              'plumber manchester',
+              'https://example.com/plumbers/manchester',
+            ],
+            clicks: 2,
+            impressions: 50,
+            ctr: 0.04,
+            position: 12,
+          },
+        ],
+        rowsFetched: 2,
+        calls: 1,
+      }),
+      analyticsEvidence: async (input) => {
+        analyticsPropertyId = input.propertyId
+        return localAnalyticsEvidence(input, {
+          runReport: async () => ({
+            dimensionHeaders: [
+              { name: 'landingPagePlusQueryString' },
+              { name: 'country' },
+              { name: 'region' },
+              { name: 'city' },
+            ],
+            metricHeaders: [{ name: 'sessions' }],
+            rows: [
+              {
+                dimensionValues: [
+                  { value: '/plumbers/london' },
+                  { value: 'United Kingdom' },
+                  { value: 'England' },
+                  { value: 'London' },
+                ],
+                metricValues: [{ value: '20' }],
+              },
+              {
+                dimensionValues: [
+                  { value: '/unrelated' },
+                  { value: 'United States' },
+                  { value: 'California' },
+                  { value: 'Los Angeles' },
+                ],
+                metricValues: [{ value: '500' }],
+              },
+            ],
+            rowCount: 2,
+          }),
+        })
+      },
+    },
+  )
+
+  assert.equal(analyticsPropertyId, '123')
+  assert.equal(report.analyticsEvidence.status, 'complete')
+  assert.equal(report.analyticsEvidence.source.matchedPages, 1)
+  assert.equal(report.analyticsEvidence.locations[0]?.city, 'London')
+  assert.equal(report.analyticsEvidence.locations[0]?.sessions, 20)
+  assert.equal(report.summary.analyticsLocations, 1)
+  assert.equal(report.summary.analyticsMatchedPages, 1)
+  assert.equal(
+    report.opportunities[0]?.intent.method,
+    'explicit-local-intent-v1',
+  )
 })
 
 test('does not make paid requests by default', async () => {
@@ -216,6 +356,43 @@ test('keeps first-party evidence when optional SERPs are unavailable', async () 
   assert.deepEqual(report.warnings, ['Provider is disconnected.'])
 })
 
+test('keeps first-party evidence when optional Analytics geography is unavailable', async () => {
+  const report = await localSearchReport(
+    {
+      site: 'sc-domain:example.com',
+      locationTerms: ['london'],
+      googleAnalyticsPropertyId: '123',
+    },
+    {
+      now: () => new Date('2026-07-22T12:00:00.000Z'),
+      searchAnalytics: async () => ({
+        rows: [
+          {
+            keys: ['plumber london', 'https://example.com/london'],
+            clicks: 5,
+            impressions: 100,
+            ctr: 0.05,
+            position: 7,
+          },
+        ],
+        rowsFetched: 1,
+        calls: 1,
+      }),
+      analyticsEvidence: (input) =>
+        localAnalyticsEvidence(input, {
+          runReport: async () => {
+            throw new Error('Analytics connection failed.')
+          },
+        }),
+    },
+  )
+
+  assert.equal(report.dataStatus, 'partial')
+  assert.equal(report.summary.localQueries, 1)
+  assert.equal(report.analyticsEvidence.status, 'unavailable')
+  assert.match(report.warnings.join(' '), /Analytics connection failed/)
+})
+
 test('requires an explicit canonical location for local SERPs', async () => {
   await assert.rejects(
     localSearchReport({
@@ -245,6 +422,34 @@ test('rejects SERP-only options when paid evidence is not enabled', async () => 
       error.code === 'INVALID_INPUT' &&
       /includeSerps/.test(error.message),
   )
+})
+
+test('rejects Analytics limits and malformed property ids before acquisition', async () => {
+  let calls = 0
+  const dependencies = {
+    searchAnalytics: async () => {
+      calls++
+      return { rows: [], rowsFetched: 0, calls: 1 }
+    },
+  }
+  await assert.rejects(
+    localSearchReport(
+      { site: 'sc-domain:example.com', analyticsLimit: 10 },
+      dependencies,
+    ),
+    /googleAnalyticsPropertyId/,
+  )
+  await assert.rejects(
+    localSearchReport(
+      {
+        site: 'sc-domain:example.com',
+        googleAnalyticsPropertyId: 'not-a-property',
+      },
+      dependencies,
+    ),
+    /numeric Google Analytics property id/,
+  )
+  assert.equal(calls, 0)
 })
 
 test('keeps a capped source partial when every retained row is filtered', async () => {

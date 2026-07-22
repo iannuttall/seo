@@ -56,6 +56,13 @@ function evidence(
           isFeaturedSnippet: false,
         },
       ],
+      localPack: {
+        present: false,
+        returnedRows: 0,
+        retainedRows: 0,
+        invalidRows: 0,
+        results: [],
+      },
     },
     observedAt: '2026-07-21T12:00:01.000Z',
     market: {
@@ -135,6 +142,7 @@ test('SERP results summarize exact ranks without inventing strength', async () =
   assert.equal(captured?.context?.reportId, 'serp-results')
   assert.equal(report.dataStatus, 'complete')
   assert.equal(report.summary.organicResults, 3)
+  assert.equal(report.summary.localPackResults, 0)
   assert.equal(report.summary.uniqueDomains, 2)
   assert.equal(report.summary.correctedQuery, true)
   assert.deepEqual(report.domains[0], {

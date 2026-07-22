@@ -69,6 +69,32 @@ export function userDataFixture(): UserDataFixture {
               },
             },
             price: {
+              backlinks: {
+                summary: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.000036 },
+                      { cost_type: 'per_request', cost: 0.024 },
+                    ],
+                  },
+                },
+                backlinks: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.000036 },
+                      { cost_type: 'per_request', cost: 0.024 },
+                    ],
+                  },
+                },
+                referring_domains: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_result', cost: 0.000036 },
+                      { cost_type: 'per_request', cost: 0.024 },
+                    ],
+                  },
+                },
+              },
               dataforseo_labs: {
                 keyword_overview: {
                   live: {

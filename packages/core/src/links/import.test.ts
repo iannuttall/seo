@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { importLinkEvidence } from './import.js'
 import { linkEvidenceReport } from './report.js'
+import type { CollectedLinkEvidence } from './types.js'
 
 test('CSV link imports stream, normalize, deduplicate, and retain provenance', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'seo-links-'))
@@ -91,4 +92,38 @@ test('link reports bound returned evidence and do not imply complete coverage', 
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
+})
+
+test('link reports enforce one structured output budget for large evidence sets', () => {
+  const rows = Array.from({ length: 10_000 }, (_, index) => ({
+    sourceUrl: `https://source-${index}.example/post`,
+    sourceDomain: `source-${index}.example`,
+    targetUrl: `https://target.example/page-${index % 1_000}`,
+  }))
+  const evidence: CollectedLinkEvidence = {
+    rows,
+    targetCounts: [],
+    provenance: {
+      provider: 'json-import',
+      observedAt: '2026-07-22T08:00:00.000Z',
+      cached: false,
+      suppliedRows: rows.length,
+      validRows: rows.length,
+      invalidRows: 0,
+      duplicateRows: 0,
+      capped: false,
+      rowLimit: rows.length,
+      completeness: 'unknown',
+    },
+    warnings: [],
+  }
+
+  const report = linkEvidenceReport({ evidence, limit: 500 })
+
+  assert.equal(report.links.length, 500)
+  assert.equal(report.targetCounts.length, 100)
+  assert.equal(report.outputBudget.returned, 600)
+  assert.ok(report.outputBudget.returned <= report.outputBudget.limit)
+  assert.ok(report.outputBudget.omitted > 0)
+  assert.ok(Buffer.byteLength(JSON.stringify(report)) < 250_000)
 })

@@ -2,8 +2,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   bingWebmasterOverview,
   collectBingLinkEvidence,
+  collectDataForSeoLinkEvidence,
   importLinkEvidence,
   linkEvidenceReport,
+  linkTargetContext,
   SeoError,
 } from '@seo/core'
 import * as z from 'zod/v4'
@@ -88,42 +90,101 @@ export function registerProviderTools(server: McpServer): void {
     'seo_link_evidence',
     {
       description:
-        'Review bounded referring-link evidence from Bing Webmaster or a local export',
+        'Review bounded referring-link evidence from DataForSEO, Bing Webmaster or a local export',
       inputSchema: {
         site: z.string().url().max(2_000).optional(),
+        provider: z.enum(['dataforseo', 'bing']).optional(),
+        target: z.string().trim().min(1).max(2_048).optional(),
+        scope: z.enum(['domain', 'page']).optional(),
+        includeSubdomains: z.boolean().optional(),
+        searchConsoleSite: z.string().trim().min(1).max(2_048).optional(),
         file: z.string().min(1).max(4_096).optional(),
         format: z.enum(['csv', 'json', 'jsonl']).optional(),
         rowLimit: z.number().int().min(1).max(100_000).optional(),
         targetLimit: z.number().int().min(1).max(50).optional(),
         detailPagesPerTarget: z.number().int().min(1).max(3).optional(),
         limit: z.number().int().min(1).max(500).optional(),
+        days: z.number().int().min(1).max(548).optional(),
+        refresh: z.boolean().optional(),
       },
     },
     async ({
       site,
+      provider,
+      target,
+      scope,
+      includeSubdomains,
+      searchConsoleSite,
       file,
       format,
       rowLimit,
       targetLimit,
       detailPagesPerTarget,
       limit,
+      days,
+      refresh,
     }) => {
       try {
-        if (Boolean(site) === Boolean(file)) {
+        const liveProvider = provider ?? (target ? 'dataforseo' : 'bing')
+        const sourceCount =
+          Number(Boolean(file)) +
+          Number(Boolean(site)) +
+          Number(Boolean(target))
+        if (sourceCount !== 1) {
           throw new SeoError(
             'INVALID_INPUT',
-            'Pass exactly one of site for Bing or file for a local import.',
+            'Pass one link source: file, site for Bing, or target for DataForSEO.',
+          )
+        }
+        if (file && provider) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Do not pass provider with a local link file.',
+          )
+        }
+        if (liveProvider === 'dataforseo' && !target) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Pass target for DataForSEO link evidence.',
+          )
+        }
+        if (liveProvider === 'bing' && !site && !file) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Pass site for Bing link evidence.',
           )
         }
         const evidence = file
           ? await importLinkEvidence({ file, format, rowLimit })
-          : await collectBingLinkEvidence({
-              site: site ?? '',
-              rowLimit,
-              targetLimit,
-              detailPagesPerTarget,
-            })
-        const report = linkEvidenceReport({ evidence, limit })
+          : liveProvider === 'dataforseo'
+            ? await collectDataForSeoLinkEvidence({
+                target: target ?? '',
+                scope,
+                includeSubdomains,
+                rowLimit,
+                refresh,
+              })
+            : await collectBingLinkEvidence({
+                site: site ?? '',
+                rowLimit,
+                targetLimit,
+                detailPagesPerTarget,
+              })
+        const context =
+          searchConsoleSite || evidence.provenance.provider === 'dataforseo'
+            ? await linkTargetContext({
+                evidence,
+                searchConsoleSite,
+                crawlSite: searchConsoleSite ?? target,
+                days,
+                refresh,
+              })
+            : undefined
+        const report = linkEvidenceReport({
+          evidence,
+          limit,
+          targetContext: context,
+        })
         return toolSuccess(
           `${report.summary.observedLinks} referring links were retained from ${report.provenance.provider}.`,
           report,

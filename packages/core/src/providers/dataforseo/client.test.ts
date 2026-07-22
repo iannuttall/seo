@@ -62,6 +62,11 @@ test('user data uses the free account endpoint and returns owned fields', async 
       rankingPages: { perRequestMicros: 12_000, perResultMicros: 120 },
       serpCompetitors: { perRequestMicros: 12_000, perResultMicros: 120 },
     },
+    linkPrices: {
+      summary: { perRequestMicros: 24_000, perResultMicros: 36 },
+      backlinks: { perRequestMicros: 24_000, perResultMicros: 36 },
+      referringDomains: { perRequestMicros: 24_000, perResultMicros: 36 },
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: 2_000,
       perResultMicros: 0,

@@ -70,7 +70,7 @@ export const linksCommand = defineCommand({
     'row-limit': {
       type: 'string',
       description:
-        'Maximum imported or Bing link rows. Defaults to 500 for Bing and 10000 for files.',
+        'Maximum source rows. Defaults: 100 DataForSEO, 500 Bing, 10000 files.',
     },
     'target-limit': {
       type: 'string',
@@ -236,6 +236,23 @@ export const linksCommand = defineCommand({
       printJson(report)
       return
     }
+    const providerCosts = report.providerEvidence
+      ? [
+          report.providerEvidence.summary.cost.actualMicros,
+          report.providerEvidence.backlinks.cost.actualMicros,
+        ]
+      : []
+    const providerCost = providerCosts.every(
+      (value): value is number => value !== null,
+    )
+      ? providerCosts.reduce((total, value) => total + value, 0)
+      : null
+    const providerCached = report.providerEvidence
+      ? [
+          report.providerEvidence.summary.cache.status,
+          report.providerEvidence.backlinks.cache.status,
+        ].every((status) => status === 'hit')
+      : false
     printReportSummary({
       title: 'Inbound link evidence',
       target: report.provenance.provider,
@@ -273,6 +290,28 @@ export const linksCommand = defineCommand({
                 label: 'Provider domains',
                 value: formatCount(
                   report.providerSummary.referringDomains.value,
+                ),
+              },
+            ]
+          : []),
+        ...(report.providerEvidence
+          ? [
+              {
+                label: 'Provider cost',
+                value:
+                  providerCost === null
+                    ? 'Unknown'
+                    : `$${(providerCost / 1_000_000).toFixed(4)}${providerCached ? ' (cached)' : ''}`,
+              },
+            ]
+          : []),
+        ...(report.providerSummary?.brokenBacklinks.state === 'observed' &&
+        report.providerSummary.brokenBacklinks.value > 0
+          ? [
+              {
+                label: 'Provider broken links',
+                value: formatCount(
+                  report.providerSummary.brokenBacklinks.value,
                 ),
               },
             ]

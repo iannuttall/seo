@@ -70,7 +70,8 @@ through adding your own desktop OAuth client.
 
 Research providers are optional and connected separately. Start with the main
 report, then add DataForSEO when keyword estimates, live results, domain
-footprints, ranking pages, or competitor research would change the decision.
+footprints, ranking pages, competitor research, or exact local result context
+would change the decision.
 
 That is the normal path. The `seo` command is then available in every terminal,
 script, CI job, and local MCP client on the machine.
@@ -133,6 +134,8 @@ Use `seo help all` for the longer command list.
   ranks.
 - Detect repeated first-party and competitor page patterns, then return bounded
   data-source research briefs before proposing a new programmatic template.
+- Find location-specific Search Console demand and repeated local page patterns,
+  then add a few exact local result snapshots when the decision needs them.
 - Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
   compact local MCP surface.
 
@@ -209,6 +212,7 @@ commands:
 seo reports describe keyword-research --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
+seo reports describe local-search-demand --json
 
 seo reports run domain-overview \
   --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
@@ -229,6 +233,9 @@ The research flow now covers:
 - `competitor-keyword-gap` for comparing up to three relevant domains with
   retained Search Console themes, the site's provider-observed rankings, and
   programmatic page patterns;
+- `local-search-demand` for matching explicit place names, nearby phrases, and
+  postal codes in retained Search Console rows, reviewing repeated local page
+  patterns, and optionally adding up to three exact local result snapshots;
 - `link-evidence` for a current link summary, one representative backlink per
   referring domain, and linked-target checks against saved crawl and Search
   Console evidence.
@@ -238,6 +245,8 @@ are estimates. Search Console remains the evidence for measured search
 performance on a property you own. A live result snapshot remains the evidence
 for one query, market, device, and observation time. Reports can combine these
 sources without blending their meanings or turning a missing row into zero.
+Local query wording does not establish the searcher's physical location, and an
+observed local pack does not establish that a particular listing appeared.
 
 Read the [research provider guide](https://seoskill.dev/docs/research-providers)
 for setup, costs, caching, country-level limits, competitor classification, and

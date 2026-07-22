@@ -666,6 +666,22 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded keyword set with discovery sources, provider estimates, evidence states, and research follow-ups.',
   },
+  'local-search-demand': {
+    name: 'Local search demand',
+    description:
+      'Find location-specific Search Console demand and enrich a small shortlist with exact local result snapshots.',
+    useWhen: [
+      'You want to find retained queries that name a service area, use a proximity phrase, or contain a postcode or ZIP code.',
+      'You need to connect local demand with current landing pages and repeated programmatic page patterns.',
+      'You want optional city and device-specific result evidence without replacing first-party performance data.',
+    ],
+    avoidWhen: [
+      'You need Google Business Profile performance or a complete business listing audit.',
+      'You want the searcher location inferred from a place name in the query.',
+    ],
+    outcome:
+      'A bounded local-intent query and page queue, repeated local template signals, and optional local SERP feature and competitor evidence.',
+  },
   'saved-keywords': {
     name: 'Saved keyword set',
     description:

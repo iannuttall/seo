@@ -1,6 +1,7 @@
 import { reportGuideOverridesAF } from './guide-overrides-a-f'
 import { domainResearchGuideOverrides } from './guide-overrides-domain-research'
 import { reportGuideOverridesIP } from './guide-overrides-i-p'
+import { localSearchGuideOverrides } from './guide-overrides-local-search'
 import { reportGuideOverridesPseo } from './guide-overrides-pseo'
 import { reportGuideOverridesQZ } from './guide-overrides-q-z'
 import { savedKeywordGuideOverrides } from './guide-overrides-saved-keywords'
@@ -31,6 +32,7 @@ export const reportGuideOverrides: Partial<
   ...reportGuideOverridesAF,
   ...domainResearchGuideOverrides,
   ...reportGuideOverridesIP,
+  ...localSearchGuideOverrides,
   ...reportGuideOverridesPseo,
   ...reportGuideOverridesQZ,
   ...savedKeywordGuideOverrides,

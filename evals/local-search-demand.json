@@ -1,0 +1,41 @@
+{
+  "subject": "local-search-demand",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me the local search opportunities already visible for our London and Manchester service pages.",
+      "expected_output": "Should discover, describe, and run local-search-demand with the Search Console site and bounded locationTerms for London and Manchester. Should read source completeness and heuristic classifications before the opportunity rows. Should keep a place in a query separate from the searcher's physical location and suggest local SERP verification only when it would affect the decision.",
+      "assertions": [
+        "Uses report id local-search-demand through the discovery flow",
+        "Passes London and Manchester as bounded locationTerms",
+        "Reads source completeness and heuristic intent evidence",
+        "Does not infer the searcher's physical location from query wording"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Check our top three local queries in mobile Google results for London and tell me whether a local pack appears.",
+      "expected_output": "Should run local-search-demand with includeSerps true, a London canonical location, mobile device, and serpLimit 3. Should inspect each snapshot's market, observedAt, coverage, cache, cost, features, and organic rows. Should describe local_pack only as an observed result feature in those snapshots, not as complete listing or Google Business Profile evidence.",
+      "assertions": [
+        "Requests at most three local SERP snapshots for the exact London mobile market",
+        "Reads snapshot provenance, coverage, cache, cost, features, and organic rows",
+        "Treats local_pack as an observed feature rather than complete listing evidence",
+        "Keeps Search Console average position separate from exact snapshot ranks"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We have a repeated city URL pattern, so create pages for every town and promise that each one will rank locally.",
+      "expected_output": "Should refuse the ranking promise and page-per-town conclusion. Should explain that the template is a heuristic review signal and require shared intent, reliable source fields, page uniqueness, representative output, indexability, internal linking, and current local result evidence before expansion.",
+      "assertions": [
+        "Refuses to promise local rankings",
+        "Does not treat a repeated URL pattern as proof that more pages should exist",
+        "Requires source data, uniqueness, indexability, internal linking, and representative page checks",
+        "Recommends current local result review before expansion"
+      ],
+      "files": []
+    }
+  ]
+}

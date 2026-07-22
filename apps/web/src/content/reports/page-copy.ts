@@ -185,6 +185,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Review bounded referring URLs, target pages and anchor text from Bing Webmaster or a local CSV, JSON or JSONL export, with source limits kept visible.',
     lead: 'See which retained pages link to the site without downloading a giant backlink index. The report keeps source coverage and limits visible, so a missing row never becomes proof that no link exists.',
   },
+  'local-search-demand': {
+    title: 'Local SEO keyword research',
+    description:
+      'Find location-specific Search Console queries, landing pages and repeated local templates. Add a few exact local result snapshots only when needed.',
+    lead: 'Find the local searches already associated with the site and the pages receiving that demand. Start with first-party evidence, then add exact local results only where current intent, competitors or result features would change the decision.',
+  },
   'server-log-analysis': {
     title: 'Server log crawler analysis',
     description:

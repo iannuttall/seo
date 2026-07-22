@@ -24,6 +24,7 @@ const {
   getCacheStats,
   KEYWORD_SET_LIMITS,
   keywordSetLogicalBytes,
+  localSearchReport,
   observedValue,
   savedKeywordSetReport,
 } = await import('../dist/index.js')
@@ -66,6 +67,70 @@ assert.ok(
   rssGrowthBytes <= MAX_RSS_GROWTH,
   `provider analysis RSS grew by ${(rssGrowthBytes / MEBIBYTE).toFixed(1)} MiB`,
 )
+
+const LOCAL_SEARCH_ROWS = 50_000
+const LOCAL_SEARCH_MAX_DURATION_MS = 10_000
+const LOCAL_SEARCH_MAX_RSS_GROWTH = 256 * MEBIBYTE
+const LOCAL_SEARCH_MAX_OUTPUT_BYTES = MEBIBYTE
+const localSearchRows = Array.from(
+  { length: LOCAL_SEARCH_ROWS },
+  (_, index) => ({
+    keys: [
+      `service place ${index % 100}`,
+      `https://example.com/locations/place-${index % 10_000}`,
+    ],
+    clicks: index % 5,
+    impressions: 100 + (index % 100),
+    ctr: (index % 5) / (100 + (index % 100)),
+    position: 3 + (index % 20),
+  }),
+)
+const localSearchBaselineRss = process.memoryUsage().rss
+const localSearchStartedAt = performance.now()
+const localSearch = await localSearchReport(
+  {
+    site: 'sc-domain:example.com',
+    locationTerms: Array.from({ length: 100 }, (_, index) => `place ${index}`),
+    maxRows: LOCAL_SEARCH_ROWS,
+    limit: 100,
+  },
+  {
+    now: () => new Date('2026-07-22T12:00:00.000Z'),
+    searchAnalytics: async () => ({
+      rows: localSearchRows,
+      rowsFetched: LOCAL_SEARCH_ROWS,
+      calls: 10,
+    }),
+  },
+)
+const localSearchDurationMs = performance.now() - localSearchStartedAt
+const localSearchRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - localSearchBaselineRss,
+)
+const localSearchOutputBytes = Buffer.byteLength(JSON.stringify(localSearch))
+console.log(
+  JSON.stringify({
+    report: 'local-search-demand',
+    sourceRows: LOCAL_SEARCH_ROWS,
+    locationTerms: 100,
+    returnedQueries: localSearch.opportunities.length,
+    returnedTemplates: localSearch.templates.length,
+    durationMs: Math.round(localSearchDurationMs),
+    rssGrowthMiB: Number((localSearchRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    bytesRead: Buffer.byteLength(JSON.stringify(localSearchRows)),
+    bytesWritten: 0,
+    outputBytes: localSearchOutputBytes,
+  }),
+)
+assert.equal(localSearch.dataStatus, 'partial')
+assert.equal(localSearch.source.possiblyTruncated, true)
+assert.equal(localSearch.selection.sourceRows, LOCAL_SEARCH_ROWS)
+assert.equal(localSearch.opportunities.length, 100)
+assert.ok(localSearch.templates.length <= 10)
+assert.ok(localSearchDurationMs <= LOCAL_SEARCH_MAX_DURATION_MS)
+assert.ok(localSearchRssGrowthBytes <= LOCAL_SEARCH_MAX_RSS_GROWTH)
+assert.ok(localSearchOutputBytes <= LOCAL_SEARCH_MAX_OUTPUT_BYTES)
 
 const KEYWORD_SET_ROWS = 10_000
 const KEYWORD_SET_BATCH_SIZE = 1_000

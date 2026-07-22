@@ -230,6 +230,17 @@ keeps the Data API response, including headers, rows, totals, metadata, and row
 count when Google returns them. This makes `seo analytics google report` useful when you
 need raw post-click evidence without a higher-level SEO interpretation.
 
+`local-search-demand` can use the same property for one narrow geography
+question. Pass `googleAnalyticsPropertyId` to request sessions by landing page,
+country, region and city. The report removes the landing-page query string and
+keeps only exact paths already retained by its local Search Console analysis.
+It reports source caps, unmatched rows, missing values, malformed rows,
+duplicates and Google quality warnings beside the location totals.
+
+This join adds measured location context to a landing page or repeated local
+template. It does not establish the physical location behind a Search Console
+query. The query and Analytics rows remain separate evidence.
+
 Use [AI referrals](/docs/reports/ai-referrals) for known assistant referral
 sources. Use [measure change](/docs/reports/measure-change) when a recorded page
 or page-group change needs equal before and after windows.

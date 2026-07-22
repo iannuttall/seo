@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto'
+import { z } from 'zod/v4'
 import type {
   ProviderEvidence,
   ProviderWarning,
+  SerpLocalPackResult,
   SerpOrganicResult,
   SerpSnapshot,
   SerpSnapshotProvider,
@@ -34,6 +36,15 @@ type SerpResult = NonNullable<
   NonNullable<DataForSeoSerpResponse['tasks'][number]['result']>[number]
 >
 type SerpItem = NonNullable<SerpResult['items']>[number]
+
+const localPackRatingSchema = z
+  .object({
+    rating_type: z.string().trim().min(1).max(100).nullable().optional(),
+    value: z.number().finite().nonnegative().nullable().optional(),
+    votes_count: z.number().int().nonnegative().nullable().optional(),
+    rating_max: z.number().finite().positive().nullable().optional(),
+  })
+  .passthrough()
 
 function safeUrl(value: string | null | undefined): string | null {
   if (!value) return null
@@ -84,6 +95,56 @@ function organicResult(item: SerpItem): SerpOrganicResult | null {
   }
 }
 
+function optionalText(value: unknown, maximum: number): string | null {
+  return typeof value === 'string' && value.trim() && value.length <= maximum
+    ? value.trim()
+    : null
+}
+
+function validLocalPack(item: SerpItem): item is SerpItem & {
+  rank_group: number
+  rank_absolute: number
+  title: string
+} {
+  return (
+    item.type === 'local_pack' &&
+    Number.isSafeInteger(item.rank_group) &&
+    (item.rank_group ?? 0) > 0 &&
+    Number.isSafeInteger(item.rank_absolute) &&
+    (item.rank_absolute ?? 0) > 0 &&
+    Boolean(item.title?.trim()) &&
+    (item.title?.trim().length ?? 0) <= 500
+  )
+}
+
+function localPackResult(item: SerpItem): SerpLocalPackResult | null {
+  if (!validLocalPack(item)) return null
+  const rating = localPackRatingSchema.safeParse(item.rating)
+  return {
+    rankGroup: item.rank_group,
+    rankAbsolute: item.rank_absolute,
+    page:
+      Number.isSafeInteger(item.page) && (item.page ?? 0) > 0
+        ? (item.page ?? null)
+        : null,
+    title: item.title.trim(),
+    domain: optionalText(item.domain, 253)?.toLowerCase() ?? null,
+    url: safeUrl(item.url),
+    cid: optionalText(item.cid, 100),
+    phone: optionalText(item.phone, 100),
+    description: optionalText(item.description, 2_000),
+    isPaid: typeof item.is_paid === 'boolean' ? item.is_paid : null,
+    rating: rating.success
+      ? {
+          type: rating.data.rating_type ?? null,
+          value: rating.data.value ?? null,
+          votesCount: rating.data.votes_count ?? null,
+          maximum: rating.data.rating_max ?? null,
+        }
+      : null,
+  }
+}
+
 function checkedAt(value: string, fallback: string): string {
   const timestamp = Date.parse(value)
   return Number.isFinite(timestamp)
@@ -126,17 +187,39 @@ export function mapDataForSeoSerpSnapshot(
         compareCodepoints(left.url, right.url),
     )
   const organicResults = mappedOrganicResults.slice(0, input.depth)
-  const invalidRows = organicItems.length - mappedOrganicResults.length
+  const localPackItems = items.filter((item) => item.type === 'local_pack')
+  const localPackResults = localPackItems
+    .flatMap((item) => {
+      const mapped = localPackResult(item)
+      return mapped ? [mapped] : []
+    })
+    .sort(
+      (left, right) =>
+        left.rankAbsolute - right.rankAbsolute ||
+        left.rankGroup - right.rankGroup ||
+        compareCodepoints(left.title, right.title) ||
+        compareCodepoints(left.cid ?? '', right.cid ?? ''),
+    )
+  const invalidOrganicRows = organicItems.length - mappedOrganicResults.length
+  const invalidLocalPackRows = localPackItems.length - localPackResults.length
+  const invalidRows = invalidOrganicRows + invalidLocalPackRows
   const resultCapped = mappedOrganicResults.length > input.depth
   const invalidResultCount =
     result.se_results_count !== null &&
     result.se_results_count !== undefined &&
     result.se_results_count < organicResults.length
-  if (invalidRows > 0) {
+  if (invalidOrganicRows > 0) {
     warnings.push({
       code: 'invalid-organic-results',
       field: 'organicResults',
-      message: `DataForSEO returned ${invalidRows} organic result${invalidRows === 1 ? '' : 's'} without a valid rank, domain, or URL.`,
+      message: `DataForSEO returned ${invalidOrganicRows} organic result${invalidOrganicRows === 1 ? '' : 's'} without a valid rank, domain, or URL.`,
+    })
+  }
+  if (invalidLocalPackRows > 0) {
+    warnings.push({
+      code: 'invalid-local-pack-results',
+      field: 'localPack.results',
+      message: `DataForSEO returned ${invalidLocalPackRows} local-pack result${invalidLocalPackRows === 1 ? '' : 's'} without a valid rank or title.`,
     })
   }
   if (!Number.isFinite(Date.parse(result.datetime))) {
@@ -181,6 +264,13 @@ export function mapDataForSeoSerpSnapshot(
     pagesCount: result.pages_count === undefined ? null : result.pages_count,
     features,
     organicResults,
+    localPack: {
+      present: features.includes('local_pack'),
+      returnedRows: localPackItems.length,
+      retainedRows: localPackResults.length,
+      invalidRows: invalidLocalPackRows,
+      results: localPackResults,
+    },
   }
 
   return {

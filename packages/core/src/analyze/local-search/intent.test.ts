@@ -26,6 +26,19 @@ test('uses token boundaries and does not treat generic local wording as proof', 
   assert.equal(classifyLocalIntent('local seo guide', []), null)
   assert.equal(classifyLocalIntent('plumber northampton', ['ham']), null)
   assert.equal(classifyLocalIntent('replacement part 10001', []), null)
+  assert.equal(
+    classifyLocalIntent('"took its name from a nearby stream" factory', []),
+    null,
+  )
+  assert.equal(classifyLocalIntent('history of a nearby village', []), null)
+  assert.deepEqual(
+    classifyLocalIntent('restaurants close to me', [])?.matchedTerms,
+    ['close to me'],
+  )
+  assert.deepEqual(
+    classifyLocalIntent('coffee shops around me', [])?.matchedTerms,
+    ['around me'],
+  )
   assert.deepEqual(classifyLocalIntent('dentist 10001', ['10001'])?.classes, [
     'named-location',
   ])

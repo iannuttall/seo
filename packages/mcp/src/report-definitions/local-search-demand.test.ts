@@ -1,0 +1,120 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import {
+  createLocalSearchDemandHandler,
+  localSearchDemandInputSchema,
+} from './local-search-demand.js'
+
+test('local search report definition passes first-party and local SERP inputs to core', async () => {
+  const handler = createLocalSearchDemandHandler({
+    localSearchReport: async (input) => {
+      assert.equal(input.site, 'sc-domain:example.com')
+      assert.deepEqual(input.locationTerms, ['London'])
+      assert.equal(input.includeSerps, true)
+      assert.equal(input.googleAnalyticsPropertyId, '123')
+      assert.equal(input.analyticsLimit, 500)
+      assert.equal(
+        input.market?.location?.name,
+        'London,England,United Kingdom',
+      )
+      return {
+        summary: { verdict: 'Local evidence retained.' },
+      } as never
+    },
+  })
+  const input = {
+    site: 'sc-domain:example.com',
+    locationTerms: ['London'],
+    includeSerps: true,
+    countryCode: 'GB',
+    languageCode: 'en',
+    searchEngine: 'google' as const,
+    location: { name: 'London,England,United Kingdom' },
+    googleAnalyticsPropertyId: '123',
+    analyticsLimit: 500,
+  }
+  assert.equal(localSearchDemandInputSchema.safeParse(input).success, true)
+  await handler(input)
+})
+
+test('local search report schema keeps paid local SERPs explicit and bounded', () => {
+  assert.equal(
+    localSearchDemandInputSchema.safeParse({
+      site: 'sc-domain:example.com',
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', countryCode: 'GB' },
+    { site: 'sc-domain:example.com', includeSerps: true },
+    {
+      site: 'sc-domain:example.com',
+      includeSerps: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { name: 'London,England,United Kingdom' },
+      serpLimit: 4,
+    },
+    { site: 'sc-domain:example.com', maxRows: 50_001 },
+    { site: 'sc-domain:example.com', analyticsLimit: 500 },
+    {
+      site: 'sc-domain:example.com',
+      googleAnalyticsPropertyId: 'property-name',
+    },
+    {
+      site: 'sc-domain:example.com',
+      locationTerms: Array.from({ length: 101 }, (_, index) => `area ${index}`),
+    },
+  ]) {
+    assert.equal(
+      localSearchDemandInputSchema.safeParse(input).success,
+      false,
+      JSON.stringify(input),
+    )
+  }
+})
+
+test('local search report keeps combined evidence inside one agent output budget', async () => {
+  const opportunities = Array.from({ length: 100 }, (_, index) => ({
+    query: `plumber near place ${index}`,
+    evidence: 'Bounded local evidence. '.repeat(250),
+    pages: Array.from({ length: 10 }, (_, pageIndex) => ({
+      url: `https://example.test/places/${index}/${pageIndex}`,
+    })),
+  }))
+  const handler = createLocalSearchDemandHandler({
+    localSearchReport: async () =>
+      ({
+        schemaVersion: 1,
+        site: 'sc-domain:example.test',
+        generatedAt: '2026-07-22T12:00:00.000Z',
+        dataStatus: 'partial',
+        source: { rowsFetched: 50_000, possiblyTruncated: true },
+        selection: { eligibleQueries: 100, returnedQueries: 100 },
+        summary: { verdict: 'Bounded local evidence was retained.' },
+        opportunities,
+        serpEvidence: { reports: opportunities },
+        serpInsights: { organicCompetitors: { items: opportunities } },
+        analyticsEvidence: { locations: opportunities },
+        caveats: ['Search Console and provider evidence are capped.'],
+        nextSteps: [],
+      }) as never,
+  })
+
+  const result = await handler({ site: 'sc-domain:example.test' })
+  const outputBudget = result.structuredContent?.outputBudget as Record<
+    string,
+    unknown
+  >
+  assert.equal(outputBudget.truncated, true)
+  assert.ok(
+    Buffer.byteLength(JSON.stringify(result.structuredContent)) <= 98_304,
+  )
+  assert.deepEqual(result.structuredContent?.source, {
+    rowsFetched: 50_000,
+    possiblyTruncated: true,
+  })
+  assert.deepEqual(result.structuredContent?.caveats, [
+    'Search Console and provider evidence are capped.',
+  ])
+})

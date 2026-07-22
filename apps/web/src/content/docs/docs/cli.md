@@ -144,7 +144,23 @@ seo reports run local-search-demand \
 The default run makes no paid request. It finds explicit place names, nearby
 phrases and postal codes in retained query-page rows, then groups repeated page
 patterns for review. Add `includeSerps`, a canonical location and a device only
-when up to three exact live snapshots would change the next step.
+when up to three exact live snapshots would change the next step. Those
+snapshots retain bounded local-pack listing rows and recurring organic domains.
+The domains remain unclassified search competitors until you inspect them.
+
+Add `googleAnalyticsPropertyId` when visitor geography would change how you
+review the retained landing pages or repeated page templates:
+
+```sh
+seo reports run local-search-demand \
+  --params '{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"googleAnalyticsPropertyId":"123456789"}' \
+  --json
+```
+
+The report requests sessions by landing page, country, region and city. It
+normalizes away the landing-page query string, then keeps only exact paths that
+were retained from the local Search Console evidence. It never assigns an
+Analytics location to a Search Console query.
 
 The [research provider guide](/docs/research-providers) covers credentials,
 local cost limits, caching, supported reports and programmatic data-source

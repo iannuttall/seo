@@ -200,8 +200,8 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'local-search-demand': {
     title: 'Local SEO keyword research',
     description:
-      'Find location-specific Search Console queries, landing pages and repeated local templates. Add a few exact local result snapshots only when needed.',
-    lead: 'Find the local searches already associated with the site and the pages receiving that demand. Start with first-party evidence, then add exact local results only where current intent, competitors or result features would change the decision.',
+      'Find local Search Console queries, landing pages and repeated templates. Add measured visitor geography or a few exact local results only when needed.',
+    lead: 'Find the local searches already associated with the site and the pages receiving that demand. Start with first-party evidence, then add landing-page geography or exact local results only where the added context would change the decision.',
   },
   'server-log-analysis': {
     title: 'Server log crawler analysis',

@@ -260,7 +260,9 @@ The research flow now covers:
   programmatic page patterns;
 - `local-search-demand` for matching explicit place names, nearby phrases, and
   postal codes in retained Search Console rows, reviewing repeated local page
-  patterns, and optionally adding up to three exact local result snapshots;
+  patterns, optionally joining Analytics geography by exact landing-page path,
+  and optionally adding up to three exact local result snapshots with bounded
+  competitor and local-pack listing summaries;
 - `link-evidence` for a current link summary, one representative backlink per
   referring domain, and linked-target checks against saved crawl and Search
   Console evidence;

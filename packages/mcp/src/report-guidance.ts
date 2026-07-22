@@ -701,18 +701,18 @@ export const REPORT_GUIDANCE = {
   'local-search-demand': {
     name: 'Local search demand',
     description:
-      'Find location-specific Search Console demand and enrich a small shortlist with exact local result snapshots.',
+      'Find location-specific Search Console demand and add optional landing-page geography and exact local result evidence.',
     useWhen: [
       'You want to find retained queries that name a service area, use a proximity phrase, or contain a postcode or ZIP code.',
       'You need to connect local demand with current landing pages and repeated programmatic page patterns.',
-      'You want optional city and device-specific result evidence without replacing first-party performance data.',
+      'You want optional Analytics landing-page geography or city and device-specific result evidence without replacing first-party performance data or assigning a location to a query.',
     ],
     avoidWhen: [
       'You need Google Business Profile performance or a complete business listing audit.',
       'You want the searcher location inferred from a place name in the query.',
     ],
     outcome:
-      'A bounded local-intent query and page queue, repeated local template signals, and optional local SERP feature and competitor evidence.',
+      'A bounded local-intent query and page queue, repeated local template signals, optional landing-page geography, and optional local competitor and listing evidence.',
   },
   'saved-keywords': {
     name: 'Saved keyword set',

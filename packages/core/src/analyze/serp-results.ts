@@ -42,6 +42,7 @@ export type SerpResultsReport = {
     effectiveKeyword: string
     requestedDepth: number
     organicResults: number
+    localPackResults: number
     uniqueDomains: number
     observedFeatures: number
     correctedQuery: boolean
@@ -267,10 +268,11 @@ export async function serpResultsReport(
       effectiveKeyword: evidence.data.effectiveKeyword,
       requestedDepth: depth,
       organicResults: evidence.data.organicResults.length,
+      localPackResults: evidence.data.localPack.results.length,
       uniqueDomains: domains.length,
       observedFeatures: evidence.data.features.length,
       correctedQuery,
-      verdict: `${evidence.data.organicResults.length} organic results across ${domains.length} domains were retained from the ${evidence.market.device ?? 'desktop'} snapshot.`,
+      verdict: `${evidence.data.organicResults.length} organic results across ${domains.length} domains and ${evidence.data.localPack.results.length} local-pack listings were retained from the ${evidence.market.device ?? 'desktop'} snapshot.`,
     },
     evidence,
     domains,
@@ -278,6 +280,7 @@ export async function serpResultsReport(
     caveats: [
       'This is one market, location, language, and device-specific result snapshot; it is not rank history.',
       "Search results can change between checks and may differ from a person's signed-in or personalized results.",
+      'Local-pack listings are observations from this result snapshot. They do not prove listing ownership, completeness, or Google Business Profile performance.',
       'The provider result count is an estimate and may be missing; retained organic rows are bounded by the requested depth.',
       'Repeated domains, result features, titles, and snippets do not establish content quality, authority, or ranking feasibility.',
     ],

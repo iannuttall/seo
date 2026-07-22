@@ -72,7 +72,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'link-evidence':
     'Open a selected referring page and confirm the link is still present before making a decision. Use a fresh export or Bing report later when you need to check whether the observed set changed.',
   'local-search-demand':
-    'Start with the retained local queries and their landing pages. Inspect repeated page families before expanding them, and request exact local results only for the few terms whose current intent, competitors or result features would change the work.',
+    'Start with the retained local queries and their landing pages. Inspect repeated page families before expanding them. Add Analytics geography or exact local results only when that context would change the work, and classify recurring result domains before treating them as comparable businesses.',
   'server-log-analysis':
     'Check important crawler errors against the original log and current server configuration. Confirm crawler identity separately when the decision depends on more than the observed user-agent string.',
   'serp-results':

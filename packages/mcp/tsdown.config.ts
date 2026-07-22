@@ -20,7 +20,6 @@ export default defineConfig([
       'src/experiment-tools.ts',
       'src/fetch-rate.ts',
       'src/input-schemas.ts',
-      'src/local-search-tools.ts',
       'src/monitoring-tools.ts',
       'src/opportunity-tools.ts',
       'src/pseo-tools.ts',

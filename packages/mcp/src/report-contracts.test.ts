@@ -113,11 +113,26 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
     }).success,
     true,
   )
+  assert.equal(
+    schema.safeParse({
+      provider: 'dataforseo',
+      target: 'example.com',
+      scope: 'domain',
+      includeSubdomains: true,
+      searchConsoleSite: 'sc-domain:example.com',
+      rowLimit: 500,
+      limit: 500,
+      days: 548,
+    }).success,
+    true,
+  )
   for (const input of [
     { file: './links.csv', rowLimit: 100_001 },
     { file: './links.csv', limit: 501 },
     { site: 'https://example.com/', targetLimit: 51 },
     { site: 'https://example.com/', detailPagesPerTarget: 4 },
+    { provider: 'dataforseo', target: 'example.com', rowLimit: 100_001 },
+    { provider: 'dataforseo', target: 'example.com', days: 549 },
   ]) {
     assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
   }

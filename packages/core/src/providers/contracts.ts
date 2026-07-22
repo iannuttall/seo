@@ -104,18 +104,25 @@ export type ProviderRequestEvidence = {
   sort: string[]
 }
 
-export type ProviderEvidence<T> = {
+export type ProviderEvidenceBase<T> = {
   schemaVersion: 1
   provider: ProviderId
   capability: ProviderCapability
   data: T
   observedAt: string
-  market: SearchMarket
   coverage: ProviderCoverage
   cache: ProviderCacheEvidence
   cost: ProviderCostEvidence
   request: ProviderRequestEvidence
   warnings: ProviderWarning[]
+}
+
+export type ProviderEvidence<T> = ProviderEvidenceBase<T> & {
+  market: SearchMarket
+}
+
+export type MarketIndependentProviderEvidence<T> = ProviderEvidenceBase<T> & {
+  market: null
 }
 
 export type ProviderCapabilitySupport = {

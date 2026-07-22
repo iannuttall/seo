@@ -18,6 +18,11 @@ import type {
   DataForSeoSerpCompetitorsResponse,
 } from './domain-schema.js'
 import type {
+  DataForSeoBacklinksResponse,
+  DataForSeoLinkSummaryResponse,
+  DataForSeoReferringDomainsResponse,
+} from './link-schema.js'
+import type {
   DataForSeoPaidSnapshot,
   DataForSeoUnitPrice,
 } from './paid-request.js'
@@ -40,6 +45,11 @@ export type DataForSeoAccountSnapshot = {
     rankedKeywords: DataForSeoUnitPrice
     rankingPages: DataForSeoUnitPrice
     serpCompetitors: DataForSeoUnitPrice
+  }
+  linkPrices: {
+    summary: DataForSeoUnitPrice
+    backlinks: DataForSeoUnitPrice
+    referringDomains: DataForSeoUnitPrice
   }
   serpLiveAdvancedPrice: DataForSeoUnitPrice
   serpTaskPostPrice: DataForSeoUnitPrice
@@ -68,6 +78,7 @@ export type DataForSeoClientOptions = {
   accountPricingTtlMs?: number
   spendLimits?: ProviderSpendLimits
   domainResearchTtlMs?: number
+  linkTtlMs?: number
 }
 
 export type DataForSeoKeywordOverviewRequest = {
@@ -203,3 +214,34 @@ export type DataForSeoSerpReadyTask = {
   providerTaskId: string
   tag: string | null
 }
+
+export type DataForSeoLinkRequestBase = {
+  target: string
+  scope: 'domain' | 'page'
+  includeSubdomains: boolean
+  refresh?: boolean
+  context: ProviderRequestContext
+}
+
+export type DataForSeoLinkSummaryRequest = DataForSeoLinkRequestBase
+
+export type DataForSeoBacklinksRequest = DataForSeoLinkRequestBase & {
+  mode: 'one_per_domain' | 'as_is'
+  status: 'live' | 'lost' | 'all'
+  limit: number
+  offset: number
+  orderBy: string[]
+}
+
+export type DataForSeoReferringDomainsRequest = DataForSeoLinkRequestBase & {
+  limit: number
+  offset: number
+  orderBy: string[]
+}
+
+export type DataForSeoLinkSummarySnapshot =
+  DataForSeoPaidSnapshot<DataForSeoLinkSummaryResponse>
+export type DataForSeoBacklinksSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoBacklinksResponse>
+export type DataForSeoReferringDomainsSnapshot =
+  DataForSeoPaidSnapshot<DataForSeoReferringDomainsResponse>

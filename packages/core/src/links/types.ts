@@ -1,5 +1,13 @@
+import type { MarketIndependentProviderEvidence } from '../providers/contracts.js'
+import type {
+  ExternalBacklinkPage,
+  LinkSummary,
+  ProviderLinkMetric,
+} from '../providers/link-contracts.js'
+
 export type LinkEvidenceProvider =
   | 'bing-webmaster'
+  | 'dataforseo'
   | 'csv-import'
   | 'json-import'
   | 'jsonl-import'
@@ -12,6 +20,13 @@ export type LinkEvidenceRow = {
   firstSeenAt?: string
   lastSeenAt?: string
   nofollow?: boolean
+  linkType?: string
+  attributes?: string[]
+  state?: 'live' | 'lost'
+  indirect?: boolean
+  linksFromPage?: number
+  linksFromDomain?: number
+  providerMetrics?: ProviderLinkMetric[]
 }
 
 export type LinkTargetCount = {
@@ -23,7 +38,7 @@ export type LinkTargetCount = {
 export type LinkEvidenceProvenance = {
   provider: LinkEvidenceProvider
   observedAt: string
-  cached: false
+  cached: boolean
   suppliedRows: number
   validRows: number
   invalidRows: number
@@ -39,9 +54,9 @@ export type LinkEvidenceProvenance = {
   }
   providerRequests?: {
     methods: string[]
-    targetPagesRequested: number
-    detailPagesRequested: number
-    maxConcurrentRequests: number
+    targetPagesRequested?: number
+    detailPagesRequested?: number
+    maxConcurrentRequests?: number
   }
   providerCoverage?: {
     targetCountRows: {
@@ -54,12 +69,29 @@ export type LinkEvidenceProvenance = {
       retainedRows: number
       invalidRows: number
     }
+    summaryRows?: {
+      returnedRows: number
+      retainedRows: number
+      invalidRows: number
+    }
+    backlinkRows?: {
+      returnedRows: number
+      retainedRows: number
+      invalidRows: number
+      providerTotalRows: number | null
+    }
   }
+}
+
+export type ExternalLinkProviderEvidence = {
+  summary: MarketIndependentProviderEvidence<LinkSummary>
+  backlinks: MarketIndependentProviderEvidence<ExternalBacklinkPage>
 }
 
 export type CollectedLinkEvidence = {
   rows: LinkEvidenceRow[]
   targetCounts: LinkTargetCount[]
   provenance: LinkEvidenceProvenance
+  externalProvider?: ExternalLinkProviderEvidence
   warnings: string[]
 }

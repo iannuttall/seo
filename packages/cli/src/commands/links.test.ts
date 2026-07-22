@@ -41,3 +41,38 @@ test('links command imports a bounded local file as structured JSON', async () =
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('links command rejects ambiguous and provider-mismatched sources before acquisition', async () => {
+  const base = {
+    env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' },
+  }
+  for (const args of [
+    ['links', '--file', './links.json', '--target', 'example.com', '--json'],
+    [
+      'links',
+      '--site',
+      'https://example.com/',
+      '--target',
+      'example.com',
+      '--json',
+    ],
+    [
+      'links',
+      '--provider',
+      'dataforseo',
+      '--site',
+      'https://example.com/',
+      '--json',
+    ],
+  ]) {
+    await assert.rejects(
+      execFileAsync(process.execPath, [cliPath, ...args], base),
+      (error: unknown) => {
+        const output = error as { stdout?: string; stderr?: string }
+        return /one link source|not both|use --target/i.test(
+          `${output.stdout ?? ''}\n${output.stderr ?? ''}`,
+        )
+      },
+    )
+  }
+})

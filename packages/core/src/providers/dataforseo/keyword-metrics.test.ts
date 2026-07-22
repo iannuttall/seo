@@ -74,6 +74,11 @@ function accountPricing(): DataForSeoAccountSnapshot {
       rankingPages: { perRequestMicros: 10_000, perResultMicros: 100 },
       serpCompetitors: { perRequestMicros: 10_000, perResultMicros: 100 },
     },
+    linkPrices: {
+      summary: { perRequestMicros: 24_000, perResultMicros: 36 },
+      backlinks: { perRequestMicros: 24_000, perResultMicros: 36 },
+      referringDomains: { perRequestMicros: 24_000, perResultMicros: 36 },
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: null,
       perResultMicros: null,

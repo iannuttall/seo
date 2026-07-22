@@ -76,7 +76,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/ai-visibility',
     label: 'AI visibility tracking',
     description:
-      'See what AI visibility tracking should measure, what SEO Skill supports now, and what the planned provider-backed report will add.',
+      'Track fixed AI prompts, answers, mentions, citations, model changes and exact provider costs without inventing a universal score.',
   },
   {
     path: '/docs/mcp',

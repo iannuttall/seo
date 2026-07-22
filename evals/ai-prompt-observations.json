@@ -1,0 +1,54 @@
+{
+  "subject": "ai-prompt-observations",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check these three buying questions in ChatGPT and Perplexity for our brand and two competitors, then compare the answers with the searches already associated with our site.",
+      "expected_output": "Should discover, describe, and run ai-prompt-observations through the shared report pipeline with three fixed prompts, exact current model names, one target, two competitors, one market label, and the owned Search Console site. Should inspect data status, observation coverage, cache state, effective model, exact returned cost, citations, target matches, and first-party source status before findings. Should treat each answer as one current sample and Search Console overlap as a bounded lexical heuristic.",
+      "assertions": [
+        "Uses report id ai-prompt-observations through the shared discovery flow",
+        "Uses exact current model names and a fixed set of prompts",
+        "Reads coverage, cache, effective model, exact cost, and first-party source status before findings",
+        "Treats each answer as one sample rather than universal AI visibility",
+        "Treats Search Console overlap as a bounded lexical heuristic"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Repeat last month's AI prompt run and tell me which assistant rankings improved. Use the latest model automatically.",
+      "expected_output": "Should not select an implicit latest model or describe answer order as a ranking. Should require an exact model from the provider's free current catalog. Should compare only a fresh observation with the same prompt, provider, requested and effective model, market label, web-search setting, output-token limit, and complete untruncated evidence. Cached observations, model changes, partial answers, and truncated answers should remain non-comparable.",
+      "assertions": [
+        "Does not choose an implicit latest model",
+        "Does not describe answer order or mentions as assistant rankings",
+        "Requires the same complete observation configuration for change comparison",
+        "Keeps cached, model-changed, partial, and truncated observations non-comparable"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The report found repeated fan-out queries. Turn every cluster into a programmatic page template and forecast the traffic.",
+      "expected_output": "Should refuse the automatic template plan and traffic forecast. Should treat fan-out themes and Search Console overlap as bounded lexical research leads, then validate keyword demand, current result intent, existing page coverage, source rights, stable identifiers and fields, missing-value behavior, useful page variation, and representative templates before scaling.",
+      "assertions": [
+        "Refuses to approve templates or forecast traffic from fan-out themes",
+        "Treats fan-out themes and Search Console overlap as bounded lexical research leads",
+        "Requires keyword, current result, existing page, and data-source validation",
+        "Requires representative template checks before scaling"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Use model old-model-name for one live prompt and keep it cheap.",
+      "expected_output": "Should use the report schema and provider preflight. If the exact model is no longer available, it should report current model names returned by the free catalog and state that no paid request started. It may retry only after selecting one of those explicit names. It should keep the base-fee estimate separate from the exact task cost returned after a completed request.",
+      "assertions": [
+        "Uses the free current model catalog before paid work",
+        "Reports that no paid request started when the model is invalid",
+        "Retries only with an explicit current model name",
+        "Keeps the base-fee estimate separate from exact returned cost"
+      ],
+      "files": []
+    }
+  ]
+}

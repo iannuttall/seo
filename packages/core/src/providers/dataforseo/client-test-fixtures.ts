@@ -70,6 +70,13 @@ export function userDataFixture(): UserDataFixture {
             },
             price: {
               ai_optimization: {
+                llm_responses: {
+                  live: {
+                    priority_normal: [
+                      { cost_type: 'per_request', cost: 0.0006 },
+                    ],
+                  },
+                },
                 llm_mentions: {
                   target_metrics: {
                     live: {

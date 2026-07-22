@@ -17,6 +17,8 @@ process.once('exit', () => rmSync(cacheDir, { recursive: true, force: true }))
 const {
   addKeywordsToSet,
   aiMentionResearchReport,
+  aiPromptObservationLogicalBytes,
+  aiPromptObservationsReport,
   analyzeQuickWinsFromRows,
   clearCache,
   competitorKeywordGapReport,
@@ -532,6 +534,183 @@ assert.ok(aiMentionReport.processing.candidateRowVisits <= 10_000)
 assert.ok(aiMentionDurationMs <= AI_MENTION_MAX_DURATION_MS)
 assert.ok(aiMentionRssGrowthBytes <= AI_MENTION_MAX_RSS_GROWTH)
 assert.ok(aiMentionOutputBytes <= AI_MENTION_MAX_OUTPUT_BYTES)
+
+const AI_PROMPT_GSC_ROWS = 100_000
+const AI_PROMPT_COUNT = 5
+const AI_PROMPT_MODELS = [
+  { surface: 'chatgpt', model: 'chatgpt-resource-model' },
+  { surface: 'claude', model: 'claude-resource-model' },
+  { surface: 'gemini', model: 'gemini-resource-model' },
+  { surface: 'perplexity', model: 'perplexity-resource-model' },
+]
+const AI_PROMPT_REQUESTS = AI_PROMPT_COUNT * AI_PROMPT_MODELS.length
+const AI_PROMPT_MAX_DURATION_MS = 10_000
+const AI_PROMPT_MAX_RSS_GROWTH = 384 * MEBIBYTE
+const AI_PROMPT_MAX_OUTPUT_BYTES = 2 * MEBIBYTE
+let aiPromptProviderCalls = 0
+let aiPromptActiveCalls = 0
+let aiPromptPeakConcurrency = 0
+const aiPromptGscRows = Array.from(
+  { length: AI_PROMPT_GSC_ROWS },
+  (_, index) => ({
+    keys: [
+      `privacy analytics platform question ${index}`,
+      `https://example.com/analytics/${index % 10_000}`,
+    ],
+    clicks: index % 7,
+    impressions: 100 + (index % 100),
+    ctr: (index % 7) / (100 + (index % 100)),
+    position: 4 + (index % 20),
+  }),
+)
+const aiPromptAdapter = {
+  provider: 'dataforseo',
+  capabilitySupport: [
+    {
+      capability: 'ai-prompt-observation',
+      status: 'available',
+      markets: 'all',
+    },
+  ],
+  aiPromptModels: async (surface) =>
+    AI_PROMPT_MODELS.filter((item) => item.surface === surface).map((item) => ({
+      name: item.model,
+      reasoning: false,
+      webSearchSupported: true,
+      queuedCollectionSupported: true,
+    })),
+  observeAiPrompt: async (input) => {
+    aiPromptProviderCalls += 1
+    aiPromptActiveCalls += 1
+    aiPromptPeakConcurrency = Math.max(
+      aiPromptPeakConcurrency,
+      aiPromptActiveCalls,
+    )
+    await new Promise((resolve) => setImmediate(resolve))
+    aiPromptActiveCalls -= 1
+    const observation = aiPromptProviderCalls
+    return {
+      schemaVersion: 1,
+      provider: 'dataforseo',
+      capability: 'ai-prompt-observation',
+      data: {
+        requestedModel: input.model,
+        effectiveModel: `${input.model}-v1`,
+        answer: `Example Analytics is one option. ${'Bounded answer evidence. '.repeat(950)}`,
+        answerTruncated: false,
+        citations: Array.from({ length: 25 }, (_, index) => ({
+          title: `Citation ${index}`,
+          url: `https://example.com/citations/${observation}-${index}`,
+          domain: 'example.com',
+        })),
+        fanOutQueries: Array.from(
+          { length: 20 },
+          (_, index) => `privacy analytics platform question ${index}`,
+        ),
+        inputTokens: 20,
+        outputTokens: 2_048,
+        reasoningTokens: 0,
+        webSearchRequested: input.webSearch,
+        webSearchObserved: input.webSearch,
+        modelCostMicros: 1_200,
+        checkedAt: `2026-07-22T12:${String(observation).padStart(2, '0')}:00.000Z`,
+      },
+      observedAt: '2026-07-22T12:00:00.000Z',
+      market: null,
+      coverage: {
+        requestedRows: 1,
+        returnedRows: 1,
+        retainedRows: 1,
+        invalidRows: 0,
+        providerTotalRows: 1,
+        completeness: 'complete',
+        nextCursor: null,
+      },
+      cache: { status: 'miss', storedAt: null, expiresAt: null },
+      cost: {
+        currency: 'USD',
+        estimatedMicros: 600,
+        actualMicros: 1_800,
+        taskIds: [`resource-ai-prompt-${observation}`],
+      },
+      request: {
+        operation: 'ai-prompt-observation',
+        endpoint: 'resource-fixture',
+        limit: 1,
+        filters: {},
+        sort: [],
+      },
+      warnings: [],
+    }
+  },
+}
+const aiPromptBaselineRss = process.memoryUsage().rss
+const aiPromptStartedAt = performance.now()
+const aiPromptReport = await aiPromptObservationsReport(
+  {
+    prompts: Array.from({ length: AI_PROMPT_COUNT }, (_, index) => ({
+      id: `prompt-${index}`,
+      group: `group-${index % 2}`,
+      prompt: `Which privacy analytics platform suits use case ${index}?`,
+    })),
+    models: AI_PROMPT_MODELS,
+    target: {
+      label: 'Example Analytics',
+      domains: ['example.com'],
+    },
+    competitors: Array.from({ length: 5 }, (_, index) => ({
+      label: `Competitor ${index}`,
+    })),
+    market: { countryCode: 'GB', languageCode: 'en' },
+    webSearch: true,
+    maxOutputTokens: 4_096,
+    site: 'sc-domain:example.com',
+  },
+  {
+    candidates: [{ adapter: aiPromptAdapter, connected: true, priority: 1 }],
+    now: () => new Date('2026-07-22T13:00:00.000Z'),
+    searchAnalytics: async () => ({
+      rows: aiPromptGscRows,
+      rowsFetched: AI_PROMPT_GSC_ROWS,
+      calls: 20,
+    }),
+  },
+)
+const aiPromptDurationMs = performance.now() - aiPromptStartedAt
+const aiPromptRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - aiPromptBaselineRss,
+)
+const aiPromptOutputBytes = Buffer.byteLength(JSON.stringify(aiPromptReport))
+const aiPromptLogicalBytes = aiPromptObservationLogicalBytes()
+console.log(
+  JSON.stringify({
+    report: 'ai-prompt-observations',
+    sourceRows: AI_PROMPT_GSC_ROWS,
+    providerCalls: aiPromptProviderCalls,
+    peakConcurrency: aiPromptPeakConcurrency,
+    returnedObservations: aiPromptReport.observations.length,
+    firstPartyCandidateVisits:
+      aiPromptReport.processing.firstPartyCandidateVisits,
+    durationMs: Math.round(aiPromptDurationMs),
+    peakRssGrowthMiB: Number((aiPromptRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    bytesRead: Buffer.byteLength(JSON.stringify(aiPromptGscRows)),
+    logicalBytesWritten: aiPromptLogicalBytes,
+    outputBytes: aiPromptOutputBytes,
+  }),
+)
+assert.equal(aiPromptProviderCalls, AI_PROMPT_REQUESTS)
+assert.equal(aiPromptPeakConcurrency, 4)
+assert.equal(aiPromptReport.dataStatus, 'partial')
+assert.equal(aiPromptReport.source.firstParty.possiblyTruncated, true)
+assert.equal(aiPromptReport.observations.length, AI_PROMPT_REQUESTS)
+assert.equal(aiPromptReport.processing.firstPartyRows, AI_PROMPT_GSC_ROWS)
+assert.equal(aiPromptReport.processing.retainedFirstPartyPostings, 50_000)
+assert.ok(aiPromptReport.processing.firstPartyCandidateVisits <= 161_000)
+assert.ok(aiPromptDurationMs <= AI_PROMPT_MAX_DURATION_MS)
+assert.ok(aiPromptRssGrowthBytes <= AI_PROMPT_MAX_RSS_GROWTH)
+assert.ok(aiPromptOutputBytes <= AI_PROMPT_MAX_OUTPUT_BYTES)
+assert.ok(aiPromptLogicalBytes <= 128 * MEBIBYTE)
 
 const BATCHES = 20
 const KEYWORDS_PER_BATCH = 100

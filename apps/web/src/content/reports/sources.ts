@@ -11,6 +11,11 @@ export const reportSources = {
     label: 'DataForSEO LLM Mentions API reference',
     url: 'https://docs.dataforseo.com/v3/ai_optimization/llm_mentions/search_mentions/live/',
   },
+  'ai-prompt-provider': {
+    key: 'ai-prompt-provider',
+    label: 'DataForSEO AI Optimization API reference',
+    url: 'https://docs.dataforseo.com/v3/ai_optimization/overview/',
+  },
   'bing-webmaster': {
     key: 'bing-webmaster',
     label: 'Bing Webmaster API guidance',

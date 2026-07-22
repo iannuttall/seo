@@ -104,6 +104,25 @@ export type ProviderRequestEvidence = {
   sort: string[]
 }
 
+export type ProviderImportEvidence = {
+  provider: ProviderId
+  path: string
+  format: 'csv' | 'json' | 'jsonl'
+  sha256: string
+  exportedAt: string
+  importedAt: string
+  includedFields: string[]
+  fileBytes: number
+  bytesRead: number
+  fileRows: number
+  suppliedRows: number
+  validRows: number
+  invalidRows: number
+  duplicateRows: number
+  capped: boolean
+  rowLimit: number
+}
+
 export type ProviderEvidenceBase<T> = {
   schemaVersion: 1
   provider: ProviderId
@@ -114,6 +133,7 @@ export type ProviderEvidenceBase<T> = {
   cache: ProviderCacheEvidence
   cost: ProviderCostEvidence
   request: ProviderRequestEvidence
+  imports?: ProviderImportEvidence[]
   warnings: ProviderWarning[]
 }
 

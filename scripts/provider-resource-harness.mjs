@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Response } from 'undici'
@@ -29,6 +29,7 @@ const {
   keywordSetLogicalBytes,
   localSearchReport,
   observedValue,
+  rankedKeywordsReport,
   savedKeywordSetReport,
 } = await import('../dist/index.js')
 const rows = Array.from({ length: ROW_COUNT }, (_, index) => ({
@@ -366,6 +367,84 @@ assert.ok(
 assert.ok(domainDurationMs <= DOMAIN_MAX_DURATION_MS)
 assert.ok(domainRssGrowthBytes <= DOMAIN_MAX_RSS_GROWTH)
 assert.ok(domainOutputBytes <= DOMAIN_MAX_OUTPUT_BYTES)
+
+const RESEARCH_IMPORT_ROWS = 100_000
+const RESEARCH_IMPORT_MAX_DURATION_MS = 15_000
+const RESEARCH_IMPORT_MAX_RSS_GROWTH = 384 * MEBIBYTE
+const RESEARCH_IMPORT_MAX_OUTPUT_BYTES = MEBIBYTE
+const researchImportPath = join(cacheDir, 'ranked-keywords.jsonl')
+writeFileSync(
+  researchImportPath,
+  Array.from({ length: RESEARCH_IMPORT_ROWS }, (_, index) =>
+    JSON.stringify({
+      keyword: `bounded import keyword ${index}`,
+      position: 1 + (index % 100),
+      url: `https://example.com/pages/${index % 10_000}`,
+      volume: index % 1_000,
+      traffic: index % 100,
+    }),
+  ).join('\n'),
+)
+const researchImportBytes = statSync(researchImportPath).size
+const researchImportBaselineRss = process.memoryUsage().rss
+const researchImportStartedAt = performance.now()
+const researchImportReport = await rankedKeywordsReport(
+  {
+    target: 'example.com',
+    market: {
+      searchEngine: 'google',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    limit: 100,
+    researchFiles: [
+      {
+        dataset: 'ranked-keywords',
+        file: researchImportPath,
+        provider: 'semrush',
+        exportedAt: '2026-07-21T12:00:00.000Z',
+        rowLimit: RESEARCH_IMPORT_ROWS,
+      },
+    ],
+  },
+  { now: () => new Date('2026-07-22T12:00:00.000Z') },
+)
+const researchImportDurationMs = performance.now() - researchImportStartedAt
+const researchImportRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - researchImportBaselineRss,
+)
+const researchImportOutputBytes = Buffer.byteLength(
+  JSON.stringify(researchImportReport),
+)
+console.log(
+  JSON.stringify({
+    report: 'ranked-keywords-import',
+    sourceRows: RESEARCH_IMPORT_ROWS,
+    returnedRows: researchImportReport.evidence.data.rows.length,
+    durationMs: Math.round(researchImportDurationMs),
+    rssGrowthMiB: Number((researchImportRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    bytesRead: researchImportReport.evidence.imports?.[0]?.bytesRead ?? 0,
+    bytesWritten: researchImportBytes,
+    outputBytes: researchImportOutputBytes,
+  }),
+)
+assert.equal(researchImportReport.evidence.data.rows.length, 100)
+assert.equal(
+  researchImportReport.evidence.imports?.[0]?.bytesRead,
+  researchImportBytes,
+)
+assert.equal(
+  researchImportReport.evidence.imports?.[0]?.suppliedRows,
+  RESEARCH_IMPORT_ROWS,
+)
+assert.equal(
+  researchImportReport.evidence.imports?.[0]?.fileRows,
+  RESEARCH_IMPORT_ROWS,
+)
+assert.ok(researchImportDurationMs <= RESEARCH_IMPORT_MAX_DURATION_MS)
+assert.ok(researchImportRssGrowthBytes <= RESEARCH_IMPORT_MAX_RSS_GROWTH)
+assert.ok(researchImportOutputBytes <= RESEARCH_IMPORT_MAX_OUTPUT_BYTES)
 
 const AI_MENTION_GSC_ROWS = 100_000
 const AI_MENTION_SAMPLES = 25

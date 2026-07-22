@@ -1,7 +1,12 @@
-import { createReadStream } from 'node:fs'
-import { readFile, stat } from 'node:fs/promises'
-import { extname, resolve } from 'node:path'
 import { SeoError } from '../errors.js'
+import {
+  csvRecords,
+  csvRow,
+  importFile,
+  jsonlRecords,
+  readJsonArray,
+  type StructuredImportFormat,
+} from '../imports/records.js'
 import {
   compareLinkEvidence,
   linkEvidenceKey,
@@ -14,21 +19,6 @@ const DEFAULT_ROW_LIMIT = 10_000
 const MAX_ROW_LIMIT = 100_000
 const MAX_STREAM_BYTES = 50_000_000
 const MAX_JSON_BYTES = 10_000_000
-const MAX_CELL_BYTES = 1_000_000
-
-type ImportFormat = 'csv' | 'json' | 'jsonl'
-
-function formatFor(path: string, explicit?: ImportFormat): ImportFormat {
-  if (explicit) return explicit
-  const extension = extname(path).toLowerCase()
-  if (extension === '.csv') return 'csv'
-  if (extension === '.jsonl' || extension === '.ndjson') return 'jsonl'
-  if (extension === '.json') return 'json'
-  throw new SeoError(
-    'INVALID_INPUT',
-    'Link imports must be CSV, JSON, JSONL, or NDJSON.',
-  )
-}
 
 function boundedRowLimit(value?: number): number {
   const limit = value ?? DEFAULT_ROW_LIMIT
@@ -41,152 +31,30 @@ function boundedRowLimit(value?: number): number {
   return limit
 }
 
-async function* csvRecords(
-  path: string,
-  byteLimit: number,
-  progress: { bytesRead: number },
-): AsyncGenerator<string[]> {
-  const stream = createReadStream(path, { encoding: 'utf8' })
-  let record: string[] = []
-  let field = ''
-  let quoted = false
-  let pendingQuote = false
-
-  for await (const chunk of stream) {
-    progress.bytesRead += Buffer.byteLength(chunk)
-    if (progress.bytesRead > byteLimit) {
-      stream.destroy()
-      throw new SeoError(
-        'INVALID_INPUT',
-        `Link import exceeds the ${byteLimit}-byte streaming limit.`,
-      )
-    }
-    for (const character of chunk) {
-      if (pendingQuote) {
-        if (character === '"') {
-          field += '"'
-          pendingQuote = false
-          continue
-        }
-        quoted = false
-        pendingQuote = false
-      }
-      if (quoted) {
-        if (character === '"') pendingQuote = true
-        else field += character
-      } else if (character === '"' && field.length === 0) {
-        quoted = true
-      } else if (character === ',') {
-        record.push(field)
-        field = ''
-      } else if (character === '\n') {
-        record.push(field.replace(/\r$/, ''))
-        field = ''
-        if (record.some((value) => value.length > 0)) yield record
-        record = []
-      } else {
-        field += character
-      }
-      if (Buffer.byteLength(field) > MAX_CELL_BYTES) {
-        stream.destroy()
-        throw new SeoError(
-          'INVALID_INPUT',
-          `Link import contains a cell larger than ${MAX_CELL_BYTES} bytes.`,
-        )
-      }
-    }
-  }
-  if (quoted && !pendingQuote) {
-    throw new SeoError('INVALID_INPUT', 'Link CSV contains an unclosed quote.')
-  }
-  if (field || record.length) {
-    record.push(field.replace(/\r$/, ''))
-    if (record.some((value) => value.length > 0)) yield record
-  }
-}
-
-async function* jsonlRecords(
-  path: string,
-  byteLimit: number,
-  progress: { bytesRead: number },
-): AsyncGenerator<RawLinkEvidenceRow> {
-  const stream = createReadStream(path, { encoding: 'utf8' })
-  let remainder = ''
-  for await (const chunk of stream) {
-    progress.bytesRead += Buffer.byteLength(chunk)
-    if (progress.bytesRead > byteLimit) {
-      stream.destroy()
-      throw new SeoError(
-        'INVALID_INPUT',
-        `Link import exceeds the ${byteLimit}-byte streaming limit.`,
-      )
-    }
-    remainder += chunk
-    let newline = remainder.indexOf('\n')
-    while (newline >= 0) {
-      const line = remainder.slice(0, newline).trim()
-      remainder = remainder.slice(newline + 1)
-      if (line) yield parseObject(line)
-      newline = remainder.indexOf('\n')
-    }
-    if (Buffer.byteLength(remainder) > MAX_CELL_BYTES) {
-      stream.destroy()
-      throw new SeoError(
-        'INVALID_INPUT',
-        `Link import contains a line larger than ${MAX_CELL_BYTES} bytes.`,
-      )
-    }
-  }
-  if (remainder.trim()) yield parseObject(remainder)
-}
-
-function parseObject(value: string): RawLinkEvidenceRow {
-  try {
-    const parsed = JSON.parse(value)
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      throw new Error('not an object')
-    }
-    return parsed as RawLinkEvidenceRow
-  } catch {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Link JSONL must contain one JSON object per line.',
-    )
-  }
-}
-
-function rowFromCsv(headers: string[], values: string[]): RawLinkEvidenceRow {
-  return Object.fromEntries(
-    headers.map((header, index) => [header, values[index]]),
-  )
-}
-
 export async function importLinkEvidence(input: {
   file: string
-  format?: ImportFormat
+  format?: StructuredImportFormat
   rowLimit?: number
 }): Promise<CollectedLinkEvidence> {
-  const path = resolve(input.file)
-  const file = await stat(path).catch(() => undefined)
-  if (!file?.isFile()) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `Link import file was not found: ${path}`,
-    )
-  }
-  const format = formatFor(path, input.format)
+  const file = await importFile({
+    file: input.file,
+    format: input.format,
+    label: 'Link',
+    maxStreamBytes: MAX_STREAM_BYTES,
+    maxJsonBytes: MAX_JSON_BYTES,
+  })
+  const { format, path } = file
   const rowLimit = boundedRowLimit(input.rowLimit)
-  if (format === 'json' && file.size > MAX_JSON_BYTES) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `JSON link imports are limited to ${MAX_JSON_BYTES} bytes. Use CSV or JSONL for larger files.`,
-    )
-  }
 
   const progress = { bytesRead: 0 }
   let records: AsyncIterable<RawLinkEvidenceRow>
   if (format === 'csv') {
-    const csv = csvRecords(path, MAX_STREAM_BYTES, progress)
+    const csv = csvRecords({
+      path,
+      byteLimit: MAX_STREAM_BYTES,
+      progress,
+      label: 'Link',
+    })
     const first = await csv.next()
     const headerRow = Array.isArray(first.value) ? first.value : []
     const headers = headerRow.map((value, index) =>
@@ -196,25 +64,19 @@ export async function importLinkEvidence(input: {
       throw new SeoError('INVALID_INPUT', 'Link CSV has no header row.')
     }
     records = (async function* () {
-      for await (const values of csv) yield rowFromCsv(headers, values)
+      for await (const values of csv) {
+        yield csvRow(headers, values) as RawLinkEvidenceRow
+      }
     })()
   } else if (format === 'jsonl') {
-    records = jsonlRecords(path, MAX_STREAM_BYTES, progress)
+    records = jsonlRecords({
+      path,
+      byteLimit: MAX_STREAM_BYTES,
+      progress,
+      label: 'Link',
+    }) as AsyncIterable<RawLinkEvidenceRow>
   } else {
-    const body = await readFile(path, 'utf8')
-    progress.bytesRead = Buffer.byteLength(body)
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(body)
-    } catch {
-      throw new SeoError('INVALID_INPUT', 'Link JSON is not valid JSON.')
-    }
-    if (!Array.isArray(parsed)) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        'Link JSON must be an array of objects.',
-      )
-    }
+    const parsed = await readJsonArray({ path, progress, label: 'Link' })
     records = (async function* () {
       for (const row of parsed) {
         yield row && typeof row === 'object' && !Array.isArray(row)
@@ -270,7 +132,7 @@ export async function importLinkEvidence(input: {
         path,
         format,
         bytesRead: progress.bytesRead,
-        fileBytes: file.size,
+        fileBytes: file.fileBytes,
       },
     },
     warnings: capped

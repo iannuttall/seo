@@ -7,6 +7,15 @@ import type {
   SearchMarket,
 } from './contracts.js'
 
+export type ResearchImportSource = {
+  dataset: 'ranked-keywords'
+  file: string
+  provider: 'dataforseo' | 'semrush' | 'ahrefs'
+  exportedAt: string
+  format?: 'csv' | 'json' | 'jsonl'
+  rowLimit?: number
+}
+
 export type RankingDistribution = {
   first: number
   top3: number

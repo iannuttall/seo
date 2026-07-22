@@ -64,6 +64,46 @@ const gapCompetitorInput = z.strictObject({
     'marketplace',
   ]),
 })
+const researchFileInput = z.strictObject({
+  dataset: z
+    .literal('ranked-keywords')
+    .describe(
+      'Type of provider export. Ranked-keywords files can feed keyword, page, competitor and gap reports.',
+    ),
+  file: z
+    .string()
+    .trim()
+    .min(1)
+    .max(4_096)
+    .describe('Path to a local CSV, TSV, JSON, JSONL or NDJSON export.'),
+  provider: providerIdInput.describe(
+    'Provider that produced the file: dataforseo, semrush or ahrefs.',
+  ),
+  exportedAt: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .describe('Date or timestamp when the provider export was created.'),
+  format: z
+    .enum(['csv', 'json', 'jsonl'])
+    .optional()
+    .describe('File format override. The file extension is used by default.'),
+  rowLimit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100_000)
+    .optional()
+    .describe('Maximum file rows to normalize. Defaults to 10000.'),
+})
+const researchFilesInput = z
+  .array(researchFileInput)
+  .min(1)
+  .max(4)
+  .describe(
+    'One to four local ranked-keyword exports from the same provider and market.',
+  )
 
 const domainOverviewInput = z.strictObject({
   domain: domainInput,
@@ -83,6 +123,7 @@ const rankedKeywordsInput = z.strictObject({
   excludeTerms: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
   limit: z.number().int().min(1).max(100).default(50),
   offset: z.number().int().min(0).max(100_000).default(0),
+  researchFiles: researchFilesInput.optional(),
   ...commonInput,
 })
 
@@ -94,6 +135,7 @@ const rankingPagesInput = z.strictObject({
   minRankedKeywords: z.number().int().min(0).optional(),
   limit: z.number().int().min(1).max(100).default(50),
   offset: z.number().int().min(0).max(100_000).default(0),
+  researchFiles: researchFilesInput.optional(),
   ...commonInput,
 })
 
@@ -104,6 +146,7 @@ const serpCompetitorsInput = z.strictObject({
   resultTypes: resultTypesInput,
   limit: z.number().int().min(1).max(100).default(25),
   offset: z.number().int().min(0).max(100_000).default(0),
+  researchFiles: researchFilesInput.optional(),
   ...commonInput,
 })
 
@@ -116,6 +159,7 @@ const competitorGapInput = z.strictObject({
   minSearchVolume: z.number().int().min(0).optional(),
   maxRank: z.number().int().min(1).max(100).optional(),
   includeSubdomains: z.boolean().optional(),
+  researchFiles: researchFilesInput.optional(),
   ...commonInput,
 })
 

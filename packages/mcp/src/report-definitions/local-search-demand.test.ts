@@ -73,3 +73,48 @@ test('local search report schema keeps paid local SERPs explicit and bounded', (
     )
   }
 })
+
+test('local search report keeps combined evidence inside one agent output budget', async () => {
+  const opportunities = Array.from({ length: 100 }, (_, index) => ({
+    query: `plumber near place ${index}`,
+    evidence: 'Bounded local evidence. '.repeat(250),
+    pages: Array.from({ length: 10 }, (_, pageIndex) => ({
+      url: `https://example.test/places/${index}/${pageIndex}`,
+    })),
+  }))
+  const handler = createLocalSearchDemandHandler({
+    localSearchReport: async () =>
+      ({
+        schemaVersion: 1,
+        site: 'sc-domain:example.test',
+        generatedAt: '2026-07-22T12:00:00.000Z',
+        dataStatus: 'partial',
+        source: { rowsFetched: 50_000, possiblyTruncated: true },
+        selection: { eligibleQueries: 100, returnedQueries: 100 },
+        summary: { verdict: 'Bounded local evidence was retained.' },
+        opportunities,
+        serpEvidence: { reports: opportunities },
+        serpInsights: { organicCompetitors: { items: opportunities } },
+        analyticsEvidence: { locations: opportunities },
+        caveats: ['Search Console and provider evidence are capped.'],
+        nextSteps: [],
+      }) as never,
+  })
+
+  const result = await handler({ site: 'sc-domain:example.test' })
+  const outputBudget = result.structuredContent?.outputBudget as Record<
+    string,
+    unknown
+  >
+  assert.equal(outputBudget.truncated, true)
+  assert.ok(
+    Buffer.byteLength(JSON.stringify(result.structuredContent)) <= 98_304,
+  )
+  assert.deepEqual(result.structuredContent?.source, {
+    rowsFetched: 50_000,
+    possiblyTruncated: true,
+  })
+  assert.deepEqual(result.structuredContent?.caveats, [
+    'Search Console and provider evidence are capped.',
+  ])
+})

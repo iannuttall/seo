@@ -29,10 +29,18 @@ import {
 import type {
   DataForSeoAccountSnapshot,
   DataForSeoClientOptions,
+  DataForSeoDomainOverviewRequest,
+  DataForSeoDomainOverviewSnapshot,
   DataForSeoKeywordDiscoveryRequest,
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoRankedKeywordsRequest,
+  DataForSeoRankedKeywordsSnapshot,
+  DataForSeoRankingPagesRequest,
+  DataForSeoRankingPagesSnapshot,
+  DataForSeoSerpCompetitorsRequest,
+  DataForSeoSerpCompetitorsSnapshot,
   DataForSeoSerpReadyTask,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
@@ -42,9 +50,18 @@ import type {
 import type { DataForSeoCredentials } from './credentials.js'
 import { readDataForSeoCredentials } from './credentials.js'
 import {
-  type DataForSeoDiscoveryResponse,
-  dataForSeoDiscoveryResponseSchema,
-} from './discovery-schema.js'
+  discoveryNextCursor,
+  discoveryRows,
+  discoveryTotalRows,
+} from './discovery-client-response.js'
+import { dataForSeoDiscoveryResponseSchema } from './discovery-schema.js'
+import {
+  DEFAULT_DOMAIN_RESEARCH_TTL_MS,
+  domainOverviewPaidRequest,
+  rankedKeywordsPaidRequest,
+  rankingPagesPaidRequest,
+  serpCompetitorsPaidRequest,
+} from './domain-client.js'
 import {
   type DataForSeoPaidResponse,
   type DataForSeoUnitPrice,
@@ -59,6 +76,7 @@ import {
   type DataForSeoKeywordOverviewResponse,
   dataForSeoKeywordOverviewResponseSchema,
 } from './schema.js'
+import { validateSerpInput } from './serp-client-input.js'
 import { dataForSeoSerpResponseSchema } from './serp-schema.js'
 import {
   type DataForSeoQueuedSerpRequest,
@@ -90,77 +108,22 @@ const MAX_KEYWORD_CHARACTERS = 80
 const MAX_KEYWORD_WORDS = 10
 const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
-const MAX_SERP_DEPTH = 100
-
-function validateSerpInput(
-  input: Omit<DataForSeoSerpRequest, 'refresh' | 'context'>,
-): { keyword: string; locationName: string | undefined } {
-  const keyword = input.keyword.trim().replace(/\s+/gu, ' ')
-  if (
-    keyword.length < 1 ||
-    keyword.length > MAX_KEYWORD_CHARACTERS ||
-    keyword.split(/\s+/u).length > MAX_KEYWORD_WORDS
-  ) {
-    throw new ProviderError({
-      provider: 'dataforseo',
-      operation: 'serp-snapshot',
-      code: 'configuration',
-      message: `SERP snapshots require a keyword of at most ${MAX_KEYWORD_CHARACTERS} characters and ${MAX_KEYWORD_WORDS} words.`,
-    })
-  }
-  if (
-    /(?:^|\s)(?:allinanchor|allintext|allintitle|allinurl|cache|define|definition|filetype|id|inanchor|info|intext|intitle|inurl|link|site):/iu.test(
-      keyword,
-    )
-  ) {
-    throw new ProviderError({
-      provider: 'dataforseo',
-      operation: 'serp-snapshot',
-      code: 'configuration',
-      message:
-        'SERP snapshot keywords cannot contain search operators with multiplied provider pricing.',
-    })
-  }
-  if (
-    !Number.isSafeInteger(input.depth) ||
-    input.depth < 1 ||
-    input.depth > MAX_SERP_DEPTH
-  ) {
-    throw new ProviderError({
-      provider: 'dataforseo',
-      operation: 'serp-snapshot',
-      code: 'configuration',
-      message: `SERP depth must be from 1 to ${MAX_SERP_DEPTH}.`,
-    })
-  }
-  if (!/^[a-z]{2}$/.test(input.languageCode)) {
-    throw new ProviderError({
-      provider: 'dataforseo',
-      operation: 'serp-snapshot',
-      code: 'configuration',
-      message: 'DataForSEO language code must contain two lowercase letters.',
-    })
-  }
-  const locationName = input.locationName?.trim()
-  if ((input.locationCode !== undefined) === Boolean(locationName)) {
-    throw new ProviderError({
-      provider: 'dataforseo',
-      operation: 'serp-snapshot',
-      code: 'configuration',
-      message:
-        'DataForSEO SERP snapshots require exactly one location code or location name.',
-    })
-  }
-  return { keyword, locationName }
-}
 
 export type {
   DataForSeoAccountSnapshot,
   DataForSeoClientOptions,
+  DataForSeoDomainOverviewRequest,
+  DataForSeoDomainOverviewSnapshot,
   DataForSeoKeywordDiscoveryRequest,
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoRankedKeywordsRequest,
+  DataForSeoRankedKeywordsSnapshot,
+  DataForSeoRankingPagesRequest,
+  DataForSeoRankingPagesSnapshot,
+  DataForSeoSerpCompetitorsRequest,
+  DataForSeoSerpCompetitorsSnapshot,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
 } from './client-types.js'
@@ -213,6 +176,26 @@ function keywordDiscoveryPrices(
   }
 }
 
+function domainResearchPrices(
+  account: UserDataAccount,
+): DataForSeoAccountSnapshot['domainResearchPrices'] {
+  return {
+    domainOverview: unitPrice(
+      account.price?.dataforseo_labs?.domain_rank_overview?.live
+        ?.priority_normal,
+    ),
+    rankedKeywords: unitPrice(
+      account.price?.dataforseo_labs?.ranked_keywords?.live?.priority_normal,
+    ),
+    rankingPages: unitPrice(
+      account.price?.dataforseo_labs?.relevant_pages?.live?.priority_normal,
+    ),
+    serpCompetitors: unitPrice(
+      account.price?.dataforseo_labs?.serp_competitors?.live?.priority_normal,
+    ),
+  }
+}
+
 function serpLiveAdvancedPrice(account: UserDataAccount): DataForSeoUnitPrice {
   return unitPrice(account.price?.serp?.live?.advanced?.priority_normal)
 }
@@ -239,40 +222,6 @@ function responseRows(response: DataForSeoKeywordOverviewResponse): number {
   )
 }
 
-function discoveryRows(response: DataForSeoDiscoveryResponse): number {
-  return response.tasks.reduce(
-    (taskTotal, task) =>
-      taskTotal +
-      (task.result ?? []).reduce(
-        (resultTotal, result) => resultTotal + (result.items?.length ?? 0),
-        0,
-      ),
-    0,
-  )
-}
-
-function discoveryTotalRows(
-  response: DataForSeoDiscoveryResponse,
-): number | null {
-  const totals = response.tasks.flatMap((task) =>
-    (task.result ?? []).flatMap((result) =>
-      typeof result.total_count === 'number' ? [result.total_count] : [],
-    ),
-  )
-  return totals.length ? totals.reduce((sum, value) => sum + value, 0) : null
-}
-
-function discoveryNextCursor(
-  response: DataForSeoDiscoveryResponse,
-): string | null {
-  const cursors = response.tasks.flatMap((task) =>
-    (task.result ?? []).flatMap((result) =>
-      result.offset_token ? [result.offset_token] : [],
-    ),
-  )
-  return cursors.length === 1 ? (cursors[0] ?? null) : null
-}
-
 export class DataForSeoClient {
   private readonly fetch: ProviderFetch
   private readonly credentials: () =>
@@ -288,6 +237,7 @@ export class DataForSeoClient {
   private readonly keywordDiscoveryTtlMs: number
   private readonly serpTtlMs: number
   private readonly accountPricingTtlMs: number
+  private readonly domainResearchTtlMs: number
   private readonly spendLimits: ProviderSpendLimits | undefined
   private accountPricing:
     | {
@@ -319,6 +269,8 @@ export class DataForSeoClient {
     this.serpTtlMs = options.serpTtlMs ?? DEFAULT_SERP_TTL_MS
     this.accountPricingTtlMs =
       options.accountPricingTtlMs ?? DEFAULT_ACCOUNT_PRICING_TTL_MS
+    this.domainResearchTtlMs =
+      options.domainResearchTtlMs ?? DEFAULT_DOMAIN_RESEARCH_TTL_MS
     this.spendLimits = options.spendLimits
   }
 
@@ -432,6 +384,7 @@ export class DataForSeoClient {
       ),
       keywordOverviewPrice: keywordOverviewPrice(account),
       keywordDiscoveryPrices: keywordDiscoveryPrices(account),
+      domainResearchPrices: domainResearchPrices(account),
       serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
       serpTaskPostPrice: serpTaskPostPrice(account),
       backlinksSubscriptionExpiresAt:
@@ -528,6 +481,38 @@ export class DataForSeoClient {
       database: this.database,
       spendLimits: this.spendLimits,
     })
+  }
+
+  async domainOverview(
+    input: DataForSeoDomainOverviewRequest,
+  ): Promise<DataForSeoDomainOverviewSnapshot> {
+    return this.paidPost(
+      domainOverviewPaidRequest(input, this.domainResearchTtlMs),
+    )
+  }
+
+  async rankedKeywords(
+    input: DataForSeoRankedKeywordsRequest,
+  ): Promise<DataForSeoRankedKeywordsSnapshot> {
+    return this.paidPost(
+      rankedKeywordsPaidRequest(input, this.domainResearchTtlMs),
+    )
+  }
+
+  async rankingPages(
+    input: DataForSeoRankingPagesRequest,
+  ): Promise<DataForSeoRankingPagesSnapshot> {
+    return this.paidPost(
+      rankingPagesPaidRequest(input, this.domainResearchTtlMs),
+    )
+  }
+
+  async serpCompetitors(
+    input: DataForSeoSerpCompetitorsRequest,
+  ): Promise<DataForSeoSerpCompetitorsSnapshot> {
+    return this.paidPost(
+      serpCompetitorsPaidRequest(input, this.domainResearchTtlMs),
+    )
   }
 
   async keywordOverview(

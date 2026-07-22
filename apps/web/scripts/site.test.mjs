@@ -831,7 +831,7 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(
     home,
     new RegExp(
-      `One SEO skill and ${routeReportIds.length} audit tools for AI agents to fix\\s+issues, measure performance, and grow your organic and AI search\\s+visibility\\.`,
+      `One SEO skill and ${routeReportIds.length} reports and tools for AI agents\\s+to fix issues, measure performance, research search opportunities,\\s+and improve organic and AI search visibility\\.`,
     ),
   )
   assert.match(home, /data-glitch/)

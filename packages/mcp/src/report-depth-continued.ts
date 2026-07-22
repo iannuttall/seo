@@ -1,6 +1,115 @@
 import type { ReportDepth } from './report-depth.js'
 
 export const REPORT_DEPTH_CONTINUED = {
+  'competitor-keyword-gap': {
+    readOrder: [
+      'dataStatus, source statuses, market, and selection bounds',
+      'summary classification counts before the returned candidate subset',
+      'processing counts for first-party rows, token postings, competitor rows, and candidate terms',
+      'candidate classification, relevance state, firstParty, ownProviderRank, and competitor rows',
+      'pseo proposal, repeatedCompetitorPatterns, dataSourceBriefs, findings, and caveats',
+    ],
+    doNotClaim: [
+      'A provider-only competitor term is not automatically relevant, missing from the site, or worth targeting.',
+      'not-in-retained Search Console evidence is not proof of zero impressions or no existing coverage.',
+      'Lexical overlap and repeated URL patterns do not prove intent, demand, page quality, or that a template should be built.',
+    ],
+    verify:
+      'Inspect current results, representative competitor pages, existing first-party pages, and an authoritative data source before approving a candidate.',
+    related: [
+      { id: 'serp-competitors', reason: 'Finds and classifies domains first.' },
+      { id: 'ranking-pages', reason: 'Inspects repeated competitor pages.' },
+      {
+        id: 'keyword-opportunities',
+        reason: 'Starts from first-party demand.',
+      },
+    ],
+  },
+  'domain-overview': {
+    readOrder: [
+      'dataStatus, market, provider coverage, cache, cost, and warnings',
+      'summary and evidence.data.organic provider values',
+      'firstParty status, range, and measured values when requested',
+      'findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'Provider traffic, keyword counts, ranking movements, and traffic cost are estimates, not measured site performance.',
+      'Do not subtract provider estimates from Search Console values or turn them into a percentage gap.',
+      'Empty, capped, partial, invalid, or unavailable evidence cannot support a zero footprint or all-clear.',
+    ],
+    verify:
+      'Use Search Console for actual site performance and inspect ranking pages or current results before acting on provider estimates.',
+    related: [
+      { id: 'ranking-pages', reason: 'Shows pages behind the footprint.' },
+      { id: 'ranked-keywords', reason: 'Shows bounded keyword rows.' },
+      {
+        id: 'search-performance-overview',
+        reason: 'Starts with first-party performance.',
+      },
+    ],
+  },
+  'ranked-keywords': {
+    readOrder: [
+      'dataStatus, market, coverage, request filters, cache, cost, and warnings',
+      'summary totals and returned evidence.data.rows',
+      'firstParty status, caps, and per-row match states when requested',
+      'findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'Provider rank, traffic, volume, difficulty, and intent are not live result or first-party evidence.',
+      'A query absent from retained Search Console rows is not proof of no impressions or no ranking.',
+      'The returned page is not a full domain keyword inventory when coverage is filtered, capped, or paginated.',
+    ],
+    verify:
+      'Run a current result report for any keyword whose rank, result type, or intent would change the decision.',
+    related: [
+      { id: 'serp-results', reason: 'Checks a current result snapshot.' },
+      { id: 'ranking-pages', reason: 'Groups ranking pages and URL patterns.' },
+      {
+        id: 'keyword-opportunities',
+        reason: 'Adds first-party opportunity logic.',
+      },
+    ],
+  },
+  'ranking-pages': {
+    readOrder: [
+      'dataStatus, market, coverage, request filters, cache, cost, and warnings',
+      'summary and bounded evidence.data.rows',
+      'firstParty page matches when requested',
+      'repeatedPatterns, findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'Estimated traffic and keyword counts are not measured page traffic.',
+      'A repeated path is a structural heuristic, not proof of shared intent, quality, or a programmatic generator.',
+      'Patterns from a filtered or paginated page sample may not describe the whole domain.',
+    ],
+    verify:
+      'Inspect representative pages, their ranked queries, current results, data sources, and first-party performance before changing or creating a template.',
+    related: [
+      { id: 'ranked-keywords', reason: 'Shows queries behind a page.' },
+      { id: 'pseo-audit', reason: 'Checks first-party template quality.' },
+      { id: 'competitor-keyword-gap', reason: 'Classifies possible gaps.' },
+    ],
+  },
+  'serp-competitors': {
+    readOrder: [
+      'dataStatus, market, querySetSize, coverage, request, cache, and cost',
+      'competitors relationship, siteType, classificationSource, and keywordCoverage',
+      'findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'A recurring result domain is a search competitor for this keyword set, not automatically a business competitor.',
+      'unknown site types must stay unknown until the user or agent classifies them.',
+      'Visibility and traffic estimates are not complete market share or measured traffic.',
+    ],
+    verify:
+      'Review unknown domains and current representative results before selecting a small explicit set for gap research.',
+    related: [
+      { id: 'ranking-pages', reason: 'Inspects a relevant domain.' },
+      { id: 'competitor-keyword-gap', reason: 'Compares explicit domains.' },
+      { id: 'serp-results', reason: 'Checks one current result set.' },
+    ],
+  },
   'monthly-action-plan': {
     readOrder: [
       'workflow summary, steps, actions, and nested output',

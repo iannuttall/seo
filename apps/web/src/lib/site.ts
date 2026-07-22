@@ -4,7 +4,7 @@ export const site = {
   name: 'SEO Skill',
   packageName: 'seo',
   url: 'https://seoskill.dev',
-  description: `One SEO skill gives your agent ${reportIds.length} SEO audit tools through a local CLI and MCP server, using your crawl, Search Console, and Google Analytics data to grow your visibility.`,
+  description: `Give your agent ${reportIds.length} SEO reports that run locally across crawling, Search Console, Google Analytics, keyword research, competitors, programmatic SEO, AI search, and monitoring.`,
   repository: 'https://github.com/iannuttall/seo',
   issues: 'https://github.com/iannuttall/seo/issues',
   advisory: 'https://github.com/iannuttall/seo/security/advisories/new',

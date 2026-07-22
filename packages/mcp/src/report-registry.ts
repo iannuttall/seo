@@ -3,6 +3,7 @@ import * as z from 'zod/v4'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
+import { registerDomainResearchTools } from './domain-research-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
 import { registerKeywordTools } from './keyword-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
@@ -86,6 +87,17 @@ const reportGroups: readonly ReportGroup[] = [
       'seo_rank_tracking',
       'seo_saved_keywords',
       'seo_serp_results',
+    ],
+  },
+  {
+    category: 'opportunities',
+    register: registerDomainResearchTools,
+    names: [
+      'seo_competitor_keyword_gap',
+      'seo_domain_overview',
+      'seo_ranked_keywords',
+      'seo_ranking_pages',
+      'seo_serp_competitors',
     ],
   },
   {

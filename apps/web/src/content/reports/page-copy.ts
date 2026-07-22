@@ -71,6 +71,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Compare two saved SEO crawls to find new, fixed and changed technical issues. Check the crawl scope before treating the difference as real or complete.',
     lead: 'See what changed between two saved crawl snapshots without fetching the site again. Check that both crawls covered a comparable part of the site before celebrating a fix or reporting a regression.',
   },
+  'competitor-keyword-gap': {
+    title: 'Competitor keyword gap report',
+    description:
+      'Compare competitor keywords with Search Console themes, current rankings and repeated page patterns. Exclude irrelevant terms and evidence of existing coverage.',
+    lead: 'Start with a small set of relevant competitors, then test their keywords against what the site already covers. The report classifies possible gaps instead of pretending every competitor term deserves a page.',
+  },
   'content-optimization': {
     title: 'Content optimization report',
     description:
@@ -100,6 +106,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     description:
       'Compare matched Search Console periods to find pages and queries losing clicks, impressions, position or CTR before planning a content refresh.',
     lead: 'Find pages or queries with a supported decline across two matched periods. The report shows what moved, then leaves the cause open for investigation.',
+  },
+  'domain-overview': {
+    title: 'Domain organic search overview',
+    description:
+      'Review estimated organic traffic, ranked keywords and ranking distribution for a domain, with optional matching Search Console evidence kept separate.',
+    lead: 'Get a quick country-level view of a domain before opening its pages and keywords. Provider estimates and owner-verified Search Console totals stay side by side, with no invented ratio between them.',
   },
   'setup-check': {
     title: 'SEO CLI setup check',
@@ -293,6 +305,18 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Track exact organic positions for a saved keyword set by location and device. Compare ranking changes with local history, coverage and provider cost.',
     lead: 'Track the same saved keywords in a fixed market and device, then compare each exact snapshot with the prior compatible run. Results stay on your machine, including queued task state, cost and history.',
   },
+  'ranked-keywords': {
+    title: 'Ranked keywords report',
+    description:
+      'Review a bounded domain or page keyword footprint with ranking URLs, demand estimates, provider limits and optional matching Search Console query evidence.',
+    lead: 'Open the keyword rows behind a domain or page footprint. Filters run before paid acquisition, and each optional Search Console match says observed or not found in retained rows instead of inventing a zero.',
+  },
+  'ranking-pages': {
+    title: 'Organic ranking pages report',
+    description:
+      "Find the pages behind a domain's estimated organic footprint, repeated URL patterns, provider limits and optional matching Search Console page evidence.",
+    lead: "See which pages carry a domain's estimated search footprint and whether the retained paths form repeated page families. Open representative pages before treating a path pattern as a useful template.",
+  },
   'redirect-trace': {
     title: 'Redirect trace',
     description:
@@ -322,6 +346,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     description:
       'Inspect exact organic ranks, domains, URLs, titles, snippets and result features for one keyword, location, language and device-specific search snapshot.',
     lead: 'See the current bounded result page for one query and market. The snapshot keeps exact ranks separate from Search Console averages and does not turn repeated domains into a strength score.',
+  },
+  'serp-competitors': {
+    title: 'Search competitor research report',
+    description:
+      'Find domains that repeatedly appear for an explicit keyword set, preserve declared site types, and leave unknown search competitors safely unclassified.',
+    lead: 'Discover who repeatedly appears across a keyword set before choosing competitors for deeper research. A recurring domain is a search competitor for this sample, not automatically a business competitor.',
   },
   'striking-distance': {
     title: 'Striking distance SEO report',

@@ -25,6 +25,12 @@ export const docsNav: DocsNavEntry[] = [
       'Connect one verified Bing site and review bounded traffic trends, crawl changes, and search opportunities.',
   },
   {
+    path: '/docs/research-providers',
+    label: 'Research providers',
+    description:
+      'Connect DataForSEO locally, control paid work and combine keyword, domain, competitor and page estimates with first-party evidence.',
+  },
+  {
     path: '/docs/indexnow',
     label: 'IndexNow',
     description:

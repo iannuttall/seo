@@ -6,9 +6,11 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { listReports } from '@seo/mcp'
 
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../index.js', import.meta.url))
+const reportCount = listReports().length
 
 async function runSeo(args: string[]): Promise<{
   exitCode: number
@@ -45,7 +47,7 @@ test('reports list exposes the shared sorted catalog', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   const output = JSON.parse(result.stdout)
-  assert.equal(output.reports.length, 63)
+  assert.equal(output.reports.length, reportCount)
   assert.deepEqual(output.categories, [
     'ai-search',
     'crawl',
@@ -71,6 +73,15 @@ test('reports list exposes the shared sorted catalog', async () => {
         !('useWhen' in report),
     ),
   )
+  for (const id of [
+    'domain-overview',
+    'ranked-keywords',
+    'ranking-pages',
+    'serp-competitors',
+    'competitor-keyword-gap',
+  ]) {
+    assert.ok(output.reports.some((report: { id: string }) => report.id === id))
+  }
 })
 
 test('reports list stays browsable for humans', async () => {
@@ -79,7 +90,10 @@ test('reports list stays browsable for humans', async () => {
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
   assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-  assert.match(result.stdout, /^63 reports across 9 categories\./)
+  assert.match(
+    result.stdout,
+    new RegExp(`^${reportCount} reports across 9 categories\\.`),
+  )
   assert.match(result.stdout, /^AI search \(7\)$/m)
   assert.match(result.stdout, /affected-urls\s+URLs affected by a crawl issue/)
   assert.match(result.stdout, /seo reports describe <id>/)

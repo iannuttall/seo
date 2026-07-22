@@ -225,7 +225,7 @@ test('the registered ranked-keyword report runs local imports and keeps provenan
     await writeFile(
       file,
       [
-        'Keyword,Position,URL,Search Volume',
+        'Search Term,Current Rank,Destination,Monthly Demand',
         'safe fixture query,5,https://example.com/page,100',
       ].join('\n'),
     )
@@ -241,6 +241,12 @@ test('the registered ranked-keyword report runs local imports and keeps provenan
           file,
           provider: 'semrush',
           exportedAt: '2026-07-20T12:00:00Z',
+          columns: {
+            keyword: 'Search Term',
+            position: 'Current Rank',
+            url: 'Destination',
+            searchVolume: 'Monthly Demand',
+          },
         },
       ],
     })
@@ -254,6 +260,12 @@ test('the registered ranked-keyword report runs local imports and keeps provenan
     assert.equal(result?.structuredContent?.dataStatus, 'partial')
     assert.equal(imports?.length, 1)
     assert.equal(imports?.[0]?.provider, 'semrush')
+    assert.deepEqual(imports?.[0]?.columnMapping, {
+      keyword: 'Search Term',
+      position: 'Current Rank',
+      url: 'Destination',
+      searchVolume: 'Monthly Demand',
+    })
     assert.match(String(imports?.[0]?.sha256), /^[a-f0-9]{64}$/u)
     assert.ok(
       Buffer.byteLength(JSON.stringify(result?.structuredContent)) <= 98_304,

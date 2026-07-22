@@ -150,9 +150,11 @@ For competitor and programmatic research, use a separate narrow sequence:
 If no provider API is connected, describe the selected report and check its
 `researchFiles` schema. One to four local ranked-keyword exports from the same
 provider can feed `ranked-keywords`, `ranking-pages`, `serp-competitors` and
-`competitor-keyword-gap`. Read every `evidence.imports` entry first. The export
-date, file hash, fields, filtered historical rows, rejected rows and caps
-define what the file can support. An absent imported row is not a zero.
+`competitor-keyword-gap`. Use the optional `columns` map when source headings
+do not match the recognised export fields. Never guess an ambiguous mapping.
+Read every `evidence.imports` entry first. The export date, file hash, fields,
+column mapping, filtered historical rows, rejected rows and caps define what
+the file can support. An absent imported row is not a zero.
 
 For AI mention research, keep the surface and market fixed:
 

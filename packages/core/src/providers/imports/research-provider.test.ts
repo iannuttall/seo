@@ -115,6 +115,91 @@ test('Semrush percentage fields keep their own meaning', async () => {
   })
 })
 
+test('custom column mappings override aliases and stay in provenance', async () => {
+  const body = [
+    'Search Term,Destination,Reported Rank,Position,Monthly Demand,Estimated Visits,Traffic %,Kind',
+    'custom shoes,https://shop.example/custom,7,99,900,42,4.2%,Local pack',
+  ].join('\n')
+  await fixture('custom-rankings.csv', body, async (path) => {
+    const provider = new ResearchImportProvider([
+      source(path, {
+        columns: {
+          keyword: 'Search Term',
+          url: 'Destination',
+          position: 'Reported Rank',
+          searchVolume: 'Monthly Demand',
+          estimatedTraffic: 'Estimated Visits',
+          resultType: 'Kind',
+        },
+      }),
+    ])
+    const result = await provider.rankedKeywords({
+      target: 'shop.example',
+      market,
+      limit: 10,
+    })
+    const row = result.data.rows[0]
+
+    assert.equal(row?.keyword, 'custom shoes')
+    assert.equal(row?.rankGroup, 7)
+    assert.equal(row?.rankAbsolute, 7)
+    assert.deepEqual(row?.monthlySearchVolume, {
+      state: 'observed',
+      value: 900,
+    })
+    assert.deepEqual(row?.estimatedMonthlyTraffic, {
+      state: 'observed',
+      value: 42,
+    })
+    assert.equal(row?.resultType, 'local_pack')
+    assert.deepEqual(result.imports?.[0]?.columnMapping, {
+      keyword: 'Search Term',
+      url: 'Destination',
+      position: 'Reported Rank',
+      searchVolume: 'Monthly Demand',
+      estimatedTraffic: 'Estimated Visits',
+      resultType: 'Kind',
+    })
+  })
+})
+
+test('custom column mappings reject missing and reused source fields', async () => {
+  const body = [
+    'Search Term,Destination,Reported Rank',
+    'custom shoes,https://shop.example/custom,7',
+  ].join('\n')
+  await fixture('invalid-column-map.csv', body, async (path) => {
+    const missing = new ResearchImportProvider([
+      source(path, { columns: { keyword: 'Unknown Term' } }),
+    ])
+    await assert.rejects(
+      missing.rankedKeywords({
+        target: 'shop.example',
+        market,
+        limit: 10,
+      }),
+      /keyword.*missing source column "Unknown Term"/u,
+    )
+
+    const reused = new ResearchImportProvider([
+      source(path, {
+        columns: {
+          keyword: 'Search Term',
+          url: 'search-term',
+        },
+      }),
+    ])
+    await assert.rejects(
+      reused.rankedKeywords({
+        target: 'shop.example',
+        market,
+        limit: 10,
+      }),
+      /cannot map "keyword" and "url" to the same source column/u,
+    )
+  })
+})
+
 test('Semrush Organic Positions exports map current headers into stable fields', async () => {
   const body = [
     'Keyword,Position,Previous position,Search Volume,Keyword Difficulty,CPC,URL,Traffic,Traffic (%),Traffic Cost,Competition,Number of Results,Trends,Timestamp,SERP Features by Keyword,Keyword Intents,Position Type',

@@ -235,9 +235,11 @@ The parameter file uses `researchFiles`. Each item records
 `exportedAt` date. CSV, TSV, JSON, JSONL and NDJSON are supported. UTF-8 and
 UTF-16 CSV files are detected automatically, including Ahrefs downloads that
 use tabs despite a `.csv` name. The output keeps the detected encoding and
-delimiter, a SHA-256 hash, included fields, row counts, filtered historical
-rows, invalid rows, duplicates and caps under `evidence.imports`. Imported
-files can feed `ranked-keywords`,
+delimiter, a SHA-256 hash, included fields, explicit column mapping, row counts,
+filtered historical rows, invalid rows, duplicates and caps under
+`evidence.imports`. Add `columns` when an export uses unfamiliar headings.
+Each entry maps a canonical field such as `keyword`, `url`, `position` or
+`searchVolume` to the source heading. Imported files can feed `ranked-keywords`,
 `ranking-pages`, `serp-competitors` and `competitor-keyword-gap` without
 adding another command or MCP tool. The [research provider guide](https://seoskill.dev/docs/research-providers)
 has the exact JSON shape, market guidance and file limits.

@@ -179,7 +179,7 @@ test('reports run imports ranked-keyword files through the generic CLI path', as
   await writeFile(
     researchFile,
     [
-      'Keyword,Position,URL,Search Volume',
+      'Search Term,Current Rank,Destination,Monthly Demand',
       'safe fixture query,5,https://example.com/page,100',
     ].join('\n'),
   )
@@ -195,6 +195,12 @@ test('reports run imports ranked-keyword files through the generic CLI path', as
           file: researchFile,
           provider: 'semrush',
           exportedAt: '2026-07-20T12:00:00Z',
+          columns: {
+            keyword: 'Search Term',
+            position: 'Current Rank',
+            url: 'Destination',
+            searchVolume: 'Monthly Demand',
+          },
         },
       ],
     }),
@@ -216,6 +222,10 @@ test('reports run imports ranked-keyword files through the generic CLI path', as
     assert.equal(output.evidence.provider, 'semrush')
     assert.equal(output.evidence.imports.length, 1)
     assert.match(output.evidence.imports[0].sha256, /^[a-f0-9]{64}$/u)
+    assert.equal(
+      output.evidence.imports[0].columnMapping.searchVolume,
+      'Monthly Demand',
+    )
   } finally {
     await rm(directory, { recursive: true, force: true })
   }

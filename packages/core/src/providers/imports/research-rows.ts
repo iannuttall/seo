@@ -14,6 +14,12 @@ import type {
   RankedKeyword,
   ResearchImportSource,
 } from '../domain-contracts.js'
+import {
+  normalizedResearchColumnName,
+  type ResearchImportColumns,
+  researchImportColumns,
+  validateResearchImportColumnSources,
+} from './research-columns.js'
 
 export const DEFAULT_RESEARCH_ROW_LIMIT = 10_000
 export const MAX_RESEARCH_ROW_LIMIT = 100_000
@@ -119,6 +125,25 @@ const FIELD_ALIASES = {
   ],
 } as const
 
+const COLUMN_MAPPING_FIELD = {
+  keyword: 'keyword',
+  url: 'url',
+  rankGroup: 'position',
+  rankAbsolute: 'absolutePosition',
+  volume: 'searchVolume',
+  difficulty: 'keywordDifficulty',
+  cpc: 'cpc',
+  competition: 'paidCompetition',
+  intent: 'intent',
+  resultCount: 'resultCount',
+  traffic: 'estimatedTraffic',
+  resultType: 'resultType',
+  updatedAt: 'searchVolumeUpdatedAt',
+} as const satisfies Record<
+  keyof typeof FIELD_ALIASES,
+  keyof ResearchImportColumns
+>
+
 const BOOLEAN_INTENT_FIELDS = [
   ['navigational', 'navigational'],
   ['informational', 'informational'],
@@ -162,21 +187,23 @@ function exportTimestamp(value: string): string {
   return date.toISOString()
 }
 
-function keyName(value: string): string {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/gu, '')
-  const percentage = /%|percent/iu.test(value)
-  return percentage && !normalized.endsWith('percent')
-    ? `${normalized}percent`
-    : normalized
-}
-
 function normalizedRawRow(raw: RawRow): RawRow {
   return Object.fromEntries(
-    Object.entries(raw).map(([key, value]) => [keyName(key), value]),
+    Object.entries(raw).map(([key, value]) => [
+      normalizedResearchColumnName(key),
+      value,
+    ]),
   )
+}
+
+function aliasesFor(
+  fieldName: keyof typeof FIELD_ALIASES,
+  columns: ResearchImportColumns | undefined,
+): readonly string[] {
+  const mapped = columns?.[COLUMN_MAPPING_FIELD[fieldName]]
+  return mapped
+    ? [normalizedResearchColumnName(mapped)]
+    : FIELD_ALIASES[fieldName]
 }
 
 function field(
@@ -331,10 +358,13 @@ function normalizedIntent(value: string): string {
     .join(', ')
 }
 
-function intentField(raw: RawRow): ProviderValue<string> {
+function intentField(
+  raw: RawRow,
+  aliases: readonly string[],
+): ProviderValue<string> {
   const explicit = textField({
     raw,
-    aliases: FIELD_ALIASES.intent,
+    aliases,
     label: 'intent',
     maximum: 100,
   })
@@ -371,8 +401,8 @@ function intentField(raw: RawRow): ProviderValue<string> {
   return { state: 'observed', value: intents.join(', ') }
 }
 
-function resultType(raw: RawRow): string {
-  const value = requiredText(raw, FIELD_ALIASES.resultType)
+function resultType(raw: RawRow, aliases: readonly string[]): string {
+  const value = requiredText(raw, aliases)
   if (!value) return 'organic'
   const normalized = value
     .trim()
@@ -390,10 +420,13 @@ function resultType(raw: RawRow): string {
   return normalized
 }
 
-function dateField(raw: RawRow): ProviderValue<string> {
+function dateField(
+  raw: RawRow,
+  aliases: readonly string[],
+): ProviderValue<string> {
   const value = textField({
     raw,
-    aliases: FIELD_ALIASES.updatedAt,
+    aliases,
     label: 'search-volume update date',
     maximum: 100,
   })
@@ -434,15 +467,18 @@ function normalizedUrl(value: string): { url: string; domain: string } | null {
   }
 }
 
-function normalizeRow(rawValue: RawRow): NormalizedResearchRow {
+function normalizeRow(
+  rawValue: RawRow,
+  columns: ResearchImportColumns | undefined,
+): NormalizedResearchRow {
   const raw = normalizedRawRow(rawValue)
-  const keyword = requiredText(raw, FIELD_ALIASES.keyword)
-  const rawUrl = requiredText(raw, FIELD_ALIASES.url)
+  const keyword = requiredText(raw, aliasesFor('keyword', columns))
+  const rawUrl = requiredText(raw, aliasesFor('url', columns))
   const importedRankGroup = numberValue(
-    field(raw, FIELD_ALIASES.rankGroup).value,
+    field(raw, aliasesFor('rankGroup', columns)).value,
   )
   const importedRankAbsolute = numberValue(
-    field(raw, FIELD_ALIASES.rankAbsolute).value,
+    field(raw, aliasesFor('rankAbsolute', columns)).value,
   )
   const rankGroup = importedRankGroup ?? importedRankAbsolute ?? 0
   const rankAbsolute = importedRankAbsolute ?? importedRankGroup ?? 0
@@ -482,10 +518,10 @@ function normalizeRow(rawValue: RawRow): NormalizedResearchRow {
       url: target.url,
       rankGroup,
       rankAbsolute,
-      resultType: resultType(raw),
+      resultType: resultType(raw, aliasesFor('resultType', columns)),
       monthlySearchVolume: numberField({
         raw,
-        aliases: FIELD_ALIASES.volume,
+        aliases: aliasesFor('volume', columns),
         label: 'monthly search volume',
         integer: true,
         minimum: 0,
@@ -495,39 +531,39 @@ function normalizeRow(rawValue: RawRow): NormalizedResearchRow {
         value: null,
         reason: 'Ranked-keyword exports do not include typed monthly history.',
       },
-      searchVolumeUpdatedAt: dateField(raw),
+      searchVolumeUpdatedAt: dateField(raw, aliasesFor('updatedAt', columns)),
       cpcUsd: numberField({
         raw,
-        aliases: FIELD_ALIASES.cpc,
+        aliases: aliasesFor('cpc', columns),
         label: 'CPC',
         minimum: 0,
       }),
       paidCompetition: numberField({
         raw,
-        aliases: FIELD_ALIASES.competition,
+        aliases: aliasesFor('competition', columns),
         label: 'paid competition',
         minimum: 0,
         maximum: 1,
       }),
       keywordDifficulty: numberField({
         raw,
-        aliases: FIELD_ALIASES.difficulty,
+        aliases: aliasesFor('difficulty', columns),
         label: 'keyword difficulty',
         minimum: 0,
         maximum: 100,
         percentage: 'whole',
       }),
-      intent: intentField(raw),
+      intent: intentField(raw, aliasesFor('intent', columns)),
       resultCount: numberField({
         raw,
-        aliases: FIELD_ALIASES.resultCount,
+        aliases: aliasesFor('resultCount', columns),
         label: 'result count',
         integer: true,
         minimum: 0,
       }),
       estimatedMonthlyTraffic: numberField({
         raw,
-        aliases: FIELD_ALIASES.traffic,
+        aliases: aliasesFor('traffic', columns),
         label: 'estimated monthly traffic',
         minimum: 0,
       }),
@@ -561,6 +597,7 @@ export async function importResearchRows(
   now = new Date(),
 ): Promise<ImportedResearchRows> {
   const limit = researchImportRowLimit(source.rowLimit)
+  const columns = researchImportColumns(source.columns)
   const exportedAt = exportTimestamp(source.exportedAt)
   const file = await importFile({
     file: source.file,
@@ -599,7 +636,7 @@ export async function importResearchRows(
       invalidRows += 1
       return
     }
-    const normalized = normalizeRow(raw)
+    const normalized = normalizeRow(raw, columns)
     if (normalized.kind === 'filtered') {
       filteredRows += 1
       return
@@ -638,7 +675,7 @@ export async function importResearchRows(
       headers.length === 0 ||
       headers.length > MAX_INCLUDED_FIELDS ||
       headers.some((header) => !header) ||
-      new Set(headers.map(keyName)).size !== headers.length
+      new Set(headers.map(normalizedResearchColumnName)).size !== headers.length
     ) {
       throw new SeoError(
         'INVALID_INPUT',
@@ -680,6 +717,7 @@ export async function importResearchRows(
 
   const rows = [...rowsByKey.values()].sort(compareImportedResearchRows)
   const capped = sourceRows > limit
+  validateResearchImportColumnSources(columns, fields)
   if (
     sourceRows > 0 &&
     rows.length === 0 &&
@@ -722,10 +760,14 @@ export async function importResearchRows(
       message: `Included field names were capped at ${MAX_INCLUDED_FIELDS}.`,
     })
   }
-  const normalizedFields = new Set([...fields].map(keyName))
+  const normalizedFields = new Set(
+    [...fields].map(normalizedResearchColumnName),
+  )
   if (
     rows.length > 0 &&
-    !FIELD_ALIASES.resultType.some((alias) => normalizedFields.has(alias))
+    !aliasesFor('resultType', columns).some((alias) =>
+      normalizedFields.has(alias),
+    )
   ) {
     warnings.push({
       code: 'organic-result-type-default',
@@ -742,6 +784,7 @@ export async function importResearchRows(
       format: file.format,
       encoding: progress.encoding ?? 'utf-8',
       delimiter: progress.delimiter ?? null,
+      columnMapping: columns ?? null,
       sha256: hash.digest('hex'),
       exportedAt,
       importedAt: now.toISOString(),

@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   competitorKeywordGapReport,
   domainOverviewReport,
+  normalizedResearchColumnName,
   rankedKeywordsReport,
   rankingPagesReport,
   serpCompetitorsReport,
@@ -64,6 +65,50 @@ const gapCompetitorInput = z.strictObject({
     'marketplace',
   ]),
 })
+const sourceColumnInput = (meaning: string) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(500)
+    .describe(`Source column containing ${meaning}.`)
+    .optional()
+const researchColumnsInput = z
+  .strictObject({
+    keyword: sourceColumnInput('the search query'),
+    url: sourceColumnInput('the current absolute ranking URL'),
+    position: sourceColumnInput('the current grouped ranking position'),
+    absolutePosition: sourceColumnInput('the current absolute result position'),
+    searchVolume: sourceColumnInput('monthly search volume'),
+    keywordDifficulty: sourceColumnInput('keyword difficulty from 0 to 100'),
+    cpc: sourceColumnInput('cost per click in US dollars'),
+    paidCompetition: sourceColumnInput('paid competition from 0 to 1'),
+    intent: sourceColumnInput('one or more search intents'),
+    resultCount: sourceColumnInput('the estimated result count'),
+    estimatedTraffic: sourceColumnInput('estimated monthly visits'),
+    resultType: sourceColumnInput('the organic or search feature result type'),
+    searchVolumeUpdatedAt: sourceColumnInput('the search volume update date'),
+  })
+  .superRefine((columns, context) => {
+    const seen = new Map<string, string>()
+    for (const [canonical, source] of Object.entries(columns)) {
+      if (!source) continue
+      const normalized = normalizedResearchColumnName(source)
+      const existing = seen.get(normalized)
+      if (existing) {
+        context.addIssue({
+          code: 'custom',
+          message: `Source column "${source}" is already mapped to "${existing}".`,
+          path: [canonical],
+        })
+      } else {
+        seen.set(normalized, canonical)
+      }
+    }
+  })
+  .describe(
+    'Optional canonical field to source column mapping. Named fields override automatic header matching.',
+  )
 const researchFileInput = z.strictObject({
   dataset: z
     .literal('ranked-keywords')
@@ -96,6 +141,7 @@ const researchFileInput = z.strictObject({
     .max(100_000)
     .optional()
     .describe('Maximum file rows to normalize. Defaults to 10000.'),
+  columns: researchColumnsInput.optional(),
 })
 const researchFilesInput = z
   .array(researchFileInput)

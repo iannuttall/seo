@@ -6,6 +6,7 @@ import type {
   ProviderValue,
   SearchMarket,
 } from './contracts.js'
+import type { ResearchImportColumns } from './imports/research-columns.js'
 
 export type ResearchImportSource = {
   dataset: 'ranked-keywords'
@@ -14,6 +15,7 @@ export type ResearchImportSource = {
   exportedAt: string
   format?: 'csv' | 'json' | 'jsonl'
   rowLimit?: number
+  columns?: ResearchImportColumns
 }
 
 export type RankingDistribution = {

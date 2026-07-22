@@ -128,7 +128,13 @@ hard to read:
       "dataset": "ranked-keywords",
       "file": "./exports/example-keywords.csv",
       "provider": "semrush",
-      "exportedAt": "2026-07-20T12:00:00Z"
+      "exportedAt": "2026-07-20T12:00:00Z",
+      "columns": {
+        "keyword": "Search Term",
+        "url": "Destination",
+        "position": "Current Rank",
+        "searchVolume": "Monthly Demand"
+      }
     }
   ]
 }
@@ -152,6 +158,17 @@ and a positive position. The importer also recognises common export names such
 as `Query`, `Phrase`, `Current URL`, `Landing Page`, `Current Position`,
 `Search Volume`, `Volume`, `Difficulty`, `KD`, `CPC`, `Competition`,
 `Keyword Intents`, `Current organic traffic` and `Traffic`.
+
+Leave `columns` out when those common headings match. Add it when an export
+uses different names. A named mapping overrides automatic matching for that
+field. The accepted canonical fields are `keyword`, `url`, `position`,
+`absolutePosition`, `searchVolume`, `keywordDifficulty`, `cpc`,
+`paidCompetition`, `intent`, `resultCount`, `estimatedTraffic`, `resultType`
+and `searchVolumeUpdatedAt`.
+
+Copy source headings exactly. The importer rejects missing headings and stops
+one source column from being assigned two meanings. This avoids treating a
+percentage as a visit count or a previous position as the current rank.
 
 An export can contain separate organic and search-feature rows for the same
 keyword and page. `ranking-pages` counts that as one ranked keyword. Its ranking
@@ -192,8 +209,9 @@ value.
 
 Every file gets its own entry under `evidence.imports`. That entry records the
 provider, export time, detected encoding and delimiter, SHA-256 file hash,
-included fields, bytes read, total file rows, supplied rows, valid rows,
-filtered historical rows, rejected rows, duplicates and row cap. Ahrefs
+included fields, explicit column mapping, bytes read, total file rows, supplied
+rows, valid rows, filtered historical rows, rejected rows, duplicates and row
+cap. Ahrefs
 comparison rows with no current URL or position are filtered historical rows,
 not broken records. The report scans a bounded file to finish its hash and
 file-row count even when the row cap stops normalization. Missing rows remain

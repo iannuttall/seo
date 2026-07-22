@@ -196,6 +196,39 @@ test('representative backlinks reject invalid rows and collapse duplicates deter
   assert.match(forward.warnings[1]?.message ?? '', /duplicate/)
 })
 
+test('representative backlink coverage does not paginate against an ungrouped total', async () => {
+  const items = Array.from({ length: 17 }, (_, index) => ({
+    url_from: `https://source-${index}.example/post`,
+    url_to: 'https://example.com/page',
+    rank: 100 - index,
+  }))
+  const result = await provider({
+    backlinks: async () =>
+      snapshot(
+        dataForSeoBacklinksResponseSchema.parse({
+          status_code: 20000,
+          status_message: 'Ok.',
+          tasks_count: 1,
+          tasks_error: 0,
+          tasks: [
+            {
+              id: 'backlinks-task',
+              status_code: 20000,
+              status_message: 'Ok.',
+              result: [{ total_count: 19, items_count: 17, items }],
+            },
+          ],
+        }),
+        items.length,
+      ),
+  }).backlinks({ target: 'example.com', limit: 25, mode: 'representative' })
+
+  assert.equal(result.coverage.returnedRows, 17)
+  assert.equal(result.coverage.providerTotalRows, 19)
+  assert.equal(result.coverage.completeness, 'filtered')
+  assert.equal(result.coverage.nextCursor, null)
+})
+
 test('referring domains keep unavailable fields separate from zero', async () => {
   const result = await provider({
     referringDomains: async () =>

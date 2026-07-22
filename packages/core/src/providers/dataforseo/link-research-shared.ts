@@ -190,9 +190,10 @@ export function linkCoverage(input: {
   providerTotalRows: number | null
   offset: number
   filtered: boolean
+  providerTotalComparable?: boolean
 }): ProviderCoverage {
   const hasMore =
-    input.providerTotalRows !== null
+    input.providerTotalComparable !== false && input.providerTotalRows !== null
       ? input.offset + input.returnedRows < input.providerTotalRows
       : input.returnedRows >= input.requestedRows
   return {

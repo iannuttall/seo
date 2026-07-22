@@ -116,6 +116,23 @@ cost, task ids, observation time, and warnings before interpreting the result.
 Optional Search Console overlap adds first-party context without turning an
 indexed mention record into a live prompt observation.
 
+Use `ai-prompt-observations` for a small set of current answers. Pass exact
+current model names so later observations do not silently move to a different
+baseline:
+
+```sh
+seo reports run ai-prompt-observations \
+  --params '{"prompts":[{"id":"analytics-tools","prompt":"Which privacy-friendly analytics tools suit a small publisher?"}],"models":[{"surface":"chatgpt","model":"current-model-name"}],"target":{"label":"Example Analytics","domains":["example.com"]},"countryCode":"GB","languageCode":"en"}' \
+  --json
+```
+
+The free model-catalog check runs before paid work. An invalid model response
+lists current choices. The effective model is the model the provider says it
+actually ran, which can differ from the exact model you requested. Read it with
+coverage, cache state, citations, task id, exact returned cost, warnings, and
+comparison status before interpreting a target match or change. Each returned
+answer is one sample, not an assistant ranking or universal visibility score.
+
 Use `local-search-demand` when Search Console should lead a local investigation:
 
 ```sh

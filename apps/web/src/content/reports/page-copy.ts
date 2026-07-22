@@ -29,6 +29,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Find visits from known AI assistants in Google Analytics, see which landing pages received them and keep missing referrers separate from confirmed traffic.',
     lead: 'See which known AI assistants sent visits recorded by Google Analytics and where those visitors landed. It measures observed referrals, not general visibility inside an assistant.',
   },
+  'ai-mention-research': {
+    title: 'AI mention research report',
+    description:
+      'Compare provider-indexed AI mentions, cited domains and question samples with optional Search Console evidence for one exact surface and market.',
+    lead: 'See where a named brand or product appears in a provider-indexed set of AI answers, which domains are cited and whether retained questions overlap with searches already associated with your site. The report keeps indexed research separate from live prompt checks.',
+  },
   'ai-search-scorecard': {
     title: 'AI search scorecard',
     description:

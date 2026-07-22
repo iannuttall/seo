@@ -186,6 +186,7 @@ export async function rankingPagesReport(
       ...(input.researchFiles
         ? [
             "These page groups were calculated from local ranked-keyword exports. Check evidence.imports before treating the retained rows as the provider's full domain footprint.",
+            'One keyword and page can have separate organic and search-feature rows. Ranked-keyword counts use unique keywords, while ranking buckets and estimated traffic retain the row-level result types.',
           ]
         : []),
       'Estimated page traffic and ranked-keyword counts come from a country-level provider database. Search Console remains the evidence for measured site performance.',

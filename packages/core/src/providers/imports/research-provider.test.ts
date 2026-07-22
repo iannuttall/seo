@@ -19,10 +19,10 @@ const market = {
   languageCode: 'en',
 }
 
-async function fixture(
+async function fixture<T extends string | Uint8Array>(
   name: string,
-  body: string,
-  run: (path: string, body: string) => Promise<void>,
+  body: T,
+  run: (path: string, body: T) => Promise<void>,
 ) {
   const directory = await mkdtemp(join(tmpdir(), 'seo-research-import-'))
   const path = join(directory, name)
@@ -69,6 +69,8 @@ test('semicolon CSV imports map provider aliases and retain file provenance', as
     assert.equal(result.coverage.completeness, 'partial')
     assert.equal(result.coverage.invalidRows, 1)
     assert.equal(result.data.rows.length, 2)
+    assert.equal(result.imports?.[0]?.encoding, 'utf-8')
+    assert.equal(result.imports?.[0]?.delimiter, ';')
     assert.equal(result.data.rows[0]?.rankAbsolute, 2)
     assert.deepEqual(result.data.rows[0]?.monthlySearchVolume, {
       state: 'observed',
@@ -110,6 +112,183 @@ test('Semrush percentage fields keep their own meaning', async () => {
     })
     assert.equal(result.data.rows[0]?.intent.state, 'observed')
     assert.equal(result.data.rows[0]?.estimatedMonthlyTraffic.state, 'missing')
+  })
+})
+
+test('Semrush Organic Positions exports map current headers into stable fields', async () => {
+  const body = [
+    'Keyword,Position,Previous position,Search Volume,Keyword Difficulty,CPC,URL,Traffic,Traffic (%),Traffic Cost,Competition,Number of Results,Trends,Timestamp,SERP Features by Keyword,Keyword Intents,Position Type',
+    'research tools,1,2,90,82,0.00,https://docs.example/tools,7,12.5,0.00,0.01,104,"43, 14, 100",2026-06-26,"Reviews, People also ask","Commercial, Informational",People also ask',
+    'provider research,3,4,320,26,1.25,https://docs.example/providers,11,20,4.50,0.33,157,"44, 18, 81",2026-07-14,"Sitelinks, AI overview",informational,AI overview',
+  ].join('\n')
+  await fixture('semrush-organic-positions.csv', body, async (path) => {
+    const provider = new ResearchImportProvider([source(path)])
+    const result = await provider.rankedKeywords({
+      target: 'docs.example',
+      market,
+      limit: 10,
+    })
+
+    assert.equal(result.data.rows.length, 2)
+    assert.equal(result.imports?.[0]?.encoding, 'utf-8')
+    assert.equal(result.imports?.[0]?.delimiter, ',')
+    assert.equal(result.data.rows[0]?.resultType, 'people_also_ask')
+    assert.deepEqual(result.data.rows[0]?.intent, {
+      state: 'observed',
+      value: 'informational, commercial',
+    })
+    assert.deepEqual(result.data.rows[0]?.estimatedMonthlyTraffic, {
+      state: 'observed',
+      value: 7,
+    })
+    assert.deepEqual(
+      result.data.rows[0]?.searchVolumeUpdatedAt.state,
+      'missing',
+    )
+    assert.equal(result.data.rows[1]?.resultType, 'ai_overview_reference')
+    assert.ok(result.imports?.[0]?.includedFields.includes('Keyword Intents'))
+  })
+})
+
+test('Ahrefs UTF-16LE tab exports retain bytes and boolean intent fields', async () => {
+  const decoded = [
+    [
+      'Keyword',
+      'Country',
+      'Language',
+      'Navigational',
+      'Informational',
+      'Commercial',
+      'Transactional',
+      'SERP features',
+      'Volume',
+      'KD',
+      'CPC',
+      'Current organic traffic',
+      'Previous position',
+      'Previous URL',
+      'Current position',
+      'Current position kind',
+      'Current URL',
+      'Current date',
+    ]
+      .map((value) => `"${value}"`)
+      .join('\t'),
+    [
+      'provider contract',
+      'US',
+      'English',
+      'false',
+      'true',
+      'true',
+      'false',
+      'AI Overview, Image pack',
+      '2120000',
+      '92',
+      '2.15',
+      '47389',
+      '25',
+      'https://docs.example/provider-contract',
+      '6',
+      'Image pack',
+      'https://docs.example/provider-contract',
+      '2026-07-18 20:02:53',
+    ]
+      .map((value) => `"${value}"`)
+      .join('\t'),
+    [
+      'research adapters',
+      'US',
+      'English',
+      'false',
+      'true',
+      'false',
+      'false',
+      'Sitelinks, People also ask',
+      '190000',
+      '73',
+      '4.13',
+      '7410',
+      '19',
+      'https://docs.example/research-adapters',
+      '9',
+      '',
+      'https://docs.example/research-adapters',
+      '2026-07-21 20:39:45',
+    ]
+      .map((value) => `"${value}"`)
+      .join('\t'),
+    [
+      'lost research term',
+      'US',
+      'English',
+      'false',
+      'true',
+      'false',
+      'false',
+      'People also ask',
+      '500',
+      '20',
+      '0.80',
+      '',
+      '10',
+      'https://docs.example/lost',
+      '',
+      '',
+      '',
+      '2026-07-21 20:39:45',
+    ]
+      .map((value) => `"${value}"`)
+      .join('\t'),
+  ].join('\r\n')
+  const body = Buffer.concat([
+    Buffer.from([0xff, 0xfe]),
+    Buffer.from(decoded, 'utf16le'),
+  ])
+  await fixture('ahrefs-organic-keywords.csv', body, async (path) => {
+    const provider = new ResearchImportProvider([
+      source(path, { provider: 'ahrefs' }),
+    ])
+    const result = await provider.rankedKeywords({
+      target: 'docs.example',
+      market,
+      limit: 10,
+    })
+
+    assert.equal(result.data.rows.length, 2)
+    assert.equal(result.imports?.[0]?.encoding, 'utf-16le')
+    assert.equal(result.imports?.[0]?.delimiter, '\t')
+    assert.equal(result.data.rows[0]?.resultType, 'image_pack')
+    assert.deepEqual(result.data.rows[0]?.intent, {
+      state: 'observed',
+      value: 'informational, commercial',
+    })
+    assert.deepEqual(result.data.rows[0]?.estimatedMonthlyTraffic, {
+      state: 'observed',
+      value: 47_389,
+    })
+    assert.equal(result.data.rows[0]?.searchVolumeUpdatedAt.state, 'missing')
+    assert.equal(result.data.rows[1]?.resultType, 'organic')
+    assert.equal(result.imports?.[0]?.bytesRead, body.byteLength)
+    assert.equal(result.imports?.[0]?.fileBytes, body.byteLength)
+    assert.equal(result.imports?.[0]?.fileRows, 3)
+    assert.equal(result.imports?.[0]?.filteredRows, 1)
+    assert.equal(result.imports?.[0]?.invalidRows, 0)
+    assert.equal(
+      result.imports?.[0]?.sha256,
+      createHash('sha256').update(body).digest('hex'),
+    )
+    assert.ok(result.imports?.[0]?.includedFields.includes('Current URL'))
+    assert.equal(
+      result.warnings.some(
+        (warning) => warning.code === 'historical-import-rows',
+      ),
+      true,
+    )
+    assert.equal(
+      result.imports?.[0]?.includedFields.some((field) => field.includes('\0')),
+      false,
+    )
   })
 })
 
@@ -214,6 +393,40 @@ test('malformed JSONL rows stay visible without invalidating useful rows', async
   })
 })
 
+test('populated imports with no usable rows fail clearly', async () => {
+  const body = [
+    'Keyword,Position,URL',
+    'missing URL,3,',
+    'bad URL,4,not-a-url',
+  ].join('\n')
+  await fixture('invalid-rankings.csv', body, async (path) => {
+    const provider = new ResearchImportProvider([source(path)])
+    await assert.rejects(
+      provider.rankedKeywords({
+        target: 'example.com',
+        market,
+        limit: 10,
+      }),
+      /contained no valid ranked-keyword rows/u,
+    )
+  })
+})
+
+test('UTF-32 CSV imports fail with an actionable encoding error', async () => {
+  const body = Buffer.from([0xff, 0xfe, 0x00, 0x00, 0x4b, 0x00, 0x00, 0x00])
+  await fixture('utf32-rankings.csv', body, async (path) => {
+    const provider = new ResearchImportProvider([source(path)])
+    await assert.rejects(
+      provider.rankedKeywords({
+        target: 'example.com',
+        market,
+        limit: 10,
+      }),
+      /UTF-32 imports are not supported/u,
+    )
+  })
+})
+
 test('ranking pages and SERP competitors aggregate the same typed import', async () => {
   const body = JSON.stringify([
     {
@@ -276,6 +489,47 @@ test('ranking pages and SERP competitors aggregate the same typed import', async
   })
 })
 
+test('ranking-page footprints keep unique keywords separate from result rows', async () => {
+  const body = JSON.stringify([
+    {
+      keyword: 'shared query',
+      position: 1,
+      url: 'https://one.example/shared',
+      resultType: 'organic',
+      traffic: 10,
+    },
+    {
+      keyword: 'shared query',
+      position: 1,
+      url: 'https://one.example/shared',
+      resultType: 'ai_overview_reference',
+      traffic: 2,
+    },
+  ])
+  await fixture('ranking-result-types.json', body, async (path) => {
+    const provider = new ResearchImportProvider([source(path)])
+    const result = await provider.rankingPages({
+      domain: 'one.example',
+      market,
+      limit: 10,
+    })
+    const footprint = result.data.rows[0]?.organic
+
+    assert.deepEqual(footprint?.rankedKeywords, {
+      state: 'observed',
+      value: 1,
+    })
+    assert.deepEqual(footprint?.rankings, {
+      state: 'observed',
+      value: { first: 2, top3: 2, top10: 2, top20: 2, top50: 2, top100: 2 },
+    })
+    assert.deepEqual(footprint?.estimatedMonthlyTraffic, {
+      state: 'observed',
+      value: 12,
+    })
+  })
+})
+
 test('ranking-pages report combines import groups with retained Search Console pages', async () => {
   const body = JSON.stringify([
     {
@@ -323,6 +577,12 @@ test('ranking-pages report combines import groups with retained Search Console p
     assert.equal(report.firstParty.matches[0]?.clicks, 8)
     assert.equal(report.evidence.imports?.[0]?.provider, 'ahrefs')
     assert.equal(report.dataStatus, 'partial')
+    assert.equal(
+      report.caveats.some((caveat) =>
+        caveat.includes('separate organic and search-feature rows'),
+      ),
+      true,
+    )
   })
 })
 

@@ -2,14 +2,18 @@ import type { Hash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { open, readFile, stat } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
+import { TextDecoder } from 'node:util'
 import { SeoError } from '../errors.js'
 
 export type StructuredImportFormat = 'csv' | 'json' | 'jsonl'
 export type CsvDelimiter = ',' | ';' | '\t'
+export type TextEncoding = 'utf-8' | 'utf-16be' | 'utf-16le'
 
 export type ImportProgress = {
   bytesRead: number
   hash?: Hash
+  encoding?: TextEncoding
+  delimiter?: CsvDelimiter
 }
 
 export type ImportFile = {
@@ -84,14 +88,63 @@ function delimiterCount(line: string, delimiter: CsvDelimiter): number {
   return count
 }
 
+async function detectTextEncoding(path: string): Promise<TextEncoding> {
+  const handle = await open(path, 'r')
+  try {
+    const buffer = Buffer.alloc(4)
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
+    if (
+      bytesRead >= 4 &&
+      ((buffer[0] === 0xff &&
+        buffer[1] === 0xfe &&
+        buffer[2] === 0x00 &&
+        buffer[3] === 0x00) ||
+        (buffer[0] === 0x00 &&
+          buffer[1] === 0x00 &&
+          buffer[2] === 0xfe &&
+          buffer[3] === 0xff))
+    ) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'UTF-32 imports are not supported. Export the file as UTF-8 or UTF-16 CSV.',
+      )
+    }
+    if (bytesRead >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+      return 'utf-16le'
+    }
+    if (bytesRead >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+      return 'utf-16be'
+    }
+    return 'utf-8'
+  } finally {
+    await handle.close()
+  }
+}
+
+function decodeText(
+  decoder: TextDecoder,
+  chunk: Buffer,
+  stream: boolean,
+  label: string,
+): string {
+  try {
+    return decoder.decode(chunk, { stream })
+  } catch {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `${label} import is not valid UTF-8 or UTF-16 text.`,
+    )
+  }
+}
+
 export async function detectCsvDelimiter(path: string): Promise<CsvDelimiter> {
   const handle = await open(path, 'r')
   try {
     const buffer = Buffer.alloc(64 * 1024)
     const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
-    const firstRecord = buffer
-      .subarray(0, bytesRead)
-      .toString('utf8')
+    const encoding = await detectTextEncoding(path)
+    const firstRecord = new TextDecoder(encoding)
+      .decode(buffer.subarray(0, bytesRead))
       .split(/\r?\n/u, 1)[0]
       ?.replace(/^\uFEFF/u, '')
     if (!firstRecord) return ','
@@ -114,24 +167,19 @@ export async function* csvRecords(input: {
   delimiter?: CsvDelimiter
   maxCellBytes?: number
 }): AsyncGenerator<string[]> {
-  const stream = createReadStream(input.path, { encoding: 'utf8' })
+  const stream = createReadStream(input.path)
+  const encoding = await detectTextEncoding(input.path)
+  const decoder = new TextDecoder(encoding, { fatal: true })
   const delimiter = input.delimiter ?? (await detectCsvDelimiter(input.path))
+  input.progress.encoding = encoding
+  input.progress.delimiter = delimiter
   const maxCellBytes = input.maxCellBytes ?? DEFAULT_IMPORT_CELL_BYTES
   let record: string[] = []
   let field = ''
   let quoted = false
   let pendingQuote = false
 
-  for await (const chunk of stream) {
-    input.progress.bytesRead += Buffer.byteLength(chunk)
-    input.progress.hash?.update(chunk)
-    if (input.progress.bytesRead > input.byteLimit) {
-      stream.destroy()
-      throw new SeoError(
-        'INVALID_INPUT',
-        `${input.label} import exceeds the ${input.byteLimit}-byte streaming limit.`,
-      )
-    }
+  const consumeChunk = function* (chunk: string): Generator<string[]> {
     for (const character of chunk) {
       if (pendingQuote) {
         if (character === '"') {
@@ -167,6 +215,21 @@ export async function* csvRecords(input: {
       }
     }
   }
+
+  for await (const value of stream) {
+    const chunk = Buffer.isBuffer(value) ? value : Buffer.from(value)
+    input.progress.bytesRead += chunk.byteLength
+    input.progress.hash?.update(chunk)
+    if (input.progress.bytesRead > input.byteLimit) {
+      stream.destroy()
+      throw new SeoError(
+        'INVALID_INPUT',
+        `${input.label} import exceeds the ${input.byteLimit}-byte streaming limit.`,
+      )
+    }
+    yield* consumeChunk(decodeText(decoder, chunk, true, input.label))
+  }
+  yield* consumeChunk(decodeText(decoder, Buffer.alloc(0), false, input.label))
   if (quoted && !pendingQuote) {
     throw new SeoError(
       'INVALID_INPUT',
@@ -188,6 +251,7 @@ export async function* jsonlRecords(input: {
   onInvalidLine?: (line: number) => void
 }): AsyncGenerator<Record<string, unknown>> {
   const stream = createReadStream(input.path, { encoding: 'utf8' })
+  input.progress.encoding = 'utf-8'
   const maxLineBytes = input.maxLineBytes ?? DEFAULT_IMPORT_CELL_BYTES
   let remainder = ''
   let lineNumber = 0
@@ -264,6 +328,7 @@ export async function readJsonArray(input: {
   progress: ImportProgress
   label: string
 }): Promise<unknown[]> {
+  input.progress.encoding = 'utf-8'
   const body = await readFile(input.path, 'utf8')
   input.progress.bytesRead = Buffer.byteLength(body)
   input.progress.hash?.update(body)

@@ -29,11 +29,22 @@ export async function dataForSeoDomainOverview(
     refresh: input.refresh,
     context: requestContext('domain-overview', input.context),
   })
-  const rows = snapshot.response.tasks.flatMap((task) => task.result ?? [])
-  const matching = rows.find(
+  const results = snapshot.response.tasks.flatMap((task) => task.result ?? [])
+  const matchingResult = results.find(
     (row) => !row.target || domain(row.target) === target,
   )
-  const invalidRows = rows.length > 0 && !matching ? rows.length : 0
+  const items = matchingResult?.items ?? []
+  const matching =
+    items.find(
+      (item) =>
+        (!item.language_code ||
+          item.language_code === market.languageCode.split('-')[0]) &&
+        (!matchingResult?.location_code ||
+          !item.location_code ||
+          item.location_code === matchingResult.location_code),
+    ) ?? items[0]
+  const invalidRows =
+    results.length > 0 && !matchingResult ? snapshot.returnedRows : 0
   return domainEvidence({
     capability: 'domain-overview',
     data: {
@@ -44,11 +55,14 @@ export async function dataForSeoDomainOverview(
     snapshot,
     coverage: {
       requestedRows: 1,
-      returnedRows: rows.length,
+      returnedRows: snapshot.returnedRows,
       retainedRows: matching ? 1 : 0,
       invalidRows,
-      providerTotalRows: rows.length,
-      completeness: matching || rows.length === 0 ? 'complete' : 'invalid',
+      providerTotalRows: matchingResult?.total_count ?? snapshot.returnedRows,
+      completeness:
+        matching || results.length === 0 || items.length === 0
+          ? 'complete'
+          : 'invalid',
       nextCursor: null,
     },
     endpoint: DOMAIN_ENDPOINTS.overview,

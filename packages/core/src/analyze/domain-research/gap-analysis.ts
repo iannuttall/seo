@@ -269,8 +269,8 @@ export function analyzeCompetitorGap(acquisition: GapAcquisition) {
         })),
         firstParty: {
           observed: Boolean(firstParty),
-          clicks: firstParty?.clicks ?? 0,
-          impressions: firstParty?.impressions ?? 0,
+          clicks: firstParty?.clicks ?? null,
+          impressions: firstParty?.impressions ?? null,
           averagePosition: firstParty?.averagePosition ?? null,
           urls: firstParty?.urls ?? [],
         },

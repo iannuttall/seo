@@ -58,12 +58,22 @@ const taskFields = {
   result_count: z.number().int().nonnegative().optional(),
 } as const
 
+const overviewItemSchema = z
+  .object({
+    location_code: z.number().int().positive().nullable().optional(),
+    language_code: z.string().trim().min(1).max(35).nullable().optional(),
+    metrics: metricsSchema.nullable().optional(),
+  })
+  .passthrough()
+
 const overviewResultSchema = z
   .object({
     target: z.string().trim().min(1).max(2_048).optional(),
     location_code: z.number().int().positive().nullable().optional(),
     language_code: z.string().trim().min(1).max(35).nullable().optional(),
-    metrics: metricsSchema.nullable().optional(),
+    total_count: z.number().int().nonnegative().nullable().optional(),
+    items_count: z.number().int().nonnegative().optional(),
+    items: z.array(overviewItemSchema).max(1_000).nullable().optional(),
   })
   .passthrough()
 

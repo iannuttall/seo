@@ -538,6 +538,15 @@ test('competitor gap removes existing coverage and proposes bounded pSEO researc
   )
   assert.equal(candidateRow?.classification, 'relevant-gap-candidate')
   assert.equal(candidateRow?.pseo.proposal, 'existing-template-review')
+  assert.equal(candidateRow?.firstParty.observed, false)
+  assert.equal(candidateRow?.firstParty.clicks, null)
+  assert.equal(candidateRow?.firstParty.impressions, null)
+  const coveredRow = report.candidates.find(
+    (item) => item.keyword === 'covered widget term',
+  )
+  assert.equal(coveredRow?.firstParty.observed, true)
+  assert.equal(coveredRow?.firstParty.clicks, 5)
+  assert.equal(coveredRow?.firstParty.impressions, 100)
   assert.equal(report.summary.alreadyObservedFirstParty, 1)
   assert.equal(report.summary.unverifiedCompetitorTerms, 1)
   assert.equal(report.dataSourceBriefs.length, 1)

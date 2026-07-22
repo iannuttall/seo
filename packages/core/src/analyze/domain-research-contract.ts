@@ -296,8 +296,8 @@ export type CompetitorKeywordGapCandidate = {
   }>
   firstParty: {
     observed: boolean
-    clicks: number
-    impressions: number
+    clicks: number | null
+    impressions: number | null
     averagePosition: number | null
     urls: string[]
   }

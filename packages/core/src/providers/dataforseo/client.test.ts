@@ -434,7 +434,12 @@ test('domain research endpoints send bounded requests and record dynamic costs',
       if (path.endsWith('/domain_rank_overview/live')) {
         return new Response(
           JSON.stringify(
-            paidResponse({ target: 'example.com', metrics: { organic: {} } }),
+            paidResponse({
+              target: 'example.com',
+              total_count: 1,
+              items_count: 1,
+              items: [{ metrics: { organic: {} } }],
+            }),
           ),
         )
       }
@@ -581,6 +586,10 @@ test('domain research endpoints send bounded requests and record dynamic costs',
   assert.deepEqual(
     snapshots.map((snapshot) => snapshot.cost.estimatedMicros),
     [12_120, 15_000, 14_400, 13_200],
+  )
+  assert.deepEqual(
+    snapshots.map((snapshot) => snapshot.returnedRows),
+    [1, 1, 1, 1],
   )
   assert.ok(
     snapshots.every((snapshot) => snapshot.cost.actualMicros === 12_120),

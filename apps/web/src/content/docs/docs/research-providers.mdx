@@ -107,6 +107,45 @@ The current domain research endpoints use country and language. They do not
 accept a city, postcode or device. Use `serp-results` when you need a current
 location and device-specific result snapshot.
 
+## Start a local search investigation with first-party evidence
+
+`local-search-demand` finds retained Search Console queries whose wording
+contains an explicit place name, nearby phrase, UK postcode or a US ZIP code
+with supporting local wording. Add the real place names, aliases and known ZIP
+codes for the market because automatic detection is deliberately conservative.
+
+```sh
+seo reports run local-search-demand \
+  --params '{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"days":90}' \
+  --json
+```
+
+The default path makes one bounded Search Console request and no paid provider
+request. It returns the local query and landing-page evidence, filtered-row
+counts, action labels and repeated URL patterns. The patterns are prompts to
+inspect working local page families, not proof that more pages should exist.
+
+Request live context only for a short decision-critical set:
+
+```sh
+seo reports run local-search-demand \
+  --params '{"site":"sc-domain:example.com","locationTerms":["london"],"includeSerps":true,"countryCode":"GB","languageCode":"en","location":{"name":"London,England,United Kingdom"},"device":"mobile","serpLimit":3}' \
+  --json
+```
+
+That path adds at most three current organic snapshots through the same cache,
+spend limits and provider-neutral result contract as `serp-results`. Read the
+recorded location, device, observation time, coverage, cache and cost for every
+snapshot. A local pack feature means the pack appeared in that snapshot. It
+does not show that the site or a particular business listing appeared, and it
+does not replace Maps, review, call, direction or business-profile data.
+
+A place in the query does not prove the searcher's physical location. Search
+Console average position is not an exact local rank. Google Analytics geography
+can describe sessions from a region, but it cannot prove which query produced
+them. Keep those sources separate when deciding whether to improve a current
+page, review overlapping pages or investigate a new local template.
+
 ## Review live referring-link evidence
 
 Run the bounded provider path for a domain:

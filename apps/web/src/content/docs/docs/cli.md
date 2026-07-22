@@ -101,6 +101,19 @@ Domain research uses country and language. Use `serp-results` for a current
 place and device-specific result snapshot. Provider estimates, first-party
 measurements and live observations keep separate fields and caveats.
 
+Use `local-search-demand` when Search Console should lead a local investigation:
+
+```sh
+seo reports run local-search-demand \
+  --params '{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"days":90}' \
+  --json
+```
+
+The default run makes no paid request. It finds explicit place names, nearby
+phrases and postal codes in retained query-page rows, then groups repeated page
+patterns for review. Add `includeSerps`, a canonical location and a device only
+when up to three exact live snapshots would change the next step.
+
 The [research provider guide](/docs/research-providers) covers credentials,
 local cost limits, caching, supported reports and programmatic data-source
 checks.

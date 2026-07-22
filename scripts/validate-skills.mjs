@@ -123,12 +123,18 @@ const reportIdOverrides = new Map(
     ),
   ].map((match) => [match[1] ?? match[2], match[3]]),
 )
-const reportIds = new Set(
-  [...reportRegistrySource.matchAll(/'seo_([a-z0-9_]+)'/g)].map((match) => {
+const directReportSource = reportRegistrySource.match(
+  /const directReports:[^=]+?= \[([\s\S]*?)\n\] as const/,
+)?.[1]
+const reportIds = new Set([
+  ...[...(directReportSource ?? '').matchAll(/\bid:\s*'([a-z0-9-]+)'/g)].map(
+    (match) => match[1],
+  ),
+  ...[...reportRegistrySource.matchAll(/'seo_([a-z0-9_]+)'/g)].map((match) => {
     const internalId = match[1].replaceAll('_', '-')
     return reportIdOverrides.get(internalId) ?? internalId
   }),
-)
+])
 const mcpSource = await text('packages/mcp/src/discovery-tools.ts')
 const mcpTools = new Set(
   [...mcpSource.matchAll(/registerTool\(\s*'([^']+)'/g)].map(

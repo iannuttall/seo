@@ -1,37 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type * as z from 'zod/v4'
-import { registerAiMentionTools } from './ai-mention-tools.js'
+import {
+  aiMentionResearchInputSchema,
+  createAiMentionResearchHandler,
+} from './ai-mention-research.js'
 
-type ToolHandler = (input: Record<string, unknown>) => Promise<unknown>
-type ToolResult = { structuredContent?: Record<string, unknown> }
-
-function server() {
-  let schema: z.ZodType | undefined
-  let handler: ToolHandler | undefined
-  return {
-    get schema() {
-      return schema
-    },
-    get handler() {
-      return handler
-    },
-    value: {
-      registerTool(
-        _name: string,
-        config: { inputSchema: z.ZodType },
-        run: ToolHandler,
-      ) {
-        schema = config.inputSchema
-        handler = run
-      },
-    } as never,
-  }
-}
-
-test('AI mention MCP forwards a bounded provider-neutral request', async () => {
-  const captured = server()
-  registerAiMentionTools(captured.value, {
+test('AI mention report forwards a bounded provider-neutral request', async () => {
+  const handler = createAiMentionResearchHandler({
     aiMentionResearchReport: async (input) => {
       assert.equal(input.target.label, 'Example')
       assert.equal(input.market.surface, 'google-ai-overview')
@@ -41,8 +16,7 @@ test('AI mention MCP forwards a bounded provider-neutral request', async () => {
       return { summary: { verdict: 'Evidence retained.' } } as never
     },
   })
-  assert.ok(captured.handler)
-  await captured.handler({
+  await handler({
     target: { label: 'Example' },
     competitors: [],
     surface: 'google-ai-overview',
@@ -54,11 +28,9 @@ test('AI mention MCP forwards a bounded provider-neutral request', async () => {
   })
 })
 
-test('AI mention MCP schema bounds targets and sample acquisition', () => {
-  const captured = server()
-  registerAiMentionTools(captured.value)
+test('AI mention report schema bounds targets and sample acquisition', () => {
   assert.equal(
-    captured.schema?.safeParse({
+    aiMentionResearchInputSchema.safeParse({
       target: { label: 'Example', aliases: ['Example App'] },
       competitors: [{ label: 'Competitor' }],
       surface: 'chatgpt',
@@ -97,15 +69,14 @@ test('AI mention MCP schema bounds targets and sample acquisition', () => {
     },
   ]) {
     assert.equal(
-      captured.schema?.safeParse(input).success,
+      aiMentionResearchInputSchema.safeParse(input).success,
       false,
       JSON.stringify(input),
     )
   }
 })
 
-test('AI mention MCP keeps oversized evidence inside one agent output budget', async () => {
-  const captured = server()
+test('AI mention report keeps oversized evidence inside one agent output budget', async () => {
   const oversizedSamples = Array.from({ length: 25 }, (_, index) => ({
     question: `Which analytics platform should I use for case ${index}?`,
     answerExcerpt: 'Bounded answer evidence. '.repeat(400),
@@ -114,7 +85,7 @@ test('AI mention MCP keeps oversized evidence inside one agent output budget', a
       url: `https://source-${sourceIndex}.test/evidence/${index}`,
     })),
   }))
-  registerAiMentionTools(captured.value, {
+  const handler = createAiMentionResearchHandler({
     aiMentionResearchReport: async () =>
       ({
         schemaVersion: 1,
@@ -132,7 +103,7 @@ test('AI mention MCP keeps oversized evidence inside one agent output budget', a
       }) as never,
   })
 
-  const result = (await captured.handler?.({
+  const result = await handler({
     target: { label: 'Example Analytics' },
     surface: 'google-ai-overview',
     countryCode: 'GB',
@@ -140,7 +111,7 @@ test('AI mention MCP keeps oversized evidence inside one agent output budget', a
     location: { code: 2826 },
     includeSamples: true,
     sampleLimit: 25,
-  })) as ToolResult
+  })
   const outputBudget = result.structuredContent?.outputBudget as Record<
     string,
     unknown

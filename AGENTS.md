@@ -264,6 +264,10 @@ tables (`packages/mcp/src/report-depth*.ts`) and is served at runtime by
 - Skills and MCP must call the same core functions as the CLI.
 - Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
   tools when discovery plus a report id can cover them cleanly.
+- New reports must use the existing list, describe, and run tools. Do not add a
+  report-specific public MCP tool unless the product contract explicitly changes.
+- Define new reports directly in the shared registry. Do not register a fake MCP
+  tool only to capture its schema and handler for discovery.
 - Bound inputs and outputs. Large pages, issue inventories, and raw provider
   rows should be opt-in.
 - Preserve structured error and report schemas across CLI and MCP surfaces.

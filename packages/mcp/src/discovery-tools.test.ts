@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { TELEMETRY_REPORTS } from '@seo/core'
 import { createServer, startMcpServer } from './index.js'
 import { REPORT_DEPTH } from './report-depth.js'
@@ -15,7 +14,7 @@ import {
 type JsonRecord = Record<string, unknown>
 
 async function withClient<T>(run: (client: Client) => Promise<T>): Promise<T> {
-  const server: McpServer = createServer()
+  const server = createServer()
   const client = new Client({ name: 'seo-mcp-test', version: '1.0.0' })
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair()

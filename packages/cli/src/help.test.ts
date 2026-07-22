@@ -9,7 +9,7 @@ import {
 } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { test } from 'node:test'
+import { describe, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
@@ -82,6 +82,8 @@ async function withServer(
   }
 }
 
+// biome-ignore format: Keep this large integration suite flat while Node runs bounded subtests concurrently.
+describe('CLI help and integration contracts', { concurrency: 3 }, () => {
 test('root help stays curated and useful', async () => {
   const output = await runSeo(['help'])
 
@@ -1095,4 +1097,5 @@ test('crawl-reports compares latest against the previous saved report', async ()
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })
   }
+})
 })

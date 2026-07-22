@@ -205,6 +205,10 @@ Every report must be technically defensible and useful to another program.
   complete states distinct.
 - Provider row limits, sampling, pagination, failed subqueries, invalid rows,
   and retained subsets must remain visible in structured provenance.
+- Local provider imports retain the provider, export date, file hash, included
+  fields, encoding, delimiter, bytes read, file rows, supplied rows, valid
+  rows, invalid rows, filtered historical rows, duplicates, and caps. An
+  imported absence is never a definitive zero.
 - Keep provider-indexed AI mention datasets, fixed live prompt observations,
   referral analytics, and technical eligibility as separate evidence types.
   Never present one as proof of another.
@@ -219,6 +223,9 @@ Every report must be technically defensible and useful to another program.
   final-data helper. Do not recreate date windows with naive UTC subtraction.
 - Aggregate duplicate provider rows deterministically before ranking or
   limiting results.
+- Normalize provider exports into shared internal types. Unfamiliar export
+  fields use an explicit canonical column map that is validated and retained
+  in provenance. Do not infer ambiguous mappings silently.
 - Use stable codepoint tie-breakers so input order never changes output.
 - Keep analysis dates, thresholds, limits, units, source semantics, and schema
   versions in JSON where an agent needs them to interpret a result.

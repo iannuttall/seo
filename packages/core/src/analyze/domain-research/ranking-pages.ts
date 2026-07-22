@@ -17,10 +17,10 @@ import {
   offset,
   providerFailure,
   reportStatus,
+  researchFilesDependencies,
   researchProvider,
   siteMatchesDomain,
   validatedMarket,
-  validatedProvider,
 } from './shared.js'
 
 const MAX_GSC_PAGE_ROWS = 25_000
@@ -31,7 +31,13 @@ export async function rankingPagesReport(
 ): Promise<RankingPagesReport> {
   const now = (dependencies.now ?? (() => new Date()))()
   const market = validatedMarket(input.market)
-  const providerId = validatedProvider(input.provider)
+  const source = researchFilesDependencies({
+    sources: input.researchFiles,
+    provider: input.provider,
+    dependencies,
+    now,
+  })
+  const providerId = source.provider
   const domain = normalizeDomain(input.domain)
   const rowLimit = limit(input.limit, 50)
   const rowOffset = offset(input.offset)
@@ -46,7 +52,7 @@ export async function rankingPagesReport(
     capability: 'relevant-pages',
     market,
     provider: providerId,
-    dependencies,
+    dependencies: source.dependencies,
     method: 'rankingPages',
   })
   let evidence: Awaited<ReturnType<RankingPagesProvider['rankingPages']>>
@@ -84,7 +90,7 @@ export async function rankingPagesReport(
   const range = input.site ? finalGscDateRange(rangeDays, now) : null
   const firstPartyResponse =
     input.site && range
-      ? await (dependencies.searchAnalytics ?? querySearchAnalytics)(
+      ? await (source.dependencies.searchAnalytics ?? querySearchAnalytics)(
           input.site,
           {
             ...range,
@@ -177,6 +183,12 @@ export async function rankingPagesReport(
     repeatedPatterns: patterns,
     findings,
     caveats: [
+      ...(input.researchFiles
+        ? [
+            "These page groups were calculated from local ranked-keyword exports. Check evidence.imports before treating the retained rows as the provider's full domain footprint.",
+            'One keyword and page can have separate organic and search-feature rows. Ranked-keyword counts use unique keywords, while ranking buckets and estimated traffic retain the row-level result types.',
+          ]
+        : []),
       'Estimated page traffic and ranked-keyword counts come from a country-level provider database. Search Console remains the evidence for measured site performance.',
       'Repeated URL paths are a deterministic structural heuristic. They do not prove shared intent, page quality, a common generator, or that more pages should be created.',
       'Pagination and filters bound the page sample. Patterns found in this subset may not describe the whole domain.',

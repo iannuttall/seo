@@ -29,6 +29,7 @@ export type ReportSourceKey =
   | 'javascript'
   | 'keyword-provider-discovery'
   | 'keyword-provider-metrics'
+  | 'local-research-files'
   | 'redirects'
   | 'robots'
   | 'robots-meta'

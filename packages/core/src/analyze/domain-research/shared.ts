@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { SeoError } from '../../errors.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { finalGscDateRange } from '../../gsc/dates.js'
@@ -18,9 +19,15 @@ import type {
   DomainOverviewProvider,
   RankedKeywordsProvider,
   RankingPagesProvider,
+  ResearchImportSource,
   SerpCompetitorsProvider,
 } from '../../providers/domain-contracts.js'
 import { ProviderError } from '../../providers/errors.js'
+import { ResearchImportProvider } from '../../providers/imports/research-provider.js'
+import {
+  MAX_RESEARCH_ROW_LIMIT,
+  researchImportRowLimit,
+} from '../../providers/imports/research-rows.js'
 import {
   type ProviderCandidate,
   resolveProvider,
@@ -86,6 +93,80 @@ export function validatedProvider(value?: ProviderId): ProviderId | undefined {
     throw new SeoError('INVALID_INPUT', 'Use a supported research provider.')
   }
   return parsed.data
+}
+
+export function researchFilesDependencies(input: {
+  sources?: ResearchImportSource[]
+  provider?: ProviderId
+  dependencies: DomainResearchDependencies
+  now?: Date
+}): {
+  provider: ProviderId | undefined
+  dependencies: DomainResearchDependencies
+} {
+  if (!input.sources) {
+    return {
+      provider: validatedProvider(input.provider),
+      dependencies: input.dependencies,
+    }
+  }
+  if (input.sources.length < 1 || input.sources.length > 4) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use one to four ranked-keyword research files.',
+    )
+  }
+  const sourceProvider = input.sources[0]?.provider
+  if (
+    !sourceProvider ||
+    input.sources.some((source) => source.provider !== sourceProvider)
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'All research files in one report must come from the same provider.',
+    )
+  }
+  const validatedSourceProvider = validatedProvider(sourceProvider)
+  if (!validatedSourceProvider) {
+    throw new SeoError('INVALID_INPUT', 'Use a supported research provider.')
+  }
+  if (input.provider && input.provider !== validatedSourceProvider) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'The selected provider must match the research file provider.',
+    )
+  }
+  if (input.sources.some((source) => source.dataset !== 'ranked-keywords')) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'The research file dataset must be ranked-keywords.',
+    )
+  }
+  const paths = input.sources.map((source) => resolve(source.file))
+  if (new Set(paths).size !== paths.length) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use each research file once in a report.',
+    )
+  }
+  const requestedRows = input.sources.reduce(
+    (total, source) => total + researchImportRowLimit(source.rowLimit),
+    0,
+  )
+  if (requestedRows > MAX_RESEARCH_ROW_LIMIT) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Research files can normalize at most ${MAX_RESEARCH_ROW_LIMIT} rows in one report.`,
+    )
+  }
+  const adapter = new ResearchImportProvider(input.sources, input.now)
+  return {
+    provider: validatedSourceProvider,
+    dependencies: {
+      ...input.dependencies,
+      candidates: [{ adapter, connected: true, priority: 0 }],
+    },
+  }
 }
 
 export function days(value: number | undefined): number {

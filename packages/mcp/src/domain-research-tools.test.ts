@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
 import type * as z from 'zod/v4'
 import { registerDomainResearchTools } from './domain-research-tools.js'
@@ -76,6 +79,39 @@ test('domain research tools register one report surface with bounded inputs', ()
       competitors: [{ domain: 'one.test' }],
       countryCode: 'GB',
       languageCode: 'en',
+    }).success,
+    false,
+  )
+  const researchFile = {
+    dataset: 'ranked-keywords',
+    file: '/tmp/provider-export.csv',
+    provider: 'semrush',
+    exportedAt: '2026-07-20T12:00:00Z',
+  }
+  assert.equal(
+    captured.schemas.get('seo_ranked_keywords')?.safeParse({
+      target: 'example.com',
+      countryCode: 'GB',
+      languageCode: 'en',
+      researchFiles: [researchFile],
+    }).success,
+    true,
+  )
+  assert.equal(
+    captured.schemas.get('seo_domain_overview')?.safeParse({
+      domain: 'example.com',
+      countryCode: 'GB',
+      languageCode: 'en',
+      researchFiles: [researchFile],
+    }).success,
+    false,
+  )
+  assert.equal(
+    captured.schemas.get('seo_ranked_keywords')?.safeParse({
+      target: 'example.com',
+      countryCode: 'GB',
+      languageCode: 'en',
+      researchFiles: [{ ...researchFile, provider: 'unknown' }],
     }).success,
     false,
   )
@@ -180,4 +216,61 @@ test('competitor gap keeps oversized evidence inside the agent output budget', a
   assert.ok(
     Buffer.byteLength(JSON.stringify(result?.structuredContent)) <= 98_304,
   )
+})
+
+test('the registered ranked-keyword report runs local imports and keeps provenance', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'seo-mcp-research-import-'))
+  const file = join(directory, 'keywords.csv')
+  try {
+    await writeFile(
+      file,
+      [
+        'Search Term,Current Rank,Destination,Monthly Demand',
+        'safe fixture query,5,https://example.com/page,100',
+      ].join('\n'),
+    )
+    const captured = server()
+    registerDomainResearchTools(captured.value)
+    const result = await captured.handlers.get('seo_ranked_keywords')?.({
+      target: 'example.com',
+      countryCode: 'GB',
+      languageCode: 'en',
+      researchFiles: [
+        {
+          dataset: 'ranked-keywords',
+          file,
+          provider: 'semrush',
+          exportedAt: '2026-07-20T12:00:00Z',
+          columns: {
+            keyword: 'Search Term',
+            position: 'Current Rank',
+            url: 'Destination',
+            searchVolume: 'Monthly Demand',
+          },
+        },
+      ],
+    })
+
+    const evidence = result?.structuredContent?.evidence as
+      | Record<string, unknown>
+      | undefined
+    const imports = evidence?.imports as
+      | Array<Record<string, unknown>>
+      | undefined
+    assert.equal(result?.structuredContent?.dataStatus, 'partial')
+    assert.equal(imports?.length, 1)
+    assert.equal(imports?.[0]?.provider, 'semrush')
+    assert.deepEqual(imports?.[0]?.columnMapping, {
+      keyword: 'Search Term',
+      position: 'Current Rank',
+      url: 'Destination',
+      searchVolume: 'Monthly Demand',
+    })
+    assert.match(String(imports?.[0]?.sha256), /^[a-f0-9]{64}$/u)
+    assert.ok(
+      Buffer.byteLength(JSON.stringify(result?.structuredContent)) <= 98_304,
+    )
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })

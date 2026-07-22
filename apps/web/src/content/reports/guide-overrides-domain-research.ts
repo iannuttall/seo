@@ -59,11 +59,17 @@ export const domainResearchGuideOverrides: Partial<
         source: 'search-analytics',
         role: 'Adds retained owner-verified query and page evidence for the same site without changing provider metrics.',
       },
+      {
+        label: 'Optional local ranked-keyword exports',
+        source: 'local-research-files',
+        role: 'Run the same report from one to four DataForSEO, Semrush or Ahrefs files when no provider API is connected.',
+      },
     ],
     checks: [
       'Applies rank, demand, wording, result-type, and row limits before acquisition, then validates and deduplicates returned rows deterministically.',
       'Labels each first-party comparison as observed, not in retained rows, or not requested.',
       'Keeps provider totals, pagination, invalid rows, cache state, warnings, and request cost beside the visible subset.',
+      'Records each imported file provider, export date, SHA-256 hash, included fields, explicit column mapping, filtered historical rows, invalid rows, duplicates, bytes read, and cap.',
     ],
     returns: [
       'A bounded ranked-keyword list with ranking URLs, ranks, result types, provider metrics, source state, and stable ordering.',
@@ -103,11 +109,17 @@ export const domainResearchGuideOverrides: Partial<
         source: 'search-analytics',
         role: 'Adds retained owner-verified page metrics for exact matching URLs.',
       },
+      {
+        label: 'Optional local ranked-keyword exports',
+        source: 'local-research-files',
+        role: 'Groups imported keyword rows into page evidence and repeated URL patterns without a paid API request.',
+      },
     ],
     checks: [
       'Validates and deduplicates provider page rows while preserving filters, pagination, totals, invalid rows, warnings, and cost.',
       'Groups repeated path shapes into deterministic structural patterns with counts and representative URLs.',
       'Keeps the path-pattern heuristic separate from claims about page quality, intent, demand, or how a site creates its pages.',
+      'Keeps imported file dates, hashes, fields, explicit column mappings, row counts, filtered historical rows, rejected rows, duplicates, and caps beside the derived page groups.',
     ],
     returns: [
       'A bounded list of ranking pages with provider estimates, movement, ranking distribution, and optional exact Search Console matches.',
@@ -146,11 +158,17 @@ export const domainResearchGuideOverrides: Partial<
         label: 'Target domain and optional site classifications',
         role: 'Separate the target and user-declared business competitors from publishers, directories, communities, marketplaces, and unknown sites.',
       },
+      {
+        label: 'Optional multi-domain ranked-keyword exports',
+        source: 'local-research-files',
+        role: 'Find recurring domains in one to four local provider files without claiming they reproduce a live result page.',
+      },
     ],
     checks: [
       'Normalizes and deduplicates 2 to 200 keywords before acquisition and validates the provider response against the requested query count.',
       'Measures recurring domains by matched keywords, query-set coverage, average position, visibility estimate, and sample positions.',
       'Keeps every undeclared site type unknown instead of guessing whether a search competitor is a business competitor.',
+      'Leaves provider visibility unavailable on the file path and retains each file boundary under evidence.imports.',
     ],
     returns: [
       'A bounded competitor set with relationship, declared site type, matched keyword count, query-set coverage, position evidence, and provider estimates.',
@@ -194,12 +212,18 @@ export const domainResearchGuideOverrides: Partial<
         source: 'domain-provider-pages',
         role: 'Add repeated path-pattern evidence and representative pages for programmatic SEO research.',
       },
+      {
+        label: 'Optional site and competitor exports',
+        source: 'local-research-files',
+        role: 'Combine one to four local ranked-keyword files from the same provider when live provider access is unavailable.',
+      },
     ],
     checks: [
       'Separates terms already observed in retained first-party rows, terms where the site already has a provider-observed rank, plausible gap candidates, and unverified competitor terms.',
-      'Requires retained first-party theme overlap plus either several compared domains or a top-10 competitor rank before promoting a term to a relevant candidate.',
+      'Ignores generic terms and search operators, then requires two meaningful terms in one retained first-party query plus either several compared domains or a top-10 competitor rank.',
       'Builds bounded token indexes for large Search Console datasets and applies deterministic limits, ordering, and one structured-output budget.',
       'Creates a data-source research brief only when repeated page patterns support a possible new template family.',
+      'Keeps file hashes, export times, included fields, filtered historical rows, invalid rows, duplicates, and caps visible for every imported domain source.',
     ],
     returns: [
       'A bounded candidate list with competitor evidence, own-site coverage state, provider metrics, theme matches, classifications, and verification prompts.',

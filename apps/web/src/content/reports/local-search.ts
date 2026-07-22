@@ -31,7 +31,7 @@ export const localSearchReports = [
       'Groups repeated URL shapes for template review without claiming that each page is useful, unique, or worth creating.',
       'Keeps Search Console average position separate from an exact live rank and keeps provider cost, cache, coverage, and result features visible.',
       'Aggregates recurring organic domains as unclassified search competitors and local-pack rows as observed listings, with evidence references and fixed output limits.',
-      'Keeps Analytics geography separate from query wording and reports unmatched, invalid, duplicate, capped, and quality-warning states.',
+      'Keeps Analytics geography separate from query wording and reports unmatched, missing, invalid, duplicate, capped, and quality-warning states.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',

@@ -24,6 +24,19 @@
         "Does not call the retained rows every backlink"
       ],
       "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Agent task: use the connected research provider to review links to example.com, combine them with sc-domain:example.com and the latest saved crawl, then tell me what to fix.",
+      "expected_output": "Should route to report id link-evidence, describe it, then run seo links --provider dataforseo --target example.com --search-site sc-domain:example.com --json or seo_run_report with the equivalent bounded inputs. Should read providerSummary and providerEvidence coverage, filters, cache and cost separately from the representative links. Should then read targetContext evidence states and findings. A broken, redirected, canonical-conflicting or non-indexable target is a crawl observation that needs a live check. A missing Search Console page row is not zero. Provider rank and spam values keep their provider-specific names and are not ranking factors or universal authority scores.",
+      "assertions": [
+        "Uses the existing link-evidence report with DataForSEO",
+        "Reads provider coverage, cache and cost before representative rows",
+        "Combines target crawl and Search Console evidence without blending source meanings",
+        "Treats technical findings as observations that need live verification",
+        "Does not turn provider metrics into ranking factors or universal scores"
+      ],
+      "files": []
     }
   ]
 }

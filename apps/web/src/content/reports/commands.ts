@@ -19,6 +19,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo ai-referrals --project example',
       note: 'Find Google Analytics sessions referred by known AI products.',
     },
+    'ai-mention-research': {
+      command:
+        'seo reports run ai-mention-research --params \'{"target":{"label":"Example Analytics"},"surface":"google-ai-overview","countryCode":"GB","languageCode":"en","location":{"code":2826}}\' --json',
+      note: 'Research one target in a bounded provider-indexed AI dataset.',
+    },
     'audit-page': {
       command: 'seo audit-page --url https://example.com/page',
       note: 'Inspect one live page before changing it.',

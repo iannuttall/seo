@@ -120,8 +120,9 @@ export const reportGuideOverridesAF: Partial<
       },
       {
         when: 'You need to know whether an AI product will cite, mention, rank, or send traffic to a page.',
+        reportId: 'ai-mention-research',
         doInstead:
-          'No automated report in this package can decide that. Check the relevant AI products with a repeatable external monitoring method and review their returned answers and citations. This report can still identify technical controls that may prevent eligibility.',
+          'Run AI mention research for provider-indexed mention and citation evidence. Use fixed prompt observations for current answers and AI referrals for measured visits. None of those sources can guarantee future selection or ranking.',
       },
     ],
     seo: {
@@ -161,13 +162,71 @@ export const reportGuideOverridesAF: Partial<
       },
       {
         when: 'You need to know whether assistants mention or cite the site even when nobody clicks through.',
+        reportId: 'ai-mention-research',
         doInstead:
-          'No automated report in this package measures unclicked mentions or citations. Use repeatable external prompt monitoring and inspect the answers and cited URLs. AI referrals can only confirm visits that reached Google Analytics with a recognisable source.',
+          'Run AI mention research for provider-indexed mentions, questions, and cited URLs. Use fixed prompt observations when you need a current answer. AI referrals can only confirm visits that reached Google Analytics with a recognisable source.',
       },
     ],
     seo: {
       primaryKeyword: 'ai referrals',
       supportingKeywords: ['google analytics report', 'ai search optimization'],
+    },
+  },
+  'ai-mention-research': {
+    name: 'Research AI mentions and citations',
+    summary:
+      'Compare provider-indexed mentions, cited domains, and bounded question samples for one AI surface and market, then add Search Console overlap when you own the site.',
+    inputs: [
+      {
+        label: 'Provider-indexed AI mention data',
+        source: 'ai-mention-provider',
+        role: 'Provides target metrics, cited source domains, question samples, observation dates, model names, and the exact surface and market.',
+      },
+      {
+        label: 'Optional Search Console query rows',
+        source: 'search-analytics',
+        role: 'Adds bounded first-party query and landing-page evidence for a property you own.',
+      },
+      {
+        label: 'Explicit target and comparison set',
+        role: 'Defines one named target, its aliases, and at most five named competitors measured in the same provider request.',
+      },
+    ],
+    checks: [
+      'Keeps mention metrics and question samples in separate evidence states, so a failed sample request does not erase successful metrics.',
+      'Calculates mention share only across supplied targets, marks cited URLs from an optional owned domain, and applies a bounded lexical overlap heuristic to retained Search Console rows.',
+      'Reports cache status, price evidence, actual cost, provider task ids, row caps, invalid rows, processing bounds, warnings, and partial states.',
+    ],
+    returns: [
+      'Target and competitor mention metrics, source-domain evidence, and at most 25 retained question samples for one surface, location, and language.',
+      'Owned citation flags, optional first-party query matches, repeated question terms, cautious programmatic data-source briefs, findings, caveats, and next steps.',
+    ],
+    alternatives: [
+      {
+        when: 'You need the current answer for a fixed prompt rather than an indexed research dataset.',
+        doInstead:
+          'Record a repeatable fixed prompt observation. Keep the prompt, product, model, market, time, answer, and citations together so a later observation can be compared on the same terms.',
+      },
+      {
+        when: 'You need measured visits from known AI products.',
+        reportId: 'ai-referrals',
+        doInstead:
+          'Run AI referrals. It reads Google Analytics referral sessions and landing pages instead of inferring traffic from mention records.',
+      },
+      {
+        when: 'You only need technical crawl, index, or snippet eligibility evidence.',
+        reportId: 'ai-readiness',
+        doInstead:
+          'Run AI search readiness. It checks technical controls without claiming that an AI product mentioned or cited the site.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'ai mention tracking',
+      supportingKeywords: [
+        'ai citation tracking',
+        'ai search visibility',
+        'chatgpt mentions',
+      ],
     },
   },
   'ai-search-scorecard': {

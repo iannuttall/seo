@@ -1,6 +1,10 @@
 import { defineConfig } from 'tsdown'
 
-const bundledPackages = [/^@seo\//, /^cheerio(?:\/|$)/]
+const bundledPackages = [
+  /^@seo\//,
+  /^@modelcontextprotocol\/sdk(?:\/|$)/,
+  /^cheerio(?:\/|$)/,
+]
 
 export default defineConfig([
   {

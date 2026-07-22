@@ -179,6 +179,17 @@ test('the packed package installs and runs without the workspace', {
     maxBuffer: 1024 * 1024,
   })
 
+  const audit = await execFileAsync(
+    'npm',
+    ['audit', '--omit=dev', '--audit-level=low', '--json'],
+    {
+      cwd: consumerDirectory,
+      env: consumerEnv(),
+      maxBuffer: 1024 * 1024,
+    },
+  )
+  assert.equal(JSON.parse(audit.stdout).metadata.vulnerabilities.total, 0)
+
   const cli = join(consumerDirectory, 'node_modules', 'seo', 'dist', 'cli.js')
   const version = await execFileAsync(process.execPath, [cli, '--version'], {
     cwd: consumerDirectory,

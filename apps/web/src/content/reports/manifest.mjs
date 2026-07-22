@@ -3,6 +3,7 @@ export const reportIds = [
   'agent-readiness',
   'ai-readiness',
   'ai-referrals',
+  'ai-mention-research',
   'ai-search-scorecard',
   'audit-page',
   'audit-urls',

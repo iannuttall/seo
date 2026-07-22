@@ -53,7 +53,7 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 | Audit a whole site | `site-crawl` with `health: true`, `report` command (main report), full `site-crawl` only if needed, `top-fixes`, `ai-search-scorecard` |
 | More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
 | AI agent readiness for a content site | `agent-readiness`, `ai-readiness`, `entity-readiness`, `llms-txt-audit` |
-| AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-referrals`, `seo-to-ai-query` |
+| AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-mention-research`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Research keywords and current results | `keyword-research`, `keyword-metrics`, `saved-keywords`, `serp-results` |
 | Find search competitors and plausible gaps | `serp-competitors`, `domain-overview`, `ranking-pages`, `ranked-keywords`, `competitor-keyword-gap` |

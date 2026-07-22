@@ -323,6 +323,50 @@ test('local search demand keeps provider work explicit and bounded', () => {
   }
 })
 
+test('AI mention research bounds comparison and provider sample work', () => {
+  const schema = reportSchema('ai-mention-research')
+  assert.equal(
+    schema.safeParse({
+      target: { label: 'Example', aliases: ['Example App'] },
+      competitors: [{ label: 'Competitor' }],
+      domain: 'example.com',
+      surface: 'google-ai-overview',
+      countryCode: 'US',
+      languageCode: 'en',
+      location: { code: 2840 },
+      site: 'sc-domain:example.com',
+      days: 28,
+      sampleLimit: 25,
+    }).success,
+    true,
+  )
+  for (const input of [
+    {
+      target: { label: 'Example' },
+      surface: 'google-ai-overview',
+      countryCode: 'US',
+      languageCode: 'en',
+    },
+    {
+      target: { label: 'Example', aliases: Array(6).fill('alias') },
+      surface: 'google-ai-overview',
+      countryCode: 'US',
+      languageCode: 'en',
+      location: { code: 2840 },
+    },
+    {
+      target: { label: 'Example' },
+      surface: 'google-ai-overview',
+      countryCode: 'US',
+      languageCode: 'en',
+      location: { code: 2840 },
+      sampleLimit: 26,
+    },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('rank tracking bounds local configuration, acquisition, and output', () => {
   const schema = reportSchema('rank-tracking')
   assert.equal(

@@ -2,6 +2,62 @@ import type { ReportEditorial } from './types'
 
 export const aiSearchReports = [
   {
+    id: 'ai-mention-research',
+    name: 'AI mention research',
+    category: 'ai-search',
+    summary:
+      'Compare provider-indexed mentions, cited domains, and bounded question samples for one AI surface and market, with optional Search Console overlap.',
+    question:
+      'Where does a named target appear in provider-indexed AI answers, and which observed questions overlap with existing search demand?',
+    useWhen: [
+      'You need mention and citation evidence beyond referral traffic or technical eligibility.',
+      'You want one target and a small named competitor set measured in the same provider dataset.',
+      'You want to compare bounded AI question samples with retained Search Console queries before planning content or a programmatic template.',
+    ],
+    avoidWhen: [
+      'You need the answer returned by a fixed prompt right now. Record a repeatable observation with the exact product, model, market, time, answer, and citations instead.',
+      'You need a complete census, a universal visibility score, sentiment, or proof that an AI product never mentions a target.',
+    ],
+    evidence: [
+      'DataForSEO LLM Mentions metrics, cited source domains, and bounded question samples for the exact surface, location, and language.',
+      'Optional retained Search Console query and landing-page rows for a property you own.',
+    ],
+    methodology: [
+      'Makes one metrics request and, by default, one sample request. It keeps provider values, source coverage, cache state, cost, and warnings intact.',
+      'Calculates comparison share only within the supplied targets, marks citations from an optional owned domain, and applies a bounded lexical overlap heuristic to optional Search Console rows.',
+      'Turns repeated sample terms into research briefs with data rights, field quality, page value, and scale checks instead of recommending pages automatically.',
+    ],
+    exampleParams: {
+      target: { label: 'Example Analytics', aliases: ['Example'] },
+      competitors: [{ label: 'Competitor Cloud' }],
+      domain: 'example.com',
+      surface: 'google-ai-overview',
+      countryCode: 'GB',
+      languageCode: 'en',
+      location: { code: 2826 },
+      site: 'sc-domain:example.com',
+      sampleLimit: 10,
+    },
+    interpretation: [
+      'Read source status, coverage, observation time, cache, cost, and warnings first. Then compare target metrics, retained questions, citations, and first-party overlap without blending them into one score.',
+    ],
+    caveats: [
+      'Provider-indexed records are not live prompt observations or a complete census. Search Console overlap is lexical and bounded, so a match does not prove shared intent and no match does not prove a gap.',
+    ],
+    nextSteps: [
+      'Inspect cited pages and current results for the questions that would change a decision.',
+      'Use a fixed prompt observation for a small stable question set before making claims about current answers.',
+      'Check existing pages, source rights, useful variation, and representative records before expanding a programmatic template.',
+    ],
+    related: [
+      'seo-to-ai-query',
+      'ai-referrals',
+      'pseo-opportunities',
+      'content-optimization',
+    ],
+    sources: ['ai-mention-provider', 'search-analytics'],
+  },
+  {
     id: 'ai-referrals',
     name: 'AI referral traffic',
     category: 'ai-search',

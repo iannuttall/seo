@@ -192,6 +192,11 @@ test('AI mention research combines comparison, citations and Search Console over
       (finding) => finding.code === 'lower-comparison-share',
     ),
   )
+  assert.match(
+    report.nextSteps.join(' '),
+    /Record repeatable fixed prompt observations/,
+  )
+  assert.doesNotMatch(JSON.stringify(report), /prompt observation report/)
   assert.equal(report.cost.actualMicros, 204_000)
 })
 

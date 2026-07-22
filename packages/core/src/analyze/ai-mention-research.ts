@@ -734,7 +734,7 @@ export async function aiMentionResearchReport(
     nextSteps: [
       'Review the exact market, source coverage, cache state, cost, and warnings before interpreting mention differences.',
       'Inspect retained questions and cited pages, then compare them with existing first-party landing pages where Search Console evidence is available.',
-      'Use a fixed prompt observation report for a small set of important questions when a current, repeatable answer check would affect the decision.',
+      'Record repeatable fixed prompt observations for a small set of important questions when a current answer check would affect the decision.',
     ],
   }
 }

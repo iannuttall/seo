@@ -140,6 +140,7 @@ export async function dataForSeoBacklinks(
       providerTotalRows,
       offset,
       filtered: mode === 'representative' || status !== 'all',
+      providerTotalComparable: mode !== 'representative',
     }),
     endpoint: LINK_ENDPOINTS.backlinks,
     limit: input.limit,

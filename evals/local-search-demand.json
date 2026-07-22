@@ -46,7 +46,7 @@
         "Uses optional Analytics evidence through local-search-demand rather than a new tool",
         "Explains the exact retained landing-page path join",
         "Does not assign Analytics geography to a Search Console query",
-        "Reads caps, unmatched rows, malformed rows, duplicates, and quality warnings before interpreting locations"
+        "Reads caps, unmatched rows, missing values, malformed rows, duplicates, and quality warnings before interpreting locations"
       ],
       "files": []
     }

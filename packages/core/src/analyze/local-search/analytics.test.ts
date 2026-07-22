@@ -106,12 +106,13 @@ test('keeps malformed, duplicate, capped, and quality states visible', async () 
     '10',
   ]
   const report = await localAnalyticsEvidence(
-    { ...input, limit: 3 },
+    { ...input, limit: 4 },
     {
       runReport: async () => ({
         ...analyticsResult([
           duplicate,
           duplicate,
+          ['(not set)', 'United Kingdom', 'England', 'London', '5'],
           [
             '/plumbers/manchester',
             'United Kingdom',
@@ -128,6 +129,7 @@ test('keeps malformed, duplicate, capped, and quality states visible', async () 
 
   assert.equal(report.status, 'partial')
   assert.equal(report.source.limitReached, true)
+  assert.equal(report.source.missingRows, 1)
   assert.equal(report.source.invalidRows, 1)
   assert.equal(report.source.exactDuplicateRows, 1)
   assert.equal(report.source.matchedRows, 1)

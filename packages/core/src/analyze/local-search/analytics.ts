@@ -58,18 +58,36 @@ function metric(value: string | undefined): number | null {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
 }
 
-function validRow(row: Record<string, string>): ValidRow | null {
+function parsedRow(
+  row: Record<string, string>,
+):
+  | { kind: 'valid'; value: ValidRow }
+  | { kind: 'missing' }
+  | { kind: 'invalid' } {
   const originalPath = row.landingPagePlusQueryString ?? ''
+  const sessionValue = row.sessions
+  if (
+    !originalPath.trim() ||
+    originalPath === '(not set)' ||
+    sessionValue === undefined ||
+    !sessionValue.trim() ||
+    sessionValue === '(not set)'
+  ) {
+    return { kind: 'missing' }
+  }
   const path = normalizePath(originalPath)
-  const sessions = metric(row.sessions)
-  if (!path || sessions === null) return null
+  const sessions = metric(sessionValue)
+  if (!path || sessions === null) return { kind: 'invalid' }
   return {
-    path,
-    originalPath,
-    country: locationValue(row.country),
-    region: locationValue(row.region),
-    city: locationValue(row.city),
-    sessions,
+    kind: 'valid',
+    value: {
+      path,
+      originalPath,
+      country: locationValue(row.country),
+      region: locationValue(row.region),
+      city: locationValue(row.city),
+      sessions,
+    },
   }
 }
 
@@ -163,6 +181,7 @@ function emptyEvidence(input: {
       matchedRows: 0,
       matchedPages: 0,
       unmatchedRows: 0,
+      missingRows: 0,
       invalidRows: 0,
       exactDuplicateRows: 0,
       limit: input.limit,
@@ -267,17 +286,23 @@ export async function localAnalyticsEvidence(
   const locations = new Map<string, LocationAccumulator>()
   const matchedPaths = new Set<string>()
   const signatures = new Set<string>()
+  let missingRows = 0
   let invalidRows = 0
   let exactDuplicateRows = 0
   let unmatchedRows = 0
   let matchedRows = 0
 
   for (const source of rows) {
-    const row = validRow(source)
-    if (!row) {
+    const parsed = parsedRow(source)
+    if (parsed.kind === 'missing') {
+      missingRows++
+      continue
+    }
+    if (parsed.kind === 'invalid') {
       invalidRows++
       continue
     }
+    const row = parsed.value
     const signature = rowSignature(row)
     if (signatures.has(signature)) {
       exactDuplicateRows++
@@ -336,6 +361,7 @@ export async function localAnalyticsEvidence(
   const partial =
     limitReached ||
     qualityWarnings.length > 0 ||
+    missingRows > 0 ||
     invalidRows > 0 ||
     exactDuplicateRows > 0
   const status: LocalAnalyticsEvidence['status'] =
@@ -357,10 +383,12 @@ export async function localAnalyticsEvidence(
       metrics: ['sessions'],
       returnedRows: rows.length,
       availableRows,
-      retainedRows: rows.length - invalidRows - exactDuplicateRows,
+      retainedRows:
+        rows.length - missingRows - invalidRows - exactDuplicateRows,
       matchedRows,
       matchedPages: matchedPaths.size,
       unmatchedRows,
+      missingRows,
       invalidRows,
       exactDuplicateRows,
       limit: input.limit,

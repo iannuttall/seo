@@ -94,6 +94,7 @@ export type LocalAnalyticsEvidence = {
     matchedRows: number
     matchedPages: number
     unmatchedRows: number
+    missingRows: number
     invalidRows: number
     exactDuplicateRows: number
     limit: number

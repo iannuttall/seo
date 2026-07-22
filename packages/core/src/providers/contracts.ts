@@ -108,6 +108,8 @@ export type ProviderImportEvidence = {
   provider: ProviderId
   path: string
   format: 'csv' | 'json' | 'jsonl'
+  encoding: 'utf-8' | 'utf-16be' | 'utf-16le'
+  delimiter: ',' | ';' | '\t' | null
   sha256: string
   exportedAt: string
   importedAt: string
@@ -117,6 +119,7 @@ export type ProviderImportEvidence = {
   fileRows: number
   suppliedRows: number
   validRows: number
+  filteredRows: number
   invalidRows: number
   duplicateRows: number
   capped: boolean

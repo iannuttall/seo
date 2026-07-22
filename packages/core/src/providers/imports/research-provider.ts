@@ -178,6 +178,8 @@ function completeness(input: {
   if (input.imported.imports.some((item) => item.capped)) return 'capped'
   if (input.imported.imports.some((item) => item.invalidRows > 0))
     return 'partial'
+  if (input.imported.imports.some((item) => item.filteredRows > 0))
+    return 'filtered'
   if (input.retainedRows < input.returnedRows) return 'filtered'
   return 'unknown'
 }

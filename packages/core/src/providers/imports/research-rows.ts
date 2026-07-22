@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
+import type { ImportProgress } from '../../imports/records.js'
 import {
   csvRecords,
   csvRow,
@@ -29,6 +30,11 @@ export type ImportedResearchRows = {
   importEvidence: ProviderImportEvidence
   warnings: Array<{ code: string; message: string; row?: number }>
 }
+
+type NormalizedResearchRow =
+  | { kind: 'row'; row: ImportedResearchRow }
+  | { kind: 'filtered' }
+  | { kind: 'invalid' }
 
 const FIELD_ALIASES = {
   keyword: ['keyword', 'query', 'phrase', 'keyworddatakeyword'],
@@ -79,6 +85,7 @@ const FIELD_ALIASES = {
     'intent',
     'intents',
     'keywordintent',
+    'keywordintents',
     'searchintent',
     'keyworddatasearchintentinfomainintent',
   ],
@@ -91,6 +98,7 @@ const FIELD_ALIASES = {
   traffic: [
     'traffic',
     'currenttraffic',
+    'currentorganictraffic',
     'estimatedtraffic',
     'estimatedmonthlytraffic',
     'etv',
@@ -100,6 +108,8 @@ const FIELD_ALIASES = {
     'resulttype',
     'type',
     'rankingtype',
+    'positiontype',
+    'currentpositionkind',
     'rankedserpelementserpitemtype',
   ],
   updatedAt: [
@@ -108,6 +118,13 @@ const FIELD_ALIASES = {
     'keyworddatakeywordinfolastupdatedtime',
   ],
 } as const
+
+const BOOLEAN_INTENT_FIELDS = [
+  ['navigational', 'navigational'],
+  ['informational', 'informational'],
+  ['commercial', 'commercial'],
+  ['transactional', 'transactional'],
+] as const
 
 export function researchImportRowLimit(value?: number): number {
   const result = value ?? DEFAULT_RESEARCH_ROW_LIMIT
@@ -283,6 +300,96 @@ function textField(input: {
       }
 }
 
+function booleanValue(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value
+  if (value === 1 || value === 0) return value === 1
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toLowerCase()
+  if (['true', 'yes', '1'].includes(normalized)) return true
+  if (['false', 'no', '0', ''].includes(normalized)) return false
+  return null
+}
+
+function normalizedIntent(value: string): string {
+  const order = new Map<string, number>(
+    BOOLEAN_INTENT_FIELDS.map(([intent], index) => [intent, index]),
+  )
+  return [
+    ...new Set(
+      value
+        .split(/[,;|]/u)
+        .map((item) => item.trim().toLowerCase().replace(/\s+/gu, '_'))
+        .filter(Boolean),
+    ),
+  ]
+    .sort(
+      (left, right) =>
+        (order.get(left) ?? Number.MAX_SAFE_INTEGER) -
+          (order.get(right) ?? Number.MAX_SAFE_INTEGER) ||
+        (left < right ? -1 : left > right ? 1 : 0),
+    )
+    .join(', ')
+}
+
+function intentField(raw: RawRow): ProviderValue<string> {
+  const explicit = textField({
+    raw,
+    aliases: FIELD_ALIASES.intent,
+    label: 'intent',
+    maximum: 100,
+  })
+  if (explicit.state === 'observed') {
+    return { state: 'observed', value: normalizedIntent(explicit.value) }
+  }
+  if (explicit.state === 'invalid') return explicit
+
+  let present = false
+  const intents: string[] = []
+  for (const [intent, alias] of BOOLEAN_INTENT_FIELDS) {
+    const source = field(raw, [alias])
+    if (!source.present) continue
+    present = true
+    const parsed = booleanValue(source.value)
+    if (parsed === null) {
+      return {
+        state: 'invalid',
+        value: null,
+        reason: `The imported ${intent} intent flag is invalid.`,
+      }
+    }
+    if (parsed) intents.push(intent)
+  }
+  if (!present || intents.length === 0) {
+    return {
+      state: 'missing',
+      value: null,
+      reason: present
+        ? 'This imported row has no observed search intent.'
+        : 'The import does not include intent.',
+    }
+  }
+  return { state: 'observed', value: intents.join(', ') }
+}
+
+function resultType(raw: RawRow): string {
+  const value = requiredText(raw, FIELD_ALIASES.resultType)
+  if (!value) return 'organic'
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, '_')
+    .replace(/^_+|_+$/gu, '')
+  const compact = normalized.replaceAll('_', '')
+  if (!normalized || compact === 'organic') return 'organic'
+  if (compact.startsWith('paid')) return 'paid'
+  if (compact === 'featuredsnippet') return 'featured_snippet'
+  if (compact === 'localpack') return 'local_pack'
+  if (compact === 'aioverview' || compact === 'aioverviewreference') {
+    return 'ai_overview_reference'
+  }
+  return normalized
+}
+
 function dateField(raw: RawRow): ProviderValue<string> {
   const value = textField({
     raw,
@@ -327,7 +434,7 @@ function normalizedUrl(value: string): { url: string; domain: string } | null {
   }
 }
 
-function normalizeRow(rawValue: RawRow): ImportedResearchRow | null {
+function normalizeRow(rawValue: RawRow): NormalizedResearchRow {
   const raw = normalizedRawRow(rawValue)
   const keyword = requiredText(raw, FIELD_ALIASES.keyword)
   const rawUrl = requiredText(raw, FIELD_ALIASES.url)
@@ -340,6 +447,19 @@ function normalizeRow(rawValue: RawRow): ImportedResearchRow | null {
   const rankGroup = importedRankGroup ?? importedRankAbsolute ?? 0
   const rankAbsolute = importedRankAbsolute ?? importedRankGroup ?? 0
   const target = rawUrl ? normalizedUrl(rawUrl) : null
+  const currentPosition = field(raw, ['currentposition'])
+  const currentUrl = field(raw, ['currenturl'])
+  const previousPosition = field(raw, ['previousposition'])
+  const previousUrl = field(raw, ['previousurl'])
+  if (
+    currentPosition.present &&
+    currentUrl.present &&
+    !textValue(currentPosition.value) &&
+    !textValue(currentUrl.value) &&
+    (textValue(previousPosition.value) || textValue(previousUrl.value))
+  ) {
+    return { kind: 'filtered' }
+  }
   if (
     !keyword ||
     keyword.length > 500 ||
@@ -352,70 +472,66 @@ function normalizeRow(rawValue: RawRow): ImportedResearchRow | null {
     rankAbsolute < 1 ||
     rankAbsolute > 1_000
   ) {
-    return null
+    return { kind: 'invalid' }
   }
-  const resultType =
-    requiredText(raw, FIELD_ALIASES.resultType)?.toLowerCase() ?? 'organic'
   return {
-    domain: target.domain,
-    keyword: keyword.trim().replace(/\s+/gu, ' '),
-    url: target.url,
-    rankGroup,
-    rankAbsolute,
-    resultType,
-    monthlySearchVolume: numberField({
-      raw,
-      aliases: FIELD_ALIASES.volume,
-      label: 'monthly search volume',
-      integer: true,
-      minimum: 0,
-    }),
-    monthlySearches: {
-      state: 'missing',
-      value: null,
-      reason: 'Ranked-keyword exports do not include typed monthly history.',
+    kind: 'row',
+    row: {
+      domain: target.domain,
+      keyword: keyword.trim().replace(/\s+/gu, ' '),
+      url: target.url,
+      rankGroup,
+      rankAbsolute,
+      resultType: resultType(raw),
+      monthlySearchVolume: numberField({
+        raw,
+        aliases: FIELD_ALIASES.volume,
+        label: 'monthly search volume',
+        integer: true,
+        minimum: 0,
+      }),
+      monthlySearches: {
+        state: 'missing',
+        value: null,
+        reason: 'Ranked-keyword exports do not include typed monthly history.',
+      },
+      searchVolumeUpdatedAt: dateField(raw),
+      cpcUsd: numberField({
+        raw,
+        aliases: FIELD_ALIASES.cpc,
+        label: 'CPC',
+        minimum: 0,
+      }),
+      paidCompetition: numberField({
+        raw,
+        aliases: FIELD_ALIASES.competition,
+        label: 'paid competition',
+        minimum: 0,
+        maximum: 1,
+      }),
+      keywordDifficulty: numberField({
+        raw,
+        aliases: FIELD_ALIASES.difficulty,
+        label: 'keyword difficulty',
+        minimum: 0,
+        maximum: 100,
+        percentage: 'whole',
+      }),
+      intent: intentField(raw),
+      resultCount: numberField({
+        raw,
+        aliases: FIELD_ALIASES.resultCount,
+        label: 'result count',
+        integer: true,
+        minimum: 0,
+      }),
+      estimatedMonthlyTraffic: numberField({
+        raw,
+        aliases: FIELD_ALIASES.traffic,
+        label: 'estimated monthly traffic',
+        minimum: 0,
+      }),
     },
-    searchVolumeUpdatedAt: dateField(raw),
-    cpcUsd: numberField({
-      raw,
-      aliases: FIELD_ALIASES.cpc,
-      label: 'CPC',
-      minimum: 0,
-    }),
-    paidCompetition: numberField({
-      raw,
-      aliases: FIELD_ALIASES.competition,
-      label: 'paid competition',
-      minimum: 0,
-      maximum: 1,
-    }),
-    keywordDifficulty: numberField({
-      raw,
-      aliases: FIELD_ALIASES.difficulty,
-      label: 'keyword difficulty',
-      minimum: 0,
-      maximum: 100,
-      percentage: 'whole',
-    }),
-    intent: textField({
-      raw,
-      aliases: FIELD_ALIASES.intent,
-      label: 'intent',
-      maximum: 100,
-    }),
-    resultCount: numberField({
-      raw,
-      aliases: FIELD_ALIASES.resultCount,
-      label: 'result count',
-      integer: true,
-      minimum: 0,
-    }),
-    estimatedMonthlyTraffic: numberField({
-      raw,
-      aliases: FIELD_ALIASES.traffic,
-      label: 'estimated monthly traffic',
-      minimum: 0,
-    }),
   }
 }
 
@@ -451,11 +567,16 @@ export async function importResearchRows(
     format: source.format,
     label: 'Research',
   })
-  const progress = { bytesRead: 0, hash: createHash('sha256') }
+  const hash = createHash('sha256')
+  const progress: ImportProgress = {
+    bytesRead: 0,
+    hash,
+  }
   const fields = new Set<string>()
   const rowsByKey = new Map<string, ImportedResearchRow>()
   let suppliedRows = 0
   let sourceRows = 0
+  let filteredRows = 0
   let invalidRows = 0
   let duplicateRows = 0
   let omittedFieldNames = false
@@ -478,11 +599,16 @@ export async function importResearchRows(
       invalidRows += 1
       return
     }
-    const row = normalizeRow(raw)
-    if (!row) {
+    const normalized = normalizeRow(raw)
+    if (normalized.kind === 'filtered') {
+      filteredRows += 1
+      return
+    }
+    if (normalized.kind === 'invalid') {
       invalidRows += 1
       return
     }
+    const { row } = normalized
     const key = importedResearchRowKey(row)
     const existing = rowsByKey.get(key)
     if (existing) {
@@ -554,11 +680,28 @@ export async function importResearchRows(
 
   const rows = [...rowsByKey.values()].sort(compareImportedResearchRows)
   const capped = sourceRows > limit
+  if (
+    sourceRows > 0 &&
+    rows.length === 0 &&
+    filteredRows === 0 &&
+    invalidRows > 0
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Research import contained no valid ranked-keyword rows. Check that it includes a keyword, an absolute HTTP URL, and a current position.',
+    )
+  }
   const warnings: ImportedResearchRows['warnings'] = []
   if (invalidRows > 0) {
     warnings.push({
       code: 'invalid-import-rows',
       message: `${invalidRows} imported row${invalidRows === 1 ? '' : 's'} lacked a valid keyword, absolute HTTP URL, or position.`,
+    })
+  }
+  if (filteredRows > 0) {
+    warnings.push({
+      code: 'historical-import-rows',
+      message: `${filteredRows} imported comparison row${filteredRows === 1 ? '' : 's'} had no current ranking and ${filteredRows === 1 ? 'was' : 'were'} excluded.`,
     })
   }
   if (duplicateRows > 0) {
@@ -597,7 +740,9 @@ export async function importResearchRows(
       provider: source.provider,
       path: file.path,
       format: file.format,
-      sha256: progress.hash.digest('hex'),
+      encoding: progress.encoding ?? 'utf-8',
+      delimiter: progress.delimiter ?? null,
+      sha256: hash.digest('hex'),
       exportedAt,
       importedAt: now.toISOString(),
       includedFields: [...fields].sort((left, right) =>
@@ -608,6 +753,7 @@ export async function importResearchRows(
       fileRows: sourceRows,
       suppliedRows,
       validRows: rows.length,
+      filteredRows,
       invalidRows,
       duplicateRows,
       capped,

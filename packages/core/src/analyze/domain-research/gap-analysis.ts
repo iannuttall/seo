@@ -1,6 +1,9 @@
 import type { RankedKeyword } from '../../providers/domain-contracts.js'
 import type { CompetitorKeywordGapCandidate } from '../domain-research-contract.js'
-import { canonicalPseoTerm, pseoQueryTerms } from '../pseo/query-insights.js'
+import {
+  canonicalPseoTerm,
+  pseoQueryThemeTerms,
+} from '../pseo/query-insights.js'
 import { clusterPseoTemplates, templateForUrl } from '../pseo/templates.js'
 import type { GapAcquisition } from './gap-acquisition.js'
 import { compareText, normalizedKeyword, value } from './shared.js'
@@ -8,6 +11,7 @@ import { compareText, normalizedKeyword, value } from './shared.js'
 const MAX_RELEVANCE_QUERY_REFS = 3
 const MAX_FIRST_PARTY_PATTERN_URLS = 10_000
 export const MAX_TOKEN_ROWS_PER_TERM = 100
+const RELEVANCE_STOPWORDS = new Set(['com', 'http', 'https', 'www'])
 
 type CompetitorKeywordRow = {
   domain: string
@@ -16,8 +20,16 @@ type CompetitorKeywordRow = {
 }
 
 function terms(value: string): string[] {
+  const withoutSearchOperators = value.replace(
+    /(?:^|\s)-?(?:cache|filetype|intext|intitle|inurl|related|site):(?:"[^"]+"|\S+)/giu,
+    ' ',
+  )
   return [
-    ...new Set(pseoQueryTerms(value).map(canonicalPseoTerm).filter(Boolean)),
+    ...new Set(
+      pseoQueryThemeTerms(withoutSearchOperators)
+        .map(canonicalPseoTerm)
+        .filter((term) => term && !RELEVANCE_STOPWORDS.has(term)),
+    ),
   ].sort(compareText)
 }
 
@@ -71,40 +83,42 @@ function relevanceForKeyword(
   tokenIndex: Map<string, number[]>,
 ): CompetitorKeywordGapCandidate['relevance'] {
   const keywordTerms = terms(keyword)
-  const sharedTokens = keywordTerms.filter((token) => tokenIndex.has(token))
   const candidateRows = new Set<number>()
-  for (const token of sharedTokens) {
+  for (const token of keywordTerms) {
     for (const rowIndex of tokenIndex.get(token) ?? [])
       candidateRows.add(rowIndex)
   }
-  const matchedFirstPartyQueries = [...candidateRows]
+  const matches = [...candidateRows]
     .map((index) => acquisition.sourceRows.rows[index])
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
     .map((row) => ({
       query: row.query,
-      overlap: terms(row.query).filter((token) => keywordTerms.includes(token))
-        .length,
+      sharedTokens: terms(row.query).filter((token) =>
+        keywordTerms.includes(token),
+      ),
       impressions: row.impressions,
     }))
-    .filter((row) => row.overlap > 0)
+    .filter((row) => row.sharedTokens.length > 0)
     .sort(
       (left, right) =>
-        right.overlap - left.overlap ||
+        right.sharedTokens.length - left.sharedTokens.length ||
         right.impressions - left.impressions ||
         compareText(left.query, right.query),
     )
     .slice(0, MAX_RELEVANCE_QUERY_REFS)
-    .map((row) => row.query)
+  const maximumOverlap = matches[0]?.sharedTokens.length ?? 0
   return {
     state:
-      sharedTokens.length >= 2
+      maximumOverlap >= 2
         ? 'observed-overlap'
-        : sharedTokens.length === 1
+        : maximumOverlap === 1
           ? 'weak-overlap'
           : 'unavailable',
-    sharedTokens,
-    matchedFirstPartyQueries,
-    method: 'bounded-lexical-overlap-v1',
+    sharedTokens: [...new Set(matches.flatMap((row) => row.sharedTokens))].sort(
+      compareText,
+    ),
+    matchedFirstPartyQueries: matches.map((row) => row.query),
+    method: 'bounded-query-theme-overlap-v2',
   }
 }
 

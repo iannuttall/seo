@@ -75,6 +75,10 @@ test('user data uses the free account endpoint and returns owned fields', async 
       },
       searchMentions: { perRequestMicros: 100_000, perResultMicros: 1_000 },
     },
+    aiPromptObservationPrice: {
+      perRequestMicros: 600,
+      perResultMicros: 0,
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: 2_000,
       perResultMicros: 0,

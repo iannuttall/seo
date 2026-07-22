@@ -84,6 +84,10 @@ function accountPricing(): DataForSeoAccountSnapshot {
       multiTargetMetrics: { perRequestMicros: null, perResultMicros: null },
       searchMentions: { perRequestMicros: null, perResultMicros: null },
     },
+    aiPromptObservationPrice: {
+      perRequestMicros: 600,
+      perResultMicros: 0,
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: null,
       perResultMicros: null,

@@ -221,6 +221,24 @@ seo reports run domain-overview \
   --json
 ```
 
+Ranked-keyword exports work without provider API access. Pass one to four
+local DataForSEO, Semrush or Ahrefs files through the same report pipeline:
+
+```sh
+seo reports run competitor-keyword-gap \
+  --params-file ./competitor-gap-run.json \
+  --json
+```
+
+The parameter file uses `researchFiles`. Each item records
+`dataset: "ranked-keywords"`, the local `file`, its `provider`, and the real
+`exportedAt` date. CSV, TSV, JSON, JSONL and NDJSON are supported. The output
+keeps a SHA-256 hash, included fields, row counts, invalid rows, duplicates and
+caps under `evidence.imports`. Imported files can feed `ranked-keywords`,
+`ranking-pages`, `serp-competitors` and `competitor-keyword-gap` without
+adding another command or MCP tool. The [research provider guide](https://seoskill.dev/docs/research-providers)
+has the exact JSON shape, market guidance and file limits.
+
 The research flow now covers:
 
 - `keyword-research`, `keyword-metrics`, and `saved-keywords` for discovery,

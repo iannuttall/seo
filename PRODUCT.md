@@ -46,10 +46,14 @@ evidence. Keep the human path calm. Keep the agent path powerful.
 ## Product purpose
 
 A local-first SEO engine. It exists so that anyone, or any agent, can audit a
-site and act on real evidence without a hosted platform, an account, or a
-subscription. Reports, tokens, and caches stay on the user's machine. Success
-is a report that is technically defensible, an agent that picks the right
-report without help, and a user who trusts the output enough to act on it.
+site, research its search market, and act on real evidence without a required
+hosted platform or product account. Crawl, Search Console, and Google Analytics
+provide first-party and directly observed evidence. Optional research
+providers add keyword, result, domain, competitor, and link estimates with
+their costs and limits kept visible. Reports, tokens, and caches stay on the
+user's machine. Success is a report that is technically defensible, an agent
+that picks the right report without help, and a user who trusts the output
+enough to act on it.
 
 ## Vocabulary
 

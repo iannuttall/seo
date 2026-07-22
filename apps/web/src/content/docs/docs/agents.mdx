@@ -15,6 +15,8 @@ Good requests name the site and the decision you need to make:
 - "Compare the latest two crawls and list high-severity regressions introduced in the new one."
 - "Audit this pricing page before I change its canonical and internal links."
 - "Check whether this traffic decline is present in a complete Search Console window."
+- "Find recurring search competitors for these product queries, then leave unknown site types unclassified."
+- "Compare these two competitors with our retained Search Console themes and existing provider ranks."
 
 "Do all my SEO" gives the agent no useful stopping point. Start with
 `seo report` when the request really is broad, then let its recommendations
@@ -97,6 +99,14 @@ or withhold rows. A crawl can stop at its page cap. Those states are reasons to
 bound a conclusion, not reasons to fill the gap with a guess. The
 [Google data guide](/docs/google) covers the provider-specific limits.
 
+Research providers add a different kind of evidence. Keyword volume,
+difficulty, traffic, intent, visibility, domain footprint and ranking history
+are estimates. Keep them separate from Search Console measurements, current
+crawl evidence and live result snapshots. Read provider request filters,
+market, observation time, cache state, cost and coverage before using the
+finding. The [research provider guide](/docs/research-providers) covers those
+boundaries and local spend controls.
+
 ## Ask for a small follow-up
 
 The first result should identify the affected set. The next call should inspect
@@ -112,6 +122,17 @@ A sensible sequence looks like this:
 
 This is slower than a made-up answer and much faster than fixing the wrong
 page.
+
+For competitor and programmatic research, use a separate narrow sequence:
+
+1. Run `serp-competitors` for an explicit keyword set.
+2. Classify unknown domains and remove publishers, directories or communities
+   that do not match the decision.
+3. Run `competitor-keyword-gap` with no more than three relevant domains.
+4. Review first-party overlap and existing provider ranks before opening a gap
+   candidate.
+5. Check current results, representative pages and the returned data-source
+   brief before proposing a new programmatic template.
 
 ## Treat agent output as analysis, not provider truth
 

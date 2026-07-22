@@ -1,4 +1,5 @@
 import { REPORT_DEPTH, type ReportDepth } from './report-depth.js'
+import { REPORT_GUIDANCE_DOMAIN_RESEARCH } from './report-guidance-domain-research.js'
 
 export type { RelatedReport, ReportDepth } from './report-depth.js'
 
@@ -16,6 +17,7 @@ export type ReportGuidance = {
 export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
+  ...REPORT_GUIDANCE_DOMAIN_RESEARCH,
   'affected-urls': {
     name: 'URLs affected by a crawl issue',
     description:

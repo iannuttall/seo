@@ -1,6 +1,6 @@
 ---
-title: Set up the SEO CLI and run your first audit
-description: Install the SEO CLI and run setup to connect Search Console, save your site and complete your first audit. Google Analytics can wait until you need it.
+title: Set up SEO and run your first audit
+description: Install the command, connect Search Console, save your site and complete your first audit. Google Analytics and research providers can wait until you need them.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search
@@ -134,6 +134,22 @@ operating system.
 Use `seo auth logout` to delete local Google tokens. Use `seo reset` only when
 you want to remove all local SEO data. The [privacy policy](/privacy)
 documents every storage and network boundary.
+
+## Add research data when the question needs it
+
+The first report does not require a paid research provider. Connect DataForSEO
+later when keyword estimates, current results, domain footprints, ranking pages
+or competitor research would change the work:
+
+```sh
+seo providers dataforseo connect
+seo providers dataforseo status --check
+seo providers dataforseo limits
+```
+
+Keep local spend limits in place before broad research. The [research provider
+guide](/docs/research-providers) explains costs, caching, country-level domain
+reports, first-party evidence joins and programmatic SEO research.
 
 ## Add your agent after the first report works
 

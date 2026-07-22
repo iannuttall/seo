@@ -1,6 +1,6 @@
 ---
-title: SEO CLI commands
-description: Use the SEO CLI to audit a site, investigate lost traffic and save evidence before you make a change. Scripts and CI can run the same reports as JSON.
+title: SEO commands
+description: Audit a site, investigate lost traffic, research search opportunities and save evidence before you make a change. Scripts and CI can run the same reports as JSON.
 ---
 
 The CLI has a short path for normal work and a report registry for agents and
@@ -15,6 +15,9 @@ answer.
 | Broad technical review before connecting Google | `seo report --url <url>` |
 | Rank the next search and technical actions | `seo refresh-priorities` |
 | Find page-one rankings with weak CTR evidence | `seo quick-wins` |
+| Research keyword ideas and market estimates | `keyword-research`, `keyword-metrics` |
+| Find recurring search competitors | `serp-competitors` |
+| Compare relevant competitor keyword gaps | `competitor-keyword-gap` |
 | Review rankings averaging positions 10 to 20 | `seo second-page` |
 | Check crawl and index monitoring evidence | `seo technical-watch` |
 | Audit one live URL | `seo audit-page --url <url>` |
@@ -75,6 +78,31 @@ row limits, and omitted-query caveats before you call a list complete.
 
 The [Google data guide](/docs/google) explains why Search Console chart totals
 and exported query rows can differ.
+
+## Add independent keyword and competitor research
+
+Provider-backed reports use the same discovery and run commands as every other
+report:
+
+```sh
+seo providers dataforseo connect
+seo providers dataforseo limits
+seo reports describe serp-competitors --json
+seo reports describe competitor-keyword-gap --json
+```
+
+Start with `keyword-opportunities` when Search Console demand should lead the
+investigation. Use `serp-competitors` to find recurring domains across an
+explicit keyword set. Classify the relevant domains, then compare no more than
+three with `competitor-keyword-gap`.
+
+Domain research uses country and language. Use `serp-results` for a current
+place and device-specific result snapshot. Provider estimates, first-party
+measurements and live observations keep separate fields and caveats.
+
+The [research provider guide](/docs/research-providers) covers credentials,
+local cost limits, caching, supported reports and programmatic data-source
+checks.
 
 ## Save technical evidence before you change the site
 

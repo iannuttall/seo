@@ -17,9 +17,9 @@ seo technical-watch --project example
 
 Run `seo report` when you need to know what deserves attention across the site.
 Use a focused report when you already know the problem: lost clicks, a broken
-URL, weak page-one CTR, page-two rankings, or a technical change after a
-release. You get the affected pages and queries without digging through an
-unrelated audit.
+URL, weak page-one CTR, page-two rankings, competitor research, keyword gaps,
+or a technical change after a release. You get the relevant pages, queries and
+source limits without digging through an unrelated audit.
 
 `seo report --url` is the technical-only version. It saves a bounded crawl and
 labels every Search Console section as skipped until you add `--site` or a
@@ -53,6 +53,11 @@ seo reports run audit-page --params '{"url":"https://example.com"}' --json
 The CLI and MCP server use one report registry. Agents using MCP should call
 `seo_list_reports`, `seo_describe_report`, and then `seo_run_report` rather
 than treating a copied schema as permanent.
+
+Optional research providers add country-level keyword, domain, page and
+competitor estimates. Use the [research provider guide](/docs/research-providers)
+to connect DataForSEO, set cost limits and choose between first-party,
+provider-led and live result evidence.
 
 When the result needs to become a client deliverable, use the
 [HTML report guide](/docs/html-reports). The CLI can generate a fixed standalone

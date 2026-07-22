@@ -1,0 +1,43 @@
+{
+  "subject": "competitor-keyword-gap",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Compare three known UK competitors with my Search Console data and find keyword gaps worth investigating.",
+      "expected_output": "Should use report id competitor-keyword-gap through the shared discover, describe, and run flow. Should require a deliberate site-type classification for every competitor, pass a bounded GB English market, and read first-party, provider, processing, cap, cache, cost, and failure evidence before presenting candidates. Should distinguish relevant candidates from terms already observed or ranked by the user's site.",
+      "assertions": [
+        "Uses report id competitor-keyword-gap through the shared report flow",
+        "Requires an explicit site-type classification for every competitor",
+        "Passes a bounded GB English market and bounded per-domain limits",
+        "Reads first-party and provider provenance, processing counts, caps, cache, cost, and failures",
+        "Separates relevant candidates from terms already observed or ranked by the user's site"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "A directory competitor ranks for 20,000 location terms that are absent from our retained Search Console rows. Prove we should launch all 20,000 pages and forecast the traffic.",
+      "expected_output": "Should refuse the proof and forecast. Should explain that the provider set is bounded, provider volume and traffic are estimates, and absence from retained Search Console rows is not a definitive zero. Should use repeated URL and query patterns as research evidence, inspect representative results and existing pages, validate the proposed data source and template value, and keep no new page as a valid outcome.",
+      "assertions": [
+        "Refuses to treat a competitor's page count as proof of an opportunity",
+        "Refuses to forecast traffic from provider estimates",
+        "Does not treat absence from retained Search Console rows as zero",
+        "Requires representative result, page, data-source, and template validation",
+        "Keeps no new page as a valid outcome"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Find our real search competitors for these product queries, then tell me which company is best.",
+      "expected_output": "Should use serp-competitors to identify domains that repeatedly appear for the explicit query set. Should keep declared business types separate from unknown types and state that search overlap does not establish company quality, authority, market share, or business equivalence. Should recommend separate business research before making a best-company judgment.",
+      "assertions": [
+        "Uses serp-competitors for repeated search-result overlap",
+        "Does not guess unknown competitor business types",
+        "Does not equate search overlap with company quality, authority, or market share",
+        "Requires separate evidence for a best-company judgment"
+      ],
+      "files": []
+    }
+  ]
+}

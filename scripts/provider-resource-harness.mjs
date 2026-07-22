@@ -18,11 +18,13 @@ const {
   addKeywordsToSet,
   analyzeQuickWinsFromRows,
   clearCache,
+  competitorKeywordGapReport,
   createKeywordSet,
   DataForSeoClient,
   getCacheStats,
   KEYWORD_SET_LIMITS,
   keywordSetLogicalBytes,
+  observedValue,
   savedKeywordSetReport,
 } = await import('../dist/index.js')
 const rows = Array.from({ length: ROW_COUNT }, (_, index) => ({
@@ -131,6 +133,171 @@ assert.ok(keywordSetDurationMs <= KEYWORD_SET_MAX_DURATION_MS)
 assert.ok(keywordSetRssGrowthBytes <= KEYWORD_SET_MAX_RSS_GROWTH)
 assert.ok(keywordSetLogicalSize <= KEYWORD_SET_LIMITS.logicalBytes)
 assert.ok(keywordSetOutputBytes <= KEYWORD_SET_MAX_OUTPUT_BYTES)
+
+const DOMAIN_GSC_ROWS = 100_000
+const DOMAIN_ROWS_PER_COMPETITOR = 250
+const DOMAIN_MAX_DURATION_MS = 10_000
+const DOMAIN_MAX_RSS_GROWTH = 384 * MEBIBYTE
+const DOMAIN_MAX_OUTPUT_BYTES = 2 * MEBIBYTE
+let domainProviderCalls = 0
+
+function domainMetric(keyword, url, rank) {
+  const missing = {
+    state: 'missing',
+    value: null,
+    reason: 'Not present in the resource fixture.',
+  }
+  return {
+    keyword,
+    url,
+    rankGroup: rank,
+    rankAbsolute: rank,
+    resultType: 'organic',
+    monthlySearchVolume: observedValue(100),
+    monthlySearches: missing,
+    searchVolumeUpdatedAt: missing,
+    cpcUsd: observedValue(1),
+    paidCompetition: observedValue(0.2),
+    keywordDifficulty: observedValue(20),
+    intent: observedValue('commercial'),
+    resultCount: missing,
+    estimatedMonthlyTraffic: observedValue(5),
+  }
+}
+
+function rankedEvidence(target, rows) {
+  return {
+    schemaVersion: 1,
+    provider: 'dataforseo',
+    capability: 'ranked-keywords',
+    data: { target, rows, totalRows: rows.length },
+    observedAt: '2026-07-21T12:00:00.000Z',
+    market: {
+      searchEngine: 'google',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    coverage: {
+      requestedRows: rows.length,
+      returnedRows: rows.length,
+      retainedRows: rows.length,
+      invalidRows: 0,
+      providerTotalRows: rows.length,
+      completeness: 'complete',
+      nextCursor: null,
+    },
+    cache: { status: 'miss', storedAt: null, expiresAt: null },
+    cost: {
+      currency: 'USD',
+      estimatedMicros: 12_000,
+      actualMicros: 12_000,
+      taskIds: ['resource-domain-task'],
+    },
+    request: {
+      operation: 'ranked-keywords',
+      endpoint: 'resource-fixture',
+      limit: rows.length,
+      filters: {},
+      sort: [],
+    },
+    warnings: [],
+  }
+}
+
+const domainGscRows = Array.from({ length: DOMAIN_GSC_ROWS }, (_, index) => ({
+  keys: [
+    `widget category ${index}`,
+    `https://example.com/categories/${index % 10_000}`,
+  ],
+  clicks: index % 5,
+  impressions: 100 + (index % 100),
+  ctr: (index % 5) / (100 + (index % 100)),
+  position: 5 + (index % 20),
+}))
+const domainAdapter = {
+  provider: 'dataforseo',
+  capabilitySupport: [
+    {
+      capability: 'ranked-keywords',
+      status: 'available',
+      markets: [{ searchEngines: ['google'], location: 'country-only' }],
+    },
+  ],
+  rankedKeywords: async ({ target }) => {
+    domainProviderCalls += 1
+    const rows =
+      target === 'example.com'
+        ? []
+        : Array.from({ length: DOMAIN_ROWS_PER_COMPETITOR }, (_, index) =>
+            domainMetric(
+              `widget category ${index}`,
+              `https://${target}/locations/place-${index}`,
+              1 + (index % 20),
+            ),
+          )
+    return rankedEvidence(target, rows)
+  },
+}
+const domainBaselineRss = process.memoryUsage().rss
+const domainStartedAt = performance.now()
+const domainReport = await competitorKeywordGapReport(
+  {
+    site: 'sc-domain:example.com',
+    competitors: [
+      { domain: 'one.test', siteType: 'business' },
+      { domain: 'two.test', siteType: 'business' },
+      { domain: 'three.test', siteType: 'business' },
+    ],
+    market: {
+      searchEngine: 'google',
+      countryCode: 'GB',
+      languageCode: 'en',
+    },
+    limitPerDomain: DOMAIN_ROWS_PER_COMPETITOR,
+    candidateLimit: 50,
+  },
+  {
+    candidates: [{ adapter: domainAdapter, connected: true, priority: 1 }],
+    now: () => new Date('2026-07-21T12:00:00.000Z'),
+    searchAnalytics: async () => ({
+      rows: domainGscRows,
+      rowsFetched: DOMAIN_GSC_ROWS,
+      calls: 20,
+    }),
+  },
+)
+const domainDurationMs = performance.now() - domainStartedAt
+const domainRssGrowthBytes = Math.max(
+  0,
+  process.memoryUsage().rss - domainBaselineRss,
+)
+const domainOutputBytes = Buffer.byteLength(JSON.stringify(domainReport))
+console.log(
+  JSON.stringify({
+    report: 'competitor-keyword-gap',
+    sourceRows: DOMAIN_GSC_ROWS,
+    providerCalls: domainProviderCalls,
+    providerRows: 3 * DOMAIN_ROWS_PER_COMPETITOR,
+    returnedCandidates: domainReport.candidates.length,
+    durationMs: Math.round(domainDurationMs),
+    rssGrowthMiB: Number((domainRssGrowthBytes / MEBIBYTE).toFixed(1)),
+    bytesRead: Buffer.byteLength(JSON.stringify(domainGscRows)),
+    bytesWritten: 0,
+    outputBytes: domainOutputBytes,
+  }),
+)
+assert.equal(domainProviderCalls, 4)
+assert.equal(domainReport.dataStatus, 'partial')
+assert.equal(domainReport.source.firstParty.possiblyTruncated, true)
+assert.equal(domainReport.candidates.length, 50)
+assert.equal(domainReport.processing.firstPartyRows, DOMAIN_GSC_ROWS)
+assert.equal(domainReport.processing.sourceTermVisits, DOMAIN_GSC_ROWS * 3)
+assert.ok(
+  domainReport.processing.retainedTokenPostings <= DOMAIN_GSC_ROWS + 200,
+)
+assert.ok(domainDurationMs <= DOMAIN_MAX_DURATION_MS)
+assert.ok(domainRssGrowthBytes <= DOMAIN_MAX_RSS_GROWTH)
+assert.ok(domainOutputBytes <= DOMAIN_MAX_OUTPUT_BYTES)
 
 const BATCHES = 20
 const KEYWORDS_PER_BATCH = 100

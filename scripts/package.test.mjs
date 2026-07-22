@@ -39,6 +39,18 @@ test('the clean package install check builds workspace dependencies', () => {
   )
 })
 
+test('CI reuses the verified build without dropping any gates', async () => {
+  const ci = await readFile('.github/workflows/ci.yml', 'utf8')
+
+  assert.match(ci, /pnpm build/)
+  assert.match(ci, /pnpm typecheck/)
+  assert.match(ci, /pnpm test:built/)
+  assert.match(ci, /pnpm test:package-install:built/)
+  assert.match(ci, /pnpm lint:static/)
+  assert.match(ci, /pnpm security:check/)
+  assert.doesNotMatch(ci, /run: pnpm (?:test|test:package-install|lint)$/m)
+})
+
 test('the public TypeScript library and MCP entry points load', async () => {
   const [core, mcp] = await Promise.all([
     import('../dist/index.js'),

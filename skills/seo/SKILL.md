@@ -61,7 +61,7 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |
 | Track exact keyword positions | `rank-tracking` for a saved set and fixed market/device; `serp-results` for one current query |
 | Review Bing traffic, crawl, query, and page insights | `bing-webmaster-overview`, then `site-crawl` when live page evidence is needed |
-| See who links to the site | `link-evidence`, then verify selected referring URLs directly |
+| Review referring links and linked targets | `link-evidence`, then verify selected referring URLs and flagged targets directly |
 | Review real crawler requests in a server log | `server-log-analysis`, then verify important errors against the original log and server configuration |
 | Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
 | Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
@@ -115,8 +115,9 @@ recommend a User-Agent-only bypass.
 ## Beyond the report catalog
 
 Use `seo help all` for direct provider and administration commands. Bing setup
-uses `seo providers bing`; link evidence uses `seo links --project <id> --json`
-or `seo links --file <path> --json`. IndexNow writes externally: validate with
+uses `seo providers bing`; link evidence uses `seo links --project <id> --json`,
+`seo links --provider dataforseo --target <domain> --json`, or a local file.
+IndexNow writes externally: validate with
 `seo indexnow submit --dry-run --json` and remove dry run only when authorised.
 Receipt does not prove crawling or indexing. Prefer registered reports.
 

@@ -22,12 +22,15 @@ import type {
 import type { ProviderSpendLimits } from '../cost-limits.js'
 import { ProviderError } from '../errors.js'
 import { type ProviderFetch, providerRequestJson } from '../transport.js'
+import { dataForSeoAccountPrices } from './account-pricing.js'
 import {
   type DataForSeoUserDataResponse,
   dataForSeoUserDataResponseSchema,
 } from './account-schema.js'
 import type {
   DataForSeoAccountSnapshot,
+  DataForSeoBacklinksRequest,
+  DataForSeoBacklinksSnapshot,
   DataForSeoClientOptions,
   DataForSeoDomainOverviewRequest,
   DataForSeoDomainOverviewSnapshot,
@@ -35,10 +38,14 @@ import type {
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoLinkSummaryRequest,
+  DataForSeoLinkSummarySnapshot,
   DataForSeoRankedKeywordsRequest,
   DataForSeoRankedKeywordsSnapshot,
   DataForSeoRankingPagesRequest,
   DataForSeoRankingPagesSnapshot,
+  DataForSeoReferringDomainsRequest,
+  DataForSeoReferringDomainsSnapshot,
   DataForSeoSerpCompetitorsRequest,
   DataForSeoSerpCompetitorsSnapshot,
   DataForSeoSerpReadyTask,
@@ -62,6 +69,12 @@ import {
   rankingPagesPaidRequest,
   serpCompetitorsPaidRequest,
 } from './domain-client.js'
+import {
+  backlinksPaidRequest,
+  DEFAULT_LINK_TTL_MS,
+  linkSummaryPaidRequest,
+  referringDomainsPaidRequest,
+} from './link-client.js'
 import {
   type DataForSeoPaidResponse,
   type DataForSeoUnitPrice,
@@ -111,6 +124,8 @@ const MAX_DISCOVERY_ROWS = 100
 
 export type {
   DataForSeoAccountSnapshot,
+  DataForSeoBacklinksRequest,
+  DataForSeoBacklinksSnapshot,
   DataForSeoClientOptions,
   DataForSeoDomainOverviewRequest,
   DataForSeoDomainOverviewSnapshot,
@@ -118,91 +133,19 @@ export type {
   DataForSeoKeywordDiscoverySnapshot,
   DataForSeoKeywordOverviewRequest,
   DataForSeoKeywordOverviewSnapshot,
+  DataForSeoLinkSummaryRequest,
+  DataForSeoLinkSummarySnapshot,
   DataForSeoRankedKeywordsRequest,
   DataForSeoRankedKeywordsSnapshot,
   DataForSeoRankingPagesRequest,
   DataForSeoRankingPagesSnapshot,
+  DataForSeoReferringDomainsRequest,
+  DataForSeoReferringDomainsSnapshot,
   DataForSeoSerpCompetitorsRequest,
   DataForSeoSerpCompetitorsSnapshot,
   DataForSeoSerpRequest,
   DataForSeoSerpSnapshot,
 } from './client-types.js'
-
-type UserDataAccount = NonNullable<
-  DataForSeoUserDataResponse['tasks'][number]['result']
->[number]
-
-function unitPrice(
-  components: Array<{ cost_type: string; cost: number }> | null | undefined,
-): DataForSeoUnitPrice {
-  const prices = components ?? []
-  const total = (type: 'per_request' | 'per_result') => {
-    const matching = prices.filter((item) => item.cost_type === type)
-    return matching.length
-      ? matching.reduce(
-          (sum, item) => sum + Math.round(item.cost * 1_000_000),
-          0,
-        )
-      : prices.length
-        ? 0
-        : null
-  }
-  return {
-    perRequestMicros: total('per_request'),
-    perResultMicros: total('per_result'),
-  }
-}
-
-function keywordOverviewPrice(account: UserDataAccount): DataForSeoUnitPrice {
-  return unitPrice(
-    account.price?.dataforseo_labs?.keyword_overview?.live?.priority_normal,
-  )
-}
-
-function keywordDiscoveryPrices(
-  account: UserDataAccount,
-): DataForSeoAccountSnapshot['keywordDiscoveryPrices'] {
-  return {
-    ideas: unitPrice(
-      account.price?.dataforseo_labs?.keyword_ideas?.live?.priority_normal,
-    ),
-    related: unitPrice(
-      account.price?.dataforseo_labs?.related_keywords?.live?.priority_normal,
-    ),
-    suggestions: unitPrice(
-      account.price?.dataforseo_labs?.keyword_suggestions?.live
-        ?.priority_normal,
-    ),
-  }
-}
-
-function domainResearchPrices(
-  account: UserDataAccount,
-): DataForSeoAccountSnapshot['domainResearchPrices'] {
-  return {
-    domainOverview: unitPrice(
-      account.price?.dataforseo_labs?.domain_rank_overview?.live
-        ?.priority_normal,
-    ),
-    rankedKeywords: unitPrice(
-      account.price?.dataforseo_labs?.ranked_keywords?.live?.priority_normal,
-    ),
-    rankingPages: unitPrice(
-      account.price?.dataforseo_labs?.relevant_pages?.live?.priority_normal,
-    ),
-    serpCompetitors: unitPrice(
-      account.price?.dataforseo_labs?.serp_competitors?.live?.priority_normal,
-    ),
-  }
-}
-
-function serpLiveAdvancedPrice(account: UserDataAccount): DataForSeoUnitPrice {
-  return unitPrice(account.price?.serp?.live?.advanced?.priority_normal)
-}
-
-function serpTaskPostPrice(account: UserDataAccount): DataForSeoUnitPrice {
-  return unitPrice(account.price?.serp?.task_post?.priority_normal)
-}
 
 function responseTaskIds(response: DataForSeoPaidResponse): string[] {
   return [
@@ -238,6 +181,7 @@ export class DataForSeoClient {
   private readonly serpTtlMs: number
   private readonly accountPricingTtlMs: number
   private readonly domainResearchTtlMs: number
+  private readonly linkTtlMs: number
   private readonly spendLimits: ProviderSpendLimits | undefined
   private accountPricing:
     | {
@@ -271,6 +215,7 @@ export class DataForSeoClient {
       options.accountPricingTtlMs ?? DEFAULT_ACCOUNT_PRICING_TTL_MS
     this.domainResearchTtlMs =
       options.domainResearchTtlMs ?? DEFAULT_DOMAIN_RESEARCH_TTL_MS
+    this.linkTtlMs = options.linkTtlMs ?? DEFAULT_LINK_TTL_MS
     this.spendLimits = options.spendLimits
   }
 
@@ -382,11 +327,7 @@ export class DataForSeoClient {
       accountDailyLimitMicros: dataForSeoUsdToMicros(
         account.money?.limits?.day?.total,
       ),
-      keywordOverviewPrice: keywordOverviewPrice(account),
-      keywordDiscoveryPrices: keywordDiscoveryPrices(account),
-      domainResearchPrices: domainResearchPrices(account),
-      serpLiveAdvancedPrice: serpLiveAdvancedPrice(account),
-      serpTaskPostPrice: serpTaskPostPrice(account),
+      ...dataForSeoAccountPrices(account),
       backlinksSubscriptionExpiresAt:
         account.backlinks_subscription_expiry_date ?? null,
       aiMentionsSubscriptionExpiresAt:
@@ -513,6 +454,24 @@ export class DataForSeoClient {
     return this.paidPost(
       serpCompetitorsPaidRequest(input, this.domainResearchTtlMs),
     )
+  }
+
+  async linkSummary(
+    input: DataForSeoLinkSummaryRequest,
+  ): Promise<DataForSeoLinkSummarySnapshot> {
+    return this.paidPost(linkSummaryPaidRequest(input, this.linkTtlMs))
+  }
+
+  async backlinks(
+    input: DataForSeoBacklinksRequest,
+  ): Promise<DataForSeoBacklinksSnapshot> {
+    return this.paidPost(backlinksPaidRequest(input, this.linkTtlMs))
+  }
+
+  async referringDomains(
+    input: DataForSeoReferringDomainsRequest,
+  ): Promise<DataForSeoReferringDomainsSnapshot> {
+    return this.paidPost(referringDomainsPaidRequest(input, this.linkTtlMs))
   }
 
   async keywordOverview(

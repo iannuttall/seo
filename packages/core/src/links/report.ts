@@ -1,4 +1,5 @@
 import { SeoError } from '../errors.js'
+import type { LinkTargetContext } from './context.js'
 import type {
   CollectedLinkEvidence,
   LinkEvidenceRow,
@@ -7,6 +8,11 @@ import type {
 
 const DEFAULT_OUTPUT_LIMIT = 100
 const MAX_OUTPUT_LIMIT = 500
+const MAX_TARGET_COUNTS = 100
+const MAX_CONTEXT_ROWS = 100
+const MAX_FINDINGS = 50
+const MAX_STRUCTURED_DETAIL_ROWS =
+  MAX_OUTPUT_LIMIT + MAX_TARGET_COUNTS + MAX_CONTEXT_ROWS + MAX_FINDINGS
 
 function boundedLimit(value?: number): number {
   const limit = value ?? DEFAULT_OUTPUT_LIMIT
@@ -29,13 +35,14 @@ function targetCounts(rows: LinkEvidenceRow[]): LinkTargetCount[] {
     .sort(
       (a, b) =>
         b.observedLinks - a.observedLinks ||
-        a.targetUrl.localeCompare(b.targetUrl, 'en'),
+        (a.targetUrl < b.targetUrl ? -1 : a.targetUrl > b.targetUrl ? 1 : 0),
     )
 }
 
 export function linkEvidenceReport(input: {
   evidence: CollectedLinkEvidence
   limit?: number
+  targetContext?: LinkTargetContext
 }) {
   const limit = boundedLimit(input.limit)
   const rows = input.evidence.rows.slice(0, limit)
@@ -45,8 +52,32 @@ export function linkEvidenceReport(input: {
     ? input.evidence.targetCounts
     : observedTargets
 
+  const providerEvidence = input.evidence.externalProvider
+    ? {
+        summary: input.evidence.externalProvider.summary,
+        backlinks: {
+          ...input.evidence.externalProvider.backlinks,
+          data: {
+            target: input.evidence.externalProvider.backlinks.data.target,
+            mode: input.evidence.externalProvider.backlinks.data.mode,
+            totalRows: input.evidence.externalProvider.backlinks.data.totalRows,
+            retainedRows:
+              input.evidence.externalProvider.backlinks.data.rows.length,
+          },
+        },
+      }
+    : null
+  const targetCountsOutput = counts.slice(0, MAX_TARGET_COUNTS)
+  const contextRows = input.targetContext?.rows.slice(0, MAX_CONTEXT_ROWS) ?? []
+  const findings = input.targetContext?.findings.slice(0, MAX_FINDINGS) ?? []
+  const returnedDetailRows =
+    rows.length +
+    targetCountsOutput.length +
+    contextRows.length +
+    findings.length
+
   return {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     generatedAt: new Date().toISOString(),
     dataStatus:
       input.evidence.provenance.completeness === 'complete'
@@ -59,6 +90,8 @@ export function linkEvidenceReport(input: {
         .size,
       providerTargetPages: counts.length,
     },
+    providerSummary: providerEvidence?.summary.data ?? null,
+    providerEvidence,
     provenance: input.evidence.provenance,
     selection: {
       availableRows: input.evidence.rows.length,
@@ -66,13 +99,63 @@ export function linkEvidenceReport(input: {
       omittedRows: Math.max(0, input.evidence.rows.length - rows.length),
       limit,
     },
-    targetCounts: counts.slice(0, 100),
+    outputBudget: {
+      unit: 'structured-detail-rows' as const,
+      limit: MAX_STRUCTURED_DETAIL_ROWS,
+      returned: returnedDetailRows,
+      omitted: Math.max(
+        0,
+        input.evidence.rows.length -
+          rows.length +
+          Math.max(0, counts.length - targetCountsOutput.length) +
+          Math.max(
+            0,
+            (input.targetContext?.rows.length ?? 0) - contextRows.length,
+          ) +
+          Math.max(
+            0,
+            (input.targetContext?.findings.length ?? 0) - findings.length,
+          ),
+      ),
+      sections: {
+        links: { limit: MAX_OUTPUT_LIMIT, returned: rows.length },
+        targetCounts: {
+          limit: MAX_TARGET_COUNTS,
+          returned: targetCountsOutput.length,
+        },
+        targetContext: {
+          limit: MAX_CONTEXT_ROWS,
+          returned: contextRows.length,
+        },
+        findings: { limit: MAX_FINDINGS, returned: findings.length },
+      },
+    },
+    targetCounts: targetCountsOutput,
     links: rows,
-    warnings: input.evidence.warnings,
+    targetContext: input.targetContext
+      ? { ...input.targetContext, rows: contextRows, findings }
+      : null,
+    findings,
+    warnings: [
+      ...input.evidence.warnings,
+      ...(input.targetContext?.warnings ?? []),
+    ],
     caveats: [
       'This is bounded provider or imported evidence, not a complete backlink index.',
       'A missing link is not proof that no link exists, and an observed link is not a quality or ranking verdict.',
       'Referring-domain counts describe the retained rows only.',
+      ...(providerEvidence
+        ? [
+            'Provider profile counts describe its current index. The representative link rows are a separate bounded sample.',
+            'Provider rank and spam metrics keep their provider names and scales. They are context, not ranking factors or universal authority scores.',
+          ]
+        : []),
+      ...(input.targetContext
+        ? [
+            'Search Console page rows are retained first-party evidence. Missing or capped rows are never treated as zero.',
+            'Saved crawl findings describe the recorded crawl time. Verify the live target before changing it.',
+          ]
+        : []),
     ],
   }
 }

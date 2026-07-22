@@ -204,8 +204,9 @@ export const reportGuideOverridesAF: Partial<
     alternatives: [
       {
         when: 'You need the current answer for a fixed prompt rather than an indexed research dataset.',
+        reportId: 'ai-prompt-observations',
         doInstead:
-          'Record a repeatable fixed prompt observation. Keep the prompt, product, model, market, time, answer, and citations together so a later observation can be compared on the same terms.',
+          'Run AI prompt observations. Keep the prompt, surface, requested and effective model, market label, settings, time, answer, and citations together so a later compatible observation can be compared.',
       },
       {
         when: 'You need measured visits from known AI products.',
@@ -902,10 +903,9 @@ export const reportGuideOverridesAF: Partial<
       },
       {
         when: 'You need to know whether Google will show a page in an AI Overview or how often it already appears there.',
-        href: '/docs/ai-visibility',
-        label: 'AI visibility tracking',
+        reportId: 'ai-mention-research',
         doInstead:
-          'SEO Skill does not measure AI Overview selection or visibility yet. The AI visibility tracking guide explains what can be measured now and what the planned provider-backed report will cover.',
+          'No report can predict whether Google will select a page. Run AI mention research for bounded provider-indexed Google AI Overview evidence, then inspect its coverage, market, question samples, and citations before describing visibility.',
       },
     ],
     seo: {

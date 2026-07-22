@@ -16,6 +16,10 @@ import {
   createAiMentionResearchHandler,
 } from './report-definitions/ai-mention-research.js'
 import {
+  aiPromptObservationsInputSchema,
+  createAiPromptObservationsHandler,
+} from './report-definitions/ai-prompt-observations.js'
+import {
   getReportGuidance,
   REPORT_GUIDANCE,
   type RelatedReport,
@@ -67,6 +71,12 @@ const directReports: readonly DirectReport[] = [
     category: 'ai-search',
     inputSchema: aiMentionResearchInputSchema,
     handler: createAiMentionResearchHandler(),
+  },
+  {
+    id: 'ai-prompt-observations',
+    category: 'ai-search',
+    inputSchema: aiPromptObservationsInputSchema,
+    handler: createAiPromptObservationsHandler(),
   },
 ] as const
 

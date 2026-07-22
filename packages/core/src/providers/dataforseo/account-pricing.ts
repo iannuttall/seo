@@ -13,6 +13,7 @@ type AccountPrices = Pick<
   | 'domainResearchPrices'
   | 'linkPrices'
   | 'aiMentionPrices'
+  | 'aiPromptObservationPrice'
   | 'serpLiveAdvancedPrice'
   | 'serpTaskPostPrice'
 >
@@ -42,6 +43,9 @@ export function dataForSeoAccountPrices(
   account: UserDataAccount,
 ): AccountPrices {
   return {
+    aiPromptObservationPrice: unitPrice(
+      account.price?.ai_optimization?.llm_responses?.live?.priority_normal,
+    ),
     aiMentionPrices: {
       targetMetrics: unitPrice(
         account.price?.ai_optimization?.llm_mentions?.target_metrics?.live

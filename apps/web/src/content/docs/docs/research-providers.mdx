@@ -1,6 +1,6 @@
 ---
-title: Keyword and competitor research providers
-description: Connect DataForSEO locally, control paid requests and combine keyword, domain, competitor and page estimates with Search Console evidence.
+title: Research providers
+description: Connect DataForSEO locally, control paid requests and combine keyword, domain, competitor, link and AI answer evidence with first-party data.
 ---
 
 Research a market without replacing the evidence from your own site. Optional
@@ -85,6 +85,7 @@ seo reports list --category opportunities --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
 seo reports describe ai-mention-research --json
+seo reports describe ai-prompt-observations --json
 ```
 
 Run a report through the existing catalog command. There are no separate
@@ -149,14 +150,77 @@ Read the result in this order:
 Provider-indexed records are not live prompt observations or a complete census.
 Mention count and AI search volume do not prove traffic, sentiment, citation
 quality, authority, future visibility, or demand for a new page. Search Console
-overlap is a lexical heuristic over retained rows. Check the current answer
-with a fixed prompt observation when that answer would change the decision.
+overlap is a lexical heuristic over retained rows. Run
+`ai-prompt-observations` when the current answer would change the decision.
 
 For programmatic SEO, repeated question terms can reveal a useful research
 direction. They do not approve a template. Confirm shared intent, existing page
 coverage, data rights, stable identifiers, fields, geographic coverage, update
 frequency, missing values, duplicates, useful page variation, and
 representative output before increasing page count.
+
+## Record current AI answers for fixed prompts
+
+`ai-prompt-observations` runs one to five fixed prompts across one to four
+explicit current models from ChatGPT, Claude, Gemini, or Perplexity. The full
+set of prompt and model combinations is capped at 20 paid live requests. Start
+with one prompt and one model, then add only observations that can change a
+decision.
+
+```sh
+seo reports run ai-prompt-observations \
+  --params '{"prompts":[{"id":"analytics-tools","group":"commercial","prompt":"Which privacy-friendly analytics tools suit a small publisher?"}],"models":[{"surface":"chatgpt","model":"current-model-name"}],"target":{"label":"Example Analytics","aliases":["Example"],"domains":["example.com"]},"competitors":[{"label":"Competitor Cloud"}],"countryCode":"GB","languageCode":"en","site":"sc-domain:example.com"}' \
+  --json
+```
+
+The requested model is the exact model you chose. The effective model is the
+model the provider says actually ran. Fan-out queries are extra supporting
+searches the provider reports using to form the answer. Keeping these fields
+separate prevents a provider-side model change from looking like a visibility
+change.
+
+Model names are exact. Before paid work, the report checks the provider's free
+current model catalog. A retired or misspelled model fails with current choices
+and confirms that no paid request started. This avoids silently moving a saved
+prompt set to a new model. Perplexity always uses web search. Other models must
+advertise web-search support when `webSearch` is true.
+
+Read the result in this order:
+
+1. `dataStatus`, warnings, request count, provider, market label, and optional
+   Search Console status.
+2. Each observation's coverage, cache state, requested and effective model,
+   checked time, answer, citations, token use, task id, and exact returned cost.
+3. Named-target matches and cited domains. These describe only the retained
+   answer and the aliases or domains you supplied.
+4. Comparison status. Only a fresh, complete, untruncated observation with the
+   same provider, prompt, requested and effective model, market label,
+   web-search setting, and output-token limit supports a change.
+5. Supporting-search themes in `fanOutThemes`, optional Search Console overlap,
+   findings, caveats, and next steps.
+
+The preflight estimate contains provider base fees only. The response records
+the exact task cost after token and web-search charges are known. If any request
+fails, actual total cost stays partial or unknown instead of pretending the
+missing request cost zero. Cached results do not support a new change claim.
+
+Answers and bounded history stay in the local SQLite store. The history keeps
+at most 90 observations per exact configuration, 10,000 observations in total,
+and 128 MB of logical payload. Answers are capped at 24 KB, citations at 25,
+fan-out queries at 20, and structured agent output at the shared 96 KB budget.
+
+The country and language fields label and separate a fixed prompt set. AI response
+endpoints do not expose identical location or language controls across every
+surface, so prompt wording remains the direct language instruction. One answer
+is not a universal result, visibility score, assistant ranking, or proof that a
+target never appears.
+
+Supporting-search themes and Search Console word matches are bounded research leads.
+Before planning a programmatic template, validate keyword demand, current
+search-result intent, existing page coverage, source rights, stable identifiers
+and fields, geographic coverage, update frequency, missing values, duplicates,
+useful page variation, and representative output. No new page remains a valid
+result.
 
 ## Start a local search investigation with first-party evidence
 

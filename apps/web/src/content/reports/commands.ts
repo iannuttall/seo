@@ -24,6 +24,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
         'seo reports run ai-mention-research --params \'{"target":{"label":"Example Analytics"},"surface":"google-ai-overview","countryCode":"GB","languageCode":"en","location":{"code":2826}}\' --json',
       note: 'Research one target in a bounded provider-indexed AI dataset.',
     },
+    'ai-prompt-observations': {
+      command:
+        'seo reports run ai-prompt-observations --params \'{"prompts":[{"id":"analytics-tools","prompt":"Which privacy-friendly analytics tools suit a small publisher?"}],"models":[{"surface":"chatgpt","model":"current-model-name"}],"target":{"label":"Example Analytics","domains":["example.com"]},"countryCode":"GB","languageCode":"en"}\' --json',
+      note: 'Record one fixed prompt against an exact current model.',
+    },
     'audit-page': {
       command: 'seo audit-page --url https://example.com/page',
       note: 'Inspect one live page before changing it.',

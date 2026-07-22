@@ -53,6 +53,12 @@ const userDataPriceSchema = z
   .object({
     ai_optimization: z
       .object({
+        llm_responses: z
+          .object({
+            live: normalPriorityPriceSchema.optional(),
+          })
+          .passthrough()
+          .optional(),
         llm_mentions: z
           .object({
             target_metrics: livePriceSchema.optional(),

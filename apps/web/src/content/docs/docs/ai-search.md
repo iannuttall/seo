@@ -126,10 +126,9 @@ Google now directs site owners to its own Search Console reporting for
 visibility in Google generative AI features. Other providers expose different
 or no first-party reporting, so keep source-specific evidence separate.
 
-The [AI visibility tracking guide](/docs/ai-visibility) covers the separate
-planned report for observed mentions, citations, prompt coverage, and share of
-voice. That work needs repeatable provider data and does not belong inside a
-technical readiness score.
+The [AI visibility tracking guide](/docs/ai-visibility) covers fixed live prompt
+observations, provider-indexed mention research, citations, and referral
+evidence. Those sources remain separate from a technical readiness score.
 
 ## Give an agent a claim it can defend
 

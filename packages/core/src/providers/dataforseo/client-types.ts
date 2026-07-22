@@ -56,6 +56,7 @@ export type DataForSeoAccountSnapshot = {
     multiTargetMetrics: DataForSeoUnitPrice
     searchMentions: DataForSeoUnitPrice
   }
+  aiPromptObservationPrice: DataForSeoUnitPrice
   serpLiveAdvancedPrice: DataForSeoUnitPrice
   serpTaskPostPrice: DataForSeoUnitPrice
   backlinksSubscriptionExpiresAt: string | null
@@ -85,6 +86,7 @@ export type DataForSeoClientOptions = {
   domainResearchTtlMs?: number
   linkTtlMs?: number
   aiMentionTtlMs?: number
+  aiPromptObservationTtlMs?: number
 }
 
 export type DataForSeoKeywordOverviewRequest = {

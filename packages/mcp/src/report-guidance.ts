@@ -139,17 +139,18 @@ export const REPORT_GUIDANCE = {
   'link-evidence': {
     name: 'Referring link evidence',
     description:
-      'Review a bounded set of pages that link to the site from Bing Webmaster or a local export.',
+      'Review bounded referring-link evidence from a live provider, Bing Webmaster or a local export.',
     useWhen: [
       'You want concrete referring URLs and anchor text where available.',
-      'You need one normalized view of Bing or an exported CSV, JSON, or JSONL file.',
+      'You want to compare a live provider summary with saved crawl and Search Console evidence for linked target pages.',
+      'You need one normalized view of DataForSEO, Bing or an exported CSV, JSON, or JSONL file.',
     ],
     avoidWhen: [
-      'You need a complete backlink index or a domain authority score.',
+      'You need a complete backlink index or a universal authority score.',
       'You want to find broken internal links during a crawl.',
     ],
     outcome:
-      'A bounded, deduplicated link list with target-page counts and explicit source coverage.',
+      'Provider summary counts, representative links, target-page search and crawl context, and bounded technical findings with explicit source coverage.',
   },
   'server-log-analysis': {
     name: 'Server log crawler analysis',

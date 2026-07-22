@@ -228,7 +228,10 @@ The research flow now covers:
   community, or marketplace;
 - `competitor-keyword-gap` for comparing up to three relevant domains with
   retained Search Console themes, the site's provider-observed rankings, and
-  programmatic page patterns.
+  programmatic page patterns;
+- `link-evidence` for a current link summary, one representative backlink per
+  referring domain, and linked-target checks against saved crawl and Search
+  Console evidence.
 
 Provider traffic, volume, difficulty, intent, visibility, and ranking history
 are estimates. Search Console remains the evidence for measured search
@@ -269,18 +272,35 @@ evidence remain distinct. Bing's `inIndex` crawl statistic is provider
 evidence, not URL-level proof that a page is indexed. A query or page missing
 from a weekly top list is unknown, not zero.
 
-Use the same connection to review a bounded set of referring links, or import
-an export from another source:
+Review a bounded set of referring links from DataForSEO, Bing or a local
+export:
 
 ```sh
+seo links --provider dataforseo --target example.com --json
+seo links --provider dataforseo --target example.com \
+  --search-site sc-domain:example.com --json
 seo links --project example --json
 seo links --file ./links.csv --row-limit 10000 --json
 ```
 
+The DataForSEO path makes two sequential paid requests by default: one summary
+and up to 100 live representative backlinks, one per referring domain. Current
+endpoint prices, estimated and actual cost, task ids, cache state, provider
+filters, row coverage and omitted rows stay in the result. A cached repeat
+does not repeat paid work during the retention window.
+
+When a matching saved crawl or Search Console property is available, the same
+report checks linked target pages for observed error responses, redirects,
+canonical conflicts and non-indexable states. Search Console metrics add
+first-party context without turning a missing retained page row into zero.
+Verify the live target and the referring page before changing anything.
+
 CSV and JSONL imports stream from disk. Regular JSON arrays have a smaller
 file limit to avoid a memory spike. Every result includes the number of rows
 read, rejected, deduplicated, omitted, or stopped by a limit. It is evidence
-from the selected source, not a complete backlink index or an authority score.
+from the selected source, not a complete backlink index. Provider rank and
+spam metrics keep their provider-specific names and scales. They are context,
+not search-engine ranking factors or universal authority scores.
 
 ## Create an HTML report for a client
 

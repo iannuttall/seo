@@ -18,6 +18,7 @@ answer.
 | Research keyword ideas and market estimates | `keyword-research`, `keyword-metrics` |
 | Find recurring search competitors | `serp-competitors` |
 | Compare relevant competitor keyword gaps | `competitor-keyword-gap` |
+| Review referring links and linked targets | `link-evidence` |
 | Review rankings averaging positions 10 to 20 | `seo second-page` |
 | Check crawl and index monitoring evidence | `seo technical-watch` |
 | Audit one live URL | `seo audit-page --url <url>` |
@@ -103,6 +104,19 @@ measurements and live observations keep separate fields and caveats.
 The [research provider guide](/docs/research-providers) covers credentials,
 local cost limits, caching, supported reports and programmatic data-source
 checks.
+
+The same provider connection can add a current link summary and representative
+referring URLs to the existing link report:
+
+```sh
+seo links --provider dataforseo --target example.com --json
+seo links --provider dataforseo --target example.com \
+  --search-site sc-domain:example.com --json
+```
+
+The second form joins a matching saved crawl and retained Search Console page
+evidence. It can prioritize linked targets with observed technical problems,
+but it still requires a live page and referring-link check before action.
 
 ## Save technical evidence before you change the site
 

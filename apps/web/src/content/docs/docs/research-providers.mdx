@@ -99,9 +99,55 @@ seo reports run serp-competitors \
   --json
 ```
 
+The existing `link-evidence` report also accepts a live DataForSEO target
+through the direct `seo links` command. It does not add a second report or MCP
+tool.
+
 The current domain research endpoints use country and language. They do not
 accept a city, postcode or device. Use `serp-results` when you need a current
 location and device-specific result snapshot.
+
+## Review live referring-link evidence
+
+Run the bounded provider path for a domain:
+
+```sh
+seo links --provider dataforseo --target example.com --json
+```
+
+Add a Search Console property when you own the target and want first-party
+page evidence in the same result:
+
+```sh
+seo links --provider dataforseo --target example.com \
+  --search-site sc-domain:example.com --json
+```
+
+The default run makes one summary request, then requests up to 100 live
+representative backlinks with one row per referring domain. `--row-limit` can
+raise that bounded request to 500. It does not fetch every backlink or fan out
+across every target page. Both requests run sequentially, use the local
+provider cache, and pass through the same report spend limits as keyword and
+domain research.
+
+Read these result areas in order:
+
+1. `dataStatus`, warnings, caveats and source provenance.
+2. `providerSummary` for current provider counts and named metrics.
+3. `providerEvidence` for coverage, filters, cache, cost and observation time.
+4. `findings` and `targetContext` for saved-crawl and Search Console evidence.
+5. `targetCounts` and the bounded representative `links` list.
+
+A matching saved crawl can flag linked targets observed with an error response,
+redirect, conflicting canonical or non-indexable state. Search Console can add
+retained clicks and impressions for the same target. Those sources stay
+separate: a provider row does not prove link quality, a missing Search Console
+row is not zero, and a saved crawl does not prove the page still has the same
+state. Open the referring URL and check the target live before acting.
+
+Provider rank and spam metrics retain their DataForSEO names and 0 to 100
+scales. They can help order a review, but they are not Google ranking factors,
+universal authority scores or interchangeable with another provider's metric.
 
 ## Start with first-party opportunities
 

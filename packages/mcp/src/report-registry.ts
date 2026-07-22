@@ -6,7 +6,6 @@ import { registerDiagnosisTools } from './diagnosis-tools.js'
 import { registerDomainResearchTools } from './domain-research-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
 import { registerKeywordTools } from './keyword-tools.js'
-import { registerLocalSearchTools } from './local-search-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerProviderTools } from './provider-tools.js'
@@ -19,6 +18,10 @@ import {
   aiPromptObservationsInputSchema,
   createAiPromptObservationsHandler,
 } from './report-definitions/ai-prompt-observations.js'
+import {
+  createLocalSearchDemandHandler,
+  localSearchDemandInputSchema,
+} from './report-definitions/local-search-demand.js'
 import {
   getReportGuidance,
   REPORT_GUIDANCE,
@@ -78,6 +81,12 @@ const directReports: readonly DirectReport[] = [
     inputSchema: aiPromptObservationsInputSchema,
     handler: createAiPromptObservationsHandler(),
   },
+  {
+    id: 'local-search-demand',
+    category: 'opportunities',
+    inputSchema: localSearchDemandInputSchema,
+    handler: createLocalSearchDemandHandler(),
+  },
 ] as const
 
 const legacyReportGroups: readonly ReportGroup[] = [
@@ -119,11 +128,6 @@ const legacyReportGroups: readonly ReportGroup[] = [
       'seo_saved_keywords',
       'seo_serp_results',
     ],
-  },
-  {
-    category: 'opportunities',
-    register: registerLocalSearchTools,
-    names: ['seo_local_search_demand'],
   },
   {
     category: 'opportunities',

@@ -101,6 +101,13 @@ function evidence(
                 isFeaturedSnippet: false,
               },
             ],
+      localPack: {
+        present: false,
+        returnedRows: 0,
+        retainedRows: 0,
+        invalidRows: 0,
+        results: [],
+      },
     },
     observedAt: checkedAt,
     market: request.market,

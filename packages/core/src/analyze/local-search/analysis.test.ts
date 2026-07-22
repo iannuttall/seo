@@ -49,6 +49,12 @@ test('builds deterministic local opportunities and repeated page patterns', () =
   )
   assert.equal(result.templates[0]?.queryCount, 2)
   assert.equal(result.templates[0]?.impressions, 180)
+  assert.deepEqual(result.eligiblePageUrls, [
+    'https://example.com/areas/london',
+    'https://example.com/plumbers',
+    'https://example.com/plumbers/london',
+    'https://example.com/plumbers/manchester',
+  ])
 })
 
 test('rejects invalid and conflicting rows while deduplicating exact repeats', () => {
@@ -94,6 +100,7 @@ test('keeps large local inputs and every returned list bounded', () => {
   })
   assert.equal(result.selection.eligibleQueries, 100)
   assert.equal(result.eligiblePageCount, 10_000)
+  assert.equal(result.eligiblePageUrls.length, 10_000)
   assert.equal(result.eligibleSummary.impressions, 50_005_000)
   assert.equal(result.opportunities.length, 25)
   assert.ok(result.templates.length <= 10)

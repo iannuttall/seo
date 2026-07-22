@@ -223,6 +223,12 @@ Every report must be technically defensible and useful to another program.
   final-data helper. Do not recreate date windows with naive UTC subtraction.
 - Aggregate duplicate provider rows deterministically before ranking or
   limiting results.
+- Join optional Analytics geography to local search evidence only through an
+  exact retained landing-page path. Never assign that geography to a Search
+  Console query.
+- Treat retained local-pack rows as observed listings and recurring organic
+  domains as unclassified search competitors. Neither proves listing
+  ownership, complete Maps coverage, or business equivalence.
 - Normalize provider exports into shared internal types. Unfamiliar export
   fields use an explicit canonical column map that is validated and retained
   in provenance. Do not infer ambiguous mappings silently.

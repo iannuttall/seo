@@ -25,6 +25,7 @@ export type ReportSourceKey =
   | 'domain-provider-overview'
   | 'domain-provider-pages'
   | 'google-analytics-acquisition'
+  | 'google-analytics-geography'
   | 'google-updates'
   | 'javascript'
   | 'keyword-provider-discovery'

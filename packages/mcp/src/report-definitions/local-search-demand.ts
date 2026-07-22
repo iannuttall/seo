@@ -1,7 +1,6 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { localSearchReport } from '@seo/core'
 import * as z from 'zod/v4'
-import { compactAgentWorkflowOutput } from './agent-output-budget.js'
+import { compactAgentWorkflowOutput } from '../agent-output-budget.js'
 import {
   providerCountryCodeInput,
   providerDeviceInput,
@@ -9,10 +8,10 @@ import {
   providerLanguageCodeInput,
   providerLocationInput,
   providerSearchEngineInput,
-} from './provider-inputs.js'
-import { toolError, toolSuccess } from './tool-result.js'
+} from '../provider-inputs.js'
+import { type ToolResult, toolError, toolSuccess } from '../tool-result.js'
 
-const localSearchInput = z
+export const localSearchDemandInputSchema = z
   .strictObject({
     site: z.string().trim().min(1).max(2_048),
     days: z.number().int().min(1).max(548).optional(),
@@ -34,6 +33,21 @@ const localSearchInput = z
     provider: providerIdInput.optional(),
     serpLimit: z.number().int().min(1).max(3).optional(),
     serpDepth: z.number().int().min(1).max(20).optional(),
+    googleAnalyticsPropertyId: z
+      .string()
+      .trim()
+      .regex(/^(?:properties\/)?\d{1,30}$/u)
+      .describe(
+        'Optional numeric Google Analytics property id for landing-page geography evidence.',
+      )
+      .optional(),
+    analyticsLimit: z
+      .number()
+      .int()
+      .min(1)
+      .max(10_000)
+      .describe('Maximum Google Analytics geography rows to request.')
+      .optional(),
     refresh: z.boolean().optional(),
   })
   .superRefine((input, context) => {
@@ -65,20 +79,21 @@ const localSearchInput = z
           'Local SERP evidence requires countryCode, languageCode, and a canonical location.',
       })
     }
+    if (input.analyticsLimit && !input.googleAnalyticsPropertyId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['analyticsLimit'],
+        message:
+          'Pass googleAnalyticsPropertyId before setting analyticsLimit.',
+      })
+    }
   })
 
-export function registerLocalSearchTools(
-  server: McpServer,
+export function createLocalSearchDemandHandler(
   dependencies: { localSearchReport?: typeof localSearchReport } = {},
-): void {
-  server.registerTool(
-    'seo_local_search_demand',
-    {
-      description:
-        'Find retained local-intent demand, landing pages, repeated local templates, and optional location-specific SERP evidence',
-      inputSchema: localSearchInput,
-    },
-    async ({
+): (input: Record<string, unknown>) => Promise<ToolResult> {
+  return async (input) => {
+    const {
       site,
       days,
       locationTerms,
@@ -96,46 +111,49 @@ export function registerLocalSearchTools(
       provider,
       serpLimit,
       serpDepth,
+      googleAnalyticsPropertyId,
+      analyticsLimit,
       refresh,
-    }) => {
-      try {
-        const report = await (
-          dependencies.localSearchReport ?? localSearchReport
-        )({
-          site,
-          days,
-          locationTerms,
-          minImpressions,
-          limit,
-          maxRows,
-          brandTerms,
-          includeBrand,
-          includeSerps,
-          ...(includeSerps && countryCode && languageCode && location
-            ? {
-                market: {
-                  countryCode,
-                  languageCode,
-                  searchEngine,
-                  location,
-                  device,
-                },
-              }
-            : {}),
-          provider,
-          serpLimit,
-          serpDepth,
-          refresh,
-        })
-        return toolSuccess(
-          report.summary.verdict,
-          compactAgentWorkflowOutput(
-            report as unknown as Record<string, unknown>,
-          ),
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
+    } = localSearchDemandInputSchema.parse(input)
+    try {
+      const report = await (
+        dependencies.localSearchReport ?? localSearchReport
+      )({
+        site,
+        days,
+        locationTerms,
+        minImpressions,
+        limit,
+        maxRows,
+        brandTerms,
+        includeBrand,
+        includeSerps,
+        ...(includeSerps && countryCode && languageCode && location
+          ? {
+              market: {
+                countryCode,
+                languageCode,
+                searchEngine,
+                location,
+                device,
+              },
+            }
+          : {}),
+        provider,
+        serpLimit,
+        serpDepth,
+        googleAnalyticsPropertyId,
+        analyticsLimit,
+        refresh,
+      })
+      return toolSuccess(
+        report.summary.verdict,
+        compactAgentWorkflowOutput(
+          report as unknown as Record<string, unknown>,
+        ),
+      )
+    } catch (error) {
+      return toolError(error)
+    }
+  }
 }

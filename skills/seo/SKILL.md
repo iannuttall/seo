@@ -56,6 +56,7 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-mention-research`, `ai-prompt-observations`, `ai-referrals`, `seo-to-ai-query` |
 | Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
 | Research keywords and current results | `keyword-research`, `keyword-metrics`, `saved-keywords`, `serp-results` |
+| Research local demand and page patterns | `local-search-demand`, then `serp-results` or `rank-tracking` for a fixed market when needed |
 | Find search competitors and plausible gaps | `serp-competitors`, `domain-overview`, `ranking-pages`, `ranked-keywords`, `competitor-keyword-gap` |
 | Research programmatic SEO opportunities | `keyword-opportunities`, `pseo-opportunities`, `ranking-pages`, `competitor-keyword-gap`, then `pseo-audit` for an existing site |
 | Catch regressions over time | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` after a fix ships |

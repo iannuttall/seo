@@ -1,10 +1,11 @@
 import type { LocalIntentEvidence } from './types.js'
 
 const NEARBY_PHRASES = [
+  'around me',
+  'close to me',
   'closest to me',
   'in my area',
   'near me',
-  'nearby',
 ] as const
 const UK_POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/iu
 const US_ZIP_CODE = /\b\d{5}(?:-\d{4})?\b/u

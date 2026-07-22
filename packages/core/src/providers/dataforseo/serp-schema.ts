@@ -11,6 +11,10 @@ const serpItemSchema = z
     title: z.string().max(10_000).nullable().optional(),
     description: z.string().max(50_000).nullable().optional(),
     is_featured_snippet: z.boolean().nullable().optional(),
+    cid: z.unknown().optional(),
+    phone: z.unknown().optional(),
+    is_paid: z.unknown().optional(),
+    rating: z.unknown().optional(),
   })
   .passthrough()
 

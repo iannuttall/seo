@@ -422,19 +422,19 @@ export const REPORT_DEPTH_CONTINUED = {
     readOrder: [
       'dataStatus, source row cap, possiblyTruncated, and selection exclusions',
       'methodologyDetails supplied terms and automatic heuristic patterns',
-      'opportunities intent evidence, metrics, page coverage, and action',
-      'templates as repeated page review signals',
-      'serpEvidence requested status, exact market, coverage, cache, cost, features, and organic rows',
+      'opportunities intent evidence, metrics, page coverage, action, and templates as repeated page review signals',
+      'analyticsEvidence status, source completeness, exact landing-page matches, location coverage, and template context',
+      'serpEvidence status, market, coverage, cache, cost and snapshots, then serpInsights observations, unclassified competitors, and retained listings',
       'caveats and nextSteps',
     ],
     doNotClaim: [
       'A place in a query is not evidence of the searcher location, and Google Analytics geography cannot prove the query.',
       'Search Console average position is not an exact city rank, and one live snapshot is not rank history.',
-      'A local pack feature does not expose every listing, prove business visibility, or replace Google Business Profile evidence.',
+      'A retained local-pack listing does not prove ownership, complete Maps coverage, business visibility, or Google Business Profile performance, and a recurring result domain is not proof of a comparable business.',
       'A repeated local URL pattern does not prove shared intent, page quality, unique source data, or permission to scale.',
     ],
     verify:
-      'Inspect representative landing pages and the retained live results in the same location, language, and device before changing or expanding local pages.',
+      'Inspect representative landing pages, classify recurring result domains, and verify retained listings in current results for the same location, language, and device before changing or expanding local pages.',
     related: [
       { id: 'pseo-audit', reason: 'Validates repeated local page templates.' },
       { id: 'serp-results', reason: 'Opens one local result snapshot.' },

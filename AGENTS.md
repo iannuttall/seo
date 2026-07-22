@@ -123,6 +123,10 @@ Useful core areas:
 - `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.
 - `packages/core/src/extract`: page and structured-data extraction.
 - `packages/core/src/export`: CSV and export rendering.
+- `packages/core/src/providers`: provider-neutral research contracts and
+  provider-specific adapters. Keep provider-native metrics named and typed.
+- `packages/core/src/links`: Bing, file and live-provider link evidence plus
+  saved-crawl and Search Console target joins.
 - `packages/core/src/gsc`: Search Console provider boundary.
 - `packages/core/src/ga4`: Google Analytics Data/Admin API adapter. Keep `ga4`
   naming inside this implementation boundary only. Product commands, config,

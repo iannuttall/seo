@@ -10,6 +10,29 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../index.js', import.meta.url))
 
+test('links help exposes live provider and target context controls', async () => {
+  const { stdout, stderr } = await execFileAsync(
+    process.execPath,
+    [cliPath, 'links', '--help'],
+    { env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' } },
+  )
+
+  assert.equal(stderr, '')
+  for (const flag of [
+    '--provider',
+    '--target',
+    '--scope',
+    '--include-subdomains',
+    '--search-site',
+    '--row-limit',
+    '--days',
+    '--refresh',
+  ]) {
+    assert.match(stdout, new RegExp(flag))
+  }
+  assert.match(stdout, /100 DataForSEO, 500 Bing, 10000 files/)
+})
+
 test('links command imports a bounded local file as structured JSON', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'seo-links-cli-'))
   const file = join(directory, 'links.json')
@@ -39,5 +62,40 @@ test('links command imports a bounded local file as structured JSON', async () =
     assert.match(report.caveats[0], /not a complete backlink index/i)
   } finally {
     await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('links command rejects ambiguous and provider-mismatched sources before acquisition', async () => {
+  const base = {
+    env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' },
+  }
+  for (const args of [
+    ['links', '--file', './links.json', '--target', 'example.com', '--json'],
+    [
+      'links',
+      '--site',
+      'https://example.com/',
+      '--target',
+      'example.com',
+      '--json',
+    ],
+    [
+      'links',
+      '--provider',
+      'dataforseo',
+      '--site',
+      'https://example.com/',
+      '--json',
+    ],
+  ]) {
+    await assert.rejects(
+      execFileAsync(process.execPath, [cliPath, ...args], base),
+      (error: unknown) => {
+        const output = error as { stdout?: string; stderr?: string }
+        return /one link source|not both|use --target/i.test(
+          `${output.stdout ?? ''}\n${output.stderr ?? ''}`,
+        )
+      },
+    )
   }
 })

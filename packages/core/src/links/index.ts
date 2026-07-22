@@ -1,4 +1,6 @@
 export * from './bing.js'
+export * from './context.js'
+export * from './dataforseo.js'
 export * from './import.js'
 export * from './normalize.js'
 export * from './report.js'

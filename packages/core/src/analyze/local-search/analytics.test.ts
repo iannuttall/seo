@@ -173,6 +173,8 @@ test('returns the same geography order when provider rows are reversed', async (
 
 test('keeps ten thousand Analytics rows and every returned list bounded', async () => {
   const rowCount = 10_000
+  const template = templates[0]
+  assert.ok(template)
   const rows = Array.from({ length: rowCount }, (_, index) => [
     `/plumbers/city-${index}`,
     'United Kingdom',
@@ -185,7 +187,7 @@ test('keeps ten thousand Analytics rows and every returned list bounded', async 
     {
       ...input,
       limit: rowCount,
-      templates: [{ ...templates[0]!, signature: '/plumbers/:slug' }],
+      templates: [{ ...template, signature: '/plumbers/:slug' }],
       localPageUrls: rows.map(([path]) => `https://example.test${path ?? '/'}`),
     },
     {

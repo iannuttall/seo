@@ -9,7 +9,10 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 
 const packageJson = JSON.parse(await readFile('package.json', 'utf8'))
-const bundledRuntimeDependencies = new Set(['cheerio'])
+const bundledRuntimeDependencies = new Set([
+  '@modelcontextprotocol/sdk',
+  'cheerio',
+])
 const repositoryUrl = 'https://github.com/iannuttall/seo'
 
 test('the public package exposes one unscoped API, CLI, and MCP surface', () => {
@@ -22,6 +25,7 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   assert.equal(packageJson.homepage, 'https://seoskill.dev')
   assert.equal(packageJson.repository.url, `git+${repositoryUrl}.git`)
   assert.equal(packageJson.bugs.url, `${repositoryUrl}/issues`)
+  assert.equal(packageJson.dependencies['@modelcontextprotocol/sdk'], undefined)
   assert.doesNotMatch(
     JSON.stringify(packageJson),
     /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
@@ -233,9 +237,13 @@ test('root runtime dependencies cover or bundle workspace dependencies', async (
         )
         for (const runtimeFile of runtimeFiles) {
           const source = await readFile(`dist/${runtimeFile}`, 'utf8')
+          const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
           assert.doesNotMatch(
             source,
-            new RegExp(`(?:from\\s*|import\\()['"]${name}(?:/[^'"]*)?['"]`),
+            new RegExp(
+              `^(?:import|export)[^\\n]*from\\s*['"]${escapedName}(?:/[^'"]*)?['"]|^import\\(\\s*['"]${escapedName}(?:/[^'"]*)?['"]`,
+              'm',
+            ),
             `${name} must be bundled into ${runtimeFile}`,
           )
         }

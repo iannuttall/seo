@@ -211,7 +211,7 @@ test('fixed prompt observations combine targets, citations, fan-out themes, and 
   )
 })
 
-test('model catalog preflight rejects the whole basket before paid work', async () => {
+test('model catalog preflight rejects the whole prompt set before paid work', async () => {
   let paidCalls = 0
   const adapter = provider({
     models: { chatgpt: ['different-model'] },

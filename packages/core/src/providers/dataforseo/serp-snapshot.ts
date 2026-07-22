@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { z } from 'zod/v4'
 import type {
   ProviderEvidence,
   ProviderWarning,
@@ -8,7 +9,6 @@ import type {
   SerpSnapshotProvider,
   SerpSnapshotRequest,
 } from '../contracts.js'
-import { z } from 'zod/v4'
 import { searchMarketSchema } from '../contracts.js'
 import { ProviderError } from '../errors.js'
 import {

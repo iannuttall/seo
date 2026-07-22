@@ -1,7 +1,7 @@
 import {
+  type Ga4RunReportResult,
   ga4ReportQualityWarnings,
   ga4RowsToObjects,
-  type Ga4RunReportResult,
   runGa4Report,
 } from '../../ga4/client.js'
 import { templateForUrl } from '../pseo/templates.js'

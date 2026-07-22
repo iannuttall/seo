@@ -1,9 +1,21 @@
 import { fetch, type RequestInit } from 'undici'
+import { readBoundedResponseText } from '../fetch/http-client.js'
 import {
   createGoogleAccessTokenClient,
   type GoogleAccessTokenClient,
 } from '../gsc/auth.js'
 import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
+import {
+  collectGa4AccountSummaries,
+  type Ga4AccountSummary,
+} from './account-summaries.js'
+
+export type {
+  Ga4AccountSummary,
+  Ga4PropertySummary,
+} from './account-summaries.js'
+
+const GA4_ACCOUNT_SUMMARY_RESPONSE_LIMIT_BYTES = 10 * 1024 * 1024
 
 export interface Ga4ReportRequest {
   dateRanges: Array<{ startDate: string; endDate: string }>
@@ -36,19 +48,6 @@ export interface Ga4RunReportResult {
     }>
   }
   propertyQuota?: unknown
-}
-
-export interface Ga4PropertySummary {
-  property: string
-  displayName?: string
-  propertyType?: string
-  parent?: string
-}
-
-export interface Ga4AccountSummary {
-  account: string
-  displayName?: string
-  propertySummaries: Ga4PropertySummary[]
 }
 
 export interface Ga4DataStream {
@@ -157,26 +156,36 @@ export async function runGa4Report(
 
 export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
   const { client } = await createGoogleAccessTokenClient()
-  const response = await authedFetch(
-    client,
-    'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
-  )
+  return collectGa4AccountSummaries(async (pageToken) => {
+    const url = new URL(
+      'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
+    )
+    url.searchParams.set('pageSize', '200')
+    if (pageToken) url.searchParams.set('pageToken', pageToken)
 
-  if (!response.ok) {
-    if (response.status === 403) {
+    const response = await authedFetch(client, url.toString())
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error(
+          'Google Analytics account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
+        )
+      }
       throw new Error(
-        'Google Analytics account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
+        `Google Analytics account summary fetch failed with ${response.status}.`,
       )
     }
-    throw new Error(
-      `Google Analytics account summary fetch failed with ${response.status}.`,
-    )
-  }
 
-  const json = (await response.json()) as {
-    accountSummaries?: Ga4AccountSummary[]
-  }
-  return json.accountSummaries ?? []
+    const text = await readBoundedResponseText(
+      response,
+      GA4_ACCOUNT_SUMMARY_RESPONSE_LIMIT_BYTES,
+      'Google Analytics account summary response',
+    )
+    try {
+      return JSON.parse(text) as unknown
+    } catch {
+      throw new Error('Google Analytics account summary response was invalid.')
+    }
+  })
 }
 
 export async function listGa4DataStreams(

@@ -1,5 +1,6 @@
 import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { AI_PROMPT_OBSERVATION_SCHEMA_SQL } from '../ai-prompt-observations/schema.js'
 import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
 import { fileSize, getSeoCliPaths } from '../paths.js'
 import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
@@ -328,6 +329,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
+    database.exec(AI_PROMPT_OBSERVATION_SCHEMA_SQL)
     database.exec(KEYWORD_SET_SCHEMA_SQL)
     database.exec(RANK_TRACKING_SCHEMA_SQL)
     database.exec(PROVIDER_SPEND_SCHEMA_SQL)

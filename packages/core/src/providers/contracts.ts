@@ -364,3 +364,70 @@ export interface AiMentionProvider extends ProviderAdapter {
     input: AiMentionRequest,
   ): Promise<AiMentionEvidence<AiMentionSample[]>>
 }
+
+export const aiPromptSurfaceSchema = z.enum([
+  'chatgpt',
+  'claude',
+  'gemini',
+  'perplexity',
+])
+export type AiPromptSurface = z.infer<typeof aiPromptSurfaceSchema>
+
+export const aiPromptMarketSchema = z
+  .object({
+    countryCode: z.string().trim().min(2).max(2).toUpperCase(),
+    languageCode: z.string().trim().min(2).max(35).toLowerCase(),
+  })
+  .strict()
+export type AiPromptMarket = z.infer<typeof aiPromptMarketSchema>
+
+export type AiPromptModel = {
+  name: string
+  reasoning: boolean
+  webSearchSupported: boolean
+  queuedCollectionSupported: boolean
+}
+
+export type AiPromptCitation = {
+  title: string | null
+  url: string
+  domain: string
+}
+
+export type AiPromptObservation = {
+  requestedModel: string
+  effectiveModel: string
+  answer: string
+  answerTruncated: boolean
+  citations: AiPromptCitation[]
+  fanOutQueries: string[]
+  inputTokens: number | null
+  outputTokens: number | null
+  reasoningTokens: number | null
+  webSearchRequested: boolean
+  webSearchObserved: boolean | null
+  modelCostMicros: number | null
+  checkedAt: string
+}
+
+export type AiPromptObservationRequest = {
+  prompt: string
+  surface: AiPromptSurface
+  model: string
+  market: AiPromptMarket
+  webSearch: boolean
+  maxOutputTokens: number
+  refresh?: boolean
+  context?: ProviderRequestContext
+}
+
+export type AiPromptEvidence<T> = MarketIndependentProviderEvidence<T> & {
+  capability: 'ai-prompt-observation'
+}
+
+export interface AiPromptObservationProvider extends ProviderAdapter {
+  aiPromptModels(surface: AiPromptSurface): Promise<AiPromptModel[]>
+  observeAiPrompt(
+    input: AiPromptObservationRequest,
+  ): Promise<AiPromptEvidence<AiPromptObservation>>
+}

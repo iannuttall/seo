@@ -69,6 +69,34 @@ export function userDataFixture(): UserDataFixture {
               },
             },
             price: {
+              ai_optimization: {
+                llm_mentions: {
+                  target_metrics: {
+                    live: {
+                      priority_normal: [
+                        { cost_type: 'per_request', cost: 0.1 },
+                        { cost_type: 'per_result', cost: 0.001 },
+                      ],
+                    },
+                  },
+                  multi_target_metrics: {
+                    live: {
+                      priority_normal: [
+                        { cost_type: 'per_request', cost: 0.1 },
+                        { cost_type: 'per_result', cost: 0.001 },
+                      ],
+                    },
+                  },
+                  search_mentions: {
+                    live: {
+                      priority_normal: [
+                        { cost_type: 'per_request', cost: 0.1 },
+                        { cost_type: 'per_result', cost: 0.001 },
+                      ],
+                    },
+                  },
+                },
+              },
               backlinks: {
                 summary: {
                   live: {

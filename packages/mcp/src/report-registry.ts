@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import * as z from 'zod/v4'
+import { registerAiMentionTools } from './ai-mention-tools.js'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
@@ -51,6 +52,11 @@ type ReportGroup = {
 }
 
 const reportGroups: readonly ReportGroup[] = [
+  {
+    category: 'ai-search',
+    register: registerAiMentionTools,
+    names: ['seo_ai_mention_research'],
+  },
   {
     category: 'setup',
     register: registerDiagnosisTools,

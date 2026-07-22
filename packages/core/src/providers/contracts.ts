@@ -271,3 +271,96 @@ export interface SerpSnapshotProvider extends ProviderAdapter {
     input: SerpSnapshotRequest,
   ): Promise<ProviderEvidence<SerpSnapshot>>
 }
+
+export const aiMentionSurfaceSchema = z.enum(['google-ai-overview', 'chatgpt'])
+export type AiMentionSurface = z.infer<typeof aiMentionSurfaceSchema>
+
+export const aiMentionMarketSchema = z
+  .object({
+    countryCode: z.string().trim().min(2).max(2).toUpperCase(),
+    languageCode: z.string().trim().min(2).max(35).toLowerCase(),
+    location: z
+      .object({
+        code: z.number().int().positive().optional(),
+        name: z.string().trim().min(1).max(500).optional(),
+      })
+      .refine((value) => value.code !== undefined || value.name !== undefined, {
+        message: 'A location needs a provider code or canonical name.',
+      }),
+    surface: aiMentionSurfaceSchema,
+  })
+  .strict()
+export type AiMentionMarket = z.infer<typeof aiMentionMarketSchema>
+
+export type AiMentionTarget = {
+  key: string
+  label: string
+  aliases: string[]
+}
+
+export type AiMentionMetric = {
+  target: AiMentionTarget
+  mentions: ProviderValue<number>
+  aiSearchVolume: ProviderValue<number>
+  sourceDomains: Array<{
+    domain: string
+    mentions: number
+    aiSearchVolume: number
+  }>
+}
+
+export type AiMentionMetrics = {
+  targets: AiMentionMetric[]
+  combined: {
+    mentions: ProviderValue<number>
+    aiSearchVolume: ProviderValue<number>
+    sourceDomains: Array<{
+      domain: string
+      mentions: number
+      aiSearchVolume: number
+    }>
+  }
+}
+
+export type AiMentionSource = {
+  rank: number
+  domain: string
+  url: string
+  title: string | null
+  sourceName: string | null
+}
+
+export type AiMentionSample = {
+  question: string
+  answerExcerpt: string
+  answerTruncated: boolean
+  model: string | null
+  aiSearchVolume: ProviderValue<number>
+  firstObservedAt: ProviderValue<string>
+  lastObservedAt: ProviderValue<string>
+  isWebSearchBased: ProviderValue<boolean>
+  sources: AiMentionSource[]
+}
+
+export type AiMentionRequest = {
+  target: AiMentionTarget
+  competitors: AiMentionTarget[]
+  domain?: string
+  market: AiMentionMarket
+  sampleLimit: number
+  refresh?: boolean
+  context?: ProviderRequestContext
+}
+
+export type AiMentionEvidence<T> = ProviderEvidenceBase<T> & {
+  market: AiMentionMarket
+}
+
+export interface AiMentionProvider extends ProviderAdapter {
+  aiMentionMetrics(
+    input: AiMentionRequest,
+  ): Promise<AiMentionEvidence<AiMentionMetrics>>
+  aiMentionSamples(
+    input: AiMentionRequest,
+  ): Promise<AiMentionEvidence<AiMentionSample[]>>
+}

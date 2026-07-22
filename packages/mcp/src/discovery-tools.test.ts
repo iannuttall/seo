@@ -57,6 +57,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
   assert.deepEqual(ids, [
     'affected-urls',
     'agent-readiness',
+    'ai-mention-research',
     'ai-readiness',
     'ai-referrals',
     'ai-search-scorecard',

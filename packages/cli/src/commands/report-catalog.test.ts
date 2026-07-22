@@ -11,6 +11,9 @@ import { listReports } from '@seo/mcp'
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../index.js', import.meta.url))
 const reportCount = listReports().length
+const aiSearchReportCount = listReports().filter(
+  (report) => report.category === 'ai-search',
+).length
 
 async function runSeo(args: string[]): Promise<{
   exitCode: number
@@ -94,7 +97,10 @@ test('reports list stays browsable for humans', async () => {
     result.stdout,
     new RegExp(`^${reportCount} reports across 9 categories\\.`),
   )
-  assert.match(result.stdout, /^AI search \(7\)$/m)
+  assert.match(
+    result.stdout,
+    new RegExp(`^AI search \\(${aiSearchReportCount}\\)$`, 'm'),
+  )
   assert.match(result.stdout, /affected-urls\s+URLs affected by a crawl issue/)
   assert.match(result.stdout, /seo reports describe <id>/)
   assert.doesNotMatch(result.stdout, /^Description\s/m)

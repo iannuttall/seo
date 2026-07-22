@@ -79,6 +79,11 @@ function accountPricing(): DataForSeoAccountSnapshot {
       backlinks: { perRequestMicros: 24_000, perResultMicros: 36 },
       referringDomains: { perRequestMicros: 24_000, perResultMicros: 36 },
     },
+    aiMentionPrices: {
+      targetMetrics: { perRequestMicros: null, perResultMicros: null },
+      multiTargetMetrics: { perRequestMicros: null, perResultMicros: null },
+      searchMentions: { perRequestMicros: null, perResultMicros: null },
+    },
     serpLiveAdvancedPrice: {
       perRequestMicros: null,
       perResultMicros: null,

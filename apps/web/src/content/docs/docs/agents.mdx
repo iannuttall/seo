@@ -17,6 +17,7 @@ Good requests name the site and the decision you need to make:
 - "Check whether this traffic decline is present in a complete Search Console window."
 - "Find recurring search competitors for these product queries, then leave unknown site types unclassified."
 - "Compare these two competitors with our retained Search Console themes and existing provider ranks."
+- "Compare our indexed AI mentions with these three competitors in one market, then show the cited domains and repeated questions worth checking."
 
 "Do all my SEO" gives the agent no useful stopping point. Start with
 `seo report` when the request really is broad, then let its recommendations
@@ -107,6 +108,11 @@ market, observation time, cache state, cost and coverage before using the
 finding. The [research provider guide](/docs/research-providers) covers those
 boundaries and local spend controls.
 
+Provider-indexed AI mention records need another boundary. They can show
+mentions, cited domains and question samples retained by the provider. They do
+not prove that the same answer appears now. Search Console overlap adds useful
+first-party context, but it remains a lexical heuristic over retained rows.
+
 Local search evidence needs the same separation. Query wording can show an
 explicit place, nearby phrase or postal code, but it does not establish the
 searcher's physical location. Search Console position is averaged across
@@ -140,6 +146,17 @@ For competitor and programmatic research, use a separate narrow sequence:
    candidate.
 5. Check current results, representative pages and the returned data-source
    brief before proposing a new programmatic template.
+
+For AI mention research, keep the surface and market fixed:
+
+1. Describe `ai-mention-research` and use its current input schema.
+2. Run one named target against no more than five relevant competitors.
+3. Check coverage, cache state, cost, task ids, warnings and observation dates
+   before comparing mention counts.
+4. Read cited sources, question samples and optional Search Console overlap as
+   separate evidence.
+5. Run a fixed-prompt observation when the current answer would change the
+   decision.
 
 For referring-link research, run `link-evidence` with one source. With
 DataForSEO, read provider summary and cost evidence before the representative

@@ -27,7 +27,14 @@ export {
   runReport,
 } from './reports.js'
 
-export function createServer(options: { telemetry?: boolean } = {}): McpServer {
+export interface SeoMcpServer {
+  connect(transport: object): Promise<void>
+  close(): Promise<void>
+}
+
+export function createServer(
+  options: { telemetry?: boolean } = {},
+): SeoMcpServer {
   const server = new McpServer(
     {
       name: 'seo',
@@ -48,7 +55,7 @@ export function createServer(options: { telemetry?: boolean } = {}): McpServer {
     }
   }
 
-  return server
+  return server as unknown as SeoMcpServer
 }
 
 export async function startMcpServer(

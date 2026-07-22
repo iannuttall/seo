@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { ResearchImportColumns } from './imports/research-columns.js'
 
 export const providerIdSchema = z.enum(['dataforseo', 'semrush', 'ahrefs'])
 export type ProviderId = z.infer<typeof providerIdSchema>
@@ -104,6 +105,29 @@ export type ProviderRequestEvidence = {
   sort: string[]
 }
 
+export type ProviderImportEvidence = {
+  provider: ProviderId
+  path: string
+  format: 'csv' | 'json' | 'jsonl'
+  encoding: 'utf-8' | 'utf-16be' | 'utf-16le'
+  delimiter: ',' | ';' | '\t' | null
+  columnMapping: ResearchImportColumns | null
+  sha256: string
+  exportedAt: string
+  importedAt: string
+  includedFields: string[]
+  fileBytes: number
+  bytesRead: number
+  fileRows: number
+  suppliedRows: number
+  validRows: number
+  filteredRows: number
+  invalidRows: number
+  duplicateRows: number
+  capped: boolean
+  rowLimit: number
+}
+
 export type ProviderEvidenceBase<T> = {
   schemaVersion: 1
   provider: ProviderId
@@ -114,6 +138,7 @@ export type ProviderEvidenceBase<T> = {
   cache: ProviderCacheEvidence
   cost: ProviderCostEvidence
   request: ProviderRequestEvidence
+  imports?: ProviderImportEvidence[]
   warnings: ProviderWarning[]
 }
 

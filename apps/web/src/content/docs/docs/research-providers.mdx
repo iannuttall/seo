@@ -109,6 +109,114 @@ The current domain research endpoints use country and language. They do not
 accept a city, postcode or device. Use `serp-results` when you need a current
 location and device-specific result snapshot.
 
+## Use ranked-keyword exports without API access
+
+You can run four domain research reports from local DataForSEO, Semrush or
+Ahrefs exports. No provider connection or paid request is needed. The report
+still uses the same typed rows and evidence rules as the live API path.
+
+Put the report parameters in a JSON file when the file paths make the command
+hard to read:
+
+```json
+{
+  "target": "example.com",
+  "countryCode": "GB",
+  "languageCode": "en",
+  "researchFiles": [
+    {
+      "dataset": "ranked-keywords",
+      "file": "./exports/example-keywords.csv",
+      "provider": "semrush",
+      "exportedAt": "2026-07-20T12:00:00Z",
+      "columns": {
+        "keyword": "Search Term",
+        "url": "Destination",
+        "position": "Current Rank",
+        "searchVolume": "Monthly Demand"
+      }
+    }
+  ]
+}
+```
+
+Run it through the normal report catalog:
+
+```sh
+seo reports run ranked-keywords \
+  --params-file ./ranked-keywords-run.json \
+  --json
+```
+
+The importer accepts CSV, TSV, JSON arrays, JSONL and NDJSON. It detects UTF-8,
+UTF-16, comma, semicolon and tab-separated files automatically. This includes
+Ahrefs downloads that use UTF-16 and tabs despite having a `.csv` name. You do
+not need to convert the file first.
+
+Each current ranking needs a keyword, an absolute HTTP or HTTPS ranking URL,
+and a positive position. The importer also recognises common export names such
+as `Query`, `Phrase`, `Current URL`, `Landing Page`, `Current Position`,
+`Search Volume`, `Volume`, `Difficulty`, `KD`, `CPC`, `Competition`,
+`Keyword Intents`, `Current organic traffic` and `Traffic`.
+
+Leave `columns` out when those common headings match. Add it when an export
+uses different names. A named mapping overrides automatic matching for that
+field. The accepted canonical fields are `keyword`, `url`, `position`,
+`absolutePosition`, `searchVolume`, `keywordDifficulty`, `cpc`,
+`paidCompetition`, `intent`, `resultCount`, `estimatedTraffic`, `resultType`
+and `searchVolumeUpdatedAt`.
+
+Copy source headings exactly. The importer rejects missing headings and stops
+one source column from being assigned two meanings. This avoids treating a
+percentage as a visit count or a previous position as the current rank.
+
+An export can contain separate organic and search-feature rows for the same
+keyword and page. `ranking-pages` counts that as one ranked keyword. Its ranking
+buckets and estimated traffic keep both result rows because each one describes
+a different search appearance. Those totals can be higher than the unique
+keyword count without being duplicates.
+
+Set `countryCode` and `languageCode` to the market used for the export. The
+file does not carry enough consistent metadata for the importer to verify that
+choice. Keep every file in one run on the same market. Ambiguous fields stay
+missing. For example, `Traffic %` is not treated as estimated monthly visits.
+Use a `YYYY-MM-DD` date or an ISO timestamp with a timezone for `exportedAt`.
+
+The same input works with these reports:
+
+| Report | What the file supplies |
+| --- | --- |
+| `ranked-keywords` | Ranked terms, URLs, positions and any optional metrics present in the export. |
+| `ranking-pages` | Page groups, retained keyword counts and repeated URL patterns calculated from the imported rows. |
+| `serp-competitors` | Repeated domains across the requested terms when the files contain more than one domain. |
+| `competitor-keyword-gap` | Site and competitor rows from up to four exports from the same provider. |
+
+The gap report calls a term relevant only when at least two meaningful words
+also appear together in one retained Search Console query. Common words such as
+`new`, `search`, `page` and `tool` do not count. A one-word match stays weak,
+words found across separate queries are not combined into stronger evidence,
+and search operators such as `site:` and `filetype:` are ignored.
+
+`domain-overview` still requires a live provider. A ranked-keyword export
+cannot safely recreate the provider's full domain totals, traffic estimate or
+movement history.
+
+Pass one to four files from the same provider. Separate files are useful for a
+site and up to three competitors. A single run can normalize at most 100,000
+rows across all files. CSV, TSV, JSONL and NDJSON files are capped at 50 MB
+each. Regular JSON arrays are capped at 10 MB because they are loaded as one
+value.
+
+Every file gets its own entry under `evidence.imports`. That entry records the
+provider, export time, detected encoding and delimiter, SHA-256 file hash,
+included fields, explicit column mapping, bytes read, total file rows, supplied
+rows, valid rows, filtered historical rows, rejected rows, duplicates and row
+cap. Ahrefs
+comparison rows with no current URL or position are filtered historical rows,
+not broken records. The report scans a bounded file to finish its hash and
+file-row count even when the row cap stops normalization. Missing rows remain
+unknown because a local export does not prove full provider coverage.
+
 ## Research indexed AI mentions and citations
 
 `ai-mention-research` checks one named target in a provider-indexed set of AI

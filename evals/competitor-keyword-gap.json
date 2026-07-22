@@ -38,6 +38,19 @@
         "Requires separate evidence for a best-company judgment"
       ],
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I have separate Semrush ranked-keyword exports for my site and three competitors, but no API access. Compare the gaps without uploading the files anywhere.",
+      "expected_output": "Should describe competitor-keyword-gap and pass the four local exports through researchFiles with dataset ranked-keywords, provider semrush, and the real export date for each file. Should not request provider credentials or add another tool. Should read evidence.imports for every file, including hashes, fields, row quality, duplicates, bytes, and caps. Should keep missing imported rows unknown and use Search Console only for the matching owned site.",
+      "assertions": [
+        "Uses researchFiles on the existing competitor-keyword-gap report",
+        "Keeps all files local and does not request provider API credentials",
+        "Supplies the provider and real export date for every file",
+        "Reads every evidence.imports provenance record before interpreting gaps",
+        "Does not treat an absent imported or Search Console row as zero"
+      ],
+      "files": []
     }
   ]
 }

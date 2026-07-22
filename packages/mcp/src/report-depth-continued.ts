@@ -62,6 +62,7 @@ export const REPORT_DEPTH_CONTINUED = {
   'competitor-keyword-gap': {
     readOrder: [
       'dataStatus, source statuses, market, and selection bounds',
+      'source evidence.imports file dates, hashes, fields, row quality, and caps when present',
       'summary classification counts before the returned candidate subset',
       'processing counts for first-party rows, token postings, competitor rows, and candidate terms',
       'candidate classification, relevance state, firstParty, ownProviderRank, and competitor rows',
@@ -109,6 +110,7 @@ export const REPORT_DEPTH_CONTINUED = {
   'ranked-keywords': {
     readOrder: [
       'dataStatus, market, coverage, request filters, cache, cost, and warnings',
+      'evidence.imports file dates, hashes, fields, row quality, and caps when present',
       'summary totals and returned evidence.data.rows',
       'firstParty status, caps, and per-row match states when requested',
       'findings, caveats, and nextSteps',
@@ -132,6 +134,7 @@ export const REPORT_DEPTH_CONTINUED = {
   'ranking-pages': {
     readOrder: [
       'dataStatus, market, coverage, request filters, cache, cost, and warnings',
+      'evidence.imports file dates, hashes, fields, row quality, and caps when present',
       'summary and bounded evidence.data.rows',
       'firstParty page matches when requested',
       'repeatedPatterns, findings, caveats, and nextSteps',
@@ -152,6 +155,7 @@ export const REPORT_DEPTH_CONTINUED = {
   'serp-competitors': {
     readOrder: [
       'dataStatus, market, querySetSize, coverage, request, cache, and cost',
+      'evidence.imports file dates, hashes, fields, row quality, and caps when present',
       'competitors relationship, siteType, classificationSource, and keywordCoverage',
       'findings, caveats, and nextSteps',
     ],

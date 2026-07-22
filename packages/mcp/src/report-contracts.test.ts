@@ -138,6 +138,54 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
   }
 })
 
+test('ranked keyword imports accept explicit canonical column mappings', () => {
+  const schema = reportSchema('ranked-keywords')
+  const base = {
+    target: 'example.com',
+    countryCode: 'GB',
+    languageCode: 'en',
+    researchFiles: [
+      {
+        dataset: 'ranked-keywords',
+        file: './rankings.csv',
+        provider: 'semrush',
+        exportedAt: '2026-07-20',
+      },
+    ],
+  }
+  assert.equal(
+    schema.safeParse({
+      ...base,
+      researchFiles: [
+        {
+          ...base.researchFiles[0],
+          columns: {
+            keyword: 'Search Term',
+            url: 'Destination',
+            position: 'Current Rank',
+            searchVolume: 'Monthly Demand',
+          },
+        },
+      ],
+    }).success,
+    true,
+  )
+  for (const columns of [
+    { unknown: 'Search Term' },
+    { keyword: '' },
+    { keyword: 'Search Term', url: 'search-term' },
+  ]) {
+    assert.equal(
+      schema.safeParse({
+        ...base,
+        researchFiles: [{ ...base.researchFiles[0], columns }],
+      }).success,
+      false,
+      JSON.stringify(columns),
+    )
+  }
+})
+
 test('keyword metrics bounds market and keyword acquisition inputs', () => {
   const schema = reportSchema('keyword-metrics')
   assert.equal(

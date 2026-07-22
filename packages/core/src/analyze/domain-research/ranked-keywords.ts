@@ -16,10 +16,10 @@ import {
   offset,
   providerFailure,
   reportStatus,
+  researchFilesDependencies,
   researchProvider,
   siteMatchesDomain,
   validatedMarket,
-  validatedProvider,
 } from './shared.js'
 
 export async function rankedKeywordsReport(
@@ -28,7 +28,13 @@ export async function rankedKeywordsReport(
 ): Promise<RankedKeywordsReport> {
   const now = (dependencies.now ?? (() => new Date()))()
   const market = validatedMarket(input.market)
-  const providerId = validatedProvider(input.provider)
+  const source = researchFilesDependencies({
+    sources: input.researchFiles,
+    provider: input.provider,
+    dependencies,
+    now,
+  })
+  const providerId = source.provider
   const targetDomain = normalizeDomain(input.target)
   const rowLimit = limit(input.limit, 50)
   const rowOffset = offset(input.offset)
@@ -43,7 +49,7 @@ export async function rankedKeywordsReport(
     capability: 'ranked-keywords',
     market,
     provider: providerId,
-    dependencies,
+    dependencies: source.dependencies,
     method: 'rankedKeywords',
   })
   let evidence: Awaited<ReturnType<RankedKeywordsProvider['rankedKeywords']>>
@@ -73,7 +79,7 @@ export async function rankedKeywordsReport(
         site: input.site,
         days: rangeDays,
         refresh: input.refresh,
-        dependencies,
+        dependencies: source.dependencies,
         now,
       })
     : null
@@ -177,6 +183,11 @@ export async function rankedKeywordsReport(
     },
     findings,
     caveats: [
+      ...(input.researchFiles
+        ? [
+            'This run uses local provider exports. Check evidence.imports for each export time, file hash, included fields, rejected rows and cap before interpreting missing rows.',
+          ]
+        : []),
       'Rank, traffic, search volume, difficulty, intent, and CPC fields come from the provider database and its update schedule. They are not a live result check.',
       'A keyword absent from retained Search Console rows is not proof that the site had no impressions. Search Console omits anonymized queries and this acquisition is bounded.',
       'Filters and pagination change the visible subset. Check evidence.coverage and evidence.request before interpreting counts or missing rows.',

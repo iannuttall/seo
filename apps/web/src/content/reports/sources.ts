@@ -81,6 +81,11 @@ export const reportSources = {
     label: 'DataForSEO keyword overview API reference',
     url: 'https://docs.dataforseo.com/v3/dataforseo_labs-google-keyword_overview-live/',
   },
+  'local-research-files': {
+    key: 'local-research-files',
+    label: 'Local provider export format and evidence limits',
+    url: '/docs/research-providers#use-ranked-keyword-exports-without-api-access',
+  },
   redirects: {
     key: 'redirects',
     label: 'Google guidance for redirects',

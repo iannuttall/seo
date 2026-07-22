@@ -8,6 +8,7 @@ export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
     useWhen: [
       'You have already identified relevant competitors and want a bounded opportunity review.',
       'You want to separate existing coverage from plausible new keyword or programmatic template research.',
+      'You have one ranked-keyword export containing the site and compared competitor domains but no connected provider API.',
     ],
     avoidWhen: [
       'You have not classified whether the compared domains are relevant to the business and search intent.',
@@ -38,6 +39,7 @@ export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
     useWhen: [
       'You need the keyword rows behind a site, competitor, or page footprint.',
       'You want to check provider-only rows against retained first-party query evidence for a site you own.',
+      'You have a DataForSEO, Semrush or Ahrefs ranked-keyword export instead of API access.',
     ],
     avoidWhen: [
       'You need a current exact rank for one query, place, and device.',
@@ -53,6 +55,7 @@ export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
     useWhen: [
       "You want to see which pages account for a domain's estimated organic footprint.",
       'You are researching competitor or first-party programmatic page families.',
+      'You want to group a local ranked-keyword export into pages and repeated URL patterns.',
     ],
     avoidWhen: [
       'You plan to infer page quality or intent from URL structure alone.',
@@ -68,6 +71,7 @@ export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
     useWhen: [
       'You want to discover search competitors before selecting domains for deeper research.',
       'You need to separate a target, declared competitors, and other recurring result domains.',
+      'You have a multi-domain ranked-keyword export covering the supplied keyword set.',
     ],
     avoidWhen: [
       'You have only one query or need a local, device-specific live snapshot.',

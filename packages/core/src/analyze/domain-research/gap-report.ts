@@ -119,7 +119,7 @@ function sourceBriefs(
         'Test representative, sparse, duplicate, stale, and malformed records before scaling page count.',
       ],
       evidenceBoundary:
-        'This brief comes from lexical overlap and repeated ranking-page patterns. It does not verify demand, intent, data availability, page quality, or that a new template should be built.',
+        'This brief comes from query-theme overlap and repeated ranking-page patterns. It does not verify demand, intent, data availability, page quality, or that a new template should be built.',
     }))
 }
 
@@ -201,7 +201,12 @@ export async function competitorKeywordGapReport(
       patterns: analysis.competitorPatterns,
     }),
     caveats: [
-      'A relevant gap candidate is a heuristic. It requires retained first-party theme overlap plus either multiple compared domains or a top-10 competitor rank. It does not prove intent, demand, traffic, or that a page should be created.',
+      ...(input.researchFiles
+        ? [
+            'This comparison uses local ranked-keyword files. It can compare only the site and competitor domains present in those files, and every source keeps the same file-level coverage limits.',
+          ]
+        : []),
+      'A relevant gap candidate is a heuristic. It ignores search operators and URL plumbing, then requires at least two meaningful terms in one retained first-party query plus either multiple compared domains or a top-10 competitor rank. It does not prove intent, demand, traffic, or that a page should be created.',
       'Search Console absences mean only that a query was not found in the bounded retained rows. Anonymized queries, filters, the selected date range, and row caps can hide evidence.',
       'Provider ranks, volume, difficulty, intent, and traffic are estimates from a country-level database. Verify shortlisted terms with current result evidence before acting.',
       'Programmatic page patterns come from URL structure. Inspect representative pages and data sources before deciding whether a scalable template is useful or safe.',

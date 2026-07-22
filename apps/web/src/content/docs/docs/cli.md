@@ -101,6 +101,21 @@ Domain research uses country and language. Use `serp-results` for a current
 place and device-specific result snapshot. Provider estimates, first-party
 measurements and live observations keep separate fields and caveats.
 
+Use `ai-mention-research` for provider-indexed mentions, cited domains, and a
+bounded sample of related questions for one AI surface and market:
+
+```sh
+seo reports run ai-mention-research \
+  --params '{"target":{"label":"Example Analytics"},"surface":"google-ai-overview","countryCode":"GB","languageCode":"en","location":{"code":2826},"domain":"example.com","site":"sc-domain:example.com"}' \
+  --json
+```
+
+The default run makes one metrics request and one sample request. Set
+`includeSamples` to `false` for metrics only. Read provider coverage, cache,
+cost, task ids, observation time, and warnings before interpreting the result.
+Optional Search Console overlap adds first-party context without turning an
+indexed mention record into a live prompt observation.
+
 Use `local-search-demand` when Search Console should lead a local investigation:
 
 ```sh

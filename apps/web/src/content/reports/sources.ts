@@ -6,6 +6,11 @@ export const reportSources = {
     label: 'Google guidance for AI features and websites',
     url: 'https://developers.google.com/search/docs/appearance/ai-features',
   },
+  'ai-mention-provider': {
+    key: 'ai-mention-provider',
+    label: 'DataForSEO LLM Mentions API reference',
+    url: 'https://docs.dataforseo.com/v3/ai_optimization/llm_mentions/search_mentions/live/',
+  },
   'bing-webmaster': {
     key: 'bing-webmaster',
     label: 'Bing Webmaster API guidance',

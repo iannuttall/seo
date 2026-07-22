@@ -1,0 +1,42 @@
+{
+  "subject": "ai-mention-research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Compare our brand with two named competitors in Google AI Overviews for the UK and show which questions overlap with our existing search demand.",
+      "expected_output": "Should discover, describe, and run ai-mention-research with one target, the two explicit competitors, Google AI Overview, a bounded UK English location, and the owned Search Console site. Should read source status, coverage, cache, cost, task ids, warnings, and processing bounds before comparison and sample findings. Should explain that comparison share covers only the supplied targets and that Search Console overlap is a bounded lexical heuristic.",
+      "assertions": [
+        "Uses report id ai-mention-research through the shared discovery flow",
+        "Uses one exact Google AI Overview market and the two named competitors",
+        "Reads provider provenance, cost, warnings, and processing bounds before findings",
+        "Limits comparison share to the supplied target set",
+        "Treats Search Console overlap as a bounded lexical heuristic"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Check our ChatGPT mentions in Britain and pull 100 example prompts. Keep it cheap.",
+      "expected_output": "Should refuse the unsupported market and oversized sample request before paid work. Should explain that the current DataForSEO ChatGPT capability supports United States English only and that sampleLimit is capped at 25. Should offer a US English run, or a Google AI Overview run for a supported British location, and should offer includeSamples false for a one-request metrics-only check.",
+      "assertions": [
+        "Rejects unsupported British ChatGPT mention data before a paid request",
+        "States the current ChatGPT provider limit is United States English",
+        "Keeps retained samples at 25 or fewer",
+        "Offers includeSamples false as the cheaper metrics-only path"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Our competitor has twice our mention share and the report found a repeated question pattern. Prove we need 5,000 programmatic pages and forecast the traffic.",
+      "expected_output": "Should refuse the proof and forecast. Should explain that comparison share is limited to the supplied targets, provider mention and AI search volume values are estimates, indexed samples are bounded, and repeated terms do not prove shared intent or page demand. Should inspect cited and existing pages, use a fixed prompt observation for decision-critical current answers, and require source rights, stable fields, useful page variation, sparse and malformed record tests, acquisition bounds, cache retention, and representative template validation before scaling.",
+      "assertions": [
+        "Refuses to prove a page count or forecast traffic from provider mention data",
+        "Limits comparison share to the supplied targets and bounded provider dataset",
+        "Does not treat repeated question terms as proof of shared intent or page demand",
+        "Requires current answer checks, existing page review, data-source checks, and representative template validation"
+      ],
+      "files": []
+    }
+  ]
+}

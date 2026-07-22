@@ -205,6 +205,9 @@ Every report must be technically defensible and useful to another program.
   complete states distinct.
 - Provider row limits, sampling, pagination, failed subqueries, invalid rows,
   and retained subsets must remain visible in structured provenance.
+- Keep provider-indexed AI mention datasets, fixed live prompt observations,
+  referral analytics, and technical eligibility as separate evidence types.
+  Never present one as proof of another.
 - A capped or partial source cannot support a definitive zero or all-clear.
 - GSC final-data dates use the `America/Los_Angeles` calendar and the shared
   final-data helper. Do not recreate date windows with naive UTC subtraction.

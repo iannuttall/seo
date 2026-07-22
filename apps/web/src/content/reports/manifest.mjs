@@ -34,6 +34,7 @@ export const reportIds = [
   'link-evidence',
   'server-log-analysis',
   'link-recovery',
+  'local-search-demand',
   'crawl-history',
   'crawler-rules',
   'llms-txt-audit',

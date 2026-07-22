@@ -90,6 +90,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'link-evidence',
     'link-recovery',
     'llms-txt-audit',
+    'local-search-demand',
     'measure-change',
     'monthly-action-plan',
     'monthly-report',

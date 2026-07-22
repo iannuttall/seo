@@ -356,6 +356,33 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'pseo-audit', reason: 'Validates repeated page templates.' },
     ],
   },
+  'local-search-demand': {
+    readOrder: [
+      'dataStatus, source row cap, possiblyTruncated, and selection exclusions',
+      'methodologyDetails supplied terms and automatic heuristic patterns',
+      'opportunities intent evidence, metrics, page coverage, and action',
+      'templates as repeated page review signals',
+      'serpEvidence requested status, exact market, coverage, cache, cost, features, and organic rows',
+      'caveats and nextSteps',
+    ],
+    doNotClaim: [
+      'A place in a query is not evidence of the searcher location, and Google Analytics geography cannot prove the query.',
+      'Search Console average position is not an exact city rank, and one live snapshot is not rank history.',
+      'A local pack feature does not expose every listing, prove business visibility, or replace Google Business Profile evidence.',
+      'A repeated local URL pattern does not prove shared intent, page quality, unique source data, or permission to scale.',
+    ],
+    verify:
+      'Inspect representative landing pages and the retained live results in the same location, language, and device before changing or expanding local pages.',
+    related: [
+      { id: 'pseo-audit', reason: 'Validates repeated local page templates.' },
+      { id: 'serp-results', reason: 'Opens one local result snapshot.' },
+      { id: 'rank-tracking', reason: 'Measures exact local ranks over time.' },
+      {
+        id: 'keyword-research',
+        reason: 'Finds candidate terms beyond retained Search Console queries.',
+      },
+    ],
+  },
   'saved-keywords': {
     readOrder: [
       'dataStatus, summary, evidence pagination, and any tag filter',

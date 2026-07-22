@@ -6,6 +6,7 @@ import { registerDiagnosisTools } from './diagnosis-tools.js'
 import { registerDomainResearchTools } from './domain-research-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
 import { registerKeywordTools } from './keyword-tools.js'
+import { registerLocalSearchTools } from './local-search-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerProviderTools } from './provider-tools.js'
@@ -88,6 +89,11 @@ const reportGroups: readonly ReportGroup[] = [
       'seo_saved_keywords',
       'seo_serp_results',
     ],
+  },
+  {
+    category: 'opportunities',
+    register: registerLocalSearchTools,
+    names: ['seo_local_search_demand'],
   },
   {
     category: 'opportunities',

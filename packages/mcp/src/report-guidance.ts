@@ -96,18 +96,18 @@ export const REPORT_GUIDANCE = {
   'ai-prompt-observations': {
     name: 'Fixed AI prompt observations',
     description:
-      'Run a small fixed set of prompts against explicit models, retain answer and citation evidence locally, and compare only compatible observations.',
+      'Run a small fixed set of prompts against explicit models, retain answer and citation evidence locally, and compare only like-for-like observations.',
     useWhen: [
       'You need a current answer sample for an exact prompt, model, market label, and web-search setting.',
       'You want to track target and competitor mentions or citations without turning samples into a universal visibility score.',
-      'You want to compare repeated fan-out themes with retained Search Console demand before researching content or programmatic templates.',
+      'You want to compare repeated supporting-search themes with retained Search Console demand before researching content or programmatic templates.',
     ],
     avoidWhen: [
       'You need broad provider-indexed mention estimates rather than current fixed prompt samples.',
       'You cannot supply current model names or do not want to start explicitly bounded paid requests.',
     ],
     outcome:
-      'Current answer samples, target and competitor observations, cited domains, fan-out themes, optional first-party overlap, exact response costs, and defensible local change states.',
+      'Current answer samples, target and competitor observations, cited domains, supporting-search themes, optional first-party overlap, exact response costs, and defensible local change states.',
   },
   'ai-search-scorecard': {
     name: 'AI search scorecard',

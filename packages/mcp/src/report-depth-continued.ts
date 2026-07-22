@@ -35,14 +35,14 @@ export const REPORT_DEPTH_CONTINUED = {
       'dataStatus, exact prompt and model combinations, market label, web-search setting, and request count',
       'each observation evidence coverage, cache state, requested and effective model, checkedAt, answerTruncated, cost, and warnings',
       'answer text, citations, target matches, and comparison status',
-      'firstParty source limits and each fan-out lexical overlap state',
+      'firstParty source limits and each supporting-search word-match state',
       'citedDomains, fanOutThemes, findings, caveats, and nextSteps',
     ],
     doNotClaim: [
       'A generated answer is one sample, not a census of what every user sees or proof of universal AI visibility.',
       'not-observed applies only to the retained answer and supplied aliases. It is not proof of absence.',
       'A citation does not prove that the source supports every answer claim, caused traffic, or will recur. Model changes, cache hits, partial evidence, and truncated answers are not comparable trend points.',
-      'Fan-out and Search Console lexical overlap do not prove shared intent, independent demand, or that a new page or programmatic template should be built.',
+      'Supporting-search and Search Console word matches do not prove shared intent, independent demand, or that a new page or programmatic template should be built.',
     ],
     verify:
       'Inspect the answer and cited pages, validate research leads with keyword and current result evidence, and repeat only decision-critical prompts with the same effective model and complete evidence.',

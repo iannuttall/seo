@@ -20,7 +20,7 @@ const validInput = {
   maxOutputTokens: 2_048,
 }
 
-test('AI prompt report forwards one bounded provider-neutral basket', async () => {
+test('AI prompt report forwards one bounded provider-neutral prompt set', async () => {
   const handler = createAiPromptObservationsHandler({
     aiPromptObservationsReport: async (input) => {
       assert.equal(input.prompts.length, 1)
@@ -60,6 +60,26 @@ test('AI prompt report schema bounds all paid request dimensions', () => {
       aiPromptObservationsInputSchema.safeParse(input).success,
       false,
       JSON.stringify(input),
+    )
+  }
+})
+
+test('AI prompt report advertises only the currently supported live provider', () => {
+  assert.equal(
+    aiPromptObservationsInputSchema.safeParse({
+      ...validInput,
+      provider: 'dataforseo',
+    }).success,
+    true,
+  )
+  for (const provider of ['semrush', 'ahrefs']) {
+    assert.equal(
+      aiPromptObservationsInputSchema.safeParse({
+        ...validInput,
+        provider,
+      }).success,
+      false,
+      provider,
     )
   }
 })

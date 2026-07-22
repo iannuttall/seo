@@ -20,11 +20,13 @@ import type { DataForSeoCredentials } from './credentials.js'
 
 export type DataForSeoPaidResponse = {
   status_code: number
+  status_message?: string
   cost?: number
   tasks_error: number
   tasks: Array<{
     id?: string
     status_code: number
+    status_message?: string
     cost?: number
   }>
 }
@@ -232,12 +234,15 @@ export async function dataForSeoPaidPost<
     },
   )
   if (failed) {
-    const statusCode = failedTasks[0]?.status_code ?? response.status_code
+    const failedTask = failedTasks[0]
+    const statusCode = failedTask?.status_code ?? response.status_code
+    const statusMessage =
+      failedTask?.status_message?.trim() || response.status_message?.trim()
     throw new ProviderError({
       provider: 'dataforseo',
       operation: input.operation,
       code: taskErrorCode(statusCode),
-      message: `DataForSEO could not complete ${input.operation} (${statusCode}).`,
+      message: `DataForSEO could not complete ${input.operation} (${statusCode}${statusMessage ? `: ${statusMessage}` : ''}).`,
       retryable: statusCode === 40202,
     })
   }

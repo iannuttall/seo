@@ -148,6 +148,24 @@ test('AI mention client uses current endpoints, account pricing and local cache'
     },
   ])
   assert.ok(requests[1]?.url.endsWith('/search_mentions/live'))
+  assert.deepEqual(requests[1]?.body, [
+    {
+      language_code: 'en',
+      location_code: 2840,
+      platform: 'google',
+      target: [
+        {
+          keyword: 'Target',
+          match_type: 'word_match',
+          search_scope: ['answer'],
+          search_filter: 'include',
+        },
+      ],
+      order_by: ['ai_search_volume,desc'],
+      offset: 0,
+      limit: 3,
+    },
+  ])
 
   const cached = await client.aiMentionMetrics({
     target: { key: 'target', label: 'Target', aliases: ['Target'] },
@@ -228,4 +246,47 @@ test('AI mention client enforces spend limits before a paid request', async () =
     /row limit/i,
   )
   assert.equal(paidCalls, 0)
+})
+
+test('AI mention client preserves provider task diagnostics', async () => {
+  const client = new DataForSeoClient({
+    database: database(),
+    spendLimits: spendLimits(),
+    credentials: () => ({ login: 'user', password: 'password' }),
+    fetch: async (url) => {
+      if (String(url).endsWith('/appendix/user_data')) {
+        return new Response(JSON.stringify(userDataFixture()))
+      }
+      return new Response(
+        JSON.stringify({
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0,
+          tasks_count: 1,
+          tasks_error: 1,
+          tasks: [
+            {
+              id: 'failed-task',
+              status_code: 40501,
+              status_message: "Invalid Field: 'order_by'.",
+              cost: 0,
+              result_count: 0,
+              result: null,
+            },
+          ],
+        }),
+      )
+    },
+  })
+  await assert.rejects(
+    client.aiMentionSearch({
+      target: { key: 'target', label: 'Target', aliases: ['Target'] },
+      platform: 'google',
+      languageCode: 'en',
+      locationCode: 2840,
+      limit: 3,
+      context: { reportId: 'ai-mention-research', reportRunId: 'run-1' },
+    }),
+    /40501: Invalid Field: 'order_by'/,
+  )
 })

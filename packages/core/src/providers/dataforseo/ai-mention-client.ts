@@ -258,7 +258,7 @@ export function aiMentionSearchPaidRequest(
       ...location,
       platform: input.platform,
       target: targetEntities(input.target),
-      order_by: ['ai_search_volume,desc', 'question,asc'],
+      order_by: ['ai_search_volume,desc'],
       offset: 0,
       limit: input.limit,
     },

@@ -16,11 +16,12 @@
     {
       "id": 2,
       "prompt": "Check our top three local queries in mobile Google results for London and tell me whether a local pack appears.",
-      "expected_output": "Should run local-search-demand with includeSerps true, a London canonical location, mobile device, and serpLimit 3. Should inspect each snapshot's market, observedAt, coverage, cache, cost, features, and organic rows. Should describe local_pack only as an observed result feature in those snapshots, not as complete listing or Google Business Profile evidence.",
+      "expected_output": "Should run local-search-demand with includeSerps true, a London canonical location, mobile device, and serpLimit 3. Should inspect each snapshot's market, observedAt, coverage, cache, cost, organic rows, local-pack rows and aggregated search competitors. Should treat retained local-pack rows as observed listings, not as ownership, complete Maps coverage or Google Business Profile performance.",
       "assertions": [
         "Requests at most three local SERP snapshots for the exact London mobile market",
-        "Reads snapshot provenance, coverage, cache, cost, features, and organic rows",
-        "Treats local_pack as an observed feature rather than complete listing evidence",
+        "Reads snapshot provenance, coverage, cache, cost, organic rows, and local-pack rows",
+        "Treats retained local-pack rows as observations rather than ownership or complete listing evidence",
+        "Classifies recurring organic domains before treating them as comparable businesses",
         "Keeps Search Console average position separate from exact snapshot ranks"
       ],
       "files": []
@@ -34,6 +35,18 @@
         "Does not treat a repeated URL pattern as proof that more pages should exist",
         "Requires source data, uniqueness, indexability, internal linking, and representative page checks",
         "Recommends current local result review before expansion"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Use Analytics to tell me which city every local Search Console query came from.",
+      "expected_output": "Should challenge the requested query-level join. Should explain that local-search-demand can request bounded Analytics geography with googleAnalyticsPropertyId, but it joins sessions only through exact retained landing-page paths. Should keep the Search Console query evidence and Analytics geography separate, inspect source completeness and quality warnings, and avoid assigning a city to a query.",
+      "assertions": [
+        "Uses optional Analytics evidence through local-search-demand rather than a new tool",
+        "Explains the exact retained landing-page path join",
+        "Does not assign Analytics geography to a Search Console query",
+        "Reads caps, unmatched rows, malformed rows, duplicates, and quality warnings before interpreting locations"
       ],
       "files": []
     }

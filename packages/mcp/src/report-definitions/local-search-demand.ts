@@ -37,8 +37,17 @@ export const localSearchDemandInputSchema = z
       .string()
       .trim()
       .regex(/^(?:properties\/)?\d{1,30}$/u)
+      .describe(
+        'Optional numeric Google Analytics property id for landing-page geography evidence.',
+      )
       .optional(),
-    analyticsLimit: z.number().int().min(1).max(10_000).optional(),
+    analyticsLimit: z
+      .number()
+      .int()
+      .min(1)
+      .max(10_000)
+      .describe('Maximum Google Analytics geography rows to request.')
+      .optional(),
     refresh: z.boolean().optional(),
   })
   .superRefine((input, context) => {

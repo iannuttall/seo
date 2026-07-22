@@ -142,12 +142,22 @@ seo reports run ranked-keywords \
   --json
 ```
 
-The importer accepts CSV, TSV, JSON arrays, JSONL and NDJSON. Comma,
-semicolon and tab delimiters are detected automatically. Each row needs a
-keyword, an absolute HTTP or HTTPS ranking URL, and a positive position. It
-also recognises common export names such as `Query`, `Phrase`, `Current URL`,
-`Landing Page`, `Current Position`, `Search Volume`, `Volume`, `Difficulty`,
-`KD`, `CPC`, `Competition`, `Intent` and `Traffic`.
+The importer accepts CSV, TSV, JSON arrays, JSONL and NDJSON. It detects UTF-8,
+UTF-16, comma, semicolon and tab-separated files automatically. This includes
+Ahrefs downloads that use UTF-16 and tabs despite having a `.csv` name. You do
+not need to convert the file first.
+
+Each current ranking needs a keyword, an absolute HTTP or HTTPS ranking URL,
+and a positive position. The importer also recognises common export names such
+as `Query`, `Phrase`, `Current URL`, `Landing Page`, `Current Position`,
+`Search Volume`, `Volume`, `Difficulty`, `KD`, `CPC`, `Competition`,
+`Keyword Intents`, `Current organic traffic` and `Traffic`.
+
+An export can contain separate organic and search-feature rows for the same
+keyword and page. `ranking-pages` counts that as one ranked keyword. Its ranking
+buckets and estimated traffic keep both result rows because each one describes
+a different search appearance. Those totals can be higher than the unique
+keyword count without being duplicates.
 
 Set `countryCode` and `languageCode` to the market used for the export. The
 file does not carry enough consistent metadata for the importer to verify that
@@ -164,6 +174,12 @@ The same input works with these reports:
 | `serp-competitors` | Repeated domains across the requested terms when the files contain more than one domain. |
 | `competitor-keyword-gap` | Site and competitor rows from up to four exports from the same provider. |
 
+The gap report calls a term relevant only when at least two meaningful words
+also appear together in one retained Search Console query. Common words such as
+`new`, `search`, `page` and `tool` do not count. A one-word match stays weak,
+words found across separate queries are not combined into stronger evidence,
+and search operators such as `site:` and `filetype:` are ignored.
+
 `domain-overview` still requires a live provider. A ranked-keyword export
 cannot safely recreate the provider's full domain totals, traffic estimate or
 movement history.
@@ -175,11 +191,13 @@ each. Regular JSON arrays are capped at 10 MB because they are loaded as one
 value.
 
 Every file gets its own entry under `evidence.imports`. That entry records the
-provider, export time, SHA-256 file hash, included fields, bytes read, total
-file rows, supplied rows, valid rows, rejected rows, duplicates and row cap. The
-report scans a bounded file to finish its hash and file-row count even when the
-row cap stops normalization. Missing rows remain unknown because a local
-export does not prove full provider coverage.
+provider, export time, detected encoding and delimiter, SHA-256 file hash,
+included fields, bytes read, total file rows, supplied rows, valid rows,
+filtered historical rows, rejected rows, duplicates and row cap. Ahrefs
+comparison rows with no current URL or position are filtered historical rows,
+not broken records. The report scans a bounded file to finish its hash and
+file-row count even when the row cap stops normalization. Missing rows remain
+unknown because a local export does not prove full provider coverage.
 
 ## Research indexed AI mentions and citations
 

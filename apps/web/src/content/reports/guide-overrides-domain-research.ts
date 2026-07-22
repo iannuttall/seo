@@ -69,7 +69,7 @@ export const domainResearchGuideOverrides: Partial<
       'Applies rank, demand, wording, result-type, and row limits before acquisition, then validates and deduplicates returned rows deterministically.',
       'Labels each first-party comparison as observed, not in retained rows, or not requested.',
       'Keeps provider totals, pagination, invalid rows, cache state, warnings, and request cost beside the visible subset.',
-      'Records each imported file provider, export date, SHA-256 hash, included fields, row quality, duplicates, bytes read, and cap.',
+      'Records each imported file provider, export date, SHA-256 hash, included fields, filtered historical rows, invalid rows, duplicates, bytes read, and cap.',
     ],
     returns: [
       'A bounded ranked-keyword list with ranking URLs, ranks, result types, provider metrics, source state, and stable ordering.',
@@ -119,7 +119,7 @@ export const domainResearchGuideOverrides: Partial<
       'Validates and deduplicates provider page rows while preserving filters, pagination, totals, invalid rows, warnings, and cost.',
       'Groups repeated path shapes into deterministic structural patterns with counts and representative URLs.',
       'Keeps the path-pattern heuristic separate from claims about page quality, intent, demand, or how a site creates its pages.',
-      'Keeps imported file dates, hashes, fields, row counts, rejected rows, duplicates, and caps beside the derived page groups.',
+      'Keeps imported file dates, hashes, fields, row counts, filtered historical rows, rejected rows, duplicates, and caps beside the derived page groups.',
     ],
     returns: [
       'A bounded list of ranking pages with provider estimates, movement, ranking distribution, and optional exact Search Console matches.',
@@ -220,10 +220,10 @@ export const domainResearchGuideOverrides: Partial<
     ],
     checks: [
       'Separates terms already observed in retained first-party rows, terms where the site already has a provider-observed rank, plausible gap candidates, and unverified competitor terms.',
-      'Requires retained first-party theme overlap plus either several compared domains or a top-10 competitor rank before promoting a term to a relevant candidate.',
+      'Ignores generic terms and search operators, then requires two meaningful terms in one retained first-party query plus either several compared domains or a top-10 competitor rank.',
       'Builds bounded token indexes for large Search Console datasets and applies deterministic limits, ordering, and one structured-output budget.',
       'Creates a data-source research brief only when repeated page patterns support a possible new template family.',
-      'Keeps file hashes, export times, included fields, invalid rows, duplicates, and caps visible for every imported domain source.',
+      'Keeps file hashes, export times, included fields, filtered historical rows, invalid rows, duplicates, and caps visible for every imported domain source.',
     ],
     returns: [
       'A bounded candidate list with competitor evidence, own-site coverage state, provider metrics, theme matches, classifications, and verification prompts.',

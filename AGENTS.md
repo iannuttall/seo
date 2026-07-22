@@ -206,8 +206,9 @@ Every report must be technically defensible and useful to another program.
 - Provider row limits, sampling, pagination, failed subqueries, invalid rows,
   and retained subsets must remain visible in structured provenance.
 - Local provider imports retain the provider, export date, file hash, included
-  fields, bytes read, file rows, supplied rows, valid rows, invalid rows,
-  duplicates, and caps. An imported absence is never a definitive zero.
+  fields, encoding, delimiter, bytes read, file rows, supplied rows, valid
+  rows, invalid rows, filtered historical rows, duplicates, and caps. An
+  imported absence is never a definitive zero.
 - Keep provider-indexed AI mention datasets, fixed live prompt observations,
   referral analytics, and technical eligibility as separate evidence types.
   Never present one as proof of another.

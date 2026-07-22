@@ -224,7 +224,7 @@ export function validateAiPromptObservationInput(input: {
   if (requestCount > MAX_AI_OBSERVATION_REQUESTS) {
     throw new SeoError(
       'INVALID_INPUT',
-      `This basket would start ${requestCount} paid requests. The per-run limit is ${MAX_AI_OBSERVATION_REQUESTS}.`,
+      `These prompt and model combinations would start ${requestCount} paid requests. The per-run limit is ${MAX_AI_OBSERVATION_REQUESTS}.`,
     )
   }
   return {

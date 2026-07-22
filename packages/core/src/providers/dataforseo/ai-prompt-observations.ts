@@ -57,10 +57,29 @@ function modelsFromResponse(
   )
 }
 
-function checkedAt(value: string | null | undefined, fallback: string): string {
-  if (!value) return fallback
+function checkedAt(
+  value: string | null | undefined,
+  fallback: string,
+): { value: string; warning: ProviderWarning | null } {
+  if (!value) return { value: fallback, warning: null }
   const parsed = new Date(value.replace(' ', 'T').replace(' +00:00', 'Z'))
-  return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString()
+  const observed = new Date(fallback)
+  const invalid = Number.isNaN(parsed.getTime())
+  const implausiblyFuture =
+    !invalid &&
+    !Number.isNaN(observed.getTime()) &&
+    parsed.getTime() > observed.getTime() + 5 * 60_000
+  if (invalid || implausiblyFuture) {
+    return {
+      value: fallback,
+      warning: {
+        code: 'provider-datetime-invalid',
+        message:
+          'The provider returned an invalid or future answer time, so the local observation time was retained instead.',
+      },
+    }
+  }
+  return { value: parsed.toISOString(), warning: null }
 }
 
 function mappedObservation(
@@ -110,6 +129,8 @@ function mappedObservation(
     .sort(compareText)
     .slice(0, MAX_FAN_OUT_QUERIES)
   const warnings: ProviderWarning[] = [...snapshot.warnings]
+  const observationTime = checkedAt(row.datetime, snapshot.observedAt)
+  if (observationTime.warning) warnings.push(observationTime.warning)
   if (!rawAnswer) {
     warnings.push({
       code: 'answer-missing',
@@ -161,7 +182,7 @@ function mappedObservation(
         row.money_spent === null || row.money_spent === undefined
           ? null
           : Math.round(row.money_spent * 1_000_000),
-      checkedAt: checkedAt(row.datetime, snapshot.observedAt),
+      checkedAt: observationTime.value,
     },
     observedAt: snapshot.observedAt,
     coverage: {

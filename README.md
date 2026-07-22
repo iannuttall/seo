@@ -214,6 +214,7 @@ seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
 seo reports describe local-search-demand --json
 seo reports describe ai-mention-research --json
+seo reports describe ai-prompt-observations --json
 
 seo reports run domain-overview \
   --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
@@ -242,7 +243,11 @@ The research flow now covers:
   Console evidence;
 - `ai-mention-research` for provider-indexed mentions, cited domains, and
   bounded question samples in one exact AI surface and market, with optional
-  Search Console overlap for a property you own.
+  Search Console overlap for a property you own;
+- `ai-prompt-observations` for a small fixed set of prompts across explicit
+  current ChatGPT, Claude, Gemini, or Perplexity models, with answers,
+  citations, compatible history, exact returned costs, and optional Search
+  Console context stored locally.
 
 Provider traffic, volume, difficulty, intent, visibility, and ranking history
 are estimates. Search Console remains the evidence for measured search
@@ -251,8 +256,12 @@ for one query, market, device, and observation time. Reports can combine these
 sources without blending their meanings or turning a missing row into zero.
 Local query wording does not establish the searcher's physical location, and an
 observed local pack does not establish that a particular listing appeared.
-Provider-indexed AI mentions are not live prompt observations, and neither one
-proves referral traffic or technical eligibility.
+Provider-indexed AI mentions are not live prompt observations. Each live answer
+is one sample under its exact prompt, requested and effective model, market
+label, settings, and collection time. Neither source proves referral traffic or
+technical eligibility. A missing target in one answer does not prove universal
+absence. The requested model is the model you chose; the effective model is the
+model the provider reports actually running.
 
 Read the [research provider guide](https://seoskill.dev/docs/research-providers)
 for setup, costs, caching, country-level limits, competitor classification, and

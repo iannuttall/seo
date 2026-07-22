@@ -428,8 +428,9 @@ export const reportGuideOverridesQZ: Partial<
       },
       {
         when: 'You need to know whether an assistant currently mentions, cites, or recommends the site for a prompt.',
+        reportId: 'ai-prompt-observations',
         doInstead:
-          'No automated report in this package tests live assistant answers. Run the generated prompt set against the chosen assistants under a documented location, account, model, and date, then save the responses for comparison. This report supplies repeatable prompts and their Search Console source evidence.',
+          'Run AI prompt observations for a small fixed subset. It keeps each answer, citation, exact model, settings, time, cache state, and cost beside the Search Console source evidence used to build the prompts.',
       },
     ],
     seo: {

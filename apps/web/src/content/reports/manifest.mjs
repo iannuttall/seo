@@ -4,6 +4,7 @@ export const reportIds = [
   'ai-readiness',
   'ai-referrals',
   'ai-mention-research',
+  'ai-prompt-observations',
   'ai-search-scorecard',
   'audit-page',
   'audit-urls',

@@ -9,6 +9,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Check the matched referrer and landing page before treating a session as useful AI traffic. Search demand and assistant visibility need their own reports because Google Analytics only records visits that reached the site.',
   'ai-mention-research':
     'Inspect the exact market, cited pages and retained questions before acting on a mention difference. Check existing first-party pages, then use a fixed prompt observation only for the small question set where a current answer would change the decision.',
+  'ai-prompt-observations':
+    'Open the exact answer, citations, effective model, cache state and returned cost before acting on a match. Validate repeated themes against keyword, result and existing page evidence before planning content or a programmatic template.',
   'ai-search-scorecard':
     'Open the checks behind the weakest score group and fix only the failures supported by crawl evidence. Run the scorecard again against a comparable crawl so the before and after numbers describe the same scope.',
   'audit-page':
@@ -148,6 +150,8 @@ export const reportScheduleNotes: Partial<Record<string, string>> = {
     "Ask your agent to run this weekly or monthly and tell you which assistants and landing pages are new. Compare complete Google Analytics periods because today's traffic can still be arriving or attributed.",
   'ai-mention-research':
     'Run this on a measured weekly or monthly cadence only when the indexed dataset supports the selected surface and market. Keep the target set, aliases and location stable so changes are comparable, and use refresh only when newer provider evidence is worth another paid request.',
+  'ai-prompt-observations':
+    'Schedule only a small stable prompt set. Keep prompts, exact models, market labels, web-search settings and output-token limits fixed, and start a new baseline whenever an effective model changes.',
   'compare-crawls':
     'Your agent can schedule matching crawls and compare each new snapshot with the previous one. Keep the start URL, scope and limits stable or the change list will mix site changes with crawl changes.',
   'crawl-diff':

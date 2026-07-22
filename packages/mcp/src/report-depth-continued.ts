@@ -1,6 +1,32 @@
 import type { ReportDepth } from './report-depth.js'
 
 export const REPORT_DEPTH_CONTINUED = {
+  'ai-mention-research': {
+    readOrder: [
+      'dataStatus, exact surface and market, source statuses, coverage, cache, cost, and warnings',
+      'summary and comparison provider values before targetComparisonShare',
+      'samples with observation times, model, answerTruncated, sources, and ownedSources',
+      'firstParty source limits and each sample lexical overlap state',
+      'questionPatterns, dataSourceBriefs, findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'Provider-indexed records are not live prompt observations, a complete census, or proof of current AI visibility.',
+      'Comparison share is limited to the supplied targets and returned provider dataset. It is not a universal score.',
+      'Mention count, AI search volume, and citations do not prove referral traffic, sentiment, authority, or future performance.',
+      'Lexical overlap and repeated question terms do not prove shared intent or justify a new page or programmatic template.',
+    ],
+    verify:
+      'Inspect cited pages and current results, then run fixed prompt observations for a small stable question set before changing content or templates.',
+    related: [
+      { id: 'ai-referrals', reason: 'Measures identifiable referral visits.' },
+      { id: 'ai-readiness', reason: 'Checks technical access controls.' },
+      {
+        id: 'keyword-opportunities',
+        reason: 'Starts from first-party demand.',
+      },
+      { id: 'pseo-audit', reason: 'Validates existing repeated templates.' },
+    ],
+  },
   'competitor-keyword-gap': {
     readOrder: [
       'dataStatus, source statuses, market, and selection bounds',

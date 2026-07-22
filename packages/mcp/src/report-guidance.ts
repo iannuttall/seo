@@ -77,6 +77,22 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A source and landing-page breakdown of identifiable AI referrals.',
   },
+  'ai-mention-research': {
+    name: 'AI mention research',
+    description:
+      'Compare provider-indexed mentions, source domains, and question samples for one AI surface, location, and language.',
+    useWhen: [
+      'You need independent AI mention and citation research beyond referral traffic or technical readiness.',
+      'You want to compare a named target with a small explicit competitor set in the same provider dataset.',
+      'You want to check bounded question samples against existing Search Console demand before planning content.',
+    ],
+    avoidWhen: [
+      'You need a current answer from a fixed prompt. Use prompt observation rather than an indexed mention dataset.',
+      'You want a universal visibility score or proof that an AI product never mentions a target.',
+    ],
+    outcome:
+      'Provider-indexed comparison metrics, cited sources, bounded question evidence, optional first-party overlap, costs, and programmatic research prompts.',
+  },
   'ai-search-scorecard': {
     name: 'AI search scorecard',
     description:

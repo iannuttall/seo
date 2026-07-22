@@ -27,6 +27,15 @@ import {
   type DataForSeoUserDataResponse,
   dataForSeoUserDataResponseSchema,
 } from './account-schema.js'
+import {
+  aiMentionMetricsPaidRequest,
+  aiMentionSearchPaidRequest,
+  type DataForSeoAiMentionMetricsRequest,
+  type DataForSeoAiMentionMetricsSnapshot,
+  type DataForSeoAiMentionSearchRequest,
+  type DataForSeoAiMentionSearchSnapshot,
+  DEFAULT_AI_MENTION_TTL_MS,
+} from './ai-mention-client.js'
 import type {
   DataForSeoAccountSnapshot,
   DataForSeoBacklinksRequest,
@@ -123,6 +132,12 @@ const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
 
 export type {
+  DataForSeoAiMentionMetricsRequest,
+  DataForSeoAiMentionMetricsSnapshot,
+  DataForSeoAiMentionSearchRequest,
+  DataForSeoAiMentionSearchSnapshot,
+} from './ai-mention-client.js'
+export type {
   DataForSeoAccountSnapshot,
   DataForSeoBacklinksRequest,
   DataForSeoBacklinksSnapshot,
@@ -182,6 +197,7 @@ export class DataForSeoClient {
   private readonly accountPricingTtlMs: number
   private readonly domainResearchTtlMs: number
   private readonly linkTtlMs: number
+  private readonly aiMentionTtlMs: number
   private readonly spendLimits: ProviderSpendLimits | undefined
   private accountPricing:
     | {
@@ -216,6 +232,7 @@ export class DataForSeoClient {
     this.domainResearchTtlMs =
       options.domainResearchTtlMs ?? DEFAULT_DOMAIN_RESEARCH_TTL_MS
     this.linkTtlMs = options.linkTtlMs ?? DEFAULT_LINK_TTL_MS
+    this.aiMentionTtlMs = options.aiMentionTtlMs ?? DEFAULT_AI_MENTION_TTL_MS
     this.spendLimits = options.spendLimits
   }
 
@@ -392,6 +409,7 @@ export class DataForSeoClient {
     ttlMs: number
     refresh?: boolean
     rowCount: (response: T) => number
+    timeoutMs?: number
   }): Promise<{
     response: T
     observedAt: string
@@ -417,7 +435,7 @@ export class DataForSeoClient {
       baseUrl: this.baseUrl,
       fetch: this.fetch,
       maxResponseBytes: this.maxResponseBytes,
-      timeoutMs: this.timeoutMs,
+      timeoutMs: input.timeoutMs ?? this.timeoutMs,
       now: this.now,
       database: this.database,
       spendLimits: this.spendLimits,
@@ -430,6 +448,20 @@ export class DataForSeoClient {
     return this.paidPost(
       domainOverviewPaidRequest(input, this.domainResearchTtlMs),
     )
+  }
+
+  async aiMentionMetrics(
+    input: DataForSeoAiMentionMetricsRequest,
+  ): Promise<DataForSeoAiMentionMetricsSnapshot> {
+    return this.paidPost(
+      aiMentionMetricsPaidRequest(input, this.aiMentionTtlMs),
+    )
+  }
+
+  async aiMentionSearch(
+    input: DataForSeoAiMentionSearchRequest,
+  ): Promise<DataForSeoAiMentionSearchSnapshot> {
+    return this.paidPost(aiMentionSearchPaidRequest(input, this.aiMentionTtlMs))
   }
 
   async rankedKeywords(

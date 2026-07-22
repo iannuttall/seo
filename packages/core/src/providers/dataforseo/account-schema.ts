@@ -51,6 +51,19 @@ const livePriceSchema = z
 
 const userDataPriceSchema = z
   .object({
+    ai_optimization: z
+      .object({
+        llm_mentions: z
+          .object({
+            target_metrics: livePriceSchema.optional(),
+            multi_target_metrics: livePriceSchema.optional(),
+            search_mentions: livePriceSchema.optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
     backlinks: z
       .object({
         summary: livePriceSchema.optional(),

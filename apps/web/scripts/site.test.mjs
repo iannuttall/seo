@@ -923,7 +923,14 @@ test('telemetry prose and stats keep a stable readable first render', () => {
     /data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events/u,
   )
   assert.match(stats, /class="animate-pulse[^>]+data-stats-loading/u)
-  assert.doesNotMatch(stats, />Loading<\//u)
+  assert.match(
+    stats,
+    /data-stats-status[^>]*data-agent-markdown="exclude"[^>]*>\s*Fetching current totals\.<\/p>/u,
+  )
+  assert.doesNotMatch(
+    stats,
+    /data-stats-status[^>]*>[^<]*Agents can fetch current/u,
+  )
   assert.doesNotMatch(stats, /Not available/u)
 
   // Live values are browser-only. The static page tells agents to fetch the
@@ -933,7 +940,11 @@ test('telemetry prose and stats keep a stable readable first render', () => {
     stats,
     /Agents can fetch current\s+values as JSON with a GET request to https:\/\/seoskill\.dev\/api\/stats/u,
   )
-  assert.equal(matches(stats, /data-agent-markdown="exclude"/gu).length, 4)
+  assert.match(
+    stats,
+    /hidden data-agent-markdown="only">\s*Agents can fetch current values as JSON/u,
+  )
+  assert.equal(matches(stats, /data-agent-markdown="exclude"/gu).length, 5)
   const statsMarkdown = readFileSync(resolve(dist, 'stats.md'), 'utf8')
   assert.match(statsMarkdown, /https:\/\/seoskill\.dev\/api\/stats/u)
   assert.doesNotMatch(statsMarkdown, /Recorded installs/u)

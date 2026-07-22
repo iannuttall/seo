@@ -23,9 +23,12 @@ const metrics = [
     description="Aggregate event counts from installs that leave anonymous telemetry enabled. No user, machine, site, URL, report content, Google data, or location is attached to any event."
     align="left"
   >
-    <p slot="actions" class="animate-pulse font-sans text-sm text-foreground-muted" data-stats-status data-stats-loading aria-live="polite">
-      Counts on this page load live in the browser. Agents can fetch current
-      values as JSON with a GET request to https://seoskill.dev/api/stats.
+    <p slot="actions" class="animate-pulse font-sans text-sm text-foreground-muted" data-stats-status data-stats-loading data-agent-markdown="exclude" aria-live="polite">
+      Fetching current totals.
+    </p>
+    <p slot="actions" hidden data-agent-markdown="only">
+      Agents can fetch current values as JSON with a GET request to
+      https://seoskill.dev/api/stats.
     </p>
   </PageHeader>
 

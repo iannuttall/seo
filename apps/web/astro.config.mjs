@@ -15,7 +15,13 @@ export default defineConfig({
     syntaxHighlight: false,
     processor: unified({ rehypePlugins: [rehypeCodeFrame] }),
   },
-  integrations: [mdx(), agentMarkdown({ llmsTxt })],
+  integrations: [
+    mdx(),
+    agentMarkdown({
+      llmsTxt,
+      cloudflareHeaders: false,
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
     resolve: {

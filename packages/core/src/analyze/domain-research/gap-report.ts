@@ -201,6 +201,11 @@ export async function competitorKeywordGapReport(
       patterns: analysis.competitorPatterns,
     }),
     caveats: [
+      ...(input.researchFiles
+        ? [
+            'This comparison uses local ranked-keyword files. It can compare only the site and competitor domains present in those files, and every source keeps the same file-level coverage limits.',
+          ]
+        : []),
       'A relevant gap candidate is a heuristic. It requires retained first-party theme overlap plus either multiple compared domains or a top-10 competitor rank. It does not prove intent, demand, traffic, or that a page should be created.',
       'Search Console absences mean only that a query was not found in the bounded retained rows. Anonymized queries, filters, the selected date range, and row caps can hide evidence.',
       'Provider ranks, volume, difficulty, intent, and traffic are estimates from a country-level database. Verify shortlisted terms with current result evidence before acting.',

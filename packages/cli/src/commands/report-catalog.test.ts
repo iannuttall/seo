@@ -172,6 +172,55 @@ test('reports run validates inline and file parameters consistently', async () =
   }
 })
 
+test('reports run imports ranked-keyword files through the generic CLI path', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'seo-research-import-cli-'))
+  const researchFile = join(directory, 'rankings.csv')
+  const paramsFile = join(directory, 'params.json')
+  await writeFile(
+    researchFile,
+    [
+      'Keyword,Position,URL,Search Volume',
+      'safe fixture query,5,https://example.com/page,100',
+    ].join('\n'),
+  )
+  await writeFile(
+    paramsFile,
+    JSON.stringify({
+      target: 'example.com',
+      countryCode: 'GB',
+      languageCode: 'en',
+      researchFiles: [
+        {
+          dataset: 'ranked-keywords',
+          file: researchFile,
+          provider: 'semrush',
+          exportedAt: '2026-07-20T12:00:00Z',
+        },
+      ],
+    }),
+  )
+
+  try {
+    const result = await runSeo([
+      'reports',
+      'run',
+      'ranked-keywords',
+      '--params-file',
+      paramsFile,
+      '--json',
+    ])
+    assert.equal(result.exitCode, 0)
+    assert.equal(result.stderr, '')
+    const output = JSON.parse(result.stdout)
+    assert.equal(output.summary.providerRows, 1)
+    assert.equal(output.evidence.provider, 'semrush')
+    assert.equal(output.evidence.imports.length, 1)
+    assert.match(output.evidence.imports[0].sha256, /^[a-f0-9]{64}$/u)
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
 test('reports reject unknown categories and malformed JSON clearly', async () => {
   const category = await runSeo([
     'reports',

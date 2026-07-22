@@ -16,9 +16,9 @@ import {
   offset,
   providerFailure,
   reportStatus,
+  researchFilesDependencies,
   researchProvider,
   validatedMarket,
-  validatedProvider,
   value,
 } from './shared.js'
 
@@ -62,7 +62,13 @@ export async function serpCompetitorsReport(
 ): Promise<SerpCompetitorsReport> {
   const now = (dependencies.now ?? (() => new Date()))()
   const market = validatedMarket(input.market)
-  const providerId = validatedProvider(input.provider)
+  const source = researchFilesDependencies({
+    sources: input.researchFiles,
+    provider: input.provider,
+    dependencies,
+    now,
+  })
+  const providerId = source.provider
   const keywords = [...new Set(input.keywords.map(normalizedKeyword))]
     .filter(Boolean)
     .sort(compareText)
@@ -92,7 +98,7 @@ export async function serpCompetitorsReport(
     capability: 'serp-competitors',
     market,
     provider: providerId,
-    dependencies,
+    dependencies: source.dependencies,
     method: 'serpCompetitors',
   })
   let evidence: Awaited<ReturnType<SerpCompetitorsProvider['serpCompetitors']>>
@@ -196,9 +202,16 @@ export async function serpCompetitorsReport(
     competitors,
     findings,
     caveats: [
+      ...(input.researchFiles
+        ? [
+            "Imported competitors come only from domains present in the local ranked-keyword file. This does not recreate a live result page or the provider's complete competitor dataset.",
+          ]
+        : []),
       'This is a country-level provider comparison across the supplied keyword set. It is not a complete market share, business-competitor, or local-rank study.',
       'A domain is a search competitor when it appears in this result set. Publisher, directory, community, marketplace, and business labels come only from the supplied classification; unknown domains stay unknown.',
-      'Visibility and estimated traffic are provider calculations. Query-set size, filters, result types, pagination, and update time all affect them.',
+      input.researchFiles
+        ? 'The import leaves provider visibility unavailable. Estimated traffic is summed only when every contributing row contains a valid value.'
+        : 'Visibility and estimated traffic are provider calculations. Query-set size, filters, result types, pagination, and update time all affect them.',
     ],
     nextSteps: [
       'Classify unknown domains before treating them as strategic competitors. A directory or community can reveal intent without being a business competitor.',

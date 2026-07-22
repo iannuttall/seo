@@ -8,6 +8,7 @@ import type {
   RankedKeyword,
   RankedKeywordPage,
   RankingPagePage,
+  ResearchImportSource,
   SerpCompetitorSet,
 } from '../providers/domain-contracts.js'
 
@@ -76,6 +77,7 @@ export type DomainOverviewReport = {
 
 export type RankedKeywordsReportInput = Omit<DomainReportInput, 'domain'> & {
   target: string
+  researchFiles?: ResearchImportSource[]
   site?: string
   days?: number
   includeSubdomains?: boolean
@@ -135,6 +137,7 @@ export type RankedKeywordsReport = {
 }
 
 export type RankingPagesReportInput = DomainReportInput & {
+  researchFiles?: ResearchImportSource[]
   site?: string
   days?: number
   minEstimatedTraffic?: number
@@ -221,6 +224,7 @@ export type SerpCompetitorsReportInput = {
   limit?: number
   offset?: number
   provider?: ProviderId
+  researchFiles?: ResearchImportSource[]
   projectId?: string
   refresh?: boolean
 }
@@ -276,6 +280,7 @@ export type CompetitorKeywordGapReportInput = {
   maxRank?: number
   includeSubdomains?: boolean
   provider?: ProviderId
+  researchFiles?: ResearchImportSource[]
   projectId?: string
   refresh?: boolean
 }

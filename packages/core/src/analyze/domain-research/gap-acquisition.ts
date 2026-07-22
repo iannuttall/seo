@@ -14,9 +14,9 @@ import {
   limit,
   normalizeDomain,
   providerFailure,
+  researchFilesDependencies,
   researchProvider,
   validatedMarket,
-  validatedProvider,
 } from './shared.js'
 
 export const MAX_GAP_COMPETITORS = 3
@@ -72,7 +72,13 @@ export async function acquireCompetitorGap(
 ): Promise<GapAcquisition> {
   const now = (dependencies.now ?? (() => new Date()))()
   const market = validatedMarket(input.market)
-  const providerId = validatedProvider(input.provider)
+  const source = researchFilesDependencies({
+    sources: input.researchFiles,
+    provider: input.provider,
+    dependencies,
+    now,
+  })
+  const providerId = source.provider
   const ownDomain = normalizeDomain(input.site)
   const compared = competitors(input.competitors)
   if (compared.some((item) => item.domain === ownDomain)) {
@@ -107,7 +113,7 @@ export async function acquireCompetitorGap(
     capability: 'ranked-keywords',
     market,
     provider: providerId,
-    dependencies,
+    dependencies: source.dependencies,
     method: 'rankedKeywords',
   })
   const reportRunId = randomUUID()
@@ -115,7 +121,7 @@ export async function acquireCompetitorGap(
     site: input.site,
     days: rangeDays,
     refresh: input.refresh,
-    dependencies,
+    dependencies: source.dependencies,
     now,
   })
   let ownSource: CompetitorKeywordGapReport['source']['ownDomain'] = {

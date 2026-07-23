@@ -76,6 +76,37 @@ report includes cache hit, miss or bypass state, observation time, estimated
 cost, actual cost and provider task ids. Use `refresh: true` only when the
 decision needs newer provider evidence.
 
+## Know what a provider request sends
+
+The software stores provider credentials, caches, histories and spend records
+locally. A live provider request still sends the inputs needed for that
+operation directly to the provider.
+
+| Operation | Inputs sent to DataForSEO |
+| --- | --- |
+| Keyword, result and domain research | Keywords or seeds, domains or URLs, market, location, device, filters and limits required by the report. |
+| Link research | The target domain or URL, provider filters and result limits. |
+| Indexed AI mention research | Target names and aliases, surface, market and result limits. |
+| Fixed AI prompt observation | The full prompt, selected model, country, web search setting and output limit. |
+| First-party enrichment | Selected Search Console query text or a derived research seed, only when `includeExternal` or `includeSerps` is explicitly enabled. |
+
+First-party enrichment does not send Google OAuth tokens, Google account
+identity, Search Console property IDs, clicks, impressions, click-through rate,
+positions, or Google Analytics rows. The report keeps provider estimates and
+first-party metrics separate.
+
+DataForSEO processes live inputs and responses under its
+[privacy policy](https://dataforseo.com/privacy-policy). As of 23 July 2026,
+that policy says API task data is stored for 365 days. Local cache removal and
+`seo providers dataforseo disconnect` do not delete provider-side task data.
+Use the disconnect command to remove saved credentials, then
+`seo reset --yes` to remove local configuration, caches, histories, spend
+records, logs and saved reports. Environment credentials remain under the
+control of your shell or runtime.
+
+Local DataForSEO, Semrush and Ahrefs file imports are different. They are read
+from disk and are not uploaded to a provider or the project maintainer.
+
 ## Discover the research reports
 
 The normal CLI and MCP discovery flow exposes the same reports:

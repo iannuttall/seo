@@ -8,8 +8,9 @@ description: Use and read this skill immediately if the user request is in any w
 `seo` is a local CLI, MCP server, and report engine using crawl, Search Console,
 Google Analytics, optional Bing evidence, and optional research providers.
 Reports keep observations, estimates, findings, caveats, costs, and provenance
-separate. Data stays local. Discover reports at runtime instead of memorising
-them.
+separate. Storage stays local; requested crawls and provider operations still
+make direct network requests. Discover reports at runtime instead of
+memorising them.
 
 ## Discover, describe, run
 

@@ -221,7 +221,7 @@ const allHelpSections: HelpSection[] = [
       ['seo cache', 'Manage local cache'],
       ['seo privacy', 'Show local storage paths'],
       ['seo telemetry status', 'Check anonymous usage telemetry'],
-      ['seo reset', 'Delete local SEO data'],
+      ['seo reset', 'Delete saved credentials and all local data'],
     ],
   },
 ]

@@ -12,6 +12,16 @@ import {
 const KEYRING_SERVICE = 'seo'
 const PRIVATE_FILE_MODE = 0o600
 
+export const PROVIDER_SECRET_NAMES = {
+  bingApiKey: 'bing-api-key',
+  dataForSeoCredentials: 'dataforseo-credentials',
+  indexNowKeys: 'indexnow-keys',
+} as const
+
+export const MANAGED_PROVIDER_SECRET_NAMES = Object.freeze(
+  Object.values(PROVIDER_SECRET_NAMES),
+)
+
 type ProviderSecretsFile = {
   version: 1
   secrets: Record<string, string>
@@ -131,6 +141,39 @@ export async function writeProviderSecret(
 }
 
 export async function deleteProviderSecret(name: string): Promise<void> {
-  await deleteKeyringPassword(KEYRING_SERVICE, account(name)).catch(() => false)
+  const stored = await readProviderSecret({ name })
+  let keyringError: unknown
+  try {
+    await deleteKeyringPassword(KEYRING_SERVICE, account(name))
+  } catch (error) {
+    keyringError = error
+  }
+  if (keyringError && stored?.source === 'keychain') {
+    throw new Error(
+      'The saved provider credential could not be removed from the system keychain. Unlock the keychain and try again.',
+      { cause: keyringError },
+    )
+  }
   deleteFileSecret(name)
+}
+
+export async function deleteManagedProviderSecrets(): Promise<void> {
+  const results = await Promise.allSettled(
+    MANAGED_PROVIDER_SECRET_NAMES.map((name) => deleteProviderSecret(name)),
+  )
+  const failed = results.flatMap((result, index) =>
+    result.status === 'rejected' ? [MANAGED_PROVIDER_SECRET_NAMES[index]] : [],
+  )
+  if (failed.length > 0) {
+    throw new Error(
+      `Reset could not remove ${failed.length} saved provider credential record${failed.length === 1 ? '' : 's'}. Unlock the keychain or repair the local provider secrets file, then run \`seo reset --yes\` again.`,
+      {
+        cause: new AggregateError(
+          results.flatMap((result) =>
+            result.status === 'rejected' ? [result.reason] : [],
+          ),
+        ),
+      },
+    )
+  }
 }

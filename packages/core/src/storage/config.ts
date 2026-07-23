@@ -173,12 +173,26 @@ export async function writeTokens(tokens: StoredTokens): Promise<void> {
 }
 
 export async function deleteTokens(): Promise<void> {
-  const tokens = await readTokens()
-  if (tokens) {
-    await deleteKeyringTokens(tokens).catch(() => undefined)
+  const path = getSeoCliPaths().tokensFile
+  const raw = readJsonFile<StoredTokens>(path)
+  if (!raw) {
+    safeRemove(path)
+    return
+  }
+  const tokens = tokenSchema.parse(raw)
+  const keyringBacked = !hasTokenSecrets(tokens)
+  try {
+    await deleteKeyringTokens(tokens)
+  } catch (error) {
+    if (keyringBacked) {
+      throw new Error(
+        'Google tokens could not be removed from the system keychain. Unlock the keychain and try again.',
+        { cause: error },
+      )
+    }
   }
 
-  safeRemove(getSeoCliPaths().tokensFile)
+  safeRemove(path)
 }
 
 export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {

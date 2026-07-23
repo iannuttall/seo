@@ -1,12 +1,10 @@
-import { rmSync } from 'node:fs'
 import { cancel, confirm } from '@clack/prompts'
 import {
-  deleteTokens,
   getCacheStats,
   getPrivacySnapshot,
-  getSeoCliPaths,
   listSearchUpdates,
   listSites,
+  resetSeoData,
   SeoError,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -45,7 +43,7 @@ export const privacyCommand = defineCommand({
 export const resetCommand = defineCommand({
   meta: {
     name: 'reset',
-    description: 'Delete local seo config, tokens, cache, and logs',
+    description: 'Delete saved credentials and all local data',
   },
   args: {
     yes: {
@@ -60,7 +58,6 @@ export const resetCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const paths = getSeoCliPaths()
     const json = jsonFlag(args)
     if (!args.yes && !canPrompt({ json })) {
       throw new SeoError(
@@ -72,7 +69,7 @@ export const resetCommand = defineCommand({
       ? true
       : maybeExitCancelled(
           await confirm({
-            message: 'Delete config, tokens, cache, and logs?',
+            message: 'Delete saved credentials and all local data?',
             initialValue: false,
           }),
         )
@@ -80,10 +77,7 @@ export const resetCommand = defineCommand({
       cancel('Reset aborted.')
       return
     }
-    await deleteTokens()
-    rmSync(paths.configDir, { recursive: true, force: true })
-    rmSync(paths.cacheDir, { recursive: true, force: true })
-    rmSync(paths.logDir, { recursive: true, force: true })
+    await resetSeoData()
     if (json) {
       printJson({ reset: true })
     } else {

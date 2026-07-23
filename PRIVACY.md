@@ -99,8 +99,10 @@ Analytics responses immediately. Run `seo cache clear --provider gsc` to do
 the same for Search Console. Project profiles and reports that you deliberately
 save remain until you delete them with the relevant command or run
 `seo reset --yes`. The reset command removes Google tokens, local
-configuration, caches, logs, histories, and saved reports. Provider secrets in
-the system keychain need the provider-specific removal commands listed below.
+configuration, caches, logs, histories, saved reports, and saved provider
+credentials. It removes active keychain credentials before deleting local
+files. If the keychain refuses a deletion, reset stops and tells you to unlock
+it before trying again.
 
 ## Optional research provider requests
 
@@ -184,9 +186,9 @@ bounded to 50,000 rows and 32 MiB.
 Run `seo cache clear --provider dataforseo` to remove cached DataForSEO
 responses. Run `seo providers dataforseo disconnect` to remove saved
 credentials. These commands do not delete task data already processed by
-DataForSEO. Run `seo reset --yes` to remove local configuration, caches,
-histories, spend records, logs, and saved reports. It does not clear
-DataForSEO, Bing, or IndexNow secrets from the system keychain.
+DataForSEO. Run `seo reset --yes` to remove every saved provider credential
+along with local configuration, caches, histories, spend records, logs, and
+saved reports.
 
 ## Anonymous tool usage
 
@@ -257,7 +259,8 @@ Use `seo auth logout` to remove local Google tokens,
 `seo indexnow remove --site https://example.com` to remove a saved IndexNow key
 for one site. Environment variables are controlled by your shell or runtime and
 are not changed by these commands. Use `seo privacy` to inspect local paths and
-`seo reset --yes` to remove local files managed by the software.
+`seo reset --yes` to remove every saved credential and local file managed by
+the software.
 
 You can also revoke the app from your
 [Google Account connections](https://myaccount.google.com/connections).

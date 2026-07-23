@@ -34,6 +34,7 @@ let previousConfigDir: string | undefined
 
 class MemoryKeyring {
   readonly values = new Map<string, string>()
+  readonly failedDeletes = new Set<string>()
   unavailable = false
 
   private key(service: string, account: string): string {
@@ -56,6 +57,9 @@ class MemoryKeyring {
 
   async deletePassword(service: string, account: string): Promise<boolean> {
     if (this.unavailable) throw new Error('Keychain unavailable')
+    if (this.failedDeletes.has(this.key(service, account))) {
+      throw new Error('Keychain deletion failed')
+    }
     return this.values.delete(this.key(service, account))
   }
 }
@@ -84,6 +88,7 @@ function resetStorage(): void {
   rmSync(configDir, { recursive: true, force: true })
   mkdirSync(configDir, { recursive: true })
   keyring.values.clear()
+  keyring.failedDeletes.clear()
   keyring.unavailable = false
 }
 
@@ -204,6 +209,26 @@ test('switches back to a private file and logout removes both stores', async () 
   )
   assert.deepEqual(await readTokens(), tokens)
 
+  await deleteTokens()
+  assert.equal(existsSync(getSeoCliPaths().tokensFile), false)
+  assert.equal(keyring.values.size, 0)
+})
+
+test('logout keeps token metadata when keychain deletion fails', async () => {
+  resetStorage()
+  writeConfig(configSchema.parse({}))
+  await writeTokens(testTokens())
+  const failedKey = 'seo:google:owner@example.com:refresh'
+  keyring.failedDeletes.add(failedKey)
+
+  await assert.rejects(
+    deleteTokens(),
+    /Google tokens could not be removed from the system keychain/i,
+  )
+  assert.equal(existsSync(getSeoCliPaths().tokensFile), true)
+  assert.equal(keyring.values.get(failedKey), 'refresh-token')
+
+  keyring.failedDeletes.clear()
   await deleteTokens()
   assert.equal(existsSync(getSeoCliPaths().tokensFile), false)
   assert.equal(keyring.values.size, 0)

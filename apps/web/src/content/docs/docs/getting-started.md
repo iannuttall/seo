@@ -132,8 +132,10 @@ prints the paths used for profiles, tokens, caches, and saved reports on your
 operating system.
 
 Use `seo auth logout` to delete local Google tokens. Use `seo reset` only when
-you want to remove all local SEO data. The [privacy policy](/privacy)
-documents every storage and network boundary.
+you want to remove local configuration, caches, histories, logs, and saved
+reports. Disconnect provider credentials and remove saved IndexNow keys first
+if they are stored in the system keychain. The [privacy policy](/privacy)
+documents every storage, deletion, and network boundary.
 
 ## Add research data when the question needs it
 

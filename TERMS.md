@@ -1,6 +1,6 @@
 # Terms of use
 
-Last updated: 10 July 2026
+Last updated: 23 July 2026
 
 These terms cover the official `seo` command-line tool, library, MCP server,
 documentation, and seoskill.dev website.
@@ -34,6 +34,12 @@ Google Search Console and Google Analytics access is optional and read-only.
 Your use of Google APIs is also subject to Google's terms and policies. Google
 can change API behaviour, quotas, scopes, or availability without notice to
 this project.
+
+Optional research providers, Bing Webmaster, Chrome UX Report, and IndexNow are
+also controlled by their respective operators. A provider can charge for a
+request, retain task data, change its prices or limits, or withdraw a feature.
+Review the provider's current terms, privacy policy, and report cost evidence
+before sending sensitive inputs or starting broad paid work.
 
 The software can request public websites, run browser tooling, and use package
 registries or operating system services. Those products are controlled by

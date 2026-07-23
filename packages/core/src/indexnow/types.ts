@@ -1,7 +1,9 @@
+import { PROVIDER_SECRET_NAMES } from '../storage/provider-secrets.js'
+
 export const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow'
 export const INDEXNOW_MAX_URLS = 1_000
 export const INDEXNOW_KEY_ENV = 'SEO_INDEXNOW_KEY'
-export const INDEXNOW_KEYS_SECRET = 'indexnow-keys'
+export const INDEXNOW_KEYS_SECRET = PROVIDER_SECRET_NAMES.indexNowKeys
 
 export type IndexNowKey = {
   host: string

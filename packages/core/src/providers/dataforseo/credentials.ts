@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { readConfig, writeConfig } from '../../storage/config.js'
 import {
   deleteProviderSecret,
+  PROVIDER_SECRET_NAMES,
   type ProviderSecretSource,
   readProviderSecret,
   writeProviderSecret,
@@ -10,7 +11,8 @@ import { ProviderError } from '../errors.js'
 
 export const DATAFORSEO_LOGIN_ENV = 'SEO_DATAFORSEO_LOGIN'
 export const DATAFORSEO_PASSWORD_ENV = 'SEO_DATAFORSEO_PASSWORD'
-export const DATAFORSEO_CREDENTIAL_SECRET = 'dataforseo-credentials'
+export const DATAFORSEO_CREDENTIAL_SECRET =
+  PROVIDER_SECRET_NAMES.dataForSeoCredentials
 
 const dataForSeoCredentialsSchema = z
   .object({

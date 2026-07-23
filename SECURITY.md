@@ -33,11 +33,11 @@ Desktop OAuth client credentials are not confidential secrets. User tokens,
 provider API keys, and analytics data are confidential and must never be
 committed, pasted into issues, or included in fixtures.
 
-Use `seo privacy` to inspect local files. Remove saved provider secrets with
-their disconnect or removal commands before `seo reset --yes`; reset clears
-Google tokens and the local config, cache, and log directories but does not
-currently clear provider secrets from the operating-system keychain. Google
-grants can also be revoked at
+Use `seo privacy` to inspect local files. `seo reset --yes` removes Google
+tokens, saved provider credentials, saved IndexNow keys, and the local config,
+cache, and log directories. Reset stops before deleting those directories if
+an active keychain credential cannot be removed. Environment variables remain
+under the control of your shell or runtime. Google grants can also be revoked at
 <https://myaccount.google.com/connections>.
 
 ## Maintainer checks

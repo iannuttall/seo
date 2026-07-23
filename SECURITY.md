@@ -24,12 +24,20 @@ and caches stay on the machine running the command. Access and refresh tokens
 use the operating-system keychain when enabled; fallback token files and local
 credential files use private file permissions.
 
+Local first does not mean offline. Crawls, connected accounts, research
+providers, Chrome UX Report, IndexNow, package checks, and anonymous telemetry
+can make the direct network requests described in the
+[privacy policy](https://seoskill.dev/privacy).
+
 Desktop OAuth client credentials are not confidential secrets. User tokens,
 provider API keys, and analytics data are confidential and must never be
 committed, pasted into issues, or included in fixtures.
 
-Use `seo privacy` to inspect local storage and `seo reset --yes` to remove it.
-Google grants can also be revoked at
+Use `seo privacy` to inspect local files. Remove saved provider secrets with
+their disconnect or removal commands before `seo reset --yes`; reset clears
+Google tokens and the local config, cache, and log directories but does not
+currently clear provider secrets from the operating-system keychain. Google
+grants can also be revoked at
 <https://myaccount.google.com/connections>.
 
 ## Maintainer checks

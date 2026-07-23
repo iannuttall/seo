@@ -83,8 +83,6 @@ technical report before connecting Google.
 Running `seo help` shows the shape of the tool:
 
 ```txt
-seo v0.2.15
-
 Run SEO audits, find what needs fixing, and ship the changes with your agent.
 
 Start here
@@ -651,15 +649,17 @@ paths, including OAuth testing-mode limits.
 ### Does my site data stay on my machine?
 
 Yes. Reports, project profiles, Google tokens, crawls, and caches stay in your
-local config directory. The CLI only makes the network requests needed to fetch
-your site and call the Google APIs you connect.
+local config directory. Local first does not mean offline. A command can
+request a site, connected Google or Bing account, research provider, Chrome UX
+Report, IndexNow, or the npm registry when the work needs it.
 
-SEO data never leaves your machine. The CLI sends anonymous usage events such
-as the event name, report id, tool version, agent, OS, architecture, Node major,
-and install week. It never sends URLs, identifiers, report data, or Google data.
-Disable telemetry with `DO_NOT_TRACK=1` or `seo telemetry disable`. Read the
-[full telemetry details](https://seoskill.dev/telemetry) and the
-[public aggregate stats](https://seoskill.dev/stats).
+Optional external enrichment can send selected Search Console query or derived
+seed text to DataForSEO only when you explicitly enable it. It does not send
+Google credentials, property IDs, Search Console metrics, or Google Analytics
+rows. Local provider file imports are not uploaded. Read the
+[privacy policy](https://seoskill.dev/privacy) for every network boundary and
+the [telemetry page](https://seoskill.dev/telemetry) for the fixed anonymous
+usage-event schema and opt-out controls.
 
 ### Do I need a Google API key?
 
@@ -694,7 +694,7 @@ vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 - [CLI commands](https://seoskill.dev/docs/cli)
 - [Crawler](https://seoskill.dev/docs/crawler)
 - [Reports and data](https://seoskill.dev/docs/reports)
-- [Keyword and competitor research](https://seoskill.dev/docs/research-providers)
+- [Research providers](https://seoskill.dev/docs/research-providers)
 - [MCP and agents](https://seoskill.dev/docs/agents)
 - [AI-search evidence](https://seoskill.dev/docs/ai-search)
 - [Privacy policy](https://seoskill.dev/privacy)

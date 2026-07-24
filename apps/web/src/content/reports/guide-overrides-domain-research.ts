@@ -3,6 +3,63 @@ import type { ReportGuideOverride } from './guide-types'
 export const domainResearchGuideOverrides: Partial<
   Record<string, ReportGuideOverride>
 > = {
+  'competitive-opportunities': {
+    inputs: [
+      {
+        label: 'Target domain and topic seeds',
+        role: 'Define the site being compared and the small topic set used to discover candidate keywords.',
+      },
+      {
+        label: 'Country, language, and device',
+        source: 'serp-provider-results',
+        role: 'Keep keyword research and current Google results aligned to one explicit market.',
+      },
+      {
+        label: 'Connected research providers',
+        source: 'keyword-provider-discovery',
+        role: 'Supply keyword ideas, current result snapshots, free Domain Rating observations, and optional paid link summaries.',
+      },
+    ],
+    checks: [
+      'Keeps supplied seeds first, then selects a bounded keyword shortlist using discovery coverage and observed demand.',
+      'Collects current result pages and identifies recurring ranking domains without assuming they are relevant business competitors.',
+      'Adds Ahrefs Domain Rating by default and requests paid link summaries only when competitionEvidence is link-summary.',
+      'Builds an evidence-referenced investigation order and keeps provider metrics separate from current result observations.',
+      'Preserves source coverage, cache state, costs, warnings, failures, caps, dates, and missing values across every provider.',
+    ],
+    returns: [
+      'A focused keyword investigation order with target ranks, competitor pages, review reasons, and evidence references.',
+      'Recurring ranking domains plus Domain Rating and optional referring-domain comparisons for the target and retained competitors.',
+      'Bounded source reports, processing counts, output limits, caveats, and practical follow-ups.',
+    ],
+    alternatives: [
+      {
+        when: 'You only need keyword ideas and market estimates.',
+        reportId: 'keyword-research',
+        doInstead:
+          'Run keyword research without current result and competitor enrichment.',
+      },
+      {
+        when: 'You already have a small classified competitor set.',
+        reportId: 'competitor-keyword-gap',
+        doInstead:
+          'Run competitor keyword gaps for a deeper comparison with existing first-party and provider coverage.',
+      },
+      {
+        when: 'You need city-level or exact local result evidence.',
+        reportId: 'local-search-demand',
+        doInstead:
+          'Start with retained local demand, then request a fixed local result market only when that context changes the work.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'competitive keyword research',
+      supportingKeywords: [
+        'SEO competitor research',
+        'keyword opportunity analysis',
+      ],
+    },
+  },
   'domain-rating': {
     inputs: [
       {

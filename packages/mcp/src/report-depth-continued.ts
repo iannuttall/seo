@@ -59,6 +59,38 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'pseo-opportunities', reason: 'Researches viable template ideas.' },
     ],
   },
+  'competitive-opportunities': {
+    readOrder: [
+      'dataStatus, market, selection bounds, detailBudget, source coverage, cache, costs, warnings, and failed requests',
+      'summary and processing counts before the retained opportunity order',
+      'each opportunity current result status, target ranks, competitors, reviewReasons, and evidenceRefs',
+      'source SERP rows, Domain Rating observations, and link summaries behind decision-critical comparisons',
+      'findings, caveats, and nextSteps',
+    ],
+    doNotClaim: [
+      'The investigation order is not a keyword-difficulty, authority, ranking-feasibility, or traffic forecast.',
+      'A lower Domain Rating or referring-domain count does not by itself make a result easy to outrank.',
+      'Missing, failed, capped, or partial provider evidence is not zero.',
+      'A recurring result domain is not automatically a relevant business competitor.',
+    ],
+    verify:
+      'Inspect the current ranking pages, their search intent, existing site coverage, Search Console evidence, and URL-level links before choosing a page or keyword.',
+    related: [
+      {
+        id: 'competitor-keyword-gap',
+        reason: 'Compares a small classified competitor set in depth.',
+      },
+      { id: 'serp-results', reason: 'Refreshes one current result snapshot.' },
+      {
+        id: 'keyword-research',
+        reason: 'Expands seeds without competitor enrichment.',
+      },
+      {
+        id: 'link-evidence',
+        reason: 'Inspects decision-critical page links.',
+      },
+    ],
+  },
   'competitor-keyword-gap': {
     readOrder: [
       'dataStatus, source statuses, market, and selection bounds',

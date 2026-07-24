@@ -2,6 +2,70 @@ import type { ReportEditorial } from './types'
 
 export const domainResearchReports = [
   {
+    id: 'competitive-opportunities',
+    name: 'Competitive opportunities',
+    category: 'opportunities',
+    summary:
+      'Turn a topic into a focused keyword and competitor shortlist using demand, current rankings, Domain Rating, and optional link evidence.',
+    question:
+      'Which keywords and ranking domains deserve a closer look before choosing what to work on?',
+    useWhen: [
+      'You are starting with a topic rather than a fixed keyword or competitor list.',
+      'You want demand, current results, and competitor evidence ordered in one bounded report.',
+      'You want free Ahrefs Domain Rating context before deciding whether paid link summaries would help.',
+    ],
+    avoidWhen: [
+      'You need local results for a city or precise location.',
+      'You already have a classified competitor set and need a full keyword-gap comparison.',
+    ],
+    evidence: [
+      'Keyword ideas from one connected research provider, with discovery sources, metric states, coverage, cache status, warnings, and cost.',
+      'Current Google result snapshots for the retained keyword shortlist, including exact ranking domains, URLs, positions, market, device, and observation time.',
+      'Ahrefs Domain Rating for the target and retained competitors, plus optional paid domain-level link summaries from Ahrefs or DataForSEO.',
+    ],
+    methodology: [
+      'Retains supplied seeds first, then orders discovered terms by source coverage, observed volume, and a stable keyword tie-break.',
+      'Finds recurring ranking domains across the retained results and keeps the target, competitors, and provider observations separately addressable.',
+      'Orders the review queue using target presence, lower observed Domain Rating, fewer observed referring domains, discovery coverage, and demand evidence.',
+      'Bounds keyword discovery, result depth, competitor enrichment, findings, and total structured output before provider work starts.',
+    ],
+    exampleParams: {
+      target: 'example.com',
+      seeds: ['seo reporting software'],
+      countryCode: 'GB',
+      languageCode: 'en',
+      keywordProvider: 'semrush',
+      serpProvider: 'dataforseo',
+      competitionEvidence: 'domain-rating',
+    },
+    interpretation: [
+      'Start with the first one or two keywords whose current pages serve the same audience and intent as the site.',
+      'Use Domain Rating and link counts to decide what deserves inspection. Confirm the choice against existing pages, Search Console, and URL-level links.',
+    ],
+    caveats: [
+      'The investigation order combines several distinct evidence types. It is not a ranking promise, traffic forecast, or universal difficulty score.',
+      'Provider estimates, failed requests, caps, missing values, cache state, costs, and observation dates remain visible in their source sections.',
+      'Recurring result domains still need a relevance and site-type review before deeper competitor work.',
+    ],
+    nextSteps: [
+      'Open the current ranking pages for the first one or two retained keywords and compare their intent and page type.',
+      'Check existing site and Search Console coverage before proposing a new page.',
+      'Request paid link summaries or URL-level links only when they can change the shortlist.',
+    ],
+    related: [
+      'competitor-keyword-gap',
+      'serp-results',
+      'keyword-research',
+      'link-evidence',
+    ],
+    sources: [
+      'keyword-provider-discovery',
+      'serp-provider-results',
+      'ahrefs-domain-rating',
+      'ahrefs-link-provider',
+    ],
+  },
+  {
     id: 'domain-rating',
     name: 'Ahrefs Domain Rating',
     category: 'opportunities',

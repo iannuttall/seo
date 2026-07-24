@@ -125,7 +125,7 @@ after(() => {
 
 test('reset removes Google and provider keychain secrets before local files', async () => {
   await seedStorage(true)
-  assert.equal(keyring.values.size, 5)
+  assert.equal(keyring.values.size, 2 + MANAGED_PROVIDER_SECRET_NAMES.length)
 
   await resetSeoData()
 

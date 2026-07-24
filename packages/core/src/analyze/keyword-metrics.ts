@@ -22,6 +22,8 @@ import {
   type ProviderCandidate,
   resolveProvider,
 } from '../providers/resolver.js'
+import { readSemrushApiKey } from '../providers/semrush/credentials.js'
+import { SemrushKeywordMetricsProvider } from '../providers/semrush/keyword-metrics.js'
 
 const MAX_REPORT_KEYWORDS = 50
 
@@ -165,11 +167,20 @@ function keywordMetricsProvider(
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
+  const [dataForSeo, semrush] = await Promise.all([
+    readDataForSeoCredentials(),
+    readSemrushApiKey(),
+  ])
   return [
     {
       adapter: new DataForSeoKeywordMetricsProvider(),
-      connected: Boolean(await readDataForSeoCredentials()),
+      connected: Boolean(dataForSeo),
       priority: 10,
+    },
+    {
+      adapter: new SemrushKeywordMetricsProvider(),
+      connected: Boolean(semrush),
+      priority: 20,
     },
   ]
 }
@@ -181,7 +192,7 @@ function providerResolutionError(input: {
   if (input.reason === 'provider-not-connected') {
     return new SeoError(
       'PROVIDER_UNAVAILABLE',
-      'No connected provider can supply keyword metrics. Run `seo providers dataforseo connect` first.',
+      'No connected provider can supply keyword metrics. Connect DataForSEO or Semrush under `seo providers` first.',
     )
   }
   if (input.provider && input.reason === 'market-not-supported') {

@@ -1,0 +1,122 @@
+---
+title: Semrush research
+description: Connect the permanent Semrush Version 3 API key and run bounded keyword, domain, ranking-page and competitor research.
+---
+
+Use Semrush estimates without replacing evidence from your own site. The
+adapter supplies six existing research reports with provider-native values,
+coverage, cache state and API-unit cost. It does not add a Semrush-specific MCP
+tool or agent skill.
+
+## Use the permanent Version 3 key
+
+Open My profile, choose API Keys, and copy the row named **V3 API Key**. Semrush
+generates one permanent Version 3 key for each account, so there is no button
+to create another one.
+
+This integration accepts only that Version 3 key. It does not accept Version 4
+keys. Semrush keeps the versions, keys and supported endpoints separate; its
+<a href="https://developer.semrush.com/api/v3/introduction/api-versions/" target="_blank" rel="noreferrer">API version guide</a>
+explains the distinction.
+
+Connect it through the masked terminal prompt:
+
+```sh
+seo providers semrush connect
+seo providers semrush status --check
+```
+
+The connection check requests the remaining API-unit balance and costs no
+units. The key is saved in the system keychain when available, with a private
+local file fallback. It is never stored in a project profile, report, cache
+entry or structured error.
+
+The
+<a href="https://developer.semrush.com/api/v3/get-started/api-units-balance/" target="_blank" rel="noreferrer">Semrush balance guide</a>
+describes the free check and how report rows consume API units.
+
+Remove the saved key with:
+
+```sh
+seo providers semrush disconnect
+```
+
+Agents and CI can supply the same Version 3 key without saving it:
+
+```sh
+SEO_SEMRUSH_API_KEY='your-version-3-key' \
+  seo providers semrush status --check --json
+```
+
+Keep the value in the platform secret manager. Do not put it in a repository,
+script, report parameter, command-line flag or issue.
+
+## Run the shared research reports
+
+Choose Semrush through the normal report input. The same report ids, schemas
+and evidence rules are used for every supported provider.
+
+```sh
+seo reports run keyword-metrics \
+  --params '{"keywords":["technical seo","seo audit"],"countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"semrush"}' \
+  --json
+
+seo reports run keyword-research \
+  --params '{"seeds":["technical seo"],"sources":["ideas"],"countryCode":"GB","languageCode":"en","searchEngine":"google","limit":10,"provider":"semrush"}' \
+  --json
+
+seo reports run domain-overview \
+  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"semrush"}' \
+  --json
+```
+
+The connected adapter supports:
+
+| Report | Evidence supplied |
+| --- | --- |
+| `keyword-metrics` | Search volume, cost per click, paid competition, result count, intent and keyword difficulty when Semrush returns them. |
+| `keyword-research` | Bounded ideas, related terms and question keywords from one to five seeds. |
+| `domain-overview` | Provider-estimated organic keyword count, traffic and traffic cost for one domain. |
+| `ranked-keywords` | A bounded set of observed terms, ranking URLs, positions and optional keyword metrics. |
+| `ranking-pages` | Ranking pages and repeated URL patterns derived from bounded provider rows. |
+| `serp-competitors` | Domains repeatedly observed for an explicit keyword set. |
+
+Use `seo reports describe <report-id> --json` before scripting a report. It
+returns the current input schema, reading order, caveats and related reports.
+
+## Keep requests bounded
+
+Every cache miss checks the free balance before requesting paid data. The
+adapter sets the provider row limit before acquisition, rejects unbounded
+inputs, and records estimated and returned API units in structured evidence.
+If the balance cannot cover the maximum request, the paid call does not start.
+
+Results are cached locally for seven days by default. A cache hit costs no API
+units and makes no provider request. Pass `"refresh":true` only when the
+decision needs a newer observation.
+
+Semrush Version 3 research uses Google desktop data from a country-level
+regional database. It does not support a city, postcode, Bing or mobile market
+through this adapter. The requested language remains visible in the report,
+but Semrush does not apply it as a separate language filter.
+
+## Read the caveats before acting
+
+Semrush metrics are external estimates. They are not Search Console
+impressions, measured visits, a complete keyword inventory or a forecast.
+Keyword difficulty is a provider metric, not a ranking probability.
+
+Semrush marks its Version 3 keyword endpoints as deprecated. The reports keep
+that warning in their evidence. The
+<a href="https://developer.semrush.com/api/v3/seo/keyword-reports/" target="_blank" rel="noreferrer">Version 3 keyword reference</a>
+says existing integrations remain available temporarily, so a successful
+request does not promise permanent endpoint availability.
+
+Run the main first-party report before paid research:
+
+```sh
+seo report --project example
+```
+
+Use a Semrush report when it answers a specific gap, then verify an important
+term against Search Console and a current result page in the same market.

@@ -95,6 +95,12 @@ export type ProviderCostEvidence = {
   estimatedMicros: number | null
   actualMicros: number | null
   taskIds: string[]
+  native?: {
+    unit: string
+    estimatedUnits: number | null
+    actualUnits: number | null
+    remainingBefore: number | null
+  }
 }
 
 export type ProviderRequestEvidence = {

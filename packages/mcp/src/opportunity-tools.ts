@@ -3,7 +3,6 @@ import {
   cannibalReport,
   ctrUnderperformersReport,
   decayingReport,
-  getKeywordProvider,
   internalLinksReport,
   queryClusterReport,
   quickWinsReport,
@@ -12,7 +11,7 @@ import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
 import { resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
-import { summarize, toolError, toolSuccess } from './tool-result.js'
+import { toolError, toolSuccess } from './tool-result.js'
 
 type QuickWinsToolInput = {
   site: string
@@ -404,43 +403,6 @@ export function registerOpportunityTools(
           refresh,
         })
         return toolSuccess(result.summary.verdict, result)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'semrush_call',
-    {
-      description:
-        'Raw-ish Semrush passthrough for supported keyword endpoints',
-      inputSchema: {
-        endpoint: z.enum(['phrase_this', 'phrase_related', 'phrase_questions']),
-        phrase: z.string(),
-      },
-    },
-    async ({ endpoint, phrase }) => {
-      try {
-        const provider = await getKeywordProvider('authoritative')
-        if (!provider) {
-          throw new Error('No keyword provider configured.')
-        }
-
-        const result =
-          endpoint === 'phrase_this'
-            ? await provider.keywordOverview(phrase)
-            : endpoint === 'phrase_related'
-              ? await provider.relatedKeywords?.(phrase)
-              : await provider.questions?.(phrase)
-
-        if (!result) {
-          throw new Error(
-            `Endpoint ${endpoint} is not supported by the active provider.`,
-          )
-        }
-
-        return toolSuccess(summarize(result.data), result)
       } catch (error) {
         return toolError(error)
       }

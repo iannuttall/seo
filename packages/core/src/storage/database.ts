@@ -455,6 +455,7 @@ export function getCacheStats(): CacheStats {
       .get() as { count: number },
     semrush_cache: { count: legacySemrushCount + providerCount('semrush') },
     provider_cache: { count: providerCount('dataforseo') },
+    ahrefs_cache: { count: providerCount('ahrefs') },
     http_cache: database
       .prepare('SELECT COUNT(*) AS count FROM http_cache')
       .get() as { count: number },
@@ -482,13 +483,23 @@ function databaseFootprint(path: string): number {
 }
 
 export function clearCache(
-  provider?: 'gsc' | 'google-analytics' | 'semrush' | 'dataforseo' | 'http',
+  provider?:
+    | 'gsc'
+    | 'google-analytics'
+    | 'semrush'
+    | 'dataforseo'
+    | 'ahrefs'
+    | 'http',
   olderThanMs?: number,
 ): number {
   const database = getDb()
   const cutoff = olderThanMs ? Date.now() - olderThanMs : undefined
 
-  if (provider === 'dataforseo' || provider === 'semrush') {
+  if (
+    provider === 'dataforseo' ||
+    provider === 'semrush' ||
+    provider === 'ahrefs'
+  ) {
     const sql = cutoff
       ? 'DELETE FROM provider_cache WHERE provider = ? AND fetched_at < ?'
       : 'DELETE FROM provider_cache WHERE provider = ?'

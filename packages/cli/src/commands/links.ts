@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import {
   bingWebmasterSiteUrl,
   type CollectedLinkEvidence,
+  collectAhrefsLinkEvidence,
   collectBingLinkEvidence,
   collectDataForSeoLinkEvidence,
   importLinkEvidence,
@@ -31,7 +32,7 @@ export const linksCommand = defineCommand({
   meta: {
     name: 'links',
     description:
-      'Review bounded referring-link evidence from DataForSEO, Bing or a file',
+      'Review bounded referring-link evidence from Ahrefs, DataForSEO, Bing or a file',
   },
   args: {
     project: { type: 'string', description: 'Saved project id or name.' },
@@ -39,20 +40,20 @@ export const linksCommand = defineCommand({
     site: { type: 'string', description: 'Verified Bing Webmaster site URL.' },
     provider: {
       type: 'string',
-      description: 'Live link source: dataforseo or bing.',
+      description: 'Live link source: ahrefs, dataforseo or bing.',
     },
     target: {
       type: 'string',
-      description: 'Domain or absolute page URL for DataForSEO.',
+      description: 'Domain or absolute page URL for Ahrefs or DataForSEO.',
     },
     scope: {
       type: 'string',
-      description: 'DataForSEO target scope: domain or page.',
+      description: 'Live provider target scope: domain or page.',
     },
     'include-subdomains': {
       type: 'boolean',
       default: true,
-      description: 'Include subdomains for a DataForSEO domain target.',
+      description: 'Include subdomains for a live provider domain target.',
     },
     'search-site': {
       type: 'string',
@@ -70,7 +71,7 @@ export const linksCommand = defineCommand({
     'row-limit': {
       type: 'string',
       description:
-        'Maximum source rows. Defaults: 100 DataForSEO, 500 Bing, 10000 files.',
+        'Maximum source rows. Defaults: 100 live provider, 500 Bing, 10000 files.',
     },
     'target-limit': {
       type: 'string',
@@ -105,10 +106,10 @@ export const linksCommand = defineCommand({
     const file = stringArg(args.file)
     const format = stringArg(args.format)
     const provider = stringArg(args.provider)
-    if (provider && !['dataforseo', 'bing'].includes(provider)) {
+    if (provider && !['ahrefs', 'dataforseo', 'bing'].includes(provider)) {
       throw new SeoError(
         'INVALID_INPUT',
-        '--provider must be dataforseo or bing.',
+        '--provider must be ahrefs, dataforseo or bing.',
       )
     }
     if (file && provider) {
@@ -133,25 +134,25 @@ export const linksCommand = defineCommand({
     if (file && (site || target)) {
       throw new SeoError(
         'INVALID_INPUT',
-        'Pass one link source: --file, --site for Bing, or --target for DataForSEO.',
+        'Pass one link source: --file, --site for Bing, or --target for Ahrefs or DataForSEO.',
       )
     }
     if (site && target) {
       throw new SeoError(
         'INVALID_INPUT',
-        'Pass --site for Bing or --target for DataForSEO, not both.',
+        'Pass --site for Bing or --target for a live research provider, not both.',
       )
     }
     if (target && provider === 'bing') {
       throw new SeoError(
         'INVALID_INPUT',
-        'Use --site with Bing or --target with DataForSEO.',
+        'Use --site with Bing or --target with Ahrefs or DataForSEO.',
       )
     }
-    if (site && provider === 'dataforseo') {
+    if (site && ['ahrefs', 'dataforseo'].includes(provider ?? '')) {
       throw new SeoError(
         'INVALID_INPUT',
-        'Use --target with DataForSEO or --site with Bing.',
+        'Use --target with Ahrefs or DataForSEO, or --site with Bing.',
       )
     }
     const savedProject = projectArg(args)
@@ -168,7 +169,7 @@ export const linksCommand = defineCommand({
         format: format as 'csv' | 'json' | 'jsonl' | undefined,
         rowLimit,
       })
-    } else if (provider === 'dataforseo' || target) {
+    } else if (provider === 'ahrefs' || provider === 'dataforseo' || target) {
       const providerTarget =
         target ??
         project?.startUrl ??
@@ -179,7 +180,7 @@ export const linksCommand = defineCommand({
           'Pass --target or use a saved project with a crawl URL or Search Console property.',
         )
       }
-      evidence = await collectDataForSeoLinkEvidence({
+      const providerInput = {
         target: providerTarget,
         scope: scope as 'domain' | 'page' | undefined,
         includeSubdomains: booleanArg(args['include-subdomains']),
@@ -190,7 +191,11 @@ export const linksCommand = defineCommand({
           reportId: 'link-evidence',
           reportRunId: randomUUID(),
         },
-      })
+      }
+      evidence =
+        provider === 'ahrefs'
+          ? await collectAhrefsLinkEvidence(providerInput)
+          : await collectDataForSeoLinkEvidence(providerInput)
     } else {
       const bingSite = site ?? bingWebmasterSiteUrl(project)
       if (!bingSite) {
@@ -211,18 +216,14 @@ export const linksCommand = defineCommand({
     }
     const searchConsoleSite = stringArg(args['search-site']) ?? project?.siteUrl
     const targetPageContext =
-      project ||
-      searchConsoleSite ||
-      evidence.provenance.provider === 'dataforseo'
+      project || searchConsoleSite || evidence.externalProvider
         ? await linkTargetContext({
             evidence,
             searchConsoleSite,
             crawlSite:
               project?.siteUrl ??
               searchConsoleSite ??
-              (evidence.provenance.provider === 'dataforseo'
-                ? evidence.externalProvider?.summary.data.target
-                : undefined),
+              evidence.externalProvider?.summary.data.target,
             days: strictNumberArg(args.days, '--days'),
             refresh: booleanArg(args.refresh),
           })
@@ -246,6 +247,17 @@ export const linksCommand = defineCommand({
       (value): value is number => value !== null,
     )
       ? providerCosts.reduce((total, value) => total + value, 0)
+      : null
+    const providerUnits = report.providerEvidence
+      ? [
+          report.providerEvidence.summary.cost.native?.actualUnits,
+          report.providerEvidence.backlinks.cost.native?.actualUnits,
+        ]
+      : []
+    const providerUnitCost = providerUnits.every(
+      (value): value is number => value !== null && value !== undefined,
+    )
+      ? providerUnits.reduce((total, value) => total + value, 0)
       : null
     const providerCached = report.providerEvidence
       ? [
@@ -300,7 +312,9 @@ export const linksCommand = defineCommand({
                 label: 'Provider cost',
                 value:
                   providerCost === null
-                    ? 'Unknown'
+                    ? providerUnitCost === null
+                      ? 'Unknown'
+                      : `${formatCount(providerUnitCost)} API units${providerCached ? ' (cached)' : ''}`
                     : `$${(providerCost / 1_000_000).toFixed(4)}${providerCached ? ' (cached)' : ''}`,
               },
             ]

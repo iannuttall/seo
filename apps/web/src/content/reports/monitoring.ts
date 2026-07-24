@@ -84,40 +84,44 @@ export const monitoringReports = [
     name: 'Referring link evidence',
     category: 'monitoring',
     summary:
-      'Review bounded referring URLs and target pages from Bing Webmaster or a local link export.',
+      'Review bounded referring URLs and target pages from Ahrefs, DataForSEO, Bing Webmaster or a local link export.',
     question:
       'Which retained pages link to this site, and where do they point?',
     useWhen: [
       'You need concrete referring URLs and anchor text where the source provides it.',
-      'You have Bing Webmaster connected or a CSV, JSON, or JSONL link export.',
+      'You have Ahrefs, DataForSEO or Bing Webmaster connected, or a CSV, JSON, or JSONL link export.',
     ],
     avoidWhen: [
-      'You need a complete web-scale backlink index or a third-party authority score.',
+      'You need a complete web-scale backlink index or want a provider metric treated as ranking impact.',
     ],
     evidence: [
-      'Bounded Bing Webmaster link rows or normalized rows read from an explicit local export.',
+      'Bounded provider link rows, provider summary counts, or normalized rows read from an explicit local export.',
     ],
     methodology: [
       'Validates HTTP URLs, normalizes common field names, deduplicates rows, and applies strict provider, file, and output limits.',
       'Streams CSV and JSONL files. Regular JSON arrays have a smaller byte limit so large imports do not create an unexpected memory spike.',
+      'Keeps provider summary counts separate from retained representative links and records cache and cost evidence for paid research.',
     ],
     exampleParams: {
-      file: './links.csv',
-      rowLimit: 10000,
+      provider: 'ahrefs',
+      target: 'example.com',
+      scope: 'domain',
+      rowLimit: 100,
       limit: 100,
     },
     interpretation: [
-      'Read provenance and selection before the link list. Open a referring page to confirm that an important link still exists.',
+      'Read provenance, provider summary and selection before the link list. Open a referring page to confirm that an important link still exists.',
     ],
     caveats: [
       'The retained rows are not a complete backlink index and do not measure link quality, authority, value, or ranking impact.',
+      'Provider totals and metrics remain external estimates. A missing row in a bounded list is unknown, not zero.',
     ],
     nextSteps: [
       'Verify a selected referring URL directly.',
       'Trace a target URL when it redirects or no longer serves the expected page.',
     ],
     related: ['link-recovery', 'redirect-trace', 'site-crawl'],
-    sources: ['bing-webmaster'],
+    sources: ['ahrefs-link-provider', 'bing-webmaster'],
   },
   {
     id: 'index-coverage',

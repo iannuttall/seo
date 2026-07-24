@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 23 July 2026
+Last updated: 24 July 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -106,8 +106,8 @@ it before trying again.
 
 ## Optional research provider requests
 
-DataForSEO requests can send the exact inputs needed for the selected
-operation. Depending on the report, these can include:
+Research-provider requests send only the inputs needed for the selected
+operation. Depending on the provider and report, these can include:
 
 - keywords, research seeds, domains, URLs, filters, result limits, country,
   language, location, and device;
@@ -115,22 +115,23 @@ operation. Depending on the report, these can include:
 - the full fixed prompt, selected model, country, web search setting, and
   output limit used for an AI prompt observation.
 
-Your DataForSEO login and API password authenticate these HTTPS requests. The
-project maintainer does not receive the credentials, inputs, or responses.
-DataForSEO processes them under its
+DataForSEO requests use your login and API password. Semrush requests use your
+Version 3 API key and can include the regional database, selected columns, and
+report limits. Ahrefs requests use your API v3 bearer key and can include the
+target mode and country filter. Each provider also receives ordinary network
+metadata.
+
+The project maintainer does not receive these credentials, inputs, or
+responses. DataForSEO processes them under its
 [privacy policy](https://dataforseo.com/privacy-policy). As of the date of this
 policy, DataForSEO says it stores API task data for 365 days. Its policy and
-retention can change independently of this project.
+retention can change independently of this project. Semrush and Ahrefs process
+requests under their respective
+[Semrush privacy policy](https://www.semrush.com/company/legal/privacy-policy/)
+and [Ahrefs privacy policy](https://ahrefs.com/legal/privacy-policy).
 
-The exported TypeScript library also includes a Semrush adapter. If you
-configure and call it, Semrush receives the API key and the phrase, domain,
-URL, database, columns, and limits needed for that request. The current CLI
-uses Semrush and Ahrefs ranked-keyword exports as local files rather than live
-connections. Importing a provider file does not upload it to the provider or
-the project maintainer. The Semrush library adapter caches responses locally
-for up to 14 days. Cache maintenance enforces a 16 MiB Semrush-cache limit and
-removes rows older than 30 days. Run
-`seo cache clear --provider semrush` to remove those cached responses.
+Importing a local DataForSEO, Semrush, or Ahrefs file does not upload it to the
+provider or the project maintainer.
 
 ## Bing Webmaster requests
 
@@ -172,10 +173,12 @@ That transfer is controlled by the client and model service, not by the local
 ## How long research data is kept locally
 
 DataForSEO responses are cached locally for up to 24 hours or seven days,
-depending on the operation. Cache maintenance removes provider cache entries
-older than 30 days and enforces a 32 MiB provider-cache limit. On a machine
-where the command is no longer run, expired rows can remain until you clear the
-cache or reset the software.
+depending on the operation. Semrush responses are cached for up to seven days.
+Ahrefs Domain Rating responses are cached for up to 24 hours, and other Ahrefs
+responses are cached for up to seven days. Cache maintenance removes provider
+cache entries older than 30 days and enforces a 32 MiB provider-cache limit.
+On a machine where the command is no longer run, expired rows can remain until
+you clear the cache or reset the software.
 
 Fixed AI prompt observations are saved locally so repeated runs can show
 compatible changes over time. History is bounded to 90 observations for one
@@ -183,12 +186,14 @@ exact configuration, 10,000 observations in total, and 128 MiB of logical
 storage. The local provider spend ledger is retained for up to 730 days and is
 bounded to 50,000 rows and 32 MiB.
 
-Run `seo cache clear --provider dataforseo` to remove cached DataForSEO
-responses. Run `seo providers dataforseo disconnect` to remove saved
-credentials. These commands do not delete task data already processed by
-DataForSEO. Run `seo reset --yes` to remove every saved provider credential
-along with local configuration, caches, histories, spend records, logs, and
-saved reports.
+Run `seo cache clear --provider dataforseo`,
+`seo cache clear --provider semrush`, or
+`seo cache clear --provider ahrefs` to remove one provider's cached responses.
+Run the matching `seo providers <provider> disconnect` command to remove its
+saved credential. These commands do not delete data already processed by an
+external provider. Run `seo reset --yes` to remove every saved provider
+credential along with local configuration, caches, histories, spend records,
+logs, and saved reports.
 
 ## Anonymous tool usage
 
@@ -253,14 +258,15 @@ copy, publish, transmit, or pass it to an agent or application yourself.
 
 ## Removing access and local data
 
-Use `seo auth logout` to remove local Google tokens,
-`seo providers dataforseo disconnect` to remove saved DataForSEO credentials,
-`seo providers bing disconnect` to remove the saved Bing credential, and
-`seo indexnow remove --site https://example.com` to remove a saved IndexNow key
-for one site. Environment variables are controlled by your shell or runtime and
-are not changed by these commands. Use `seo privacy` to inspect local paths and
-`seo reset --yes` to remove every saved credential and local file managed by
-the software.
+Use `seo auth logout` to remove local Google tokens. Use
+`seo providers dataforseo disconnect`,
+`seo providers semrush disconnect`, `seo providers ahrefs disconnect`, or
+`seo providers bing disconnect` to remove the corresponding saved provider
+credential. Use `seo indexnow remove --site https://example.com` to remove a
+saved IndexNow key for one site. Environment variables are controlled by your
+shell or runtime and are not changed by these commands. Use `seo privacy` to
+inspect local paths and `seo reset --yes` to remove every saved credential and
+local file managed by the software.
 
 You can also revoke the app from your
 [Google Account connections](https://myaccount.google.com/connections).

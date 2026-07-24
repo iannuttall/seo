@@ -2,6 +2,8 @@ import { resolve } from 'node:path'
 import { SeoError } from '../../errors.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { finalGscDateRange } from '../../gsc/dates.js'
+import { readAhrefsApiKey } from '../../providers/ahrefs/credentials.js'
+import { AhrefsDomainResearchProvider } from '../../providers/ahrefs/domain-research.js'
 import type {
   ProviderAdapter,
   ProviderCapability,
@@ -210,9 +212,10 @@ export function offset(value: number | undefined): number {
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
-  const [dataForSeo, semrush] = await Promise.all([
+  const [dataForSeo, semrush, ahrefs] = await Promise.all([
     readDataForSeoCredentials(),
     readSemrushApiKey(),
+    readAhrefsApiKey(),
   ])
   return [
     {
@@ -224,6 +227,11 @@ async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
       adapter: new SemrushDomainResearchProvider(),
       connected: Boolean(semrush),
       priority: 20,
+    },
+    {
+      adapter: new AhrefsDomainResearchProvider(),
+      connected: Boolean(ahrefs),
+      priority: 30,
     },
   ]
 }
@@ -254,7 +262,7 @@ export async function researchProvider<T extends ProviderAdapter>(input: {
         ? 'INVALID_INPUT'
         : 'PROVIDER_UNAVAILABLE',
       resolution.reason === 'provider-not-connected'
-        ? 'No connected provider can run domain research. Connect DataForSEO or Semrush under `seo providers` first.'
+        ? 'No connected provider can run domain research. Connect DataForSEO, Semrush or Ahrefs under `seo providers` first.'
         : `${providerName} cannot run this domain research report for the selected market.`,
     )
   }

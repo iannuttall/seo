@@ -246,7 +246,7 @@ const resultRows = [
 const lowerSentenceStart = (value: string) =>
   /^[A-Z][a-z]/.test(value) ? `${value[0]?.toLowerCase()}${value.slice(1)}` : value
 const evidenceIntro = `This ${page.noun} uses ${report.evidence
-  .map(lowerSentenceStart)
+  .map((value, index) => (index === 0 ? lowerSentenceStart(value) : value))
   .join(' ')}`
 const limitParagraphs = [
   report.caveats.join(' '),

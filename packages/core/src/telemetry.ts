@@ -50,6 +50,7 @@ export const TELEMETRY_REPORTS = [
   'cannibalisation',
   'community-intent',
   'compare-crawls',
+  'competitive-opportunities',
   'competitor-keyword-gap',
   'content-optimization',
   'crawl-diff',

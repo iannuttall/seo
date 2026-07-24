@@ -52,6 +52,7 @@ export const reportCollections = [
     introduction:
       'Combine searches already associated with the site and independent keyword estimates to choose what deserves a closer look.',
     reports: [
+      ['competitive-opportunities', 'Competitive opportunities'],
       ['keyword-research', 'Keyword research'],
       ['keyword-metrics', 'Keyword metrics'],
       ['saved-keywords', 'Saved keyword set'],

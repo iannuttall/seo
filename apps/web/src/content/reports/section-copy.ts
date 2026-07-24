@@ -25,6 +25,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Review the wording of the returned queries and the result formats already serving them. Use that evidence to decide whether the page needs first-hand experience, comparison detail or a different content format.',
   'compare-crawls':
     'Confirm that both crawls covered comparable pages before calling a difference a regression or recovery. Audit representative changes directly, then use affected URLs when the same rule spans a larger group.',
+  'competitive-opportunities':
+    'Open the current pages behind the first one or two leads and confirm that they serve the same intent. Check existing site and Search Console coverage, then request deeper link evidence only when it can change the decision.',
   'competitor-keyword-gap':
     'Start with relevant candidates whose source coverage is usable, then inspect the current results and representative pages. Complete the data-source checks before approving a programmatic template, and keep no new page as a valid outcome.',
   'content-optimization':

@@ -15,6 +15,7 @@ answer.
 | Broad technical review before connecting Google | `seo report --url <url>` |
 | Rank the next search and technical actions | `seo refresh-priorities` |
 | Find page-one rankings with weak CTR evidence | `seo quick-wins` |
+| Turn a topic into a keyword and competitor shortlist | `competitive-opportunities` |
 | Research keyword ideas and market estimates | `keyword-research`, `keyword-metrics` |
 | Find recurring search competitors | `serp-competitors` |
 | Compare relevant competitor keyword gaps | `competitor-keyword-gap` |

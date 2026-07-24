@@ -46,6 +46,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command: 'seo community-intent --project example',
       note: 'Find returned queries with review, forum, or comparison wording.',
     },
+    'competitive-opportunities': {
+      command:
+        'seo reports run competitive-opportunities --params \'{"target":"example.com","seeds":["seo reporting software"],"countryCode":"GB","languageCode":"en","keywordProvider":"semrush","serpProvider":"dataforseo"}\' --json',
+      note: 'Turn one topic into a bounded keyword and competitor shortlist.',
+    },
     'compare-crawls': {
       command: 'seo crawl-reports --compare latest --against previous',
       note: 'Compare two saved crawl snapshots.',

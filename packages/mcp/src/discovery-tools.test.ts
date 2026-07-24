@@ -67,6 +67,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'cannibalisation',
     'community-intent',
     'compare-crawls',
+    'competitive-opportunities',
     'competitor-keyword-gap',
     'content-optimization',
     'crawl-diff',

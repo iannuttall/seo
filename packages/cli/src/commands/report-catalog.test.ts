@@ -77,6 +77,7 @@ test('reports list exposes the shared sorted catalog', async () => {
     ),
   )
   for (const id of [
+    'competitive-opportunities',
     'domain-overview',
     'ranked-keywords',
     'ranking-pages',

@@ -1,0 +1,41 @@
+{
+  "subject": "competitive-opportunities",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Research SEO reporting software in the UK and show me the keywords and competitors worth investigating first.",
+      "expected_output": "Should describe and run competitive-opportunities with a bounded seed set, GB English market, and Domain Rating evidence. Should read source coverage, costs, warnings, failures, selection bounds, current result rows, review reasons, and evidence references before presenting a short investigation order. Should check existing site and Search Console coverage before proposing pages.",
+      "assertions": [
+        "Uses report id competitive-opportunities through the shared report flow",
+        "Passes bounded seeds with countryCode GB and languageCode en",
+        "Reads source coverage, costs, warnings, failures, selection bounds, and evidence references",
+        "Presents an investigation order and checks existing site coverage before proposing pages"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Use Semrush for keyword ideas, DataForSEO for 10-result SERPs, and Ahrefs link summaries for no more than five competitors. Refresh everything.",
+      "expected_output": "Should run competitive-opportunities with keywordProvider semrush, serpProvider dataforseo, serpDepth 10, competitorLimit 5, competitionEvidence link-summary, linkProvider ahrefs, and refresh true. It should make the paid link-summary request explicit, keep each provider's estimates and costs separate, and preserve failed, partial, capped, or missing evidence rather than converting it to zero.",
+      "assertions": [
+        "Uses the requested Semrush, DataForSEO, and Ahrefs provider roles",
+        "Sets serpDepth 10, competitorLimit 5, competitionEvidence link-summary, and refresh true",
+        "Makes paid link-summary acquisition explicit",
+        "Keeps provider evidence separate and never converts incomplete evidence to zero"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The report found a DR 8 competitor with fewer referring domains, so promise me we can beat them and forecast the traffic.",
+      "expected_output": "Should reject the ranking promise and traffic forecast. It may use lower Domain Rating and referring-domain counts as review reasons only, then require current ranking-page intent, existing site and Search Console coverage, page relevance, and URL-level link evidence before choosing the opportunity.",
+      "assertions": [
+        "Does not claim that lower Domain Rating or referring-domain counts prove the competitor can be beaten",
+        "Refuses to forecast rankings or traffic from the investigation order",
+        "Treats the provider metrics as review reasons rather than a feasibility score",
+        "Requires current page, first-party, intent, relevance, and URL-level evidence before acting"
+      ],
+      "files": []
+    }
+  ]
+}

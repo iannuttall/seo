@@ -19,6 +19,10 @@ import {
   createAiPromptObservationsHandler,
 } from './report-definitions/ai-prompt-observations.js'
 import {
+  competitiveOpportunitiesInputSchema,
+  createCompetitiveOpportunitiesHandler,
+} from './report-definitions/competitive-opportunities.js'
+import {
   createDomainRatingHandler,
   domainRatingInputSchema,
 } from './report-definitions/domain-rating.js'
@@ -73,6 +77,12 @@ type DirectReport = {
 }
 
 const directReports: readonly DirectReport[] = [
+  {
+    id: 'competitive-opportunities',
+    category: 'opportunities',
+    inputSchema: competitiveOpportunitiesInputSchema,
+    handler: createCompetitiveOpportunitiesHandler(),
+  },
   {
     id: 'domain-rating',
     category: 'opportunities',

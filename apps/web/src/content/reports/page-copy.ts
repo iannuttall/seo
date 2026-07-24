@@ -83,6 +83,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Compare two saved SEO crawls to find new, fixed and changed technical issues. Check the crawl scope before treating the difference as real or complete.',
     lead: 'See what changed between two saved crawl snapshots without fetching the site again. Check that both crawls covered a comparable part of the site before celebrating a fix or reporting a regression.',
   },
+  'competitive-opportunities': {
+    title: 'Competitive SEO opportunities',
+    description:
+      'Turn a topic into a focused keyword and competitor shortlist using demand, current rankings, Ahrefs Domain Rating and optional link evidence.',
+    lead: 'Start with a topic and see which keywords, ranking domains and pages deserve a closer look. The report orders the investigation so you can spend time on the strongest leads first.',
+  },
   'competitor-keyword-gap': {
     title: 'Competitor keyword gap report',
     description:

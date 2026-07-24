@@ -65,6 +65,10 @@ seo reports run keyword-research \
   --params '{"seeds":["technical seo"],"sources":["ideas"],"countryCode":"GB","languageCode":"en","searchEngine":"google","limit":10,"provider":"semrush"}' \
   --json
 
+seo reports run competitive-opportunities \
+  --params '{"target":"example.com","seeds":["technical seo"],"countryCode":"GB","languageCode":"en","keywordProvider":"semrush","serpProvider":"dataforseo"}' \
+  --json
+
 seo reports run domain-overview \
   --params '{"domain":"example.com","countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"semrush"}' \
   --json
@@ -76,6 +80,7 @@ The connected adapter supports:
 | --- | --- |
 | `keyword-metrics` | Search volume, cost per click, paid competition, result count, intent and keyword difficulty when Semrush returns them. |
 | `keyword-research` | Bounded ideas, related terms and question keywords from one to five seeds. |
+| `competitive-opportunities` | Keyword discovery for a bounded shortlist enriched with current results and competitor evidence from connected providers. |
 | `domain-overview` | Provider-estimated organic keyword count, traffic and traffic cost for one domain. |
 | `ranked-keywords` | A bounded set of observed terms, ranking URLs, positions and optional keyword metrics. |
 | `ranking-pages` | Ranking pages and repeated URL patterns derived from bounded provider rows. |

@@ -221,6 +221,7 @@ commands:
 
 ```sh
 seo reports describe keyword-research --json
+seo reports describe competitive-opportunities --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
 seo reports describe local-search-demand --json
@@ -257,6 +258,9 @@ has the exact JSON shape, market guidance and file limits.
 
 The research flow now covers:
 
+- `competitive-opportunities` for turning a small topic set into a bounded
+  keyword and competitor investigation order using current results, free
+  Domain Rating observations, and optional paid link summaries;
 - `keyword-research`, `keyword-metrics`, and `saved-keywords` for discovery,
   estimates, and local persistence;
 - `serp-results` and `rank-tracking` for current or repeated exact market and

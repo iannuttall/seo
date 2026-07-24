@@ -1,6 +1,22 @@
 import type { ReportGuidance } from './report-guidance.js'
 
 export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
+  'competitive-opportunities': {
+    name: 'Competitive opportunities',
+    description:
+      'Turn a topic into a focused keyword and competitor shortlist using demand, current rankings, Domain Rating, and optional link evidence.',
+    useWhen: [
+      'You want to research a topic before choosing keywords or competitors.',
+      'You need one bounded investigation order across keyword demand, current results, and competitor evidence.',
+      'You want free Ahrefs Domain Rating context before deciding whether paid link research would help.',
+    ],
+    avoidWhen: [
+      'You already know the exact competitor domains and need their full keyword footprints.',
+      'You need local results for a specific city or precise location.',
+    ],
+    outcome:
+      'A focused keyword and competitor investigation order with current ranking pages, supporting evidence, costs, and clear follow-ups.',
+  },
   'competitor-keyword-gap': {
     name: 'Competitor keyword gaps',
     description:

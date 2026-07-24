@@ -12,6 +12,7 @@ export const reportIds = [
   'cannibalisation',
   'community-intent',
   'compare-crawls',
+  'competitive-opportunities',
   'competitor-keyword-gap',
   'content-optimization',
   'crawl-diff',

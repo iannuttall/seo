@@ -128,12 +128,15 @@ async function requestOnce(input: ProviderRequestInput): Promise<string> {
       ...input.init,
       signal: input.init?.signal ?? AbortSignal.timeout(input.timeoutMs),
     })
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => undefined)
+      throw httpError(input, response.status)
+    }
     const text = await readBoundedResponseText(
       response,
       input.maxResponseBytes,
       `${input.provider} response`,
     )
-    if (!response.ok) throw httpError(input, response.status)
     return text
   } catch (error) {
     throw requestError(input, error)

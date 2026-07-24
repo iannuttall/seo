@@ -41,9 +41,11 @@ export function providerCredentialScope(
   provider: ProviderId,
   accountIdentifier: string,
 ): string {
-  return createHash('sha256')
-    .update(`${provider}\0${accountIdentifier.trim().toLowerCase()}`)
-    .digest('hex')
+  const identifier =
+    provider === 'dataforseo'
+      ? accountIdentifier.trim().toLowerCase()
+      : accountIdentifier.trim()
+  return createHash('sha256').update(`${provider}\0${identifier}`).digest('hex')
 }
 
 function requestHash(key: ProviderCacheKey, requestJson: string): string {

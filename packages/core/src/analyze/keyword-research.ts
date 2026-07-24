@@ -21,6 +21,8 @@ import {
   type ProviderCandidate,
   resolveProvider,
 } from '../providers/resolver.js'
+import { readSemrushApiKey } from '../providers/semrush/credentials.js'
+import { SemrushKeywordDiscoveryProvider } from '../providers/semrush/keyword-discovery.js'
 import { analyzeKeywordTrend, type KeywordTrend } from './keyword-metrics.js'
 
 const MAX_RESEARCH_SEEDS = 5
@@ -83,11 +85,20 @@ function discoveryProvider(
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
+  const [dataForSeo, semrush] = await Promise.all([
+    readDataForSeoCredentials(),
+    readSemrushApiKey(),
+  ])
   return [
     {
       adapter: new DataForSeoKeywordDiscoveryProvider(),
-      connected: Boolean(await readDataForSeoCredentials()),
+      connected: Boolean(dataForSeo),
       priority: 10,
+    },
+    {
+      adapter: new SemrushKeywordDiscoveryProvider(),
+      connected: Boolean(semrush),
+      priority: 20,
     },
   ]
 }
@@ -271,7 +282,7 @@ export async function keywordResearchReport(
   if (resolution.status === 'unavailable') {
     const message =
       resolution.reason === 'provider-not-connected'
-        ? 'No connected provider can discover keywords. Run `seo providers dataforseo connect` first.'
+        ? 'No connected provider can discover keywords. Connect DataForSEO or Semrush under `seo providers` first.'
         : validated.provider
           ? `${validated.provider} cannot discover keywords for this market.`
           : 'No configured provider can discover keywords for this market.'

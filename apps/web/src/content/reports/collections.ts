@@ -58,6 +58,7 @@ export const reportCollections = [
       ['serp-results', 'Live search results'],
       ['rank-tracking', 'Exact rank tracking'],
       ['domain-overview', 'Domain search footprint'],
+      ['domain-rating', 'Ahrefs Domain Rating'],
       ['ranked-keywords', 'Ranked keyword footprint'],
       ['ranking-pages', 'Ranking pages and patterns'],
       ['serp-competitors', 'Search competitors'],

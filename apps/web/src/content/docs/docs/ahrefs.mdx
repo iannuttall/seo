@@ -1,0 +1,162 @@
+---
+title: Ahrefs research
+description: Connect an Ahrefs API v3 key and run bounded keyword, domain, competitor, Domain Rating and backlink research.
+---
+
+Use Ahrefs estimates when a first-party report leaves a specific research
+question open. The adapter supplies existing provider-neutral reports with
+coverage, cache state and API-unit cost. It does not add an Ahrefs-specific MCP
+tool or agent skill.
+
+## Connect an API v3 key
+
+Create or copy an API key in Ahrefs Account settings, then connect it through
+the masked terminal prompt:
+
+```sh
+seo providers ahrefs connect
+seo providers ahrefs status --check
+```
+
+The connection check uses the free account endpoint. It shows the subscription,
+workspace usage, reset date and key expiry without exposing the key. The key is
+saved in the system keychain when available, with a private local file fallback.
+It is never stored in a project profile, report, cache entry or structured
+error.
+
+Ahrefs documents bearer-key authentication in its
+<a href="https://docs.ahrefs.com/en/api/reference/subscription-info/get-limits-and-usage" target="_blank" rel="noreferrer">limits and usage reference</a>.
+
+Remove the saved key with:
+
+```sh
+seo providers ahrefs disconnect
+```
+
+Agents and CI can provide the same key without saving it:
+
+```sh
+SEO_AHREFS_API_KEY='your-api-v3-key' \
+  seo providers ahrefs status --check --json
+```
+
+Keep the value in the platform secret manager. Do not put it in a repository,
+script, report parameter, command-line flag or issue.
+
+## Run shared research reports
+
+Choose Ahrefs through the normal report input:
+
+```sh
+seo reports run keyword-metrics \
+  --params '{"keywords":["technical seo","seo audit"],"countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"ahrefs"}' \
+  --json
+
+seo reports run domain-overview \
+  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"ahrefs"}' \
+  --json
+
+seo reports run ranked-keywords \
+  --params '{"target":"example.com","limit":25,"offset":0,"countryCode":"GB","languageCode":"en","searchEngine":"google","provider":"ahrefs"}' \
+  --json
+```
+
+The connected adapter supports:
+
+| Report | Evidence supplied |
+| --- | --- |
+| `keyword-metrics` | Search volume, cost per click, keyword difficulty and intent when Ahrefs returns them. |
+| `keyword-research` | Bounded matching terms, related terms and search suggestions from one to five seeds. |
+| `domain-overview` | Provider-estimated organic keyword count, traffic and traffic value for one domain. |
+| `ranked-keywords` | A bounded set of observed terms, ranking URLs, positions and optional keyword metrics. |
+| `ranking-pages` | Ranking pages and repeated URL patterns derived from bounded provider rows. |
+| `serp-competitors` | Domains repeatedly observed for an explicit keyword set. |
+| `domain-rating` | One free, attributed Domain Rating observation for a domain or URL. |
+| `link-evidence` | Bounded representative backlinks, provider totals and source-page metrics. |
+
+Use `seo reports describe <report-id> --json` before scripting a report. It
+returns the current input schema, reading order, caveats and related reports.
+
+## Read Domain Rating as supporting evidence
+
+Run the free Domain Rating report before deciding whether deeper link research
+is useful:
+
+```sh
+seo reports run domain-rating \
+  --params '{"target":"example.com","targetMode":"domain","provider":"ahrefs"}' \
+  --json
+```
+
+Domain Rating is an Ahrefs 0 to 100 logarithmic estimate of backlink-profile
+strength. It is not a Google metric, ranking factor, traffic estimate, keyword
+difficulty score or proof that a result is easy to outrank. Missing Domain
+Rating remains missing, not zero.
+
+The result preserves the provider license and the required attribution
+**Domain Rating by Ahrefs**, linked to
+<a href="https://ahrefs.com/" target="_blank" rel="noreferrer">Ahrefs</a>.
+See the
+<a href="https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free" target="_blank" rel="noreferrer">Domain Rating endpoint reference</a>
+for the provider contract.
+
+## Inspect bounded backlink evidence
+
+Use the existing link report for a domain or one exact page:
+
+```sh
+seo links \
+  --provider ahrefs \
+  --target example.com \
+  --scope domain \
+  --row-limit 100 \
+  --json
+```
+
+The report keeps provider summary counts separate from the retained link list.
+The default list keeps one representative backlink per referring domain. A
+bounded or partial list cannot prove that a backlink, referring domain or
+target page does not exist.
+
+Use a current result snapshot, page relevance and URL-level link evidence
+before making a competitive decision. Domain Rating alone is too broad for
+that job.
+
+## Keep paid requests bounded
+
+Inspect or lower the local per-report work limits before broad research:
+
+```sh
+seo providers ahrefs limits
+seo providers ahrefs limits --requests 10 --rows 1000
+```
+
+Every paid cache miss checks the live API-unit balance before acquisition. The
+adapter also enforces fixed per-request and per-report unit caps, reads the
+returned Ahrefs unit headers and records estimated and actual API units in the
+evidence. Ahrefs explains row costs, minimum charges and response headers in
+its
+<a href="https://docs.ahrefs.com/en/api/docs/limits-consumption" target="_blank" rel="noreferrer">API consumption guide</a>.
+
+Results are cached locally for seven days by default. A local cache hit costs
+no API units and makes no provider request. Pass `"refresh":true` only when the
+decision needs a newer observation. Inspect or remove local rows with:
+
+```sh
+seo cache stats
+seo cache clear --provider ahrefs
+```
+
+Ahrefs research uses Google country-level data through this adapter. It does
+not provide a city, postcode, Bing or mobile market here. The requested
+language remains visible as context, but it is not a separate Ahrefs API
+filter.
+
+Run the main first-party report before paid research:
+
+```sh
+seo report --project example
+```
+
+Use an Ahrefs report to answer one evidence gap, then verify an important term
+against Search Console and a current result page in the same market.

@@ -1,6 +1,16 @@
 import type { ReportSource, ReportSourceKey } from './types'
 
 export const reportSources = {
+  'ahrefs-domain-rating': {
+    key: 'ahrefs-domain-rating',
+    label: 'Ahrefs Domain Rating API reference',
+    url: 'https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free',
+  },
+  'ahrefs-link-provider': {
+    key: 'ahrefs-link-provider',
+    label: 'Ahrefs backlink API reference',
+    url: 'https://docs.ahrefs.com/en/api/reference/site-explorer/get-all-backlinks',
+  },
   'ai-features': {
     key: 'ai-features',
     label: 'Google guidance for AI features and websites',

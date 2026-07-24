@@ -57,6 +57,7 @@ export const TELEMETRY_REPORTS = [
   'ctr-underperformers',
   'decaying-pages',
   'domain-overview',
+  'domain-rating',
   'setup-check',
   'entity-readiness',
   'explain-crawl-issue',

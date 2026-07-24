@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Response } from 'undici'
+import { runAhrefsResourceHarness } from './provider-resource-ahrefs.mjs'
 import { runSemrushResourceHarness } from './provider-resource-semrush.mjs'
 
 const MEBIBYTE = 1024 * 1024
@@ -965,6 +966,7 @@ try {
   assert.equal(clearCache('dataforseo'), BATCHES)
   assert.equal(getCacheStats().counts.provider_cache, 0)
   await runSemrushResourceHarness({ mebibyte: MEBIBYTE })
+  await runAhrefsResourceHarness({ mebibyte: MEBIBYTE })
 } finally {
   rmSync(cacheDir, { recursive: true, force: true })
 }

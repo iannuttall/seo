@@ -18,6 +18,7 @@ export const reportIds = [
   'site-crawl',
   'ctr-underperformers',
   'decaying-pages',
+  'domain-rating',
   'domain-overview',
   'setup-check',
   'entity-readiness',

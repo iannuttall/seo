@@ -8,6 +8,7 @@ import type {
 export type LinkEvidenceProvider =
   | 'bing-webmaster'
   | 'dataforseo'
+  | 'ahrefs'
   | 'csv-import'
   | 'json-import'
   | 'jsonl-import'

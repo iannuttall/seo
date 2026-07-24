@@ -3,6 +3,46 @@ import type { ReportGuideOverride } from './guide-types'
 export const domainResearchGuideOverrides: Partial<
   Record<string, ReportGuideOverride>
 > = {
+  'domain-rating': {
+    inputs: [
+      {
+        label: 'Domain or absolute URL',
+        source: 'ahrefs-domain-rating',
+        role: 'Defines the single target sent to the free Ahrefs Domain Rating endpoint.',
+      },
+      {
+        label: 'Connected Ahrefs API v3 key',
+        role: 'Authenticates the request without placing the key in report input, output or cache data.',
+      },
+    ],
+    checks: [
+      'Normalizes the target and keeps domain and URL modes explicit.',
+      'Validates the provider response while preserving a missing value, license, attribution, observation time, coverage, cache state and warnings.',
+      'Returns the Ahrefs metric without converting it into a ranking factor, traffic estimate, keyword-difficulty score or feasibility verdict.',
+    ],
+    returns: [
+      'One attributed Domain Rating observation on the Ahrefs 0 to 100 logarithmic scale.',
+      'The exact target, mode, provider license, attribution link, cache evidence, coverage and interpretation limits.',
+    ],
+    alternatives: [
+      {
+        when: 'You need actual referring URLs, target pages or provider backlink totals.',
+        reportId: 'link-evidence',
+        doInstead:
+          'Run link evidence with an Ahrefs target and a bounded row limit. Keep provider summary counts separate from the retained representative links.',
+      },
+      {
+        when: 'You want to judge whether a result may be competitive for one keyword.',
+        reportId: 'serp-results',
+        doInstead:
+          'Inspect the current result page, page relevance and URL-level evidence. Domain Rating alone cannot establish ranking feasibility.',
+      },
+    ],
+    seo: {
+      primaryKeyword: 'Ahrefs Domain Rating checker',
+      supportingKeywords: ['Domain Rating API', 'backlink profile strength'],
+    },
+  },
   'domain-overview': {
     inputs: [
       {

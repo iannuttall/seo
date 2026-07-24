@@ -126,6 +126,16 @@ test('link evidence bounds provider work, imports, and returned rows', () => {
     }).success,
     true,
   )
+  assert.equal(
+    schema.safeParse({
+      provider: 'ahrefs',
+      target: 'example.com',
+      scope: 'domain',
+      rowLimit: 100,
+      limit: 100,
+    }).success,
+    true,
+  )
   for (const input of [
     { file: './links.csv', rowLimit: 100_001 },
     { file: './links.csv', limit: 501 },

@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   bingWebmasterOverview,
+  collectAhrefsLinkEvidence,
   collectBingLinkEvidence,
   collectDataForSeoLinkEvidence,
   importLinkEvidence,
@@ -90,10 +91,10 @@ export function registerProviderTools(server: McpServer): void {
     'seo_link_evidence',
     {
       description:
-        'Review bounded referring-link evidence from DataForSEO, Bing Webmaster or a local export',
+        'Review bounded referring-link evidence from Ahrefs, DataForSEO, Bing Webmaster or a local export',
       inputSchema: {
         site: z.string().url().max(2_000).optional(),
-        provider: z.enum(['dataforseo', 'bing']).optional(),
+        provider: z.enum(['ahrefs', 'dataforseo', 'bing']).optional(),
         target: z.string().trim().min(1).max(2_048).optional(),
         scope: z.enum(['domain', 'page']).optional(),
         includeSubdomains: z.boolean().optional(),
@@ -133,7 +134,7 @@ export function registerProviderTools(server: McpServer): void {
         if (sourceCount !== 1) {
           throw new SeoError(
             'INVALID_INPUT',
-            'Pass one link source: file, site for Bing, or target for DataForSEO.',
+            'Pass one link source: file, site for Bing, or target for Ahrefs or DataForSEO.',
           )
         }
         if (file && provider) {
@@ -142,10 +143,10 @@ export function registerProviderTools(server: McpServer): void {
             'Do not pass provider with a local link file.',
           )
         }
-        if (liveProvider === 'dataforseo' && !target) {
+        if (['ahrefs', 'dataforseo'].includes(liveProvider) && !target) {
           throw new SeoError(
             'INVALID_INPUT',
-            'Pass target for DataForSEO link evidence.',
+            'Pass target for Ahrefs or DataForSEO link evidence.',
           )
         }
         if (liveProvider === 'bing' && !site && !file) {
@@ -156,22 +157,30 @@ export function registerProviderTools(server: McpServer): void {
         }
         const evidence = file
           ? await importLinkEvidence({ file, format, rowLimit })
-          : liveProvider === 'dataforseo'
-            ? await collectDataForSeoLinkEvidence({
+          : liveProvider === 'ahrefs'
+            ? await collectAhrefsLinkEvidence({
                 target: target ?? '',
                 scope,
                 includeSubdomains,
                 rowLimit,
                 refresh,
               })
-            : await collectBingLinkEvidence({
-                site: site ?? '',
-                rowLimit,
-                targetLimit,
-                detailPagesPerTarget,
-              })
+            : liveProvider === 'dataforseo'
+              ? await collectDataForSeoLinkEvidence({
+                  target: target ?? '',
+                  scope,
+                  includeSubdomains,
+                  rowLimit,
+                  refresh,
+                })
+              : await collectBingLinkEvidence({
+                  site: site ?? '',
+                  rowLimit,
+                  targetLimit,
+                  detailPagesPerTarget,
+                })
         const context =
-          searchConsoleSite || evidence.provenance.provider === 'dataforseo'
+          searchConsoleSite || evidence.externalProvider
             ? await linkTargetContext({
                 evidence,
                 searchConsoleSite,

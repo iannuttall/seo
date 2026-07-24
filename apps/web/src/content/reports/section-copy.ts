@@ -37,6 +37,8 @@ export const reportNextStepIntros: Record<string, string> = {
     'Inspect the live search result and query intent before rewriting a title or description. Record the change, leave the page long enough to collect comparable data and check the same query set again.',
   'decaying-pages':
     'Confirm that the decline survives a matched date and segment comparison before refreshing the page. Use the page opportunity report to choose a supported update, then measure the change against the same demand.',
+  'domain-rating':
+    'Use the observation to decide whether URL-level backlink evidence deserves a closer look. Compare current results, page relevance and first-party performance before making any claim about ranking difficulty.',
   'domain-overview':
     'Use the footprint to choose a narrower domain, page or keyword investigation. Keep provider estimates separate from Search Console measurements, and check current results before changing priorities.',
   'setup-check':

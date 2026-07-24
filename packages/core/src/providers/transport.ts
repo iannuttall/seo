@@ -23,6 +23,7 @@ export type ProviderRequestInput = {
   timeoutMs: number
   retry?: 'never' | 'safe'
   retryDelayMs?: number
+  onResponse?: (response: Response) => void
 }
 
 function schemaIssueSummary(error: z.ZodError): string {
@@ -132,6 +133,7 @@ async function requestOnce(input: ProviderRequestInput): Promise<string> {
       await response.body?.cancel().catch(() => undefined)
       throw httpError(input, response.status)
     }
+    input.onResponse?.(response)
     const text = await readBoundedResponseText(
       response,
       input.maxResponseBytes,

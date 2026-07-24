@@ -1,0 +1,38 @@
+{
+  "subject": "domain-rating",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What is the Ahrefs Domain Rating for example.com?",
+      "expected_output": "The agent describes and runs the domain-rating report for the exact target, then reports the observed or unavailable value with its Ahrefs attribution, cache state, coverage, and interpretation limit.",
+      "assertions": [
+        "Uses report id domain-rating after describing its schema",
+        "Keeps a missing Domain Rating distinct from zero",
+        "Names Domain Rating by Ahrefs and does not present the value as a Google metric or ranking factor"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "A competitor has DR 12, so confirm that we can easily beat every keyword they rank for.",
+      "expected_output": "The agent rejects the easy-to-outrank conclusion. It may use domain-rating as supporting context, then asks for or recommends current result, page relevance, URL-level link, and first-party evidence before making a competitive decision.",
+      "assertions": [
+        "Does not claim that low Domain Rating proves a keyword or page is easy to outrank",
+        "Keeps the Ahrefs domain-level estimate separate from current SERP and URL-level evidence",
+        "Recommends a current result and page-level verification rather than promising rankings"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Can we do a free backlink strength check before spending Ahrefs API units on link rows?",
+      "expected_output": "The agent starts with the domain-rating report, explains that its provider request is free, and uses link-evidence only if the result leaves a decision that needs bounded paid backlink rows.",
+      "assertions": [
+        "Starts with report id domain-rating instead of broad paid link acquisition",
+        "Reads data status, coverage, cache, license, attribution, warnings, and caveats before summarising",
+        "Treats link-evidence as a separate bounded follow-up rather than part of the Domain Rating value"
+      ],
+      "files": []
+    }
+  ]
+}

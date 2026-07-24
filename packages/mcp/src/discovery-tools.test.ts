@@ -76,6 +76,7 @@ test('report catalog is stable, sorted, and excludes raw or mutable tools', () =
     'ctr-underperformers',
     'decaying-pages',
     'domain-overview',
+    'domain-rating',
     'entity-readiness',
     'explain-crawl-issue',
     'generate-llms-txt',

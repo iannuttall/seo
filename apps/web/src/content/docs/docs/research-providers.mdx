@@ -1,6 +1,6 @@
 ---
 title: Research providers
-description: Connect DataForSEO locally, control paid requests and combine keyword, domain, competitor, link and AI answer evidence with first-party data.
+description: Connect optional research providers locally, control paid requests and combine keyword, domain, competitor, link and AI answer evidence with first-party data.
 ---
 
 Research a market without replacing the evidence from your own site. Optional
@@ -10,12 +10,17 @@ performance. Crawls still supply current page and technical evidence.
 
 DataForSEO supports the broadest set of current research reports. Semrush
 Version 3 supports bounded keyword, domain, ranking-page and search-competitor
-research. The report contracts are provider neutral, so both adapters return
-the same evidence shape where their capabilities overlap. A report fails
-clearly when a selected provider does not support its operation or market.
+research. Ahrefs API v3 supports those shared research reports plus attributed
+Domain Rating and bounded backlink evidence. The report contracts are provider
+neutral, so the adapters return the same evidence shape where their
+capabilities overlap. A report fails clearly when a selected provider does not
+support its operation or market.
 
 Use the [Semrush guide](/docs/semrush) for the exact key, connection commands,
 supported reports and API-unit behavior.
+
+Use the [Ahrefs guide](/docs/ahrefs) for connection, supported reports, Domain
+Rating attribution, backlink evidence and API-unit limits.
 
 ## Connect DataForSEO on this computer
 
@@ -135,8 +140,8 @@ seo reports run serp-competitors \
   --json
 ```
 
-The existing `link-evidence` report also accepts a live DataForSEO target
-through the direct `seo links` command. It does not add a second report or MCP
+The existing `link-evidence` report accepts a live Ahrefs or DataForSEO target
+through the direct `seo links` command. It does not add another report or MCP
 tool.
 
 The current domain research endpoints use country and language. They do not

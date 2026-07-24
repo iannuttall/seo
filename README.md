@@ -69,9 +69,8 @@ the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
 Research providers are optional and connected separately. Start with the main
-report, then add DataForSEO when keyword estimates, live results, domain
-footprints, ranking pages, competitor research, or exact local result context
-would change the decision.
+report, then add DataForSEO, Semrush, or Ahrefs only when external keyword,
+result, domain, competitor, or link estimates would change the decision.
 
 That is the normal path. The `seo` command is then available in every terminal,
 script, CI job, and local MCP client on the machine.
@@ -188,8 +187,9 @@ Run `seo help` for the short path or `seo help all` for the full command list.
 
 ## Research keywords and competitors
 
-Connect DataForSEO when you need independent market estimates or competitor
-evidence. The connection is local and separate from Google sign-in:
+Connect a research provider when you need independent market estimates or
+competitor evidence. Each connection is local and separate from Google
+sign-in. DataForSEO has the broadest live coverage:
 
 ```sh
 seo providers dataforseo connect
@@ -198,10 +198,23 @@ seo providers dataforseo limits
 ```
 
 Credentials use the system keychain when available, with a private local file
-fallback. Paid requests read current endpoint prices, reserve estimated spend
-before acquisition, record actual cost, and use local daily, monthly, request,
-and row limits. Cached results avoid repeating paid work during their retention
-window.
+fallback. Semrush Version 3 and Ahrefs API v3 use the same local credential
+boundary:
+
+```sh
+seo providers semrush connect
+seo providers semrush status --check
+
+seo providers ahrefs connect
+seo providers ahrefs status --check
+seo providers ahrefs limits
+```
+
+Read the [Semrush guide](https://seoskill.dev/docs/semrush) and
+[Ahrefs guide](https://seoskill.dev/docs/ahrefs) before running paid research.
+Supported reports record the applicable API units or USD cost, cache state,
+request bounds, and retained row coverage. Cached results avoid repeating paid
+work during their retention window.
 
 Use the existing report catalog. There are no separate provider-named report
 commands:
@@ -264,6 +277,8 @@ The research flow now covers:
 - `link-evidence` for a current link summary, one representative backlink per
   referring domain, and linked-target checks against saved crawl and Search
   Console evidence;
+- `domain-rating` for one free, attributed Ahrefs observation of backlink
+  profile strength, kept separate from ranking and traffic evidence;
 - `ai-mention-research` for provider-indexed mentions, cited domains, and
   bounded question samples in one exact AI surface and market, with optional
   Search Console overlap for a property you own;
@@ -319,10 +334,11 @@ evidence remain distinct. Bing's `inIndex` crawl statistic is provider
 evidence, not URL-level proof that a page is indexed. A query or page missing
 from a weekly top list is unknown, not zero.
 
-Review a bounded set of referring links from DataForSEO, Bing or a local
-export:
+Review a bounded set of referring links from Ahrefs, DataForSEO, Bing or a
+local export:
 
 ```sh
+seo links --provider ahrefs --target example.com --json
 seo links --provider dataforseo --target example.com --json
 seo links --provider dataforseo --target example.com \
   --search-site sc-domain:example.com --json
@@ -330,11 +346,12 @@ seo links --project example --json
 seo links --file ./links.csv --row-limit 10000 --json
 ```
 
-The DataForSEO path makes two sequential paid requests by default: one summary
-and up to 100 live representative backlinks, one per referring domain. Current
-endpoint prices, estimated and actual cost, task ids, cache state, provider
-filters, row coverage and omitted rows stay in the result. A cached repeat
-does not repeat paid work during the retention window.
+The Ahrefs and DataForSEO paths request one summary and a bounded set of live
+representative backlinks, one per referring domain by default. Ahrefs keeps
+estimated and actual API units in the evidence. DataForSEO keeps current
+endpoint prices, estimated and actual USD cost, and task ids. Both retain cache
+state, provider filters, row coverage, and omitted rows. A cached repeat does
+not repeat paid work during the retention window.
 
 When a matching saved crawl or Search Console property is available, the same
 report checks linked target pages for observed error responses, redirects,
@@ -654,9 +671,9 @@ request a site, connected Google or Bing account, research provider, Chrome UX
 Report, IndexNow, or the npm registry when the work needs it.
 
 Optional external enrichment can send selected Search Console query or derived
-seed text to DataForSEO only when you explicitly enable it. It does not send
-Google credentials, property IDs, Search Console metrics, or Google Analytics
-rows. Local provider file imports are not uploaded. Read the
+seed text to the chosen research provider only when you explicitly enable it.
+It does not send Google credentials, property IDs, Search Console metrics, or
+Google Analytics rows. Local provider file imports are not uploaded. Read the
 [privacy policy](https://seoskill.dev/privacy) for every network boundary and
 the [telemetry page](https://seoskill.dev/telemetry) for the fixed anonymous
 usage-event schema and opt-out controls.

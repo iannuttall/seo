@@ -37,6 +37,12 @@ export const docsNav: DocsNavEntry[] = [
       'Connect the permanent Semrush Version 3 key and run bounded keyword, domain, ranking-page and competitor research.',
   },
   {
+    path: '/docs/ahrefs',
+    label: 'Ahrefs',
+    description:
+      'Connect an Ahrefs API v3 key and run bounded keyword, domain, competitor, Domain Rating and backlink research.',
+  },
+  {
     path: '/docs/indexnow',
     label: 'IndexNow',
     description:

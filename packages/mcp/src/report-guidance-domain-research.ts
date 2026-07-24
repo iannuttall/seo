@@ -32,6 +32,21 @@ export const REPORT_GUIDANCE_DOMAIN_RESEARCH = {
     outcome:
       'A bounded domain estimate with ranking distribution, source coverage, cost, and an optional Search Console comparison.',
   },
+  'domain-rating': {
+    name: 'Ahrefs Domain Rating',
+    description:
+      'Retrieve the current Ahrefs backlink-profile estimate for one domain or URL with its required license and attribution.',
+    useWhen: [
+      'You need one provider-native backlink-profile metric as supporting evidence.',
+      'You want the free Ahrefs value before deciding whether deeper paid link research is useful.',
+    ],
+    avoidWhen: [
+      'You want a Google ranking factor, traffic estimate, keyword-difficulty score, or an easy-to-outrank verdict.',
+      'You need page relevance, current result positions, or complete backlink evidence.',
+    ],
+    outcome:
+      'One explicitly attributed Ahrefs Domain Rating observation with cache, coverage, license, and interpretation limits.',
+  },
   'ranked-keywords': {
     name: 'Ranked keyword footprint',
     description:

@@ -119,6 +119,12 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
       'Compare matched Search Console periods to find pages and queries losing clicks, impressions, position or CTR before planning a content refresh.',
     lead: 'Find pages or queries with a supported decline across two matched periods. The report shows what moved, then leaves the cause open for investigation.',
   },
+  'domain-rating': {
+    title: 'Ahrefs Domain Rating report',
+    description:
+      'Retrieve one attributed Ahrefs Domain Rating observation for a domain or URL, with its target mode, license, cache state, coverage and limits kept visible.',
+    lead: 'Check the broad backlink-profile estimate Ahrefs returns for one domain or URL. Use it as supporting context, then inspect current results and URL-level evidence before judging a keyword or page.',
+  },
   'domain-overview': {
     title: 'Domain organic search overview',
     description:
@@ -194,7 +200,7 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'link-evidence': {
     title: 'Backlink evidence report',
     description:
-      'Review bounded referring URLs, target pages and anchor text from Bing Webmaster or a local CSV, JSON or JSONL export, with source limits kept visible.',
+      'Review bounded referring URLs, target pages and anchor text from Ahrefs, DataForSEO, Bing Webmaster or a local export, with source limits kept visible.',
     lead: 'See which retained pages link to the site without downloading a giant backlink index. The report keeps source coverage and limits visible, so a missing row never becomes proof that no link exists.',
   },
   'local-search-demand': {

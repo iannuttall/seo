@@ -3,7 +3,7 @@ import DotPattern from '@/components/DotPattern.astro'
 import ClaudePixel from '@/components/icons/ClaudePixel.astro'
 import PixelIcon from '@/components/icons/PixelIcon.astro'
 
-type Demo = 'mcp' | 'cli' | 'crawl' | 'ai' | 'library' | 'measure'
+type Demo = 'mcp' | 'cli' | 'crawl' | 'research' | 'ai' | 'library' | 'measure'
 
 type Props = {
   demo: Demo
@@ -151,6 +151,76 @@ const { demo, patternId, title } = Astro.props
                 <span class="text-foreground-muted">1 URL</span>
               </div>
               <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Open a chain for its hops</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      demo === 'research' && (
+        <div class="relative w-full" aria-label="Stack of keyword and competitor research reports" data-stack-demo>
+          <div class="stack-card stack-pos-front absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between gap-3 whitespace-nowrap border-b-2 border-nav px-3 py-2 text-xs">
+              <span>keyword ideas</span>
+              <span class="text-foreground-muted">Semrush<span class="stack-example-label"> example</span></span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>seo audit tool</span>
+                <span class="text-primary">1,300 volume</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>technical seo audit</span>
+                <span class="text-foreground-muted">720 volume</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>seo audit checklist</span>
+                <span class="text-foreground-muted">590 volume</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Decide what to research first</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-middle absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between gap-3 whitespace-nowrap border-b-2 border-nav px-3 py-2 text-xs">
+              <span>competitors</span>
+              <span class="text-foreground-muted">DataForSEO<span class="stack-example-label"> example</span></span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>tools.example</span>
+                <span class="text-primary">4 / 5 terms</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>guides.example</span>
+                <span class="text-foreground-muted">3 / 5 terms</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>reviews.example</span>
+                <span class="text-foreground-muted">2 / 5 terms</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">See who ranks across your topics</div>
+            </div>
+          </div>
+          <div class="stack-card stack-pos-back absolute flex flex-col border-2 border-nav bg-background" data-stack-card>
+            <div class="flex items-center justify-between gap-3 whitespace-nowrap border-b-2 border-nav px-3 py-2 text-xs">
+              <span>domain rating</span>
+              <span class="text-foreground-muted">Ahrefs<span class="stack-example-label"> example</span></span>
+            </div>
+            <div class="flex min-h-0 flex-1 flex-col divide-y divide-border text-[11px]">
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>your site</span>
+                <span class="text-primary">DR 41</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>tools.example</span>
+                <span class="text-foreground-muted">DR 52</span>
+              </div>
+              <div class="flex flex-1 items-center justify-between gap-3 px-3 py-1.5">
+                <span>guides.example</span>
+                <span class="text-foreground-muted">DR 36</span>
+              </div>
+              <div class="flex flex-1 items-center px-3 py-1.5 text-foreground-muted">Compare backlink strength at a glance</div>
             </div>
           </div>
         </div>
@@ -318,6 +388,11 @@ console.log(report.issues)</code></pre>
   .stack-pos-back {
     inset: 0 2rem 0;
     z-index: 10;
+  }
+
+  .stack-pos-middle .stack-example-label,
+  .stack-pos-back .stack-example-label {
+    display: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

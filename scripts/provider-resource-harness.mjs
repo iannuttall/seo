@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Response } from 'undici'
+import { runSemrushResourceHarness } from './provider-resource-semrush.mjs'
 
 const MEBIBYTE = 1024 * 1024
 const ROW_COUNT = 80_000
@@ -963,6 +964,7 @@ try {
   assert.ok(cacheStats.logicalSizeBytes <= cacheStats.maxSizeBytes)
   assert.equal(clearCache('dataforseo'), BATCHES)
   assert.equal(getCacheStats().counts.provider_cache, 0)
+  await runSemrushResourceHarness({ mebibyte: MEBIBYTE })
 } finally {
   rmSync(cacheDir, { recursive: true, force: true })
 }

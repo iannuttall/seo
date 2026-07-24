@@ -16,6 +16,7 @@ export const PROVIDER_SECRET_NAMES = {
   bingApiKey: 'bing-api-key',
   dataForSeoCredentials: 'dataforseo-credentials',
   indexNowKeys: 'indexnow-keys',
+  semrushApiKey: 'semrush-api-key',
 } as const
 
 export const MANAGED_PROVIDER_SECRET_NAMES = Object.freeze(

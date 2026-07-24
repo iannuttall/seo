@@ -28,7 +28,13 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/research-providers',
     label: 'Research providers',
     description:
-      'Connect DataForSEO locally, control paid work and combine keyword, domain, competitor and page estimates with first-party evidence.',
+      'Connect optional providers locally, control paid work and combine keyword, domain, competitor and page estimates with first-party evidence.',
+  },
+  {
+    path: '/docs/semrush',
+    label: 'Semrush',
+    description:
+      'Connect the permanent Semrush Version 3 key and run bounded keyword, domain, ranking-page and competitor research.',
   },
   {
     path: '/docs/indexnow',

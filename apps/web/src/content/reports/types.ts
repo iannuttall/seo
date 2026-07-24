@@ -16,6 +16,8 @@ export type ReportSourceKey =
   | 'ai-features'
   | 'ai-mention-provider'
   | 'ai-prompt-provider'
+  | 'ahrefs-domain-rating'
+  | 'ahrefs-link-provider'
   | 'bing-webmaster'
   | 'canonical'
   | 'core-web-vitals'

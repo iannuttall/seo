@@ -138,3 +138,25 @@ test('provider transport retries only explicitly safe operations', async () => {
   )
   assert.equal(chargedAttempts, 1)
 })
+
+test('provider transport exposes successful response metadata', async () => {
+  let observedCost = ''
+  const result = await providerRequestJson({
+    provider: 'ahrefs',
+    operation: 'metadata',
+    url: 'https://example.test',
+    fetch: async () =>
+      new Response('{"ok":true}', {
+        headers: { 'x-api-units-cost-total-actual': '50' },
+      }),
+    maxResponseBytes: 1_024,
+    timeoutMs: 1_000,
+    schema: z.object({ ok: z.literal(true) }),
+    onResponse: (response) => {
+      observedCost = response.headers.get('x-api-units-cost-total-actual') ?? ''
+    },
+  })
+
+  assert.deepEqual(result, { ok: true })
+  assert.equal(observedCost, '50')
+})

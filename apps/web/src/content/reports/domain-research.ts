@@ -2,6 +2,53 @@ import type { ReportEditorial } from './types'
 
 export const domainResearchReports = [
   {
+    id: 'domain-rating',
+    name: 'Ahrefs Domain Rating',
+    category: 'opportunities',
+    summary:
+      'Retrieve one attributed Ahrefs backlink-profile estimate before deciding whether deeper paid link research is useful.',
+    question:
+      'What Domain Rating does Ahrefs currently return for this domain or URL, and what can that value support?',
+    useWhen: [
+      'You need one provider-native backlink-profile metric as supporting evidence.',
+      'You want the free Ahrefs value before requesting paid backlink rows.',
+    ],
+    avoidWhen: [
+      'You want a Google ranking factor, traffic estimate, keyword-difficulty score, or easy-to-outrank verdict.',
+      'You need current result positions, page relevance, or complete backlink evidence.',
+    ],
+    evidence: [
+      'One Ahrefs Domain Rating observation on its 0 to 100 logarithmic scale.',
+      'The exact domain or URL mode, observation time, cache state, coverage and provider warnings.',
+      'The provider license, required Domain Rating by Ahrefs attribution and attribution URL.',
+    ],
+    methodology: [
+      'Normalizes one domain or absolute HTTP or HTTPS URL before calling the free Ahrefs endpoint.',
+      'Keeps an unavailable value missing rather than turning it into zero.',
+      'Returns the provider-native metric without combining it into a ranking, traffic or opportunity score.',
+    ],
+    exampleParams: {
+      target: 'example.com',
+      targetMode: 'domain',
+      provider: 'ahrefs',
+    },
+    interpretation: [
+      'Use the value as broad backlink-profile context. Compare current results, page relevance and URL-level link evidence before making a competitive decision.',
+      'Read the required attribution and license beside the value when displaying or reusing it.',
+    ],
+    caveats: [
+      'Domain Rating is an Ahrefs estimate. It is not a Google metric or ranking factor.',
+      'A lower value does not prove that a page or keyword is easy to outrank. Missing Domain Rating is not zero.',
+    ],
+    nextSteps: [
+      'Run link evidence for bounded referring-link rows and provider summary counts.',
+      'Run SERP results for a decision-critical keyword.',
+      'Run domain overview when the question concerns estimated search footprint rather than backlink strength.',
+    ],
+    related: ['link-evidence', 'serp-results', 'domain-overview'],
+    sources: ['ahrefs-domain-rating'],
+  },
+  {
     id: 'domain-overview',
     name: 'Domain search footprint',
     category: 'opportunities',

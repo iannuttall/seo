@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { SeoError } from '../errors.js'
+import { readAhrefsApiKey } from '../providers/ahrefs/credentials.js'
+import { AhrefsKeywordDiscoveryProvider } from '../providers/ahrefs/keyword-discovery.js'
 import type {
   KeywordDiscoveryProvider,
   KeywordDiscoverySource,
@@ -85,9 +87,10 @@ function discoveryProvider(
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
-  const [dataForSeo, semrush] = await Promise.all([
+  const [dataForSeo, semrush, ahrefs] = await Promise.all([
     readDataForSeoCredentials(),
     readSemrushApiKey(),
+    readAhrefsApiKey(),
   ])
   return [
     {
@@ -99,6 +102,11 @@ async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
       adapter: new SemrushKeywordDiscoveryProvider(),
       connected: Boolean(semrush),
       priority: 20,
+    },
+    {
+      adapter: new AhrefsKeywordDiscoveryProvider(),
+      connected: Boolean(ahrefs),
+      priority: 30,
     },
   ]
 }
@@ -282,7 +290,7 @@ export async function keywordResearchReport(
   if (resolution.status === 'unavailable') {
     const message =
       resolution.reason === 'provider-not-connected'
-        ? 'No connected provider can discover keywords. Connect DataForSEO or Semrush under `seo providers` first.'
+        ? 'No connected provider can discover keywords. Connect DataForSEO, Semrush or Ahrefs under `seo providers` first.'
         : validated.provider
           ? `${validated.provider} cannot discover keywords for this market.`
           : 'No configured provider can discover keywords for this market.'

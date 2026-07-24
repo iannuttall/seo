@@ -41,3 +41,28 @@ test('cache clear rejects an unknown provider before opening the database', asyn
     await rm(cacheDir, { recursive: true, force: true })
   }
 })
+
+test('cache clear accepts Ahrefs as an isolated provider cache', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-cache-cli-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-cache-cli-cache-'))
+  try {
+    const result = await execFileAsync(
+      process.execPath,
+      [cliPath, 'cache', 'clear', '--provider', 'ahrefs'],
+      {
+        env: {
+          ...process.env,
+          SEO_CONFIG_DIR: configDir,
+          SEO_CACHE_DIR: cacheDir,
+          CI: '1',
+          NO_UPDATE_NOTIFIER: '1',
+        },
+      },
+    )
+    assert.equal(result.stderr, '')
+    assert.equal(result.stdout, 'Removed 0 cached rows.\n')
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})

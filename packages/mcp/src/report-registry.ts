@@ -19,6 +19,10 @@ import {
   createAiPromptObservationsHandler,
 } from './report-definitions/ai-prompt-observations.js'
 import {
+  createDomainRatingHandler,
+  domainRatingInputSchema,
+} from './report-definitions/domain-rating.js'
+import {
   createLocalSearchDemandHandler,
   localSearchDemandInputSchema,
 } from './report-definitions/local-search-demand.js'
@@ -69,6 +73,12 @@ type DirectReport = {
 }
 
 const directReports: readonly DirectReport[] = [
+  {
+    id: 'domain-rating',
+    category: 'opportunities',
+    inputSchema: domainRatingInputSchema,
+    handler: createDomainRatingHandler(),
+  },
   {
     id: 'ai-mention-research',
     category: 'ai-search',

@@ -13,6 +13,7 @@ const KEYRING_SERVICE = 'seo'
 const PRIVATE_FILE_MODE = 0o600
 
 export const PROVIDER_SECRET_NAMES = {
+  ahrefsApiKey: 'ahrefs-api-key',
   bingApiKey: 'bing-api-key',
   dataForSeoCredentials: 'dataforseo-credentials',
   indexNowKeys: 'indexnow-keys',

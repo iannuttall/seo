@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { SeoError } from '../errors.js'
+import { readAhrefsApiKey } from '../providers/ahrefs/credentials.js'
+import { AhrefsKeywordMetricsProvider } from '../providers/ahrefs/keyword-metrics.js'
 import type {
   KeywordMetric,
   KeywordMetricsProvider,
@@ -167,9 +169,10 @@ function keywordMetricsProvider(
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
-  const [dataForSeo, semrush] = await Promise.all([
+  const [dataForSeo, semrush, ahrefs] = await Promise.all([
     readDataForSeoCredentials(),
     readSemrushApiKey(),
+    readAhrefsApiKey(),
   ])
   return [
     {
@@ -182,6 +185,11 @@ async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
       connected: Boolean(semrush),
       priority: 20,
     },
+    {
+      adapter: new AhrefsKeywordMetricsProvider(),
+      connected: Boolean(ahrefs),
+      priority: 30,
+    },
   ]
 }
 
@@ -192,7 +200,7 @@ function providerResolutionError(input: {
   if (input.reason === 'provider-not-connected') {
     return new SeoError(
       'PROVIDER_UNAVAILABLE',
-      'No connected provider can supply keyword metrics. Connect DataForSEO or Semrush under `seo providers` first.',
+      'No connected provider can supply keyword metrics. Connect DataForSEO, Semrush or Ahrefs under `seo providers` first.',
     )
   }
   if (input.provider && input.reason === 'market-not-supported') {

@@ -277,11 +277,11 @@ export const reportGuideOverridesIP: Partial<
   'link-evidence': {
     name: 'Review referring link evidence',
     summary:
-      'Normalize a bounded set of referring URLs from Bing Webmaster or a local export without downloading a web-scale index.',
+      'Normalize bounded referring URLs from Ahrefs, DataForSEO, Bing Webmaster or a local export without downloading a web-scale index.',
     inputs: [
       {
-        label: 'Bing Webmaster link data or a local link export',
-        source: 'bing-webmaster',
+        label: 'Live provider target or local link export',
+        source: 'ahrefs-link-provider',
         role: 'Provides the referring URL, target URL, and optional anchor text observed by the selected source.',
       },
       {
@@ -293,10 +293,11 @@ export const reportGuideOverridesIP: Partial<
       'Validates HTTP URLs, normalizes common import fields, deduplicates stable row keys, and preserves invalid and duplicate counts.',
       'Streams CSV and JSONL files and rejects oversized regular JSON before reading it into memory.',
       'Keeps provider pagination, file bytes, row limits, output omissions, warnings, and caveats beside the retained links.',
+      'Keeps provider summary counts, representative link rows, cache state and paid request cost as separate evidence.',
     ],
     returns: [
-      'A bounded list of referring URLs, target URLs, source domains, and anchor text where the source provided it.',
-      'Target-page counts, source provenance, validation counts, limit status, warnings, and narrow interpretation caveats.',
+      'A bounded list of referring URLs, target URLs, source domains, anchor text and provider-native page metrics where the source provided them.',
+      'Provider summary totals, target-page counts, source provenance, validation counts, limit status, cache and cost evidence, warnings, and narrow interpretation caveats.',
     ],
     alternatives: [
       {
@@ -306,9 +307,9 @@ export const reportGuideOverridesIP: Partial<
           'Run a bounded site crawl. It follows current internal links and records broken responses rather than importing external referring-link evidence.',
       },
       {
-        when: 'You need a complete backlink index, authority score, or link value estimate.',
+        when: 'You need a complete backlink index or want one provider score turned into a ranking verdict.',
         doInstead:
-          'Use a specialist provider and keep its coverage and scoring method explicit. This report does not invent metrics that Bing or the imported file did not supply.',
+          'Use provider-native metrics only with their coverage and method kept explicit. This report cannot turn a bounded backlink sample or Domain Rating into ranking impact.',
       },
     ],
     seo: {

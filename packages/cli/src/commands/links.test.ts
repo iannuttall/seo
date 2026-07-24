@@ -30,7 +30,7 @@ test('links help exposes live provider and target context controls', async () =>
   ]) {
     assert.match(stdout, new RegExp(flag))
   }
-  assert.match(stdout, /100 DataForSEO, 500 Bing, 10000 files/)
+  assert.match(stdout, /100 live provider, 500 Bing, 10000 files/)
 })
 
 test('links command imports a bounded local file as structured JSON', async () => {
@@ -83,6 +83,14 @@ test('links command rejects ambiguous and provider-mismatched sources before acq
       'links',
       '--provider',
       'dataforseo',
+      '--site',
+      'https://example.com/',
+      '--json',
+    ],
+    [
+      'links',
+      '--provider',
+      'ahrefs',
       '--site',
       'https://example.com/',
       '--json',

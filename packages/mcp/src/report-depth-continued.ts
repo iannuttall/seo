@@ -107,6 +107,25 @@ export const REPORT_DEPTH_CONTINUED = {
       },
     ],
   },
+  'domain-rating': {
+    readOrder: [
+      'dataStatus, target, targetMode, observedAt, cache, coverage, and warnings',
+      'evidence.data.domainRating, licenseUrl, attribution, and attributionUrl',
+      'caveats and nextSteps before using the value in a comparison',
+    ],
+    doNotClaim: [
+      'Domain Rating is an Ahrefs backlink-profile estimate, not a Google metric, ranking factor, traffic estimate, or keyword-difficulty score.',
+      'A lower Domain Rating does not by itself mean a result, page, or keyword is easy to outrank.',
+      'Missing or unavailable Domain Rating is not zero.',
+    ],
+    verify:
+      'Inspect the current result page, page relevance, URL-level link evidence, and your own site evidence before making a competitive decision.',
+    related: [
+      { id: 'link-evidence', reason: 'Adds bounded referring-link evidence.' },
+      { id: 'serp-results', reason: 'Checks a current result snapshot.' },
+      { id: 'domain-overview', reason: 'Adds search-footprint estimates.' },
+    ],
+  },
   'ranked-keywords': {
     readOrder: [
       'dataStatus, market, coverage, request filters, cache, cost, and warnings',

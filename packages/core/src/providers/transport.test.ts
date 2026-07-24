@@ -61,7 +61,11 @@ test('provider transport returns structured safe errors', async () => {
   await assert.rejects(
     providerRequestText({
       ...base,
-      fetch: async () => new Response('secret body', { status: 401 }),
+      fetch: async () =>
+        new Response('secret body that exceeds the configured response limit', {
+          status: 401,
+        }),
+      maxResponseBytes: 5,
     }),
     (error) => {
       assert.ok(error instanceof ProviderError)
@@ -105,13 +109,14 @@ test('provider transport retries only explicitly safe operations', async () => {
   const safeFetch: ProviderFetch = async () => {
     safeAttempts += 1
     return safeAttempts === 1
-      ? new Response('', { status: 503 })
+      ? new Response('oversized transient response body', { status: 503 })
       : new Response('ok')
   }
   assert.equal(
     await providerRequestText({
       ...base,
       fetch: safeFetch,
+      maxResponseBytes: 5,
       retry: 'safe',
       retryDelayMs: 0,
     }),

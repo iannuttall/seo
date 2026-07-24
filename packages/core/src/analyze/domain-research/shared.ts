@@ -32,6 +32,8 @@ import {
   type ProviderCandidate,
   resolveProvider,
 } from '../../providers/resolver.js'
+import { readSemrushApiKey } from '../../providers/semrush/credentials.js'
+import { SemrushDomainResearchProvider } from '../../providers/semrush/domain-research.js'
 import type { GscRow } from '../../types.js'
 import type { DomainResearchDataStatus } from '../domain-research-contract.js'
 
@@ -208,11 +210,20 @@ export function offset(value: number | undefined): number {
 }
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
+  const [dataForSeo, semrush] = await Promise.all([
+    readDataForSeoCredentials(),
+    readSemrushApiKey(),
+  ])
   return [
     {
       adapter: new DataForSeoDomainResearchProvider(),
-      connected: Boolean(await readDataForSeoCredentials()),
+      connected: Boolean(dataForSeo),
       priority: 10,
+    },
+    {
+      adapter: new SemrushDomainResearchProvider(),
+      connected: Boolean(semrush),
+      priority: 20,
     },
   ]
 }
@@ -243,7 +254,7 @@ export async function researchProvider<T extends ProviderAdapter>(input: {
         ? 'INVALID_INPUT'
         : 'PROVIDER_UNAVAILABLE',
       resolution.reason === 'provider-not-connected'
-        ? 'No connected provider can run domain research. Run `seo providers dataforseo connect` first.'
+        ? 'No connected provider can run domain research. Connect DataForSEO or Semrush under `seo providers` first.'
         : `${providerName} cannot run this domain research report for the selected market.`,
     )
   }

@@ -430,6 +430,19 @@ export function getCacheStats(): CacheStats {
   const database = getDb()
   const dbPath = getSeoCliPaths().cacheDbFile
   const logicalSizes = cacheLogicalSizes(database)
+  const providerCount = (provider: string): number =>
+    (
+      database
+        .prepare(
+          'SELECT COUNT(*) AS count FROM provider_cache WHERE provider = ?',
+        )
+        .get(provider) as { count: number }
+    ).count
+  const legacySemrushCount = (
+    database.prepare('SELECT COUNT(*) AS count FROM semrush_cache').get() as {
+      count: number
+    }
+  ).count
   const counts = {
     sites: database.prepare('SELECT COUNT(*) AS count FROM sites').get() as {
       count: number
@@ -440,12 +453,8 @@ export function getCacheStats(): CacheStats {
     google_analytics_cache: database
       .prepare('SELECT COUNT(*) AS count FROM ga4_cache')
       .get() as { count: number },
-    semrush_cache: database
-      .prepare('SELECT COUNT(*) AS count FROM semrush_cache')
-      .get() as { count: number },
-    provider_cache: database
-      .prepare('SELECT COUNT(*) AS count FROM provider_cache')
-      .get() as { count: number },
+    semrush_cache: { count: legacySemrushCount + providerCount('semrush') },
+    provider_cache: { count: providerCount('dataforseo') },
     http_cache: database
       .prepare('SELECT COUNT(*) AS count FROM http_cache')
       .get() as { count: number },
@@ -479,15 +488,24 @@ export function clearCache(
   const database = getDb()
   const cutoff = olderThanMs ? Date.now() - olderThanMs : undefined
 
-  if (provider === 'dataforseo') {
+  if (provider === 'dataforseo' || provider === 'semrush') {
     const sql = cutoff
       ? 'DELETE FROM provider_cache WHERE provider = ? AND fetched_at < ?'
       : 'DELETE FROM provider_cache WHERE provider = ?'
+    const providerName = provider
     const info = cutoff
-      ? database.prepare(sql).run('dataforseo', cutoff)
-      : database.prepare(sql).run('dataforseo')
+      ? database.prepare(sql).run(providerName, cutoff)
+      : database.prepare(sql).run(providerName)
+    const legacy =
+      provider === 'semrush'
+        ? cutoff
+          ? database
+              .prepare('DELETE FROM semrush_cache WHERE fetched_at < ?')
+              .run(cutoff).changes
+          : database.prepare('DELETE FROM semrush_cache').run().changes
+        : 0
     compactCacheDatabase(database, { allowFullVacuum: true })
-    return info.changes
+    return info.changes + legacy
   }
 
   const tables =
@@ -495,17 +513,15 @@ export function clearCache(
       ? ['gsc_cache']
       : provider === 'google-analytics'
         ? ['ga4_cache']
-        : provider === 'semrush'
-          ? ['semrush_cache']
-          : provider === 'http'
-            ? ['http_cache']
-            : [
-                'gsc_cache',
-                'ga4_cache',
-                'semrush_cache',
-                'provider_cache',
-                'http_cache',
-              ]
+        : provider === 'http'
+          ? ['http_cache']
+          : [
+              'gsc_cache',
+              'ga4_cache',
+              'semrush_cache',
+              'provider_cache',
+              'http_cache',
+            ]
 
   let removed = 0
 

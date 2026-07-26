@@ -127,10 +127,12 @@ Use `seo help all` for the longer command list.
 - Discover keyword ideas, compare market estimates, inspect current results,
   and keep useful terms in local saved sets.
 - Find recurring search competitors, inspect their ranking pages, and filter
-  possible keyword gaps through first-party evidence and existing provider
-  ranks.
-- Detect repeated first-party and competitor page patterns, then return bounded
-  data-source research briefs before proposing a new programmatic template.
+  possible keyword gaps through Search Console data and existing provider
+  rankings.
+- Find repeatable Search Console searches and review planned terms, comparison
+  pairs or other useful combinations.
+- Find repeated page patterns on your site and competitor sites, then check
+  what information a useful new page would need.
 - Find location-specific Search Console demand and repeated local page patterns,
   then add a few exact local result snapshots when the decision needs them.
 - Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
@@ -213,8 +215,8 @@ seo providers ahrefs limits
 Read the [Semrush guide](https://seoskill.dev/docs/semrush) and
 [Ahrefs guide](https://seoskill.dev/docs/ahrefs) before running paid research.
 Supported reports record the applicable API units or USD cost, cache state,
-request bounds, and retained row coverage. Cached results avoid repeating paid
-work during their retention window.
+request limits and row counts. Cached results avoid repeating paid work during
+their retention window.
 
 Use the existing report catalog. There are no separate provider-named report
 commands:
@@ -225,6 +227,8 @@ seo reports describe competitive-opportunities --json
 seo reports describe domain-overview --json
 seo reports describe competitor-keyword-gap --json
 seo reports describe local-search-demand --json
+seo reports describe pseo-patterns --json
+seo reports describe pseo-opportunities --json
 seo reports describe ai-mention-research --json
 seo reports describe ai-prompt-observations --json
 
@@ -254,11 +258,11 @@ Each entry maps a canonical field such as `keyword`, `url`, `position` or
 `searchVolume` to the source heading. Imported files can feed `ranked-keywords`,
 `ranking-pages`, `serp-competitors` and `competitor-keyword-gap` without
 adding another command or MCP tool. The [research provider guide](https://seoskill.dev/docs/research-providers)
-has the exact JSON shape, market guidance and file limits.
+has the exact JSON format, market guidance and file limits.
 
 The research flow now covers:
 
-- `competitive-opportunities` for turning a small topic set into a bounded
+- `competitive-opportunities` for turning a small topic set into a focused
   keyword and competitor investigation order using current results, free
   Domain Rating observations, and optional paid link summaries;
 - `keyword-research`, `keyword-metrics`, and `saved-keywords` for discovery,
@@ -271,20 +275,24 @@ The research flow now covers:
   set without guessing whether they are a business, publisher, directory,
   community, or marketplace;
 - `competitor-keyword-gap` for comparing up to three relevant domains with
-  retained Search Console themes, the site's provider-observed rankings, and
+  Search Console themes, the site's provider-observed rankings, and
   programmatic page patterns;
 - `local-search-demand` for matching explicit place names, nearby phrases, and
-  postal codes in retained Search Console rows, reviewing repeated local page
+  postal codes in Search Console, reviewing repeated local page
   patterns, optionally joining Analytics geography by exact landing-page path,
-  and optionally adding up to three exact local result snapshots with bounded
-  competitor and local-pack listing summaries;
+  and optionally adding up to three exact local result checks;
+- `pseo-patterns` for recognising repeatable query wording in Search Console
+  and checking planned terms, comparison pairs and other useful combinations,
+  including deliberate product sets that do not depend on search volume;
+- `pseo-opportunities` for deeper keyword, result-page, competitor-pattern, and
+  data research tied to existing page patterns and Search Console themes;
 - `link-evidence` for a current link summary, one representative backlink per
   referring domain, and linked-target checks against saved crawl and Search
   Console evidence;
 - `domain-rating` for one free, attributed Ahrefs observation of backlink
   profile strength, kept separate from ranking and traffic evidence;
 - `ai-mention-research` for provider-indexed mentions, cited domains, and
-  bounded question samples in one exact AI surface and market, with optional
+  question samples in one exact AI surface and market, with optional
   Search Console overlap for a property you own;
 - `ai-prompt-observations` for a small fixed set of prompts across explicit
   current ChatGPT, Claude, Gemini, or Perplexity models, with answers,
@@ -331,14 +339,12 @@ selected project when the hostname is unambiguous, and stores the key in the
 system keychain with a private local file fallback. Agents and CI can set
 `SEO_BING_API_KEY` and run the report without saving the key.
 
-The report compares recent traffic periods, highlights material crawl changes,
-and returns bounded query and page review lists. Provider responses stay
-uncached and byte limited. Invalid, partial, capped, unavailable, and sampled
-evidence remain distinct. Bing's `inIndex` crawl statistic is provider
-evidence, not URL-level proof that a page is indexed. A query or page missing
-from a weekly top list is unknown, not zero.
+The report compares recent traffic periods, highlights crawl changes and
+returns query and page lists to review. Bing's `inIndex` crawl statistic is a
+site-level number, so check important URLs directly before treating them as
+indexed.
 
-Review a bounded set of referring links from Ahrefs, DataForSEO, Bing or a
+Review referring links from Ahrefs, DataForSEO, Bing or a
 local export:
 
 ```sh
@@ -350,17 +356,17 @@ seo links --project example --json
 seo links --file ./links.csv --row-limit 10000 --json
 ```
 
-The Ahrefs and DataForSEO paths request one summary and a bounded set of live
+The Ahrefs and DataForSEO paths request one summary and a selected set of live
 representative backlinks, one per referring domain by default. Ahrefs keeps
 estimated and actual API units in the evidence. DataForSEO keeps current
 endpoint prices, estimated and actual USD cost, and task ids. Both retain cache
-state, provider filters, row coverage, and omitted rows. A cached repeat does
-not repeat paid work during the retention window.
+state, provider filters and row counts. A cached repeat does not repeat paid
+work during the retention window.
 
 When a matching saved crawl or Search Console property is available, the same
 report checks linked target pages for observed error responses, redirects,
 canonical conflicts and non-indexable states. Search Console metrics add
-first-party context without turning a missing retained page row into zero.
+search performance for matching pages.
 Verify the live target and the referring page before changing anything.
 
 CSV and JSONL imports stream from disk. Regular JSON arrays have a smaller
@@ -410,10 +416,9 @@ seo server-logs analyze --file ./access.jsonl --format jsonl --json
 ```
 
 The report groups observed search and AI crawler user agents by response class
-and path. Input bytes, rows, line size, unique paths, and returned detail are
-bounded, and any capped or malformed evidence stays visible. User-agent names
-can be spoofed, so the result describes observed request strings rather than
-verified crawler identity.
+and path. You can limit the file size, rows, line size, unique paths and detail
+returned. User-agent names can be spoofed, so the result describes the request
+strings found in the log rather than verified crawler identity.
 
 ## Notify IndexNow after a change
 
@@ -493,8 +498,8 @@ Reports keep observed data, derived findings, skipped sections, limits, and
 provider errors separate so automation can make decisions without parsing
 terminal prose.
 
-`seo report --json` returns a compact summary, action queue, and bounded crawl
-evidence so an agent can choose its next call without loading every raw report.
+`seo report --json` returns a compact summary, action queue, and crawl findings
+so an agent can choose its next call without loading every raw report.
 Use `--full` only when a script needs the complete report object.
 
 When a CI job needs Search Console or Google Analytics data, give it a Google service
@@ -701,7 +706,7 @@ and request bounds stay visible in each supported report.
 
 A hosted SEO tool keeps your data on its servers and shows you a dashboard. This
 runs on your machine, works from your own crawl and Google data, and returns
-structured evidence your agent can read and act on. Every finding shows the
+clear report data your agent can read and act on. Every finding shows the
 evidence behind it and a way to verify a fix, so you are not trusting a score
 you cannot inspect.
 

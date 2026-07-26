@@ -33,7 +33,7 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     title: 'AI mention research report',
     description:
       'Compare provider-indexed AI mentions, cited domains and question samples with optional Search Console evidence for one exact surface and market.',
-    lead: 'See where a named brand or product appears in a provider-indexed set of AI answers, which domains are cited and whether retained questions overlap with searches already associated with your site. The report keeps indexed research separate from live prompt checks.',
+    lead: 'See where a named brand or product appears in a provider-indexed set of AI answers, which domains are cited and whether returned questions overlap with searches already associated with your site. The report keeps indexed research separate from live prompt checks.',
   },
   'ai-prompt-observations': {
     title: 'AI prompt observation report',
@@ -105,7 +105,7 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     title: 'SEO crawl diff',
     description:
       'Repeat a limited crawl and compare it with the previous run to find technical SEO issues that appeared, changed or disappeared after a release.',
-    lead: 'Run the same bounded crawl again and see which technical findings changed. This is the quick release check when you need fresh evidence rather than a comparison of two existing snapshots.',
+    lead: 'Run the same limited crawl again and see which technical findings changed. This is the quick release check when you need fresh evidence rather than a comparison of two existing snapshots.',
   },
   'site-crawl': {
     title: 'Sitemap health check and technical site crawl',
@@ -206,20 +206,20 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'link-evidence': {
     title: 'Backlink evidence report',
     description:
-      'Review bounded referring URLs, target pages and anchor text from Ahrefs, DataForSEO, Bing Webmaster or a local export, with source limits kept visible.',
-    lead: 'See which retained pages link to the site without downloading a giant backlink index. The report keeps source coverage and limits visible, so a missing row never becomes proof that no link exists.',
+      'Review limited referring URLs, target pages and anchor text from Ahrefs, DataForSEO, Bing Webmaster or a local export, with source limits kept visible.',
+    lead: 'See which returned pages link to the site without downloading a giant backlink index. The report keeps what each source returned and limits visible, so a missing row never becomes proof that no link exists.',
   },
   'local-search-demand': {
     title: 'Local SEO keyword research',
     description:
       'Find local Search Console queries, landing pages and repeated templates. Add measured visitor geography or a few exact local results only when needed.',
-    lead: 'Find the local searches already associated with the site and the pages receiving that demand. Start with first-party evidence, then add landing-page geography or exact local results only where the added context would change the decision.',
+    lead: 'Find the local searches already associated with the site and the pages receiving that demand. Start with Search Console data, then add landing-page geography or exact local results only where the added context would change the decision.',
   },
   'server-log-analysis': {
     title: 'Server log crawler analysis',
     description:
       'Stream a local combined or JSONL access log to review observed search and AI crawler requests, response errors and paths without retaining raw events.',
-    lead: 'See which known crawler user agents reached the server and where they met redirects or errors. The report aggregates the file as it reads, keeps memory and output bounded, and shows when limits or malformed rows reduced coverage.',
+    lead: 'See which known crawler user agents reached the server and where they met redirects or errors. The report aggregates the file as it reads, keeps memory and output limited, and shows when limits or malformed rows reduced coverage.',
   },
   'crawl-history': {
     title: 'SEO crawl history',
@@ -290,20 +290,26 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'pseo-opportunities': {
     title: 'Programmatic SEO opportunities',
     description:
-      'Find programmatic SEO opportunities by joining template and Search Console evidence with optional keyword, live SERP, competitor and data-source research.',
+      'Research ways to expand an existing programmatic page system with Search Console, keyword ideas, current results and competitor pages before building more.',
     lead: 'Start with repeated templates and query clusters already observed on the site. Add independent discovery and live results only when they help decide whether to extend a working template, research a different page type or stop.',
+  },
+  'pseo-patterns': {
+    title: 'Programmatic SEO patterns',
+    description:
+      'Find repeatable searches in Search Console, then check planned comparisons, tools, templates and location pages to see what exists and what may be missing.',
+    lead: 'See the types of searches where your site already appears in Google, such as comparisons, alternatives, calculators, templates and location pages. If you already have a list of topics you want to cover, the report checks which pages exist, which ideas overlap and which are still missing.',
   },
   'keyword-metrics': {
     title: 'Keyword metrics report',
     description:
-      'Compare keyword search volume, monthly trends, CPC, competition, difficulty, intent and result counts for one country and language with cost and coverage.',
+      'Compare search volume, trends, CPC, competition, difficulty, intent and result counts for a list of keywords in one country and language before deeper research.',
     lead: 'Check a limited keyword set against independent market estimates before committing to deeper research. The report keeps missing data, request cost and provider coverage visible, so a neat number never looks more certain than it is.',
   },
   'keyword-opportunities': {
     title: 'Keyword opportunity report',
     description:
       'Combine Search Console quick wins, second-page queries and striking-distance evidence with optional keyword estimates and programmatic SEO clusters.',
-    lead: 'Build one bounded research queue from searches already associated with the site. Add independent market estimates only when they would change the next investigation, since external acquisition can cost money.',
+    lead: 'Build one limited research queue from searches already associated with the site. Add independent market estimates only when they would change the next investigation, since outside research can cost money.',
   },
   'keyword-research': {
     title: 'Keyword research report',
@@ -314,7 +320,7 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'saved-keywords': {
     title: 'Saved keyword set report',
     description:
-      'Review saved keyword research, stale provider metrics, tags and page mappings from one local project set without repeating paid acquisition.',
+      'Review saved keyword research, stale provider metrics, tags and page mappings from one local project set without repeating paid provider requests.',
     lead: 'Continue a keyword investigation from local saved evidence. The report shows which returned terms have current metrics or page mappings while keeping missing values and partial views clear.',
   },
   'query-clusters': {
@@ -338,14 +344,14 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'ranked-keywords': {
     title: 'Ranked keywords report',
     description:
-      'Review a bounded domain or page keyword footprint with ranking URLs, demand estimates, provider limits and optional matching Search Console query evidence.',
-    lead: 'Open the keyword rows behind a domain or page footprint. Filters run before paid acquisition, and each optional Search Console match says observed or not found in retained rows instead of inventing a zero.',
+      'Review a limited domain or page keyword footprint with ranking URLs, demand estimates, provider limits and optional matching Search Console query evidence.',
+    lead: 'Open the keyword rows behind a domain or page footprint. Filters run before paid requests, and each optional Search Console match says observed or not found in returned rows instead of inventing a zero.',
   },
   'ranking-pages': {
     title: 'Organic ranking pages report',
     description:
-      "Find the pages behind a domain's estimated organic footprint, repeated URL patterns, provider limits and optional matching Search Console page evidence.",
-    lead: "See which pages carry a domain's estimated search footprint and whether the retained paths form repeated page families. Open representative pages before treating a path pattern as a useful template.",
+      "See which pages carry a domain's estimated search footprint, which URL patterns repeat and how matching pages on your own site perform in Search Console.",
+    lead: "See which pages carry a domain's estimated search footprint and whether the returned paths form repeated page families. Open representative pages before treating a path pattern as a useful template.",
   },
   'redirect-trace': {
     title: 'Redirect trace',
@@ -375,7 +381,7 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
     title: 'Live SERP results report',
     description:
       'Inspect exact organic ranks, domains, URLs, titles, snippets and result features for one keyword, location, language and device-specific search snapshot.',
-    lead: 'See the current bounded result page for one query and market. The snapshot keeps exact ranks separate from Search Console averages and does not turn repeated domains into a strength score.',
+    lead: 'See the current limited result page for one query and market. The snapshot keeps exact ranks separate from Search Console averages and does not turn repeated domains into a strength score.',
   },
   'serp-competitors': {
     title: 'Search competitor research report',

@@ -32,6 +32,7 @@ const {
   buildPseoAuditReportFromRows,
   buildQueryClusterReportFromRows,
   pseoOpportunitiesReport,
+  pseoPatternsReport,
 } = await import('../dist/index.js')
 
 const pageRows = Array.from({ length: PAGE_COUNT }, (_, index) => ({
@@ -90,7 +91,7 @@ const queryClusters = buildQueryClusterReportFromRows({
   rows: sourceRows,
   limit: 10,
 })
-const report = await pseoOpportunitiesReport(
+const opportunitiesReport = await pseoOpportunitiesReport(
   {
     site: 'sc-domain:example.com',
     templateLimit: 10,
@@ -101,16 +102,61 @@ const report = await pseoOpportunitiesReport(
     now: () => new Date('2026-07-21T12:00:00.000Z'),
   },
 )
+const patternValues = Array.from(
+  { length: 100 },
+  (_, index) => `entity-${String(index).padStart(3, '0')}`,
+)
+const patternsReport = await pseoPatternsReport(
+  {
+    site: 'sc-domain:example.com',
+    candidateLimit: 250,
+    observedQueryLimit: 250,
+    patternSets: [
+      {
+        id: 'entity-comparisons',
+        kind: 'comparison',
+        shape: 'pairs',
+        coveragePolicy: 'complete-set',
+        values: patternValues,
+        pairing: 'all-pairs',
+        queryTemplates: ['{left} vs {right}', '{right} vs {left}'],
+        pathTemplate: '/compare/{left}-vs-{right}',
+      },
+      {
+        id: 'format-utilities',
+        kind: 'utility',
+        shape: 'matrix',
+        axes: [
+          { id: 'tool', values: patternValues },
+          { id: 'format', values: patternValues },
+        ],
+        queryTemplates: ['{tool} for {format}'],
+        pathTemplate: '/tools/{tool}/{format}',
+      },
+    ],
+  },
+  {
+    firstPartyReport: async () => ({
+      audit,
+      queryRows: queryPageRows,
+      pageRows,
+      discoveredUrls: pageRows.map((row) => row.page),
+    }),
+  },
+)
 
 clearInterval(peakSample)
 peakRss = Math.max(peakRss, process.memoryUsage().rss)
 const durationMs = performance.now() - startedAt
 const rssGrowthBytes = Math.max(0, peakRss - baselineRss)
-const outputBytes = Buffer.byteLength(JSON.stringify(report))
+const opportunitiesOutputBytes = Buffer.byteLength(
+  JSON.stringify(opportunitiesReport),
+)
+const patternsOutputBytes = Buffer.byteLength(JSON.stringify(patternsReport))
 
 console.log(
   JSON.stringify({
-    report: 'pseo-opportunities',
+    reports: ['pseo-opportunities', 'pseo-patterns'],
     queryPageRows: queryPageRows.length,
     pageRows: pageRows.length,
     heapLimitMiB: HEAP_LIMIT_MIB,
@@ -118,17 +164,41 @@ console.log(
     peakRssGrowthMiB: Number((rssGrowthBytes / MEBIBYTE).toFixed(1)),
     bytesRead: 0,
     bytesWritten: 0,
-    outputBytes,
-    returnedTemplates: report.templates.length,
-    returnedClusters: report.queryClusters.length,
-    returnedSeeds: report.source.external.discovery.seeds.length,
+    outputBytes: {
+      pseoOpportunities: opportunitiesOutputBytes,
+      pseoPatterns: patternsOutputBytes,
+    },
+    opportunities: {
+      returnedTemplates: opportunitiesReport.templates.length,
+      returnedClusters: opportunitiesReport.queryClusters.length,
+      returnedSeeds: opportunitiesReport.source.external.discovery.seeds.length,
+    },
+    patterns: {
+      plannedTopics: patternsReport.summary.plannedTopics,
+      returnedTopics: patternsReport.summary.returnedTopics,
+      logicalRows: patternsReport.detailBudget.returned,
+    },
   }),
 )
 
-assert.ok(report.templates.length <= 10)
-assert.ok(report.queryClusters.length <= 10)
-assert.ok(report.source.external.discovery.seeds.length <= 5)
-assert.equal(report.source.external.discovery.status, 'not-requested')
-assert.ok(outputBytes <= MAX_OUTPUT_BYTES)
+assert.ok(opportunitiesReport.templates.length <= 10)
+assert.ok(opportunitiesReport.queryClusters.length <= 10)
+assert.ok(opportunitiesReport.source.external.discovery.seeds.length <= 5)
+assert.equal(
+  opportunitiesReport.source.external.discovery.status,
+  'not-requested',
+)
+assert.equal(patternsReport.summary.plannedTopics, 14_950)
+assert.equal(patternsReport.summary.returnedTopics, 250)
+assert.equal(patternsReport.patternSets[0]?.returnedTopics, 125)
+assert.equal(patternsReport.patternSets[1]?.returnedTopics, 125)
+assert.equal(
+  patternsReport.source.external.keywordMetrics.status,
+  'not-requested',
+)
+assert.equal(patternsReport.source.external.serps.requested, false)
+assert.ok(patternsReport.detailBudget.returned <= 2_000)
+assert.ok(opportunitiesOutputBytes <= MAX_OUTPUT_BYTES)
+assert.ok(patternsOutputBytes <= MAX_OUTPUT_BYTES)
 assert.ok(durationMs <= MAX_DURATION_MS)
 assert.ok(rssGrowthBytes <= MAX_RSS_GROWTH)

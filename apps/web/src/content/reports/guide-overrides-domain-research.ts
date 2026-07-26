@@ -21,16 +21,16 @@ export const domainResearchGuideOverrides: Partial<
       },
     ],
     checks: [
-      'Keeps supplied seeds first, then selects a bounded keyword shortlist using discovery coverage and observed demand.',
+      'Keeps supplied seeds first, then selects a limited keyword shortlist using discovery coverage and observed demand.',
       'Collects current result pages and identifies recurring ranking domains without assuming they are relevant business competitors.',
       'Adds Ahrefs Domain Rating by default and requests paid link summaries only when competitionEvidence is link-summary.',
       'Builds an evidence-referenced investigation order and keeps provider metrics separate from current result observations.',
-      'Preserves source coverage, cache state, costs, warnings, failures, caps, dates, and missing values across every provider.',
+      'Preserves what each source returned, cache state, costs, warnings, failures, caps, dates, and missing values across every provider.',
     ],
     returns: [
       'A focused keyword investigation order with target ranks, competitor pages, review reasons, and evidence references.',
-      'Recurring ranking domains plus Domain Rating and optional referring-domain comparisons for the target and retained competitors.',
-      'Bounded source reports, processing counts, output limits, caveats, and practical follow-ups.',
+      'Recurring ranking domains plus Domain Rating and optional referring-domain comparisons for the target and returned competitors.',
+      'Limited source reports, processing counts, output limits, caveats, and practical follow-ups.',
     ],
     alternatives: [
       {
@@ -43,13 +43,13 @@ export const domainResearchGuideOverrides: Partial<
         when: 'You already have a small classified competitor set.',
         reportId: 'competitor-keyword-gap',
         doInstead:
-          'Run competitor keyword gaps for a deeper comparison with existing first-party and provider coverage.',
+          'Run competitor keyword gaps for a deeper comparison with existing coverage and provider data.',
       },
       {
         when: 'You need city-level or exact local result evidence.',
         reportId: 'local-search-demand',
         doInstead:
-          'Start with retained local demand, then request a fixed local result market only when that context changes the work.',
+          'Start with returned local demand, then request a fixed local result market only when that context changes the work.',
       },
     ],
     seo: {
@@ -86,7 +86,7 @@ export const domainResearchGuideOverrides: Partial<
         when: 'You need actual referring URLs, target pages or provider backlink totals.',
         reportId: 'link-evidence',
         doInstead:
-          'Run link evidence with an Ahrefs target and a bounded row limit. Keep provider summary counts separate from the retained representative links.',
+          'Run link evidence with an Ahrefs target and a limited row limit. Keep provider summary counts separate from the returned representative links.',
       },
       {
         when: 'You want to judge whether a result may be competitive for one keyword.',
@@ -116,10 +116,10 @@ export const domainResearchGuideOverrides: Partial<
     checks: [
       'Collects estimated organic traffic, ranked keywords, traffic cost, ranking buckets, and movement counts from one provider capability.',
       'Keeps provider estimates and matching Search Console totals separate so an estimate is never presented as measured traffic.',
-      'Preserves request filters, source coverage, invalid rows, cache state, observation time, warnings, and local request cost.',
+      'Preserves request filters, what each source returned, invalid rows, cache state, observation time, warnings, and local request cost.',
     ],
     returns: [
-      'A country-level domain footprint with estimated traffic, keyword counts, ranking distribution, movement, and provider provenance.',
+      'A country-level domain footprint with estimated traffic, keyword counts, ranking distribution, movement, and provider source details.',
       'Optional owner-verified Search Console totals beside the estimate, with separate dates, semantics, coverage, and caveats.',
     ],
     alternatives: [
@@ -127,7 +127,7 @@ export const domainResearchGuideOverrides: Partial<
         when: 'You need the individual terms or pages behind the footprint.',
         reportId: 'ranked-keywords',
         doInstead:
-          'Run ranked keywords for a bounded term-level view, or ranking pages when page families and representative URLs matter more.',
+          'Run ranked keywords for a limited term-level view, or ranking pages when page families and representative URLs matter more.',
       },
       {
         when: 'You need a current result for one query, location, and device.',
@@ -149,12 +149,12 @@ export const domainResearchGuideOverrides: Partial<
       {
         label: 'Domain or page target and market filters',
         source: 'domain-provider-keywords',
-        role: 'Provide a bounded set of estimated keyword, rank, result type, ranking URL, demand, difficulty, intent, and traffic rows.',
+        role: 'Provide a limited set of estimated keyword, rank, result type, ranking URL, demand, difficulty, intent, and traffic rows.',
       },
       {
         label: 'Optional matching Search Console property',
         source: 'search-analytics',
-        role: 'Adds retained owner-verified query and page evidence for the same site without changing provider metrics.',
+        role: 'Adds returned owner-verified query and page evidence for the same site without changing provider metrics.',
       },
       {
         label: 'Optional local ranked-keyword exports',
@@ -163,14 +163,14 @@ export const domainResearchGuideOverrides: Partial<
       },
     ],
     checks: [
-      'Applies rank, demand, wording, result-type, and row limits before acquisition, then validates and deduplicates returned rows deterministically.',
-      'Labels each first-party comparison as observed, not in retained rows, or not requested.',
+      'Applies rank, demand, wording, result-type, and row limits before making the request, then validates and deduplicates returned rows deterministically.',
+      'Shows whether each term appeared in Search Console, was not returned, or was not checked.',
       'Keeps provider totals, pagination, invalid rows, cache state, warnings, and request cost beside the visible subset.',
       'Records each imported file provider, export date, SHA-256 hash, included fields, explicit column mapping, filtered historical rows, invalid rows, duplicates, bytes read, and cap.',
     ],
     returns: [
-      'A bounded ranked-keyword list with ranking URLs, ranks, result types, provider metrics, source state, and stable ordering.',
-      'Optional Search Console query and page matches, including conflicts where provider demand is zero but retained first-party impressions exist.',
+      'A limited ranked-keyword list with ranking URLs, ranks, result types, provider metrics, data availability, and stable ordering.',
+      'Optional Search Console query and page matches, including conflicts where provider demand is zero but returned Search Console impressions exist.',
     ],
     alternatives: [
       {
@@ -199,12 +199,12 @@ export const domainResearchGuideOverrides: Partial<
       {
         label: 'Domain and provider row filters',
         source: 'domain-provider-pages',
-        role: 'Provide a bounded page-level footprint with estimated traffic, keyword counts, ranking distribution, and movement.',
+        role: 'Provide a limited page-level footprint with estimated traffic, keyword counts, ranking distribution, and movement.',
       },
       {
         label: 'Optional matching Search Console property',
         source: 'search-analytics',
-        role: 'Adds retained owner-verified page metrics for exact matching URLs.',
+        role: 'Adds returned owner-verified page metrics for exact matching URLs.',
       },
       {
         label: 'Optional local ranked-keyword exports',
@@ -214,13 +214,13 @@ export const domainResearchGuideOverrides: Partial<
     ],
     checks: [
       'Validates and deduplicates provider page rows while preserving filters, pagination, totals, invalid rows, warnings, and cost.',
-      'Groups repeated path shapes into deterministic structural patterns with counts and representative URLs.',
+      'Groups repeated paths into consistent patterns with counts and representative URLs.',
       'Keeps the path-pattern heuristic separate from claims about page quality, intent, demand, or how a site creates its pages.',
       'Keeps imported file dates, hashes, fields, explicit column mappings, row counts, filtered historical rows, rejected rows, duplicates, and caps beside the derived page groups.',
     ],
     returns: [
-      'A bounded list of ranking pages with provider estimates, movement, ranking distribution, and optional exact Search Console matches.',
-      'Repeated path patterns, representative URLs, evidence references, source coverage, and caveats for programmatic SEO review.',
+      'A limited list of ranking pages with provider estimates, movement, ranking distribution, and optional exact Search Console matches.',
+      'Repeated path patterns, representative URLs, evidence references, what each source returned, and caveats for programmatic SEO review.',
     ],
     alternatives: [
       {
@@ -233,7 +233,7 @@ export const domainResearchGuideOverrides: Partial<
         when: 'You need to assess a programmatic template family on a site you own.',
         reportId: 'pseo-audit',
         doInstead:
-          'Run the pSEO audit to add first-party performance, template, overlap, and page-quality evidence before changing a working page family.',
+          'Run the pSEO audit to add Search Console performance, template, overlap, and page-quality evidence before changing a working page family.',
       },
     ],
     seo: {
@@ -249,7 +249,7 @@ export const domainResearchGuideOverrides: Partial<
       {
         label: 'Explicit keyword set and country market',
         source: 'domain-provider-competitors',
-        role: 'Define the bounded query set used to find domains that repeatedly appear in the same search market.',
+        role: 'Define the limited query set used to find domains that repeatedly appear in the same search market.',
       },
       {
         label: 'Target domain and optional site classifications',
@@ -262,14 +262,14 @@ export const domainResearchGuideOverrides: Partial<
       },
     ],
     checks: [
-      'Normalizes and deduplicates 2 to 200 keywords before acquisition and validates the provider response against the requested query count.',
+      'Normalizes and deduplicates 2 to 200 keywords before making the request and validates the provider response against the requested query count.',
       'Measures recurring domains by matched keywords, query-set coverage, average position, visibility estimate, and sample positions.',
       'Keeps every undeclared site type unknown instead of guessing whether a search competitor is a business competitor.',
       'Leaves provider visibility unavailable on the file path and retains each file boundary under evidence.imports.',
     ],
     returns: [
-      'A bounded competitor set with relationship, declared site type, matched keyword count, query-set coverage, position evidence, and provider estimates.',
-      'Request limits, source coverage, pagination, invalid rows, warnings, cache state, observation time, and local request cost.',
+      'A limited competitor set with relationship, declared site type, matched keyword count, query-set coverage, position evidence, and provider estimates.',
+      'Request limits, what each source returned, pagination, invalid rows, warnings, cache state, observation time, and local request cost.',
     ],
     alternatives: [
       {
@@ -297,12 +297,12 @@ export const domainResearchGuideOverrides: Partial<
       {
         label: 'Connected Search Console property',
         source: 'search-analytics',
-        role: 'Provides retained owner-verified query and page evidence used to find existing topic coverage.',
+        role: 'Provides returned owner-verified query and page evidence used to find existing topic coverage.',
       },
       {
         label: 'Site and classified competitor domains',
         source: 'domain-provider-keywords',
-        role: 'Provide bounded estimated keyword footprints for the site and up to three explicitly relevant competitors.',
+        role: 'Provide limited estimated keyword footprints for the site and up to three explicitly relevant competitors.',
       },
       {
         label: 'Competitor ranking pages',
@@ -316,14 +316,14 @@ export const domainResearchGuideOverrides: Partial<
       },
     ],
     checks: [
-      'Separates terms already observed in retained first-party rows, terms where the site already has a provider-observed rank, plausible gap candidates, and unverified competitor terms.',
-      'Ignores generic terms and search operators, then requires two meaningful terms in one retained first-party query plus either several compared domains or a top-10 competitor rank.',
-      'Builds bounded token indexes for large Search Console datasets and applies deterministic limits, ordering, and one structured-output budget.',
+      'Separates terms already observed in returned Search Console rows, terms where the site already has a provider-observed rank, plausible gap candidates, and unverified competitor terms.',
+      'Ignores generic terms and search operators, then requires two meaningful terms in one returned Search Console query plus either several compared domains or a top-10 competitor rank.',
+      'Builds limited token indexes for large Search Console datasets and applies deterministic limits, ordering, and one structured-output budget.',
       'Creates a data-source research brief only when repeated page patterns support a possible new template family.',
       'Keeps file hashes, export times, included fields, filtered historical rows, invalid rows, duplicates, and caps visible for every imported domain source.',
     ],
     returns: [
-      'A bounded candidate list with competitor evidence, own-site coverage state, provider metrics, theme matches, classifications, and verification prompts.',
+      'A limited candidate list with competitor evidence, own-site coverage state, provider metrics, theme matches, classifications, and verification prompts.',
       'Repeated competitor page patterns and programmatic SEO briefs covering source rights, identifiers, fields, coverage, freshness, missing values, and distinct page value.',
       'Per-source status, row caps, failed sources, invalid rows, cache state, request cost, processing counts, warnings, and caveats.',
     ],
@@ -335,7 +335,7 @@ export const domainResearchGuideOverrides: Partial<
           'Run search competitors on a representative keyword set, inspect the returned domains, and classify only the sites that compete for the same audience or outcome.',
       },
       {
-        when: 'You want to expand an existing first-party page family rather than research competitor terms.',
+        when: 'You want to expand an existing existing page family rather than research competitor terms.',
         reportId: 'pseo-opportunities',
         doInstead:
           'Run pSEO opportunities to find expansion evidence in owner-verified performance and working templates before introducing an independent competitor dataset.',

@@ -16,7 +16,7 @@ Good requests name the site and the decision you need to make:
 - "Audit this pricing page before I change its canonical and internal links."
 - "Check whether this traffic decline is present in a complete Search Console window."
 - "Find recurring search competitors for these product queries, then leave unknown site types unclassified."
-- "Compare these two competitors with our retained Search Console themes and existing provider ranks."
+- "Compare these two competitors with our returned Search Console themes and existing provider ranks."
 - "Compare our indexed AI mentions with these three competitors in one market, then show the cited domains and repeated questions worth checking."
 
 "Do all my SEO" gives the agent no useful stopping point. Start with
@@ -49,7 +49,7 @@ seo reports run quick-wins --params '{"site":"sc-domain:example.com"}' --json
 JSON mode never prompts. An unattended run must pass its project, property,
 URL, output path, and other required inputs explicitly.
 
-`seo report --json` returns a compact summary, action queue, and bounded crawl
+`seo report --json` returns a compact summary, action queue, and limited crawl
 evidence. Add `--full` only when the agent needs every report section.
 
 Use `seo reports describe <id> --json` before constructing `params`. The schema
@@ -91,7 +91,7 @@ Ask the agent to check these fields and concepts before it reaches a verdict:
 
 - the analysis date and source date windows;
 - complete, partial, capped, filtered, missing, and unavailable states;
-- warnings, skipped sections, failed subqueries, and retained row limits;
+- warnings, skipped sections, failed subqueries, and returned row limits;
 - the observed page or provider evidence behind each finding;
 - whether the action is a rule, a heuristic, or a verification step.
 
@@ -109,9 +109,10 @@ finding. The [research provider guide](/docs/research-providers) covers those
 boundaries and local spend controls.
 
 Provider-indexed AI mention records need another boundary. They can show
-mentions, cited domains and question samples retained by the provider. They do
+mentions, cited domains and question samples returned by the provider. They do
 not prove that the same answer appears now. Search Console overlap adds useful
-first-party context, but it remains a lexical heuristic over retained rows.
+Search Console context, but it is still simple word matching across the rows
+returned.
 
 Local search evidence needs the same separation. Query wording can show an
 explicit place, nearby phrase or postal code, but it does not establish the
@@ -119,10 +120,10 @@ searcher's physical location. Search Console position is averaged across
 impressions. A live result snapshot is exact only for its recorded query,
 canonical location, device and time. An observed local pack does not show that
 a particular business listing appeared unless the report retains that listing
-row. A retained row still does not prove ownership, complete Maps coverage or
+row. A returned row still does not prove ownership, complete Maps coverage or
 Google Business Profile performance. Recurring organic domains are search
 competitors for the observed queries until their business type and relevance
-are checked. Optional Analytics geography is joined only by an exact retained
+are checked. Optional Analytics geography is joined only by an exact returned
 landing-page path. It can add location context for measured sessions, but it
 cannot assign a location to a Search Console query.
 
@@ -133,7 +134,7 @@ that set rather than rerunning everything.
 
 A sensible sequence looks like this:
 
-1. Run `quick-wins` for the retained opportunity list.
+1. Run `quick-wins` for the returned opportunity list.
 2. Pick one query and page using the evidence in the result.
 3. Run `audit-page` for current on-page and technical evidence.
 4. Check the live result and intended page purpose before proposing a change.
@@ -148,7 +149,7 @@ For competitor and programmatic research, use a separate narrow sequence:
 2. Classify unknown domains and remove publishers, directories or communities
    that do not match the decision.
 3. Run `competitor-keyword-gap` with no more than three relevant domains.
-4. Review first-party overlap and existing provider ranks before opening a gap
+4. Review Search Console overlap and existing provider ranks before opening a gap
    candidate.
 5. Check current results, representative pages and the returned data-source
    brief before proposing a new programmatic template.

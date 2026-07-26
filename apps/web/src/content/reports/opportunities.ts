@@ -115,7 +115,7 @@ export const opportunityReports = [
       'Separate demand loss, position movement, CTR movement, and technical evidence. A decline tells you where to look, not what caused it.',
     ],
     caveats: [
-      'Seasonality and missing lower-volume rows can change the shape of a comparison.',
+      'Seasonality and missing lower-volume rows can change the comparison.',
     ],
     nextSteps: [
       'Audit affected pages and inspect their query mix before refreshing content.',
@@ -215,19 +215,19 @@ export const opportunityReports = [
     question:
       'Which existing search opportunities deserve deeper page, keyword, or programmatic SEO research?',
     useWhen: [
-      'You want one bounded review queue across quick wins, second-page queries, and striking-distance evidence.',
+      'You want one limited review queue across quick wins, second-page queries, and striking-distance evidence.',
       'Independent market estimates would add useful context to Search Console evidence already associated with the site.',
       'You need query clusters and repeated URL patterns that may justify a programmatic SEO investigation.',
     ],
     avoidWhen: [
       'You need an exact rank, a current result snapshot, or a verified competitor list.',
-      'You want external metrics to replace Search Console evidence or automatically change first-party priorities.',
+      'You want external metrics to replace Search Console evidence or automatically change Search Console priorities.',
     ],
     evidence: [
-      'One bounded Search Console query and page acquisition, three existing opportunity analyses, and optional provider estimates for an explicit market.',
+      'One limited Search Console query and page request, three existing opportunity analyses, and optional provider estimates for an explicit market.',
     ],
     methodology: [
-      'Selects at most 50 unique first-party opportunity keywords across quick-win, second-page, and striking-distance sections, then keeps optional external estimates separate from their existing scores.',
+      'Selects at most 50 unique Search Console keywords across quick-win, second-page, and striking-distance sections, then keeps optional external estimates separate from their existing scores.',
       'Clusters only the returned opportunity subset and flags repeated URL patterns for representative template and data-source review.',
     ],
     exampleParams: {
@@ -238,10 +238,10 @@ export const opportunityReports = [
       includeExternal: false,
     },
     interpretation: [
-      'Start with first-party impressions, pages, average position, and source sections. Use external volume or trend only as added context, then inspect the current result before choosing a target.',
+      'Start with Search Console impressions, pages, average position, and source sections. Use external volume or trend only as added context, then inspect the current result before choosing a target.',
     ],
     caveats: [
-      'Search Console omits anonymised queries and average position is not an exact rank. External metrics are estimates, and external acquisition may cost money when explicitly enabled.',
+      'Search Console omits anonymised queries and average position is not an exact rank. External metrics are estimates, and outside research may cost money when explicitly enabled.',
       'Clusters and URL patterns use a selected subset. They can identify a useful programmatic SEO investigation, but cannot prove that more pages should exist.',
     ],
     nextSteps: [
@@ -261,7 +261,7 @@ export const opportunityReports = [
       'Which related terms deserve an intent and result-page review before they enter a content plan?',
     useWhen: [
       'You need candidate terms beyond the queries already visible in Search Console.',
-      'You want several bounded discovery methods to feed a deeper research shortlist.',
+      'You want several limited discovery methods to feed a deeper research shortlist.',
     ],
     avoidWhen: [
       'You plan to publish one page for every returned keyword without checking shared intent or page fit.',
@@ -271,7 +271,7 @@ export const opportunityReports = [
       'A connected keyword provider, explicit seed and discovery-source pairs, the selected market, typed metrics, provider coverage, cache status, and local request cost.',
     ],
     methodology: [
-      'Normalises at most five seeds, bounds provider fanout before acquisition, combines selected discovery methods, and deduplicates ideas while retaining every observed seed and source pair.',
+      'Normalises at most five seeds, bounds provider fanout before making the request, combines selected discovery methods, and deduplicates ideas while retaining every observed seed and source pair.',
       'Keeps zero separate from missing or invalid estimates and labels trend changes only when six consecutive monthly values exist.',
     ],
     exampleParams: {
@@ -308,7 +308,7 @@ export const opportunityReports = [
     question:
       'Which saved terms are missing current evidence or still need a page-planning decision?',
     useWhen: [
-      'You want to continue earlier keyword research without repeating provider acquisition.',
+      'You want to continue earlier keyword research without repeating provider requests.',
       'You need to inspect stale metrics, user-managed groups, or unmapped terms in one project set.',
     ],
     avoidWhen: [
@@ -334,7 +334,7 @@ export const opportunityReports = [
     ],
     nextSteps: [
       'Preview the refresh cost before updating stale or missing provider snapshots.',
-      'Inspect current results in the saved market and compare relevant terms with first-party evidence.',
+      'Inspect current results in the saved market and compare relevant terms with Search Console data.',
     ],
     related: [
       'keyword-metrics',
@@ -343,6 +343,79 @@ export const opportunityReports = [
       'pseo-opportunities',
     ],
     sources: ['keyword-provider-metrics'],
+  },
+  {
+    id: 'pseo-patterns',
+    name: 'Programmatic SEO patterns',
+    category: 'opportunities',
+    summary:
+      'Find repeatable searches in Search Console, then check a planned list of comparisons, tools, templates, locations, integrations, or other topics.',
+    question:
+      'Which repeatable searches could become useful pages, and which of those pages already exist?',
+    useWhen: [
+      'You want to find searches for alternatives, comparisons, calculators, templates, examples, integrations, locations, audiences, conversions, or other repeatable topics.',
+      'You have a list of products, competitors, tools, or locations you want to cover even when search volume is missing.',
+      'You need to know which pages exist, which ideas overlap, and which topics may be missing.',
+    ],
+    avoidWhen: [
+      'You only need to check the technical health, content, or Google index status of pages that already exist.',
+      'You want the report to write copy, publish every possible page, or predict traffic.',
+    ],
+    evidence: [
+      'Search Console searches and pages, sitemap URLs, repeated sections of the site, any topic list you provide, and optional search estimates or current results.',
+    ],
+    methodology: [
+      'Groups the Search Console searches into useful types, then adds up their clicks, impressions, pages, and average position.',
+      'Builds topics from a list you provide. This can be a simple list, product pairs, or combinations such as several tools for several file types.',
+      'Checks every idea against Search Console and the sitemap, then separates existing pages, likely overlap, missing topics with search evidence, and topics missing only from your planned list.',
+    ],
+    exampleParams: {
+      site: 'sc-domain:example.com',
+      days: 90,
+      patternSets: [
+        {
+          id: 'format-utilities',
+          kind: 'utility',
+          shape: 'matrix',
+          axes: [
+            {
+              id: 'tool',
+              values: ['reading time calculator', 'word counter'],
+            },
+            { id: 'format', values: ['article', 'essay'] },
+          ],
+          queryTemplates: ['{tool} for {format}'],
+          pathTemplate: '/tools/{tool}/{format}',
+        },
+      ],
+      candidateLimit: 100,
+      includeExternal: false,
+    },
+    interpretation: [
+      'Start with the search types and real searches the report found. If you supplied a topic list, check how many ideas it contains, which pages already exist, and where another page may already answer the same need.',
+      'Use `complete-set` only when you have decided that every topic matters, such as a comparison page for every product pair. A missing page under this setting reflects your plan, not proof of search demand.',
+    ],
+    caveats: [
+      'Search Console hides some anonymised searches and may return only part of a large result. A search missing from the report does not prove that nobody searches for it or that your site has no relevant page.',
+      'The automatic groups are based on the words people used. Search volume estimates and current result checks add context, but they do not decide whether a page should be created.',
+    ],
+    nextSteps: [
+      'Open the current pages behind the strongest ideas and check whether they already answer the same search.',
+      'Confirm that the source data is reliable and that each page can offer something genuinely useful. Plan what happens when data is missing, how pages link together, and how search engines will find them.',
+      'Publish a small representative set first. Check the live pages with the programmatic SEO audit before creating more.',
+    ],
+    related: [
+      'pseo-opportunities',
+      'pseo-audit',
+      'ranking-pages',
+      'keyword-metrics',
+    ],
+    sources: [
+      'search-analytics',
+      'sitemaps',
+      'keyword-provider-metrics',
+      'serp-provider-results',
+    ],
   },
   {
     id: 'pseo-opportunities',
@@ -362,12 +435,12 @@ export const opportunityReports = [
       'You only need to audit the current technical and index state of existing pages.',
     ],
     evidence: [
-      'Bounded programmatic SEO audit and Search Console query-cluster evidence, plus optional provider discovery and live result snapshots for an explicit market.',
+      'Limited programmatic SEO audit and Search Console query-cluster evidence, plus optional provider discovery and live result snapshots for an explicit market.',
     ],
     methodology: [
-      'Selects at most five seeds from search-evidenced templates and retained query clusters, then keeps discovered candidates linked to those first-party references.',
+      'Selects at most five seeds from search-evidenced templates and returned query clusters, then keeps discovered candidates linked to those original Search Console data.',
       'Separates existing-query evidence, observed-template expansion, and new-template research before selecting at most three live result checks.',
-      'Groups repeated domains and URL patterns from the retained snapshots without assigning authority, quality, or ranking-feasibility scores.',
+      'Groups repeated domains and URL patterns from the returned snapshots without assigning authority, quality, or ranking-feasibility scores.',
     ],
     exampleParams: {
       site: 'sc-domain:example.com',
@@ -376,16 +449,16 @@ export const opportunityReports = [
       clusterLimit: 10,
     },
     interpretation: [
-      'Read the first-party templates and clusters first. Use provider metrics and live result patterns as added context, then complete the data-source brief before proposing any generated inventory.',
+      "Read the site's templates and clusters first. Use provider metrics and live result patterns as added context, then complete the data-source brief before proposing any generated inventory.",
     ],
     caveats: [
-      'Search Console is bounded and omits anonymised queries. Provider metrics are estimates, while live results describe one market, device, and observation time.',
+      'Search Console is limited and omits anonymised queries. Provider metrics are estimates, while live results describe one market, device, and observation time.',
       'A repeated competitor URL pattern is not proof of page quality, authority, reusable data, or a template another site should reproduce.',
     ],
     nextSteps: [
       'Rerun with explicit external market and cost limits only when independent discovery would change the decision.',
       'Inspect representative ranking pages and validate identifiers, fields, coverage, freshness, rights, missing-value rules, crawl controls, and internal links.',
-      'Run the programmatic SEO audit with bounded crawl and index samples before changing a generator.',
+      'Run the programmatic SEO audit with limited crawl and index samples before changing a generator.',
     ],
     related: [
       'pseo-audit',
@@ -501,11 +574,11 @@ export const opportunityReports = [
       'You only need to inspect one current result page with no saved history.',
     ],
     evidence: [
-      'A local saved keyword set, target domain, fixed search market, separate device configuration, provider task evidence, exact retained positions, requested depth, coverage, cost, and prior compatible runs.',
+      'A local saved keyword set, target domain, fixed search market, separate device configuration, provider task evidence, exact returned positions, requested depth, coverage, cost, and prior compatible runs.',
     ],
     methodology: [
       'Creates an immutable run for one provider-neutral configuration and keeps desktop and mobile observations separate.',
-      'Uses bounded live collection for small manual runs or queued tasks for larger recurring runs, then resumes saved provider tasks without reposting completed work.',
+      'Uses limited live collection for small manual runs or queued tasks for larger recurring runs, then resumes saved provider tasks without reposting completed work.',
       'Compares exact observations with the prior compatible run and labels pending, failed, observed, and not observed within depth as different states.',
     ],
     exampleParams: {
@@ -541,9 +614,9 @@ export const opportunityReports = [
     name: 'Live search results',
     category: 'opportunities',
     summary:
-      'Inspect one location and device-specific search snapshot with exact retained organic ranks, domains, result features, coverage, cache status, and request cost.',
+      'Inspect one location and device-specific search snapshot with exact returned organic ranks, domains, result features, coverage, cache status, and request cost.',
     question:
-      'What does the current bounded result page show for this query and market?',
+      'What does the current limited result page show for this query and market?',
     useWhen: [
       'A keyword needs a current intent and result-page review before a content decision.',
       'You need exact snapshot ranks kept separate from Search Console average position.',
@@ -556,7 +629,7 @@ export const opportunityReports = [
       'One provider snapshot with keyword, effective query, observation time, search market, exact organic ranks, URLs, titles, snippets, result features, coverage, cache status, and local request cost.',
     ],
     methodology: [
-      'Requests at most 100 results for one bounded query, validates each organic row, sorts exact absolute ranks consistently, and summarizes repeated domains without assigning a strength score.',
+      'Requests at most 100 results for one limited query, validates each organic row, sorts exact absolute ranks consistently, and summarizes repeated domains without assigning a strength score.',
     ],
     exampleParams: {
       keyword: 'local seo software',
@@ -566,14 +639,14 @@ export const opportunityReports = [
       depth: 20,
     },
     interpretation: [
-      'Review the retained pages, result types, and any corrected query. Repeated domains describe this snapshot; they do not prove authority or that another site cannot compete.',
+      'Review the returned pages, result types, and any corrected query. Repeated domains describe this snapshot; they do not prove authority or that another site cannot compete.',
     ],
     caveats: [
       'Results can change between checks and may differ from signed-in or personalised searches. Provider result counts are estimates, and the requested depth is not a complete inventory.',
     ],
     nextSteps: [
       'Open representative ranking pages and confirm the dominant intent before choosing an existing or new target page.',
-      'Match query, market, device, and date before comparing the snapshot with first-party position evidence.',
+      'Match query, market, device, and date before comparing the snapshot with Search Console position data.',
     ],
     related: [
       'keyword-research',

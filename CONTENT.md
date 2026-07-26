@@ -221,14 +221,36 @@ useful. Name a sensible cadence or trigger, say what the agent should report,
 and explain which scope, filters, or date windows must stay comparable. Do not
 paste a generic "run this regularly" line onto every report.
 
-The limits section needs room to explain the boundary properly. Use at least
-two short paragraphs. The first states what the report cannot establish from
-its evidence. The second explains how to interpret or verify that specific
-result. Do not leave a single caveat sentence floating in a large card.
+Do not add a generic limits section to every report page. Shared data rules
+belong in the reports guide. If one report has a specific limitation that
+changes how the result should be used, explain it in one or two clear
+sentences near the relevant instruction.
 
 Show parallel facts in a table or structured card. Use prose for explanation,
 limits, and decisions. Code examples must be complete, copyable, and able to
 wrap or scroll without appearing cut off.
+
+## Keep report internals out of human documentation
+
+The public site is for people trying to do SEO work. It is not a readable copy
+of the JSON schema, report registry, or engineering contract.
+
+Use everyday words on report pages. Do not expose report field names,
+implementation limits, registry terminology, or engineering shorthand in
+human-facing introductions, summaries, instructions, or explanations.
+
+An exact parameter or field name may appear in a command example or an advanced
+usage section. Explain what it does in plain English the first time it appears.
+
+Shared data rules belong in one shared guide. Do not repeat generic warnings
+about anonymised Search Console queries, API row limits, missing data, or
+provider estimates on every report page. An individual page should mention a
+limitation only when it is specific to that report and changes what the reader
+should do. Keep that explanation to one or two clear sentences.
+
+Technical depth still matters. Put it where agents and developers need it:
+`seo reports describe`, JSON output, MCP guidance, schemas, and contributor
+documentation. Keep the human path calm.
 
 ## Explain evidence like a careful human
 
@@ -246,8 +268,7 @@ the limits are.
 
 Prefer:
 
-> Search Console returned no retained rows for this query in the selected date
-> range.
+> Search Console did not return this query for the selected dates.
 
 Avoid:
 

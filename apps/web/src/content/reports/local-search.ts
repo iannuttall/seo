@@ -8,27 +8,27 @@ export const localSearchReports = [
     summary:
       'Find location-specific Search Console demand, landing pages, and repeated local page patterns, with optional Analytics geography and live results for one exact search market.',
     question:
-      'Which retained searches show local intent, which pages answer them, and where would landing-page geography or an exact local result snapshot change the decision?',
+      'Which returned searches show local intent, which pages answer them, and where would landing-page geography or an exact local result snapshot change the decision?',
     useWhen: [
       'You want owner-verified evidence for place names, nearby wording, or postal-code searches.',
       'You need to review repeated location pages before expanding or changing a programmatic template.',
-      'You want a small number of current, location-specific result snapshots alongside first-party evidence.',
-      'You want to see measured location context for retained local landing pages without assigning that geography to a query.',
+      'You want a small number of current, location-specific result snapshots alongside Search Console data.',
+      'You want to see measured location context for returned local landing pages without assigning that geography to a query.',
     ],
     avoidWhen: [
       'You need Google Business Profile performance, Maps listing details, reviews, calls, or directions.',
       "You plan to infer a searcher's physical location from query wording alone.",
     ],
     evidence: [
-      'Finalized Search Console query and page rows from one bounded request.',
-      'Explicit location terms plus conservative nearby and postal-code heuristics, with every match retained.',
-      'Optional provider SERP snapshots for up to three retained queries in one canonical location and device.',
-      'Optional Google Analytics sessions by country, region, and city, joined only to retained local landing-page paths.',
+      'Finalized Search Console query and page rows from one limited request.',
+      'Explicit location terms plus conservative nearby and postal-code heuristics, with every match returned.',
+      'Optional provider SERP snapshots for up to three returned queries in one canonical location and device.',
+      'Optional Google Analytics sessions by country, region, and city, joined only to returned local landing-page paths.',
     ],
     methodology: [
       'Validates, deduplicates, and aggregates query-page rows before applying minimum evidence and output limits.',
       'Classifies only explicit local wording and labels the classification as a heuristic.',
-      'Groups repeated URL shapes for template review without claiming that each page is useful, unique, or worth creating.',
+      'Groups repeated URL patterns for template review without claiming that each page is useful, unique, or worth creating.',
       'Keeps Search Console average position separate from an exact live rank and keeps provider cost, cache, coverage, and result features visible.',
       'Aggregates recurring organic domains as unclassified search competitors and local-pack rows as observed listings, with evidence references and fixed output limits.',
       'Keeps Analytics geography separate from query wording and reports unmatched, missing, invalid, duplicate, capped, and quality-warning states.',
@@ -41,14 +41,14 @@ export const localSearchReports = [
       limit: 25,
     },
     interpretation: [
-      'Start with the first-party queries and pages. Use their action labels to protect existing visibility, improve a relevant page, investigate fit, or review page overlap.',
+      "Start with the site's queries and pages. Use their action labels to protect existing visibility, improve a relevant page, investigate fit, or review page overlap.",
       'Request paid snapshots only for a shortlist where current result format, intent, competitors, or exact rank would alter the next step.',
       'Add Analytics geography only when measured location context would change how you review a landing page or repeated local template.',
     ],
     caveats: [
       "A place in the query does not prove the searcher's location, and a query without local wording can still have local intent.",
       'Search Console position is averaged across impressions. A live result is one query, location, device, language, and observation time.',
-      'A retained local-pack listing is an observed result row. It does not prove ownership, complete Maps coverage, or Google Business Profile performance.',
+      'A returned local-pack listing is an observed result row. It does not prove ownership, complete Maps coverage, or Google Business Profile performance.',
       'Analytics geography describes measured sessions for matched landing pages. It does not prove which query produced a session.',
     ],
     nextSteps: [

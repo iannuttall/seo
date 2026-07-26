@@ -17,7 +17,7 @@ export const workflowReports = [
       'You already know the affected page, query, or technical issue. Run the focused report for that question instead.',
     ],
     evidence: [
-      'Search performance sections, source coverage, skipped reasons, ranked findings, and generated follow-up commands.',
+      'Search performance sections, what each source returned, skipped reasons, ranked findings, and generated follow-up commands.',
     ],
     methodology: [
       'Compares recent and earlier Search Console evidence, narrows the movement by segment, then recommends follow-ups supported by the returned findings.',
@@ -91,7 +91,7 @@ export const workflowReports = [
     question:
       'Which existing pages deserve refresh or investigation attention first?',
     useWhen: [
-      'A content team needs one queue assembled from several first-party evidence types.',
+      'A content team needs one queue assembled from several site data sources.',
       'You can inspect the live pages before deciding to edit.',
     ],
     avoidWhen: [

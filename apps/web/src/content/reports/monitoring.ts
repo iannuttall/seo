@@ -20,7 +20,7 @@ export const monitoringReports = [
       'Bing Webmaster daily traffic and crawl statistics plus weekly top query and page lists.',
     ],
     methodology: [
-      'Requests four provider sections in parallel, validates rows, sorts dates consistently, and keeps responses and output bounded.',
+      'Requests four provider sections in parallel, validates rows, sorts dates consistently, and keeps responses and output limited.',
       'Compares matched traffic periods and crawl snapshots, then compares movements only for query and page entries observed in every weekly top list in both periods.',
     ],
     exampleParams: {
@@ -84,9 +84,9 @@ export const monitoringReports = [
     name: 'Referring link evidence',
     category: 'monitoring',
     summary:
-      'Review bounded referring URLs and target pages from Ahrefs, DataForSEO, Bing Webmaster or a local link export.',
+      'Review limited referring URLs and target pages from Ahrefs, DataForSEO, Bing Webmaster or a local link export.',
     question:
-      'Which retained pages link to this site, and where do they point?',
+      'Which returned pages link to this site, and where do they point?',
     useWhen: [
       'You need concrete referring URLs and anchor text where the source provides it.',
       'You have Ahrefs, DataForSEO or Bing Webmaster connected, or a CSV, JSON, or JSONL link export.',
@@ -95,12 +95,12 @@ export const monitoringReports = [
       'You need a complete web-scale backlink index or want a provider metric treated as ranking impact.',
     ],
     evidence: [
-      'Bounded provider link rows, provider summary counts, or normalized rows read from an explicit local export.',
+      'Limited provider link rows, provider summary counts, or normalized rows read from an explicit local export.',
     ],
     methodology: [
       'Validates HTTP URLs, normalizes common field names, deduplicates rows, and applies strict provider, file, and output limits.',
       'Streams CSV and JSONL files. Regular JSON arrays have a smaller byte limit so large imports do not create an unexpected memory spike.',
-      'Keeps provider summary counts separate from retained representative links and records cache and cost evidence for paid research.',
+      'Keeps provider summary counts separate from returned representative links and records cache and cost evidence for paid research.',
     ],
     exampleParams: {
       provider: 'ahrefs',
@@ -110,11 +110,11 @@ export const monitoringReports = [
       limit: 100,
     },
     interpretation: [
-      'Read provenance, provider summary and selection before the link list. Open a referring page to confirm that an important link still exists.',
+      'Read source details, provider summary and selection before the link list. Open a referring page to confirm that an important link still exists.',
     ],
     caveats: [
-      'The retained rows are not a complete backlink index and do not measure link quality, authority, value, or ranking impact.',
-      'Provider totals and metrics remain external estimates. A missing row in a bounded list is unknown, not zero.',
+      'The returned rows are not a complete backlink index and do not measure link quality, authority, value, or ranking impact.',
+      'Provider totals and metrics remain external estimates. A missing row in a limited list is unknown, not zero.',
     ],
     nextSteps: [
       'Verify a selected referring URL directly.',
@@ -336,7 +336,7 @@ export const monitoringReports = [
     name: 'Server log crawler analysis',
     category: 'monitoring',
     summary:
-      'Stream a local access log into bounded search and AI crawler activity, response status, and path evidence.',
+      'Stream a local access log into limited search and AI crawler activity, response status, and path evidence.',
     question:
       'Which known crawler user agents reached the server, and where did they receive redirects or errors?',
     useWhen: [
@@ -366,7 +366,7 @@ export const monitoringReports = [
     ],
     caveats: [
       'User-agent strings can be absent or spoofed, and the supplied file may omit servers, requests, or time periods.',
-      'Path rankings cover retained aggregates only when the path limit is reached.',
+      'Path rankings cover returned aggregates only when the path limit is reached.',
     ],
     nextSteps: [
       'Trace an important redirecting or failing path against the live site.',

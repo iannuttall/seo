@@ -1,11 +1,11 @@
 ---
 title: SEO reports for audits and analysis
-description: Find the SEO report for the problem in front of you, from technical crawl issues to lost clicks and AI search visibility. Each result includes evidence.
+description: Choose an SEO report for a site audit, lost clicks, keyword research, competitors, indexing, links, local search, or AI search visibility.
 ---
 
 import { productFacts } from '@/lib/facts'
 
-## Get to the first useful answer faster
+## Run the main report first
 
 ```sh
 seo report --project example
@@ -18,30 +18,30 @@ seo technical-watch --project example
 Run `seo report` when you need to know what deserves attention across the site.
 Use a focused report when you already know the problem: lost clicks, a broken
 URL, weak page-one CTR, page-two rankings, competitor research, keyword gaps,
-or a technical change after a release. You get the relevant pages, queries and
-source limits without digging through an unrelated audit.
+or a technical change after a release.
 
-`seo report --url` is the technical-only version. It saves a bounded crawl and
-labels every Search Console section as skipped until you add `--site` or a
-project profile. It does not turn missing search data into an empty result.
+`seo report --url` runs the technical checks without Search Console. Add
+`--site` or use a saved project when you want search performance included.
 
-## Keep every recommendation tied to evidence you can check
+## How report data works
 
-Each result keeps the observed crawl or provider data beside the finding. It
-also carries the date range, row caps, thresholds, skipped sections, source
-limits, and the command that verifies the change.
+Some services limit how much data they return or hide searches for privacy.
+The report tells you when that happened. Missing data means unknown, not zero.
 
-That means a missing row stays missing instead of becoming zero. A capped
-crawl cannot produce an all-clear. A low-CTR row can earn a place in the review
-queue without becoming a promise of more traffic.
+Search Console and Google Analytics describe activity on a site you control.
+Keyword tools and current search results add outside estimates and observations.
+They can help you investigate, but they cannot promise rankings or traffic.
 
-## Find a report by the job you need done
+Those rules apply to every report, so individual report pages only call out a
+limit when it changes how you should use that particular result.
+
+## Choose a report for a specific job
 
 The catalog includes {productFacts.reports} reports across
-{productFacts.reportCategories} categories. Browse the plain-English list
-below, or ask the installed package for the live ids and input schemas.
+{productFacts.reportCategories} categories. Browse the list below or ask the
+installed package for the current report names and options.
 
-Ask the installed package for the live catalog and exact input schema:
+Use these commands when you need the exact options for an agent or script:
 
 ```sh
 seo reports list --json
@@ -50,32 +50,15 @@ seo reports describe audit-page --json
 seo reports run audit-page --params '{"url":"https://example.com"}' --json
 ```
 
-The CLI and MCP server use one report registry. Agents using MCP should call
-`seo_list_reports`, `seo_describe_report`, and then `seo_run_report` rather
-than treating a copied schema as permanent.
+Agents using MCP should call `seo_list_reports`, `seo_describe_report`, and
+then `seo_run_report`.
 
 Optional research providers add country-level keyword, domain, page and
-competitor estimates plus bounded referring-link evidence. Use the
-[research provider guide](/docs/research-providers) to connect DataForSEO, set
-cost limits and choose between first-party, provider-led and live result
-evidence.
-
-Local search investigations can combine retained Search Console query and page
-evidence with optional Analytics geography for exact landing-page paths and a
-few exact local result snapshots. These sources stay separate: location wording
-does not prove visitor location, Analytics does not identify a Search Console
-query, and one live snapshot is not rank history.
+competitor estimates. The [research provider guide](/docs/research-providers)
+explains how to connect one and set spending limits.
 
 When the result needs to become a client deliverable, use the
 [HTML report guide](/docs/html-reports). The CLI can generate a fixed standalone
-file, or an agent can design its own page from structured evidence while keeping
-the report's limits and verification steps intact.
+file, or an agent can create a custom layout from the same report.
 
 <ReportCatalog />
-
-## Know where the answer stops
-
-SEO systems expose incomplete evidence. Reports avoid turning rough
-heuristics into ranking rules, label estimates as estimates, and lower the
-strength of a conclusion when the input is sparse. Important changes still
-deserve a check against the live page and the relevant provider.

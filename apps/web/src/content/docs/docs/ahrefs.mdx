@@ -1,9 +1,9 @@
 ---
 title: Ahrefs research
-description: Connect an Ahrefs API v3 key and run bounded keyword, domain, competitor, Domain Rating and backlink research.
+description: Connect an Ahrefs API v3 key and run limited keyword, domain, competitor, Domain Rating and backlink research.
 ---
 
-Use Ahrefs estimates when a first-party report leaves a specific research
+Use Ahrefs estimates when a report based on your site data leaves a specific research
 question open. The adapter supplies existing provider-neutral reports with
 coverage, cache state and API-unit cost. It does not add an Ahrefs-specific MCP
 tool or agent skill.
@@ -70,14 +70,14 @@ The connected adapter supports:
 | Report | Evidence supplied |
 | --- | --- |
 | `keyword-metrics` | Search volume, cost per click, keyword difficulty and intent when Ahrefs returns them. |
-| `keyword-research` | Bounded matching terms, related terms and search suggestions from one to five seeds. |
-| `competitive-opportunities` | Keyword discovery and free Domain Rating evidence inside a bounded current-result investigation. |
+| `keyword-research` | Limited matching terms, related terms and search suggestions from one to five seeds. |
+| `competitive-opportunities` | Keyword discovery and free Domain Rating evidence inside a limited current-result investigation. |
 | `domain-overview` | Provider-estimated organic keyword count, traffic and traffic value for one domain. |
-| `ranked-keywords` | A bounded set of observed terms, ranking URLs, positions and optional keyword metrics. |
-| `ranking-pages` | Ranking pages and repeated URL patterns derived from bounded provider rows. |
+| `ranked-keywords` | A limited set of observed terms, ranking URLs, positions and optional keyword metrics. |
+| `ranking-pages` | Ranking pages and repeated URL patterns derived from limited provider rows. |
 | `serp-competitors` | Domains repeatedly observed for an explicit keyword set. |
 | `domain-rating` | One free, attributed Domain Rating observation for a domain or URL. |
-| `link-evidence` | Bounded representative backlinks, provider totals and source-page metrics. |
+| `link-evidence` | Limited representative backlinks, provider totals and source-page metrics. |
 
 Use `seo reports describe <report-id> --json` before scripting a report. It
 returns the current input schema, reading order, caveats and related reports.
@@ -105,7 +105,7 @@ See the
 <a href="https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free" target="_blank" rel="noreferrer">Domain Rating endpoint reference</a>
 for the provider contract.
 
-## Inspect bounded backlink evidence
+## Inspect limited backlink evidence
 
 Use the existing link report for a domain or one exact page:
 
@@ -118,16 +118,16 @@ seo links \
   --json
 ```
 
-The report keeps provider summary counts separate from the retained link list.
+The report keeps provider summary counts separate from the returned link list.
 The default list keeps one representative backlink per referring domain. A
-bounded or partial list cannot prove that a backlink, referring domain or
+limited or partial list cannot prove that a backlink, referring domain or
 target page does not exist.
 
 Use a current result snapshot, page relevance and URL-level link evidence
 before making a competitive decision. Domain Rating alone is too broad for
 that job.
 
-## Keep paid requests bounded
+## Keep paid requests limited
 
 Inspect or lower the local per-report work limits before broad research:
 
@@ -136,7 +136,7 @@ seo providers ahrefs limits
 seo providers ahrefs limits --requests 10 --rows 1000
 ```
 
-Every paid cache miss checks the live API-unit balance before acquisition. The
+Every paid cache miss checks the live API-unit balance before making the request. The
 adapter also enforces fixed per-request and per-report unit caps, reads the
 returned Ahrefs unit headers and records estimated and actual API units in the
 evidence. Ahrefs explains row costs, minimum charges and response headers in
@@ -157,7 +157,7 @@ not provide a city, postcode, Bing or mobile market here. The requested
 language remains visible as context, but it is not a separate Ahrefs API
 filter.
 
-Run the main first-party report before paid research:
+Run the main site report before paid research:
 
 ```sh
 seo report --project example

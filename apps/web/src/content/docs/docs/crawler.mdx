@@ -100,9 +100,9 @@ Google limits each sitemap to 50 MB uncompressed or 50,000 URLs in its
 Treat sitemap membership the same way in a crawl report. A listed URL deserves
 inspection, but its presence does not prove that Google indexed it.
 
-## External-link checks stay bounded
+## External-link checks stay limited
 
-External-link checks run against a bounded sample of the URLs retained by the
+External-link checks run against a limited sample of the URLs returned by the
 crawl. The crawler spreads that sample across source pages, keeps each selected check
 on the page that linked to it, and records the limits, deferred URLs, and
 request failures in `externalLinkVerification` JSON. A 404 is evidence about
@@ -238,7 +238,7 @@ seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit 
 
 JSON preserves the structured contract for scripts and agents. CSV works for
 sorting issues or pages. HTML gives you a local standalone report, while
-Markdown is useful for a bounded implementation brief. JUnit creates one test
+Markdown is useful for a limited implementation brief. JUnit creates one test
 case per sitemap document and listed URL with status, redirect, network,
 robots, and access-block evidence.
 

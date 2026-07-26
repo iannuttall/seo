@@ -1,5 +1,6 @@
 import { SeoError } from '../../errors.js'
 import type { ProviderCostEvidence } from '../../providers/contracts.js'
+import type { KeywordMetricsReport } from '../keyword-metrics.js'
 import type { KeywordResearchReport } from '../keyword-research.js'
 import type {
   PseoExternalAcquisition,
@@ -9,7 +10,7 @@ import type { SerpResultsReport } from '../serp-results.js'
 import { comparePseoOpportunityText } from './input.js'
 
 export function pseoExternalAcquisition(
-  report: KeywordResearchReport | SerpResultsReport,
+  report: KeywordMetricsReport | KeywordResearchReport | SerpResultsReport,
 ): PseoExternalAcquisition {
   const {
     provider,

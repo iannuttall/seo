@@ -31,7 +31,11 @@ const catalogCollections = reportCollections.map((collection) => ({
             {collection.reports.map(({ report, label }) => {
               const guide = resolveReportGuide(report)
               return (
-                <NavCard title={label} description={guide.summary} href={reportPath(report.id)}>
+                <NavCard
+                  title={label}
+                  description={guide.seo?.description ?? guide.lead}
+                  href={reportPath(report.id)}
+                >
                   <span class="mt-auto font-mono text-xs text-foreground-faint">{report.id}</span>
                 </NavCard>
               )

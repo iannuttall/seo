@@ -19,7 +19,7 @@ export const aiPromptGuideOverrides: Partial<
       {
         label: 'Optional Search Console query rows',
         source: 'search-analytics',
-        role: 'Adds bounded first-party query and landing-page context for a property you own.',
+        role: 'Adds limited Search Console query and landing-page context for a property you own.',
       },
       {
         label: 'Live AI response evidence',
@@ -28,8 +28,8 @@ export const aiPromptGuideOverrides: Partial<
       },
     ],
     checks: [
-      'Rejects unknown models, unsupported web search, more than 20 prompt and model combinations, and invalid output-token limits before paid acquisition.',
-      'Caps live work at 20 requests and concurrency at four, then bounds retained answers, citations, fan-out queries, first-party matching work, local history, and agent output.',
+      'Rejects unknown models, unsupported web search, more than 20 prompt and model combinations, and invalid output-token limits before paid requests.',
+      'Caps live work at 20 requests and concurrency at four, then bounds returned answers, citations, fan-out queries, Search Console matching, local history, and agent output.',
       'Keeps base-fee estimates separate from exact returned task cost and keeps unavailable observations visible instead of converting them to zeros.',
       'Compares only fresh, complete, untruncated observations with the same provider, prompt, requested and effective model, market label, web-search setting, and output-token limit.',
     ],
@@ -42,13 +42,13 @@ export const aiPromptGuideOverrides: Partial<
         when: 'You want broader provider-indexed mention counts, cited domains, or related question samples for one market.',
         reportId: 'ai-mention-research',
         doInstead:
-          'Run AI mention research. It queries a bounded indexed dataset instead of generating a fresh answer for every supplied prompt and model.',
+          'Run AI mention research. It queries a limited indexed dataset instead of generating a fresh answer for every supplied prompt and model.',
       },
       {
         when: 'You need a prompt set grounded in searches already associated with the site.',
         reportId: 'seo-to-ai-query',
         doInstead:
-          'Build a stable prompt seed set from retained Search Console queries first, then choose a small decision-critical subset for live observation.',
+          'Build a stable prompt seed set from returned Search Console queries first, then choose a small decision-critical subset for live observation.',
       },
       {
         when: 'You need measured visits from known AI products.',

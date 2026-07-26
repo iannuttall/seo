@@ -118,13 +118,13 @@ The Google Analytics report groups measurable visits from known AI referral sour
 show a real landing page, source, and session count when Google Analytics received them.
 
 Referrer stripping, apps, redirects, privacy controls, and changing source
-domains make that evidence incomplete. "No retained AI referrals" means the
+domains make that evidence incomplete. "No returned AI referrals" means the
 query found none in the available Google Analytics rows. It does not prove that no person
 found the site through an AI product.
 
 Google now directs site owners to its own Search Console reporting for
 visibility in Google generative AI features. Other providers expose different
-or no first-party reporting, so keep source-specific evidence separate.
+or no site reporting, so keep source-specific evidence separate.
 
 The [AI visibility tracking guide](/docs/ai-visibility) covers fixed live prompt
 observations, provider-indexed mention research, citations, and referral
@@ -132,12 +132,12 @@ evidence. Those sources remain separate from a technical readiness score.
 
 ## Give an agent a claim it can defend
 
-Ask for findings in this shape:
+Ask for findings in this format:
 
 1. The exact page evidence or provider row observed.
 2. The eligibility issue or optional observation derived from it.
 3. The limit on what that evidence can establish.
-4. A bounded change and a way to verify it.
+4. A limited change and a way to verify it.
 
 The [agent workflow guide](/docs/agents) covers that evidence discipline. Use
 the [crawler guide](/docs/crawler) when a finding depends on robots, canonicals,

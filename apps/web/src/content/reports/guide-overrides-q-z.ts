@@ -6,7 +6,7 @@ export const reportGuideOverridesQZ: Partial<
   'server-log-analysis': {
     name: 'Review crawler activity in server logs',
     summary:
-      'Stream a local access log into bounded crawler, status, and path evidence without building another raw log database.',
+      'Stream a local access log into limited crawler, status, and path evidence without building another raw log database.',
     inputs: [
       {
         label: 'Combined or JSONL access log',
@@ -25,7 +25,7 @@ export const reportGuideOverridesQZ: Partial<
     ],
     returns: [
       'Observed crawler request totals with 2xx, 3xx, 4xx, and 5xx breakdowns and latest timestamps.',
-      'A bounded list of crawler and path aggregates, file provenance, warnings, and explicit omissions.',
+      'A limited list of crawler and path aggregates, file source details, warnings, and explicit omissions.',
     ],
     alternatives: [
       {
@@ -37,7 +37,7 @@ export const reportGuideOverridesQZ: Partial<
       {
         when: 'You need durable raw-event storage, arbitrary searches, or identity verification from source networks.',
         doInstead:
-          'Use the server or a dedicated log platform for that job. This report deliberately performs one bounded local aggregation and does not retain raw events or verify crawler source IPs.',
+          'Use the server or a dedicated log platform for that job. This report deliberately performs one limited local aggregation and does not retain raw events or verify crawler source IPs.',
       },
     ],
     seo: {
@@ -259,7 +259,7 @@ export const reportGuideOverridesQZ: Partial<
   'serp-results': {
     name: 'Inspect live search results',
     summary:
-      'Inspect one bounded search snapshot with exact retained organic ranks, market context, result features, provider coverage, cache status, and request cost.',
+      'Inspect one limited search snapshot with exact returned organic ranks, market context, result features, provider coverage, cache status, and request cost.',
     inputs: [
       {
         label: 'Keyword and search market',
@@ -272,20 +272,20 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     checks: [
-      'Validates and sorts retained organic rows by exact absolute rank with stable tie-breakers.',
+      'Validates and sorts returned organic rows by exact absolute rank with stable tie-breakers.',
       'Keeps the effective query, observation time, market, result features, invalid rows, provider limits, and omitted depth visible.',
       'Summarises repeated domains as a property of this snapshot without turning frequency into an authority or feasibility score.',
     ],
     returns: [
-      'Exact retained organic ranks with URLs, domains, titles, snippets, result features, and corrected-query evidence where observed.',
-      'A bounded domain summary plus provider, market, coverage, cache, cost, warning, limit, and caveat evidence.',
+      'Exact returned organic ranks with URLs, domains, titles, snippets, result features, and corrected-query evidence where observed.',
+      'A limited domain summary plus provider, market, coverage, cache, cost, warning, limit, and caveat evidence.',
     ],
     alternatives: [
       {
         when: 'You need independent demand estimates or related candidates rather than the current result page.',
         reportId: 'keyword-research',
         doInstead:
-          'Run keyword research to build a bounded shortlist, then inspect result snapshots only for the candidates that deserve an intent review.',
+          'Run keyword research to build a limited shortlist, then inspect result snapshots only for the candidates that deserve an intent review.',
       },
       {
         when: 'You need ranking history or a definitive explanation for why one page outranks another.',
@@ -314,31 +314,31 @@ export const reportGuideOverridesQZ: Partial<
       {
         label: 'Connected exact-rank provider',
         source: 'serp-provider-results',
-        role: 'Posts or collects bounded search snapshots with task ids, exact ranks, requested depth, coverage, warnings, and cost.',
+        role: 'Posts or collects limited search snapshots with task ids, exact ranks, requested depth, coverage, warnings, and cost.',
       },
     ],
     checks: [
       'Creates or resumes one local run for the exact keyword set, target domain, market, device, provider, depth, collection method, and cadence.',
       'Records observed, not observed within depth, pending, and failed states separately for every keyword and device pair.',
       'Compares the latest completed evidence with the prior compatible run for new, lost, improved, declined, unchanged, and ranking URL changes.',
-      'Retains bounded local history and caps report output without hiding omitted counts.',
+      'Retains limited local history and caps report output without hiding omitted counts.',
     ],
     returns: [
       'A run summary with tracked keywords, completed, pending and failed snapshots, exact position changes, ranking URL changes, and prior-run coverage.',
-      'A bounded item list with current and previous evidence plus fixed market, device, depth, provider task, local retention, cost, warning, and caveat context.',
+      'A limited item list with current and previous evidence plus fixed market, device, depth, provider task, local retention, cost, warning, and caveat context.',
     ],
     alternatives: [
       {
         when: 'You need clicks, impressions, CTR, or average position from searches associated with the site.',
         reportId: 'quick-wins',
         doInstead:
-          'Use a Search Console opportunity report for first-party performance evidence. Exact rank snapshots do not contain clicks or impressions and should not replace average position.',
+          'Use a Search Console opportunity report for Search Console performance. Exact rank snapshots do not contain clicks or impressions and should not replace average position.',
       },
       {
         when: 'You need to inspect one current result page but do not need saved history.',
         reportId: 'serp-results',
         doInstead:
-          'Run live search results for that query and market. It returns the retained result page and features without creating a recurring tracking configuration.',
+          'Run live search results for that query and market. It returns the returned result page and features without creating a recurring tracking configuration.',
       },
       {
         when: 'You need proof that a ranking change caused a traffic change.',
@@ -454,11 +454,11 @@ export const reportGuideOverridesQZ: Partial<
       },
     ],
     checks: [
-      'Groups eligible findings by rule and calculates a repeatable score from severity, affected count, available first-party value, and estimated effort.',
+      'Groups eligible findings by rule and calculates a repeatable score from severity, affected count, available Search Console metrics, and estimated effort.',
       'Attaches the exact score factors, rule explanation, fix guidance, and a repeatable verification command.',
     ],
     returns: [
-      'A limited technical fix queue with score, severity, affected count, sample URLs, effort, and first-party evidence.',
+      'A limited technical fix queue with score, severity, affected count, sample URLs, effort, and Search Console data.',
       'Plain-language reasons for the order plus how to fix and verify each selected rule.',
     ],
     alternatives: [
@@ -625,7 +625,7 @@ export const reportGuideOverridesQZ: Partial<
       'Builds follow-up actions only from supported report sections and preserves partial or unavailable states.',
     ],
     returns: [
-      'The complete monthly SEO report with dates, comparisons, source coverage, findings, and caveats.',
+      'The complete monthly SEO report with dates, comparisons, what each source returned, findings, and caveats.',
       'A short action list and next report commands selected from the month’s supported evidence.',
     ],
     alternatives: [
@@ -633,7 +633,7 @@ export const reportGuideOverridesQZ: Partial<
         when: 'You only need a readable monthly status report and do not want a generated follow-up queue.',
         reportId: 'monthly-report',
         doInstead:
-          'Run monthly report. It returns the calendar-month comparison, opportunity evidence, source coverage, and caveats without adding the workflow action list.',
+          'Run monthly report. It returns the calendar-month comparison, opportunity evidence, what each source returned, and caveats without adding the workflow action list.',
       },
       {
         when: 'You need to measure the effect of one known implementation rather than review the whole month.',

@@ -1,5 +1,6 @@
 import { REPORT_DEPTH, type ReportDepth } from './report-depth.js'
 import { REPORT_GUIDANCE_DOMAIN_RESEARCH } from './report-guidance-domain-research.js'
+import { REPORT_GUIDANCE_PSEO } from './report-guidance-pseo.js'
 
 export type { RelatedReport, ReportDepth } from './report-depth.js'
 
@@ -18,6 +19,7 @@ export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
   ...REPORT_GUIDANCE_DOMAIN_RESEARCH,
+  ...REPORT_GUIDANCE_PSEO,
   'affected-urls': {
     name: 'URLs affected by a crawl issue',
     description:
@@ -620,37 +622,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'Lab diagnostics plus clearly labelled field metrics when available.',
-  },
-  'pseo-audit': {
-    name: 'Programmatic SEO audit',
-    description:
-      'Review repeated page templates using search demand, crawl evidence, and optional Google index checks.',
-    useWhen: [
-      'A site publishes many pages from repeatable templates.',
-      'You need to compare template groups before expanding or pruning them.',
-    ],
-    avoidWhen: [
-      'You want every repeated path labelled as spam or thin content.',
-      'There are too few pages to compare as a template group.',
-    ],
-    outcome:
-      'Template-level demand, quality, and index evidence with representative URLs.',
-  },
-  'pseo-opportunities': {
-    name: 'Programmatic SEO opportunities',
-    description:
-      'Combine repeated template and query-cluster evidence with optional keyword discovery, live results, competitor URL patterns, and data-source research briefs.',
-    useWhen: [
-      'You want to expand a template that already earns impressions without treating every related keyword as a new page.',
-      'You need to separate extensions of an observed template from research for a possible new template.',
-      'Current result pages and repeated competitor URL patterns would change the programmatic SEO decision.',
-    ],
-    avoidWhen: [
-      'You only need to audit the current technical and index state of existing templates.',
-      'You want external provider calls made without explicit market, cost, and result limits.',
-    ],
-    outcome:
-      'A bounded research queue that keeps first-party templates, provider estimates, live results, competitor patterns, costs, and data-source checks separate.',
   },
   'keyword-metrics': {
     name: 'Keyword metrics',

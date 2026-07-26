@@ -32,10 +32,10 @@ export const savedKeywordGuideOverrides: Partial<
         when: 'You need new market candidates rather than terms already saved in the project.',
         reportId: 'keyword-research',
         doInstead:
-          'Run keyword research from a small seed list. It performs bounded provider discovery and keeps acquisition coverage and cost beside the returned candidates.',
+          'Run keyword research from a small seed list. It performs limited provider discovery and keeps request details and cost beside the returned candidates.',
       },
       {
-        when: 'You need first-party evidence for which terms already surface your pages.',
+        when: 'You need Search Console data for which terms already surface your pages.',
         reportId: 'keyword-opportunities',
         doInstead:
           'Run keyword opportunities for the Search Console property. It starts from returned query and page evidence, then adds independent estimates only when explicitly requested.',

@@ -6,25 +6,25 @@ export const aiSearchReports = [
     name: 'AI mention research',
     category: 'ai-search',
     summary:
-      'Compare provider-indexed mentions, cited domains, and bounded question samples for one AI surface and market, with optional Search Console overlap.',
+      'Compare provider-indexed mentions, cited domains, and limited question samples for one AI surface and market, with optional Search Console overlap.',
     question:
       'Where does a named target appear in provider-indexed AI answers, and which observed questions overlap with existing search demand?',
     useWhen: [
       'You need mention and citation evidence beyond referral traffic or technical eligibility.',
       'You want one target and a small named competitor set measured in the same provider dataset.',
-      'You want to compare bounded AI question samples with retained Search Console queries before planning content or a programmatic template.',
+      'You want to compare limited AI question samples with returned Search Console queries before planning content or a programmatic template.',
     ],
     avoidWhen: [
       'You need the answer returned by a fixed prompt right now. Use ai-prompt-observations with the exact surface, model, market label, time, answer, and citations instead.',
       'You need a complete census, a universal visibility score, sentiment, or proof that an AI product never mentions a target.',
     ],
     evidence: [
-      'DataForSEO LLM Mentions metrics, cited source domains, and bounded question samples for the exact surface, location, and language.',
-      'Optional retained Search Console query and landing-page rows for a property you own.',
+      'DataForSEO LLM Mentions metrics, cited source domains, and limited question samples for the exact surface, location, and language.',
+      'Optional returned Search Console query and landing-page rows for a property you own.',
     ],
     methodology: [
-      'Makes one metrics request and, by default, one sample request. It keeps provider values, source coverage, cache state, cost, and warnings intact.',
-      'Calculates comparison share only within the supplied targets, marks citations from an optional owned domain, and applies a bounded lexical overlap heuristic to optional Search Console rows.',
+      'Makes one metrics request and, by default, one sample request. It keeps provider values, what each source returned, cache state, cost, and warnings intact.',
+      'Calculates comparison share only within the supplied targets, marks citations from an optional owned domain, and applies a limited lexical overlap heuristic to optional Search Console rows.',
       'Turns repeated sample terms into research briefs with data rights, field quality, page value, and scale checks instead of recommending pages automatically.',
     ],
     exampleParams: {
@@ -39,10 +39,10 @@ export const aiSearchReports = [
       sampleLimit: 10,
     },
     interpretation: [
-      'Read source status, coverage, observation time, cache, cost, and warnings first. Then compare target metrics, retained questions, citations, and first-party overlap without blending them into one score.',
+      'Read source status, coverage, observation time, cache, cost, and warnings first. Then compare target metrics, returned questions, citations, and Search Console overlap without blending them into one score.',
     ],
     caveats: [
-      'Provider-indexed records are not live prompt observations or a complete census. Search Console overlap is lexical and bounded, so a match does not prove shared intent and no match does not prove a gap.',
+      'Provider-indexed records are not live prompt observations or a complete census. Search Console overlap is lexical and limited, so a match does not prove shared intent and no match does not prove a gap.',
     ],
     nextSteps: [
       'Inspect cited pages and current results for the questions that would change a decision.',
@@ -69,7 +69,7 @@ export const aiSearchReports = [
     useWhen: [
       'You need the current answer, mentions, or citations for a small decision-critical prompt set.',
       'You want repeatable observations across ChatGPT, Claude, Gemini, or Perplexity with exact model versions and costs.',
-      'You want to compare the supporting searches reported for an answer with retained Search Console demand before investigating content or programmatic templates.',
+      'You want to compare the supporting searches reported for an answer with returned Search Console demand before investigating content or programmatic templates.',
     ],
     avoidWhen: [
       'You need a universal visibility score, an assistant ranking, or proof that a target never appears.',
@@ -77,14 +77,14 @@ export const aiSearchReports = [
     ],
     evidence: [
       'DataForSEO response evidence for each exact prompt, surface, chosen model, model the provider actually ran, market label, web-search setting, and collection time.',
-      'Optional retained Search Console query and landing-page rows for a property you own.',
+      'Optional returned Search Console query and landing-page rows for a property you own.',
       'Earlier local observations with the same comparison key.',
     ],
     methodology: [
       'Checks the free current model catalog before paid work, then runs no more than five prompts across four explicit models with concurrency capped at four.',
-      'Stores bounded answers, citations, supporting searches returned as fan-out queries, provider task ids, cache state, token use, base-price estimates, and exact returned task costs locally.',
+      'Stores limited answers, citations, supporting searches returned as fan-out queries, provider task ids, cache state, token use, base-price estimates, and exact returned task costs locally.',
       'Compares only fresh, complete, untruncated observations with the same provider, prompt, requested and effective model, market label, web-search setting, and output-token limit.',
-      'Matches named targets and domains, then applies bounded word and phrase matching to supporting-search themes and optional Search Console rows without turning them into demand or page recommendations.',
+      'Matches named targets and domains, then applies limited word and phrase matching to supporting-search themes and optional Search Console rows without turning them into demand or page recommendations.',
     ],
     exampleParams: {
       prompts: [
@@ -107,12 +107,12 @@ export const aiSearchReports = [
       site: 'sc-domain:example.com',
     },
     interpretation: [
-      'Read data status, source coverage, warnings, cache state, effective model, citations, exact returned cost, and first-party status before reading target matches or change findings.',
-      'Treat every answer as one observation under its recorded configuration. A missing mention applies only to that retained sample.',
+      'Read data status, what each source returned, warnings, cache state, effective model, citations, exact returned cost, and Search Console status before reading target matches or change findings.',
+      'Treat every answer as one observation under its recorded configuration. A missing mention applies only to that returned sample.',
     ],
     caveats: [
       'The market and language label separates each fixed prompt set, but the provider does not expose the same location or language controls on every AI surface. Prompt wording remains the direct language instruction.',
-      'Supporting-search themes and Search Console word matches are bounded research leads. They do not prove shared intent, independent demand, a content gap, or the value of a programmatic template.',
+      'Supporting-search themes and Search Console word matches are limited research leads. They do not prove shared intent, independent demand, a content gap, or the value of a programmatic template.',
     ],
     nextSteps: [
       'Inspect the full answer, citations, effective model, cache state, and cost before acting on a target match.',
@@ -158,7 +158,7 @@ export const aiSearchReports = [
       resultLimit: 25,
     },
     interpretation: [
-      'Treat returned sessions as attributed referrals from the matched sources. Check the landing-page selection before treating the ranked output as the full retained breakdown, then review those pages and engagement in the same scope.',
+      'Treat returned sessions as attributed referrals from the matched sources. Check the landing-page selection before treating the ranked output as the full returned breakdown, then review those pages and engagement in the same scope.',
     ],
     caveats: [
       'Missing referrers, consent, redirects, attribution settings, and source changes can hide or reclassify visits.',
@@ -215,7 +215,7 @@ export const aiSearchReports = [
     question:
       'Which observed search queries suggest that people want opinions, comparisons, or lived experience?',
     useWhen: [
-      'You need first-party wording to review community or evidence-led content opportunities.',
+      'You need Search Console wording to review community or evidence-led content opportunities.',
       'A repeatable phrase classifier is useful as a starting filter.',
     ],
     avoidWhen: [
@@ -293,7 +293,7 @@ export const aiSearchReports = [
     name: 'Page opportunities',
     category: 'ai-search',
     summary:
-      'Show the first-party search opportunities attached to one URL, then verify the page before recommending work.',
+      "Show the site's search opportunities attached to one URL, then verify the page before recommending work.",
     question:
       'Which returned query opportunities are associated with this page?',
     useWhen: [

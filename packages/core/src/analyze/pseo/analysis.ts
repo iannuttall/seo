@@ -60,7 +60,12 @@ export type PseoDatasetInput = {
   caveats?: string[]
 }
 
-function retainedQueryRows(input: PseoDatasetInput) {
+export function selectPseoQueryRows(
+  input: Pick<
+    PseoDatasetInput,
+    'site' | 'queryPageRows' | 'brandTerms' | 'includeBrand'
+  >,
+) {
   let invalid = 0
   let lowActionability = 0
   let brand = 0
@@ -221,7 +226,7 @@ function buildTemplates(input: {
 export function buildPseoAuditReportFromRows(
   input: PseoDatasetInput,
 ): PseoAuditReport {
-  const querySelection = retainedQueryRows(input)
+  const querySelection = selectPseoQueryRows(input)
   const invalidPageRows = input.pageRows.filter(
     (row) => !validPseoPageRow(row),
   ).length

@@ -379,6 +379,38 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'content-optimization', reason: 'Builds a page brief.' },
     ],
   },
+  'pseo-patterns': {
+    readOrder: [
+      'dataStatus, source states, selection limits, detailBudget, warnings, and caveats',
+      'observedPatterns and observedQueries from retained Search Console evidence',
+      'patternSets planned and returned cardinality before reviewing candidates',
+      'candidate review.state, firstParty, inventory, overlap, external evidenceRefs, and reasons',
+      'findings and nextSteps only after separating evidence-led and complete-set coverage',
+    ],
+    doNotClaim: [
+      'A recognized query phrase is a wording heuristic, not proof that a page template should be built.',
+      'A declared complete set is caller-supplied product strategy, not observed demand, and a strategic gap is not a search-volume claim.',
+      'A query absent from retained Search Console evidence is not zero demand, no ranking, or no existing page coverage.',
+      'Provider metrics and result snapshots are optional secondary evidence. They do not prove traffic, ranking feasibility, page quality, or the correct number of pages.',
+    ],
+    verify:
+      'Inspect representative current pages and results, confirm stable entities and source fields, resolve possible overlap, and test a small page set before expanding a pattern.',
+    related: [
+      {
+        id: 'pseo-opportunities',
+        reason: 'Expands observed templates with deeper external research.',
+      },
+      { id: 'pseo-audit', reason: 'Audits existing template evidence.' },
+      {
+        id: 'ranking-pages',
+        reason: 'Inspects repeated competitor page structures.',
+      },
+      {
+        id: 'keyword-metrics',
+        reason: 'Adds bounded market estimates when needed.',
+      },
+    ],
+  },
   'pseo-opportunities': {
     readOrder: [
       'dataStatus, summary, market, selection, and caveats',
@@ -396,8 +428,11 @@ export const REPORT_DEPTH_CONTINUED = {
     verify:
       'Inspect the retained live results and representative existing pages, then validate identifiers, fields, freshness, usage rights, missing-value rules, crawl controls, and internal links before expanding a template.',
     related: [
+      {
+        id: 'pseo-patterns',
+        reason: 'Maps broad observed and declared pattern sets first.',
+      },
       { id: 'pseo-audit', reason: 'Validates existing template evidence.' },
-      { id: 'keyword-research', reason: 'Expands a supplied seed list.' },
       { id: 'serp-results', reason: 'Inspects one live result snapshot.' },
       { id: 'query-clusters', reason: 'Reviews first-party query groups.' },
     ],

@@ -66,6 +66,7 @@ export const reportCollections = [
       ['competitor-keyword-gap', 'Competitor keyword gaps'],
       ['keyword-opportunities', 'Keyword opportunities'],
       ['local-search-demand', 'Local search demand'],
+      ['pseo-patterns', 'Programmatic SEO patterns'],
       ['pseo-opportunities', 'Programmatic SEO opportunities'],
       ['quick-wins', 'Quick wins'],
       ['striking-distance', 'Striking distance'],

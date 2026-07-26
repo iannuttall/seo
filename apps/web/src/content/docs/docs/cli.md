@@ -55,7 +55,7 @@ seo crawl https://example.com
 seo redirect-trace --url https://example.com/old-page
 ```
 
-`seo report --url` creates a bounded local crawl and skips Search Console
+`seo report --url` creates a limited local crawl and skips Search Console
 analysis on purpose. It is the right first run for a site you have not
 connected yet. Add `--site` or `--project` when the report should join search
 performance data.
@@ -63,7 +63,7 @@ performance data.
 Use `seo start` to create the first profile. The [setup guide](/docs/getting-started)
 covers multiple sites and local storage.
 
-## Find search opportunities from first-party data
+## Find search opportunities from site data
 
 ```sh
 seo quick-wins --project example
@@ -74,7 +74,7 @@ seo ctr-underperformers --project example
 seo page-opportunities --project example --url https://example.com/pricing
 ```
 
-These reports use retained Search Console rows. Saved brand terms let reports
+These reports use returned Search Console rows. Saved brand terms let reports
 exclude branded queries where that comparison matters. Read the date window,
 row limits, and omitted-query caveats before you call a list complete.
 
@@ -99,11 +99,11 @@ explicit keyword set. Classify the relevant domains, then compare no more than
 three with `competitor-keyword-gap`.
 
 Domain research uses country and language. Use `serp-results` for a current
-place and device-specific result snapshot. Provider estimates, first-party
-measurements and live observations keep separate fields and caveats.
+place and device-specific result snapshot. Provider estimates, Search Console
+measurements and live observations stay separate.
 
 Use `ai-mention-research` for provider-indexed mentions, cited domains, and a
-bounded sample of related questions for one AI surface and market:
+limited sample of related questions for one AI surface and market:
 
 ```sh
 seo reports run ai-mention-research \
@@ -114,7 +114,7 @@ seo reports run ai-mention-research \
 The default run makes one metrics request and one sample request. Set
 `includeSamples` to `false` for metrics only. Read provider coverage, cache,
 cost, task ids, observation time, and warnings before interpreting the result.
-Optional Search Console overlap adds first-party context without turning an
+Optional Search Console overlap adds Search Console context without turning an
 indexed mention record into a live prompt observation.
 
 Use `ai-prompt-observations` for a small set of current answers. Pass exact
@@ -143,14 +143,14 @@ seo reports run local-search-demand \
 ```
 
 The default run makes no paid request. It finds explicit place names, nearby
-phrases and postal codes in retained query-page rows, then groups repeated page
+phrases and postal codes in returned query-page rows, then groups repeated page
 patterns for review. Add `includeSerps`, a canonical location and a device only
 when up to three exact live snapshots would change the next step. Those
-snapshots retain bounded local-pack listing rows and recurring organic domains.
+snapshots retain limited local-pack listing rows and recurring organic domains.
 The domains remain unclassified search competitors until you inspect them.
 
 Add `googleAnalyticsPropertyId` when visitor geography would change how you
-review the retained landing pages or repeated page templates:
+review the returned landing pages or repeated page templates:
 
 ```sh
 seo reports run local-search-demand \
@@ -160,7 +160,7 @@ seo reports run local-search-demand \
 
 The report requests sessions by landing page, country, region and city. It
 normalizes away the landing-page query string, then keeps only exact paths that
-were retained from the local Search Console evidence. It never assigns an
+were returned from the local Search Console evidence. It never assigns an
 Analytics location to a Search Console query.
 
 The [research provider guide](/docs/research-providers) covers credentials,
@@ -176,7 +176,7 @@ seo links --provider dataforseo --target example.com \
   --search-site sc-domain:example.com --json
 ```
 
-The second form joins a matching saved crawl and retained Search Console page
+The second form joins a matching saved crawl and returned Search Console page
 evidence. It can prioritize linked targets with observed technical problems,
 but it still requires a live page and referring-link check before action.
 

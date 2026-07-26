@@ -69,7 +69,7 @@ The report requests Bing's daily search traffic and crawl statistics plus its
 weekly top query and page lists. It does not write these responses to the local
 cache. Every response has a hard byte limit. Daily sections keep at most 400
 rows and weekly sections keep at most 8,000 validated source rows before
-reducing them to bounded insights. Structured output retains at most 14 recent
+reducing them to limited insights. Structured output retains at most 14 recent
 daily rows per section, 10 items per insight list, and 40 query and page insight
 items across the report.
 
@@ -88,7 +88,7 @@ The useful parts come first:
 The structured result also exposes returned rows, excluded invalid rows, caps,
 method names, observation time, and the credential source.
 
-Read `dataStatus`, provenance, and section coverage before the findings. Bing's
+Read `dataStatus`, source details, and section coverage before the findings. Bing's
 query and page endpoints return weekly top lists, not complete exports, so
 those sections remain partial by design. An entry missing from one period is
 unknown and is never treated as zero. Invalid, capped, or failed sections also
@@ -96,7 +96,7 @@ stay visible.
 
 ## Review referring links
 
-The connected site can also return a bounded sample of pages Bing says link to
+The connected site can also return a limited sample of pages Bing says link to
 it:
 
 ```sh
@@ -105,7 +105,7 @@ seo links --project example --json
 
 The command first requests target-page link counts, then requests referring
 URLs for a limited number of those targets. Provider pages, target pages,
-parallel requests, response bytes, retained rows, and returned rows all have
+parallel requests, response bytes, returned rows, and returned rows all have
 hard limits. The result says when any of those limits made the evidence
 partial.
 
@@ -118,7 +118,7 @@ seo links --file ./links.csv --row-limit 10000 --json
 CSV and JSONL files stream from disk. Regular JSON arrays are accepted only
 under a smaller file limit. Common source URL, target URL, anchor text,
 first-seen, last-seen, and nofollow column names are normalized. Invalid and
-duplicate rows stay visible in provenance.
+duplicate rows stay visible in source details.
 
 This report does not download a web-scale backlink database. A missing row is
 not proof that no link exists, and a returned row is not an authority, quality,
@@ -150,6 +150,6 @@ SEO_BING_API_KEY=your-key \
 ```
 
 Store the value in the platform's secret manager. Do not put it in a script,
-repository, report parameter, or command-line flag. The structured provenance
+repository, report parameter, or command-line flag. The structured source details
 shows that the environment supplied the credential, but never includes the
 key.

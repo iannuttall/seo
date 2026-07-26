@@ -11,7 +11,7 @@ export const domainResearchReports = [
       'Which keywords and ranking domains deserve a closer look before choosing what to work on?',
     useWhen: [
       'You are starting with a topic rather than a fixed keyword or competitor list.',
-      'You want demand, current results, and competitor evidence ordered in one bounded report.',
+      'You want demand, current results, and competitor evidence ordered in one limited report.',
       'You want free Ahrefs Domain Rating context before deciding whether paid link summaries would help.',
     ],
     avoidWhen: [
@@ -20,12 +20,12 @@ export const domainResearchReports = [
     ],
     evidence: [
       'Keyword ideas from one connected research provider, with discovery sources, metric states, coverage, cache status, warnings, and cost.',
-      'Current Google result snapshots for the retained keyword shortlist, including exact ranking domains, URLs, positions, market, device, and observation time.',
-      'Ahrefs Domain Rating for the target and retained competitors, plus optional paid domain-level link summaries from Ahrefs or DataForSEO.',
+      'Current Google result snapshots for the returned keyword shortlist, including exact ranking domains, URLs, positions, market, device, and observation time.',
+      'Ahrefs Domain Rating for the target and returned competitors, plus optional paid domain-level link summaries from Ahrefs or DataForSEO.',
     ],
     methodology: [
-      'Retains supplied seeds first, then orders discovered terms by source coverage, observed volume, and a stable keyword tie-break.',
-      'Finds recurring ranking domains across the retained results and keeps the target, competitors, and provider observations separately addressable.',
+      'Retains supplied seeds first, then orders discovered terms by what each source returned, observed volume, and a stable keyword tie-break.',
+      'Finds recurring ranking domains across the returned results and keeps the target, competitors, and provider observations separately addressable.',
       'Orders the review queue using target presence, lower observed Domain Rating, fewer observed referring domains, discovery coverage, and demand evidence.',
       'Bounds keyword discovery, result depth, competitor enrichment, findings, and total structured output before provider work starts.',
     ],
@@ -48,7 +48,7 @@ export const domainResearchReports = [
       'Recurring result domains still need a relevance and site-type review before deeper competitor work.',
     ],
     nextSteps: [
-      'Open the current ranking pages for the first one or two retained keywords and compare their intent and page type.',
+      'Open the current ranking pages for the first one or two returned keywords and compare their intent and page type.',
       'Check existing site and Search Console coverage before proposing a new page.',
       'Request paid link summaries or URL-level links only when they can change the shortlist.',
     ],
@@ -74,7 +74,7 @@ export const domainResearchReports = [
     question:
       'What Domain Rating does Ahrefs currently return for this domain or URL, and what can that value support?',
     useWhen: [
-      'You need one provider-native backlink-profile metric as supporting evidence.',
+      "You need one provider's own backlink-profile metric as supporting evidence.",
       'You want the free Ahrefs value before requesting paid backlink rows.',
     ],
     avoidWhen: [
@@ -89,7 +89,7 @@ export const domainResearchReports = [
     methodology: [
       'Normalizes one domain or absolute HTTP or HTTPS URL before calling the free Ahrefs endpoint.',
       'Keeps an unavailable value missing rather than turning it into zero.',
-      'Returns the provider-native metric without combining it into a ranking, traffic or opportunity score.',
+      "Returns the provider's own metric without combining it into a ranking, traffic or opportunity score.",
     ],
     exampleParams: {
       target: 'example.com',
@@ -105,7 +105,7 @@ export const domainResearchReports = [
       'A lower value does not prove that a page or keyword is easy to outrank. Missing Domain Rating is not zero.',
     ],
     nextSteps: [
-      'Run link evidence for bounded referring-link rows and provider summary counts.',
+      'Run link evidence for limited referring-link rows and provider summary counts.',
       'Run SERP results for a decision-critical keyword.',
       'Run domain overview when the question concerns estimated search footprint rather than backlink strength.',
     ],
@@ -119,10 +119,10 @@ export const domainResearchReports = [
     summary:
       "Review a country-level estimate of a domain's organic footprint beside optional owner-verified Search Console totals.",
     question:
-      "How large is this domain's estimated organic footprint, and what does first-party evidence show for a matching site I own?",
+      "How large is this domain's estimated organic footprint, and what does Search Console data show for a matching site I own?",
     useWhen: [
       'You need a quick independent footprint before deeper competitor or page research.',
-      'You want ranking distribution, movement, estimated traffic, and keyword count in one bounded result.',
+      'You want ranking distribution, movement, estimated traffic, and keyword count in one limited result.',
       'You want provider estimates and matching Search Console performance shown without blending their meanings.',
     ],
     avoidWhen: [
@@ -131,7 +131,7 @@ export const domainResearchReports = [
     ],
     evidence: [
       'Country-level provider estimates for organic traffic, ranked keywords, traffic cost, ranking buckets, and movement counts.',
-      'Optional matching Search Console totals for a finalised date range, kept as a separate first-party source.',
+      'Optional matching Search Console totals for a finalised date range, kept as a separate Search Console source.',
       'Provider coverage, cache state, request filters, warnings, observation time, and local request cost.',
     ],
     methodology: [
@@ -156,7 +156,7 @@ export const domainResearchReports = [
     ],
     nextSteps: [
       'Run ranking pages to find the URLs behind the footprint.',
-      'Run ranked keywords to inspect a bounded set of terms and ranking pages.',
+      'Run ranked keywords to inspect a limited set of terms and ranking pages.',
       'Start with Search Console opportunity reports before changing priorities for a site you own.',
     ],
     related: [
@@ -171,13 +171,13 @@ export const domainResearchReports = [
     name: 'Ranked keyword footprint',
     category: 'opportunities',
     summary:
-      'Review bounded provider keyword, ranking-page, result-type, and estimate rows with an optional matching Search Console comparison.',
+      'Review limited provider keyword, ranking-page, result-type, and estimate rows with an optional matching Search Console comparison.',
     question:
-      'Which keywords and pages appear in this provider footprint, and which rows have matching first-party evidence?',
+      'Which keywords and pages appear in this provider footprint, and which rows have matching Search Console data?',
     useWhen: [
       'You need the keyword rows behind a domain or page footprint.',
       'You want to filter by rank, demand, result type, or excluded wording before paying for rows.',
-      'You want provider rows compared with retained Search Console query evidence for a matching site you own.',
+      'You want provider rows compared with returned Search Console query evidence for a matching site you own.',
       'You have a local ranked-keyword export but no provider API connection.',
     ],
     avoidWhen: [
@@ -191,9 +191,9 @@ export const domainResearchReports = [
       'Optional local-file dates, hashes, included fields, row quality, duplicate counts, and caps.',
     ],
     methodology: [
-      'Applies bounded filters before acquisition, rejects unsafe limits, validates each returned row, and collapses duplicates deterministically.',
-      'Labels each first-party comparison as observed, not in retained rows, or not requested.',
-      'Keeps provider zero-volume conflicts visible when retained Search Console impressions exist.',
+      'Applies limited filters before making the request, rejects unsafe limits, validates each returned row, and collapses duplicates deterministically.',
+      'Shows whether each term appeared in Search Console, was not returned, or was not checked.',
+      'Keeps provider zero-volume conflicts visible when returned Search Console impressions exist.',
     ],
     exampleParams: {
       target: 'example.com',
@@ -205,17 +205,17 @@ export const domainResearchReports = [
       limit: 50,
     },
     interpretation: [
-      'Treat provider rows as a shortlist. Check the ranking page, current results, and first-party evidence before deciding that a term is a content opportunity.',
-      'An unmatched row means only that the bounded retained Search Console data did not contain it.',
+      'Treat provider rows as a shortlist. Check the ranking page, current results, and Search Console data before deciding that a term is a content opportunity.',
+      'An unmatched row means only that the limited returned Search Console data did not contain it.',
     ],
     caveats: [
       'Rank, volume, traffic, difficulty, and intent are provider estimates and may be older than the current result page.',
-      'Pagination and filters change the visible subset. Anonymised Search Console queries can hide first-party matches.',
+      'Pagination and filters change the visible subset. Anonymised Search Console queries can hide Search Console matches.',
     ],
     nextSteps: [
       'Run SERP results for shortlisted terms whose current intent or rank would change the decision.',
       'Run ranking pages to inspect repeated page families.',
-      'Use keyword opportunities for first-party prioritisation and programmatic clusters.',
+      'Use keyword opportunities for Search Console prioritisation and programmatic clusters.',
     ],
     related: ['serp-results', 'ranking-pages', 'keyword-opportunities'],
     sources: [
@@ -229,11 +229,11 @@ export const domainResearchReports = [
     name: 'Ranking pages and patterns',
     category: 'opportunities',
     summary:
-      "Find a domain's bounded ranking-page footprint and repeated URL patterns, with optional matching Search Console page evidence.",
+      "Find a domain's limited ranking-page footprint and repeated URL patterns, with optional matching Search Console page evidence.",
     question:
       "Which pages account for this domain's estimated search footprint, and do their paths reveal page families worth reviewing?",
     useWhen: [
-      "You want to see which pages carry a first-party or competitor domain's estimated organic footprint.",
+      "You want to see which pages carry the target or a competitor's estimated organic footprint.",
       'You are researching programmatic page families and need representative URLs.',
       'You want matching Search Console page evidence for a site you own.',
       'You want to group a local ranked-keyword export into pages and URL patterns.',
@@ -245,12 +245,12 @@ export const domainResearchReports = [
     evidence: [
       'Provider page URLs with estimated organic traffic, keyword counts, traffic cost, ranking distribution, and movement fields.',
       'Deterministic repeated path patterns with counts, representative URLs, and evidence references.',
-      'Optional matching Search Console page metrics from a bounded finalised date range.',
+      'Optional matching Search Console page metrics from a limited finalised date range.',
     ],
     methodology: [
-      'Filters and limits provider work before acquisition, validates URLs, collapses duplicate rows, and keeps pagination visible.',
-      'Clusters repeated path shapes as a structural pSEO heuristic without claiming shared intent or page quality.',
-      'Matches exact first-party page URLs while keeping estimated and measured metrics separate.',
+      'Filters and limits provider work before making the request, validates URLs, collapses duplicate rows, and keeps pagination visible.',
+      'Groups repeated path patterns for pSEO review without claiming shared intent or page quality.',
+      'Matches exact matching site URLs while keeping estimated and measured metrics separate.',
     ],
     exampleParams: {
       domain: 'example.com',
@@ -270,7 +270,7 @@ export const domainResearchReports = [
     ],
     nextSteps: [
       'Run ranked keywords for a representative page.',
-      'Run pSEO audit before changing a working first-party template family.',
+      'Run pSEO audit before changing a working existing template family.',
       'Use a current result snapshot when live competitors or intent would change the decision.',
     ],
     related: ['ranked-keywords', 'pseo-audit', 'competitor-keyword-gap'],
@@ -304,7 +304,7 @@ export const domainResearchReports = [
       'User-declared site types and relationship labels, with every undeclared type kept unknown.',
     ],
     methodology: [
-      'Normalizes and deduplicates the keyword set before acquisition and keeps provider limits, pagination, cache, and cost visible.',
+      'Normalizes and deduplicates the keyword set before making the request and keeps provider limits, pagination, cache, and cost visible.',
       'Labels the target as self and uses only supplied classifications for declared competitors.',
       'Treats recurring undeclared domains as search competitors, not automatic business competitors.',
     ],
@@ -340,13 +340,13 @@ export const domainResearchReports = [
     name: 'Competitor keyword gaps',
     category: 'opportunities',
     summary:
-      "Compare up to three explicit competitors with retained Search Console themes, the site's provider footprint, and repeated ranking-page patterns.",
+      "Compare up to three explicit competitors with returned Search Console themes, the site's provider footprint, and repeated ranking-page patterns.",
     question:
-      'Which competitor terms remain plausible opportunities after checking existing first-party and provider coverage?',
+      'Which competitor terms remain plausible opportunities after checking existing coverage and provider data?',
     useWhen: [
       'You have classified a small set of relevant competitors.',
       'You want existing Search Console coverage and provider-observed ranks removed from a possible gap list.',
-      'You need pSEO pattern evidence and a bounded data-source research brief for plausible template ideas.',
+      'You need pSEO pattern evidence and a limited data-source research brief for plausible template ideas.',
       'You have separate local ranked-keyword exports for the site and up to three competitors.',
     ],
     avoidWhen: [
@@ -354,14 +354,14 @@ export const domainResearchReports = [
       'You have not checked whether the competitors and keyword market match the site purpose.',
     ],
     evidence: [
-      'Bounded ranked-keyword rows for the site and up to three explicit competitor domains.',
-      'Up to 100,000 Search Console query and page rows, aggregated and indexed for bounded lexical theme matching.',
-      'Exact first-party coverage, own provider ranks, repeated competitor page patterns, provider costs, source failures, and row caps.',
+      'Limited ranked-keyword rows for the site and up to three explicit competitor domains.',
+      'Up to 100,000 Search Console query and page rows, aggregated and indexed for limited lexical theme matching.',
+      'Exact existing coverage, own provider ranks, repeated competitor page patterns, provider costs, source failures, and row caps.',
     ],
     methodology: [
       'Classifies each term as already observed first party, already ranked by the provider, a relevant gap candidate, or an unverified competitor term.',
-      'Requires retained first-party theme overlap plus either several compared domains or a top-10 competitor rank before calling a term a relevant candidate.',
-      'Uses bounded token indexes and deterministic ordering instead of nested full-dataset scans.',
+      'Requires returned Search Console theme overlap plus either several compared domains or a top-10 competitor rank before calling a term a relevant candidate.',
+      'Uses limited token indexes and deterministic ordering instead of nested full-dataset scans.',
       'Suggests existing-template review or new-template research only when structural evidence supports it. Each new-template idea includes a data-source brief.',
     ],
     exampleParams: {
@@ -381,13 +381,13 @@ export const domainResearchReports = [
       'Treat pSEO suggestions as research prompts. Confirm source rights, stable identifiers, fields, coverage, freshness, missing-value behavior, and distinct page value before building anything.',
     ],
     caveats: [
-      'Search Console absence means not found in retained rows. It does not prove zero impressions, no ranking, or no page coverage.',
+      'Search Console absence means not found in returned rows. It does not prove zero impressions, no ranking, or no page coverage.',
       'Lexical overlap and URL patterns do not prove demand, intent, page quality, or that a scalable template should exist.',
       'Provider ranks, volume, difficulty, intent, and traffic are country-level estimates that need a current result check.',
     ],
     nextSteps: [
       'Inspect current results for shortlisted terms.',
-      'Compare representative competitor and first-party pages.',
+      'Compare representative competitor and existing pages.',
       'Complete the returned data-source brief before approving a new programmatic template family.',
     ],
     related: ['serp-competitors', 'ranking-pages', 'keyword-opportunities'],

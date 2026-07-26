@@ -16,37 +16,37 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/google',
     label: 'Google data',
     description:
-      'Connect read-only Search Console and optional Google Analytics data without treating partial rows as complete evidence.',
+      'Connect read-only Search Console and optional Google Analytics data.',
   },
   {
     path: '/docs/bing',
     label: 'Bing Webmaster',
     description:
-      'Connect one verified Bing site and review bounded traffic trends, crawl changes, and search opportunities.',
+      'Connect one verified Bing site and review traffic trends, crawl changes and search opportunities.',
   },
   {
     path: '/docs/research-providers',
     label: 'Research providers',
     description:
-      'Connect optional providers locally, control paid work and combine keyword, domain, competitor and page estimates with first-party evidence.',
+      'Connect optional providers locally, control paid work and combine keyword, domain, competitor and page estimates with Search Console data.',
   },
   {
     path: '/docs/semrush',
     label: 'Semrush',
     description:
-      'Connect the permanent Semrush Version 3 key and run bounded keyword, domain, ranking-page and competitor research.',
+      'Connect a Semrush Version 3 key for keyword, domain, ranking-page and competitor research.',
   },
   {
     path: '/docs/ahrefs',
     label: 'Ahrefs',
     description:
-      'Connect an Ahrefs API v3 key and run bounded keyword, domain, competitor, Domain Rating and backlink research.',
+      'Connect an Ahrefs API v3 key for keyword, domain, competitor, Domain Rating and backlink research.',
   },
   {
     path: '/docs/indexnow',
     label: 'IndexNow',
     description:
-      'Generate and verify a local key, then notify participating search engines about a bounded list of changed URLs.',
+      'Generate and verify a local key, then submit a selected list of changed URLs.',
   },
   {
     path: '/docs/cli',
@@ -64,19 +64,19 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/crawler',
     label: 'Crawler',
     description:
-      'Collect a bounded technical baseline, inspect affected URLs, and compare like-for-like evidence after a release.',
+      'Crawl a site, inspect affected URLs and compare technical changes after a release.',
   },
   {
     path: '/docs/reports',
     label: 'SEO reports',
     description:
-      'Choose the report that answers your question and learn what its evidence can and cannot establish.',
+      'Choose the report that answers your question and see what to do next.',
   },
   {
     path: '/docs/html-reports',
     label: 'HTML reports',
     description:
-      'Generate a standalone report, or let an agent design one without weakening the evidence contract.',
+      'Create a standalone HTML report yourself or ask an agent to design one.',
   },
   {
     path: '/docs/ai-search',
@@ -106,7 +106,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/agents',
     label: 'Agent workflows',
     description:
-      'Keep report selection narrow and stop missing, capped, or partial data becoming a confident false answer.',
+      'Help an agent choose the right report, inspect the result and verify important changes.',
   },
 ]
 

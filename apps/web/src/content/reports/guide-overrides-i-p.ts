@@ -277,7 +277,7 @@ export const reportGuideOverridesIP: Partial<
   'link-evidence': {
     name: 'Review referring link evidence',
     summary:
-      'Normalize bounded referring URLs from Ahrefs, DataForSEO, Bing Webmaster or a local export without downloading a web-scale index.',
+      'Normalize limited referring URLs from Ahrefs, DataForSEO, Bing Webmaster or a local export without downloading a web-scale index.',
     inputs: [
       {
         label: 'Live provider target or local link export',
@@ -286,30 +286,30 @@ export const reportGuideOverridesIP: Partial<
       },
       {
         label: 'Explicit work and output limits',
-        role: 'Bounds provider pages, target pages, file rows, retained rows, parallel requests, and returned detail.',
+        role: 'Bounds provider pages, target pages, file rows, returned rows, parallel requests, and returned detail.',
       },
     ],
     checks: [
       'Validates HTTP URLs, normalizes common import fields, deduplicates stable row keys, and preserves invalid and duplicate counts.',
       'Streams CSV and JSONL files and rejects oversized regular JSON before reading it into memory.',
-      'Keeps provider pagination, file bytes, row limits, output omissions, warnings, and caveats beside the retained links.',
+      'Keeps provider pagination, file bytes, row limits, output omissions, warnings, and caveats beside the returned links.',
       'Keeps provider summary counts, representative link rows, cache state and paid request cost as separate evidence.',
     ],
     returns: [
-      'A bounded list of referring URLs, target URLs, source domains, anchor text and provider-native page metrics where the source provided them.',
-      'Provider summary totals, target-page counts, source provenance, validation counts, limit status, cache and cost evidence, warnings, and narrow interpretation caveats.',
+      "A limited list of referring URLs, target URLs, source domains, anchor text and the provider's own page metrics where available.",
+      'Provider summary totals, target-page counts, source source details, validation counts, limit status, cache and cost evidence, warnings, and narrow interpretation caveats.',
     ],
     alternatives: [
       {
         when: 'You need to find broken internal links or discover links across the current site.',
         reportId: 'site-crawl',
         doInstead:
-          'Run a bounded site crawl. It follows current internal links and records broken responses rather than importing external referring-link evidence.',
+          'Run a limited site crawl. It follows current internal links and records broken responses rather than importing external referring-link evidence.',
       },
       {
         when: 'You need a complete backlink index or want one provider score turned into a ranking verdict.',
         doInstead:
-          'Use provider-native metrics only with their coverage and method kept explicit. This report cannot turn a bounded backlink sample or Domain Rating into ranking impact.',
+          "Use the provider's own metrics only with their method kept clear. This report cannot turn a backlink sample or Domain Rating into ranking impact.",
       },
     ],
     seo: {
@@ -794,7 +794,7 @@ export const reportGuideOverridesIP: Partial<
       'Compares the latest three monthly estimates with the preceding three only when six consecutive months exist.',
     ],
     returns: [
-      'Typed metrics for each retained keyword with provider, market, coverage, cache, cost, request, and warning evidence.',
+      'Typed metrics for each returned keyword with provider, market, coverage, cache, cost, request, and warning evidence.',
       'Limited trend findings with direct evidence references and no traffic, ranking, or future-demand forecast.',
     ],
     alternatives: [
@@ -802,7 +802,7 @@ export const reportGuideOverridesIP: Partial<
         when: 'You need evidence of searches already associated with your own pages.',
         reportId: 'query-clusters',
         doInstead:
-          'Run query clusters for the Search Console property. It groups returned first-party query evidence instead of estimating wider market demand.',
+          'Run query clusters for the Search Console property. It groups returned Search Console queries instead of estimating wider market demand.',
       },
       {
         when: 'You need to know who ranks now or whether the result page matches the intended topic.',
@@ -821,11 +821,11 @@ export const reportGuideOverridesIP: Partial<
   'keyword-research': {
     name: 'Discover keyword candidates',
     summary:
-      'Expand a small seed list into bounded market-specific ideas while preserving the discovery method, metric state, provider coverage, cache status, and request cost.',
+      'Expand a small seed list into limited market-specific ideas while preserving the discovery method, metric state, provider coverage, cache status, and request cost.',
     inputs: [
       {
         label: 'Seed keywords and discovery methods',
-        role: 'Set at most five seeds and choose ideas, related terms, suggestions, or a bounded combination.',
+        role: 'Set at most five seeds and choose ideas, related terms, suggestions, or a limited combination.',
       },
       {
         label: 'Connected keyword provider',
@@ -834,20 +834,20 @@ export const reportGuideOverridesIP: Partial<
       },
     ],
     checks: [
-      'Bounds provider fanout before acquisition, normalises duplicate terms, and retains every observed seed and discovery method for each result.',
+      'Bounds provider fanout before making the request, normalises duplicate terms, and retains every observed seed and discovery method for each result.',
       'Keeps zero, missing, invalid, partial, capped, and complete provider states distinct.',
       'Labels source overlap and six-month trend comparisons as review signals rather than page or ranking recommendations.',
     ],
     returns: [
       'A limited candidate list with sources, seed terms, available metrics, trend evidence, and stable ordering.',
-      'Provider, market, coverage, cache, request-cost, limit, warning, and caveat evidence for the full acquisition.',
+      'Provider, market, coverage, cache, request-cost, limit, warning, and caveat evidence for the full provider request.',
     ],
     alternatives: [
       {
         when: 'You need queries already associated with the site rather than independent market candidates.',
         reportId: 'query-clusters',
         doInstead:
-          'Run query clusters for the Search Console property. It groups returned first-party query evidence and does not make a paid discovery request.',
+          'Run query clusters for the Search Console property. It groups returned Search Console queries and does not make a paid discovery request.',
       },
       {
         when: 'You need to decide whether several terms deserve one page, separate pages, or no new page.',
@@ -867,12 +867,12 @@ export const reportGuideOverridesIP: Partial<
   'keyword-opportunities': {
     name: 'Prioritise keyword opportunities',
     summary:
-      'Build one bounded queue from existing Search Console opportunities, then optionally add market estimates without changing the first-party priority scores.',
+      "Build one limited queue from existing Search Console opportunities, then optionally add market estimates without changing the site's priority scores.",
     inputs: [
       {
         label: 'Search Console property and date range',
         source: 'search-analytics',
-        role: 'Returns retained query and page rows for the selected property and finalised date window.',
+        role: 'Returns returned query and page rows for the selected property and finalised date window.',
       },
       {
         label: 'Opportunity and output limits',
@@ -885,13 +885,13 @@ export const reportGuideOverridesIP: Partial<
       },
     ],
     checks: [
-      'Runs quick-win, second-page, and striking-distance analysis from one bounded Search Console acquisition instead of fetching the same source three times.',
-      'Selects unique keywords across all three sections, keeps provider value states and cost visible, and does not blend external estimates into first-party scores.',
+      'Runs quick-win, second-page, and striking-distance analysis from one limited Search Console request instead of fetching the same source three times.',
+      'Selects unique keywords across all three sections, keeps provider value states and cost visible, and does not blend external estimates into Search Console scores.',
       'Groups only the selected opportunity subset and flags repeated URL patterns for representative template and data-source review.',
     ],
     returns: [
-      'Separate first-party, external, and combined evidence with source coverage, limits, request cost, cache status, warnings, and caveats.',
-      'A bounded keyword queue, query clusters, programmatic patterns, evidence-linked findings, and up to three data-source validation prompts.',
+      'Keeps Search Console data and outside estimates separate, with their limits, costs, warnings, and source details.',
+      'A limited keyword queue, query clusters, programmatic patterns, evidence-linked findings, and up to three data-source validation prompts.',
     ],
     alternatives: [
       {

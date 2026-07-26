@@ -558,6 +558,60 @@ test('pSEO opportunities keeps provider work explicit and bounded', () => {
   }
 })
 
+test('pSEO patterns keeps strategic sets general and provider work explicit', () => {
+  const schema = reportSchema('pseo-patterns')
+  const defaults = schema.safeParse({ site: 'sc-domain:example.com' })
+  assert.equal(defaults.success, true)
+  if (defaults.success) {
+    assert.equal(defaults.data.includeBrand, true)
+    assert.equal(defaults.data.includeExternal, false)
+    assert.deepEqual(defaults.data.patternSets, [])
+  }
+  assert.equal(
+    schema.safeParse({
+      site: 'sc-domain:example.com',
+      patternSets: [
+        {
+          id: 'comparisons',
+          kind: 'comparison',
+          shape: 'pairs',
+          coveragePolicy: 'complete-set',
+          values: ['keep', 'pocket', 'readwise reader'],
+          pairing: 'all-pairs',
+          queryTemplates: ['{left} vs {right}', '{right} vs {left}'],
+          pathTemplate: '/compare/{left}-vs-{right}',
+        },
+        {
+          id: 'utilities',
+          kind: 'utility',
+          shape: 'matrix',
+          axes: [
+            { id: 'tool', values: ['reading time', 'word count'] },
+            { id: 'format', values: ['article', 'essay'] },
+          ],
+          queryTemplates: ['{tool} calculator for {format}'],
+        },
+      ],
+      includeExternal: true,
+      countryCode: 'GB',
+      languageCode: 'en',
+      keywordLimit: 50,
+      serpLimit: 3,
+      serpDepth: 20,
+    }).success,
+    true,
+  )
+  for (const input of [
+    { site: 'sc-domain:example.com', includeExternal: true },
+    { site: 'sc-domain:example.com', countryCode: 'GB', languageCode: 'en' },
+    { site: 'sc-domain:example.com', candidateLimit: 251 },
+    { site: 'sc-domain:example.com', observedQueryLimit: 251 },
+    { site: 'sc-domain:example.com', serpLimit: 1 },
+  ]) {
+    assert.equal(schema.safeParse(input).success, false, JSON.stringify(input))
+  }
+})
+
 test('server log analysis bounds streamed work and returned rows', () => {
   const schema = reportSchema('server-log-analysis')
   assert.equal(

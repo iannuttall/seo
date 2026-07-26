@@ -31,6 +31,10 @@ import {
   localSearchDemandInputSchema,
 } from './report-definitions/local-search-demand.js'
 import {
+  createPseoPatternsHandler,
+  pseoPatternsInputSchema,
+} from './report-definitions/pseo-patterns.js'
+import {
   getReportGuidance,
   REPORT_GUIDANCE,
   type RelatedReport,
@@ -106,6 +110,12 @@ const directReports: readonly DirectReport[] = [
     category: 'opportunities',
     inputSchema: localSearchDemandInputSchema,
     handler: createLocalSearchDemandHandler(),
+  },
+  {
+    id: 'pseo-patterns',
+    category: 'opportunities',
+    inputSchema: pseoPatternsInputSchema,
+    handler: createPseoPatternsHandler(),
   },
 ] as const
 

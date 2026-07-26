@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   normalizePseoText,
+  pseoQueryPatternKind,
+  pseoQueryPatternResult,
   pseoQueryPatterns,
   pseoQueryTerms,
 } from './query-insights.js'
@@ -76,4 +78,37 @@ test('pseoQueryPatterns counts distinct queries across page rows', () => {
 
   assert.equal(patterns[0]?.queryCount, 2)
   assert.equal(patterns[0]?.impressions, 45)
+})
+
+test('pSEO query patterns recognise comparison, conversion, and how-to wording', () => {
+  assert.equal(pseoQueryPatternKind('keep alternative'), 'alternatives')
+  assert.equal(pseoQueryPatternKind('USD to GBP'), 'conversion')
+  assert.equal(
+    pseoQueryPatternKind('how to configure an rss feed'),
+    'docs-how-to',
+  )
+})
+
+test('pSEO pattern research retains recognized families ahead of learned-theme overflow', () => {
+  const learnedRows = Array.from({ length: 50 }, (_, index) => [
+    {
+      query: `family${index} group${index} alpha${index}`,
+      clicks: 0,
+      impressions: 100,
+    },
+    {
+      query: `family${index} group${index} beta${index}`,
+      clicks: 0,
+      impressions: 90,
+    },
+  ]).flat()
+  const result = pseoQueryPatternResult(
+    [...learnedRows, { query: 'keep reviews', clicks: 0, impressions: 1 }],
+    { limit: 5, preferRecognized: true },
+  )
+
+  assert.ok(result.available > result.patterns.length)
+  assert.ok(
+    result.patterns.some((pattern) => pattern.kind === 'reviews-community'),
+  )
 })

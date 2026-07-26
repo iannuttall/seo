@@ -23,7 +23,7 @@ export const reportCategoryEditorial = [
     id: 'opportunities',
     label: 'Search opportunities',
     introduction:
-      'Combine first-party visibility with bounded keyword, domain, competitor, page, and link research.',
+      'Combine Search Console visibility with limited keyword, domain, competitor, page, and link research.',
   },
   {
     id: 'crawl',

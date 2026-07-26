@@ -89,6 +89,7 @@ export const TELEMETRY_REPORTS = [
   'performance-audit',
   'pseo-audit',
   'pseo-opportunities',
+  'pseo-patterns',
   'query-clusters',
   'quick-wins',
   'rank-tracking',

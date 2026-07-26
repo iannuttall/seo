@@ -3,7 +3,7 @@ import DottedCard from '@/components/DottedCard.astro'
 import NavCard from '@/components/NavCard.astro'
 
 const measurements = [
-  ['Answers', 'The retained answer for each exact prompt, surface, chosen model, model the provider actually ran, settings, and time.'],
+  ['Answers', 'The returned answer for each exact prompt, surface, chosen model, model the provider actually ran, settings, and time.'],
   ['Named targets', 'Whether supplied brand aliases appeared in that answer sample, kept separate from citations.'],
   ['Citations', 'Which pages and domains appeared in returned citation metadata, including citations that do not name the target.'],
   ['Prompt set coverage', 'How many completed observations in the fixed set included the target or one of its domains.'],
@@ -16,7 +16,7 @@ const requirements = [
   'One to five fixed prompts, with stable ids and optional groups.',
   'One to four exact current model names from ChatGPT, Claude, Gemini, or Perplexity.',
   'Your target aliases and domains, plus no more than five named competitors.',
-  'An optional Search Console property when first-party query context would help.',
+  'An optional Search Console property when Search Console query context would help.',
 ] as const
 ---
 
@@ -39,7 +39,7 @@ const requirements = [
           exact returned cost.
         </p>
         <p>
-          The report stores bounded history on this computer and compares only compatible
+          The report stores limited history on this computer and compares only compatible
           observations. It does not turn a handful of generated answers into a universal
           visibility score or assistant ranking.
         </p>
@@ -54,7 +54,7 @@ const requirements = [
       </h2>
       <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
         The evidence stays attached to every summary. Read the answer, model, settings,
-        source coverage, and collection time before interpreting a mention or change.
+        what each source returned, and collection time before interpreting a mention or change.
       </p>
     </div>
 
@@ -113,7 +113,7 @@ const requirements = [
       />
       <NavCard
         title="AI mention research report"
-        description="Research provider-indexed mentions, cited domains, and bounded question samples for one surface and market."
+        description="Research provider-indexed mentions, cited domains, and limited question samples for one surface and market."
         href="/docs/reports/ai-mention-research"
       />
       <NavCard
@@ -140,7 +140,7 @@ const requirements = [
 
     <p class="max-w-3xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
       A crawl restriction can affect eligibility. A live answer is one generated sample. A
-      provider-indexed mention is bounded by that dataset. A Google Analytics referral proves
+      provider-indexed mention is limited by that dataset. A Google Analytics referral proves
       that one recorded visit reached the site. None can replace the others.
     </p>
   </section>
@@ -204,7 +204,7 @@ const requirements = [
           <p>
             AI answers can vary on another request. A fixed prompt set gives you a repeatable
             sample across the prompts, models, market labels, settings, and dates you choose.
-            A missing mention only means the retained answer did not contain a supplied alias
+            A missing mention only means the returned answer did not contain a supplied alias
             or domain. It does not prove the target never appeared elsewhere.
           </p>
           <p>

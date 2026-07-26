@@ -51,6 +51,7 @@ export const reportIds = [
   'performance-audit',
   'pseo-audit',
   'pseo-opportunities',
+  'pseo-patterns',
   'query-clusters',
   'quick-wins',
   'rank-tracking',

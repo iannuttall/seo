@@ -41,23 +41,23 @@ including its Limited Use requirements.
 
 ## When Search Console query text can leave your machine
 
-External enrichment is off by default. Three reports can send a limited part of
-their retained Search Console evidence to the connected research provider when
-you explicitly enable it:
+External enrichment is off by default. Three reports can send selected Search
+Console search terms to the connected research provider when you explicitly
+enable it:
 
 - `keyword-opportunities` can send selected query text for keyword metrics when
   `includeExternal` is `true`;
 - `local-search-demand` can send selected local-intent query text for live
   results when `includeSerps` is `true`; and
-- `pseo-opportunities` can send research seeds derived from retained query and
-  template evidence when `includeExternal` is `true`.
+- `pseo-opportunities` can send research seeds derived from Search Console
+  searches and existing page patterns when `includeExternal` is `true`.
 
 These requests do not send Google OAuth tokens, Google account identity,
 Search Console property IDs, clicks, impressions, click-through rate,
 positions, or Google Analytics rows. The selected query or seed text is
 processed by the research provider under its own privacy policy. The report
-shows that external evidence was requested and keeps its meaning separate from
-first-party metrics.
+shows that outside research was requested and keeps it separate from Search
+Console metrics.
 
 ## How Google data is protected
 
@@ -181,10 +181,10 @@ On a machine where the command is no longer run, expired rows can remain until
 you clear the cache or reset the software.
 
 Fixed AI prompt observations are saved locally so repeated runs can show
-compatible changes over time. History is bounded to 90 observations for one
+compatible changes over time. The software keeps up to 90 observations for one
 exact configuration, 10,000 observations in total, and 128 MiB of logical
-storage. The local provider spend ledger is retained for up to 730 days and is
-bounded to 50,000 rows and 32 MiB.
+storage. The local provider spend ledger is kept for up to 730 days, 50,000
+rows, or 32 MiB.
 
 Run `seo cache clear --provider dataforseo`,
 `seo cache clear --provider semrush`, or

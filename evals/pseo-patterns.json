@@ -1,0 +1,57 @@
+{
+  "subject": "pseo-patterns",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What repeatable search patterns are already showing up for my site? I am thinking beyond comparisons.",
+      "expected_output": "Should use report id pseo-patterns through the shared discover, describe, and run flow. Should begin with the Search Console-only pass and no declared pattern set, then read source states, observedPatterns, observedQueries, retained limits, warnings, and caveats. Should explain that automatic labels are wording heuristics and may surface alternatives, comparisons, utilities, templates, examples, locations, integrations, conversions, actions, and other supported patterns.",
+      "assertions": [
+        "Uses report id pseo-patterns through the shared report flow",
+        "Starts with Search Console evidence without silently calling a paid provider",
+        "Reviews observed pattern aggregates and exact retained queries",
+        "Keeps source states, bounds, warnings, and caveats visible",
+        "Does not reduce programmatic SEO research to comparison pages"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Map Keep versus every named reader, plus competitor versus competitor. I want the full set even where Search Console or a volume provider has nothing.",
+      "expected_output": "Should describe pseo-patterns, then run it with one comparison pair set, the supplied stable values, all-pairs pairing, explicit query and path templates, and complete-set coverage. Should state the planned topic cardinality before using the bounded returned candidate subset. Should treat strategic gaps as caller-supplied product coverage, not volume-backed demand, and must not require provider volume. It should still inspect first-party matches, inventory, overlap, and representative pages before recommending what to publish.",
+      "assertions": [
+        "Uses a comparison pair set with all-pairs and complete-set coverage",
+        "Includes both target-to-competitor and competitor-to-competitor topics",
+        "States planned cardinality and respects the candidate cap",
+        "Does not require search volume to retain a strategic comparison gap",
+        "Keeps product strategy separate from observed search demand"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Check whether tools by file format, templates by job role, and service pages by location could make sense as programmatic patterns.",
+      "expected_output": "Should use pseo-patterns with separate bounded matrix or term sets whose placeholders match their axes. Should not force the work into comparison pairing. It should use evidence-led coverage unless the user explicitly declares a complete product set, inspect Search Console and inventory overlap first, and recommend validation of entities, source fields, uniqueness, missing-value rules, internal links, and a small representative launch before expansion.",
+      "assertions": [
+        "Uses general term or matrix shapes rather than comparison pairs",
+        "Keeps each pattern set and its placeholders explicit",
+        "Defaults to evidence-led coverage when complete coverage was not declared",
+        "Checks existing coverage and possible overlap before new pages",
+        "Requires source and page-quality validation before expansion"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I supplied 100 entities and three query variants. Generate and recommend every pair because the report found a few impressions.",
+      "expected_output": "Should reject unbounded combinatorial generation. It should explain that 100 unordered values plan 4,950 topics before query variants, report planned versus returned and omitted counts, and keep the returned candidate set within the schema limit. A few retained impressions and a recognized comparison phrase do not prove that every pair deserves a page. It should review overlap, inventory, representative current results and pages, and test a small deliberate subset.",
+      "assertions": [
+        "Does not recommend generating every combination",
+        "Reports planned topic cardinality before the bounded returned subset",
+        "Keeps query variants separate from topic count",
+        "Does not generalize a few impressions across the full set",
+        "Requires a small validated subset before expansion"
+      ],
+      "files": []
+    }
+  ]
+}

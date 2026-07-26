@@ -1,6 +1,6 @@
 ---
 title: IndexNow URL notifications
-description: Generate a local IndexNow key, verify its public key file and submit a bounded list of changed URLs without claiming they were indexed.
+description: Generate a local IndexNow key, verify its public key file and submit a limited list of changed URLs without claiming they were indexed.
 ---
 
 IndexNow tells participating search engines that a URL was added, updated, or
@@ -55,7 +55,7 @@ seo indexnow submit \
 You can also pass comma-separated `--urls` or a newline-delimited `--file`.
 Each run accepts at most 1,000 unique URLs, and every URL must belong to the
 configured host. The command verifies the public key file before it sends the
-bounded JSON request to the fixed IndexNow endpoint.
+limited JSON request to the fixed IndexNow endpoint.
 
 Agents and CI can set `SEO_INDEXNOW_KEY` for one process instead of saving a
 key. Keep JSON mode explicit so the command never prompts:

@@ -175,7 +175,7 @@ export const reportGuideOverridesAF: Partial<
   'ai-mention-research': {
     name: 'Research AI mentions and citations',
     summary:
-      'Compare provider-indexed mentions, cited domains, and bounded question samples for one AI surface and market, then add Search Console overlap when you own the site.',
+      'Compare provider-indexed mentions, cited domains, and limited question samples for one AI surface and market, then add Search Console overlap when you own the site.',
     inputs: [
       {
         label: 'Provider-indexed AI mention data',
@@ -185,7 +185,7 @@ export const reportGuideOverridesAF: Partial<
       {
         label: 'Optional Search Console query rows',
         source: 'search-analytics',
-        role: 'Adds bounded first-party query and landing-page evidence for a property you own.',
+        role: 'Adds limited Search Console query and landing-page evidence for a property you own.',
       },
       {
         label: 'Explicit target and comparison set',
@@ -194,12 +194,12 @@ export const reportGuideOverridesAF: Partial<
     ],
     checks: [
       'Keeps mention metrics and question samples in separate evidence states, so a failed sample request does not erase successful metrics.',
-      'Calculates mention share only across supplied targets, marks cited URLs from an optional owned domain, and applies a bounded lexical overlap heuristic to retained Search Console rows.',
+      'Calculates mention share only across supplied targets, marks cited URLs from an optional owned domain, and applies a limited lexical overlap heuristic to returned Search Console rows.',
       'Reports cache status, price evidence, actual cost, provider task ids, row caps, invalid rows, processing bounds, warnings, and partial states.',
     ],
     returns: [
-      'Target and competitor mention metrics, source-domain evidence, and at most 25 retained question samples for one surface, location, and language.',
-      'Owned citation flags, optional first-party query matches, repeated question terms, cautious programmatic data-source briefs, findings, caveats, and next steps.',
+      'Target and competitor mention metrics, source-domain evidence, and at most 25 returned question samples for one surface, location, and language.',
+      'Owned citation flags, optional Search Console query matches, repeated question terms, cautious programmatic data-source briefs, findings, caveats, and next steps.',
     ],
     alternatives: [
       {
@@ -250,7 +250,7 @@ export const reportGuideOverridesAF: Partial<
       'Records each check as pass, warn, fail, or unknown, and excludes unknown checks from the score instead of counting them as failures.',
     ],
     returns: [
-      'A 0-100 heuristic score with per-check observed evidence, a derived finding, and a bounded verification step.',
+      'A 0-100 heuristic score with per-check observed evidence, a derived finding, and a limited verification step.',
       'A partial flag, an excluded list, and the methodology id, version, weights, and formula for reproduction.',
     ],
     alternatives: [
@@ -290,7 +290,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     checks: [
       'Records fetch diagnostics, final URL, response, canonical, robots directives, metadata, headings, links, and structured data.',
-      'Labels estimates and heuristics explicitly and keeps fetch failures or unavailable first-party data separate.',
+      'Labels estimates and heuristics explicitly and keeps fetch failures or unavailable site data separate.',
     ],
     returns: [
       'A page snapshot with observed technical, metadata, content, link, and structured-data evidence.',
@@ -327,7 +327,7 @@ export const reportGuideOverridesAF: Partial<
       {
         label: 'Optional Search Console and Google Analytics project context',
         source: 'search-analytics',
-        role: 'Adds available first-party page value without widening the URL list.',
+        role: 'Adds available Search Console page metrics without widening the URL list.',
       },
     ],
     checks: [
@@ -360,7 +360,7 @@ export const reportGuideOverridesAF: Partial<
   'bing-webmaster-overview': {
     name: 'Review Bing search and crawl evidence',
     summary:
-      'Find bounded Bing traffic trends, crawl changes, and query and page opportunities without crawling page bodies.',
+      'Find limited Bing traffic trends, crawl changes, and query and page opportunities without crawling page bodies.',
     inputs: [
       {
         label: 'Verified Bing Webmaster site',
@@ -380,7 +380,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     returns: [
       'Prioritized findings with observed evidence, cautious interpretation, and a verification step.',
-      'Traffic trends, crawl changes, and bounded query and page opportunities with explicit provider coverage.',
+      'Traffic trends, crawl changes, and limited query and page opportunities with explicit provider coverage.',
     ],
     alternatives: [
       {
@@ -393,7 +393,7 @@ export const reportGuideOverridesAF: Partial<
         when: 'You need to inspect current pages and technical findings rather than provider statistics.',
         reportId: 'site-crawl',
         doInstead:
-          'Run a bounded site crawl. It fetches current page evidence and groups repeated technical findings.',
+          'Run a limited site crawl. It fetches current page evidence and groups repeated technical findings.',
       },
     ],
     seo: {
@@ -435,7 +435,7 @@ export const reportGuideOverridesAF: Partial<
       {
         when: 'You need a final decision to merge, redirect, canonicalise, or keep the overlapping pages separate.',
         doInstead:
-          'No automated report can decide page intent, business value, or the preferred information architecture. Review the live pages, SERP intent, conversions, backlinks, and ownership of each topic. This report can still supply the overlap and first-party metrics for that review.',
+          'No automated report can decide page intent, business value, or the preferred information architecture. Review the live pages, SERP intent, conversions, backlinks, and ownership of each topic. This report can still supply the overlap and Search Console metrics for that review.',
       },
     ],
     seo: {
@@ -619,7 +619,7 @@ export const reportGuideOverridesAF: Partial<
       'Check sitemap URL health first, then run a full technical crawl only when page-level evidence is needed.',
     inputs: [
       {
-        label: 'Explicit sitemap or bounded sitemap discovery',
+        label: 'Explicit sitemap or limited sitemap discovery',
         source: 'sitemaps',
         role: 'Defines the URL set for the health pass and keeps sitemap source, completeness, redirects, and limits visible.',
       },
@@ -636,7 +636,7 @@ export const reportGuideOverridesAF: Partial<
       {
         label: 'Optional Search Console and Google Analytics joins',
         source: 'search-analytics',
-        role: 'Adds available first-party value to fetched landing pages in full mode without filling missing rows with zero.',
+        role: 'Adds available Search Console metrics to fetched landing pages in full mode without filling missing rows with zero.',
       },
     ],
     checks: [
@@ -646,7 +646,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     returns: [
       'A compact health result with exact URLs, statuses, redirects, robots outcomes, network failures, crawler identity, and access-block guidance.',
-      'In full mode, grouped page-level issues, top fixes, warnings, caveats, source coverage, and an optional local report id.',
+      'In full mode, grouped page-level issues, top fixes, warnings, caveats, what each source returned, and an optional local report id.',
     ],
     alternatives: [
       {
@@ -855,7 +855,7 @@ export const reportGuideOverridesAF: Partial<
     ],
     alternatives: [
       {
-        when: 'You understand the rule and need the real URLs, evidence, and first-party metrics behind that finding in a saved crawl.',
+        when: 'You understand the rule and need the real URLs, evidence, and Search Console metrics behind that finding in a saved crawl.',
         reportId: 'affected-urls',
         doInstead:
           'Run affected URLs with the rule id. It turns the catalog explanation into a limited list of actual pages and keeps the selection count and truncation visible.',
@@ -905,7 +905,7 @@ export const reportGuideOverridesAF: Partial<
         when: 'You need to know whether Google will show a page in an AI Overview or how often it already appears there.',
         reportId: 'ai-mention-research',
         doInstead:
-          'No report can predict whether Google will select a page. Run AI mention research for bounded provider-indexed Google AI Overview evidence, then inspect its coverage, market, question samples, and citations before describing visibility.',
+          'No report can predict whether Google will select a page. Run AI mention research for limited provider-indexed Google AI Overview evidence, then inspect its coverage, market, question samples, and citations before describing visibility.',
       },
     ],
     seo: {

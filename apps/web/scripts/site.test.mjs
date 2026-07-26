@@ -257,6 +257,19 @@ test('every content page has one deterministic Markdown alternative', () => {
   )
 })
 
+test('public copy avoids internal report language', () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
+  )
+  const internalLanguage =
+    /\b(?:bounded|first-party|cardinality|provenance|provider-native)\b|retained (?:rows|queries|evidence)|declared set|planned cardinality|candidate budget|coverage policy|source state|structured provenance|evidence contract|data contract|(?:query|url|evidence) shapes?/iu
+
+  for (const page of manifest.pages) {
+    const markdown = readFileSync(resolve(dist, page.markdownFile), 'utf8')
+    assert.doesNotMatch(markdown, internalLanguage, page.markdownFile)
+  }
+})
+
 test('llms.txt is a short curated map generated from the route manifest', async () => {
   const manifest = JSON.parse(
     readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
@@ -459,7 +472,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.match(html, /npm i -g seo/)
     assert.match(html, /seo start/)
     assert.match(html, /What you need before you run it/)
-    assert.match(html, /What the result cannot prove/)
+    assert.match(html, /See how report data works/)
     assert.match(html, /Use a different report for these jobs/)
     assert.match(
       html,
@@ -492,14 +505,7 @@ test('report library covers the live registry and keeps legacy routes', async ()
     assert.doesNotMatch(html, /Run the report from the CLI/)
     assert.doesNotMatch(html, /Keep the next step tied to the evidence/)
     assert.doesNotMatch(html, /These reports reuse nearby evidence/)
-
-    const limitsStart = html.indexOf('id="cannot-prove"')
-    const limitsEnd = html.indexOf('id="different-tool"', limitsStart)
-    assert.ok(limitsStart >= 0 && limitsEnd > limitsStart, id)
-    assert.ok(
-      matches(html.slice(limitsStart, limitsEnd), /<p>/g).length >= 2,
-      `Expected two limits paragraphs for ${id}`,
-    )
+    assert.doesNotMatch(html, /What the result cannot prove/)
     assert.match(html, new RegExp(`seo reports describe ${id}`))
     assert.match(html, new RegExp(`seo reports run ${id}`))
     assert.doesNotMatch(
@@ -550,6 +556,24 @@ test('report library covers the live registry and keeps legacy routes', async ()
   assert.match(
     pseo,
     /manually review whether those pages satisfy their search intent, provide distinct value, and deserve to exist\./,
+  )
+
+  const pseoPatterns = readFileSync(
+    resolve(dist, 'docs/reports/pseo-patterns/index.html'),
+    'utf8',
+  )
+  assert.match(
+    pseoPatterns,
+    /<title>Programmatic SEO patterns \| SEO Skill<\/title>/,
+  )
+  assert.match(pseoPatterns, /<h1[^>]*>Programmatic SEO patterns<\/h1>/)
+  assert.match(
+    pseoPatterns,
+    /If you already have a list of topics you want to cover, the report checks which pages exist, which ideas overlap and which are still missing\./,
+  )
+  assert.match(
+    pseoPatterns,
+    /You can provide a list, pairs such as Product A versus Product B, or combinations such as one tool for several file types\./,
   )
 
   for (const [id, slug] of Object.entries(reportSlugs)) {

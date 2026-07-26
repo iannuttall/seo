@@ -1,10 +1,10 @@
 ---
 title: Semrush research
-description: Connect the permanent Semrush Version 3 API key and run bounded keyword, domain, ranking-page and competitor research.
+description: Connect the permanent Semrush Version 3 API key and run limited keyword, domain, ranking-page and competitor research.
 ---
 
 Use Semrush estimates without replacing evidence from your own site. The
-adapter supplies six existing research reports with provider-native values,
+adapter supplies six existing research reports with provider's own values,
 coverage, cache state and API-unit cost. It does not add a Semrush-specific MCP
 tool or agent skill.
 
@@ -79,21 +79,21 @@ The connected adapter supports:
 | Report | Evidence supplied |
 | --- | --- |
 | `keyword-metrics` | Search volume, cost per click, paid competition, result count, intent and keyword difficulty when Semrush returns them. |
-| `keyword-research` | Bounded ideas, related terms and question keywords from one to five seeds. |
-| `competitive-opportunities` | Keyword discovery for a bounded shortlist enriched with current results and competitor evidence from connected providers. |
+| `keyword-research` | Limited ideas, related terms and question keywords from one to five seeds. |
+| `competitive-opportunities` | Keyword discovery for a limited shortlist enriched with current results and competitor evidence from connected providers. |
 | `domain-overview` | Provider-estimated organic keyword count, traffic and traffic cost for one domain. |
-| `ranked-keywords` | A bounded set of observed terms, ranking URLs, positions and optional keyword metrics. |
-| `ranking-pages` | Ranking pages and repeated URL patterns derived from bounded provider rows. |
+| `ranked-keywords` | A limited set of observed terms, ranking URLs, positions and optional keyword metrics. |
+| `ranking-pages` | Ranking pages and repeated URL patterns derived from limited provider rows. |
 | `serp-competitors` | Domains repeatedly observed for an explicit keyword set. |
 
 Use `seo reports describe <report-id> --json` before scripting a report. It
 returns the current input schema, reading order, caveats and related reports.
 
-## Keep requests bounded
+## Keep requests limited
 
 Every cache miss checks the free balance before requesting paid data. The
-adapter sets the provider row limit before acquisition, rejects unbounded
-inputs, and records estimated and returned API units in structured evidence.
+adapter sets the provider row limit before making the request, rejects unbounded
+inputs, and records estimated and returned API units in the report.
 If the balance cannot cover the maximum request, the paid call does not start.
 
 Results are cached locally for seven days by default. A cache hit costs no API
@@ -117,7 +117,7 @@ that warning in their evidence. The
 says existing integrations remain available temporarily, so a successful
 request does not promise permanent endpoint availability.
 
-Run the main first-party report before paid research:
+Run the main site report before paid research:
 
 ```sh
 seo report --project example

@@ -8,7 +8,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'ai-referrals':
     'Check the matched referrer and landing page before treating a session as useful AI traffic. Search demand and assistant visibility need their own reports because Google Analytics only records visits that reached the site.',
   'ai-mention-research':
-    'Inspect the exact market, cited pages and retained questions before acting on a mention difference. Check existing first-party pages, then use a fixed prompt observation only for the small question set where a current answer would change the decision.',
+    'Inspect the exact market, cited pages and returned questions before acting on a mention difference. Check your existing pages, then use a fixed prompt observation only for the small question set where a current answer would change the decision.',
   'ai-prompt-observations':
     'Open the exact answer, citations, effective model, cache state and returned cost before acting on a match. Validate repeated themes against keyword, result and existing page evidence before planning content or a programmatic template.',
   'ai-search-scorecard':
@@ -16,9 +16,9 @@ export const reportNextStepIntros: Record<string, string> = {
   'audit-page':
     "Choose the finding that affects this page's actual purpose, make one supported change and audit the URL again. A fresh page check is more useful than carrying an old crawl observation into the next decision.",
   'audit-urls':
-    'Separate repeated template problems from failures that affect one URL. Fix a representative page first, then run the same bounded URL list again before changing the rest of the batch.',
+    'Separate repeated template problems from failures that affect one URL. Fix a representative page first, then run the same limited URL list again before changing the rest of the batch.',
   'bing-webmaster-overview':
-    'Start with the highest-priority finding, then check its exact dates and source coverage. Run a current site crawl or page audit before changing anything because provider statistics cannot explain the cause on their own.',
+    'Start with the highest-priority finding, then check its exact dates and what each source returned. Run a current site crawl or page audit before changing anything because provider statistics cannot explain the cause on their own.',
   cannibalisation:
     'Compare the competing pages and the intent each one serves before consolidating anything. Merge, redirect or differentiate a page only when the returned query evidence and the live content support that choice.',
   'community-intent':
@@ -28,11 +28,11 @@ export const reportNextStepIntros: Record<string, string> = {
   'competitive-opportunities':
     'Open the current pages behind the first one or two leads and confirm that they serve the same intent. Check existing site and Search Console coverage, then request deeper link evidence only when it can change the decision.',
   'competitor-keyword-gap':
-    'Start with relevant candidates whose source coverage is usable, then inspect the current results and representative pages. Complete the data-source checks before approving a programmatic template, and keep no new page as a valid outcome.',
+    'Start with relevant candidates whose what each source returned is usable, then inspect the current results and representative pages. Complete the data-source checks before approving a programmatic template, and keep no new page as a valid outcome.',
   'content-optimization':
     "Choose the gaps supported by returned queries and the page's existing purpose. Update the page around a focused intent, then measure the same query and page set after enough Search Console data has arrived.",
   'crawl-diff':
-    'Check that the repeated crawl used the same start URL, limits and discovery rules. Inspect new regressions on live pages and run the bounded crawl again after the release fix.',
+    'Check that the repeated crawl used the same start URL, limits and discovery rules. Inspect new regressions on live pages and run the limited crawl again after the release fix.',
   'site-crawl':
     'Start with the issues affecting important pages, then open the affected URLs instead of changing a template from a count alone. Save the next crawl with comparable limits so you can verify what disappeared and what remained.',
   'ctr-underperformers':
@@ -40,7 +40,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'decaying-pages':
     'Confirm that the decline survives a matched date and segment comparison before refreshing the page. Use the page opportunity report to choose a supported update, then measure the change against the same demand.',
   'domain-rating':
-    'Use the observation to decide whether URL-level backlink evidence deserves a closer look. Compare current results, page relevance and first-party performance before making any claim about ranking difficulty.',
+    'Use the observation to decide whether URL-level backlink evidence deserves a closer look. Compare current results, page relevance and Search Console performance before making any claim about ranking difficulty.',
   'domain-overview':
     'Use the footprint to choose a narrower domain, page or keyword investigation. Keep provider estimates separate from Search Console measurements, and check current results before changing priorities.',
   'setup-check':
@@ -64,11 +64,11 @@ export const reportNextStepIntros: Record<string, string> = {
   'internal-links':
     'Open both the suggested source page and target page before adding a link. Keep the link only when it helps the reader in that exact context, then recrawl to confirm the relationship was recorded.',
   'keyword-metrics':
-    'Start with terms that combine useful estimated demand with a clear fit for the site. Compare them with first-party search evidence and inspect the current results before creating a page, expanding a template or promising an outcome.',
+    'Start with terms that combine useful estimated demand with a clear fit for the site. Compare them with Search Console data and inspect the current results before creating a page, expanding a template or promising an outcome.',
   'keyword-opportunities':
     'Start with the Search Console evidence and the report section that supplied each candidate. Use provider estimates as added context, inspect the current results, and audit representative pages before creating content or expanding a template.',
   'keyword-research':
-    'Review source overlap and metric states, then inspect the current results for a short list. Compare relevant terms with first-party evidence and validate representative templates before adding pages at scale.',
+    'Review source overlap and metric states, then inspect the current results for a short list. Compare relevant terms with Search Console data and validate representative templates before adding pages at scale.',
   'saved-keywords':
     'Start with missing or stale metric snapshots and terms without a page mapping. Compare the useful candidates with Search Console and current results before changing a page or approving a new template.',
   'link-recovery':
@@ -76,11 +76,11 @@ export const reportNextStepIntros: Record<string, string> = {
   'link-evidence':
     'Open a selected referring page and confirm the link is still present before making a decision. Use a fresh export or Bing report later when you need to check whether the observed set changed.',
   'local-search-demand':
-    'Start with the retained local queries and their landing pages. Inspect repeated page families before expanding them. Add Analytics geography or exact local results only when that context would change the work, and classify recurring result domains before treating them as comparable businesses.',
+    'Start with the returned local queries and their landing pages. Inspect repeated page families before expanding them. Add Analytics geography or exact local results only when that context would change the work, and classify recurring result domains before treating them as comparable businesses.',
   'server-log-analysis':
     'Check important crawler errors against the original log and current server configuration. Confirm crawler identity separately when the decision depends on more than the observed user-agent string.',
   'serp-results':
-    'Open representative ranking pages and confirm the query intent. Match market, device, query and observation time before comparing the exact snapshot with first-party average position or a later check.',
+    'Open representative ranking pages and confirm the query intent. Match market, device, query and observation time before comparing the exact snapshot with Search Console average position or a later check.',
   'serp-competitors':
     'Review every unknown site type before choosing competitors for deeper research. Keep publishers, directories, communities and marketplaces distinct, then compare a small relevant set instead of treating result overlap as business equivalence.',
   'crawl-history':
@@ -106,7 +106,9 @@ export const reportNextStepIntros: Record<string, string> = {
   'pseo-audit':
     'Inspect representative pages from each template pattern before changing the generator. Fix shared problems at template level, recrawl the same sample and confirm that distinct pages still serve distinct intent.',
   'pseo-opportunities':
-    'Review the first-party templates and clusters before adding external evidence. For the strongest candidates, inspect live results and complete the data-source checks before deciding to extend a template, create a different page type or do nothing.',
+    "Review the site's templates and clusters before adding external evidence. For the strongest candidates, inspect live results and complete the data-source checks before deciding to extend a template, create a different page type or do nothing.",
+  'pseo-patterns':
+    'Start with the search types and real searches the report found. If you supplied a topic list, check what already exists, resolve any overlap and test a small useful group before creating more pages.',
   'query-clusters':
     'Open the queries and pages inside each useful cluster before changing site structure. Treat the groups as an investigation aid, then confirm intent and page overlap with live search evidence.',
   'quick-wins':
@@ -114,9 +116,9 @@ export const reportNextStepIntros: Record<string, string> = {
   'rank-tracking':
     'Check market, device, depth, coverage and cost before reading the position changes. Inspect changed ranking URLs and add Search Console evidence before deciding that a movement deserves work.',
   'ranked-keywords':
-    'Shortlist terms whose provider row, ranking page and first-party match state support another look. Check current results before changing a page, and do not treat absence from retained Search Console rows as zero.',
+    'Shortlist terms whose provider row, ranking page and Search Console match support another look. Check current results before changing a page, and do not treat absence from returned Search Console rows as zero.',
   'ranking-pages':
-    'Open representative pages from each useful path pattern and inspect their queries, fields, source data and page value. Run the programmatic audit before expanding a first-party template, and research the data source before proposing a new one.',
+    'Open representative pages from each useful path pattern and inspect their queries, fields, source data and page value. Run the programmatic audit before expanding an existing template, and research the data source before proposing a new one.',
   'redirect-trace':
     "Fix loops, unnecessary hops and destinations that do not match the original URL's purpose. Update internal links to the final URL and trace the path again after deployment.",
   'narrative-report':
@@ -159,7 +161,7 @@ export const reportScheduleNotes: Partial<Record<string, string>> = {
   'compare-crawls':
     'Your agent can schedule matching crawls and compare each new snapshot with the previous one. Keep the start URL, scope and limits stable or the change list will mix site changes with crawl changes.',
   'crawl-diff':
-    'This works well as a scheduled release check. Ask your agent to repeat the same bounded crawl after a deployment and report only the findings that appeared, changed or disappeared.',
+    'This works well as a scheduled release check. Ask your agent to repeat the same limited crawl after a deployment and report only the findings that appeared, changed or disappeared.',
   'crawl-history':
     'Scheduled crawls can build this history for you. Use the same site, start URL and limits when you want your agent to report meaningful changes between runs.',
   'crawl-report':

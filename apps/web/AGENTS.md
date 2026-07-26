@@ -65,6 +65,11 @@ pnpm deploy:web:dry-run
   support claims with specific evidence, and keep contributor details out of
   the primary user journey. Follow the root `CONTENT.md` guide for titles,
   product vocabulary, instructions, report pages, and SEO copy.
+- Do not expose report-contract or implementation language in public copy.
+  Field names, implementation limits and registry terminology belong in agent
+  or developer output. Shared data caveats live on the reports overview. A
+  report page only adds a short limitation when it changes how that specific
+  result should be used.
 - Keep client-side JavaScript limited to real interactions: install tabs,
   copy buttons, accordions, and the example report panel.
 - The home page example panels (`src/components/FeatureShowcase.astro` and

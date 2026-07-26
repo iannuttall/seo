@@ -5,14 +5,12 @@ description: Install the SEO CLI, connect your site and run your first audit. Ea
 
 import { productFacts } from '@/lib/facts'
 
-Run an SEO audit on your own computer. It crawls your site, reads the
-Google data you choose to connect, and returns reports that show the evidence
-behind each recommendation.
+Run an SEO audit on your own computer. It crawls your site, reads the Google
+data you choose to connect and shows why each recommendation was made.
 
-Connect an optional research provider when you need proactive keyword ideas,
+Connect an optional research provider when you need keyword ideas,
 current result snapshots, domain footprints, competitor discovery or keyword
-gap and referring-link research. Provider estimates keep their source, market,
-cost and limits, and never replace Search Console or crawl evidence.
+gap and referring-link research.
 
 You can use it yourself in a terminal or give the same reports to an AI agent
 through skills, JSON, or a local MCP server. Either way, the analysis comes
@@ -22,10 +20,10 @@ from the same code.
 
 An agent gets the best result with both parts of the project:
 
-- The CLI crawls sites, connects Google, and runs deterministic reports through
+- The CLI crawls sites, connects Google, and runs consistent reports through
   the terminal or MCP.
-- The agent skill teaches the agent which report to run, how
-  to read incomplete evidence, and what to verify before changing a site.
+- The agent skill teaches the agent which report to run and what to verify
+  before changing a site.
 
 One command installs the CLI:
 
@@ -66,8 +64,8 @@ You can start before connecting Google.
 seo report --url https://example.com
 ```
 
-That run creates a bounded local crawl. It labels Search Console work as
-skipped until you add a property, rather than guessing at traffic or rankings.
+That run crawls the site without using Search Console. Connect Google later
+when you want search performance and query data.
 
 ## Get to the right fix faster
 
@@ -85,8 +83,8 @@ jobs such as:
 - separating a real decline from a partial or unfinished data window;
 - inspecting technical eligibility for search and AI search features;
 - researching keywords, ranking pages and recurring search competitors;
-- filtering competitor terms through first-party evidence and programmatic
-  page patterns.
+- filtering competitor terms through Search Console data and programmatic
+  page patterns;
 - finding location-specific demand and repeated local page patterns before
   checking a few exact local results.
 
@@ -95,38 +93,23 @@ explains the page evidence behind technical findings.
 
 ## Add post-click context when it changes the priority
 
-Search Console provides first-party search performance and property access.
-Google Analytics is optional. It adds post-click evidence such as landing-page sessions,
-engagement, and known referral sources.
+Search Console provides search performance and query data. Google Analytics is
+optional. It adds landing-page sessions, engagement and known referral sources.
 
 Both integrations are read-only. Tokens, project profiles, caches, and saved
 crawls stay on your machine. The [Google data guide](/docs/google) explains
 what each source can establish, where its numbers can be incomplete, and how
 local sign-in works.
 
-The [research provider guide](/docs/research-providers) covers DataForSEO
-credentials, local spend limits, caching, country-level domain research and
-the evidence boundaries for keyword, competitor and local search reports.
+The [research provider guide](/docs/research-providers) covers provider setup,
+local spend limits, caching and the reports that can use outside estimates.
 
 ## Let an agent act without redoing the analysis
 
-Agents should start with a compact result, inspect its status and caveats, then
-ask for detail on the affected pages or queries. Loading every report schema
-and every raw row into a conversation burns context without improving the
-answer.
+Agents should start with the main report, then open the affected pages or
+queries for the few findings that deserve action.
 
 <DocsCards />
-
-## Know where each conclusion stops
-
-SEO data is messy. Search Console hides some queries, Google Analytics can withhold or
-process data later, crawls stop at configured limits, and a site can change
-between collection and review.
-
-The reports keep observed evidence separate from findings. They also carry
-date ranges, limits, skipped sections, partial-data states, and verification
-steps. A missing row does not quietly become zero. An intentional `noindex` or
-canonical does not automatically become a defect either.
 
 ## Questions and bugs belong on GitHub
 

@@ -1,6 +1,6 @@
 ---
 title: Research providers
-description: Connect optional research providers locally, control paid requests and combine keyword, domain, competitor, link and AI answer evidence with first-party data.
+description: Connect optional research providers locally, control paid requests and combine keyword, domain, competitor, link and AI answer evidence with site data.
 ---
 
 Research a market without replacing the evidence from your own site. Optional
@@ -9,10 +9,10 @@ pages and competitor rows. Search Console still supplies owner-verified search
 performance. Crawls still supply current page and technical evidence.
 
 DataForSEO supports the broadest set of current research reports. Semrush
-Version 3 supports bounded keyword, domain, ranking-page and search-competitor
+Version 3 supports limited keyword, domain, ranking-page and search-competitor
 research. Ahrefs API v3 supports those shared research reports plus attributed
-Domain Rating and bounded backlink evidence. The report contracts are provider
-neutral, so the adapters return the same evidence shape where their
+Domain Rating and limited backlink evidence. The report contracts are provider
+neutral, so the adapters return the same fields where their
 capabilities overlap. A report fails clearly when a selected provider does not
 support its operation or market.
 
@@ -97,12 +97,12 @@ operation directly to the provider.
 | Link research | The target domain or URL, provider filters and result limits. |
 | Indexed AI mention research | Target names and aliases, surface, market and result limits. |
 | Fixed AI prompt observation | The full prompt, selected model, country, web search setting and output limit. |
-| First-party enrichment | Selected Search Console query text or a derived research seed, only when `includeExternal` or `includeSerps` is explicitly enabled. |
+| Search Console enrichment | Selected Search Console query text or a derived research seed, only when `includeExternal` or `includeSerps` is explicitly enabled. |
 
-First-party enrichment does not send Google OAuth tokens, Google account
+Search Console enrichment does not send Google OAuth tokens, Google account
 identity, Search Console property IDs, clicks, impressions, click-through rate,
 positions, or Google Analytics rows. The report keeps provider estimates and
-first-party metrics separate.
+Search Console metrics separate.
 
 DataForSEO processes live inputs and responses under its
 [privacy policy](https://dataforseo.com/privacy-policy). As of 23 July 2026,
@@ -231,12 +231,12 @@ The same input works with these reports:
 | Report | What the file supplies |
 | --- | --- |
 | `ranked-keywords` | Ranked terms, URLs, positions and any optional metrics present in the export. |
-| `ranking-pages` | Page groups, retained keyword counts and repeated URL patterns calculated from the imported rows. |
+| `ranking-pages` | Page groups, returned keyword counts and repeated URL patterns calculated from the imported rows. |
 | `serp-competitors` | Repeated domains across the requested terms when the files contain more than one domain. |
 | `competitor-keyword-gap` | Site and competitor rows from up to four exports from the same provider. |
 
 The gap report calls a term relevant only when at least two meaningful words
-also appear together in one retained Search Console query. Common words such as
+also appear together in one returned Search Console query. Common words such as
 `new`, `search`, `page` and `tool` do not count. A one-word match stays weak,
 words found across separate queries are not combined into stronger evidence,
 and search operators such as `site:` and `filetype:` are ignored.
@@ -257,7 +257,7 @@ included fields, explicit column mapping, bytes read, total file rows, supplied
 rows, valid rows, filtered historical rows, rejected rows, duplicates and row
 cap. Ahrefs
 comparison rows with no current URL or position are filtered historical rows,
-not broken records. The report scans a bounded file to finish its hash and
+not broken records. The report scans a limited file to finish its hash and
 file-row count even when the row cap stops normalization. Missing rows remain
 unknown because a local export does not prove full provider coverage.
 
@@ -265,8 +265,8 @@ unknown because a local export does not prove full provider coverage.
 
 `ai-mention-research` checks one named target in a provider-indexed set of AI
 answers. It can compare up to five named competitors in the same dataset,
-return cited domains and bounded question samples, mark citations from an
-owned domain, and compare sample wording with retained Search Console queries.
+return cited domains and limited question samples, mark citations from an
+owned domain, and compare sample wording with returned Search Console queries.
 
 ```sh
 seo reports run ai-mention-research \
@@ -277,7 +277,7 @@ seo reports run ai-mention-research \
 The default path makes two paid live API requests: one for metrics and one for
 question samples. Set `includeSamples` to `false` for a metrics-only run with
 one paid request. The report accepts one location and language per run, at most
-five competitors, at most five aliases per target, and at most 25 retained
+five competitors, at most five aliases per target, and at most 25 returned
 samples. Cached results use the local provider cache and do not repeat paid
 work until their retention window expires unless `refresh` is true.
 
@@ -294,7 +294,7 @@ Read the result in this order:
    describes only the supplied comparison set.
 3. Question samples, observation dates, model, answer truncation, cited URLs,
    and `ownedSources`.
-4. Optional Search Console source limits and each sample's bounded lexical
+4. Optional Search Console source limits and each sample's limited lexical
    matches.
 5. Repeated question patterns, data-source briefs, findings, caveats, and next
    steps.
@@ -302,7 +302,7 @@ Read the result in this order:
 Provider-indexed records are not live prompt observations or a complete census.
 Mention count and AI search volume do not prove traffic, sentiment, citation
 quality, authority, future visibility, or demand for a new page. Search Console
-overlap is a lexical heuristic over retained rows. Run
+overlap uses simple word matching across the Search Console rows returned. Run
 `ai-prompt-observations` when the current answer would change the decision.
 
 For programmatic SEO, repeated question terms can reveal a useful research
@@ -343,7 +343,7 @@ Read the result in this order:
    Search Console status.
 2. Each observation's coverage, cache state, requested and effective model,
    checked time, answer, citations, token use, task id, and exact returned cost.
-3. Named-target matches and cited domains. These describe only the retained
+3. Named-target matches and cited domains. These describe only the returned
    answer and the aliases or domains you supplied.
 4. Comparison status. Only a fresh, complete, untruncated observation with the
    same provider, prompt, requested and effective model, market label,
@@ -356,7 +356,7 @@ the exact task cost after token and web-search charges are known. If any request
 fails, actual total cost stays partial or unknown instead of pretending the
 missing request cost zero. Cached results do not support a new change claim.
 
-Answers and bounded history stay in the local SQLite store. The history keeps
+Answers and limited history stay in the local SQLite store. The history keeps
 at most 90 observations per exact configuration, 10,000 observations in total,
 and 128 MB of logical payload. Answers are capped at 24 KB, citations at 25,
 fan-out queries at 20, and structured agent output at the shared 96 KB budget.
@@ -367,16 +367,16 @@ surface, so prompt wording remains the direct language instruction. One answer
 is not a universal result, visibility score, assistant ranking, or proof that a
 target never appears.
 
-Supporting-search themes and Search Console word matches are bounded research leads.
+Supporting-search themes and Search Console word matches are limited research leads.
 Before planning a programmatic template, validate keyword demand, current
 search-result intent, existing page coverage, source rights, stable identifiers
 and fields, geographic coverage, update frequency, missing values, duplicates,
 useful page variation, and representative output. No new page remains a valid
 result.
 
-## Start a local search investigation with first-party evidence
+## Start a local search investigation with Search Console data
 
-`local-search-demand` finds retained Search Console queries whose wording
+`local-search-demand` finds returned Search Console queries whose wording
 contains an explicit place name, nearby phrase, UK postcode or a US ZIP code
 with supporting local wording. Add the real place names, aliases and known ZIP
 codes for the market because automatic detection is deliberately conservative.
@@ -387,7 +387,7 @@ seo reports run local-search-demand \
   --json
 ```
 
-The default path makes one bounded Search Console request and no paid provider
+The default path makes one limited Search Console request and no paid provider
 request. It returns the local query and landing-page evidence, filtered-row
 counts, action labels and repeated URL patterns. The patterns are prompts to
 inspect working local page families, not proof that more pages should exist.
@@ -404,7 +404,7 @@ That path adds at most three current organic snapshots through the same cache,
 spend limits and provider-neutral result contract as `serp-results`. Read the
 recorded location, device, observation time, coverage, cache and cost for every
 snapshot. The report also groups recurring organic domains as unclassified
-search competitors and retains bounded local-pack listing rows with their
+search competitors and retains limited local-pack listing rows with their
 observed rank, title, URL, phone, rating and provider identifier when returned.
 These rows do not prove listing ownership, complete Maps coverage or Google
 Business Profile performance.
@@ -418,11 +418,11 @@ seo reports run local-search-demand \
   --json
 ```
 
-This makes one bounded Google Analytics request for landing page, country,
+This makes one limited Google Analytics request for landing page, country,
 region, city and sessions. Query strings are removed from the landing-page
 dimension before an exact path join. Unmatched, missing, malformed, duplicate,
 capped and quality-warning states stay visible. The returned geography describes
-measured sessions for retained landing pages. It does not establish which
+measured sessions for returned landing pages. It does not establish which
 Search Console query produced a session.
 
 A place in the query does not prove the searcher's physical location. Search
@@ -433,14 +433,14 @@ template.
 
 ## Review live referring-link evidence
 
-Run the bounded provider path for a domain:
+Run the limited provider path for a domain:
 
 ```sh
 seo links --provider dataforseo --target example.com --json
 ```
 
-Add a Search Console property when you own the target and want first-party
-page evidence in the same result:
+Add a Search Console property when you own the target and want its page data in
+the same result:
 
 ```sh
 seo links --provider dataforseo --target example.com \
@@ -449,22 +449,22 @@ seo links --provider dataforseo --target example.com \
 
 The default run makes one summary request, then requests up to 100 live
 representative backlinks with one row per referring domain. `--row-limit` can
-raise that bounded request to 500. It does not fetch every backlink or fan out
+raise that limited request to 500. It does not fetch every backlink or fan out
 across every target page. Both requests run sequentially, use the local
 provider cache, and pass through the same report spend limits as keyword and
 domain research.
 
 Read these result areas in order:
 
-1. `dataStatus`, warnings, caveats and source provenance.
+1. `dataStatus`, warnings, caveats and source source details.
 2. `providerSummary` for current provider counts and named metrics.
 3. `providerEvidence` for coverage, filters, cache, cost and observation time.
 4. `findings` and `targetContext` for saved-crawl and Search Console evidence.
-5. `targetCounts` and the bounded representative `links` list.
+5. `targetCounts` and the limited representative `links` list.
 
 A matching saved crawl can flag linked targets observed with an error response,
 redirect, conflicting canonical or non-indexable state. Search Console can add
-retained clicks and impressions for the same target. Those sources stay
+returned clicks and impressions for the same target. Those sources stay
 separate: a provider row does not prove link quality, a missing Search Console
 row is not zero, and a saved crawl does not prove the page still has the same
 state. Open the referring URL and check the target live before acting.
@@ -473,28 +473,28 @@ Provider rank and spam metrics retain their DataForSEO names and 0 to 100
 scales. They can help order a review, but they are not Google ranking factors,
 universal authority scores or interchangeable with another provider's metric.
 
-## Start with first-party opportunities
+## Start with Search Console opportunities
 
 Use `keyword-opportunities` when the question starts with your own Search
 Console data. It combines quick wins, second-page evidence, query clusters,
-repeated first-party URL patterns and optional provider metrics in one bounded
+repeated existing URL patterns and optional provider metrics in one limited
 review queue.
 
 Use the provider-led reports for different questions:
 
-- `competitive-opportunities` turns a topic into a bounded keyword and
+- `competitive-opportunities` turns a topic into a limited keyword and
   competitor investigation order with current results and optional link
   context.
 - `domain-overview` gives a quick country-level estimated footprint.
-- `ranked-keywords` opens bounded keyword and ranking-page rows.
+- `ranked-keywords` opens limited keyword and ranking-page rows.
 - `ranking-pages` finds pages behind the footprint and repeated path patterns.
 - `serp-competitors` finds domains that recur across an explicit keyword set.
 - `competitor-keyword-gap` compares up to three relevant competitors with
-  retained Search Console themes and the provider footprint for your site.
+  returned Search Console themes and the provider footprint for your site.
 
 Pass a Search Console property only when it matches a site you own. Competitor
-domains stay provider-only. The report never pretends to have first-party
-evidence for somebody else's site.
+domains stay provider-only. The report never pretends to have Search Console
+data for somebody else's site.
 
 ## Classify competitors before comparing gaps
 
@@ -506,13 +506,13 @@ marketplace or business. `serp-competitors` leaves undeclared site types as
 The gap report does not label every competitor term an opportunity. It keeps
 four states separate:
 
-1. Already observed in retained Search Console rows.
+1. Already observed in returned Search Console rows.
 2. Already ranked in the provider footprint for the site.
-3. Relevant gap candidate based on bounded first-party theme overlap and
+3. Relevant gap candidate based on limited Search Console theme overlap and
    competitor evidence.
 4. Unverified competitor term.
 
-An absent Search Console row means only that the bounded retained data did not
+An absent Search Console row means only that the limited returned data did not
 contain it. Search Console can omit anonymised queries, and row caps or the date
 range can hide evidence.
 
@@ -523,7 +523,7 @@ an agent find possible page families without downloading a whole domain. A
 path pattern does not prove shared intent, quality, useful data or that more
 pages should be created.
 
-For a plausible new template, the gap report returns a bounded data-source
+For a plausible new template, the gap report returns a limited data-source
 brief. Check:
 
 - stable identifiers, fields, units and geographic coverage;
@@ -532,19 +532,19 @@ brief. Check:
 - the useful information that makes each generated page distinct;
 - representative sparse, stale and boundary records before scaling.
 
-For an existing first-party template, run `pseo-audit` before adding variants.
+For an existing existing template, run `pseo-audit` before adding variants.
 For a new family, inspect current results and representative competitor pages,
 then complete the data-source research before implementation.
 
 ## Read each source by what it can establish
 
 Provider volume, difficulty, traffic, intent and visibility are estimates.
-Search Console clicks and impressions are first-party measurements for the
+Search Console clicks and impressions are Search Console measurements for the
 selected property and dates. A crawl observes the current site version. A live
 result report observes one query, market, device and time.
 
 Useful analysis can combine these sources, but it should not blend their
-numbers into one unexplained score. Read source coverage, request filters,
+numbers into one unexplained score. Read what each source returned, request filters,
 observation dates, cost, warnings and caveats before the findings. Verify a
 shortlisted keyword with current results before changing content or a
 programmatic template.

@@ -67,12 +67,12 @@ clicks.
 
 That changes how you should read a report:
 
-- "No retained query matched" is not the same as "the query never appeared."
+- "No returned query matched" is not the same as "the query never appeared."
 - A query list can rank the evidence it received without claiming to cover all demand.
-- Adding page, query, device, or country dimensions can change aggregation and retained rows.
+- Adding page, query, device, or country dimensions can change aggregation and returned rows.
 - A zero is trustworthy only when the result says the relevant source was complete enough to support it.
 
-Reports keep caps, filters, and source state in their provenance so an agent can
+Reports keep caps, filters, and data availability in their source details so an agent can
 make that distinction.
 
 ## Ask Search Console a precise question
@@ -105,7 +105,7 @@ JSON output includes the property, request body, returned rows, rows fetched,
 API call count, and the number of rows kept after the local output limit. Human
 output shows a compact table of the first rows.
 
-This is retained Search Console data, not a complete keyword database.
+This is returned Search Console data, not a complete keyword database.
 Anonymized queries are missing, dimensional rows may not reconcile with
 property totals, and Google returns top rows rather than promising every row.
 Keep the request dates, dimensions, search type, filters, and row limits beside
@@ -114,7 +114,7 @@ any conclusion.
 Use [quick-win review](/docs/reports/quick-wins),
 [segment impact](/docs/reports/segment-impact), or
 [decaying pages](/docs/reports/decaying-pages) when you want the CLI to turn those
-rows into a bounded investigation queue.
+rows into a limited investigation queue.
 
 ## Check the indexed version Google reports for one URL
 
@@ -140,7 +140,7 @@ large site in one run.
 
 Run [audit one page](/docs/reports/audit-page) to compare the current live URL
 with that indexed evidence. Use [index monitoring](/docs/reports/index-monitor)
-when you need a repeatable, quota-bounded sample across a sitemap.
+when you need a repeatable, quota-limited sample across a sitemap.
 
 ## Compare finalized Search Console windows
 
@@ -233,7 +233,7 @@ need raw post-click evidence without a higher-level SEO interpretation.
 `local-search-demand` can use the same property for one narrow geography
 question. Pass `googleAnalyticsPropertyId` to request sessions by landing page,
 country, region and city. The report removes the landing-page query string and
-keeps only exact paths already retained by its local Search Console analysis.
+keeps only exact paths already returned by its local Search Console analysis.
 It reports source caps, unmatched rows, missing values, malformed rows,
 duplicates and Google quality warnings beside the location totals.
 
@@ -250,16 +250,16 @@ or page-group change needs equal before and after windows.
 Google says Analytics data can change while events are processed. Its
 <a href="https://support.google.com/analytics/answer/11198161" target="_blank" rel="noreferrer">data freshness guidance</a>
 notes that processing can take 24 to 48 hours and that recent reports can use
-stricter cardinality limits before daily data is ready.
+stricter row limits before daily data is ready.
 
 The Data API can also return sampled data, estimated unique counts, thresholded
-rows, and an `(other)` row for high-cardinality dimensions. Google's
+rows, and an `(other)` row when a dimension has many unique values. Google's
 <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/reporting-data-expectations" target="_blank" rel="noreferrer">Data API reporting expectations</a>
 explain why an API response and a UI report can differ even when both are
 working as designed.
 
 Reports preserve available metadata for those states. If a result is partial or
-thresholded, use it for bounded direction rather than an exact all-site total.
+thresholded, use it for limited direction rather than an exact all-site total.
 
 ## Understand the local OAuth handoff
 

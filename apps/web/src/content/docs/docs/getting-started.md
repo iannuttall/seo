@@ -67,7 +67,7 @@ If you only have a URL, run the technical-only version of the report.
 seo report --url https://example.com
 ```
 
-This creates a bounded local crawl and saves the evidence. Search Console
+This creates a limited local crawl and saves the evidence. Search Console
 sections say that they were skipped. They do not become zeroes or guesses. Run
 `seo start` later when you want click, query, ranking, and Google Analytics data in the
 same investigation.
@@ -152,7 +152,7 @@ seo providers dataforseo limits
 
 Keep local spend limits in place before broad research. The [research provider
 guide](/docs/research-providers) explains costs, caching, country-level domain
-reports, first-party evidence joins and programmatic SEO research.
+reports, Search Console data joins and programmatic SEO research.
 
 ## Add your agent after the first report works
 

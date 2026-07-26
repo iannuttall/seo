@@ -96,7 +96,7 @@ export const reportingReports = [
       'Which programmatic page families show supported index, crawl, visibility, or page-quality review signals?',
     useWhen: [
       'A site publishes repeated URL templates at meaningful scale.',
-      'You need sampled technical evidence alongside first-party search visibility.',
+      'You need sampled technical evidence alongside Search Console visibility.',
     ],
     avoidWhen: [
       'You plan to label pages thin from word count or condemn a whole template from one sampled URL.',
@@ -151,7 +151,7 @@ export const reportingReports = [
       changeLimit: 5,
     },
     interpretation: [
-      'Use the narrative as a reading layer. The structured reports remain the evidence contract for agents, exports, and verification.',
+      'Use the narrative as a reading layer. The structured reports remain the data rules for agents, exports, and verification.',
     ],
     caveats: [
       'Clear writing cannot strengthen incomplete or partial source evidence.',

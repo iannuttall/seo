@@ -9,7 +9,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
   {
     'agent-readiness': {
       command: 'seo agent-readiness https://example.com --max-pages 100 --json',
-      note: 'Check the public content-site contract with a fresh bounded crawl.',
+      note: 'Check the public content-site contract with a fresh limited crawl.',
     },
     'ai-readiness': {
       command: 'seo ai-readiness --project example',
@@ -22,7 +22,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'ai-mention-research': {
       command:
         'seo reports run ai-mention-research --params \'{"target":{"label":"Example Analytics"},"surface":"google-ai-overview","countryCode":"GB","languageCode":"en","location":{"code":2826}}\' --json',
-      note: 'Research one target in a bounded provider-indexed AI dataset.',
+      note: 'Research one target in a limited provider-indexed AI dataset.',
     },
     'ai-prompt-observations': {
       command:
@@ -49,7 +49,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'competitive-opportunities': {
       command:
         'seo reports run competitive-opportunities --params \'{"target":"example.com","seeds":["seo reporting software"],"countryCode":"GB","languageCode":"en","keywordProvider":"semrush","serpProvider":"dataforseo"}\' --json',
-      note: 'Turn one topic into a bounded keyword and competitor shortlist.',
+      note: 'Turn one topic into a limited keyword and competitor shortlist.',
     },
     'compare-crawls': {
       command: 'seo crawl-reports --compare latest --against previous',
@@ -128,17 +128,17 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'keyword-opportunities': {
       command:
         'seo reports run keyword-opportunities --params \'{"site":"sc-domain:example.com","days":90}\' --json',
-      note: 'Build a first-party opportunity queue without making a paid provider request.',
+      note: 'Build a Search Console opportunity list without making a paid provider request.',
     },
     'keyword-research': {
       command:
         'seo reports run keyword-research --params \'{"seeds":["local seo software"],"countryCode":"US","languageCode":"en"}\' --json',
-      note: 'Discover a bounded market-specific keyword shortlist.',
+      note: 'Discover a limited market-specific keyword shortlist.',
     },
     'saved-keywords': {
       command:
         'seo reports run saved-keywords --params \'{"projectId":"example","set":"Priority"}\' --json',
-      note: 'Review one local saved research set without provider acquisition.',
+      note: 'Review one local saved research set without provider requests.',
     },
     'link-recovery': {
       command: 'seo link-recover --project example',
@@ -147,7 +147,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'local-search-demand': {
       command:
         'seo reports run local-search-demand --params \'{"site":"sc-domain:example.com","locationTerms":["london","manchester"],"days":90}\' --json',
-      note: 'Find retained location-specific demand before requesting paid live results.',
+      note: 'Find returned location-specific demand before requesting paid live results.',
     },
     'llms-txt-audit': {
       command: 'seo llms audit --project example',
@@ -163,7 +163,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     },
     'narrative-report': {
       command: 'seo report-narrative --project example',
-      note: 'Turn structured evidence into a client-ready narrative.',
+      note: 'Turn report findings into a client-ready narrative.',
     },
     'okf-build': {
       command: 'seo okf export --project example',
@@ -194,6 +194,11 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
       command:
         'seo reports run pseo-opportunities --params \'{"site":"sc-domain:example.com","includeExternal":false}\' --json',
       note: 'Research template expansion without making paid calls by default.',
+    },
+    'pseo-patterns': {
+      command:
+        'seo reports run pseo-patterns --params \'{"site":"sc-domain:example.com"}\' --json',
+      note: 'Find repeatable searches in your own Search Console data. Add a planned topic list later if you have one.',
     },
     'query-clusters': {
       command: 'seo query-cluster --project example',
@@ -227,7 +232,7 @@ export const humanReportCommands: Partial<Record<string, HumanReportCommand>> =
     'serp-results': {
       command:
         'seo reports run serp-results --params \'{"keyword":"local seo software","countryCode":"US","languageCode":"en","device":"mobile"}\' --json',
-      note: 'Inspect one bounded location and device-specific result snapshot.',
+      note: 'Inspect one limited location and device-specific result snapshot.',
     },
     'seo-to-ai-query': {
       command: 'seo seo-to-ai-query --project example',

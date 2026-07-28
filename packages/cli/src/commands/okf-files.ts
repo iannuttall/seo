@@ -18,6 +18,9 @@ import {
   resolve,
 } from 'node:path'
 import {
+  OKF_MAX_FILE_BYTES,
+  OKF_MAX_FILES,
+  OKF_MAX_TOTAL_BYTES,
   type OkfFile,
   type OkfValidationReport,
   SeoError,
@@ -47,6 +50,7 @@ async function writeFiles(root: string, files: OkfFile[]): Promise<void> {
 
 export async function readOkfMarkdownFiles(root: string): Promise<OkfFile[]> {
   const files: OkfFile[] = []
+  let totalBytes = 0
   async function walk(dir: string, prefix = ''): Promise<void> {
     const entries = await readdir(dir, { withFileTypes: true })
     for (const entry of entries) {
@@ -55,6 +59,26 @@ export async function readOkfMarkdownFiles(root: string): Promise<OkfFile[]> {
       if (entry.isDirectory()) {
         await walk(fullPath, relative)
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        if (files.length >= OKF_MAX_FILES) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            `OKF validation accepts at most ${OKF_MAX_FILES} Markdown files.`,
+          )
+        }
+        const stats = await lstat(fullPath)
+        if (stats.size > OKF_MAX_FILE_BYTES) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            `OKF file exceeds ${OKF_MAX_FILE_BYTES} bytes: ${relative}`,
+          )
+        }
+        totalBytes += stats.size
+        if (totalBytes > OKF_MAX_TOTAL_BYTES) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            `OKF Markdown files exceed ${OKF_MAX_TOTAL_BYTES} bytes in total.`,
+          )
+        }
         files.push({
           path: relative,
           content: await readFile(fullPath, 'utf8'),
@@ -99,11 +123,11 @@ export async function writeOkfDirectory(
   output: string,
   files: OkfFile[],
 ): Promise<OkfValidationReport> {
-  const validation = validateOkfFiles(files)
+  const validation = validateOkfFiles(files, { profile: 'seo-export' })
   if (!validation.valid) {
     throw new SeoError(
       'INVALID_INPUT',
-      'Generated bundle did not pass seo OKF checks and was not written.',
+      'Generated bundle did not pass the SEO export profile and was not written.',
     )
   }
   const target = resolve(output)
@@ -115,7 +139,10 @@ export async function writeOkfDirectory(
   let movedExisting = false
   try {
     await writeFiles(staging, files)
-    const diskValidation = validateOkfFiles(await readOkfMarkdownFiles(staging))
+    const diskValidation = validateOkfFiles(
+      await readOkfMarkdownFiles(staging),
+      { profile: 'seo-export' },
+    )
     if (!diskValidation.valid) {
       throw new SeoError(
         'INTERNAL_ERROR',

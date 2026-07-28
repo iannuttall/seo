@@ -525,7 +525,7 @@ export const crawlReports = [
     name: 'Build an OKF knowledge manifest',
     category: 'crawl',
     summary:
-      'Turn a saved crawl into a compact, cited site knowledge manifest for an agent to inspect locally.',
+      'Turn a saved crawl into a compact OKF v0.2 knowledge pack with source details for an agent to inspect locally.',
     question:
       'Which crawled pages and relationships should form a limited site knowledge pack?',
     useWhen: [
@@ -536,10 +536,10 @@ export const crawlReports = [
       'You need a search-engine requirement or a replacement for the live pages.',
     ],
     evidence: [
-      'Crawl URLs, page metadata, internal links, extracted concepts, selection limits, and caveats.',
+      'Crawl URLs, page metadata, HTTP status, internal links, extracted concepts, selection limits, and caveats.',
     ],
     methodology: [
-      'Selects concepts and pages within explicit limits, emits a manifest, and can include limited Markdown files.',
+      'Selects pages within explicit limits, emits OKF v0.2 Markdown with source and generation metadata, and validates the stricter SEO export profile.',
     ],
     exampleParams: {
       reportId: 'crawl_example_20260710',
@@ -548,7 +548,7 @@ export const crawlReports = [
       title: 'Example site knowledge',
     },
     interpretation: [
-      'Treat the output as a derived local artifact. Follow citations back to the live page before using a claim.',
+      'Treat the output as a derived local artifact. Follow source references back to the live page before using a claim. Trust fields describe recorded review events; they do not prove the claim.',
     ],
     caveats: [
       'The pack inherits the crawl scope, extraction limits, and freshness of its source report.',
@@ -565,8 +565,8 @@ export const crawlReports = [
     name: 'Validate OKF files',
     category: 'crawl',
     summary:
-      'Check an agent-supplied OKF file set for structural and reference problems before another tool relies on it.',
-    question: 'Does this OKF file set satisfy the expected local contract?',
+      'Check an agent-supplied OKF file set for format, sources, lifecycle, freshness, and reference problems before another tool relies on it.',
+    question: 'Does this OKF file set satisfy the selected validation profile?',
     useWhen: [
       'Files were generated or edited and need validation.',
       'An automation depends on predictable paths and metadata.',
@@ -575,12 +575,13 @@ export const crawlReports = [
       'You need to verify the truth of every source-page claim. Structural validation cannot do that.',
     ],
     evidence: [
-      'The supplied file paths, frontmatter, headings, links, citations, and required manifest structure.',
+      'The supplied Markdown paths, frontmatter, headings, source references, format declaration, and optional trust signals.',
     ],
     methodology: [
-      'Parses the limited file set and returns repeatable errors and warnings for the supported format.',
+      'Parses the limited file set with generic OKF rules by default, or the stricter SEO export profile when requested, then returns deterministic errors, warnings, and aggregate trust summaries.',
     ],
     exampleParams: {
+      profile: 'okf',
       files: [
         { path: 'index.md', content: '# Example knowledge' },
         { path: 'caveats.md', content: '# Caveats' },
@@ -591,6 +592,7 @@ export const crawlReports = [
     ],
     caveats: [
       'A valid file set can still contain stale, incomplete, or incorrect content.',
+      'Missing optional verification or freshness metadata does not make a generic OKF bundle invalid.',
     ],
     nextSteps: [
       'Correct invalid files and rerun validation.',

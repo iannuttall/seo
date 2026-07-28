@@ -588,27 +588,88 @@ test('entityReadiness counts SoftwareApplication without conflating identity sig
 
 test('OKF bundle builds concept files and validates frontmatter', () => {
   const bundle = buildOkfBundle(fixtureReport())
-  const validation = validateOkfFiles(bundle.files)
+  const validation = validateOkfFiles(bundle.files, {
+    profile: 'seo-export',
+    now: bundle.generatedAt,
+  })
   const explanation = explainOkfValidation(validation)
+  const root = bundle.files.find((file) => file.path === 'index.md')
+  const log = bundle.files.find((file) => file.path === 'log.md')
+  const concept = bundle.files.find(
+    (file) =>
+      file.path.startsWith('concepts/') && file.path !== 'concepts/index.md',
+  )
 
-  assert.ok(bundle.files.some((file) => file.path === 'index.md'))
-  assert.equal(bundle.conceptCount, 2)
+  assert.equal(bundle.schemaVersion, 2)
+  assert.equal(bundle.okfVersion, '0.2')
+  assert.equal(bundle.pageConceptCount, 2)
+  assert.equal(bundle.conceptCount, 5)
   assert.equal(validation.valid, true)
+  assert.equal(validation.formatVersion, '0.2')
+  assert.equal(validation.compatibility, 'v0.2')
+  assert.equal(validation.profile, 'seo-export')
+  assert.equal(validation.concepts, 5)
+  assert.equal(validation.provenance.sources, 5)
+  assert.equal(validation.generation.generated, 5)
+  assert.equal(validation.trust.unverified, 5)
+  assert.equal(validation.lifecycle.stable, 5)
+  assert.equal(validation.freshness.unspecified, 5)
   assert.equal(explanation.valid, true)
-  assert.match(explanation.summary, /passes seo OKF checks/)
+  assert.equal(explanation.compatibility, 'v0.2')
+  assert.equal(explanation.provenance.sources, 5)
+  assert.equal(explanation.generation.generated, 5)
+  assert.equal(explanation.trust.unverified, 5)
+  assert.equal(explanation.lifecycle.stable, 5)
+  assert.equal(explanation.freshness.unspecified, 5)
+  assert.match(explanation.summary, /OKF v0\.2 validation passed/)
   assert.equal(bundle.generatedAt, '2026-06-20T00:00:00.000Z')
   assert.equal(bundle.selection.eligiblePages, 2)
+  assert.match(root?.content ?? '', /okf_version: "0\.2"/)
+  assert.doesNotMatch(root?.content ?? '', /^type:/m)
+  assert.match(log?.content ?? '', /^## 2026-06-20$/m)
+  assert.match(concept?.content ?? '', /^resource: "https:/m)
+  assert.match(concept?.content ?? '', /^http_status: 200$/m)
+  assert.match(concept?.content ?? '', /^generated:/m)
+  assert.match(concept?.content ?? '', /^sources:/m)
+  assert.doesNotMatch(concept?.content ?? '', /^status: 200$/m)
+  assert.doesNotMatch(concept?.content ?? '', /^# Citations$/m)
 })
 
 test('OKF validation summaries inflect one concept', () => {
-  const report = fixtureReport()
-  report.pages = [fixturePage(report, 0)]
-  const validation = validateOkfFiles(buildOkfBundle(report).files)
+  const validation = validateOkfFiles(
+    [
+      {
+        path: 'metric.md',
+        content: '---\ntype: Metric\n---\n\n# Metric\n',
+      },
+    ],
+    { now: '2026-06-20T00:00:00.000Z' },
+  )
 
-  assert.match(explainOkfValidation(validation).summary, /1 concept file/)
-  assert.doesNotMatch(
-    explainOkfValidation(validation).summary,
-    /1 concept files/,
+  const explanation = explainOkfValidation(validation)
+  assert.match(explanation.summary, /1 concept\./)
+  assert.doesNotMatch(explanation.summary, /1 concepts/)
+  assert.match(explanation.nextActions.join(' '), /against its sources/)
+})
+
+test('OKF validation summaries use plural source wording', () => {
+  const validation = validateOkfFiles(
+    [
+      {
+        path: 'first.md',
+        content: '---\ntype: Metric\n---\n\n# First\n',
+      },
+      {
+        path: 'second.md',
+        content: '---\ntype: Metric\n---\n\n# Second\n',
+      },
+    ],
+    { now: '2026-06-20T00:00:00.000Z' },
+  )
+
+  assert.match(
+    explainOkfValidation(validation).nextActions.join(' '),
+    /2 unverified concepts against their sources/,
   )
 })
 
@@ -650,7 +711,8 @@ test('OKF selection deduplicates final URLs and excludes non-2xx pages', () => {
 
   const bundle = buildOkfBundle(report)
 
-  assert.equal(bundle.conceptCount, 1)
+  assert.equal(bundle.pageConceptCount, 1)
+  assert.equal(bundle.conceptCount, 4)
   assert.equal(bundle.selection.sourcePages, 3)
   assert.equal(bundle.selection.eligiblePages, 1)
   assert.equal(bundle.selection.duplicateFinalUrls, 1)

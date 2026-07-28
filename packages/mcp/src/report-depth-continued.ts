@@ -288,17 +288,18 @@ export const REPORT_DEPTH_CONTINUED = {
   },
   'okf-build': {
     readOrder: [
-      'manifest schema version, report id, source URL, generation time, crawl status, title, concept count, and caveats',
+      'manifest schema version, OKF version, report id, source URL, generation time, crawl status, title, total concept count, page concept count, and caveats',
       'selection page counts and deterministic ordering',
-      'the returned validation before using files',
+      'the returned validation profile, valid state, issue counts, provenance, generation, trust, lifecycle, and freshness before using files',
     ],
     doNotClaim: [
       'If selected pages equal the limit the bundle is bounded, not exhaustive.',
       'A successful structural validation does not establish ownership, freshness, factual accuracy, or completeness.',
       'The builder does not make extracted claims true or current.',
+      'Unverified means no supported verification event was supplied; it does not mean the concept is false.',
     ],
     verify:
-      'Inspect citations, canonical URLs, and summaries against source pages, especially for time-dependent claims.',
+      'Inspect source references, canonical URLs, and summaries against source pages, especially for time-dependent claims.',
     related: [
       { id: 'okf-validate', reason: 'Validates the bundle.' },
       { id: 'crawl-report', reason: 'Inspects the source crawl.' },
@@ -307,7 +308,8 @@ export const REPORT_DEPTH_CONTINUED = {
   },
   'okf-validate': {
     readOrder: [
-      'validation.valid and file and concept counts',
+      'validation.profile, formatVersion, compatibility, valid state, file and concept counts, and issue counts',
+      'provenance, generation, trust, lifecycle, and freshness summaries',
       'each issue level, path, and message',
       'explanation.nextActions as ordering guidance',
     ],
@@ -315,9 +317,10 @@ export const REPORT_DEPTH_CONTINUED = {
       'Validation checks the file contract only and does not browse cited sources or determine whether the knowledge is true, current, owned, or complete.',
       'Warnings still require review even when valid is true.',
       'Never report valid true as fact checked.',
+      'Missing optional trust fields do not make a generic OKF bundle invalid.',
     ],
     verify:
-      'After structural success, separately verify cited URLs, claims, dates, and the recorded crawl snapshot.',
+      'After structural success, separately verify source URLs, claims, dates, and any recorded crawl snapshot.',
     related: [{ id: 'okf-build', reason: 'Builds the bundle to validate.' }],
   },
   'page-opportunities': {

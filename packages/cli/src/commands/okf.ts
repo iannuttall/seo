@@ -1,7 +1,9 @@
 import {
   buildOkfBundle,
   explainOkfValidation,
+  type OkfValidationProfile,
   okfConceptLimit,
+  SeoError,
   validateOkfFiles,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -16,22 +18,25 @@ function printValidation(
 ) {
   process.stdout.write(`OKF validation for ${filesPath}\n\n`)
   printKeyValue([
+    ['Version', validation.formatVersion ?? 'not declared'],
+    ['Compatibility', validation.compatibility],
+    ['Profile', validation.profile],
     ['Valid', validation.valid ? 'yes' : 'no'],
     ['Files', String(validation.files)],
     ['Concepts', String(validation.concepts)],
-    [
-      'Errors',
-      String(
-        validation.issues.filter((issue) => issue.severity === 'error').length,
-      ),
-    ],
-    [
-      'Warnings',
-      String(
-        validation.issues.filter((issue) => issue.severity === 'warning')
-          .length,
-      ),
-    ],
+    ['Errors', String(validation.issueCounts.errors)],
+    ['Warnings', String(validation.issueCounts.warnings)],
+    ['With sources', String(validation.provenance.sources)],
+    ['Generated', String(validation.generation.generated)],
+    ['Human reviewed', String(validation.trust.humanReviewed)],
+    ['Machine confirmed', String(validation.trust.machineConfirmed)],
+    ['Unverified', String(validation.trust.unverified)],
+    ['Draft', String(validation.lifecycle.draft)],
+    ['Stable', String(validation.lifecycle.stable)],
+    ['Deprecated', String(validation.lifecycle.deprecated)],
+    ['Fresh', String(validation.freshness.fresh)],
+    ['Stale', String(validation.freshness.stale)],
+    ['Freshness unspecified', String(validation.freshness.unspecified)],
   ])
   if (validation.issues.length) {
     process.stdout.write('\nIssues\n')
@@ -42,6 +47,17 @@ function printValidation(
         .map((issue) => [issue.severity, issue.path, issue.message]),
     )
   }
+  if (validation.issuesTruncated) {
+    process.stdout.write(
+      `\n${validation.omittedIssues} more validation issues were omitted.\n`,
+    )
+  }
+}
+
+function validationProfile(value: unknown): OkfValidationProfile {
+  const profile = stringArg(value) ?? 'okf'
+  if (profile === 'okf' || profile === 'seo-export') return profile
+  throw new SeoError('INVALID_INPUT', 'Profile must be okf or seo-export.')
 }
 
 export const okfExportCommand = defineCommand({
@@ -72,7 +88,7 @@ export const okfExportCommand = defineCommand({
     },
     'max-concepts': {
       type: 'string',
-      description: 'Maximum concept files to export. Defaults to 500.',
+      description: 'Maximum page concepts to export. Defaults to 500.',
     },
     title: {
       type: 'string',
@@ -104,6 +120,7 @@ export const okfExportCommand = defineCommand({
     printKeyValue([
       ['Files', String(bundle.files.length)],
       ['Concepts', String(bundle.conceptCount)],
+      ['Page concepts', String(bundle.pageConceptCount)],
       ['Valid', validation.valid ? 'yes' : 'no'],
     ])
   },
@@ -120,6 +137,10 @@ export const okfValidateCommand = defineCommand({
       required: true,
       description: 'OKF bundle directory.',
     },
+    profile: {
+      type: 'string',
+      description: 'Validation profile: okf or seo-export. Defaults to okf.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -130,7 +151,9 @@ export const okfValidateCommand = defineCommand({
     const path = stringArg(args.path)
     if (!path) throw new Error('Pass an OKF bundle directory.')
     const files = await readOkfMarkdownFiles(path)
-    const validation = validateOkfFiles(files)
+    const validation = validateOkfFiles(files, {
+      profile: validationProfile(args.profile),
+    })
     if (!validation.valid) process.exitCode = 1
     if (jsonFlag(args)) {
       printJson(validation)
@@ -151,6 +174,10 @@ export const okfExplainCommand = defineCommand({
       required: true,
       description: 'OKF bundle directory.',
     },
+    profile: {
+      type: 'string',
+      description: 'Validation profile: okf or seo-export. Defaults to okf.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -160,7 +187,9 @@ export const okfExplainCommand = defineCommand({
   run: async ({ args }) => {
     const path = stringArg(args.path)
     if (!path) throw new Error('Pass an OKF bundle directory.')
-    const validation = validateOkfFiles(await readOkfMarkdownFiles(path))
+    const validation = validateOkfFiles(await readOkfMarkdownFiles(path), {
+      profile: validationProfile(args.profile),
+    })
     const explanation = explainOkfValidation(validation)
     if (!explanation.valid) process.exitCode = 1
     if (jsonFlag(args)) {
@@ -169,11 +198,25 @@ export const okfExplainCommand = defineCommand({
     }
     process.stdout.write(`${explanation.summary}\n\n`)
     printKeyValue([
+      ['Version', explanation.formatVersion ?? 'not declared'],
+      ['Compatibility', explanation.compatibility],
+      ['Profile', explanation.profile],
       ['Valid', explanation.valid ? 'yes' : 'no'],
       ['Files', String(explanation.files)],
       ['Concepts', String(explanation.concepts)],
       ['Errors', String(explanation.errors)],
       ['Warnings', String(explanation.warnings)],
+      ['With sources', String(explanation.provenance.sources)],
+      ['Generated', String(explanation.generation.generated)],
+      ['Human reviewed', String(explanation.trust.humanReviewed)],
+      ['Machine confirmed', String(explanation.trust.machineConfirmed)],
+      ['Unverified', String(explanation.trust.unverified)],
+      ['Draft', String(explanation.lifecycle.draft)],
+      ['Stable', String(explanation.lifecycle.stable)],
+      ['Deprecated', String(explanation.lifecycle.deprecated)],
+      ['Fresh', String(explanation.freshness.fresh)],
+      ['Stale', String(explanation.freshness.stale)],
+      ['Freshness unspecified', String(explanation.freshness.unspecified)],
     ])
     if (explanation.nextActions.length) {
       process.stdout.write('\nNext actions\n')

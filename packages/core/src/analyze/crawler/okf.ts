@@ -1,62 +1,36 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
-import { countLabel } from '../../phrasing.js'
+import { SEO_VERSION } from '../../version.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import type { OkfBundle, OkfFile } from './okf-types.js'
 import type { CrawlReport } from './report.js'
+
+export type {
+  OkfBundle,
+  OkfExplainReport,
+  OkfFile,
+  OkfFreshnessSummary,
+  OkfGenerationSummary,
+  OkfLifecycleSummary,
+  OkfProvenanceSummary,
+  OkfTrustSummary,
+  OkfValidationIssue,
+  OkfValidationOptions,
+  OkfValidationProfile,
+  OkfValidationReport,
+} from './okf-types.js'
+export {
+  explainOkfValidation,
+  OKF_MAX_FILE_BYTES,
+  OKF_MAX_FILES,
+  OKF_MAX_TOTAL_BYTES,
+  OKF_MAX_VALIDATION_ISSUES,
+  validateOkfFiles,
+} from './okf-validation.js'
 
 export const OKF_DEFAULT_CONCEPTS = 500
 export const OKF_MAX_CONCEPTS = 5_000
-
-export type OkfFile = {
-  path: string
-  content: string
-}
-
-export type OkfBundle = {
-  schemaVersion: 1
-  reportId: string
-  sourceUrl: string
-  generatedAt: string
-  crawlStatus: CrawlReport['status']
-  rootTitle: string
-  files: OkfFile[]
-  conceptCount: number
-  selection: {
-    sourcePages: number
-    eligiblePages: number
-    duplicateFinalUrls: number
-    selectedPages: number
-    limitedPages: number
-    limit: number
-    order: 'search-clicks-impressions-internal-authority-inlinks-url'
-  }
-  caveats: string[]
-  warnings: string[]
-}
-
-export type OkfValidationIssue = {
-  path: string
-  severity: 'error' | 'warning'
-  message: string
-}
-
-export type OkfValidationReport = {
-  valid: boolean
-  files: number
-  concepts: number
-  issues: OkfValidationIssue[]
-}
-
-export type OkfExplainReport = {
-  title: string
-  valid: boolean
-  summary: string
-  files: number
-  concepts: number
-  errors: number
-  warnings: number
-  nextActions: string[]
-}
+export const OKF_VERSION = '0.2' as const
 
 function compareText(left: string, right: string): number {
   const leftPoints = [...left].map((value) => value.codePointAt(0) ?? 0)
@@ -135,14 +109,58 @@ function pageType(page: CrawlPageSnapshot): string {
   return 'webpage'
 }
 
-function conceptFile(page: CrawlPageSnapshot): OkfFile {
+function generated(report: CrawlReport) {
+  return {
+    by: `seo/${SEO_VERSION}`,
+    at: report.generatedAt,
+  }
+}
+
+function sourceLastModified(page: CrawlPageSnapshot): string | undefined {
+  const header = Object.entries(page.responseHeaders ?? {}).find(
+    ([key]) => key.toLowerCase() === 'last-modified',
+  )?.[1]
+  if (!header) return undefined
+  const parsed = new Date(header)
+  return Number.isFinite(parsed.getTime())
+    ? parsed.toISOString().slice(0, 10)
+    : undefined
+}
+
+function pageSource(page: CrawlPageSnapshot, title: string) {
+  return {
+    id: 'source-page',
+    resource: page.finalUrl,
+    title,
+    last_modified: sourceLastModified(page),
+  }
+}
+
+function crawlSource(report: CrawlReport) {
+  return {
+    id: 'crawl-report',
+    resource: `crawl report ${report.id}`,
+    title: `Crawl report for ${report.config.url}`,
+  }
+}
+
+function markdownLabel(value: string): string {
+  return value.replace(/[[\]]/g, '\\$&')
+}
+
+function conceptFile(page: CrawlPageSnapshot, report: CrawlReport): OkfFile {
   const title = pageTitle(page)
   const body = [
     frontmatter({
       type: pageType(page),
       title,
-      url: page.finalUrl,
-      status: page.status,
+      description: page.metaDescription
+        ? singleLine(page.metaDescription)
+        : undefined,
+      resource: page.finalUrl,
+      generated: generated(report),
+      sources: [pageSource(page, title)],
+      http_status: page.status,
       indexable: page.indexable,
       canonical: page.canonical,
       schemaTypes: page.schemaTypes,
@@ -151,13 +169,15 @@ function conceptFile(page: CrawlPageSnapshot): OkfFile {
     `# ${title}`,
     '',
     page.metaDescription
-      ? `Summary: ${singleLine(page.metaDescription)}`
+      ? `Summary: ${singleLine(page.metaDescription)}[^source-page]`
       : undefined,
     page.contentSample
-      ? `Extract: ${singleLine(page.contentSample)}`
+      ? `Extract: ${singleLine(page.contentSample)}[^source-page]`
       : undefined,
     '',
     '## Signals',
+    '',
+    'These signals were observed during the crawl.[^source-page]',
     '',
     `- URL: ${page.finalUrl}`,
     `- Status: ${page.status}`,
@@ -166,9 +186,7 @@ function conceptFile(page: CrawlPageSnapshot): OkfFile {
     `- Structured data: ${(page.schemaTypes ?? []).join(', ') || 'none detected'}`,
     `- Internal inlinks: ${page.internalInlinkCount ?? 0}`,
     '',
-    '# Citations',
-    '',
-    `- [Source page](<${page.finalUrl}>)`,
+    `[^source-page]: ${title}`,
     '',
   ].filter((line): line is string => line !== undefined)
 
@@ -263,12 +281,16 @@ export function buildOkfBundle(
         ]
       : []),
   ]
-  const concepts = pages.map(conceptFile)
+  const concepts = pages.map((page) => conceptFile(page, report))
+  const crawlProvenance = {
+    generated: generated(report),
+    sources: [crawlSource(report)],
+  }
   const files: OkfFile[] = [
     {
       path: 'index.md',
       content: [
-        frontmatter({ okf: '0.1', type: 'index', title }),
+        frontmatter({ okf_version: OKF_VERSION }),
         `# ${title}`,
         '',
         `Source crawl: ${report.id}`,
@@ -287,9 +309,11 @@ export function buildOkfBundle(
     {
       path: 'log.md',
       content: [
-        '# Log',
+        '# Bundle Update Log',
         '',
-        `- ${report.generatedAt}: Generated OKF bundle from crawl report ${report.id}.`,
+        `## ${report.generatedAt.slice(0, 10)}`,
+        '',
+        `* **Creation**: Generated the bundle from crawl report ${report.id}.`,
         '',
       ].join('\n'),
     },
@@ -298,18 +322,29 @@ export function buildOkfBundle(
       content: [
         '# Concepts',
         '',
-        ...concepts.map(
-          (file) =>
-            `- [${file.path.replace(/^concepts\//, '')}](${file.path.replace(/^concepts\//, '')})`,
-        ),
+        ...concepts.map((file, index) => {
+          const page = pages[index]
+          const path = file.path.replace(/^concepts\//, '')
+          const pageTitleValue = page ? pageTitle(page) : path
+          const description = page?.metaDescription
+            ? ` - ${singleLine(page.metaDescription)}`
+            : ''
+          return `- [${markdownLabel(pageTitleValue)}](${path})${description}`
+        }),
         '',
       ].join('\n'),
     },
     {
       path: 'inventory/pages.md',
       content: [
-        frontmatter({ type: 'inventory', title: 'Selected concept pages' }),
+        frontmatter({
+          type: 'inventory',
+          title: 'Selected concept pages',
+          ...crawlProvenance,
+        }),
         '# Selected Concept Pages',
+        '',
+        'This inventory was retained from the saved crawl.[^crawl-report]',
         '',
         '| URL | Status | Indexable | Title |',
         '| --- | ---: | --- | --- |',
@@ -318,17 +353,21 @@ export function buildOkfBundle(
             `| ${page.finalUrl} | ${page.status} | ${page.indexable ? 'yes' : 'no'} | ${singleLine(page.title ?? '').replace(/\|/g, '\\|')} |`,
         ),
         '',
-        '# Citations',
-        '',
-        `- [Crawl start URL](${report.config.url})`,
+        '[^crawl-report]: Saved crawl report',
         '',
       ].join('\n'),
     },
     {
       path: 'graph/links.md',
       content: [
-        frontmatter({ type: 'graph', title: 'Internal link graph' }),
+        frontmatter({
+          type: 'graph',
+          title: 'Internal link graph',
+          ...crawlProvenance,
+        }),
         '# Internal Link Graph',
+        '',
+        'These retained link samples were observed during the saved crawl.[^crawl-report]',
         '',
         ...pages.flatMap((page) => [
           `## ${pageTitle(page)}`,
@@ -340,17 +379,21 @@ export function buildOkfBundle(
             .map((url) => `- ${url}`),
           '',
         ]),
-        '# Citations',
-        '',
-        `- [Crawl start URL](${report.config.url})`,
+        '[^crawl-report]: Saved crawl report',
         '',
       ].join('\n'),
     },
     {
       path: 'caveats.md',
       content: [
-        frontmatter({ type: 'caveats', title: 'Caveats' }),
+        frontmatter({
+          type: 'caveats',
+          title: 'Caveats',
+          ...crawlProvenance,
+        }),
         '# Caveats',
+        '',
+        'These caveats and warnings came from the saved crawl.[^crawl-report]',
         '',
         ...(generatedCaveats.length
           ? generatedCaveats
@@ -365,24 +408,28 @@ export function buildOkfBundle(
             ]
           : []),
         '',
-        '# Citations',
-        '',
-        `- [Crawl start URL](${report.config.url})`,
+        '[^crawl-report]: Saved crawl report',
         '',
       ].join('\n'),
     },
     ...concepts,
   ]
+  const conceptCount = files.filter(
+    (file) =>
+      file.path.endsWith('.md') && !/(^|\/)(?:index|log)\.md$/.test(file.path),
+  ).length
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    okfVersion: OKF_VERSION,
     reportId: report.id,
     sourceUrl: report.config.url,
     generatedAt: report.generatedAt,
     crawlStatus: report.status,
     rootTitle: title,
     files,
-    conceptCount: concepts.length,
+    conceptCount,
+    pageConceptCount: concepts.length,
     selection: {
       sourcePages: selected.sourcePages,
       eligiblePages: selected.eligiblePages,
@@ -394,187 +441,5 @@ export function buildOkfBundle(
     },
     caveats: generatedCaveats,
     warnings: report.warnings,
-  }
-}
-
-function hasFrontmatter(content: string): boolean {
-  return /^---\n[\s\S]+?\n---\n/.test(content)
-}
-
-function frontmatterHasType(content: string): boolean {
-  const match = content.match(/^---\n([\s\S]+?)\n---\n/)
-  return Boolean(match?.[1]?.match(/^type:\s*.+$/m))
-}
-
-function frontmatterString(content: string, key: string): string | undefined {
-  const match = content.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'))?.[1]
-  if (!match) return undefined
-  try {
-    const value: unknown = JSON.parse(match)
-    return typeof value === 'string' ? value : undefined
-  } catch {
-    return undefined
-  }
-}
-
-function isReserved(path: string): boolean {
-  return (
-    path.endsWith('/index.md') ||
-    path === 'index.md' ||
-    path.endsWith('/log.md') ||
-    path === 'log.md'
-  )
-}
-
-export function validateOkfFiles(files: OkfFile[]): OkfValidationReport {
-  const issues: OkfValidationIssue[] = []
-  const pathCounts = new Map<string, number>()
-  for (const file of files) {
-    pathCounts.set(file.path, (pathCounts.get(file.path) ?? 0) + 1)
-    if (
-      !file.path ||
-      file.path.startsWith('/') ||
-      file.path.split('/').some((part) => part === '..' || part === '')
-    ) {
-      issues.push({
-        path: file.path || '(empty)',
-        severity: 'error',
-        message: 'File paths must be safe relative paths.',
-      })
-    }
-  }
-  for (const [path, count] of pathCounts) {
-    if (count > 1) {
-      issues.push({
-        path,
-        severity: 'error',
-        message: `File path is duplicated ${count} times.`,
-      })
-    }
-  }
-  const byPath = new Map(files.map((file) => [file.path, file]))
-  const requiredPaths = [
-    'index.md',
-    'log.md',
-    'concepts/index.md',
-    'inventory/pages.md',
-    'graph/links.md',
-    'caveats.md',
-  ]
-  for (const path of requiredPaths) {
-    if (byPath.has(path)) continue
-    issues.push({
-      path,
-      severity: 'error',
-      message: 'Required seo OKF bundle file is missing.',
-    })
-  }
-  const root = byPath.get('index.md')
-  if (
-    root &&
-    (frontmatterString(root.content, 'okf') !== '0.1' ||
-      frontmatterString(root.content, 'type') !== 'index')
-  ) {
-    issues.push({
-      path: 'index.md',
-      severity: 'error',
-      message: 'Root frontmatter must declare okf "0.1" and type "index".',
-    })
-  }
-  for (const file of files.filter((item) => item.path.endsWith('.md'))) {
-    if (!file.content.trim()) {
-      issues.push({
-        path: file.path,
-        severity: 'error',
-        message: 'Markdown files must not be empty.',
-      })
-    }
-    if (!isReserved(file.path)) {
-      if (!hasFrontmatter(file.content)) {
-        issues.push({
-          path: file.path,
-          severity: 'error',
-          message: 'Concept files need YAML frontmatter.',
-        })
-      } else if (!frontmatterHasType(file.content)) {
-        issues.push({
-          path: file.path,
-          severity: 'error',
-          message: 'Concept frontmatter needs a non-empty type field.',
-        })
-      }
-      if (file.path.startsWith('concepts/')) {
-        const url = frontmatterString(file.content, 'url')
-        let validUrl = false
-        try {
-          validUrl = Boolean(
-            url && ['http:', 'https:'].includes(new URL(url).protocol),
-          )
-        } catch {
-          validUrl = false
-        }
-        if (!validUrl) {
-          issues.push({
-            path: file.path,
-            severity: 'error',
-            message: 'Concept frontmatter needs a valid HTTP(S) url.',
-          })
-        }
-      }
-      if (!/\n# Citations\n/i.test(file.content)) {
-        issues.push({
-          path: file.path,
-          severity: 'warning',
-          message: 'Files with claims should include a # Citations section.',
-        })
-      }
-    }
-  }
-  const conceptIndex = byPath.get('concepts/index.md')?.content ?? ''
-  for (const file of files.filter(
-    (item) => item.path.startsWith('concepts/') && !isReserved(item.path),
-  )) {
-    const relative = file.path.replace(/^concepts\//, '')
-    if (!conceptIndex.includes(`](${relative})`)) {
-      issues.push({
-        path: file.path,
-        severity: 'error',
-        message: 'Concept is missing from concepts/index.md.',
-      })
-    }
-  }
-  const concepts = files.filter(
-    (file) => file.path.startsWith('concepts/') && !isReserved(file.path),
-  ).length
-  return {
-    valid: !issues.some((issue) => issue.severity === 'error'),
-    files: files.length,
-    concepts,
-    issues,
-  }
-}
-
-export function explainOkfValidation(
-  validation: OkfValidationReport,
-): OkfExplainReport {
-  const errors = validation.issues.filter((issue) => issue.severity === 'error')
-  const warnings = validation.issues.filter(
-    (issue) => issue.severity === 'warning',
-  )
-  return {
-    title: 'OKF bundle',
-    valid: validation.valid,
-    summary: validation.valid
-      ? `This bundle passes seo OKF checks with ${countLabel(validation.concepts, 'concept file')}.`
-      : `This OKF bundle has ${countLabel(errors.length, 'validation error')}.`,
-    files: validation.files,
-    concepts: validation.concepts,
-    errors: errors.length,
-    warnings: warnings.length,
-    nextActions: validation.valid
-      ? [
-          'Review concept quality and publish the bundle where agents can fetch it.',
-        ]
-      : errors.slice(0, 5).map((issue) => `${issue.path}: ${issue.message}`),
   }
 }

@@ -855,7 +855,10 @@ export function registerCrawlerTools(server: McpServer): void {
           maxConcepts: maxConcepts ?? (includeFiles ? 25 : 100),
           title,
         })
-        const validation = validateOkfFiles(bundle.files)
+        const validation = validateOkfFiles(bundle.files, {
+          profile: 'seo-export',
+          now: report.generatedAt,
+        })
         const { files, ...manifest } = bundle
         return toolSuccess(
           `Built OKF bundle with ${bundle.conceptCount} concepts.`,
@@ -878,7 +881,7 @@ export function registerCrawlerTools(server: McpServer): void {
     'seo_okf_validate',
     {
       description:
-        'Validate OKF markdown files supplied by an agent. Use the okf-build report to generate files from a crawl.',
+        'Validate OKF Markdown files supplied by an agent. Missing Markdown targets remain warnings under the generic OKF profile. Use the okf-build report to generate files from a crawl.',
       inputSchema: {
         files: z
           .array(
@@ -889,14 +892,17 @@ export function registerCrawlerTools(server: McpServer): void {
           )
           .min(1)
           .max(5_006),
+        profile: z.enum(['okf', 'seo-export']).optional(),
       },
     },
-    async ({ files }) => {
-      const validation = validateOkfFiles(files)
+    async ({ files, profile }) => {
+      const validation = validateOkfFiles(files, {
+        profile: profile ?? 'okf',
+      })
       return toolSuccess(
         validation.valid
-          ? 'Bundle passes seo OKF checks.'
-          : 'Bundle has seo OKF issues.',
+          ? 'Bundle passes OKF validation.'
+          : 'Bundle has OKF validation errors.',
         {
           validation,
           explanation: explainOkfValidation(validation),

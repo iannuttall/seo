@@ -571,7 +571,7 @@ export const REPORT_GUIDANCE = {
   'okf-build': {
     name: 'Build site knowledge for agents',
     description:
-      'Create a compact, cited site knowledge pack from public pages in a crawl.',
+      'Create a compact OKF v0.2 site knowledge pack with source provenance from public pages in a crawl.',
     useWhen: [
       'An agent needs reliable site facts with links back to source pages.',
       'You want a portable knowledge pack from selected crawl content.',
@@ -580,18 +580,20 @@ export const REPORT_GUIDANCE = {
       'The crawl contains private, stale, or irrelevant pages.',
       'You want the tool to invent missing facts.',
     ],
-    outcome: 'An OKF manifest and optional markdown files with source links.',
+    outcome:
+      'An OKF v0.2 manifest and optional Markdown files with source, generation, and validation evidence.',
   },
   'okf-validate': {
     name: 'Validate a site knowledge pack',
     description:
-      'Check supplied OKF markdown files for structure, references, and broken links before use.',
+      'Check supplied OKF Markdown files using the generic format or stricter SEO export profile.',
     useWhen: [
       'You created or edited an OKF pack and want to check it.',
       'An agent needs to verify files before loading them.',
     ],
     avoidWhen: ['You need to build the pack from a crawl first.'],
-    outcome: 'A validation result with exact file, reference, and link errors.',
+    outcome:
+      'A validation result with format compatibility, exact issues, provenance, trust, lifecycle, and freshness summaries.',
   },
   'page-opportunities': {
     name: 'Opportunities for one page',

@@ -260,14 +260,14 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'okf-build': {
     title: 'OKF export',
     description:
-      'Export crawl evidence as a limited Open Knowledge Format bundle with linked artifacts that an agent can inspect locally using a clear manifest.',
-    lead: 'Turn a saved crawl into a portable OKF knowledge pack for an agent or another tool. The export keeps its manifest, source files and size limits explicit.',
+      'Export crawl evidence as a limited OKF v0.2 bundle with source details, generation metadata, and linked artifacts that an agent can inspect locally.',
+    lead: 'Turn a saved crawl into a portable OKF knowledge pack for an agent or another tool. The export keeps its sources, generation details, validation profile and size limits explicit.',
   },
   'okf-validate': {
     title: 'OKF validator',
     description:
-      'Validate an Open Knowledge Format pack for broken files, paths, links, citations and manifest references before an agent uses or trusts the evidence.',
-    lead: 'Check an OKF knowledge pack before handing it to an agent. Broken paths and missing references are much cheaper to fix before they become confident answers.',
+      'Validate an Open Knowledge Format pack for paths, sources, trust signals, lifecycle, freshness, and Markdown references before an agent uses it.',
+    lead: 'Check an OKF knowledge pack before handing it to an agent. Use generic validation for external bundles or the stricter SEO export profile for files generated here.',
   },
   'page-opportunities': {
     title: 'Page SEO opportunities',

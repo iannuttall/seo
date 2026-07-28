@@ -570,7 +570,7 @@ export const reportGuideOverridesIP: Partial<
   'okf-build': {
     name: 'Build site knowledge for agents',
     summary:
-      'Turn a saved crawl into a compact OKF knowledge pack with source pages an agent can inspect and verify locally.',
+      'Turn a saved crawl into a compact OKF v0.2 knowledge pack with source details an agent can inspect locally.',
     inputs: [
       {
         label: 'Saved or fresh crawl report',
@@ -583,18 +583,18 @@ export const reportGuideOverridesIP: Partial<
     ],
     checks: [
       'Selects concepts and source pages consistently within the requested limits.',
-      'Builds the OKF manifest, file paths, citations, and validation result from the selected crawl evidence.',
+      'Builds OKF v0.2 file paths, source and generation metadata, and a strict SEO export validation result from the selected crawl evidence.',
     ],
     returns: [
-      'A compact OKF manifest with concept counts, source references, file paths, and inherited crawl caveats.',
-      'Optional limited Markdown files plus a validation result when inline files are requested.',
+      'A compact manifest with total and page concept counts, source references, file paths, and inherited crawl caveats.',
+      'Optional limited Markdown files plus source, generation, trust, lifecycle, and freshness summaries when inline files are requested.',
     ],
     alternatives: [
       {
         when: 'You need to check an edited or generated OKF file set for broken structure and references.',
         reportId: 'okf-validate',
         doInstead:
-          'Run OKF validation on the exact files. It checks supported frontmatter, paths, headings, links, citations, and manifest references without rebuilding the pack.',
+          'Run OKF validation on the exact Markdown files. Use the generic OKF profile for external bundles or the stricter SEO export profile for files built here.',
       },
       {
         when: 'You need to prove that every statement in the knowledge pack is current and correct.',
@@ -610,7 +610,7 @@ export const reportGuideOverridesIP: Partial<
   'okf-validate': {
     name: 'Validate an OKF knowledge pack',
     summary:
-      'Check OKF files for structural, path, link, citation, and manifest problems before an agent or automation relies on them.',
+      'Check OKF files for format, path, source, lifecycle, freshness, and Markdown reference problems before an agent or automation relies on them.',
     inputs: [
       {
         label: 'OKF Markdown files',
@@ -618,12 +618,13 @@ export const reportGuideOverridesIP: Partial<
       },
     ],
     checks: [
-      'Parses supported frontmatter, headings, links, citations, paths, and manifest references.',
+      'Parses supported frontmatter, headings, sources, trust signals, paths, and Markdown references.',
+      'Keeps generic OKF rules separate from the stricter SEO export layout.',
       'Returns repeatable errors and warnings without fetching pages or judging the truth of their content.',
     ],
     returns: [
       'A pass or fail result with structured validation errors and warnings for each affected file.',
-      'Plain-language guidance for fixing supported format and reference problems.',
+      'Counts for source coverage, generation, trust, lifecycle, and freshness with plain-language next actions.',
     ],
     alternatives: [
       {

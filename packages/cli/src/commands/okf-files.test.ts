@@ -3,35 +3,41 @@ import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import type { OkfFile } from '@seo/core'
+import { OKF_MAX_FILE_BYTES, type OkfFile } from '@seo/core'
 import { readOkfMarkdownFiles, writeOkfDirectory } from './okf-files.js'
 
 function files(concepts: Array<{ name: string; url: string }> = []): OkfFile[] {
+  const provenance =
+    'generated: {"by":"seo/0.2.27","at":"2026-07-28T00:00:00.000Z"}\nsources:\n  - {"id":"crawl-report","resource":"crawl report test"}'
   return [
     {
       path: 'index.md',
-      content: '---\nokf: "0.1"\ntype: "index"\n---\n\n# Test\n',
+      content: '---\nokf_version: "0.2"\n---\n\n# Test\n',
     },
-    { path: 'log.md', content: '# Log\n' },
+    {
+      path: 'log.md',
+      content:
+        '# Bundle Update Log\n\n## 2026-07-28\n* **Creation**: Created the bundle.\n',
+    },
     {
       path: 'concepts/index.md',
       content: `# Concepts\n\n${concepts.map((item) => `- [${item.name}](${item.name})`).join('\n')}\n`,
     },
     {
       path: 'inventory/pages.md',
-      content: '---\ntype: "inventory"\n---\n\n# Inventory\n\n# Citations\n',
+      content: `---\ntype: "inventory"\n${provenance}\n---\n\n# Inventory\n`,
     },
     {
       path: 'graph/links.md',
-      content: '---\ntype: "graph"\n---\n\n# Graph\n\n# Citations\n',
+      content: `---\ntype: "graph"\n${provenance}\n---\n\n# Graph\n`,
     },
     {
       path: 'caveats.md',
-      content: '---\ntype: "caveats"\n---\n\n# Caveats\n\n# Citations\n',
+      content: `---\ntype: "caveats"\n${provenance}\n---\n\n# Caveats\n`,
     },
     ...concepts.map((item) => ({
       path: `concepts/${item.name}`,
-      content: `---\ntype: "webpage"\nurl: ${JSON.stringify(item.url)}\n---\n\n# Page\n\n# Citations\n`,
+      content: `---\ntype: "webpage"\nresource: ${JSON.stringify(item.url)}\nhttp_status: 200\n${provenance}\n---\n\n# Page\n`,
     })),
   ]
 }
@@ -66,6 +72,22 @@ test('atomic OKF replacement refuses unmanaged non-empty directories', async () 
     await assert.rejects(
       writeOkfDirectory(output, files()),
       /non-empty unmanaged directory/,
+    )
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('directory validation rejects oversized Markdown before reading it', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'seo-okf-oversized-'))
+  try {
+    await writeFile(
+      join(root, 'large.md'),
+      Buffer.alloc(OKF_MAX_FILE_BYTES + 1, 'a'),
+    )
+    await assert.rejects(
+      readOkfMarkdownFiles(root),
+      /OKF file exceeds 2000000 bytes/,
     )
   } finally {
     await rm(root, { recursive: true, force: true })

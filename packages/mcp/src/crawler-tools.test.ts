@@ -449,6 +449,8 @@ test('crawler MCP structured output schema stays stable', async () => {
       'crawlStatus',
       'filePaths',
       'generatedAt',
+      'okfVersion',
+      'pageConceptCount',
       'reportId',
       'rootTitle',
       'schemaVersion',
@@ -456,6 +458,78 @@ test('crawler MCP structured output schema stays stable', async () => {
       'sourceUrl',
       'warnings',
     ])
+    const buildValidation = okfStructured.validation as JsonRecord
+    assert.equal(buildValidation.profile, 'seo-export')
+    assert.equal(buildValidation.formatVersion, '0.2')
+    assert.equal(buildValidation.valid, true)
+    assert.deepEqual(keys(buildValidation), [
+      'compatibility',
+      'concepts',
+      'files',
+      'formatVersion',
+      'freshness',
+      'generation',
+      'issueCounts',
+      'issues',
+      'issuesTruncated',
+      'lifecycle',
+      'omittedIssues',
+      'profile',
+      'provenance',
+      'schemaVersion',
+      'seoExport',
+      'trust',
+      'valid',
+    ])
+
+    const validateTool = tools.get('seo_okf_validate')
+    assert.ok(validateTool)
+    assert.deepEqual(keys(validateTool.config.inputSchema), [
+      'files',
+      'profile',
+    ])
+    const suppliedFiles = [
+      {
+        path: 'index.md',
+        content: '# External bundle\n\n* [Attesters](attesters/index.md)\n',
+      },
+      {
+        path: 'log.md',
+        content:
+          '---\ntype: Log\n---\n\n# History\n\n## 2026-07-01\n\nCreated.\n',
+      },
+      {
+        path: 'attesters/index.md',
+        content: '# Attesters\n\n* [Runtime](runtime.py)\n',
+      },
+      {
+        path: 'metric.md',
+        content:
+          '---\ntype: Metric\ngenerated: { by: process:test, at: 2026-07-01T00:00:00Z }\nverified: { by: human:test, at: 2026-07-02T00:00:00Z }\nstatus: draft\nstale_after: 2026-07-03\nsources:\n  - { id: source, resource: https://example.com/source }\n---\n\n# Metric\n',
+      },
+    ]
+    const genericResult = await validateTool.handler({
+      files: suppliedFiles,
+    })
+    const genericStructured = genericResult.structuredContent as JsonRecord
+    const genericValidation = genericStructured.validation as JsonRecord
+    assert.equal(genericValidation.profile, 'okf')
+    assert.equal(genericValidation.valid, true)
+    assert.deepEqual(genericValidation.trust, {
+      unverified: 0,
+      machineConfirmed: 0,
+      humanReviewed: 1,
+    })
+    assert.equal((genericValidation.freshness as JsonRecord).stale, 1)
+
+    const strictResult = await validateTool.handler({
+      files: suppliedFiles,
+      profile: 'seo-export',
+    })
+    const strictValidation = (strictResult.structuredContent as JsonRecord)
+      .validation as JsonRecord
+    assert.equal(strictValidation.profile, 'seo-export')
+    assert.equal(strictValidation.valid, false)
   } finally {
     await fixture.close()
   }

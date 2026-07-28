@@ -145,7 +145,7 @@ export const exportKnowledgeCommand = defineCommand({
     },
     'max-concepts': {
       type: 'string',
-      description: 'Maximum OKF concept files. Defaults to 500.',
+      description: 'Maximum OKF page concepts. Defaults to 500.',
     },
     json: {
       type: 'boolean',
@@ -179,6 +179,7 @@ export const exportKnowledgeCommand = defineCommand({
       printKeyValue([
         ['Files', String(bundle.files.length)],
         ['Concepts', String(bundle.conceptCount)],
+        ['Page concepts', String(bundle.pageConceptCount)],
         ['Valid', validation.valid ? 'yes' : 'no'],
       ])
       return

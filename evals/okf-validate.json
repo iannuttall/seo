@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "I edited our knowledge pack markdown by hand. Can you check I didn't break the structure or any references before we use it?",
-      "expected_output": "Should use report id okf-validate to check supplied OKF Markdown files with the generic okf profile unless the files are known SEO exports. Should follow the discovery flow: seo_describe_report with id okf-validate, then seo_run_report with the required files array of path and content objects. Should read validation.profile, formatVersion, compatibility, valid, file and concept counts, and issue counts first, then provenance, generation, trust, lifecycle, and freshness, then each retained issue and explanation.nextActions. Should present it as a file-contract and trust-metadata check, not a fact check.",
+      "expected_output": "Should use report id okf-validate to check supplied OKF Markdown files with the generic okf profile unless the files are known SEO exports. Should follow the discovery flow: seo_describe_report with id okf-validate, then seo_run_report with the required files array of path and content objects. Should read validation.profile, formatVersion, compatibility, valid, file and concept counts, and issue counts first, then provenance, generation, trust, lifecycle, freshness, and attestation, then each retained issue and explanation.nextActions. Should present it as a file-contract and trust-metadata check, not a fact check.",
       "assertions": [
         "Uses report id okf-validate to check the edited files",
         "Passes the required files array of path and content objects",
@@ -17,7 +17,7 @@
     {
       "id": 2,
       "prompt": "Validate these two OKF files and tell me what to fix first if anything is wrong.",
-      "expected_output": "Should run report id okf-validate with the files array containing both path and content entries, via seo reports run okf-validate or seo_run_report. Should read the validation profile, format compatibility, valid state, counts, and provenance and trust summaries, then each issue level, path, and message, then use explanation.nextActions as the ordering guidance for what to fix first. Should note that missing optional trust fields do not invalidate generic OKF, warnings still require review even when validation.valid is true, and valid must not be reported as fact checked.",
+      "expected_output": "Should run report id okf-validate with the files array containing both path and content entries, via seo reports run okf-validate or seo_run_report. Should read the validation profile, format compatibility, valid state, counts, and provenance, trust, and attestation summaries, then each issue level, path, and message, then use explanation.nextActions as the ordering guidance for what to fix first. Should note that missing optional trust or attestation fields do not invalidate generic OKF, warnings still require review even when validation.valid is true, and valid must not be reported as fact checked.",
       "assertions": [
         "Runs report id okf-validate with both files in the files array",
         "Reads the profile, compatibility, counts, and trust summaries before each issue",

@@ -37,6 +37,17 @@ function printValidation(
     ['Fresh', String(validation.freshness.fresh)],
     ['Stale', String(validation.freshness.stale)],
     ['Freshness unspecified', String(validation.freshness.unspecified)],
+    ['Attested computations', String(validation.attestation.concepts)],
+    [
+      'Complete attestation contracts',
+      String(validation.attestation.completeContracts),
+    ],
+    [
+      'Incomplete attestation contracts',
+      String(validation.attestation.incompleteContracts),
+    ],
+    ['Inline computations', String(validation.attestation.inlineComputations)],
+    ['File computations', String(validation.attestation.fileComputations)],
   ])
   if (validation.issues.length) {
     process.stdout.write('\nIssues\n')
@@ -217,6 +228,20 @@ export const okfExplainCommand = defineCommand({
       ['Fresh', String(explanation.freshness.fresh)],
       ['Stale', String(explanation.freshness.stale)],
       ['Freshness unspecified', String(explanation.freshness.unspecified)],
+      ['Attested computations', String(explanation.attestation.concepts)],
+      [
+        'Complete attestation contracts',
+        String(explanation.attestation.completeContracts),
+      ],
+      [
+        'Incomplete attestation contracts',
+        String(explanation.attestation.incompleteContracts),
+      ],
+      [
+        'Inline computations',
+        String(explanation.attestation.inlineComputations),
+      ],
+      ['File computations', String(explanation.attestation.fileComputations)],
     ])
     if (explanation.nextActions.length) {
       process.stdout.write('\nNext actions\n')

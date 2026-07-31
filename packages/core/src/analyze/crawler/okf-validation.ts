@@ -1,6 +1,7 @@
 import { posix } from 'node:path'
 import { parseDocument } from 'yaml'
 import { countLabel } from '../../phrasing.js'
+import { validateOkfAttestedComputation } from './okf-attestation.js'
 import type {
   OkfExplainReport,
   OkfFile,
@@ -150,6 +151,13 @@ function isActor(value: unknown): value is string {
   )
 }
 
+function isSourceAuthor(value: unknown): value is string {
+  return (
+    isActor(value) ||
+    (typeof value === 'string' && /^team:[^:\s]+$/.test(value))
+  )
+}
+
 function mapping(value: unknown): Frontmatter | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Frontmatter)
@@ -228,6 +236,13 @@ function sourceIds(
       } else {
         ids.add(source.id)
       }
+    }
+    if (source.author !== undefined && !isSourceAuthor(source.author)) {
+      collector.add(
+        document.file.path,
+        'warning',
+        `sources[${index}].author should identify a tool, human, team, or process actor.`,
+      )
     }
     if (
       source.usage_count !== undefined &&
@@ -639,6 +654,7 @@ export function validateOkfFiles(
   }
 
   const concepts = documents.filter((item) => !isReserved(item.file.path))
+  const paths = new Set(files.map((file) => file.path))
   const provenance = {
     sources: 0,
     legacyCitations: 0,
@@ -666,6 +682,13 @@ export function validateOkfFiles(
     unspecified: 0,
     invalid: 0,
     evaluatedOn: today,
+  }
+  const attestation = {
+    concepts: 0,
+    completeContracts: 0,
+    incompleteContracts: 0,
+    inlineComputations: 0,
+    fileComputations: 0,
   }
 
   for (const document of concepts) {
@@ -740,9 +763,25 @@ export function validateOkfFiles(
       collector.add(path, 'warning', 'stale_after should use YYYY-MM-DD.')
     } else if (today >= staleAfter) freshness.stale++
     else freshness.fresh++
+
+    const attested = validateOkfAttestedComputation(
+      {
+        path: document.file.path,
+        frontmatter: document.frontmatter,
+        body: document.body,
+      },
+      paths,
+      (message) => collector.add(document.file.path, 'warning', message),
+    )
+    if (attested) {
+      attestation.concepts++
+      if (attested.complete) attestation.completeContracts++
+      else attestation.incompleteContracts++
+      if (attested.computation === 'inline') attestation.inlineComputations++
+      if (attested.computation === 'file') attestation.fileComputations++
+    }
   }
 
-  const paths = new Set(files.map((file) => file.path))
   for (const document of documents) {
     for (const value of markdownTargets(document.body)) {
       const target = internalTarget(document.file.path, value)
@@ -856,7 +895,7 @@ export function validateOkfFiles(
 
   const totalIssues = collector.errors + collector.warnings
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     profile,
     formatVersion,
     compatibility: compatibility(formatVersion),
@@ -875,6 +914,7 @@ export function validateOkfFiles(
     trust,
     lifecycle,
     freshness,
+    attestation,
     ...(seoExport ? { seoExport } : {}),
   }
 }
@@ -900,6 +940,11 @@ export function explainOkfValidation(
     if (validation.freshness.stale) {
       nextActions.push(
         `Review ${countLabel(validation.freshness.stale, 'stale concept')} before use.`,
+      )
+    }
+    if (validation.attestation.incompleteContracts) {
+      nextActions.push(
+        `Review ${countLabel(validation.attestation.incompleteContracts, 'incomplete attested computation contract')}.`,
       )
     }
     if (validation.lifecycle.deprecated) {
@@ -938,6 +983,7 @@ export function explainOkfValidation(
     trust: validation.trust,
     lifecycle: validation.lifecycle,
     freshness: validation.freshness,
+    attestation: validation.attestation,
     nextActions,
   }
 }

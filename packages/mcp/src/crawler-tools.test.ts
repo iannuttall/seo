@@ -462,7 +462,9 @@ test('crawler MCP structured output schema stays stable', async () => {
     assert.equal(buildValidation.profile, 'seo-export')
     assert.equal(buildValidation.formatVersion, '0.2')
     assert.equal(buildValidation.valid, true)
+    assert.equal(buildValidation.schemaVersion, 3)
     assert.deepEqual(keys(buildValidation), [
+      'attestation',
       'compatibility',
       'concepts',
       'files',
@@ -519,6 +521,13 @@ test('crawler MCP structured output schema stays stable', async () => {
       unverified: 0,
       machineConfirmed: 0,
       humanReviewed: 1,
+    })
+    assert.deepEqual(genericValidation.attestation, {
+      concepts: 0,
+      completeContracts: 0,
+      incompleteContracts: 0,
+      inlineComputations: 0,
+      fileComputations: 0,
     })
     assert.equal((genericValidation.freshness as JsonRecord).stale, 1)
 

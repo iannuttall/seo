@@ -17,7 +17,7 @@
     {
       "id": 2,
       "prompt": "Build an OKF pack from saved crawl crawl_example_20260710 with maxConcepts 30 and includeFiles true, then check it validates.",
-      "expected_output": "Should run report id okf-build with reportId crawl_example_20260710, maxConcepts 30, and includeFiles true, via seo reports run okf-build or seo_run_report. Should read the manifest schema version, OKF version, crawl status, title, total concept count, page concept count, and caveats, then selection page counts and deterministic ordering, then the returned SEO export validation profile, issue counts, provenance, generation, trust, lifecycle, and freshness before using the files. Should note that if selected pages equal the limit the bundle is bounded, not exhaustive, and route to report id okf-validate with profile seo-export to check the files separately.",
+      "expected_output": "Should run report id okf-build with reportId crawl_example_20260710, maxConcepts 30, and includeFiles true, via seo reports run okf-build or seo_run_report. Should read the manifest schema version, OKF version, crawl status, title, total concept count, page concept count, and caveats, then selection page counts and deterministic ordering, then the returned SEO export validation profile, issue counts, provenance, generation, trust, lifecycle, freshness, and attestation before using the files. Should note that if selected pages equal the limit the bundle is bounded, not exhaustive, and route to report id okf-validate with profile seo-export to check the files separately.",
       "assertions": [
         "Runs report id okf-build with reportId crawl_example_20260710",
         "Sets maxConcepts 30 and includeFiles true as requested",

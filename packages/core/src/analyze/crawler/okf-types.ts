@@ -77,8 +77,16 @@ export type OkfFreshnessSummary = {
   evaluatedOn: string
 }
 
+export type OkfAttestationSummary = {
+  concepts: number
+  completeContracts: number
+  incompleteContracts: number
+  inlineComputations: number
+  fileComputations: number
+}
+
 export type OkfValidationReport = {
-  schemaVersion: 2
+  schemaVersion: 3
   profile: OkfValidationProfile
   formatVersion: string | null
   compatibility: 'v0.2' | 'v0.1' | 'undeclared' | 'best-effort'
@@ -97,6 +105,7 @@ export type OkfValidationReport = {
   trust: OkfTrustSummary
   lifecycle: OkfLifecycleSummary
   freshness: OkfFreshnessSummary
+  attestation: OkfAttestationSummary
   seoExport?: {
     pageConcepts: number
   }
@@ -118,5 +127,6 @@ export type OkfExplainReport = {
   trust: OkfTrustSummary
   lifecycle: OkfLifecycleSummary
   freshness: OkfFreshnessSummary
+  attestation: OkfAttestationSummary
   nextActions: string[]
 }

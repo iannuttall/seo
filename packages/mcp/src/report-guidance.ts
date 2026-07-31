@@ -593,7 +593,7 @@ export const REPORT_GUIDANCE = {
     ],
     avoidWhen: ['You need to build the pack from a crawl first.'],
     outcome:
-      'A validation result with format compatibility, exact issues, provenance, trust, lifecycle, and freshness summaries.',
+      'A validation result with format compatibility, exact issues, provenance, trust, lifecycle, freshness, and attestation summaries.',
   },
   'page-opportunities': {
     name: 'Opportunities for one page',

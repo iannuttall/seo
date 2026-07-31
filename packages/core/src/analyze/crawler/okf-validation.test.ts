@@ -124,7 +124,7 @@ test('generic OKF validation does not require the SEO export layout', () => {
     {
       path: 'computations/revenue.md',
       content:
-        '---\ntype: Attested Computation\nruntime: bigquery\nparameters:\n  - { name: year, type: integer, required: true }\nexecutor:\n  resource: https://example.com/run\n  receipt: [job_id, result]\nattester:\n  resource: https://example.com/attest\n---\n\n# Computation\n\n```sql\nSELECT @year\n```\n',
+        '---\ntype: Attested Computation\nruntime: bigquery\nparameters:\n  - { name: year, type: integer, required: true }\nexecutor:\n  resource: https://example.com/run\n  receipt: [job_id, result]\nattester:\n  resource: https://example.com/attest\nsources:\n  - { resource: https://example.com/policy, author: team:data-platform }\n---\n\n# Computation\n\n```sql\nSELECT @year\n```\n',
     },
   ])
 
@@ -132,6 +132,58 @@ test('generic OKF validation does not require the SEO export layout', () => {
   assert.equal(report.profile, 'okf')
   assert.equal(report.concepts, 1)
   assert.equal(report.issueCounts.errors, 0)
+  assert.equal(report.issueCounts.warnings, 0)
+  assert.deepEqual(report.attestation, {
+    concepts: 1,
+    completeContracts: 1,
+    incompleteContracts: 0,
+    inlineComputations: 1,
+    fileComputations: 0,
+  })
+})
+
+test('OKF attested computation fields remain soft validation warnings', () => {
+  const report = validate([
+    {
+      path: 'index.md',
+      content:
+        '# Computations\n\n* [Missing contract](computations/missing.md)\n* [File contract](computations/file.md)\n',
+    },
+    {
+      path: 'computations/missing.md',
+      content:
+        '---\ntype: Attested Computation\nparameters:\n  - { name: year, type: integer, required: yes }\n  - { name: year, required: false }\nexecutor:\n  resource: missing-runner.py\n  receipt: [job_id, job_id, ""]\nattester: {}\nsources:\n  - { resource: https://example.com/policy, author: unknown actor }\n---\n\n# Definition\n\nNo computation supplied.\n',
+    },
+    {
+      path: 'computations/file.md',
+      content:
+        '---\ntype: Attested Computation\nruntime: python\ncomputation: revenue.py\nexecutor:\n  resource: runner.py\n  receipt: [result]\nattester:\n  resource: attester.py\n---\n\n# Definition\n\nFile-backed computation.\n',
+    },
+    { path: 'computations/revenue.py', content: 'print(1)\n' },
+    { path: 'computations/runner.py', content: 'print(1)\n' },
+    { path: 'computations/attester.py', content: 'print(1)\n' },
+  ])
+
+  assert.equal(report.valid, true)
+  assert.equal(report.issueCounts.errors, 0)
+  assert.deepEqual(report.attestation, {
+    concepts: 2,
+    completeContracts: 1,
+    incompleteContracts: 1,
+    inlineComputations: 0,
+    fileComputations: 1,
+  })
+  const messages = report.issues.map((issue) => issue.message).join(' ')
+  assert.match(messages, /runtime should be a non-empty string/)
+  assert.match(messages, /required should be true or false/)
+  assert.match(messages, /parameter year is duplicated/)
+  assert.match(messages, /parameters\[1\]\.type/)
+  assert.match(messages, /one fenced code block under # Computation/)
+  assert.match(messages, /executor\.resource bundle path was not supplied/)
+  assert.match(messages, /executor\.receipt field job_id is duplicated/)
+  assert.match(messages, /executor\.receipt\[2\]/)
+  assert.match(messages, /attester\.resource should be a non-empty path or URL/)
+  assert.match(messages, /sources\[0\]\.author/)
 })
 
 test('generic validation accepts official v0.2 compatibility edges', () => {

@@ -6,6 +6,7 @@ import type { OkfBundle, OkfFile } from './okf-types.js'
 import type { CrawlReport } from './report.js'
 
 export type {
+  OkfAttestationSummary,
   OkfBundle,
   OkfExplainReport,
   OkfFile,

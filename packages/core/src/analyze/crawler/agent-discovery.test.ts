@@ -356,7 +356,7 @@ test('HTML fallbacks are not evaluated as Markdown representations', async () =>
   )
 })
 
-test('markdown quality ignores repeated commands and weak intro samples', async () => {
+test('markdown quality ignores repeated commands, excluded UI, and weak intro samples', async () => {
   const exampleMarkdown = `---
 title: "Example"
 description: "An example page"
@@ -385,8 +385,10 @@ seo projects list
 `
   const variantPage: CrawlPageSnapshot = {
     ...page,
-    wordCount: 12,
-    contentSketch: undefined,
+    wordCount: 20,
+    contentSketch: contentSketch(
+      Array.from({ length: 40 }, (_, index) => `control${index}`).join(' '),
+    ),
     contentSample:
       'Unrelated visual navigation text that is not part of the useful document intro.',
   }
@@ -400,6 +402,8 @@ seo projects list
 
   assert.equal(quality?.repeatedLines, 0)
   assert.equal(quality?.introductoryCopyRetained, false)
+  assert.equal(quality?.contentSketchCoverage, 0)
+  assert.ok((quality?.wordRetentionRatio ?? 0) >= 0.8)
 
   const crawl = createCrawlReport({
     config: { url: 'https://example.com/' },
@@ -409,6 +413,46 @@ seo projects list
   }
   crawl.agentDiscovery = discovery
 
+  const checks = new Map(
+    agentReadiness(crawl).checks.map((item) => [item.id, item]),
+  )
+  assert.equal(checks.get('markdown-content-parity')?.status, 'pass')
+  assert.equal(checks.get('markdown-quality')?.status, 'pass')
+})
+
+test('short complete Markdown is not classified as navigation-only', async () => {
+  const shortMarkdown = `---
+title: "Brief"
+---
+
+# Brief
+
+Small, complete release note.
+`
+  const shortPage: CrawlPageSnapshot = {
+    ...page,
+    wordCount: 5,
+    contentSample: 'Brief Small complete release note',
+    contentSketch: contentSketch('Brief Small complete release note'),
+  }
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [shortPage],
+    timeoutMs: 1_000,
+    fetch: fetchWithMarkdown(shortMarkdown),
+  })
+  const quality = discovery.markdownAlternates.pages[0]?.quality
+
+  assert.ok((quality?.wordCount ?? 0) < 25)
+  assert.equal(quality?.navigationOnly, false)
+
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [shortPage],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
   assert.equal(
     agentReadiness(crawl).checks.find((item) => item.id === 'markdown-quality')
       ?.status,
@@ -449,11 +493,73 @@ ${duplicated}
   }
   crawl.agentDiscovery = discovery
 
-  assert.equal(
-    agentReadiness(crawl).checks.find((item) => item.id === 'markdown-quality')
-      ?.status,
-    'warning',
+  const qualityCheck = agentReadiness(crawl).checks.find(
+    (item) => item.id === 'markdown-quality',
   )
+  assert.equal(qualityCheck?.status, 'warning')
+  const evidence = qualityCheck?.evidence as {
+    affectedPages: number
+    pages: Array<{ url: string; reasons: string[] }>
+  }
+  assert.equal(evidence.affectedPages, 1)
+  assert.deepEqual(evidence.pages, [
+    {
+      url: 'https://example.com/',
+      reasons: ['repeated-prose'],
+      quality: discovery.markdownAlternates.pages[0]?.quality,
+    },
+  ])
+})
+
+test('markdown parity warnings include the triggering page metrics', async () => {
+  const source = Array.from(
+    { length: 100 },
+    (_, index) => `sourceword${index}`,
+  ).join(' ')
+  const missingPage: CrawlPageSnapshot = {
+    ...page,
+    wordCount: 100,
+    contentSketch: contentSketch(source),
+  }
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [missingPage],
+    timeoutMs: 1_000,
+    fetch: fetchWithMarkdown(markdown),
+  })
+  const crawl = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages: [missingPage],
+  }) as ReturnType<typeof createCrawlReport> & {
+    agentDiscovery: typeof discovery
+  }
+  crawl.agentDiscovery = discovery
+
+  const parity = agentReadiness(crawl).checks.find(
+    (item) => item.id === 'markdown-content-parity',
+  )
+  assert.equal(parity?.status, 'warning')
+  const evidence = parity?.evidence as {
+    failedPages: number
+    pages: Array<{
+      url: string
+      contentSketchCoverage: number
+      wordRetentionRatio: number
+      sourceWordCount: number
+      wordCount: number
+    }>
+  }
+  assert.equal(evidence.failedPages, 1)
+  assert.deepEqual(evidence.pages, [
+    {
+      url: 'https://example.com/',
+      contentSketchCoverage: 0,
+      wordRetentionRatio:
+        discovery.markdownAlternates.pages[0]?.quality?.wordRetentionRatio,
+      sourceWordCount: 100,
+      wordCount: discovery.markdownAlternates.pages[0]?.quality?.wordCount,
+    },
+  ])
 })
 
 test('agentReadiness reports evidence without scoring irrelevant profiles', async () => {

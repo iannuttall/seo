@@ -382,6 +382,66 @@ test('aiSearchScorecard recognizes software identity without treating it as site
   assert.match(identity?.finding ?? '', /Entity schema is present/)
 })
 
+test('aiSearchScorecard accepts top-level Person sameAs for a personal site', () => {
+  const card = aiSearchScorecard(
+    cleanReport({
+      pages: [
+        cleanPage('https://example.com/', {
+          schemaTypes: ['Person', 'WebSite'],
+          schemaSameAs: ['https://github.com/example'],
+          schemaSameAsEvidence: [
+            {
+              url: 'https://github.com/example',
+              block: 0,
+              path: '$.@graph[0].sameAs',
+              subjectId: 'https://example.com/#person',
+              subjectTypes: ['Person'],
+            },
+          ],
+          socialProfileLinks: ['https://github.com/example'],
+        }),
+      ],
+    }),
+  )
+  const identity = card.checks.find((check) => check.id === 'entity-identity')
+
+  assert.equal(identity?.status, 'pass')
+  assert.deepEqual(identity?.observed.siteSameAs, [
+    'https://github.com/example',
+  ])
+  assert.match(
+    identity?.finding ?? '',
+    /Organization, Person, or LocalBusiness/,
+  )
+})
+
+test('aiSearchScorecard does not treat a nested author sameAs as site identity', () => {
+  const card = aiSearchScorecard(
+    cleanReport({
+      pages: [
+        cleanPage('https://example.com/', {
+          schemaTypes: ['Person', 'WebSite'],
+          schemaSameAs: ['https://example.net/jane'],
+          schemaSameAsEvidence: [
+            {
+              url: 'https://example.net/jane',
+              block: 0,
+              path: '$.author.sameAs',
+              subjectId: 'https://example.com/#jane',
+              subjectTypes: ['Person'],
+            },
+          ],
+          socialProfileLinks: ['https://example.net/jane'],
+        }),
+      ],
+    }),
+  )
+  const identity = card.checks.find((check) => check.id === 'entity-identity')
+
+  assert.equal(identity?.status, 'warn')
+  assert.deepEqual(identity?.observed.siteSameAs, [])
+})
+
 test('aiSearchScorecard does not count a page-level type as entity identity', () => {
   const card = aiSearchScorecard(
     cleanReport({

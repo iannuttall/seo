@@ -4,11 +4,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, test } from 'node:test'
 import {
+  analyticsConnection,
   bingWebmasterSiteUrl,
   deleteClient,
   getClient,
+  removeClientAnalyticsConnection,
   saveClient,
+  setClientAnalyticsConnection,
   setClientBingSite,
+  updateClient,
 } from './clients.js'
 import { readConfig } from './storage/config.js'
 
@@ -83,4 +87,96 @@ test('saving a Bing site preserves the rest of the project profile', () => {
     bingWebmasterSiteUrl(getClient('example')),
     'https://example.com/',
   )
+})
+
+test('Clicky can be selected as the project analytics connection', () => {
+  const client = saveClient({
+    id: 'clicky-example',
+    name: 'Clicky Example',
+    siteUrl: 'sc-domain:example.com',
+    analytics: {
+      selected: 'clicky',
+      clicky: { siteId: '123' },
+      google: { propertyId: '456' },
+    },
+  })
+
+  assert.deepEqual(analyticsConnection(client), {
+    provider: 'clicky',
+    siteId: '123',
+  })
+})
+
+test('updating one project field preserves every omitted field', () => {
+  saveClient({
+    id: 'example',
+    name: 'Example',
+    siteUrl: 'sc-domain:example.com',
+    startUrl: 'https://example.com/',
+    watchUrls: ['https://example.com/pricing'],
+    brandTerms: ['example'],
+    analytics: { google: { propertyId: '123' } },
+    searchEngines: { bing: { siteUrl: 'https://example.com/' } },
+    reportDay: 12,
+    technicalWeekday: 3,
+    isDefault: true,
+  })
+
+  const updated = updateClient('example', { name: 'Example site' })
+
+  assert.equal(updated.name, 'Example site')
+  assert.equal(updated.siteUrl, 'sc-domain:example.com')
+  assert.equal(updated.startUrl, 'https://example.com/')
+  assert.deepEqual(updated.watchUrls, ['https://example.com/pricing'])
+  assert.deepEqual(updated.brandTerms, ['example'])
+  assert.equal(updated.analytics.google?.propertyId, '123')
+  assert.equal(updated.searchEngines?.bing?.siteUrl, 'https://example.com/')
+  assert.equal(updated.reportDay, 12)
+  assert.equal(updated.technicalWeekday, 3)
+  assert.equal(updated.isDefault, true)
+})
+
+test('attaching Clicky selects it without dropping other project data', () => {
+  saveClient({
+    id: 'example',
+    name: 'Example',
+    siteUrl: 'sc-domain:example.com',
+    startUrl: 'https://example.com/',
+    analytics: { google: { propertyId: '123' } },
+    searchEngines: { bing: { siteUrl: 'https://example.com/' } },
+  })
+
+  const updated = setClientAnalyticsConnection('example', {
+    provider: 'clicky',
+    siteId: '456',
+  })
+
+  assert.deepEqual(updated.analytics, {
+    selected: 'clicky',
+    google: { propertyId: '123' },
+    clicky: { siteId: '456' },
+  })
+  assert.equal(updated.siteUrl, 'sc-domain:example.com')
+  assert.equal(updated.startUrl, 'https://example.com/')
+  assert.equal(updated.searchEngines?.bing?.siteUrl, 'https://example.com/')
+})
+
+test('detaching Clicky preserves Google Analytics and selects it again', () => {
+  saveClient({
+    id: 'example',
+    name: 'Example',
+    siteUrl: 'sc-domain:example.com',
+    analytics: {
+      selected: 'clicky',
+      google: { propertyId: '123' },
+      clicky: { siteId: '456' },
+    },
+  })
+
+  const updated = removeClientAnalyticsConnection('example', 'clicky')
+
+  assert.deepEqual(updated.analytics, {
+    selected: 'google',
+    google: { propertyId: '123' },
+  })
 })

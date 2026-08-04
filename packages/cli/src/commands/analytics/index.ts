@@ -1,4 +1,5 @@
 import { defineCommand } from 'citty'
+import { clickyAnalyticsCommand } from './clicky/index.js'
 import { googleAnalyticsCommand } from './google/index.js'
 
 export const analyticsCommand = defineCommand({
@@ -7,6 +8,7 @@ export const analyticsCommand = defineCommand({
     description: 'Read analytics data from connected providers',
   },
   subCommands: {
+    clicky: clickyAnalyticsCommand,
     google: googleAnalyticsCommand,
   },
 })

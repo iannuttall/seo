@@ -6,6 +6,7 @@ import type {
   queryPagesTopQueriesBatch,
   queryPageTopQuery,
 } from '../../gsc/client.js'
+import type { AnalyticsConnection } from '../../types.js'
 import type {
   fetchLandingPageValues,
   landingValueForUrl,
@@ -46,10 +47,12 @@ export async function crawlDataSources(input: {
   skipReason?: 'cancelled' | 'memory-pressure'
   site?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
   pages: CrawlReport['pages']
   warnings: string[]
   searchMetricsLimit: number
   analyticsLimit: number
+  refresh?: boolean
   now: () => Date
   queryPageMetrics: typeof queryPageMetrics
   queryPageTopQuery: typeof queryPageTopQuery
@@ -62,6 +65,20 @@ export async function crawlDataSources(input: {
 }): Promise<CrawlReportDataSources> {
   const window = crawlMetricsWindow(input.now())
   const skippedForMemory = input.skipReason === 'memory-pressure'
+  const analyticsConnection =
+    input.analyticsConnection ??
+    (input.googleAnalyticsPropertyId
+      ? ({
+          provider: 'google',
+          propertyId: input.googleAnalyticsPropertyId,
+        } as const)
+      : undefined)
+  const analyticsLabel =
+    analyticsConnection?.provider === 'clicky'
+      ? 'Clicky'
+      : analyticsConnection?.provider === 'google'
+        ? 'Google Analytics'
+        : 'Analytics'
   const dataSources: CrawlReportDataSources = {
     searchConsole: {
       status: 'skipped',
@@ -80,16 +97,18 @@ export async function crawlDataSources(input: {
     },
     analytics: {
       status: 'skipped',
+      provider: analyticsConnection?.provider,
+      observedMetrics: [],
       totalPages: input.pages.length,
       queriedPages: 0,
       joinedPages: 0,
       retainedRowLimit: input.analyticsLimit,
       retainedRowLimitReached: false,
       warning: skippedForMemory
-        ? 'Google Analytics join skipped after the local memory safety limit was reached.'
+        ? `${analyticsLabel} join skipped after the local memory safety limit was reached.`
         : input.skipReason === 'cancelled'
-          ? 'Google Analytics join skipped because the crawl was cancelled.'
-          : 'Google Analytics join skipped because no property was selected.',
+          ? `${analyticsLabel} join skipped because the crawl was cancelled.`
+          : 'Analytics join skipped because no connection was selected.',
     },
   }
 
@@ -108,12 +127,15 @@ export async function crawlDataSources(input: {
       queryPagesTopQueriesBatch: input.queryPagesTopQueriesBatch,
     })
   }
-  if (!input.skipReason && input.googleAnalyticsPropertyId) {
+  if (!input.skipReason && analyticsConnection) {
     dataSources.analytics = await joinAnalytics({
-      propertyId: input.googleAnalyticsPropertyId,
+      connection: analyticsConnection,
+      legacyGooglePropertyInput:
+        !input.analyticsConnection && Boolean(input.googleAnalyticsPropertyId),
       pages: input.pages,
       warnings: input.warnings,
       limit: input.analyticsLimit,
+      refresh: input.refresh,
       window,
       fetchLandingPageValues: input.fetchLandingPageValues,
       landingValueForUrl: input.landingValueForUrl,

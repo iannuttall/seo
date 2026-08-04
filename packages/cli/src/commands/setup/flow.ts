@@ -1,10 +1,12 @@
-import { confirm, intro, note, outro, text } from '@clack/prompts'
+import { intro, note, outro, text } from '@clack/prompts'
 import {
+  analyticsConnection,
   type ClientProfile,
   deriveBrandTerms,
   ensureSeoCliDirs,
   listClients,
   saveClient,
+  updateClient,
 } from '@seo/core'
 import {
   booleanArg,
@@ -23,11 +25,16 @@ import {
 } from '../../utils.js'
 import { slugId, startUrlForSite, suggestedClientName } from '../shared.js'
 import {
-  chooseGoogleAnalyticsProperty,
+  chooseSetupProjectTarget,
+  nextAvailableProjectId,
+} from './project-target.js'
+import {
+  chooseAnalyticsForSetup,
   maybeConnectAuth,
   maybeInstallMcp,
   maybeInstallSkill,
   type SetupAuthStatus,
+  type SetupClickySelection,
   type SetupGoogleAnalyticsSelection,
   type SetupMcpInstall,
   type SetupSkillInstall,
@@ -38,6 +45,7 @@ type SetupResult = {
   site: string
   auth: SetupAuthStatus
   googleAnalytics?: SetupGoogleAnalyticsSelection
+  clicky?: SetupClickySelection
   mcp: SetupMcpInstall[]
   skill?: SetupSkillInstall
   next: string[]
@@ -85,22 +93,6 @@ function mcpFailureMessage(installs: SetupMcpInstall[]): string | undefined {
     .join('\n')
 }
 
-function existingProfileForSetup(
-  site: string,
-  name: string,
-  requestedId: string | undefined,
-): ClientProfile | undefined {
-  if (requestedId) return undefined
-  const matches = listClients().filter((client) => client.siteUrl === site)
-  if (matches.length === 1) return matches[0]
-  return (
-    matches.find((client) => client.isDefault) ??
-    matches.find(
-      (client) => client.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
-    )
-  )
-}
-
 export async function runGuidedSetup(
   args: Record<string, unknown>,
 ): Promise<void> {
@@ -125,33 +117,39 @@ export async function runGuidedSetup(
   }
 
   ensureSeoCliDirs()
-  const siteInput = {
-    site: stringArg(args.site),
-    options: { json, refresh: booleanArg(args.refresh) },
-  }
-  const selectedSite = json ? await resolveSite(siteInput) : undefined
-  const auth = await maybeConnectAuth(args)
-  const site = selectedSite ?? (await resolveSite(siteInput))
-  const defaultName = suggestedClientName(site)
-  if (canPrompt({ json })) {
+  const interactive = canPrompt({ json })
+  if (interactive) {
     note(
-      'A project profile remembers the site and report defaults so future commands stay short.',
-      'Project profile',
+      'A project profile remembers one site and its report defaults so future commands stay short.',
+      'Project profiles',
     )
   }
-  const shouldSaveProfile =
-    booleanArg(args['skip-profile']) === true
-      ? false
-      : canPrompt({ json })
-        ? maybeExitCancelled(
-            await confirm({
-              message: 'Save this site as a project profile?',
-              initialValue: true,
-            }),
-          )
-        : true
+  const clients = listClients()
+  const projectTarget = await chooseSetupProjectTarget({
+    clients,
+    interactive,
+    requestedId: stringArg(args.id),
+    skipProfile: booleanArg(args['skip-profile']),
+  })
+  const existingProject =
+    projectTarget.mode === 'update' ? projectTarget.client : undefined
+  const selectedProjectSite = stringArg(args.site) ?? existingProject?.siteUrl
+  const siteInput = {
+    site: selectedProjectSite,
+    options: {
+      allowDefault: projectTarget.mode === 'update',
+      json,
+      refresh: booleanArg(args.refresh),
+    },
+  }
+  const selectedSite = json ? await resolveSite(siteInput) : undefined
+  const auth = await maybeConnectAuth(
+    selectedProjectSite ? { ...args, site: selectedProjectSite } : args,
+  )
+  const site = selectedSite ?? (await resolveSite(siteInput))
+  const defaultName = suggestedClientName(site)
 
-  if (!shouldSaveProfile) {
+  if (projectTarget.mode === 'skip') {
     const mcp = await maybeInstallMcp(args)
     const skill = await maybeInstallSkill(args)
     const siteArg = `--site ${shellArg(site)}`
@@ -185,24 +183,25 @@ export async function runGuidedSetup(
 
   const name =
     stringArg(args.name) ??
-    (canPrompt({ json })
+    (interactive
       ? maybeExitCancelled(
           await text({
             message: 'Project name',
-            placeholder: defaultName,
-            defaultValue: defaultName,
+            placeholder: existingProject?.name ?? defaultName,
+            defaultValue: existingProject?.name ?? defaultName,
           }),
         )
-      : defaultName)
-  const requestedId = stringArg(args.id)
+      : (existingProject?.name ?? defaultName))
   const id =
-    requestedId ??
-    existingProfileForSetup(site, name, requestedId)?.id ??
-    slugId(name)
-  const defaultStartUrl = startUrlForSite(site) ?? ''
+    existingProject?.id ??
+    (projectTarget.mode === 'create' && projectTarget.requestedId
+      ? slugId(projectTarget.requestedId)
+      : nextAvailableProjectId(name, clients))
+  const defaultStartUrl =
+    existingProject?.startUrl ?? startUrlForSite(site) ?? ''
   const startUrl =
     stringArg(args.url) ??
-    (canPrompt({ json })
+    (interactive
       ? maybeExitCancelled(
           await text({
             message: 'Website URL to crawl',
@@ -211,34 +210,67 @@ export async function runGuidedSetup(
           }),
         )
       : defaultStartUrl || undefined)
-  const watchUrls = listArg(args.urls).length > 0 ? listArg(args.urls) : []
-  const googleAnalytics = await chooseGoogleAnalyticsProperty({
-    property: stringArg(args['google-analytics-property']),
+  const watchUrls =
+    args.urls === undefined
+      ? (existingProject?.watchUrls ?? [])
+      : listArg(args.urls)
+  const analyticsSelection = await chooseAnalyticsForSetup({
+    googleProperty: stringArg(args['google-analytics-property']),
+    clickySiteId: stringArg(args['clicky-site-id']),
+    current: analyticsConnection(existingProject),
     site,
-    interactive: canPrompt({ json }),
+    interactive,
   })
-  const googleAnalyticsPropertyId = googleAnalytics?.propertyId
-  const derivedBrandTerms = deriveBrandTerms({ id, name, siteUrl: site })
+  const googleAnalytics =
+    analyticsSelection?.provider === 'google'
+      ? analyticsSelection.google
+      : undefined
+  const clicky =
+    analyticsSelection?.provider === 'clicky'
+      ? analyticsSelection.clicky
+      : undefined
+  const derivedBrandTerms =
+    existingProject?.brandTerms ?? deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
-    listArg(args.brand).length > 0 ? listArg(args.brand) : derivedBrandTerms
-  const reportDay = numberArg(args['report-day']) ?? 1
-  const technicalWeekday = numberArg(args.weekday) ?? 1
-  const isDefault = booleanArg(args.default) ?? true
+    args.brand === undefined ? derivedBrandTerms : listArg(args.brand)
+  const reportDay =
+    numberArg(args['report-day']) ?? existingProject?.reportDay ?? 1
+  const technicalWeekday =
+    numberArg(args.weekday) ?? existingProject?.technicalWeekday ?? 1
+  const isDefault =
+    booleanArg(args.default) ?? existingProject?.isDefault ?? true
 
-  const client = saveClient({
-    id,
+  const analytics =
+    analyticsSelection === undefined
+      ? undefined
+      : analyticsSelection.provider === 'google'
+        ? {
+            ...existingProject?.analytics,
+            selected: 'google' as const,
+            google: { propertyId: analyticsSelection.google.propertyId },
+          }
+        : analyticsSelection.provider === 'clicky'
+          ? {
+              ...existingProject?.analytics,
+              selected: 'clicky' as const,
+              clicky: { siteId: analyticsSelection.clicky.siteId },
+            }
+          : {}
+
+  const profile = {
     name,
     siteUrl: site,
     startUrl,
     watchUrls,
     brandTerms,
-    analytics: googleAnalyticsPropertyId
-      ? { google: { propertyId: googleAnalyticsPropertyId } }
-      : undefined,
+    analytics,
     reportDay,
     technicalWeekday,
     isDefault,
-  })
+  }
+  const client = existingProject
+    ? updateClient(existingProject.id, profile)
+    : saveClient({ id, ...profile })
   const mcp = await maybeInstallMcp(args)
   const skill = await maybeInstallSkill(args)
   const next = [
@@ -251,6 +283,7 @@ export async function runGuidedSetup(
     site,
     auth,
     googleAnalytics,
+    clicky,
     mcp,
     skill,
     next,
@@ -268,8 +301,12 @@ export async function runGuidedSetup(
     ['Watch URLs', String(client.watchUrls.length)],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
     [
-      'Google Analytics property',
-      client.analytics.google?.propertyId ?? 'not connected (optional)',
+      'Traffic analytics',
+      client.analytics.selected === 'clicky'
+        ? `Clicky site ${client.analytics.clicky?.siteId}`
+        : client.analytics.google?.propertyId
+          ? `Google Analytics property ${client.analytics.google.propertyId}`
+          : 'not connected (optional)',
     ],
     ...(googleAnalytics
       ? [
@@ -277,6 +314,12 @@ export async function runGuidedSetup(
             string,
             string,
           ],
+        ]
+      : []),
+    ...(clicky
+      ? [
+          ['Clicky site', clicky.siteId] as [string, string],
+          ['Clicky credential', clicky.credentialSource] as [string, string],
         ]
       : []),
     ['Auth', auth],

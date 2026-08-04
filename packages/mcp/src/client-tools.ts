@@ -61,6 +61,10 @@ export function registerClientTools(server: McpServer): void {
         startUrl: z.string().url().optional(),
         watchUrls: z.array(z.string().url()).optional(),
         googleAnalyticsPropertyId: z.string().optional(),
+        clickySiteId: z
+          .string()
+          .regex(/^\d{1,30}$/u)
+          .optional(),
         reportDay: z.number().optional(),
         technicalWeekday: z.number().optional(),
         isDefault: z.boolean().optional(),
@@ -74,6 +78,7 @@ export function registerClientTools(server: McpServer): void {
       startUrl,
       watchUrls,
       googleAnalyticsPropertyId,
+      clickySiteId,
       reportDay,
       technicalWeekday,
       isDefault,
@@ -98,6 +103,11 @@ export function registerClientTools(server: McpServer): void {
           return toolSuccess(`Default client set to ${client.id}.`, client)
         }
         if (!site) throw new Error('Pass site to save a client.')
+        if (googleAnalyticsPropertyId && clickySiteId) {
+          throw new Error(
+            'Pass either googleAnalyticsPropertyId or clickySiteId, not both.',
+          )
+        }
         const client = saveClient({
           id,
           name,
@@ -105,8 +115,13 @@ export function registerClientTools(server: McpServer): void {
           startUrl,
           watchUrls,
           analytics: googleAnalyticsPropertyId
-            ? { google: { propertyId: googleAnalyticsPropertyId } }
-            : undefined,
+            ? {
+                selected: 'google',
+                google: { propertyId: googleAnalyticsPropertyId },
+              }
+            : clickySiteId
+              ? { selected: 'clicky', clicky: { siteId: clickySiteId } }
+              : undefined,
           reportDay,
           technicalWeekday,
           isDefault,

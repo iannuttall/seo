@@ -1,6 +1,46 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { authSetupOptions } from './prompts.js'
+import { analyticsSetupOptions, authSetupOptions } from './prompts.js'
+
+test('setup offers Clicky as a traffic analytics option', () => {
+  assert.deepEqual(analyticsSetupOptions(), [
+    {
+      value: 'google',
+      label: 'Google Analytics',
+      hint: 'Use a property available to your Google login',
+    },
+    {
+      value: 'clicky',
+      label: 'Clicky',
+      hint: 'Use a site ID and sitekey from Clicky',
+    },
+    { value: 'skip', label: 'Skip traffic analytics' },
+  ])
+})
+
+test('setup can preserve, replace, or remove existing traffic analytics', () => {
+  assert.deepEqual(
+    analyticsSetupOptions({ provider: 'clicky', siteId: '123' }),
+    [
+      {
+        value: 'keep',
+        label: 'Keep Clicky site 123',
+        hint: 'Leave this project connection unchanged',
+      },
+      {
+        value: 'google',
+        label: 'Google Analytics',
+        hint: 'Use a property available to your Google login',
+      },
+      {
+        value: 'clicky',
+        label: 'Clicky',
+        hint: 'Use a site ID and sitekey from Clicky',
+      },
+      { value: 'remove', label: 'Remove traffic analytics' },
+    ],
+  )
+})
 
 test('saved BYO OAuth clients go directly to Google sign-in', () => {
   const options = authSetupOptions({

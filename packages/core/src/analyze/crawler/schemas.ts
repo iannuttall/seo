@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { listRules } from '../../rules.js'
+import { analyticsConnectionSchema } from '../../types.js'
 import { agentDiscoverySchema } from './agent-discovery-schema.js'
 import { CRAWL_SKIP_REASONS } from './crawl-skip-reasons.js'
 import { crawlSiteChecksSchema } from './site-checks-schema.js'
@@ -56,8 +57,8 @@ const searchMetricsSchema = z.object({
 
 const analyticsSchema = z.object({
   sessions: z.number(),
-  totalUsers: z.number(),
-  conversions: z.number(),
+  totalUsers: z.number().optional(),
+  conversions: z.number().optional(),
 })
 
 const crawlerIdentitySchema = z.object({
@@ -729,8 +730,8 @@ export const crawlTopFixSchema = crawlIssueGroupSchema.extend({
     clicks: z.number(),
     impressions: z.number(),
     sessions: z.number(),
-    totalUsers: z.number(),
-    conversions: z.number(),
+    totalUsers: z.number().optional(),
+    conversions: z.number().optional(),
     avgPosition: z.number().optional(),
     effort: z.enum(['low', 'medium', 'high']),
     effortScore: z.number(),
@@ -934,6 +935,10 @@ const crawlSearchDataSourceSchema = z.object({
 })
 
 const crawlAnalyticsDataSourceSchema = z.object({
+  provider: z.enum(['google', 'clicky']).optional(),
+  observedMetrics: z
+    .array(z.enum(['sessions', 'totalUsers', 'conversions']))
+    .optional(),
   status: crawlDataSourceStatusSchema,
   window: crawlDataSourceWindowSchema.optional(),
   totalPages: z.number().int().nonnegative(),
@@ -957,6 +962,7 @@ const crawlReportBaseSchema = z.object({
   projectId: z.string().optional(),
   site: z.string().optional(),
   googleAnalyticsPropertyId: z.string().optional(),
+  analyticsConnection: analyticsConnectionSchema.optional(),
   generatedAt: z.string().datetime(),
   status: z.enum(['completed', 'partial', 'failed']),
   configHash: z.string(),

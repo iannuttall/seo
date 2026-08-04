@@ -4,9 +4,24 @@ import {
   fetchLandingPageValues,
   landingPageRankingPolicy,
   landingPageValuesCanRank,
+  landingPageValuesFromClickyRows,
   landingPageValuesFromRows,
   landingValueForUrl,
 } from './analytics-value.js'
+
+test('Clicky entrance rows become visits without invented user or conversion values', () => {
+  const values = landingPageValuesFromClickyRows([
+    {
+      value: '12',
+      url: 'https://example.com/pricing?utm_source=search',
+    },
+    { value: '3', url: 'https://example.com/pricing/' },
+  ])
+
+  assert.deepEqual(values.get('/pricing'), { sessions: 15 })
+  assert.equal(values.get('/pricing')?.totalUsers, undefined)
+  assert.equal(values.get('/pricing')?.conversions, undefined)
+})
 
 test('aggregates Google Analytics query-string variants by normalized landing path', () => {
   const values = landingPageValuesFromRows([

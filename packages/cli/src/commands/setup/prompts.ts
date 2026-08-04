@@ -7,7 +7,10 @@ import {
   text,
 } from '@clack/prompts'
 import {
+  type AnalyticsConnection,
   authStatus,
+  CLICKY_SITEKEY_ENV,
+  ClickyClient,
   type Ga4WebStreamCandidate,
   type Ga4WebStreamMatch,
   ga4MatchReason,
@@ -16,7 +19,9 @@ import {
   listGa4DataStreams,
   loginWithLoopback,
   matchGa4WebStreams,
+  readClickySiteKey,
   SeoError,
+  writeClickySiteKey,
   writeOauthClient,
 } from '@seo/core'
 import { canPrompt, maybeExitCancelled } from '../../utils.js'
@@ -40,6 +45,15 @@ export type SetupGoogleAnalyticsSelection = {
   selection: 'explicit' | 'matched' | 'manual'
   reason: string
 }
+export type SetupClickySelection = {
+  siteId: string
+  credentialSource: 'environment' | 'keychain' | 'file'
+  selection: 'explicit' | 'manual'
+}
+export type SetupAnalyticsSelection =
+  | { provider: 'google'; google: SetupGoogleAnalyticsSelection }
+  | { provider: 'clicky'; clicky: SetupClickySelection }
+  | { provider: 'none' }
 export type SetupSkillInstall = {
   status: 'installed' | 'declined' | 'skipped' | 'failed'
   error?: string
@@ -56,6 +70,46 @@ type GoogleAnalyticsSetupChoice = GoogleAnalyticsPropertyChoice & {
 }
 
 type AuthSetupChoice = 'login' | 'setup' | 'skip'
+type AnalyticsSetupChoice = 'keep' | 'google' | 'clicky' | 'remove' | 'skip'
+
+export function analyticsSetupOptions(current?: AnalyticsConnection): Array<{
+  value: AnalyticsSetupChoice
+  label: string
+  hint?: string
+}> {
+  const providers: Array<{
+    value: AnalyticsSetupChoice
+    label: string
+    hint?: string
+  }> = [
+    {
+      value: 'google',
+      label: 'Google Analytics',
+      hint: 'Use a property available to your Google login',
+    },
+    {
+      value: 'clicky',
+      label: 'Clicky',
+      hint: 'Use a site ID and sitekey from Clicky',
+    },
+  ]
+  if (!current) {
+    return [...providers, { value: 'skip', label: 'Skip traffic analytics' }]
+  }
+  const currentLabel =
+    current.provider === 'clicky'
+      ? `Clicky site ${current.siteId}`
+      : `Google Analytics property ${current.propertyId}`
+  return [
+    {
+      value: 'keep',
+      label: `Keep ${currentLabel}`,
+      hint: 'Leave this project connection unchanged',
+    },
+    ...providers,
+    { value: 'remove', label: 'Remove traffic analytics' },
+  ]
+}
 
 export function authSetupOptions(input: {
   sharedConfigured: boolean
@@ -263,6 +317,122 @@ export async function chooseGoogleAnalyticsProperty(input: {
         ? `Selected ${choice.label} during setup. Its web stream did not clearly match ${input.site}.`
         : `Selected ${choice.label} during setup. seo could not read every Google Analytics web stream, so it did not guess a match.`,
   }
+}
+
+async function chooseClicky(input: {
+  siteId?: string
+  interactive: boolean
+}): Promise<SetupClickySelection> {
+  const siteId =
+    input.siteId ??
+    (input.interactive
+      ? maybeExitCancelled(
+          await text({
+            message: 'Clicky site ID',
+            validate: (value) =>
+              /^\d{1,30}$/u.test(value?.trim() ?? '')
+                ? undefined
+                : 'Enter the numeric site ID from Clicky',
+          }),
+        )
+      : undefined)
+  if (!siteId) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Pass --clicky-site-id when connecting Clicky outside a terminal.',
+    )
+  }
+
+  const existing = await readClickySiteKey(siteId)
+  const siteKey =
+    existing?.siteKey ??
+    (input.interactive
+      ? maybeExitCancelled(
+          await password({
+            message: 'Clicky sitekey',
+            validate: (value) =>
+              /^[A-Za-z0-9]{12,64}$/u.test(value?.trim() ?? '')
+                ? undefined
+                : 'Enter the sitekey from Clicky',
+          }),
+        )
+      : undefined)
+  if (!siteKey) {
+    throw new SeoError(
+      'AUTH_REQUIRED',
+      `Set ${CLICKY_SITEKEY_ENV} when connecting Clicky outside a terminal.`,
+    )
+  }
+
+  await new ClickyClient({ siteId, siteKey }).verify()
+  const credentialSource =
+    existing?.source ?? (await writeClickySiteKey(siteId, siteKey))
+  return {
+    siteId,
+    credentialSource,
+    selection: input.siteId ? 'explicit' : 'manual',
+  }
+}
+
+export async function chooseAnalyticsForSetup(input: {
+  googleProperty?: string
+  clickySiteId?: string
+  current?: AnalyticsConnection
+  site: string
+  interactive?: boolean
+}): Promise<SetupAnalyticsSelection | undefined> {
+  if (input.googleProperty && input.clickySiteId) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Pass either --google-analytics-property or --clicky-site-id, not both.',
+    )
+  }
+  const interactive = input.interactive ?? canPrompt()
+  if (input.clickySiteId) {
+    return {
+      provider: 'clicky',
+      clicky: await chooseClicky({
+        siteId: input.clickySiteId,
+        interactive,
+      }),
+    }
+  }
+  if (input.googleProperty) {
+    const google = await chooseGoogleAnalyticsProperty({
+      property: input.googleProperty,
+      site: input.site,
+      interactive,
+    })
+    return google ? { provider: 'google', google } : undefined
+  }
+  if (!interactive) return undefined
+
+  const choice = maybeExitCancelled(
+    await select<AnalyticsSetupChoice>({
+      message: 'Traffic analytics',
+      options: analyticsSetupOptions(input.current),
+    }),
+  )
+  if (choice === 'keep') return undefined
+  if (choice === 'remove') return { provider: 'none' }
+  if (choice === 'skip') return undefined
+  if (choice === 'clicky') {
+    return {
+      provider: 'clicky',
+      clicky: await chooseClicky({ interactive }),
+    }
+  }
+  const google = await chooseGoogleAnalyticsProperty({
+    site: input.site,
+    interactive,
+  })
+  if (!google) {
+    note(
+      'No Google Analytics property was available for this Google login. You can connect one later.',
+      'Traffic analytics skipped',
+    )
+  }
+  return google ? { provider: 'google', google } : undefined
 }
 
 export async function maybeInstallSkill(

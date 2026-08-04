@@ -1,4 +1,4 @@
-import { saveClient } from '@seo/core'
+import { getClient, SeoError, saveClient, updateClient } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -9,6 +9,7 @@ import {
 } from '../../../args.js'
 import { resolveSite } from '../../../selection.js'
 import { printJson } from '../../../utils.js'
+import { slugId } from '../../shared.js'
 import { printClientProfile } from './output.js'
 
 export const clientAddCommand = defineCommand({
@@ -41,6 +42,11 @@ export const clientAddCommand = defineCommand({
       type: 'string',
       description: 'Optional Google Analytics property ID for this project.',
     },
+    'clicky-site-id': {
+      type: 'string',
+      description:
+        'Optional Clicky site ID. Save its sitekey with seo analytics clicky connect.',
+    },
     brand: {
       type: 'string',
       description: 'Comma-separated branded query terms to exclude by default.',
@@ -65,27 +71,50 @@ export const clientAddCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const client = saveClient({
-      id: stringArg(args.id),
+    const requestedId = stringArg(args.id)
+    const existing = requestedId
+      ? (getClient(requestedId) ?? getClient(slugId(requestedId)))
+      : undefined
+    const googleAnalyticsProperty = stringArg(args['google-analytics-property'])
+    const clickySiteId = stringArg(args['clicky-site-id'])
+    if (googleAnalyticsProperty && clickySiteId) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Pass either --google-analytics-property or --clicky-site-id, not both.',
+      )
+    }
+    const siteUrl = await resolveSite({
+      site: stringArg(args.site) ?? existing?.siteUrl,
+      options: { json },
+    })
+    const profile = {
       name: stringArg(args.name),
-      siteUrl: await resolveSite({
-        site: stringArg(args.site),
-        options: { json },
-      }),
+      siteUrl,
       startUrl: stringArg(args.url),
-      watchUrls: listArg(args.urls),
-      brandTerms: listArg(args.brand),
-      analytics: stringArg(args['google-analytics-property'])
+      watchUrls: args.urls === undefined ? undefined : listArg(args.urls),
+      brandTerms: args.brand === undefined ? undefined : listArg(args.brand),
+      analytics: googleAnalyticsProperty
         ? {
+            ...existing?.analytics,
+            selected: 'google' as const,
             google: {
-              propertyId: stringArg(args['google-analytics-property']) ?? '',
+              propertyId: googleAnalyticsProperty,
             },
           }
-        : undefined,
+        : clickySiteId
+          ? {
+              ...existing?.analytics,
+              selected: 'clicky' as const,
+              clicky: { siteId: clickySiteId },
+            }
+          : undefined,
       reportDay: numberArg(args['report-day']),
       technicalWeekday: numberArg(args.weekday),
       isDefault: booleanArg(args.default),
-    })
+    }
+    const client = existing
+      ? updateClient(existing.id, profile)
+      : saveClient({ id: requestedId, ...profile })
     if (json) {
       printJson(client)
       return

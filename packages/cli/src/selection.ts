@@ -12,6 +12,7 @@ import {
 import { canPrompt, maybeExitCancelled } from './utils.js'
 
 type ResolveOptions = {
+  allowDefault?: boolean
   json?: boolean
   refresh?: boolean
 }
@@ -91,7 +92,13 @@ export async function resolveSite(input: {
     Boolean(config.defaultSite) &&
     (config.clients.some((client) => client.siteUrl === config.defaultSite) ||
       config.sites.some((site) => site.siteUrl === config.defaultSite))
-  if (config.defaultSite && defaultSiteKnown) return config.defaultSite
+  if (
+    input.options?.allowDefault !== false &&
+    config.defaultSite &&
+    defaultSiteKnown
+  ) {
+    return config.defaultSite
+  }
 
   if (input.options?.json || !canPrompt()) {
     throw new SeoError(

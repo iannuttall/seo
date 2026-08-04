@@ -8,7 +8,11 @@ import {
   normalizeJavaScriptRenderingMode,
 } from '../../fetch/page-fetcher.js'
 import type { RuleCategory, RuleId, RuleSeverity } from '../../rules.js'
-import type { AccessBlockEvidence, CrawlerIdentity } from '../../types.js'
+import type {
+  AccessBlockEvidence,
+  AnalyticsConnection,
+  CrawlerIdentity,
+} from '../../types.js'
 import type {
   SitemapDocument,
   SitemapFetchResult,
@@ -27,8 +31,10 @@ import {
   crawlSkipReasonCountsFromRecord,
   normalizeCrawlSkipReasonCounts,
 } from './crawl-skip-reasons.js'
+import type { CrawlStatusPhase } from './crawl-status.js'
 import type { CrawlSiteChecks } from './site-checks.js'
 
+export type { CrawlStatusPhase } from './crawl-status.js'
 export type { CrawlSiteChecks } from './site-checks.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
@@ -69,23 +75,11 @@ export type CrawlConfigInput = Omit<Partial<CrawlConfig>, 'url' | 'js'> & {
   site?: string
   searchMetricsLimit?: number
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
   analyticsLimit?: number
   signal?: AbortSignal
   onStatus?: CrawlStatusHandler
 }
-
-export type CrawlStatusPhase =
-  | 'started'
-  | 'url_queued'
-  | 'url_skipped'
-  | 'page_started'
-  | 'page_completed'
-  | 'page_failed'
-  | 'page_skipped'
-  | 'external_links_started'
-  | 'external_links_completed'
-  | 'cancelled'
-  | 'completed'
 
 export type CrawlStatusEvent = {
   type: 'crawl_status'
@@ -246,6 +240,8 @@ export type CrawlSearchDataSource = {
 }
 
 export type CrawlAnalyticsDataSource = {
+  provider?: AnalyticsConnection['provider']
+  observedMetrics?: Array<'sessions' | 'totalUsers' | 'conversions'>
   status: CrawlDataSourceStatus
   window?: CrawlDataSourceWindow
   totalPages: number
@@ -311,6 +307,7 @@ export type CrawlReport = {
   projectId?: string
   site?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
   generatedAt: string
   status: 'completed' | 'partial' | 'failed'
   configHash: string
@@ -461,11 +458,15 @@ export function crawlDefinitionId(input: {
   config: CrawlConfigInput
   site?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
 }): string {
   const normalized = {
     config: normalizeCrawlConfig(input.config),
     site: input.site ?? null,
     googleAnalyticsPropertyId: input.googleAnalyticsPropertyId ?? null,
+    ...(input.analyticsConnection
+      ? { analyticsConnection: input.analyticsConnection }
+      : {}),
   }
   const hash = createHash('sha256')
     .update(JSON.stringify(normalized))
@@ -905,6 +906,7 @@ export function createCrawlReport(input: {
   projectId?: string
   site?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
@@ -921,6 +923,7 @@ export function createCrawlReport(input: {
     config,
     site: input.site,
     googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
+    analyticsConnection: input.analyticsConnection,
   })
   const pagesWithLinks = deriveInternalLinkAuthority(
     input.pages ?? [],
@@ -953,6 +956,7 @@ export function createCrawlReport(input: {
     projectId: input.projectId,
     site: input.site,
     googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
+    analyticsConnection: input.analyticsConnection,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
     status: input.status ?? 'completed',
     configHash: crawlConfigHash(config),
@@ -1036,6 +1040,7 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
         config,
         site: report.site,
         googleAnalyticsPropertyId: report.googleAnalyticsPropertyId,
+        analyticsConnection: report.analyticsConnection,
       }),
     summary: summarizeCrawlReport({
       pages,

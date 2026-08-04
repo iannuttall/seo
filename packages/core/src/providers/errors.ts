@@ -1,4 +1,4 @@
-import type { ProviderId } from './contracts.js'
+import type { ExternalServiceId } from './contracts.js'
 
 export type ProviderErrorCode =
   | 'configuration'
@@ -11,14 +11,14 @@ export type ProviderErrorCode =
   | 'remote-error'
 
 export class ProviderError extends Error {
-  readonly provider: ProviderId
+  readonly provider: ExternalServiceId
   readonly operation: string
   readonly code: ProviderErrorCode
   readonly status: number | null
   readonly retryable: boolean
 
   constructor(input: {
-    provider: ProviderId
+    provider: ExternalServiceId
     operation: string
     code: ProviderErrorCode
     message: string

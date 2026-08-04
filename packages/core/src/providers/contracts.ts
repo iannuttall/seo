@@ -3,6 +3,7 @@ import type { ResearchImportColumns } from './imports/research-columns.js'
 
 export const providerIdSchema = z.enum(['dataforseo', 'semrush', 'ahrefs'])
 export type ProviderId = z.infer<typeof providerIdSchema>
+export type ExternalServiceId = ProviderId | 'clicky'
 
 export const providerCapabilitySchema = z.enum([
   'keyword-metrics',

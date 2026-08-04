@@ -48,7 +48,7 @@ export type PriorityQueueItem = {
   }
   analytics?: {
     sessions: number
-    totalUsers: number
+    totalUsers?: number
   }
   grouped?: {
     count: number

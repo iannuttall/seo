@@ -33,6 +33,8 @@ export function printClientProfile(client: ClientProfile): void {
       'Google Analytics property',
       client.analytics.google?.propertyId ?? 'not set',
     ],
+    ['Clicky site', client.analytics.clicky?.siteId ?? 'not set'],
+    ['Selected analytics', client.analytics.selected ?? 'not set'],
     ['Report day', client.reportDay ? String(client.reportDay) : 'not set'],
     [
       'Technical weekday',

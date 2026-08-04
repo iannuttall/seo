@@ -1,12 +1,12 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, keyword research, competitors, backlinks, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, programmatic SEO, local search, Search Console or Google Analytics questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to evidence-backed local reports through the SEO CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, keyword research, competitors, backlinks, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, programmatic SEO, local search, Search Console, Google Analytics or Clicky questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to evidence-backed local reports through the SEO CLI and MCP server.
 ---
 
 # seo
 
 `seo` is a local CLI, MCP server, and report engine using crawl, Search Console,
-Google Analytics, optional Bing evidence, and optional research providers.
+Google Analytics or Clicky, optional Bing evidence, and optional research providers.
 Reports keep observations, estimates, findings, caveats, costs, and provenance
 separate. Storage stays local; requested crawls and provider operations still
 make direct network requests. Discover reports at runtime instead of
@@ -121,7 +121,7 @@ recommend a User-Agent-only bypass.
   observations until the user confirms they are unintended.
 - Provider traffic, volume, difficulty, visibility, intent, authority, and
   ranking history are estimates. Keep them separate from Search Console,
-  Google Analytics, crawl, and live result evidence.
+  connected analytics, crawl, and live result evidence.
 
 ## Beyond the report catalog
 

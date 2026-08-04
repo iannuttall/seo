@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 24 July 2026
+Last updated: 4 August 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -38,6 +38,19 @@ maintainer.
 The use of information received from Google APIs follows the [Google API
 Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy),
 including its Limited Use requirements.
+
+## Clicky data the software can access
+
+Clicky access is optional. If you connect a site, the software sends its numeric
+site ID, sitekey, requested report type, date range, and row limit directly to
+Clicky over HTTPS. It can read the traffic data that sitekey permits. The
+project maintainer does not receive the request or response.
+
+The site ID is saved in the project profile. The sitekey uses the operating
+system keychain when available, with a private local file fallback. Agents and
+CI can use `SEO_CLICKY_SITEKEY` without saving it. Clicky responses are cached
+locally for up to 24 hours, and cache keys and cached responses do not contain
+the sitekey.
 
 ## When Search Console query text can leave your machine
 
@@ -96,7 +109,8 @@ run, expired rows may remain in the local cache file until you delete them.
 
 Run `seo cache clear --provider google-analytics` to remove cached Google
 Analytics responses immediately. Run `seo cache clear --provider gsc` to do
-the same for Search Console. Project profiles and reports that you deliberately
+the same for Search Console. Run `seo cache clear --provider clicky` to remove
+cached Clicky responses. Project profiles and reports that you deliberately
 save remain until you delete them with the relevant command or run
 `seo reset --yes`. The reset command removes Google tokens, local
 configuration, caches, logs, histories, saved reports, and saved provider

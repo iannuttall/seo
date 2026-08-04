@@ -109,6 +109,7 @@ test('crawler MCP structured output schema stays stable', async () => {
     const crawlTool = tools.get('seo_crawl_site')
     assert.ok(crawlTool)
     assert.deepEqual(keys(crawlTool.config.inputSchema), [
+      'clickySiteId',
       'concurrency',
       'exclude',
       'fetchIntervalCap',
@@ -171,6 +172,8 @@ test('crawler MCP structured output schema stays stable', async () => {
       ],
       analytics: [
         'joinedPages',
+        'observedMetrics',
+        'provider',
         'queriedPages',
         'retainedRowLimit',
         'retainedRowLimitReached',

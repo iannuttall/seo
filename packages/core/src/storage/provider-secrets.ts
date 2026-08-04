@@ -15,6 +15,7 @@ const PRIVATE_FILE_MODE = 0o600
 export const PROVIDER_SECRET_NAMES = {
   ahrefsApiKey: 'ahrefs-api-key',
   bingApiKey: 'bing-api-key',
+  clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
   indexNowKeys: 'indexnow-keys',
   semrushApiKey: 'semrush-api-key',

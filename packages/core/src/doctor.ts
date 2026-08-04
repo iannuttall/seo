@@ -1,4 +1,6 @@
 import { existsSync } from 'node:fs'
+import { readClickySiteKey } from './clicky/credentials.js'
+import { analyticsConnection } from './clients.js'
 import {
   getAuthModeStatus,
   getClientConfig,
@@ -180,6 +182,23 @@ export async function runDoctor(
       config.analytics.google.defaultPropertyId ??
       'No saved default. Human CLI commands will prompt; agents can pass --property.',
   })
+
+  const defaultProject = config.clients.find((client) => client.isDefault)
+  const defaultAnalytics = analyticsConnection(defaultProject)
+  if (defaultAnalytics?.provider === 'clicky') {
+    const credential = await readClickySiteKey(defaultAnalytics.siteId)
+    checks.push({
+      id: 'default-clicky',
+      label: 'Saved Clicky connection',
+      status: credential ? 'pass' : 'fail',
+      detail: credential
+        ? `Site ${defaultAnalytics.siteId}, credential from ${credential.source}.`
+        : `Site ${defaultAnalytics.siteId} has no saved sitekey.`,
+      fix: credential
+        ? undefined
+        : `Run \`seo analytics clicky connect --site-id ${defaultAnalytics.siteId}\`.`,
+    })
+  }
 
   const ok = checks.every((check) => check.status !== 'fail')
   return {

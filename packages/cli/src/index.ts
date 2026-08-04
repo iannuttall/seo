@@ -113,7 +113,7 @@ const helpSections: HelpSection[] = [
   {
     title: 'Start here',
     commands: [
-      ['seo start', 'Connect Google and save a project profile'],
+      ['seo start', 'Connect first-party data and save a project profile'],
       ['seo report', 'Run the main SEO report for the default project'],
       ['seo report --site sc-domain:example.com', 'Run without a profile'],
       [
@@ -200,6 +200,7 @@ const allHelpSections: HelpSection[] = [
       ['seo url-inspect', 'Run URL Inspection'],
       ['seo analytics google properties', 'List Google Analytics properties'],
       ['seo analytics google report', 'Run a Google Analytics report'],
+      ['seo analytics clicky report', 'Run a Clicky analytics report'],
       ['seo updates', 'List official Google ranking updates'],
     ],
   },

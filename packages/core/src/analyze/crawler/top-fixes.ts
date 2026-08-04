@@ -31,8 +31,8 @@ export type TopFix = CrawlIssueGroup & {
     clicks: number
     impressions: number
     sessions: number
-    totalUsers: number
-    conversions: number
+    totalUsers?: number
+    conversions?: number
     avgPosition?: number
     effort: 'low' | 'medium' | 'high'
     effortScore: number
@@ -151,14 +151,19 @@ function searchValueForGroup(report: CrawlReport, urls: string[]) {
     (sum, page) => sum + (page.analytics?.sessions ?? 0),
     0,
   )
-  const totalUsers = pages.reduce(
-    (sum, page) => sum + (page.analytics?.totalUsers ?? 0),
-    0,
+  const observedMetrics = new Set(
+    report.dataSources?.analytics.observedMetrics ?? [
+      'sessions',
+      'totalUsers',
+      'conversions',
+    ],
   )
-  const conversions = pages.reduce(
-    (sum, page) => sum + (page.analytics?.conversions ?? 0),
-    0,
-  )
+  const totalUsers = observedMetrics.has('totalUsers')
+    ? pages.reduce((sum, page) => sum + (page.analytics?.totalUsers ?? 0), 0)
+    : undefined
+  const conversions = observedMetrics.has('conversions')
+    ? pages.reduce((sum, page) => sum + (page.analytics?.conversions ?? 0), 0)
+    : undefined
   const avgPosition = metrics.length
     ? metrics.reduce((sum, item) => sum + item.position, 0) / metrics.length
     : undefined
@@ -177,14 +182,21 @@ function whyThisRanks(
   input: TopFix['scoreFactors'],
   recommendation: RuleRecommendation,
   searchStatus?: CrawlDataSourceStatus,
+  analyticsProvider?: NonNullable<
+    CrawlReport['dataSources']
+  >['analytics']['provider'],
 ): string {
   const visibility = input.searchVisibleUrls
     ? `${input.searchVisibleUrls} affected URLs have GSC visibility (${input.clicks} clicks, ${input.impressions} impressions).`
     : searchStatus && !['joined', 'none'].includes(searchStatus)
       ? `No joined GSC visibility is available for these affected URLs; Search Console evidence is ${searchStatus}.`
       : 'No affected URL has joined GSC visibility yet.'
+  const analyticsLabel =
+    analyticsProvider === 'clicky' ? 'Clicky' : 'Google Analytics'
+  const sessionLabel =
+    analyticsProvider === 'clicky' ? 'landing-page visits' : 'sessions'
   const analytics = input.sessions
-    ? ` Google Analytics adds ${input.sessions} sessions and ${input.conversions} conversions from affected landing pages.`
+    ? ` ${analyticsLabel} adds ${input.sessions} ${sessionLabel}${input.conversions === undefined ? '' : ` and ${input.conversions} conversions`} from affected pages.`
     : ''
   const priority =
     recommendation === 'review'
@@ -229,7 +241,7 @@ export function topFixes(
       scoreFactors.clicks * 20 * valueWeight +
       (Math.min(scoreFactors.impressions, 10_000) / 25) * valueWeight +
       scoreFactors.sessions * 2 * valueWeight +
-      scoreFactors.conversions * 100 * valueWeight +
+      (scoreFactors.conversions ?? 0) * 100 * valueWeight +
       scoreFactors.effortScore
     const rule = explainRule(group.ruleId)
     const recommendation = recommendationForRule(group.ruleId)
@@ -242,6 +254,7 @@ export function topFixes(
         scoreFactors,
         recommendation,
         report.dataSources?.searchConsole.status,
+        report.dataSources?.analytics.provider,
       ),
       howToFix: rule?.howToFix ?? '',
       howToVerify: rule?.howToVerify ?? '',

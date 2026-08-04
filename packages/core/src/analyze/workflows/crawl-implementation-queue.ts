@@ -62,7 +62,7 @@ function confidenceForFix(fix: TopFix): QueueConfidence {
   if (
     fix.scoreFactors.searchVisibleUrls > 0 ||
     fix.scoreFactors.sessions > 0 ||
-    fix.scoreFactors.conversions > 0
+    (fix.scoreFactors.conversions ?? 0) > 0
   ) {
     return 'high'
   }
@@ -95,7 +95,7 @@ function impactForFix(fix: TopFix): number {
     fix.scoreFactors.clicks * 5 +
     Math.min(fix.scoreFactors.impressions, 10_000) / 100 +
     fix.scoreFactors.sessions +
-    fix.scoreFactors.conversions * 25
+    (fix.scoreFactors.conversions ?? 0) * 25
   )
 }
 
@@ -184,19 +184,20 @@ export async function crawlImplementationQueueWorkflow(
         warnings: crawl.warnings,
       }),
       joinStep({
-        tool: 'seo_google_analytics_landing_page_values',
-        enabled: Boolean(input.googleAnalyticsPropertyId),
-        warningPrefix: 'Google Analytics metrics skipped:',
-        enabledSummary:
-          'Joined Google Analytics landing-page value where URLs matched.',
-        skippedSummary: 'No Google Analytics property was selected.',
+        tool: 'seo_analytics_landing_page_values',
+        enabled: Boolean(
+          input.analyticsConnection ?? input.googleAnalyticsPropertyId,
+        ),
+        warningPrefix: 'Analytics metrics skipped:',
+        enabledSummary: 'Joined landing-page value where URLs matched.',
+        skippedSummary: 'No analytics connection was selected.',
         warnings: crawl.warnings,
       }),
       {
         tool: 'seo_top_crawl_fixes',
         status: 'completed',
         summary:
-          'Grouped crawl issues, weighted them by severity, affected URLs, GSC visibility, Google Analytics value, and effort.',
+          'Grouped crawl issues, weighted them by severity, affected URLs, GSC visibility, analytics value, and effort.',
       },
     ],
     actions: queue.slice(0, 5).map((item) => ({

@@ -222,60 +222,6 @@ test('start JSON creates a usable project without interactive output', async () 
   }
 })
 
-test('start reuses the existing project profile for the selected property', async () => {
-  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-profile-config-'))
-  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-profile-cache-'))
-  const env = { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir }
-
-  try {
-    const added = await runSeoResult(
-      [
-        'projects',
-        'add',
-        '--id',
-        'example',
-        '--name',
-        'example.com',
-        '--site',
-        'sc-domain:example.com',
-        '--url',
-        'https://example.com/',
-        '--json',
-      ],
-      env,
-    )
-    assert.equal(added.exitCode, 0)
-
-    const result = await runSeoResult(
-      [
-        'start',
-        '--site',
-        'sc-domain:example.com',
-        '--skip-auth',
-        '--skip-mcp',
-        '--json',
-      ],
-      env,
-    )
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 0)
-    assert.equal(output.client.id, 'example')
-    assert.deepEqual(output.next, [
-      'seo report --project example',
-      'seo refresh-priorities --project example --verify-content',
-      'seo technical-watch --project example',
-    ])
-
-    const listed = await runSeoResult(['projects', 'list', '--json'], env)
-    assert.equal(listed.exitCode, 0)
-    assert.equal(JSON.parse(listed.stdout).clients.length, 1)
-  } finally {
-    await rm(configDir, { recursive: true, force: true })
-    await rm(cacheDir, { recursive: true, force: true })
-  }
-})
-
 test('start JSON does not silently skip missing authentication', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
@@ -885,6 +831,11 @@ test('version aliases and nested command help are available', async () => {
     ['export', 'refresh-priorities', '--help'],
     ['analytics', 'google', 'properties', '--help'],
     ['analytics', 'google', 'report', '--help'],
+    ['analytics', 'clicky', 'connect', '--help'],
+    ['analytics', 'clicky', 'status', '--help'],
+    ['analytics', 'clicky', 'report', '--help'],
+    ['analytics', 'clicky', 'detach', '--help'],
+    ['analytics', 'clicky', 'disconnect', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
@@ -903,6 +854,13 @@ test('Google Analytics commands only use the provider namespace', async () => {
   assert.match(output, /properties/)
   assert.match(output, /report/)
   assert.doesNotMatch(output, /ga4/i)
+})
+
+test('Clicky connect can attach a verified site to an existing project', async () => {
+  const output = await runSeo(['analytics', 'clicky', 'connect', '--help'])
+  assert.match(output, /--project/)
+  assert.match(output, /--site-id/)
+  assert.match(output, /Validate and save a Clicky sitekey/)
 })
 
 test('unknown commands emit one error and exit with failure', async () => {

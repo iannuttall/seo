@@ -1,6 +1,6 @@
 import { deriveBrandTerms } from './brand.js'
 import { readConfig, writeConfig } from './storage/config.js'
-import type { ClientProfile } from './types.js'
+import type { AnalyticsConnection, ClientProfile } from './types.js'
 
 export type ClientProfileInput = {
   id?: string
@@ -16,10 +16,38 @@ export type ClientProfileInput = {
   isDefault?: boolean
 }
 
+export type ClientProfileUpdate = Omit<ClientProfileInput, 'id' | 'siteUrl'> & {
+  siteUrl?: string
+}
+
 export function googleAnalyticsPropertyId(
   client: Pick<ClientProfile, 'analytics'> | undefined,
 ): string | undefined {
   return client?.analytics.google?.propertyId
+}
+
+export function analyticsConnection(
+  client: Pick<ClientProfile, 'analytics'> | undefined,
+): AnalyticsConnection | undefined {
+  const analytics = client?.analytics
+  if (!analytics) return undefined
+  if (analytics.selected === 'clicky') {
+    return analytics.clicky
+      ? { provider: 'clicky', siteId: analytics.clicky.siteId }
+      : undefined
+  }
+  if (analytics.selected === 'google') {
+    return analytics.google
+      ? { provider: 'google', propertyId: analytics.google.propertyId }
+      : undefined
+  }
+  if (analytics.google) {
+    return { provider: 'google', propertyId: analytics.google.propertyId }
+  }
+  if (analytics.clicky) {
+    return { provider: 'clicky', siteId: analytics.clicky.siteId }
+  }
+  return undefined
 }
 
 export function bingWebmasterSiteUrl(
@@ -103,16 +131,67 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
   return client
 }
 
+export function updateClient(
+  idOrName: string,
+  update: ClientProfileUpdate,
+): ClientProfile {
+  const client = getClient(idOrName)
+  if (!client) throw new Error(`Client not found: ${idOrName}`)
+  return saveClient({
+    ...update,
+    id: client.id,
+    siteUrl: update.siteUrl ?? client.siteUrl,
+  })
+}
+
+export function setClientAnalyticsConnection(
+  idOrName: string,
+  connection: AnalyticsConnection,
+): ClientProfile {
+  const client = getClient(idOrName)
+  if (!client) throw new Error(`Client not found: ${idOrName}`)
+  return updateClient(client.id, {
+    analytics:
+      connection.provider === 'clicky'
+        ? {
+            ...client.analytics,
+            selected: 'clicky',
+            clicky: { siteId: connection.siteId },
+          }
+        : {
+            ...client.analytics,
+            selected: 'google',
+            google: { propertyId: connection.propertyId },
+          },
+  })
+}
+
+export function removeClientAnalyticsConnection(
+  idOrName: string,
+  provider: AnalyticsConnection['provider'],
+): ClientProfile {
+  const client = getClient(idOrName)
+  if (!client) throw new Error(`Client not found: ${idOrName}`)
+  const analytics = { ...client.analytics }
+  if (provider === 'clicky') delete analytics.clicky
+  else delete analytics.google
+  if (analytics.selected === provider) {
+    analytics.selected = analytics.google
+      ? 'google'
+      : analytics.clicky
+        ? 'clicky'
+        : undefined
+  }
+  return updateClient(client.id, { analytics })
+}
+
 export function setClientBingSite(
   idOrName: string,
   siteUrl: string,
 ): ClientProfile {
   const client = getClient(idOrName)
   if (!client) throw new Error(`Client not found: ${idOrName}`)
-  return saveClient({
-    id: client.id,
-    name: client.name,
-    siteUrl: client.siteUrl,
+  return updateClient(client.id, {
     searchEngines: {
       ...client.searchEngines,
       bing: { siteUrl },

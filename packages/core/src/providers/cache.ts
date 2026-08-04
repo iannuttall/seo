@@ -3,7 +3,7 @@ import type { ZodType } from 'zod'
 import { CACHE_MAX_AGE_MS } from '../storage/cache-maintenance.js'
 import { getDb, noteCacheWrite } from '../storage/database.js'
 import type Database from '../storage/sqlite.js'
-import type { ProviderId } from './contracts.js'
+import type { ExternalServiceId } from './contracts.js'
 import { ProviderError } from './errors.js'
 
 export type ProviderCacheEntry<T> = {
@@ -16,7 +16,7 @@ export type ProviderCacheEntry<T> = {
 }
 
 type ProviderCacheKey = {
-  provider: ProviderId
+  provider: ExternalServiceId
   credentialScope: string
   operation: string
   request: unknown
@@ -38,7 +38,7 @@ export function stableProviderRequestJson(request: unknown): string {
 }
 
 export function providerCredentialScope(
-  provider: ProviderId,
+  provider: ExternalServiceId,
   accountIdentifier: string,
 ): string {
   const identifier =

@@ -46,8 +46,8 @@ seo start
 ```
 
 The setup opens Google sign-in, lets you choose a Search Console property,
-offers a matching Google Analytics property, and saves those choices as a local project
-profile. Then run:
+offers Google Analytics or Clicky for traffic context, and saves those choices as a local
+project profile. Then run:
 
 ```sh
 seo report
@@ -93,13 +93,14 @@ explains the page evidence behind technical findings.
 
 ## Add post-click context when it changes the priority
 
-Search Console provides search performance and query data. Google Analytics is
-optional. It adds landing-page sessions, engagement and known referral sources.
+Search Console provides search performance and query data. Traffic analytics is
+optional. Google Analytics adds sessions, engagement, conversions, geography and known
+referral sources. Clicky adds observed page views and landing-page visits.
 
-Both integrations are read-only. Tokens, project profiles, caches, and saved
-crawls stay on your machine. The [Google data guide](/docs/google) explains
-what each source can establish, where its numbers can be incomplete, and how
-local sign-in works.
+Both analytics integrations are read-only. Tokens, sitekeys, project profiles,
+caches, and saved crawls stay on your machine. The [Google data guide](/docs/google)
+explains local Google sign-in. The [Clicky connection guide](/docs/clicky) shows
+where to find each site's credentials and how to verify the connection.
 
 The [research provider guide](/docs/research-providers) covers provider setup,
 local spend limits, caching and the reports that can use outside estimates.

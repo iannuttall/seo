@@ -1,11 +1,11 @@
 ---
 title: Set up SEO and run your first audit
-description: Install the command, connect Search Console, save your site and complete your first audit. Google Analytics and research providers can wait until you need them.
+description: Install the command, connect Search Console, save your site and complete your first audit. Traffic analytics and research providers can wait until you need them.
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search
-Console property adds traffic and query evidence. Google Analytics is optional. You can
-still start with a local technical report before connecting Google.
+Console property adds click and query evidence. Google Analytics and Clicky are optional.
+You can still start with a local technical report before connecting either one.
 
 ## Install the SEO CLI
 
@@ -16,20 +16,28 @@ npm i -g seo
 seo start
 ```
 
-Setup opens Google sign-in in your browser. After you approve read-only access,
-the CLI brings you back to the terminal and asks you to choose:
+Setup asks whether to create a new project, update an existing one, or continue
+without a saved profile. When you create or update one, it then guides you
+through:
 
 1. A Search Console property.
-2. An optional Google Analytics property.
+2. Google Analytics, Clicky, or no traffic analytics connection.
 3. A name for the project profile saved on your computer.
 
+Choosing an existing project keeps its Search Console property and current
+defaults unless you explicitly change them. Setup never updates a project just
+because another project uses the same property.
+
 A project profile is a local shortcut. It remembers the property, crawl URL,
-optional Google Analytics property, and brand terms you would otherwise repeat on every
+optional analytics connection, and brand terms you would otherwise repeat on every
 command. If this is your only site, make it the default and most commands will
 need no flags.
 
 The [Google connection guide](/docs/google) explains the permissions and data
 limits before you sign in.
+
+If you use Clicky, the [Clicky connection guide](/docs/clicky) shows where to
+find the Site ID and sitekey before setup asks for them.
 
 Do not run the global install with `sudo`. If npm reports a permission error,
 fix npm's global install directory, then run the same command again.
@@ -69,7 +77,7 @@ seo report --url https://example.com
 
 This creates a limited local crawl and saves the evidence. Search Console
 sections say that they were skipped. They do not become zeroes or guesses. Run
-`seo start` later when you want click, query, ranking, and Google Analytics data in the
+`seo start` later when you want click, query, ranking, and traffic analytics data in the
 same investigation.
 
 Read the result in this order:
@@ -110,7 +118,7 @@ ongoing work because you are less likely to query the wrong property.
 
 ## Keep going when one source is missing
 
-A useful report should survive a missing optional section. If Google Analytics is not
+A useful report should survive a missing optional section. If traffic analytics is not
 connected or a Search Console window is too sparse, the report records the
 skip reason and continues with evidence that still holds.
 

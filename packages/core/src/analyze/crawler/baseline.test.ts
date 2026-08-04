@@ -236,6 +236,21 @@ test('rejects restricted crawls as a report baseline', () => {
   )
 })
 
+test('does not reuse a baseline from a different analytics connection', () => {
+  const report = {
+    ...crawlReport(),
+    analyticsConnection: { provider: 'clicky' as const, siteId: '123' },
+  }
+
+  assert.equal(
+    isCompatibleTechnicalBaseline(report, {
+      url: 'https://example.com/',
+      analyticsConnection: { provider: 'clicky', siteId: '456' },
+    }),
+    false,
+  )
+})
+
 test('does not reuse a stale crawl baseline', async () => {
   const existing = {
     ...crawlReport(),

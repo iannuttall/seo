@@ -1,5 +1,8 @@
 import { readFile } from 'node:fs/promises'
-import { crawlImplementationQueueWorkflow } from '@seo/core'
+import {
+  analyticsConnection,
+  crawlImplementationQueueWorkflow,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -166,9 +169,13 @@ export const crawlQueueCommand = defineCommand({
       }),
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
-      googleAnalyticsPropertyId:
-        stringArg(args['google-analytics-property']) ??
-        selection?.client?.analytics.google?.propertyId,
+      googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
+      analyticsConnection: stringArg(args['google-analytics-property'])
+        ? {
+            provider: 'google',
+            propertyId: stringArg(args['google-analytics-property']) ?? '',
+          }
+        : analyticsConnection(selection?.client),
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),

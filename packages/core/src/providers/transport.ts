@@ -5,7 +5,7 @@ import {
   ResponseSizeLimitError,
   readBoundedResponseText,
 } from '../fetch/http-client.js'
-import type { ProviderId } from './contracts.js'
+import type { ExternalServiceId } from './contracts.js'
 import { ProviderError } from './errors.js'
 
 export type ProviderFetch = (
@@ -14,7 +14,7 @@ export type ProviderFetch = (
 ) => Promise<Response>
 
 export type ProviderRequestInput = {
-  provider: ProviderId
+  provider: ExternalServiceId
   operation: string
   url: string | URL
   init?: RequestInit

@@ -30,7 +30,7 @@ activity.
 
 ## Google and other third-party services
 
-Google Search Console and Google Analytics access is optional and read-only.
+Google Search Console, Google Analytics, and Clicky access is optional and read-only.
 Your use of Google APIs is also subject to Google's terms and policies. Google
 can change API behaviour, quotas, scopes, or availability without notice to
 this project.

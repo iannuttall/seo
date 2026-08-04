@@ -38,8 +38,8 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-The `seo` command turns crawl, Search Console, Google Analytics, and optional
-research-provider data into work you can inspect and ship. Find technical
+The `seo` command turns crawl, Search Console, connected traffic analytics, and
+optional research-provider data into work you can inspect and ship. Find technical
 blockers, recover existing demand, research new keywords and competitors,
 review programmatic page patterns, and catch regressions after a release.
 
@@ -47,7 +47,7 @@ review programmatic page patterns, and catch regressions after a release.
 
 - People running their own sites who want a clear audit and a ranked list of
   fixes, without learning a heavy dashboard.
-- AI agents that need real crawl, Search Console, Google Analytics, keyword,
+- AI agents that need real crawl, Search Console, Google Analytics or Clicky, keyword,
   result, domain, competitor, and link evidence through MCP and one packaged
   SEO skill instead of screenshots or guesses.
 - Developers who want to embed the same report engine in a script, a CI job, or
@@ -64,7 +64,7 @@ seo report
 ```
 
 The setup walks you through Google sign-in, your Search Console property, an
-optional Google Analytics property, and a local project profile. Public releases can include
+optional Google Analytics or Clicky connection, and a local project profile. Public releases can include
 the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
@@ -85,7 +85,7 @@ Running `seo help` shows the shape of the tool:
 Run SEO audits, find what needs fixing, and ship the changes with your agent.
 
 Start here
-  seo start                                Connect Google and save a project profile
+  seo start                                Connect first-party data and save a project profile
   seo report                               Run the main SEO report for the default project
   seo report --site sc-domain:example.com  Run without a profile
   seo report --url https://example.com     Start with a local technical report
@@ -154,7 +154,7 @@ The point of a report is to be defensible, so the design keeps a few rules:
 ## Everyday use
 
 `seo start` can save a project profile, which is a local shortcut for a site,
-Search Console property, Google Analytics property, and brand terms. If you have one default
+Search Console property, traffic analytics connection, and brand terms. If you have one default
 project, most commands need no flags.
 
 ```sh
@@ -317,13 +317,34 @@ Read the [research provider guide](https://seoskill.dev/docs/research-providers)
 for setup, costs, caching, country-level limits, competitor classification, and
 programmatic data-source checks.
 
-Google Analytics commands sit under their provider namespace. List the properties available
-to the connected account, then run a report with the property you need:
+Traffic analytics commands sit under their provider namespace. Google Analytics
+uses the connected Google account:
 
 ```sh
 seo analytics google properties
 seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 ```
+
+Clicky uses the numeric site ID and sitekey shown on the site's preferences
+page. Sign in to Clicky, open the site, then open **Preferences**. The page URL
+looks like `https://clicky.com/stats/prefs?site_id=123456789`. Copy the Site ID
+and **sitekey**, not the admin sitekey. Each Clicky site has its own pair.
+
+Connect it during `seo start`, or connect it separately and attach the site ID
+to a project profile:
+
+```sh
+seo analytics clicky connect --site-id 123456789
+seo analytics clicky connect --project example --site-id 123456789
+seo analytics clicky report --project example --start-date 2026-07-01 --end-date 2026-07-28
+```
+
+The sitekey is saved in the system keychain with a private local file fallback.
+Agents and CI can set `SEO_CLICKY_SITEKEY`. Clicky landing-page visits can inform
+the main crawl and priority reports. Reports that need Google-specific
+conversion, attribution, or geography fields still require Google Analytics.
+See the [Clicky connection guide](https://seoskill.dev/docs/clicky) for setup,
+verification, and report examples.
 
 Bing Webmaster is optional. Connect it when you want Bing traffic trends,
 crawl changes, and query and page opportunities beside your Google evidence:

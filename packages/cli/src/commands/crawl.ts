@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
+  analyticsConnection,
   type CrawlOutputFormat,
   crawlSite,
   renderCrawlCsv,
@@ -257,9 +258,13 @@ export const crawlCommand = defineCommand({
       }),
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
-      googleAnalyticsPropertyId:
-        stringArg(args['google-analytics-property']) ??
-        selection?.client?.analytics.google?.propertyId,
+      googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
+      analyticsConnection: stringArg(args['google-analytics-property'])
+        ? {
+            provider: 'google',
+            propertyId: stringArg(args['google-analytics-property']) ?? '',
+          }
+        : analyticsConnection(selection?.client),
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),

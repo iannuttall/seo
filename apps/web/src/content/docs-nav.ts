@@ -19,6 +19,12 @@ export const docsNav: DocsNavEntry[] = [
       'Connect read-only Search Console and optional Google Analytics data.',
   },
   {
+    path: '/docs/clicky',
+    label: 'Clicky analytics',
+    description:
+      "Find each site's ID and sitekey, connect Clicky locally, and read traffic reports with clear limits.",
+  },
+  {
     path: '/docs/bing',
     label: 'Bing Webmaster',
     description:

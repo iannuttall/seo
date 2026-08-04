@@ -52,6 +52,7 @@ export type CrawlSnapshotInput = {
   projectId?: string
   site?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: CrawlReport['analyticsConnection']
   url: string
   status: CrawlReport['status']
   configHash: string
@@ -195,6 +196,7 @@ function snapshotInput(report: CrawlReport): CrawlSnapshotInput {
     projectId: report.projectId,
     site: report.site,
     googleAnalyticsPropertyId: report.googleAnalyticsPropertyId,
+    analyticsConnection: report.analyticsConnection,
     url: report.config.url,
     status: report.status,
     configHash: report.configHash,

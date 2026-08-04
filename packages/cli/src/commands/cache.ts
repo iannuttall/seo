@@ -8,6 +8,7 @@ const CACHE_PROVIDERS = [
   'semrush',
   'dataforseo',
   'ahrefs',
+  'clicky',
   'http',
 ] as const
 
@@ -53,6 +54,7 @@ export const cacheCommand = defineCommand({
           ['Semrush', String(stats.counts.semrush_cache ?? 0)],
           ['DataForSEO', String(stats.counts.provider_cache ?? 0)],
           ['Ahrefs', String(stats.counts.ahrefs_cache ?? 0)],
+          ['Clicky', String(stats.counts.clicky_cache ?? 0)],
           ['HTTP', String(stats.counts.http_cache ?? 0)],
         ])
       },
@@ -66,7 +68,7 @@ export const cacheCommand = defineCommand({
         provider: {
           type: 'string',
           description:
-            'Optional cache provider: gsc, google-analytics, semrush, dataforseo, ahrefs, or http',
+            'Optional cache provider: gsc, google-analytics, semrush, dataforseo, ahrefs, clicky, or http',
         },
       },
       run: async ({ args }) => {

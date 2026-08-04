@@ -31,6 +31,7 @@ export type ResolveTechnicalBaselineInput = {
   url?: string
   projectId?: string
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: CrawlConfigInput['analyticsConnection']
   crawl?: boolean
   refresh?: boolean
   maxPages?: number
@@ -74,10 +75,33 @@ function crawlCoversUrl(crawlUrl: string, targetUrl: string): boolean {
 
 export function isCompatibleTechnicalBaseline(
   report: CrawlReport,
-  input: Pick<ResolveTechnicalBaselineInput, 'url' | 'maxPages' | 'maxDepth'>,
+  input: Pick<
+    ResolveTechnicalBaselineInput,
+    | 'url'
+    | 'maxPages'
+    | 'maxDepth'
+    | 'googleAnalyticsPropertyId'
+    | 'analyticsConnection'
+  >,
 ): boolean {
   const maxPages = input.maxPages ?? REPORT_BASELINE_MAX_PAGES
   const maxDepth = input.maxDepth ?? REPORT_BASELINE_MAX_DEPTH
+  const requestedAnalytics =
+    input.analyticsConnection ??
+    (input.googleAnalyticsPropertyId
+      ? ({
+          provider: 'google',
+          propertyId: input.googleAnalyticsPropertyId,
+        } as const)
+      : undefined)
+  const reportAnalytics =
+    report.analyticsConnection ??
+    (report.googleAnalyticsPropertyId
+      ? ({
+          provider: 'google',
+          propertyId: report.googleAnalyticsPropertyId,
+        } as const)
+      : undefined)
 
   return (
     (report.status === 'completed' || report.status === 'partial') &&
@@ -88,6 +112,7 @@ export function isCompatibleTechnicalBaseline(
     report.config.exclude.length === 0 &&
     report.config.useSitemap &&
     report.config.respectRobots &&
+    JSON.stringify(reportAnalytics) === JSON.stringify(requestedAnalytics) &&
     (!input.url || crawlCoversUrl(report.config.url, input.url))
   )
 }
@@ -118,7 +143,11 @@ function crawlInput(
   > &
     Pick<
       ResolveTechnicalBaselineInput,
-      'projectId' | 'googleAnalyticsPropertyId' | 'refresh' | 'searchSite'
+      | 'projectId'
+      | 'googleAnalyticsPropertyId'
+      | 'refresh'
+      | 'searchSite'
+      | 'analyticsConnection'
     >,
 ): CrawlConfigInput {
   return {
@@ -126,6 +155,9 @@ function crawlInput(
     ...(input.searchSite ? { site: input.searchSite } : {}),
     projectId: input.projectId,
     googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
+    ...(input.analyticsConnection
+      ? { analyticsConnection: input.analyticsConnection }
+      : {}),
     mode: 'site',
     maxPages: input.maxPages,
     maxDepth: input.maxDepth,

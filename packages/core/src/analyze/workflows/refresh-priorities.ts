@@ -1,3 +1,4 @@
+import type { AnalyticsConnection } from '../../types.js'
 import { diagnoseProperty } from '../diagnose-property.js'
 import { defaultDateRange } from '../shared.js'
 import {
@@ -89,6 +90,7 @@ export async function refreshPrioritiesWorkflow(input: {
   brandTerms?: string[]
   includeBrand?: boolean
   googleAnalyticsPropertyId?: string
+  analyticsConnection?: AnalyticsConnection
   verifyContent?: boolean
   verifyLimit?: number
   refresh?: boolean
@@ -109,11 +111,14 @@ export async function refreshPrioritiesWorkflow(input: {
   })
   const range = defaultDateRange(input.days ?? 28)
   const analytics = await fetchLandingPageValues({
+    connection: input.analyticsConnection,
     propertyId: input.googleAnalyticsPropertyId,
     startDate: range.startDate,
     endDate: range.endDate,
+    refresh: input.refresh,
   })
   const analyticsPolicy = landingPageRankingPolicy({
+    connection: input.analyticsConnection,
     propertyId: input.googleAnalyticsPropertyId,
     source: analytics.source,
     warning: analytics.warning,

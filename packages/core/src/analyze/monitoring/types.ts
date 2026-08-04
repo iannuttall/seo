@@ -190,8 +190,8 @@ export type CrawlPageSnapshot = {
   }
   analytics?: {
     sessions: number
-    totalUsers: number
-    conversions: number
+    totalUsers?: number
+    conversions?: number
   }
 }
 

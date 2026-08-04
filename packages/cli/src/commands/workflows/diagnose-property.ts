@@ -1,4 +1,5 @@
 import {
+  analyticsConnection,
   type CrawlReport,
   diagnosePropertyWorkflow,
   type ReportHtmlSection,
@@ -260,7 +261,7 @@ function printTechnicalSection(
         fix.score,
         fix.ruleId,
         fix.severity,
-        `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.sessions} sessions / ${fix.scoreFactors.conversions} conv.`,
+        `${fix.scoreFactors.clicks} clicks / ${fix.scoreFactors.sessions} visits${fix.scoreFactors.conversions === undefined ? '' : ` / ${fix.scoreFactors.conversions} conv.`}`,
         truncate(fix.howToVerify, 72),
       ]),
     )
@@ -631,6 +632,7 @@ function workflowCommandMeta(input: {
             projectId: selection?.client?.id,
             googleAnalyticsPropertyId:
               selection?.client?.analytics.google?.propertyId,
+            analyticsConnection: analyticsConnection(selection?.client),
             crawl: !negatedBooleanArg(args, 'crawl'),
             refresh: booleanArg(args.refresh),
             maxPages: numberArg(args['crawl-max-pages']),

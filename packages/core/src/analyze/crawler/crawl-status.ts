@@ -1,0 +1,12 @@
+export type CrawlStatusPhase =
+  | 'started'
+  | 'url_queued'
+  | 'url_skipped'
+  | 'page_started'
+  | 'page_completed'
+  | 'page_failed'
+  | 'page_skipped'
+  | 'external_links_started'
+  | 'external_links_completed'
+  | 'cancelled'
+  | 'completed'

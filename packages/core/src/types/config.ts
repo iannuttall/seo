@@ -10,6 +10,19 @@ export const siteSchema = z.object({
 
 export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
+export const analyticsProviderSchema = z.enum(['google', 'clicky'])
+
+export const analyticsConnectionSchema = z.discriminatedUnion('provider', [
+  z.object({
+    provider: z.literal('google'),
+    propertyId: z.string(),
+  }),
+  z.object({
+    provider: z.literal('clicky'),
+    siteId: z.string().regex(/^\d{1,30}$/u),
+  }),
+])
+
 export const providerSpendLimitOverridesSchema = z
   .object({
     dailyNoticeMicros: z.number().int().nonnegative().optional(),
@@ -22,9 +35,15 @@ export const providerSpendLimitOverridesSchema = z
 
 export const analyticsConnectionsSchema = z
   .object({
+    selected: analyticsProviderSchema.optional(),
     google: z
       .object({
         propertyId: z.string(),
+      })
+      .optional(),
+    clicky: z
+      .object({
+        siteId: z.string().regex(/^\d{1,30}$/u),
       })
       .optional(),
   })
@@ -106,4 +125,6 @@ export const configSchema = z.object({
 })
 
 export type AppConfig = z.infer<typeof configSchema>
+export type AnalyticsConnection = z.infer<typeof analyticsConnectionSchema>
+export type AnalyticsProvider = z.infer<typeof analyticsProviderSchema>
 export type ClientProfile = z.infer<typeof clientProfileSchema>

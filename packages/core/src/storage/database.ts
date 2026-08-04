@@ -456,6 +456,7 @@ export function getCacheStats(): CacheStats {
     semrush_cache: { count: legacySemrushCount + providerCount('semrush') },
     provider_cache: { count: providerCount('dataforseo') },
     ahrefs_cache: { count: providerCount('ahrefs') },
+    clicky_cache: { count: providerCount('clicky') },
     http_cache: database
       .prepare('SELECT COUNT(*) AS count FROM http_cache')
       .get() as { count: number },
@@ -489,6 +490,7 @@ export function clearCache(
     | 'semrush'
     | 'dataforseo'
     | 'ahrefs'
+    | 'clicky'
     | 'http',
   olderThanMs?: number,
 ): number {
@@ -498,7 +500,8 @@ export function clearCache(
   if (
     provider === 'dataforseo' ||
     provider === 'semrush' ||
-    provider === 'ahrefs'
+    provider === 'ahrefs' ||
+    provider === 'clicky'
   ) {
     const sql = cutoff
       ? 'DELETE FROM provider_cache WHERE provider = ? AND fetched_at < ?'

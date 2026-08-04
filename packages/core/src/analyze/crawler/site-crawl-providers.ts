@@ -8,6 +8,7 @@ import type {
   SearchDateWindow,
   SearchPageBatch,
 } from '../../gsc/client.js'
+import type { AnalyticsConnection } from '../../types.js'
 import { defaultDateRange } from '../site-diagnostics/quick-wins-report-input.js'
 import type {
   fetchLandingPageValues,
@@ -42,27 +43,40 @@ export function crawlMetricsWindow(now: Date): CrawlDataSourceWindow {
 }
 
 export async function joinAnalytics(input: {
-  propertyId: string
+  connection: AnalyticsConnection
+  legacyGooglePropertyInput?: boolean
   pages: CrawlReport['pages']
   warnings: string[]
   limit: number
+  refresh?: boolean
   window: CrawlDataSourceWindow
   fetchLandingPageValues: LandingPageProvider
   landingValueForUrl: typeof landingValueForUrl
 }): Promise<CrawlAnalyticsDataSource> {
+  const label =
+    input.connection.provider === 'clicky' ? 'Clicky' : 'Google Analytics'
   let analytics: Awaited<ReturnType<LandingPageProvider>>
   try {
-    analytics = await input.fetchLandingPageValues({
-      propertyId: input.propertyId,
+    const request = {
       startDate: input.window.startDate,
       endDate: input.window.endDate,
       limit: input.limit,
-    })
+      ...(input.legacyGooglePropertyInput || input.refresh === undefined
+        ? {}
+        : { refresh: input.refresh }),
+    }
+    analytics = await input.fetchLandingPageValues(
+      input.legacyGooglePropertyInput && input.connection.provider === 'google'
+        ? { ...request, propertyId: input.connection.propertyId }
+        : { ...request, connection: input.connection },
+    )
   } catch (error) {
-    const warning = `Google Analytics metrics unavailable: ${error instanceof Error ? error.message : String(error)}`
+    const warning = `${label} metrics unavailable: ${error instanceof Error ? error.message : String(error)}`
     input.warnings.push(warning)
     return {
       status: 'unavailable',
+      provider: input.connection.provider,
+      observedMetrics: [],
       window: input.window,
       totalPages: input.pages.length,
       queriedPages: input.pages.length,
@@ -72,10 +86,12 @@ export async function joinAnalytics(input: {
     }
   }
   if (analytics.warning) {
-    const warning = `Google Analytics metrics unavailable: ${analytics.warning}`
+    const warning = `${label} metrics unavailable: ${analytics.warning}`
     input.warnings.push(warning)
     return {
       status: 'unavailable',
+      provider: input.connection.provider,
+      observedMetrics: analytics.source?.observedMetrics ?? [],
       window: input.window,
       totalPages: input.pages.length,
       queriedPages: input.pages.length,
@@ -103,13 +119,13 @@ export async function joinAnalytics(input: {
   const retainedRowLimitReached = analytics.source?.retainedRowLimitReached
   const qualityWarnings = analytics.source?.qualityWarnings ?? []
   const warning = !sourceQualityKnown
-    ? `Google Analytics metrics joined for ${joinedPages} of ${input.pages.length} crawled pages, but the provider did not expose row completeness; missing page metrics are not reliable zero-traffic evidence.`
+    ? `${label} metrics joined for ${joinedPages} of ${input.pages.length} crawled pages, but the provider did not expose row completeness; missing page metrics are not reliable zero-traffic evidence.`
     : retainedRowLimitReached
-      ? `Google Analytics retained-row limit reached; missing page metrics are not reliable zero-traffic evidence.`
+      ? `${label} retained-row limit reached; missing page metrics are not reliable zero-traffic evidence.`
       : qualityWarnings.length
         ? `${qualityWarnings.join(' ')} Missing page metrics and relative analytics value are partial evidence.`
         : input.pages.length && joinedPages === 0
-          ? 'Google Analytics metrics joined for 0 crawled pages.'
+          ? `${label} metrics joined for 0 crawled pages.`
           : undefined
   if (warning) input.warnings.push(warning)
   return {
@@ -119,6 +135,8 @@ export async function joinAnalytics(input: {
         : joinedPages
           ? 'joined'
           : 'none',
+    provider: input.connection.provider,
+    observedMetrics: analytics.source?.observedMetrics,
     window: input.window,
     totalPages: input.pages.length,
     queriedPages: input.pages.length,

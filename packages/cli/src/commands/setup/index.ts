@@ -23,6 +23,11 @@ export const setupCommand = defineCommand({
       type: 'string',
       description: 'Optional Google Analytics property ID.',
     },
+    'clicky-site-id': {
+      type: 'string',
+      description:
+        'Optional Clicky site ID. Set SEO_CLICKY_SITEKEY outside a terminal.',
+    },
     brand: {
       type: 'string',
       description: 'Comma-separated branded query terms to exclude by default.',
@@ -83,7 +88,7 @@ export const startCommand = defineCommand({
   meta: {
     name: 'start',
     description:
-      'Start here: connect Google, save a profile, and get the first report commands',
+      'Start here: connect first-party data, save a profile, and get the first report commands',
   },
 })
 

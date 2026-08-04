@@ -18,8 +18,6 @@ import {
   listCrawlReports,
   listRules,
   loadCrawlReport,
-  MAX_CRAWL_CONCURRENCY,
-  MAX_CRAWL_DEPTH,
   MAX_CRAWL_PAGES,
   SeoError,
   saveCrawlReport,
@@ -33,15 +31,9 @@ import {
   compactCrawlResult,
   resolveSavedReportAlias,
 } from './crawler-tool-helpers.js'
+import * as crawlerInputs from './crawler-tool-inputs.js'
 import { fetchRateInput } from './fetch-rate.js'
 import { toolError, toolSuccess } from './tool-result.js'
-
-function boundedPositiveInteger(maximum: number) {
-  return z.number().int().min(1).max(maximum).optional()
-}
-
-const crawlPageLimit = boundedPositiveInteger(MAX_CRAWL_PAGES)
-const crawlDepthLimit = z.number().int().min(0).max(MAX_CRAWL_DEPTH).optional()
 
 export function registerCrawlerTools(server: McpServer): void {
   server.registerTool(
@@ -72,9 +64,10 @@ export function registerCrawlerTools(server: McpServer): void {
           ),
         site: z.string().optional(),
         googleAnalyticsPropertyId: z.string().optional(),
-        maxPages: crawlPageLimit,
-        maxDepth: crawlDepthLimit,
-        concurrency: boundedPositiveInteger(MAX_CRAWL_CONCURRENCY),
+        clickySiteId: crawlerInputs.clickySiteIdInput,
+        maxPages: crawlerInputs.crawlPageLimit,
+        maxDepth: crawlerInputs.crawlDepthLimit,
+        concurrency: crawlerInputs.crawlConcurrencyLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -94,6 +87,7 @@ export function registerCrawlerTools(server: McpServer): void {
       sitemapUrl,
       site,
       googleAnalyticsPropertyId,
+      clickySiteId,
       maxPages,
       maxDepth,
       concurrency,
@@ -110,6 +104,10 @@ export function registerCrawlerTools(server: McpServer): void {
       saveReport,
     }) => {
       try {
+        const analyticsConnection = crawlerInputs.clickyAnalyticsConnection({
+          googleAnalyticsPropertyId,
+          clickySiteId,
+        })
         const crawlUrl =
           url ?? (sitemapUrl ? new URL('/', sitemapUrl).toString() : undefined)
         if (!crawlUrl) {
@@ -125,6 +123,7 @@ export function registerCrawlerTools(server: McpServer): void {
           sitemapUrl,
           site,
           googleAnalyticsPropertyId,
+          analyticsConnection,
           maxPages,
           maxDepth,
           concurrency,
@@ -163,8 +162,9 @@ export function registerCrawlerTools(server: McpServer): void {
         urls: z.array(z.string().url()).min(1).max(MAX_CRAWL_PAGES),
         site: z.string().optional(),
         googleAnalyticsPropertyId: z.string().optional(),
-        maxPages: crawlPageLimit,
-        concurrency: boundedPositiveInteger(MAX_CRAWL_CONCURRENCY),
+        clickySiteId: crawlerInputs.clickySiteIdInput,
+        maxPages: crawlerInputs.crawlPageLimit,
+        concurrency: crawlerInputs.crawlConcurrencyLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -177,6 +177,7 @@ export function registerCrawlerTools(server: McpServer): void {
       urls,
       site,
       googleAnalyticsPropertyId,
+      clickySiteId,
       maxPages,
       concurrency,
       fetchIntervalCap,
@@ -187,12 +188,17 @@ export function registerCrawlerTools(server: McpServer): void {
       saveReport,
     }) => {
       try {
+        const analyticsConnection = crawlerInputs.clickyAnalyticsConnection({
+          googleAnalyticsPropertyId,
+          clickySiteId,
+        })
         const report = await crawlSite({
           url: urls[0] ?? '',
           urls,
           mode: 'list',
           site,
           googleAnalyticsPropertyId,
+          analyticsConnection,
           maxPages: maxPages ?? urls.length,
           concurrency,
           refresh,
@@ -226,8 +232,8 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
-        maxDepth: crawlDepthLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
+        maxDepth: crawlerInputs.crawlDepthLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -341,7 +347,7 @@ export function registerCrawlerTools(server: McpServer): void {
         ruleId: z.string().optional(),
         category: z.string().optional(),
         severity: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -414,7 +420,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -475,7 +481,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -531,7 +537,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -583,7 +589,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -635,7 +641,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -687,7 +693,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         maxUrls: z.number().int().positive().optional(),
         tokenBudget: z.number().int().positive().optional(),
         exclude: z.array(z.string()).optional(),
@@ -758,7 +764,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         fetchIntervalCap: z.number().int().positive().optional(),
         fetchIntervalMs: z.number().int().positive().optional(),
         refresh: z.boolean().optional(),
@@ -810,7 +816,7 @@ export function registerCrawlerTools(server: McpServer): void {
         url: z.string().url().optional(),
         reportId: z.string().optional(),
         site: z.string().optional(),
-        maxPages: crawlPageLimit,
+        maxPages: crawlerInputs.crawlPageLimit,
         maxConcepts: z.number().int().min(1).max(100).optional(),
         includeFiles: z.boolean().optional(),
         title: z.string().min(1).max(200).optional(),

@@ -1,4 +1,4 @@
-import { refreshPrioritiesWorkflow } from '@seo/core'
+import { analyticsConnection, refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -76,9 +76,13 @@ export const refreshPrioritiesCommand = defineCommand({
       limit: numberArg(args.limit),
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      googleAnalyticsPropertyId:
-        stringArg(args['google-analytics-property']) ??
-        selection.client?.analytics.google?.propertyId,
+      googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
+      analyticsConnection: stringArg(args['google-analytics-property'])
+        ? {
+            provider: 'google',
+            propertyId: stringArg(args['google-analytics-property']) ?? '',
+          }
+        : analyticsConnection(selection.client),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

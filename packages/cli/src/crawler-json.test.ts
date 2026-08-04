@@ -147,6 +147,7 @@ test('crawler CLI JSON output schema stays stable', async () => {
       ],
       analytics: [
         'joinedPages',
+        'observedMetrics',
         'queriedPages',
         'retainedRowLimit',
         'retainedRowLimitReached',
@@ -230,14 +231,12 @@ test('crawler CLI JSON output schema stays stable', async () => {
       topFixScoreFactors: [
         'affectedUrls',
         'clicks',
-        'conversions',
         'effort',
         'effortScore',
         'impressions',
         'searchVisibleUrls',
         'sessions',
         'severity',
-        'totalUsers',
       ],
       topFixVerification: ['command', 'expected'],
     })
@@ -353,10 +352,12 @@ test('crawler CLI exposes the fast sitemap health pass and JUnit output', async 
     assert.match(junit, /<testsuite name="seo sitemap health"/)
     assert.match(junit, /tests="3" failures="1"/)
     assert.match(junit, /robotsAllowed=true/)
+    assert.ok(userAgents.length > 0)
     assert.ok(
       userAgents.every((value) =>
         /^SEO-Skill\/\d+\.\d+\.\d+ \(\+https:\/\/seoskill\.dev\)$/.test(value),
       ),
+      `Unexpected crawler user-agent: ${JSON.stringify(userAgents)}`,
     )
   } finally {
     await fixture.close()

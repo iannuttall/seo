@@ -719,10 +719,14 @@ export async function crawlSite(
       googleAnalyticsPropertyId: healthStrategy
         ? undefined
         : input.googleAnalyticsPropertyId,
+      analyticsConnection: healthStrategy
+        ? undefined
+        : input.analyticsConnection,
       pages,
       warnings,
       searchMetricsLimit,
       analyticsLimit,
+      refresh: config.refresh,
       now: deps.now,
       queryPageMetrics: deps.queryPageMetrics,
       queryPageTopQuery: deps.queryPageTopQuery,
@@ -798,6 +802,7 @@ export async function crawlSite(
       projectId: input.projectId,
       site,
       googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
+      analyticsConnection: input.analyticsConnection,
       dataSources,
       pages,
       requests,

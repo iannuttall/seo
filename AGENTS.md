@@ -132,6 +132,8 @@ Useful core areas:
   naming inside this implementation boundary only. Product commands, config,
   report fields, MCP inputs, docs, and UI use `googleAnalytics` or “Google
   Analytics”.
+- `packages/core/src/clicky`: Clicky API adapter and sitekey storage boundary.
+  Profiles store the site ID only. Keep sitekeys in the managed secret store.
 
 ## Product Rules
 
@@ -163,6 +165,9 @@ The guided flow should not ask humans for implementation details.
 - Ask for a project name, not an internal id.
 - Derive stable ids automatically.
 - Explain project profiles in one short sentence.
+- When projects already exist, ask whether to create a new project or update a
+  selected project. Never infer an update target only because a Search Console
+  property matches.
 - Default to saving a profile, but allow profile-free use with `--site`.
 - Discover Search Console and Google Analytics choices after sign-in. Do not expect users to
   copy property ids if the provider can list them.
@@ -194,6 +199,9 @@ Every report must be technically defensible and useful to another program.
 - Keep local query wording, searcher location, Google Analytics geography,
   exact SERP location, Maps results, and business-profile evidence separate.
   None can stand in for another.
+- Treat Clicky visitors as visit or session evidence only where Clicky's own
+  definition supports that mapping. Do not invent Google Analytics users,
+  conversions, attribution, or geography fields from Clicky rows.
 - Label heuristics as heuristics. Do not turn conventions, correlations, or
   arbitrary thresholds into search-engine requirements.
 - Do not claim causation, ranking impact, indexing, crawler access, rich-result

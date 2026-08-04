@@ -1,5 +1,11 @@
 import type { CrawlAgentDiscovery } from './agent-discovery.js'
+import type { MarkdownQualityObservation } from './agent-discovery-types.js'
 import type { AgentReadinessCheck } from './agent-readiness.js'
+
+const MIN_CONTENT_SKETCH_COVERAGE = 0.6
+const SUPPORTING_WORD_RETENTION_RATIO = 0.8
+const MIN_WORD_RETENTION_RATIO = 0.4
+const MAX_PAGE_EVIDENCE = 10
 
 function check(
   section: string,
@@ -37,30 +43,42 @@ function unstableMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
     .map((page) => page.htmlUrl)
 }
 
-function qualityFailureUrls(discovery: CrawlAgentDiscovery): string[] {
-  return discovery.markdownAlternates.pages
-    .filter((page) => {
-      const quality = page.quality
-      if (!quality) return false
-      return (
-        !quality.frontmatterTitle ||
-        quality.h1Count !== 1 ||
-        !quality.codeFenceBalanced ||
-        quality.rawHtmlTags > 0 ||
-        quality.rawSvgTags > 0 ||
-        quality.rawScriptTags > 0 ||
-        quality.rawStyleTags > 0 ||
-        quality.navigationOnly ||
-        quality.repeatedLines > 0 ||
-        (quality.contentSketchCoverage !== null &&
-          quality.contentSketchCoverage !== undefined &&
-          quality.contentSketchCoverage < 0.6) ||
-        quality.tabbedContent?.complete === false ||
-        (quality.wordRetentionRatio !== null &&
-          quality.wordRetentionRatio < 0.4)
-      )
-    })
-    .map((page) => page.htmlUrl)
+function hasContentParityFailure(quality: MarkdownQualityObservation): boolean {
+  const coverage = quality.contentSketchCoverage
+  if (
+    coverage === null ||
+    coverage === undefined ||
+    coverage >= MIN_CONTENT_SKETCH_COVERAGE
+  ) {
+    return false
+  }
+  return (
+    quality.wordRetentionRatio === null ||
+    quality.wordRetentionRatio < SUPPORTING_WORD_RETENTION_RATIO
+  )
+}
+
+function qualityFailureReasons(quality: MarkdownQualityObservation): string[] {
+  const reasons: string[] = []
+  if (!quality.frontmatterTitle) reasons.push('missing-frontmatter-title')
+  if (quality.h1Count !== 1) reasons.push('h1-count')
+  if (!quality.codeFenceBalanced) reasons.push('unbalanced-code-fences')
+  if (quality.rawHtmlTags > 0) reasons.push('raw-html')
+  if (quality.rawSvgTags > 0) reasons.push('raw-svg')
+  if (quality.rawScriptTags > 0) reasons.push('raw-script')
+  if (quality.rawStyleTags > 0) reasons.push('raw-style')
+  if (quality.navigationOnly) reasons.push('navigation-only')
+  if (quality.repeatedLines > 0) reasons.push('repeated-prose')
+  if (quality.tabbedContent?.complete === false) {
+    reasons.push('missing-tab-panels')
+  }
+  if (
+    quality.wordRetentionRatio !== null &&
+    quality.wordRetentionRatio < MIN_WORD_RETENTION_RATIO
+  ) {
+    reasons.push('low-word-retention')
+  }
+  return reasons
 }
 
 function confirmedMarkdown(
@@ -85,7 +103,12 @@ export function markdownChecks(
   const markdown = discovery.markdownAlternates
   const failedUrls = failedMarkdownUrls(discovery)
   const unstableUrls = unstableMarkdownUrls(discovery)
-  const qualityUrls = qualityFailureUrls(discovery)
+  const qualityFailures = markdown.pages.flatMap((page) => {
+    if (!page.quality) return []
+    const reasons = qualityFailureReasons(page.quality)
+    return reasons.length ? [{ page, quality: page.quality, reasons }] : []
+  })
+  const qualityUrls = qualityFailures.map(({ page }) => page.htmlUrl)
   const hasEligibleHtml = markdown.eligibleHtmlPages > 0
   const hasEvaluatedMarkdown = markdown.evaluatedPages > 0
   const negotiatedPages = markdown.pages.filter(
@@ -145,7 +168,7 @@ export function markdownChecks(
       page.quality?.contentSketchCoverage !== undefined,
   )
   const parityFailures = parityPages.filter(
-    (page) => (page.quality?.contentSketchCoverage ?? 0) < 0.6,
+    (page) => page.quality && hasContentParityFailure(page.quality),
   )
   const tabbedPages = markdown.pages.filter(
     (page) => (page.quality?.tabbedContent?.detectedPanels ?? 0) > 0,
@@ -274,7 +297,7 @@ export function markdownChecks(
           : parityFailures.length === 0
             ? 'Markdown retains sampled content from the HTML document'
             : 'Some Markdown responses may omit important HTML content',
-      plainEnglish: `${parityPages.length} pages were compared using bounded hashes sampled across the main HTML content. ${parityFailures.length} retained less than 60% of that sample. This detects likely omissions without storing full page bodies.`,
+      plainEnglish: `${parityPages.length} pages were compared using bounded hashes sampled across the main HTML content. ${parityFailures.length} retained less than 60% of that sample and less than 80% of the source word count. Requiring both signals avoids treating deliberately excluded controls as missing content.`,
       action:
         parityPages.length === 0
           ? 'Confirm a successful text/markdown representation, then run this check again.'
@@ -284,8 +307,18 @@ export function markdownChecks(
       evidence: {
         evaluatedPages: parityPages.length,
         failedPages: parityFailures.length,
-        minimumCoverage: 0.6,
+        minimumCoverage: MIN_CONTENT_SKETCH_COVERAGE,
+        supportingMinimumWordRetention: SUPPORTING_WORD_RETENTION_RATIO,
         sampling: 'bounded-content-shingles',
+        returnedPages: Math.min(parityFailures.length, MAX_PAGE_EVIDENCE),
+        truncated: parityFailures.length > MAX_PAGE_EVIDENCE,
+        pages: parityFailures.slice(0, MAX_PAGE_EVIDENCE).map((page) => ({
+          url: page.htmlUrl,
+          contentSketchCoverage: page.quality?.contentSketchCoverage,
+          wordRetentionRatio: page.quality?.wordRetentionRatio,
+          sourceWordCount: page.quality?.sourceWordCount,
+          wordCount: page.quality?.wordCount,
+        })),
       },
       urls: parityFailures.map((page) => page.htmlUrl).slice(0, 25),
     }),
@@ -396,6 +429,19 @@ export function markdownChecks(
         : qualityUrls.length === 0
           ? 'Keep the shared Markdown conversion path covered as templates and components change.'
           : 'Open the affected Markdown directly and fix the shared converter or component exclusion rules rather than patching generated files.',
+      evidence: {
+        affectedPages: qualityFailures.length,
+        returnedPages: Math.min(qualityFailures.length, MAX_PAGE_EVIDENCE),
+        truncated: qualityFailures.length > MAX_PAGE_EVIDENCE,
+        minimumWordRetention: MIN_WORD_RETENTION_RATIO,
+        pages: qualityFailures
+          .slice(0, MAX_PAGE_EVIDENCE)
+          .map(({ page, quality, reasons }) => ({
+            url: page.htmlUrl,
+            reasons,
+            quality,
+          })),
+      },
       urls: qualityUrls.slice(0, 25),
     }),
   ]

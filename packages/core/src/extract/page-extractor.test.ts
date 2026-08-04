@@ -155,6 +155,26 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.deepEqual(page.warnings, ['fixture warning'])
 })
 
+test('extractPage combines concise opening paragraphs for the readability heuristic', async () => {
+  const page = await extractPage(
+    fetchResult(`<!doctype html>
+      <html>
+        <head><title>Concise guide</title></head>
+        <body>
+          <main>
+            <h1>Concise guide</h1>
+            <p>This short opening names the problem and gives readers the immediate context.</p>
+            <p>The next sentence explains what the page helps them decide in practice.</p>
+            <p>A final concise paragraph sets expectations before the detailed sections begin.</p>
+          </main>
+        </body>
+      </html>`),
+    'readability',
+  )
+
+  assert.equal(page.answerable, true)
+})
+
 test('extractPage combines effective Googlebot meta directives across the document', async () => {
   const result = fetchResult(`<!doctype html>
       <html>

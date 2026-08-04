@@ -462,18 +462,21 @@ export async function extractPage(
   const listCount = $('ul, ol').length
   const tableCount = $('table').length
   const structuredBlocks = listCount + tableCount
-  const answerable = $('main p, article p, p')
+  const openingParagraphWordCount = $('main p, article p, p')
     .toArray()
     .slice(0, 3)
-    .some(
-      (element) =>
+    .reduce(
+      (total, element) =>
+        total +
         $(element)
           .text()
           .replace(/\s+/g, ' ')
           .trim()
           .split(/\s+/)
-          .filter(Boolean).length >= 25,
+          .filter(Boolean).length,
+      0,
     )
+  const answerable = openingParagraphWordCount >= 25
   let imagesTotal = 0
   let imagesMissingAlt = 0
   const oversizedImageCandidates: ExtractedPage['oversizedImageCandidates'] = []

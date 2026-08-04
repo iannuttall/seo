@@ -3,14 +3,14 @@ import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import {
   entityReadiness,
   isEntityEvidenceSchemaType,
-  isSiteIdentitySchemaType,
+  isSiteIdentitySameAsEvidence,
 } from './entity-readiness.js'
 import { type GeoGapResult, geoGapsReport } from './geo-gaps.js'
 import { auditLlmsTxt } from './llms.js'
 import type { CrawlAiBotAccess, CrawlReport } from './report.js'
 
 export const AI_SEARCH_SCORECARD_METHODOLOGY_ID = 'seo-ai-search-scorecard'
-export const AI_SEARCH_SCORECARD_METHODOLOGY_VERSION = 1
+export const AI_SEARCH_SCORECARD_METHODOLOGY_VERSION = 2
 
 export type ScorecardStatus = 'pass' | 'warn' | 'fail' | 'unknown'
 
@@ -408,9 +408,10 @@ function entityIdentityCheck(report: CrawlReport): ScorecardCheck {
   const hasEntitySchema = Object.keys(entity.entities.schemaTypes).some(
     isEntityEvidenceSchemaType,
   )
-  const siteSameAs = Object.entries(entity.entities.sameAsByType)
-    .filter(([type]) => isSiteIdentitySchemaType(type))
-    .flatMap(([, urls]) => urls)
+  const siteSameAs = indexablePages(report)
+    .flatMap((page) => page.schemaSameAsEvidence ?? [])
+    .filter(isSiteIdentitySameAsEvidence)
+    .map((evidence) => evidence.url)
   const uniqueSiteSameAs = [...new Set(siteSameAs)].sort()
   const status: ScorecardStatus = uniqueSiteSameAs.length
     ? 'pass'
@@ -429,9 +430,9 @@ function entityIdentityCheck(report: CrawlReport): ScorecardCheck {
     },
     finding:
       status === 'pass'
-        ? 'The crawl found sameAs links attached to Organization or LocalBusiness structured data for the site entity.'
+        ? 'The crawl found sameAs links attached to Organization, Person, or LocalBusiness structured data for the site entity.'
         : status === 'warn'
-          ? 'Entity schema is present, but no Organization or LocalBusiness sameAs evidence connects the site entity to official profiles.'
+          ? 'Entity schema is present, but no top-level Organization, Person, or LocalBusiness sameAs evidence connects the site entity to official profiles.'
           : 'No Organization, LocalBusiness, Person, Product, SoftwareApplication, or WebSite schema was found on the evaluated pages.',
     verification,
   }
@@ -465,10 +466,10 @@ function answerableContentCheck(pages: CrawlPageSnapshot[]): ScorecardCheck {
       evaluatedPages: pages.length,
       answerablePages: answerable.length,
       coveragePercent: pct(answerable.length, pages.length),
-      heuristic: 'one-of-first-three-paragraphs-has-at-least-25-words',
+      heuristic: 'first-three-paragraphs-have-at-least-25-words-in-total',
       missingSample: sampleUrls(pages.filter((page) => !page.geo?.answerable)),
     },
-    finding: `${pct(answerable.length, pages.length)}% of evaluated indexable pages open with at least one substantive paragraph. This is a readability heuristic, not a content-quality or citation measure.`,
+    finding: `${pct(answerable.length, pages.length)}% of evaluated indexable pages have at least 25 words across their first three paragraphs. This is a readability heuristic, not a content-quality or citation measure.`,
     verification,
   }
 }

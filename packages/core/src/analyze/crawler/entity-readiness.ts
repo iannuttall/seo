@@ -24,6 +24,19 @@ export function isSiteIdentitySchemaType(type: string): boolean {
   return SITE_IDENTITY_SCHEMA_TYPES.has(type.toLowerCase())
 }
 
+export function isSiteIdentitySameAsEvidence(evidence: {
+  path: string
+  subjectTypes: string[]
+}): boolean {
+  if (evidence.subjectTypes.some(isSiteIdentitySchemaType)) return true
+  if (!evidence.subjectTypes.some((type) => type.toLowerCase() === 'person')) {
+    return false
+  }
+  return /^(?:\$|\$\[\d+\]|\$\.@graph\[\d+\])\.sameAs(?:\[\d+\])?$/u.test(
+    evidence.path,
+  )
+}
+
 function isProfileIdentitySchemaType(type: string): boolean {
   return PROFILE_IDENTITY_SCHEMA_TYPES.has(type.toLowerCase())
 }
@@ -85,9 +98,7 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
     .filter((evidence) =>
       evidence.subjectTypes.some(isProfileIdentitySchemaType),
     )
-  const siteSameAsEvidence = sameAsEvidence.filter((evidence) =>
-    evidence.subjectTypes.some(isSiteIdentitySchemaType),
-  )
+  const siteSameAsEvidence = sameAsEvidence.filter(isSiteIdentitySameAsEvidence)
   const sameAs = unique(sameAsEvidence.map((evidence) => evidence.url))
   const sameAsByType: Record<string, string[]> = {}
   for (const evidence of sameAsEvidence) {
@@ -126,9 +137,9 @@ export function entityReadiness(report: CrawlReport): EntityReadinessReport {
         id: 'same-as',
         title: 'Site entity profiles are connected',
         plainEnglish: siteSameAsEvidence.length
-          ? 'The crawl found sameAs links attached to Organization or LocalBusiness structured data.'
+          ? 'The crawl found sameAs links attached to Organization, Person, or LocalBusiness structured data for the site identity.'
           : sameAs.length
-            ? 'The crawl found Person sameAs links, but no Organization or LocalBusiness profile evidence for the site entity.'
+            ? 'The crawl found Person sameAs links, but they were nested under another entity rather than attached to a top-level site identity.'
             : socialProfiles.length
               ? 'The crawl found social-domain links, but they are not enough to prove official profile ownership.'
               : 'The crawl did not find entity-scoped sameAs evidence.',

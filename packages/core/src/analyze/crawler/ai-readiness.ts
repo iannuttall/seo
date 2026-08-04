@@ -297,7 +297,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         score: 0,
         title: 'Short opening paragraphs are an unscored observation',
         plainEnglish: hasIndexablePages
-          ? `${pct(answerablePages.length, pageCount)}% of indexable pages have at least one 25-word paragraph near the start. This does not establish content quality, citation likelihood, or Google AI eligibility.`
+          ? `${pct(answerablePages.length, pageCount)}% of indexable pages have at least 25 words across their first three paragraphs. This does not establish content quality, citation likelihood, or Google AI eligibility.`
           : 'No indexable 2xx pages were available, so opening-paragraph coverage was not evaluated.',
         action:
           'Write for the reader and the page intent. Do not create artificial answer blocks or chunk content solely for AI Search.',
@@ -305,7 +305,7 @@ export function aiReadiness(report: CrawlReport): AiReadinessReport {
         evidence: {
           observedPages: answerablePages.length,
           evaluatedPages: pageCount,
-          heuristic: 'one-of-first-three-paragraphs-has-at-least-25-words',
+          heuristic: 'first-three-paragraphs-have-at-least-25-words-in-total',
           googleSearchImpact: 'not-established',
           guidanceUrl:
             'https://developers.google.com/search/docs/fundamentals/ai-optimization-guide',

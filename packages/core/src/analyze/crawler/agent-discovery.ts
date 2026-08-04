@@ -168,6 +168,10 @@ function markdownQuality(
   const codeFences = markdown.match(/^```/gmu)?.length ?? 0
   const wordCount = bodyWordCount(markdown)
   const sourceWordCount = page.wordCount ?? 0
+  const wordRetentionRatio =
+    sourceWordCount > 0
+      ? Math.round((wordCount / sourceWordCount) * 1_000) / 1_000
+      : null
   const panelCoverage = (page.tabbedContent?.panelSketches ?? []).map((panel) =>
     contentSketchCoverage(panel.sketch, markdown),
   )
@@ -194,14 +198,15 @@ function markdownQuality(
       markdown.match(/\b[a-z]{4,}[A-Z][A-Za-z]{3,}\b/gu)?.length ?? 0,
     repeatedLines: repeatedProseLines(markdown),
     sourceWordCount,
-    wordRetentionRatio:
-      sourceWordCount > 0
-        ? Math.round((wordCount / sourceWordCount) * 1_000) / 1_000
-        : null,
+    wordRetentionRatio,
     introductoryCopyRetained: introProbe
       ? normalizedMarkdown.includes(introProbe)
       : null,
-    navigationOnly: bodyWordCount(markdown) < 25,
+    navigationOnly:
+      wordCount < 25 &&
+      sourceWordCount >= 25 &&
+      wordRetentionRatio !== null &&
+      wordRetentionRatio < 0.4,
     contentSketchCoverage: contentSketchCoverage(page.contentSketch, markdown),
     tabbedContent: {
       detectedPanels: page.tabbedContent?.panels ?? 0,

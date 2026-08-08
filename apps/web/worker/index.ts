@@ -1,4 +1,6 @@
+import { Hono } from 'hono'
 import { reportIds } from '../src/content/reports/manifest.mjs'
+import { handleSitemapImport } from './tools/sitemap.ts'
 
 export const TELEMETRY_EVENTS = [
   'first_run',
@@ -457,7 +459,7 @@ async function liveStats(env: Env): Promise<Stats> {
 async function handleStats(
   request: Request,
   env: Env,
-  ctx: ExecutionContext,
+  ctx: { waitUntil(promise: Promise<unknown>): void },
 ): Promise<Response> {
   if (request.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
@@ -482,14 +484,16 @@ async function handleStats(
   }
 }
 
-export default {
-  async fetch(request, env, ctx): Promise<Response> {
-    const pathname = new URL(request.url).pathname
-    if (pathname === '/api/t') return handleTelemetryIngest(request, env)
-    if (pathname === '/api/stats') return handleStats(request, env, ctx)
-    if (pathname.startsWith('/api/')) {
-      return jsonResponse({ error: 'Not found' }, 404)
-    }
-    return env.ASSETS.fetch(request)
-  },
-} satisfies ExportedHandler<Env>
+export const app = new Hono<{ Bindings: Env }>()
+
+app.all('/api/t', (context) =>
+  handleTelemetryIngest(context.req.raw, context.env),
+)
+app.all('/api/stats', (context) =>
+  handleStats(context.req.raw, context.env, context.executionCtx),
+)
+app.all('/api/tools/sitemap', (context) => handleSitemapImport(context.req.raw))
+app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
+app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))
+
+export default app

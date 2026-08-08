@@ -464,6 +464,13 @@ export const reportGuideOverridesIP: Partial<
     ],
     alternatives: [
       {
+        when: 'You want to draft a small file from links you choose yourself.',
+        href: '/tools/llms-txt-generator',
+        label: 'Free llms.txt generator',
+        doInstead:
+          'Use the browser generator to create, copy, or download a small draft without installing anything. It does not crawl the pages or choose links for you.',
+      },
+      {
         when: 'You need to check a published llms.txt file and the pages it links to.',
         reportId: 'llms-txt-audit',
         doInstead:

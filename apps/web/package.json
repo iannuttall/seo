@@ -15,8 +15,8 @@
     "predev": "pnpm build:discovery",
     "lint": "astro check",
     "preview": "astro preview",
-    "preview:cloudflare": "pnpm build && wrangler d1 migrations apply seo-telemetry --local && wrangler dev",
-    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs worker/index.test.ts",
+    "preview:cloudflare": "pnpm build && CI=1 wrangler d1 migrations apply seo-telemetry --local && wrangler dev",
+    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs scripts/llms-txt-generator.test.mjs worker/index.test.ts worker/tools/sitemap.test.ts",
     "typecheck": "wrangler types worker/worker-configuration.d.ts --include-runtime false --check && astro check && tsc -p worker/tsconfig.json",
     "types:worker": "wrangler types worker/worker-configuration.d.ts --include-runtime false"
   },
@@ -26,7 +26,8 @@
     "@iannuttall/seo-graph-astro": "^0.0.4",
     "@iannuttall/seo-graph-core": "^0.0.2",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.1.3"
+    "astro": "^7.1.3",
+    "hono": "^4.13.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

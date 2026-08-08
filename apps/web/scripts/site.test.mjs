@@ -13,6 +13,11 @@ const { reportIds: routeReportIds } = await import(
 )
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
+  ['tools/index.html', 'https://seoskill.dev/tools'],
+  [
+    'tools/llms-txt-generator/index.html',
+    'https://seoskill.dev/tools/llms-txt-generator',
+  ],
   ['docs/index.html', 'https://seoskill.dev/docs'],
   [
     'docs/getting-started/index.html',
@@ -280,8 +285,8 @@ test('llms.txt is a short curated map generated from the route manifest', async 
 
   assert.equal(actual, renderLlmsTxt(manifest, llmsTxt))
   assert.match(actual, /^# SEO Skill\n\n> /u)
-  assert.equal(matches(actual, /^## /gmu).length, 4)
-  assert.equal(matches(actual, /^- \[/gmu).length, 12)
+  assert.equal(matches(actual, /^## /gmu).length, 5)
+  assert.equal(matches(actual, /^- \[/gmu).length, 14)
   assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
   assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
 
@@ -359,6 +364,7 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
       ([path]) =>
         path === 'index.html' ||
         path.startsWith('docs/') ||
+        path.startsWith('tools/') ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
     )
@@ -684,7 +690,7 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /X-Content-Type-Options: nosniff/)
 })
 
-test('Cloudflare limits the Worker to anonymous telemetry and static assets', () => {
+test('Cloudflare limits the Worker to telemetry, bounded tools, and static assets', () => {
   const config = JSON.parse(
     readFileSync(resolve(appRoot, 'wrangler.jsonc'), 'utf8'),
   )
@@ -697,6 +703,10 @@ test('Cloudflare limits the Worker to anonymous telemetry and static assets', ()
   assert.equal(config.main, './worker/index.ts')
   assert.equal(config.assets.binding, 'ASSETS')
   assert.deepEqual(config.assets.run_worker_first, ['/api/*'])
+  assert.deepEqual(config.compatibility_flags, [
+    'nodejs_compat',
+    'global_fetch_strictly_public',
+  ])
   assert.equal(config.assets.html_handling, 'drop-trailing-slash')
   assert.equal(config.assets.not_found_handling, '404-page')
   assert.equal(config.analytics_engine_datasets, undefined)

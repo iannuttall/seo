@@ -1,0 +1,262 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+---
+
+<section data-llms-txt-validator class="space-y-8">
+  <DottedCard patternId="llms-txt-validator-input">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Paste or open llms.txt</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+            Your text stays in this browser tab. The checker does not upload the file or open any of its links.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input data-file-input class="hidden" type="file" accept=".txt,.md,text/plain,text/markdown" />
+          <Button data-open-file type="button" class="px-3 py-2 text-xs">Open file</Button>
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
+          <button
+            data-clear-input
+            type="button"
+            class="px-2 py-2 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+          >Clear</button>
+        </div>
+      </div>
+
+      <p data-file-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+        Open a text or Markdown file up to 100,000 bytes, or paste its contents below.
+      </p>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>llms.txt content</span>
+        <textarea
+          data-validator-input
+          class="min-h-96 w-full resize-y border border-border bg-background px-4 py-3 font-mono text-xs font-normal leading-6 text-foreground outline-none focus:border-primary"
+          maxlength="100000"
+          spellcheck="false"
+          placeholder="# Example docs&#10;&#10;> Documentation for the Example project.&#10;&#10;## Docs&#10;&#10;- [Quick start](https://example.com/docs/start): Install and make the first request."
+        ></textarea>
+      </label>
+    </div>
+  </DottedCard>
+
+  <DottedCard patternId="llms-txt-validator-result" inverted>
+    <div class="space-y-6 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Validation result</h2>
+        <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75" aria-live="polite">
+          Add an llms.txt file to check its Markdown shape.
+        </p>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-px border border-panel-foreground/30 bg-panel-foreground/30 sm:grid-cols-4">
+        <div class="bg-panel p-3">
+          <dt class="font-sans text-xs font-light text-panel-foreground/65">Bytes</dt>
+          <dd data-stat-bytes class="mt-1 font-mono text-lg">0</dd>
+        </div>
+        <div class="bg-panel p-3">
+          <dt class="font-sans text-xs font-light text-panel-foreground/65">Lines</dt>
+          <dd data-stat-lines class="mt-1 font-mono text-lg">0</dd>
+        </div>
+        <div class="bg-panel p-3">
+          <dt class="font-sans text-xs font-light text-panel-foreground/65">Sections</dt>
+          <dd data-stat-sections class="mt-1 font-mono text-lg">0</dd>
+        </div>
+        <div class="bg-panel p-3">
+          <dt class="font-sans text-xs font-light text-panel-foreground/65">Links</dt>
+          <dd data-stat-links class="mt-1 font-mono text-lg">0</dd>
+        </div>
+      </dl>
+
+      <div data-result-messages class="space-y-5"></div>
+    </div>
+  </DottedCard>
+</section>
+
+<script>
+  import {
+    LLMS_TXT_VALIDATOR_LIMITS,
+    validateLlmsTxt,
+  } from '@/lib/llms-txt-validator.mjs'
+
+  const example = `# Example docs
+
+> Documentation for the Example project.
+
+Start with the quick start before opening the full reference.
+
+## Docs
+
+- [Quick start](https://example.com/docs/start): Install and make the first request.
+
+## Optional
+
+- [Full reference](https://example.com/reference): Complete API documentation.
+`
+
+  type ValidationIssue = { message: string; line?: number }
+
+  function initialiseValidator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    const input = root.querySelector<HTMLTextAreaElement>('[data-validator-input]')
+    const fileInput = root.querySelector<HTMLInputElement>('[data-file-input]')
+    const openFile = root.querySelector<HTMLButtonElement>('[data-open-file]')
+    const useExample = root.querySelector<HTMLButtonElement>('[data-use-example]')
+    const clearInput = root.querySelector<HTMLButtonElement>('[data-clear-input]')
+    const fileStatus = root.querySelector<HTMLElement>('[data-file-status]')
+    const summary = root.querySelector<HTMLElement>('[data-result-summary]')
+    const messages = root.querySelector<HTMLElement>('[data-result-messages]')
+    const statBytes = root.querySelector<HTMLElement>('[data-stat-bytes]')
+    const statLines = root.querySelector<HTMLElement>('[data-stat-lines]')
+    const statSections = root.querySelector<HTMLElement>('[data-stat-sections]')
+    const statLinks = root.querySelector<HTMLElement>('[data-stat-links]')
+
+    if (
+      !input ||
+      !fileInput ||
+      !openFile ||
+      !useExample ||
+      !clearInput ||
+      !fileStatus ||
+      !summary ||
+      !messages ||
+      !statBytes ||
+      !statLines ||
+      !statSections ||
+      !statLinks
+    ) return
+
+    let fileError = ''
+
+    function renderGroup(title: string, items: ValidationIssue[], kind: 'error' | 'warning'): void {
+      if (!messages || items.length === 0) return
+      const section = document.createElement('section')
+      section.className = 'space-y-2'
+      const heading = document.createElement('h3')
+      heading.className = 'font-mono text-sm font-normal'
+      heading.textContent = title
+      const list = document.createElement('ol')
+      list.className = 'space-y-2'
+      for (const item of items) {
+        const row = document.createElement('li')
+        row.className =
+          kind === 'error'
+            ? 'border border-primary bg-primary/10 px-3 py-2 font-sans text-xs leading-5'
+            : 'border border-panel-foreground/30 px-3 py-2 font-sans text-xs leading-5 text-panel-foreground/80'
+        row.textContent = item.line
+          ? `Line ${item.line}: ${item.message}`
+          : item.message
+        list.append(row)
+      }
+      section.append(heading, list)
+      messages.append(section)
+    }
+
+    function render(): void {
+      if (
+        !input ||
+        !summary ||
+        !messages ||
+        !statBytes ||
+        !statLines ||
+        !statSections ||
+        !statLinks
+      ) return
+      const result = validateLlmsTxt(input.value)
+      statBytes.textContent = result.stats.bytes.toLocaleString()
+      statLines.textContent = result.stats.lines.toLocaleString()
+      statSections.textContent = result.stats.sections.toLocaleString()
+      statLinks.textContent = result.stats.links.toLocaleString()
+      messages.replaceChildren()
+
+      if (!input.value && !fileError) {
+        summary.textContent = 'Add an llms.txt file to check its Markdown shape.'
+        return
+      }
+
+      const errors: ValidationIssue[] = fileError
+        ? [{ message: fileError }]
+        : result.errors
+      const errorCount = fileError ? 1 : result.issueStats.errors
+      const warningCount = fileError ? 0 : result.issueStats.warnings
+      if (errorCount > 0) {
+        summary.textContent = `${errorCount} ${errorCount === 1 ? 'change' : 'changes'} needed before the file follows the proposal shape.`
+      } else if (warningCount > 0) {
+        summary.textContent = `The file follows the proposal shape with ${warningCount} ${warningCount === 1 ? 'suggestion' : 'suggestions'}.`
+      } else {
+        summary.textContent = 'The file follows the local Markdown checks.'
+      }
+      renderGroup('Changes to make', errors, 'error')
+      renderGroup('Suggestions', result.warnings, 'warning')
+      if (!fileError && result.issueStats.omitted > 0) {
+        renderGroup(
+          'More results',
+          [
+            {
+              message: `${result.issueStats.omitted.toLocaleString()} more results are hidden. Fix the first ${LLMS_TXT_VALIDATOR_LIMITS.maxIssues} and check the file again.`,
+            },
+          ],
+          'warning',
+        )
+      }
+    }
+
+    input.addEventListener('input', () => {
+      fileError = ''
+      fileStatus.textContent = 'Checking pasted text in this browser tab.'
+      render()
+    })
+
+    openFile.addEventListener('click', () => {
+      fileInput.value = ''
+      fileInput.click()
+    })
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files?.[0]
+      if (!file) return
+      if (file.size > LLMS_TXT_VALIDATOR_LIMITS.maxBytes) {
+        input.value = ''
+        fileError = `The selected file is ${file.size.toLocaleString()} bytes. Keep it under ${LLMS_TXT_VALIDATOR_LIMITS.maxBytes.toLocaleString()} bytes.`
+        fileStatus.textContent = `${file.name} was not opened.`
+        render()
+        return
+      }
+      try {
+        input.value = await file.text()
+        fileError = ''
+        fileStatus.textContent = `Opened ${file.name}. The file stays in this browser tab.`
+      } catch {
+        input.value = ''
+        fileError = 'This browser could not read the selected file.'
+        fileStatus.textContent = `${file.name} was not opened.`
+      }
+      render()
+    })
+
+    useExample.addEventListener('click', () => {
+      input.value = example
+      fileError = ''
+      fileStatus.textContent = 'Loaded a complete example.'
+      render()
+    })
+
+    clearInput.addEventListener('click', () => {
+      input.value = ''
+      fileInput.value = ''
+      fileError = ''
+      fileStatus.textContent =
+        'Open a text or Markdown file up to 100,000 bytes, or paste its contents below.'
+      render()
+      input.focus()
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-llms-txt-validator]')) {
+    initialiseValidator(root)
+  }
+</script>

@@ -16,7 +16,7 @@
     "lint": "astro check",
     "preview": "astro preview",
     "preview:cloudflare": "pnpm build && CI=1 wrangler d1 migrations apply seo-telemetry --local && wrangler dev",
-    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs scripts/llms-txt-generator.test.mjs worker/index.test.ts worker/tools/sitemap.test.ts",
+    "test": "node --test scripts/site.test.mjs scripts/og-template.test.mjs scripts/llms-txt-generator.test.mjs scripts/llms-txt-validator.test.mjs worker/index.test.ts worker/tools/sitemap.test.ts",
     "typecheck": "wrangler types worker/worker-configuration.d.ts --include-runtime false --check && astro check && tsc -p worker/tsconfig.json",
     "types:worker": "wrangler types worker/worker-configuration.d.ts --include-runtime false"
   },

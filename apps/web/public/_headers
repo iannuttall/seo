@@ -29,6 +29,12 @@
 /docs/*.md
   Link: <https://seoskill.dev/docs/:splat>; rel="canonical"
 
+/tools.md
+  Link: <https://seoskill.dev/tools>; rel="canonical"
+
+/tools/llms-txt-generator.md
+  Link: <https://seoskill.dev/tools/llms-txt-generator>; rel="canonical"
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 

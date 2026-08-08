@@ -6,6 +6,8 @@ const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 const paths = [
   '/',
+  '/tools',
+  '/tools/llms-txt-generator',
   '/docs',
   '/docs/agents',
   '/docs/ai-search',

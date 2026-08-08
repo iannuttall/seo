@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   aggregateStats,
+  app,
   handleTelemetryIngest,
   validateTelemetryPayload,
 } from './index.ts'
@@ -150,4 +151,44 @@ test('stats aggregate installs, reports, agents, and complete d7 cohorts', () =>
     { report: 'site-crawl', count: 12 },
     { report: 'quick-wins', count: 8 },
   ])
+})
+
+test('Hono preserves API method errors, API 404s, and static asset fallback', async () => {
+  const assetRequests: string[] = []
+  const env = {
+    ASSETS: {
+      async fetch(request: Request) {
+        assetRequests.push(request.url)
+        return new Response('static asset')
+      },
+    },
+  }
+  const context = { waitUntil() {} }
+
+  const telemetry = await app.fetch(
+    new Request('https://seoskill.dev/api/t'),
+    env as never,
+    context as never,
+  )
+  const stats = await app.fetch(
+    new Request('https://seoskill.dev/api/stats', { method: 'POST' }),
+    env as never,
+    context as never,
+  )
+  const missing = await app.fetch(
+    new Request('https://seoskill.dev/api/missing'),
+    env as never,
+    context as never,
+  )
+  const asset = await app.fetch(
+    new Request('https://seoskill.dev/tools'),
+    env as never,
+    context as never,
+  )
+
+  assert.equal(telemetry.status, 405)
+  assert.equal(stats.status, 405)
+  assert.equal(missing.status, 404)
+  assert.equal(await asset.text(), 'static asset')
+  assert.deepEqual(assetRequests, ['https://seoskill.dev/tools'])
 })

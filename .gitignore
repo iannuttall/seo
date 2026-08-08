@@ -5,5 +5,6 @@ node_modules
 dist
 coverage
 *.tsbuildinfo
+.conductor/settings.local.toml
 /docs/
 /apps/web/public/.well-known/agent-skills/

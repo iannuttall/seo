@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://seoskill.dev</loc></url>
+  <url><loc>https://seoskill.dev/tools</loc></url>
+  <url><loc>https://seoskill.dev/tools/llms-txt-generator</loc></url>
   <url><loc>https://seoskill.dev/docs</loc></url>
   <url><loc>https://seoskill.dev/docs/agents</loc></url>
   <url><loc>https://seoskill.dev/docs/ai-search</loc></url>

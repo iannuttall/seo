@@ -1,0 +1,97 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import LlmsTxtGenerator from '@/components/tools/LlmsTxtGenerator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'llms.txt generator' },
+]
+---
+
+<BaseLayout
+  title="llms.txt generator"
+  description="Create an llms.txt file from a sitemap or your own links. Choose the pages an agent should read, then copy or download the Markdown file."
+  canonicalPath="/tools/llms-txt-generator"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        {breadcrumbs.map((crumb, index) => (
+          <li class="flex items-center gap-1.5">
+            {crumb.href ? (
+              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-foreground">{crumb.label}</span>
+            )}
+            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <PageHeader
+      title="llms.txt generator"
+      description="Start with a sitemap or add links yourself, choose the pages an agent should read first, then copy or download an llms.txt file."
+      align="left"
+    />
+
+    <LlmsTxtGenerator />
+
+    <div class="docs-prose mt-16">
+      <h2>What this generator creates</h2>
+      <p>
+        The llms.txt proposal uses Markdown. A file starts with one H1 title and
+        can add a short blockquote summary, notes, and H2 sections containing
+        links. A section named Optional identifies secondary pages that can be
+        skipped when a consumer needs a shorter context.
+      </p>
+      <p>
+        Read the current{' '}
+        <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt proposal and format</a>
+        {' '}before publishing the file. This generator checks its own fields and
+        creates that basic structure. It does not fetch the linked pages or prove
+        that another service reads them.
+      </p>
+
+      <h2>llms.txt does not improve Google rankings</h2>
+      <p>
+        Google Search says it ignores llms.txt files for visibility and rankings.
+        Publish one only when an agent or service you care about explicitly uses
+        it. Keep normal crawling, indexing, internal links, and useful page content
+        as separate work.
+      </p>
+      <p>
+        See Google's current{' '}
+        <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide#mythbusting" target="_blank" rel="noreferrer">generative AI search guidance</a>
+        {' '}for that distinction.
+      </p>
+
+      <h2>Generate a draft from a real crawl</h2>
+      <p>
+        This web tool reads URLs from the sitemap files you submit. It does not
+        crawl the pages or decide which ones matter. If you want automatic page
+        selection from indexable crawl evidence, install the package and use the{' '}
+        <a href="/docs/reports/llms-txt-generator">crawl-driven llms.txt generator</a>.
+        Review the selected URLs before publishing either result.
+      </p>
+      <pre><code>npm i -g seo
+seo start
+seo llms generate --project example --output llms.txt</code></pre>
+
+      <h2>Check the published file</h2>
+      <p>
+        After publishing, run the{' '}
+        <a href="/docs/reports/llms-txt-audit">llms.txt audit</a> to check the
+        response, content type, links, redirects, duplicates, and crawl coverage.
+        The audit records those observations without turning the optional file
+        into a search requirement.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

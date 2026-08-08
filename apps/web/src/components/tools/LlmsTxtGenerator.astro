@@ -1,0 +1,651 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+---
+
+<section data-llms-txt-generator class="space-y-8">
+  <DottedCard patternId="llms-txt-generator-form">
+    <form class="space-y-7 p-5 sm:p-6" novalidate>
+      <section class="space-y-4 border border-border bg-background-subtle p-4" aria-labelledby="sitemap-import-heading">
+        <div class="space-y-1">
+          <h2 id="sitemap-import-heading" class="font-mono text-lg font-normal">Start from a sitemap</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+            Enter a public sitemap URL, then choose the pages to add. You can edit every label and link before downloading the file.
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label class="flex-1 space-y-2 font-sans text-sm font-medium">
+            <span>Sitemap URL</span>
+            <input
+              data-sitemap-url
+              class="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm font-normal text-foreground outline-none focus:border-primary"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              maxlength="2048"
+              placeholder="https://example.com/sitemap.xml"
+            />
+          </label>
+          <Button data-fetch-sitemap type="button" class="px-4 py-2.5 text-xs">Find pages</Button>
+        </div>
+        <p data-sitemap-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          We check up to five sitemap files and show up to 1,000 pages. We do not read the pages themselves.
+        </p>
+        <div data-sitemap-results class="hidden space-y-4 border-t border-border pt-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <label class="flex-1 space-y-2 font-sans text-xs font-medium">
+              <span>Filter pages</span>
+              <input
+                data-sitemap-filter
+                class="w-full border border-border bg-background px-3 py-2 font-mono text-xs font-normal text-foreground outline-none focus:border-primary"
+                type="search"
+                placeholder="docs, pricing, guide..."
+              />
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <Button data-select-sitemap-pages type="button" class="px-3 py-2 text-xs">Select shown</Button>
+              <Button data-clear-sitemap-pages type="button" class="px-3 py-2 text-xs">Clear</Button>
+            </div>
+          </div>
+          <p data-sitemap-count class="font-sans text-xs font-light text-foreground-muted"></p>
+          <div data-sitemap-pages class="max-h-80 space-y-2 overflow-y-auto border border-border bg-background p-3"></div>
+        </div>
+      </section>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Site or project name</span>
+          <input
+            data-llms-title
+            class="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm font-normal text-foreground outline-none focus:border-primary"
+            type="text"
+            autocomplete="organization"
+            maxlength="120"
+            placeholder="Example docs"
+          />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Short summary</span>
+          <input
+            data-llms-summary
+            class="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm font-normal text-foreground outline-none focus:border-primary"
+            type="text"
+            maxlength="300"
+            placeholder="What should an agent know first?"
+          />
+        </label>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Important notes <span class="font-light text-foreground-muted">(optional)</span></span>
+        <textarea
+          data-llms-details
+          class="min-h-24 w-full resize-y border border-border bg-background px-3 py-2.5 font-mono text-sm font-normal leading-6 text-foreground outline-none focus:border-primary"
+          maxlength="1000"
+          placeholder="Add one short note about how to use the links."
+        ></textarea>
+      </label>
+
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <div class="space-y-1">
+            <h2 class="font-mono text-lg font-normal">Link sections</h2>
+            <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+              Group the pages an agent should open first. Keep secondary pages in an Optional section.
+            </p>
+          </div>
+          <Button data-add-section type="button" class="px-3 py-2 text-xs">Add section</Button>
+        </div>
+        <div data-llms-sections class="space-y-5"></div>
+      </div>
+    </form>
+  </DottedCard>
+
+  <DottedCard patternId="llms-txt-generator-output" inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Generated llms.txt</h2>
+          <p data-output-stats class="font-sans text-xs font-light text-panel-foreground/70">
+            Add a project name to create the file.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <Button data-copy-output type="button" class="px-3 py-2 text-xs" disabled>Copy</Button>
+          <Button data-download-output type="button" class="px-3 py-2 text-xs" disabled>Download</Button>
+        </div>
+      </div>
+
+      <div data-output-messages class="space-y-2" aria-live="polite"></div>
+
+      <textarea
+        data-llms-output
+        class="min-h-80 w-full resize-y border border-panel-foreground/30 bg-panel px-4 py-3 font-mono text-xs font-normal leading-6 text-panel-foreground outline-none focus:border-primary"
+        readonly
+        spellcheck="false"
+        aria-label="Generated llms.txt content"
+      ></textarea>
+    </div>
+  </DottedCard>
+
+  <template data-section-template>
+    <fieldset data-llms-section class="space-y-4 border border-border bg-background-subtle p-4">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <label class="min-w-56 flex-1 space-y-2 font-sans text-sm font-medium">
+          <span>Section heading</span>
+          <input
+            data-section-heading
+            class="w-full border border-border bg-background px-3 py-2 font-mono text-sm font-normal text-foreground outline-none focus:border-primary disabled:opacity-50"
+            type="text"
+            maxlength="100"
+            placeholder="Docs"
+          />
+        </label>
+        <label class="flex items-center gap-2 pb-2 font-sans text-sm font-light">
+          <input data-section-optional type="checkbox" class="size-4 accent-primary" />
+          Optional section
+        </label>
+        <button
+          data-remove-section
+          type="button"
+          class="mb-1 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+        >Remove section</button>
+      </div>
+      <div data-section-links class="space-y-3"></div>
+      <button
+        data-add-link
+        type="button"
+        class="font-sans text-xs text-primary underline underline-offset-4 hover:decoration-dotted"
+      >Add link</button>
+    </fieldset>
+  </template>
+
+  <template data-link-template>
+    <div data-llms-link class="grid gap-3 border-t border-border pt-3 sm:grid-cols-[1fr_1.4fr]">
+      <label class="space-y-1.5 font-sans text-xs font-medium">
+        <span>Link label</span>
+        <input
+          data-link-label
+          class="w-full border border-border bg-background px-3 py-2 font-mono text-xs font-normal text-foreground outline-none focus:border-primary"
+          type="text"
+          maxlength="160"
+          placeholder="Quick start"
+        />
+      </label>
+      <label class="space-y-1.5 font-sans text-xs font-medium">
+        <span>Complete URL</span>
+        <input
+          data-link-url
+          class="w-full border border-border bg-background px-3 py-2 font-mono text-xs font-normal text-foreground outline-none focus:border-primary"
+          type="url"
+          inputmode="url"
+          maxlength="2000"
+          placeholder="https://example.com/docs/start"
+        />
+      </label>
+      <label class="space-y-1.5 font-sans text-xs font-medium sm:col-span-2">
+        <span>Why this page matters <span class="font-light text-foreground-muted">(optional)</span></span>
+        <input
+          data-link-description
+          class="w-full border border-border bg-background px-3 py-2 font-mono text-xs font-normal text-foreground outline-none focus:border-primary"
+          type="text"
+          maxlength="300"
+          placeholder="A short description of what the page contains."
+        />
+      </label>
+      <button
+        data-remove-link
+        type="button"
+        class="justify-self-start font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted sm:col-span-2"
+      >Remove link</button>
+    </div>
+  </template>
+</section>
+
+<script>
+  import {
+    LLMS_TXT_LIMITS,
+    generateLlmsTxt,
+  } from '@/lib/llms-txt-generator.mjs'
+
+  function initialiseGenerator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    const title = root.querySelector<HTMLInputElement>('[data-llms-title]')
+    const summary = root.querySelector<HTMLInputElement>('[data-llms-summary]')
+    const details = root.querySelector<HTMLTextAreaElement>('[data-llms-details]')
+    const sections = root.querySelector<HTMLElement>('[data-llms-sections]')
+    const sectionTemplate = root.querySelector<HTMLTemplateElement>('[data-section-template]')
+    const linkTemplate = root.querySelector<HTMLTemplateElement>('[data-link-template]')
+    const addSectionButton = root.querySelector<HTMLButtonElement>('[data-add-section]')
+    const output = root.querySelector<HTMLTextAreaElement>('[data-llms-output]')
+    const outputStats = root.querySelector<HTMLElement>('[data-output-stats]')
+    const outputMessages = root.querySelector<HTMLElement>('[data-output-messages]')
+    const copyButton = root.querySelector<HTMLButtonElement>('[data-copy-output]')
+    const downloadButton = root.querySelector<HTMLButtonElement>('[data-download-output]')
+    const sitemapUrl = root.querySelector<HTMLInputElement>('[data-sitemap-url]')
+    const fetchSitemapButton = root.querySelector<HTMLButtonElement>('[data-fetch-sitemap]')
+    const sitemapStatus = root.querySelector<HTMLElement>('[data-sitemap-status]')
+    const sitemapResults = root.querySelector<HTMLElement>('[data-sitemap-results]')
+    const sitemapFilter = root.querySelector<HTMLInputElement>('[data-sitemap-filter]')
+    const sitemapCount = root.querySelector<HTMLElement>('[data-sitemap-count]')
+    const sitemapPages = root.querySelector<HTMLElement>('[data-sitemap-pages]')
+    const selectSitemapPages = root.querySelector<HTMLButtonElement>('[data-select-sitemap-pages]')
+    const clearSitemapPages = root.querySelector<HTMLButtonElement>('[data-clear-sitemap-pages]')
+
+    if (
+      !title ||
+      !summary ||
+      !details ||
+      !sections ||
+      !sectionTemplate ||
+      !linkTemplate ||
+      !addSectionButton ||
+      !output ||
+      !outputStats ||
+      !outputMessages ||
+      !copyButton ||
+      !downloadButton ||
+      !sitemapUrl ||
+      !fetchSitemapButton ||
+      !sitemapStatus ||
+      !sitemapResults ||
+      !sitemapFilter ||
+      !sitemapCount ||
+      !sitemapPages ||
+      !selectSitemapPages ||
+      !clearSitemapPages
+    ) return
+
+    type SitemapPage = { url: string; label: string }
+    let discoveredPages: SitemapPage[] = []
+    const selectedSitemapUrls = new Set<string>()
+    const sitemapDisplayLimit = 100
+
+    function totalLinks(): number {
+      return sections?.querySelectorAll('[data-llms-link]').length ?? 0
+    }
+
+    function syncControls(): void {
+      if (!sections || !addSectionButton) return
+      addSectionButton.disabled =
+        sections.querySelectorAll('[data-llms-section]').length >=
+        LLMS_TXT_LIMITS.maxSections
+      for (const button of sections.querySelectorAll<HTMLButtonElement>('[data-add-link]')) {
+        button.disabled = totalLinks() >= LLMS_TXT_LIMITS.maxLinks
+      }
+    }
+
+    function addLink(section: Element): Element | undefined {
+      if (!linkTemplate || totalLinks() >= LLMS_TXT_LIMITS.maxLinks) return
+      const links = section.querySelector('[data-section-links]')
+      const fragment = linkTemplate.content.cloneNode(true)
+      const link = (fragment as DocumentFragment).querySelector('[data-llms-link]')
+      links?.append(fragment)
+      syncControls()
+      return link ?? undefined
+    }
+
+    function addSection(): HTMLElement | undefined {
+      if (!sectionTemplate || !sections) return
+      if (
+        sections.querySelectorAll('[data-llms-section]').length >=
+        LLMS_TXT_LIMITS.maxSections
+      ) return
+      const fragment = sectionTemplate.content.cloneNode(true)
+      const section = (fragment as DocumentFragment).querySelector('[data-llms-section]')
+      if (!section) return
+      sections.append(fragment)
+      addLink(section)
+      syncControls()
+      render()
+      return section as HTMLElement
+    }
+
+    function inputValue(parent: Element, selector: string): string {
+      return parent.querySelector<HTMLInputElement>(selector)?.value ?? ''
+    }
+
+    function isEmptySection(section: Element): boolean {
+      return !inputValue(section, '[data-section-heading]') &&
+        [...section.querySelectorAll('[data-llms-link]')].every(
+          (link) =>
+            !inputValue(link, '[data-link-label]') &&
+            !inputValue(link, '[data-link-url]') &&
+            !inputValue(link, '[data-link-description]'),
+        )
+    }
+
+    function importedSection(): HTMLElement | undefined {
+      return sections?.querySelector<HTMLElement>('[data-sitemap-section]') ?? undefined
+    }
+
+    function clearImportedSection(): void {
+      importedSection()?.remove()
+      if (sections?.querySelectorAll('[data-llms-section]').length === 0) addSection()
+    }
+
+    function syncImportedSection(): void {
+      if (!sections) return
+      const selected = discoveredPages.filter((page) => selectedSitemapUrls.has(page.url))
+      if (selected.length === 0) {
+        clearImportedSection()
+        render()
+        return
+      }
+
+      let section = importedSection()
+      if (!section) {
+        section = [...sections.querySelectorAll<HTMLElement>('[data-llms-section]')]
+          .find(isEmptySection) ?? addSection()
+      }
+      if (!section) return
+      section.dataset.sitemapSection = 'true'
+      const heading = section.querySelector<HTMLInputElement>('[data-section-heading]')
+      const links = section.querySelector<HTMLElement>('[data-section-links]')
+      if (heading) heading.value = 'Pages'
+      links?.replaceChildren()
+      for (const page of selected) {
+        const link = addLink(section)
+        if (!link) break
+        const label = link.querySelector<HTMLInputElement>('[data-link-label]')
+        const url = link.querySelector<HTMLInputElement>('[data-link-url]')
+        if (label) label.value = page.label
+        if (url) url.value = page.url
+      }
+      render()
+    }
+
+    function visibleSitemapPages(): SitemapPage[] {
+      const query = sitemapFilter?.value.trim().toLowerCase() ?? ''
+      return discoveredPages.filter(
+        (page) =>
+          !query ||
+          page.label.toLowerCase().includes(query) ||
+          page.url.toLowerCase().includes(query),
+      )
+    }
+
+    function renderSitemapPages(): void {
+      if (!sitemapPages || !sitemapCount || !sitemapResults) return
+      const matches = visibleSitemapPages()
+      const shown = matches.slice(0, sitemapDisplayLimit)
+      sitemapPages.replaceChildren()
+      for (const page of shown) {
+        const label = document.createElement('label')
+        label.className =
+          'flex items-start gap-3 border-b border-border pb-2 last:border-0 last:pb-0'
+        const checkbox = document.createElement('input')
+        checkbox.type = 'checkbox'
+        checkbox.className = 'mt-0.5 size-4 shrink-0 accent-primary'
+        checkbox.dataset.sitemapPage = page.url
+        checkbox.checked = selectedSitemapUrls.has(page.url)
+        const copy = document.createElement('span')
+        copy.className = 'min-w-0 font-sans text-xs leading-5'
+        const name = document.createElement('span')
+        name.className = 'block font-medium text-foreground'
+        name.textContent = page.label
+        const url = document.createElement('span')
+        url.className =
+          'block truncate font-mono text-[11px] text-foreground-muted'
+        url.textContent = page.url
+        copy.append(name, url)
+        label.append(checkbox, copy)
+        sitemapPages.append(label)
+      }
+      sitemapResults.classList.remove('hidden')
+      const hidden = Math.max(0, matches.length - shown.length)
+      sitemapCount.textContent =
+        `${matches.length.toLocaleString()} matching pages. ` +
+        `${selectedSitemapUrls.size} selected.` +
+        (hidden
+          ? ` Refine the filter to see the other ${hidden.toLocaleString()}.`
+          : '')
+    }
+
+    async function fetchSitemap(): Promise<void> {
+      if (!sitemapUrl || !fetchSitemapButton || !sitemapStatus) return
+      if (!sitemapUrl.value.trim()) {
+        sitemapStatus.textContent = 'Enter a complete HTTPS sitemap URL.'
+        sitemapUrl.focus()
+        return
+      }
+      fetchSitemapButton.disabled = true
+      fetchSitemapButton.textContent = 'Finding pages...'
+      sitemapStatus.textContent = 'Fetching the sitemap...'
+      try {
+        const response = await fetch('/api/tools/sitemap', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url: sitemapUrl.value.trim() }),
+        })
+        const result: unknown = await response.json()
+        const payload = result && typeof result === 'object'
+          ? result as { error?: unknown; urls?: unknown; warnings?: unknown }
+          : undefined
+        if (!response.ok) {
+          throw new Error(
+            typeof payload?.error === 'string'
+              ? payload.error
+              : 'The sitemap could not be checked.',
+          )
+        }
+        if (!Array.isArray(payload?.urls)) {
+          throw new Error('The sitemap service returned an invalid response.')
+        }
+        discoveredPages = payload.urls.filter(
+          (page): page is SitemapPage =>
+            Boolean(page) &&
+            typeof page === 'object' &&
+            'url' in page &&
+            'label' in page &&
+            typeof page.url === 'string' &&
+            typeof page.label === 'string',
+        )
+        selectedSitemapUrls.clear()
+        clearImportedSection()
+        if (title && !title.value && discoveredPages[0]) {
+          title.value = new URL(discoveredPages[0].url).hostname.replace(/^www\./u, '')
+        }
+        if (sitemapFilter) sitemapFilter.value = ''
+        const warnings = Array.isArray(payload.warnings)
+          ? payload.warnings.filter(
+              (warning): warning is string => typeof warning === 'string',
+            )
+          : []
+        sitemapStatus.textContent =
+          `Found ${discoveredPages.length.toLocaleString()} pages.` +
+          (warnings.length ? ` ${warnings.join(' ')}` : '')
+        renderSitemapPages()
+        render()
+      } catch (error) {
+        sitemapStatus.textContent =
+          error instanceof Error
+            ? error.message
+            : 'The sitemap could not be checked.'
+      } finally {
+        fetchSitemapButton.disabled = false
+        fetchSitemapButton.textContent = 'Find pages'
+      }
+    }
+
+    function collectInput() {
+      return {
+        title: title?.value ?? '',
+        summary: summary?.value ?? '',
+        details: details?.value ?? '',
+        sections: [...(sections?.querySelectorAll('[data-llms-section]') ?? [])].map(
+          (section) => ({
+            heading: inputValue(section, '[data-section-heading]'),
+            optional:
+              section.querySelector<HTMLInputElement>('[data-section-optional]')
+                ?.checked ?? false,
+            links: [...section.querySelectorAll('[data-llms-link]')].map((link) => ({
+              label: inputValue(link, '[data-link-label]'),
+              url: inputValue(link, '[data-link-url]'),
+              description: inputValue(link, '[data-link-description]'),
+            })),
+          }),
+        ),
+      }
+    }
+
+    function renderMessages(items: Array<{ message: string }>, kind: 'error' | 'warning'): void {
+      if (!outputMessages) return
+      for (const item of items) {
+        const message = document.createElement('p')
+        message.className =
+          kind === 'error'
+            ? 'border border-primary bg-primary/10 px-3 py-2 font-sans text-xs leading-5 text-panel-foreground'
+            : 'border border-panel-foreground/30 px-3 py-2 font-sans text-xs leading-5 text-panel-foreground/80'
+        message.textContent = item.message
+        outputMessages.append(message)
+      }
+    }
+
+    function render(): void {
+      if (!output || !outputStats || !outputMessages || !copyButton || !downloadButton) return
+      const result = generateLlmsTxt(collectInput())
+      output.value = result.content
+      outputMessages.replaceChildren()
+      renderMessages(result.errors, 'error')
+      renderMessages(result.warnings, 'warning')
+      const ready = result.errors.length === 0 && result.content.length > 0
+      copyButton.disabled = !ready
+      downloadButton.disabled = !ready
+      outputStats.textContent = ready
+        ? `${result.stats.sections} sections, ${result.stats.links} links, ${result.stats.bytes.toLocaleString()} bytes, about ${result.stats.estimatedTokens.toLocaleString()} tokens.`
+        : 'Fix the fields below to create the file.'
+      syncControls()
+    }
+
+    root.addEventListener('input', (event) => {
+      const target = event.target
+      if (
+        target instanceof HTMLInputElement &&
+        target.matches('[data-sitemap-filter]')
+      ) {
+        renderSitemapPages()
+        return
+      }
+      if (target instanceof HTMLInputElement && target.matches('[data-section-optional]')) {
+        const section = target.closest('[data-llms-section]')
+        const heading = section?.querySelector<HTMLInputElement>('[data-section-heading]')
+        if (heading) heading.disabled = target.checked
+      }
+      render()
+    })
+
+    root.addEventListener('submit', (event) => {
+      event.preventDefault()
+    })
+
+    root.addEventListener('click', (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      const button = target.closest('button')
+      if (!button) return
+
+      if (button.matches('[data-fetch-sitemap]')) {
+        void fetchSitemap()
+      } else if (button.matches('[data-select-sitemap-pages]')) {
+        const importedLinkCount =
+          importedSection()?.querySelectorAll('[data-llms-link]').length ?? 0
+        const available = Math.max(
+          0,
+          LLMS_TXT_LIMITS.maxLinks - (totalLinks() - importedLinkCount),
+        )
+        for (const page of visibleSitemapPages().slice(0, sitemapDisplayLimit)) {
+          if (selectedSitemapUrls.size >= available) break
+          selectedSitemapUrls.add(page.url)
+        }
+        syncImportedSection()
+        renderSitemapPages()
+      } else if (button.matches('[data-clear-sitemap-pages]')) {
+        selectedSitemapUrls.clear()
+        syncImportedSection()
+        renderSitemapPages()
+      } else if (button.matches('[data-add-section]')) {
+        addSection()
+      } else if (button.matches('[data-add-link]')) {
+        const section = button.closest('[data-llms-section]')
+        if (section) addLink(section)
+        render()
+      } else if (button.matches('[data-remove-link]')) {
+        const removedUrl = button
+          .closest('[data-llms-link]')
+          ?.querySelector<HTMLInputElement>('[data-link-url]')?.value
+        if (button.closest('[data-sitemap-section]') && removedUrl) {
+          selectedSitemapUrls.delete(removedUrl)
+        }
+        button.closest('[data-llms-link]')?.remove()
+        renderSitemapPages()
+        render()
+      } else if (button.matches('[data-remove-section]')) {
+        if (button.closest('[data-sitemap-section]')) {
+          selectedSitemapUrls.clear()
+        }
+        button.closest('[data-llms-section]')?.remove()
+        if (sections?.querySelectorAll('[data-llms-section]').length === 0) addSection()
+        renderSitemapPages()
+        render()
+      }
+    })
+
+    root.addEventListener('change', (event) => {
+      const target = event.target
+      if (
+        !(target instanceof HTMLInputElement) ||
+        !target.matches('[data-sitemap-page]')
+      ) return
+      const url = target.dataset.sitemapPage
+      if (!url) return
+      if (target.checked) {
+        const importedLinkCount =
+          importedSection()?.querySelectorAll('[data-llms-link]').length ?? 0
+        const available =
+          LLMS_TXT_LIMITS.maxLinks - (totalLinks() - importedLinkCount)
+        if (selectedSitemapUrls.size >= available) {
+          target.checked = false
+          if (sitemapStatus) {
+            sitemapStatus.textContent =
+              `The file can contain up to ${LLMS_TXT_LIMITS.maxLinks} links.`
+          }
+          return
+        }
+        selectedSitemapUrls.add(url)
+      } else {
+        selectedSitemapUrls.delete(url)
+      }
+      syncImportedSection()
+      renderSitemapPages()
+    })
+
+    copyButton.addEventListener('click', async () => {
+      if (!output.value) return
+      await navigator.clipboard.writeText(output.value)
+      copyButton.textContent = 'Copied'
+      window.setTimeout(() => {
+        copyButton.textContent = 'Copy'
+      }, 1500)
+    })
+
+    downloadButton.addEventListener('click', () => {
+      if (!output.value) return
+      const blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'llms.txt'
+      link.click()
+      URL.revokeObjectURL(url)
+    })
+
+    addSection()
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-llms-txt-generator]')) {
+    initialiseGenerator(root)
+  }
+</script>

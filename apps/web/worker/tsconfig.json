@@ -11,5 +11,6 @@
     "target": "ES2022",
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["./index.ts", "./worker-configuration.d.ts"]
+  "include": ["./**/*.ts"],
+  "exclude": ["./**/*.test.ts"]
 }

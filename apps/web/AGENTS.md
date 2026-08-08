@@ -1,7 +1,7 @@
 # Site agent notes
 
 This package is the Astro site for `https://seoskill.dev`. Pages stay static.
-A small Cloudflare Worker handles the anonymous telemetry API and serves the
+A small Hono app on Cloudflare Workers handles bounded API work and serves the
 built assets.
 
 Before writing, editing, or generating any site copy, read the root
@@ -22,12 +22,14 @@ pnpm deploy:web:dry-run
 
 ## Site rules
 
-- Keep page content static. The application Worker is limited to `/api/t`,
-  `/api/stats`, and the static assets binding. The Astro integration writes
-  Markdown alternatives during the build. Cloudflare zone Transform Rules
-  handle `Accept: text/markdown` requests. Do not add an account system,
-  remote MCP server, cookies, or another hosted product surface without an
-  explicit product decision.
+- Keep page content static. The Hono Worker is limited to `/api/t`,
+  `/api/stats`, bounded `/api/tools/*` jobs, and the static assets binding.
+  Tool APIs must validate public upstream URLs, bound network and output work,
+  and return partial or capped states rather than hiding them. The Astro
+  integration writes Markdown alternatives during the build. Cloudflare zone
+  Transform Rules handle `Accept: text/markdown` requests. Do not add an
+  account system, remote MCP server, cookies, or another hosted product
+  surface without an explicit product decision.
 - Keep canonical metadata, structured data, navigation, and footer markup in
   `src/layouts/BaseLayout.astro`. Marketing, docs, reports, policy pages, and
   the 404 page all use that layout.

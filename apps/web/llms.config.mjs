@@ -22,6 +22,13 @@ export const llmsTxt = {
       ],
     },
     {
+      heading: 'Free browser tools',
+      items: [
+        { path: '/tools' },
+        { path: '/tools/llms-txt-generator' },
+      ],
+    },
+    {
       heading: 'Agent and AI guidance',
       items: [
         { path: '/docs/ai-search' },

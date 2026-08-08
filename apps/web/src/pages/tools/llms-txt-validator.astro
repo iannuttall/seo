@@ -13,7 +13,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
 <BaseLayout
   title="llms.txt validator"
-  description="Validate a pasted or local llms.txt file. Find Markdown structure, section, link, and size problems without uploading the file or opening its URLs."
+  description="Validate a published, pasted, or local llms.txt file. Find Markdown structure, section, link, and size problems without opening the URLs inside it."
   canonicalPath="/tools/llms-txt-validator"
   {breadcrumbs}
 >
@@ -37,7 +37,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
     <PageHeader
       title="llms.txt validator"
-      description="Paste an llms.txt file or open one from your computer. The checker finds format and link-list problems without sending the file anywhere."
+      description="Enter a public llms.txt URL, paste the content, or open a local file. Get line-specific format and link-list checks."
       align="left"
     />
 
@@ -60,9 +60,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
       <h2>A valid file does not prove the links work</h2>
       <p>
-        This tool reads text in your browser. It does not request the linked
-        pages, check redirects, inspect response headers, or confirm that an
-        agent uses the file. Use the{' '}
+        When you enter a URL, this tool downloads that llms.txt file. It does
+        not request the pages listed inside it, inspect their response headers,
+        or confirm that an agent uses the file. Use the{' '}
         <a href="/docs/reports/llms-txt-audit">published llms.txt audit</a> when
         you need that live evidence.
       </p>

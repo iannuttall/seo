@@ -39,6 +39,20 @@ test('the clean package install check builds workspace dependencies', () => {
   )
 })
 
+test('core tests isolate SQLite state between test processes', async () => {
+  const corePackage = JSON.parse(
+    await readFile('packages/core/package.json', 'utf8'),
+  )
+  const runner = await readFile('packages/core/scripts/run-tests.mjs', 'utf8')
+
+  assert.equal(corePackage.scripts.test, 'node scripts/run-tests.mjs')
+  assert.match(runner, /SEO_CORE_TEST_ROOT/)
+  assert.match(runner, /join\(testRoot, String\(process\.pid\)\)/)
+  assert.match(runner, /SEO_CONFIG_DIR/)
+  assert.match(runner, /SEO_CACHE_DIR/)
+  assert.match(runner, /rmSync\(temporaryRoot/)
+})
+
 test('CI reuses the verified build without dropping any gates', async () => {
   const ci = await readFile('.github/workflows/ci.yml', 'utf8')
 

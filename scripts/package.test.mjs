@@ -44,11 +44,27 @@ test('CI reuses the verified build without dropping any gates', async () => {
 
   assert.match(ci, /pnpm build/)
   assert.match(ci, /pnpm typecheck/)
-  assert.match(ci, /pnpm test:built/)
+  assert.match(ci, /pnpm test:cli-shard:built/)
+  assert.match(ci, /pnpm test:contracts:built/)
+  assert.match(ci, /pnpm test:resources:built/)
   assert.match(ci, /pnpm test:package-install:built/)
   assert.match(ci, /pnpm lint:static/)
   assert.match(ci, /pnpm security:check/)
+  assert.match(ci, /actions\/upload-artifact@v7/)
+  assert.match(ci, /actions\/download-artifact@v8/)
+  assert.match(ci, /actions\/cache\/restore@v6/)
+  assert.match(ci, /actions\/cache\/save@v6/)
   assert.doesNotMatch(ci, /run: pnpm (?:test|test:package-install|lint)$/m)
+})
+
+test('production dogfood waits for the released package before auditing', async () => {
+  const dogfood = await readFile('.github/workflows/site-dogfood.yml', 'utf8')
+
+  assert.match(dogfood, /^name: Production dogfood$/m)
+  assert.match(dogfood, /for attempt in \$\(seq 1 24\)/)
+  assert.match(dogfood, /npm view "seo@\$version" version/)
+  assert.match(dogfood, /seo@\$version was not published within four minutes/)
+  assert.doesNotMatch(dogfood, /outputs\.published/)
 })
 
 test('the public TypeScript library and MCP entry points load', async () => {

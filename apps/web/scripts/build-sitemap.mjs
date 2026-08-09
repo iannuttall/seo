@@ -9,6 +9,7 @@ const paths = [
   '/tools',
   '/tools/llms-txt-generator',
   '/tools/llms-txt-validator',
+  '/tools/server-log-analyzer',
   '/docs',
   '/docs/agents',
   '/docs/ai-search',

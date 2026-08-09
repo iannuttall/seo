@@ -22,6 +22,10 @@ const expectedPages = new Map([
     'tools/llms-txt-validator/index.html',
     'https://seoskill.dev/tools/llms-txt-validator',
   ],
+  [
+    'tools/server-log-analyzer/index.html',
+    'https://seoskill.dev/tools/server-log-analyzer',
+  ],
   ['docs/index.html', 'https://seoskill.dev/docs'],
   [
     'docs/getting-started/index.html',
@@ -290,7 +294,7 @@ test('llms.txt is a short curated map generated from the route manifest', async 
   assert.equal(actual, renderLlmsTxt(manifest, llmsTxt))
   assert.match(actual, /^# SEO Skill\n\n> /u)
   assert.equal(matches(actual, /^## /gmu).length, 5)
-  assert.equal(matches(actual, /^- \[/gmu).length, 15)
+  assert.equal(matches(actual, /^- \[/gmu).length, 16)
   assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
   assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
 

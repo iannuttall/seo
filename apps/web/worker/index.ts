@@ -22,6 +22,7 @@ export const TELEMETRY_EVENTS = [
   'audit_start',
   'audit_complete',
   'audit_failed',
+  'command_failed',
   'first_audit_complete',
   'active_d1',
   'active_d7',
@@ -41,7 +42,88 @@ export const TELEMETRY_ERROR_CATEGORIES = [
   'crawl_timeout',
   'network',
   'config',
+  'data',
+  'database',
+  'filesystem',
+  'internal',
   'unknown',
+] as const
+
+const TELEMETRY_V1_ERROR_CATEGORIES = [
+  'auth',
+  'crawl_timeout',
+  'network',
+  'config',
+  'unknown',
+] as const
+
+export const TELEMETRY_FAILURE_REASONS = [
+  'access_denied',
+  'auth_config_required',
+  'auth_expired',
+  'auth_required',
+  'crawl_timeout',
+  'database_constraint',
+  'database_corrupt',
+  'database_locked',
+  'database_read_only',
+  'database_unique_constraint',
+  'filesystem_full',
+  'filesystem_not_found',
+  'filesystem_permission',
+  'insufficient_data',
+  'internal_error',
+  'invalid_input',
+  'network_connection',
+  'network_dns',
+  'network_timeout',
+  'network_tls',
+  'optional_provider_unavailable',
+  'property_not_found',
+  'provider_unavailable',
+  'rate_limited',
+  'unknown',
+] as const
+
+export const TELEMETRY_FAILURE_CONTEXTS = ['crawl_pages_run_id_url'] as const
+
+export const TELEMETRY_OPERATIONS = [
+  'analytics',
+  'auth',
+  'cache',
+  'change-log',
+  'client',
+  'content',
+  'content-groups',
+  'crawl-reports',
+  'diagnose',
+  'export',
+  'gsc-query',
+  'indexnow',
+  'init',
+  'llms',
+  'logs',
+  'mcp',
+  'monitoring',
+  'okf',
+  'perf',
+  'privacy',
+  'project',
+  'projects',
+  'providers',
+  'pseo',
+  'reports',
+  'reset',
+  'schedule',
+  'server-logs',
+  'setup',
+  'skill',
+  'sites',
+  'start',
+  'telemetry',
+  'tests',
+  'updates',
+  'url-inspect',
 ] as const
 
 const PLATFORMS = [
@@ -74,6 +156,9 @@ const ARCHITECTURES = [
 type TelemetryEvent = (typeof TELEMETRY_EVENTS)[number]
 type TelemetryAgent = (typeof TELEMETRY_AGENTS)[number]
 type TelemetryErrorCategory = (typeof TELEMETRY_ERROR_CATEGORIES)[number]
+type TelemetryFailureReason = (typeof TELEMETRY_FAILURE_REASONS)[number]
+type TelemetryFailureContext = (typeof TELEMETRY_FAILURE_CONTEXTS)[number]
+type TelemetryOperation = (typeof TELEMETRY_OPERATIONS)[number]
 
 export type TelemetryPayload = {
   event: TelemetryEvent
@@ -83,8 +168,11 @@ export type TelemetryPayload = {
   arch: string
   node: string
   cohort: string
-  schema: 1
+  schema: 1 | 2
   errorCategory?: TelemetryErrorCategory
+  failureReason?: TelemetryFailureReason
+  failureContext?: TelemetryFailureContext
+  operation?: TelemetryOperation
   report?: string
 }
 
@@ -99,7 +187,7 @@ type TelemetryWriteDatabase = {
   prepare(query: string): TelemetryWriteStatement
 }
 
-type Stats = {
+export type Stats = {
   schema: 1
   generatedAt: string
   window: {
@@ -114,6 +202,7 @@ type Stats = {
     auditsStarted: number
     auditsCompleted: number
     auditsFailed: number
+    commandsFailed: number
     auditsThisMonth: number
     firstAuditConversionPercent: number | null
   }
@@ -129,6 +218,19 @@ type Stats = {
     complete: boolean
   }>
   reports: Array<{ report: string; count: number }>
+  failures: {
+    categories: Array<{ category: string; count: number }>
+    details: Array<{
+      event: 'audit_failed' | 'command_failed'
+      report: string | null
+      operation: string | null
+      category: string
+      reason: string
+      context: string | null
+      version: string
+      count: number
+    }>
+  }
 }
 
 const REPORT_IDS = new Set<string>(reportIds)
@@ -148,6 +250,10 @@ const AUDIT_EVENTS = new Set<TelemetryEvent>([
   'audit_failed',
   'first_audit_complete',
 ])
+const FAILURE_EVENTS = new Set<TelemetryEvent>([
+  'audit_failed',
+  'command_failed',
+])
 const MAX_BODY_BYTES = 2_048
 const RESPONSE_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
@@ -162,8 +268,19 @@ function includes<T extends string>(
   return typeof value === 'string' && values.includes(value as T)
 }
 
-function exactFields(value: Record<string, unknown>): boolean {
-  const allowed = new Set([...BASE_FIELDS, 'errorCategory', 'report'])
+function exactFields(value: Record<string, unknown>, schema: 1 | 2): boolean {
+  const allowed = new Set(
+    schema === 1
+      ? [...BASE_FIELDS, 'errorCategory', 'report']
+      : [
+          ...BASE_FIELDS,
+          'errorCategory',
+          'failureReason',
+          'failureContext',
+          'operation',
+          'report',
+        ],
+  )
   return Object.keys(value).every((field) => allowed.has(field))
 }
 
@@ -172,7 +289,8 @@ export function validateTelemetryPayload(
 ): value is TelemetryPayload {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const payload = value as Record<string, unknown>
-  if (!exactFields(payload)) return false
+  if (payload.schema !== 1 && payload.schema !== 2) return false
+  if (!exactFields(payload, payload.schema)) return false
   if (!includes(TELEMETRY_EVENTS, payload.event)) return false
   if (!includes(TELEMETRY_AGENTS, payload.agent)) return false
   if (!includes(PLATFORMS, payload.os)) return false
@@ -195,17 +313,46 @@ export function validateTelemetryPayload(
   ) {
     return false
   }
-  if (payload.schema !== 1) return false
+  if (payload.schema === 1 && payload.event === 'command_failed') return false
 
   const isAuditEvent = AUDIT_EVENTS.has(payload.event)
   if (isAuditEvent !== (typeof payload.report === 'string')) return false
   if (typeof payload.report === 'string' && !REPORT_IDS.has(payload.report)) {
     return false
   }
-  if (payload.event === 'audit_failed') {
-    return includes(TELEMETRY_ERROR_CATEGORIES, payload.errorCategory)
+  const isFailureEvent = FAILURE_EVENTS.has(payload.event)
+  if (!isFailureEvent) {
+    return (
+      payload.errorCategory === undefined &&
+      payload.failureReason === undefined &&
+      payload.failureContext === undefined &&
+      payload.operation === undefined
+    )
   }
-  return payload.errorCategory === undefined
+  if (!includes(TELEMETRY_ERROR_CATEGORIES, payload.errorCategory)) return false
+  if (payload.schema === 1) {
+    return (
+      payload.event === 'audit_failed' &&
+      includes(TELEMETRY_V1_ERROR_CATEGORIES, payload.errorCategory)
+    )
+  }
+  if (!includes(TELEMETRY_FAILURE_REASONS, payload.failureReason)) return false
+  if (
+    payload.failureContext !== undefined &&
+    !includes(TELEMETRY_FAILURE_CONTEXTS, payload.failureContext)
+  ) {
+    return false
+  }
+  if (
+    payload.failureContext !== undefined &&
+    payload.failureReason !== 'database_unique_constraint'
+  ) {
+    return false
+  }
+  if (payload.event === 'command_failed') {
+    return includes(TELEMETRY_OPERATIONS, payload.operation)
+  }
+  return payload.operation === undefined
 }
 
 async function readBoundedText(
@@ -278,8 +425,11 @@ export async function handleTelemetryIngest(
         cohort,
         schema,
         error_category,
-        report
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+        report,
+        failure_reason,
+        failure_context,
+        operation
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
     )
       .bind(
         receivedMonth,
@@ -293,6 +443,9 @@ export async function handleTelemetryIngest(
         value.schema,
         value.errorCategory ?? null,
         value.report ?? null,
+        value.failureReason ?? null,
+        value.failureContext ?? null,
+        value.operation ?? null,
       )
       .run()
   } catch {
@@ -315,6 +468,11 @@ function rowString(row: StatsRow, field: string): string {
 function rowCount(row: StatsRow): number {
   const value = row.count
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+function nullableRowString(row: StatsRow, field: string): string | null {
+  const value = row[field]
+  return typeof value === 'string' && value.length > 0 ? value : null
 }
 
 function percentage(numerator: number, denominator: number): number | null {
@@ -358,6 +516,8 @@ export function aggregateStats(
     agents: StatsRow[]
     cohorts: StatsRow[]
     reports: StatsRow[]
+    failureCategories: StatsRow[]
+    failureDetails: StatsRow[]
   },
   now = new Date(),
 ): Stats {
@@ -396,6 +556,7 @@ export function aggregateStats(
       auditsStarted: eventCounts.get('audit_start') ?? 0,
       auditsCompleted: eventCounts.get('audit_complete') ?? 0,
       auditsFailed: eventCounts.get('audit_failed') ?? 0,
+      commandsFailed: eventCounts.get('command_failed') ?? 0,
       auditsThisMonth: input.month.reduce((sum, row) => sum + rowCount(row), 0),
       firstAuditConversionPercent: percentage(firstAuditCompletions, installs),
     },
@@ -429,6 +590,51 @@ export function aggregateStats(
         ),
       }))
       .sort((a, b) => b.count - a.count || a.report.localeCompare(b.report)),
+    failures: {
+      categories: input.failureCategories
+        .map((row) => ({
+          category: rowString(row, 'category'),
+          count: rowCount(row),
+        }))
+        .filter((row) =>
+          TELEMETRY_ERROR_CATEGORIES.includes(
+            row.category as TelemetryErrorCategory,
+          ),
+        )
+        .sort(
+          (a, b) => b.count - a.count || a.category.localeCompare(b.category),
+        ),
+      details: input.failureDetails
+        .map((row) => ({
+          event: rowString(row, 'event') as 'audit_failed' | 'command_failed',
+          report: nullableRowString(row, 'report'),
+          operation: nullableRowString(row, 'operation'),
+          category: rowString(row, 'category'),
+          reason: rowString(row, 'reason'),
+          context: nullableRowString(row, 'context'),
+          version: rowString(row, 'version'),
+          count: rowCount(row),
+        }))
+        .filter(
+          (row) =>
+            FAILURE_EVENTS.has(row.event) &&
+            TELEMETRY_ERROR_CATEGORIES.includes(
+              row.category as TelemetryErrorCategory,
+            ) &&
+            TELEMETRY_FAILURE_REASONS.includes(
+              row.reason as TelemetryFailureReason,
+            ),
+        )
+        .sort(
+          (a, b) =>
+            b.count - a.count ||
+            a.event.localeCompare(b.event) ||
+            (a.report ?? a.operation ?? '').localeCompare(
+              b.report ?? b.operation ?? '',
+            ) ||
+            a.reason.localeCompare(b.reason),
+        ),
+    },
   }
 }
 
@@ -463,11 +669,54 @@ async function liveStats(env: Env): Promise<Stats> {
        WHERE event = 'audit_start'
        GROUP BY report`,
     ),
+    env.TELEMETRY_DB.prepare(
+      `SELECT error_category AS category, COUNT(*) AS count
+       FROM telemetry_events
+       WHERE event IN ('audit_failed', 'command_failed')
+       GROUP BY error_category`,
+    ),
+    env.TELEMETRY_DB.prepare(
+      `SELECT
+         event,
+         report,
+         operation,
+         error_category AS category,
+         failure_reason AS reason,
+         failure_context AS context,
+         version,
+         COUNT(*) AS count
+       FROM telemetry_events
+       WHERE schema = 2 AND event IN ('audit_failed', 'command_failed')
+       GROUP BY
+         event,
+         report,
+         operation,
+         error_category,
+         failure_reason,
+         failure_context,
+         version
+       ORDER BY count DESC, event, report, operation, reason, version
+       LIMIT 20`,
+    ),
   ])
-  const [events, month, agents, cohorts, reports] = results.map(
-    (result) => result.results,
-  )
-  return aggregateStats({ events, month, agents, cohorts, reports })
+  const [
+    events,
+    month,
+    agents,
+    cohorts,
+    reports,
+    failureCategories,
+    failureDetails,
+  ] = results.map((result) => result.results)
+  return aggregateStats({
+    events,
+    month,
+    agents,
+    cohorts,
+    reports,
+    failureCategories,
+    failureDetails,
+  })
 }
 
 async function handleStats(

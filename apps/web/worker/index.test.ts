@@ -19,6 +19,15 @@ const validPayload = {
   report: 'site-crawl',
 }
 
+const validFailurePayload = {
+  ...validPayload,
+  event: 'audit_failed',
+  schema: 2,
+  errorCategory: 'database',
+  failureReason: 'database_unique_constraint',
+  failureContext: 'crawl_pages_run_id_url',
+}
+
 test('ingest schema accepts only fixed anonymous fields', () => {
   assert.equal(validateTelemetryPayload(validPayload), true)
   assert.equal(
@@ -45,6 +54,54 @@ test('ingest schema accepts only fixed anonymous fields', () => {
   )
   assert.equal(
     validateTelemetryPayload({ ...validPayload, event: 'audit_failed' }),
+    false,
+  )
+  assert.equal(validateTelemetryPayload(validFailurePayload), true)
+  assert.equal(
+    validateTelemetryPayload({
+      ...validFailurePayload,
+      event: 'command_failed',
+      report: undefined,
+      operation: 'auth',
+    }),
+    true,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validFailurePayload,
+      message: 'UNIQUE constraint failed: private table and values',
+    }),
+    false,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validFailurePayload,
+      failureReason: undefined,
+    }),
+    false,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validFailurePayload,
+      failureReason: 'internal_error',
+    }),
+    false,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validFailurePayload,
+      event: 'command_failed',
+      report: undefined,
+      operation: 'private-project-name',
+    }),
+    false,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validPayload,
+      event: 'audit_failed',
+      errorCategory: 'database',
+    }),
     false,
   )
 })
@@ -94,6 +151,59 @@ test('ingest writes only the documented anonymous fields to D1', async () => {
     1,
     null,
     'site-crawl',
+    null,
+    null,
+    null,
+  ])
+})
+
+test('schema 2 ingest writes fixed failure classifications without raw errors', async () => {
+  const statements: Array<{ query: string; values: unknown[] }> = []
+  const env = {
+    TELEMETRY_DB: {
+      prepare(query: string) {
+        const statement = {
+          values: [] as unknown[],
+          bind(...values: unknown[]) {
+            this.values = values
+            return this
+          },
+          async run() {
+            statements.push({ query, values: this.values })
+          },
+        }
+        return statement
+      },
+    },
+  } satisfies Parameters<typeof handleTelemetryIngest>[1]
+  const request = new Request('https://seoskill.dev/api/t', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(validFailurePayload),
+  })
+
+  const response = await handleTelemetryIngest(
+    request,
+    env,
+    new Date('2026-08-09T12:00:00Z'),
+  )
+
+  assert.equal(response.status, 204)
+  assert.deepEqual(statements[0]?.values, [
+    '2026-08',
+    'audit_failed',
+    '0.2.5',
+    'codex',
+    'darwin',
+    'arm64',
+    '22',
+    '2026-W29',
+    2,
+    'database',
+    'site-crawl',
+    'database_unique_constraint',
+    'crawl_pages_run_id_url',
+    null,
   ])
 })
 
@@ -123,6 +233,29 @@ test('stats aggregate installs, reports, agents, and complete d7 cohorts', () =>
         { report: 'site-crawl', count: 12 },
         { report: 'quick-wins', count: 8 },
       ],
+      failureCategories: [
+        { category: 'unknown', count: 122 },
+        { category: 'database', count: 11 },
+      ],
+      failureDetails: [
+        {
+          event: 'audit_failed',
+          report: 'site-crawl',
+          category: 'database',
+          reason: 'database_unique_constraint',
+          context: 'crawl_pages_run_id_url',
+          version: '0.2.31',
+          count: 11,
+        },
+        {
+          event: 'command_failed',
+          operation: 'auth',
+          category: 'internal',
+          reason: 'internal_error',
+          version: '0.2.31',
+          count: 2,
+        },
+      ],
     },
     new Date('2026-07-16T12:00:00Z'),
   )
@@ -135,6 +268,7 @@ test('stats aggregate installs, reports, agents, and complete d7 cohorts', () =>
   })
   assert.equal(stats.totals.auditsStarted, 22)
   assert.equal(stats.totals.auditsThisMonth, 7)
+  assert.equal(stats.totals.commandsFailed, 0)
   assert.deepEqual(stats.agents.installs[0], {
     agent: 'codex',
     count: 6,
@@ -150,6 +284,32 @@ test('stats aggregate installs, reports, agents, and complete d7 cohorts', () =>
   assert.deepEqual(stats.reports.slice(0, 2), [
     { report: 'site-crawl', count: 12 },
     { report: 'quick-wins', count: 8 },
+  ])
+  assert.deepEqual(stats.failures.categories, [
+    { category: 'unknown', count: 122 },
+    { category: 'database', count: 11 },
+  ])
+  assert.deepEqual(stats.failures.details, [
+    {
+      event: 'audit_failed',
+      report: 'site-crawl',
+      operation: null,
+      category: 'database',
+      reason: 'database_unique_constraint',
+      context: 'crawl_pages_run_id_url',
+      version: '0.2.31',
+      count: 11,
+    },
+    {
+      event: 'command_failed',
+      report: null,
+      operation: 'auth',
+      category: 'internal',
+      reason: 'internal_error',
+      context: null,
+      version: '0.2.31',
+      count: 2,
+    },
   ])
 })
 

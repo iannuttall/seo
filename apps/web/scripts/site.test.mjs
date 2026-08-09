@@ -879,13 +879,21 @@ test('telemetry prose and stats keep a stable readable first render', () => {
   assert.match(stats, /data-stats-root[^>]*aria-busy="true"/u)
   assert.equal(
     matches(stats, /data-stat="[^"]+" data-stats-loading>0%?</gu).length,
-    6,
+    7,
   )
   assert.match(
     stats,
     /data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events/u,
   )
   assert.match(stats, /class="animate-pulse[^>]+data-stats-loading/u)
+  assert.match(
+    stats,
+    /data-failure-category-table data-stats-loading><tr><td colspan="2">No recorded failures/u,
+  )
+  assert.match(
+    stats,
+    /data-failure-detail-table data-stats-loading><tr><td colspan="5">No detailed failure signals/u,
+  )
   assert.match(
     stats,
     /data-stats-status[^>]*data-agent-markdown="exclude"[^>]*>\s*Fetching current totals\.<\/p>/u,
@@ -907,7 +915,7 @@ test('telemetry prose and stats keep a stable readable first render', () => {
     stats,
     /hidden data-agent-markdown="only">\s*Agents can fetch current values as JSON/u,
   )
-  assert.equal(matches(stats, /data-agent-markdown="exclude"/gu).length, 5)
+  assert.equal(matches(stats, /data-agent-markdown="exclude"/gu).length, 6)
   const statsMarkdown = readFileSync(resolve(dist, 'stats.md'), 'utf8')
   assert.match(statsMarkdown, /https:\/\/seoskill\.dev\/api\/stats/u)
   assert.doesNotMatch(statsMarkdown, /Recorded installs/u)

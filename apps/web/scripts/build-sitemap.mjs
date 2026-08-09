@@ -10,6 +10,7 @@ const paths = [
   '/tools/llms-txt-generator',
   '/tools/llms-txt-validator',
   '/tools/server-log-analyzer',
+  '/tools/sitemap-extractor',
   '/docs',
   '/docs/agents',
   '/docs/ai-search',

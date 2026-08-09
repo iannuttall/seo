@@ -1,0 +1,113 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import SitemapExtractor from '@/components/tools/SitemapExtractor.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Sitemap URL extractor' },
+]
+---
+
+<BaseLayout
+  title="Sitemap URL extractor"
+  description="Extract URLs and metadata from an XML sitemap or sitemap index. Filter the results and download CSV, TXT, or JSON without creating an account."
+  canonicalPath="/tools/sitemap-extractor"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        {breadcrumbs.map((crumb, index) => (
+          <li class="flex items-center gap-1.5">
+            {crumb.href ? (
+              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-foreground">{crumb.label}</span>
+            )}
+            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <PageHeader
+      title="Sitemap URL extractor"
+      description="Enter a sitemap URL or domain, follow nested sitemap indexes, then filter and download the extracted URLs with their sitemap metadata."
+      align="left"
+    />
+
+    <SitemapExtractor />
+
+    <div class="docs-prose mt-16">
+      <h2>Extract URLs from sitemap files</h2>
+      <p>
+        The extractor reads XML sitemaps, sitemap indexes, gzip files, and text
+        sitemaps. When you enter a domain, it checks robots.txt first and then
+        common sitemap locations. Child sitemap files are followed up to the
+        visible processing limits.
+      </p>
+      <p>
+        CSV and JSON downloads retain each URL's source sitemap, nesting depth,
+        last modified value, change frequency, priority, hreflang count, and
+        image, video, or news entry counts. These are declarations in the
+        sitemap. The tool does not request the page or confirm that its metadata
+        is accurate.
+      </p>
+
+      <h2>Split large sitemap files around 10,000 URLs</h2>
+      <p>
+        Google accepts up to 50,000 URLs or 50 MB uncompressed in one sitemap.
+        This tool flags individual files above 10,000 URL entries because many
+        technical SEO teams use that as a practical working size. Smaller files
+        can make failures, retries, and Search Console coverage groups easier to
+        isolate. The 10,000 URL threshold is a convention, not a Google
+        requirement or ranking factor.
+      </p>
+      <p>
+        Read Google's current{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap size and format documentation</a>
+        {' '}for the protocol limits. Barry Adams also explains the 10,000 URL
+        working size in his{' '}
+        <a href="https://www.polemicdigital.com/perfecting-xml-sitemaps/" target="_blank" rel="noreferrer">technical sitemap guidance</a>.
+      </p>
+
+      <h2>Partial results stay visible</h2>
+      <p>
+        A blocked child sitemap, timeout, invalid XML file, or processing limit
+        does not erase the URLs already extracted. The result is marked as
+        partial and lists the affected sitemap. Do not treat a partial export as
+        the complete URL inventory for the site.
+      </p>
+      <p>
+        Some sites block automated requests even when their sitemap works in a
+        normal browser. Entering the exact sitemap URL may help when discovery
+        fails, but it cannot bypass the target site's access controls.
+      </p>
+
+      <h2>The tool does not crawl extracted pages</h2>
+      <p>
+        HTTP status codes, canonicals, robots directives, and indexability need
+        page requests. Run the{' '}
+        <a href="/docs/reports/site-crawl">technical SEO site crawl</a>
+        {' '}when you need that evidence, or use sitemap health mode for a faster
+        response and redirect check.
+      </p>
+      <pre><code>npm i -g seo
+seo start
+seo crawl --sitemap-url https://example.com/sitemap.xml --health</code></pre>
+
+      <h2>How the submitted URL is handled</h2>
+      <p>
+        The sitemap URL is sent to the site's Cloudflare Worker, which fetches
+        and processes the sitemap during the request. The extractor does not
+        create an account or save the URL list to a product database. The target
+        server can see the sitemap request in its normal server logs.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

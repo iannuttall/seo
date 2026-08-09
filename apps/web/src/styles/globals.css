@@ -116,6 +116,12 @@
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 15%, transparent);
   }
+
+  input,
+  textarea {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "calt" 0;
+  }
 }
 
 /* Inner scrollers hide their scrollbars entirely; wheel, trackpad, and keys

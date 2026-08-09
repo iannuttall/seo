@@ -13,6 +13,7 @@ import {
   TELEMETRY_NOTICE,
   type TelemetryOptions,
   type TelemetryPayload,
+  trackTelemetryCommandFailed,
   trackTelemetryReportComplete,
   trackTelemetryReportFailed,
   trackTelemetryReportStart,
@@ -94,6 +95,7 @@ test('every disable mechanism results in zero network calls', () => {
   setTelemetryEnabled(false, run.options)
   initializeTelemetry(run.options)
   trackTelemetryReportStart('site-crawl', run.options)
+  trackTelemetryCommandFailed('auth', new Error('private'), run.options)
   assert.equal(run.payloads.length, 0)
   assert.equal(getTelemetryStatus(run.options).reason, 'local_setting')
 })
@@ -141,7 +143,11 @@ test('payloads contain only the public schema fields', () => {
   const payload = buildTelemetryPayload(
     'audit_failed',
     { ...state, sentMilestones: [] },
-    { errorCategory: 'network', report: 'site-crawl' },
+    {
+      errorCategory: 'network',
+      failureReason: 'provider_unavailable',
+      report: 'site-crawl',
+    },
     run.options,
   )
 
@@ -153,10 +159,61 @@ test('payloads contain only the public schema fields', () => {
     arch: 'arm64',
     node: '22',
     cohort: '2026-W29',
-    schema: 1,
+    schema: 2,
     errorCategory: 'network',
+    failureReason: 'provider_unavailable',
     report: 'site-crawl',
   })
+})
+
+test('report and command failures send only classified schema 2 fields', () => {
+  const run = fixture()
+  initializeTelemetry(run.options)
+  run.payloads.length = 0
+  const error = Object.assign(
+    new Error(
+      'UNIQUE constraint failed: crawl_pages.run_id, crawl_pages.url for https://private.example',
+    ),
+    { code: 'SQLITE_CONSTRAINT_PRIMARYKEY' },
+  )
+
+  trackTelemetryReportFailed('technical-watch', error, run.options)
+  trackTelemetryCommandFailed(
+    'auth',
+    new Error('Unexpected failure'),
+    run.options,
+  )
+
+  assert.deepEqual(run.payloads, [
+    {
+      event: 'audit_failed',
+      version: '0.2.5',
+      agent: 'codex',
+      os: 'darwin',
+      arch: 'arm64',
+      node: '22',
+      cohort: '2026-W29',
+      schema: 2,
+      errorCategory: 'database',
+      failureReason: 'database_unique_constraint',
+      failureContext: 'crawl_pages_run_id_url',
+      report: 'technical-watch',
+    },
+    {
+      event: 'command_failed',
+      version: '0.2.5',
+      agent: 'codex',
+      os: 'darwin',
+      arch: 'arm64',
+      node: '22',
+      cohort: '2026-W29',
+      schema: 2,
+      errorCategory: 'unknown',
+      failureReason: 'unknown',
+      operation: 'auth',
+    },
+  ])
+  assert.equal(JSON.stringify(run.payloads).includes('private.example'), false)
 })
 
 test('unknown report strings never reach the transport', () => {
@@ -166,6 +223,11 @@ test('unknown report strings never reach the transport', () => {
   trackTelemetryReportStart('https://private.example/report', run.options)
   trackTelemetryReportComplete('/Users/example/private.json', run.options)
   trackTelemetryReportFailed('unknown-report', 'unknown', run.options)
+  trackTelemetryCommandFailed(
+    'private-project-name',
+    new Error('no'),
+    run.options,
+  )
   assert.equal(run.payloads.length, 0)
 })
 

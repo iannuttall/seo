@@ -5,22 +5,26 @@ import PageHeader from '@/components/PageHeader.astro'
 import CopyCode from '@/components/docs/CopyCode.astro'
 import { reportIds } from '@/content/reports/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import {
+  TELEMETRY_ERROR_CATEGORIES,
+  TELEMETRY_FAILURE_CONTEXTS,
+  TELEMETRY_FAILURE_REASONS,
+  TELEMETRY_NOTICE,
+  TELEMETRY_OPERATIONS,
+  SEO_VERSION,
+} from '@seo/core'
 
-const firstRunNotice = `SEO Skill collects anonymous usage data to improve the tool (event name,
-report id, version, agent, OS, architecture, Node major, and install week;
-never URLs, report data, or identifiers of any kind).
-Docs: https://seoskill.dev/telemetry
-Disable: seo telemetry disable (or set DO_NOT_TRACK=1)`
+const firstRunNotice = TELEMETRY_NOTICE.trimEnd()
 
 const exampleEvent = `{
   "event": "audit_complete",
-  "version": "0.2.5",
+  "version": "${SEO_VERSION}",
   "agent": "codex",
   "os": "darwin",
   "arch": "arm64",
   "node": "22",
   "cohort": "2026-W29",
-  "schema": 1,
+  "schema": 2,
   "report": "site-crawl"
 }`
 
@@ -39,86 +43,10 @@ const failureEvent = `{
   "report": "technical-watch"
 }`
 
-const failureCategories = [
-  'auth',
-  'crawl_timeout',
-  'network',
-  'config',
-  'data',
-  'database',
-  'filesystem',
-  'internal',
-  'unknown',
-]
-
-const failureReasons = [
-  'access_denied',
-  'auth_config_required',
-  'auth_expired',
-  'auth_required',
-  'crawl_timeout',
-  'database_constraint',
-  'database_corrupt',
-  'database_locked',
-  'database_read_only',
-  'database_unique_constraint',
-  'filesystem_full',
-  'filesystem_not_found',
-  'filesystem_permission',
-  'insufficient_data',
-  'internal_error',
-  'invalid_input',
-  'network_connection',
-  'network_dns',
-  'network_timeout',
-  'network_tls',
-  'optional_provider_unavailable',
-  'property_not_found',
-  'provider_unavailable',
-  'rate_limited',
-  'unknown',
-]
-
-const failureContexts = ['crawl_pages_run_id_url']
-
-const failureOperations = [
-  'analytics',
-  'auth',
-  'cache',
-  'change-log',
-  'client',
-  'content',
-  'content-groups',
-  'crawl-reports',
-  'diagnose',
-  'export',
-  'gsc-query',
-  'indexnow',
-  'init',
-  'llms',
-  'logs',
-  'mcp',
-  'monitoring',
-  'okf',
-  'perf',
-  'privacy',
-  'project',
-  'projects',
-  'providers',
-  'pseo',
-  'reports',
-  'reset',
-  'schedule',
-  'server-logs',
-  'setup',
-  'skill',
-  'sites',
-  'start',
-  'telemetry',
-  'tests',
-  'updates',
-  'url-inspect',
-]
+const failureCategories = [...TELEMETRY_ERROR_CATEGORIES]
+const failureReasons = [...TELEMETRY_FAILURE_REASONS]
+const failureContexts = [...TELEMETRY_FAILURE_CONTEXTS]
+const failureOperations = [...TELEMETRY_OPERATIONS]
 
 const telemetryCommands = `seo telemetry disable
 seo telemetry status
@@ -154,9 +82,9 @@ const localState = `{
         link events to a person or machine.
       </p>
       <p>
-        Published clients currently send schema 1 events. The receiver also
-        accepts schema 2, which adds fixed failure reasons without accepting
-        raw error text.
+        Clients before version 0.2.31 send schema 1 events. Current clients send
+        schema 2, which adds fixed failure reasons without accepting raw error
+        text.
       </p>
       <p>
         See the same aggregate data as the maintainer on the <a href="/stats">public usage stats page</a>.
@@ -216,7 +144,7 @@ const localState = `{
             </thead>
             <tbody>
               <tr><td><code>event</code></td><td>One event name from the table above.</td></tr>
-              <tr><td><code>version</code></td><td>The installed <code>seo</code> package version, such as <code>0.2.5</code>.</td></tr>
+              <tr><td><code>version</code></td><td>The installed <code>seo</code> package version, such as <code>{SEO_VERSION}</code>.</td></tr>
               <tr><td><code>agent</code></td><td><code>claude-code</code> | <code>cursor</code> | <code>codex</code> | <code>cli</code> | <code>unknown</code>. MCP uses the client name from its standard initialize handshake, then discards the original name.</td></tr>
               <tr><td><code>os</code></td><td><code>aix</code> | <code>android</code> | <code>darwin</code> | <code>freebsd</code> | <code>haiku</code> | <code>linux</code> | <code>openbsd</code> | <code>sunos</code> | <code>win32</code>.</td></tr>
               <tr><td><code>arch</code></td><td><code>arm</code> | <code>arm64</code> | <code>ia32</code> | <code>loong64</code> | <code>mips</code> | <code>mipsel</code> | <code>ppc</code> | <code>ppc64</code> | <code>riscv64</code> | <code>s390</code> | <code>s390x</code> | <code>x64</code>.</td></tr>

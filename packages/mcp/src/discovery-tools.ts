@@ -1,7 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   type TelemetryOptions,
-  telemetryErrorCategory,
   trackTelemetryReportComplete,
   trackTelemetryReportFailed,
   trackTelemetryReportStart,
@@ -104,7 +103,7 @@ export function registerDiscoveryTools(
           if (result.isError) {
             trackTelemetryReportFailed(
               id,
-              telemetryErrorCategory(result.structuredContent?.error),
+              result.structuredContent?.error,
               telemetry,
             )
           } else {
@@ -114,11 +113,7 @@ export function registerDiscoveryTools(
         return result
       } catch (error) {
         if (telemetry) {
-          trackTelemetryReportFailed(
-            id,
-            telemetryErrorCategory(error),
-            telemetry,
-          )
+          trackTelemetryReportFailed(id, error, telemetry)
         }
         throw error
       }

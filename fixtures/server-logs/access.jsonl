@@ -1,0 +1,4 @@
+{"timestamp":"2025-10-10T13:55:36Z","method":"GET","path":"/docs","status":200,"bytes":90,"userAgent":"ClaudeBot/1.0"}
+{"@timestamp":"2025-10-10T13:56:36Z","requestMethod":"GET","requestUri":"https://example.test/answer?source=chat","statusCode":404,"bodyBytesSent":10,"user_agent":"OAI-SearchBot/1.0"}
+{"time":"2025-10-10T13:57:36Z","http_method":"GET","request_uri":"/home","status_code":200,"body_bytes_sent":400,"http_user_agent":"Mozilla/5.0"}
+{"bad":true}

@@ -1,0 +1,8 @@
+127.0.0.1 - - [10/Oct/2025:13:55:36 +0000] "GET /docs?ref=one HTTP/1.1" 200 120 "-" "Googlebot/2.1"
+127.0.0.1 - - [10/Oct/2025:13:56:36 +0000] "GET /missing HTTP/1.1" 404 12 "-" "Googlebot/2.1"
+127.0.0.1 - - [10/Oct/2025:13:57:36 +0000] "GET /old HTTP/1.1" 301 0 "-" "bingbot/2.0"
+127.0.0.1 - - [10/Oct/2025:13:58:36 +0000] "GET /guides HTTP/1.1" 200 300 "-" "OAI-SearchBot/1.0"
+127.0.0.1 - - [10/Oct/2025:13:59:36 +0000] "GET /api HTTP/1.1" 500 44 "-" "ClaudeBot/1.0"
+127.0.0.1 - - [10/Oct/2025:14:00:36 +0000] "GET /home HTTP/1.1" 200 500 "-" "Mozilla/5.0"
+malformed row
+127.0.0.1 - - [10/Oct/2025:14:01:36 +0000] "GET /docs?ref=two HTTP/1.1" 200 121 "-" "Googlebot/2.1"

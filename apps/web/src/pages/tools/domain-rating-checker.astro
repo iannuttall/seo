@@ -1,0 +1,74 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import ProtectedMetricChecker from '@/components/tools/ProtectedMetricChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Domain Rating checker' },
+]
+---
+
+<BaseLayout
+  title="Domain Rating checker"
+  description="Check the Domain Rating for any website."
+  canonicalPath="/tools/domain-rating-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Domain Rating checker"
+      description="Get the Domain Rating for your website, a client site, or a competitor."
+      align="left"
+    />
+
+    <ProtectedMetricChecker
+      kind="domain-rating"
+      endpoint="/api/tools/domain-rating"
+      action="domain-rating"
+      heading="Check Domain Rating"
+      description="Enter a domain."
+      buttonLabel="Check Domain Rating"
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>Domain Rating is not Domain Authority</h2>
+      <p>
+        Domain Rating, or DR, is Ahrefs' estimate of a website's backlink
+        profile strength on a logarithmic 0 to 100 scale. Domain Authority, or
+        DA, is a separate Moz metric. The names sound similar, but their
+        indexes and calculations are not interchangeable.
+      </p>
+
+      <h2>Compare websites in the same market</h2>
+      <p>
+        There is no universal good Domain Rating. A DR of 30 can be strong in
+        one narrow market and weak in another. Compare sites that compete for
+        similar topics, audiences, and links, then inspect the referring
+        domains behind the score.
+      </p>
+
+      <h2>Domain Rating does not predict one page's rank</h2>
+      <p>
+        DR describes a domain-level backlink profile. It does not measure page
+        relevance, content quality, technical accessibility, search intent, or
+        the links pointing to one specific URL. A lower-DR site can outrank a
+        higher-DR site for an individual query.
+      </p>
+
+      <h2>Find backlink opportunities</h2>
+      <p>
+        Check competitors, publications, directories, and potential partners.
+        Comparing their Domain Ratings can help you decide which backlink
+        opportunities deserve a closer look first. The{' '}
+        <a href="/docs/reports/link-evidence">link evidence report</a>{' '}
+        adds representative backlinks and referring-domain totals when a score
+        deserves closer inspection.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

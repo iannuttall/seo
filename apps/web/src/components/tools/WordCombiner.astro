@@ -1,0 +1,767 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+---
+
+<section data-word-combiner class="space-y-6">
+  <DottedCard patternId="word-combiner-input">
+    <form data-combiner-form class="space-y-6 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Build your word lists</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+            Add one word or phrase per line. Every item is combined in list order.
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-wrap gap-2">
+          <Button data-add-list type="button" class="px-3 py-2 text-xs">Add list</Button>
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
+          <Button data-clear type="button" class="px-3 py-2 text-xs">Clear all</Button>
+        </div>
+      </div>
+
+      <div data-word-lists class="grid gap-4 lg:grid-cols-3"></div>
+
+      <section class="space-y-5 border border-border bg-background-subtle p-4" aria-labelledby="combination-settings-heading">
+        <div class="space-y-1">
+          <h3 id="combination-settings-heading" class="font-mono text-sm font-normal">Choose and format the combinations</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            Choose which list patterns to generate, then control how every result is formatted.
+          </p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Combination pattern</span>
+            <FormSelect data-pattern>
+              <option value="all-lists">All populated lists</option>
+              <option value="progressive">Progressive from list A</option>
+              <option value="adjacent-and-all">Adjacent pairs and all lists</option>
+            </FormSelect>
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Word separator</span>
+            <FormSelect data-word-separator>
+              <option value="space">Space</option>
+              <option value="hyphen">Hyphen</option>
+              <option value="underscore">Underscore</option>
+              <option value="none">Nothing</option>
+              <option value="custom">Custom</option>
+            </FormSelect>
+          </label>
+
+          <label data-custom-word-separator-field hidden class="space-y-2 font-sans text-sm font-medium">
+            <span>Custom word separator</span>
+            <FormInput
+              data-custom-word-separator
+              type="text"
+              maxlength="12"
+              placeholder=" / "
+              disabled
+            />
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Output separator</span>
+            <FormSelect data-output-separator>
+              <option value="newline">New line</option>
+              <option value="comma">Comma</option>
+              <option value="space">Space</option>
+              <option value="pipe">Single pipe</option>
+              <option value="double-pipe">Double pipe</option>
+              <option value="dash">Dash</option>
+              <option value="custom">Custom</option>
+            </FormSelect>
+          </label>
+
+          <label data-custom-output-separator-field hidden class="space-y-2 font-sans text-sm font-medium">
+            <span>Custom output separator</span>
+            <FormInput
+              data-custom-output-separator
+              type="text"
+              maxlength="12"
+              placeholder=" / "
+              disabled
+            />
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Letter case</span>
+            <FormSelect data-case-mode>
+              <option value="preserve">Keep input case</option>
+              <option value="lowercase">lowercase</option>
+              <option value="uppercase">UPPERCASE</option>
+              <option value="title-case">Title Case</option>
+            </FormSelect>
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Prefix <span class="font-light text-foreground-muted">(optional)</span></span>
+            <FormInput
+              data-prefix
+              type="text"
+              maxlength="80"
+              placeholder="["
+            />
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Suffix <span class="font-light text-foreground-muted">(optional)</span></span>
+            <FormInput
+              data-suffix
+              type="text"
+              maxlength="80"
+              placeholder="]"
+            />
+          </label>
+
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Prefix and suffix scope</span>
+            <FormSelect data-affix-scope>
+              <option value="combination">Whole combination</option>
+              <option value="item">Each list item</option>
+            </FormSelect>
+          </label>
+
+          <label class="flex min-h-12 items-center gap-3 self-end font-sans text-sm font-medium">
+            <input data-dedupe type="checkbox" checked class="size-4 accent-primary" />
+            Remove duplicates
+          </label>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Keep combinations containing <span class="font-light text-foreground-muted">(optional)</span></span>
+            <FormTextarea
+              data-include
+              class="min-h-20"
+              maxlength="2000"
+              placeholder="One phrase per line. Any match is kept."
+            />
+          </label>
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Remove combinations containing <span class="font-light text-foreground-muted">(optional)</span></span>
+            <FormTextarea
+              data-exclude
+              class="min-h-20"
+              maxlength="2000"
+              placeholder="One phrase per line. Any match is removed."
+            />
+          </label>
+        </div>
+      </section>
+
+      <div class="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div class="space-y-1">
+          <p data-projected-count class="font-mono text-lg">0 projected combinations</p>
+          <p data-projection-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            Add words to at least two lists, or include individual items. Up to 100,000 candidate combinations are checked.
+          </p>
+        </div>
+        <Button data-generate type="submit" class="min-h-12 shrink-0 px-5 text-xs" disabled>Combine words</Button>
+      </div>
+
+      <div data-progress class="hidden space-y-2" aria-live="polite">
+        <div class="flex items-baseline justify-between gap-4 font-sans text-xs font-light text-foreground-muted">
+          <span data-progress-status>Starting...</span>
+          <span data-progress-count class="shrink-0 font-mono">0 checked</span>
+        </div>
+        <div class="h-1.5 overflow-hidden bg-border" aria-hidden="true">
+          <div data-progress-bar class="h-full w-0 bg-primary transition-[width]"></div>
+        </div>
+      </div>
+
+      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+        Your lists stay in this browser tab. They are not uploaded.
+      </p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="word-combiner-summary" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <strong data-result-title class="font-mono text-2xl font-normal text-primary">Combinations generated</strong>
+            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+          </div>
+          <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
+            <Button data-copy type="button" class="w-full px-3 py-2.5 text-xs" disabled>Copy</Button>
+            <Button data-download="txt" type="button" class="w-full px-3 py-2.5 text-xs" disabled>Download TXT</Button>
+            <Button data-download="csv" type="button" class="w-full px-3 py-2.5 text-xs" disabled>Download CSV</Button>
+          </div>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Generated</dt>
+            <dd data-stat-generated class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Projected</dt>
+            <dd data-stat-projected class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Candidates checked</dt>
+            <dd data-stat-checked class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Lists used</dt>
+            <dd data-stat-lists class="mt-1 font-mono text-lg">0</dd>
+          </div>
+        </dl>
+
+        <p data-export-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite">
+          Copy and downloads use the active result search. Copy and TXT also use the selected output separator.
+        </p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="word-combiner-results">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <label class="flex-1 space-y-2 font-sans text-sm font-medium">
+            <span>Search generated combinations</span>
+            <FormInput
+              data-result-filter
+              type="search"
+              placeholder="Filter the generated list"
+            />
+          </label>
+          <p data-filter-count class="pb-3 font-sans text-xs font-light text-foreground-muted">0 combinations</p>
+        </div>
+
+        <p data-empty-results hidden class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          No generated combinations match this search.
+        </p>
+
+        <div data-result-table class="overflow-x-auto border border-border">
+          <table class="w-full min-w-[32rem] border-collapse text-left">
+            <thead class="border-b border-border bg-background-subtle font-sans text-xs font-medium text-foreground-muted">
+              <tr>
+                <th class="w-20 px-3 py-2.5 text-right">Number</th>
+                <th class="px-3 py-2.5">Combination</th>
+              </tr>
+            </thead>
+            <tbody data-result-rows class="divide-y divide-border font-mono text-xs"></tbody>
+          </table>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p data-page-status class="font-sans text-xs font-light text-foreground-muted"></p>
+          <div class="grid grid-cols-2 gap-2">
+            <Button data-previous type="button" class="px-3 py-2 text-xs" disabled>Previous</Button>
+            <Button data-next type="button" class="px-3 py-2 text-xs" disabled>Next</Button>
+          </div>
+        </div>
+      </div>
+    </DottedCard>
+  </div>
+
+  <template data-list-template>
+    <fieldset data-word-list class="space-y-3 border border-border bg-background-subtle p-4">
+      <legend data-list-legend class="sr-only">Word list</legend>
+      <div class="flex items-center justify-between gap-3">
+        <span data-list-heading class="font-mono text-sm">List</span>
+        <Button data-remove-list type="button" class="px-2.5 py-1.5 text-xs">Remove</Button>
+      </div>
+      <label class="block">
+        <span data-list-label class="sr-only">Words for list</span>
+        <FormTextarea
+          data-list-input
+          class="min-h-40"
+          maxlength="100000"
+          spellcheck="false"
+          autocapitalize="off"
+        />
+      </label>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p data-list-count class="font-sans text-xs font-light text-foreground-muted">0 items</p>
+        <label class="flex items-center gap-2 font-sans text-xs font-medium">
+          <input data-include-individual type="checkbox" class="size-4 accent-primary" />
+          Include individual items
+        </label>
+      </div>
+    </fieldset>
+  </template>
+</section>
+
+<script>
+  import {
+    WORD_COMBINER_LIMITS,
+    projectWordCombinationCount,
+    wordCombinationsToCsv,
+    wordCombinationsToTxt,
+    type WordCombinationAffixScope,
+    type WordCombinationCase,
+    type WordCombinationInput,
+    type WordCombinationPattern,
+    type WordCombinationResult,
+  } from '@/lib/word-combiner'
+
+  type WorkerMessage =
+    | { type: 'progress'; processed: number }
+    | { type: 'complete'; result: WordCombinationResult }
+    | { type: 'error'; message: string }
+
+  const exampleLists = [
+    'best\nlocal\naffordable',
+    'seo tools\nrank tracker',
+    'for agencies\nfor small business',
+  ]
+
+  function initialiseWordCombiner(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing word combiner control: ${selector}`)
+      return element
+    }
+
+    const form = required<HTMLFormElement>('[data-combiner-form]')
+    const lists = required<HTMLElement>('[data-word-lists]')
+    const listTemplate = required<HTMLTemplateElement>('[data-list-template]')
+    const addListButton = required<HTMLButtonElement>('[data-add-list]')
+    const useExampleButton = required<HTMLButtonElement>('[data-use-example]')
+    const clearButton = required<HTMLButtonElement>('[data-clear]')
+    const pattern = required<HTMLSelectElement>('[data-pattern]')
+    const wordSeparator = required<HTMLSelectElement>('[data-word-separator]')
+    const customWordSeparatorField = required<HTMLElement>('[data-custom-word-separator-field]')
+    const customWordSeparator = required<HTMLInputElement>('[data-custom-word-separator]')
+    const outputSeparator = required<HTMLSelectElement>('[data-output-separator]')
+    const customOutputSeparatorField = required<HTMLElement>('[data-custom-output-separator-field]')
+    const customOutputSeparator = required<HTMLInputElement>('[data-custom-output-separator]')
+    const caseMode = required<HTMLSelectElement>('[data-case-mode]')
+    const prefix = required<HTMLInputElement>('[data-prefix]')
+    const suffix = required<HTMLInputElement>('[data-suffix]')
+    const affixScope = required<HTMLSelectElement>('[data-affix-scope]')
+    const dedupe = required<HTMLInputElement>('[data-dedupe]')
+    const include = required<HTMLTextAreaElement>('[data-include]')
+    const exclude = required<HTMLTextAreaElement>('[data-exclude]')
+    const projectedCount = required<HTMLElement>('[data-projected-count]')
+    const projectionStatus = required<HTMLElement>('[data-projection-status]')
+    const generate = required<HTMLButtonElement>('[data-generate]')
+    const progress = required<HTMLElement>('[data-progress]')
+    const progressStatus = required<HTMLElement>('[data-progress-status]')
+    const progressCount = required<HTMLElement>('[data-progress-count]')
+    const progressBar = required<HTMLElement>('[data-progress-bar]')
+    const results = required<HTMLElement>('[data-results]')
+    const resultTitle = required<HTMLElement>('[data-result-title]')
+    const resultSummary = required<HTMLElement>('[data-result-summary]')
+    const statGenerated = required<HTMLElement>('[data-stat-generated]')
+    const statProjected = required<HTMLElement>('[data-stat-projected]')
+    const statChecked = required<HTMLElement>('[data-stat-checked]')
+    const statLists = required<HTMLElement>('[data-stat-lists]')
+    const exportStatus = required<HTMLElement>('[data-export-status]')
+    const copyButton = required<HTMLButtonElement>('[data-copy]')
+    const downloadButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-download]')]
+    const resultFilter = required<HTMLInputElement>('[data-result-filter]')
+    const filterCount = required<HTMLElement>('[data-filter-count]')
+    const emptyResults = required<HTMLElement>('[data-empty-results]')
+    const resultTable = required<HTMLElement>('[data-result-table]')
+    const resultRows = required<HTMLElement>('[data-result-rows]')
+    const pageStatus = required<HTMLElement>('[data-page-status]')
+    const previous = required<HTMLButtonElement>('[data-previous]')
+    const next = required<HTMLButtonElement>('[data-next]')
+
+    const pageSize = 100
+    let worker: Worker | undefined
+    let generatedRows: string[] = []
+    let filteredRows: string[] = []
+    let page = 0
+    let projectionTimer: number | undefined
+    let resultFilterTimer: number | undefined
+
+    function number(value: number | bigint | string): string {
+      return BigInt(value).toLocaleString()
+    }
+
+    function listInputs(): HTMLTextAreaElement[] {
+      return [...lists.querySelectorAll<HTMLTextAreaElement>('[data-list-input]')]
+    }
+
+    function includeIndividualInputs(): HTMLInputElement[] {
+      return [...lists.querySelectorAll<HTMLInputElement>('[data-include-individual]')]
+    }
+
+    function updateListControls(): void {
+      const fields = [...lists.querySelectorAll<HTMLElement>('[data-word-list]')]
+      addListButton.disabled = fields.length >= WORD_COMBINER_LIMITS.lists
+      fields.forEach((field, index) => {
+        const letter = String.fromCharCode(65 + index)
+        const heading = field.querySelector<HTMLElement>('[data-list-heading]')
+        const legend = field.querySelector<HTMLElement>('[data-list-legend]')
+        const label = field.querySelector<HTMLElement>('[data-list-label]')
+        const input = field.querySelector<HTMLTextAreaElement>('[data-list-input]')
+        const remove = field.querySelector<HTMLButtonElement>('[data-remove-list]')
+        if (heading) heading.textContent = `List ${letter}`
+        if (legend) legend.textContent = `List ${letter}`
+        if (label) label.textContent = `Words for list ${letter}`
+        if (input) input.placeholder = exampleLists[index] ?? exampleLists[2]
+        if (remove) remove.disabled = fields.length <= 2
+      })
+    }
+
+    function addList(value = ''): void {
+      if (listInputs().length >= WORD_COMBINER_LIMITS.lists) return
+      const fragment = listTemplate.content.cloneNode(true) as DocumentFragment
+      const field = fragment.querySelector<HTMLElement>('[data-word-list]')
+      const input = fragment.querySelector<HTMLTextAreaElement>('[data-list-input]')
+      const includeIndividual = fragment.querySelector<HTMLInputElement>('[data-include-individual]')
+      const remove = fragment.querySelector<HTMLButtonElement>('[data-remove-list]')
+      if (!field || !input || !includeIndividual || !remove) return
+      input.value = value
+      input.addEventListener('input', scheduleProjection)
+      includeIndividual.addEventListener('change', updateProjection)
+      remove.addEventListener('click', () => {
+        if (listInputs().length <= 2) return
+        field.remove()
+        updateListControls()
+        updateProjection()
+      })
+      lists.append(fragment)
+      updateListControls()
+      updateProjection()
+    }
+
+    function updateProjection(): void {
+      const currentLists = listInputs()
+      const projection = projectWordCombinationCount(
+        currentLists.map((input) => input.value),
+        dedupe.checked,
+        pattern.value as WordCombinationPattern,
+        includeIndividualInputs().map((input) => input.checked),
+      )
+      for (const [index, field] of [...lists.querySelectorAll<HTMLElement>('[data-word-list]')].entries()) {
+        const count = field.querySelector<HTMLElement>('[data-list-count]')
+        if (count) {
+          const values = (currentLists[index]?.value ?? '')
+            .slice(0, WORD_COMBINER_LIMITS.charactersPerList)
+            .split(/\r?\n/u)
+            .map((value) => value.trim())
+            .filter(Boolean)
+          const items = Math.min(
+            WORD_COMBINER_LIMITS.itemsPerList,
+            dedupe.checked ? new Set(values).size : values.length,
+          )
+          count.textContent = `${number(items)} ${items === 1 ? 'item' : 'items'}`
+        }
+      }
+      projectedCount.textContent = `${number(projection.total)} projected combinations`
+      generate.disabled = projection.total < 1n
+      if (projection.total < 1n) {
+        projectionStatus.textContent = 'Add words to at least two lists, or include individual items. Up to 100,000 candidate combinations are checked.'
+      } else if (projection.total > BigInt(WORD_COMBINER_LIMITS.candidateCombinations)) {
+        projectionStatus.textContent = `This setup projects ${number(projection.total)} combinations. The browser will check the first ${number(WORD_COMBINER_LIMITS.candidateCombinations)}.`
+      } else if (projection.duplicateInputsRemoved > 0) {
+        projectionStatus.textContent = `${number(projection.duplicateInputsRemoved)} duplicate input ${projection.duplicateInputsRemoved === 1 ? 'was' : 'were'} removed from the projection.`
+      } else {
+        projectionStatus.textContent = `${number(projection.populatedLists)} ${projection.populatedLists === 1 ? 'list' : 'lists'} will produce ${number(projection.total)} combinations.`
+      }
+    }
+
+    function scheduleProjection(): void {
+      window.clearTimeout(projectionTimer)
+      projectionTimer = window.setTimeout(updateProjection, 100)
+    }
+
+    function selectedWordSeparator(): string {
+      if (wordSeparator.value === 'hyphen') return '-'
+      if (wordSeparator.value === 'underscore') return '_'
+      if (wordSeparator.value === 'none') return ''
+      if (wordSeparator.value === 'custom') return customWordSeparator.value
+      return ' '
+    }
+
+    function selectedOutputSeparator(): string {
+      if (outputSeparator.value === 'comma') return ', '
+      if (outputSeparator.value === 'space') return ' '
+      if (outputSeparator.value === 'pipe') return ' | '
+      if (outputSeparator.value === 'double-pipe') return ' || '
+      if (outputSeparator.value === 'dash') return ' - '
+      if (outputSeparator.value === 'custom') return customOutputSeparator.value
+      return '\n'
+    }
+
+    function currentInput(): WordCombinationInput {
+      return {
+        lists: listInputs().map((input) => input.value),
+        pattern: pattern.value as WordCombinationPattern,
+        includeIndividuals: includeIndividualInputs().map((input) => input.checked),
+        wordSeparator: selectedWordSeparator(),
+        caseMode: caseMode.value as WordCombinationCase,
+        prefix: prefix.value,
+        suffix: suffix.value,
+        affixScope: affixScope.value as WordCombinationAffixScope,
+        dedupe: dedupe.checked,
+        include: include.value,
+        exclude: exclude.value,
+      }
+    }
+
+    function setActionState(): void {
+      const disabled = filteredRows.length === 0
+      copyButton.disabled = disabled
+      downloadButtons.forEach((button) => { button.disabled = disabled })
+    }
+
+    function cell(value: string, className = ''): HTMLTableCellElement {
+      const element = document.createElement('td')
+      element.className = `px-3 py-3 ${className}`
+      element.textContent = value
+      return element
+    }
+
+    function renderPage(): void {
+      resultRows.replaceChildren()
+      const pages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
+      page = Math.min(page, pages - 1)
+      const start = page * pageSize
+      const visible = filteredRows.slice(start, start + pageSize)
+      visible.forEach((row, index) => {
+        const tr = document.createElement('tr')
+        tr.append(
+          cell(number(start + index + 1), 'text-right text-foreground-muted'),
+          cell(row, 'break-words'),
+        )
+        resultRows.append(tr)
+      })
+      const hasRows = filteredRows.length > 0
+      emptyResults.hidden = hasRows
+      resultTable.hidden = !hasRows
+      filterCount.textContent = `${number(filteredRows.length)} ${filteredRows.length === 1 ? 'combination' : 'combinations'}`
+      pageStatus.textContent = hasRows
+        ? `Showing ${number(start + 1)} to ${number(start + visible.length)} of ${number(filteredRows.length)}`
+        : 'No combinations to show'
+      previous.disabled = page === 0
+      next.disabled = page >= pages - 1 || !hasRows
+      setActionState()
+    }
+
+    function applyResultFilter(): void {
+      const query = resultFilter.value.trim().toLocaleLowerCase()
+      filteredRows = query
+        ? generatedRows.filter((row) => row.toLocaleLowerCase().includes(query))
+        : generatedRows
+      page = 0
+      exportStatus.textContent = query
+        ? `Copy and downloads use the ${number(filteredRows.length)} matching combinations. Copy and TXT use the selected output separator.`
+        : 'Copy and downloads use the complete generated result. Copy and TXT use the selected output separator.'
+      renderPage()
+    }
+
+    function scheduleResultFilter(): void {
+      window.clearTimeout(resultFilterTimer)
+      resultFilterTimer = window.setTimeout(applyResultFilter, 100)
+    }
+
+    function renderResult(result: WordCombinationResult): void {
+      generatedRows = result.rows
+      resultFilter.value = ''
+      filteredRows = generatedRows
+      page = 0
+      resultTitle.textContent = result.rows.length === 1
+        ? '1 combination generated'
+        : `${number(result.rows.length)} combinations generated`
+      if (result.capped) {
+        resultSummary.textContent = `The first ${number(result.processedCandidates)} of ${number(result.projectedCount)} projected candidates were checked. Narrow the lists if you need a complete result.`
+      } else if (result.inputTruncated) {
+        resultSummary.textContent = 'The input limit was reached. The result only covers the retained list items.'
+      } else if (result.rows.length === 0) {
+        resultSummary.textContent = 'No combinations passed the include and exclude filters.'
+      } else {
+        resultSummary.textContent = 'The complete projected set was checked in this browser tab.'
+      }
+      statGenerated.textContent = number(result.rows.length)
+      statProjected.textContent = number(result.projectedCount)
+      statChecked.textContent = number(result.processedCandidates)
+      statLists.textContent = number(result.populatedLists)
+      exportStatus.textContent = result.rows.length > 0
+        ? 'Copy and downloads use the complete generated result. Copy and TXT use the selected output separator.'
+        : 'Change the filters or list values and generate the combinations again.'
+      progressBar.style.width = '100%'
+      progressStatus.textContent = 'Finished generating combinations.'
+      progressCount.textContent = `${number(result.processedCandidates)} checked`
+      generate.disabled = false
+      generate.textContent = 'Combine words'
+      results.hidden = false
+      renderPage()
+      results.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+
+    function startWorker(projected: bigint): Worker {
+      worker?.terminate()
+      const nextWorker = new Worker(new URL('../../workers/word-combiner.ts', import.meta.url), {
+        type: 'module',
+      })
+      nextWorker.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
+        const message = event.data
+        if (message.type === 'progress') {
+          const target = Number(
+            projected > BigInt(WORD_COMBINER_LIMITS.candidateCombinations)
+              ? WORD_COMBINER_LIMITS.candidateCombinations
+              : projected,
+          )
+          const percent = target > 0 ? Math.min(100, (message.processed / target) * 100) : 0
+          progressBar.style.width = `${percent}%`
+          progressCount.textContent = `${number(message.processed)} checked`
+          return
+        }
+        if (message.type === 'complete') {
+          renderResult(message.result)
+          return
+        }
+        generate.disabled = false
+        generate.textContent = 'Combine words'
+        progressStatus.textContent = message.message
+        progressBar.style.width = '0%'
+      })
+      nextWorker.addEventListener('error', () => {
+        generate.disabled = false
+        generate.textContent = 'Combine words'
+        progressStatus.textContent = 'The browser stopped before the combinations were generated.'
+        progressBar.style.width = '0%'
+      })
+      return nextWorker
+    }
+
+    function download(format: 'txt' | 'csv'): void {
+      if (filteredRows.length === 0) return
+      const content = format === 'csv'
+        ? wordCombinationsToCsv(filteredRows)
+        : wordCombinationsToTxt(filteredRows, selectedOutputSeparator())
+      const blob = new Blob([content], {
+        type: format === 'csv' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `word-combinations.${format}`
+      link.hidden = true
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 0)
+      exportStatus.textContent = `Downloaded ${number(filteredRows.length)} combinations as ${format.toUpperCase()}.`
+    }
+
+    for (let index = 0; index < 3; index += 1) addList()
+
+    addListButton.addEventListener('click', () => addList())
+    useExampleButton.addEventListener('click', () => {
+      const fields = [...lists.querySelectorAll<HTMLElement>('[data-word-list]')]
+      fields.slice(exampleLists.length).forEach((field) => field.remove())
+      while (listInputs().length < exampleLists.length) addList()
+      listInputs().forEach((input, index) => {
+        input.value = exampleLists[index] ?? ''
+      })
+      includeIndividualInputs().forEach((input) => { input.checked = false })
+      pattern.value = 'all-lists'
+      dedupe.checked = true
+      generatedRows = []
+      filteredRows = []
+      results.hidden = true
+      progress.classList.add('hidden')
+      updateListControls()
+      updateProjection()
+    })
+    clearButton.addEventListener('click', () => {
+      worker?.terminate()
+      worker = undefined
+      listInputs().forEach((input) => { input.value = '' })
+      includeIndividualInputs().forEach((input) => { input.checked = false })
+      pattern.value = 'all-lists'
+      wordSeparator.value = 'space'
+      customWordSeparator.value = ''
+      customWordSeparator.disabled = true
+      customWordSeparatorField.hidden = true
+      outputSeparator.value = 'newline'
+      customOutputSeparator.value = ''
+      customOutputSeparator.disabled = true
+      customOutputSeparatorField.hidden = true
+      caseMode.value = 'preserve'
+      prefix.value = ''
+      suffix.value = ''
+      affixScope.value = 'combination'
+      dedupe.checked = true
+      include.value = ''
+      exclude.value = ''
+      resultFilter.value = ''
+      generatedRows = []
+      filteredRows = []
+      results.hidden = true
+      progress.classList.add('hidden')
+      updateProjection()
+      listInputs()[0]?.focus()
+    })
+    pattern.addEventListener('change', updateProjection)
+    wordSeparator.addEventListener('change', () => {
+      customWordSeparatorField.hidden = wordSeparator.value !== 'custom'
+      customWordSeparator.disabled = wordSeparator.value !== 'custom'
+    })
+    outputSeparator.addEventListener('change', () => {
+      customOutputSeparatorField.hidden = outputSeparator.value !== 'custom'
+      customOutputSeparator.disabled = outputSeparator.value !== 'custom'
+    })
+    dedupe.addEventListener('change', updateProjection)
+    resultFilter.addEventListener('input', scheduleResultFilter)
+    previous.addEventListener('click', () => {
+      if (page < 1) return
+      page -= 1
+      renderPage()
+    })
+    next.addEventListener('click', () => {
+      if ((page + 1) * pageSize >= filteredRows.length) return
+      page += 1
+      renderPage()
+    })
+    copyButton.addEventListener('click', async () => {
+      if (filteredRows.length === 0) return
+      try {
+        await navigator.clipboard.writeText(
+          wordCombinationsToTxt(filteredRows, selectedOutputSeparator()),
+        )
+        exportStatus.textContent = `Copied ${number(filteredRows.length)} combinations.`
+      } catch {
+        exportStatus.textContent = 'Copying was blocked by the browser. Download the TXT file instead.'
+      }
+    })
+    downloadButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const format = button.dataset.download
+        if (format === 'txt' || format === 'csv') download(format)
+      })
+    })
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      const input = currentInput()
+      const projection = projectWordCombinationCount(
+        input.lists,
+        input.dedupe,
+        input.pattern,
+        input.includeIndividuals,
+      )
+      if (projection.total < 1n) return
+      generate.disabled = true
+      generate.textContent = 'Combining...'
+      results.hidden = true
+      progress.classList.remove('hidden')
+      progressStatus.textContent = 'Generating combinations in this browser tab.'
+      progressCount.textContent = '0 checked'
+      progressBar.style.width = '0%'
+      worker = startWorker(projection.total)
+      worker.postMessage({ type: 'generate', input })
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-word-combiner]')) {
+    initialiseWordCombiner(root)
+  }
+</script>

@@ -1,0 +1,15 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = HTMLAttributes<'textarea'>
+
+const { class: className, ...attrs } = Astro.props
+---
+
+<textarea
+  class:list={[
+    'w-full resize-y border border-border bg-background px-3 py-3 font-mono text-sm font-normal leading-6 text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary',
+    className,
+  ]}
+  {...attrs}
+><slot /></textarea>

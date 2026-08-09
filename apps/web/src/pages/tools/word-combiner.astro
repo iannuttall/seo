@@ -1,0 +1,90 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import WordCombiner from '@/components/tools/WordCombiner.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Word combiner' },
+]
+---
+
+<BaseLayout
+  title="Word combiner"
+  description="Combine up to five word or keyword lists in your browser. Filter, preview, copy, and download the results as TXT or CSV without uploading your data."
+  canonicalPath="/tools/word-combiner"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader
+      title="Word combiner"
+      description="Mix up to five lists into ordered word and keyword combinations, then filter, copy, or download the result."
+      align="left"
+    />
+
+    <WordCombiner />
+
+    <div class="docs-prose mt-16">
+      <h2>Combine keyword lists in a fixed order</h2>
+      <p>
+        Each list works like a column. Add "best" and "local" to list A,
+        "SEO tools" and "rank tracker" to list B, and the tool creates four
+        combinations. Add another list when every output needs a location,
+        audience, product attribute, or other qualifier.
+      </p>
+      <p>
+        You can combine every populated list, build progressively from list A,
+        or generate adjacent pairs alongside the full combination. Individual
+        list items can be included too. Fixed order usually produces cleaner
+        phrases than generating every possible word order.
+      </p>
+
+      <h2>Filters keep large combinations manageable</h2>
+      <p>
+        Include and exclude filters are applied while the list is generated.
+        Use one phrase per line. An include filter keeps a combination when any
+        phrase matches, while an exclude filter removes it when any phrase
+        matches.
+      </p>
+      <p>
+        The projected count appears before you run the tool. Generation stops
+        after the first 100,000 candidate combinations, and a capped result is
+        labelled as partial. Narrow the source lists when you need the complete
+        set.
+      </p>
+
+      <h2>Generated phrases still need keyword research</h2>
+      <p>
+        A combination is a candidate, not proof that people search for it. Check
+        relevance, intent, and demand before using a phrase in a page plan or
+        paid search campaign. The{' '}
+        <a href="/docs/reports/query-clusters">query cluster report</a>
+        {' '}groups observed Search Console queries when you need evidence from
+        an existing site.
+      </p>
+      <p>
+        Do not turn every row into a landing page. The useful rows are the ones
+        that match a real product, service, audience, or location and deserve a
+        distinct answer.
+      </p>
+
+      <h2>Keep your word lists private</h2>
+      <p>
+        Your lists stay in this browser tab while you combine, filter, copy, and
+        export them. Closing or refreshing the tab clears the current result.
+      </p>
+      <p>
+        Copy and TXT use your chosen output separator, which can be a new line,
+        comma, space, pipe, dash, or custom value. CSV keeps one combination
+        per row and adds a heading for spreadsheet imports. All three actions
+        use the active result search, so you can export a smaller subset without
+        generating it again.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

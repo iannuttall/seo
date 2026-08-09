@@ -1,0 +1,359 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+---
+
+<section data-traffic-checker class="space-y-6">
+  <DottedCard patternId="website-traffic-input">
+    <form data-traffic-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Estimate organic search traffic</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          See estimated organic traffic, ranking keywords, and position changes for the last twelve months.
+        </p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
+        <label class="block space-y-2 font-sans text-sm font-medium">
+          <span>Domain</span>
+          <FormInput
+            data-target
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="253"
+            placeholder="example.com"
+            required
+          />
+        </label>
+        <label class="block space-y-2 font-sans text-sm font-medium">
+          <span>Google market</span>
+          <FormSelect data-market>
+            <option value="2840:en:United States">United States</option>
+            <option value="2826:en:United Kingdom">United Kingdom</option>
+            <option value="2124:en:Canada">Canada</option>
+            <option value="2036:en:Australia">Australia</option>
+            <option value="2356:en:India">India</option>
+            <option value="2276:de:Germany">Germany</option>
+            <option value="2250:fr:France">France</option>
+            <option value="2724:es:Spain">Spain</option>
+            <option value="2380:it:Italy">Italy</option>
+            <option value="2528:nl:Netherlands">Netherlands</option>
+          </FormSelect>
+        </label>
+      </div>
+      <TurnstileWidget action="website-traffic" />
+      <div class="flex justify-end">
+        <Button data-submit type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check traffic</Button>
+      </div>
+      <p data-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="website-traffic-summary" inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p class="font-sans text-xs font-light text-panel-foreground/65">Estimated monthly Google organic traffic</p>
+            <p data-traffic class="mt-1 font-mono text-5xl font-normal text-primary"></p>
+            <p data-period class="mt-2 font-sans text-sm font-light text-panel-foreground/70"></p>
+          </div>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy summary</Button>
+            <Button data-download type="button" class="min-h-10 px-4 text-xs">Download CSV</Button>
+          </div>
+        </div>
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Ranking keywords</dt>
+            <dd data-keywords class="mt-1 font-mono text-lg"></dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Traffic value</dt>
+            <dd data-value class="mt-1 font-mono text-lg"></dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Market</dt>
+            <dd data-result-market class="mt-1 font-mono text-xs"></dd>
+          </div>
+        </dl>
+        <div class="space-y-2 border-t border-panel-foreground/30 pt-5">
+          <p data-data-status class="font-mono text-xs"></p>
+          <p data-checked-at class="font-sans text-xs font-light text-panel-foreground/65"></p>
+          <ul data-warnings class="list-disc space-y-1 pl-5 font-sans text-xs font-light leading-5 text-panel-foreground/70"></ul>
+        </div>
+        <p data-action-status class="font-sans text-xs font-light text-panel-foreground/65" aria-live="polite"></p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="website-traffic-history">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-sm font-normal">Twelve-month estimate</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            Compare monthly traffic and keyword movement to spot gains, losses, and trend changes.
+          </p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[68rem] border-collapse text-left">
+            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <tr>
+                <th class="pb-2 pr-4">Month</th>
+                <th class="pb-2 pr-4 text-right">Traffic</th>
+                <th class="pb-2 pr-4 text-right">Keywords</th>
+                <th class="pb-2 pr-4 text-right">Top 3</th>
+                <th class="pb-2 pr-4 text-right">Top 10</th>
+                <th class="pb-2 pr-4 text-right">New</th>
+                <th class="pb-2 pr-4 text-right">Up</th>
+                <th class="pb-2 pr-4 text-right">Down</th>
+                <th class="pb-2 text-right">Lost</th>
+              </tr>
+            </thead>
+            <tbody data-history class="divide-y divide-border font-sans text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="website-traffic-keywords">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-sm font-normal">Top ranking keywords</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">A small current sample for context, not a complete keyword export.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[48rem] border-collapse text-left">
+            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <tr>
+                <th class="pb-2 pr-4">Keyword</th>
+                <th class="pb-2 pr-4 text-right">Position</th>
+                <th class="pb-2 pr-4 text-right">Search volume</th>
+                <th class="pb-2">Ranking URL</th>
+              </tr>
+            </thead>
+            <tbody data-top-keywords class="divide-y divide-border font-sans text-xs"></tbody>
+          </table>
+        </div>
+        <p data-no-keywords hidden class="font-sans text-sm font-light text-foreground-muted">No current keyword sample was available.</p>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import {
+    buildTrafficHistoryCsv,
+    sumKnownTrafficCounts,
+    type TrafficHistoryDisplayRow,
+  } from '@/lib/website-traffic-display'
+
+  type HistoryRow = TrafficHistoryDisplayRow & {
+    positions: {
+      first: number | null
+      secondToThird: number | null
+      fourthToTenth: number | null
+      eleventhToTwentieth: number | null
+      twentyFirstToHundredth: number | null
+    }
+  }
+  type KeywordRow = { keyword: string; rankGroup: number | null; searchVolume: number | null; rankingUrl: string | null }
+  type TrafficResult = {
+    target: string
+    dataStatus: 'complete' | 'partial' | 'unavailable'
+    latest: HistoryRow | null
+    history: HistoryRow[]
+    topKeywords: KeywordRow[]
+    warnings: Array<{ code?: string; message: string }>
+    provenance: {
+      checkedAt: string
+      provider: string
+      market: { locationCode: number; languageCode: string }
+    }
+  }
+  type TrafficResponse = { result: TrafficResult }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const number = new Intl.NumberFormat()
+  const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+  const formatCount = (value: number | null): string => value === null ? 'N/A' : number.format(value)
+
+  function initialiseTrafficChecker(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const form = root.querySelector<HTMLFormElement>('[data-traffic-form]')
+    const target = root.querySelector<HTMLInputElement>('[data-target]')
+    const market = root.querySelector<HTMLSelectElement>('[data-market]')
+    const submit = root.querySelector<HTMLButtonElement>('[data-submit]')
+    const error = root.querySelector<HTMLElement>('[data-error]')
+    const results = root.querySelector<HTMLElement>('[data-results]')
+    if (!form || !target || !market || !submit || !error || !results) return
+    const marketSelect = market
+    const resultsSection = results
+    let latestResult: TrafficResponse | undefined
+
+    const setText = (selector: string, value: string) => {
+      const element = root.querySelector<HTMLElement>(selector)
+      if (element) element.textContent = value
+    }
+
+    function render(data: TrafficResponse): void {
+      const result = data.result
+      const latest = result.latest
+      setText('[data-traffic]', latest?.estimatedOrganicTraffic === null || latest?.estimatedOrganicTraffic === undefined ? 'N/A' : number.format(Math.round(latest.estimatedOrganicTraffic)))
+      setText('[data-period]', latest ? `${latest.month} for ${result.target}` : result.target)
+      setText('[data-keywords]', latest?.rankingResults === null || latest?.rankingResults === undefined ? 'N/A' : number.format(latest.rankingResults))
+      setText('[data-value]', latest?.estimatedTrafficValueUsd === null || latest?.estimatedTrafficValueUsd === undefined ? 'N/A' : money.format(latest.estimatedTrafficValueUsd))
+      setText('[data-result-market]', `${marketSelect.options[marketSelect.selectedIndex]?.text ?? 'Selected market'} / ${result.provenance.market.languageCode}`)
+      setText(
+        '[data-data-status]',
+        result.dataStatus === 'complete'
+          ? 'Complete result'
+          : result.dataStatus === 'partial'
+            ? 'Partial result'
+            : 'Result unavailable',
+      )
+      setText('[data-checked-at]', `Checked ${new Date(result.provenance.checkedAt).toLocaleString()}`)
+
+      const warnings = root.querySelector<HTMLElement>('[data-warnings]')
+      if (warnings) {
+        const visibleWarnings = result.warnings.filter(
+          (warning) => warning.code !== 'provider-estimate',
+        )
+        warnings.replaceChildren(...visibleWarnings.map((warning) => {
+          const item = document.createElement('li')
+          item.textContent = warning.message
+          return item
+        }))
+        warnings.hidden = visibleWarnings.length === 0
+      }
+
+      const history = root.querySelector<HTMLElement>('[data-history]')
+      if (history) {
+        history.replaceChildren(...result.history.map((row) => {
+          const tr = document.createElement('tr')
+          const top3 = sumKnownTrafficCounts([row.positions.first, row.positions.secondToThird])
+          const top10 = sumKnownTrafficCounts([top3, row.positions.fourthToTenth])
+          tr.innerHTML = `<td class="py-3 pr-4 font-mono">${row.month}</td><td class="py-3 pr-4 text-right font-mono">${row.estimatedOrganicTraffic === null ? 'N/A' : number.format(Math.round(row.estimatedOrganicTraffic))}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.rankingResults)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(top3)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(top10)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.new)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.up)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.down)}</td><td class="py-3 text-right font-mono">${formatCount(row.movement.lost)}</td>`
+          return tr
+        }))
+      }
+
+      const keywordBody = root.querySelector<HTMLElement>('[data-top-keywords]')
+      const noKeywords = root.querySelector<HTMLElement>('[data-no-keywords]')
+      if (keywordBody) {
+        keywordBody.replaceChildren(...result.topKeywords.map((row) => {
+          const tr = document.createElement('tr')
+          const keyword = document.createElement('td')
+          keyword.className = 'py-3 pr-4'
+          keyword.textContent = row.keyword
+          const position = document.createElement('td')
+          position.className = 'py-3 pr-4 text-right font-mono'
+          position.textContent = row.rankGroup === null ? 'N/A' : String(row.rankGroup)
+          const volume = document.createElement('td')
+          volume.className = 'py-3 pr-4 text-right font-mono'
+          volume.textContent = row.searchVolume === null ? 'N/A' : number.format(row.searchVolume)
+          const url = document.createElement('td')
+          url.className = 'max-w-md truncate py-3 font-mono'
+          url.textContent = row.rankingUrl ?? 'N/A'
+          url.title = row.rankingUrl ?? ''
+          tr.append(keyword, position, volume, url)
+          return tr
+        }))
+      }
+      if (noKeywords) noKeywords.hidden = result.topKeywords.length > 0
+      resultsSection.hidden = false
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      resultsSection.hidden = true
+      const token = new FormData(form).get('turnstileToken')
+      if (!target.value.trim()) {
+        error.textContent = 'Enter a domain.'
+        error.hidden = false
+        target.focus()
+        return
+      }
+      if (typeof token !== 'string' || token.length === 0) {
+        error.textContent = 'Complete the security check first.'
+        error.hidden = false
+        return
+      }
+      const [locationCode, languageCode] = marketSelect.value.split(':')
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      try {
+        const response = await fetch('/api/tools/website-traffic', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            target: target.value.trim(),
+            locationCode: Number(locationCode),
+            languageCode,
+            turnstileToken: token,
+          }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The traffic estimate could not be completed.')
+        }
+        const data = (await response.json()) as TrafficResponse & { error?: string }
+        if (!response.ok) throw new Error(data.error || 'The traffic estimate could not be completed.')
+        latestResult = data
+        render(data)
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The traffic estimate could not be completed.'
+        error.hidden = false
+      } finally {
+        submit.disabled = false
+        submit.textContent = 'Check traffic'
+        const widget = root.querySelector<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+
+    root.querySelector('[data-copy]')?.addEventListener('click', async () => {
+      if (!latestResult) return
+      const result = latestResult.result
+      const latest = result.latest
+      await navigator.clipboard.writeText([
+        `Target: ${result.target}`,
+        `Market: ${marketSelect.options[marketSelect.selectedIndex]?.text ?? 'Selected market'} (${result.provenance.market.languageCode})`,
+        `Estimated monthly Google organic traffic: ${latest?.estimatedOrganicTraffic === null || latest?.estimatedOrganicTraffic === undefined ? 'unavailable' : Math.round(latest.estimatedOrganicTraffic)}`,
+        `Ranking keywords: ${latest?.rankingResults ?? 'unavailable'}`,
+        `Checked: ${result.provenance.checkedAt}`,
+      ].join('\n'))
+      setText('[data-action-status]', 'Summary copied.')
+    })
+
+    root.querySelector('[data-download]')?.addEventListener('click', () => {
+      if (!latestResult) return
+      const result = latestResult.result
+      const csv = buildTrafficHistoryCsv(result.history)
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${result.target.replace(/[^a-z0-9.-]+/gi, '-')}-organic-traffic.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      setText('[data-action-status]', 'CSV downloaded.')
+    })
+  }
+
+  function initialiseAll(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-traffic-checker]')) initialiseTrafficChecker(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

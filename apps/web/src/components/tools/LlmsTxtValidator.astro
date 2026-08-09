@@ -52,6 +52,7 @@ import DottedCard from '@/components/DottedCard.astro'
           <p data-url-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
             We fetch one public HTTPS text file up to 100,000 bytes. Links inside it are not opened.
           </p>
+          <p data-url-error hidden class="font-sans text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
         </form>
       </div>
 
@@ -134,6 +135,7 @@ import DottedCard from '@/components/DottedCard.astro'
     LLMS_TXT_VALIDATOR_LIMITS,
     validateLlmsTxt,
   } from '@/lib/llms-txt-validator.mjs'
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
 
   const example = `# Example docs
 
@@ -195,6 +197,7 @@ Start with the quick start before opening the full reference.
     const urlInput = root.querySelector<HTMLInputElement>('[data-url-input]')
     const checkUrl = root.querySelector<HTMLButtonElement>('[data-check-url]')
     const urlStatus = root.querySelector<HTMLElement>('[data-url-status]')
+    const urlError = root.querySelector<HTMLElement>('[data-url-error]')
     const input = root.querySelector<HTMLTextAreaElement>('[data-validator-input]')
     const fileInput = root.querySelector<HTMLInputElement>('[data-file-input]')
     const checkContent = root.querySelector<HTMLButtonElement>('[data-check-content]')
@@ -218,6 +221,7 @@ Start with the quick start before opening the full reference.
       !urlInput ||
       !checkUrl ||
       !urlStatus ||
+      !urlError ||
       !input ||
       !fileInput ||
       !checkContent ||
@@ -350,12 +354,18 @@ Start with the quick start before opening the full reference.
 
     urlForm.addEventListener('submit', async (event) => {
       event.preventDefault()
-      const url = urlInput.value.trim()
+      urlError.hidden = true
+      urlError.textContent = ''
+      urlInput.removeAttribute('aria-invalid')
+      const url = defaultToolUrlToHttps(urlInput.value)
       if (!url) {
-        urlStatus.textContent = 'Enter a complete HTTPS llms.txt URL.'
+        urlError.textContent = 'Enter an llms.txt URL.'
+        urlError.hidden = false
+        urlInput.setAttribute('aria-invalid', 'true')
         urlInput.focus()
         return
       }
+      urlInput.value = url
 
       controller?.abort()
       controller = new AbortController()
@@ -388,9 +398,12 @@ Start with the quick start before opening the full reference.
         render()
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return
-        urlStatus.textContent = error instanceof Error
+        urlError.textContent = error instanceof Error
           ? error.message
           : 'The llms.txt file could not be checked.'
+        urlError.hidden = false
+        urlInput.setAttribute('aria-invalid', 'true')
+        urlStatus.textContent = 'Check stopped.'
       } finally {
         checkUrl.disabled = false
         checkUrl.textContent = 'Check URL'

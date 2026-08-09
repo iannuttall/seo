@@ -1,0 +1,105 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import RobotsTxtValidator from '@/components/tools/RobotsTxtValidator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'robots.txt validator and tester' },
+]
+---
+
+<BaseLayout
+  title="robots.txt validator and tester"
+  description="Fetch or paste a robots.txt file, find ignored lines, and test the exact rule that allows or blocks a URL for search and AI crawlers."
+  canonicalPath="/tools/robots-txt-validator"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader
+      title="robots.txt validator and tester"
+      description="Fetch a live robots.txt file or test custom rules. See which user-agent group applies, the winning rule, and its source line for up to 100 URLs."
+      align="left"
+    />
+
+    <RobotsTxtValidator />
+
+    <div class="docs-prose mt-16">
+      <h2>Test live rules or a draft file</h2>
+      <p>
+        Live mode requests the robots.txt file at the site's root. Custom mode
+        checks pasted rules inside your browser, which is useful before a
+        change reaches production. Both modes use the same parser and URL
+        matching rules.
+      </p>
+      <p>
+        The result keeps parseable rules even when another line is ignored.
+        That matters because crawlers do not normally discard a whole file over
+        one bad line.
+      </p>
+
+      <h2>How the winning rule is selected</h2>
+      <p>
+        The tester follows the{' '}
+        <a href="https://www.rfc-editor.org/rfc/rfc9309.html" target="_blank" rel="noreferrer">Robots Exclusion Protocol</a>.
+        {' '}It selects the most specific user-agent group, matches paths with
+        case sensitivity, supports <code>*</code> and terminal <code>$</code>,
+        and uses the rule that matches the most URL octets. An Allow rule wins
+        when equally specific Allow and Disallow rules conflict.
+      </p>
+      <p>
+        Repeated groups for the same specific crawler are combined. A specific
+        group is not combined with the global <code>User-agent: *</code> group.
+        Google's{' '}
+        <a href="https://developers.google.com/crawling/docs/robots-txt/robots-txt-spec" target="_blank" rel="noreferrer">robots.txt parser documentation</a>
+        {' '}shows the same grouping and matching behavior.
+      </p>
+
+      <h2>Allowed does not prove a crawler can fetch the page</h2>
+      <p>
+        An allowed result means no matching robots.txt rule blocks the URL. A
+        firewall, login, bot challenge, network failure, or page response can
+        still stop a request. The tool does not impersonate a crawler or verify
+        its source IP address.
+      </p>
+      <p>
+        robots.txt is also a crawl control, not access control. Google may show
+        a blocked URL without a snippet when it discovers that address
+        elsewhere. Use authentication for private content and a crawlable
+        {' '}<code>noindex</code> directive when the goal is to keep a public page
+        out of Google Search.
+      </p>
+
+      <h2>Missing files and server errors mean different things</h2>
+      <p>
+        Google generally treats a missing robots.txt file and most other 4xx
+        responses as no crawl restrictions. A 429 response, server error, DNS
+        failure, or timeout is different because a cached copy may continue to
+        apply. The checker reports that state as uncertain rather than guessing
+        which rules a crawler currently holds.
+      </p>
+
+      <h2>Search and AI crawlers use separate tokens</h2>
+      <p>
+        The presets separate search crawlers from model training controls.
+        OpenAI documents <code>OAI-SearchBot</code> for ChatGPT search and
+        {' '}<code>GPTBot</code> for potential training. Anthropic documents separate
+        Claude search and training crawlers. Blocking one does not describe the
+        access of the other.
+      </p>
+      <p>
+        Read the current crawler guidance from{' '}
+        <a href="https://help.openai.com/en/articles/12627856-publishers-and-developers-faq" target="_blank" rel="noreferrer">OpenAI</a>,{' '}
+        <a href="https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" target="_blank" rel="noreferrer">Anthropic</a>, and{' '}
+        <a href="https://docs.perplexity.ai/docs/resources/perplexity-crawlers" target="_blank" rel="noreferrer">Perplexity</a>
+        {' '}before making a policy change. Crawler names and uses can change.
+      </p>
+
+    </div>
+  </main>
+</BaseLayout>

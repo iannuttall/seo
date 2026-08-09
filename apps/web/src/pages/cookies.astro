@@ -4,11 +4,11 @@ import PolicyLayout from '@/layouts/PolicyLayout.astro'
 
 <PolicyLayout
   title="Cookie policy"
-  description="How seoskill.dev uses cookie-free Clicky analytics without receiving local reports, tokens, or connected account data."
-  dateModified="2026-07-23"
+  description="How seoskill.dev uses Clicky analytics and Cloudflare Turnstile without receiving local reports, tokens, or connected account data."
+  dateModified="2026-08-09"
 >
   <h1>Cookie policy</h1>
-  <p>Last updated: 23 July 2026</p>
+  <p>Last updated: 9 August 2026</p>
   <p>
     The seoskill.dev website uses Clicky to count visits and see which pages
     people use. Clicky tracking cookies are disabled in the website code.
@@ -22,9 +22,15 @@ import PolicyLayout from '@/layouts/PolicyLayout.astro'
   </p>
   <p>
     The site is served through Cloudflare. Cloudflare may also process normal
-    web request data and use strictly necessary security mechanisms under its
-    own policies. The <a href="/privacy">privacy policy</a> explains how the
-    website and local SEO software handle data separately.
+    web request data. Provider-backed forms use Cloudflare Turnstile as a
+    strictly necessary security control against automated use. Turnstile
+    processes challenge and browser information under Cloudflare's policies.
+    It is not used for advertising or site analytics here.
+  </p>
+  <p>
+    The <a href="/privacy">privacy policy</a> explains the short-lived daily
+    quota counter and how the website and local SEO software handle data
+    separately.
   </p>
   <h2>Questions</h2>
   <p>

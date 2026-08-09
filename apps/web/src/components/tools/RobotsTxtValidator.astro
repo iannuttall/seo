@@ -1,0 +1,839 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
+---
+
+<section data-robots-validator class="space-y-6">
+  <DottedCard patternId="robots-validator-input">
+    <form data-validator-form class="space-y-6 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Check robots.txt rules</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Fetch the live file or test a draft before you publish it.
+        </p>
+      </div>
+
+      <div class="flex gap-2" role="tablist" aria-label="robots.txt input method">
+        <button
+          data-input-tab="live"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="robots-live-panel"
+          class="cursor-pointer border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+        >Live file</button>
+        <button
+          data-input-tab="custom"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="robots-custom-panel"
+          tabindex="-1"
+          class="cursor-pointer border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+        >Custom rules</button>
+      </div>
+
+      <div id="robots-live-panel" data-input-panel="live" role="tabpanel">
+        <label class="block space-y-2 font-sans text-sm font-medium">
+          <span>Domain or page URL</span>
+          <FormInput
+            data-live-url
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="2048"
+            placeholder="https://example.com"
+          />
+        </label>
+        <p class="mt-2 font-sans text-xs font-light leading-5 text-foreground-muted">
+          Enter any page or domain and the checker will load the robots.txt file from the site root.
+        </p>
+      </div>
+
+      <div id="robots-custom-panel" data-input-panel="custom" role="tabpanel" hidden class="space-y-4">
+        <div class="space-y-2">
+          <label class="block space-y-2 font-sans text-sm font-medium">
+            <span>Site origin</span>
+            <FormInput
+              data-custom-origin
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="2048"
+              value="https://example.com"
+              placeholder="https://example.com"
+            />
+          </label>
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p data-custom-fetch-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+              Start with the example or load this site's live file into the editor.
+            </p>
+            <Button data-fetch-custom type="button" class="min-h-10 shrink-0 px-4 py-2 text-xs">Fetch into editor</Button>
+          </div>
+        </div>
+        <label class="block space-y-2 font-sans text-sm font-medium">
+          <span>robots.txt content</span>
+          <FormTextarea
+            data-custom-content
+            class="min-h-64 text-xs"
+            maxlength={500 * 1024}
+            rows="11"
+            spellcheck="false"
+          />
+        </label>
+        <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          Your draft stays in this browser tab.
+        </p>
+      </div>
+
+      <div class="grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>User agent</span>
+          <FormSelect data-user-agent>
+            {ROBOTS_CRAWLER_PRESETS.map((crawler) => (
+              <option value={crawler.value}>{crawler.label} ({crawler.purpose})</option>
+            ))}
+          </FormSelect>
+        </label>
+        <label data-custom-user-agent-label hidden class="space-y-2 font-sans text-sm font-medium">
+          <span>Custom user agent</span>
+          <FormInput
+            data-custom-user-agent
+            type="text"
+            maxlength="256"
+            spellcheck="false"
+            placeholder="ExampleBot"
+          />
+        </label>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>URLs or paths to test</span>
+        <FormTextarea
+          data-test-urls
+          class="min-h-36 text-xs"
+          rows="5"
+          spellcheck="false"
+          placeholder="/&#10;/private/page&#10;https://example.com/products/widget"
+        />
+      </label>
+      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+        Enter one URL or root-relative path per line, up to 100. Rules apply only to the exact protocol, host, and port shown above.
+      </p>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p data-form-status class="font-sans text-sm font-light leading-6 text-foreground-muted" aria-live="polite">
+          Ready to check the live file.
+        </p>
+        <Button data-run-check type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check rules</Button>
+      </div>
+      <p data-form-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="robots-validator-summary" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="space-y-1">
+          <strong data-result-title class="font-mono text-2xl font-normal text-primary">Rules parsed</strong>
+          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-5">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Groups</dt>
+            <dd data-stat-groups class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Rules</dt>
+            <dd data-stat-rules class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Errors</dt>
+            <dd data-stat-errors class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Warnings</dt>
+            <dd data-stat-warnings class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">URLs tested</dt>
+            <dd data-stat-tested class="mt-1 font-mono text-lg">0</dd>
+          </div>
+        </dl>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="robots-source-heading">
+          <h3 id="robots-source-heading" class="font-mono text-sm font-normal">Source details</h3>
+          <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            <div class="min-w-0 lg:col-span-3">
+              <dt class="font-sans text-xs font-light text-panel-foreground/65">Requested</dt>
+              <dd class="mt-1 min-w-0"><a data-source-requested class="cursor-pointer break-all font-mono text-xs text-primary underline decoration-primary/50 underline-offset-4 hover:decoration-primary" target="_blank" rel="noreferrer"></a></dd>
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <dt class="font-sans text-xs font-light text-panel-foreground/65">Final source</dt>
+              <dd class="mt-1 min-w-0"><a data-source-final class="cursor-pointer break-all font-mono text-xs text-primary underline decoration-primary/50 underline-offset-4 hover:decoration-primary" target="_blank" rel="noreferrer"></a></dd>
+            </div>
+            <div class="lg:col-span-2">
+              <dt class="font-sans text-xs font-light text-panel-foreground/65">Response</dt>
+              <dd data-source-response class="mt-1 font-mono text-xs"></dd>
+            </div>
+            <div class="lg:col-span-2">
+              <dt class="font-sans text-xs font-light text-panel-foreground/65">File</dt>
+              <dd data-source-file class="mt-1 font-mono text-xs"></dd>
+            </div>
+            <div class="lg:col-span-2">
+              <dt class="font-sans text-xs font-light text-panel-foreground/65">Redirects</dt>
+              <dd data-source-redirects class="mt-1 font-mono text-xs"></dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="robots-export-heading">
+          <div class="space-y-1">
+            <h3 id="robots-export-heading" class="font-mono text-sm font-normal">Copy or download the report</h3>
+            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+              JSON includes the source, parsed groups, line findings, limits, and every URL verdict.
+            </p>
+          </div>
+          <div class="mt-4 grid gap-2 sm:grid-cols-3">
+            <Button data-copy-report type="button" class="w-full px-3 py-2.5 text-xs">Copy report</Button>
+            <Button data-download-json type="button" class="w-full px-3 py-2.5 text-xs">Download JSON</Button>
+            <Button data-download-csv type="button" class="w-full px-3 py-2.5 text-xs">Download URL CSV</Button>
+          </div>
+          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+        </section>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="robots-validator-url-tests">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-sm font-normal">URL test results</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            A result covers robots.txt matching only. It does not test a firewall, login, page response, or indexing state.
+          </p>
+        </div>
+        <div data-url-table-frame class="overflow-x-auto">
+          <table class="w-full min-w-[58rem] border-collapse text-left">
+            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <tr>
+                <th class="pb-2 pr-4">URL</th>
+                <th class="pb-2 pr-4">Result</th>
+                <th class="pb-2 pr-4">Winning rule</th>
+                <th class="pb-2">Reason</th>
+              </tr>
+            </thead>
+            <tbody data-url-results class="divide-y divide-border font-sans text-xs"></tbody>
+          </table>
+        </div>
+        <p data-no-url-results hidden class="font-sans text-sm font-light text-foreground-muted">
+          URL tests were not run because the live response did not establish which rules currently apply.
+        </p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="robots-validator-findings">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-sm font-normal">Line findings</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            Parseable rules remain active even when another line is ignored.
+          </p>
+        </div>
+        <div data-issue-table-frame class="overflow-x-auto">
+          <table class="w-full min-w-[42rem] border-collapse text-left">
+            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <tr>
+                <th class="pb-2 pr-4">Level</th>
+                <th class="pb-2 pr-4">Line</th>
+                <th class="pb-2 pr-4">Finding</th>
+                <th class="pb-2">Details</th>
+              </tr>
+            </thead>
+            <tbody data-issue-results class="divide-y divide-border font-sans text-xs"></tbody>
+          </table>
+        </div>
+        <p data-no-issues hidden class="font-sans text-sm font-light text-foreground-muted">
+          No line-level problems were found in the parsed content.
+        </p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="robots-validator-groups">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-sm font-normal">Parsed groups and sitemaps</h3>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            Repeated groups for the same specific crawler are combined when a URL is tested.
+          </p>
+        </div>
+        <div data-group-list class="space-y-4"></div>
+        <div data-sitemap-section hidden class="border-t border-border pt-5">
+          <h4 class="font-mono text-xs font-normal">Declared sitemaps</h4>
+          <ul data-sitemap-list class="mt-3 space-y-2 font-mono text-xs text-foreground-muted"></ul>
+        </div>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import RobotsValidatorWorker from '@/lib/robots-txt-validator.worker.ts?worker'
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
+  import type {
+    RobotsAnalysis,
+    RobotsIssue,
+    RobotsUrlResult,
+  } from '@/lib/robots-txt-validator'
+  import type {
+    RobotsWorkerRequest,
+    RobotsWorkerResponse,
+  } from '@/lib/robots-txt-validator.worker'
+
+  type LiveFetch = {
+    schema: 1
+    source: {
+      requestedUrl: string
+      finalUrl: string
+      origin: string
+      status: number
+      statusText: string
+      contentType: string | null
+      bytes: number
+      truncated: boolean
+      looksLikeHtml: boolean
+      availability: 'rules' | 'no-rules' | 'uncertain'
+      redirects: Array<{ from: string; to: string; status: number }>
+      limits: Record<string, number>
+    }
+    content: string
+    message: string
+  }
+
+  type CompleteReport = {
+    schema: 1
+    mode: 'live' | 'custom'
+    source: LiveFetch['source'] | { origin: string; bytes: number; lines: number; availability: 'rules' }
+    analysis: RobotsAnalysis
+  }
+
+  function isLiveFetch(value: unknown): value is LiveFetch {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+    const result = value as Record<string, unknown>
+    return result.schema === 1 && typeof result.content === 'string' && typeof result.source === 'object'
+  }
+
+  function initialiseRobotsValidator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing robots.txt validator control: ${selector}`)
+      return element
+    }
+
+    const form = required<HTMLFormElement>('[data-validator-form]')
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-input-tab]')]
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-input-panel]')]
+    const liveUrl = required<HTMLInputElement>('[data-live-url]')
+    const customOrigin = required<HTMLInputElement>('[data-custom-origin]')
+    const customContent = required<HTMLTextAreaElement>('[data-custom-content]')
+    const fetchCustom = required<HTMLButtonElement>('[data-fetch-custom]')
+    const customFetchStatus = required<HTMLElement>('[data-custom-fetch-status]')
+    const userAgent = required<HTMLSelectElement>('[data-user-agent]')
+    const customUserAgentLabel = required<HTMLElement>('[data-custom-user-agent-label]')
+    const customUserAgent = required<HTMLInputElement>('[data-custom-user-agent]')
+    const testUrls = required<HTMLTextAreaElement>('[data-test-urls]')
+    const runButton = required<HTMLButtonElement>('[data-run-check]')
+    const formStatus = required<HTMLElement>('[data-form-status]')
+    const formError = required<HTMLElement>('[data-form-error]')
+    const results = required<HTMLElement>('[data-results]')
+    const resultTitle = required<HTMLElement>('[data-result-title]')
+    const resultSummary = required<HTMLElement>('[data-result-summary]')
+    const statGroups = required<HTMLElement>('[data-stat-groups]')
+    const statRules = required<HTMLElement>('[data-stat-rules]')
+    const statErrors = required<HTMLElement>('[data-stat-errors]')
+    const statWarnings = required<HTMLElement>('[data-stat-warnings]')
+    const statTested = required<HTMLElement>('[data-stat-tested]')
+    const sourceRequested = required<HTMLAnchorElement>('[data-source-requested]')
+    const sourceFinal = required<HTMLAnchorElement>('[data-source-final]')
+    const sourceResponse = required<HTMLElement>('[data-source-response]')
+    const sourceFile = required<HTMLElement>('[data-source-file]')
+    const sourceRedirects = required<HTMLElement>('[data-source-redirects]')
+    const urlTableFrame = required<HTMLElement>('[data-url-table-frame]')
+    const urlResults = required<HTMLElement>('[data-url-results]')
+    const noUrlResults = required<HTMLElement>('[data-no-url-results]')
+    const issueTableFrame = required<HTMLElement>('[data-issue-table-frame]')
+    const issueResults = required<HTMLElement>('[data-issue-results]')
+    const noIssues = required<HTMLElement>('[data-no-issues]')
+    const groupList = required<HTMLElement>('[data-group-list]')
+    const sitemapSection = required<HTMLElement>('[data-sitemap-section]')
+    const sitemapList = required<HTMLElement>('[data-sitemap-list]')
+    const copyReport = required<HTMLButtonElement>('[data-copy-report]')
+    const downloadJson = required<HTMLButtonElement>('[data-download-json]')
+    const downloadCsv = required<HTMLButtonElement>('[data-download-csv]')
+    const exportStatus = required<HTMLElement>('[data-export-status]')
+
+    if (!customContent.value) {
+      customContent.value = `User-agent: *
+Disallow: /private/
+Allow: /private/public-page
+
+Sitemap: https://example.com/sitemap.xml`
+    }
+    if (!testUrls.value) {
+      testUrls.value = `/
+/private/page
+/private/public-page`
+    }
+
+    const activeTabClasses = ['border-primary', 'bg-primary', 'text-primary-foreground']
+    const inactiveTabClasses = ['border-border', 'bg-background-subtle', 'text-foreground-muted']
+    const worker = new RobotsValidatorWorker()
+    let mode: 'live' | 'custom' = 'live'
+    let currentReport: CompleteReport | undefined
+    let requestId = 0
+    let activeWorkerRequest:
+      | {
+          id: number
+          resolve: (analysis: RobotsAnalysis) => void
+          reject: (error: Error) => void
+        }
+      | undefined
+    let controller: AbortController | undefined
+
+    worker.onmessage = (event: MessageEvent<RobotsWorkerResponse>) => {
+      if (!activeWorkerRequest || event.data.id !== activeWorkerRequest.id) return
+      const pending = activeWorkerRequest
+      activeWorkerRequest = undefined
+      if (event.data.ok) pending.resolve(event.data.analysis)
+      else pending.reject(new Error(event.data.error))
+    }
+    worker.onerror = () => {
+      if (!activeWorkerRequest) return
+      const pending = activeWorkerRequest
+      activeWorkerRequest = undefined
+      pending.reject(new Error('The local validator could not start.'))
+    }
+
+    function setMode(nextMode: 'live' | 'custom', focus = false): void {
+      mode = nextMode
+      for (const tab of tabs) {
+        const active = tab.dataset.inputTab === mode
+        tab.setAttribute('aria-selected', String(active))
+        tab.tabIndex = active ? 0 : -1
+        tab.classList.toggle('hover:text-foreground', !active)
+        for (const className of activeTabClasses) tab.classList.toggle(className, active)
+        for (const className of inactiveTabClasses) tab.classList.toggle(className, !active)
+      }
+      for (const panel of panels) panel.hidden = panel.dataset.inputPanel !== mode
+      formStatus.textContent = mode === 'live'
+        ? 'Ready to check the live file.'
+        : 'Custom rules will stay in this browser tab.'
+      if (focus) (mode === 'live' ? liveUrl : customContent).focus()
+    }
+
+    function crawler(): string {
+      return userAgent.value === 'custom' ? customUserAgent.value.trim() : userAgent.value
+    }
+
+    function urls(): string[] {
+      return testUrls.value
+        .split(/\r\n|\n|\r/u)
+        .map((value) => value.trim())
+        .filter(Boolean)
+    }
+
+    function analyse(request: Omit<RobotsWorkerRequest, 'id'>): Promise<RobotsAnalysis> {
+      requestId += 1
+      const id = requestId
+      if (activeWorkerRequest) {
+        activeWorkerRequest.reject(new Error('A newer validation replaced this one.'))
+      }
+      return new Promise((resolve, reject) => {
+        activeWorkerRequest = { id, resolve, reject }
+        worker.postMessage({ ...request, id } satisfies RobotsWorkerRequest)
+      })
+    }
+
+    async function fetchLiveRobots(url: string, signal: AbortSignal): Promise<LiveFetch> {
+      const response = await fetch('/api/tools/robots-txt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url }),
+        signal,
+      })
+      const payload: unknown = await response.json().catch(() => undefined)
+      if (!response.ok || !isLiveFetch(payload)) {
+        const message = payload && typeof payload === 'object' && 'error' in payload
+          ? String((payload as { error: unknown }).error)
+          : 'The live robots.txt file could not be checked.'
+        throw new Error(message)
+      }
+      return payload
+    }
+
+    function formatBytes(bytes: number): string {
+      if (bytes < 1_024) return `${bytes.toLocaleString()} B`
+      return `${(bytes / 1_024).toLocaleString(undefined, { maximumFractionDigits: 1 })} KiB`
+    }
+
+    function setSourceLink(link: HTMLAnchorElement, label: string, href?: string): void {
+      link.textContent = label
+      if (href) {
+        link.href = href
+        link.classList.add('cursor-pointer', 'text-primary', 'underline')
+      } else {
+        link.removeAttribute('href')
+        link.classList.remove('cursor-pointer', 'text-primary', 'underline')
+      }
+    }
+
+    function cell(value: string, className = ''): HTMLTableCellElement {
+      const element = document.createElement('td')
+      element.className = `py-3 pr-4 align-top last:pr-0 ${className}`
+      element.textContent = value
+      return element
+    }
+
+    function renderUrlResults(values: RobotsUrlResult[], uncertain: boolean): void {
+      urlResults.replaceChildren()
+      urlTableFrame.hidden = values.length === 0
+      noUrlResults.hidden = values.length > 0
+      noUrlResults.textContent = uncertain
+        ? 'URL tests were not run because the live response did not establish which rules currently apply.'
+        : 'No URLs or paths were supplied for testing.'
+      for (const value of values) {
+        const row = document.createElement('tr')
+        row.append(
+          cell(value.url ?? value.input, 'max-w-80 break-all font-mono'),
+          cell(value.verdict.replace('-', ' '), value.verdict === 'blocked' ? 'font-medium text-red-700 dark:text-red-400' : 'font-medium'),
+          cell(value.rule ? `${value.rule.directive}: ${value.rule.pattern} (line ${value.rule.line})` : 'None', 'font-mono'),
+          cell(value.reason, 'max-w-96 text-foreground-muted'),
+        )
+        urlResults.append(row)
+      }
+    }
+
+    function renderIssues(values: RobotsIssue[], source?: LiveFetch['source']): void {
+      const sourceIssues: RobotsIssue[] = []
+      if (source?.truncated) {
+        sourceIssues.push({
+          severity: 'warning',
+          code: 'file-truncated',
+          message: 'Only the first 500 KiB was parsed. Content after that point was ignored.',
+        })
+      }
+      if (source?.looksLikeHtml) {
+        sourceIssues.push({
+          severity: 'warning',
+          code: 'html-response',
+          message: 'The live URL returned HTML. Crawlers may still use any parseable robots.txt lines inside it.',
+        })
+      }
+      const all = [...sourceIssues, ...values]
+      issueResults.replaceChildren()
+      issueTableFrame.hidden = all.length === 0
+      noIssues.hidden = all.length > 0
+      for (const value of all) {
+        const row = document.createElement('tr')
+        row.append(
+          cell(value.severity, value.severity === 'error' ? 'font-medium text-red-700 dark:text-red-400' : 'font-medium'),
+          cell(value.line ? String(value.line) : 'File', 'font-mono'),
+          cell(value.code.replaceAll('-', ' '), 'font-mono'),
+          cell(value.message, 'text-foreground-muted'),
+        )
+        issueResults.append(row)
+      }
+    }
+
+    function renderGroups(analysis: RobotsAnalysis): void {
+      groupList.replaceChildren()
+      if (analysis.document.groups.length === 0) {
+        const empty = document.createElement('p')
+        empty.className = 'font-sans text-sm font-light text-foreground-muted'
+        empty.textContent = 'No parseable user-agent groups were found.'
+        groupList.append(empty)
+      }
+      analysis.document.groups.forEach((group, index) => {
+        const details = document.createElement('details')
+        details.className = 'border border-border bg-background-subtle'
+        details.open = group.rules.length <= 20
+        const summary = document.createElement('summary')
+        summary.className = 'cursor-pointer px-4 py-3 font-mono text-xs font-normal'
+        const ruleLabel = group.rules.length === 1 ? 'rule' : 'rules'
+        summary.textContent = `Group ${index + 1}: ${group.userAgents.map((entry) => entry.value).join(', ')} (${group.rules.length.toLocaleString()} ${ruleLabel})`
+        const rules = document.createElement('ul')
+        rules.className = 'max-h-80 space-y-1 overflow-y-auto border-t border-border px-4 py-3 font-mono text-xs text-foreground-muted'
+        if (group.rules.length === 0) {
+          const item = document.createElement('li')
+          item.textContent = 'No parseable Allow or Disallow rules'
+          rules.append(item)
+        }
+        for (const rule of group.rules) {
+          const item = document.createElement('li')
+          item.textContent = `Line ${rule.line}: ${rule.directive}: ${rule.pattern}`
+          rules.append(item)
+        }
+        details.append(summary, rules)
+        groupList.append(details)
+      })
+
+      sitemapList.replaceChildren()
+      sitemapSection.hidden = analysis.document.sitemaps.length === 0
+      for (const sitemap of analysis.document.sitemaps) {
+        const item = document.createElement('li')
+        item.className = 'break-all'
+        item.textContent = `Line ${sitemap.line}: ${sitemap.value}${sitemap.valid ? '' : ' (invalid URL)'}`
+        sitemapList.append(item)
+      }
+    }
+
+    function renderSource(report: CompleteReport): void {
+      if ('requestedUrl' in report.source) {
+        setSourceLink(sourceRequested, report.source.requestedUrl, report.source.requestedUrl)
+        setSourceLink(sourceFinal, report.source.finalUrl, report.source.finalUrl)
+        const status = [report.source.status, report.source.statusText].filter(Boolean).join(' ')
+        sourceResponse.textContent = report.source.contentType
+          ? `${status} · ${report.source.contentType}`
+          : status
+        sourceFile.textContent = `${formatBytes(report.source.bytes)} · ${report.analysis.document.lines.toLocaleString()} lines${report.source.truncated ? ' · capped' : ''}`
+        sourceRedirects.textContent = report.source.redirects.length.toLocaleString()
+        return
+      }
+
+      setSourceLink(sourceRequested, report.source.origin, report.source.origin)
+      setSourceLink(sourceFinal, 'Local draft')
+      sourceResponse.textContent = 'Not fetched'
+      sourceFile.textContent = `${formatBytes(report.source.bytes)} · ${report.source.lines.toLocaleString()} lines`
+      sourceRedirects.textContent = 'Not applicable'
+    }
+
+    function render(report: CompleteReport, live?: LiveFetch): void {
+      const analysis = report.analysis
+      const uncertain = report.source.availability === 'uncertain'
+      const sourceWarnings =
+        ('truncated' in report.source && report.source.truncated ? 1 : 0) +
+        ('looksLikeHtml' in report.source && report.source.looksLikeHtml ? 1 : 0)
+      const errors = analysis.document.issueCounts.error
+      const warnings = analysis.document.issueCounts.warning + sourceWarnings
+
+      resultTitle.classList.remove('text-primary', 'text-red-400', 'text-yellow-300')
+      if (uncertain) {
+        resultTitle.textContent = 'Access uncertain'
+        resultTitle.classList.add('text-yellow-300')
+      } else if (errors > 0) {
+        resultTitle.textContent = 'Rules need attention'
+        resultTitle.classList.add('text-red-400')
+      } else if (warnings > 0) {
+        resultTitle.textContent = 'Rules parsed with warnings'
+        resultTitle.classList.add('text-yellow-300')
+      } else {
+        resultTitle.textContent = 'Rules parsed'
+        resultTitle.classList.add('text-primary')
+      }
+      resultSummary.textContent = live
+        ? `${live.message} Tested as ${analysis.userAgent}.`
+        : `The custom file was parsed locally and tested as ${analysis.userAgent}.`
+      statGroups.textContent = analysis.document.groups.length.toLocaleString()
+      statRules.textContent = analysis.document.rules.toLocaleString()
+      statErrors.textContent = errors.toLocaleString()
+      statWarnings.textContent = warnings.toLocaleString()
+      statTested.textContent = analysis.tests.length.toLocaleString()
+      renderSource(report)
+      renderUrlResults(analysis.tests, uncertain)
+      renderIssues(analysis.document.issues, live?.source)
+      renderGroups(analysis)
+      exportStatus.textContent = 'The report is ready to copy or download.'
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    async function run(): Promise<void> {
+      formError.hidden = true
+      formError.textContent = ''
+      runButton.disabled = true
+      runButton.textContent = mode === 'live' ? 'Fetching...' : 'Checking...'
+      formStatus.textContent = mode === 'live' ? 'Fetching the live robots.txt file...' : 'Checking the custom rules locally...'
+      controller?.abort()
+
+      try {
+        const selectedCrawler = crawler()
+        if (!selectedCrawler) throw new Error('Enter a custom user agent.')
+        const values = urls()
+        let analysis: RobotsAnalysis
+        let live: LiveFetch | undefined
+        if (mode === 'live') {
+          const normalizedUrl = defaultToolUrlToHttps(liveUrl.value)
+          if (!normalizedUrl) throw new Error('Enter a domain or URL.')
+          liveUrl.value = normalizedUrl
+          controller = new AbortController()
+          live = await fetchLiveRobots(normalizedUrl, controller.signal)
+          analysis = await analyse({
+            content: live.content,
+            origin: live.source.origin,
+            urls: live.source.availability === 'uncertain' ? [] : values,
+            userAgent: selectedCrawler,
+          })
+          currentReport = {
+            schema: 1,
+            mode,
+            source: live.source,
+            analysis,
+          }
+        } else {
+          analysis = await analyse({
+            content: customContent.value,
+            origin: customOrigin.value,
+            urls: values,
+            userAgent: selectedCrawler,
+          })
+          currentReport = {
+            schema: 1,
+            mode,
+            source: {
+              origin: analysis.origin,
+              bytes: analysis.document.bytes,
+              lines: analysis.document.lines,
+              availability: 'rules',
+            },
+            analysis,
+          }
+        }
+        render(currentReport, live)
+        formStatus.textContent = 'Check complete.'
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        formError.textContent = error instanceof Error ? error.message : String(error)
+        formError.hidden = false
+        formStatus.textContent = 'The check did not finish.'
+      } finally {
+        runButton.disabled = false
+        runButton.textContent = 'Check rules'
+      }
+    }
+
+    function csvCell(value: unknown): string {
+      const text = value === undefined ? '' : String(value)
+      return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+    }
+
+    function download(content: string, filename: string, type: string): void {
+      const blob = new Blob([content], { type })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.click()
+      URL.revokeObjectURL(url)
+    }
+
+    function textReport(report: CompleteReport): string {
+      const lines = [
+        'robots.txt validator report',
+        `Site: ${report.analysis.origin}`,
+        `User agent: ${report.analysis.userAgent}`,
+        `Groups: ${report.analysis.document.groups.length}`,
+        `Rules: ${report.analysis.document.rules}`,
+        `Errors: ${report.analysis.document.issueCounts.error}`,
+        `Warnings: ${report.analysis.document.issueCounts.warning}`,
+        '',
+      ]
+      for (const result of report.analysis.tests) {
+        lines.push(`${result.verdict.toUpperCase()} ${result.url ?? result.input}`)
+        lines.push(`  ${result.reason}`)
+      }
+      return `${lines.join('\n')}\n`
+    }
+
+    fetchCustom.addEventListener('click', async () => {
+      customFetchStatus.textContent = 'Fetching the live robots.txt file...'
+      fetchCustom.disabled = true
+      fetchCustom.textContent = 'Fetching...'
+      controller?.abort()
+      controller = new AbortController()
+
+      try {
+        const origin = customOrigin.value.trim()
+        if (!origin) throw new Error('Enter a public HTTPS domain or URL.')
+        const live = await fetchLiveRobots(origin, controller.signal)
+        if (live.source.availability !== 'rules') {
+          throw new Error(`${live.message} The editor was not changed.`)
+        }
+        customOrigin.value = live.source.origin
+        customContent.value = live.content
+        currentReport = undefined
+        results.hidden = true
+        customFetchStatus.textContent = `Loaded ${formatBytes(live.source.bytes)} from ${live.source.finalUrl}. Edit the rules, then run the check.`
+        formStatus.textContent = 'The live file is ready to edit.'
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        customFetchStatus.textContent = error instanceof Error ? error.message : String(error)
+      } finally {
+        fetchCustom.disabled = false
+        fetchCustom.textContent = 'Fetch into editor'
+      }
+    })
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      void run()
+    })
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => setMode(tab.dataset.inputTab as 'live' | 'custom', true))
+    }
+    userAgent.addEventListener('change', () => {
+      customUserAgentLabel.hidden = userAgent.value !== 'custom'
+      if (!customUserAgentLabel.hidden) customUserAgent.focus()
+    })
+    copyReport.addEventListener('click', async () => {
+      if (!currentReport) return
+      await navigator.clipboard.writeText(textReport(currentReport))
+      exportStatus.textContent = 'Report copied.'
+    })
+    downloadJson.addEventListener('click', () => {
+      if (!currentReport) return
+      download(
+        `${JSON.stringify(currentReport, null, 2)}\n`,
+        'robots-txt-report.json',
+        'application/json;charset=utf-8',
+      )
+      exportStatus.textContent = 'JSON downloaded.'
+    })
+    downloadCsv.addEventListener('click', () => {
+      if (!currentReport) return
+      const header = ['url', 'input', 'userAgent', 'verdict', 'groupUserAgents', 'directive', 'pattern', 'line', 'specificity', 'reason']
+      const rows = currentReport.analysis.tests.map((result) => [
+        result.url,
+        result.input,
+        result.userAgent,
+        result.verdict,
+        result.groupUserAgents.join('|'),
+        result.rule?.directive,
+        result.rule?.pattern,
+        result.rule?.line,
+        result.rule?.specificity,
+        result.reason,
+      ].map(csvCell).join(','))
+      download(
+        `${header.join(',')}\n${rows.join('\n')}${rows.length ? '\n' : ''}`,
+        'robots-txt-url-tests.csv',
+        'text/csv;charset=utf-8',
+      )
+      exportStatus.textContent = 'URL test CSV downloaded.'
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-robots-validator]')) {
+    initialiseRobotsValidator(root)
+  }
+</script>

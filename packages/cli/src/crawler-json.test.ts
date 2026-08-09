@@ -291,7 +291,14 @@ test('crawler CLI exposes the fast sitemap health pass and JUnit output', async 
   const userAgents: string[] = []
   let baseUrl = ''
   const fixture = await withServer((req, res) => {
-    userAgents.push(String(req.headers['user-agent'] ?? ''))
+    const requestPath = req.url ?? ''
+    if (
+      ['/robots.txt', '/custom-sitemap.xml', '/good', '/missing'].includes(
+        requestPath,
+      )
+    ) {
+      userAgents.push(String(req.headers['user-agent'] ?? ''))
+    }
     if (req.url === '/robots.txt') {
       res.setHeader('content-type', 'text/plain')
       res.end('User-agent: SEO-Skill\nAllow: /\n')

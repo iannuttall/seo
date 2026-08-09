@@ -24,7 +24,7 @@
     "build": "pnpm run clean && tsc -p tsconfig.json",
     "clean": "node -e \"require('node:fs').rmSync('dist', { force: true, recursive: true })\"",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test \"dist/**/*.test.js\"",
+    "test": "node scripts/run-tests.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

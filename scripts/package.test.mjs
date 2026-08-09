@@ -39,16 +39,46 @@ test('the clean package install check builds workspace dependencies', () => {
   )
 })
 
+test('core tests isolate SQLite state between test processes', async () => {
+  const corePackage = JSON.parse(
+    await readFile('packages/core/package.json', 'utf8'),
+  )
+  const runner = await readFile('packages/core/scripts/run-tests.mjs', 'utf8')
+
+  assert.equal(corePackage.scripts.test, 'node scripts/run-tests.mjs')
+  assert.match(runner, /SEO_CORE_TEST_ROOT/)
+  assert.match(runner, /join\(testRoot, String\(process\.pid\)\)/)
+  assert.match(runner, /SEO_CONFIG_DIR/)
+  assert.match(runner, /SEO_CACHE_DIR/)
+  assert.match(runner, /rmSync\(temporaryRoot/)
+})
+
 test('CI reuses the verified build without dropping any gates', async () => {
   const ci = await readFile('.github/workflows/ci.yml', 'utf8')
 
   assert.match(ci, /pnpm build/)
   assert.match(ci, /pnpm typecheck/)
-  assert.match(ci, /pnpm test:built/)
+  assert.match(ci, /pnpm test:cli-shard:built/)
+  assert.match(ci, /pnpm test:contracts:built/)
+  assert.match(ci, /pnpm test:resources:built/)
   assert.match(ci, /pnpm test:package-install:built/)
   assert.match(ci, /pnpm lint:static/)
   assert.match(ci, /pnpm security:check/)
+  assert.match(ci, /actions\/upload-artifact@v7/)
+  assert.match(ci, /actions\/download-artifact@v8/)
+  assert.match(ci, /actions\/cache\/restore@v6/)
+  assert.match(ci, /actions\/cache\/save@v6/)
   assert.doesNotMatch(ci, /run: pnpm (?:test|test:package-install|lint)$/m)
+})
+
+test('production dogfood waits for the released package before auditing', async () => {
+  const dogfood = await readFile('.github/workflows/site-dogfood.yml', 'utf8')
+
+  assert.match(dogfood, /^name: Production dogfood$/m)
+  assert.match(dogfood, /for attempt in \$\(seq 1 24\)/)
+  assert.match(dogfood, /npm view "seo@\$version" version/)
+  assert.match(dogfood, /seo@\$version was not published within four minutes/)
+  assert.doesNotMatch(dogfood, /outputs\.published/)
 })
 
 test('the public TypeScript library and MCP entry points load', async () => {

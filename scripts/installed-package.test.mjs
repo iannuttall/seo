@@ -15,34 +15,32 @@ const root = process.cwd()
 const tempRoot = await mkdtemp(join(tmpdir(), 'seo-packed-install-'))
 const archiveDirectory = join(tempRoot, 'archive')
 const consumerDirectory = join(tempRoot, 'consumer')
-const configDirectory = join(tempRoot, 'config')
-const cacheDirectory = join(tempRoot, 'cache')
 const globalPrefix = join(tempRoot, 'global')
 const pnpmGlobalDirectory = join(tempRoot, 'pnpm-global')
 const pnpmBinDirectory = join(tempRoot, 'pnpm-bin')
 const tsc = require.resolve('typescript/bin/tsc')
-let archivePath
+let archivePromise
 
 after(async () => {
   await rm(tempRoot, { recursive: true, force: true })
 })
 
-function consumerEnv() {
+function consumerEnv(scope) {
   return {
     ...process.env,
-    SEO_CACHE_DIR: cacheDirectory,
-    SEO_CONFIG_DIR: configDirectory,
+    SEO_CACHE_DIR: join(tempRoot, scope, 'cache'),
+    SEO_CONFIG_DIR: join(tempRoot, scope, 'config'),
     NO_UPDATE_NOTIFIER: '1',
   }
 }
 
-async function listInstalledMcpTools(seo) {
+async function listInstalledMcpTools(seo, env) {
   const transport = new StdioClientTransport({
     command: seo,
     args: ['mcp', 'serve'],
     cwd: root,
     env: {
-      ...consumerEnv(),
+      ...env,
       NPM_CONFIG_OFFLINE: 'true',
     },
     stderr: 'pipe',
@@ -59,25 +57,30 @@ async function listInstalledMcpTools(seo) {
   }
 }
 
-async function packedTarball() {
-  if (archivePath) return archivePath
+async function createPackedTarball() {
   await mkdir(archiveDirectory, { recursive: true })
   await execFileAsync(
     'npm',
     ['pack', '--ignore-scripts', '--pack-destination', archiveDirectory],
-    { cwd: root, env: consumerEnv() },
+    { cwd: root, env: consumerEnv('archive') },
   )
   const archive = (await readdir(archiveDirectory)).find((file) =>
     /^seo-[\d.]+\.tgz$/.test(file),
   )
   assert.ok(archive, 'npm pack should create an seo tarball')
-  archivePath = join(archiveDirectory, archive)
-  return archivePath
+  return join(archiveDirectory, archive)
+}
+
+function packedTarball() {
+  archivePromise ??= createPackedTarball()
+  return archivePromise
 }
 
 test('the packed package installs globally into an isolated prefix', {
+  concurrency: true,
   timeout: 120_000,
 }, async () => {
+  const env = consumerEnv('npm-global')
   const tarball = await packedTarball()
   await execFileAsync(
     'npm',
@@ -90,7 +93,7 @@ test('the packed package installs globally into an isolated prefix', {
       '--no-fund',
       tarball,
     ],
-    { cwd: root, env: consumerEnv(), maxBuffer: 1024 * 1024 },
+    { cwd: root, env, maxBuffer: 1024 * 1024 },
   )
 
   if (process.platform === 'win32') return
@@ -98,23 +101,23 @@ test('the packed package installs globally into an isolated prefix', {
   const seo = join(globalPrefix, 'bin', 'seo')
   const version = await execFileAsync(seo, ['--version'], {
     cwd: root,
-    env: consumerEnv(),
+    env,
   })
   assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+$/)
 
   const start = await execFileAsync(seo, ['start', '--dry-run', '--json'], {
     cwd: root,
-    env: consumerEnv(),
+    env,
   })
   assert.equal(JSON.parse(start.stdout).dryRun, true)
 
   const cache = await execFileAsync(seo, ['cache', 'stats'], {
     cwd: root,
-    env: consumerEnv(),
+    env,
   })
   assert.match(cache.stdout, /DB\s+/)
 
-  const mcp = await listInstalledMcpTools(seo)
+  const mcp = await listInstalledMcpTools(seo, env)
   assert.deepEqual(
     mcp.tools.map((tool) => tool.name),
     ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
@@ -122,10 +125,12 @@ test('the packed package installs globally into an isolated prefix', {
 })
 
 test('the packed package opens its database after a pnpm global install', {
+  concurrency: true,
   timeout: 120_000,
 }, async () => {
   if (process.platform === 'win32') return
 
+  const env = consumerEnv('pnpm-global')
   const tarball = await packedTarball()
   await mkdir(pnpmGlobalDirectory, { recursive: true })
   await mkdir(pnpmBinDirectory, { recursive: true })
@@ -144,7 +149,7 @@ test('the packed package opens its database after a pnpm global install', {
     {
       cwd: root,
       env: {
-        ...consumerEnv(),
+        ...env,
         PATH: `${pnpmBinDirectory}${delimiter}${process.env.PATH ?? ''}`,
         PNPM_HOME: pnpmBinDirectory,
       },
@@ -155,14 +160,16 @@ test('the packed package opens its database after a pnpm global install', {
   const seo = join(pnpmBinDirectory, 'seo')
   const cache = await execFileAsync(seo, ['cache', 'stats'], {
     cwd: root,
-    env: consumerEnv(),
+    env,
   })
   assert.match(cache.stdout, /DB\s+/)
 })
 
 test('the packed package installs and runs without the workspace', {
+  concurrency: true,
   timeout: 120_000,
 }, async () => {
+  const env = consumerEnv('consumer')
   const tarball = await packedTarball()
   await mkdir(consumerDirectory)
   await writeFile(
@@ -175,7 +182,7 @@ test('the packed package installs and runs without the workspace', {
   )
   await execFileAsync('npm', ['install', '--no-audit', '--no-fund', tarball], {
     cwd: consumerDirectory,
-    env: consumerEnv(),
+    env,
     maxBuffer: 1024 * 1024,
   })
 
@@ -184,7 +191,7 @@ test('the packed package installs and runs without the workspace', {
     ['audit', '--omit=dev', '--audit-level=low', '--json'],
     {
       cwd: consumerDirectory,
-      env: consumerEnv(),
+      env,
       maxBuffer: 1024 * 1024,
     },
   )
@@ -193,7 +200,7 @@ test('the packed package installs and runs without the workspace', {
   const cli = join(consumerDirectory, 'node_modules', 'seo', 'dist', 'cli.js')
   const version = await execFileAsync(process.execPath, [cli, '--version'], {
     cwd: consumerDirectory,
-    env: consumerEnv(),
+    env,
   })
   assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+$/)
 
@@ -209,28 +216,28 @@ test('the packed package installs and runs without the workspace', {
       '--skip-mcp',
       '--json',
     ],
-    { cwd: consumerDirectory, env: consumerEnv() },
+    { cwd: consumerDirectory, env },
   )
   const startResult = JSON.parse(start.stdout)
   assert.equal(startResult.dryRun, true)
 
   const cache = await execFileAsync(process.execPath, [cli, 'cache', 'stats'], {
     cwd: consumerDirectory,
-    env: consumerEnv(),
+    env,
   })
   assert.match(cache.stdout, /DB\s+/)
 
   const reportHelp = await execFileAsync(
     process.execPath,
     [cli, 'report', '--help'],
-    { cwd: consumerDirectory, env: consumerEnv() },
+    { cwd: consumerDirectory, env },
   )
   assert.match(reportHelp.stdout, /Run the main SEO report/)
 
   const mcp = await execFileAsync(
     process.execPath,
     [cli, 'mcp', 'serve', '--test'],
-    { cwd: consumerDirectory, env: consumerEnv() },
+    { cwd: consumerDirectory, env },
   )
   assert.match(mcp.stdout, /MCP server constructed successfully/)
 
@@ -241,7 +248,7 @@ test('the packed package installs and runs without the workspace', {
       '-e',
       "import { auditPage, crawlSite } from 'seo'; import { createServer } from 'seo/mcp'; if (typeof auditPage !== 'function' || typeof crawlSite !== 'function' || typeof createServer !== 'function') process.exit(1)",
     ],
-    { cwd: consumerDirectory, env: consumerEnv() },
+    { cwd: consumerDirectory, env },
   )
   assert.equal(library.stderr, '')
 
@@ -263,6 +270,6 @@ test('the packed package installs and runs without the workspace', {
       '--strict',
       'consumer.ts',
     ],
-    { cwd: consumerDirectory, env: consumerEnv() },
+    { cwd: consumerDirectory, env },
   )
 })

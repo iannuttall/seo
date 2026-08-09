@@ -34,6 +34,12 @@ body:
       description: Node version and operating system.
     validations:
       required: true
+  - type: input
+    id: diagnostics
+    attributes:
+      label: Failure diagnostics
+      description: Fixed error classification from the CLI, if one was shown.
+      placeholder: INTERNAL_ERROR | database | database_unique_constraint
   - type: textarea
     id: evidence
     attributes:

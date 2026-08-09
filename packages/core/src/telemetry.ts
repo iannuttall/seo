@@ -2,10 +2,22 @@ import { existsSync } from 'node:fs'
 import { arch, platform } from 'node:os'
 import { getSeoCliPaths } from './paths.js'
 import { readJsonFile, writeJsonAtomic } from './storage/files.js'
+import {
+  classifyTelemetryFailure,
+  isTelemetryOperation,
+  TELEMETRY_ERROR_CATEGORIES,
+  TELEMETRY_FAILURE_CONTEXTS,
+  TELEMETRY_FAILURE_REASONS,
+  type TelemetryErrorCategory,
+  type TelemetryFailureClassification,
+  type TelemetryFailureContext,
+  type TelemetryFailureReason,
+  type TelemetryOperation,
+} from './telemetry-failures.js'
 import { SEO_VERSION } from './version.js'
 
 export const TELEMETRY_ENDPOINT = 'https://seoskill.dev/api/t'
-export const TELEMETRY_SCHEMA_VERSION = 1
+export const TELEMETRY_SCHEMA_VERSION = 2
 export const TELEMETRY_TIMEOUT_MS = 2_000
 
 export const TELEMETRY_EVENTS = [
@@ -14,6 +26,7 @@ export const TELEMETRY_EVENTS = [
   'audit_start',
   'audit_complete',
   'audit_failed',
+  'command_failed',
   'first_audit_complete',
   'active_d1',
   'active_d7',
@@ -25,14 +38,6 @@ export const TELEMETRY_AGENTS = [
   'cursor',
   'codex',
   'cli',
-  'unknown',
-] as const
-
-export const TELEMETRY_ERROR_CATEGORIES = [
-  'auth',
-  'crawl_timeout',
-  'network',
-  'config',
   'unknown',
 ] as const
 
@@ -115,7 +120,6 @@ export const TELEMETRY_REPORTS = [
 
 export type TelemetryEvent = (typeof TELEMETRY_EVENTS)[number]
 export type TelemetryAgent = (typeof TELEMETRY_AGENTS)[number]
-export type TelemetryErrorCategory = (typeof TELEMETRY_ERROR_CATEGORIES)[number]
 export type TelemetryReport = (typeof TELEMETRY_REPORTS)[number]
 
 export type TelemetryState = {
@@ -133,8 +137,11 @@ export type TelemetryPayload = {
   arch: string
   node: string
   cohort: string
-  schema: 1
+  schema: 1 | 2
   errorCategory?: TelemetryErrorCategory
+  failureReason?: TelemetryFailureReason
+  failureContext?: TelemetryFailureContext
+  operation?: TelemetryOperation
   report?: TelemetryReport
 }
 
@@ -200,8 +207,9 @@ const CI_ENVIRONMENT_KEYS = [
 ] as const
 
 export const TELEMETRY_NOTICE = `SEO Skill collects anonymous usage data to improve the tool (event name,
-report id, version, agent, OS, architecture, Node major, and install week;
-never URLs, report data, or identifiers of any kind).
+fixed report or command name, fixed failure classification, version, agent,
+OS, architecture, Node major, and install week; never URLs, report data, error
+messages, command arguments, or identifiers of any kind).
 Docs: https://seoskill.dev/telemetry
 Disable: seo telemetry disable (or set DO_NOT_TRACK=1)\n`
 
@@ -361,6 +369,9 @@ export function buildTelemetryPayload(
   state: TelemetryState,
   fields: {
     errorCategory?: TelemetryErrorCategory
+    failureReason?: TelemetryFailureReason
+    failureContext?: TelemetryFailureContext
+    operation?: TelemetryOperation
     report?: TelemetryReport
   } = {},
   options: TelemetryOptions = {},
@@ -375,6 +386,9 @@ export function buildTelemetryPayload(
     cohort: state.cohort,
     schema: TELEMETRY_SCHEMA_VERSION,
     ...(fields.errorCategory ? { errorCategory: fields.errorCategory } : {}),
+    ...(fields.failureReason ? { failureReason: fields.failureReason } : {}),
+    ...(fields.failureContext ? { failureContext: fields.failureContext } : {}),
+    ...(fields.operation ? { operation: fields.operation } : {}),
     ...(fields.report ? { report: fields.report } : {}),
   }
 }
@@ -498,7 +512,13 @@ export function initializeTelemetry(
 
 function sendEvent(
   event: TelemetryEvent,
-  fields: { errorCategory?: TelemetryErrorCategory; report?: TelemetryReport },
+  fields: {
+    errorCategory?: TelemetryErrorCategory
+    failureReason?: TelemetryFailureReason
+    failureContext?: TelemetryFailureContext
+    operation?: TelemetryOperation
+    report?: TelemetryReport
+  },
   options: TelemetryOptions,
 ): void {
   const state = enabledState(options)
@@ -543,11 +563,25 @@ export function trackTelemetryReportComplete(
 
 export function trackTelemetryReportFailed(
   report: string,
-  errorCategory: TelemetryErrorCategory,
+  error: unknown,
   options: TelemetryOptions = {},
 ): void {
   if (!isTelemetryReport(report)) return
-  sendEvent('audit_failed', { errorCategory, report }, options)
+  const failure = telemetryFailureInput(error)
+  sendEvent('audit_failed', { ...failure, report }, options)
+}
+
+export function trackTelemetryCommandFailed(
+  operation: string,
+  error: unknown,
+  options: TelemetryOptions = {},
+): void {
+  if (!isTelemetryOperation(operation)) return
+  sendEvent(
+    'command_failed',
+    { ...classifyTelemetryFailure(error), operation },
+    options,
+  )
 }
 
 export function trackTelemetrySetupComplete(
@@ -568,28 +602,53 @@ export function trackTelemetrySetupComplete(
 }
 
 export function telemetryErrorCategory(error: unknown): TelemetryErrorCategory {
-  if (error instanceof Error && error.name === 'AbortError') {
-    return 'crawl_timeout'
-  }
-  const code =
-    error && typeof error === 'object' && 'code' in error
-      ? String(error.code)
-      : undefined
-  if (
-    code === 'ACCESS_DENIED' ||
-    code === 'AUTH_CONFIG_REQUIRED' ||
-    code === 'AUTH_EXPIRED' ||
-    code === 'AUTH_REQUIRED'
-  ) {
-    return 'auth'
-  }
-  if (code === 'INVALID_INPUT' || code === 'PROPERTY_NOT_FOUND') return 'config'
-  if (
-    code === 'OPTIONAL_PROVIDER_UNAVAILABLE' ||
-    code === 'PROVIDER_UNAVAILABLE' ||
-    code === 'RATE_LIMITED'
-  ) {
-    return 'network'
-  }
-  return 'unknown'
+  return classifyTelemetryFailure(error).errorCategory
 }
+
+function isTelemetryFailureClassification(
+  value: unknown,
+): value is TelemetryFailureClassification {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const candidate = value as Partial<TelemetryFailureClassification>
+  return (
+    TELEMETRY_ERROR_CATEGORIES.includes(
+      candidate.errorCategory as TelemetryErrorCategory,
+    ) &&
+    TELEMETRY_FAILURE_REASONS.includes(
+      candidate.failureReason as TelemetryFailureReason,
+    ) &&
+    (candidate.failureContext === undefined ||
+      (candidate.failureReason === 'database_unique_constraint' &&
+        TELEMETRY_FAILURE_CONTEXTS.includes(candidate.failureContext)))
+  )
+}
+
+function telemetryFailureInput(error: unknown): TelemetryFailureClassification {
+  if (isTelemetryFailureClassification(error)) return error
+  if (
+    typeof error === 'string' &&
+    TELEMETRY_ERROR_CATEGORIES.includes(error as TelemetryErrorCategory)
+  ) {
+    return {
+      errorCategory: error as TelemetryErrorCategory,
+      failureReason: 'unknown',
+    }
+  }
+  return classifyTelemetryFailure(error)
+}
+
+export type {
+  TelemetryErrorCategory,
+  TelemetryFailureClassification,
+  TelemetryFailureContext,
+  TelemetryFailureReason,
+  TelemetryOperation,
+} from './telemetry-failures.js'
+export {
+  classifyTelemetryFailure,
+  isTelemetryOperation,
+  TELEMETRY_ERROR_CATEGORIES,
+  TELEMETRY_FAILURE_CONTEXTS,
+  TELEMETRY_FAILURE_REASONS,
+  TELEMETRY_OPERATIONS,
+} from './telemetry-failures.js'

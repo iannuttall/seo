@@ -213,16 +213,18 @@ logs, and saved reports.
 
 Anonymous usage telemetry is enabled by default with a one-time first-run
 notice. It describes use of the tool, not the site or Google data being
-analysed. Events can contain only a fixed event name, public report identifier,
-package version, detected agent category, operating system, architecture, Node
-major version, first-run ISO week, wire schema version, and a fixed error
-category for failed reports.
+analysed. Events can contain only a fixed event name, public report identifier
+or top-level command name, package version, detected agent category, operating
+system, architecture, Node major version, first-run ISO week, wire schema
+version, and fixed failure classification for failed runs. The classification
+can include a category, reason, and one allowlisted code context. It never
+contains the underlying error text or a user-supplied value.
 
 Telemetry never contains a user ID, machine ID, UUID, fingerprint, audited
 domain, URL, hostname, page content, report content, Search Console or Google
 Analytics response, Google property ID, token, secret, file path, username,
-local hostname, raw error message, IP address, or location. The complete event
-and field catalogue is published at
+local hostname, raw error message, command argument, IP address, or location.
+The complete event and field catalogue is published at
 [seoskill.dev/telemetry](https://seoskill.dev/telemetry).
 
 Once-only event state stays in a private local file in the existing SEO config
@@ -241,6 +243,12 @@ Disable all telemetry network calls with `seo telemetry disable`,
 environments. Use `seo telemetry status` to inspect the effective setting and
 `seo telemetry enable` to turn the local setting back on. Environment and CI
 overrides always win.
+
+An unexpected CLI error can print a prefilled GitHub issue link. The link
+contains only the package version, Node major, operating system, architecture,
+fixed report or command name, and fixed failure classification. It does not
+contain the raw error or command arguments. Nothing is sent to GitHub unless
+you open the link, and you can review the form before submitting it.
 
 Aggregate event counts are public at
 [seoskill.dev/stats](https://seoskill.dev/stats). They are described as

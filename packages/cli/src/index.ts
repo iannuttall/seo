@@ -3,8 +3,8 @@ import {
   initializeTelemetry,
   SEO_VERSION,
   seoErrorEnvelope,
-  telemetryErrorCategory,
   toSeoError,
+  trackTelemetryCommandFailed,
   trackTelemetryReportComplete,
   trackTelemetryReportFailed,
   trackTelemetryReportStart,
@@ -96,6 +96,7 @@ import {
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
+import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
 import { maybeOfferSelfUpdate } from './self-update.js'
 import { printCatalog, printHeading, printSection } from './utils.js'
 
@@ -478,11 +479,12 @@ if (helpRequested || versionRequested) {
     }
   } catch (error) {
     if (trackedReport) {
-      trackTelemetryReportFailed(
-        trackedReport,
-        telemetryErrorCategory(error),
-        telemetryOptions,
-      )
+      trackTelemetryReportFailed(trackedReport, error, telemetryOptions)
+    } else if (!isTelemetryControl) {
+      const operation = telemetryOperation(commandArgs)
+      if (operation) {
+        trackTelemetryCommandFailed(operation, error, telemetryOptions)
+      }
     }
     const normalized = toSeoError(error)
     if (argv.includes('--json')) {
@@ -491,6 +493,14 @@ if (helpRequested || versionRequested) {
       )
     } else {
       process.stderr.write(`Error: ${normalized.message}\n`)
+      const feedbackUrl = buildErrorFeedbackUrl({
+        args: commandArgs,
+        error,
+        report: trackedReport,
+      })
+      if (feedbackUrl) {
+        process.stderr.write(`Report this bug: ${feedbackUrl}\n`)
+      }
     }
     process.exitCode = normalized.exitCode
   }

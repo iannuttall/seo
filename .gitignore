@@ -5,6 +5,13 @@ node_modules
 dist
 coverage
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+!.dev.vars.production.example
 .conductor/settings.local.toml
 /docs/
 /apps/web/public/.well-known/agent-skills/

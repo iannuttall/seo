@@ -33,6 +33,12 @@ Desktop OAuth client credentials are not confidential secrets. User tokens,
 provider API keys, and analytics data are confidential and must never be
 committed, pasted into issues, or included in fixtures.
 
+The hosted web tools keep the Ahrefs token, DataForSEO login and password,
+Turnstile secret, and quota HMAC key in Cloudflare Worker secrets. Local
+development values belong in the ignored `apps/web/.dev.vars` file. Only fake
+placeholders and Cloudflare's documented local test keys belong in tracked
+examples. Public forms never receive provider credentials.
+
 Use `seo privacy` to inspect local files. `seo reset --yes` removes Google
 tokens, saved provider credentials, saved IndexNow keys, and the local config,
 cache, and log directories. Reset stops before deleting those directories if

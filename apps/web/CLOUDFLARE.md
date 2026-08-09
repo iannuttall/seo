@@ -1,8 +1,10 @@
 # Cloudflare deployment
 
-The site is a static Astro build with one small Cloudflare Worker in front of its assets. Astro writes the HTML pages, Markdown alternates, discovery files, and response-header rules into `apps/web/dist`. The Worker handles only `/api/t` and `/api/stats`, then sends every other request to the static assets binding.
+The site is a static Astro build with one small Cloudflare Worker in front of its assets. Astro writes the HTML pages, Markdown alternates, discovery files, and response-header rules into `apps/web/dist`. The Worker handles telemetry, public stats, bounded URL-fetching tools, and protected provider checks under `/api`, then sends every other request to the static assets binding.
 
 Anonymous telemetry events go to a dedicated D1 database through a Worker binding. The Worker validates a fixed schema, does not read request IP or location fields, and has invocation logging disabled. The public stats endpoint queries aggregate counts through the same binding and caches its response at the edge for one hour.
+
+Every Worker-backed tool uses a SQLite-backed `PaidToolGuard` Durable Object for an exact allowance of ten checks per network and tool each UTC day. It stores daily HMAC identities rather than raw IP addresses and deletes each day's object after 48 hours. Native rate-limit bindings reject bursts before the Worker starts expensive fetch work. Provider-backed forms also validate Turnstile, and separate provider budgets cap the number of Ahrefs, DataForSEO Spam Score, and DataForSEO traffic requests even when clients rotate networks.
 
 ## Git build settings
 
@@ -46,6 +48,96 @@ Regenerate isolated Worker types after changing bindings:
 ```sh
 pnpm --filter @seo/web types:worker
 ```
+
+## Provider tool secrets
+
+Production values live only in the ignored `apps/web/.dev.vars.production`
+file. Start from `.dev.vars.production.example`, fill every required production
+value, then preview which secrets will be published:
+
+```sh
+cp apps/web/.dev.vars.production.example apps/web/.dev.vars.production
+pnpm --filter @seo/web secrets:publish:dry-run
+pnpm --filter @seo/web secrets:publish
+```
+
+The production file is the local recovery source for every required Worker
+secret. The publisher compares `env-manifest.json` with the remote `seo-skill`
+Worker and adds only missing required secrets. Existing values are left alone.
+Pass `--all` only when every listed remote value should be replaced from the
+local file. Use `--only NAME` to rotate one named secret from the file.
+
+Check the production contract without publishing anything:
+
+```sh
+pnpm secrets:web:check
+pnpm secrets:web:check-local
+```
+
+The first command checks remote secret names and is safe for Cloudflare's build
+environment, where ignored local files do not exist. The second also validates
+the complete local recovery file. Remote values remain unreadable through
+Wrangler.
+
+The production deploy command runs the remote check before migrations or
+deployment, so Cloudflare's deployment pipeline stops when a required remote
+secret name is missing.
+
+Install the tracked local Git hooks once in each checkout or Conductor
+workspace:
+
+```sh
+pnpm hooks:install
+```
+
+The pre-commit hook validates both the local recovery file and remote secret
+names whenever staged changes touch the web app, its lockfile, or the hook
+itself. It uses the local Wrangler login, so no Cloudflare API token or GitHub
+Actions secret is required. If Wrangler is not authenticated, a local value is
+missing, or a required remote secret name is missing, the commit stops with an
+actionable error. Git hooks can be bypassed with `--no-verify`, so the deploy
+check remains the final remote enforcement point.
+
+The public Turnstile site key is an Astro build input rather than a secret.
+Put it in the ignored `apps/web/.env.production` file for local production
+builds and set the same build variable in the Cloudflare project:
+
+```sh
+PUBLIC_TURNSTILE_SITE_KEY=your-site-key
+```
+
+The global daily provider limits are non-secret Wrangler variables. The
+tracked defaults allow 500 free Ahrefs checks, 100 DataForSEO Spam Score
+checks, and 10 DataForSEO traffic checks per UTC day. Change the limits in
+`wrangler.jsonc` when the provider budget changes. A limit can tighten during a
+day but cannot widen until the next UTC day.
+
+For local review, copy `.dev.vars.example` to the ignored `.dev.vars` file.
+The preview command removes the Turnstile widget and uses a localhost-only
+bypass token. The same command overrides `LOCAL_TOOL_PREVIEW` to `true` for the
+local Worker. Its tracked production value is `false`, so production requests
+still require normal Turnstile verification.
+
+```sh
+pnpm --filter @seo/web preview:cloudflare
+```
+
+## Durable Object cost guardrails
+
+`PaidToolGuard` performs no provider requests, alarms with external work,
+WebSocket work, or row scans. A provider reservation has a runtime ceiling of
+seven SQL statements, while a public fetch reservation uses no more than four.
+Its reads use primary keys with `LIMIT 1`, writes touch at most one identity
+row and one provider row, and the cleanup alarm only removes the small daily
+object after 48 hours. Burst limits run before every reservation. Turnstile
+runs before provider reservations.
+
+Create a low Cloudflare billing budget alert for the `ian.is` account and
+monitor the `PaidToolGuard` request, duration, and row-read metrics after
+deployment. Cloudflare budget alerts are account-wide notifications based on
+processed usage. They are useful warnings, but they are not hard spending
+limits and usage may take time to appear. See Cloudflare's
+[billing budget alert announcement](https://developers.cloudflare.com/changelog/post/2026-06-04-billable-usage-product-sidebar/).
 
 ## Route Markdown requests at the edge
 

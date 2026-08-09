@@ -1,0 +1,227 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+type Props = {
+  kind: 'spam-score' | 'domain-rating'
+  endpoint: string
+  action: string
+  heading: string
+  description: string
+  buttonLabel: string
+}
+
+const { kind, endpoint, action, heading, description, buttonLabel } = Astro.props
+const targetLabel = kind === 'spam-score' ? 'Domain or page URL' : 'Domain'
+---
+
+<section
+  data-protected-metric-checker
+  data-kind={kind}
+  data-endpoint={endpoint}
+  class="space-y-6"
+>
+  <DottedCard patternId={`${kind}-input`}>
+    <form data-checker-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">{heading}</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">{description}</p>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>{targetLabel}</span>
+        <FormInput
+          data-target
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="example.com"
+          required
+        />
+      </label>
+
+      <TurnstileWidget {action} />
+
+      <div class="flex justify-end">
+        <Button data-submit type="submit" class="min-h-12 shrink-0 px-5 text-xs">{buttonLabel}</Button>
+      </div>
+      <p data-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId={`${kind}-summary`} inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p data-score class="mt-1 font-mono text-5xl font-normal text-primary"></p>
+            <p data-label class="mt-2 font-sans text-sm font-light text-panel-foreground/70"></p>
+          </div>
+          <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy result</Button>
+        </div>
+        <dl class="grid gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-2">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Checked target</dt>
+            <dd data-result-target class="mt-1 break-all font-mono text-xs"></dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Checked</dt>
+            <dd data-checked-at class="mt-1 font-mono text-xs"></dd>
+          </div>
+        </dl>
+        <p data-copy-status class="font-sans text-xs font-light text-panel-foreground/65" aria-live="polite"></p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId={`${kind}-meaning`}>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="font-mono text-sm font-normal">
+          {kind === 'spam-score' ? 'What the score highlights' : 'Compare the sites you actually compete with'}
+        </h3>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          {kind === 'spam-score'
+            ? 'Use the score to find domains or pages that need a closer review. A lower score suggests fewer spam patterns, while a higher score suggests more.'
+            : 'One Domain Rating has little context on its own. The competitive opportunities report combines current search results, keyword demand, Domain Rating, and optional referring-domain counts to find the competitors and topics worth inspecting.'}
+        </p>
+        {kind === 'domain-rating' ? (
+          <Button
+            href="/docs/reports/competitive-opportunities"
+            class="min-h-10 w-fit px-4 text-xs"
+          >
+            Open the competitor research report
+          </Button>
+        ) : null}
+        <p data-warning hidden class="border-t border-border pt-3 font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  type MetricResult = {
+    target: string
+    dataStatus: string
+    spamScore?: number | null
+    domainRating?: number | null
+    warnings: Array<{ code?: string; message: string }>
+    provenance: {
+      checkedAt: string
+      attribution: { label: string; url: string }
+    }
+  }
+  type MetricResponse = { result: MetricResult }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  function initialiseChecker(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    const form = root.querySelector<HTMLFormElement>('[data-checker-form]')
+    const target = root.querySelector<HTMLInputElement>('[data-target]')
+    const submit = root.querySelector<HTMLButtonElement>('[data-submit]')
+    const error = root.querySelector<HTMLElement>('[data-error]')
+    const results = root.querySelector<HTMLElement>('[data-results]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]')
+    if (!form || !target || !submit || !error || !results || !copy) return
+
+    let latest: MetricResponse | undefined
+    const setText = (selector: string, value: string) => {
+      const element = root.querySelector<HTMLElement>(selector)
+      if (element) element.textContent = value
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      results.hidden = true
+      const token = new FormData(form).get('turnstileToken')
+      if (!target.value.trim()) {
+        error.textContent = root.dataset.kind === 'spam-score' ? 'Enter a domain or page URL.' : 'Enter a domain.'
+        error.hidden = false
+        target.focus()
+        return
+      }
+      if (typeof token !== 'string' || token.length === 0) {
+        error.textContent = 'Complete the security check first.'
+        error.hidden = false
+        return
+      }
+
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      try {
+        const response = await fetch(root.dataset.endpoint ?? '', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ target: target.value.trim(), turnstileToken: token }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as MetricResponse & { error?: string }
+        if (!response.ok) throw new Error(data.error || 'The check could not be completed.')
+        const metric = data.result
+        latest = data
+        const kind = root.dataset.kind
+        const score = kind === 'spam-score' ? metric.spamScore : metric.domainRating
+        setText('[data-score]', score === null || score === undefined ? 'N/A' : String(score))
+        const scoreLabel = metric.dataStatus !== 'complete'
+          ? 'Metric unavailable'
+          : kind === 'spam-score' && typeof score === 'number'
+            ? score <= 30
+              ? 'Low Spam Score'
+              : score <= 60
+                ? 'Medium Spam Score'
+                : 'High Spam Score'
+            : 'Domain Rating by Ahrefs'
+        setText('[data-label]', scoreLabel)
+        setText('[data-result-target]', metric.target)
+        setText('[data-checked-at]', new Date(metric.provenance.checkedAt).toLocaleString())
+        const warning = root.querySelector<HTMLElement>('[data-warning]')
+        if (warning) {
+          const visibleWarnings = metric.warnings.filter(
+            (item) => item.code !== 'provider-estimate',
+          )
+          warning.textContent = visibleWarnings.map((item) => item.message).join(' ')
+          warning.hidden = visibleWarnings.length === 0
+        }
+        results.hidden = false
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The check could not be completed.'
+        error.hidden = false
+      } finally {
+        submit.disabled = false
+        submit.textContent = root.dataset.kind === 'spam-score' ? 'Check spam score' : 'Check Domain Rating'
+        const widget = root.querySelector<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+
+    copy.addEventListener('click', async () => {
+      if (!latest) return
+      const result = latest.result
+      const score = root.dataset.kind === 'spam-score' ? result.spamScore : result.domainRating
+      const label = root.dataset.kind === 'spam-score' ? 'Spam Score' : 'Domain Rating'
+      await navigator.clipboard.writeText(`${label}: ${score ?? 'unavailable'}\nTarget: ${result.target}\nChecked: ${result.provenance.checkedAt}`)
+      setText('[data-copy-status]', 'Result copied.')
+    })
+  }
+
+  function initialiseAll(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-protected-metric-checker]')) initialiseChecker(root)
+  }
+
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

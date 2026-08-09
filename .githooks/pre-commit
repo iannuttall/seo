@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+
+if git diff --cached --quiet -- \
+  apps/web \
+  package.json \
+  pnpm-lock.yaml \
+  .githooks/pre-commit \
+  scripts/install-git-hooks.mjs; then
+  exit 0
+fi
+
+cd "$repo_root"
+pnpm secrets:web:check-local

@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 4 August 2026
+Last updated: 9 August 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 and the seoskill.dev website.
@@ -259,6 +259,39 @@ The website host and security provider may also process normal web request
 data such as an IP address, user agent, requested path, and timestamp. Website
 analytics and logs do not include the reports, tokens, or Google API responses
 stored by the local software.
+
+## Website tool requests
+
+Most browser tool input stays in the browser. The log file analyzer, word
+combiner, and pasted or uploaded validator modes do not upload their input to
+seoskill.dev. A tool that fetches a public URL must send that URL to the
+seoskill.dev Cloudflare Worker because normal browser cross-origin rules often
+prevent a direct request. This includes live llms.txt, sitemap, robots.txt, and
+favicon checks. The target server receives an ordinary request from
+Cloudflare and can record it in its own logs.
+
+Three provider-backed website tools send a target and the inputs needed for
+the selected check from the Worker to an outside provider:
+
+- Spam Score sends the domain or page to DataForSEO.
+- Website traffic estimates send the domain, country, and language to
+  DataForSEO.
+- Domain Rating sends the domain to Ahrefs.
+
+The provider credentials remain in encrypted Cloudflare Worker secrets. The
+Worker returns a small normalized result and does not save submitted targets
+or provider responses in a product database or public recent-search list.
+DataForSEO and Ahrefs process these requests under the provider privacy
+policies linked in the research-provider section above.
+
+Provider-backed forms use Cloudflare Turnstile to limit automated use. The
+browser sends challenge information to Cloudflare and the Worker validates the
+single-use token before calling a provider. Every tool that reaches the Worker
+also creates a daily HMAC from the Cloudflare-provided connecting IP address.
+Only the HMAC, tool, date, and counters are stored in a Durable Object. The raw
+IP is not stored in the counter, the HMAC changes each UTC day, and the object
+deletes its stored data after 48 hours. People on one shared network can share
+the same daily allowance.
 
 ## Sharing and sale
 

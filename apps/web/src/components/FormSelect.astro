@@ -1,0 +1,24 @@
+---
+import PixelIcon from '@/components/icons/PixelIcon.astro'
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = HTMLAttributes<'select'>
+
+const { class: className, ...attrs } = Astro.props
+---
+
+<div class="relative">
+  <select
+    class:list={[
+      'min-h-12 w-full appearance-none border border-border bg-background py-3 pl-3 pr-12 font-sans text-sm font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary',
+      className,
+    ]}
+    {...attrs}
+  >
+    <slot />
+  </select>
+  <PixelIcon
+    name="chevron-down-2"
+    class="pointer-events-none absolute right-4 top-1/2 size-3.5 -translate-y-1/2 text-foreground"
+  />
+</div>

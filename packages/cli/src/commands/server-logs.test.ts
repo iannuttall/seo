@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -9,6 +9,9 @@ import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../index.js', import.meta.url))
+const combinedFixture = fileURLToPath(
+  new URL('../../../../fixtures/server-logs/combined.log', import.meta.url),
+)
 
 test('server-logs analyzes a local file as structured JSON', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'seo-server-logs-cli-'))
@@ -42,4 +45,56 @@ test('server-logs is discoverable in the full help inventory', async () => {
   )
   assert.equal(stderr, '')
   assert.match(stdout, /seo server-logs analyze/)
+})
+
+test('server-logs renders each shared CSV table to stdout', async () => {
+  for (const [name, header] of [
+    ['crawler-summary', 'crawler,category,requests'],
+    ['crawler-paths', 'crawler,category,path,requests'],
+    ['crawler-errors', 'crawler,category,path,requests'],
+    ['status-codes', 'status,requests'],
+  ] as const) {
+    const { stdout, stderr } = await execFileAsync(
+      process.execPath,
+      [
+        cliPath,
+        'server-logs',
+        'analyze',
+        '--file',
+        combinedFixture,
+        '--csv',
+        name,
+      ],
+      { env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' } },
+    )
+    assert.equal(stderr, '')
+    assert.match(stdout, new RegExp(`^${header}`, 'u'))
+  }
+})
+
+test('server-logs writes a selected CSV without mixing status text into it', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'seo-server-logs-csv-'))
+  const output = join(directory, 'exports', 'crawler-errors.csv')
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      process.execPath,
+      [
+        cliPath,
+        'server-logs',
+        'analyze',
+        '--file',
+        combinedFixture,
+        '--csv',
+        'crawler-errors',
+        '--output',
+        output,
+      ],
+      { env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' } },
+    )
+    assert.equal(stderr, '')
+    assert.equal(stdout, `Wrote ${output}\n`)
+    assert.match(await readFile(output, 'utf8'), /Googlebot,search,\/missing/u)
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })

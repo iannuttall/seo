@@ -1,0 +1,464 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+---
+
+<section data-llms-txt-validator class="space-y-6">
+  <DottedCard patternId="llms-txt-validator-input">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Validate an llms.txt file</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Check a published file, paste its contents, or open one from your computer.
+        </p>
+      </div>
+
+      <div class="flex gap-2" role="tablist" aria-label="Input method">
+        <button
+          data-input-tab="url"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="llms-url-panel"
+          class="border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+        >From URL</button>
+        <button
+          data-input-tab="paste"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="llms-paste-panel"
+          tabindex="-1"
+          class="border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+        >Paste content</button>
+      </div>
+
+      <div id="llms-url-panel" data-input-panel="url" role="tabpanel">
+        <form data-url-form class="space-y-3" novalidate>
+          <label for="llms-validator-url" class="block font-sans text-sm font-medium">llms.txt URL</label>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <input
+              id="llms-validator-url"
+              data-url-input
+              class="min-h-12 min-w-0 flex-1 border border-border bg-background px-4 py-3 font-mono text-sm font-normal text-foreground outline-none focus:border-primary"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              maxlength="2048"
+              placeholder="https://example.com/llms.txt"
+            />
+            <Button data-check-url type="submit" class="min-h-12 px-5 text-xs sm:min-w-32">Check URL</Button>
+          </div>
+          <p data-url-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            We fetch one public HTTPS text file up to 100,000 bytes. Links inside it are not opened.
+          </p>
+        </form>
+      </div>
+
+      <div id="llms-paste-panel" data-input-panel="paste" role="tabpanel" hidden>
+        <div class="space-y-3">
+          <label for="llms-validator-content" class="block font-sans text-sm font-medium">llms.txt content</label>
+          <textarea
+            id="llms-validator-content"
+            data-validator-input
+            class="min-h-64 w-full resize-y border border-border bg-background px-4 py-3 font-mono text-xs font-normal leading-6 text-foreground outline-none focus:border-primary"
+            maxlength="100000"
+            rows="11"
+            spellcheck="false"
+            placeholder="# Example docs&#10;&#10;> Documentation for the Example project.&#10;&#10;## Docs&#10;&#10;- [Quick start](https://example.com/docs/start): Install and make the first request."
+          ></textarea>
+          <div class="space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <input data-file-input class="hidden" type="file" accept=".txt,.md,text/plain,text/markdown" />
+              <Button data-check-content type="button" class="px-4 py-2.5 text-xs">Check content</Button>
+              <button
+                data-open-file
+                type="button"
+                class="border border-border bg-background-subtle px-3 py-2 font-sans text-xs font-medium text-foreground transition-colors hover:border-foreground"
+              >Open file</button>
+              <button
+                data-use-example
+                type="button"
+                class="px-2 py-2 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+              >Use example</button>
+              <button
+                data-clear-input
+                type="button"
+                class="px-2 py-2 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+              >Clear</button>
+            </div>
+            <p data-local-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+              Pasted text and local files stay in this browser tab.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </DottedCard>
+
+  <div data-result-card hidden>
+    <DottedCard patternId="llms-txt-validator-result" inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4">
+          <strong data-result-verdict class="font-mono text-2xl font-normal text-primary">Valid</strong>
+          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75" aria-live="polite"></p>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Bytes</dt>
+            <dd data-stat-bytes class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Lines</dt>
+            <dd data-stat-lines class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Sections</dt>
+            <dd data-stat-sections class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Links</dt>
+            <dd data-stat-links class="mt-1 font-mono text-lg">0</dd>
+          </div>
+        </dl>
+
+        <div data-result-messages class="border-t border-panel-foreground/30 pt-5" hidden></div>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import {
+    LLMS_TXT_VALIDATOR_LIMITS,
+    validateLlmsTxt,
+  } from '@/lib/llms-txt-validator.mjs'
+
+  const example = `# Example docs
+
+> Documentation for the Example project.
+
+Start with the quick start before opening the full reference.
+
+## Docs
+
+- [Quick start](https://example.com/docs/start): Install and make the first request.
+
+## Optional
+
+- [Full reference](https://example.com/reference): Complete API documentation.
+`
+
+  const activeTabClasses = [
+    'border-primary',
+    'bg-primary',
+    'text-primary-foreground',
+  ]
+  const inactiveTabClasses = [
+    'border-border',
+    'bg-background-subtle',
+    'text-foreground-muted',
+  ]
+
+  type ValidationIssue = { message: string; line?: number }
+  type LlmsTxtFetchResult = {
+    schema: 1
+    source: {
+      requestedUrl: string
+      finalUrl: string
+      bytes: number
+    }
+    content: string
+  }
+
+  function isLlmsTxtFetchResult(value: unknown): value is LlmsTxtFetchResult {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+    const result = value as Record<string, unknown>
+    if (result.schema !== 1 || typeof result.content !== 'string') return false
+    if (!result.source || typeof result.source !== 'object' || Array.isArray(result.source)) return false
+    const source = result.source as Record<string, unknown>
+    return (
+      typeof source.requestedUrl === 'string' &&
+      typeof source.finalUrl === 'string' &&
+      typeof source.bytes === 'number'
+    )
+  }
+
+  function initialiseValidator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-input-tab]')]
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-input-panel]')]
+    const urlForm = root.querySelector<HTMLFormElement>('[data-url-form]')
+    const urlInput = root.querySelector<HTMLInputElement>('[data-url-input]')
+    const checkUrl = root.querySelector<HTMLButtonElement>('[data-check-url]')
+    const urlStatus = root.querySelector<HTMLElement>('[data-url-status]')
+    const input = root.querySelector<HTMLTextAreaElement>('[data-validator-input]')
+    const fileInput = root.querySelector<HTMLInputElement>('[data-file-input]')
+    const checkContent = root.querySelector<HTMLButtonElement>('[data-check-content]')
+    const openFile = root.querySelector<HTMLButtonElement>('[data-open-file]')
+    const useExample = root.querySelector<HTMLButtonElement>('[data-use-example]')
+    const clearInput = root.querySelector<HTMLButtonElement>('[data-clear-input]')
+    const localStatus = root.querySelector<HTMLElement>('[data-local-status]')
+    const resultCard = root.querySelector<HTMLElement>('[data-result-card]')
+    const verdict = root.querySelector<HTMLElement>('[data-result-verdict]')
+    const summary = root.querySelector<HTMLElement>('[data-result-summary]')
+    const messages = root.querySelector<HTMLElement>('[data-result-messages]')
+    const statBytes = root.querySelector<HTMLElement>('[data-stat-bytes]')
+    const statLines = root.querySelector<HTMLElement>('[data-stat-lines]')
+    const statSections = root.querySelector<HTMLElement>('[data-stat-sections]')
+    const statLinks = root.querySelector<HTMLElement>('[data-stat-links]')
+
+    if (
+      tabs.length !== 2 ||
+      panels.length !== 2 ||
+      !urlForm ||
+      !urlInput ||
+      !checkUrl ||
+      !urlStatus ||
+      !input ||
+      !fileInput ||
+      !checkContent ||
+      !openFile ||
+      !useExample ||
+      !clearInput ||
+      !localStatus ||
+      !resultCard ||
+      !verdict ||
+      !summary ||
+      !messages ||
+      !statBytes ||
+      !statLines ||
+      !statSections ||
+      !statLinks
+    ) return
+
+    let fileError = ''
+    let controller: AbortController | undefined
+
+    function setMode(mode: 'url' | 'paste', focus = false): void {
+      if (!urlInput || !input) return
+      for (const tab of tabs) {
+        const active = tab.dataset.inputTab === mode
+        tab.setAttribute('aria-selected', String(active))
+        tab.tabIndex = active ? 0 : -1
+        tab.classList.toggle('hover:text-foreground', !active)
+        for (const className of activeTabClasses) tab.classList.toggle(className, active)
+        for (const className of inactiveTabClasses) tab.classList.toggle(className, !active)
+      }
+      for (const panel of panels) panel.hidden = panel.dataset.inputPanel !== mode
+      if (focus) (mode === 'url' ? urlInput : input).focus()
+    }
+
+    function hideResult(): void {
+      if (!resultCard) return
+      resultCard.hidden = true
+    }
+
+    function renderGroup(title: string, items: ValidationIssue[]): void {
+      if (!messages || items.length === 0) return
+      messages.hidden = false
+      const section = document.createElement('section')
+      section.className = 'border-t border-panel-foreground/30 pt-5 first:border-t-0 first:pt-0'
+      const heading = document.createElement('h3')
+      heading.className = 'font-mono text-sm font-normal'
+      heading.textContent = `${title} (${items.length.toLocaleString()})`
+      const list = document.createElement('ol')
+      list.className = 'mt-3 divide-y divide-panel-foreground/20'
+      for (const item of items) {
+        const row = document.createElement('li')
+        row.className = 'py-3 first:pt-0 last:pb-0 font-sans text-xs leading-5 text-panel-foreground/80'
+        if (item.line) {
+          const line = document.createElement('span')
+          line.className = 'mr-2 font-mono text-xs text-primary'
+          line.textContent = `Line ${item.line}`
+          row.append(line)
+        }
+        row.append(item.line ? ` ${item.message}` : item.message)
+        list.append(row)
+      }
+      section.append(heading, list)
+      messages.append(section)
+    }
+
+    function render(): void {
+      if (
+        !input ||
+        !resultCard ||
+        !verdict ||
+        !summary ||
+        !messages ||
+        !statBytes ||
+        !statLines ||
+        !statSections ||
+        !statLinks
+      )
+        return
+      const result = validateLlmsTxt(input.value)
+      statBytes.textContent = result.stats.bytes.toLocaleString()
+      statLines.textContent = result.stats.lines.toLocaleString()
+      statSections.textContent = result.stats.sections.toLocaleString()
+      statLinks.textContent = result.stats.links.toLocaleString()
+      messages.replaceChildren()
+      messages.hidden = true
+
+      if (!input.value && !fileError) {
+        hideResult()
+        return
+      }
+
+      const errors: ValidationIssue[] = fileError ? [{ message: fileError }] : result.errors
+      const errorCount = fileError ? 1 : result.issueStats.errors
+      const warningCount = fileError ? 0 : result.issueStats.warnings
+      if (errorCount > 0) {
+        verdict.textContent = 'Needs changes'
+        summary.textContent = `${errorCount} ${errorCount === 1 ? 'change' : 'changes'} needed before the file follows the proposal shape.`
+      } else if (warningCount > 0) {
+        verdict.textContent = 'Valid with suggestions'
+        summary.textContent = `${warningCount} ${warningCount === 1 ? 'suggestion' : 'suggestions'} to improve the file.`
+      } else {
+        verdict.textContent = 'Valid'
+        summary.textContent = 'The file follows the local Markdown checks.'
+      }
+      renderGroup('Changes to make', errors)
+      renderGroup('Suggestions', result.warnings)
+      if (!fileError && result.issueStats.omitted > 0) {
+        renderGroup('More results', [
+          {
+            message: `${result.issueStats.omitted.toLocaleString()} more results are hidden. Fix the first ${LLMS_TXT_VALIDATOR_LIMITS.maxIssues} and check the file again.`,
+          },
+        ])
+      }
+      resultCard.hidden = false
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        const mode = tab.dataset.inputTab
+        if (mode === 'url' || mode === 'paste') setMode(mode, true)
+      })
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
+        event.preventDefault()
+        const mode = tab.dataset.inputTab === 'url' ? 'paste' : 'url'
+        setMode(mode, true)
+      })
+    }
+
+    urlForm.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      const url = urlInput.value.trim()
+      if (!url) {
+        urlStatus.textContent = 'Enter a complete HTTPS llms.txt URL.'
+        urlInput.focus()
+        return
+      }
+
+      controller?.abort()
+      controller = new AbortController()
+      checkUrl.disabled = true
+      checkUrl.textContent = 'Checking...'
+      urlStatus.textContent = 'Fetching the llms.txt file...'
+      hideResult()
+      try {
+        const response = await fetch('/api/tools/llms-txt', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url }),
+          signal: controller.signal,
+        })
+        const data: unknown = await response.json()
+        if (!response.ok) {
+          const error = data && typeof data === 'object' && !Array.isArray(data)
+            ? (data as { error?: unknown }).error
+            : undefined
+          throw new Error(typeof error === 'string' ? error : 'The llms.txt file could not be checked.')
+        }
+        if (!isLlmsTxtFetchResult(data)) {
+          throw new Error('The llms.txt service returned an invalid response.')
+        }
+        input.value = data.content
+        fileError = ''
+        urlStatus.textContent = data.source.finalUrl === data.source.requestedUrl
+          ? `Fetched ${data.source.finalUrl}`
+          : `Fetched ${data.source.finalUrl} after a redirect.`
+        render()
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        urlStatus.textContent = error instanceof Error
+          ? error.message
+          : 'The llms.txt file could not be checked.'
+      } finally {
+        checkUrl.disabled = false
+        checkUrl.textContent = 'Check URL'
+      }
+    })
+
+    input.addEventListener('input', () => {
+      fileError = ''
+      localStatus.textContent = 'Ready to check the pasted content.'
+      hideResult()
+    })
+
+    checkContent.addEventListener('click', () => {
+      if (!input.value.trim()) {
+        localStatus.textContent = 'Paste some llms.txt content first.'
+        input.focus()
+        return
+      }
+      fileError = ''
+      localStatus.textContent = 'Checked the pasted content in this browser tab.'
+      render()
+    })
+
+    openFile.addEventListener('click', () => {
+      fileInput.value = ''
+      fileInput.click()
+    })
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files?.[0]
+      if (!file) return
+      if (file.size > LLMS_TXT_VALIDATOR_LIMITS.maxBytes) {
+        input.value = ''
+        fileError = `The selected file is ${file.size.toLocaleString()} bytes. Keep it under ${LLMS_TXT_VALIDATOR_LIMITS.maxBytes.toLocaleString()} bytes.`
+        localStatus.textContent = `${file.name} was not opened.`
+        render()
+        return
+      }
+      try {
+        input.value = await file.text()
+        fileError = ''
+        localStatus.textContent = `Opened ${file.name}. The file stays in this browser tab.`
+      } catch {
+        input.value = ''
+        fileError = 'This browser could not read the selected file.'
+        localStatus.textContent = `${file.name} was not opened.`
+      }
+      render()
+    })
+
+    useExample.addEventListener('click', () => {
+      input.value = example
+      fileError = ''
+      localStatus.textContent = 'Loaded and checked a complete example.'
+      render()
+    })
+
+    clearInput.addEventListener('click', () => {
+      input.value = ''
+      fileInput.value = ''
+      fileError = ''
+      localStatus.textContent = 'Pasted text and local files stay in this browser tab.'
+      hideResult()
+      input.focus()
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-llms-txt-validator]')) {
+    initialiseValidator(root)
+  }
+</script>

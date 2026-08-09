@@ -26,6 +26,10 @@ const expectedPages = new Map([
     'tools/server-log-analyzer/index.html',
     'https://seoskill.dev/tools/server-log-analyzer',
   ],
+  [
+    'tools/sitemap-extractor/index.html',
+    'https://seoskill.dev/tools/sitemap-extractor',
+  ],
   ['docs/index.html', 'https://seoskill.dev/docs'],
   [
     'docs/getting-started/index.html',
@@ -792,6 +796,14 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
       ),
     ),
   )
+  assert.match(
+    headers,
+    new RegExp(
+      escapeRegExp(
+        '/tools/*.md\n  Link: <https://seoskill.dev/tools/:splat>; rel="canonical"',
+      ),
+    ),
+  )
   assert.doesNotMatch(headers, /X-Markdown-Tokens:/)
   assert.doesNotMatch(headers, /Generated agent markdown headers/)
 
@@ -808,7 +820,11 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
 
   for (const page of manifest.pages) {
     assert.ok(Number.isInteger(page.tokens) && page.tokens > 0)
-    if (page.markdownPath.startsWith('/docs/')) continue
+    if (
+      page.markdownPath.startsWith('/docs/') ||
+      page.markdownPath.startsWith('/tools/')
+    )
+      continue
     assert.ok(
       headerRules.includes(page.markdownPath),
       `Missing exact Markdown header rule for ${page.markdownPath}`,
@@ -947,6 +963,17 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
     /max-w-4xl/,
   )
   assert.match(css, /prefers-color-scheme: dark/)
+})
+
+test('text entry controls disable ambiguous font ligatures', () => {
+  const globals = readFileSync(
+    resolve(appRoot, 'src/styles/globals.css'),
+    'utf8',
+  )
+
+  assert.match(globals, /input,\s*\n\s*textarea\s*\{/)
+  assert.match(globals, /font-variant-ligatures:\s*none/)
+  assert.match(globals, /font-feature-settings:\s*"liga" 0, "clig" 0, "calt" 0/)
 })
 
 test('telemetry prose and stats keep a stable readable first render', () => {

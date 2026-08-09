@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { reportIds } from '../src/content/reports/manifest.mjs'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
+import { handleSitemapExtraction } from './tools/sitemap-extractor.ts'
 
 export const TELEMETRY_EVENTS = [
   'first_run',
@@ -495,6 +496,11 @@ app.all('/api/stats', (context) =>
 )
 app.all('/api/tools/llms-txt', (context) => handleLlmsTxtFetch(context.req.raw))
 app.all('/api/tools/sitemap', (context) => handleSitemapImport(context.req.raw))
+app.all('/api/tools/sitemap-extractor', (context) =>
+  handleSitemapExtraction(context.req.raw, fetch, (promise) =>
+    context.executionCtx.waitUntil(promise),
+  ),
+)
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))
 

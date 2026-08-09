@@ -17,7 +17,7 @@ const JSON_HEADERS = {
   'x-content-type-options': 'nosniff',
 }
 
-type SitemapFetcher = (
+export type SitemapFetcher = (
   input: RequestInfo | URL,
   init?: RequestInit,
 ) => Promise<Response>
@@ -113,7 +113,7 @@ async function readRequestJson(request: Request): Promise<unknown> {
   }
 }
 
-function isBrowserRequestFromSameSite(request: Request): boolean {
+export function isBrowserRequestFromSameSite(request: Request): boolean {
   const requestUrl = new URL(request.url)
   const origin = request.headers.get('origin')
   if (origin && origin !== requestUrl.origin) return false
@@ -134,7 +134,7 @@ function isBrowserRequestFromSameSite(request: Request): boolean {
   return true
 }
 
-function parseSitemapUrl(value: unknown): URL {
+export function parseSitemapUrl(value: unknown): URL {
   if (typeof value !== 'string' || value.length > 2_048) {
     throw new ToolInputError('Enter a complete HTTPS sitemap URL.')
   }

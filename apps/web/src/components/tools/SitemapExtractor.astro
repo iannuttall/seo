@@ -1,0 +1,660 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormSelect from '@/components/FormSelect.astro'
+---
+
+<section data-sitemap-extractor class="space-y-6">
+  <DottedCard patternId="sitemap-extractor-input">
+    <form data-extractor-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Enter a sitemap or domain</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Use an exact sitemap URL, or enter a domain and we will check robots.txt and common sitemap locations.
+        </p>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Sitemap URL or domain</span>
+        <input
+          data-sitemap-url
+          class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-sm font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="https://example.com/sitemap.xml"
+        />
+      </label>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p data-input-help class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          The server fetches sitemap files only and returns up to 50,000 unique URLs. It does not crawl the pages listed inside them.
+        </p>
+        <Button data-extract type="submit" class="min-h-12 shrink-0 px-5 text-xs">Extract URLs</Button>
+      </div>
+
+      <div data-progress class="hidden space-y-2" aria-live="polite">
+        <div class="flex items-baseline justify-between gap-4 font-sans text-xs font-light text-foreground-muted">
+          <span data-status>Starting extraction...</span>
+          <span data-progress-count class="shrink-0 font-mono">0 URLs</span>
+        </div>
+        <div class="h-1.5 overflow-hidden bg-border" aria-hidden="true">
+          <div data-progress-bar class="h-full w-0 bg-primary transition-[width]"></div>
+        </div>
+      </div>
+
+      <p data-error class="hidden font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="sitemap-extractor-results" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <div class="space-y-1">
+            <strong data-result-title class="font-mono text-2xl font-normal text-primary">URLs extracted</strong>
+            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+          </div>
+          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Unique URLs</dt>
+            <dd data-stat-urls class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Sitemaps</dt>
+            <dd data-stat-sitemaps class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Duplicates</dt>
+            <dd data-stat-duplicates class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Invalid URLs</dt>
+            <dd data-stat-invalid class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Large files</dt>
+            <dd data-stat-large class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Downloaded</dt>
+            <dd data-stat-bytes class="mt-1 font-mono text-lg">0 KB</dd>
+          </div>
+        </dl>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="download-heading">
+          <div class="space-y-1">
+            <h3 id="download-heading" class="font-mono text-sm font-normal">Copy or download URLs</h3>
+            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+              Actions use the active filters. CSV and JSON include sitemap metadata. TXT contains one URL per line.
+            </p>
+          </div>
+          <div class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <Button data-copy type="button" class="w-full px-3 py-2.5 text-xs">Copy URLs</Button>
+            <Button data-export="csv" type="button" class="w-full px-3 py-2.5 text-xs">Download CSV</Button>
+            <Button data-export="txt" type="button" class="w-full px-3 py-2.5 text-xs">Download TXT</Button>
+            <Button data-export="json" type="button" class="w-full px-3 py-2.5 text-xs">Download JSON</Button>
+          </div>
+          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+        </section>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="sitemap-extractor-details">
+      <div class="space-y-6 p-5 sm:p-6">
+        <section data-warning-section hidden class="border-b border-border pb-5" aria-labelledby="sitemap-warning-heading">
+          <h3 id="sitemap-warning-heading" class="font-mono text-sm font-normal">Check these sitemap files</h3>
+          <ul data-warning-list class="mt-3 space-y-3 font-sans text-xs font-light leading-5 text-foreground-muted"></ul>
+        </section>
+
+        <section aria-labelledby="sitemap-files-heading">
+          <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 id="sitemap-files-heading" class="font-mono text-sm font-normal">Sitemap files</h3>
+            <p class="font-sans text-xs font-light text-foreground-muted">Files over 10,000 URL entries are flagged</p>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[42rem] border-collapse text-left">
+              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+                <tr>
+                  <th class="pb-2 pr-4">Sitemap</th>
+                  <th class="pb-2 pr-4">Type</th>
+                  <th class="pb-2 pr-4 text-right">URLs</th>
+                  <th class="pb-2 text-right">Depth</th>
+                </tr>
+              </thead>
+              <tbody data-sitemap-rows class="divide-y divide-border font-sans text-xs"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="sitemap-extractor-url-list">
+      <div class="space-y-6 p-5 sm:p-6">
+        <section aria-labelledby="filter-heading">
+          <div class="space-y-1">
+            <h3 id="filter-heading" class="font-mono text-sm font-normal">Filter the URL list</h3>
+            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+              Copy and download actions use the active filters. Clear the fields to include every extracted URL.
+            </p>
+          </div>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <label class="space-y-2 font-sans text-xs font-medium">
+              <span>Search URLs</span>
+              <input
+                data-search
+                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                type="search"
+                placeholder="product, /blog/, ?page="
+              />
+            </label>
+            <label class="space-y-2 font-sans text-xs font-medium">
+              <span>Source sitemap</span>
+              <FormSelect data-source-filter>
+                <option value="">All sitemap files</option>
+              </FormSelect>
+            </label>
+            <label class="space-y-2 font-sans text-xs font-medium">
+              <span>URL must include</span>
+              <input
+                data-include
+                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                type="text"
+                placeholder="/products/"
+              />
+            </label>
+            <label class="space-y-2 font-sans text-xs font-medium">
+              <span>URL must exclude</span>
+              <input
+                data-exclude
+                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                type="text"
+                placeholder="?filter="
+              />
+            </label>
+          </div>
+        </section>
+
+        <section class="border-t border-border pt-5" aria-labelledby="url-preview-heading">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 id="url-preview-heading" class="font-mono text-sm font-normal">URL preview</h3>
+            <p data-filter-count class="font-sans text-xs font-light text-foreground-muted"></p>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[56rem] border-collapse text-left">
+              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+                <tr>
+                  <th class="pb-2 pr-4">URL</th>
+                  <th class="pb-2 pr-4">Last modified</th>
+                  <th class="pb-2 pr-4 text-right">Hreflang</th>
+                  <th class="pb-2 pr-4 text-right">Images</th>
+                  <th class="pb-2 text-right">Depth</th>
+                </tr>
+              </thead>
+              <tbody data-url-rows class="divide-y divide-border font-sans text-xs"></tbody>
+            </table>
+          </div>
+          <p data-empty-filter hidden class="mt-4 font-sans text-sm font-light text-foreground-muted">
+            No extracted URLs match these filters.
+          </p>
+          <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span data-page-status class="font-mono text-xs text-foreground-muted"></span>
+            <div class="flex gap-2">
+              <Button data-previous type="button" class="px-3 py-2 text-xs" disabled>Previous</Button>
+              <Button data-next type="button" class="px-3 py-2 text-xs" disabled>Next</Button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  type ExtractedUrl = {
+    url: string
+    sourceSitemap: string
+    depth: number
+    lastmod?: string
+    changefreq?: string
+    priority?: string
+    hreflang: string[]
+    hreflangCount: number
+    imageCount: number
+    videoCount: number
+    newsCount: number
+  }
+
+  type SitemapResult = {
+    url: string
+    depth: number
+    kind: 'urlset' | 'sitemapindex' | 'text'
+    urlEntries: number
+    childSitemaps: number
+    countCapped: boolean
+    overRecommendedSize: boolean
+  }
+
+  type WarningResult = {
+    code: string
+    severity: 'advice' | 'warning'
+    message: string
+    sitemapUrl?: string
+  }
+
+  type CompleteResult = {
+    dataStatus: 'complete' | 'partial'
+    urlsReturned: number
+    duplicateUrls: number
+    invalidUrls: number
+    sitemapsFetched: number
+    sitemapsFailed: number
+    largeSitemaps: number
+    downloadedBytes: number
+    expandedBytes: number
+    elapsedMilliseconds: number
+  }
+
+  type StreamEvent =
+    | ({ type: 'url' } & ExtractedUrl)
+    | ({ type: 'sitemap' } & SitemapResult)
+    | ({ type: 'warning' } & WarningResult)
+    | ({ type: 'complete' } & CompleteResult)
+    | { type: 'meta'; maximumUrls: number }
+    | { type: 'error'; message: string }
+
+  function initialiseSitemapExtractor(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing sitemap extractor control: ${selector}`)
+      return element
+    }
+
+    const form = required<HTMLFormElement>('[data-extractor-form]')
+    const sitemapUrl = required<HTMLInputElement>('[data-sitemap-url]')
+    const extractButton = required<HTMLButtonElement>('[data-extract]')
+    const progress = required<HTMLElement>('[data-progress]')
+    const status = required<HTMLElement>('[data-status]')
+    const progressCount = required<HTMLElement>('[data-progress-count]')
+    const progressBar = required<HTMLElement>('[data-progress-bar]')
+    const errorMessage = required<HTMLElement>('[data-error]')
+    const results = required<HTMLElement>('[data-results]')
+    const resultTitle = required<HTMLElement>('[data-result-title]')
+    const resultSummary = required<HTMLElement>('[data-result-summary]')
+    const coverage = required<HTMLElement>('[data-coverage]')
+    const statUrls = required<HTMLElement>('[data-stat-urls]')
+    const statSitemaps = required<HTMLElement>('[data-stat-sitemaps]')
+    const statDuplicates = required<HTMLElement>('[data-stat-duplicates]')
+    const statInvalid = required<HTMLElement>('[data-stat-invalid]')
+    const statLarge = required<HTMLElement>('[data-stat-large]')
+    const statBytes = required<HTMLElement>('[data-stat-bytes]')
+    const warningSection = required<HTMLElement>('[data-warning-section]')
+    const warningList = required<HTMLElement>('[data-warning-list]')
+    const sitemapRows = required<HTMLElement>('[data-sitemap-rows]')
+    const search = required<HTMLInputElement>('[data-search]')
+    const sourceFilter = required<HTMLSelectElement>('[data-source-filter]')
+    const include = required<HTMLInputElement>('[data-include]')
+    const exclude = required<HTMLInputElement>('[data-exclude]')
+    const filterCount = required<HTMLElement>('[data-filter-count]')
+    const urlRows = required<HTMLElement>('[data-url-rows]')
+    const emptyFilter = required<HTMLElement>('[data-empty-filter]')
+    const pageStatus = required<HTMLElement>('[data-page-status]')
+    const previous = required<HTMLButtonElement>('[data-previous]')
+    const next = required<HTMLButtonElement>('[data-next]')
+    const exportStatus = required<HTMLElement>('[data-export-status]')
+    const copy = required<HTMLButtonElement>('[data-copy]')
+    const exportButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-export]')]
+
+    const maximumUrls = 50_000
+    const pageSize = 100
+    let urls: ExtractedUrl[] = []
+    let filteredUrls: ExtractedUrl[] = []
+    let sitemaps: SitemapResult[] = []
+    let warnings: WarningResult[] = []
+    let page = 0
+    let controller: AbortController | undefined
+    let filterTimer: number | undefined
+
+    function number(value: number): string {
+      return value.toLocaleString()
+    }
+
+    function bytes(value: number): string {
+      if (value < 1_000) return `${value} B`
+      if (value < 1_000_000) return `${(value / 1_000).toFixed(1)} KB`
+      return `${(value / 1_000_000).toFixed(1)} MB`
+    }
+
+    function cell(value: string, className = ''): HTMLTableCellElement {
+      const element = document.createElement('td')
+      element.className = `py-3 pr-4 last:pr-0 ${className}`
+      element.textContent = value
+      return element
+    }
+
+    function renderSitemaps(): void {
+      sitemapRows.replaceChildren()
+      const ordered = [...sitemaps].sort((left, right) => left.depth - right.depth || left.url.localeCompare(right.url))
+      for (const sitemap of ordered) {
+        const row = document.createElement('tr')
+        const urlCell = cell(sitemap.url, 'max-w-xl break-all font-mono')
+        if (sitemap.overRecommendedSize) {
+          const note = document.createElement('span')
+          note.className = 'mt-1 block text-primary'
+          note.textContent = 'Consider splitting this file around 10,000 URLs.'
+          urlCell.append(note)
+        }
+        row.append(
+          urlCell,
+          cell(sitemap.kind === 'sitemapindex' ? 'Sitemap index' : sitemap.kind === 'text' ? 'Text sitemap' : 'XML sitemap'),
+          cell(sitemap.kind === 'sitemapindex' ? `${number(sitemap.childSitemaps)} child files` : `${sitemap.countCapped ? 'At least ' : ''}${number(sitemap.urlEntries)}`, 'text-right font-mono'),
+          cell(number(sitemap.depth), 'text-right font-mono'),
+        )
+        sitemapRows.append(row)
+      }
+    }
+
+    function renderWarnings(): void {
+      warningList.replaceChildren()
+      warningSection.hidden = warnings.length === 0
+      for (const warning of warnings) {
+        const item = document.createElement('li')
+        const label = document.createElement('strong')
+        label.className = warning.severity === 'advice' ? 'font-medium text-primary' : 'font-medium text-foreground'
+        label.textContent = warning.severity === 'advice' ? 'Sitemap size advice. ' : 'Partial result. '
+        item.append(label, document.createTextNode(warning.message))
+        warningList.append(item)
+      }
+    }
+
+    function renderUrls(): void {
+      const totalPages = Math.max(1, Math.ceil(filteredUrls.length / pageSize))
+      page = Math.min(page, totalPages - 1)
+      const start = page * pageSize
+      const shown = filteredUrls.slice(start, start + pageSize)
+      urlRows.replaceChildren()
+      for (const url of shown) {
+        const row = document.createElement('tr')
+        row.append(
+          cell(url.url, 'max-w-2xl break-all font-mono'),
+          cell(url.lastmod ?? ''),
+          cell(number(url.hreflangCount), 'text-right font-mono'),
+          cell(number(url.imageCount), 'text-right font-mono'),
+          cell(number(url.depth), 'text-right font-mono'),
+        )
+        urlRows.append(row)
+      }
+      emptyFilter.hidden = filteredUrls.length > 0
+      filterCount.textContent = `${number(filteredUrls.length)} of ${number(urls.length)} URLs match`
+      pageStatus.textContent = filteredUrls.length
+        ? `${number(start + 1)} to ${number(Math.min(start + pageSize, filteredUrls.length))} of ${number(filteredUrls.length)}`
+        : 'No matching URLs'
+      previous.disabled = page === 0
+      next.disabled = page >= totalPages - 1 || filteredUrls.length === 0
+      const disabled = filteredUrls.length === 0
+      exportButtons.forEach((button) => { button.disabled = disabled })
+      copy.disabled = disabled
+    }
+
+    function applyFilters(): void {
+      const query = search.value.trim().toLowerCase()
+      const requiredPart = include.value.trim().toLowerCase()
+      const excludedPart = exclude.value.trim().toLowerCase()
+      const source = sourceFilter.value
+      filteredUrls = urls.filter((entry) => {
+        const value = entry.url.toLowerCase()
+        return (!query || value.includes(query)) &&
+          (!requiredPart || value.includes(requiredPart)) &&
+          (!excludedPart || !value.includes(excludedPart)) &&
+          (!source || entry.sourceSitemap === source)
+      })
+      page = 0
+      renderUrls()
+    }
+
+    function queueFilters(): void {
+      window.clearTimeout(filterTimer)
+      filterTimer = window.setTimeout(applyFilters, 120)
+    }
+
+    function updateSourceFilter(): void {
+      const current = sourceFilter.value
+      sourceFilter.replaceChildren()
+      const all = document.createElement('option')
+      all.value = ''
+      all.textContent = 'All sitemap files'
+      sourceFilter.append(all)
+      for (const source of [...new Set(urls.map((entry) => entry.sourceSitemap))].sort()) {
+        const option = document.createElement('option')
+        option.value = source
+        option.textContent = source
+        sourceFilter.append(option)
+      }
+      sourceFilter.value = [...sourceFilter.options].some((option) => option.value === current) ? current : ''
+    }
+
+    function renderComplete(summary: CompleteResult): void {
+      const complete = summary.dataStatus === 'complete'
+      resultTitle.textContent = `${number(summary.urlsReturned)} unique URLs extracted`
+      resultSummary.textContent = complete
+        ? `Read ${number(summary.sitemapsFetched)} sitemap files in ${(summary.elapsedMilliseconds / 1_000).toFixed(1)} seconds.`
+        : `Read ${number(summary.sitemapsFetched)} sitemap files. Check the warnings before treating the list as complete.`
+      coverage.textContent = complete ? 'Complete extraction' : 'Partial extraction'
+      statUrls.textContent = number(summary.urlsReturned)
+      statSitemaps.textContent = number(summary.sitemapsFetched)
+      statDuplicates.textContent = number(summary.duplicateUrls)
+      statInvalid.textContent = number(summary.invalidUrls)
+      statLarge.textContent = number(summary.largeSitemaps)
+      statBytes.textContent = bytes(summary.downloadedBytes)
+      renderWarnings()
+      renderSitemaps()
+      updateSourceFilter()
+      applyFilters()
+      results.hidden = false
+      progressBar.style.width = '100%'
+      status.textContent = complete ? 'Extraction finished.' : 'Extraction finished with partial results.'
+      exportStatus.textContent = urls.length ? 'Choose a format to download the active URL list.' : ''
+      window.requestAnimationFrame(() => results.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+    }
+
+    function reset(): void {
+      urls = []
+      filteredUrls = []
+      sitemaps = []
+      warnings = []
+      page = 0
+      results.hidden = true
+      errorMessage.hidden = true
+      errorMessage.textContent = ''
+      warningList.replaceChildren()
+      sitemapRows.replaceChildren()
+      urlRows.replaceChildren()
+      progress.classList.remove('hidden')
+      progressBar.style.width = '0%'
+      progressCount.textContent = '0 URLs'
+      status.textContent = 'Looking for sitemap files...'
+      exportStatus.textContent = ''
+    }
+
+    async function handleEvent(event: StreamEvent, selectedMaximum: number): Promise<void> {
+      if (event.type === 'url') {
+        const { type: _type, ...entry } = event
+        urls.push(entry)
+        if (urls.length === 1 || urls.length % 100 === 0) {
+          progressCount.textContent = `${number(urls.length)} URLs`
+          progressBar.style.width = `${Math.min(98, (urls.length / selectedMaximum) * 100)}%`
+          status.textContent = `Extracting URLs from ${number(Math.max(1, sitemaps.length + 1))} sitemap files...`
+        }
+      } else if (event.type === 'sitemap') {
+        const { type: _type, ...sitemap } = event
+        sitemaps.push(sitemap)
+        status.textContent = `Read ${number(sitemaps.length)} sitemap files and found ${number(urls.length)} unique URLs.`
+      } else if (event.type === 'warning') {
+        const { type: _type, ...warning } = event
+        warnings.push(warning)
+      } else if (event.type === 'complete') {
+        renderComplete(event)
+      } else if (event.type === 'error') {
+        throw new Error(event.message)
+      }
+    }
+
+    async function extract(): Promise<void> {
+      const value = sitemapUrl.value.trim()
+      if (!value) {
+        errorMessage.textContent = 'Enter a sitemap URL or domain.'
+        errorMessage.hidden = false
+        sitemapUrl.focus()
+        return
+      }
+      controller?.abort()
+      controller = new AbortController()
+      reset()
+      extractButton.disabled = true
+      extractButton.textContent = 'Extracting...'
+
+      try {
+        const response = await fetch('/api/tools/sitemap-extractor', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url: value, maxUrls: maximumUrls }),
+          signal: controller.signal,
+        })
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({})) as { error?: unknown }
+          throw new Error(typeof body.error === 'string' ? body.error : 'The sitemap request failed.')
+        }
+        if (!response.body) throw new Error('The sitemap response was empty.')
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let remainder = ''
+        while (true) {
+          const chunk = await reader.read()
+          if (chunk.done) break
+          const lines = `${remainder}${decoder.decode(chunk.value, { stream: true })}`.split('\n')
+          remainder = lines.pop() ?? ''
+          for (const line of lines) {
+            if (line.trim()) await handleEvent(JSON.parse(line) as StreamEvent, maximumUrls)
+          }
+        }
+        remainder += decoder.decode()
+        if (remainder.trim()) await handleEvent(JSON.parse(remainder) as StreamEvent, maximumUrls)
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        errorMessage.textContent = error instanceof Error ? error.message : 'The sitemap could not be extracted.'
+        errorMessage.hidden = false
+        status.textContent = 'Extraction stopped.'
+        progressBar.style.width = '0%'
+      } finally {
+        extractButton.disabled = false
+        extractButton.textContent = 'Extract URLs'
+      }
+    }
+
+    function csvCell(value: string | number | undefined): string {
+      const text = value === undefined ? '' : String(value)
+      return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+    }
+
+    function filename(extension: string): string {
+      let host = 'sitemap'
+      try {
+        const value = sitemapUrl.value.includes('://') ? sitemapUrl.value : `https://${sitemapUrl.value}`
+        host = new URL(value).hostname.replace(/^www\./u, '').replace(/[^a-z0-9]+/giu, '-') || 'sitemap'
+      } catch {
+        // Keep the generic filename when the input is not a complete URL.
+      }
+      return `${host}-sitemap-urls.${extension}`
+    }
+
+    function download(content: string, extension: 'csv' | 'txt' | 'json', type: string): void {
+      const blob = new Blob([content], { type })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename(extension)
+      link.hidden = true
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 0)
+      exportStatus.textContent = `Downloaded ${filename(extension)} with ${number(filteredUrls.length)} URLs.`
+    }
+
+    function exportRows(format: string): void {
+      if (!filteredUrls.length) return
+      if (format === 'txt') {
+        download(`${filteredUrls.map((entry) => entry.url).join('\n')}\n`, 'txt', 'text/plain;charset=utf-8')
+        return
+      }
+      if (format === 'json') {
+        download(`${JSON.stringify(filteredUrls, null, 2)}\n`, 'json', 'application/json;charset=utf-8')
+        return
+      }
+      const header = ['url', 'source_sitemap', 'depth', 'lastmod', 'changefreq', 'priority', 'hreflang', 'hreflang_count', 'image_count', 'video_count', 'news_count']
+      const rows = filteredUrls.map((entry) => [
+        entry.url,
+        entry.sourceSitemap,
+        entry.depth,
+        entry.lastmod,
+        entry.changefreq,
+        entry.priority,
+        entry.hreflang.join('|'),
+        entry.hreflangCount,
+        entry.imageCount,
+        entry.videoCount,
+        entry.newsCount,
+      ].map(csvCell).join(','))
+      download(`${header.join(',')}\n${rows.join('\n')}\n`, 'csv', 'text/csv;charset=utf-8')
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      void extract()
+    })
+    for (const input of [search, include, exclude]) input.addEventListener('input', queueFilters)
+    sourceFilter.addEventListener('change', applyFilters)
+    previous.addEventListener('click', () => {
+      if (page > 0) {
+        page -= 1
+        renderUrls()
+      }
+    })
+    next.addEventListener('click', () => {
+      if ((page + 1) * pageSize < filteredUrls.length) {
+        page += 1
+        renderUrls()
+      }
+    })
+    exportButtons.forEach((button) => {
+      button.addEventListener('click', () => exportRows(button.dataset.export ?? 'csv'))
+    })
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(filteredUrls.map((entry) => entry.url).join('\n'))
+        exportStatus.textContent = `Copied ${number(filteredUrls.length)} URLs.`
+      } catch {
+        exportStatus.textContent = 'The browser could not copy the URLs. Download a TXT file instead.'
+      }
+    })
+  }
+
+  function initialiseAllSitemapExtractors(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-sitemap-extractor]')) {
+      initialiseSitemapExtractor(root)
+    }
+  }
+
+  initialiseAllSitemapExtractors()
+  document.addEventListener('astro:page-load', initialiseAllSitemapExtractors)
+</script>

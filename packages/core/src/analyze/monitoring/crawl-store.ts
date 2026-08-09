@@ -1,4 +1,5 @@
 import { getDb } from '../../storage/database.js'
+import { deduplicateCrawlPageSnapshots } from './crawl-pages.js'
 import type {
   CrawlDiffRecommendation,
   CrawlPageRow,
@@ -89,6 +90,7 @@ export function insertCrawlRun(
   recommendations: Array<CrawlDiffRecommendation & { url: string }> = [],
 ): void {
   const db = getDb()
+  const uniquePages = deduplicateCrawlPageSnapshots(pages)
   db.prepare(
     `INSERT INTO crawl_runs
     (id, site_url, start_url, created_at, limit_count, url_count)
@@ -99,7 +101,7 @@ export function insertCrawlRun(
     run.startUrl,
     Date.parse(run.createdAt),
     run.limit,
-    pages.length,
+    uniquePages.length,
   )
 
   const insertPage = db.prepare(
@@ -117,7 +119,7 @@ export function insertCrawlRun(
   const createdAt = Date.parse(run.createdAt)
 
   const transaction = db.transaction(() => {
-    for (const page of pages) {
+    for (const page of uniquePages) {
       insertPage.run(
         run.id,
         page.url,

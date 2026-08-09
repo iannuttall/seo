@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { crawlOne } from './crawl-page.js'
+import { deduplicateCrawlPageSnapshots } from './crawl-pages.js'
 import {
   attachCrawlRecommendations,
   topCrawlRecommendations,
@@ -89,13 +90,15 @@ export async function crawlDiff(input: {
     }
   }
 
+  const uniquePages = deduplicateCrawlPageSnapshots(pages)
+
   const run: CrawlRun = {
     id: randomUUID(),
     site,
     startUrl,
     createdAt: new Date().toISOString(),
     limit,
-    urlCount: pages.length,
+    urlCount: uniquePages.length,
   }
   const previousRun = getPreviousRun({ site, startUrl, currentRunId: run.id })
   const previousPages = previousRun
@@ -103,17 +106,17 @@ export async function crawlDiff(input: {
     : []
   const items = previousRun
     ? attachCrawlRecommendations(
-        compareCrawlPages({ current: pages, previous: previousPages }),
+        compareCrawlPages({ current: uniquePages, previous: previousPages }),
       )
     : []
   const recommendations = topCrawlRecommendations(items)
-  insertCrawlRun(run, pages, recommendations)
+  insertCrawlRun(run, uniquePages, recommendations)
 
   return {
     run,
     previousRun,
     summary: {
-      crawled: pages.length,
+      crawled: uniquePages.length,
       added: items.filter((item) => item.kind === 'added').length,
       removed: items.filter((item) => item.kind === 'removed').length,
       changed: items.filter((item) => item.kind === 'changed').length,

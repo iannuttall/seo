@@ -171,6 +171,33 @@ test('crawl store preserves rich page snapshots', () => {
   assert.match(saved?.warnings?.[0] ?? '', /Readability/)
 })
 
+test('crawl store deduplicates redirect aliases by final URL', () => {
+  const site = `sc-domain:redirect-${randomUUID()}.example`
+  const startUrl = `https://${site.slice('sc-domain:'.length)}/`
+  const finalUrl = `${startUrl}destination`
+  const runId = `run-${randomUUID()}`
+
+  insertCrawlRun(
+    {
+      id: runId,
+      site,
+      startUrl,
+      createdAt: new Date().toISOString(),
+      limit: 3,
+      urlCount: 2,
+    },
+    [page({ url: finalUrl, finalUrl }), page({ url: finalUrl, finalUrl })],
+  )
+
+  const saved = getRunPages(runId)
+  assert.equal(saved.size, 1)
+  assert.ok(saved.has(finalUrl))
+  const storedRun = getDb()
+    .prepare('SELECT url_count FROM crawl_runs WHERE id = ?')
+    .get(runId) as { url_count: number }
+  assert.equal(storedRun.url_count, 1)
+})
+
 test('crawl monitoring retains only the recent runs it can use', () => {
   const site = `sc-domain:retention-${randomUUID()}.example`
   const startUrl = `https://${site.slice('sc-domain:'.length)}/`

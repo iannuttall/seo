@@ -48,8 +48,8 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <p>
         The extractor reads XML sitemaps, sitemap indexes, gzip files, and text
         sitemaps. When you enter a domain, it checks robots.txt first and then
-        common sitemap locations. Child sitemap files are followed up to the
-        visible processing limits.
+        common sitemap locations. It follows linked child sitemaps and shows any
+        files it could not read.
       </p>
       <p>
         CSV and JSON downloads retain each URL's source sitemap, nesting depth,
@@ -101,13 +101,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 seo start
 seo crawl --sitemap-url https://example.com/sitemap.xml --health</code></pre>
 
-      <h2>How the submitted URL is handled</h2>
-      <p>
-        The sitemap URL is sent to the site's Cloudflare Worker, which fetches
-        and processes the sitemap during the request. The extractor does not
-        create an account or save the URL list to a product database. The target
-        server can see the sitemap request in its normal server logs.
-      </p>
     </div>
   </main>
 </BaseLayout>

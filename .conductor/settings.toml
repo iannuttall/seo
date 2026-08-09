@@ -3,6 +3,7 @@
 [scripts]
 setup = """
 pnpm install --frozen-lockfile
+pnpm hooks:install
 pnpm build
 """
 archive = "true"
@@ -10,6 +11,6 @@ run_mode = "concurrent"
 
 [scripts.run.web]
 available_in = [ "local" ]
-command = "pnpm --filter @seo/web preview:cloudflare -- --ip 127.0.0.1 --port \"$CONDUCTOR_PORT\" --show-interactive-dev-session false"
+command = "pnpm --filter @seo/web preview:cloudflare --ip 127.0.0.1 --port \"$CONDUCTOR_PORT\" --show-interactive-dev-session false"
 default = true
 icon = "globe"

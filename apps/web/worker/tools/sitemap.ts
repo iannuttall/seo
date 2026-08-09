@@ -1,3 +1,5 @@
+import { defaultToolUrlToHttps } from '../../src/lib/tool-url.ts'
+
 export const SITEMAP_TOOL_LIMITS = Object.freeze({
   bodyBytes: 4_096,
   sitemapBytes: 1_048_576,
@@ -538,7 +540,10 @@ export async function handleSitemapImport(
     if (fields.length !== 1 || fields[0] !== 'url') {
       throw new ToolInputError('Send only the sitemap URL.')
     }
-    const sitemapUrl = parseSitemapUrl((body as { url?: unknown }).url)
+    const inputUrl = (body as { url?: unknown }).url
+    const sitemapUrl = parseSitemapUrl(
+      typeof inputUrl === 'string' ? defaultToolUrlToHttps(inputUrl) : inputUrl,
+    )
     return jsonResponse(await importSitemap(sitemapUrl, fetcher))
   } catch (error) {
     if (error instanceof ToolInputError) {

@@ -1,3 +1,4 @@
+import { safePublicFetchMessage } from './public-fetch-errors.ts'
 import { parseSitemapUrl, type SitemapFetcher } from './sitemap.ts'
 
 export const SITEMAP_EXTRACTOR_LIMITS = Object.freeze({
@@ -83,9 +84,7 @@ export async function fetchPublicResponse(
       if (controller.signal.aborted) {
         throw new ExtractorFetchError('The request timed out.')
       }
-      throw new ExtractorFetchError(
-        `The request failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      throw new ExtractorFetchError(safePublicFetchMessage(error, 'sitemap'))
     } finally {
       clearTimeout(timeout)
     }

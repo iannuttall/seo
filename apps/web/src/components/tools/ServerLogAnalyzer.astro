@@ -376,7 +376,7 @@ import FormSelect from '@/components/FormSelect.astro'
       next.addEventListener('error', () => {
         analyze.disabled = false
         analyze.textContent = 'Analyze log'
-        status.textContent = 'The browser worker stopped before the log was analyzed.'
+        status.textContent = 'The log could not be analyzed.'
         progressTrack.classList.add('hidden')
       })
       return next

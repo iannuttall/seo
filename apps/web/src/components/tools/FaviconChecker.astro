@@ -1,0 +1,594 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+---
+
+<section data-favicon-checker class="space-y-6">
+  <DottedCard patternId="favicon-checker-input">
+    <form data-checker-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Enter a website</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          The checker reads the hostname's home page, declared icons, one web app manifest, and the usual /favicon.ico fallback.
+        </p>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Website URL or domain</span>
+        <FormInput
+          data-website-url
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="https://example.com"
+        />
+      </label>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          A path is reduced to the hostname's home page because Google uses one favicon per hostname.
+        </p>
+        <Button data-check type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check favicons</Button>
+      </div>
+
+      <p data-error class="hidden font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="favicon-checker-summary" inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <div class="space-y-1">
+            <strong data-result-title class="font-mono text-2xl font-normal text-primary">Favicons checked</strong>
+            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+          </div>
+          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+        </div>
+
+        <div class="grid gap-2 border-t border-panel-foreground/30 pt-5 sm:grid-cols-2">
+          <Button data-copy type="button" class="w-full px-3 py-2.5 text-xs">Copy findings</Button>
+          <Button data-download type="button" class="w-full px-3 py-2.5 text-xs">Download JSON</Button>
+        </div>
+        <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Icons checked</dt>
+            <dd data-stat-icons class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Fetched images</dt>
+            <dd data-stat-fetched class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Downloaded</dt>
+            <dd data-stat-bytes class="mt-1 font-mono text-lg">0 KB</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Requests</dt>
+            <dd data-stat-requests class="mt-1 font-mono text-lg">0</dd>
+          </div>
+        </dl>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="favicon-checker-coverage">
+      <div class="space-y-6 p-5 sm:p-6">
+        <section aria-labelledby="favicon-coverage-heading">
+          <div class="space-y-1">
+            <h3 id="favicon-coverage-heading" class="font-mono text-sm font-normal">Coverage by surface</h3>
+            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+              Each row answers a different question. A browser fallback does not replace a home page declaration for Google Search.
+            </p>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[40rem] border-collapse text-left">
+              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+                <tr>
+                  <th class="pb-2 pr-4">Surface</th>
+                  <th class="pb-2 pr-4">Finding</th>
+                  <th class="pb-2">Evidence</th>
+                </tr>
+              </thead>
+              <tbody data-coverage-rows class="divide-y divide-border font-sans text-xs"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section data-actions-section class="border-t border-border pt-5" aria-labelledby="favicon-actions-heading">
+          <h3 id="favicon-actions-heading" class="font-mono text-sm font-normal">What to check next</h3>
+          <ul data-actions class="mt-3 space-y-2 font-sans text-sm font-light leading-6 text-foreground-muted"></ul>
+        </section>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="favicon-checker-icons">
+      <div class="space-y-6 p-5 sm:p-6">
+        <section aria-labelledby="favicon-files-heading">
+          <div class="space-y-1">
+            <h3 id="favicon-files-heading" class="font-mono text-sm font-normal">Icon evidence</h3>
+            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+              Declared values and detected file details stay separate so a wrong size or type hint remains visible.
+            </p>
+          </div>
+          <div class="mt-4 hidden overflow-x-auto sm:block">
+            <table class="w-full min-w-[48rem] border-collapse text-left">
+              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+                <tr>
+                  <th class="pb-2 pr-4">Preview</th>
+                  <th class="pb-2 pr-4">Icon and declaration</th>
+                  <th class="pb-2 pr-4">Response</th>
+                  <th class="pb-2">Detected image</th>
+                </tr>
+              </thead>
+              <tbody data-icon-rows class="divide-y divide-border font-sans text-xs"></tbody>
+            </table>
+          </div>
+          <div data-icon-cards class="mt-4 divide-y divide-border border-y border-border sm:hidden"></div>
+        </section>
+
+        <section data-warning-section hidden class="border-t border-border pt-5" aria-labelledby="favicon-warnings-heading">
+          <h3 id="favicon-warnings-heading" class="font-mono text-sm font-normal">Files to review</h3>
+          <ul data-warnings class="mt-3 space-y-2 font-sans text-sm font-light leading-6 text-foreground-muted"></ul>
+        </section>
+
+        <section class="border-t border-border pt-5" aria-labelledby="favicon-limits-heading">
+          <h3 id="favicon-limits-heading" class="font-mono text-sm font-normal">What this check cannot prove</h3>
+          <ul data-limitations class="mt-3 space-y-2 font-sans text-sm font-light leading-6 text-foreground-muted"></ul>
+        </section>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
+
+  type Coverage = {
+    state: 'found' | 'issues-found' | 'not-found' | 'needs-review'
+    evidence: string[]
+  }
+
+  type Icon = {
+    url: string
+    finalUrl?: string
+    sources: Array<'html' | 'manifest' | 'fallback'>
+    declarations: Array<{
+      source: 'html' | 'manifest' | 'fallback'
+      rel?: string
+      sizes?: string
+      type?: string
+      purpose?: string
+      media?: string
+    }>
+    fetch: {
+      status: 'ok' | 'http-error' | 'network-error' | 'too-large' | 'not-fetched'
+      httpStatus?: number
+      contentType?: string
+      bytes?: number
+      message?: string
+    }
+    image?: {
+      format: string
+      width?: number
+      height?: number
+      square?: boolean
+      scalable?: boolean
+      embeddedSizes?: string[]
+    }
+    preview?: {
+      dataUrl: string
+      contentType: string
+      bytes: number
+    }
+  }
+
+  type Result = {
+    schema: 1
+    source: {
+      requestedUrl: string
+      homepageUrl: string
+      finalHomepageUrl: string
+      dataStatus: 'complete' | 'partial'
+      downloadedBytes: number
+      subrequests: number
+    }
+    page: {
+      manifestStatus: 'not-declared' | 'fetched' | 'failed' | 'too-large'
+    }
+    icons: Icon[]
+    coverage: {
+      googleSearch: Coverage
+      browsers: Coverage
+      ios: Coverage
+      pwa: Coverage
+    }
+    actions: string[]
+    warnings: string[]
+    limitations: string[]
+  }
+
+  function initialiseFaviconChecker(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing favicon checker control: ${selector}`)
+      return element
+    }
+
+    const form = required<HTMLFormElement>('[data-checker-form]')
+    const websiteUrl = required<HTMLInputElement>('[data-website-url]')
+    const checkButton = required<HTMLButtonElement>('[data-check]')
+    const errorMessage = required<HTMLElement>('[data-error]')
+    const results = required<HTMLElement>('[data-results]')
+    const resultTitle = required<HTMLElement>('[data-result-title]')
+    const resultSummary = required<HTMLElement>('[data-result-summary]')
+    const coverageLabel = required<HTMLElement>('[data-coverage]')
+    const copyButton = required<HTMLButtonElement>('[data-copy]')
+    const downloadButton = required<HTMLButtonElement>('[data-download]')
+    const actionStatus = required<HTMLElement>('[data-action-status]')
+    const statIcons = required<HTMLElement>('[data-stat-icons]')
+    const statFetched = required<HTMLElement>('[data-stat-fetched]')
+    const statBytes = required<HTMLElement>('[data-stat-bytes]')
+    const statRequests = required<HTMLElement>('[data-stat-requests]')
+    const coverageRows = required<HTMLElement>('[data-coverage-rows]')
+    const actionsSection = required<HTMLElement>('[data-actions-section]')
+    const actions = required<HTMLElement>('[data-actions]')
+    const iconRows = required<HTMLElement>('[data-icon-rows]')
+    const iconCards = required<HTMLElement>('[data-icon-cards]')
+    const warningSection = required<HTMLElement>('[data-warning-section]')
+    const warnings = required<HTMLElement>('[data-warnings]')
+    const limitations = required<HTMLElement>('[data-limitations]')
+    let currentResult: Result | undefined
+
+    function number(value: number): string {
+      return value.toLocaleString()
+    }
+
+    function bytes(value: number): string {
+      if (value < 1_000) return `${value} B`
+      if (value < 1_000_000) return `${(value / 1_000).toFixed(1)} KB`
+      return `${(value / 1_000_000).toFixed(1)} MB`
+    }
+
+    function cell(className = ''): HTMLTableCellElement {
+      const element = document.createElement('td')
+      element.className = `py-3 pr-4 align-top last:pr-0 ${className}`
+      return element
+    }
+
+    function list(items: string[], target: HTMLElement): void {
+      target.replaceChildren()
+      for (const value of items) {
+        const item = document.createElement('li')
+        item.textContent = value
+        target.append(item)
+      }
+    }
+
+    function findingLabel(surface: string, coverage: Coverage): string {
+      if (surface === 'Google Search' && coverage.state === 'found') return 'Checked rules passed'
+      if (coverage.state === 'found') return 'Found'
+      if (coverage.state === 'not-found') return 'Not found'
+      if (coverage.state === 'issues-found') return 'Issues found'
+      return 'Needs review'
+    }
+
+    function renderCoverage(result: Result): void {
+      coverageRows.replaceChildren()
+      const entries: Array<[string, Coverage]> = [
+        ['Google Search', result.coverage.googleSearch],
+        ['Browser tabs and bookmarks', result.coverage.browsers],
+        ['iOS home screen', result.coverage.ios],
+        ['Installed web app', result.coverage.pwa],
+      ]
+      for (const [surface, coverage] of entries) {
+        const row = document.createElement('tr')
+        const surfaceCell = cell('font-medium')
+        surfaceCell.textContent = surface
+        const findingCell = cell('font-mono')
+        findingCell.textContent = findingLabel(surface, coverage)
+        findingCell.classList.add(coverage.state === 'found' ? 'text-primary' : 'text-foreground')
+        const evidenceCell = cell('max-w-xl font-light leading-5 text-foreground-muted')
+        evidenceCell.textContent = coverage.evidence.join(' ')
+        row.append(surfaceCell, findingCell, evidenceCell)
+        coverageRows.append(row)
+      }
+    }
+
+    function declared(icon: Icon): string {
+      const values = icon.declarations.map((declaration) => {
+        const attributes = [
+          declaration.rel ? `rel=${declaration.rel}` : '',
+          declaration.sizes ? `sizes=${declaration.sizes}` : '',
+          declaration.type ? `type=${declaration.type}` : '',
+          declaration.purpose ? `purpose=${declaration.purpose}` : '',
+          declaration.media ? `media=${declaration.media}` : '',
+        ].filter(Boolean)
+        return attributes.join(', ') || 'No size or type hints'
+      })
+      return [...new Set(values)].join(' | ')
+    }
+
+    function detected(icon: Icon): string {
+      if (!icon.image || icon.image.format === 'unknown') return 'Unknown format'
+      const dimensions = icon.image.width && icon.image.height
+        ? `${number(icon.image.width)} x ${number(icon.image.height)}`
+        : icon.image.scalable
+          ? 'Scalable, size not detected'
+          : 'Size not detected'
+      const embedded = icon.image.embeddedSizes?.length
+        ? ` (${icon.image.embeddedSizes.join(', ')})`
+        : ''
+      const shape = icon.image.square === true
+        ? ', square'
+        : icon.image.square === false
+          ? ', not square'
+          : ''
+      return `${icon.image.format.toUpperCase()}, ${dimensions}${shape}${embedded}`
+    }
+
+    function preview(icon: Icon): HTMLElement {
+      const frame = document.createElement('div')
+      frame.className = 'flex size-14 items-center justify-center overflow-hidden border border-border p-1'
+      if (icon.preview) {
+        const usesDarkBackground = icon.declarations.some((declaration) =>
+          declaration.media?.toLowerCase().includes('prefers-color-scheme: dark'),
+        )
+        frame.style.backgroundColor = usesDarkBackground ? '#1c1c1c' : '#fff'
+        frame.title = usesDarkBackground
+          ? 'Preview on a dark background'
+          : 'Preview on a light background'
+        const image = document.createElement('img')
+        image.src = icon.preview.dataUrl
+        image.alt = ''
+        image.className = 'size-12 object-contain'
+        image.loading = 'lazy'
+        image.decoding = 'async'
+        frame.append(image)
+      } else {
+        frame.classList.add('bg-background')
+        const unavailable = document.createElement('span')
+        unavailable.className = 'bg-background px-1 py-0.5 text-center font-mono text-[0.625rem] leading-3 text-foreground-muted'
+        unavailable.textContent = 'No preview'
+        frame.append(unavailable)
+      }
+      return frame
+    }
+
+    function iconDetails(icon: Icon): HTMLElement {
+      const details = document.createElement('div')
+      details.className = 'min-w-0 break-all font-mono'
+      const link = document.createElement('a')
+      link.href = icon.finalUrl ?? icon.url
+      link.target = '_blank'
+      link.rel = 'noreferrer'
+      link.className = 'cursor-pointer underline decoration-border underline-offset-4 hover:decoration-foreground'
+      link.textContent = icon.url
+      details.append(link)
+      if (icon.finalUrl && icon.finalUrl !== icon.url) {
+        const finalUrl = document.createElement('span')
+        finalUrl.className = 'mt-1 block font-sans font-light leading-5 text-foreground-muted'
+        finalUrl.textContent = `Fetched from ${icon.finalUrl}`
+        details.append(finalUrl)
+      }
+      const source = document.createElement('span')
+      source.className = 'mt-1 block font-sans font-light leading-5 text-foreground-muted'
+      source.textContent = icon.sources.map((value) => value === 'html' ? 'Home page' : value === 'manifest' ? 'Manifest' : '/favicon.ico fallback').join(', ')
+      const declaration = document.createElement('span')
+      declaration.className = 'mt-1 block text-foreground-muted'
+      declaration.textContent = declared(icon)
+      details.append(source, declaration)
+      return details
+    }
+
+    function fetchResult(icon: Icon): string {
+      if (icon.fetch.status === 'ok') {
+        return `${icon.fetch.httpStatus ?? 200}, ${icon.fetch.contentType || 'type missing'}, ${bytes(icon.fetch.bytes ?? 0)}`
+      }
+      return icon.fetch.httpStatus
+        ? `HTTP ${icon.fetch.httpStatus}`
+        : icon.fetch.message ?? 'Not fetched'
+    }
+
+    function renderIcons(result: Result): void {
+      iconRows.replaceChildren()
+      iconCards.replaceChildren()
+      const sourcePriority = (icon: Icon): number => icon.sources.includes('html')
+        ? 0
+        : icon.sources.includes('manifest')
+          ? 1
+          : 2
+      const orderedIcons = [...result.icons].sort(
+        (left, right) => sourcePriority(left) - sourcePriority(right),
+      )
+      for (const icon of orderedIcons) {
+        const row = document.createElement('tr')
+        const previewCell = cell()
+        previewCell.append(preview(icon))
+
+        const urlCell = cell('max-w-md break-all font-mono')
+        urlCell.append(iconDetails(icon))
+
+        const fetchCell = cell()
+        fetchCell.textContent = fetchResult(icon)
+
+        const imageCell = cell('font-mono')
+        imageCell.textContent = detected(icon)
+        row.append(previewCell, urlCell, fetchCell, imageCell)
+        iconRows.append(row)
+
+        const card = document.createElement('article')
+        card.className = 'grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3 py-4 font-sans text-xs'
+        card.append(preview(icon), iconDetails(icon))
+        const metadata = document.createElement('dl')
+        metadata.className = 'col-span-2 grid grid-cols-2 gap-3 border-t border-border pt-3'
+        const responseGroup = document.createElement('div')
+        const responseLabel = document.createElement('dt')
+        responseLabel.className = 'font-medium text-foreground-muted'
+        responseLabel.textContent = 'Response'
+        const responseValue = document.createElement('dd')
+        responseValue.className = 'mt-1 break-words font-mono'
+        responseValue.textContent = fetchResult(icon)
+        responseGroup.append(responseLabel, responseValue)
+        const imageGroup = document.createElement('div')
+        const imageLabel = document.createElement('dt')
+        imageLabel.className = 'font-medium text-foreground-muted'
+        imageLabel.textContent = 'Detected image'
+        const imageValue = document.createElement('dd')
+        imageValue.className = 'mt-1 break-words font-mono'
+        imageValue.textContent = detected(icon)
+        imageGroup.append(imageLabel, imageValue)
+        metadata.append(responseGroup, imageGroup)
+        card.append(metadata)
+        iconCards.append(card)
+      }
+    }
+
+    function render(result: Result): void {
+      currentResult = result
+      const fetchedImages = result.icons.filter((icon) => icon.fetch.status === 'ok' && icon.image?.format !== 'unknown').length
+      resultTitle.textContent = `${number(result.icons.length)} icon URL${result.icons.length === 1 ? '' : 's'} checked`
+      resultSummary.textContent = result.source.dataStatus === 'complete'
+        ? `Read the home page and fetched ${number(fetchedImages)} recognised image files.`
+        : `Some files could not be checked. Use the warnings before treating this as complete coverage.`
+      coverageLabel.textContent = result.source.dataStatus === 'complete' ? 'Complete check' : 'Partial check'
+      statIcons.textContent = number(result.icons.length)
+      statFetched.textContent = number(fetchedImages)
+      statBytes.textContent = bytes(result.source.downloadedBytes)
+      statRequests.textContent = number(result.source.subrequests)
+      renderCoverage(result)
+      renderIcons(result)
+      list(result.actions, actions)
+      actionsSection.hidden = result.actions.length === 0
+      list(result.warnings, warnings)
+      warningSection.hidden = result.warnings.length === 0
+      list(result.limitations, limitations)
+      actionStatus.textContent = 'Copy the findings or download the structured evidence.'
+      results.hidden = false
+      window.requestAnimationFrame(() => results.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+    }
+
+    function reportText(result: Result): string {
+      const lines = [
+        `Favicon check for ${result.source.finalHomepageUrl}`,
+        `Data status: ${result.source.dataStatus}`,
+        '',
+        'Coverage',
+      ]
+      const entries: Array<[string, Coverage]> = [
+        ['Google Search', result.coverage.googleSearch],
+        ['Browsers', result.coverage.browsers],
+        ['iOS', result.coverage.ios],
+        ['Installed web app', result.coverage.pwa],
+      ]
+      for (const [surface, coverage] of entries) {
+        lines.push(`${surface}: ${findingLabel(surface, coverage)}`)
+        for (const evidence of coverage.evidence) lines.push(`  ${evidence}`)
+      }
+      if (result.actions.length) {
+        lines.push('', 'Actions', ...result.actions.map((action) => `- ${action}`))
+      }
+      if (result.warnings.length) {
+        lines.push('', 'Warnings', ...result.warnings.map((warning) => `- ${warning}`))
+      }
+      return `${lines.join('\n')}\n`
+    }
+
+    async function check(): Promise<void> {
+      const value = defaultToolUrlToHttps(websiteUrl.value)
+      if (!value) {
+        errorMessage.textContent = 'Enter a website URL or domain.'
+        errorMessage.hidden = false
+        websiteUrl.focus()
+        return
+      }
+      websiteUrl.value = value
+
+      errorMessage.hidden = true
+      errorMessage.textContent = ''
+      results.hidden = true
+      checkButton.disabled = true
+      checkButton.textContent = 'Checking...'
+      try {
+        const response = await fetch('/api/tools/favicon-checker', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url: value }),
+        })
+        const body = await response.json().catch(() => ({})) as Result & { error?: unknown }
+        if (!response.ok) {
+          throw new Error(typeof body.error === 'string' ? body.error : 'The favicon check failed.')
+        }
+        render(body)
+      } catch (error) {
+        errorMessage.textContent = error instanceof Error ? error.message : 'The favicons could not be checked.'
+        errorMessage.hidden = false
+      } finally {
+        checkButton.disabled = false
+        checkButton.textContent = 'Check favicons'
+      }
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      void check()
+    })
+
+    copyButton.addEventListener('click', async () => {
+      if (!currentResult) return
+      try {
+        await navigator.clipboard.writeText(reportText(currentResult))
+        actionStatus.textContent = 'Findings copied.'
+      } catch {
+        actionStatus.textContent = 'The browser could not copy the findings. Download the JSON file instead.'
+      }
+    })
+
+    downloadButton.addEventListener('click', () => {
+      if (!currentResult) return
+      const exportResult = {
+        ...currentResult,
+        icons: currentResult.icons.map(({ preview, ...icon }) => ({
+          ...icon,
+          preview: preview
+            ? { includedInPage: true, contentType: preview.contentType, bytes: preview.bytes }
+            : undefined,
+        })),
+      }
+      const blob = new Blob([`${JSON.stringify(exportResult, null, 2)}\n`], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      let host = 'website'
+      try {
+        host = new URL(currentResult.source.finalHomepageUrl).hostname.replace(/^www\./u, '').replace(/[^a-z0-9]+/giu, '-') || 'website'
+      } catch {
+        // Keep the generic filename if the checked home page URL is malformed.
+      }
+      link.href = url
+      link.download = `${host}-favicon-check.json`
+      link.hidden = true
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 0)
+      actionStatus.textContent = `Downloaded ${link.download}.`
+    })
+  }
+
+  function initialiseAllFaviconCheckers(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-favicon-checker]')) {
+      initialiseFaviconChecker(root)
+    }
+  }
+
+  initialiseAllFaviconCheckers()
+  document.addEventListener('astro:page-load', initialiseAllFaviconCheckers)
+</script>

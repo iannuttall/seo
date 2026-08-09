@@ -18,6 +18,42 @@
     "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page"
   },
+  "durable_objects": {
+    "bindings": [{ "name": "PAID_TOOL_GUARD", "class_name": "PaidToolGuard" }]
+  },
+  "exports": {
+    "PaidToolGuard": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+  "ratelimits": [
+    {
+      "name": "TOOL_CLIENT_RATE_LIMITER",
+      "namespace_id": "2026080901",
+      "simple": { "limit": 20, "period": 60 }
+    },
+    {
+      "name": "TOOL_ROUTE_RATE_LIMITER",
+      "namespace_id": "2026080902",
+      "simple": { "limit": 100, "period": 60 }
+    }
+  ],
+  "vars": {
+    "LOCAL_TOOL_PREVIEW": "false",
+    "AHREFS_DAILY_PROVIDER_LIMIT": "500",
+    "DATAFORSEO_SPAM_DAILY_PROVIDER_LIMIT": "100",
+    "DATAFORSEO_TRAFFIC_DAILY_PROVIDER_LIMIT": "10"
+  },
+  "secrets": {
+    "required": [
+      "TURNSTILE_SECRET_KEY",
+      "TOOL_QUOTA_HASH_KEY",
+      "AHREFS_API_KEY",
+      "DATAFORSEO_LOGIN",
+      "DATAFORSEO_PASSWORD"
+    ]
+  },
   "d1_databases": [
     {
       "binding": "TELEMETRY_DB",

@@ -1,0 +1,65 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import ProtectedMetricChecker from '@/components/tools/ProtectedMetricChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Spam score checker' },
+]
+---
+
+<BaseLayout
+  title="Spam score checker"
+  description="Check the spam score for a domain or page URL."
+  canonicalPath="/tools/spam-score-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Spam score checker"
+      description="Get a spam score for your website, a client site, a competitor, or an individual page."
+      align="left"
+    />
+
+    <ProtectedMetricChecker
+      kind="spam-score"
+      endpoint="/api/tools/spam-score"
+      action="spam-score"
+      heading="Check a spam score"
+      description="Enter a domain or page URL."
+      buttonLabel="Check spam score"
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>Use the score to find sites worth reviewing</h2>
+      <p>
+        Check your own website, a client site, a competitor, or an individual
+        page. The result gives you a quick way to decide where a closer review
+        may be useful.
+      </p>
+      <p>
+        Lower scores indicate fewer common spam patterns. Higher scores indicate
+        more patterns and make the site a stronger candidate for a manual review.
+      </p>
+
+      <h2>Review the site behind the number</h2>
+      <p>
+        Open the site, check its content and contact details, and review the
+        links pointing to it. This helps you understand why the score is high
+        and whether the site is relevant to your work.
+      </p>
+
+      <h2>Compare scores from the same checker</h2>
+      <p>
+        Spam scores vary between checkers, so use the same tool when comparing
+        several domains. That gives you a cleaner view of which sites stand out
+        from the rest of the group.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

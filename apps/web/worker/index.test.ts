@@ -175,15 +175,24 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
     env as never,
     context as never,
   )
-  const llmsTxt = await app.fetch(
-    new Request('https://seoskill.dev/api/tools/llms-txt'),
-    env as never,
-    context as never,
-  )
-  const sitemapExtractor = await app.fetch(
-    new Request('https://seoskill.dev/api/tools/sitemap-extractor'),
-    env as never,
-    context as never,
+  const toolRoutes = [
+    'llms-txt',
+    'sitemap-extractor',
+    'sitemap-validator',
+    'robots-txt',
+    'favicon-checker',
+    'spam-score',
+    'domain-rating',
+    'website-traffic',
+  ]
+  const toolResponses = await Promise.all(
+    toolRoutes.map((route) =>
+      app.fetch(
+        new Request(`https://seoskill.dev/api/tools/${route}`),
+        env as never,
+        context as never,
+      ),
+    ),
   )
   const missing = await app.fetch(
     new Request('https://seoskill.dev/api/missing'),
@@ -198,8 +207,10 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
 
   assert.equal(telemetry.status, 405)
   assert.equal(stats.status, 405)
-  assert.equal(llmsTxt.status, 405)
-  assert.equal(sitemapExtractor.status, 405)
+  assert.deepEqual(
+    toolResponses.map((response) => response.status),
+    toolRoutes.map(() => 405),
+  )
   assert.equal(missing.status, 404)
   assert.equal(await asset.text(), 'static asset')
   assert.deepEqual(assetRequests, ['https://seoskill.dev/tools'])

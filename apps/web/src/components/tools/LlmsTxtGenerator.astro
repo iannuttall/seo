@@ -207,6 +207,7 @@ import DottedCard from '@/components/DottedCard.astro'
     LLMS_TXT_LIMITS,
     generateLlmsTxt,
   } from '@/lib/llms-txt-generator.mjs'
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
 
   function initialiseGenerator(root: HTMLElement): void {
     if (root.dataset.initialised === 'true') return
@@ -406,11 +407,13 @@ import DottedCard from '@/components/DottedCard.astro'
 
     async function fetchSitemap(): Promise<void> {
       if (!sitemapUrl || !fetchSitemapButton || !sitemapStatus) return
-      if (!sitemapUrl.value.trim()) {
-        sitemapStatus.textContent = 'Enter a complete HTTPS sitemap URL.'
+      const normalizedUrl = defaultToolUrlToHttps(sitemapUrl.value)
+      if (!normalizedUrl) {
+        sitemapStatus.textContent = 'Enter a sitemap URL.'
         sitemapUrl.focus()
         return
       }
+      sitemapUrl.value = normalizedUrl
       fetchSitemapButton.disabled = true
       fetchSitemapButton.textContent = 'Finding pages...'
       sitemapStatus.textContent = 'Fetching the sitemap...'
@@ -418,7 +421,7 @@ import DottedCard from '@/components/DottedCard.astro'
         const response = await fetch('/api/tools/sitemap', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ url: sitemapUrl.value.trim() }),
+          body: JSON.stringify({ url: normalizedUrl }),
         })
         const result: unknown = await response.json()
         const payload = result && typeof result === 'object'

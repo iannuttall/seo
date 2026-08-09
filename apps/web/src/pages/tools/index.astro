@@ -3,6 +3,7 @@ import NavCard from '@/components/NavCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
+import { tools } from '@/content/tools/manifest.mjs'
 
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
@@ -12,7 +13,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
 <BaseLayout
   title="Free SEO tools"
-  description="Use small web tools for technical SEO and agent-ready files. Each tool has strict processing limits and does not require an account."
+  description="Use free SEO tools to check websites, technical files, search traffic, and keyword lists."
   canonicalPath="/tools"
   {breadcrumbs}
   schemaType="CollectionPage"
@@ -37,35 +38,14 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
     <PageHeader
       title="Free SEO tools"
-      description="Complete a small technical job without an account. Each tool is deliberately narrow, fast, and capped."
+      description="Check a website, technical file, or keyword list without creating an account."
       align="left"
     />
 
     <div class="grid gap-6 sm:grid-cols-2">
-      <NavCard
-        title="Open the llms.txt generator"
-        heading="llms.txt generator"
-        description="Create a concise Markdown file for agents and services that explicitly read the llms.txt proposal. Copy it or download it as llms.txt."
-        href="/tools/llms-txt-generator"
-      />
-      <NavCard
-        title="Open the llms.txt validator"
-        heading="llms.txt validator"
-        description="Check a published, pasted, or local llms.txt file for format, section, link, and size problems."
-        href="/tools/llms-txt-validator"
-      />
-      <NavCard
-        title="Open the SEO log file analyzer"
-        heading="SEO log file analyzer"
-        description="Find search and AI crawler requests, error paths, and status codes in an access log. Download the results as CSV."
-        href="/tools/server-log-analyzer"
-      />
-      <NavCard
-        title="Open the sitemap URL extractor"
-        heading="Sitemap URL extractor"
-        description="Follow XML sitemaps and sitemap indexes, filter the extracted URLs, and download CSV, TXT, or JSON files."
-        href="/tools/sitemap-extractor"
-      />
+      {tools.map((tool) => (
+        <NavCard title={tool.action} heading={tool.title} description={tool.description} href={tool.path} />
+      ))}
     </div>
 
     <section class="docs-prose mt-14" aria-labelledby="larger-audits">

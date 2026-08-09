@@ -1,0 +1,10 @@
+{
+  "requiredRemote": [
+    "TURNSTILE_SECRET_KEY",
+    "TOOL_QUOTA_HASH_KEY",
+    "AHREFS_API_KEY",
+    "DATAFORSEO_LOGIN",
+    "DATAFORSEO_PASSWORD"
+  ],
+  "optionalRemote": []
+}

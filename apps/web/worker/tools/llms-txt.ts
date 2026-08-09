@@ -1,3 +1,5 @@
+import { defaultToolUrlToHttps } from '../../src/lib/tool-url.ts'
+
 export const LLMS_TXT_TOOL_LIMITS = Object.freeze({
   bodyBytes: 4_096,
   fileBytes: 100_000,
@@ -120,7 +122,7 @@ function parseLlmsTxtUrl(value: unknown): URL {
 
   let url: URL
   try {
-    url = new URL(value.trim())
+    url = new URL(defaultToolUrlToHttps(value))
   } catch {
     throw new ToolInputError('Enter a complete HTTPS llms.txt URL.')
   }

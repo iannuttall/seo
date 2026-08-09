@@ -217,6 +217,8 @@ import FormSelect from '@/components/FormSelect.astro'
 </section>
 
 <script>
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
+
   type ExtractedUrl = {
     url: string
     sourceSitemap: string
@@ -509,13 +511,14 @@ import FormSelect from '@/components/FormSelect.astro'
     }
 
     async function extract(): Promise<void> {
-      const value = sitemapUrl.value.trim()
+      const value = defaultToolUrlToHttps(sitemapUrl.value)
       if (!value) {
         errorMessage.textContent = 'Enter a sitemap URL or domain.'
         errorMessage.hidden = false
         sitemapUrl.focus()
         return
       }
+      sitemapUrl.value = value
       controller?.abort()
       controller = new AbortController()
       reset()

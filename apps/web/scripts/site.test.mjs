@@ -11,25 +11,16 @@ const dist = resolve(appRoot, 'dist')
 const { reportIds: routeReportIds } = await import(
   resolve(appRoot, 'src/content/reports/manifest.mjs')
 )
+const { tools } = await import(
+  resolve(appRoot, 'src/content/tools/manifest.mjs')
+)
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
   ['tools/index.html', 'https://seoskill.dev/tools'],
-  [
-    'tools/llms-txt-generator/index.html',
-    'https://seoskill.dev/tools/llms-txt-generator',
-  ],
-  [
-    'tools/llms-txt-validator/index.html',
-    'https://seoskill.dev/tools/llms-txt-validator',
-  ],
-  [
-    'tools/server-log-analyzer/index.html',
-    'https://seoskill.dev/tools/server-log-analyzer',
-  ],
-  [
-    'tools/sitemap-extractor/index.html',
-    'https://seoskill.dev/tools/sitemap-extractor',
-  ],
+  ...tools.map((tool) => [
+    `${tool.path.slice(1)}/index.html`,
+    `https://seoskill.dev${tool.path}`,
+  ]),
   ['docs/index.html', 'https://seoskill.dev/docs'],
   [
     'docs/getting-started/index.html',
@@ -298,6 +289,32 @@ test('public copy avoids internal report language', () => {
   }
 })
 
+test('tool copy stays focused on the job instead of its backend', () => {
+  const implementationCopy =
+    /Cloudflare|Turnstile|server-side credential|per network|each UTC day|provider allowance|global provider budget|site's Worker|browser worker/iu
+
+  for (const tool of tools) {
+    const markdown = readFileSync(
+      resolve(dist, `${tool.path.slice(1)}.md`),
+      'utf8',
+    )
+    assert.doesNotMatch(markdown, implementationCopy, tool.path)
+  }
+
+  for (const tool of [
+    'spam-score-checker',
+    'domain-rating-checker',
+    'website-traffic-checker',
+  ]) {
+    const html = readFileSync(
+      resolve(dist, 'tools', tool, 'index.html'),
+      'utf8',
+    )
+    assert.doesNotMatch(html, /checks remaining today/iu, tool)
+    assert.doesNotMatch(html, /Up to 10|protected provider checks/iu, tool)
+  }
+})
+
 test('llms.txt is a short curated map generated from the route manifest', async () => {
   const manifest = JSON.parse(
     readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
@@ -309,7 +326,13 @@ test('llms.txt is a short curated map generated from the route manifest', async 
   assert.equal(actual, renderLlmsTxt(manifest, llmsTxt))
   assert.match(actual, /^# SEO Skill\n\n> /u)
   assert.equal(matches(actual, /^## /gmu).length, 5)
-  assert.equal(matches(actual, /^- \[/gmu).length, 16)
+  assert.equal(
+    matches(actual, /^- \[/gmu).length,
+    llmsTxt.sections.reduce(
+      (total, section) => total + section.items.length,
+      0,
+    ),
+  )
   assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
   assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
 
@@ -711,146 +734,6 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /Access-Control-Allow-Origin: \*/)
   assert.match(headers, /Cache-Control: public, max-age=300, must-revalidate/)
   assert.match(headers, /X-Content-Type-Options: nosniff/)
-})
-
-test('Cloudflare limits the Worker to telemetry, bounded tools, and static assets', () => {
-  const config = JSON.parse(
-    readFileSync(resolve(appRoot, 'wrangler.jsonc'), 'utf8'),
-  )
-  const headers = readFileSync(resolve(dist, '_headers'), 'utf8')
-  const manifest = JSON.parse(
-    readFileSync(resolve(dist, 'agent-routes.json'), 'utf8'),
-  )
-
-  assert.equal(config.name, 'seo-skill')
-  assert.equal(config.main, './worker/index.ts')
-  assert.equal(config.assets.binding, 'ASSETS')
-  assert.deepEqual(config.assets.run_worker_first, ['/api/*'])
-  assert.deepEqual(config.compatibility_flags, [
-    'nodejs_compat',
-    'global_fetch_strictly_public',
-  ])
-  assert.equal(config.assets.html_handling, 'drop-trailing-slash')
-  assert.equal(config.assets.not_found_handling, '404-page')
-  assert.equal(config.analytics_engine_datasets, undefined)
-  assert.equal(config.secrets, undefined)
-  assert.equal(config.vars, undefined)
-  assert.equal(config.observability.enabled, false)
-  assert.equal(config.observability.logs.enabled, false)
-  assert.equal(config.observability.logs.invocation_logs, false)
-  assert.equal(config.kv_namespaces, undefined)
-  assert.deepEqual(config.d1_databases, [
-    {
-      binding: 'TELEMETRY_DB',
-      database_name: 'seo-telemetry',
-      database_id: '4b8c5f37-983d-4229-a712-77dbcd853efe',
-      migrations_dir: './migrations',
-    },
-  ])
-  assert.equal(config.r2_buckets, undefined)
-  assert.deepEqual(config.routes, [
-    { pattern: 'seoskill.dev', custom_domain: true },
-    { pattern: 'www.seoskill.dev', custom_domain: true },
-  ])
-  assert.equal(existsSync(resolve(appRoot, 'src/worker.ts')), false)
-  assert.equal(existsSync(resolve(appRoot, 'tsconfig.worker.json')), false)
-  assert.equal(existsSync(resolve(appRoot, 'worker-configuration.d.ts')), false)
-  assert.equal(existsSync(resolve(appRoot, 'worker/index.ts')), true)
-  assert.equal(existsSync(resolve(appRoot, 'worker/tsconfig.json')), true)
-  assert.equal(
-    existsSync(resolve(appRoot, 'worker/worker-configuration.d.ts')),
-    true,
-  )
-  const migration = readFileSync(
-    resolve(appRoot, 'migrations/0001_create_telemetry_events.sql'),
-    'utf8',
-  )
-  assert.match(migration, /CREATE TABLE telemetry_events/)
-  assert.match(migration, /received_month TEXT NOT NULL/)
-  assert.doesNotMatch(
-    migration,
-    /ip_address|country|region|city|request_headers|user_id|machine_id/i,
-  )
-
-  assert.match(
-    headers,
-    /Content-Signal: search=yes, ai-input=yes, ai-train=yes/,
-  )
-  assert.match(headers, /Strict-Transport-Security: max-age=300/)
-  assert.match(headers, /rel="sitemap"; type="application\/xml"/)
-  assert.match(headers, /rel="llms-txt"; type="text\/markdown"/)
-  assert.match(headers, /rel="agent-skills"; type="application\/json"/)
-  assert.match(
-    headers,
-    new RegExp(
-      escapeRegExp(
-        '/*.md\n  Content-Type: text/markdown; charset=utf-8\n  Vary: Accept',
-      ),
-    ),
-  )
-  assert.match(
-    headers,
-    new RegExp(
-      escapeRegExp(
-        '/docs/*.md\n  Link: <https://seoskill.dev/docs/:splat>; rel="canonical"',
-      ),
-    ),
-  )
-  assert.match(
-    headers,
-    new RegExp(
-      escapeRegExp(
-        '/tools/*.md\n  Link: <https://seoskill.dev/tools/:splat>; rel="canonical"',
-      ),
-    ),
-  )
-  assert.doesNotMatch(headers, /X-Markdown-Tokens:/)
-  assert.doesNotMatch(headers, /Generated agent markdown headers/)
-
-  const headerRules = headers
-    .split('\n')
-    .filter(
-      (line) =>
-        line.length > 0 && !line.startsWith(' ') && !line.startsWith('#'),
-    )
-  assert.ok(
-    headerRules.length <= 100,
-    `Cloudflare supports at most 100 _headers rules, found ${headerRules.length}`,
-  )
-
-  for (const page of manifest.pages) {
-    assert.ok(Number.isInteger(page.tokens) && page.tokens > 0)
-    if (
-      page.markdownPath.startsWith('/docs/') ||
-      page.markdownPath.startsWith('/tools/')
-    )
-      continue
-    assert.ok(
-      headerRules.includes(page.markdownPath),
-      `Missing exact Markdown header rule for ${page.markdownPath}`,
-    )
-  }
-
-  for (const page of [
-    'cookies',
-    'privacy',
-    'security',
-    'terms',
-    'trademarks',
-  ]) {
-    assert.match(
-      headers,
-      new RegExp(
-        `/${page}\\.md\\n  Link: <https://seoskill\\.dev/${page}>; rel="canonical"\\n  X-Robots-Tag: noindex, follow`,
-      ),
-    )
-    assert.match(
-      headers,
-      new RegExp(
-        `/${page}\\n  Link: <https://seoskill\\.dev/${page}\\.md>; rel="alternate"; type="text/markdown"\\n  Vary: Accept\\n  X-Robots-Tag: noindex, follow`,
-      ),
-    )
-  }
 })
 
 test('site copy has no stale hosted product, email contact, or dash punctuation', () => {

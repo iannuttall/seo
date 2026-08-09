@@ -1,16 +1,14 @@
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { reportIds, reportSlugs } from '../src/content/reports/manifest.mjs'
+import { toolPaths } from '../src/content/tools/manifest.mjs'
 
 const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 const paths = [
   '/',
   '/tools',
-  '/tools/llms-txt-generator',
-  '/tools/llms-txt-validator',
-  '/tools/server-log-analyzer',
-  '/tools/sitemap-extractor',
+  ...toolPaths,
   '/docs',
   '/docs/agents',
   '/docs/ai-search',

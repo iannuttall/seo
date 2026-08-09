@@ -1,8 +1,20 @@
 import { Hono } from 'hono'
 import { reportIds } from '../src/content/reports/manifest.mjs'
+import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
+import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
+import {
+  handleDomainRating,
+  handleSpamScore,
+  handleWebsiteTraffic,
+} from './tools/paid-tool-routes.ts'
+import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
 import { handleSitemapExtraction } from './tools/sitemap-extractor.ts'
+import { handleSitemapValidation } from './tools/sitemap-validator.ts'
+import { applyToolRateLimit } from './tools/tool-rate-limit.ts'
+
+export { PaidToolGuard } from './tools/paid-tool-guard.ts'
 
 export const TELEMETRY_EVENTS = [
   'first_run',
@@ -488,6 +500,14 @@ async function handleStats(
 
 export const app = new Hono<{ Bindings: Env }>()
 
+app.use('/api/tools/*', async (context, next) => {
+  const limited = await applyToolRateLimit(context.req.raw, context.env)
+  if (limited) return limited
+  const dailyLimited = await applyDailyToolQuota(context.req.raw, context.env)
+  if (dailyLimited) return dailyLimited
+  await next()
+})
+
 app.all('/api/t', (context) =>
   handleTelemetryIngest(context.req.raw, context.env),
 )
@@ -500,6 +520,24 @@ app.all('/api/tools/sitemap-extractor', (context) =>
   handleSitemapExtraction(context.req.raw, fetch, (promise) =>
     context.executionCtx.waitUntil(promise),
   ),
+)
+app.all('/api/tools/sitemap-validator', (context) =>
+  handleSitemapValidation(context.req.raw),
+)
+app.all('/api/tools/robots-txt', (context) =>
+  handleRobotsTxtFetch(context.req.raw),
+)
+app.all('/api/tools/favicon-checker', (context) =>
+  handleFaviconCheck(context.req.raw),
+)
+app.all('/api/tools/spam-score', (context) =>
+  handleSpamScore(context.req.raw, context.env),
+)
+app.all('/api/tools/domain-rating', (context) =>
+  handleDomainRating(context.req.raw, context.env),
+)
+app.all('/api/tools/website-traffic', (context) =>
+  handleWebsiteTraffic(context.req.raw, context.env),
 )
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))

@@ -1,3 +1,5 @@
+import { tools } from './src/content/tools/manifest.mjs'
+
 /** @satisfies {import('@iannuttall/seo-graph-core').LlmsTxtConfig} */
 export const llmsTxt = {
   title: 'SEO Skill',
@@ -22,12 +24,10 @@ export const llmsTxt = {
       ],
     },
     {
-      heading: 'Free browser tools',
+      heading: 'Free web tools',
       items: [
         { path: '/tools' },
-        { path: '/tools/llms-txt-generator' },
-        { path: '/tools/llms-txt-validator' },
-        { path: '/tools/server-log-analyzer' },
+        ...tools.map((tool) => ({ path: tool.path })),
       ],
     },
     {

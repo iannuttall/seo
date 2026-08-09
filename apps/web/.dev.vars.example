@@ -1,0 +1,6 @@
+# Cloudflare's always-pass test secret is safe for local development only.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+TOOL_QUOTA_HASH_KEY=replace-with-at-least-32-random-characters
+AHREFS_API_KEY=replace-with-your-ahrefs-token
+DATAFORSEO_LOGIN=replace-with-your-dataforseo-login
+DATAFORSEO_PASSWORD=replace-with-your-dataforseo-password

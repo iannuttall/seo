@@ -1,0 +1,79 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SitemapValidator from '@/components/tools/SitemapValidator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'XML sitemap validator' },
+]
+---
+
+<BaseLayout
+  title="XML sitemap validator"
+  description="Validate an XML sitemap from a public URL, pasted XML, or a local gzip file. Check structure, locations, dates, limits, and duplicate entries."
+  canonicalPath="/tools/sitemap-validator"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader
+      title="XML sitemap validator"
+      description="Check one XML sitemap or sitemap index for errors, invalid entries, duplicate URLs, and incorrect dates."
+      align="left"
+    />
+
+    <SitemapValidator />
+
+    <div class="docs-prose mt-16">
+      <h2>Check sitemap structure and entries</h2>
+      <p>
+        The validator checks the XML root and namespace, required location
+        values, duplicate entries, last modified dates, change frequency,
+        priority, and the limits that apply to one sitemap file. XML extensions
+        for images, video, news, and alternate languages can remain in the file.
+      </p>
+      <p>
+        A valid result describes the file that was submitted. It does not fetch
+        the listed pages, confirm their indexability, or show whether a search
+        engine has indexed them.
+      </p>
+
+      <h2>Protocol limits and the 10,000 entry advisory</h2>
+      <p>
+        The sitemap protocol allows up to 50,000 entries and 50 MB uncompressed
+        in one file. Files above either limit need to be split and referenced
+        from a sitemap index.
+      </p>
+      <p>
+        The result also includes neutral advice when a file has more than 10,000
+        entries. Some technical SEO teams use that working size because smaller
+        files make failures and coverage groups easier to isolate. It is not a
+        Google requirement or a ranking factor.
+      </p>
+      <p>
+        Read Google's current{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap format and size documentation</a>
+        {' '}for the accepted protocol rules.
+      </p>
+
+      <h2>Partial validation stays visible</h2>
+      <p>
+        If validation stops early, the result is marked as partial and shows how
+        much of the file was checked. Fix the reported problems, then run the
+        sitemap again for a complete result.
+      </p>
+
+      <h2>Check a local file before publishing it</h2>
+      <p>
+        Paste sitemap XML or open a local XML or gzip file to find problems
+        before it goes live. Pasted content and selected files stay in this
+        browser tab.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

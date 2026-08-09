@@ -1,0 +1,61 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import WebsiteTrafficChecker from '@/components/tools/WebsiteTrafficChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Website traffic checker' },
+]
+---
+
+<BaseLayout
+  title="Website traffic checker"
+  description="Check a website's estimated monthly organic traffic, ranking keywords, and twelve-month trend."
+  canonicalPath="/tools/website-traffic-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Website traffic checker"
+      description="Enter a domain and choose a country to check its estimated organic search traffic."
+      align="left"
+    />
+
+    <WebsiteTrafficChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>See how a website performs in organic search</h2>
+      <p>
+        Check estimated monthly organic traffic, ranking keywords, traffic
+        value, and position movement. The twelve-month history makes it easier
+        to spot growth, losses, and recent changes.
+      </p>
+
+      <h2>Choose the market before comparing sites</h2>
+      <p>
+        Search demand and rankings differ by country and language. Keep the
+        selected market the same when comparing two sites. A United States
+        estimate should not be presented as worldwide traffic.
+      </p>
+
+      <h2>Compare competitors and markets</h2>
+      <p>
+        Use the same country and language when comparing websites. You can then
+        see which competitors attract more search demand, rank for more
+        keywords, or gain visibility faster.
+      </p>
+
+      <h2>Why estimates change</h2>
+      <p>
+        New rankings, position changes, and changing search demand can all move
+        the estimate. Use the keyword sample and monthly history to see what
+        changed and where to investigate next.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

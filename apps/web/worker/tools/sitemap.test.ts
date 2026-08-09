@@ -63,6 +63,22 @@ test('imports, deduplicates, and labels page URLs from a sitemap', async () => {
   ])
 })
 
+test('defaults a scheme-less sitemap import URL to HTTPS', async () => {
+  const seen: string[] = []
+  const response = await handleSitemapImport(
+    request('example.com/sitemap.xml'),
+    async (input) => {
+      seen.push(input.toString())
+      return xmlResponse(
+        '<urlset><url><loc>https://example.com/</loc></url></urlset>',
+      )
+    },
+  )
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(seen, ['https://example.com/sitemap.xml'])
+})
+
 test('follows a bounded sitemap index and reports skipped child files', async () => {
   const calls: string[] = []
   const responses = new Map([

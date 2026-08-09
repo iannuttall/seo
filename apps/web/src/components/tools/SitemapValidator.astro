@@ -1,0 +1,586 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+---
+
+<section data-sitemap-validator class="space-y-6">
+  <DottedCard patternId="sitemap-validator-input">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Validate an XML sitemap</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Check a public sitemap URL, paste XML, or open an XML or gzip file from your computer.
+        </p>
+      </div>
+
+      <div class="flex gap-2" role="tablist" aria-label="Sitemap input method">
+        <button
+          data-input-tab="url"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="sitemap-validator-url-panel"
+          class="cursor-pointer border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+        >From URL</button>
+        <button
+          data-input-tab="local"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="sitemap-validator-local-panel"
+          tabindex="-1"
+          class="cursor-pointer border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+        >Paste or open file</button>
+      </div>
+
+      <div id="sitemap-validator-url-panel" data-input-panel="url" role="tabpanel">
+        <form data-url-form class="space-y-3" novalidate>
+          <label for="sitemap-validator-url" class="block font-sans text-sm font-medium">Sitemap URL</label>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <FormInput
+              id="sitemap-validator-url"
+              data-url-input
+              class="min-w-0 flex-1 px-4"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="2048"
+              placeholder="https://example.com/sitemap.xml"
+            />
+            <Button data-check-url type="submit" class="min-h-12 px-5 text-xs sm:min-w-36">Validate URL</Button>
+          </div>
+          <p data-url-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            The checker reads the sitemap file without requesting the pages listed inside it.
+          </p>
+          <p data-url-error hidden class="font-sans text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+        </form>
+      </div>
+
+      <div id="sitemap-validator-local-panel" data-input-panel="local" role="tabpanel" hidden>
+        <div class="space-y-3">
+          <label for="sitemap-validator-content" class="block font-sans text-sm font-medium">Sitemap XML</label>
+          <FormTextarea
+            id="sitemap-validator-content"
+            data-content-input
+            class="min-h-64 px-4 text-xs"
+            rows="11"
+            spellcheck="false"
+            placeholder={`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.com/</loc></url>
+</urlset>`}
+          />
+          <input data-file-input class="hidden" type="file" accept=".xml,.xml.gz,.gz,application/xml,text/xml,application/gzip" />
+          <div class="flex flex-wrap gap-2">
+            <Button data-check-content type="button" class="px-4 py-2.5 text-xs">Validate content</Button>
+            <Button data-open-file type="button" class="px-4 py-2.5 text-xs">Open file</Button>
+            <Button data-use-example type="button" class="px-4 py-2.5 text-xs">Use example</Button>
+            <Button data-clear type="button" class="px-4 py-2.5 text-xs">Clear</Button>
+          </div>
+          <p data-local-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            Pasted XML and local files stay in this browser tab. Files can be up to 50 MiB.
+          </p>
+        </div>
+      </div>
+    </div>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="sitemap-validator-summary" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <strong data-verdict class="font-mono text-2xl font-normal text-primary">Sitemap checked</strong>
+            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          </div>
+          <span data-coverage class="shrink-0 font-mono text-xs text-panel-foreground/70"></span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 border-t border-panel-foreground/30 pt-5">
+          <Button data-copy-report type="button" class="px-3 py-2.5 text-xs">Copy JSON</Button>
+          <Button data-download-report type="button" class="px-3 py-2.5 text-xs">Download JSON</Button>
+        </div>
+        <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Entries</dt>
+            <dd data-stat-entries class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Valid locations</dt>
+            <dd data-stat-valid class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Errors</dt>
+            <dd data-stat-errors class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Warnings</dt>
+            <dd data-stat-warnings class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Advice</dt>
+            <dd data-stat-advice class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Uncompressed</dt>
+            <dd data-stat-bytes class="mt-1 font-mono text-lg">0 B</dd>
+          </div>
+        </dl>
+      </div>
+    </DottedCard>
+
+    <div data-index-sitemaps hidden>
+      <DottedCard patternId="sitemap-validator-index">
+        <div class="space-y-5 p-5 sm:p-6">
+          <div class="space-y-1">
+            <h3 class="font-mono text-lg font-normal">Validate the sitemaps in this index</h3>
+            <p data-index-summary class="font-sans text-sm font-light leading-6 text-foreground-muted"></p>
+          </div>
+          <ul data-index-list class="max-h-96 divide-y divide-border overflow-y-auto border-y border-border"></ul>
+          <p data-index-omitted hidden class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+        </div>
+      </DottedCard>
+    </div>
+
+    <DottedCard patternId="sitemap-validator-findings">
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div class="space-y-1">
+            <h3 class="font-mono text-lg font-normal">Validation findings</h3>
+            <p data-document-summary class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+          </div>
+          <label class="w-full space-y-2 font-sans text-xs font-medium sm:w-52">
+            <span>Show findings</span>
+            <FormSelect data-issue-filter>
+              <option value="all">All findings</option>
+              <option value="error">Errors</option>
+              <option value="warning">Warnings</option>
+              <option value="advice">Advice</option>
+            </FormSelect>
+          </label>
+        </div>
+        <ol data-issue-list class="divide-y divide-border border-y border-border"></ol>
+        <p data-no-issues class="font-sans text-sm font-light leading-6 text-foreground-muted" hidden>
+          No findings match this filter.
+        </p>
+        <p data-omitted class="font-sans text-xs font-light leading-5 text-foreground-muted" hidden></p>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import type {
+    SitemapValidationIssue,
+    SitemapValidationReport,
+    SitemapValidationSource,
+  } from '@/lib/sitemap-validator'
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
+
+  type WorkerMessage =
+    | { type: 'progress'; source: SitemapValidationSource }
+    | { type: 'complete'; report: SitemapValidationReport }
+    | { type: 'error'; message: string }
+
+  const example = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+    <lastmod>2026-08-09</lastmod>
+  </url>
+</urlset>`
+  const activeTabClasses = ['border-primary', 'bg-primary', 'text-primary-foreground']
+  const inactiveTabClasses = ['border-border', 'bg-background-subtle', 'text-foreground-muted']
+
+  function initialiseSitemapValidator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing sitemap validator control: ${selector}`)
+      return element
+    }
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-input-tab]')]
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-input-panel]')]
+    const urlForm = required<HTMLFormElement>('[data-url-form]')
+    const urlInput = required<HTMLInputElement>('[data-url-input]')
+    const checkUrl = required<HTMLButtonElement>('[data-check-url]')
+    const urlStatus = required<HTMLElement>('[data-url-status]')
+    const urlError = required<HTMLElement>('[data-url-error]')
+    const contentInput = required<HTMLTextAreaElement>('[data-content-input]')
+    const fileInput = required<HTMLInputElement>('[data-file-input]')
+    const checkContent = required<HTMLButtonElement>('[data-check-content]')
+    const openFile = required<HTMLButtonElement>('[data-open-file]')
+    const useExample = required<HTMLButtonElement>('[data-use-example]')
+    const clear = required<HTMLButtonElement>('[data-clear]')
+    const localStatus = required<HTMLElement>('[data-local-status]')
+    const results = required<HTMLElement>('[data-results]')
+    const verdict = required<HTMLElement>('[data-verdict]')
+    const resultSummary = required<HTMLElement>('[data-result-summary]')
+    const coverage = required<HTMLElement>('[data-coverage]')
+    const actionStatus = required<HTMLElement>('[data-action-status]')
+    const copyReport = required<HTMLButtonElement>('[data-copy-report]')
+    const downloadReport = required<HTMLButtonElement>('[data-download-report]')
+    const statEntries = required<HTMLElement>('[data-stat-entries]')
+    const statValid = required<HTMLElement>('[data-stat-valid]')
+    const statErrors = required<HTMLElement>('[data-stat-errors]')
+    const statWarnings = required<HTMLElement>('[data-stat-warnings]')
+    const statAdvice = required<HTMLElement>('[data-stat-advice]')
+    const statBytes = required<HTMLElement>('[data-stat-bytes]')
+    const indexSitemaps = required<HTMLElement>('[data-index-sitemaps]')
+    const indexSummary = required<HTMLElement>('[data-index-summary]')
+    const indexList = required<HTMLUListElement>('[data-index-list]')
+    const indexOmitted = required<HTMLElement>('[data-index-omitted]')
+    const documentSummary = required<HTMLElement>('[data-document-summary]')
+    const issueFilter = required<HTMLSelectElement>('[data-issue-filter]')
+    const issueList = required<HTMLOListElement>('[data-issue-list]')
+    const noIssues = required<HTMLElement>('[data-no-issues]')
+    const omitted = required<HTMLElement>('[data-omitted]')
+
+    let worker: Worker | undefined
+    let controller: AbortController | undefined
+    let report: SitemapValidationReport | undefined
+
+    function number(value: number): string {
+      return value.toLocaleString()
+    }
+
+    function bytes(value: number): string {
+      if (value < 1_000) return `${value} B`
+      if (value < 1_000_000) return `${(value / 1_000).toFixed(1)} KB`
+      return `${(value / 1_000_000).toFixed(1)} MB`
+    }
+
+    function setMode(mode: 'url' | 'local', focus = false): void {
+      for (const tab of tabs) {
+        const active = tab.dataset.inputTab === mode
+        tab.setAttribute('aria-selected', String(active))
+        tab.tabIndex = active ? 0 : -1
+        tab.classList.toggle('hover:text-foreground', !active)
+        for (const className of activeTabClasses) tab.classList.toggle(className, active)
+        for (const className of inactiveTabClasses) tab.classList.toggle(className, !active)
+      }
+      for (const panel of panels) panel.hidden = panel.dataset.inputPanel !== mode
+      if (focus) (mode === 'url' ? urlInput : contentInput).focus()
+    }
+
+    function hideResults(): void {
+      results.hidden = true
+      indexSitemaps.hidden = true
+      report = undefined
+      actionStatus.textContent = ''
+    }
+
+    function clearUrlError(): void {
+      urlError.hidden = true
+      urlError.textContent = ''
+      urlInput.removeAttribute('aria-invalid')
+    }
+
+    function showUrlError(message: string): void {
+      urlError.textContent = message
+      urlError.hidden = false
+      urlInput.setAttribute('aria-invalid', 'true')
+    }
+
+    function renderChildSitemaps(next: SitemapValidationReport): void {
+      const children = next.document.childSitemaps
+      const show = next.document.kind === 'sitemapindex' && children.retained.length > 0
+      indexSitemaps.hidden = !show
+      indexList.replaceChildren()
+      if (!show) return
+
+      indexSummary.textContent = `${number(children.total)} ${children.total === 1 ? 'child sitemap was' : 'child sitemaps were'} found. Open one to validate that file separately.`
+      for (const child of children.retained) {
+        const item = document.createElement('li')
+        const link = document.createElement('a')
+        const href = new URL(window.location.href)
+        href.search = ''
+        href.hash = ''
+        href.searchParams.set('url', child)
+        link.href = href.toString()
+        link.className = 'group flex cursor-pointer items-center justify-between gap-4 py-3 font-sans text-sm transition-colors hover:text-primary'
+        const url = document.createElement('span')
+        url.className = 'min-w-0 break-all font-mono text-xs underline decoration-border underline-offset-4 group-hover:decoration-primary'
+        url.textContent = child
+        const action = document.createElement('span')
+        action.className = 'shrink-0 font-sans text-xs font-medium'
+        action.textContent = 'Validate'
+        link.append(url, action)
+        item.append(link)
+        indexList.append(item)
+      }
+      indexOmitted.hidden = children.omitted === 0
+      indexOmitted.textContent = children.omitted
+        ? `${number(children.omitted)} more child sitemaps are present but are not shown in this page. The JSON report records the output limit.`
+        : ''
+    }
+
+    function issueRow(issue: SitemapValidationIssue): HTMLLIElement {
+      const row = document.createElement('li')
+      row.className = 'space-y-1 py-4 first:pt-0 last:pb-0'
+      const heading = document.createElement('div')
+      heading.className = 'flex flex-wrap items-baseline gap-2'
+      const severity = document.createElement('strong')
+      severity.className = issue.severity === 'advice'
+        ? 'font-mono text-xs font-normal text-primary'
+        : issue.severity === 'error'
+          ? 'font-mono text-xs font-normal text-red-700 dark:text-red-400'
+          : 'font-mono text-xs font-normal text-foreground'
+      severity.textContent = issue.severity === 'error'
+        ? 'Error'
+        : issue.severity === 'warning'
+          ? 'Warning'
+          : 'Advice'
+      const location = document.createElement('span')
+      location.className = 'font-mono text-xs text-foreground-muted'
+      location.textContent = [
+        issue.line ? `Line ${number(issue.line)}` : '',
+        issue.entry ? `Entry ${number(issue.entry)}` : '',
+      ].filter(Boolean).join(', ')
+      heading.append(severity)
+      if (location.textContent) heading.append(location)
+      const message = document.createElement('p')
+      message.className = 'font-sans text-sm font-light leading-6 text-foreground-muted'
+      message.textContent = issue.message
+      row.append(heading, message)
+      if (issue.value) {
+        const value = document.createElement('code')
+        value.className = 'block break-all font-mono text-xs text-foreground'
+        value.textContent = issue.value
+        row.append(value)
+      }
+      return row
+    }
+
+    function renderIssues(): void {
+      if (!report) return
+      const selected = issueFilter.value
+      const issues = report.issues.filter((issue) => selected === 'all' || issue.severity === selected)
+      issueList.replaceChildren(...issues.map(issueRow))
+      issueList.hidden = issues.length === 0
+      noIssues.hidden = issues.length > 0
+      omitted.hidden = report.issueStats.omitted === 0
+      omitted.textContent = report.issueStats.omitted
+        ? `${number(report.issueStats.omitted)} more findings were omitted after the ${number(report.limits.issues)} finding output limit. Fix the retained findings, then validate again.`
+        : ''
+    }
+
+    function render(next: SitemapValidationReport): void {
+      report = next
+      verdict.textContent = next.dataStatus === 'partial'
+        ? 'Partial validation'
+        : next.valid
+          ? 'Valid sitemap'
+          : 'Sitemap needs changes'
+      const findingCount = next.issueStats.errors + next.issueStats.warnings + next.issueStats.advice
+      resultSummary.textContent = findingCount
+        ? `${number(findingCount)} ${findingCount === 1 ? 'finding' : 'findings'} across ${number(next.document.entries)} entries.`
+        : `${number(next.document.entries)} ${next.document.entries === 1 ? 'entry follows' : 'entries follow'} the checked sitemap protocol rules.`
+      coverage.textContent = next.dataStatus === 'complete' ? 'Complete file' : 'Partial evidence'
+      statEntries.textContent = number(next.document.entries)
+      statValid.textContent = number(next.document.validLocations)
+      statErrors.textContent = number(next.issueStats.errors)
+      statWarnings.textContent = number(next.issueStats.warnings)
+      statAdvice.textContent = number(next.issueStats.advice)
+      statBytes.textContent = bytes(next.source.expandedBytes)
+      const kind = next.document.kind === 'sitemapindex'
+        ? 'Sitemap index'
+        : next.document.kind === 'urlset'
+          ? 'URL sitemap'
+          : 'Unknown document type'
+      documentSummary.textContent = `${kind}. ${number(next.document.invalidLocations)} invalid and ${number(next.document.duplicateLocations)} duplicate locations observed.`
+      actionStatus.textContent = next.dataStatus === 'partial'
+        ? 'The JSON report keeps the processing limits and omitted finding count.'
+        : 'Copy or download the complete JSON report.'
+      renderChildSitemaps(next)
+      renderIssues()
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+
+    function startWorker(): Worker {
+      worker?.terminate()
+      const next = new Worker(new URL('../../workers/sitemap-validator.ts', import.meta.url), {
+        type: 'module',
+      })
+      next.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
+        const message = event.data
+        if (message.type === 'progress') {
+          localStatus.textContent = `Read ${bytes(message.source.expandedBytes)}${message.source.gzip ? ' after gzip expansion' : ''}.`
+          return
+        }
+        checkContent.disabled = false
+        checkContent.textContent = 'Validate content'
+        openFile.disabled = false
+        if (message.type === 'complete') {
+          localStatus.textContent = message.report.source.name
+            ? `Validated ${message.report.source.name} in this browser tab.`
+            : 'Validated the pasted XML in this browser tab.'
+          render(message.report)
+        } else {
+          localStatus.textContent = message.message
+        }
+      })
+      next.addEventListener('error', () => {
+        checkContent.disabled = false
+        checkContent.textContent = 'Validate content'
+        openFile.disabled = false
+        localStatus.textContent = 'The sitemap could not be validated.'
+      })
+      return next
+    }
+
+    function validateContent(content: string): void {
+      if (!content.trim()) {
+        localStatus.textContent = 'Paste sitemap XML first.'
+        contentInput.focus()
+        return
+      }
+      hideResults()
+      checkContent.disabled = true
+      checkContent.textContent = 'Validating...'
+      worker = startWorker()
+      worker.postMessage({ type: 'validate-paste', content })
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        const mode = tab.dataset.inputTab
+        if (mode === 'url' || mode === 'local') setMode(mode, true)
+      })
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
+        event.preventDefault()
+        setMode(tab.dataset.inputTab === 'url' ? 'local' : 'url', true)
+      })
+    }
+
+    urlForm.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      clearUrlError()
+      const url = defaultToolUrlToHttps(urlInput.value)
+      if (!url) {
+        showUrlError('Enter a sitemap URL.')
+        urlInput.focus()
+        return
+      }
+      urlInput.value = url
+      controller?.abort()
+      controller = new AbortController()
+      checkUrl.disabled = true
+      checkUrl.textContent = 'Validating...'
+      urlStatus.textContent = 'Fetching and validating the sitemap...'
+      hideResults()
+      try {
+        const response = await fetch('/api/tools/sitemap-validator', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url }),
+          signal: controller.signal,
+        })
+        const data: unknown = await response.json()
+        if (!response.ok) {
+          const message = data && typeof data === 'object' && !Array.isArray(data)
+            ? (data as { error?: unknown }).error
+            : undefined
+          throw new Error(typeof message === 'string' ? message : 'The sitemap could not be validated.')
+        }
+        render(data as SitemapValidationReport)
+        const source = (data as SitemapValidationReport).source
+        urlStatus.textContent = source.finalUrl === source.requestedUrl
+          ? `Validated ${source.finalUrl}`
+          : `Validated ${source.finalUrl} after a redirect.`
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        showUrlError(error instanceof Error
+          ? error.message
+          : 'The sitemap could not be validated.')
+        urlStatus.textContent = 'Validation stopped.'
+      } finally {
+        checkUrl.disabled = false
+        checkUrl.textContent = 'Validate URL'
+      }
+    })
+
+    checkContent.addEventListener('click', () => validateContent(contentInput.value))
+    openFile.addEventListener('click', () => {
+      fileInput.value = ''
+      fileInput.click()
+    })
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0]
+      if (!file) return
+      hideResults()
+      contentInput.value = ''
+      openFile.disabled = true
+      localStatus.textContent = `Opening ${file.name}...`
+      worker = startWorker()
+      worker.postMessage({ type: 'validate-file', file })
+    })
+    useExample.addEventListener('click', () => {
+      contentInput.value = example
+      validateContent(example)
+    })
+    clear.addEventListener('click', () => {
+      worker?.terminate()
+      worker = undefined
+      fileInput.value = ''
+      contentInput.value = ''
+      localStatus.textContent = 'Pasted XML and local files stay in this browser tab.'
+      hideResults()
+      contentInput.focus()
+    })
+    contentInput.addEventListener('input', hideResults)
+    issueFilter.addEventListener('change', renderIssues)
+    copyReport.addEventListener('click', async () => {
+      if (!report) return
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(report, null, 2))
+        actionStatus.textContent = 'Copied the JSON report.'
+      } catch {
+        actionStatus.textContent = 'The browser could not copy the report. Download it instead.'
+      }
+    })
+    downloadReport.addEventListener('click', () => {
+      if (!report) return
+      const url = URL.createObjectURL(
+        new Blob([`${JSON.stringify(report, null, 2)}\n`], { type: 'application/json;charset=utf-8' }),
+      )
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'sitemap-validation.json'
+      link.hidden = true
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 0)
+      actionStatus.textContent = 'Downloaded sitemap-validation.json.'
+    })
+
+    const initialUrl = new URL(window.location.href).searchParams.get('url')
+    if (initialUrl) {
+      setMode('url')
+      urlInput.value = defaultToolUrlToHttps(initialUrl)
+      urlForm.requestSubmit()
+    }
+  }
+
+  function initialiseAll(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-sitemap-validator]')) {
+      initialiseSitemapValidator(root)
+    }
+  }
+
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

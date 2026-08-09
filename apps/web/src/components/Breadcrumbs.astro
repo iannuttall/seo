@@ -1,0 +1,28 @@
+---
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+type Props = {
+  breadcrumbs: SchemaBreadcrumb[]
+}
+
+const { breadcrumbs } = Astro.props
+---
+
+<nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {
+      breadcrumbs.map((crumb, index) => (
+        <li class="flex items-center gap-1.5">
+          {crumb.href ? (
+            <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
+              {crumb.label}
+            </a>
+          ) : (
+            <span class="text-foreground">{crumb.label}</span>
+          )}
+          {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

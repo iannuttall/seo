@@ -1,0 +1,32 @@
+---
+type Props = {
+  action: string
+}
+
+const { action } = Astro.props
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY
+const disabledForLocalDevelopment =
+  import.meta.env.PUBLIC_DISABLE_TURNSTILE_FOR_LOCAL_PREVIEW === 'true'
+---
+
+{
+  disabledForLocalDevelopment ? (
+    <input type="hidden" name="turnstileToken" value="local-preview" />
+  ) : sitekey ? (
+    <div data-turnstile-container>
+      <div
+        class="cf-turnstile min-h-[65px]"
+        data-sitekey={sitekey}
+        data-action={action}
+        data-theme="auto"
+        data-response-field-name="turnstileToken"
+      />
+    </div>
+  ) : (
+    <p class="border border-border bg-background-subtle p-3 font-sans text-xs font-light leading-5 text-foreground-muted" role="status">
+      This checker is unavailable right now.
+    </p>
+  )
+}
+
+{sitekey && !disabledForLocalDevelopment ? <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> : null}

@@ -44,6 +44,22 @@ test('fetches one public llms.txt file with bounded source details', async () =>
   assert.equal(result.source.limits.fileBytes, 100_000)
 })
 
+test('defaults a scheme-less llms.txt URL to HTTPS', async () => {
+  const seen: string[] = []
+  const response = await handleLlmsTxtFetch(
+    request('example.com/llms.txt'),
+    async (input) => {
+      seen.push(input.toString())
+      return new Response('# Example\n', {
+        headers: { 'content-type': 'text/plain' },
+      })
+    },
+  )
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(seen, ['https://example.com/llms.txt'])
+})
+
 test('follows safe redirects and retains the final URL', async () => {
   const seen: string[] = []
   const response = await handleLlmsTxtFetch(

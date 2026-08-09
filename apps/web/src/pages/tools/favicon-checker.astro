@@ -1,0 +1,92 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import FaviconChecker from '@/components/tools/FaviconChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Favicon checker' },
+]
+---
+
+<BaseLayout
+  title="Favicon checker"
+  description="Check favicon files, declared sizes, image dimensions, Apple touch icons, and web app manifest icons for a public website."
+  canonicalPath="/tools/favicon-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader
+      title="Favicon checker"
+      description="Check the favicon declarations and files used by Google Search, browser tabs, iOS home screens, and installed web apps."
+      align="left"
+    />
+
+    <FaviconChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Check the home page favicon declarations</h2>
+      <p>
+        Enter a domain or any URL on the site. The checker uses the hostname's
+        home page because Google supports one favicon per hostname. It reads
+        icon link elements, checks the usual /favicon.ico fallback, and follows
+        one declared web app manifest.
+      </p>
+      <p>
+        Each icon result keeps the declared relationship, size, type, and
+        purpose next to the fetched file's HTTP response, byte size, format,
+        and detected dimensions. That makes a stale declaration or wrong image
+        response easier to spot.
+      </p>
+
+      <h2>Google Search favicon requirements</h2>
+      <p>
+        Google asks for a supported icon link on the home page, a stable icon
+        URL, and a square image of at least 8 by 8 pixels. Google recommends an
+        icon larger than 48 by 48 pixels for clearer rendering across its
+        surfaces. The home page and icon must also be crawlable by Googlebot and
+        Googlebot-Image.
+      </p>
+      <p>
+        This check can confirm the declaration, response, format, and dimensions
+        it observes. It does not run as Googlebot or decide whether the image is
+        visually representative of the site. Meeting the checked requirements
+        does not guarantee that Google will show the icon. Read the current{' '}
+        <a href="https://developers.google.com/search/docs/appearance/favicon-in-search" target="_blank" rel="noreferrer">Google Search favicon documentation</a>
+        {' '}before changing a production site.
+      </p>
+
+      <h2>Browser, iOS, and web app icons are separate</h2>
+      <p>
+        Browsers can use a declared icon or the conventional /favicon.ico file.
+        Apple touch icons are intended for iOS home screens. Manifest icons are
+        used when a web app is installed and can declare purposes such as
+        maskable. One file may cover several surfaces, but the declarations are
+        still different.
+      </p>
+      <p>
+        The{' '}
+        <a href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons" target="_blank" rel="noreferrer">web app manifest icon reference</a>
+        {' '}explains how manifest sizes, types, and purposes guide browsers and
+        operating systems.
+      </p>
+
+      <h2>What the checker covers</h2>
+      <p>
+        The checker reads the home page declarations, the usual favicon.ico
+        fallback, Apple touch icons, and icons from the web app manifest. Each
+        result shows a preview, response status, file type, dimensions, and the
+        places where the icon can be used.
+      </p>
+      <p>
+        Use the findings to catch missing files, broken declarations, incorrect
+        sizes, and gaps between browser, search, iOS, and installed app icons.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

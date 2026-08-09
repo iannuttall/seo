@@ -159,6 +159,17 @@ test('every non-home page suffixes the site name', () => {
   }
 })
 
+test('built links keep whitespace before the following word', () => {
+  for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
+    const relativePath = file.slice(dist.length + 1)
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /<\/a>[A-Za-z]/,
+      `${relativePath} joins a link to the following word`,
+    )
+  }
+})
+
 test('stats page uses the canonical report names', () => {
   const html = readFileSync(resolve(dist, 'stats/index.html'), 'utf8')
   const encoded = html.match(/data-report-labels="([^"]+)"/)?.[1]

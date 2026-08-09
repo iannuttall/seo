@@ -10,6 +10,11 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./server-logs/browser": {
+      "types": "./src/server-logs/browser.ts",
+      "browser": "./src/server-logs/browser.ts",
+      "import": "./dist/server-logs/browser.js"
     }
   },
   "files": [

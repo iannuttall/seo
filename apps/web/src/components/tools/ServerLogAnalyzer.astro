@@ -1,0 +1,439 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormSelect from '@/components/FormSelect.astro'
+---
+
+<section data-server-log-analyzer class="space-y-6">
+  <DottedCard patternId="server-log-input">
+    <form data-analyzer-form class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Choose an access log</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Open a combined Apache or NGINX log, or a JSONL export up to 250 MB.
+        </p>
+      </div>
+
+      <div
+        data-file-drop
+        class="border border-border bg-background-subtle p-5 transition-colors focus-within:border-primary"
+      >
+        <input
+          data-file-input
+          class="hidden"
+          type="file"
+          accept=".log,.txt,.jsonl,.ndjson,text/plain,application/x-ndjson"
+        />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <p data-file-name class="truncate font-mono text-sm">No file selected</p>
+            <p data-file-detail class="font-sans text-xs font-light leading-5 text-foreground-muted">
+              Drop a file here or choose one from your computer.
+            </p>
+          </div>
+          <button
+            data-choose-file
+            type="button"
+            class="shrink-0 border border-border bg-background px-4 py-2.5 font-sans text-xs font-medium text-foreground transition-colors hover:border-foreground"
+          >Choose file</button>
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <label class="block space-y-2 font-sans text-sm font-medium">
+          <span>Log format</span>
+          <FormSelect
+            data-format
+          >
+            <option value="auto">Detect from filename</option>
+            <option value="combined">Apache or NGINX combined</option>
+            <option value="jsonl">JSONL or NDJSON</option>
+          </FormSelect>
+        </label>
+        <Button data-analyze type="submit" class="min-h-12 px-5 text-xs" disabled>Analyze log</Button>
+      </div>
+
+      <div class="space-y-2">
+        <p data-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          The raw log stays in this browser tab. Nothing is uploaded.
+        </p>
+        <div data-progress-track class="hidden h-1.5 overflow-hidden bg-border" aria-hidden="true">
+          <div data-progress-bar class="h-full w-0 bg-primary transition-[width]"></div>
+        </div>
+      </div>
+    </form>
+  </DottedCard>
+
+  <div data-results hidden>
+    <DottedCard patternId="server-log-results" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <div class="space-y-1">
+            <strong data-result-title class="font-mono text-2xl font-normal text-primary">Log analyzed</strong>
+            <p data-result-period class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+          </div>
+          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Parsed requests</dt>
+            <dd data-stat-parsed class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Crawler requests</dt>
+            <dd data-stat-crawlers class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Crawler families</dt>
+            <dd data-stat-families class="mt-1 font-mono text-lg">0</dd>
+          </div>
+          <div>
+            <dt class="font-sans text-xs font-light text-panel-foreground/65">Invalid rows</dt>
+            <dd data-stat-invalid class="mt-1 font-mono text-lg">0</dd>
+          </div>
+        </dl>
+
+        <div data-warnings class="hidden border-t border-panel-foreground/30 pt-5">
+          <h3 class="font-mono text-sm font-normal">Check the file coverage</h3>
+          <ul data-warning-list class="mt-3 space-y-2 font-sans text-xs font-light leading-5 text-panel-foreground/75"></ul>
+        </div>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="crawler-activity-heading">
+          <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 id="crawler-activity-heading" class="font-mono text-sm font-normal">Crawler activity</h3>
+            <p class="font-sans text-xs font-light text-panel-foreground/65">Matched from user-agent strings</p>
+          </div>
+          <p data-no-crawlers class="mt-3 hidden font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          <div data-crawler-table class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[36rem] border-collapse text-left">
+              <thead class="border-b border-panel-foreground/30 font-sans text-xs font-medium text-panel-foreground/65">
+                <tr>
+                  <th class="pb-2 pr-4">Crawler</th>
+                  <th class="pb-2 pr-4">Type</th>
+                  <th class="pb-2 pr-4 text-right">Requests</th>
+                  <th class="pb-2 pr-4 text-right">4xx</th>
+                  <th class="pb-2 text-right">5xx</th>
+                </tr>
+              </thead>
+              <tbody data-crawler-rows class="divide-y divide-panel-foreground/20 font-sans text-xs"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="crawler-errors-heading">
+          <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 id="crawler-errors-heading" class="font-mono text-sm font-normal">Crawler error paths</h3>
+            <p class="font-sans text-xs font-light text-panel-foreground/65">Highest 4xx and 5xx counts first</p>
+          </div>
+          <p data-no-errors class="mt-3 hidden font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          <div data-error-table class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[42rem] border-collapse text-left">
+              <thead class="border-b border-panel-foreground/30 font-sans text-xs font-medium text-panel-foreground/65">
+                <tr>
+                  <th class="pb-2 pr-4">Crawler</th>
+                  <th class="pb-2 pr-4">Path</th>
+                  <th class="pb-2 pr-4 text-right">Requests</th>
+                  <th class="pb-2 pr-4 text-right">4xx</th>
+                  <th class="pb-2 text-right">5xx</th>
+                </tr>
+              </thead>
+              <tbody data-error-rows class="divide-y divide-panel-foreground/20 font-sans text-xs"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="csv-heading">
+          <div class="space-y-1">
+            <h3 id="csv-heading" class="font-mono text-sm font-normal">Download CSV files</h3>
+            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+              Exports contain crawler aggregates. They do not include raw requests or full user-agent strings.
+            </p>
+          </div>
+          <div class="mt-4 grid gap-2 sm:grid-cols-2">
+            <Button data-export="crawler-summary" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler summary</Button>
+            <Button data-export="crawler-paths" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler paths</Button>
+            <Button data-export="crawler-errors" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler errors</Button>
+            <Button data-export="status-codes" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Status codes</Button>
+          </div>
+          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+        </section>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import { BROWSER_SERVER_LOG_LIMITS, type CrawlerPathSummary, type CrawlerSummary, type ServerLogCsvFile, type ServerLogCsvName, type ServerLogFormat } from '@seo/core/server-logs/browser'
+  import type { BrowserServerLogAnalysis } from '@/lib/server-log-file'
+
+  type ServerLogReport = BrowserServerLogAnalysis['report']
+  type WorkerMessage =
+    | { type: 'progress'; bytesRead: number; suppliedRows: number }
+    | { type: 'complete'; report: ServerLogReport; errorPaths: CrawlerPathSummary[] }
+    | { type: 'export'; file: ServerLogCsvFile }
+    | { type: 'error'; message: string }
+
+  function initialiseServerLogAnalyzer(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing server log control: ${selector}`)
+      return element
+    }
+
+    const form = required<HTMLFormElement>('[data-analyzer-form]')
+    const fileInput = required<HTMLInputElement>('[data-file-input]')
+    const drop = required<HTMLElement>('[data-file-drop]')
+    const choose = required<HTMLButtonElement>('[data-choose-file]')
+    const filename = required<HTMLElement>('[data-file-name]')
+    const fileDetail = required<HTMLElement>('[data-file-detail]')
+    const format = required<HTMLSelectElement>('[data-format]')
+    const analyze = required<HTMLButtonElement>('[data-analyze]')
+    const status = required<HTMLElement>('[data-status]')
+    const progressTrack = required<HTMLElement>('[data-progress-track]')
+    const progressBar = required<HTMLElement>('[data-progress-bar]')
+    const results = required<HTMLElement>('[data-results]')
+    const resultTitle = required<HTMLElement>('[data-result-title]')
+    const resultPeriod = required<HTMLElement>('[data-result-period]')
+    const coverage = required<HTMLElement>('[data-coverage]')
+    const statParsed = required<HTMLElement>('[data-stat-parsed]')
+    const statCrawlers = required<HTMLElement>('[data-stat-crawlers]')
+    const statFamilies = required<HTMLElement>('[data-stat-families]')
+    const statInvalid = required<HTMLElement>('[data-stat-invalid]')
+    const warnings = required<HTMLElement>('[data-warnings]')
+    const warningList = required<HTMLElement>('[data-warning-list]')
+    const crawlerTable = required<HTMLElement>('[data-crawler-table]')
+    const crawlerRows = required<HTMLElement>('[data-crawler-rows]')
+    const noCrawlers = required<HTMLElement>('[data-no-crawlers]')
+    const errorTable = required<HTMLElement>('[data-error-table]')
+    const errorRows = required<HTMLElement>('[data-error-rows]')
+    const noErrors = required<HTMLElement>('[data-no-errors]')
+    const exportStatus = required<HTMLElement>('[data-export-status]')
+    const exportButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-export]')]
+
+    let selectedFile: File | undefined
+    let worker: Worker | undefined
+
+    function number(value: number): string {
+      return value.toLocaleString()
+    }
+
+    function fileSize(bytes: number): string {
+      if (bytes < 1_000) return `${bytes} bytes`
+      if (bytes < 1_000_000) return `${(bytes / 1_000).toFixed(1)} KB`
+      return `${(bytes / 1_000_000).toFixed(1)} MB`
+    }
+
+    function selectFile(file: File): void {
+      worker?.terminate()
+      worker = undefined
+      selectedFile = file
+      filename.textContent = file.name
+      fileDetail.textContent = `${fileSize(file.size)} selected. Ready to analyze locally.`
+      analyze.disabled = file.size < 1 || file.size > BROWSER_SERVER_LOG_LIMITS.bytes
+      if (file.size < 1) status.textContent = 'Choose a non-empty server log file.'
+      else if (file.size > BROWSER_SERVER_LOG_LIMITS.bytes) {
+        status.textContent = 'Choose a file smaller than 250 MB.'
+      } else {
+        status.textContent = 'The raw log stays in this browser tab. Nothing is uploaded.'
+      }
+      results.hidden = true
+      progressTrack.classList.add('hidden')
+      progressBar.style.width = '0%'
+      exportStatus.textContent = ''
+    }
+
+    function cell(value: string, className = ''): HTMLTableCellElement {
+      const element = document.createElement('td')
+      element.className = `py-3 pr-4 last:pr-0 ${className}`
+      element.textContent = value
+      return element
+    }
+
+    function renderCrawlerRows(rows: CrawlerSummary[], complete: boolean): void {
+      crawlerRows.replaceChildren()
+      crawlerTable.hidden = rows.length === 0
+      noCrawlers.hidden = rows.length > 0
+      if (rows.length === 0) {
+        noCrawlers.textContent = complete
+          ? 'No recognised crawler user agents were found in this file.'
+          : 'No recognised crawler user agents were found in the part of the file that was analyzed.'
+        return
+      }
+      for (const row of rows) {
+        const tr = document.createElement('tr')
+        tr.append(
+          cell(row.family, 'font-mono'),
+          cell(row.category),
+          cell(number(row.requests), 'text-right font-mono'),
+          cell(number(row.clientError), 'text-right font-mono'),
+          cell(number(row.serverError), 'text-right font-mono'),
+        )
+        crawlerRows.append(tr)
+      }
+    }
+
+    function renderErrorRows(rows: CrawlerPathSummary[], complete: boolean): void {
+      errorRows.replaceChildren()
+      errorTable.hidden = rows.length === 0
+      noErrors.hidden = rows.length > 0
+      if (rows.length === 0) {
+        noErrors.textContent = complete
+          ? 'No 4xx or 5xx crawler paths were found in this file.'
+          : 'No 4xx or 5xx crawler paths were found in the part of the file that was analyzed.'
+        return
+      }
+      for (const row of rows.slice(0, 50)) {
+        const tr = document.createElement('tr')
+        tr.append(
+          cell(row.family, 'font-mono'),
+          cell(row.path, 'max-w-md break-all font-mono'),
+          cell(number(row.requests), 'text-right font-mono'),
+          cell(number(row.clientError), 'text-right font-mono'),
+          cell(number(row.serverError), 'text-right font-mono'),
+        )
+        errorRows.append(tr)
+      }
+    }
+
+    function renderResult(report: ServerLogReport, errorPaths: CrawlerPathSummary[]): void {
+      const complete = report.dataStatus === 'complete'
+      resultTitle.textContent = report.summary.crawlerRows > 0
+        ? `${number(report.summary.crawlerRows)} crawler requests found`
+        : 'No recognised crawler requests found'
+      resultPeriod.textContent = report.summary.firstSeenAt && report.summary.lastSeenAt
+        ? `${new Date(report.summary.firstSeenAt).toLocaleString()} to ${new Date(report.summary.lastSeenAt).toLocaleString()}`
+        : 'No valid request dates were available.'
+      coverage.textContent = complete ? 'Complete file' : 'Partial evidence'
+      statParsed.textContent = number(report.summary.parsedRows)
+      statCrawlers.textContent = number(report.summary.crawlerRows)
+      statFamilies.textContent = number(report.crawlers.length)
+      statInvalid.textContent = number(report.summary.invalidRows)
+
+      warningList.replaceChildren()
+      warnings.hidden = report.warnings.length === 0
+      for (const warning of report.warnings) {
+        const item = document.createElement('li')
+        item.textContent = warning
+        warningList.append(item)
+      }
+      renderCrawlerRows(report.crawlers, complete)
+      renderErrorRows(errorPaths, complete)
+      exportStatus.textContent = 'Choose any table to download it as CSV.'
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+
+    function startWorker(): Worker {
+      worker?.terminate()
+      const next = new Worker(new URL('../../workers/server-log.ts', import.meta.url), {
+        type: 'module',
+      })
+      next.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
+        const message = event.data
+        if (message.type === 'progress') {
+          const percent = selectedFile?.size
+            ? Math.min(100, (message.bytesRead / selectedFile.size) * 100)
+            : 0
+          progressBar.style.width = `${percent}%`
+          status.textContent = `Read ${fileSize(message.bytesRead)} and ${number(message.suppliedRows)} rows.`
+          return
+        }
+        if (message.type === 'complete') {
+          analyze.disabled = false
+          analyze.textContent = 'Analyze log'
+          progressBar.style.width = '100%'
+          status.textContent = `Finished reading ${selectedFile?.name ?? 'the selected file'}.`
+          renderResult(message.report, message.errorPaths)
+          return
+        }
+        if (message.type === 'export') {
+          const blob = new Blob([message.file.content], { type: 'text/csv;charset=utf-8' })
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = message.file.filename
+          link.hidden = true
+          document.body.append(link)
+          link.click()
+          link.remove()
+          window.setTimeout(() => URL.revokeObjectURL(url), 0)
+          exportButtons.forEach((button) => { button.disabled = false })
+          exportStatus.textContent = message.file.capped
+            ? `Downloaded ${message.file.filename} with ${number(message.file.rowsReturned)} of ${number(message.file.rowsAvailable)} rows.`
+            : `Downloaded ${message.file.filename}.`
+          return
+        }
+        analyze.disabled = false
+        analyze.textContent = 'Analyze log'
+        exportButtons.forEach((button) => { button.disabled = false })
+        status.textContent = message.message
+        progressTrack.classList.add('hidden')
+      })
+      next.addEventListener('error', () => {
+        analyze.disabled = false
+        analyze.textContent = 'Analyze log'
+        status.textContent = 'The browser worker stopped before the log was analyzed.'
+        progressTrack.classList.add('hidden')
+      })
+      return next
+    }
+
+    choose.addEventListener('click', () => fileInput.click())
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0]
+      if (file) selectFile(file)
+    })
+    for (const eventName of ['dragenter', 'dragover']) {
+      drop.addEventListener(eventName, (event) => {
+        event.preventDefault()
+        drop.classList.add('border-primary')
+      })
+    }
+    for (const eventName of ['dragleave', 'drop']) {
+      drop.addEventListener(eventName, (event) => {
+        event.preventDefault()
+        drop.classList.remove('border-primary')
+      })
+    }
+    drop.addEventListener('drop', (event) => {
+      const file = event.dataTransfer?.files[0]
+      if (file) selectFile(file)
+    })
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      if (!selectedFile || analyze.disabled) return
+      analyze.disabled = true
+      analyze.textContent = 'Analyzing...'
+      results.hidden = true
+      progressTrack.classList.remove('hidden')
+      progressBar.style.width = '0%'
+      status.textContent = `Starting ${selectedFile.name}...`
+      worker = startWorker()
+      const selectedFormat = format.value
+      worker.postMessage({
+        type: 'analyze',
+        file: selectedFile,
+        format: selectedFormat === 'auto' ? undefined : selectedFormat as ServerLogFormat,
+      })
+    })
+
+    for (const button of exportButtons) {
+      button.addEventListener('click', () => {
+        const name = button.dataset.export as ServerLogCsvName | undefined
+        if (!worker || !name) return
+        exportButtons.forEach((item) => { item.disabled = true })
+        exportStatus.textContent = `Preparing ${name}.csv...`
+        worker.postMessage({ type: 'export', name })
+      })
+    }
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-server-log-analyzer]')) {
+    initialiseServerLogAnalyzer(root)
+  }
+</script>

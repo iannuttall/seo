@@ -175,6 +175,11 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
     env as never,
     context as never,
   )
+  const llmsTxt = await app.fetch(
+    new Request('https://seoskill.dev/api/tools/llms-txt'),
+    env as never,
+    context as never,
+  )
   const missing = await app.fetch(
     new Request('https://seoskill.dev/api/missing'),
     env as never,
@@ -188,6 +193,7 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
 
   assert.equal(telemetry.status, 405)
   assert.equal(stats.status, 405)
+  assert.equal(llmsTxt.status, 405)
   assert.equal(missing.status, 404)
   assert.equal(await asset.text(), 'static asset')
   assert.deepEqual(assetRequests, ['https://seoskill.dev/tools'])

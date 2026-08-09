@@ -35,6 +35,12 @@
 /tools/llms-txt-generator.md
   Link: <https://seoskill.dev/tools/llms-txt-generator>; rel="canonical"
 
+/tools/llms-txt-validator.md
+  Link: <https://seoskill.dev/tools/llms-txt-validator>; rel="canonical"
+
+/tools/server-log-analyzer.md
+  Link: <https://seoskill.dev/tools/server-log-analyzer>; rel="canonical"
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 

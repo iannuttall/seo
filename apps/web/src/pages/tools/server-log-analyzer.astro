@@ -1,0 +1,106 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import CopyCode from '@/components/docs/CopyCode.astro'
+import ServerLogAnalyzer from '@/components/tools/ServerLogAnalyzer.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SEO log file analyzer' },
+]
+---
+
+<BaseLayout
+  title="SEO log file analyzer"
+  description="Analyze Apache and NGINX access logs in your browser. Find search and AI crawler requests, HTTP errors, busy paths, and download CSV files."
+  canonicalPath="/tools/server-log-analyzer"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        {breadcrumbs.map((crumb, index) => (
+          <li class="flex items-center gap-1.5">
+            {crumb.href ? (
+              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-foreground">{crumb.label}</span>
+            )}
+            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <PageHeader
+      title="SEO log file analyzer"
+      description="Find Googlebot, Bingbot, and AI crawler activity in a server access log. The file is processed in your browser and can be exported as four useful CSV tables."
+      align="left"
+    />
+
+    <ServerLogAnalyzer />
+
+    <div class="docs-prose mt-16">
+      <h2>See which crawlers request your pages</h2>
+      <p>
+        The analyzer groups requests by crawler family, URL path, and HTTP
+        status. Query strings are removed so tracking parameters do not split
+        one page into hundreds of rows. It also shows the first and last valid
+        request dates found in the file.
+      </p>
+      <p>
+        Combined Apache and NGINX access logs work directly. JSONL and NDJSON
+        exports can use common names for the timestamp, method, URL, status,
+        response bytes, and user agent.
+      </p>
+
+      <h2>Your raw access log stays on your machine</h2>
+      <p>
+        A browser worker reads the selected file in small pieces and keeps only
+        totals for crawlers, paths, and status codes. The page does not upload
+        the log or keep a searchable copy of its raw requests. Large files can
+        be cancelled by closing the tab or choosing another file.
+      </p>
+
+      <h2>User-agent matches need verification</h2>
+      <p>
+        A matching user-agent string shows what the request claimed to be. It
+        does not prove that Google, Bing, OpenAI, Anthropic, or another company
+        sent the request. Check important findings against the original log and
+        your server configuration before blocking or allowing a crawler.
+      </p>
+      <p>
+        A partial result means the file contained malformed rows or reached a
+        processing limit. Treat missing crawler activity as unknown in that
+        case, rather than a clean zero.
+      </p>
+
+      <h2>Run repeatable log analysis from the terminal</h2>
+      <p>
+        The command uses the same parser and returns the same crawler evidence.
+        JSON output is useful for an agent or script.
+      </p>
+      <CopyCode
+        label="Analyze a server log as JSON"
+        value="seo server-logs analyze --file ./access.log --json"
+      />
+      <p>
+        Choose one CSV table when you need a file for a spreadsheet or another
+        analysis tool.
+      </p>
+      <CopyCode
+        label="Export crawler errors as CSV"
+        value="seo server-logs analyze --file ./access.log --csv crawler-errors --output ./crawler-errors.csv"
+        wrap
+      />
+      <p>
+        The <a href="/docs/reports/server-log-analysis">server log analysis report guide</a>{' '}
+        covers the available command limits and structured result.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

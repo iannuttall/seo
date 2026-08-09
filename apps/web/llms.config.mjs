@@ -26,6 +26,8 @@ export const llmsTxt = {
       items: [
         { path: '/tools' },
         { path: '/tools/llms-txt-generator' },
+        { path: '/tools/llms-txt-validator' },
+        { path: '/tools/server-log-analyzer' },
       ],
     },
     {

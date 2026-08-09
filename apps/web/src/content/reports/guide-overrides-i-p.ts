@@ -424,6 +424,13 @@ export const reportGuideOverridesIP: Partial<
     ],
     alternatives: [
       {
+        when: 'You only need to check the Markdown shape of a draft or local file.',
+        href: '/tools/llms-txt-validator',
+        label: 'Free llms.txt validator',
+        doInstead:
+          'Use the browser validator for line-specific format and link-list checks without installing anything. It does not fetch the file or its linked pages.',
+      },
+      {
         when: 'You need to check the site’s wider crawl, indexability, snippet, and page-structure controls for AI search.',
         reportId: 'ai-readiness',
         doInstead:

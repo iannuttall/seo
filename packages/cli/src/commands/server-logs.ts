@@ -1,4 +1,12 @@
-import { importServerLog, SeoError, serverLogReport } from '@seo/core'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import {
+  importServerLog,
+  renderServerLogCsv,
+  SeoError,
+  type ServerLogCsvName,
+  serverLogReport,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, strictNumberArg, stringArg } from '../args.js'
 import { printJson } from '../utils.js'
@@ -42,17 +50,39 @@ const analyzeCommand = defineCommand({
       default: false,
       description: 'Print machine-readable JSON.',
     },
+    csv: {
+      type: 'string',
+      description:
+        'CSV table: crawler-summary, crawler-paths, crawler-errors, or status-codes.',
+    },
+    output: {
+      type: 'string',
+      description: 'Write CSV output to this path instead of stdout.',
+    },
   },
   run: async ({ args }) => {
     const file = stringArg(args.file)
     if (!file) throw new SeoError('INVALID_INPUT', 'Pass --file.')
-    const format = stringArg(args.format)
-    if (format && !['combined', 'jsonl'].includes(format)) {
+    const json = jsonFlag(args)
+    const csvName =
+      args.csv === undefined ? undefined : serverLogCsvName(args.csv)
+    const output = stringArg(args.output)
+    if (json && csvName) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Use either --json or --csv, not both.',
+      )
+    }
+    if (output && !csvName) {
+      throw new SeoError('INVALID_INPUT', '--output requires --csv.')
+    }
+    const inputFormat = stringArg(args.format)
+    if (inputFormat && !['combined', 'jsonl'].includes(inputFormat)) {
       throw new SeoError('INVALID_INPUT', '--format must be combined or jsonl.')
     }
     const evidence = await importServerLog({
       file,
-      format: format as 'combined' | 'jsonl' | undefined,
+      format: inputFormat as 'combined' | 'jsonl' | undefined,
       rowLimit: strictNumberArg(args['row-limit'], '--row-limit'),
       pathLimit: strictNumberArg(args['path-limit'], '--path-limit'),
     })
@@ -60,7 +90,17 @@ const analyzeCommand = defineCommand({
       evidence,
       limit: strictNumberArg(args.limit, '--limit'),
     })
-    if (jsonFlag(args)) {
+    if (csvName) {
+      const csv = renderServerLogCsv(evidence, csvName)
+      await writeOrPrint(output, csv.content)
+      if (csv.capped) {
+        process.stderr.write(
+          `Warning: ${csv.omittedRows.toLocaleString()} CSV rows were omitted by the export limit.\n`,
+        )
+      }
+      return
+    }
+    if (json) {
       printJson(report)
       return
     }
@@ -137,3 +177,32 @@ export const serverLogsCommand = defineCommand({
   },
   subCommands: { analyze: analyzeCommand },
 })
+
+function serverLogCsvName(value: unknown): ServerLogCsvName {
+  const name = stringArg(value)
+  if (
+    name &&
+    [
+      'crawler-summary',
+      'crawler-paths',
+      'crawler-errors',
+      'status-codes',
+    ].includes(name)
+  ) {
+    return name as ServerLogCsvName
+  }
+  throw new SeoError(
+    'INVALID_INPUT',
+    'CSV table must be crawler-summary, crawler-paths, crawler-errors, or status-codes.',
+  )
+}
+
+async function writeOrPrint(path: string | undefined, content: string) {
+  if (!path) {
+    process.stdout.write(content)
+    return
+  }
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, content)
+  process.stdout.write(`Wrote ${path}\n`)
+}

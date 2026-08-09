@@ -1,0 +1,95 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import LlmsTxtValidator from '@/components/tools/LlmsTxtValidator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'llms.txt validator' },
+]
+---
+
+<BaseLayout
+  title="llms.txt validator"
+  description="Validate a published, pasted, or local llms.txt file. Find Markdown structure, section, link, and size problems without opening the URLs inside it."
+  canonicalPath="/tools/llms-txt-validator"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        {breadcrumbs.map((crumb, index) => (
+          <li class="flex items-center gap-1.5">
+            {crumb.href ? (
+              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-foreground">{crumb.label}</span>
+            )}
+            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <PageHeader
+      title="llms.txt validator"
+      description="Enter a public llms.txt URL, paste the content, or open a local file. Get line-specific format and link-list checks."
+      align="left"
+    />
+
+    <LlmsTxtValidator />
+
+    <div class="docs-prose mt-16">
+      <h2>What the validator checks</h2>
+      <p>
+        The checker follows the current{' '}
+        <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt proposal</a>.
+        {' '}It looks for one H1 project name, the optional blockquote summary,
+        H2 file-list sections, complete HTTP or HTTPS links, duplicate links,
+        and the special Optional section.
+      </p>
+      <p>
+        Errors include a line number when the problem belongs to one line.
+        Suggestions cover valid but thin files, such as a title with no summary
+        or useful links.
+      </p>
+
+      <h2>A valid file does not prove the links work</h2>
+      <p>
+        When you enter a URL, this tool downloads that llms.txt file. It does
+        not request the pages listed inside it, inspect their response headers,
+        or confirm that an agent uses the file. Use the{' '}
+        <a href="/docs/reports/llms-txt-audit">published llms.txt audit</a> when
+        you need that live evidence.
+      </p>
+
+      <h2>llms.txt is optional for AI search</h2>
+      <p>
+        The proposal gives systems that choose to read it a curated page list.
+        Google says AI Overviews and AI Mode need no new machine-readable file
+        or special AI markup. Pages still need the normal technical and content
+        foundations used by Google Search.
+      </p>
+      <p>
+        Google's{' '}
+        <a href="https://developers.google.com/search/docs/appearance/ai-features" target="_blank" rel="noreferrer">AI features guidance</a>
+        {' '}covers the current requirements and controls. A clean validation
+        result does not predict crawling, indexing, rankings, citations, or
+        traffic.
+      </p>
+
+      <h2>Create a cleaner draft</h2>
+      <p>
+        Fix a small file with the{' '}
+        <a href="/tools/llms-txt-generator">llms.txt generator</a>. It creates
+        the same basic shape from links you choose and can import page URLs from
+        a sitemap. For automatic selection from a site crawl, use the{' '}
+        <a href="/docs/reports/llms-txt-generator">crawl-driven generator</a>.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

@@ -18,6 +18,14 @@ const expectedPages = new Map([
     'tools/llms-txt-generator/index.html',
     'https://seoskill.dev/tools/llms-txt-generator',
   ],
+  [
+    'tools/llms-txt-validator/index.html',
+    'https://seoskill.dev/tools/llms-txt-validator',
+  ],
+  [
+    'tools/server-log-analyzer/index.html',
+    'https://seoskill.dev/tools/server-log-analyzer',
+  ],
   ['docs/index.html', 'https://seoskill.dev/docs'],
   [
     'docs/getting-started/index.html',
@@ -148,6 +156,17 @@ test('every non-home page suffixes the site name', () => {
     const html = readFileSync(resolve(dist, relativePath), 'utf8')
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
     assert.ok(title?.endsWith(' | SEO Skill'), `${relativePath}: ${title}`)
+  }
+})
+
+test('built links keep whitespace before the following word', () => {
+  for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
+    const relativePath = file.slice(dist.length + 1)
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /<\/a>[A-Za-z]/,
+      `${relativePath} joins a link to the following word`,
+    )
   }
 })
 
@@ -286,7 +305,7 @@ test('llms.txt is a short curated map generated from the route manifest', async 
   assert.equal(actual, renderLlmsTxt(manifest, llmsTxt))
   assert.match(actual, /^# SEO Skill\n\n> /u)
   assert.equal(matches(actual, /^## /gmu).length, 5)
-  assert.equal(matches(actual, /^- \[/gmu).length, 14)
+  assert.equal(matches(actual, /^- \[/gmu).length, 16)
   assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
   assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
 

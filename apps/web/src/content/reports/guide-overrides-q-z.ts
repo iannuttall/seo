@@ -29,6 +29,13 @@ export const reportGuideOverridesQZ: Partial<
     ],
     alternatives: [
       {
+        when: 'You want to inspect one access log in the browser and download CSV files.',
+        href: '/tools/server-log-analyzer',
+        label: 'Open the SEO log file analyzer',
+        doInstead:
+          'Use the browser tool for a one-off local check. The raw log stays in the tab and the same parser produces crawler, path, error, and status-code CSV files.',
+      },
+      {
         when: 'You need to check the current response and page controls for a path from the log.',
         reportId: 'audit-page',
         doInstead:

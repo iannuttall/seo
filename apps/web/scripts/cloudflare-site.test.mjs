@@ -112,6 +112,22 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
     migration,
     /ip_address|country|region|city|request_headers|user_id|machine_id/i,
   )
+  const failureMigration = readFileSync(
+    resolve(appRoot, 'migrations/0002_add_failure_details.sql'),
+    'utf8',
+  )
+  assert.match(
+    failureMigration,
+    /schema INTEGER NOT NULL CHECK \(schema IN \(1, 2\)\)/,
+  )
+  assert.match(failureMigration, /failure_reason TEXT/)
+  assert.match(failureMigration, /failure_context TEXT/)
+  assert.match(failureMigration, /operation TEXT/)
+  assert.match(failureMigration, /INSERT INTO telemetry_events_v2/)
+  assert.doesNotMatch(
+    failureMigration,
+    /raw_error|error_message|stack_trace|arguments TEXT|url TEXT|path TEXT|ip_address|country|region|city|request_headers|user_id|machine_id/i,
+  )
 
   assert.match(
     headers,

@@ -24,6 +24,102 @@ const exampleEvent = `{
   "report": "site-crawl"
 }`
 
+const failureEvent = `{
+  "event": "audit_failed",
+  "version": "0.2.31",
+  "agent": "codex",
+  "os": "darwin",
+  "arch": "arm64",
+  "node": "22",
+  "cohort": "2026-W32",
+  "schema": 2,
+  "errorCategory": "database",
+  "failureReason": "database_unique_constraint",
+  "failureContext": "crawl_pages_run_id_url",
+  "report": "technical-watch"
+}`
+
+const failureCategories = [
+  'auth',
+  'crawl_timeout',
+  'network',
+  'config',
+  'data',
+  'database',
+  'filesystem',
+  'internal',
+  'unknown',
+]
+
+const failureReasons = [
+  'access_denied',
+  'auth_config_required',
+  'auth_expired',
+  'auth_required',
+  'crawl_timeout',
+  'database_constraint',
+  'database_corrupt',
+  'database_locked',
+  'database_read_only',
+  'database_unique_constraint',
+  'filesystem_full',
+  'filesystem_not_found',
+  'filesystem_permission',
+  'insufficient_data',
+  'internal_error',
+  'invalid_input',
+  'network_connection',
+  'network_dns',
+  'network_timeout',
+  'network_tls',
+  'optional_provider_unavailable',
+  'property_not_found',
+  'provider_unavailable',
+  'rate_limited',
+  'unknown',
+]
+
+const failureContexts = ['crawl_pages_run_id_url']
+
+const failureOperations = [
+  'analytics',
+  'auth',
+  'cache',
+  'change-log',
+  'client',
+  'content',
+  'content-groups',
+  'crawl-reports',
+  'diagnose',
+  'export',
+  'gsc-query',
+  'indexnow',
+  'init',
+  'llms',
+  'logs',
+  'mcp',
+  'monitoring',
+  'okf',
+  'perf',
+  'privacy',
+  'project',
+  'projects',
+  'providers',
+  'pseo',
+  'reports',
+  'reset',
+  'schedule',
+  'server-logs',
+  'setup',
+  'skill',
+  'sites',
+  'start',
+  'telemetry',
+  'tests',
+  'updates',
+  'url-inspect',
+]
+
 const telemetryCommands = `seo telemetry disable
 seo telemetry status
 seo telemetry enable`
@@ -43,7 +139,7 @@ const localState = `{
 <BaseLayout
   title="Anonymous telemetry"
   description="Every anonymous usage event SEO sends, everything it never collects, and every way to disable telemetry."
-  dateModified="2026-07-16"
+  dateModified="2026-08-09"
 >
   <main data-agent-content>
     <PageHeader
@@ -56,6 +152,11 @@ const localState = `{
       <p>
         Telemetry never includes your SEO data or an identifier that could
         link events to a person or machine.
+      </p>
+      <p>
+        Published clients currently send schema 1 events. The receiver also
+        accepts schema 2, which adds fixed failure reasons without accepting
+        raw error text.
       </p>
       <p>
         See the same aggregate data as the maintainer on the <a href="/stats">public usage stats page</a>.
@@ -91,7 +192,8 @@ const localState = `{
               <tr><td><code>setup_complete</code></td><td>A non-dry-run guided setup finishes successfully.</td><td>Once per local install.</td></tr>
               <tr><td><code>audit_start</code></td><td>A recognised report starts through the CLI or MCP server.</td><td>Every report run.</td></tr>
               <tr><td><code>audit_complete</code></td><td>A recognised report finishes successfully.</td><td>Every successful report run.</td></tr>
-              <tr><td><code>audit_failed</code></td><td>A recognised report fails. It includes only a fixed <code>errorCategory</code>.</td><td>Every failed report run.</td></tr>
+              <tr><td><code>audit_failed</code></td><td>A recognised report fails. Schema 1 includes a fixed category. Schema 2 also includes a fixed reason and optional fixed context.</td><td>Every failed report run.</td></tr>
+              <tr><td><code>command_failed</code></td><td>A non-report command fails in a schema 2 client. It includes only a fixed command, category, reason, and optional context.</td><td>Every failed command run.</td></tr>
               <tr><td><code>first_audit_complete</code></td><td>The first recognised report finishes successfully.</td><td>Once per local install.</td></tr>
               <tr><td><code>active_d1</code></td><td>An invocation happens at least one day after the first run.</td><td>Once per local install.</td></tr>
               <tr><td><code>active_d7</code></td><td>An invocation happens at least seven days after the first run.</td><td>Once per local install.</td></tr>
@@ -120,8 +222,11 @@ const localState = `{
               <tr><td><code>arch</code></td><td><code>arm</code> | <code>arm64</code> | <code>ia32</code> | <code>loong64</code> | <code>mips</code> | <code>mipsel</code> | <code>ppc</code> | <code>ppc64</code> | <code>riscv64</code> | <code>s390</code> | <code>s390x</code> | <code>x64</code>.</td></tr>
               <tr><td><code>node</code></td><td>The Node.js major version as a string, such as <code>22</code>.</td></tr>
               <tr><td><code>cohort</code></td><td>The ISO week of the first run, such as <code>2026-W29</code>. The exact first-run time never leaves local state.</td></tr>
-              <tr><td><code>schema</code></td><td>The integer wire schema version. The current value is <code>1</code>.</td></tr>
-              <tr><td><code>errorCategory</code></td><td>Sent only with <code>audit_failed</code>. One of <code>auth</code> | <code>crawl_timeout</code> | <code>network</code> | <code>config</code> | <code>unknown</code>. Raw errors are never sent.</td></tr>
+              <tr><td><code>schema</code></td><td>The integer wire schema version. The receiver accepts <code>1</code> and <code>2</code>.</td></tr>
+              <tr><td><code>errorCategory</code></td><td>Sent only with failure events. It is one fixed category. Schema 1 accepts the original five categories. Schema 2 adds <code>data</code>, <code>database</code>, <code>filesystem</code>, and <code>internal</code>.</td></tr>
+              <tr><td><code>failureReason</code></td><td>Required for schema 2 failure events. It is one fixed reason, never raw error text.</td></tr>
+              <tr><td><code>failureContext</code></td><td>Optional on schema 2 failure events. It identifies a fixed code location or database constraint, never a user value.</td></tr>
+              <tr><td><code>operation</code></td><td>Sent only with <code>command_failed</code>. It is one fixed public command name, never arguments or user input.</td></tr>
               <tr><td><code>report</code></td><td>Sent only with report lifecycle events. It is one fixed public report identifier from the list below, never a URL or user-supplied string.</td></tr>
             </tbody>
           </table>
@@ -129,11 +234,20 @@ const localState = `{
       </div>
 
       <DottedCard patternId="telemetry-report-values">
-        <FaqAccordion items={[{ question: 'Allowed report values', values: reportIds }]} />
+        <FaqAccordion
+          items={[
+            { question: 'Allowed report values', values: reportIds },
+            { question: 'Allowed failure categories', values: failureCategories },
+            { question: 'Allowed failure reasons', values: failureReasons },
+            { question: 'Allowed failure contexts', values: failureContexts },
+            { question: 'Allowed command values', values: failureOperations },
+          ]}
+        />
       </DottedCard>
 
-      <div class="docs-prose">
+      <div class="docs-prose space-y-7">
         <CopyCode label="A successful report completion event." value={exampleEvent} wrap />
+        <CopyCode label="A schema 2 report failure event." value={failureEvent} wrap />
       </div>
     </section>
 
@@ -262,10 +376,10 @@ const localState = `{
           <li class="px-5 py-4">
             <a
               class="text-primary underline underline-offset-4 hover:decoration-dotted"
-              href="https://github.com/iannuttall/seo/blob/main/apps/web/migrations/0001_create_telemetry_events.sql"
+              href="https://github.com/iannuttall/seo/blob/main/apps/web/migrations/0002_add_failure_details.sql"
               target="_blank"
               rel="noreferrer"
-            >Exact D1 columns and database constraints</a>
+            >Schema 2 D1 columns, migration, and database constraints</a>
           </li>
           <li class="px-5 py-4">
             <a

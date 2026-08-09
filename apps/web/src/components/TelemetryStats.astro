@@ -14,6 +14,7 @@ const metrics = [
   ['setupCompletions', 'Setup completions'],
   ['firstAuditConversionPercent', 'First audit event ratio'],
   ['auditsFailed', 'Failed audits'],
+  ['commandsFailed', 'Failed commands'],
 ] as const
 ---
 
@@ -49,7 +50,7 @@ const metrics = [
     </div>
   </section>
 
-  <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
+  <div class="mb-14 grid items-start gap-5 lg:grid-cols-3" data-agent-markdown="exclude">
     <section class="space-y-5" aria-labelledby="agent-installs-heading">
       <h2 id="agent-installs-heading" class="font-mono text-xl font-normal leading-tight">
         Install agent breakdown
@@ -97,6 +98,45 @@ const metrics = [
       </div>
     </div>
   </section>
+
+  <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
+    <section class="min-w-0 space-y-5" aria-labelledby="failure-categories-heading">
+      <div class="space-y-2">
+        <h2 id="failure-categories-heading" class="font-mono text-xl font-normal leading-tight">
+          Why runs failed
+        </h2>
+        <p class="font-sans text-[0.9375rem] font-light leading-7">
+          Broad categories from every recorded failure.
+        </p>
+      </div>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table class="min-w-0">
+            <thead><tr><th>Category</th><th class="text-right">Runs</th></tr></thead>
+            <tbody class="animate-pulse" data-failure-category-table data-stats-loading><tr><td colspan="2">No recorded failures</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="min-w-0 space-y-5 lg:col-span-2" aria-labelledby="failure-details-heading">
+      <div class="space-y-2">
+        <h2 id="failure-details-heading" class="font-mono text-xl font-normal leading-tight">
+          Detailed failure signals
+        </h2>
+        <p class="font-sans text-[0.9375rem] font-light leading-7">
+          Fixed classifications from compatible versions. Raw errors and user data are never sent.
+        </p>
+      </div>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table class="min-w-0">
+            <thead><tr><th>Run</th><th>Reason</th><th>Context</th><th>Version</th><th class="text-right">Count</th></tr></thead>
+            <tbody class="animate-pulse" data-failure-detail-table data-stats-loading><tr><td colspan="5">No detailed failure signals</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <div class="mb-14 grid items-stretch gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
     <section class="flex h-full flex-col gap-5" aria-labelledby="popular-reports-heading">
@@ -168,9 +208,9 @@ const metrics = [
     return element
   }
 
-  const emptyRow = (columns: number) => {
+  const emptyRow = (columns: number, label = 'No recorded events') => {
     const row = document.createElement('tr')
-    const value = cell('No recorded events')
+    const value = cell(label)
     value.colSpan = columns
     row.append(value)
     return row
@@ -248,6 +288,73 @@ const metrics = [
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ')
 
+  const failureLabel = (value: string) =>
+    value
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+
+  const failureContextLabel = (value: string | null) => {
+    if (value === 'crawl_pages_run_id_url') return 'crawl_pages (run_id, url)'
+    return value ? failureLabel(value) : 'None'
+  }
+
+  const renderFailureCategories = (
+    table: Element | null,
+    rows: Array<{ category: string; count: number }>,
+  ) => {
+    if (!(table instanceof HTMLElement)) return
+    table.replaceChildren()
+    if (rows.length === 0) {
+      table.append(emptyRow(2, 'No recorded failures'))
+      return
+    }
+    for (const item of rows) {
+      const row = document.createElement('tr')
+      row.append(
+        cell(failureLabel(item.category)),
+        cell(count(item.count), 'right'),
+      )
+      table.append(row)
+    }
+  }
+
+  const renderFailureDetails = (
+    table: Element | null,
+    rows: Array<{
+      event: 'audit_failed' | 'command_failed'
+      report: string | null
+      operation: string | null
+      reason: string
+      context: string | null
+      version: string
+      count: number
+    }>,
+  ) => {
+    if (!(table instanceof HTMLElement)) return
+    table.replaceChildren()
+    if (rows.length === 0) {
+      table.append(emptyRow(5, 'No detailed failure signals'))
+      return
+    }
+    for (const item of rows) {
+      const row = document.createElement('tr')
+      const run = item.report
+        ? reportLabel(item.report)
+        : item.operation
+          ? `seo ${item.operation}`
+          : 'Unknown'
+      row.append(
+        cell(run),
+        cell(failureLabel(item.reason)),
+        cell(failureContextLabel(item.context)),
+        cell(item.version),
+        cell(count(item.count), 'right'),
+      )
+      table.append(row)
+    }
+  }
+
   const renderReports = (
     list: Element | null,
     rows: Array<{ report: string; count: number }>,
@@ -290,6 +397,7 @@ const metrics = [
         'auditsThisMonth',
         'setupCompletions',
         'auditsFailed',
+        'commandsFailed',
       ]) {
         text(document.querySelector(`[data-stat="${key}"]`), count(totals[key]))
       }
@@ -308,6 +416,14 @@ const metrics = [
       renderRetention(
         document.querySelector('[data-retention-table]'),
         stats.retentionD7 ?? [],
+      )
+      renderFailureCategories(
+        document.querySelector('[data-failure-category-table]'),
+        stats.failures?.categories ?? [],
+      )
+      renderFailureDetails(
+        document.querySelector('[data-failure-detail-table]'),
+        stats.failures?.details ?? [],
       )
       const reports = Array.isArray(stats.reports) ? stats.reports : []
       renderReports(

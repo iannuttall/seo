@@ -1,9 +1,24 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  TELEMETRY_AGENTS as CLIENT_AGENTS,
+  TELEMETRY_ERROR_CATEGORIES as CLIENT_ERROR_CATEGORIES,
+  TELEMETRY_EVENTS as CLIENT_EVENTS,
+  TELEMETRY_FAILURE_CONTEXTS as CLIENT_FAILURE_CONTEXTS,
+  TELEMETRY_FAILURE_REASONS as CLIENT_FAILURE_REASONS,
+  TELEMETRY_OPERATIONS as CLIENT_OPERATIONS,
+  TELEMETRY_SCHEMA_VERSION as CLIENT_SCHEMA_VERSION,
+} from '@seo/core'
+import {
   aggregateStats,
   app,
   handleTelemetryIngest,
+  TELEMETRY_AGENTS,
+  TELEMETRY_ERROR_CATEGORIES,
+  TELEMETRY_EVENTS,
+  TELEMETRY_FAILURE_CONTEXTS,
+  TELEMETRY_FAILURE_REASONS,
+  TELEMETRY_OPERATIONS,
   validateTelemetryPayload,
 } from './index.ts'
 
@@ -28,8 +43,19 @@ const validFailurePayload = {
   failureContext: 'crawl_pages_run_id_url',
 }
 
+test('schema 2 sender and receiver allowlists stay identical', () => {
+  assert.equal(CLIENT_SCHEMA_VERSION, 2)
+  assert.deepEqual(CLIENT_AGENTS, TELEMETRY_AGENTS)
+  assert.deepEqual(CLIENT_EVENTS, TELEMETRY_EVENTS)
+  assert.deepEqual(CLIENT_ERROR_CATEGORIES, TELEMETRY_ERROR_CATEGORIES)
+  assert.deepEqual(CLIENT_FAILURE_REASONS, TELEMETRY_FAILURE_REASONS)
+  assert.deepEqual(CLIENT_FAILURE_CONTEXTS, TELEMETRY_FAILURE_CONTEXTS)
+  assert.deepEqual(CLIENT_OPERATIONS, TELEMETRY_OPERATIONS)
+})
+
 test('ingest schema accepts only fixed anonymous fields', () => {
   assert.equal(validateTelemetryPayload(validPayload), true)
+  assert.equal(validateTelemetryPayload({ ...validPayload, schema: 2 }), true)
   assert.equal(
     validateTelemetryPayload({
       ...validPayload,

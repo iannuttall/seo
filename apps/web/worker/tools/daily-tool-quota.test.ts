@@ -40,11 +40,11 @@ test('reserves one exact daily check for every Worker-backed public tool', async
     identityUsed: 1,
     identityRemaining: 9,
     day: '2026-08-09',
-    tool: 'sitemap-extractor',
+    tool: 'serp-preview',
     resetAt: Date.parse('2026-08-10T00:00:00.000Z'),
   })
   const response = await applyDailyToolQuota(
-    new Request('https://seoskill.dev/api/tools/sitemap-extractor', {
+    new Request('https://seoskill.dev/api/tools/serp-preview', {
       method: 'POST',
       headers: { 'cf-connecting-ip': '203.0.113.8' },
     }),
@@ -55,7 +55,7 @@ test('reserves one exact daily check for every Worker-backed public tool', async
   assert.equal(response, undefined)
   assert.equal(fixture.state.objectName, 'paid-tools:2026-08-09')
   assert.equal(fixture.state.input?.kind, 'identity')
-  assert.equal(fixture.state.input?.tool, 'sitemap-extractor')
+  assert.equal(fixture.state.input?.tool, 'serp-preview')
   assert.match(String(fixture.state.input?.identityHash), /^[0-9a-f]{64}$/)
 })
 

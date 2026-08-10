@@ -25,6 +25,7 @@ const PUBLIC_TOOL_BY_PATH = new Map<string, PublicWorkerToolId>([
   ['/api/tools/sitemap-extractor', 'sitemap-extractor'],
   ['/api/tools/sitemap-validator', 'sitemap-validator'],
   ['/api/tools/robots-txt', 'robots-txt'],
+  ['/api/tools/serp-preview', 'serp-preview'],
   ['/api/tools/favicon-checker', 'favicon-checker'],
 ])
 

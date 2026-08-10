@@ -9,6 +9,7 @@ import {
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
 import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
+import { handleSerpPreviewFetch } from './tools/serp-preview.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
 import { handleSitemapExtraction } from './tools/sitemap-extractor.ts'
 import { handleSitemapValidation } from './tools/sitemap-validator.ts'
@@ -775,6 +776,9 @@ app.all('/api/tools/sitemap-validator', (context) =>
 )
 app.all('/api/tools/robots-txt', (context) =>
   handleRobotsTxtFetch(context.req.raw),
+)
+app.all('/api/tools/serp-preview', (context) =>
+  handleSerpPreviewFetch(context.req.raw),
 )
 app.all('/api/tools/favicon-checker', (context) =>
   handleFaviconCheck(context.req.raw),

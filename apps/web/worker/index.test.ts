@@ -366,6 +366,7 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
     'sitemap-extractor',
     'sitemap-validator',
     'robots-txt',
+    'serp-preview',
     'favicon-checker',
     'spam-score',
     'domain-rating',

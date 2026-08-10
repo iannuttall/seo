@@ -114,6 +114,42 @@ export const tools = [
       'Check pasted JSON-LD or HTML for syntax errors and missing properties in supported profiles.',
     kind: 'browser',
   },
+  {
+    id: 'seo-report-template',
+    path: '/tools/seo-report-template',
+    title: 'SEO report template',
+    action: 'Build an SEO report template',
+    description:
+      'Create an evidence-first SEO report outline in Markdown or HTML for a client, team, or site owner.',
+    kind: 'browser',
+  },
+  {
+    id: 'hreflang-generator',
+    path: '/tools/hreflang-generator',
+    title: 'Hreflang generator',
+    action: 'Open the hreflang generator',
+    description:
+      'Generate reciprocal HTML tags, an HTTP Link header, or XML sitemap entries for localized pages.',
+    kind: 'browser',
+  },
+  {
+    id: 'serp-preview',
+    path: '/tools/serp-preview',
+    title: 'SERP preview',
+    action: 'Open the SERP preview',
+    description:
+      'Preview title and meta description width on desktop or mobile, then copy the finished HTML tags.',
+    kind: 'browser',
+  },
+  {
+    id: 'canonical-checker',
+    path: '/tools/canonical-checker',
+    title: 'Canonical tag checker',
+    action: 'Open the canonical tag checker',
+    description:
+      'Inspect pasted HTML for missing, invalid, multiple, relative, or cross-site canonical links.',
+    kind: 'browser',
+  },
 ]
 
 export const toolPaths = tools.map((tool) => tool.path)

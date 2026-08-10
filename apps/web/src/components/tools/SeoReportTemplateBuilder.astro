@@ -1,0 +1,174 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import {
+  SEO_REPORT_AUDIENCES,
+  SEO_REPORT_COMPARISONS,
+  SEO_REPORT_FORMATS,
+  SEO_REPORT_SECTIONS,
+  SEO_REPORT_TEMPLATE_LIMITS,
+} from '@/lib/seo-report-template'
+---
+
+<section data-report-template-builder class="space-y-6">
+  <DottedCard patternId="seo-report-template-input">
+    <form data-report-form class="space-y-6 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Choose what the report needs to explain</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          The finished outline contains prompts and evidence tables. It does not invent traffic, ranking, or revenue numbers.
+        </p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Site or project name</span>
+          <FormInput data-site-name type="text" maxlength={SEO_REPORT_TEMPLATE_LIMITS.text} placeholder="Field Journal" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Report title <span class="font-light text-foreground-muted">(optional)</span></span>
+          <FormInput data-report-title type="text" maxlength={SEO_REPORT_TEMPLATE_LIMITS.text} placeholder="Field Journal monthly SEO report" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Period starts</span>
+          <FormInput data-period-start type="date" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Period ends</span>
+          <FormInput data-period-end type="date" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Reader</span>
+          <FormSelect data-audience>
+            {SEO_REPORT_AUDIENCES.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Comparison</span>
+          <FormSelect data-comparison>
+            {SEO_REPORT_COMPARISONS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+          <span>Output format</span>
+          <FormSelect data-format>
+            {SEO_REPORT_FORMATS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <fieldset class="space-y-4 border border-border bg-background-subtle p-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <legend class="font-mono text-sm font-normal">Report sections</legend>
+            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Keep only the sections supported by useful evidence this period.</p>
+          </div>
+          <div class="flex gap-2">
+            <Button data-select-all type="button" class="px-3 py-2 text-xs">Select all</Button>
+            <Button data-clear-sections type="button" class="px-3 py-2 text-xs">Clear</Button>
+          </div>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {SEO_REPORT_SECTIONS.map((section) => (
+            <label class="flex gap-3 border border-border bg-background p-3 font-sans text-sm">
+              <input data-section type="checkbox" value={section.id} checked class="mt-1 size-4 shrink-0 accent-primary" />
+              <span>
+                <strong class="block font-medium">{section.label}</strong>
+                <span class="mt-1 block text-xs font-light leading-5 text-foreground-muted">{section.description}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+        Everything runs in this browser tab. The report details are not uploaded.
+      </p>
+    </form>
+  </DottedCard>
+
+  <DottedCard patternId="seo-report-template-output" inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Report template</h2>
+          <p data-output-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70" aria-live="polite"></p>
+        </div>
+        <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+          <Button data-copy type="button" class="px-4 py-2.5 text-xs">Copy template</Button>
+          <Button data-download type="button" class="px-4 py-2.5 text-xs">Download</Button>
+        </div>
+      </div>
+      <pre data-output class="max-h-[36rem] overflow-auto whitespace-pre-wrap border border-panel-foreground/30 bg-panel p-4 font-mono text-xs leading-6"></pre>
+    </div>
+  </DottedCard>
+</section>
+
+<script>
+  import {
+    generateSeoReportTemplate,
+    type SeoReportFormat,
+    type SeoReportSectionId,
+  } from '@/lib/seo-report-template'
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-report-template-builder]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-report-form]')
+    const output = root.querySelector<HTMLElement>('[data-output]')
+    const summary = root.querySelector<HTMLElement>('[data-output-summary]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]')
+    const download = root.querySelector<HTMLButtonElement>('[data-download]')
+    const selectAll = root.querySelector<HTMLButtonElement>('[data-select-all]')
+    const clear = root.querySelector<HTMLButtonElement>('[data-clear-sections]')
+    if (!form || !output || !summary || !copy || !download || !selectAll || !clear) continue
+
+    const field = (selector: string) => form.querySelector<HTMLInputElement | HTMLSelectElement>(selector)
+    const checkboxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('[data-section]'))
+    let current = { output: '', filename: 'seo-report-template.md', includedSections: 0, capped: false }
+
+    const render = () => {
+      current = generateSeoReportTemplate({
+        siteName: field('[data-site-name]')?.value ?? '',
+        reportTitle: field('[data-report-title]')?.value ?? '',
+        periodStart: field('[data-period-start]')?.value ?? '',
+        periodEnd: field('[data-period-end]')?.value ?? '',
+        audience: field('[data-audience]')?.value ?? 'owner',
+        comparison: field('[data-comparison]')?.value ?? 'previous',
+        format: (field('[data-format]')?.value ?? 'markdown') as SeoReportFormat,
+        sections: checkboxes()
+          .filter((checkbox) => checkbox.checked)
+          .map((checkbox) => checkbox.value as SeoReportSectionId),
+      })
+      output.textContent = current.output
+      summary.textContent = `${current.includedSections} section${current.includedSections === 1 ? '' : 's'} included. Replace every bracketed prompt with real evidence.`
+      copy.disabled = current.output.length === 0
+      download.disabled = current.output.length === 0
+    }
+
+    form.addEventListener('input', render)
+    form.addEventListener('change', render)
+    form.addEventListener('submit', (event) => event.preventDefault())
+    selectAll.addEventListener('click', () => {
+      for (const checkbox of checkboxes()) checkbox.checked = true
+      render()
+    })
+    clear.addEventListener('click', () => {
+      for (const checkbox of checkboxes()) checkbox.checked = false
+      render()
+    })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(current.output)
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy template' }, 1_500)
+    })
+    download.addEventListener('click', () => {
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([current.output], { type: 'text/plain;charset=utf-8' }))
+      link.download = current.filename
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+    render()
+  }
+</script>

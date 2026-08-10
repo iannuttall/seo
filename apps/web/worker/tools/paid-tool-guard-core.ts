@@ -14,6 +14,7 @@ export const PUBLIC_WORKER_TOOLS = [
   'sitemap-extractor',
   'sitemap-validator',
   'robots-txt',
+  'serp-preview',
   'favicon-checker',
 ] as const
 

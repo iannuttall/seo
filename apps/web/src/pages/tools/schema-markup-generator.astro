@@ -1,0 +1,42 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SchemaMarkupGenerator from '@/components/tools/SchemaMarkupGenerator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Schema markup generator' },
+]
+---
+
+<BaseLayout title="Schema markup generator" description="Create JSON-LD structured data for articles, products, events, local businesses, recipes, videos, and other common page types." canonicalPath="/tools/schema-markup-generator" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="Schema markup generator" description="Choose a page type, enter the visible details, and copy a clean JSON-LD script without writing it by hand." align="left" />
+    <SchemaMarkupGenerator />
+    <div class="docs-prose mt-16">
+      <h2>Generate markup that matches the page</h2>
+      <p>The generator covers fourteen common page and entity types. Required fields follow the validation profile used by this tool. Optional fields are left out of the output when you do not fill them in.</p>
+      <p>Only add facts that people can see on the page. Structured data that is hidden, misleading, or unrelated to the main content can make a page ineligible for rich results.</p>
+
+      <h2>Validation and rich result eligibility are different</h2>
+      <p>A complete JSON-LD object can make a page eligible for a supported search feature. It does not guarantee that Google will show a rich result or change rankings.</p>
+      <p>Check the finished code with the <a href="/tools/schema-markup-validator">schema markup validator</a>. After publishing it, use <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a> on the live URL.</p>
+
+      <h2>FAQ markup has limited Google visibility</h2>
+      <p>FAQPage remains valid Schema.org markup, but Google normally shows FAQ rich results only for authoritative government and health sites. The generator keeps the option because other systems may still read the structured data.</p>
+
+      <h2>Ratings and reviews must be visible</h2>
+      <p>Review and AggregateRating markup must match genuine review content shown on the page. Google does not show review stars for LocalBusiness or Organization reviews published on pages controlled by the reviewed entity.</p>
+
+      <h2>Website markup belongs on the home page</h2>
+      <p>WebSite markup can state a preferred site name and alternate names for a domain or subdomain. Put it on the home page and use the canonical home page URL. The generator leaves out the retired sitelinks search box action.</p>
+
+      <h2>Your page details stay in the browser</h2>
+      <p>The form and generated JSON-LD run in this browser tab. No page details are sent to the site worker or an outside provider.</p>
+    </div>
+  </main>
+</BaseLayout>

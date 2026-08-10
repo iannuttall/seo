@@ -9,10 +9,12 @@ const reportLabelsJson = JSON.stringify(
 
 const metrics = [
   ['installs', 'Recorded installs'],
-  ['auditsStarted', 'Recorded audits'],
-  ['auditsThisMonth', 'Audits run this month'],
   ['setupCompletions', 'Setup completions'],
-  ['firstAuditConversionPercent', 'First audit event ratio'],
+  ['firstAuditCompletions', 'First audits completed'],
+  ['auditsStarted', 'Audits started'],
+  ['auditsCompleted', 'Successful audits'],
+  ['auditsThisMonth', 'Audits run this month'],
+  ['firstAuditConversionPercent', 'Installs completing first audit'],
   ['auditsFailed', 'Failed audits'],
   ['commandsFailed', 'Failed commands'],
 ] as const
@@ -50,8 +52,8 @@ const metrics = [
     </div>
   </section>
 
-  <div class="mb-14 grid items-start gap-5 lg:grid-cols-3" data-agent-markdown="exclude">
-    <section class="space-y-5" aria-labelledby="agent-installs-heading">
+  <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-breakdowns data-agent-markdown="exclude">
+    <section class="min-w-0 space-y-5" aria-labelledby="agent-installs-heading">
       <h2 id="agent-installs-heading" class="font-mono text-xl font-normal leading-tight">
         Install agent breakdown
       </h2>
@@ -64,7 +66,7 @@ const metrics = [
         </div>
       </div>
     </section>
-    <section class="space-y-5" aria-labelledby="agent-audits-heading">
+    <section class="min-w-0 space-y-5" aria-labelledby="agent-audits-heading">
       <h2 id="agent-audits-heading" class="font-mono text-xl font-normal leading-tight">
         Audit agent breakdown
       </h2>
@@ -393,9 +395,11 @@ const metrics = [
       const totals = stats.totals ?? {}
       for (const key of [
         'installs',
-        'auditsStarted',
-        'auditsThisMonth',
         'setupCompletions',
+        'firstAuditCompletions',
+        'auditsStarted',
+        'auditsCompleted',
+        'auditsThisMonth',
         'auditsFailed',
         'commandsFailed',
       ]) {

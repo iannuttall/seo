@@ -910,8 +910,11 @@ test('telemetry prose and stats keep a stable readable first render', () => {
   assert.match(stats, /data-stats-root[^>]*aria-busy="true"/u)
   assert.equal(
     matches(stats, /data-stat="[^"]+" data-stats-loading>0%?</gu).length,
-    7,
+    9,
   )
+  assert.match(stats, /data-stat="firstAuditCompletions"/u)
+  assert.match(stats, /data-stat="auditsCompleted"/u)
+  assert.match(stats, /class="[^"]*lg:grid-cols-2[^"]*" data-agent-breakdowns/u)
   assert.match(
     stats,
     /data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events/u,

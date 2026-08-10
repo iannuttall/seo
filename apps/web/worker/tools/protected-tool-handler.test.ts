@@ -452,6 +452,7 @@ test('guard and provider exceptions return safe errors only', async () => {
       tool: 'spam-score',
       providerDailyLimit: 100,
       parse,
+      now: () => now,
       verifyTurnstile: async () => ({
         ok: true,
         action: 'spam-score',
@@ -467,6 +468,7 @@ test('guard and provider exceptions return safe errors only', async () => {
       tool: 'spam-score',
       providerDailyLimit: 100,
       parse,
+      now: () => now,
       verifyTurnstile: async () => ({
         ok: true,
         action: 'spam-score',

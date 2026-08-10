@@ -96,6 +96,24 @@ export const tools = [
       'Check a robots.txt file for errors and test whether specific crawler URLs are allowed or blocked.',
     kind: 'hybrid',
   },
+  {
+    id: 'schema-markup-generator',
+    path: '/tools/schema-markup-generator',
+    title: 'Schema markup generator',
+    action: 'Open the schema markup generator',
+    description:
+      'Create JSON-LD structured data for fourteen common page and entity types and copy the finished script.',
+    kind: 'browser',
+  },
+  {
+    id: 'schema-markup-validator',
+    path: '/tools/schema-markup-validator',
+    title: 'Schema markup validator',
+    action: 'Open the schema markup validator',
+    description:
+      'Check pasted JSON-LD or HTML for syntax errors and missing properties in supported profiles.',
+    kind: 'browser',
+  },
 ]
 
 export const toolPaths = tools.map((tool) => tool.path)

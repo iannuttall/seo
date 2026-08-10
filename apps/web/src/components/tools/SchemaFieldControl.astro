@@ -1,0 +1,62 @@
+---
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import type { SchemaField } from '@/lib/schema-markup'
+
+type Props = {
+  field: SchemaField
+  name: string
+}
+
+const { field, name } = Astro.props
+const wide = field.kind === 'textarea'
+const maxLength = field.maxLength ?? (wide ? 10_000 : 2_048)
+---
+
+<label class:list={['block space-y-2 font-sans text-sm font-medium', wide && 'sm:col-span-2']}>
+  <span>{field.label}{field.required ? ' *' : ''}</span>
+  {
+    field.kind === 'textarea' ? (
+      <FormTextarea
+        name={name}
+        class="min-h-28"
+        placeholder={field.placeholder}
+        required={field.required}
+        maxlength={maxLength}
+      >
+        {field.defaultValue}
+      </FormTextarea>
+    ) : field.kind === 'select' ? (
+      <FormSelect name={name} required={field.required}>
+        {field.options?.map((option, index) => (
+          <option
+            value={option.value}
+            selected={field.defaultValue ? option.value === field.defaultValue : index === 0}
+          >
+            {option.label}
+          </option>
+        ))}
+      </FormSelect>
+    ) : (
+      <FormInput
+        name={name}
+        type={field.kind || 'text'}
+        placeholder={field.placeholder}
+        value={field.defaultValue}
+        required={field.required}
+        min={field.min}
+        max={field.max}
+        step={field.step}
+        maxlength={maxLength}
+      />
+    )
+  }
+  {
+    field.help && (
+      <small class="block font-sans text-xs font-light leading-5 text-foreground-muted">
+        {field.help}
+      </small>
+    )
+  }
+</label>

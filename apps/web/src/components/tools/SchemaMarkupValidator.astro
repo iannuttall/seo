@@ -1,0 +1,198 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+---
+
+<section data-schema-validator class="space-y-6">
+  <DottedCard patternId="schema-validator-input">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Validate JSON-LD markup</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Paste a JSON-LD object, a script element, or HTML containing JSON-LD. You can also open a local file.
+        </p>
+      </div>
+      <FormTextarea data-input class="min-h-80 px-4 text-xs" rows="14" spellcheck="false" maxlength="500000" placeholder={`{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Example Ltd",
+  "url": "https://example.com"
+}`} />
+      <input data-file class="hidden" type="file" accept=".json,.jsonld,.html,.htm,application/json,application/ld+json,text/html" />
+      <div class="flex flex-wrap gap-2">
+        <Button data-validate type="button" class="px-4 py-2.5 text-xs">Validate markup</Button>
+        <Button data-open type="button" class="px-4 py-2.5 text-xs">Open file</Button>
+        <Button data-example type="button" class="px-4 py-2.5 text-xs">Use example</Button>
+        <Button data-clear type="button" class="px-4 py-2.5 text-xs">Clear</Button>
+      </div>
+      <p data-input-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+        Your markup stays in this browser tab. The validator checks up to 500,000 characters.
+      </p>
+    </div>
+  </DottedCard>
+
+  <div data-results hidden class="space-y-6">
+    <DottedCard patternId="schema-validator-summary" inverted>
+      <div class="space-y-6 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <strong data-verdict class="font-mono text-2xl font-normal text-primary"></strong>
+            <p data-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          </div>
+          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+        </div>
+        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-5">
+          <div><dt class="text-xs text-panel-foreground/65">Entities</dt><dd data-entities class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-panel-foreground/65">Recognized</dt><dd data-recognized class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-panel-foreground/65">Errors</dt><dd data-errors class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-panel-foreground/65">Warnings</dt><dd data-warnings class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-panel-foreground/65">Advice</dt><dd data-advice class="mt-1 font-mono text-lg">0</dd></div>
+        </dl>
+        <div class="flex flex-wrap gap-2 border-t border-panel-foreground/30 pt-5">
+          <Button data-copy type="button" class="px-3 py-2.5 text-xs">Copy JSON report</Button>
+          <Button data-download type="button" class="px-3 py-2.5 text-xs">Download JSON report</Button>
+        </div>
+        <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+      </div>
+    </DottedCard>
+
+    <DottedCard patternId="schema-validator-findings">
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="font-mono text-lg font-normal">Validation findings</h3>
+          <p data-types class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+        </div>
+        <ol data-issues class="divide-y divide-border border-y border-border"></ol>
+        <p data-no-issues hidden class="font-sans text-sm font-light leading-6 text-foreground-muted">No findings were returned for the supported profile.</p>
+      </div>
+    </DottedCard>
+  </div>
+</section>
+
+<script>
+  import { SCHEMA_MARKUP_LIMITS, validateSchemaMarkup, type SchemaValidationReport } from '@/lib/schema-markup'
+
+  const example = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Example mug',
+    image: 'https://example.com/mug.jpg',
+    offers: {
+      '@type': 'Offer',
+      price: '18.00',
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+    },
+  }, null, 2)
+  const transferKey = 'seo:schema-markup-generator-output'
+
+  function initialiseSchemaValidator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing schema validator control: ${selector}`)
+      return element
+    }
+    const input = required<HTMLTextAreaElement>('[data-input]')
+    const file = required<HTMLInputElement>('[data-file]')
+    const results = required<HTMLElement>('[data-results]')
+    const verdict = required<HTMLElement>('[data-verdict]')
+    const summary = required<HTMLElement>('[data-summary]')
+    const coverage = required<HTMLElement>('[data-coverage]')
+    const types = required<HTMLElement>('[data-types]')
+    const issues = required<HTMLOListElement>('[data-issues]')
+    const noIssues = required<HTMLElement>('[data-no-issues]')
+    const actionStatus = required<HTMLElement>('[data-action-status]')
+    let report: SchemaValidationReport | undefined
+
+    function count(selector: string, value: number): void {
+      required<HTMLElement>(selector).textContent = value.toLocaleString()
+    }
+    function render(): void {
+      report = validateSchemaMarkup(input.value)
+      results.hidden = false
+      verdict.textContent = report.valid ? 'Markup passed these checks' : 'Markup needs attention'
+      summary.textContent = report.summary.errors
+        ? `${report.summary.errors} ${report.summary.errors === 1 ? 'error was' : 'errors were'} found.`
+        : report.summary.warnings
+          ? `No errors were found. Review ${report.summary.warnings} ${report.summary.warnings === 1 ? 'warning' : 'warnings'} before publishing.`
+          : 'No errors or warnings were found for the supported validation profile.'
+      coverage.textContent = report.dataStatus === 'complete' ? 'Complete within tool limits' : 'Partial result'
+      count('[data-entities]', report.summary.entities)
+      count('[data-recognized]', report.summary.recognizedEntities)
+      count('[data-errors]', report.summary.errors)
+      count('[data-warnings]', report.summary.warnings)
+      count('[data-advice]', report.summary.advice)
+      types.textContent = report.entityTypes.length
+        ? `Detected: ${report.entityTypes.map((item) => `${item.type} (${item.count})`).join(', ')}.`
+        : 'No typed entities were detected.'
+      issues.replaceChildren()
+      for (const finding of report.issues) {
+        const item = document.createElement('li')
+        item.className = 'space-y-1 py-4'
+        const heading = document.createElement('div')
+        heading.className = 'flex flex-wrap items-center gap-2'
+        const badge = document.createElement('strong')
+        badge.className = finding.severity === 'error'
+          ? 'font-mono text-xs uppercase text-red-700 dark:text-red-400'
+          : finding.severity === 'warning'
+            ? 'font-mono text-xs uppercase text-amber-700 dark:text-amber-300'
+            : 'font-mono text-xs uppercase text-foreground-muted'
+        badge.textContent = finding.severity
+        const location = document.createElement('code')
+        location.className = 'font-mono text-xs text-foreground-muted'
+        location.textContent = [finding.block ? `block ${finding.block}` : '', finding.line ? `line ${finding.line}` : '', finding.path || ''].filter(Boolean).join(', ')
+        heading.append(badge, location)
+        const message = document.createElement('p')
+        message.className = 'font-sans text-sm font-light leading-6 text-foreground'
+        message.textContent = finding.message
+        item.append(heading, message)
+        issues.append(item)
+      }
+      noIssues.hidden = report.issues.length > 0
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    root.querySelector('[data-validate]')?.addEventListener('click', render)
+    root.querySelector('[data-open]')?.addEventListener('click', () => file.click())
+    root.querySelector('[data-example]')?.addEventListener('click', () => { input.value = example; render() })
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { input.value = ''; results.hidden = true; input.focus() })
+    file.addEventListener('change', async () => {
+      const selected = file.files?.[0]
+      if (!selected) return
+      if (selected.size > SCHEMA_MARKUP_LIMITS.characters) {
+        input.value = ''
+        input.placeholder = `The selected file exceeds the ${SCHEMA_MARKUP_LIMITS.characters.toLocaleString()} byte limit.`
+        return
+      }
+      input.value = await selected.text()
+      render()
+      file.value = ''
+    })
+    root.querySelector('[data-copy]')?.addEventListener('click', async () => {
+      if (!report) return
+      await navigator.clipboard.writeText(JSON.stringify(report, null, 2))
+      actionStatus.textContent = 'JSON report copied.'
+    })
+    root.querySelector('[data-download]')?.addEventListener('click', () => {
+      if (!report) return
+      const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }))
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = 'schema-markup-validation.json'
+      anchor.click()
+      URL.revokeObjectURL(url)
+      actionStatus.textContent = 'JSON report downloaded.'
+    })
+    if (new URLSearchParams(window.location.search).get('source') === 'generator') {
+      const generated = sessionStorage.getItem(transferKey)
+      if (generated) {
+        sessionStorage.removeItem(transferKey)
+        input.value = generated
+        render()
+      }
+    }
+  }
+  for (const root of document.querySelectorAll<HTMLElement>('[data-schema-validator]')) initialiseSchemaValidator(root)
+</script>

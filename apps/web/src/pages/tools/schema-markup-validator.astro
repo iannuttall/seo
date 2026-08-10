@@ -1,0 +1,36 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SchemaMarkupValidator from '@/components/tools/SchemaMarkupValidator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Schema markup validator' },
+]
+---
+
+<BaseLayout title="Schema markup validator" description="Validate pasted JSON-LD or HTML locally. Find JSON syntax errors, missing Schema.org context and types, and missing properties for supported search and Schema.org profiles." canonicalPath="/tools/schema-markup-validator" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="Schema markup validator" description="Paste JSON-LD or HTML and check its syntax, typed entities, and required properties for supported search features." align="left" />
+    <SchemaMarkupValidator />
+    <div class="docs-prose mt-16">
+      <h2>What this validator checks</h2>
+      <p>The first pass checks JSON syntax, Schema.org context, typed entities, and input size limits. The second pass checks required and recommended properties for the fourteen profiles available in the generator.</p>
+      <p>Unsupported Schema.org types are reported separately. Their JSON syntax is still checked, but this tool does not claim that it has validated every property in the full Schema.org vocabulary.</p>
+
+      <h2>Use both official tests before publishing</h2>
+      <p><a href="https://validator.schema.org/" target="_blank" rel="noreferrer">Schema.org's validator</a> checks the wider vocabulary and can read JSON-LD, Microdata, and RDFa. <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a> checks whether a live page is eligible for supported Google search features.</p>
+      <p>A passing result does not guarantee a rich result. The visible page content, crawl access, search policies, and Google's result selection still matter.</p>
+
+      <h2>Create a fresh JSON-LD block</h2>
+      <p>Use the <a href="/tools/schema-markup-generator">schema markup generator</a> when you want a guided form for an aggregate rating, article, breadcrumb, event, FAQ page, job posting, local business, organization, person, product, recipe, review, video, or website.</p>
+
+      <h2>Your markup stays in the browser</h2>
+      <p>Pasted text and local files are checked in this browser tab. The tool does not upload the markup or request any URLs found inside it.</p>
+    </div>
+  </main>
+</BaseLayout>

@@ -859,6 +859,37 @@ test('text entry controls disable ambiguous font ligatures', () => {
   assert.match(globals, /font-feature-settings:\s*"liga" 0, "clig" 0, "calt" 0/)
 })
 
+test('schema tools use shared controls in a stacked generator flow', () => {
+  const fieldControl = readFileSync(
+    resolve(appRoot, 'src/components/tools/SchemaFieldControl.astro'),
+    'utf8',
+  )
+  const generator = readFileSync(
+    resolve(appRoot, 'src/components/tools/SchemaMarkupGenerator.astro'),
+    'utf8',
+  )
+  const validator = readFileSync(
+    resolve(appRoot, 'src/components/tools/SchemaMarkupValidator.astro'),
+    'utf8',
+  )
+
+  for (const component of ['FormInput', 'FormSelect', 'FormTextarea']) {
+    assert.match(fieldControl, new RegExp(`import ${component} from`))
+  }
+  assert.match(generator, /import Button from/)
+  assert.match(generator, /import FormSelect from/)
+  assert.match(generator, /import SchemaFieldControl from/)
+  assert.match(validator, /import Button from/)
+  assert.match(validator, /import FormTextarea from/)
+  assert.doesNotMatch(
+    generator,
+    /document\.createElement\(['"](?:button|input|select|textarea)['"]\)/,
+  )
+  assert.doesNotMatch(generator, /lg:grid-cols/)
+  assert.match(generator, /Validate this markup/)
+  assert.match(generator, /schema-markup-validator\?source=generator/)
+})
+
 test('telemetry prose and stats keep a stable readable first render', () => {
   const telemetry = readFileSync(resolve(dist, 'telemetry/index.html'), 'utf8')
   const stats = readFileSync(resolve(dist, 'stats/index.html'), 'utf8')

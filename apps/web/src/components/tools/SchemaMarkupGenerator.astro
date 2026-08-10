@@ -1,0 +1,300 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import { SCHEMA_GENERATOR_TYPES } from '@/lib/schema-markup'
+import SchemaFieldControl from './SchemaFieldControl.astro'
+---
+
+<section data-schema-generator class="space-y-6">
+  <DottedCard patternId="schema-generator-form">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Configure the page markup</h2>
+        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          Choose the page type, then enter only information that visitors can see on the page.
+        </p>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Schema type</span>
+        <FormSelect data-schema-type>
+          {
+            SCHEMA_GENERATOR_TYPES.map((type) => (
+              <option value={type.id} selected={type.id === 'article'}>{type.label}</option>
+            ))
+          }
+        </FormSelect>
+      </label>
+
+      <div class="border border-border bg-background-subtle p-4">
+        <strong data-type-name class="font-mono text-sm font-normal"></strong>
+        <p data-type-description class="mt-1 font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+        <p data-type-caveat hidden class="mt-2 font-sans text-xs font-medium leading-5 text-amber-800 dark:text-amber-300"></p>
+      </div>
+
+      {
+        SCHEMA_GENERATOR_TYPES.map((type) => (
+          <form
+            data-schema-form
+            data-schema-form-type={type.id}
+            class="space-y-5"
+            hidden={type.id !== 'article'}
+            novalidate
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              {type.fields.map((field) => (
+                <SchemaFieldControl field={field} name={field.name} />
+              ))}
+            </div>
+            <div class="space-y-5">
+              {type.repeaters?.map((repeater) => (
+                <section
+                  class="space-y-3"
+                  data-repeater-section={repeater.name}
+                  data-repeater-minimum={repeater.minimum}
+                >
+                  <div data-repeater={repeater.name} class="space-y-3">
+                    {Array.from({ length: repeater.minimum }, (_, index) => (
+                      <fieldset data-repeat-row={index} class="space-y-4 border border-border bg-background-subtle p-4">
+                        <div class="flex items-center justify-between gap-3">
+                          <legend data-repeat-legend class="font-mono text-xs">
+                            {repeater.label} {index + 1}
+                          </legend>
+                          <Button data-remove-row type="button" class="px-3 py-2 text-xs" hidden>
+                            Remove
+                          </Button>
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                          {repeater.fields.map((field) => (
+                            <SchemaFieldControl
+                              field={field}
+                              name={`${repeater.name}.${index}.${field.name}`}
+                            />
+                          ))}
+                        </div>
+                      </fieldset>
+                    ))}
+                  </div>
+                  <Button data-add-row={repeater.name} type="button" class="px-3 py-2 text-xs">
+                    {repeater.addLabel}
+                  </Button>
+                  <template data-repeat-template={repeater.name}>
+                    <fieldset data-repeat-row="__INDEX__" class="space-y-4 border border-border bg-background-subtle p-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <legend data-repeat-legend class="font-mono text-xs">{repeater.label}</legend>
+                        <Button data-remove-row type="button" class="px-3 py-2 text-xs">Remove</Button>
+                      </div>
+                      <div class="grid gap-4 sm:grid-cols-2">
+                        {repeater.fields.map((field) => (
+                          <SchemaFieldControl
+                            field={field}
+                            name={`${repeater.name}.__INDEX__.${field.name}`}
+                          />
+                        ))}
+                      </div>
+                    </fieldset>
+                  </template>
+                </section>
+              ))}
+            </div>
+          </form>
+        ))
+      }
+    </div>
+  </DottedCard>
+
+  <DottedCard patternId="schema-generator-output" inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="font-mono text-lg font-normal">Generated JSON-LD</h2>
+        <p data-validation-summary class="font-sans text-xs font-light leading-5 text-panel-foreground/70"></p>
+      </div>
+      <pre class="max-h-[42rem] min-h-72 overflow-auto border border-panel-foreground/30 bg-black/20 p-4 text-xs leading-6"><code data-output></code></pre>
+      <div class="flex flex-wrap gap-2">
+        <Button data-validate-generated type="button" class="px-3 py-2.5 text-xs">Validate this markup</Button>
+        <Button data-copy-script type="button" class="px-3 py-2.5 text-xs">Copy script</Button>
+        <Button data-copy-json type="button" class="px-3 py-2.5 text-xs">Copy JSON</Button>
+        <Button data-download type="button" class="px-3 py-2.5 text-xs">Download JSON-LD</Button>
+      </div>
+      <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+    </div>
+  </DottedCard>
+</section>
+
+<script>
+  import {
+    SCHEMA_GENERATOR_TYPES,
+    generateSchemaMarkup,
+    schemaScript,
+    validateSchemaMarkup,
+    type SchemaGeneratorType,
+  } from '@/lib/schema-markup'
+
+  const maxRepeaterItems = 100
+  const transferKey = 'seo:schema-markup-generator-output'
+
+  function initialiseSchemaGenerator(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+
+    function required<T extends Element>(selector: string): T {
+      const element = root.querySelector<T>(selector)
+      if (!element) throw new Error(`Missing schema generator control: ${selector}`)
+      return element
+    }
+
+    const typeSelect = required<HTMLSelectElement>('[data-schema-type]')
+    const forms = [...root.querySelectorAll<HTMLFormElement>('[data-schema-form]')]
+    const typeName = required<HTMLElement>('[data-type-name]')
+    const typeDescription = required<HTMLElement>('[data-type-description]')
+    const typeCaveat = required<HTMLElement>('[data-type-caveat]')
+    const output = required<HTMLElement>('[data-output]')
+    const validationSummary = required<HTMLElement>('[data-validation-summary]')
+    const actionStatus = required<HTMLElement>('[data-action-status]')
+    const copyScript = required<HTMLButtonElement>('[data-copy-script]')
+    const copyJson = required<HTMLButtonElement>('[data-copy-json]')
+    const download = required<HTMLButtonElement>('[data-download]')
+    const validateGenerated = required<HTMLButtonElement>('[data-validate-generated]')
+
+    let activeType: SchemaGeneratorType =
+      SCHEMA_GENERATOR_TYPES.find((type) => type.id === 'article') ||
+      SCHEMA_GENERATOR_TYPES[0]
+    let activeForm =
+      forms.find((form) => form.dataset.schemaFormType === activeType.id) || forms[0]
+    let json = generateSchemaMarkup(activeType.id, {})
+    let script = schemaScript(json)
+
+    function formValues(): {
+      flat: Record<string, string>
+      repeated: Record<string, Array<Record<string, string>>>
+    } {
+      const flat: Record<string, string> = {}
+      const repeated: Record<string, Array<Record<string, string>>> = {}
+      for (const element of activeForm.elements) {
+        if (
+          !(
+            element instanceof HTMLInputElement ||
+            element instanceof HTMLTextAreaElement ||
+            element instanceof HTMLSelectElement
+          )
+        )
+          continue
+        const parts = element.name.split('.')
+        if (parts.length === 1) flat[element.name] = element.value.trim()
+        else {
+          const [group, indexText, field] = parts
+          const index = Number(indexText)
+          repeated[group] ||= []
+          repeated[group][index] ||= {}
+          repeated[group][index][field] = element.value.trim()
+        }
+      }
+      for (const key of Object.keys(repeated)) repeated[key] = repeated[key].filter(Boolean)
+      return { flat, repeated }
+    }
+
+    function renderOutput(): void {
+      const data = formValues()
+      json = generateSchemaMarkup(activeType.id, data.flat, data.repeated)
+      script = schemaScript(json)
+      output.textContent = script
+      const report = validateSchemaMarkup(JSON.stringify(json))
+      validationSummary.textContent = report.summary.errors
+        ? `${report.summary.errors} required ${report.summary.errors === 1 ? 'property is' : 'properties are'} still missing.`
+        : report.summary.warnings
+          ? `Required properties are present. ${report.summary.warnings} recommended ${report.summary.warnings === 1 ? 'property is' : 'properties are'} missing.`
+          : 'The supported profile has its required and recommended properties.'
+    }
+
+    function renderType(): void {
+      activeType =
+        SCHEMA_GENERATOR_TYPES.find((type) => type.id === typeSelect.value) ||
+        SCHEMA_GENERATOR_TYPES[0]
+      activeForm =
+        forms.find((form) => form.dataset.schemaFormType === activeType.id) || forms[0]
+      for (const form of forms) form.hidden = form !== activeForm
+      typeName.textContent = activeType.label
+      typeDescription.textContent = activeType.description
+      typeCaveat.textContent = activeType.caveat || ''
+      typeCaveat.hidden = !activeType.caveat
+      renderOutput()
+    }
+
+    function normaliseRows(section: HTMLElement): void {
+      const minimum = Number(section.dataset.repeaterMinimum || 0)
+      const repeater = section.dataset.repeaterSection || ''
+      const rows = [...section.querySelectorAll<HTMLElement>('[data-repeater] > [data-repeat-row]')]
+      rows.forEach((row, index) => {
+        row.dataset.repeatRow = String(index)
+        const legend = row.querySelector<HTMLElement>('[data-repeat-legend]')
+        const config = activeType.repeaters?.find((item) => item.name === repeater)
+        if (legend && config) legend.textContent = `${config.label} ${index + 1}`
+        for (const control of row.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('[name]')) {
+          const parts = control.name.split('.')
+          control.name = `${repeater}.${index}.${parts.at(-1)}`
+        }
+        const remove = row.querySelector<HTMLButtonElement>('[data-remove-row]')
+        if (remove) remove.hidden = rows.length <= minimum
+      })
+      const add = section.querySelector<HTMLButtonElement>('[data-add-row]')
+      if (add) add.disabled = rows.length >= maxRepeaterItems
+    }
+
+    function addRow(button: HTMLButtonElement): void {
+      const section = button.closest<HTMLElement>('[data-repeater-section]')
+      if (!section) return
+      const container = section.querySelector<HTMLElement>('[data-repeater]')
+      const template = section.querySelector<HTMLTemplateElement>('[data-repeat-template]')
+      if (!container || !template || container.children.length >= maxRepeaterItems) return
+      const row = template.content.firstElementChild?.cloneNode(true)
+      if (!(row instanceof HTMLElement)) return
+      container.append(row)
+      normaliseRows(section)
+      renderOutput()
+    }
+
+    async function copy(value: string, message: string): Promise<void> {
+      await navigator.clipboard.writeText(value)
+      actionStatus.textContent = message
+    }
+
+    typeSelect.addEventListener('change', renderType)
+    for (const form of forms) form.addEventListener('input', renderOutput)
+    root.addEventListener('click', (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      const add = target.closest<HTMLButtonElement>('[data-add-row]')
+      if (add) return addRow(add)
+      const remove = target.closest<HTMLButtonElement>('[data-remove-row]')
+      if (!remove) return
+      const section = remove.closest<HTMLElement>('[data-repeater-section]')
+      remove.closest('[data-repeat-row]')?.remove()
+      if (section) normaliseRows(section)
+      renderOutput()
+    })
+    copyScript.addEventListener('click', () => void copy(script, 'Script copied.'))
+    copyJson.addEventListener('click', () =>
+      void copy(JSON.stringify(json, null, 2), 'JSON copied.'),
+    )
+    validateGenerated.addEventListener('click', () => {
+      sessionStorage.setItem(transferKey, JSON.stringify(json, null, 2))
+      window.location.assign('/tools/schema-markup-validator?source=generator')
+    })
+    download.addEventListener('click', () => {
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(json, null, 2)], { type: 'application/ld+json' }),
+      )
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${activeType.id}-schema.jsonld`
+      anchor.click()
+      URL.revokeObjectURL(url)
+      actionStatus.textContent = 'JSON-LD downloaded.'
+    })
+    renderType()
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-schema-generator]'))
+    initialiseSchemaGenerator(root)
+</script>

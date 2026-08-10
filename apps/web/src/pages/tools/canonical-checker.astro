@@ -1,0 +1,39 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import CanonicalChecker from '@/components/tools/CanonicalChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Canonical tag checker' },
+]
+---
+
+<BaseLayout title="Canonical tag checker" description="Check canonical link tags in pasted HTML. Resolve relative URLs and find missing, invalid, multiple, misplaced, or cross-site canonical signals." canonicalPath="/tools/canonical-checker" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="Canonical tag checker" description="Paste a page URL and its HTML to see every canonical link, its resolved URL, and the checks that need attention." align="left" />
+    <CanonicalChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>A canonical is a preference signal</h2>
+      <p>A canonical link tells search engines which URL you prefer for duplicate or very similar pages. Google can still select another URL when its other signals point elsewhere.</p>
+      <p>Google describes <a href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls" target="_blank" rel="noreferrer">redirects and canonical link annotations as strong signals</a>, while sitemap inclusion is weaker. Internal links should also point consistently to the preferred URL.</p>
+
+      <h2>A missing canonical is not automatically a defect</h2>
+      <p>A unique page can be understood without an explicit canonical. Treat a missing tag as an observation until duplicate versions, inconsistent internal links, or Search Console evidence show a real problem.</p>
+
+      <h2>Relative and cross-site values need human review</h2>
+      <p>The checker resolves relative values against the page URL or a valid base tag. A canonical pointing to another page or another site can be intentional, so the result describes the relationship instead of marking every mismatch as wrong.</p>
+
+      <h2>This check covers pasted HTML</h2>
+      <p>The tool does not fetch a live page or inspect an HTTP <code>Link</code> header. Paste the rendered HTML you want to review. You can send its title and description straight to the <a href="/tools/serp-preview">SERP preview</a> without pasting them again.</p>
+
+      <h2>Your HTML stays in the browser</h2>
+      <p>The HTML is parsed in this browser tab and is not uploaded. Only a small set of candidate details is kept while the check is running.</p>
+    </div>
+  </main>
+</BaseLayout>

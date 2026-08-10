@@ -1,0 +1,640 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import {
+  SERP_GOOGLE_TABS,
+  SERP_PREVIEW_ADDITIONS,
+  SERP_PREVIEW_DEVICES,
+  SERP_PREVIEW_LIMITS,
+} from '@/lib/serp-preview'
+---
+
+<section data-serp-preview class="space-y-6">
+  <DottedCard patternId="serp-preview-input">
+    <form data-serp-form class="space-y-6 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Draft the search result</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">The preview measures rendered text width. Google can still create a different title link or snippet for a specific search.</p>
+        </div>
+        <div class="flex gap-2">
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
+          <Button data-reset type="button" class="px-3 py-2 text-xs">Reset</Button>
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+          <span>Page URL</span>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <FormInput data-url class="min-h-12 flex-1" type="url" maxlength={SERP_PREVIEW_LIMITS.urlCharacters} placeholder="https://example.com/guides/field-notes" autocapitalize="none" spellcheck="false" />
+            <Button data-load-page type="button" class="min-h-12 shrink-0 px-5 text-xs">Load page</Button>
+          </div>
+          <span data-load-status hidden class="block text-xs font-light leading-5 text-foreground-muted" role="status" aria-live="polite"></span>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Site name</span>
+          <FormInput data-site-name type="text" maxlength="100" placeholder="Field Journal" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Preview size</span>
+          <FormSelect data-device>
+            {SERP_PREVIEW_DEVICES.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+          <span>Title tag</span>
+          <FormInput data-title type="text" maxlength={SERP_PREVIEW_LIMITS.titleCharacters} placeholder="Coastal field notes and recording guide" />
+          <span data-title-status class="block text-xs font-light text-foreground-muted" aria-live="polite"></span>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+          <span>Meta description</span>
+          <FormTextarea data-description class="min-h-28" maxlength={SERP_PREVIEW_LIMITS.descriptionCharacters} placeholder="Record coastal wildlife with a practical checklist for locations, weather, equipment, and verified observations." />
+          <span data-description-status class="block text-xs font-light text-foreground-muted" aria-live="polite"></span>
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Words to emphasize <span class="font-light text-foreground-muted">(optional)</span></span>
+          <FormInput data-query type="text" maxlength={SERP_PREVIEW_LIMITS.queryCharacters} placeholder="coastal field notes" />
+        </label>
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Result details</span>
+          <FormSelect data-addition>
+            {SERP_PREVIEW_ADDITIONS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Your edits stay in this browser tab. Loading a page sends its URL to this server so it can read the public HTML and favicon. Pixel budgets are preview guides, not limits published by Google.</p>
+    </form>
+  </DottedCard>
+
+  <DottedCard patternId="serp-preview-result">
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Search result preview</h2>
+          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">This is a drafting aid. Google can choose different text for each search.</p>
+        </div>
+        <Button data-copy-tags type="button" class="px-4 py-2.5 text-xs">Copy HTML tags</Button>
+      </div>
+
+      <div data-preview-frame data-preview-device="desktop" class="serp-frame">
+        <div class="serp-browser">
+          <div data-google-desktop-header class="serp-desktop-header">
+            <div class="serp-google-wordmark" aria-label="Google">
+              <span class="google-blue">G</span><span class="google-red">o</span><span class="google-yellow">o</span><span class="google-blue">g</span><span class="google-green">l</span><span class="google-red">e</span>
+            </div>
+            <div class="serp-search-box">
+              <span data-google-search class="serp-search-query">search preview</span>
+              <span class="serp-clear" aria-hidden="true">×</span>
+              <svg class="serp-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.4A7.75 7.75 0 1 1 3.5 11.25a7.75 7.75 0 0 1 15.5 0Z" /></svg>
+            </div>
+            <div class="serp-avatar" aria-hidden="true">S</div>
+          </div>
+
+          <div data-google-mobile-header class="serp-mobile-header">
+            <div class="serp-mobile-topbar">
+              <svg class="serp-menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+              <div class="serp-google-wordmark" aria-label="Google">
+                <span class="google-blue">G</span><span class="google-red">o</span><span class="google-yellow">o</span><span class="google-blue">g</span><span class="google-green">l</span><span class="google-red">e</span>
+              </div>
+              <div class="serp-avatar" aria-hidden="true">S</div>
+            </div>
+            <div class="serp-search-box">
+              <span data-google-search class="serp-search-query">search preview</span>
+              <span class="serp-clear" aria-hidden="true">×</span>
+              <svg class="serp-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.4A7.75 7.75 0 1 1 3.5 11.25a7.75 7.75 0 0 1 15.5 0Z" /></svg>
+            </div>
+          </div>
+
+          <div class="serp-tabs" aria-hidden="true">
+            {SERP_GOOGLE_TABS.map((tab, index) => <span class:list={['serp-tab', { 'serp-tab-active': index === 0 }]}>{tab}</span>)}
+          </div>
+
+          <div class="serp-results">
+            <article data-preview-result class="serp-result">
+              <div class="serp-source-row">
+                <div data-preview-favicon class="serp-favicon" aria-hidden="true">
+                  <img data-preview-favicon-image hidden alt="" />
+                  <span data-preview-favicon-fallback>E</span>
+                </div>
+                <div class="serp-source-copy">
+                  <div data-preview-site class="serp-site">Example site</div>
+                  <div data-preview-url class="serp-url">https://example.com › page</div>
+                </div>
+                <svg data-preview-menu class="serp-result-menu" viewBox="0 0 24 24" aria-label="About this result"><circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" /></svg>
+              </div>
+              <h3 data-preview-title class="serp-title">Page title</h3>
+              <div class="serp-snippet-row">
+                <div class="serp-snippet-copy">
+                  <p class="serp-description-line"><span data-preview-date hidden class="serp-date"></span><span data-preview-description>A useful description of the page will appear here when it matches the search.</span></p>
+                  <p data-preview-stars hidden class="serp-stars"></p>
+                  <p data-preview-extra hidden class="serp-extra"></p>
+                </div>
+                <div data-preview-image hidden class="serp-thumbnail" aria-label="Example result image">
+                  <svg viewBox="0 0 104 104" aria-hidden="true"><rect width="104" height="104" fill="#d8e6dd" /><path d="M0 78 28 49l18 19 15-14 43 43v7H0Z" fill="#769b82" /><path d="M0 90 38 60l21 20 15-12 30 23v13H0Z" fill="#3f6d53" /><circle cx="78" cy="28" r="11" fill="#f3bd4b" /></svg>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <pre data-meta-output class="overflow-auto whitespace-pre-wrap border border-border bg-background-subtle p-4 font-mono text-xs leading-6"></pre>
+    </div>
+  </DottedCard>
+</section>
+
+<style>
+  .serp-frame {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    background: #f1f3f4;
+    padding: 1rem;
+  }
+
+  .serp-browser {
+    container-type: inline-size;
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    background: #fff;
+    color: #202124;
+    color-scheme: light;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 1px 2px rgb(60 64 67 / 10%);
+  }
+
+  .serp-desktop-header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 82px;
+    padding: 16px 22px 10px;
+  }
+
+  .serp-mobile-header { display: none; }
+
+  .serp-google-wordmark {
+    flex: none;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .google-blue { color: #4285f4; }
+  .google-red { color: #ea4335; }
+  .google-yellow { color: #fbbc05; }
+  .google-green { color: #34a853; }
+
+  .serp-search-box {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    min-height: 46px;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    padding: 0 15px 0 20px;
+    box-shadow: 0 1px 2px rgb(60 64 67 / 8%);
+  }
+
+  .serp-search-query {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    color: #202124;
+    font-size: 15px;
+    line-height: 22px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .serp-clear {
+    margin-left: 8px;
+    padding-right: 12px;
+    border-right: 1px solid #dfe1e5;
+    color: #70757a;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 26px;
+  }
+
+  .serp-search-icon,
+  .serp-menu-icon {
+    fill: none;
+    stroke: #4285f4;
+    stroke-linecap: round;
+    stroke-width: 2;
+  }
+
+  .serp-search-icon { width: 20px; height: 20px; margin-left: 12px; }
+
+  .serp-avatar {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    place-items: center;
+    border-radius: 50%;
+    background: #5f6368;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .serp-tabs {
+    display: flex;
+    gap: 24px;
+    overflow: hidden;
+    border-bottom: 1px solid #ebebeb;
+    padding: 0 28px 0 118px;
+  }
+
+  .serp-tab {
+    flex: none;
+    padding: 11px 0 12px;
+    color: #5f6368;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .serp-tab-active {
+    border-bottom: 3px solid #1a73e8;
+    color: #1a73e8;
+  }
+
+  .serp-results { padding: 26px 28px 34px 118px; }
+  .serp-result { max-width: 600px; }
+
+  .serp-source-row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    margin-bottom: 7px;
+  }
+
+  .serp-favicon {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    place-items: center;
+    border: 1px solid #dadce0;
+    border-radius: 50%;
+    background: #f8f9fa;
+    color: #3c4043;
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+  }
+
+  .serp-favicon img { width: 18px; height: 18px; object-fit: contain; }
+
+  .serp-source-copy { min-width: 0; margin-left: 10px; }
+
+  .serp-site,
+  .serp-url {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .serp-site { color: #202124; font-size: 14px; line-height: 18px; }
+  .serp-url { color: #4d5156; font-size: 12px; line-height: 16px; }
+
+  .serp-result-menu {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin-left: 8px;
+    fill: #5f6368;
+  }
+
+  .serp-title {
+    margin: 0 0 3px;
+    color: #1a0dab;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 26px;
+  }
+
+  .serp-snippet-row { display: flex; align-items: flex-start; gap: 12px; }
+  .serp-snippet-copy { min-width: 0; flex: 1; }
+
+  .serp-description-line,
+  .serp-stars,
+  .serp-extra {
+    margin: 0;
+    color: #4d5156;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+  }
+
+  .serp-date::after { content: " - "; }
+  .serp-stars { color: #b06000; }
+  .serp-extra { color: #188038; }
+
+  .serp-thumbnail {
+    width: 104px;
+    height: 104px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #e8eaed;
+  }
+
+  .serp-thumbnail svg { display: block; width: 100%; height: 100%; }
+
+  [data-preview-device="mobile"] .serp-browser { max-width: 420px; }
+  [data-preview-device="mobile"] .serp-desktop-header { display: none; }
+  [data-preview-device="mobile"] .serp-mobile-header { display: block; padding: 13px 14px 9px; }
+
+  .serp-mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 13px;
+  }
+
+  .serp-menu-icon { width: 22px; height: 22px; stroke: #5f6368; }
+
+  [data-preview-device="mobile"] .serp-tabs { gap: 22px; padding: 0 16px; }
+  [data-preview-device="mobile"] .serp-results { padding: 22px 16px 30px; }
+  [data-preview-device="mobile"] .serp-result { max-width: none; }
+
+  @container (max-width: 340px) {
+    .serp-snippet-row { gap: 8px; }
+    .serp-thumbnail { width: 84px; height: 84px; }
+  }
+
+  @media (max-width: 640px) {
+    .serp-frame { padding: 0; background: #fff; }
+    .serp-browser { border: 0; border-radius: 0; box-shadow: none; }
+    .serp-desktop-header { gap: 12px; padding-inline: 14px; }
+    .serp-desktop-header .serp-avatar { display: none; }
+    .serp-tabs { padding-left: 20px; }
+    .serp-results { padding-inline: 20px; }
+  }
+</style>
+
+<script>
+  import {
+    generateSerpMetaHtml,
+    SERP_PREVIEW_ADDITIONS,
+    serpDisplayUrl,
+    serpQueryTerms,
+    serpWidthStatus,
+    truncateSerpText,
+    type SerpAddition,
+    type SerpDevice,
+    type SerpPreviewInput,
+  } from '@/lib/serp-preview'
+  import { defaultToolUrlToHttps } from '@/lib/tool-url'
+
+  type LoadedPage = {
+    source: { finalUrl: string }
+    metadata: {
+      title: string
+      description: string
+      siteName: string
+      favicon: { status: 'found' | 'unavailable'; dataUrl?: string }
+    }
+    warnings: string[]
+    error?: unknown
+  }
+
+  const transferKey = 'seo:canonical-checker-html'
+  const example: SerpPreviewInput = {
+    siteName: 'Field Journal',
+    url: 'https://example.com/guides/coastal-field-notes',
+    title: 'Coastal field notes and wildlife recording guide',
+    description: 'Record coastal wildlife with a practical checklist for locations, weather, equipment, and verified observations.',
+    query: 'coastal field notes',
+    device: 'desktop',
+    addition: 'date-image',
+  }
+
+  function renderMarked(target: HTMLElement, value: string, terms: string[]) {
+    target.replaceChildren()
+    if (terms.length === 0) { target.textContent = value; return }
+    const pattern = new RegExp(`(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')).join('|')})`, 'giu')
+    for (const part of value.split(pattern)) {
+      if (terms.includes(part.toLocaleLowerCase())) {
+        const mark = document.createElement('mark')
+        mark.className = 'bg-transparent font-medium text-inherit'
+        mark.textContent = part
+        target.append(mark)
+      } else target.append(document.createTextNode(part))
+    }
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-serp-preview]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-serp-form]')
+    const previewFrame = root.querySelector<HTMLElement>('[data-preview-frame]')
+    const previewSite = root.querySelector<HTMLElement>('[data-preview-site]')
+    const previewUrl = root.querySelector<HTMLElement>('[data-preview-url]')
+    const previewFavicon = root.querySelector<HTMLElement>('[data-preview-favicon]')
+    const previewFaviconImage = root.querySelector<HTMLImageElement>('[data-preview-favicon-image]')
+    const previewFaviconFallback = root.querySelector<HTMLElement>('[data-preview-favicon-fallback]')
+    const previewTitle = root.querySelector<HTMLElement>('[data-preview-title]')
+    const previewDescription = root.querySelector<HTMLElement>('[data-preview-description]')
+    const previewDate = root.querySelector<HTMLElement>('[data-preview-date]')
+    const previewImage = root.querySelector<HTMLElement>('[data-preview-image]')
+    const previewStars = root.querySelector<HTMLElement>('[data-preview-stars]')
+    const previewExtra = root.querySelector<HTMLElement>('[data-preview-extra]')
+    const searchQueries = root.querySelectorAll<HTMLElement>('[data-google-search]')
+    const titleStatus = root.querySelector<HTMLElement>('[data-title-status]')
+    const descriptionStatus = root.querySelector<HTMLElement>('[data-description-status]')
+    const metaOutput = root.querySelector<HTMLElement>('[data-meta-output]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy-tags]')
+    const loadPageButton = root.querySelector<HTMLButtonElement>('[data-load-page]')
+    const loadStatus = root.querySelector<HTMLElement>('[data-load-status]')
+    if (!form || !previewFrame || !previewSite || !previewUrl || !previewFavicon || !previewFaviconImage || !previewFaviconFallback || !previewTitle || !previewDescription || !previewDate || !previewImage || !previewStars || !previewExtra || searchQueries.length === 0 || !titleStatus || !descriptionStatus || !metaOutput || !copy || !loadPageButton || !loadStatus) continue
+    let loadedFavicon = ''
+    const input = (selector: string) => form.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector)
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    const measureTitle = (value: string) => { if (context) context.font = '20px Arial, sans-serif'; return context?.measureText(value).width ?? value.length * 10 }
+    const measureDescription = (value: string) => { if (context) context.font = '14px Arial, sans-serif'; return context?.measureText(value).width ?? value.length * 7 }
+
+    const setLoadStatus = (message: string, state: 'error' | 'info' = 'info') => {
+      const isError = state === 'error'
+      loadStatus.textContent = message
+      loadStatus.hidden = false
+      loadStatus.classList.toggle('text-foreground-muted', !isError)
+      loadStatus.classList.toggle('text-red-700', isError)
+      loadStatus.classList.toggle('dark:text-red-400', isError)
+      loadStatus.setAttribute('role', isError ? 'alert' : 'status')
+    }
+    const hideLoadStatus = () => {
+      loadStatus.hidden = true
+      loadStatus.classList.add('text-foreground-muted')
+      loadStatus.classList.remove('text-red-700', 'dark:text-red-400')
+      loadStatus.setAttribute('role', 'status')
+    }
+
+    const read = (): SerpPreviewInput => ({
+      siteName: input('[data-site-name]')?.value ?? '',
+      url: input('[data-url]')?.value ?? '',
+      title: input('[data-title]')?.value ?? '',
+      description: input('[data-description]')?.value ?? '',
+      query: input('[data-query]')?.value ?? '',
+      device: (input('[data-device]')?.value ?? 'desktop') as SerpDevice,
+      addition: (input('[data-addition]')?.value ?? 'none') as SerpAddition,
+    })
+    const fill = (value: Partial<SerpPreviewInput>) => {
+      for (const [selector, key] of [
+        ['[data-site-name]', 'siteName'], ['[data-url]', 'url'], ['[data-title]', 'title'],
+        ['[data-description]', 'description'], ['[data-query]', 'query'], ['[data-device]', 'device'], ['[data-addition]', 'addition'],
+      ] as const) {
+        const field = input(selector)
+        if (field && value[key] !== undefined) field.value = String(value[key])
+      }
+    }
+    const render = () => {
+      const value = read()
+      const displayUrl = serpDisplayUrl(value.url)
+      const terms = serpQueryTerms(value.query)
+      const titleValue = value.title || 'Page title'
+      const descriptionValue = value.description || 'A useful description of the page will appear here when it matches the search.'
+      const titleMeasure = serpWidthStatus(value.title, value.device, 'title', measureTitle)
+      const descriptionMeasure = serpWidthStatus(value.description, value.device, 'description', measureDescription)
+      const displayedTitle = truncateSerpText(titleValue, titleMeasure.budget, measureTitle)
+      const displayedDescription = truncateSerpText(descriptionValue, descriptionMeasure.budget, measureDescription)
+      previewFrame.dataset.previewDevice = value.device
+      previewSite.textContent = value.siteName || displayUrl.site
+      previewUrl.textContent = displayUrl.breadcrumb ? `https://${displayUrl.site} › ${displayUrl.breadcrumb}` : `https://${displayUrl.site}`
+      previewFaviconFallback.textContent = (value.siteName || displayUrl.site).match(/[\p{L}\p{N}]/u)?.[0]?.toLocaleUpperCase() ?? 'E'
+      previewFaviconImage.src = loadedFavicon
+      previewFaviconImage.hidden = !loadedFavicon
+      previewFaviconFallback.hidden = Boolean(loadedFavicon)
+      for (const searchQuery of searchQueries) searchQuery.textContent = value.query || 'search preview'
+      renderMarked(previewTitle, displayedTitle, terms)
+      renderMarked(previewDescription, displayedDescription, terms)
+      titleStatus.textContent = `${titleMeasure.characters} characters, about ${titleMeasure.pixels}px. ${titleMeasure.status === 'may-truncate' ? `The ${value.device} preview may shorten it.` : titleMeasure.status === 'empty' ? 'Add a title to measure it.' : `It fits this ${value.device} preview.`}`
+      descriptionStatus.textContent = `${descriptionMeasure.characters} characters, about ${descriptionMeasure.pixels}px. ${descriptionMeasure.status === 'may-truncate' ? `The ${value.device} preview may shorten it.` : descriptionMeasure.status === 'empty' ? 'Add a description to measure it.' : `It fits this ${value.device} preview.`}`
+      const addition = SERP_PREVIEW_ADDITIONS.find(
+        (choice) => choice.value === value.addition,
+      )
+      const additionDate = addition && 'date' in addition ? addition.date : undefined
+      const additionImage = addition && 'image' in addition ? addition.image : false
+      const additionRating = addition && 'rating' in addition ? addition.rating : undefined
+      const additionProduct = addition && 'product' in addition ? addition.product : undefined
+      previewDate.textContent = additionDate ?? ''
+      previewDate.hidden = !additionDate
+      previewImage.hidden = !additionImage
+      previewStars.textContent = additionRating ? `★★★★★ ${additionRating}` : ''
+      previewStars.hidden = !additionRating
+      previewExtra.textContent = additionProduct ?? ''
+      previewExtra.hidden = !additionProduct
+      metaOutput.textContent = generateSerpMetaHtml(value)
+    }
+
+    form.addEventListener('input', render)
+    form.addEventListener('change', render)
+    form.addEventListener('submit', (event) => event.preventDefault())
+    input('[data-url]')?.addEventListener('keydown', (event) => {
+      const keyboardEvent = event as KeyboardEvent
+      if (
+        keyboardEvent.key !== 'Enter' ||
+        keyboardEvent.isComposing ||
+        loadPageButton.disabled
+      ) {
+        return
+      }
+      keyboardEvent.preventDefault()
+      loadPageButton.click()
+    })
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { loadedFavicon = ''; hideLoadStatus(); fill(example); render() })
+    root.querySelector('[data-reset]')?.addEventListener('click', () => { loadedFavicon = ''; hideLoadStatus(); form.reset(); render() })
+    loadPageButton.addEventListener('click', async () => {
+      const urlField = input('[data-url]')
+      const submittedUrl = defaultToolUrlToHttps(urlField?.value ?? '')
+      if (!submittedUrl) {
+        setLoadStatus('Enter a website URL or domain.', 'error')
+        urlField?.focus()
+        return
+      }
+      if (urlField) urlField.value = submittedUrl
+      loadPageButton.disabled = true
+      loadPageButton.textContent = 'Loading...'
+      setLoadStatus('Reading the public page...')
+      try {
+        let response: Response
+        try {
+          response = await fetch('/api/tools/serp-preview', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ url: submittedUrl }),
+          })
+        } catch {
+          throw new Error('Could not reach the preview server. Try again.')
+        }
+        const body = await response.json().catch(() => null) as LoadedPage | null
+        if (!response.ok) {
+          throw new Error(
+            body && typeof body.error === 'string'
+              ? body.error
+              : `The preview server returned HTTP ${response.status}. Try again.`,
+          )
+        }
+        if (!body?.source?.finalUrl || !body.metadata || !Array.isArray(body.warnings)) {
+          throw new Error('The preview server returned an invalid response. Try again.')
+        }
+        loadedFavicon = body.metadata.favicon.dataUrl ?? ''
+        fill({
+          url: body.source.finalUrl,
+          siteName: body.metadata.siteName,
+          title: body.metadata.title,
+          description: body.metadata.description,
+        })
+        setLoadStatus(
+          body.warnings.length > 0
+            ? `Page details loaded. ${body.warnings.join(' ')}`
+            : 'Page details loaded.',
+        )
+        render()
+      } catch (error) {
+        loadedFavicon = ''
+        setLoadStatus(
+          error instanceof Error
+            ? error.message
+            : 'The page could not be loaded. Try again.',
+          'error',
+        )
+        render()
+      } finally {
+        loadPageButton.disabled = false
+        loadPageButton.textContent = 'Load page'
+      }
+    })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(metaOutput.textContent ?? '')
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy HTML tags' }, 1_500)
+    })
+
+    if (new URLSearchParams(location.search).get('source') === 'canonical') {
+      try {
+        const transferred = JSON.parse(localStorage.getItem(transferKey) ?? '{}') as { html?: string; url?: string }
+        const documentValue = new DOMParser().parseFromString(transferred.html ?? '', 'text/html')
+        fill({
+          url: transferred.url ?? '',
+          title: documentValue.querySelector('title')?.textContent?.trim() ?? '',
+          description: documentValue.querySelector('meta[name="description" i]')?.getAttribute('content')?.trim() ?? '',
+        })
+      } catch { /* Ignore a stale or invalid transfer. */ }
+    }
+    render()
+  }
+</script>

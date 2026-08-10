@@ -1,0 +1,36 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SerpPreview from '@/components/tools/SerpPreview.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SERP preview' },
+]
+---
+
+<BaseLayout title="SERP preview" description="Load a public page or draft its metadata, then preview the Google search result on desktop and mobile before copying the HTML tags." canonicalPath="/tools/serp-preview" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="SERP preview" description="Enter a URL to load its title, description and favicon, or write them yourself. Compare the result on desktop and mobile before copying the HTML." align="left" />
+    <SerpPreview />
+
+    <div class="docs-prose mt-16">
+      <h2>Pixel width is more useful than a character count</h2>
+      <p>Letters do not take up equal space. A title full of wide characters can be shortened sooner than another title with the same character count. The preview measures the rendered text and still shows the character count for a quick reference.</p>
+
+      <h2>Google may show different text</h2>
+      <p>Google creates <a href="https://developers.google.com/search/docs/appearance/title-link" target="_blank" rel="noreferrer">title links</a> from several page and link signals. It can use the title element, the main visible heading, prominent text, anchor text, and other sources.</p>
+      <p>Search <a href="https://developers.google.com/search/docs/appearance/snippet" target="_blank" rel="noreferrer">snippets are usually drawn from page content</a>. A good meta description can be used when it describes the page well, but the actual snippet can change with the query.</p>
+
+      <h2>Preview additions do not create rich results</h2>
+      <p>The optional result details show how the layout can change. They do not validate structured data or prove rich result eligibility. Use the <a href="/tools/schema-markup-validator">schema markup validator</a> to inspect JSON-LD separately.</p>
+
+      <h2>What happens when you load a page</h2>
+      <p>Loading a page sends its URL to the site worker. The worker reads the public HTML and a small favicon, then returns the title, meta description and site name. Any edits you make after that stay in this browser tab.</p>
+    </div>
+  </main>
+</BaseLayout>

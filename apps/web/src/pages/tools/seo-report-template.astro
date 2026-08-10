@@ -1,0 +1,37 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SeoReportTemplateBuilder from '@/components/tools/SeoReportTemplateBuilder.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SEO report template' },
+]
+---
+
+<BaseLayout title="SEO report template" description="Build a clear SEO report template for Markdown or HTML. Choose the audience, comparison period, and evidence sections without inventing performance data." canonicalPath="/tools/seo-report-template" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="SEO report template" description="Choose the evidence you have, then download a report outline with prompts for sources, limits, actions, and verification." align="left" />
+    <SeoReportTemplateBuilder />
+
+    <div class="docs-prose mt-16">
+      <h2>Build the report around decisions</h2>
+      <p>A useful SEO report explains what changed, why the evidence matters, and what should happen next. A long export of charts leaves that work to the reader.</p>
+      <p>The template keeps observations, interpretation, actions, and verification in separate columns. It also asks for coverage and missing data so a partial export does not turn into a false zero.</p>
+
+      <h2>Only include sections with useful evidence</h2>
+      <p>Search Console, analytics, crawl data, link research, and AI search observations measure different things. Remove a section when its source is unavailable or irrelevant. A shorter honest report beats a full template padded with empty metrics.</p>
+      <p>The <a href="/docs/reports/monthly-report">monthly SEO report</a> can assemble a report from a saved project profile. Use this browser template when you need a manual outline, a client handoff, or a structure for evidence from several systems.</p>
+
+      <h2>Compare matching periods</h2>
+      <p>Use date ranges with the same number of days. Year-over-year comparisons help with seasonal sites, while a previous-period comparison is useful for recent releases. Record which comparison was used beside the evidence.</p>
+
+      <h2>Your report details stay in the browser</h2>
+      <p>The builder creates Markdown or HTML in this browser tab. Names, dates, and report choices are not sent to the site worker or an outside provider.</p>
+    </div>
+  </main>
+</BaseLayout>

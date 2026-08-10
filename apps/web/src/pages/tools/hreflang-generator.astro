@@ -1,0 +1,39 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import HreflangGenerator from '@/components/tools/HreflangGenerator.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Hreflang generator' },
+]
+---
+
+<BaseLayout title="Hreflang generator" description="Generate complete hreflang annotations for localized pages as HTML link tags, an HTTP Link header, or XML sitemap entries." canonicalPath="/tools/hreflang-generator" {breadcrumbs}>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title="Hreflang generator" description="Add each language or regional version once. Get the complete reciprocal set as HTML, an HTTP header, or XML sitemap entries." align="left" />
+    <HreflangGenerator />
+
+    <div class="docs-prose mt-16">
+      <h2>Every localized page needs the complete set</h2>
+      <p>Each language version must reference itself and every other version. The generated HTML and HTTP header output is the same complete set for every page in the group.</p>
+      <p>Google's <a href="https://developers.google.com/search/docs/specialty/international/localized-versions" target="_blank" rel="noreferrer">localized page documentation</a> also requires complete URLs and reciprocal links. One page pointing to another without a return link can be ignored.</p>
+
+      <h2>Choose one implementation method</h2>
+      <p>HTML tags, HTTP headers, and XML sitemaps are equivalent methods for Google Search. Pick the one your team can keep accurate. Maintaining the same annotations in three places creates more chances for them to drift.</p>
+
+      <h2>Use language, script, and region codes carefully</h2>
+      <p>Start with a two-letter language code such as <code>en</code> or <code>fr</code>. Add a region only when the page genuinely targets it, such as <code>en-GB</code>. Script values such as <code>zh-Hant</code> are also accepted, and <code>x-default</code> can point unmatched users to a language selector or fallback page.</p>
+
+      <h2>Keep canonicals aligned with localized URLs</h2>
+      <p>Each localized page normally needs a canonical that represents that same localized version. The <a href="/tools/canonical-checker">canonical tag checker</a> can inspect the HTML before you publish the hreflang set.</p>
+
+      <h2>Your URLs stay in the browser</h2>
+      <p>The generator validates and formats the entries in this browser tab. It does not fetch the URLs or upload the list.</p>
+    </div>
+  </main>
+</BaseLayout>

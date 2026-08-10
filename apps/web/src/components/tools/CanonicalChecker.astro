@@ -1,0 +1,163 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import { CANONICAL_CHECKER_LIMITS } from '@/lib/canonical-checker'
+---
+
+<section data-canonical-checker class="space-y-6">
+  <DottedCard patternId="canonical-checker-input">
+    <form data-canonical-form class="space-y-6 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Check canonical evidence in HTML</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">Paste the page URL and its HTML. Relative canonicals are resolved against the page URL or the first valid base tag.</p>
+        </div>
+        <div class="flex gap-2">
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
+          <Button data-clear type="button" class="px-3 py-2 text-xs">Clear</Button>
+        </div>
+      </div>
+
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Page URL</span>
+        <FormInput data-page-url type="url" maxlength={CANONICAL_CHECKER_LIMITS.urlCharacters} placeholder="https://example.com/products/field-mug" autocapitalize="none" spellcheck="false" />
+      </label>
+      <label class="block space-y-2 font-sans text-sm font-medium">
+        <span>Page HTML</span>
+        <FormTextarea data-html class="min-h-72" maxlength={CANONICAL_CHECKER_LIMITS.htmlCharacters} placeholder={'<!doctype html>\n<html>\n<head>\n  <link rel="canonical" href="https://example.com/products/field-mug">\n</head>\n</html>'} spellcheck="false" />
+      </label>
+
+      <div class="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p class="font-sans text-xs font-light leading-5 text-foreground-muted">The first {CANONICAL_CHECKER_LIMITS.htmlCharacters.toLocaleString()} characters and {CANONICAL_CHECKER_LIMITS.candidates} canonical candidates are checked in this browser tab.</p>
+        <Button data-check type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check canonical</Button>
+      </div>
+    </form>
+  </DottedCard>
+
+  <DottedCard patternId="canonical-checker-output" inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 data-verdict class="font-mono text-lg font-normal">No check run yet</h2>
+          <p data-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70" aria-live="polite">Paste HTML to inspect its canonical links.</p>
+        </div>
+        <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+          <Button data-copy-tag type="button" class="px-4 py-2.5 text-xs" disabled>Copy resolved tag</Button>
+          <Button data-open-serp type="button" class="px-4 py-2.5 text-xs" disabled>Preview title and meta</Button>
+        </div>
+      </div>
+      <ul data-issues class="space-y-2 font-sans text-xs font-light leading-5"></ul>
+      <div data-candidates hidden class="space-y-3 border-t border-panel-foreground/30 pt-5">
+        <h3 class="font-mono text-sm font-normal">Canonical links found</h3>
+        <div data-candidate-list class="space-y-2"></div>
+      </div>
+      <pre data-resolved-tag hidden class="overflow-auto whitespace-pre-wrap border border-panel-foreground/30 bg-panel p-4 font-mono text-xs leading-6"></pre>
+    </div>
+  </DottedCard>
+</section>
+
+<script>
+  import {
+    analyzeCanonical,
+    CANONICAL_CHECKER_LIMITS,
+    type CanonicalCandidate,
+  } from '@/lib/canonical-checker'
+
+  const transferKey = 'seo:canonical-checker-html'
+  const example = {
+    url: 'https://example.com/products/field-mug?ref=newsletter',
+    html: `<!doctype html>
+<html lang="en">
+<head>
+  <title>Field mug for coastal surveys</title>
+  <meta name="description" content="A hard-wearing field mug made for survey days on the coast.">
+  <link href="/products/field-mug" rel="canonical">
+</head>
+<body><h1>Field mug</h1></body>
+</html>`,
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-canonical-checker]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-canonical-form]')
+    const pageUrl = root.querySelector<HTMLInputElement>('[data-page-url]')
+    const htmlInput = root.querySelector<HTMLTextAreaElement>('[data-html]')
+    const verdict = root.querySelector<HTMLElement>('[data-verdict]')
+    const summary = root.querySelector<HTMLElement>('[data-summary]')
+    const issues = root.querySelector<HTMLUListElement>('[data-issues]')
+    const candidatesSection = root.querySelector<HTMLElement>('[data-candidates]')
+    const candidateList = root.querySelector<HTMLElement>('[data-candidate-list]')
+    const resolvedTag = root.querySelector<HTMLElement>('[data-resolved-tag]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy-tag]')
+    const openSerp = root.querySelector<HTMLButtonElement>('[data-open-serp]')
+    if (!form || !pageUrl || !htmlInput || !verdict || !summary || !issues || !candidatesSection || !candidateList || !resolvedTag || !copy || !openSerp) continue
+    let suggestedTag = ''
+
+    const parse = (source: string): { baseHref?: string; candidates: CanonicalCandidate[] } => {
+      const documentValue = new DOMParser().parseFromString(source, 'text/html')
+      const baseHref = documentValue.querySelector('head base[href]')?.getAttribute('href') ?? undefined
+      const candidates = Array.from(documentValue.querySelectorAll('link'))
+        .filter((link) => (link.getAttribute('rel') ?? '').toLocaleLowerCase().split(/\s+/u).includes('canonical'))
+        .map((link) => ({ href: link.getAttribute('href') ?? '', inHead: Boolean(link.closest('head')) }))
+      return { baseHref, candidates }
+    }
+    const render = () => {
+      const rawHtml = htmlInput.value
+      const boundedHtml = rawHtml.slice(0, CANONICAL_CHECKER_LIMITS.htmlCharacters)
+      const parsed = parse(boundedHtml)
+      const result = analyzeCanonical({
+        pageUrl: pageUrl.value,
+        baseHref: parsed.baseHref,
+        candidates: parsed.candidates,
+        inputCapped: rawHtml.length > boundedHtml.length,
+      })
+      suggestedTag = result.suggestedTag ?? ''
+      const titles = {
+        valid: 'One canonical link found',
+        missing: 'No canonical link found',
+        multiple: 'Multiple canonical links found',
+        invalid: 'Canonical link needs attention',
+      }
+      verdict.textContent = titles[result.status]
+      summary.textContent = result.status === 'valid'
+        ? result.candidates[0]?.relation === 'self' ? 'The resolved canonical matches this page URL.' : 'The canonical resolves to another URL. Confirm that the relationship is intentional.'
+        : result.status === 'missing' ? 'A missing canonical is an observation. Unique pages do not always need one.'
+        : 'Review the evidence below before changing the page.'
+      issues.replaceChildren()
+      for (const issue of result.issues) {
+        const item = document.createElement('li')
+        item.dataset.level = issue.level
+        item.textContent = `${issue.level === 'error' ? 'Error' : issue.level === 'warning' ? 'Check' : 'Note'}: ${issue.message}`
+        issues.append(item)
+      }
+      candidateList.replaceChildren()
+      for (const candidate of result.candidates) {
+        const item = document.createElement('div')
+        item.className = 'border border-panel-foreground/30 p-3 font-mono text-xs leading-5 break-all'
+        item.textContent = candidate.resolved
+          ? `${candidate.resolved} (${candidate.relation ?? 'relation unavailable'}${candidate.inHead ? ', in head' : ', outside head'})`
+          : `${candidate.href || '(empty href)'} (invalid)`
+        candidateList.append(item)
+      }
+      candidatesSection.hidden = result.candidates.length === 0
+      resolvedTag.textContent = suggestedTag
+      resolvedTag.hidden = !suggestedTag
+      copy.disabled = !suggestedTag
+      openSerp.disabled = !rawHtml.trim()
+    }
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render() })
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { pageUrl.value = example.url; htmlInput.value = example.html; render() })
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { pageUrl.value = ''; htmlInput.value = ''; render() })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(suggestedTag)
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy resolved tag' }, 1_500)
+    })
+    openSerp.addEventListener('click', () => {
+      localStorage.setItem(transferKey, JSON.stringify({ html: htmlInput.value, url: pageUrl.value }))
+      location.href = '/tools/serp-preview?source=canonical'
+    })
+  }
+</script>

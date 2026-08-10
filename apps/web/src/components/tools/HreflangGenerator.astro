@@ -1,0 +1,189 @@
+---
+import Button from '@/components/Button.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import {
+  HREFLANG_LIMITS,
+  HREFLANG_OUTPUT_FORMATS,
+} from '@/lib/hreflang-generator'
+
+const exampleRows = [
+  { code: 'en', url: 'https://example.com/en/field-notes' },
+  { code: 'fr', url: 'https://example.com/fr/notes-de-terrain' },
+  { code: 'x-default', url: 'https://example.com/language' },
+]
+---
+
+<section data-hreflang-generator class="space-y-6">
+  <DottedCard patternId="hreflang-generator-input">
+    <form data-hreflang-form class="space-y-6 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="font-mono text-lg font-normal">Add each localized version</h2>
+          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">Every version must list itself and the other versions. This generator creates the complete set.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <Button data-add-row type="button" class="px-3 py-2 text-xs">Add version</Button>
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
+          <Button data-clear type="button" class="px-3 py-2 text-xs">Clear</Button>
+        </div>
+      </div>
+
+      <div data-rows class="space-y-3">
+        {exampleRows.slice(0, 2).map((row) => (
+          <div data-hreflang-row class="grid gap-3 border border-border bg-background-subtle p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+            <label class="space-y-2 font-sans text-sm font-medium">
+              <span>Language or locale</span>
+              <FormInput data-code type="text" maxlength="12" value={row.code} placeholder="en-GB" autocapitalize="none" spellcheck="false" />
+            </label>
+            <label class="space-y-2 font-sans text-sm font-medium">
+              <span>Complete page URL</span>
+              <FormInput data-url type="url" maxlength={HREFLANG_LIMITS.urlCharacters} value={row.url} placeholder="https://example.com/en-gb/page" autocapitalize="none" spellcheck="false" />
+            </label>
+            <Button data-remove-row type="button" class="min-h-12 px-3 text-xs">Remove</Button>
+          </div>
+        ))}
+      </div>
+
+      <template data-row-template>
+        <div data-hreflang-row class="grid gap-3 border border-border bg-background-subtle p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Language or locale</span>
+            <FormInput data-code type="text" maxlength="12" placeholder="en-GB" autocapitalize="none" spellcheck="false" />
+          </label>
+          <label class="space-y-2 font-sans text-sm font-medium">
+            <span>Complete page URL</span>
+            <FormInput data-url type="url" maxlength={HREFLANG_LIMITS.urlCharacters} placeholder="https://example.com/en-gb/page" autocapitalize="none" spellcheck="false" />
+          </label>
+          <Button data-remove-row type="button" class="min-h-12 px-3 text-xs">Remove</Button>
+        </div>
+      </template>
+
+      <div class="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+        <label class="space-y-2 font-sans text-sm font-medium">
+          <span>Implementation format</span>
+          <FormSelect data-format>
+            {HREFLANG_OUTPUT_FORMATS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+        <Button data-generate type="submit" class="min-h-12 px-5 text-xs">Generate hreflang</Button>
+      </div>
+
+      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Language codes use ISO 639-1. Add an optional ISO region such as en-GB, a script such as zh-Hant, or x-default. Up to {HREFLANG_LIMITS.entries} rows are checked locally.</p>
+    </form>
+  </DottedCard>
+
+  <DottedCard patternId="hreflang-generator-output" inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 data-result-title class="font-mono text-lg font-normal">Generated hreflang</h2>
+          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70" aria-live="polite">Add at least two localized URLs.</p>
+        </div>
+        <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+          <Button data-copy type="button" class="px-4 py-2.5 text-xs" disabled>Copy</Button>
+          <Button data-download type="button" class="px-4 py-2.5 text-xs" disabled>Download</Button>
+        </div>
+      </div>
+      <ul data-issues class="space-y-2 font-sans text-xs font-light leading-5"></ul>
+      <pre data-output class="max-h-[32rem] min-h-28 overflow-auto whitespace-pre-wrap border border-panel-foreground/30 bg-panel p-4 font-mono text-xs leading-6"></pre>
+    </div>
+  </DottedCard>
+</section>
+
+<script>
+  import {
+    generateHreflang,
+    HREFLANG_LIMITS,
+    type HreflangEntry,
+    type HreflangOutputFormat,
+  } from '@/lib/hreflang-generator'
+
+  const examples: HreflangEntry[] = [
+    { code: 'en', url: 'https://example.com/en/field-notes' },
+    { code: 'fr', url: 'https://example.com/fr/notes-de-terrain' },
+    { code: 'x-default', url: 'https://example.com/language' },
+  ]
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-hreflang-generator]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-hreflang-form]')
+    const rows = root.querySelector<HTMLElement>('[data-rows]')
+    const template = root.querySelector<HTMLTemplateElement>('[data-row-template]')
+    const format = root.querySelector<HTMLSelectElement>('[data-format]')
+    const issues = root.querySelector<HTMLUListElement>('[data-issues]')
+    const output = root.querySelector<HTMLElement>('[data-output]')
+    const summary = root.querySelector<HTMLElement>('[data-result-summary]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]')
+    const download = root.querySelector<HTMLButtonElement>('[data-download]')
+    if (!form || !rows || !template || !format || !issues || !output || !summary || !copy || !download) continue
+    let current = generateHreflang([], 'html')
+
+    const rowElements = () => Array.from(rows.querySelectorAll<HTMLElement>('[data-hreflang-row]'))
+    const readRows = (): HreflangEntry[] => rowElements().map((row) => ({
+      code: row.querySelector<HTMLInputElement>('[data-code]')?.value ?? '',
+      url: row.querySelector<HTMLInputElement>('[data-url]')?.value ?? '',
+    }))
+    const appendRow = (entry?: HreflangEntry) => {
+      if (rowElements().length >= HREFLANG_LIMITS.entries) return
+      const fragment = template.content.cloneNode(true) as DocumentFragment
+      const row = fragment.querySelector<HTMLElement>('[data-hreflang-row]')
+      if (row && entry) {
+        const code = row.querySelector<HTMLInputElement>('[data-code]')
+        const url = row.querySelector<HTMLInputElement>('[data-url]')
+        if (code) code.value = entry.code
+        if (url) url.value = entry.url
+      }
+      rows.append(fragment)
+    }
+    const replaceRows = (entries: HreflangEntry[]) => {
+      rows.replaceChildren()
+      for (const entry of entries) appendRow(entry)
+    }
+    const render = () => {
+      current = generateHreflang(readRows(), format.value as HreflangOutputFormat)
+      output.textContent = current.output
+      issues.replaceChildren()
+      for (const issue of current.issues) {
+        const item = document.createElement('li')
+        item.textContent = `${issue.level === 'error' ? 'Error' : issue.level === 'warning' ? 'Check' : 'Note'}${issue.row ? ` on row ${issue.row}` : ''}: ${issue.message}`
+        item.dataset.level = issue.level
+        issues.append(item)
+      }
+      const errors = current.issues.filter((issue) => issue.level === 'error').length
+      const warnings = current.issues.filter((issue) => issue.level === 'warning').length
+      summary.textContent = errors > 0
+        ? `${errors} error${errors === 1 ? '' : 's'} must be fixed before markup can be generated.`
+        : `${current.entries.length} version${current.entries.length === 1 ? '' : 's'} generated${warnings ? ` with ${warnings} check${warnings === 1 ? '' : 's'}` : ''}. Use the same complete set on every localized version.`
+      copy.disabled = !current.output
+      download.disabled = !current.output
+    }
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render() })
+    form.addEventListener('input', render)
+    form.addEventListener('change', render)
+    rows.addEventListener('click', (event) => {
+      const remove = (event.target as Element).closest('[data-remove-row]')
+      if (!remove) return
+      remove.closest('[data-hreflang-row]')?.remove()
+      if (rowElements().length === 0) appendRow()
+      render()
+    })
+    root.querySelector('[data-add-row]')?.addEventListener('click', () => { appendRow(); render() })
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { replaceRows(examples); render() })
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { replaceRows([{ code: '', url: '' }, { code: '', url: '' }]); render() })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(current.output)
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy' }, 1_500)
+    })
+    download.addEventListener('click', () => {
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([current.output], { type: 'text/plain;charset=utf-8' }))
+      link.download = current.filename
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+    render()
+  }
+</script>

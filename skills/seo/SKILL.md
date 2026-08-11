@@ -51,7 +51,7 @@ Run the first report, read it, then decide. Do not run a whole chain blindly.
 |---|---|
 | Page not indexed or missing from Google | `index-coverage`, `index-monitor` (URL Inspection), `audit-page`, `redirect-trace` |
 | Traffic or clicks dropped | `search-performance-overview`, `traffic-anomaly`, `update-correlation`, `segment-impact`, `decaying-pages`, `link-recovery` |
-| Audit a whole site | `site-crawl` with `health: true`, `report` command (main report), full `site-crawl` only if needed, `top-fixes`, `ai-search-scorecard` |
+| Audit a whole site | `report` command first. `--url` alone works with no Google connection and returns the crawl's complete issue inventory as actions; add `--search-console-export <path>` when a local export exists, then run its recommended follow-ups. `site-crawl` with `health: true` first on large or unknown sites, full `site-crawl` for deeper page evidence, `top-fixes`, `ai-search-scorecard` |
 | More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
 | AI agent readiness for a content site | `agent-readiness`, `ai-readiness`, `entity-readiness`, `llms-txt-audit` |
 | AI search visibility and eligibility | `ai-readiness`, `geo-gaps`, `ai-mention-research`, `ai-prompt-observations`, `ai-referrals`, `seo-to-ai-query` |
@@ -77,8 +77,12 @@ using the rows. If headings are unfamiliar, use the report schema's explicit
 mappings, filtered historical rows, rejected rows, and caps define the evidence
 boundary.
 
-Use `seo report` first for a broad performance question with a known project.
-For a large or unfamiliar URL, run sitemap health before a full crawl.
+Use `seo report` first for a broad performance question. With a known project
+it adds Search Console evidence; with only `--url` it still returns
+crawl-backed findings and actions, and `--search-console-export <path>` joins
+a local export's page table to the crawl by URL path (query and page tables
+stay separate). For a large or unfamiliar URL, run sitemap health before a
+full crawl.
 
 ## Create a client HTML report
 

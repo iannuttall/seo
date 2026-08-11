@@ -78,7 +78,8 @@ script, CI job, and local MCP client on the machine.
 
 The main report uses the evidence you have, explains what it could not check,
 and recommends a short list of follow-up commands. You can start with a local
-technical report before connecting Google.
+technical report before connecting Google: `seo report --url` crawls the site
+and returns findings and an action list with no sign-in at all.
 
 Running `seo help` shows the shape of the tool:
 
@@ -184,7 +185,11 @@ seo audit-page --url https://example.com/pricing
 
 `seo report --url` crawls the site and saves technical evidence. It does not
 pretend to know traffic, queries, or rankings until you add a Search Console
-property with `seo start`.
+property with `seo start`. If you have a Search Console performance download on
+disk, point the same report at the folder or CSV with
+`--search-console-export`. The report reads the query and page tables, keeps
+them separate from the crawl, and tells you which exported pages the crawl
+could not reach.
 
 Run `seo help` for the short path or `seo help all` for the full command list.
 

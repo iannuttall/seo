@@ -93,6 +93,35 @@ appearance, and current snippet. It is not proof that rewriting a title will
 increase clicks. The [reports and data guide](/docs/reports) covers those
 boundaries in more detail.
 
+## Use a Search Console download before you connect
+
+If you have downloaded the performance tables from Search Console but have not
+connected Google yet, point the URL report at the folder or CSV:
+
+```sh
+seo report --url https://example.com --search-console-export ./performance-export
+```
+
+The path can be the unzipped download folder or a single CSV containing the
+standard query or page table. The report records exactly what it read from each
+file, tells you which exported pages the crawl could not reach, and fetches up
+to 20 of those pages in the same run so their findings join the action list.
+When an exported search phrase appears in the titles of two or more pages, the
+report points them out as pages that may be competing for the same search.
+
+The report also lists each exported page with its clicks, impressions, and
+average position, and suggests a next step for each one: keep, update,
+consolidate, or review. The suggestions come from the numbers in the export and
+what the crawl reached, so you can work through a migration, rebrand, or
+content cleanup page by page. You make the call on every page.
+
+The export is a snapshot from the day you downloaded it, and its query and page
+tables are separate lists. The report never guesses which page served which
+query, and a query or page missing from the export is not proof of zero
+traffic. To confirm a competing-pages lead, connect Search Console with
+`seo start` and run the
+[cannibalisation report](/docs/reports/cannibalisation).
+
 ## Choose a different saved site
 
 List your project profiles and pass the one you want:

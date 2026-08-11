@@ -1,3 +1,8 @@
+import type {
+  ProviderImportEvidence,
+  ProviderWarning,
+} from '../../providers/contracts.js'
+import type { ResearchImportSource } from '../../providers/domain-contracts.js'
 import type { Recommendation } from '../../types.js'
 import type { PageTemplate, TemplateSummary } from '../page-patterns.js'
 
@@ -81,6 +86,9 @@ export interface CannibalSelection {
 
 export interface CannibalReport {
   schemaVersion: 1
+  // Optional only so pre-existing fixtures stay valid; cannibalReport always
+  // sets it.
+  dataSource?: 'search-console-api'
   site: string
   generatedAt: string
   range: { startDate: string; endDate: string }
@@ -156,6 +164,106 @@ export interface CannibalReport {
   caveats: string[]
   recommendations: string[]
   ledgerSummary: string
+}
+
+export interface CannibalImportPage {
+  url: string
+  providerBestPosition: number
+  providerEstimatedMonthlyTraffic: number | null
+  resultTypes: string[]
+  clicks: null
+  impressions: null
+  ctr: null
+  template: PageTemplate
+}
+
+export interface CannibalImportItem {
+  keyword: string
+  pages: CannibalImportPage[]
+  urlCount: number
+  providerMonthlySearchVolume: number | null
+  finding: 'multiple-ranking-urls'
+  requiresIntentReview: true
+  template?: PageTemplate
+  recommendation: Recommendation
+}
+
+export interface CannibalImportSelection {
+  importedRows: number
+  offPropertyRows: number
+  retainedRows: number
+  keywordGroups: number
+  lowActionabilityKeywords: number
+  brandKeywords: number
+  singleUrlKeywords: number
+  suppressedKeywords: number
+  eligibleKeywords: number
+  returnedKeywords: number
+  limitedKeywords: number
+  returnedSuppressions: number
+  limitedSuppressions: number
+}
+
+export interface CannibalImportReport {
+  schemaVersion: 1
+  dataSource: 'research-import'
+  site: string
+  siteDomain: string
+  generatedAt: string
+  dataStatus: 'empty' | 'filtered' | 'partial'
+  source: {
+    provider: ResearchImportSource['provider']
+    evidenceType: 'ranked-keyword-import'
+    files: number
+    completeness: 'unknown' | 'partial' | 'capped' | 'filtered'
+  }
+  methodology: {
+    id: 'import_url_overlap_v1'
+    version: 1
+    matching: 'normalized_exact_keyword'
+    finding: 'multiple-ranking-urls'
+    requiresIntentReview: true
+  }
+  filters: {
+    limit: number
+    brand: 'included' | 'excluded'
+  }
+  selection: CannibalImportSelection
+  summary: {
+    eligibleKeywords: number
+    returnedKeywords: number
+    suppressedKeywords: number
+    brandFiltering: 'included' | 'excluded'
+    verdict: string
+  }
+  templates: TemplateSummary[]
+  suppressed: CannibalSuppression[]
+  suppressionSummary: Record<string, number>
+  items: CannibalImportItem[]
+  evidence: {
+    imports: ProviderImportEvidence[]
+    warnings: ProviderWarning[]
+  }
+  caveats: string[]
+  recommendations: string[]
+}
+
+export interface AnalyzeCannibalImportRowsInput {
+  site: string
+  provider: ResearchImportSource['provider']
+  rows: import('../../providers/imports/research-rows.js').ImportedResearchRow[]
+  limit?: number
+  brandTerms?: string[]
+  includeBrand?: boolean
+}
+
+export interface CannibalImportAnalysis {
+  filters: CannibalImportReport['filters']
+  selection: Omit<CannibalImportSelection, 'importedRows' | 'offPropertyRows'>
+  items: CannibalImportItem[]
+  suppressed: CannibalSuppression[]
+  suppressionSummary: Record<string, number>
+  templates: TemplateSummary[]
 }
 
 export interface AnalyzeCannibalRowsInput {

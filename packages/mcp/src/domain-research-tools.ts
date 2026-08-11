@@ -144,7 +144,7 @@ const researchFileInput = z.strictObject({
     .describe('Maximum file rows to normalize. Defaults to 10000.'),
   columns: researchColumnsInput.optional(),
 })
-const researchFilesInput = z
+export const researchFilesInput = z
   .array(researchFileInput)
   .min(1)
   .max(4)

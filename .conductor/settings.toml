@@ -1,11 +1,7 @@
 "$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
 
 [scripts]
-setup = """
-pnpm install --frozen-lockfile
-pnpm hooks:install
-pnpm build
-"""
+setup = "bash scripts/conductor-setup.sh"
 archive = "true"
 run_mode = "concurrent"
 

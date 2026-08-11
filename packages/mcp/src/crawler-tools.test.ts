@@ -151,6 +151,7 @@ test('crawler MCP structured output schema stays stable', async () => {
         'definitionId',
         'headline',
         'id',
+        'issueGroupsComplete',
         'requestEvidenceStatus',
         'reviewObservations',
         'status',
@@ -279,11 +280,18 @@ test('crawler MCP structured output schema stays stable', async () => {
     assert.ok(affectedTool)
     assert.ok(listRulesTool)
     const singularRulesResult = await listRulesTool.handler({
-      category: 'headings',
+      category: 'mobile',
     })
     assert.equal(
       String((singularRulesResult.content as Array<JsonRecord>)[0]?.text),
       'Found 1 crawler rule.',
+    )
+    const headingsRulesResult = await listRulesTool.handler({
+      category: 'headings',
+    })
+    assert.equal(
+      String((headingsRulesResult.content as Array<JsonRecord>)[0]?.text),
+      'Found 2 crawler rules.',
     )
     const topFixResult = await topFixTool.handler({
       url: fixture.baseUrl,

@@ -105,17 +105,14 @@ test('report runs a technical crawl when given only a URL', async () => {
     const report = JSON.parse(result.stdout) as {
       summary: string
       steps: Array<{ tool: string; status: string; summary: string }>
+      actions: Array<{ title: string; action: string; confidence: string }>
       detail: string
       output: {
-        narrative: {
-          diagnosis: {
-            dataStatus: string
-            skippedSections?: Array<{ reason: string }>
-          }
-        }
+        searchSections: { status: string; reason: string }
       }
       technicalCrawl: {
         status: string
+        issueGroupsComplete?: boolean
         dataSources?: {
           searchConsole: { status: string }
           analytics: { status: string }
@@ -125,32 +122,38 @@ test('report runs a technical crawl when given only a URL', async () => {
     }
 
     assert.equal(report.detail, 'summary')
-    assert.match(report.summary, /^Completed a technical crawl of 1 page\./)
     assert.match(
       report.summary,
-      /Search Console and Google Analytics sections were skipped/,
+      /^Found \d+ high, \d+ medium, and \d+ low technical issues across 1 crawled page\./,
+    )
+    assert.match(
+      report.summary,
+      /Search Console and Google Analytics are not connected/,
     )
     assert.equal(report.steps[0]?.tool, 'seo_crawl')
     assert.equal(report.steps[0]?.status, 'completed')
     assert.equal(report.steps[1]?.tool, 'seo_report_narrative')
     assert.equal(report.steps[1]?.status, 'skipped')
+    assert.ok(
+      report.actions.length > 0,
+      'URL mode fills actions from crawl findings.',
+    )
+    assert.ok(report.actions[0]?.title)
+    assert.ok(report.actions[0]?.action)
     const compactBytes = Buffer.byteLength(result.stdout)
     assert.ok(
-      compactBytes < 15_000,
-      `Expected compact JSON under 15 KB, got ${compactBytes} bytes.`,
+      compactBytes < 25_000,
+      `Expected compact JSON under 25 KB, got ${compactBytes} bytes.`,
     )
-    assert.equal(report.output.narrative.diagnosis.dataStatus, 'unavailable')
+    assert.equal(report.output.searchSections.status, 'skipped')
+    assert.match(report.output.searchSections.reason, /Search Console/)
+    assert.equal(report.technicalCrawl.issueGroupsComplete, true)
     assert.equal(report.technicalCrawl.status, 'created')
     assert.equal(
       report.technicalCrawl.dataSources?.searchConsole.status,
       'skipped',
     )
     assert.equal(report.technicalCrawl.dataSources?.analytics.status, 'skipped')
-    assert.ok(
-      report.output.narrative.diagnosis.skippedSections?.every((section) =>
-        section.reason.includes('no Search Console property'),
-      ),
-    )
     assert.deepEqual(
       report.nextCommands.map((command) => command.command),
       [`seo audit-page --url http://127.0.0.1:${address.port}`, 'seo start'],

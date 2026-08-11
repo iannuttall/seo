@@ -799,6 +799,7 @@ export const REPORT_DEPTH_CONTINUED = {
       'status, requestEvidenceStatus, attempted and fetched counts, failures, retained pages, and pageLimitReached',
       'access crawler identity, blockedRequests, provider counts, and samples',
       'data-source states',
+      'topFixes AND reviewObservations together; the two lists are the complete grouped issue inventory, so carry every group from both into findings',
       'warnings and caveats, then opt-in pages, requests, and issues',
     ],
     doNotClaim: [

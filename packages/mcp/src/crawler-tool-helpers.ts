@@ -35,8 +35,12 @@ export function compactCrawlResult(
           agentResources: report.ai.agentResources,
         }
       : undefined,
-    topFixes: topFixes(report, { limit: 10 }),
-    reviewObservations: reviewObservations(report, { limit: 10 }),
+    // One group per rule id, so both lists are bounded by the rule catalog.
+    // Keep them complete: agents treat these two lists together as the whole
+    // grouped issue inventory, and a silent cap would hide findings.
+    topFixes: topFixes(report, { limit: 1000 }),
+    reviewObservations: reviewObservations(report, { limit: 1000 }),
+    issueGroupsComplete: true,
     warnings: report.warnings,
     caveats: report.caveats,
   }

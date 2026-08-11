@@ -1,10 +1,15 @@
 import {
   analyticsConnection,
   type CrawlReport,
+  crawlSite,
   diagnosePropertyWorkflow,
+  loadSearchConsoleExport,
   type ReportHtmlSection,
+  reconcileExportPagesWithCrawl,
   resolveTechnicalBaseline,
   reviewObservations,
+  type SearchConsoleExportEvidence,
+  type SearchConsoleExportReconciliation,
   SeoError,
   type TechnicalBaseline,
   topFixes,
@@ -31,6 +36,24 @@ import {
 import { cliReportArgs } from '../report-options.js'
 import { startUrlForSite } from '../shared.js'
 import { printWorkflow } from './output.js'
+import {
+  type ExportPageInventory,
+  exportPageInventory,
+  exportSummarySentence,
+  issueCountSummarySentence,
+  pageDisplayPath,
+  printExportPageInventory,
+  searchConsoleExportSection,
+  type TopicOverlapResult,
+  technicalCrawlActions,
+  titleEvidencePages,
+  topicOverlapCandidates,
+  unreachedUrlsOnCrawlOrigin,
+} from './url-report-evidence.js'
+
+// Bound for the in-run audit of exported page URLs the crawl never reached.
+// Keeps the extra fetch work proportional to one crawl worker window.
+const UNREACHED_AUDIT_LIMIT = 20
 
 type DiagnoseWorkflowReport = Awaited<
   ReturnType<typeof diagnosePropertyWorkflow>
@@ -170,8 +193,12 @@ function technicalSection(baseline: TechnicalBaseline) {
       (report.dataSources?.searchConsole.joinedQueryPages ?? 0) > 0,
     dataSources: report.dataSources,
     summary: report.summary,
-    topFixes: topFixes(report, { limit: 5 }),
-    reviewObservations: reviewObservations(report, { limit: 5 }),
+    // One group per rule id keeps both lists bounded by the rule catalog.
+    // Together they are the complete grouped issue inventory; a silent cap
+    // here previously hid findings from the report entirely.
+    topFixes: topFixes(report, { limit: 1000 }),
+    reviewObservations: reviewObservations(report, { limit: 1000 }),
+    issueGroupsComplete: true,
   }
 }
 
@@ -194,12 +221,12 @@ function compactTechnicalFinding(finding: ReturnType<typeof topFixes>[number]) {
 function compactTechnicalSection(section: ReturnType<typeof technicalSection>) {
   if (!('topFixes' in section)) return section
 
+  // Compact trims per-finding fields, never the group list: dropping groups
+  // made real findings invisible to agents reading the compact report.
   return {
     ...section,
-    topFixes: section.topFixes.slice(0, 3).map(compactTechnicalFinding),
-    reviewObservations: section.reviewObservations
-      .slice(0, 3)
-      .map(compactTechnicalFinding),
+    topFixes: section.topFixes.map(compactTechnicalFinding),
+    reviewObservations: section.reviewObservations.map(compactTechnicalFinding),
   }
 }
 
@@ -267,9 +294,98 @@ function printTechnicalSection(
     )
   }
   if (section.reviewObservations.length) {
+    if (options.providerFree) {
+      process.stdout.write(
+        '\nReview observations (confirm intent before treating as defects)\n',
+      )
+      printTable(
+        ['Rule', 'Severity', 'Affected URLs', 'Sample'],
+        section.reviewObservations.map((observation) => [
+          observation.ruleId,
+          observation.severity,
+          observation.count,
+          truncate(observation.sampleUrls[0] ?? '', 60),
+        ]),
+      )
+    } else {
+      process.stdout.write(
+        `\n${section.reviewObservations.length} review observation${section.reviewObservations.length === 1 ? '' : 's'} were kept out of this action queue.\n`,
+      )
+    }
+  }
+}
+
+function printSearchConsoleExportSection(input: {
+  evidence: SearchConsoleExportEvidence
+  reconciliation?: SearchConsoleExportReconciliation
+  unreachedAudit?: {
+    auditedUrls: number
+    totalUnreached: number
+    topFixes: ReturnType<typeof topFixes>
+    reviewObservations: ReturnType<typeof topFixes>
+  }
+  topicOverlap?: TopicOverlapResult
+  pageInventory?: ExportPageInventory
+}): void {
+  process.stdout.write('\nSearch Console export (local file evidence)\n')
+  process.stdout.write(`${exportSummarySentence(input)}\n`)
+  for (const warning of input.evidence.warnings) {
+    process.stdout.write(`Warning: ${warning}\n`)
+  }
+  const unreached = input.reconciliation?.unreachedPages ?? []
+  if (unreached.length) {
     process.stdout.write(
-      `\n${section.reviewObservations.length} review observation${section.reviewObservations.length === 1 ? '' : 's'} were kept out of this action queue.\n`,
+      '\nExported page URLs not reached by this crawl (by impressions)\n',
     )
+    printTable(
+      ['URL', 'Clicks', 'Impressions', 'Position'],
+      unreached
+        .slice(0, 10)
+        .map((row) => [
+          truncate(row.url, 64),
+          row.clicks,
+          row.impressions,
+          row.position ?? '-',
+        ]),
+    )
+  }
+  if (input.unreachedAudit) {
+    const audit = input.unreachedAudit
+    process.stdout.write(
+      `\nAudited ${audit.auditedUrls} of the ${audit.totalUnreached} unreached URLs in this run\n`,
+    )
+    const groups = [...audit.topFixes, ...audit.reviewObservations]
+    if (groups.length) {
+      printTable(
+        ['Rule', 'Severity', 'Affected URLs', 'Sample'],
+        groups.map((group) => [
+          group.ruleId,
+          group.severity,
+          group.count,
+          truncate(group.sampleUrls[0] ?? '', 60),
+        ]),
+      )
+    }
+  }
+  if (input.topicOverlap?.candidates.length) {
+    process.stdout.write(
+      '\nTopic overlap candidates (title-based heuristic; the export has no query-to-page mapping)\n',
+    )
+    printTable(
+      ['Query', 'Impressions', 'Pages'],
+      input.topicOverlap.candidates.map((candidate) => [
+        truncate(candidate.query, 40),
+        candidate.impressions,
+        truncate(
+          candidate.pages.map((page) => pageDisplayPath(page.url)).join(', '),
+          64,
+        ),
+      ]),
+    )
+  }
+  if (input.pageInventory) printExportPageInventory(input.pageInventory)
+  for (const caveat of input.evidence.caveats) {
+    process.stdout.write(`Note: ${caveat}\n`)
   }
 }
 
@@ -329,14 +445,27 @@ function mainReportHtmlSections(input: {
 
 function technicalFirstSummary(
   section: ReturnType<typeof technicalSection>,
+  exportEvidence?: {
+    evidence: SearchConsoleExportEvidence
+    reconciliation?: SearchConsoleExportReconciliation
+  },
+  unreachedAudit?: { auditedUrls: number; totalUnreached: number },
 ): string {
   if (!('topFixes' in section)) {
     return `Technical crawl evidence was ${section.status}. Search Console and Google Analytics sections were skipped because they are not connected.`
   }
 
-  const source = section.status === 'reused' ? 'Loaded' : 'Completed'
-  const pages = section.summary.crawledUrls
-  return `${source} a technical crawl of ${pages} ${pages === 1 ? 'page' : 'pages'}. Search Console and Google Analytics sections were skipped because they are not connected.`
+  const parts = [issueCountSummarySentence(section.summary)]
+  if (exportEvidence) parts.push(exportSummarySentence(exportEvidence))
+  if (unreachedAudit) {
+    parts.push(
+      `Audited ${unreachedAudit.auditedUrls} of the ${unreachedAudit.totalUnreached} unreached URLs in this run; their findings are in the action list.`,
+    )
+  }
+  parts.push(
+    'Search Console and Google Analytics are not connected; provider-backed sections were skipped.',
+  )
+  return parts.join(' ')
 }
 
 function technicalWorkflowStep(section: ReturnType<typeof technicalSection>): {
@@ -358,6 +487,48 @@ function technicalWorkflowStep(section: ReturnType<typeof technicalSection>): {
     tool: 'seo_crawl',
     status: 'completed',
     summary: `${section.status === 'reused' ? 'Loaded' : 'Completed'} technical evidence for ${pages} crawled ${pages === 1 ? 'page' : 'pages'}.`,
+  }
+}
+
+function exportWorkflowSteps(exportSummaryInput?: {
+  evidence: SearchConsoleExportEvidence
+  reconciliation?: SearchConsoleExportReconciliation
+}): Array<{ tool: string; status: 'completed'; summary: string }> {
+  if (!exportSummaryInput) return []
+  return [
+    {
+      tool: 'seo_search_console_export',
+      status: 'completed',
+      summary: exportSummarySentence(exportSummaryInput),
+    },
+  ]
+}
+
+/**
+ * Turn unreached export pages into one runnable follow-up. URLs are mapped
+ * onto the crawl origin by path (the same join basis as the reconciliation)
+ * so the command works in the environment the user pointed --url at.
+ */
+function unreachedAuditFollowup(
+  reconciliation: SearchConsoleExportReconciliation,
+): { command: string; why: string } | undefined {
+  if (reconciliation.unreachedCount === 0) return undefined
+  const urls: string[] = []
+  for (const row of reconciliation.unreachedPages.slice(0, 10)) {
+    try {
+      const parsed = new URL(row.url)
+      urls.push(
+        `${reconciliation.crawlOrigin}${parsed.pathname}${parsed.search}`,
+      )
+    } catch {
+      /* skip unparseable export URLs */
+    }
+  }
+  if (!urls.length) return undefined
+  const remainder = reconciliation.unreachedCount - urls.length
+  return {
+    command: `seo reports run audit-urls --params '${JSON.stringify({ urls })}' --json`,
+    why: `Fetch page-level evidence for exported URLs this crawl never reached${remainder > 0 ? ` (first ${urls.length} of ${reconciliation.unreachedCount})` : ''}.${reconciliation.originMismatch ? ' URLs were mapped onto the --url origin by path because the export origin differs.' : ''}`,
   }
 }
 
@@ -585,6 +756,11 @@ function workflowCommandMeta(input: {
               description:
                 'Include the full report in JSON output. Default JSON is a compact summary for agents.',
             },
+            'search-console-export': {
+              type: 'string' as const,
+              description:
+                'Path to a local Search Console export (a directory or CSV with the standard query and page tables). URL mode only; query and page tables stay separate.',
+            },
             ...reportHtmlArgs,
           }
         : {}),
@@ -602,6 +778,15 @@ function workflowCommandMeta(input: {
       const explicitSite = stringArg(args.site)
       const directUrl = input.printFollowups ? stringArg(args.url) : undefined
       const useSearchData = Boolean(project || explicitSite || !directUrl)
+      const exportPath = input.printFollowups
+        ? stringArg(args['search-console-export'])
+        : undefined
+      if (exportPath && useSearchData) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          'Use --search-console-export only with --url. A connected property already provides query and page evidence, and imported tables must not be blended with it.',
+        )
+      }
       const selection = useSearchData
         ? await resolveClientSelection({
             client: project,
@@ -642,6 +827,104 @@ function workflowCommandMeta(input: {
       const technicalCrawl = technicalBaseline
         ? technicalSection(technicalBaseline)
         : undefined
+      const exportEvidence = exportPath
+        ? await loadSearchConsoleExport({ path: exportPath })
+        : undefined
+      const exportReconciliation =
+        exportEvidence && technicalBaseline?.report && directUrl
+          ? reconcileExportPagesWithCrawl({
+              pages: exportEvidence.pages.rows,
+              crawledUrls: technicalBaseline.report.pages.flatMap((page) => [
+                page.url,
+                page.finalUrl,
+              ]),
+              crawlOrigin: siteForDirectUrl(directUrl),
+            })
+          : undefined
+      const exportSummaryInput = exportEvidence
+        ? { evidence: exportEvidence, reconciliation: exportReconciliation }
+        : undefined
+      // Exported pages the crawl never reached are still part of the site
+      // being audited, so fetch a bounded sample in the same run instead of
+      // deferring their page-level evidence to a follow-up command.
+      const unreachedAudit = await (async () => {
+        if (!exportReconciliation || exportReconciliation.unreachedCount === 0)
+          return undefined
+        const urls = unreachedUrlsOnCrawlOrigin(
+          exportReconciliation,
+          UNREACHED_AUDIT_LIMIT,
+        )
+        if (!urls.length) return undefined
+        const auditReport = await crawlSite({
+          url: urls[0] ?? '',
+          urls,
+          mode: 'list',
+          maxPages: urls.length,
+          useSitemap: false,
+          refresh: booleanArg(args.refresh),
+        })
+        return {
+          auditedUrls: auditReport.summary.totalPages,
+          totalUnreached: exportReconciliation.unreachedCount,
+          capped: exportReconciliation.unreachedCount > urls.length,
+          issueGroupsComplete: true,
+          topFixes: topFixes(auditReport, { limit: 1000 }),
+          reviewObservations: reviewObservations(auditReport, { limit: 1000 }),
+          // Bounded by the audit's own URL cap. Retained so title-based
+          // evidence can include pages the main crawl never reached.
+          pages: auditReport.pages.map((page) => ({
+            url: page.finalUrl || page.url,
+            title: page.title ?? null,
+          })),
+        }
+      })()
+      const titlePages = technicalBaseline?.report
+        ? titleEvidencePages(
+            technicalBaseline.report.pages,
+            unreachedAudit?.pages,
+          )
+        : undefined
+      // Title-based topic overlap between exported query phrases and crawled
+      // page titles. The export has no query-to-page mapping, so this is a
+      // labelled heuristic observation, never a cannibalisation verdict.
+      const topicOverlap =
+        exportEvidence && titlePages
+          ? topicOverlapCandidates({
+              queries: exportEvidence.queries.rows,
+              pages: titlePages,
+            })
+          : undefined
+      // Per-page suggested disposition tiers so a migration or cleanup can
+      // be decided page by page instead of from one blanket recommendation.
+      const pageInventory =
+        exportEvidence && titlePages
+          ? exportPageInventory({
+              pages: exportEvidence.pages.rows,
+              reconciliation: exportReconciliation,
+              crawledPages: titlePages,
+              overlap: topicOverlap,
+            })
+          : undefined
+      const urlModeActions = technicalBaseline?.report
+        ? technicalCrawlActions({
+            topFixes: topFixes(technicalBaseline.report, { limit: 1000 }),
+            reviewObservations: reviewObservations(technicalBaseline.report, {
+              limit: 1000,
+            }),
+            reconciliation: exportReconciliation,
+            ...(unreachedAudit
+              ? {
+                  unreachedAudit: {
+                    topFixes: unreachedAudit.topFixes,
+                    reviewObservations: unreachedAudit.reviewObservations,
+                    titlePrefix: 'unreached pages:',
+                  },
+                }
+              : {}),
+            ...(topicOverlap ? { topicOverlap } : {}),
+            ...(pageInventory ? { pageInventory } : {}),
+          })
+        : undefined
       const followups = input.printFollowups
         ? reportFollowups(outputReport, {
             crawlStartUrl:
@@ -651,6 +934,14 @@ function workflowCommandMeta(input: {
             searchDataAvailable: useSearchData,
           })
         : undefined
+      if (
+        followups &&
+        exportReconciliation &&
+        (!unreachedAudit || unreachedAudit.capped)
+      ) {
+        const audit = unreachedAuditFollowup(exportReconciliation)
+        if (audit) followups.unshift(audit)
+      }
       if (json) {
         const jsonReport =
           input.printFollowups && !full
@@ -660,11 +951,34 @@ function workflowCommandMeta(input: {
           !useSearchData && technicalCrawl
             ? {
                 ...jsonReport,
-                summary: technicalFirstSummary(technicalCrawl),
+                summary: technicalFirstSummary(
+                  technicalCrawl,
+                  exportSummaryInput,
+                  unreachedAudit,
+                ),
                 steps: [
                   technicalWorkflowStep(technicalCrawl),
+                  ...exportWorkflowSteps(exportSummaryInput),
                   ...jsonReport.steps,
                 ],
+                // A provider-free report must surface crawl findings as its
+                // action queue; an empty list here previously read as "the
+                // tool found nothing" while the findings sat below.
+                ...(urlModeActions ? { actions: urlModeActions } : {}),
+                // The compact URL-mode report replaces the empty narrative
+                // shell (every section unavailable) with an explicit skip
+                // marker. --full keeps the whole narrative object.
+                ...(full
+                  ? {}
+                  : {
+                      output: {
+                        searchSections: {
+                          status: 'skipped',
+                          reason:
+                            'No Search Console property was selected. Pass --site or --project, or run seo start to connect one.',
+                        },
+                      },
+                    }),
               }
             : jsonReport
         printJson(
@@ -680,6 +994,23 @@ function workflowCommandMeta(input: {
                         input.printFollowups && !full
                           ? compactTechnicalSection(technicalCrawl)
                           : technicalCrawl,
+                    }
+                  : {}),
+                ...(exportEvidence
+                  ? {
+                      searchConsoleExport: {
+                        ...searchConsoleExportSection({
+                          evidence: exportEvidence,
+                          reconciliation: exportReconciliation,
+                          pageInventory,
+                        }),
+                        ...(unreachedAudit
+                          ? { unreachedPagesAudit: unreachedAudit }
+                          : {}),
+                        ...(topicOverlap
+                          ? { topicOverlapCandidates: topicOverlap }
+                          : {}),
+                      },
                     }
                   : {}),
                 ...(followups ? { nextCommands: followups } : {}),
@@ -711,6 +1042,15 @@ function workflowCommandMeta(input: {
       }
       if (technicalCrawl) {
         printTechnicalSection(technicalCrawl, { providerFree: !useSearchData })
+        if (exportEvidence) {
+          printSearchConsoleExportSection({
+            evidence: exportEvidence,
+            reconciliation: exportReconciliation,
+            unreachedAudit,
+            topicOverlap,
+            pageInventory,
+          })
+        }
         if (!useSearchData) printSkippedProviderSections(technicalCrawl)
       }
       if (followups) printReportFollowups(followups)

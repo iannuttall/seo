@@ -116,6 +116,24 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'h1_multiple',
+    title: 'Multiple H1 headings',
+    category: 'headings',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Multiple H1 headings are valid HTML. Keeping one H1 is a common convention that keeps the visible document outline clear for readers and assistive technology. This is a convention heuristic, not a search-engine requirement.',
+    howToFix:
+      'Review the headings before changing anything. If one heading describes the whole page, keep it as the H1 and move the others to H2 or below so the outline stays consistent.',
+    impactIfIgnored:
+      'The visible document outline may be harder to scan, and templates can drift into inconsistent heading use.',
+    howToVerify:
+      'Re-run the crawl and confirm h1Count matches the intended heading structure.',
+    agentHints: {
+      evidenceFields: ['page.h1', 'page.h1Count'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'canonical_invalid',
     title: 'Canonical URL is invalid',
     category: 'canonical',
@@ -874,6 +892,28 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'structured_data_missing',
+    title: 'No structured data detected',
+    category: 'structured-data',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'The crawler detected no JSON-LD, microdata, or RDFa on this page. Structured data is optional and page-type dependent, so this is an observation, not a defect.',
+    howToFix:
+      'Add structured data only where a schema type genuinely describes the page, for example an article page describing its article. Validate the markup after adding it, and leave pages without a fitting schema type unmarked.',
+    impactIfIgnored:
+      'Consumers that read structured data get no machine-readable description of this page. Many page types work fine without any markup.',
+    howToVerify:
+      'Re-run the crawl and confirm structuredDataFormats lists the added format, then validate the page with a structured data tester.',
+    agentHints: {
+      evidenceFields: [
+        'page.structuredDataFormats',
+        'page.schemaTypes',
+        'issue.evidence.structuredDataFormats',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'jsonld_invalid',
     title: 'Invalid JSON-LD',
     category: 'structured-data',
@@ -927,11 +967,11 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'og_description_missing',
-    title: 'Open Graph description missing',
+    title: 'og:description not set',
     category: 'social',
     defaultSeverity: 'low',
     whyItMatters:
-      'The Open Graph description is often the short pitch shown when a page is shared in chat, Slack, social feeds, and link previews.',
+      'The og:description tag is often the short pitch shown when a page is shared in chat, Slack, social feeds, and link previews. Other og: tags can be present while this one is not set.',
     howToFix:
       'Add an og:description that briefly explains why the page is worth opening.',
     impactIfIgnored:
@@ -978,6 +1018,8 @@ export type RuleSeverity = RuleDefinition['defaultSeverity']
 
 const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   title_too_wide: 'review',
+  h1_multiple: 'review',
+  structured_data_missing: 'review',
   canonical_missing: 'review',
   canonical_multiple: 'review',
   canonical_mismatch: 'review',

@@ -658,7 +658,7 @@ test('auditCrawlPages flags heading issues', () => {
     issues
       .filter((issue) => issue.category === 'headings')
       .map((issue) => issue.ruleId),
-    ['h1_missing'],
+    ['h1_missing', 'h1_multiple'],
   )
 })
 

@@ -653,6 +653,12 @@ export function auditCrawlPages(
           h1Count,
         }),
       )
+    } else if (h1Count > 1) {
+      issues.push(
+        issue('h1_multiple', page, `${h1Count} H1 headings`, {
+          h1Count,
+        }),
+      )
     }
     if (page.canonicalStatus === 'conflicting') {
       issues.push(
@@ -847,6 +853,25 @@ export function auditCrawlPages(
           }),
         )
       }
+    }
+    const structuredDataFormats = page.structuredDataFormats
+    if (
+      page.indexable &&
+      structuredDataFormats &&
+      structuredDataFormats.length === 0 &&
+      (page.schemaTypes?.length ?? 0) === 0 &&
+      (page.invalidJsonLdCount ?? 0) === 0 &&
+      (page.unrecognizedJsonLdTypes?.length ?? 0) === 0
+    ) {
+      issues.push(
+        issue('structured_data_missing', page, 'No structured data detected', {
+          structuredDataFormats,
+          schemaTypes: page.schemaTypes ?? [],
+          invalidJsonLdCount: page.invalidJsonLdCount ?? 0,
+          unrecognizedJsonLdTypeCount:
+            page.unrecognizedJsonLdTypes?.length ?? 0,
+        }),
+      )
     }
     if ((page.invalidJsonLdCount ?? 0) > 0) {
       issues.push(

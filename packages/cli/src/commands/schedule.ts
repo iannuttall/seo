@@ -55,14 +55,26 @@ export function rankTrackingCronLine(input: {
     )
   }
   if (
-    input.keywordLimit !== undefined &&
-    (!Number.isSafeInteger(input.keywordLimit) ||
-      input.keywordLimit < 1 ||
-      input.keywordLimit > 1_000)
+    input.provider !== undefined &&
+    !['dataforseo', 'serpbase'].includes(input.provider)
   ) {
     throw new SeoError(
       'INVALID_INPUT',
-      'Queued rank tracking can collect 1 to 1000 keywords per run.',
+      'Exact rank collection supports dataforseo or serpbase.',
+    )
+  }
+  const maximumKeywords = input.provider === 'serpbase' ? 25 : 1_000
+  if (
+    input.keywordLimit !== undefined &&
+    (!Number.isSafeInteger(input.keywordLimit) ||
+      input.keywordLimit < 1 ||
+      input.keywordLimit > maximumKeywords)
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      input.provider === 'serpbase'
+        ? 'Live SerpBase rank tracking can collect 1 to 25 keywords per run.'
+        : 'Queued rank tracking can collect 1 to 1000 keywords per run.',
     )
   }
   const params = {
@@ -72,7 +84,7 @@ export function rankTrackingCronLine(input: {
     ...(input.tag ? { tag: input.tag } : {}),
     ...(devices ? { devices } : {}),
     ...(input.provider ? { provider: input.provider } : {}),
-    collectionMethod: 'queued',
+    collectionMethod: input.provider === 'serpbase' ? 'live' : 'queued',
     cadence,
     ...(input.depth === undefined ? {} : { depth: input.depth }),
     ...(input.keywordLimit === undefined

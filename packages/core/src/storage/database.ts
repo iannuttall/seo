@@ -13,6 +13,7 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
+import { migrateSerpBaseProviderIds } from './provider-id-migration.js'
 import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
@@ -366,6 +367,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
     `)
   })
   migrate.immediate()
+  migrateSerpBaseProviderIds(database)
   runCacheMaintenance(database, {
     compact: true,
     allowFullVacuum: true,
@@ -455,6 +457,7 @@ export function getCacheStats(): CacheStats {
       .get() as { count: number },
     semrush_cache: { count: legacySemrushCount + providerCount('semrush') },
     provider_cache: { count: providerCount('dataforseo') },
+    serpbase_cache: { count: providerCount('serpbase') },
     ahrefs_cache: { count: providerCount('ahrefs') },
     clicky_cache: { count: providerCount('clicky') },
     http_cache: database
@@ -490,6 +493,7 @@ export function clearCache(
     | 'semrush'
     | 'dataforseo'
     | 'ahrefs'
+    | 'serpbase'
     | 'clicky'
     | 'http',
   olderThanMs?: number,
@@ -501,6 +505,7 @@ export function clearCache(
     provider === 'dataforseo' ||
     provider === 'semrush' ||
     provider === 'ahrefs' ||
+    provider === 'serpbase' ||
     provider === 'clicky'
   ) {
     const sql = cutoff

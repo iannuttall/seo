@@ -49,3 +49,38 @@ test('rank tracking cron rejects mixed or unbounded schedule input', () => {
     /1 to 1000/u,
   )
 })
+
+test('SerpBase rank tracking cron uses bounded live collection', () => {
+  const line = rankTrackingCronLine({
+    projectId: 'project-1',
+    set: 'priority',
+    targetDomain: 'example.test',
+    provider: 'serpbase',
+    cadence: 'weekly',
+    depth: 100,
+    keywordLimit: 2,
+    hour: 9,
+    minute: 0,
+    weekday: 1,
+    day: 1,
+  })
+  assert.match(line.command, /serpbase/u)
+  assert.match(line.command, /live/u)
+  assert.doesNotMatch(line.command, /queued/u)
+  assert.throws(
+    () =>
+      rankTrackingCronLine({
+        projectId: 'project-1',
+        set: 'priority',
+        targetDomain: 'example.test',
+        provider: 'serpbase',
+        cadence: 'weekly',
+        depth: 101,
+        hour: 9,
+        minute: 0,
+        weekday: 1,
+        day: 1,
+      }),
+    /1 to 100/u,
+  )
+})

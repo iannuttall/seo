@@ -31,7 +31,17 @@ export const providerLanguageCodeInput = z
   .max(35)
   .regex(/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i)
 
-export const providerIdInput = z.enum(['dataforseo', 'semrush', 'ahrefs'])
+export const providerIdInput = z.enum([
+  'dataforseo',
+  'semrush',
+  'ahrefs',
+  'serpbase',
+])
+export const researchImportProviderIdInput = z.enum([
+  'dataforseo',
+  'semrush',
+  'ahrefs',
+])
 export const providerSearchEngineInput = z
   .enum(['google', 'bing'])
   .default('google')

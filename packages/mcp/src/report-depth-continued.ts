@@ -710,7 +710,7 @@ export const REPORT_DEPTH_CONTINUED = {
       'coverage, pending and failed counts, provider cost, warnings, and caveats',
       'comparison prior run and per-item current and previous observation states',
       'organic position change, absolute position, ranking URL changes, and checkedAt',
-      'nextSteps for first-party context, template review, or queued collection',
+      'nextSteps for first-party context, template review, or the next collection',
     ],
     doNotClaim: [
       'Not observed within the configured depth is not proof that the domain does not rank.',

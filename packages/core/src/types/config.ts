@@ -106,6 +106,7 @@ export const configSchema = z.object({
           dataforseo: providerSpendLimitOverridesSchema.optional(),
           semrush: providerSpendLimitOverridesSchema.optional(),
           ahrefs: providerSpendLimitOverridesSchema.optional(),
+          serpbase: providerSpendLimitOverridesSchema.optional(),
         })
         .strict()
         .optional(),

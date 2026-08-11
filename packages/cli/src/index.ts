@@ -221,6 +221,7 @@ const allHelpSections: HelpSection[] = [
       ['seo providers bing', 'Connect and report on Bing Webmaster'],
       ['seo providers dataforseo', 'Connect optional search data'],
       ['seo providers semrush', 'Connect optional Semrush data'],
+      ['seo providers serpbase', 'Connect live Google result data'],
       ['seo cache', 'Manage local cache'],
       ['seo privacy', 'Show local storage paths'],
       ['seo telemetry status', 'Check anonymous usage telemetry'],

@@ -260,3 +260,38 @@ test('recovers an interrupted queued post by provider tag without duplicating sp
   assert.equal(postCalls, 1)
   assert.equal(complete.run?.actualCostMicros, null)
 })
+
+test('SerpBase defaults scheduled tracking to live top-page collection', async () => {
+  const db = database()
+  setupKeywords(db, ['Alpha'])
+  let captured: SerpSnapshotRequest | undefined
+  const collector: RankTrackingCollector = {
+    provider: 'serpbase',
+    live: async (request) => {
+      captured = request
+      return { ...evidence(request, 4), provider: 'serpbase' }
+    },
+  }
+  const report = await rankTrackingReport(
+    {
+      projectId: 'project-1',
+      set: 'set-1',
+      targetDomain: 'example.test',
+      provider: 'serpbase',
+      cadence: 'weekly',
+      keywordLimit: 1,
+    },
+    {
+      database: db,
+      id: ids(),
+      now: () => new Date('2026-08-11T08:00:00.000Z'),
+      collector,
+    },
+  )
+
+  assert.equal(report.configuration.provider, 'serpbase')
+  assert.equal(report.configuration.collectionMethod, 'live')
+  assert.equal(report.configuration.depth, 10)
+  assert.equal(captured?.depth, 10)
+  assert.equal(report.summary.observed, 1)
+})

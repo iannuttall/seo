@@ -14,6 +14,7 @@ import {
   providerKeywordInput as keywordInput,
   providerLanguageCodeInput as languageCodeInput,
   providerIdInput,
+  researchImportProviderIdInput,
 } from './provider-inputs.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -121,7 +122,7 @@ const researchFileInput = z.strictObject({
     .min(1)
     .max(4_096)
     .describe('Path to a local CSV, TSV, JSON, JSONL or NDJSON export.'),
-  provider: providerIdInput.describe(
+  provider: researchImportProviderIdInput.describe(
     'Provider that produced the file: dataforseo, semrush or ahrefs.',
   ),
   exportedAt: z

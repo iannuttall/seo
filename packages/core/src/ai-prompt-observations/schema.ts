@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS ai_prompt_observations (
   estimated_cost_micros INTEGER,
   actual_cost_micros INTEGER,
   checked_at TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs')),
+  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs', 'serpbase')),
   provider_task_ids_json TEXT NOT NULL,
   completeness TEXT NOT NULL,
   warnings_json TEXT NOT NULL,

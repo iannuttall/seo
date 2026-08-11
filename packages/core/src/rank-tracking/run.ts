@@ -8,8 +8,10 @@ import type {
 } from '../providers/contracts.js'
 import { readDataForSeoCredentials } from '../providers/dataforseo/credentials.js'
 import { ProviderError } from '../providers/errors.js'
+import { readSerpBaseApiKey } from '../providers/serpbase/credentials.js'
 import { DataForSeoRankTrackingCollector } from './dataforseo-collector.js'
 import { RANK_TRACKING_LIMITS } from './limits.js'
+import { SerpBaseRankTrackingCollector } from './serpbase-collector.js'
 import {
   activeRankTrackingRun,
   failRankTrackingTask,
@@ -41,7 +43,7 @@ export type RankTrackingExecutionInput = {
   targetDomain: string
   tag?: string
   devices?: RankTrackingDevice[]
-  provider?: 'dataforseo' | 'semrush' | 'ahrefs'
+  provider?: 'dataforseo' | 'semrush' | 'ahrefs' | 'serpbase'
   collectionMethod?: RankTrackingCollectionMethod
   cadence?: RankTrackingCadence
   depth?: number
@@ -81,10 +83,19 @@ function providerError(error: unknown): SeoError {
 async function defaultCollector(
   provider: RankTrackingConfiguration['provider'],
 ): Promise<RankTrackingCollector> {
+  if (provider === 'serpbase') {
+    if (!(await readSerpBaseApiKey())) {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'SerpBase is not connected. Run `seo providers serpbase connect` first.',
+      )
+    }
+    return new SerpBaseRankTrackingCollector()
+  }
   if (provider !== 'dataforseo') {
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',
-      `${provider} does not yet implement exact rank collection. Use DataForSEO for this report.`,
+      `${provider} does not yet implement exact rank collection. Use SerpBase or DataForSEO for this report.`,
     )
   }
   if (!(await readDataForSeoCredentials())) {
@@ -332,10 +343,28 @@ export async function executeRankTracking(
   dependencies: RankTrackingExecutionDependencies = {},
 ): Promise<RankTrackingExecution> {
   const cadence = input.cadence ?? 'manual'
+  const selectedSet = getKeywordSet(
+    {
+      projectId: input.projectId,
+      idOrName: input.set,
+      tag: input.tag,
+      limit: 1,
+    },
+    dependencies,
+  )
+  const provider = input.provider ?? selectedSet.set.provider ?? 'dataforseo'
   const collectionMethod =
-    input.collectionMethod ?? (cadence === 'manual' ? 'live' : 'queued')
+    input.collectionMethod ??
+    (provider === 'serpbase' || cadence === 'manual' ? 'live' : 'queued')
+  if (provider === 'serpbase' && collectionMethod !== 'live') {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'SerpBase supports live rank collection. Use collectionMethod live.',
+    )
+  }
   const keywordLimit =
-    input.keywordLimit ?? (collectionMethod === 'live' ? 25 : 100)
+    input.keywordLimit ??
+    (provider === 'serpbase' ? 20 : collectionMethod === 'live' ? 25 : 100)
   const set = getKeywordSet(
     {
       projectId: input.projectId,
@@ -345,7 +374,6 @@ export async function executeRankTracking(
     },
     dependencies,
   )
-  const provider = input.provider ?? set.set.provider ?? 'dataforseo'
   const defaultDevice = set.set.market.device ?? 'desktop'
   const configuration = getOrCreateRankTrackingConfiguration(
     {
@@ -358,7 +386,7 @@ export async function executeRankTracking(
       provider,
       collectionMethod,
       cadence,
-      depth: input.depth ?? 100,
+      depth: input.depth ?? (provider === 'serpbase' ? 10 : 100),
       keywordLimit,
     },
     dependencies,

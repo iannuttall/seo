@@ -69,8 +69,9 @@ the shared Google app. If it is unavailable in your build, setup guides you
 through adding your own desktop OAuth client.
 
 Research providers are optional and connected separately. Start with the main
-report, then add DataForSEO, Semrush, or Ahrefs only when external keyword,
-result, domain, competitor, or link estimates would change the decision.
+report, then add SerpBase, DataForSEO, Semrush, or Ahrefs only when external
+result, keyword, domain, competitor, or link evidence would change the
+decision.
 
 That is the normal path. The `seo` command is then available in every terminal,
 script, CI job, and local MCP client on the machine.
@@ -191,7 +192,22 @@ Run `seo help` for the short path or `seo help all` for the full command list.
 
 Connect a research provider when you need independent market estimates or
 competitor evidence. Each connection is local and separate from Google
-sign-in. DataForSEO has the broadest live coverage:
+sign-in. SerpBase is the smaller option for live Google result snapshots and
+rank tracking:
+
+```sh
+seo providers serpbase connect
+seo providers serpbase status --check
+seo providers serpbase limits
+```
+
+SerpBase uses country, language and desktop or mobile settings. It returns the
+first result page, so SerpBase-backed reports accept a depth of 1 to 10 and use
+live collection rather than queued tasks. The provider returns charged credits
+without an account-specific dollar value, so local spend limits use the highest
+published standard Search price as a conservative estimate.
+
+DataForSEO has the broadest live coverage:
 
 ```sh
 seo providers dataforseo connect

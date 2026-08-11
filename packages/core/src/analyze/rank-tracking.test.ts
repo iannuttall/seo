@@ -7,6 +7,7 @@ import {
 } from '../keyword-sets/index.js'
 import type {
   ProviderEvidence,
+  SearchMarket,
   SerpSnapshot,
   SerpSnapshotRequest,
 } from '../providers/contracts.js'
@@ -23,6 +24,13 @@ const MARKET = {
   device: 'desktop' as const,
 }
 
+const COUNTRY_MARKET = {
+  searchEngine: 'google' as const,
+  countryCode: 'GB',
+  languageCode: 'en',
+  device: 'desktop' as const,
+}
+
 function database(): Database.Database {
   const db = new Database(':memory:')
   db.pragma('foreign_keys = ON')
@@ -36,12 +44,16 @@ function ids() {
   return () => `fixture-${++next}`
 }
 
-function setupKeywords(db: Database.Database, keywords: string[]) {
+function setupKeywords(
+  db: Database.Database,
+  keywords: string[],
+  market: SearchMarket = MARKET,
+) {
   const set = createKeywordSet(
     {
       projectId: 'project-1',
       name: 'Tracked terms',
-      market: MARKET,
+      market,
       provider: 'dataforseo',
     },
     { database: db, id: () => 'set-1' },
@@ -263,7 +275,7 @@ test('recovers an interrupted queued post by provider tag without duplicating sp
 
 test('SerpBase defaults scheduled tracking to live top-page collection', async () => {
   const db = database()
-  setupKeywords(db, ['Alpha'])
+  setupKeywords(db, ['Alpha'], COUNTRY_MARKET)
   let captured: SerpSnapshotRequest | undefined
   const collector: RankTrackingCollector = {
     provider: 'serpbase',
@@ -294,4 +306,83 @@ test('SerpBase defaults scheduled tracking to live top-page collection', async (
   assert.equal(report.configuration.depth, 10)
   assert.equal(captured?.depth, 10)
   assert.equal(report.summary.observed, 1)
+})
+
+test('SerpBase preflights paginated rank work against the request limit', async () => {
+  const db = database()
+  setupKeywords(db, ['Alpha', 'Beta', 'Gamma'], COUNTRY_MARKET)
+  let collectorCalls = 0
+  const collector: RankTrackingCollector = {
+    provider: 'serpbase',
+    live: async (request) => {
+      collectorCalls += 1
+      return { ...evidence(request, 4), provider: 'serpbase' }
+    },
+  }
+
+  await assert.rejects(
+    rankTrackingReport(
+      {
+        projectId: 'project-1',
+        set: 'set-1',
+        targetDomain: 'example.test',
+        provider: 'serpbase',
+        cadence: 'weekly',
+        depth: 100,
+        keywordLimit: 3,
+      },
+      {
+        database: db,
+        id: ids(),
+        now: () => new Date('2026-08-11T08:00:00.000Z'),
+        collector,
+        providerSpendLimits: () => ({
+          dailyNoticeMicros: 5_000_000,
+          dailyHardLimitMicros: null,
+          monthlyHardLimitMicros: null,
+          maxRequestsPerReport: 20,
+          maxRowsPerReport: 10_000,
+        }),
+      },
+    ),
+    /at most 2 keywords/u,
+  )
+  assert.equal(collectorCalls, 0)
+})
+
+test('partial SERPs cannot become not-observed rank snapshots', async () => {
+  const db = database()
+  setupKeywords(db, ['Alpha'], COUNTRY_MARKET)
+  const collector: RankTrackingCollector = {
+    provider: 'serpbase',
+    live: async (request) => {
+      const partial = evidence(request, null)
+      return {
+        ...partial,
+        provider: 'serpbase',
+        coverage: { ...partial.coverage, completeness: 'partial' },
+      }
+    },
+  }
+
+  const report = await rankTrackingReport(
+    {
+      projectId: 'project-1',
+      set: 'set-1',
+      targetDomain: 'example.test',
+      provider: 'serpbase',
+      keywordLimit: 1,
+    },
+    {
+      database: db,
+      id: ids(),
+      now: () => new Date('2026-08-11T08:00:00.000Z'),
+      collector,
+    },
+  )
+
+  assert.equal(report.summary.completedSnapshots, 0)
+  assert.equal(report.summary.failedSnapshots, 1)
+  assert.equal(report.summary.notObservedWithinDepth, 0)
+  assert.match(report.operationalWarnings[0] ?? '', /partial SERP/u)
 })

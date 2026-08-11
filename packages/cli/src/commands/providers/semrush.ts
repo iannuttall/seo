@@ -15,14 +15,7 @@ import {
   printJson,
   printKeyValue,
 } from '../../utils.js'
-
-function credentialSourceLabel(
-  source: 'environment' | 'keychain' | 'file' | undefined,
-): string {
-  if (source === 'keychain') return 'system keychain'
-  if (source === 'file') return 'private local file'
-  return source ?? 'missing'
-}
+import { credentialSourceLabel } from './shared.js'
 
 const connectCommand = defineCommand({
   meta: {

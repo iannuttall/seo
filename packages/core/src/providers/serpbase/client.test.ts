@@ -40,15 +40,15 @@ function database(): Database.Database {
   return db
 }
 
-function response() {
+function response(page = 1) {
   return {
     status: 0,
-    request_id: 'request-1',
+    request_id: `request-${page}`,
     elapsed_ms: 125,
     credits_charged: 1,
     search_type: 'search',
     query: 'technical seo',
-    page: 1,
+    page,
     organic: [
       {
         rank: 1,
@@ -68,6 +68,7 @@ function request() {
     countryCode: 'GB',
     languageCode: 'en',
     device: 'desktop' as const,
+    page: 1,
     requestedRows: 10,
     context: {
       projectId: 'project-1',
@@ -152,6 +153,33 @@ test('Search reuses a credential-scoped cache without another charged request', 
   assert.equal(cached.cost.actualMicros, 0)
 })
 
+test('Search caches each requested result page separately', async () => {
+  const db = database()
+  let calls = 0
+  const client = new SerpBaseClient({
+    apiKey: 'api-key',
+    database: db,
+    spendLimits: LIMITS,
+    now: () => NOW,
+    fetch: async (_url, init) => {
+      calls += 1
+      const page = (JSON.parse(String(init?.body)) as { page: number }).page
+      return new Response(JSON.stringify(response(page)))
+    },
+  })
+
+  await client.search(request())
+  await client.search({ ...request(), page: 2 })
+  const first = await client.search(request())
+  const second = await client.search({ ...request(), page: 2 })
+
+  assert.equal(calls, 2)
+  assert.equal(first.response.page, 1)
+  assert.equal(second.response.page, 2)
+  assert.equal(first.cache.status, 'hit')
+  assert.equal(second.cache.status, 'hit')
+})
+
 test('Search maps business errors and closes the spend reservation', async () => {
   const db = database()
   await assert.rejects(
@@ -208,4 +236,26 @@ test('Search applies the local hard limit before network acquisition', async () 
     },
   )
   assert.equal(called, false)
+})
+
+test('Search rejects a response for a different result page', async () => {
+  const db = database()
+  await assert.rejects(
+    new SerpBaseClient({
+      apiKey: 'api-key',
+      database: db,
+      spendLimits: LIMITS,
+      now: () => NOW,
+      fetch: async () => new Response(JSON.stringify(response())),
+    }).search({ ...request(), page: 2 }),
+    (error) => {
+      assert.ok(error instanceof ProviderError)
+      assert.equal(error.code, 'invalid-response')
+      return true
+    },
+  )
+  assert.deepEqual(
+    db.prepare('SELECT state, returned_rows FROM provider_spend_ledger').get(),
+    { state: 'failed', returned_rows: 0 },
+  )
 })

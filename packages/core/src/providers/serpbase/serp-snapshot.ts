@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type {
+  ProviderCacheEvidence,
+  ProviderCostEvidence,
   ProviderEvidence,
   ProviderWarning,
   SerpOrganicResult,
@@ -16,7 +18,8 @@ import {
 } from './client.js'
 import type { SerpBaseSearchSuccess } from './schema.js'
 
-const MAX_SERPBASE_DEPTH = 10
+const MAX_SERPBASE_DEPTH = 100
+const SERPBASE_RESULTS_PER_PAGE = 10
 const SEARCH_ENDPOINT = 'google/search'
 
 type SerpClient = Pick<SerpBaseClient, 'search'>
@@ -72,6 +75,7 @@ function featureNames(response: SerpBaseSearchSuccess): string[] {
 
 function organicResult(
   item: NonNullable<SerpBaseSearchSuccess['organic']>[number],
+  page: number,
 ): SerpOrganicResult | null {
   const url = safeUrl(
     typeof item.url === 'string'
@@ -88,10 +92,11 @@ function organicResult(
   ) {
     return null
   }
+  const rankAbsolute = (page - 1) * SERPBASE_RESULTS_PER_PAGE + item.rank
   return {
     rankGroup: item.rank,
-    rankAbsolute: item.rank,
-    page: 1,
+    rankAbsolute,
+    page,
     domain: new URL(url).hostname.toLowerCase(),
     url,
     title:
@@ -106,16 +111,103 @@ function organicResult(
   }
 }
 
-export function mapSerpBaseSerpSnapshot(
+function aggregateCache(
+  snapshots: SerpBaseSearchSnapshot[],
+): ProviderCacheEvidence {
+  if (snapshots.every((snapshot) => snapshot.cache.status === 'hit')) {
+    return {
+      status: 'hit',
+      storedAt:
+        snapshots
+          .flatMap((snapshot) =>
+            snapshot.cache.storedAt ? [snapshot.cache.storedAt] : [],
+          )
+          .sort(compareCodepoints)[0] ?? null,
+      expiresAt:
+        snapshots
+          .flatMap((snapshot) =>
+            snapshot.cache.expiresAt ? [snapshot.cache.expiresAt] : [],
+          )
+          .sort(compareCodepoints)[0] ?? null,
+    }
+  }
+  return {
+    status: snapshots.every((snapshot) => snapshot.cache.status === 'bypass')
+      ? 'bypass'
+      : 'miss',
+    storedAt: null,
+    expiresAt: null,
+  }
+}
+
+function sumKnown(values: Array<number | null>): number | null {
+  return values.every((value): value is number => value !== null)
+    ? values.reduce((total, value) => total + value, 0)
+    : null
+}
+
+function aggregateCost(
+  snapshots: SerpBaseSearchSnapshot[],
+): ProviderCostEvidence {
+  return {
+    currency: 'USD',
+    estimatedMicros: sumKnown(
+      snapshots.map((snapshot) => snapshot.cost.estimatedMicros),
+    ),
+    actualMicros: sumKnown(
+      snapshots.map((snapshot) => snapshot.cost.actualMicros),
+    ),
+    taskIds: [
+      ...new Set(snapshots.flatMap((snapshot) => snapshot.cost.taskIds)),
+    ].sort(compareCodepoints),
+    native: {
+      unit: 'credit',
+      estimatedUnits: sumKnown(
+        snapshots.map(
+          (snapshot) => snapshot.cost.native?.estimatedUnits ?? null,
+        ),
+      ),
+      actualUnits: sumKnown(
+        snapshots.map((snapshot) => snapshot.cost.native?.actualUnits ?? null),
+      ),
+      remainingBefore: null,
+    },
+  }
+}
+
+type SerpBasePageCollection = {
+  snapshots: SerpBaseSearchSnapshot[]
+  failedPage: number | null
+  requestedPages: number
+}
+
+function mapSerpBaseSerpSnapshots(
   input: SerpSnapshotRequest,
-  snapshot: SerpBaseSearchSnapshot,
+  collection: SerpBasePageCollection,
 ): ProviderEvidence<SerpSnapshot> {
+  const { snapshots, failedPage, requestedPages } = collection
+  const firstSnapshot = snapshots[0]
+  if (!firstSnapshot) {
+    throw new ProviderError({
+      provider: 'serpbase',
+      operation: 'serp-snapshot',
+      code: 'invalid-response',
+      message: 'SerpBase returned no result pages.',
+    })
+  }
   const market = searchMarketSchema.parse(input.market)
-  const warnings: ProviderWarning[] = [...snapshot.warnings]
-  const rawOrganic = snapshot.response.organic ?? []
+  const warnings: ProviderWarning[] = snapshots.flatMap(
+    (snapshot) => snapshot.warnings,
+  )
+  const rawOrganic = snapshots.flatMap((snapshot) =>
+    (snapshot.response.organic ?? []).map((item) => ({
+      item,
+      page: snapshot.response.page,
+    })),
+  )
   const mappedOrganic = rawOrganic
-    .flatMap((item) => {
-      const mapped = organicResult(item)
+    .flatMap(({ item, page }) => {
+      const mapped = organicResult(item, page)
       return mapped ? [mapped] : []
     })
     .sort(
@@ -133,7 +225,7 @@ export function mapSerpBaseSerpSnapshot(
       message: `SerpBase returned ${invalidRows} organic result${invalidRows === 1 ? '' : 's'} without a valid rank or URL.`,
     })
   }
-  if (snapshot.response.credits_charged > 0) {
+  if (snapshots.some((snapshot) => snapshot.response.credits_charged > 0)) {
     warnings.push({
       code: 'estimated-monetary-cost',
       field: 'cost.actualMicros',
@@ -141,8 +233,29 @@ export function mapSerpBaseSerpSnapshot(
         'SerpBase reported charged credits but not the account-specific monetary value. The local ledger retained the conservative request estimate.',
     })
   }
+  if (requestedPages > 1) {
+    warnings.push({
+      code: 'page-offset-rank',
+      field: 'organicResults.rankAbsolute',
+      message:
+        'Positions after page one are derived from the requested page and SerpBase page-relative rank, using 10 organic positions per page.',
+    })
+  }
+  if (failedPage !== null) {
+    warnings.push({
+      code: 'page-fetch-failed',
+      field: 'organicResults',
+      message: `SerpBase page ${failedPage} could not be collected. Results from earlier pages were retained.`,
+    })
+  }
   const keyword = normalizedKeyword(input.keyword)
-  const effectiveKeyword = normalizedKeyword(snapshot.response.query) || keyword
+  const effectiveKeyword =
+    normalizedKeyword(firstSnapshot.response.query) || keyword
+  const observedAt =
+    snapshots
+      .map((snapshot) => snapshot.observedAt)
+      .sort(compareCodepoints)
+      .at(-1) ?? firstSnapshot.observedAt
 
   return {
     schemaVersion: 1,
@@ -152,11 +265,15 @@ export function mapSerpBaseSerpSnapshot(
       keyword,
       effectiveKeyword,
       searchEngineDomain: null,
-      checkedAt: snapshot.observedAt,
+      checkedAt: observedAt,
       checkUrl: null,
       resultCount: null,
-      pagesCount: null,
-      features: featureNames(snapshot.response),
+      pagesCount: snapshots.length,
+      features: [
+        ...new Set(
+          snapshots.flatMap((snapshot) => featureNames(snapshot.response)),
+        ),
+      ].sort(compareCodepoints),
       organicResults,
       localPack: {
         present: false,
@@ -166,20 +283,27 @@ export function mapSerpBaseSerpSnapshot(
         results: [],
       },
     },
-    observedAt: snapshot.observedAt,
+    observedAt,
     market: { ...market, device: market.device ?? 'desktop' },
     coverage: {
       requestedRows: input.depth,
-      returnedRows: snapshot.returnedRows,
+      returnedRows: snapshots.reduce(
+        (total, snapshot) => total + snapshot.returnedRows,
+        0,
+      ),
       retainedRows: organicResults.length,
       invalidRows,
       providerTotalRows: null,
       completeness:
-        invalidRows > 0 ? 'partial' : capped ? 'capped' : 'complete',
-      nextCursor: null,
+        failedPage !== null || invalidRows > 0
+          ? 'partial'
+          : capped
+            ? 'capped'
+            : 'complete',
+      nextCursor: failedPage === null ? null : String(failedPage),
     },
-    cache: snapshot.cache,
-    cost: snapshot.cost,
+    cache: aggregateCache(snapshots),
+    cost: aggregateCost(snapshots),
     request: {
       operation: 'serp-snapshot',
       endpoint: SEARCH_ENDPOINT,
@@ -188,11 +312,24 @@ export function mapSerpBaseSerpSnapshot(
         countryCode: market.countryCode,
         languageCode: market.languageCode,
         device: market.device ?? 'desktop',
+        pagesRequested: requestedPages,
+        pagesCollected: snapshots.length,
       },
       sort: ['rankAbsolute:ascending', 'url:codepoint-ascending'],
     },
     warnings,
   }
+}
+
+export function mapSerpBaseSerpSnapshot(
+  input: SerpSnapshotRequest,
+  snapshot: SerpBaseSearchSnapshot,
+): ProviderEvidence<SerpSnapshot> {
+  return mapSerpBaseSerpSnapshots(input, {
+    snapshots: [snapshot],
+    failedPage: null,
+    requestedPages: 1,
+  })
 }
 
 export class SerpBaseSerpSnapshotProvider implements SerpSnapshotProvider {
@@ -247,7 +384,7 @@ export class SerpBaseSerpSnapshotProvider implements SerpSnapshotProvider {
         provider: 'serpbase',
         operation: 'serp-snapshot',
         code: 'configuration',
-        message: 'SerpBase SERP depth must be from 1 to 10.',
+        message: 'SerpBase SERP depth must be from 1 to 100.',
       })
     }
     const keyword = normalizedKeyword(input.keyword)
@@ -260,18 +397,40 @@ export class SerpBaseSerpSnapshotProvider implements SerpSnapshotProvider {
           'SERP snapshots require a keyword of at most 80 characters and 10 words.',
       })
     }
-    const snapshot = await this.client.search({
-      keyword,
-      countryCode: market.countryCode,
-      languageCode: market.languageCode,
-      device: market.device ?? 'desktop',
-      requestedRows: input.depth,
-      refresh: input.refresh,
-      context: input.context ?? {
-        reportId: 'serp-results',
-        reportRunId: randomUUID(),
-      },
+    const requestedPages = Math.ceil(input.depth / SERPBASE_RESULTS_PER_PAGE)
+    const snapshots: SerpBaseSearchSnapshot[] = []
+    let failedPage: number | null = null
+    const context = input.context ?? {
+      reportId: 'serp-results',
+      reportRunId: randomUUID(),
+    }
+    for (let page = 1; page <= requestedPages; page += 1) {
+      try {
+        snapshots.push(
+          await this.client.search({
+            keyword,
+            countryCode: market.countryCode,
+            languageCode: market.languageCode,
+            device: market.device ?? 'desktop',
+            page,
+            requestedRows: Math.min(
+              SERPBASE_RESULTS_PER_PAGE,
+              input.depth - (page - 1) * SERPBASE_RESULTS_PER_PAGE,
+            ),
+            refresh: input.refresh,
+            context,
+          }),
+        )
+      } catch (error) {
+        if (page === 1) throw error
+        failedPage = page
+        break
+      }
+    }
+    return mapSerpBaseSerpSnapshots(input, {
+      snapshots,
+      failedPage,
+      requestedPages,
     })
-    return mapSerpBaseSerpSnapshot(input, snapshot)
   }
 }

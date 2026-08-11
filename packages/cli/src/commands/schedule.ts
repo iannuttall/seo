@@ -47,15 +47,11 @@ export function rankTrackingCronLine(input: {
   }
   if (
     input.depth !== undefined &&
-    (!Number.isSafeInteger(input.depth) ||
-      input.depth < 1 ||
-      input.depth > (input.provider === 'serpbase' ? 10 : 100))
+    (!Number.isSafeInteger(input.depth) || input.depth < 1 || input.depth > 100)
   ) {
     throw new SeoError(
       'INVALID_INPUT',
-      input.provider === 'serpbase'
-        ? 'SerpBase rank tracking depth must be from 1 to 10.'
-        : 'Rank tracking depth must be from 1 to 100.',
+      'Rank tracking depth must be from 1 to 100.',
     )
   }
   if (

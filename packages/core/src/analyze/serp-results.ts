@@ -80,7 +80,9 @@ async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
     {
       adapter: new SerpBaseSerpSnapshotProvider(),
       connected: Boolean(await readSerpBaseApiKey()),
-      priority: 5,
+      // Keep the established provider as the implicit default. SerpBase stays
+      // available through explicit selection or when DataForSEO is absent.
+      priority: 20,
     },
     {
       adapter: new DataForSeoSerpSnapshotProvider(),

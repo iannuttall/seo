@@ -55,12 +55,15 @@ seo providers serpbase limits \
   --rows 200
 ```
 
-SerpBase Search returns one live Google result page. `serp-results` and
-`rank-tracking` therefore accept a depth of 1 to 10, country and language codes,
-and desktop or mobile. They do not use queued collection or exact city
-locations. SerpBase reports the credits charged but not the account-specific
-dollar value, so the local ledger reserves the highest published standard
-Search price. Check the current <a href="https://serpbase.dev/docs" target="_blank" rel="noreferrer">SerpBase API documentation</a>
+`serp-results` and `rank-tracking` can collect a depth of 1 to 100 from
+SerpBase, using one live Search request for every 10 organic positions. The
+default depth remains 10, so deeper collection is opt-in. SerpBase accepts
+country and language codes and desktop or mobile devices. It does not use
+queued collection or exact city locations. SerpBase reports the credits charged
+but not the account-specific dollar value, so the local ledger reserves the
+highest published standard Search price. Rank tracking checks the requested
+pages, keywords and devices against that local request limit before any paid
+work starts. Check the current <a href="https://serpbase.dev/docs" target="_blank" rel="noreferrer">SerpBase API documentation</a>
 and <a href="https://serpbase.dev/#pricing" target="_blank" rel="noreferrer">pricing</a> before running paid work.
 
 Run a current result snapshot through the normal report catalog:

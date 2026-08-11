@@ -10,21 +10,14 @@ import {
   writeAhrefsApiKey,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, numberArg } from '../../args.js'
+import { jsonFlag } from '../../args.js'
 import {
   canPrompt,
   maybeExitCancelled,
   printJson,
   printKeyValue,
 } from '../../utils.js'
-
-function credentialSourceLabel(
-  source: 'environment' | 'keychain' | 'file' | undefined,
-): string {
-  if (source === 'keychain') return 'system keychain'
-  if (source === 'file') return 'private local file'
-  return source ?? 'missing'
-}
+import { boundedIntegerArg, credentialSourceLabel } from './shared.js'
 
 function unitUsage(input: {
   limit: number | null
@@ -37,28 +30,6 @@ function unitUsage(input: {
       : `${input.used.toLocaleString('en-US')} used; no key limit`
   }
   return `${(input.remaining ?? 0).toLocaleString('en-US')} of ${input.limit.toLocaleString('en-US')} remaining`
-}
-
-function boundedIntegerArg(
-  value: unknown,
-  label: string,
-  minimum: number,
-  maximum: number,
-): number | undefined {
-  if (value === undefined) return undefined
-  const parsed = numberArg(value)
-  if (
-    parsed === undefined ||
-    !Number.isInteger(parsed) ||
-    parsed < minimum ||
-    parsed > maximum
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `${label} must be an integer from ${minimum} to ${maximum}.`,
-    )
-  }
-  return parsed
 }
 
 const connectCommand = defineCommand({

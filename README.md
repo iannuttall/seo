@@ -201,11 +201,13 @@ seo providers serpbase status --check
 seo providers serpbase limits
 ```
 
-SerpBase uses country, language and desktop or mobile settings. It returns the
-first result page, so SerpBase-backed reports accept a depth of 1 to 10 and use
-live collection rather than queued tasks. The provider returns charged credits
-without an account-specific dollar value, so local spend limits use the highest
-published standard Search price as a conservative estimate.
+SerpBase uses country, language and desktop or mobile settings. SerpBase-backed
+reports accept a depth of 1 to 100. Every 10 organic positions adds one live
+request, so the default remains 10 and deeper collection is opt-in. The
+provider returns charged credits without an account-specific dollar value, so
+local spend limits use the highest published standard Search price as a
+conservative estimate. Rank tracking checks the total pages, keywords and
+devices against the local request limit before starting paid work.
 
 DataForSEO has the broadest live coverage:
 

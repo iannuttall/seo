@@ -42,6 +42,7 @@ export type SerpBaseSearchRequest = {
   countryCode: string
   languageCode: string
   device: 'desktop' | 'mobile'
+  page: number
   requestedRows: number
   refresh?: boolean
   context: ProviderRequestContext
@@ -169,6 +170,18 @@ export class SerpBaseClient {
       })
     }
     if (
+      !Number.isSafeInteger(input.page) ||
+      input.page < 1 ||
+      input.page > 10
+    ) {
+      throw new ProviderError({
+        provider: 'serpbase',
+        operation: 'serp-snapshot',
+        code: 'configuration',
+        message: 'SerpBase Search page must be from 1 to 10.',
+      })
+    }
+    if (
       !Number.isSafeInteger(input.requestedRows) ||
       input.requestedRows < 1 ||
       input.requestedRows > 10
@@ -184,7 +197,7 @@ export class SerpBaseClient {
       q: keyword,
       hl: input.languageCode,
       gl: input.countryCode.toLowerCase(),
-      page: 1,
+      page: input.page,
       device: input.device === 'desktop' ? 'pc' : 'mobile',
     }
     const credentialScope = providerCredentialScope('serpbase', apiKey)
@@ -302,6 +315,30 @@ export class SerpBaseClient {
         },
       )
       throw businessError(response)
+    }
+
+    if (response.page !== input.page) {
+      finalizeProviderSpend(
+        reservation.id,
+        {
+          provider: 'serpbase',
+          state: 'failed',
+          actualCostMicros: response.credits_charged === 0 ? 0 : null,
+          returnedRows: 0,
+          taskIds: [response.request_id],
+        },
+        {
+          database: this.database,
+          limits: this.spendLimits,
+          now: this.now().getTime(),
+        },
+      )
+      throw new ProviderError({
+        provider: 'serpbase',
+        operation: 'serp-snapshot',
+        code: 'invalid-response',
+        message: `SerpBase returned page ${response.page} for requested page ${input.page}.`,
+      })
     }
 
     const returnedRows = response.organic?.length ?? 0

@@ -1,5 +1,8 @@
-export const RANK_TRACKING_SCHEMA_SQL = `
-CREATE TABLE IF NOT EXISTS rank_tracking_configs (
+export function rankTrackingConfigsTableSql(
+  table = 'rank_tracking_configs',
+  ifNotExists = true,
+): string {
+  return `CREATE TABLE ${ifNotExists ? 'IF NOT EXISTS ' : ''}${table} (
   id TEXT PRIMARY KEY,
   config_key TEXT NOT NULL UNIQUE,
   project_id TEXT NOT NULL,
@@ -17,7 +20,43 @@ CREATE TABLE IF NOT EXISTS rank_tracking_configs (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   FOREIGN KEY(keyword_set_id) REFERENCES keyword_sets(id) ON DELETE CASCADE
-);
+);`
+}
+
+export function rankTrackingSnapshotsTableSql(
+  table = 'rank_tracking_snapshots',
+  ifNotExists = true,
+): string {
+  return `CREATE TABLE ${ifNotExists ? 'IF NOT EXISTS ' : ''}${table} (
+  task_id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL,
+  normalized_keyword TEXT NOT NULL,
+  display_keyword TEXT NOT NULL,
+  device TEXT NOT NULL CHECK(device IN ('desktop', 'mobile')),
+  observation_state TEXT NOT NULL CHECK(observation_state IN ('observed', 'not_observed_within_depth')),
+  organic_position INTEGER,
+  absolute_position INTEGER,
+  ranking_url TEXT,
+  observed_features_json TEXT NOT NULL,
+  checked_at TEXT NOT NULL,
+  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs', 'serpbase')),
+  provider_task_id TEXT,
+  requested_depth INTEGER NOT NULL,
+  returned_rows INTEGER,
+  retained_rows INTEGER,
+  invalid_rows INTEGER NOT NULL,
+  completeness TEXT NOT NULL,
+  estimated_cost_micros INTEGER,
+  actual_cost_micros INTEGER,
+  warnings_json TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY(task_id) REFERENCES rank_tracking_tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY(run_id) REFERENCES rank_tracking_runs(id) ON DELETE CASCADE
+);`
+}
+
+export const RANK_TRACKING_SCHEMA_SQL = `
+${rankTrackingConfigsTableSql()}
 CREATE INDEX IF NOT EXISTS idx_rank_tracking_configs_project
   ON rank_tracking_configs(project_id, updated_at DESC, id);
 CREATE INDEX IF NOT EXISTS idx_rank_tracking_configs_due
@@ -72,32 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_rank_tracking_tasks_run
 CREATE INDEX IF NOT EXISTS idx_rank_tracking_tasks_provider
   ON rank_tracking_tasks(provider_task_id, state);
 
-CREATE TABLE IF NOT EXISTS rank_tracking_snapshots (
-  task_id TEXT PRIMARY KEY,
-  run_id TEXT NOT NULL,
-  normalized_keyword TEXT NOT NULL,
-  display_keyword TEXT NOT NULL,
-  device TEXT NOT NULL CHECK(device IN ('desktop', 'mobile')),
-  observation_state TEXT NOT NULL CHECK(observation_state IN ('observed', 'not_observed_within_depth')),
-  organic_position INTEGER,
-  absolute_position INTEGER,
-  ranking_url TEXT,
-  observed_features_json TEXT NOT NULL,
-  checked_at TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs', 'serpbase')),
-  provider_task_id TEXT,
-  requested_depth INTEGER NOT NULL,
-  returned_rows INTEGER,
-  retained_rows INTEGER,
-  invalid_rows INTEGER NOT NULL,
-  completeness TEXT NOT NULL,
-  estimated_cost_micros INTEGER,
-  actual_cost_micros INTEGER,
-  warnings_json TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
-  FOREIGN KEY(task_id) REFERENCES rank_tracking_tasks(id) ON DELETE CASCADE,
-  FOREIGN KEY(run_id) REFERENCES rank_tracking_runs(id) ON DELETE CASCADE
-);
+${rankTrackingSnapshotsTableSql()}
 CREATE INDEX IF NOT EXISTS idx_rank_tracking_snapshots_run
   ON rank_tracking_snapshots(run_id, normalized_keyword, device);
 `

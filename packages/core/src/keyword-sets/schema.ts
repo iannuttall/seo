@@ -1,5 +1,8 @@
-export const KEYWORD_SET_SCHEMA_SQL = `
-CREATE TABLE IF NOT EXISTS keyword_sets (
+export function keywordSetsTableSql(
+  table = 'keyword_sets',
+  ifNotExists = true,
+): string {
+  return `CREATE TABLE ${ifNotExists ? 'IF NOT EXISTS ' : ''}${table} (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -10,11 +13,14 @@ CREATE TABLE IF NOT EXISTS keyword_sets (
   updated_at INTEGER NOT NULL,
   last_refreshed_at INTEGER,
   UNIQUE(project_id, name COLLATE NOCASE)
-);
-CREATE INDEX IF NOT EXISTS idx_keyword_sets_project
-  ON keyword_sets(project_id, updated_at DESC, id);
+);`
+}
 
-CREATE TABLE IF NOT EXISTS keyword_set_items (
+export function keywordSetItemsTableSql(
+  table = 'keyword_set_items',
+  ifNotExists = true,
+): string {
+  return `CREATE TABLE ${ifNotExists ? 'IF NOT EXISTS ' : ''}${table} (
   set_id TEXT NOT NULL,
   normalized_keyword TEXT NOT NULL,
   display_keyword TEXT NOT NULL,
@@ -27,7 +33,15 @@ CREATE TABLE IF NOT EXISTS keyword_set_items (
   updated_at INTEGER NOT NULL,
   PRIMARY KEY(set_id, normalized_keyword),
   FOREIGN KEY(set_id) REFERENCES keyword_sets(id) ON DELETE CASCADE
-) WITHOUT ROWID;
+) WITHOUT ROWID;`
+}
+
+export const KEYWORD_SET_SCHEMA_SQL = `
+${keywordSetsTableSql()}
+CREATE INDEX IF NOT EXISTS idx_keyword_sets_project
+  ON keyword_sets(project_id, updated_at DESC, id);
+
+${keywordSetItemsTableSql()}
 CREATE INDEX IF NOT EXISTS idx_keyword_set_items_set
   ON keyword_set_items(set_id, normalized_keyword);
 

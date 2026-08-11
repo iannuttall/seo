@@ -1,7 +1,12 @@
 import { z } from 'zod'
 import type { ResearchImportColumns } from './imports/research-columns.js'
 
-export const providerIdSchema = z.enum(['dataforseo', 'semrush', 'ahrefs'])
+export const providerIdSchema = z.enum([
+  'dataforseo',
+  'semrush',
+  'ahrefs',
+  'serpbase',
+])
 export type ProviderId = z.infer<typeof providerIdSchema>
 export type ExternalServiceId = ProviderId | 'clicky'
 

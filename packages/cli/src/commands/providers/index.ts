@@ -3,6 +3,7 @@ import { ahrefsProviderCommand } from './ahrefs.js'
 import { bingProviderCommand } from './bing.js'
 import { dataForSeoProviderCommand } from './dataforseo.js'
 import { semrushProviderCommand } from './semrush.js'
+import { serpBaseProviderCommand } from './serpbase.js'
 
 export const providersCommand = defineCommand({
   meta: { name: 'providers', description: 'Connect optional data providers' },
@@ -11,5 +12,6 @@ export const providersCommand = defineCommand({
     bing: bingProviderCommand,
     dataforseo: dataForSeoProviderCommand,
     semrush: semrushProviderCommand,
+    serpbase: serpBaseProviderCommand,
   },
 })

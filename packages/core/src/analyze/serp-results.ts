@@ -16,6 +16,8 @@ import {
   type ProviderCandidate,
   resolveProvider,
 } from '../providers/resolver.js'
+import { readSerpBaseApiKey } from '../providers/serpbase/credentials.js'
+import { SerpBaseSerpSnapshotProvider } from '../providers/serpbase/serp-snapshot.js'
 
 const MAX_REPORT_DEPTH = 100
 
@@ -75,6 +77,13 @@ function snapshotProvider(
 
 async function defaultCandidates(): Promise<readonly ProviderCandidate[]> {
   return [
+    {
+      adapter: new SerpBaseSerpSnapshotProvider(),
+      connected: Boolean(await readSerpBaseApiKey()),
+      // Keep the established provider as the implicit default. SerpBase stays
+      // available through explicit selection or when DataForSEO is absent.
+      priority: 20,
+    },
     {
       adapter: new DataForSeoSerpSnapshotProvider(),
       connected: Boolean(await readDataForSeoCredentials()),
@@ -221,7 +230,9 @@ export async function serpResultsReport(
   if (resolution.status === 'unavailable') {
     const message =
       resolution.reason === 'provider-not-connected'
-        ? 'No connected provider can return live SERP results. Run `seo providers dataforseo connect` first.'
+        ? validated.provider
+          ? `${validated.provider} is not connected. Connect it before running live SERP results.`
+          : 'No connected provider can return live SERP results. Connect SerpBase or DataForSEO first.'
         : validated.provider
           ? `${validated.provider} cannot return live SERP results for this market.`
           : 'No configured provider can return live SERP results for this market.'

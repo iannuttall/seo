@@ -315,6 +315,16 @@ test('SERP results bounds query, market, device, and depth', () => {
     }).success,
     true,
   )
+  assert.equal(
+    schema.safeParse({
+      keyword: 'local seo',
+      countryCode: 'GB',
+      languageCode: 'en',
+      provider: 'serpbase',
+      depth: 10,
+    }).success,
+    true,
+  )
   for (const input of [
     { keyword: '', countryCode: 'GB', languageCode: 'en' },
     {
@@ -438,6 +448,17 @@ test('rank tracking bounds local configuration, acquisition, and output', () => 
       depth: 100,
       keywordLimit: 1_000,
       outputLimit: 250,
+    }).success,
+    true,
+  )
+  assert.equal(
+    schema.safeParse({
+      projectId: 'example-project',
+      set: 'priority',
+      targetDomain: 'example.com',
+      provider: 'serpbase',
+      collectionMethod: 'live',
+      depth: 10,
     }).success,
     true,
   )

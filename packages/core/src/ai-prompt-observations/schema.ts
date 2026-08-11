@@ -1,5 +1,8 @@
-export const AI_PROMPT_OBSERVATION_SCHEMA_SQL = `
-CREATE TABLE IF NOT EXISTS ai_prompt_observations (
+export function aiPromptObservationsTableSql(
+  table = 'ai_prompt_observations',
+  ifNotExists = true,
+): string {
+  return `CREATE TABLE ${ifNotExists ? 'IF NOT EXISTS ' : ''}${table} (
   id TEXT PRIMARY KEY,
   comparison_key TEXT NOT NULL,
   prompt_id TEXT NOT NULL,
@@ -24,12 +27,16 @@ CREATE TABLE IF NOT EXISTS ai_prompt_observations (
   estimated_cost_micros INTEGER,
   actual_cost_micros INTEGER,
   checked_at TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs')),
+  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs', 'serpbase')),
   provider_task_ids_json TEXT NOT NULL,
   completeness TEXT NOT NULL,
   warnings_json TEXT NOT NULL,
   created_at INTEGER NOT NULL
-);
+);`
+}
+
+export const AI_PROMPT_OBSERVATION_SCHEMA_SQL = `
+${aiPromptObservationsTableSql()}
 CREATE INDEX IF NOT EXISTS idx_ai_prompt_observations_comparable
   ON ai_prompt_observations(comparison_key, checked_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_prompt_observations_created

@@ -137,7 +137,7 @@ const rankTrackingInput = z.strictObject({
   provider: providerIdInput.optional(),
   collectionMethod: z.enum(['live', 'queued']).optional(),
   cadence: z.enum(['manual', 'daily', 'weekly', 'monthly']).default('manual'),
-  depth: z.number().int().min(1).max(100).default(100),
+  depth: z.number().int().min(1).max(100).optional(),
   keywordLimit: z.number().int().min(1).max(1_000).optional(),
   start: z.boolean().default(true),
   outputLimit: z.number().int().min(1).max(250).default(100),

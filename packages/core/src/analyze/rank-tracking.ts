@@ -383,7 +383,9 @@ export async function rankTrackingReport(
       'Use Search Console opportunity reports to add clicks, impressions, and average-position context before prioritising a ranking change.',
       'Inspect ranking URL changes for intent drift or competing templates before changing content.',
       configuration.cadence === 'manual'
-        ? 'Use queued collection with a daily, weekly, or monthly cadence when this set needs recurring local tracking.'
+        ? configuration.provider === 'serpbase'
+          ? 'Use live collection with a daily, weekly, or monthly local schedule when this set needs recurring tracking.'
+          : 'Use queued collection with a daily, weekly, or monthly cadence when this set needs recurring local tracking.'
         : 'Run this report from local cron at the configured cadence; overlapping runs are refused and schedule advancement is deterministic.',
     ],
   }

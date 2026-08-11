@@ -812,7 +812,7 @@ export const REPORT_GUIDANCE = {
     useWhen: [
       'You need repeatable exact-rank snapshots for a fixed market and device.',
       'You want new, lost, improved, declined, or ranking URL change evidence over time.',
-      'A recurring set should use cheaper queued collection and local history.',
+      'A recurring set needs local history. Use queued collection only when the selected provider supports it.',
     ],
     avoidWhen: [
       'You need first-party clicks, impressions, or average position; use a Search Console report.',

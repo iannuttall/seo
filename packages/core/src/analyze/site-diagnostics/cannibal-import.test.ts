@@ -219,6 +219,30 @@ test('scopes imported rows to a URL-prefix property path', async () => {
   })
 })
 
+test('URL-prefix scope requires the exact origin', async () => {
+  const body = [
+    'Keyword,Position,URL,Search Volume',
+    'project management tips,3,https://example.com/blog/one,900',
+    'project management tips,4,https://example.com/blog/two,900',
+    'project management tips,5,https://www.example.com/blog/three,900',
+    'project management tips,6,https://help.example.com/blog/four,900',
+    'project management tips,7,http://example.com/blog/five,900',
+  ].join('\n')
+  await fixture({ 'rankings.csv': body }, async (paths) => {
+    const report = await cannibalReport(
+      {
+        site: 'https://example.com/blog/',
+        researchFiles: [source(paths['rankings.csv'] ?? '')],
+      },
+      trackedDependencies(),
+    )
+
+    assert.equal(report.selection.retainedRows, 2)
+    assert.equal(report.selection.offPropertyRows, 3)
+    assert.equal(report.items[0]?.urlCount, 2)
+  })
+})
+
 test('suppresses brand keywords with multiple URLs instead of reporting them', async () => {
   const body = [
     'Keyword,Position,URL,Search Volume',

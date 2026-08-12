@@ -41,6 +41,7 @@ export interface CannibalImportDependencies {
 
 type SiteScope = {
   domain: string
+  origin: string | null
   pathPrefix: string | null
 }
 
@@ -57,10 +58,7 @@ function siteScope(site: string): SiteScope {
       'Use a valid Search Console property or domain for site.',
     )
   }
-  const domain = url.hostname
-    .toLowerCase()
-    .replace(/^www\./u, '')
-    .replace(/\.$/u, '')
+  const domain = url.hostname.toLowerCase().replace(/\.$/u, '')
   if (
     !['http:', 'https:'].includes(url.protocol) ||
     !domain.includes('.') ||
@@ -71,22 +69,23 @@ function siteScope(site: string): SiteScope {
       'Use a valid Search Console property or domain for site.',
     )
   }
-  const pathPrefix =
-    hasProtocol && url.pathname !== '/'
-      ? url.pathname.endsWith('/')
-        ? url.pathname
-        : `${url.pathname}/`
-      : null
-  return { domain, pathPrefix }
+  return {
+    domain: hasProtocol ? domain : domain.replace(/^www\./u, ''),
+    origin: hasProtocol ? url.origin : null,
+    pathPrefix: hasProtocol && url.pathname !== '/' ? url.pathname : null,
+  }
 }
 
 function rowMatchesScope(row: ImportedResearchRow, scope: SiteScope): boolean {
-  if (row.domain !== scope.domain && !row.domain.endsWith(`.${scope.domain}`)) {
-    return false
+  if (!scope.origin) {
+    return (
+      row.domain === scope.domain || row.domain.endsWith(`.${scope.domain}`)
+    )
   }
-  if (!scope.pathPrefix) return true
   try {
-    return new URL(row.url).pathname.startsWith(scope.pathPrefix)
+    const url = new URL(row.url)
+    if (url.origin !== scope.origin) return false
+    return !scope.pathPrefix || url.pathname.startsWith(scope.pathPrefix)
   } catch {
     return false
   }
@@ -184,9 +183,9 @@ function compareItems(
   right: CannibalImportItem,
 ): number {
   return (
-    right.urlCount - left.urlCount ||
     (right.providerMonthlySearchVolume ?? -1) -
       (left.providerMonthlySearchVolume ?? -1) ||
+    right.urlCount - left.urlCount ||
     compareCannibalText(left.keyword, right.keyword)
   )
 }

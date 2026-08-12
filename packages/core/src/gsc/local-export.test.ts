@@ -54,6 +54,7 @@ test('loadSearchConsoleExport parses a standard export directory', async () => {
   })
 
   assert.equal(evidence.source, 'search-console-export')
+  assert.equal(evidence.exportedAt, null)
   assert.equal(evidence.importedAt, '2026-08-11T00:00:00.000Z')
   assert.deepEqual(
     evidence.files.map((file) => file.table),
@@ -123,11 +124,11 @@ test('loadSearchConsoleExport parses a standard export directory', async () => {
   assert.deepEqual(evidence.caveats, [
     'Query and page tables are separate aggregates from a Search Console export; no query-to-page mapping exists and none was created.',
     'Search Console exports are partial: anonymised queries are withheld and export row caps apply, so missing rows are not zeros.',
-    'This is imported evidence from the export date, not a live Search Console query.',
+    'The export time is unavailable unless supplied separately; importedAt records when the local files were loaded, not when Search Console produced them.',
   ])
 })
 
-test('loadSearchConsoleExport counts invalid page URLs and keeps ctr lenient', async () => {
+test('loadSearchConsoleExport rejects invalid URLs and malformed metrics', async () => {
   const root = await fixtureDir()
   const path = join(root, 'Pages.csv')
   await writeFile(
@@ -142,36 +143,42 @@ test('loadSearchConsoleExport counts invalid page URLs and keeps ctr lenient', a
   assert.ok(file)
   assert.equal(file.table, 'pages')
   assert.equal(file.fileRows, 3)
-  assert.equal(file.validRows, 1)
-  assert.equal(file.invalidRows, 2)
-  assert.deepEqual(evidence.pages.rows, [
-    {
-      url: 'https://example.com/a',
-      clicks: 5,
-      impressions: 50,
-      ctr: null,
-      position: null,
-    },
-  ])
+  assert.equal(file.validRows, 0)
+  assert.equal(file.invalidRows, 3)
+  assert.deepEqual(evidence.pages.rows, [])
   assert.deepEqual(evidence.warnings, [
-    `2 rows in ${path} were invalid and skipped.`,
+    `3 rows in ${path} were invalid and skipped.`,
   ])
 })
 
-test('loadSearchConsoleExport defaults missing metric columns', async () => {
+test('loadSearchConsoleExport does not convert missing metric columns to zero', async () => {
   const root = await fixtureDir()
   const path = join(root, 'Queries.csv')
   await writeFile(path, 'Query\nbest widgets\n')
   const evidence = await loadSearchConsoleExport({ path })
-  assert.deepEqual(evidence.queries.rows, [
-    {
-      query: 'best widgets',
-      clicks: 0,
-      impressions: 0,
-      ctr: null,
-      position: null,
-    },
+  assert.deepEqual(evidence.queries.rows, [])
+  assert.equal(evidence.files[0]?.suppliedRows, 0)
+  assert.equal(
+    evidence.files[0]?.reason,
+    'The recognized queries table is missing required Clicks and Impressions columns.',
+  )
+  assert.deepEqual(evidence.warnings, [
+    `Skipped ${path}: The recognized queries table is missing required Clicks and Impressions columns.`,
   ])
+})
+
+test('loadSearchConsoleExport retains a caller-supplied export time', async () => {
+  const root = await fixtureDir()
+  const path = join(root, 'Queries.csv')
+  await writeFile(path, `${QUERIES_HEADER}\nbest widgets,1,2,50%,3\n`)
+
+  const evidence = await loadSearchConsoleExport({
+    path,
+    exportedAt: new Date('2026-08-01T12:00:00Z'),
+  })
+
+  assert.equal(evidence.exportedAt, '2026-08-01T12:00:00.000Z')
+  assert.match(evidence.caveats.at(-1) ?? '', /supplied by the caller/)
 })
 
 test('loadSearchConsoleExport keeps the duplicate with more impressions', async () => {
@@ -218,8 +225,48 @@ test('loadSearchConsoleExport caps supplied rows at the row limit', async () => 
     ['query 0', 'query 1', 'query 2'],
   )
   assert.deepEqual(evidence.warnings, [
-    `Only the first 3 of 5 rows in ${path} were read.`,
+    `Only 3 of 5 rows in ${path} were processed within the shared queries row limit of 3.`,
   ])
+})
+
+test('loadSearchConsoleExport shares each table row limit across files', async () => {
+  const root = await fixtureDir()
+  await writeFile(
+    join(root, 'Queries-1.csv'),
+    `${QUERIES_HEADER}\nquery 1,1,10,10%,3\nquery 2,1,9,10%,3\n`,
+  )
+  await writeFile(
+    join(root, 'Queries-2.csv'),
+    `${QUERIES_HEADER}\nquery 3,1,8,10%,3\nquery 4,1,7,10%,3\n`,
+  )
+
+  const evidence = await loadSearchConsoleExport({ path: root, rowLimit: 3 })
+
+  assert.equal(evidence.queries.totalRows, 3)
+  assert.deepEqual(
+    evidence.files.map((file) => ({
+      suppliedRows: file.suppliedRows,
+      capped: file.capped,
+    })),
+    [
+      { suppliedRows: 2, capped: false },
+      { suppliedRows: 1, capped: true },
+    ],
+  )
+})
+
+test('loadSearchConsoleExport bounds files before reading a directory', async () => {
+  const root = await fixtureDir()
+  await Promise.all(
+    Array.from({ length: 21 }, (_, index) =>
+      writeFile(
+        join(root, `Queries-${index}.csv`),
+        `${QUERIES_HEADER}\nquery ${index},1,2,50%,3\n`,
+      ),
+    ),
+  )
+
+  await assert.rejects(loadSearchConsoleExport({ path: root }), /at most 20/u)
 })
 
 test('loadSearchConsoleExport records unrecognized headers without guessing', async () => {

@@ -11,6 +11,7 @@ import {
 
 export const DEFAULT_SEARCH_CONSOLE_EXPORT_ROW_LIMIT = 5_000
 export const MAX_SEARCH_CONSOLE_EXPORT_ROW_LIMIT = 100_000
+export const MAX_SEARCH_CONSOLE_EXPORT_FILES = 20
 
 export type SearchConsoleExportQueryRow = {
   query: string
@@ -49,6 +50,7 @@ export type SearchConsoleExportFileImport = {
 
 export type SearchConsoleExportEvidence = {
   source: 'search-console-export'
+  exportedAt: string | null
   importedAt: string
   files: SearchConsoleExportFileImport[]
   queries: {
@@ -83,7 +85,6 @@ const POSITION_ALIASES = [
 const CAVEATS = [
   'Query and page tables are separate aggregates from a Search Console export; no query-to-page mapping exists and none was created.',
   'Search Console exports are partial: anonymised queries are withheld and export row caps apply, so missing rows are not zeros.',
-  'This is imported evidence from the export date, not a live Search Console query.',
 ] as const
 
 type MetricRow = {
@@ -95,6 +96,7 @@ type MetricRow = {
 
 type TableState<Row extends MetricRow> = {
   byKey: Map<string, Row>
+  suppliedRows: number
   capped: boolean
 }
 
@@ -144,6 +146,12 @@ async function exportCsvPaths(input: string): Promise<string[]> {
       `Search Console export directory contains no CSV files: ${path}`,
     )
   }
+  if (files.length > MAX_SEARCH_CONSOLE_EXPORT_FILES) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Search Console export directories can contain at most ${MAX_SEARCH_CONSOLE_EXPORT_FILES} CSV files.`,
+    )
+  }
   return files
 }
 
@@ -167,7 +175,7 @@ function metricIndex(
 
 function countValue(cell: string | undefined): number | null {
   const trimmed = (cell ?? '').trim()
-  if (!trimmed) return 0
+  if (!trimmed) return null
   if (!/^\d+(?:,\d{3})*$/u.test(trimmed)) return null
   const parsed = Number(trimmed.replaceAll(',', ''))
   return Number.isSafeInteger(parsed) ? parsed : null
@@ -256,6 +264,7 @@ export async function loadSearchConsoleExport(input: {
   path: string
   rowLimit?: number
   now?: Date
+  exportedAt?: Date
 }): Promise<SearchConsoleExportEvidence> {
   const rowLimit = exportRowLimit(input.rowLimit)
   const paths = await exportCsvPaths(input.path)
@@ -263,10 +272,12 @@ export async function loadSearchConsoleExport(input: {
   const warnings: string[] = []
   const queryState: TableState<SearchConsoleExportQueryRow> = {
     byKey: new Map(),
+    suppliedRows: 0,
     capped: false,
   }
   const pageState: TableState<SearchConsoleExportPageRow> = {
     byKey: new Map(),
+    suppliedRows: 0,
     capped: false,
   }
 
@@ -298,7 +309,7 @@ export async function loadSearchConsoleExport(input: {
         : PAGE_TABLE_HEADERS.has(firstHeader)
           ? 'pages'
           : 'unrecognized'
-    const reason =
+    const headerReason =
       table === 'unrecognized'
         ? headers.length === 0
           ? 'The file has no header row.'
@@ -309,35 +320,55 @@ export async function loadSearchConsoleExport(input: {
     const impressionsIndex = metricIndex(normalizedHeaders, IMPRESSIONS_ALIASES)
     const ctrIndex = metricIndex(normalizedHeaders, CTR_ALIASES)
     const positionIndex = metricIndex(normalizedHeaders, POSITION_ALIASES)
+    const missingRequiredFields = [
+      ...(clicksIndex === null ? ['Clicks'] : []),
+      ...(impressionsIndex === null ? ['Impressions'] : []),
+    ]
+    const reason =
+      headerReason ??
+      (missingRequiredFields.length
+        ? `The recognized ${table} table is missing required ${missingRequiredFields.join(' and ')} columns.`
+        : undefined)
+    const usable = table !== 'unrecognized' && reason === undefined
 
     let fileRows = 0
     let suppliedRows = 0
     let validRows = 0
     let invalidRows = 0
     let duplicateRows = 0
+    const tableState = table === 'queries' ? queryState : pageState
 
     for await (const values of records) {
       fileRows += 1
-      if (table === 'unrecognized') continue
-      if (suppliedRows >= rowLimit) continue
+      if (!usable) continue
+      if (tableState.suppliedRows >= rowLimit) continue
       suppliedRows += 1
+      tableState.suppliedRows += 1
       if (values.length !== headers.length) {
         invalidRows += 1
         continue
       }
-      const clicks = clicksIndex === null ? 0 : countValue(values[clicksIndex])
-      const impressions =
-        impressionsIndex === null ? 0 : countValue(values[impressionsIndex])
+      const clicks = countValue(values[clicksIndex ?? -1])
+      const impressions = countValue(values[impressionsIndex ?? -1])
       if (clicks === null || impressions === null) {
+        invalidRows += 1
+        continue
+      }
+      const ctrCell = ctrIndex === null ? '' : (values[ctrIndex] ?? '').trim()
+      const positionCell =
+        positionIndex === null ? '' : (values[positionIndex] ?? '').trim()
+      const ctr = ctrIndex === null ? null : ctrValue(ctrCell)
+      const position =
+        positionIndex === null ? null : positionValue(positionCell)
+      if ((ctrCell && ctr === null) || (positionCell && position === null)) {
         invalidRows += 1
         continue
       }
       const metrics: MetricRow = {
         clicks,
         impressions,
-        ctr: ctrIndex === null ? null : ctrValue(values[ctrIndex]),
-        position:
-          positionIndex === null ? null : positionValue(values[positionIndex]),
+        ctr,
+        position,
       }
       const key = (values[0] ?? '').trim()
       if (table === 'queries') {
@@ -374,15 +405,15 @@ export async function loadSearchConsoleExport(input: {
       pageState.byKey.set(url, { url, ...metrics })
     }
 
-    const capped = table !== 'unrecognized' && fileRows > rowLimit
+    const capped = usable && fileRows > suppliedRows
     if (capped) {
       if (table === 'queries') queryState.capped = true
       else pageState.capped = true
       warnings.push(
-        `Only the first ${rowLimit} of ${fileRows} rows in ${file.path} were read.`,
+        `Only ${suppliedRows} of ${fileRows} rows in ${file.path} were processed within the shared ${table} row limit of ${rowLimit}.`,
       )
     }
-    if (table === 'unrecognized') {
+    if (reason) {
       warnings.push(
         `Skipped ${file.path}: ${reason ?? 'the file was not recognized.'}`,
       )
@@ -421,11 +452,17 @@ export async function loadSearchConsoleExport(input: {
 
   return {
     source: 'search-console-export',
+    exportedAt: input.exportedAt?.toISOString() ?? null,
     importedAt: (input.now ?? new Date()).toISOString(),
     files,
     queries: tableOutput(queryState, compareQueryRows, rowLimit),
     pages: tableOutput(pageState, comparePageRows, rowLimit),
     warnings,
-    caveats: [...CAVEATS],
+    caveats: [
+      ...CAVEATS,
+      input.exportedAt
+        ? 'exportedAt was supplied by the caller and is not verified from the file; importedAt records when the local files were loaded.'
+        : 'The export time is unavailable unless supplied separately; importedAt records when the local files were loaded, not when Search Console produced them.',
+    ],
   }
 }

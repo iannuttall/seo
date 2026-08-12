@@ -15,6 +15,7 @@ process.env.SEO_CONFIG_DIR = configDir
 process.env.SEO_LOCK_FAST = '1'
 
 const { SeoError } = await import('../../errors.js')
+const { setKeyringForTests } = await import('../../storage/keyring.js')
 const { readTokens, writeConfig, writeOauthClient, writeTokens } = await import(
   '../../storage/config.js'
 )
@@ -24,6 +25,12 @@ const { createAuthorizedClient, refreshAuthToken } = await import(
 const { GoogleTokenEndpointError, requestGoogleAccessToken } = await import(
   './token-endpoint.js'
 )
+
+setKeyringForTests({
+  getPassword: async () => null,
+  setPassword: async () => undefined,
+  deletePassword: async () => false,
+})
 
 function storedTokens(overrides: Partial<StoredTokens> = {}): StoredTokens {
   return {
@@ -58,6 +65,7 @@ after(() => {
   if (previousConfigDir === undefined) delete process.env.SEO_CONFIG_DIR
   else process.env.SEO_CONFIG_DIR = previousConfigDir
   delete process.env.SEO_LOCK_FAST
+  setKeyringForTests()
 })
 
 test('raw refresh request uses the Google token endpoint and form body', {

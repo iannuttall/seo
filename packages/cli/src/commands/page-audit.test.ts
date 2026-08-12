@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -67,6 +67,7 @@ test('audit-page works with only a URL and does not require Google data', async 
 test('report runs a technical crawl when given only a URL', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-report-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-report-cache-'))
+  const exportDir = await mkdtemp(join(tmpdir(), 'seo-report-export-'))
   const server = createServer((_request, response) => {
     response.setHeader('content-type', 'text/html')
     response.end(
@@ -77,6 +78,15 @@ test('report runs a technical crawl when given only a URL', async () => {
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address === 'object')
+  const reportUrl = `http://127.0.0.1:${address.port}`
+  await writeFile(
+    join(exportDir, 'Queries.csv'),
+    'Top queries,Clicks,Impressions,CTR,Position\nlocal report,2,100,2%,8\n',
+  )
+  await writeFile(
+    join(exportDir, 'Pages.csv'),
+    `Top pages,Clicks,Impressions,CTR,Position\n${reportUrl}/,2,100,2%,8\n${reportUrl}/pricing,0,50,0%,30\n`,
+  )
 
   try {
     const result = await execFileAsync(
@@ -85,7 +95,7 @@ test('report runs a technical crawl when given only a URL', async () => {
         cliPath,
         'report',
         '--url',
-        `http://127.0.0.1:${address.port}`,
+        reportUrl,
         '--crawl-max-pages',
         '1',
         '--crawl-max-depth',
@@ -103,19 +113,20 @@ test('report runs a technical crawl when given only a URL', async () => {
       },
     )
     const report = JSON.parse(result.stdout) as {
+      findings: {
+        coverage: { state: string }
+        counts: { total: number; open: number }
+      }
       summary: string
       steps: Array<{ tool: string; status: string; summary: string }>
+      actions: Array<{ title: string; action: string; confidence: string }>
       detail: string
       output: {
-        narrative: {
-          diagnosis: {
-            dataStatus: string
-            skippedSections?: Array<{ reason: string }>
-          }
-        }
+        searchSections: { status: string; reason: string }
       }
       technicalCrawl: {
         status: string
+        issueGroupsComplete?: boolean
         dataSources?: {
           searchConsole: { status: string }
           analytics: { status: string }
@@ -125,36 +136,90 @@ test('report runs a technical crawl when given only a URL', async () => {
     }
 
     assert.equal(report.detail, 'summary')
-    assert.match(report.summary, /^Completed a technical crawl of 1 page\./)
     assert.match(
       report.summary,
-      /Search Console and Google Analytics sections were skipped/,
+      /^Found \d+ high, \d+ medium, and \d+ low technical issues across 1 crawled page\./,
+    )
+    assert.match(
+      report.summary,
+      /Search Console and Google Analytics are not connected/,
     )
     assert.equal(report.steps[0]?.tool, 'seo_crawl')
     assert.equal(report.steps[0]?.status, 'completed')
     assert.equal(report.steps[1]?.tool, 'seo_report_narrative')
     assert.equal(report.steps[1]?.status, 'skipped')
+    assert.ok(
+      report.actions.length > 0,
+      'URL mode fills actions from crawl findings.',
+    )
+    assert.ok(report.actions[0]?.title)
+    assert.ok(report.actions[0]?.action)
+    assert.equal(report.findings.coverage.state, 'complete')
+    assert.equal(report.findings.counts.open, report.findings.counts.total)
     const compactBytes = Buffer.byteLength(result.stdout)
     assert.ok(
-      compactBytes < 15_000,
-      `Expected compact JSON under 15 KB, got ${compactBytes} bytes.`,
+      compactBytes < 96 * 1024,
+      `Expected compact JSON under the shared 96 KiB agent budget, got ${compactBytes} bytes.`,
     )
-    assert.equal(report.output.narrative.diagnosis.dataStatus, 'unavailable')
+    assert.equal(report.output.searchSections.status, 'skipped')
+    assert.match(report.output.searchSections.reason, /Search Console/)
+    assert.equal(report.technicalCrawl.issueGroupsComplete, true)
     assert.equal(report.technicalCrawl.status, 'created')
     assert.equal(
       report.technicalCrawl.dataSources?.searchConsole.status,
       'skipped',
     )
     assert.equal(report.technicalCrawl.dataSources?.analytics.status, 'skipped')
-    assert.ok(
-      report.output.narrative.diagnosis.skippedSections?.every((section) =>
-        section.reason.includes('no Search Console property'),
-      ),
-    )
     assert.deepEqual(
       report.nextCommands.map((command) => command.command),
-      [`seo audit-page --url http://127.0.0.1:${address.port}`, 'seo start'],
+      [`seo audit-page --url ${reportUrl}`, 'seo start'],
     )
+
+    const actionsOnly = await execFileAsync(
+      process.execPath,
+      [
+        cliPath,
+        'report',
+        '--url',
+        reportUrl,
+        '--crawl-max-pages',
+        '1',
+        '--search-console-export',
+        exportDir,
+        '--actions-only',
+        '--json',
+      ],
+      {
+        env: {
+          ...process.env,
+          CI: '1',
+          NO_UPDATE_NOTIFIER: '1',
+          SEO_CACHE_DIR: cacheDir,
+          SEO_CONFIG_DIR: configDir,
+        },
+      },
+    )
+    const actionReport = JSON.parse(actionsOnly.stdout) as {
+      view: string
+      findings: { coverage: { state: string } }
+      inventories: Array<{
+        totalItems: number
+        returnedItems: number
+        complete: boolean
+        pagination: { page: number; pageCount: number; nextPage: number | null }
+      }>
+    }
+    assert.equal(actionReport.view, 'actions')
+    assert.equal(actionReport.findings.coverage.state, 'complete')
+    const inventory = actionReport.inventories[0]
+    assert.equal(inventory?.totalItems, 2)
+    assert.equal(inventory?.returnedItems, 2)
+    assert.equal(inventory?.complete, true)
+    assert.deepEqual(inventory?.pagination, {
+      page: 1,
+      pageCount: 1,
+      nextPage: null,
+    })
 
     const full = await execFileAsync(
       process.execPath,
@@ -162,7 +227,7 @@ test('report runs a technical crawl when given only a URL', async () => {
         cliPath,
         'report',
         '--url',
-        `http://127.0.0.1:${address.port}`,
+        reportUrl,
         '--crawl-max-pages',
         '1',
         '--crawl-max-depth',
@@ -194,7 +259,7 @@ test('report runs a technical crawl when given only a URL', async () => {
         cliPath,
         'report',
         '--url',
-        `http://127.0.0.1:${address.port}`,
+        reportUrl,
         '--crawl-max-pages',
         '1',
         '--crawl-max-depth',
@@ -233,5 +298,6 @@ test('report runs a technical crawl when given only a URL', async () => {
     })
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })
+    await rm(exportDir, { recursive: true, force: true })
   }
 })

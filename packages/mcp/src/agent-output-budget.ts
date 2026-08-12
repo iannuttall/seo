@@ -1,3 +1,5 @@
+import { agentActionsView } from '@seo/core'
+
 export const AGENT_STRUCTURED_OUTPUT_MAX_BYTES = 96 * 1024
 
 type Omission = {
@@ -10,6 +12,7 @@ type Omission = {
 type CompactOptions = {
   arrayLimit: number
   stringLimit: number
+  preserveAgentContract: boolean
 }
 
 function jsonBytes(value: unknown): number {
@@ -62,6 +65,14 @@ function compactValue(
   const compact: Record<string, unknown> = {}
   for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
     const itemPath = path ? `${path}.${key}` : key
+    if (
+      !path &&
+      options.preserveAgentContract &&
+      (key === 'findings' || key === 'inventories')
+    ) {
+      compact[key] = item
+      continue
+    }
     if (key === 'markdown') {
       omissions.push({ path: itemPath, kind: 'field' })
       continue
@@ -73,13 +84,23 @@ function compactValue(
 
 export function compactAgentWorkflowOutput(
   report: Record<string, unknown>,
+  options: { maxBytes?: number } = {},
 ): Record<string, unknown> {
-  const originalBytes = jsonBytes(report)
+  const maxBytes = options.maxBytes ?? AGENT_STRUCTURED_OUTPUT_MAX_BYTES
+  const prepared = report
+  const findings = report.findings as
+    | { schemaVersion?: unknown; scope?: unknown; items?: unknown }
+    | undefined
+  const preserveAgentContract =
+    findings?.schemaVersion === 1 &&
+    findings.scope === 'returned-report' &&
+    Array.isArray(findings.items)
+  const originalBytes = jsonBytes(prepared)
   const complete = {
-    ...report,
+    ...prepared,
     outputBudget: {
       schemaVersion: 1,
-      maxBytes: AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
+      maxBytes,
       originalBytes,
       returnedBytes: 0,
       truncated: false,
@@ -89,19 +110,19 @@ export function compactAgentWorkflowOutput(
         'The complete structured report fits within the agent output budget.',
     },
   }
-  if (setReturnedBytes(complete) <= AGENT_STRUCTURED_OUTPUT_MAX_BYTES) {
+  if (setReturnedBytes(complete) <= maxBytes) {
     return complete
   }
   const attempts: CompactOptions[] = [
-    { arrayLimit: 10, stringLimit: 4_000 },
-    { arrayLimit: 5, stringLimit: 2_000 },
-    { arrayLimit: 3, stringLimit: 1_000 },
-    { arrayLimit: 1, stringLimit: 500 },
+    { arrayLimit: 10, stringLimit: 4_000, preserveAgentContract },
+    { arrayLimit: 5, stringLimit: 2_000, preserveAgentContract },
+    { arrayLimit: 3, stringLimit: 1_000, preserveAgentContract },
+    { arrayLimit: 1, stringLimit: 500, preserveAgentContract },
   ]
 
   for (const options of attempts) {
     const omissions: Omission[] = []
-    const compact = compactValue(report, '', options, omissions) as Record<
+    const compact = compactValue(prepared, '', options, omissions) as Record<
       string,
       unknown
     >
@@ -109,7 +130,7 @@ export function compactAgentWorkflowOutput(
       ...compact,
       outputBudget: {
         schemaVersion: 1,
-        maxBytes: AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
+        maxBytes,
         originalBytes,
         returnedBytes: 0,
         truncated: omissions.length > 0,
@@ -122,54 +143,32 @@ export function compactAgentWorkflowOutput(
       },
     }
     const returnedBytes = setReturnedBytes(result)
-    if (returnedBytes <= AGENT_STRUCTURED_OUTPUT_MAX_BYTES) return result
+    if (returnedBytes <= maxBytes) return result
   }
 
-  const fallbackOmissions: Omission[] = []
-  const fallbackOutput = report.output as Record<string, unknown> | undefined
-  const fallbackEvidenceSource = Object.fromEntries(
-    Object.entries({
-      provenance: report.provenance ?? fallbackOutput?.provenance,
-      caveats: report.caveats ?? fallbackOutput?.caveats,
-      warnings: report.warnings ?? fallbackOutput?.warnings,
-      selection: report.selection ?? fallbackOutput?.selection,
-      totals: report.totals ?? fallbackOutput?.totals,
-    }).filter(([, value]) => value !== undefined),
-  )
-  const retainedEvidence = compactValue(
-    fallbackEvidenceSource,
-    'retainedEvidence',
-    { arrayLimit: 10, stringLimit: 2_000 },
-    fallbackOmissions,
-  )
+  // When the full report cannot fit, prefer the purpose-built action view
+  // before shortening the findings or any retained inventory. Agent completion
+  // data is more important than repeating the report body.
+  const actions = agentActionsView(prepared)
   const fallback = {
-    workflow: report.workflow,
-    site: report.site,
-    generatedAt: report.generatedAt,
-    summary: report.summary,
-    steps: report.steps,
-    actions: Array.isArray(report.actions) ? report.actions.slice(0, 5) : [],
-    output: {
-      dataStatus:
-        (report.output as { dataStatus?: unknown } | undefined)?.dataStatus ??
-        'partial',
-      detail:
-        'The detailed workflow exceeded the agent output budget. Run the related focused reports for section evidence.',
-    },
-    retainedEvidence,
+    ...actions,
     outputBudget: {
       schemaVersion: 1,
-      maxBytes: AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
+      maxBytes,
       originalBytes,
       returnedBytes: 0,
       truncated: true,
       fallback: true,
-      omissions: [
-        { path: 'output', kind: 'field' as const },
-        ...fallbackOmissions.slice(0, 99),
-      ],
+      omissionsTruncated: false,
+      omissions: [{ path: 'reportBody', kind: 'field' as const }],
+      detail:
+        'The detailed report exceeded the budget, so the complete findings and retained inventories are returned instead.',
     },
   }
-  setReturnedBytes(fallback)
-  return fallback
+  if (setReturnedBytes(fallback) <= maxBytes) {
+    return fallback
+  }
+  throw new Error(
+    `The complete findings and inventories exceed the ${maxBytes}-byte agent output budget. Run a focused report with a narrower bounded scope; actionable rows were not truncated.`,
+  )
 }

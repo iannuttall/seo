@@ -39,6 +39,10 @@ test('auth whoami prints a readable account summary', async () => {
 
   try {
     await writeFile(
+      join(configDir, 'config.json'),
+      JSON.stringify({ security: { useKeychain: false } }),
+    )
+    await writeFile(
       join(configDir, 'tokens.json'),
       JSON.stringify({
         provider: 'google',

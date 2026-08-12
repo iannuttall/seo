@@ -37,6 +37,17 @@ function absoluteHttpUrl(value?: string): boolean {
   }
 }
 
+function isLoopbackUrl(value?: string): boolean {
+  try {
+    const hostname = new URL(value ?? '').hostname.toLowerCase()
+    if (hostname === 'localhost' || hostname.endsWith('.localhost')) return true
+    if (hostname === '[::1]' || hostname === '::1') return true
+    return /^127(?:\.\d{1,3}){3}$/u.test(hostname)
+  } catch {
+    return false
+  }
+}
+
 function urlKey(value?: string): string | undefined {
   if (!value) return undefined
   try {
@@ -58,6 +69,7 @@ const QUERY_COVERAGE_MIN = 0.6
 const OVERSIZED_IMAGE_CANDIDATE_LIMIT = 2000
 const EMPTY_INITIAL_HTML_CHARACTERS = 200
 const SUBSTANTIVE_RENDERED_CHARACTERS = 500
+const NEAR_EMPTY_CONTENT_WORDS = 10
 
 function clientRenderedContentEvidence(
   page: CrawlPageSnapshot,
@@ -476,6 +488,23 @@ export function auditCrawlPages(
         ),
       )
     }
+    if (
+      !renderedContent &&
+      isAuditableHtmlPage(page) &&
+      page.indexable &&
+      page.extractionStatus === 'complete' &&
+      page.wordCount < NEAR_EMPTY_CONTENT_WORDS
+    ) {
+      issues.push(
+        issue('near_empty_content', page, `${page.wordCount} extracted words`, {
+          wordCount: page.wordCount,
+          reviewBelowWords: NEAR_EMPTY_CONTENT_WORDS,
+          contentSample: page.contentSample,
+          outgoingInternalCount: page.outgoingInternalCount,
+          rendering: page.fetchDiagnostics?.rendering,
+        }),
+      )
+    }
 
     if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {
       issues.push(
@@ -503,7 +532,7 @@ export function auditCrawlPages(
         }),
       )
     }
-    if (page.isHttps === false) {
+    if (page.isHttps === false && !isLoopbackUrl(page.finalUrl || page.url)) {
       issues.push(
         issue('http_not_secure', page, undefined, {
           finalUrl: page.finalUrl,
@@ -650,6 +679,12 @@ export function auditCrawlPages(
     if (h1Count === 0) {
       issues.push(
         issue('h1_missing', page, 'No H1 found', {
+          h1Count,
+        }),
+      )
+    } else if (h1Count > 1) {
+      issues.push(
+        issue('h1_multiple', page, `${h1Count} H1 headings`, {
           h1Count,
         }),
       )
@@ -847,6 +882,26 @@ export function auditCrawlPages(
           }),
         )
       }
+    }
+    const structuredDataFormats = page.structuredDataFormats
+    if (
+      isAuditableHtmlPage(page) &&
+      page.indexable &&
+      structuredDataFormats &&
+      structuredDataFormats.length === 0 &&
+      (page.schemaTypes?.length ?? 0) === 0 &&
+      (page.invalidJsonLdCount ?? 0) === 0 &&
+      (page.unrecognizedJsonLdTypes?.length ?? 0) === 0
+    ) {
+      issues.push(
+        issue('structured_data_missing', page, 'No structured data detected', {
+          structuredDataFormats,
+          schemaTypes: page.schemaTypes ?? [],
+          invalidJsonLdCount: page.invalidJsonLdCount ?? 0,
+          unrecognizedJsonLdTypeCount:
+            page.unrecognizedJsonLdTypes?.length ?? 0,
+        }),
+      )
     }
     if ((page.invalidJsonLdCount ?? 0) > 0) {
       issues.push(

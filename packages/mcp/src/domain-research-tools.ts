@@ -2,7 +2,6 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   competitorKeywordGapReport,
   domainOverviewReport,
-  normalizedResearchColumnName,
   rankedKeywordsReport,
   rankingPagesReport,
   serpCompetitorsReport,
@@ -14,7 +13,7 @@ import {
   providerKeywordInput as keywordInput,
   providerLanguageCodeInput as languageCodeInput,
   providerIdInput,
-  researchImportProviderIdInput,
+  researchFilesInput,
 } from './provider-inputs.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -66,92 +65,6 @@ const gapCompetitorInput = z.strictObject({
     'marketplace',
   ]),
 })
-const sourceColumnInput = (meaning: string) =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(500)
-    .describe(`Source column containing ${meaning}.`)
-    .optional()
-const researchColumnsInput = z
-  .strictObject({
-    keyword: sourceColumnInput('the search query'),
-    url: sourceColumnInput('the current absolute ranking URL'),
-    position: sourceColumnInput('the current grouped ranking position'),
-    absolutePosition: sourceColumnInput('the current absolute result position'),
-    searchVolume: sourceColumnInput('monthly search volume'),
-    keywordDifficulty: sourceColumnInput('keyword difficulty from 0 to 100'),
-    cpc: sourceColumnInput('cost per click in US dollars'),
-    paidCompetition: sourceColumnInput('paid competition from 0 to 1'),
-    intent: sourceColumnInput('one or more search intents'),
-    resultCount: sourceColumnInput('the estimated result count'),
-    estimatedTraffic: sourceColumnInput('estimated monthly visits'),
-    resultType: sourceColumnInput('the organic or search feature result type'),
-    searchVolumeUpdatedAt: sourceColumnInput('the search volume update date'),
-  })
-  .superRefine((columns, context) => {
-    const seen = new Map<string, string>()
-    for (const [canonical, source] of Object.entries(columns)) {
-      if (!source) continue
-      const normalized = normalizedResearchColumnName(source)
-      const existing = seen.get(normalized)
-      if (existing) {
-        context.addIssue({
-          code: 'custom',
-          message: `Source column "${source}" is already mapped to "${existing}".`,
-          path: [canonical],
-        })
-      } else {
-        seen.set(normalized, canonical)
-      }
-    }
-  })
-  .describe(
-    'Optional canonical field to source column mapping. Named fields override automatic header matching.',
-  )
-const researchFileInput = z.strictObject({
-  dataset: z
-    .literal('ranked-keywords')
-    .describe(
-      'Type of provider export. Ranked-keywords files can feed keyword, page, competitor and gap reports.',
-    ),
-  file: z
-    .string()
-    .trim()
-    .min(1)
-    .max(4_096)
-    .describe('Path to a local CSV, TSV, JSON, JSONL or NDJSON export.'),
-  provider: researchImportProviderIdInput.describe(
-    'Provider that produced the file: dataforseo, semrush or ahrefs.',
-  ),
-  exportedAt: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .describe('Date or timestamp when the provider export was created.'),
-  format: z
-    .enum(['csv', 'json', 'jsonl'])
-    .optional()
-    .describe('File format override. The file extension is used by default.'),
-  rowLimit: z
-    .number()
-    .int()
-    .min(1)
-    .max(100_000)
-    .optional()
-    .describe('Maximum file rows to normalize. Defaults to 10000.'),
-  columns: researchColumnsInput.optional(),
-})
-const researchFilesInput = z
-  .array(researchFileInput)
-  .min(1)
-  .max(4)
-  .describe(
-    'One to four local ranked-keyword exports from the same provider and market.',
-  )
-
 const domainOverviewInput = z.strictObject({
   domain: domainInput,
   site: siteInput.optional(),

@@ -47,6 +47,12 @@ test('default MCP server exposes only the compact discovery surface', async () =
       ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
     )
     assert.ok(result.tools.every((tool) => tool.outputSchema))
+    const runTool = result.tools.find((tool) => tool.name === 'seo_run_report')
+    assert.ok(runTool)
+    assert.deepEqual(
+      (runTool.inputSchema.properties?.view as JsonRecord | undefined)?.enum,
+      ['full', 'actions'],
+    )
   })
 })
 
@@ -265,6 +271,14 @@ test('list and describe return compact ordered metadata and parameter schema', a
       assert.equal(typeof item.id, 'string')
       assert.equal(typeof item.reason, 'string')
     }
+    const agentWorkflow = report.agentWorkflow as JsonRecord
+    const actionView = agentWorkflow.actionView as JsonRecord
+    assert.deepEqual(actionView.mcp, { id: 'audit-page', view: 'actions' })
+    assert.match(actionView.cli as string, /--actions-only --json$/)
+    assert.match(
+      agentWorkflow.completion as string,
+      /finding type and its allowed outcomes/,
+    )
     assert.deepEqual(inputSchema.required, ['url'])
     assert.equal((properties.url as JsonRecord).format, 'uri')
     assert.equal(inputSchema.additionalProperties, false)
@@ -352,6 +366,7 @@ test('run validates the selected report and returns structured errors', async ()
     assert.equal(successResult.isError, undefined)
     const successData = structured(success)
     assert.ok(Array.isArray(successData.rules))
+    assert.equal('findings' in successData, false)
     assert.ok(
       (successData.rules as JsonRecord[]).every(
         (rule) => rule.category === 'metadata',
@@ -365,6 +380,20 @@ test('run validates the selected report and returns structured errors', async ()
       content.find((item) => item.type === 'text')?.text ?? '',
       /crawler rules/,
     )
+
+    const actionsView = await client.callTool({
+      name: 'seo_run_report',
+      arguments: {
+        id: 'crawler-rules',
+        params: { category: 'metadata' },
+        view: 'actions',
+      },
+    })
+    const actionsData = structured(actionsView)
+    assert.equal(actionsData.view, 'actions')
+    assert.deepEqual(actionsData.report, { id: 'crawler-rules' })
+    assert.equal('rules' in actionsData, false)
+    assert.ok(actionsData.findings)
   })
 })
 

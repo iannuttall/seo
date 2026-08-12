@@ -24,6 +24,12 @@ type RuleDefinition = {
   howToFix: string
   impactIfIgnored: string
   howToVerify: string
+  review?: {
+    question: string
+    changeOnlyIf: string
+    ifNotNeeded: string
+    doNot?: string[]
+  }
   agentHints?: {
     evidenceFields?: string[]
     suggestedCommands?: string[]
@@ -110,6 +116,24 @@ const RULE_DEFINITIONS = [
       'The visible document outline may be less clear to readers and assistive technology.',
     howToVerify:
       'Re-run the crawl and confirm an H1 describes the page’s main visible topic.',
+    agentHints: {
+      evidenceFields: ['page.h1', 'page.h1Count'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
+    id: 'h1_multiple',
+    title: 'Multiple H1 headings',
+    category: 'headings',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Multiple H1 headings are valid HTML. Keeping one H1 is a common convention that keeps the visible document outline clear for readers and assistive technology. This is a convention heuristic, not a search-engine requirement.',
+    howToFix:
+      'Review the headings before changing anything. If one heading describes the whole page, keep it as the H1 and move the others to H2 or below so the outline stays consistent.',
+    impactIfIgnored:
+      'The visible document outline may be harder to scan, and templates can drift into inconsistent heading use.',
+    howToVerify:
+      'Re-run the crawl and confirm h1Count matches the intended heading structure.',
     agentHints: {
       evidenceFields: ['page.h1', 'page.h1Count'],
       suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
@@ -321,6 +345,29 @@ const RULE_DEFINITIONS = [
         'page.usedJs',
       ],
       suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'near_empty_content',
+    title: 'Near-empty main content',
+    category: 'content',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'The extracted main content contains fewer than ten words. This is a review heuristic, not a search-engine word-count requirement. The page may be intentional, incomplete, or dependent on client-side rendering.',
+    howToFix:
+      'Confirm that the intended body content and internal links exist in the server-delivered HTML. If the useful page appears only after client JavaScript, render it on the server or pre-render it. Leave deliberately minimal pages alone when their purpose is clear.',
+    impactIfIgnored:
+      'Crawlers and clients that do not execute JavaScript may receive an empty shell or too little context to understand and navigate the page.',
+    howToVerify:
+      'Fetch the page without browser rendering and confirm the initial HTML contains the intended main content and crawlable links. Then re-run the crawl and review the extracted word count and content sample.',
+    agentHints: {
+      evidenceFields: [
+        'page.wordCount',
+        'page.contentSample',
+        'page.outgoingInternalCount',
+        'page.fetchDiagnostics.rendering',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
     },
   },
   {
@@ -874,6 +921,40 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'structured_data_missing',
+    title: 'No structured data detected',
+    category: 'structured-data',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'The crawler detected no JSON-LD, microdata, or RDFa on this page. Structured data is optional and page-type dependent, so this is an observation, not a defect.',
+    howToFix:
+      'Add structured data only where a schema type genuinely describes the page, for example an article page describing its article. Validate the markup after adding it, and leave pages without a fitting schema type unmarked.',
+    impactIfIgnored:
+      'Consumers that read structured data get no machine-readable description of this page. Many page types work fine without any markup.',
+    howToVerify:
+      'Re-run the crawl and confirm structuredDataFormats lists the added format, then validate the page with a structured data tester.',
+    review: {
+      question:
+        'Does a specific structured data type accurately describe the visible content on this page?',
+      changeOnlyIf:
+        'Add markup only when a specific schema type fits the page and every claimed property is supported by its visible content.',
+      ifNotNeeded:
+        'Leave the page unmarked and record that no suitable schema type was confirmed.',
+      doNot: [
+        'Do not add Organization or another generic schema type only to clear this finding.',
+        'Do not copy site-wide markup onto unrelated page types.',
+      ],
+    },
+    agentHints: {
+      evidenceFields: [
+        'page.structuredDataFormats',
+        'page.schemaTypes',
+        'issue.evidence.structuredDataFormats',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'jsonld_invalid',
     title: 'Invalid JSON-LD',
     category: 'structured-data',
@@ -927,11 +1008,11 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'og_description_missing',
-    title: 'Open Graph description missing',
+    title: 'og:description not set',
     category: 'social',
     defaultSeverity: 'low',
     whyItMatters:
-      'The Open Graph description is often the short pitch shown when a page is shared in chat, Slack, social feeds, and link previews.',
+      'The og:description tag is often the short pitch shown when a page is shared in chat, Slack, social feeds, and link previews. Other og: tags can be present while this one is not set.',
     howToFix:
       'Add an og:description that briefly explains why the page is worth opening.',
     impactIfIgnored:
@@ -969,8 +1050,8 @@ const RULE_DEFINITIONS = [
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']
-type RawRuleInfo = (typeof RULE_DEFINITIONS)[number]
-export type RuleInfo = RawRuleInfo & {
+export type RuleInfo = RuleDefinition & {
+  id: RuleId
   recommendation: RuleRecommendation
 }
 export type RuleCategory = RuleDefinition['category']
@@ -978,6 +1059,8 @@ export type RuleSeverity = RuleDefinition['defaultSeverity']
 
 const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   title_too_wide: 'review',
+  h1_multiple: 'review',
+  structured_data_missing: 'review',
   canonical_missing: 'review',
   canonical_multiple: 'review',
   canonical_mismatch: 'review',
@@ -990,6 +1073,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   crawler_access_blocked: 'review',
   soft_authentication_gate: 'review',
   client_rendered_content: 'review',
+  near_empty_content: 'review',
   orphan_page: 'review',
   redirected_url: 'review',
   slow_response: 'review',

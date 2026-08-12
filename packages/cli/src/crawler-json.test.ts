@@ -58,8 +58,17 @@ function firstRecord(value: unknown): JsonRecord {
   return value[0] as JsonRecord
 }
 
+function recordWithField(value: unknown, field: string): JsonRecord {
+  assert.ok(Array.isArray(value))
+  const found = value.find(
+    (item) => item && typeof item === 'object' && field in item,
+  )
+  assert.ok(found && typeof found === 'object')
+  return found as JsonRecord
+}
+
 function crawlerJsonKeySnapshot(payload: JsonRecord) {
-  const firstIssue = firstRecord(payload.issues)
+  const firstIssue = recordWithField(payload.issues, 'evidence')
   const firstGroup = firstRecord(payload.issueGroups)
   const firstFix = firstRecord(payload.topFixes)
   const dataSources = payload.dataSources as JsonRecord
@@ -204,7 +213,15 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'statusOnlyPages',
         'totalPages',
       ],
-      issue: ['category', 'evidence', 'ruleId', 'severity', 'title', 'url'],
+      issue: [
+        'category',
+        'detail',
+        'evidence',
+        'ruleId',
+        'severity',
+        'title',
+        'url',
+      ],
       issueGroup: [
         'category',
         'count',

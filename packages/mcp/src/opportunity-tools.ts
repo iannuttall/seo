@@ -8,9 +8,9 @@ import {
   quickWinsReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
-import { researchFilesInput } from './domain-research-tools.js'
 import { fetchRateInput } from './fetch-rate.js'
 import { resolveJsOption } from './input-schemas.js'
+import { researchFilesInput } from './provider-inputs.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 

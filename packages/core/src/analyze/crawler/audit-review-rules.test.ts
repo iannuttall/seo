@@ -40,6 +40,86 @@ test('auditCrawlPages reports a missing H1 without a multiple-H1 issue', () => {
   )
 })
 
+test('auditCrawlPages labels near-empty extracted content as a review heuristic', () => {
+  const pages = [
+    page({
+      extractionStatus: 'complete',
+      wordCount: 3,
+      contentSample: 'Blog Loading posts...',
+      outgoingInternalCount: 5,
+    }),
+  ]
+  const issues = auditCrawlPages(pages)
+  const observed = issues.find((issue) => issue.ruleId === 'near_empty_content')
+
+  assert.equal(observed?.detail, '3 extracted words')
+  assert.deepEqual(observed?.evidence, {
+    wordCount: 3,
+    reviewBelowWords: 10,
+    contentSample: 'Blog Loading posts...',
+    outgoingInternalCount: 5,
+    rendering: undefined,
+  })
+
+  const report = createCrawlReport({
+    config: { url: 'https://example.com/' },
+    pages,
+    issues,
+  })
+  assert.equal(
+    topFixes(report).some((fix) => fix.ruleId === 'near_empty_content'),
+    false,
+  )
+  assert.equal(
+    reviewObservations(report).some(
+      (observation) => observation.ruleId === 'near_empty_content',
+    ),
+    true,
+  )
+})
+
+test('auditCrawlPages does not infer near-empty content without complete extraction', () => {
+  for (const input of [
+    { extractionStatus: 'failed' as const, wordCount: 3 },
+    { extractionStatus: 'not-applicable' as const, wordCount: 3 },
+    { extractionStatus: 'complete' as const, wordCount: 10 },
+    {
+      extractionStatus: 'complete' as const,
+      wordCount: 3,
+      indexable: false,
+      metaRobots: 'noindex',
+    },
+  ]) {
+    const issues = auditCrawlPages([page(input)])
+    assert.equal(
+      issues.some((issue) => issue.ruleId === 'near_empty_content'),
+      false,
+      JSON.stringify(input),
+    )
+  }
+})
+
+test('auditCrawlPages copies search metrics onto issues', () => {
+  const issues = auditCrawlPages([
+    page({
+      metaDescription: undefined,
+      searchMetrics: {
+        clicks: 12,
+        impressions: 400,
+        ctr: 0.03,
+        position: 8.5,
+      },
+    }),
+  ])
+
+  assert.deepEqual(issues[0]?.searchMetrics, {
+    clicks: 12,
+    impressions: 400,
+    ctr: 0.03,
+    position: 8.5,
+  })
+})
+
 test('auditCrawlPages observes pages without structured data', () => {
   const issues = auditCrawlPages([
     page({ structuredDataFormats: [], schemaTypes: [] }),

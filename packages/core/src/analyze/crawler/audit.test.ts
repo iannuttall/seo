@@ -384,6 +384,48 @@ test('auditCrawlPages flags performance and security issues', () => {
   )
 })
 
+test('auditCrawlPages does not require HTTPS for loopback development URLs', () => {
+  const issues = auditCrawlPages([
+    page({
+      url: 'http://localhost:3000/',
+      finalUrl: 'http://localhost:3000/',
+      isHttps: false,
+    }),
+    page({
+      url: 'http://app.localhost:3000/',
+      finalUrl: 'http://app.localhost:3000/',
+      isHttps: false,
+    }),
+    page({
+      url: 'http://127.42.0.1:3000/',
+      finalUrl: 'http://127.42.0.1:3000/',
+      isHttps: false,
+    }),
+    page({
+      url: 'http://[::1]:3000/',
+      finalUrl: 'http://[::1]:3000/',
+      isHttps: false,
+    }),
+    page({
+      url: 'http://example.com/',
+      finalUrl: 'http://example.com/',
+      isHttps: false,
+    }),
+    page({
+      url: 'http://127.example.com/',
+      finalUrl: 'http://127.example.com/',
+      isHttps: false,
+    }),
+  ])
+
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.ruleId === 'http_not_secure')
+      .map((issue) => issue.url),
+    ['http://example.com/', 'http://127.example.com/'],
+  )
+})
+
 test('auditCrawlPages flags link issues', () => {
   const issues = auditCrawlPages(
     [
@@ -1000,25 +1042,4 @@ test('auditCrawlPages does not turn word count or llms.txt into SEO issues', () 
   const geoIssues = issues.filter((issue) => issue.category === 'geo')
 
   assert.deepEqual(geoIssues, [])
-})
-
-test('auditCrawlPages copies search metrics onto issues', () => {
-  const issues = auditCrawlPages([
-    page({
-      metaDescription: undefined,
-      searchMetrics: {
-        clicks: 12,
-        impressions: 400,
-        ctr: 0.03,
-        position: 8.5,
-      },
-    }),
-  ])
-
-  assert.deepEqual(issues[0]?.searchMetrics, {
-    clicks: 12,
-    impressions: 400,
-    ctr: 0.03,
-    position: 8.5,
-  })
 })

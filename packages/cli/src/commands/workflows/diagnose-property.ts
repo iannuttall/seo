@@ -1,19 +1,20 @@
 import {
+  agentActionsView,
   analyticsConnection,
-  type CrawlReport,
   crawlSite,
   diagnosePropertyWorkflow,
   loadSearchConsoleExport,
   type ReportHtmlSection,
   reconcileExportPagesWithCrawl,
   resolveTechnicalBaseline,
-  reviewObservations,
   type SearchConsoleExportEvidence,
   type SearchConsoleExportReconciliation,
   SeoError,
+  saveCrawlReport,
   type TechnicalBaseline,
-  topFixes,
+  withAgentReportContract,
 } from '@seo/core'
+import { compactAgentWorkflowOutput } from '@seo/mcp'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -35,8 +36,17 @@ import {
 } from '../report-html.js'
 import { cliReportArgs } from '../report-options.js'
 import { startUrlForSite } from '../shared.js'
+import {
+  compactMainReportJson,
+  type DiagnoseWorkflowReport,
+  shellArg,
+  siteForDirectUrl,
+} from './main-report-json.js'
 import { printWorkflow } from './output.js'
 import {
+  completeReviewObservations,
+  completeTopFixes,
+  crawlDataSourceLines,
   type ExportPageInventory,
   exportPageInventory,
   exportSummarySentence,
@@ -55,60 +65,6 @@ import {
 // Keeps the extra fetch work proportional to one crawl worker window.
 const UNREACHED_AUDIT_LIMIT = 20
 
-type DiagnoseWorkflowReport = Awaited<
-  ReturnType<typeof diagnosePropertyWorkflow>
->
-
-function compactMainReportJson(
-  report: DiagnoseWorkflowReport,
-  workflowName?: string,
-) {
-  const { narrative } = report.output
-  const { diagnosis } = narrative
-
-  return {
-    ...report,
-    ...(workflowName ? { workflow: workflowName } : {}),
-    output: {
-      narrative: {
-        site: narrative.site,
-        generatedAt: narrative.generatedAt,
-        dataStatus: narrative.dataStatus,
-        periodDays: narrative.periodDays,
-        period: narrative.period,
-        headline: narrative.headline,
-        caveats: narrative.caveats,
-        sections: narrative.sections,
-        priorities: narrative.priorities,
-        diagnosis: {
-          site: diagnosis.site,
-          generatedAt: diagnosis.generatedAt,
-          dataStatus: diagnosis.dataStatus,
-          summary: diagnosis.summary,
-          skippedSections: diagnosis.skippedSections,
-          partialReasons: diagnosis.partialReasons,
-          priorities: diagnosis.priorities,
-        },
-      },
-    },
-  }
-}
-
-function shellArg(value: string): string {
-  if (/^[A-Za-z0-9_./:@-]+$/.test(value)) {
-    return value
-  }
-  return `'${value.replaceAll("'", "'\\''")}'`
-}
-
-function siteForDirectUrl(url: string): string {
-  try {
-    return new URL(url).origin
-  } catch {
-    throw new SeoError('INVALID_INPUT', 'Pass a valid absolute URL with --url.')
-  }
-}
-
 function addFollowup(
   commands: Array<{ command: string; why: string }>,
   command: string,
@@ -118,58 +74,6 @@ function addFollowup(
     return
   }
   commands.push({ command, why })
-}
-
-function crawlDataSourceLines(
-  dataSources: CrawlReport['dataSources'],
-): string[] {
-  if (!dataSources) return []
-
-  const sourceLine = (input: {
-    label: string
-    status: string
-    joinedPages: number
-    totalPages: number
-    window?: { days: number }
-    warning?: string
-  }): string => {
-    const range = input.window ? ` in the last ${input.window.days} days` : ''
-    const coverage = `for ${input.joinedPages} of ${input.totalPages} crawled URLs`
-
-    if (input.status === 'skipped') return `${input.label}: not connected.`
-    if (input.status === 'unavailable') {
-      return `${input.label}: unavailable. ${input.warning ?? 'No data was joined.'}`
-    }
-    if (input.status === 'partial') {
-      return `${input.label}: partial data ${coverage}${range}. ${input.warning ?? ''}`.trim()
-    }
-    if (input.status === 'none') {
-      return `${input.label}: no matching crawled URLs${range}.`
-    }
-    return `${input.label}: joined ${coverage}${range}.`
-  }
-
-  return [
-    sourceLine({
-      label: 'Search Console',
-      status: dataSources.searchConsole.status,
-      joinedPages: Math.max(
-        dataSources.searchConsole.joinedMetricPages,
-        dataSources.searchConsole.joinedQueryPages,
-      ),
-      totalPages: dataSources.searchConsole.totalPages,
-      window: dataSources.searchConsole.window,
-      warning: dataSources.searchConsole.warning,
-    }),
-    sourceLine({
-      label: 'Google Analytics',
-      status: dataSources.analytics.status,
-      joinedPages: dataSources.analytics.joinedPages,
-      totalPages: dataSources.analytics.totalPages,
-      window: dataSources.analytics.window,
-      warning: dataSources.analytics.warning,
-    }),
-  ]
 }
 
 function technicalSection(baseline: TechnicalBaseline) {
@@ -193,16 +97,15 @@ function technicalSection(baseline: TechnicalBaseline) {
       (report.dataSources?.searchConsole.joinedQueryPages ?? 0) > 0,
     dataSources: report.dataSources,
     summary: report.summary,
-    // One group per rule id keeps both lists bounded by the rule catalog.
-    // Together they are the complete grouped issue inventory; a silent cap
-    // here previously hid findings from the report entirely.
-    topFixes: topFixes(report, { limit: 1000 }),
-    reviewObservations: reviewObservations(report, { limit: 1000 }),
+    topFixes: completeTopFixes(report),
+    reviewObservations: completeReviewObservations(report),
     issueGroupsComplete: true,
   }
 }
 
-function compactTechnicalFinding(finding: ReturnType<typeof topFixes>[number]) {
+function compactTechnicalFinding(
+  finding: ReturnType<typeof completeTopFixes>[number],
+) {
   return {
     ruleId: finding.ruleId,
     title: finding.title,
@@ -321,8 +224,8 @@ function printSearchConsoleExportSection(input: {
   unreachedAudit?: {
     auditedUrls: number
     totalUnreached: number
-    topFixes: ReturnType<typeof topFixes>
-    reviewObservations: ReturnType<typeof topFixes>
+    topFixes: ReturnType<typeof completeTopFixes>
+    reviewObservations: ReturnType<typeof completeTopFixes>
   }
   topicOverlap?: TopicOverlapResult
   pageInventory?: ExportPageInventory
@@ -756,10 +659,22 @@ function workflowCommandMeta(input: {
               description:
                 'Include the full report in JSON output. Default JSON is a compact summary for agents.',
             },
+            'actions-only': {
+              type: 'boolean' as const,
+              default: false,
+              description:
+                'Return findings, verification, and the content inventory without the full report body. JSON only.',
+            },
             'search-console-export': {
               type: 'string' as const,
               description:
                 'Path to a local Search Console export (a directory or CSV with the standard query and page tables). URL mode only; query and page tables stay separate.',
+            },
+            'inventory-page': {
+              type: 'string' as const,
+              default: '1',
+              description:
+                'Page of local Search Console export inventory rows to return. URL mode only.',
             },
             ...reportHtmlArgs,
           }
@@ -774,6 +689,20 @@ function workflowCommandMeta(input: {
       const json = jsonFlag(args)
       const html = input.printFollowups ? reportHtmlOptions(args) : undefined
       const full = input.printFollowups && booleanArg(args.full)
+      const actionsOnly =
+        input.printFollowups && booleanArg(args['actions-only'])
+      if (actionsOnly && !json) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          'Use --actions-only with --json so findings and completion outcomes stay machine-readable.',
+        )
+      }
+      if (actionsOnly && full) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          'Choose either --actions-only or --full, not both.',
+        )
+      }
       const project = projectArg(args)
       const explicitSite = stringArg(args.site)
       const directUrl = input.printFollowups ? stringArg(args.url) : undefined
@@ -781,6 +710,21 @@ function workflowCommandMeta(input: {
       const exportPath = input.printFollowups
         ? stringArg(args['search-console-export'])
         : undefined
+      const inventoryPage = input.printFollowups
+        ? (numberArg(args['inventory-page']) ?? 1)
+        : 1
+      if (!Number.isSafeInteger(inventoryPage) || inventoryPage < 1) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          '--inventory-page must be a positive integer.',
+        )
+      }
+      if (inventoryPage !== 1 && !exportPath) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          'Use --inventory-page only with --search-console-export.',
+        )
+      }
       if (exportPath && useSearchData) {
         throw new SeoError(
           'INVALID_INPUT',
@@ -863,13 +807,15 @@ function workflowCommandMeta(input: {
           useSitemap: false,
           refresh: booleanArg(args.refresh),
         })
+        saveCrawlReport(auditReport, undefined, { retention: 'baseline' })
         return {
+          reportId: auditReport.id,
           auditedUrls: auditReport.summary.totalPages,
           totalUnreached: exportReconciliation.unreachedCount,
           capped: exportReconciliation.unreachedCount > urls.length,
           issueGroupsComplete: true,
-          topFixes: topFixes(auditReport, { limit: 1000 }),
-          reviewObservations: reviewObservations(auditReport, { limit: 1000 }),
+          topFixes: completeTopFixes(auditReport),
+          reviewObservations: completeReviewObservations(auditReport),
           // Bounded by the audit's own URL cap. Retained so title-based
           // evidence can include pages the main crawl never reached.
           pages: auditReport.pages.map((page) => ({
@@ -900,6 +846,8 @@ function workflowCommandMeta(input: {
         exportEvidence && titlePages
           ? exportPageInventory({
               pages: exportEvidence.pages.rows,
+              sourceCapped: exportEvidence.pages.capped,
+              page: inventoryPage,
               reconciliation: exportReconciliation,
               crawledPages: titlePages,
               overlap: topicOverlap,
@@ -907,14 +855,16 @@ function workflowCommandMeta(input: {
           : undefined
       const urlModeActions = technicalBaseline?.report
         ? technicalCrawlActions({
-            topFixes: topFixes(technicalBaseline.report, { limit: 1000 }),
-            reviewObservations: reviewObservations(technicalBaseline.report, {
-              limit: 1000,
-            }),
+            crawlReportId: technicalBaseline.report.id,
+            topFixes: completeTopFixes(technicalBaseline.report),
+            reviewObservations: completeReviewObservations(
+              technicalBaseline.report,
+            ),
             reconciliation: exportReconciliation,
             ...(unreachedAudit
               ? {
                   unreachedAudit: {
+                    reportId: unreachedAudit.reportId,
                     topFixes: unreachedAudit.topFixes,
                     reviewObservations: unreachedAudit.reviewObservations,
                     titlePrefix: 'unreached pages:',
@@ -981,7 +931,7 @@ function workflowCommandMeta(input: {
                     }),
               }
             : jsonReport
-        printJson(
+        const completeReport =
           technicalCrawl || followups
             ? {
                 ...reportWithTechnicalEvidence,
@@ -1015,7 +965,25 @@ function workflowCommandMeta(input: {
                   : {}),
                 ...(followups ? { nextCommands: followups } : {}),
               }
-            : jsonReport,
+            : jsonReport
+        const contractOptions = {
+          reportId: 'report',
+          preferRootActions: true,
+          verify:
+            'Rerun seo report with the same inputs and confirm the finding is absent or its evidence now matches the intended state.',
+          ...(!useSearchData &&
+          technicalCrawl &&
+          'issueGroupsComplete' in technicalCrawl &&
+          technicalCrawl.issueGroupsComplete
+            ? { coverage: 'complete' as const }
+            : {}),
+        }
+        printJson(
+          compactAgentWorkflowOutput(
+            actionsOnly
+              ? agentActionsView(completeReport, contractOptions)
+              : withAgentReportContract(completeReport, contractOptions),
+          ),
         )
         return
       }

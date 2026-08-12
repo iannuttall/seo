@@ -1,5 +1,6 @@
-import { SeoError } from '@seo/core'
+import { agentActionsView, SeoError } from '@seo/core'
 import * as z from 'zod/v4'
+import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { getCheckFix, listFixableChecks } from './check-fixes.js'
 import {
   getReportDefinition,
@@ -64,6 +65,19 @@ export function describeReport(id: string) {
     doNotClaim: report.doNotClaim,
     verify: report.verify,
     related: report.related,
+    agentWorkflow: {
+      actionView: {
+        mcp: { id: report.id, view: 'actions' as const },
+        cli: `seo reports run ${report.id} --params '<json>' --actions-only --json`,
+      },
+      readOrder: [
+        'findings.coverage and report-level caveats',
+        'findings.items in returned priority order',
+        'inventories row by row when present',
+      ],
+      completion:
+        'Use each finding type and its allowed outcomes. Fix items support fixed, deferred, or not-needed. Review items support changed, no-change, or deferred. Verify changed items and rerun this report before closing them.',
+    },
     ...(fixableChecks.length > 0 ? { fixableChecks } : {}),
     inputSchema: z.toJSONSchema(report.inputSchema),
   }
@@ -72,6 +86,7 @@ export function describeReport(id: string) {
 export async function executeReport(
   id: string,
   params: Record<string, unknown> = {},
+  options: { view?: 'full' | 'actions' } = {},
 ): Promise<ToolResult> {
   const report = getReportDefinition(id)
   if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
@@ -84,15 +99,30 @@ export async function executeReport(
     )
   }
 
-  return report.handler(parsed.data)
+  const result = await report.handler(parsed.data)
+  if (result.isError || !result.structuredContent) return result
+
+  const contractOptions = {
+    reportId: report.id,
+    verify: report.verify,
+  }
+  const structured =
+    options.view === 'actions'
+      ? agentActionsView(result.structuredContent, contractOptions)
+      : result.structuredContent
+  return {
+    ...result,
+    structuredContent: compactAgentWorkflowOutput(structured),
+  }
 }
 
 export async function runReport(
   id: string,
   params: Record<string, unknown> = {},
+  options: { view?: 'full' | 'actions' } = {},
 ): Promise<ToolResult> {
   try {
-    return await executeReport(id, params)
+    return await executeReport(id, params, options)
   } catch (error) {
     return toolError(error)
   }

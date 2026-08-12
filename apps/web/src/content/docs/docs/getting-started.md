@@ -110,10 +110,12 @@ When an exported search phrase appears in the titles of two or more pages, the
 report points them out as pages that may be competing for the same search.
 
 The report also lists each exported page with its clicks, impressions, and
-average position, and suggests a next step for each one: keep, update,
-consolidate, or review. The suggestions come from the numbers in the export and
+average position, and suggests a next step for each one: keep, update, or
+review. The suggestions come from the numbers in the export and
 what the crawl reached, so you can work through a migration, rebrand, or
 content cleanup page by page. You make the call on every page.
+Large inventories return 50 rows at a time in stable impression order. Pass
+`--inventory-page <nextPage>` until the returned `nextPage` is `null`.
 
 The export is a snapshot from the day you downloaded it, and its query and page
 tables are separate lists. The report never guesses which page served which

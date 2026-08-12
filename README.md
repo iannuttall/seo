@@ -189,7 +189,8 @@ property with `seo start`. If you have a Search Console performance download on
 disk, point the same report at the folder or CSV with
 `--search-console-export`. The report reads the query and page tables, keeps
 them separate from the crawl, and tells you which exported pages the crawl
-could not reach.
+could not reach. Large page inventories return stable pages; continue with
+`--inventory-page <number>` until `nextPage` is `null`.
 
 Run `seo help` for the short path or `seo help all` for the full command list.
 
@@ -545,6 +546,20 @@ terminal prose.
 `seo report --json` returns a compact summary, action queue, and crawl findings
 so an agent can choose its next call without loading every raw report.
 Use `--full` only when a script needs the complete report object.
+
+Use the action view when an agent will implement the findings:
+
+```sh
+seo report --project example --actions-only --json
+seo reports run audit-page --params '{"url":"https://example.com"}' --actions-only --json
+```
+
+It puts stable `findings` and any bounded migration `inventories` near the top.
+Check finding coverage and use each item's allowed outcomes. A fix carries an
+implementation instruction. A review carries the evidence needed to decide
+whether any change is justified. Verify changed items and rerun the originating
+report. The MCP catalog exposes the same view through `seo_run_report` with
+`view: "actions"`.
 
 When a CI job needs Search Console or Google Analytics data, give it a Google service
 account JSON key through its secret store. The service account needs access to

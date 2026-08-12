@@ -6,6 +6,7 @@ import type {
   TopFix,
 } from '@seo/core'
 import {
+  EXPORT_PAGE_INVENTORY_NOTE,
   exportPageInventory,
   exportSummarySentence,
   issueCountSummarySentence,
@@ -44,6 +45,7 @@ function fix(overrides: Partial<TopFix>): TopFix {
 function evidence(): SearchConsoleExportEvidence {
   return {
     source: 'search-console-export',
+    exportedAt: null,
     importedAt: '2026-08-11T00:00:00.000Z',
     files: [],
     queries: {
@@ -87,6 +89,7 @@ function reconciliation(
 
 test('technicalCrawlActions orders fixes by severity then score and appends review items', () => {
   const actions = technicalCrawlActions({
+    crawlReportId: 'crawl-report-1',
     topFixes: [
       fix({ ruleId: 'missing_meta_description', severity: 'low', score: 900 }),
       fix({ ruleId: 'server_error', severity: 'high', score: 100 }),
@@ -102,6 +105,10 @@ test('technicalCrawlActions orders fixes by severity then score and appends revi
   assert.equal(actions[0]?.confidence, 'high')
   assert.equal(actions[2]?.confidence, 'medium')
   assert.match(actions[2]?.action ?? '', /intent confirmation/)
+  assert.deepEqual(actions[0]?.affectedUrlsReport, {
+    id: 'affected-urls',
+    params: { reportId: 'crawl-report-1', ruleId: 'server_error' },
+  })
 })
 
 test('technicalCrawlActions ranks unreached-audit groups in the same queue by severity then count', () => {
@@ -109,6 +116,7 @@ test('technicalCrawlActions ranks unreached-audit groups in the same queue by se
     topFixes: [fix({ ruleId: 'canonical_missing', severity: 'low', count: 1 })],
     reviewObservations: [],
     unreachedAudit: {
+      reportId: 'unreached-report-1',
       topFixes: [
         fix({
           ruleId: 'missing_meta_description',
@@ -127,6 +135,13 @@ test('technicalCrawlActions ranks unreached-audit groups in the same queue by se
     'a medium issue on 12 pages outranks a low issue on 1 page',
   )
   assert.match(actions[1]?.title ?? '', /^canonical_missing/)
+  assert.deepEqual(actions[0]?.affectedUrlsReport, {
+    id: 'affected-urls',
+    params: {
+      reportId: 'unreached-report-1',
+      ruleId: 'missing_meta_description',
+    },
+  })
 })
 
 test('technicalCrawlActions adds an unreached-pages action when the export join found gaps', () => {
@@ -226,7 +241,10 @@ test('topicOverlapCandidates finds a query phrase shared by two page titles', ()
     ],
   })
   assert.equal(result.candidates.length, 1)
+  assert.equal(result.eligibleQueries, 1)
   assert.equal(result.consideredQueries, 1)
+  assert.equal(result.queryLimitReached, false)
+  assert.equal(result.candidateLimitReached, false)
   assert.equal(result.capped, false)
   assert.equal(result.candidates[0]?.query, 'project management tips')
   assert.equal(result.candidates[0]?.impressions, 120)
@@ -248,6 +266,18 @@ test('topicOverlapCandidates skips single-word queries', () => {
   assert.equal(result.candidates.length, 0)
   assert.equal(result.consideredQueries, 0)
   assert.equal(result.capped, false)
+})
+
+test('topicOverlapCandidates matches whole phrase tokens, not word fragments', () => {
+  const result = topicOverlapCandidates({
+    queries: [queryRow({ query: 'seo art', impressions: 100 })],
+    pages: [
+      { url: 'https://example.com/article', title: 'The SEO article' },
+      { url: 'https://example.com/art', title: 'SEO art guide' },
+    ],
+  })
+
+  assert.deepEqual(result.candidates, [])
 })
 
 test('topicOverlapCandidates needs two distinct page paths', () => {
@@ -341,6 +371,8 @@ test('topicOverlapCandidates reports capping instead of dropping silently', () =
   })
   assert.equal(result.candidates.length, 1)
   assert.equal(result.capped, true)
+  assert.equal(result.queryLimitReached, false)
+  assert.equal(result.candidateLimitReached, true)
   assert.equal(result.candidates[0]?.query, 'project management tips')
 })
 
@@ -357,6 +389,10 @@ test('topicOverlapCandidates bounds considered queries by impressions then click
     maxQueries: 1,
   })
   assert.equal(result.consideredQueries, 1)
+  assert.equal(result.eligibleQueries, 2)
+  assert.equal(result.queryLimitReached, true)
+  assert.equal(result.candidateLimitReached, false)
+  assert.equal(result.capped, true)
   assert.equal(
     result.candidates.length,
     0,
@@ -386,7 +422,10 @@ test('technicalCrawlActions appends one labelled topic-overlap action', () => {
           ],
         },
       ],
+      eligibleQueries: 1,
       consideredQueries: 1,
+      queryLimitReached: false,
+      candidateLimitReached: false,
       capped: false,
     },
   })
@@ -407,7 +446,14 @@ test('technicalCrawlActions adds no topic-overlap action without candidates', ()
   const actions = technicalCrawlActions({
     topFixes: [],
     reviewObservations: [],
-    topicOverlap: { candidates: [], consideredQueries: 3, capped: false },
+    topicOverlap: {
+      candidates: [],
+      eligibleQueries: 3,
+      consideredQueries: 3,
+      queryLimitReached: false,
+      candidateLimitReached: false,
+      capped: false,
+    },
   })
   assert.equal(actions.length, 0)
 })
@@ -487,7 +533,10 @@ test('exportPageInventory fires each tier rule on its own row', () => {
           ],
         },
       ],
+      eligibleQueries: 1,
       consideredQueries: 1,
+      queryLimitReached: false,
+      candidateLimitReached: false,
       capped: false,
     },
   })
@@ -499,8 +548,8 @@ test('exportPageInventory fires each tier rule on its own row', () => {
     [
       [
         '/guides/pm',
-        'consolidate',
-        'shares a search phrase with another page title',
+        'review',
+        'shares a search phrase with another page title and needs query-to-page and intent verification',
       ],
       ['/pricing', 'keep', 'has clicks in the export window'],
       [
@@ -546,7 +595,7 @@ test('exportPageInventory joins titles and reach across differing origins', () =
   assert.equal(result.rows[1]?.reachedByCrawl, false)
 })
 
-test('exportPageInventory lets the overlap rule beat the clicks rule', () => {
+test('exportPageInventory keeps title overlap in review even when the page has clicks', () => {
   const result = exportPageInventory({
     pages: [
       pageRow({
@@ -580,11 +629,14 @@ test('exportPageInventory lets the overlap rule beat the clicks rule', () => {
           ],
         },
       ],
+      eligibleQueries: 1,
       consideredQueries: 1,
+      queryLimitReached: false,
+      candidateLimitReached: false,
       capped: false,
     },
   })
-  assert.equal(result.rows[0]?.suggestedDisposition, 'consolidate')
+  assert.equal(result.rows[0]?.suggestedDisposition, 'review')
   assert.equal(result.rows[0]?.overlapQuery, 'project management tips')
 })
 
@@ -604,6 +656,64 @@ test('exportPageInventory caps rows by impressions, clicks, then url order', () 
     result.rows.map((row) => row.path),
     ['/a', '/b'],
   )
+  assert.equal(result.rows[0]?.reachedByCrawl, null)
+  assert.equal(result.rows[1]?.reachedByCrawl, null)
+  assert.equal(result.page, 1)
+  assert.equal(result.pageCount, 2)
+  assert.equal(result.nextPage, 2)
+})
+
+test('exportPageInventory returns a requested page without losing total counts', () => {
+  const result = exportPageInventory({
+    pages: [
+      pageRow({ url: 'https://example.com/c', impressions: 10 }),
+      pageRow({ url: 'https://example.com/a', impressions: 30 }),
+      pageRow({ url: 'https://example.com/b', impressions: 20 }),
+    ],
+    crawledPages: [],
+    maxRows: 2,
+    page: 2,
+  })
+
+  assert.equal(result.totalPages, 3)
+  assert.equal(result.page, 2)
+  assert.equal(result.pageCount, 2)
+  assert.equal(result.nextPage, null)
+  assert.deepEqual(
+    result.rows.map((row) => row.path),
+    ['/c'],
+  )
+  assert.match(result.note, /Fetch every page/)
+})
+
+test('exportPageInventory stays partial when the source import was capped', () => {
+  const result = exportPageInventory({
+    pages: [pageRow({ url: 'https://example.com/a', impressions: 20 })],
+    crawledPages: [],
+    sourceCapped: true,
+  })
+
+  assert.equal(result.capped, true)
+  assert.equal(result.sourceCapped, true)
+  assert.match(result.note, /source import was capped/)
+})
+
+test('exportPageInventory keeps reach unknown beyond a capped reconciliation', () => {
+  const result = exportPageInventory({
+    pages: [
+      pageRow({ url: 'https://example.com/known-unreached', impressions: 20 }),
+      pageRow({ url: 'https://example.com/not-retained', impressions: 10 }),
+    ],
+    reconciliation: reconciliation({
+      unreachedPages: [pageRow({ url: 'https://example.com/known-unreached' })],
+      unreachedCount: 2,
+      capped: true,
+    }),
+    crawledPages: [],
+  })
+
+  assert.equal(result.rows[0]?.reachedByCrawl, false)
+  assert.equal(result.rows[1]?.reachedByCrawl, null)
 })
 
 test('exportPageInventory returns byte-identical JSON on repeat', () => {
@@ -648,7 +758,10 @@ test('technicalCrawlActions places one suggested-disposition inventory action af
         ],
       },
     ],
+    eligibleQueries: 1,
     consideredQueries: 1,
+    queryLimitReached: false,
+    candidateLimitReached: false,
     capped: false,
   }
   const inventory = exportPageInventory({
@@ -687,10 +800,7 @@ test('technicalCrawlActions places one suggested-disposition inventory action af
     'content inventory: 3 exported pages tiered with suggested dispositions',
   )
   assert.equal(actions[1]?.confidence, 'medium')
-  assert.match(
-    actions[1]?.action ?? '',
-    /keep 1, update 0, consolidate 1, review 1/,
-  )
+  assert.match(actions[1]?.action ?? '', /keep 1, update 0, review 2/)
   assert.match(
     actions[1]?.action ?? '',
     /\/guides\/pm \(0 clicks, 2400 impressions, position 42\)/,
@@ -710,7 +820,18 @@ test('technicalCrawlActions adds no inventory action for an empty inventory', ()
   const actions = technicalCrawlActions({
     topFixes: [],
     reviewObservations: [],
-    pageInventory: { rows: [], totalPages: 0, capped: false, criteria: [] },
+    pageInventory: {
+      rows: [],
+      totalPages: 0,
+      capped: false,
+      sourceCapped: false,
+      page: 1,
+      pageSize: 50,
+      pageCount: 0,
+      nextPage: null,
+      criteria: [],
+      note: EXPORT_PAGE_INVENTORY_NOTE,
+    },
   })
   assert.equal(actions.length, 0)
 })

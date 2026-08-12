@@ -1,17 +1,49 @@
-import type {
-  SearchConsoleExportEvidence,
-  SearchConsoleExportPageRow,
-  SearchConsoleExportQueryRow,
-  SearchConsoleExportReconciliation,
-  TopFix,
+import {
+  type CrawlReport,
+  reviewObservations,
+  type SearchConsoleExportPageRow,
+  type SearchConsoleExportQueryRow,
+  type SearchConsoleExportReconciliation,
+  SeoError,
+  type TopFix,
+  topFixes,
 } from '@seo/core'
-import { printTable } from '../../utils.js'
-import { truncate } from '../output.js'
+
+export {
+  exportSummarySentence,
+  issueCountSummarySentence,
+  printExportPageInventory,
+  searchConsoleExportSection,
+} from './url-report-output.js'
 
 export type UrlReportAction = {
+  id: string
+  kind: 'fix' | 'review'
   title: string
   action: string
   confidence: 'high' | 'medium' | 'low'
+  severity?: string
+  affectedCount?: number
+  sampleUrls?: string[]
+  affectedUrlsReport?: {
+    id: 'affected-urls'
+    params: {
+      reportId: string
+      ruleId: string
+    }
+  }
+  evidence?: Record<string, unknown>
+  review?: {
+    question: string
+    changeOnlyIf: string
+    ifConfirmed?: string
+    ifNotNeeded: string
+    doNot?: string[]
+  }
+  verification?: {
+    command?: string
+    expected: string
+  }
 }
 
 export type TopicOverlapCandidate = {
@@ -23,8 +55,71 @@ export type TopicOverlapCandidate = {
 
 export type TopicOverlapResult = {
   candidates: TopicOverlapCandidate[]
+  eligibleQueries: number
   consideredQueries: number
+  queryLimitReached: boolean
+  candidateLimitReached: boolean
   capped: boolean
+}
+
+export function completeTopFixes(report: CrawlReport) {
+  return topFixes(report, { limit: report.issues.length })
+}
+
+export function completeReviewObservations(report: CrawlReport) {
+  return reviewObservations(report, { limit: report.issues.length })
+}
+
+export function crawlDataSourceLines(
+  dataSources: CrawlReport['dataSources'],
+): string[] {
+  if (!dataSources) return []
+
+  const sourceLine = (input: {
+    label: string
+    status: string
+    joinedPages: number
+    totalPages: number
+    window?: { days: number }
+    warning?: string
+  }): string => {
+    const range = input.window ? ` in the last ${input.window.days} days` : ''
+    const coverage = `for ${input.joinedPages} of ${input.totalPages} crawled URLs`
+
+    if (input.status === 'skipped') return `${input.label}: not connected.`
+    if (input.status === 'unavailable') {
+      return `${input.label}: unavailable. ${input.warning ?? 'No data was joined.'}`
+    }
+    if (input.status === 'partial') {
+      return `${input.label}: partial data ${coverage}${range}. ${input.warning ?? ''}`.trim()
+    }
+    if (input.status === 'none') {
+      return `${input.label}: no matching crawled URLs${range}.`
+    }
+    return `${input.label}: joined ${coverage}${range}.`
+  }
+
+  return [
+    sourceLine({
+      label: 'Search Console',
+      status: dataSources.searchConsole.status,
+      joinedPages: Math.max(
+        dataSources.searchConsole.joinedMetricPages,
+        dataSources.searchConsole.joinedQueryPages,
+      ),
+      totalPages: dataSources.searchConsole.totalPages,
+      window: dataSources.searchConsole.window,
+      warning: dataSources.searchConsole.warning,
+    }),
+    sourceLine({
+      label: 'Google Analytics',
+      status: dataSources.analytics.status,
+      joinedPages: dataSources.analytics.joinedPages,
+      totalPages: dataSources.analytics.totalPages,
+      window: dataSources.analytics.window,
+      warning: dataSources.analytics.warning,
+    }),
+  ]
 }
 
 // Strict codepoint order (not UTF-16 code-unit order) so tie-breaking is
@@ -43,7 +138,10 @@ function codePointCompare(left: string, right: string): number {
 }
 
 function normalizeText(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, ' ').trim()
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
 }
 
 // Distinct-page identity: same origin, path (without a trailing slash), and
@@ -115,10 +213,10 @@ export type ExportPageInventoryRow = {
   clicks: number
   impressions: number
   position: number | null
-  reachedByCrawl: boolean
+  reachedByCrawl: boolean | null
   title: string | null
   overlapQuery: string | null
-  suggestedDisposition: 'keep' | 'update' | 'consolidate' | 'review'
+  suggestedDisposition: 'keep' | 'update' | 'review'
   tier: string
 }
 
@@ -126,7 +224,13 @@ export type ExportPageInventory = {
   rows: ExportPageInventoryRow[]
   totalPages: number
   capped: boolean
+  sourceCapped: boolean
+  page: number
+  pageSize: number
+  pageCount: number
+  nextPage: number | null
   criteria: string[]
+  note: string
 }
 
 // Average positions past this value sit outside the usual two result pages.
@@ -136,7 +240,7 @@ const WEAK_POSITION_THRESHOLD = 20
 // The ordered tier rules; the first matching rule wins. Kept as data so every
 // inventory result carries its own methodology.
 const EXPORT_PAGE_INVENTORY_CRITERIA: readonly string[] = [
-  'consolidate: shares a search phrase with another page title',
+  'review: shares a search phrase with another page title; confirm query-to-page evidence and intent before consolidating',
   'keep: has clicks in the export window',
   'review: has impressions but no crawl path reached it',
   `update: has impressions with a weak average position (average position above ${WEAK_POSITION_THRESHOLD} in the export)`,
@@ -158,8 +262,17 @@ export function exportPageInventory(input: {
   crawledPages: Array<{ url: string; title: string | null | undefined }>
   overlap?: TopicOverlapResult
   maxRows?: number
+  page?: number
+  sourceCapped?: boolean
 }): ExportPageInventory {
   const maxRows = input.maxRows ?? 50
+  const page = input.page ?? 1
+  if (!Number.isSafeInteger(maxRows) || maxRows < 1) {
+    throw new SeoError('INVALID_INPUT', 'Inventory page size must be positive.')
+  }
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new SeoError('INVALID_INPUT', 'Inventory page must be positive.')
+  }
 
   // Without a reconciliation there is no unreached evidence, so the
   // unreached rule cannot fire and no reach claim is made from thin air.
@@ -201,13 +314,26 @@ export function exportPageInventory(input: {
       right.clicks - left.clicks ||
       codePointCompare(left.url, right.url),
   )
+  const pageCount = Math.ceil(sortedPages.length / maxRows)
+  if (pageCount > 0 && page > pageCount) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Inventory page ${page} does not exist; choose a page from 1 to ${pageCount}.`,
+    )
+  }
+  const pageStart = (page - 1) * maxRows
   const rows = sortedPages
-    .slice(0, maxRows)
+    .slice(pageStart, pageStart + maxRows)
     .map((page): ExportPageInventoryRow => {
       const joinPath = normalizedJoinPath(page.url)
-      // An unparseable export URL was never joined or fetched, so it cannot
-      // count as reached.
-      const reachedByCrawl = joinPath !== null && !unreachedPaths.has(joinPath)
+      const reachedByCrawl =
+        joinPath === null || !input.reconciliation
+          ? null
+          : unreachedPaths.has(joinPath)
+            ? false
+            : input.reconciliation.capped
+              ? null
+              : true
       const title =
         joinPath !== null ? (titlesByPath.get(joinPath) ?? null) : null
       const overlapQuery =
@@ -215,12 +341,13 @@ export function exportPageInventory(input: {
       let suggestedDisposition: ExportPageInventoryRow['suggestedDisposition']
       let tier: string
       if (overlapQuery !== null) {
-        suggestedDisposition = 'consolidate'
-        tier = 'shares a search phrase with another page title'
+        suggestedDisposition = 'review'
+        tier =
+          'shares a search phrase with another page title and needs query-to-page and intent verification'
       } else if (page.clicks > 0) {
         suggestedDisposition = 'keep'
         tier = 'has clicks in the export window'
-      } else if (page.impressions > 0 && !reachedByCrawl) {
+      } else if (page.impressions > 0 && reachedByCrawl === false) {
         suggestedDisposition = 'review'
         tier = 'has impressions but no crawl path reached it'
       } else if (
@@ -248,11 +375,29 @@ export function exportPageInventory(input: {
       }
     })
 
+  const paged = pageCount > 1
+  const notes = [EXPORT_PAGE_INVENTORY_NOTE]
+  if (paged) {
+    notes.push(
+      `This is inventory page ${page} of ${pageCount}. Fetch every page before treating the returned inventory as complete.`,
+    )
+  }
+  if (input.sourceCapped === true) {
+    notes.push(
+      'The source import was capped, so rows missing from this inventory are unknown.',
+    )
+  }
   return {
     rows,
     totalPages: input.pages.length,
-    capped: input.pages.length > maxRows,
+    capped: input.sourceCapped === true || paged,
+    sourceCapped: input.sourceCapped === true,
+    page,
+    pageSize: maxRows,
+    pageCount,
+    nextPage: page < pageCount ? page + 1 : null,
     criteria: [...EXPORT_PAGE_INVENTORY_CRITERIA],
+    note: notes.join(' '),
   }
 }
 
@@ -292,6 +437,7 @@ export function topicOverlapCandidates(input: {
       })
     }
   }
+  const eligibleQueries = totalsByQuery.size
   const considered = [...totalsByQuery.entries()]
     .map(([query, totals]) => ({ query, ...totals }))
     .sort(
@@ -324,8 +470,9 @@ export function topicOverlapCandidates(input: {
 
   const candidates: TopicOverlapCandidate[] = []
   for (const item of considered) {
+    const phrase = ` ${item.query} `
     const matches = pagePool.filter((page) =>
-      page.normalizedTitle.includes(item.query),
+      ` ${page.normalizedTitle} `.includes(phrase),
     )
     if (matches.length < 2) continue
     candidates.push({
@@ -343,17 +490,25 @@ export function topicOverlapCandidates(input: {
       right.clicks - left.clicks ||
       codePointCompare(left.query, right.query),
   )
-  const capped = candidates.length > maxCandidates
+  const queryLimitReached = eligibleQueries > considered.length
+  const candidateLimitReached = candidates.length > maxCandidates
   return {
     candidates: candidates.slice(0, maxCandidates),
+    eligibleQueries,
     consideredQueries: considered.length,
-    capped,
+    queryLimitReached,
+    candidateLimitReached,
+    capped: queryLimitReached || candidateLimitReached,
   }
 }
 
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 } as const
 
-type PrefixedFix = { fix: TopFix; prefix: string }
+type PrefixedFix = {
+  fix: TopFix
+  prefix: string
+  source: 'crawl' | 'unreached'
+}
 
 // One queue, best first: a medium issue affecting twelve pages outranks a
 // low issue on one page regardless of which crawl pass surfaced it.
@@ -382,8 +537,10 @@ function byPriority(left: PrefixedFix, right: PrefixedFix): number {
 export function technicalCrawlActions(input: {
   topFixes: TopFix[]
   reviewObservations: TopFix[]
+  crawlReportId?: string
   reconciliation?: SearchConsoleExportReconciliation
   unreachedAudit?: {
+    reportId?: string
     topFixes: TopFix[]
     reviewObservations: TopFix[]
     titlePrefix: string
@@ -393,25 +550,56 @@ export function technicalCrawlActions(input: {
 }): UrlReportAction[] {
   const audit = input.unreachedAudit
   const fixes: PrefixedFix[] = [
-    ...input.topFixes.map((fix) => ({ fix, prefix: '' })),
+    ...input.topFixes.map((fix) => ({
+      fix,
+      prefix: '',
+      source: 'crawl' as const,
+    })),
     ...(audit?.topFixes ?? []).map((fix) => ({
       fix,
       prefix: `${audit?.titlePrefix} `,
+      source: 'unreached' as const,
     })),
   ].sort(byPriority)
   const reviews: PrefixedFix[] = [
-    ...input.reviewObservations.map((fix) => ({ fix, prefix: '' })),
+    ...input.reviewObservations.map((fix) => ({
+      fix,
+      prefix: '',
+      source: 'crawl' as const,
+    })),
     ...(audit?.reviewObservations ?? []).map((fix) => ({
       fix,
       prefix: `${audit?.titlePrefix} `,
+      source: 'unreached' as const,
     })),
   ].sort(byPriority)
   const actions: UrlReportAction[] = []
-  for (const { fix, prefix } of fixes) {
+  for (const { fix, prefix, source } of fixes) {
+    const reportId =
+      source === 'crawl' ? input.crawlReportId : input.unreachedAudit?.reportId
     actions.push({
+      id: `${source}:${fix.ruleId}`,
+      kind: 'fix',
       title: `${prefix}${fix.ruleId}: ${fix.title} (${fix.count} URL${fix.count === 1 ? '' : 's'})`,
-      action: `${fix.howToFix} Verify: ${fix.howToVerify}`,
+      action: fix.howToFix,
       confidence: 'high',
+      severity: fix.severity,
+      affectedCount: fix.count,
+      sampleUrls: fix.sampleUrls,
+      ...(reportId
+        ? {
+            affectedUrlsReport: {
+              id: 'affected-urls' as const,
+              params: { reportId, ruleId: fix.ruleId },
+            },
+          }
+        : {}),
+      evidence: {
+        ruleId: fix.ruleId,
+        source,
+        whyThisRanks: fix.whyThisRanks,
+      },
+      verification: fix.verification,
     })
   }
   // Export-demand findings rank directly after the fix queue: they carry
@@ -424,9 +612,32 @@ export function technicalCrawlActions(input: {
       0,
     )
     actions.push({
+      id: 'export:unreached-pages',
+      kind: 'review',
       title: `${unreached.unreachedCount} exported page URL${unreached.unreachedCount === 1 ? '' : 's'} with search impressions were not reached by this crawl`,
       action: `These pages carry ${impressions} combined impressions across the ${unreached.unreachedPages.length} retained export rows, but no crawl path reached them. Add internal links or sitemap entries when they should be reachable. The join used URL paths from a local export; treat it as a discovery lead within this crawl bound, not proof of orphan status.`,
       confidence: 'medium',
+      affectedCount: unreached.unreachedCount,
+      evidence: {
+        retainedRows: unreached.unreachedPages.length,
+        impressions,
+      },
+      review: {
+        question:
+          'Should each retained exported page be reachable from the current site?',
+        changeOnlyIf:
+          'Add a crawl path only for a page that should remain part of the current site and has no intended exclusion.',
+        ifNotNeeded:
+          'Record no change for a page that is intentionally retired, excluded, or awaiting an owner decision.',
+        doNot: [
+          'Do not call a page orphaned from this path-only join.',
+          'Do not redirect unrelated pages to one generic destination.',
+        ],
+      },
+      verification: {
+        expected:
+          'Every retained exported page is reachable in the rerun or explicitly accounted for as deferred or no-change with owner intent.',
+      },
     })
   }
   const overlap = input.topicOverlap
@@ -435,30 +646,103 @@ export function technicalCrawlActions(input: {
     const count = overlap.candidates.length
     const paths = top.pages.map((page) => pageDisplayPath(page.url))
     actions.push({
+      id: 'export:topic-overlap',
+      kind: 'review',
       title: `topic overlap candidates: ${count} exported ${count === 1 ? 'query appears' : 'queries appear'} in 2+ page titles`,
       action: `Top candidate: "${top.query}" (${top.impressions} impressions, ${top.clicks} clicks) appears in the titles of ${paths.join(' and ')}. This is a title-based heuristic built from the export's separate query and page tables. The export contains no query-to-page mapping, so it cannot show which pages Google served for the query. Verify with the cannibalisation report (seo cannibal) after connecting a Search Console property.`,
       confidence: 'medium',
+      affectedCount: count,
+      evidence: {
+        topQuery: top.query,
+        topPages: top.pages,
+        impressions: top.impressions,
+        clicks: top.clicks,
+      },
+      review: {
+        question:
+          'Does query-to-page evidence confirm that these pages compete for the same search intent?',
+        changeOnlyIf:
+          'Consolidate or redirect only after query-to-page evidence and page intent confirm real overlap.',
+        ifNotNeeded:
+          'Keep the pages separate and record why their intents differ.',
+        doNot: [
+          'Do not merge or redirect pages from a title-match heuristic alone.',
+        ],
+      },
+      verification: {
+        expected:
+          'Confirm intent with query-to-page evidence before consolidating or redirecting either page.',
+      },
     })
   }
   const inventory = input.pageInventory
   const topRow = inventory?.rows[0]
   if (inventory && topRow) {
-    const counts = { keep: 0, update: 0, consolidate: 0, review: 0 }
+    const counts = { keep: 0, update: 0, review: 0 }
     for (const row of inventory.rows) counts[row.suggestedDisposition] += 1
-    const scope = inventory.capped
-      ? ` (top ${inventory.rows.length} of ${inventory.totalPages} export page rows by impressions)`
-      : ''
+    const scope = [
+      ...(inventory.pageCount > 1
+        ? [
+            `page ${inventory.page} of ${inventory.pageCount}; ${inventory.rows.length} of ${inventory.totalPages} retained rows`,
+          ]
+        : []),
+      ...(inventory.sourceCapped ? ['source import capped'] : []),
+    ]
+    const scopeText = scope.length ? ` (${scope.join('; ')})` : ''
     actions.push({
+      id: 'export:content-inventory',
+      kind: 'review',
       title: `content inventory: ${inventory.rows.length} exported page${inventory.rows.length === 1 ? '' : 's'} tiered with suggested dispositions`,
-      action: `Suggested tiers: keep ${counts.keep}, update ${counts.update}, consolidate ${counts.consolidate}, review ${counts.review}${scope}. Example: ${topRow.path} (${topRow.clicks} clicks, ${topRow.impressions} impressions, position ${topRow.position ?? 'not in the export'}) is tiered ${topRow.suggestedDisposition} because it ${topRow.tier}. ${EXPORT_PAGE_INVENTORY_NOTE} Work the inventory page by page instead of applying one blanket policy.`,
+      action: `Suggested tiers: keep ${counts.keep}, update ${counts.update}, review ${counts.review}${scopeText}. Example: ${topRow.path} (${topRow.clicks} clicks, ${topRow.impressions} impressions, position ${topRow.position ?? 'not in the export'}) is tiered ${topRow.suggestedDisposition} because it ${topRow.tier}. ${inventory.note} Work the inventory page by page instead of applying one blanket policy.`,
       confidence: 'medium',
+      affectedCount: inventory.rows.length,
+      evidence: { dispositions: counts, capped: inventory.capped },
+      review: {
+        question:
+          'Has every returned inventory row received an evidence-backed disposition?',
+        changeOnlyIf:
+          'Apply a content change, removal, or redirect only after deciding that row from its own evidence and product relevance.',
+        ifConfirmed:
+          'Record one disposition and reason for every returned inventory row.',
+        ifNotNeeded:
+          'Keep a page unchanged when its evidence and current product role support keeping it.',
+        doNot: [
+          'Do not use one blanket disposition for the inventory.',
+          'Do not redirect unrelated URLs to a generic hub.',
+        ],
+      },
+      verification: {
+        expected:
+          'Every returned inventory row has an owner-confirmed keep, update, or review decision; every inventory page has been fetched; redirected rows resolve to the intended destination.',
+      },
     })
   }
-  for (const { fix, prefix } of reviews) {
+  for (const { fix, prefix, source } of reviews) {
+    const reportId =
+      source === 'crawl' ? input.crawlReportId : input.unreachedAudit?.reportId
     actions.push({
+      id: `${source}:${fix.ruleId}`,
+      kind: 'review',
       title: `${prefix}${fix.ruleId}: ${fix.title} (${fix.count} URL${fix.count === 1 ? '' : 's'})`,
-      action: `Observed state that needs intent confirmation before treating it as a defect. ${fix.howToFix} Verify: ${fix.howToVerify}`,
+      action: `Observed state that needs intent confirmation before treating it as a defect. ${fix.howToFix}`,
       confidence: 'medium',
+      severity: fix.severity,
+      affectedCount: fix.count,
+      sampleUrls: fix.sampleUrls,
+      ...(reportId
+        ? {
+            affectedUrlsReport: {
+              id: 'affected-urls' as const,
+              params: { reportId, ruleId: fix.ruleId },
+            },
+          }
+        : {}),
+      evidence: {
+        ruleId: fix.ruleId,
+        source,
+        whyThisRanks: fix.whyThisRanks,
+      },
+      verification: fix.verification,
     })
   }
   return actions
@@ -482,97 +766,4 @@ export function unreachedUrlsOnCrawlOrigin(
     }
   }
   return urls
-}
-
-export function searchConsoleExportSection(input: {
-  evidence: SearchConsoleExportEvidence
-  reconciliation?: SearchConsoleExportReconciliation
-  pageInventory?: ExportPageInventory
-  topRows?: number
-}) {
-  const topRows = input.topRows ?? 20
-  const { evidence } = input
-  return {
-    source: evidence.source,
-    importedAt: evidence.importedAt,
-    files: evidence.files,
-    queries: {
-      totalRows: evidence.queries.totalRows,
-      capped: evidence.queries.capped,
-      topRowsShown: Math.min(topRows, evidence.queries.rows.length),
-      rows: evidence.queries.rows.slice(0, topRows),
-    },
-    pages: {
-      totalRows: evidence.pages.totalRows,
-      capped: evidence.pages.capped,
-      topRowsShown: Math.min(topRows, evidence.pages.rows.length),
-      rows: evidence.pages.rows.slice(0, topRows),
-    },
-    ...(input.reconciliation ? { reconciliation: input.reconciliation } : {}),
-    ...(input.pageInventory
-      ? {
-          pageInventory: {
-            ...input.pageInventory,
-            note: EXPORT_PAGE_INVENTORY_NOTE,
-          },
-        }
-      : {}),
-    warnings: evidence.warnings,
-    caveats: evidence.caveats,
-  }
-}
-
-/** Terminal table for the export page inventory, capped at 15 printed rows. */
-export function printExportPageInventory(inventory: ExportPageInventory): void {
-  if (!inventory.rows.length) return
-  const shown = inventory.rows.slice(0, 15)
-  process.stdout.write(
-    `\nContent inventory (${inventory.rows.length} exported page${inventory.rows.length === 1 ? '' : 's'} with suggested dispositions)\n`,
-  )
-  printTable(
-    ['Path', 'Clicks', 'Impressions', 'Position', 'Suggested'],
-    shown.map((row) => [
-      truncate(row.path, 48),
-      row.clicks,
-      row.impressions,
-      row.position ?? '-',
-      row.suggestedDisposition,
-    ]),
-  )
-  if (inventory.rows.length > shown.length) {
-    process.stdout.write(
-      `Showing ${shown.length} of ${inventory.rows.length} tiered rows.\n`,
-    )
-  }
-  if (inventory.capped) {
-    process.stdout.write(
-      `Tiered the top ${inventory.rows.length} of ${inventory.totalPages} export page rows by impressions.\n`,
-    )
-  }
-  process.stdout.write(`${EXPORT_PAGE_INVENTORY_NOTE}\n`)
-}
-
-export function exportSummarySentence(input: {
-  evidence: SearchConsoleExportEvidence
-  reconciliation?: SearchConsoleExportReconciliation
-}): string {
-  const queries = input.evidence.queries.totalRows
-  const pages = input.evidence.pages.totalRows
-  const base = `Loaded a local Search Console export (${queries} query row${queries === 1 ? '' : 's'}, ${pages} page row${pages === 1 ? '' : 's'}).`
-  if (!input.reconciliation) return base
-  const unreached = input.reconciliation.unreachedCount
-  if (unreached === 0) {
-    return `${base} Every exported page URL was reached by the crawl.`
-  }
-  return `${base} ${unreached} exported page URL${unreached === 1 ? '' : 's'} with impressions were not reached by this crawl.`
-}
-
-export function issueCountSummarySentence(summary: {
-  highIssues: number
-  mediumIssues: number
-  lowIssues: number
-  crawledUrls: number
-}): string {
-  const pages = summary.crawledUrls
-  return `Found ${summary.highIssues} high, ${summary.mediumIssues} medium, and ${summary.lowIssues} low technical issues across ${pages} crawled ${pages === 1 ? 'page' : 'pages'}.`
 }

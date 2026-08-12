@@ -24,6 +24,12 @@ type RuleDefinition = {
   howToFix: string
   impactIfIgnored: string
   howToVerify: string
+  review?: {
+    question: string
+    changeOnlyIf: string
+    ifNotNeeded: string
+    doNot?: string[]
+  }
   agentHints?: {
     evidenceFields?: string[]
     suggestedCommands?: string[]
@@ -339,6 +345,29 @@ const RULE_DEFINITIONS = [
         'page.usedJs',
       ],
       suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'near_empty_content',
+    title: 'Near-empty main content',
+    category: 'content',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'The extracted main content contains fewer than ten words. This is a review heuristic, not a search-engine word-count requirement. The page may be intentional, incomplete, or dependent on client-side rendering.',
+    howToFix:
+      'Confirm that the intended body content and internal links exist in the server-delivered HTML. If the useful page appears only after client JavaScript, render it on the server or pre-render it. Leave deliberately minimal pages alone when their purpose is clear.',
+    impactIfIgnored:
+      'Crawlers and clients that do not execute JavaScript may receive an empty shell or too little context to understand and navigate the page.',
+    howToVerify:
+      'Fetch the page without browser rendering and confirm the initial HTML contains the intended main content and crawlable links. Then re-run the crawl and review the extracted word count and content sample.',
+    agentHints: {
+      evidenceFields: [
+        'page.wordCount',
+        'page.contentSample',
+        'page.outgoingInternalCount',
+        'page.fetchDiagnostics.rendering',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
     },
   },
   {
@@ -904,6 +933,18 @@ const RULE_DEFINITIONS = [
       'Consumers that read structured data get no machine-readable description of this page. Many page types work fine without any markup.',
     howToVerify:
       'Re-run the crawl and confirm structuredDataFormats lists the added format, then validate the page with a structured data tester.',
+    review: {
+      question:
+        'Does a specific structured data type accurately describe the visible content on this page?',
+      changeOnlyIf:
+        'Add markup only when a specific schema type fits the page and every claimed property is supported by its visible content.',
+      ifNotNeeded:
+        'Leave the page unmarked and record that no suitable schema type was confirmed.',
+      doNot: [
+        'Do not add Organization or another generic schema type only to clear this finding.',
+        'Do not copy site-wide markup onto unrelated page types.',
+      ],
+    },
     agentHints: {
       evidenceFields: [
         'page.structuredDataFormats',
@@ -1009,8 +1050,8 @@ const RULE_DEFINITIONS = [
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']
-type RawRuleInfo = (typeof RULE_DEFINITIONS)[number]
-export type RuleInfo = RawRuleInfo & {
+export type RuleInfo = RuleDefinition & {
+  id: RuleId
   recommendation: RuleRecommendation
 }
 export type RuleCategory = RuleDefinition['category']
@@ -1032,6 +1073,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   crawler_access_blocked: 'review',
   soft_authentication_gate: 'review',
   client_rendered_content: 'review',
+  near_empty_content: 'review',
   orphan_page: 'review',
   redirected_url: 'review',
   slow_response: 'review',

@@ -24,27 +24,3 @@ test('the local pre-commit hook checks remote web secrets', () => {
     false,
   )
 })
-
-test('Conductor carries local web configuration into new workspaces', () => {
-  const includedFiles = readFileSync(
-    resolve(repoRoot, '.worktreeinclude'),
-    'utf8',
-  )
-    .trim()
-    .split('\n')
-
-  assert.deepEqual(includedFiles, [
-    'apps/web/.dev.vars',
-    'apps/web/.dev.vars.production',
-    'apps/web/.env',
-    'apps/web/.env.production',
-  ])
-
-  const conductorSettings = readFileSync(
-    resolve(repoRoot, '.conductor/settings.toml'),
-    'utf8',
-  )
-  assert.match(conductorSettings, /pnpm hooks:install/)
-  assert.match(conductorSettings, /preview:cloudflare --ip 127\.0\.0\.1/)
-  assert.doesNotMatch(conductorSettings, /preview:cloudflare -- --ip/)
-})

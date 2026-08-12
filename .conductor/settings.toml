@@ -7,6 +7,6 @@ run_mode = "concurrent"
 
 [scripts.run.web]
 available_in = [ "local" ]
-command = "pnpm --filter @seo/web preview:cloudflare --ip 127.0.0.1 --port \"$CONDUCTOR_PORT\" --show-interactive-dev-session false"
+command = "pnpm --filter @seo/web dev --host 127.0.0.1 --port \"$CONDUCTOR_PORT\""
 default = true
 icon = "globe"

@@ -33,6 +33,7 @@ export const llmsTxt = {
     {
       heading: 'Agent and AI guidance',
       items: [
+        { path: '/guides/seo-agent' },
         { path: '/docs/ai-search' },
         { path: '/docs/ai-visibility' },
         { path: '/docs/agents' },

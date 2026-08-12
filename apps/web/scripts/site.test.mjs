@@ -39,6 +39,7 @@ const expectedPages = new Map([
   ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
   ['docs/ai-visibility/index.html', 'https://seoskill.dev/docs/ai-visibility'],
   ['docs/bing/index.html', 'https://seoskill.dev/docs/bing'],
+  ['guides/seo-agent/index.html', 'https://seoskill.dev/guides/seo-agent'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -410,6 +411,7 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
       ([path]) =>
         path === 'index.html' ||
         path.startsWith('docs/') ||
+        path.startsWith('guides/') ||
         path.startsWith('tools/') ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',

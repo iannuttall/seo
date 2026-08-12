@@ -1,0 +1,197 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import InstallPicker from '@/components/InstallPicker.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import ApprovalQueue from '@/components/guides/seo-agent/ApprovalQueue.astro'
+import DataStates from '@/components/guides/seo-agent/DataStates.astro'
+import EvidenceSources from '@/components/guides/seo-agent/EvidenceSources.astro'
+import InvestigationSim from '@/components/guides/seo-agent/InvestigationSim.astro'
+import MeasureWindows from '@/components/guides/seo-agent/MeasureWindows.astro'
+import WorkingLoop from '@/components/guides/seo-agent/WorkingLoop.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'SEO agents' },
+]
+---
+
+<BaseLayout
+  title="How an SEO agent works"
+  description="An interactive guide to SEO agents. See the evidence an agent works from, the loop it runs, how approval works, and how to measure a change honestly."
+  canonicalPath="/guides/seo-agent"
+  schemaType="TechArticle"
+  datePublished="2026-08-12"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="How an SEO agent works"
+      description="An interactive guide. Six small models you can play with, from the evidence an agent can see to the measurement that closes the loop."
+      align="left"
+    />
+
+    <div class="docs-prose">
+      <p>
+        An SEO agent is an AI agent doing SEO work with real evidence. You ask a question in plain language. It
+        pulls what it needs from a crawl of your site, Search Console, your analytics, and live search results,
+        then finds problems and opportunities, proposes changes, and measures what shipped.
+      </p>
+      <p>
+        This guide shows how that works without assuming you use a terminal. Each section explains one idea,
+        gives you one small model to play with, and says what it means. Most demos use example data from a
+        made-up outdoor gear store, so the numbers hold still while you poke them. Section three is the
+        exception: it replays a real audit of a live site.
+      </p>
+
+      <h2>What an SEO agent can see</h2>
+      <p>
+        An agent is only as good as the evidence it can reach. Four sources cover most SEO questions, and they
+        answer different things. A crawl reads your pages the way a search engine would. Search Console says
+        what people searched and clicked. Analytics says what visitors did after arriving. Live results say who
+        ranks today.
+      </p>
+      <p>
+        None of them can answer for another, which is the first thing worth feeling for yourself.
+      </p>
+    </div>
+
+    <EvidenceSources />
+
+    <div class="docs-prose">
+      <p>
+        This is why "is my SEO good" has no one-source answer. The crawl can be clean while the demand quietly
+        moves to a competitor. Keeping the sources separate is what makes the answer checkable later, when you
+        want to know whether a fix worked.
+      </p>
+
+      <h2>An SEO agent works in a loop</h2>
+      <p>
+        A chatbot answers and stops. An agent keeps going, and SEO work has a natural shape for it to follow:
+        find something worth acting on, inspect the evidence, propose a change, verify it went live, and
+        measure what happened.
+      </p>
+      <p>
+        The trigger differs. Sometimes it is a problem, like pages that broke in a release. Sometimes it is an
+        opportunity, like search demand with no page answering it. The stages do not change.
+      </p>
+    </div>
+
+    <WorkingLoop />
+
+    <div class="docs-prose">
+      <p>
+        The last stage is the one people skip, and it is the one that makes the loop worth running. What you
+        measure this month decides what is worth finding next month.
+      </p>
+
+      <h2>Watch one investigation</h2>
+      <p>
+        Here is the loop run for real. On 10 August 2026 an agent audited <a
+          href="https://ilo.so"
+          target="_blank"
+          rel="noreferrer">ilo.so</a>, an X analytics site I run, picked what to build from the query evidence,
+        and the work shipped the same day. Press play and keep an eye on the right panel. The question at every
+        step is the same. What can the agent point to?
+      </p>
+    </div>
+
+    <InvestigationSim />
+
+    <div class="docs-prose">
+      <p>
+        Notice what never happens. The agent does not claim the new pages will rank, and it does not mark the
+        job done when the pull requests merge. The baseline records that the new URLs have no search data yet,
+        because none can exist. The check is scheduled for 10 September, and the result becomes a public case
+        study either way. Pointing at evidence, step after step, is what separates an SEO agent from a chatbot
+        with opinions about SEO.
+      </p>
+
+      <h2>Evidence changes the answer</h2>
+      <p>
+        Data about your site is rarely complete. Search Console finalizes days late. Exports stop at row
+        limits. Crawls go stale while you are busy shipping. A trustworthy agent does not paper over any of
+        this. It changes its wording.
+      </p>
+    </div>
+
+    <DataStates />
+
+    <div class="docs-prose">
+      <p>
+        The wording is the tell. A tool that returns the same confident sentence in all five of those states is
+        filling in a template, not reading your data.
+      </p>
+
+      <h2>You decide what ships</h2>
+      <p>
+        An agent that publishes whatever it likes is a liability. The workable shape is a queue. The agent
+        proposes changes with the evidence attached, and you approve, narrow, or skip each one.
+      </p>
+    </div>
+
+    <ApprovalQueue />
+
+    <div class="docs-prose">
+      <p>
+        The queue only works if you use all four buttons. Narrowing a broad change and skipping an unevidenced
+        one are the decisions that keep the site yours. (The keyword headline was in the queue on purpose.
+        Every SEO tool has one of those ideas. You are allowed to say no.)
+      </p>
+
+      <h2>Measure the change</h2>
+      <p>
+        The loop ends with a comparison: clicks before the change against clicks after. Two rules keep it
+        honest. The windows on either side must be the same length, and the newest days must stay out of the
+        comparison, because search data is not final for several days.
+      </p>
+    </div>
+
+    <MeasureWindows />
+
+    <div class="docs-prose">
+      <p>
+        One thing the demo cannot show is causation. The windows show an observed movement. Rankings also move
+        for reasons that have nothing to do with you, which is why the loop verifies the change went live and
+        reports the result either way, up or down.
+      </p>
+
+      <h2>Jobs an SEO agent can do</h2>
+      <p>The same loop covers most of the SEO work a site needs:</p>
+      <ul>
+        <li>Diagnose a site that lost traffic, and say which evidence supports each suspected cause.</li>
+        <li>Find queries with real demand and no page answering them.</li>
+        <li>Improve an existing page against the queries it already earns.</li>
+        <li>Watch for technical regressions after releases.</li>
+        <li>Investigate local search results for a place, kept separate from national rankings.</li>
+        <li>Check how ready pages are for AI search, as observations rather than promises.</li>
+        <li>Measure a shipped change with equal windows of final data.</li>
+      </ul>
+      <p>
+        The <a href="/docs/reports">reports guide</a> lists every report behind those jobs, and what each one
+        can and cannot prove.
+      </p>
+
+      <h2>Try it on your own site</h2>
+      <p>
+        Everything in this guide runs locally from one command. Install it, sign in to Search Console during
+        setup, and the first report on your own site is a few minutes away.
+      </p>
+    </div>
+
+    <div class="my-8">
+      <InstallPicker standalone />
+    </div>
+
+    <div class="docs-prose">
+      <p>
+        The <a href="/docs/getting-started">getting started guide</a> walks through setup, and
+        the <a href="/docs/skill">skill page</a> covers giving your own agent the same reports through Claude,
+        Codex, and other tools.
+      </p>
+      <p>SEO has always been evidence work. An agent just never gets bored of checking.</p>
+    </div>
+  </main>
+</BaseLayout>

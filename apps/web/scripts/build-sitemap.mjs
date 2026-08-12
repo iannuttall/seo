@@ -24,6 +24,7 @@ const paths = [
   '/docs/mcp',
   '/docs/reports',
   '/docs/skill',
+  '/guides/seo-agent',
   '/stats',
   '/telemetry',
   ...reportIds.map((id) => `/docs/reports/${reportSlugs[id] ?? id}`),

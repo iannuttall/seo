@@ -80,6 +80,20 @@
         "Attaches a verification step to the explained rule"
       ],
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Implement every safe fix from this audit, keep the migration decisions explicit, and don't lose anything while you work.",
+      "expected_output": "Should request the shared action view with `seo report --actions-only --json`, or `seo_run_report` with view actions for a catalog report. Should check findings coverage before implementation, preserve every stable finding id, and keep inventories beside the findings for row-level migration decisions. Should follow the discriminated finding type: implement fix instructions, but answer each review question and change the site only when its change conditions are met. Should use one allowed outcome with evidence for every open item. After edits, should run each changed item's verification and rerun the originating report before marking it complete. Should not silently omit lower-priority findings or call a code edit complete without evidence.",
+      "assertions": [
+        "Requests the shared actions-only view for implementation work",
+        "Checks findings coverage before claiming the queue is complete",
+        "Keeps every stable finding id and migration inventory row accounted for",
+        "Uses each finding type and records one allowed outcome with a reason",
+        "Runs item verification and reruns the originating report after edits",
+        "Does not silently drop lower-priority findings or close unverified edits"
+      ],
+      "files": []
     }
   ]
 }

@@ -9,7 +9,7 @@ import {
   type ReportCategory,
 } from '@seo/mcp'
 import { defineCommand } from 'citty'
-import { jsonFlag, stringArg } from '../args.js'
+import { booleanArg, jsonFlag, stringArg } from '../args.js'
 import {
   printBulletSection,
   printCallout,
@@ -225,6 +225,12 @@ const describeCommand = defineCommand({
     printBulletSection('Do not claim', report.doNotClaim)
     process.stdout.write('\n')
     printSection('Verify', report.verify)
+    process.stdout.write('\n')
+    printCallout({
+      title: 'Implement findings',
+      body: report.agentWorkflow.completion,
+      command: report.agentWorkflow.actionView.cli,
+    })
     if (report.related.length > 0) {
       process.stdout.write('\n')
       printBulletSection(
@@ -269,6 +275,12 @@ const runCommand = defineCommand({
       type: 'string',
       description: 'Read report parameters from a JSON file.',
     },
+    'actions-only': {
+      type: 'boolean',
+      default: false,
+      description:
+        'Return findings, verification, and retained inventories without the full report body.',
+    },
     json: {
       type: 'boolean',
       default: false,
@@ -278,7 +290,9 @@ const runCommand = defineCommand({
   run: async ({ args }) => {
     const id = stringArg(args.id) ?? ''
     const params = await paramsArg(args.params, args['params-file'])
-    const result = await executeReport(id, params)
+    const result = await executeReport(id, params, {
+      view: booleanArg(args['actions-only']) ? 'actions' : 'full',
+    })
     throwToolError(result)
 
     if (jsonFlag(args)) {

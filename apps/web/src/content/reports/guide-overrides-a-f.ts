@@ -416,10 +416,16 @@ export const reportGuideOverridesAF: Partial<
         source: 'canonical',
         role: 'Adds current canonical, indexability, metadata, and content evidence for selected URLs.',
       },
+      {
+        label: 'Optional local ranked-keyword exports',
+        source: 'local-research-files',
+        role: 'Finds keywords where two or more of your URLs rank in one to four DataForSEO, Semrush or Ahrefs files, with positions and volumes labelled as provider estimates.',
+      },
     ],
     checks: [
       'Groups returned rows by query and keeps only queries associated with more than one eligible URL.',
       'Ranks overlap consistently and separates observed exposure from heuristic intent or technical review signals.',
+      'Records each imported file provider, export date, SHA-256 hash, included fields, explicit column mapping, invalid rows, duplicates, and cap when local exports are used.',
     ],
     returns: [
       'Overlapping queries with their URLs, metrics, concentration, and the evidence behind the review priority.',

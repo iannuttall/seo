@@ -1,16 +1,12 @@
 "$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
 
 [scripts]
-setup = """
-pnpm install --frozen-lockfile
-pnpm hooks:install
-pnpm build
-"""
+setup = "bash scripts/conductor-setup.sh"
 archive = "true"
 run_mode = "concurrent"
 
 [scripts.run.web]
 available_in = [ "local" ]
-command = "pnpm --filter @seo/web preview:cloudflare --ip 127.0.0.1 --port \"$CONDUCTOR_PORT\" --show-interactive-dev-session false"
+command = "pnpm --filter @seo/web dev --host 127.0.0.1 --port \"$CONDUCTOR_PORT\""
 default = true
 icon = "globe"

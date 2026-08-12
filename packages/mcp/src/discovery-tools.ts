@@ -88,17 +88,18 @@ export function registerDiscoveryTools(
       inputSchema: {
         id: z.string().trim().min(1).max(100),
         params: z.record(z.string(), z.unknown()).optional(),
+        view: z.enum(['full', 'actions']).optional(),
       },
       outputSchema: openOutputSchema,
       annotations: {
         destructiveHint: false,
       },
     },
-    async ({ id, params }) => {
+    async ({ id, params, view }) => {
       const telemetry = reportIds.has(id) ? options.telemetry?.() : undefined
       if (telemetry) trackTelemetryReportStart(id, telemetry)
       try {
-        const result = await runReport(id, params)
+        const result = await runReport(id, params, { view })
         if (telemetry) {
           if (result.isError) {
             trackTelemetryReportFailed(

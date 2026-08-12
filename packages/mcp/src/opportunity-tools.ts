@@ -10,6 +10,7 @@ import {
 import * as z from 'zod/v4'
 import { fetchRateInput } from './fetch-rate.js'
 import { resolveJsOption } from './input-schemas.js'
+import { researchFilesInput } from './provider-inputs.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -75,6 +76,7 @@ export function registerOpportunityTools(
           .array(z.string().trim().min(1).max(200))
           .max(20)
           .optional(),
+        researchFiles: researchFilesInput.optional(),
       },
     },
     async ({
@@ -85,17 +87,29 @@ export function registerOpportunityTools(
       brandTerms,
       includeBrand,
       refresh,
+      researchFiles,
     }) => {
       try {
-        const result = await cannibalReport({
-          site,
-          days,
-          limit,
-          minImpressions,
-          brandTerms,
-          includeBrand,
-          refresh,
-        })
+        const result = researchFiles
+          ? await cannibalReport({
+              site,
+              days,
+              limit,
+              minImpressions,
+              brandTerms,
+              includeBrand,
+              refresh,
+              researchFiles,
+            })
+          : await cannibalReport({
+              site,
+              days,
+              limit,
+              minImpressions,
+              brandTerms,
+              includeBrand,
+              refresh,
+            })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

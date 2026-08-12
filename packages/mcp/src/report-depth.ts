@@ -139,6 +139,7 @@ const REPORT_DEPTH_PRIMARY = {
   'audit-urls': {
     readOrder: [
       'requested versus attempted, fetched, failed, retained, and omitted counts',
+      'topFixes AND reviewObservations together; the two lists are the complete grouped issue inventory, so carry every group from both into findings',
       'response evidence and issue summaries',
       'requestEvidenceStatus, warnings, and caveats',
     ],
@@ -235,11 +236,13 @@ const REPORT_DEPTH_PRIMARY = {
       'selection to see why groups were excluded or suppressed',
       'per-page clicks, impressions, position, impression share, reviewContext, and HHI',
       'priority.score and suggestedOwnerUrl',
+      'dataSource plus evidence.imports file dates, hashes, and row quality when the run used researchFiles',
     ],
     doNotClaim: [
       'URL overlap is a review candidate, not proven harmful cannibalisation.',
       'suggestedOwnerUrl is a low-confidence mechanical pick that requires intent review.',
       'priority.score is a heuristic, not estimated click lift, and a partial source cannot support an all-clear.',
+      'Research-import rows are provider estimates that support multiple-ranking-URL claims only, not traffic or Search Console-verified cannibalisation.',
     ],
     verify:
       'Compare intent and live SERPs for the overlapping URLs before consolidating anything.',

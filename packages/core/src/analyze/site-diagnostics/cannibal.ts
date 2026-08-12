@@ -1,7 +1,10 @@
+import { SeoError } from '../../errors.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
+import type { ResearchImportSource } from '../../providers/domain-contracts.js'
 import { SessionLedger } from '../../storage/ledger.js'
 import { analyzeCannibalRows } from './cannibal-analysis.js'
-import type { CannibalReport } from './cannibal-types.js'
+import { cannibalImportReport } from './cannibal-import.js'
+import type { CannibalImportReport, CannibalReport } from './cannibal-types.js'
 import {
   defaultDateRange,
   explicitDateRange,
@@ -9,6 +12,7 @@ import {
 } from './quick-wins-report-input.js'
 
 export * from './cannibal-analysis.js'
+export * from './cannibal-import.js'
 export type * from './cannibal-types.js'
 
 const MAX_GSC_ROWS = 100_000
@@ -24,6 +28,7 @@ export interface CannibalReportInput {
   brandTerms?: string[]
   includeBrand?: boolean
   refresh?: boolean
+  researchFiles?: ResearchImportSource[]
 }
 
 export interface CannibalDependencies {
@@ -56,10 +61,45 @@ function verdict(input: {
     : result
 }
 
+export function cannibalReport(
+  input: CannibalReportInput & { researchFiles: ResearchImportSource[] },
+  dependencies?: CannibalDependencies,
+): Promise<CannibalImportReport>
+export function cannibalReport(
+  input: CannibalReportInput & { researchFiles?: undefined },
+  dependencies?: CannibalDependencies,
+): Promise<CannibalReport>
 export async function cannibalReport(
   input: CannibalReportInput,
   dependencies: CannibalDependencies = defaultDependencies,
-): Promise<CannibalReport> {
+): Promise<CannibalReport | CannibalImportReport> {
+  if (input.researchFiles) {
+    const conflicts = [
+      ['days', input.days],
+      ['startDate', input.startDate],
+      ['endDate', input.endDate],
+      ['minImpressions', input.minImpressions],
+      ['refresh', input.refresh === true ? true : undefined],
+    ]
+      .filter(([, value]) => value !== undefined)
+      .map(([name]) => name)
+    if (conflicts.length > 0) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `Pick one evidence path. researchFiles reads local provider exports instead of Search Console, so remove ${conflicts.join(', ')} to use the files, or drop researchFiles to run the Search Console report.`,
+      )
+    }
+    return cannibalImportReport(
+      {
+        site: input.site,
+        researchFiles: input.researchFiles,
+        limit: input.limit,
+        brandTerms: input.brandTerms,
+        includeBrand: input.includeBrand,
+      },
+      { now: dependencies.now },
+    )
+  }
   const days = integerOption({
     value: input.days,
     fallback: 28,
@@ -150,6 +190,7 @@ export async function cannibalReport(
 
   return {
     schemaVersion: 1,
+    dataSource: 'search-console-api',
     site: input.site,
     generatedAt: now.toISOString(),
     range,

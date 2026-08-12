@@ -32,10 +32,68 @@ import {
   importResearchRows,
 } from './research-rows.js'
 
-type CombinedResearchRows = {
+export type CombinedResearchRows = {
   rows: ImportedResearchRow[]
   imports: ProviderImportEvidence[]
   warnings: ProviderWarning[]
+}
+
+function compareSources(
+  left: ResearchImportSource,
+  right: ResearchImportSource,
+): number {
+  return (
+    compareText(left.file, right.file) ||
+    compareText(left.exportedAt, right.exportedAt) ||
+    compareText(left.format ?? '', right.format ?? '') ||
+    (left.rowLimit ?? 0) - (right.rowLimit ?? 0)
+  )
+}
+
+export async function combineResearchRows(
+  sources: readonly ResearchImportSource[],
+  now = new Date(),
+): Promise<CombinedResearchRows> {
+  const ordered = [...sources].sort(compareSources)
+  const rowsByKey = new Map<string, ImportedResearchRow>()
+  const imports: ProviderImportEvidence[] = []
+  const warnings: ProviderWarning[] = []
+  let crossFileDuplicates = 0
+  for (const source of ordered) {
+    const imported = await importResearchRows(source, now)
+    imports.push(imported.importEvidence)
+    warnings.push(...imported.warnings)
+    for (const row of imported.rows) {
+      const key = importedResearchRowKey(row)
+      const existing = rowsByKey.get(key)
+      if (!existing) {
+        rowsByKey.set(key, row)
+      } else {
+        crossFileDuplicates += 1
+        if (compareImportedResearchRows(row, existing) < 0) {
+          rowsByKey.set(key, row)
+        }
+      }
+    }
+  }
+  if (crossFileDuplicates > 0) {
+    warnings.push({
+      code: 'cross-file-duplicate-rows',
+      message: `${crossFileDuplicates} duplicate row${crossFileDuplicates === 1 ? '' : 's'} across research files were removed deterministically.`,
+    })
+  }
+  if (new Set(imports.map((item) => item.exportedAt)).size > 1) {
+    warnings.push({
+      code: 'mixed-export-times',
+      message:
+        'The research files were exported at different times. Compare each imports entry before interpreting differences between domains.',
+    })
+  }
+  return {
+    rows: [...rowsByKey.values()].sort(compareImportedResearchRows),
+    imports,
+    warnings,
+  }
 }
 
 const CAPABILITIES = [
@@ -286,62 +344,14 @@ export class ResearchImportProvider
         'Research files must contain one to four exports from the same provider.',
       )
     }
-    this.#sources = [...sources].sort(
-      (left, right) =>
-        compareText(left.file, right.file) ||
-        compareText(left.exportedAt, right.exportedAt) ||
-        compareText(left.format ?? '', right.format ?? '') ||
-        (left.rowLimit ?? 0) - (right.rowLimit ?? 0),
-    )
+    this.#sources = [...sources].sort(compareSources)
     this.#now = now
     this.provider = provider
   }
 
   #rows(): Promise<CombinedResearchRows> {
-    this.#imported ??= this.#loadRows()
+    this.#imported ??= combineResearchRows(this.#sources, this.#now)
     return this.#imported
-  }
-
-  async #loadRows(): Promise<CombinedResearchRows> {
-    const rowsByKey = new Map<string, ImportedResearchRow>()
-    const imports: ProviderImportEvidence[] = []
-    const warnings: ProviderWarning[] = []
-    let crossFileDuplicates = 0
-    for (const source of this.#sources) {
-      const imported = await importResearchRows(source, this.#now)
-      imports.push(imported.importEvidence)
-      warnings.push(...imported.warnings)
-      for (const row of imported.rows) {
-        const key = importedResearchRowKey(row)
-        const existing = rowsByKey.get(key)
-        if (!existing) {
-          rowsByKey.set(key, row)
-        } else {
-          crossFileDuplicates += 1
-          if (compareImportedResearchRows(row, existing) < 0) {
-            rowsByKey.set(key, row)
-          }
-        }
-      }
-    }
-    if (crossFileDuplicates > 0) {
-      warnings.push({
-        code: 'cross-file-duplicate-rows',
-        message: `${crossFileDuplicates} duplicate row${crossFileDuplicates === 1 ? '' : 's'} across research files were removed deterministically.`,
-      })
-    }
-    if (new Set(imports.map((item) => item.exportedAt)).size > 1) {
-      warnings.push({
-        code: 'mixed-export-times',
-        message:
-          'The research files were exported at different times. Compare each imports entry before interpreting differences between domains.',
-      })
-    }
-    return {
-      rows: [...rowsByKey.values()].sort(compareImportedResearchRows),
-      imports,
-      warnings,
-    }
   }
 
   async rankedKeywords(

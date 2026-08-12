@@ -7,6 +7,10 @@ import {
 } from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
 
+export {
+  AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
+  compactAgentWorkflowOutput,
+} from './agent-output-budget.js'
 export type { CheckFix, CheckFixResource } from './check-fixes.js'
 export type {
   FullReportGuidance,

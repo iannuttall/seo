@@ -60,6 +60,18 @@ analysis on purpose. It is the right first run for a site you have not
 connected yet. Add `--site` or `--project` when the report should join search
 performance data.
 
+A downloaded Search Console performance export can join that URL report before
+you connect anything:
+
+```sh
+seo report --url https://example.com --search-console-export ./performance-export
+```
+
+The report reads the query and page tables, keeps them separate from the crawl,
+and tells you which exported pages the crawl could not reach. The
+[setup guide](/docs/getting-started) explains how to read that result and what
+the export cannot prove.
+
 Use `seo start` to create the first profile. The [setup guide](/docs/getting-started)
 covers multiple sites and local storage.
 

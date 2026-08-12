@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { resolve } from 'node:path'
 import { SeoError } from '../../errors.js'
 import type { ImportProgress } from '../../imports/records.js'
 import {
@@ -9,7 +10,11 @@ import {
   jsonlRecords,
   readJsonArray,
 } from '../../imports/records.js'
-import type { ProviderImportEvidence, ProviderValue } from '../contracts.js'
+import type {
+  ProviderId,
+  ProviderImportEvidence,
+  ProviderValue,
+} from '../contracts.js'
 import type {
   RankedKeyword,
   ResearchImportSource,
@@ -24,6 +29,11 @@ import {
 export const DEFAULT_RESEARCH_ROW_LIMIT = 10_000
 export const MAX_RESEARCH_ROW_LIMIT = 100_000
 const MAX_INCLUDED_FIELDS = 500
+const RESEARCH_IMPORT_PROVIDERS = new Set<ResearchImportSource['provider']>([
+  'dataforseo',
+  'semrush',
+  'ahrefs',
+])
 
 type RawRow = Record<string, unknown>
 
@@ -150,6 +160,64 @@ const BOOLEAN_INTENT_FIELDS = [
   ['commercial', 'commercial'],
   ['transactional', 'transactional'],
 ] as const
+
+export function validatedResearchImportSources(input: {
+  sources: readonly ResearchImportSource[]
+  provider?: ProviderId
+}): {
+  provider: ResearchImportSource['provider']
+  sources: readonly ResearchImportSource[]
+} {
+  if (input.sources.length < 1 || input.sources.length > 4) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use one to four ranked-keyword research files.',
+    )
+  }
+  const sourceProvider = input.sources[0]?.provider
+  if (
+    !sourceProvider ||
+    input.sources.some((source) => source.provider !== sourceProvider)
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'All research files in one report must come from the same provider.',
+    )
+  }
+  if (!RESEARCH_IMPORT_PROVIDERS.has(sourceProvider)) {
+    throw new SeoError('INVALID_INPUT', 'Use a supported research provider.')
+  }
+  if (input.provider && input.provider !== sourceProvider) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'The selected provider must match the research file provider.',
+    )
+  }
+  if (input.sources.some((source) => source.dataset !== 'ranked-keywords')) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'The research file dataset must be ranked-keywords.',
+    )
+  }
+  const paths = input.sources.map((source) => resolve(source.file))
+  if (new Set(paths).size !== paths.length) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use each research file once in a report.',
+    )
+  }
+  const requestedRows = input.sources.reduce(
+    (total, source) => total + researchImportRowLimit(source.rowLimit),
+    0,
+  )
+  if (requestedRows > MAX_RESEARCH_ROW_LIMIT) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Research files can normalize at most ${MAX_RESEARCH_ROW_LIMIT} rows in one report.`,
+    )
+  }
+  return { provider: sourceProvider, sources: input.sources }
+}
 
 export function researchImportRowLimit(value?: number): number {
   const result = value ?? DEFAULT_RESEARCH_ROW_LIMIT

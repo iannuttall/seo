@@ -12,12 +12,14 @@ export const opportunityReports = [
     useWhen: [
       'Several pages appear to compete for the same search topic.',
       'A migration or template change may have split signals across URLs.',
+      'You have a local ranked-keyword export and want the keywords where several of your URLs rank.',
     ],
     avoidWhen: [
       'You plan to merge pages solely because they share a query. Multiple URLs can be appropriate for different intents.',
     ],
     evidence: [
       'Returned Search Console query and page rows, grouped by normalized query with clicks, impressions, CTR, and average position.',
+      'Or one to four local DataForSEO, Semrush or Ahrefs ranked-keyword exports, read for keywords where two or more of your URLs rank.',
     ],
     methodology: [
       'Aggregates duplicate provider rows, filters low-evidence groups, and ranks multi-URL exposure candidates with stable tie-breakers.',
@@ -34,13 +36,14 @@ export const opportunityReports = [
     ],
     caveats: [
       'Anonymised queries and returned row limits can hide additional URLs or make a group incomplete.',
+      'Rows from a local keyword export are provider estimates. They can show several of your URLs ranking for a keyword, but not clicks, impressions, or which page Google served.',
     ],
     nextSteps: [
       'Audit the competing URLs and decide whether to differentiate, consolidate, redirect, or leave them alone.',
       'Measure any consolidation after a complete comparison window.',
     ],
     related: ['audit-page', 'redirect-trace', 'measure-change'],
-    sources: ['search-analytics', 'canonical'],
+    sources: ['search-analytics', 'canonical', 'local-research-files'],
   },
   {
     id: 'ctr-underperformers',

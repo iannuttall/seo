@@ -146,6 +146,8 @@ test('reports describe explains when the report is useful', async () => {
   assert.match(result.stdout, /^Parameters$/m)
   assert.match(result.stdout, /^url$/m)
   assert.match(result.stdout, /string \(uri\) · required/)
+  assert.match(result.stdout, /Implement findings/)
+  assert.match(result.stdout, /--actions-only --json/)
   assert.match(result.stdout, /seo reports describe audit-page --json/)
   assert.doesNotMatch(result.stdout, /\$schema/)
 })
@@ -171,6 +173,27 @@ test('reports run validates inline and file parameters consistently', async () =
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
+})
+
+test('reports run exposes the shared actions-only view', async () => {
+  const result = await runSeo([
+    'reports',
+    'run',
+    'crawler-rules',
+    '--params',
+    '{"category":"metadata"}',
+    '--actions-only',
+    '--json',
+  ])
+
+  assert.equal(result.exitCode, 0)
+  assert.equal(result.stderr, '')
+  const output = JSON.parse(result.stdout)
+  assert.equal(output.view, 'actions')
+  assert.equal(output.report.id, 'crawler-rules')
+  assert.equal(output.findings.counts.total, 0)
+  assert.equal('rules' in output, false)
+  assert.equal(output.outputBudget.returnedBytes > 0, true)
 })
 
 test('reports run imports ranked-keyword files through the generic CLI path', async () => {

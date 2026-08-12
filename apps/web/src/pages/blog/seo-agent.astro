@@ -2,17 +2,18 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import InstallPicker from '@/components/InstallPicker.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import ApprovalQueue from '@/components/guides/seo-agent/ApprovalQueue.astro'
-import DataStates from '@/components/guides/seo-agent/DataStates.astro'
-import EvidenceSources from '@/components/guides/seo-agent/EvidenceSources.astro'
-import InvestigationSim from '@/components/guides/seo-agent/InvestigationSim.astro'
-import MeasureWindows from '@/components/guides/seo-agent/MeasureWindows.astro'
-import WorkingLoop from '@/components/guides/seo-agent/WorkingLoop.astro'
+import ApprovalQueue from '@/components/blog/seo-agent/ApprovalQueue.astro'
+import DataStates from '@/components/blog/seo-agent/DataStates.astro'
+import EvidenceSources from '@/components/blog/seo-agent/EvidenceSources.astro'
+import InvestigationSim from '@/components/blog/seo-agent/InvestigationSim.astro'
+import MeasureWindows from '@/components/blog/seo-agent/MeasureWindows.astro'
+import WorkingLoop from '@/components/blog/seo-agent/WorkingLoop.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
+  { label: 'Blog', href: '/blog' },
   { label: 'SEO agents' },
 ]
 ---
@@ -20,7 +21,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 <BaseLayout
   title="How an SEO agent works"
   description="An interactive guide to SEO agents. See the evidence an agent works from, the loop it runs, how approval works, and how to measure a change honestly."
-  canonicalPath="/guides/seo-agent"
+  canonicalPath="/blog/seo-agent"
   schemaType="TechArticle"
   datePublished="2026-08-12"
   {breadcrumbs}

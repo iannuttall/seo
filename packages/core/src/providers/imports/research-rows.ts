@@ -15,7 +15,6 @@ import type {
   ProviderImportEvidence,
   ProviderValue,
 } from '../contracts.js'
-import { providerIdSchema } from '../contracts.js'
 import type {
   RankedKeyword,
   ResearchImportSource,
@@ -30,6 +29,11 @@ import {
 export const DEFAULT_RESEARCH_ROW_LIMIT = 10_000
 export const MAX_RESEARCH_ROW_LIMIT = 100_000
 const MAX_INCLUDED_FIELDS = 500
+const RESEARCH_IMPORT_PROVIDERS = new Set<ResearchImportSource['provider']>([
+  'dataforseo',
+  'semrush',
+  'ahrefs',
+])
 
 type RawRow = Record<string, unknown>
 
@@ -160,7 +164,10 @@ const BOOLEAN_INTENT_FIELDS = [
 export function validatedResearchImportSources(input: {
   sources: readonly ResearchImportSource[]
   provider?: ProviderId
-}): { provider: ProviderId; sources: readonly ResearchImportSource[] } {
+}): {
+  provider: ResearchImportSource['provider']
+  sources: readonly ResearchImportSource[]
+} {
   if (input.sources.length < 1 || input.sources.length > 4) {
     throw new SeoError(
       'INVALID_INPUT',
@@ -177,11 +184,10 @@ export function validatedResearchImportSources(input: {
       'All research files in one report must come from the same provider.',
     )
   }
-  const parsed = providerIdSchema.safeParse(sourceProvider)
-  if (!parsed.success) {
+  if (!RESEARCH_IMPORT_PROVIDERS.has(sourceProvider)) {
     throw new SeoError('INVALID_INPUT', 'Use a supported research provider.')
   }
-  if (input.provider && input.provider !== parsed.data) {
+  if (input.provider && input.provider !== sourceProvider) {
     throw new SeoError(
       'INVALID_INPUT',
       'The selected provider must match the research file provider.',
@@ -210,7 +216,7 @@ export function validatedResearchImportSources(input: {
       `Research files can normalize at most ${MAX_RESEARCH_ROW_LIMIT} rows in one report.`,
     )
   }
-  return { provider: parsed.data, sources: input.sources }
+  return { provider: sourceProvider, sources: input.sources }
 }
 
 export function researchImportRowLimit(value?: number): number {

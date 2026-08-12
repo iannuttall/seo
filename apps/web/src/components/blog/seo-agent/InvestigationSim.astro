@@ -1,0 +1,216 @@
+---
+import Button from '@/components/Button.astro'
+import GuideDemo from './GuideDemo.astro'
+
+/**
+ * The real audit that ran against ilo.so on 10 August 2026. Every number below
+ * comes from that session's Search Console evidence, the post-deploy crawl,
+ * and the recorded baseline. The result is measured on 10 September.
+ */
+type Step = {
+  who: 'you' | 'agent' | 'action'
+  text: string
+  evidence?: { source: string; text: string }
+  caption: string
+}
+
+const steps: Step[] = [
+  {
+    who: 'you',
+    text: 'What is worth building on ilo next?',
+    caption: 'The real question that started this audit on 10 August 2026.',
+  },
+  {
+    who: 'action',
+    text: 'Read 180 days of final Search Console query and page evidence',
+    evidence: {
+      source: 'Search Console',
+      text: '/twitter-follower-count already earns clicks. "x follower count" shows 376 impressions at position 5.0, and "twitter follower tracker" 245 impressions at position 9.9.',
+    },
+    caption: 'Existing pages reveal the demand that already finds the site.',
+  },
+  {
+    who: 'agent',
+    text: 'There is real demand around X analytics. The profile-analytics page gets impressions at positions 11 to 24 with almost no clicks, and nothing on the site ranks posts by engagement.',
+    evidence: {
+      source: 'Search Console',
+      text: '/twitter-profile-analytics: "twitter profile checker" earns 52 impressions at position 11.3, "twitter profile analytics" 61 impressions at position 23.9. Retained rows: 3 clicks in 180 days.',
+    },
+    caption: 'The gap is measured: impressions arriving, positions too low, one tool missing.',
+  },
+  {
+    who: 'agent',
+    text: 'Proposal: build a top-posts ranking tool, expand the profile-analytics and follower-count pages, and write guides for the impression questions people already ask.',
+    evidence: {
+      source: 'Search Console',
+      text: '/blog/twitter-impressions: "impressions on x meaning" earns 73 impressions at position 7.5, with no clicks yet.',
+    },
+    caption: 'Each proposed page maps to observed queries, not invented keywords.',
+  },
+  {
+    who: 'you',
+    text: 'Approved. Ship it.',
+    caption: 'Two pull requests merged to main on 10 August.',
+  },
+  {
+    who: 'action',
+    text: 'Shipped the changes, then crawled the live site',
+    evidence: {
+      source: 'Crawl',
+      text: '115 of 115 pages return 200 and are indexable. No failed or skipped pages. The new URLs are live.',
+    },
+    caption: 'Verification is a fresh crawl of the deployed site, not a memory of the merge.',
+  },
+  {
+    who: 'action',
+    text: 'Recorded the baseline before any post-change search data can exist',
+    evidence: {
+      source: 'Baseline',
+      text: 'Site totals for the 28 final days to 7 August: 10,881 clicks, 228,237 impressions. The new URLs have no query rows yet, which is expected for new pages, not zero interest.',
+    },
+    caption: 'Search Console final data still ends on 7 August. Claiming results now would be fiction.',
+  },
+  {
+    who: 'action',
+    text: 'Scheduled the comparison for 10 September',
+    evidence: {
+      source: 'Scheduled',
+      text: 'First clean 28-day post-change window: 11 August to 7 September. Compare once final data covers the whole window.',
+    },
+    caption: 'The result gets published either way, including flat or negative.',
+  },
+]
+
+const captions = steps.map((step) => step.caption)
+const idleCaption = 'Press play to watch the audit that shipped on 10 August.'
+---
+
+<GuideDemo
+  number="03"
+  label="One investigation"
+  title="From plain question to scheduled measurement"
+  description="A real audit of ilo.so, run on 10 August 2026. Conversation on the left. On the right, the evidence the agent can actually point to at each step."
+>
+  <div
+    x-data="investigation"
+    class="space-y-4"
+    data-captions={JSON.stringify(captions)}
+    data-idle-caption={idleCaption}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <Button type="button" class="px-4 py-2 font-mono text-xs" x-on:click="play()">
+        <span x-text="playing ? 'Pause' : 'Play'">Play</span>
+      </Button>
+      <button
+        type="button"
+        class="cursor-pointer border-2 border-nav bg-background px-3 py-2 font-mono text-xs transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+        x-on:click="next()"
+        x-bind:disabled="done()"
+      >
+        Next step
+      </button>
+      <button
+        type="button"
+        class="cursor-pointer border-2 border-nav bg-background px-3 py-2 font-mono text-xs transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        x-on:click="reset()"
+      >
+        Reset
+      </button>
+      <p class="ml-auto font-mono text-xs text-foreground-muted">
+        Step <span x-text="step">{steps.length}</span> / {steps.length}
+      </p>
+    </div>
+
+    <p class="font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+      Real evidence recorded from the ilo.so audit on 10 August 2026
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="border-2 border-nav">
+        <p class="border-b-2 border-nav px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-muted">
+          Conversation
+        </p>
+        <div class="h-64 space-y-3 overflow-y-auto p-3" x-ref="conversation">
+          {
+            steps.map((step, index) => (
+              <div class="sim-entry" x-bind:hidden={`step < ${index + 1}`}>
+                {step.who === 'you' ? (
+                  <p class="font-sans text-sm leading-6">
+                    <span aria-hidden="true" class="font-mono text-primary">&rsaquo;</span> {step.text}
+                  </p>
+                ) : step.who === 'agent' ? (
+                  <p class="font-sans text-sm font-light leading-6">{step.text}</p>
+                ) : (
+                  <p class="border-l-2 border-border pl-2 font-mono text-xs text-foreground-muted">{step.text}</p>
+                )}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="border-2 border-nav">
+        <p class="border-b-2 border-nav px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-muted">
+          Evidence the agent can point to
+        </p>
+        <div class="h-64 space-y-2 overflow-y-auto p-3" x-ref="ledger">
+          {
+            steps.map((step, index) =>
+              step.evidence ? (
+                <div class="sim-entry border-2 border-border p-2.5" x-bind:hidden={`step < ${index + 1}`}>
+                  <p class="mb-1 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+                    {step.evidence.source}
+                  </p>
+                  <p class="font-sans text-xs font-light leading-5">{step.evidence.text}</p>
+                </div>
+              ) : null,
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <p aria-live="polite" class="min-h-10 font-sans text-sm font-light leading-6 text-foreground-muted">
+      <span x-text="caption()">{idleCaption}</span>
+    </p>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: a step-through of the real audit that ran against ilo.so on 10 August 2026. The owner
+    asks what is worth building. The agent reads 180 days of final Search Console evidence and finds measured
+    demand around X analytics: the follower-count page already earns clicks ("x follower count", 376
+    impressions at position 5.0), the profile-analytics page earns impressions at positions 11 to 24 with
+    almost no clicks, and no page ranks posts by engagement. It proposes a top-posts ranking tool and expanded tool
+    pages, backed by guides for the impression questions people already search. Two pull requests merge the
+    same day. A post-deploy crawl
+    verifies 115 of 115 pages return 200 and are indexable. The recorded baseline (10,881 clicks and 228,237
+    impressions for the 28 final days to 7 August) claims nothing about results, because final data cannot yet
+    reflect the changes. The comparison is scheduled for 10 September, and the result gets published either
+    way.
+  </p>
+</div>
+
+<style>
+  @media (prefers-reduced-motion: no-preference) {
+    .sim-entry:not([hidden]) {
+      animation: sim-enter 0.35s ease;
+    }
+
+    @keyframes sim-enter {
+      from {
+        opacity: 0;
+        transform: translateY(0.35rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+</style>
+
+<script>
+  import './seo-agent.client'
+</script>

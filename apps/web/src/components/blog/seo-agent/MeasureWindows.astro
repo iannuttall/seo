@@ -1,0 +1,183 @@
+---
+import GuideDemo from './GuideDemo.astro'
+
+const totalDays = 84
+const changeDay = 42
+const windowLength = 21
+const notFinalDays = 3
+
+// Deterministic example series: weekday seasonality, a step change at day 42,
+// and a small wobble so the bars look like real daily clicks.
+const weekly = [1, 1.06, 1.1, 1.04, 0.98, 0.78, 0.72]
+const clicks = Array.from({ length: totalDays }, (_, day) => {
+  const lift = day >= 42 ? 1.32 : 1
+  const wobble = 1 + 0.08 * Math.sin(day * 1.7)
+  return Math.round(38 * weekly[day % 7] * lift * wobble)
+})
+
+const maxClicks = Math.max(...clicks)
+const chartHeight = 160
+const barWidth = 8
+const gap = 2
+
+function zone(day: number): string {
+  if (day >= totalDays - notFinalDays) return 'notfinal'
+  if (day >= changeDay - windowLength && day < changeDay) return 'before'
+  if (day >= changeDay && day < changeDay + windowLength) return 'after'
+  return 'out'
+}
+
+function sum(from: number, to: number): number {
+  return clicks.slice(from, to).reduce((total, value) => total + value, 0)
+}
+
+const beforeTotal = sum(changeDay - windowLength, changeDay)
+const afterTotal = sum(changeDay, changeDay + windowLength)
+const observed = Math.round(((afterTotal - beforeTotal) / beforeTotal) * 100)
+const defaultReadout = `Before: ${beforeTotal.toLocaleString('en-GB')} clicks. After: ${afterTotal.toLocaleString('en-GB')} clicks. Observed change: ${observed > 0 ? '+' : ''}${observed}%.`
+
+const legend = [
+  { zone: 'before', label: 'Before window' },
+  { zone: 'after', label: 'After window' },
+  { zone: 'notfinal', label: 'Not final yet' },
+  { zone: 'out', label: 'Outside the comparison' },
+]
+---
+
+<GuideDemo
+  number="06"
+  label="Measurement"
+  title="Equal windows, final data only"
+  description="Drag the change date. The before and after windows stay the same length, and the newest days stay out of the comparison because they are not final yet."
+>
+  <div
+    x-data="measureWindows"
+    class="space-y-4"
+    data-clicks={JSON.stringify(clicks)}
+    data-change-day={String(changeDay)}
+    data-window-length={String(windowLength)}
+    data-not-final-days={String(notFinalDays)}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <label class="flex min-w-0 flex-1 items-center gap-3 font-mono text-xs" for="measure-change-day">
+        <span class="whitespace-nowrap">Change date: day <span x-text="changeDay">{changeDay}</span></span>
+        <input
+          id="measure-change-day"
+          type="range"
+          min={windowLength}
+          max={totalDays - 4}
+          value={changeDay}
+          step="1"
+          class="measure-slider min-w-0 flex-1"
+          x-model.number="changeDay"
+        />
+      </label>
+    </div>
+
+    <div class="measure-chart border-2 border-nav p-3">
+      <svg
+        viewBox={`0 0 ${totalDays * (barWidth + gap)} ${chartHeight}`}
+        role="img"
+        aria-label="Daily clicks over 84 days with before and after comparison windows"
+        class="block w-full"
+        preserveAspectRatio="none"
+      >
+        {
+          clicks.map((value, day) => {
+            const height = Math.max(4, (value / maxClicks) * (chartHeight - 8))
+            return (
+              <rect
+                data-day={day}
+                data-zone={zone(day)}
+                x={day * (barWidth + gap)}
+                y={chartHeight - height}
+                width={barWidth}
+                height={height}
+              />
+            )
+          })
+        }
+      </svg>
+    </div>
+
+    <ul class="flex flex-wrap gap-x-4 gap-y-1">
+      {
+        legend.map((item) => (
+          <li class="flex items-center gap-1.5 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-muted">
+            <span aria-hidden="true" class="legend-swatch inline-block size-2.5" data-zone={item.zone} />
+            {item.label}
+          </li>
+        ))
+      }
+    </ul>
+
+    <p aria-live="polite" class="min-h-10 font-mono text-xs text-foreground-muted">
+      <span x-text="readout()">{defaultReadout}</span>
+    </p>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: 84 days of example daily clicks with a real step change at day 42. A slider moves the
+    comparison date. The before and after windows stay 21 days each, and the newest 3 days are excluded because
+    Search Console data is not final yet. With the windows around the real change the observed difference is
+    about +30%. Move the date away from the change and the observed difference shrinks, which is the point: the
+    windows show an observed movement, not proof of what caused it.
+  </p>
+</div>
+
+<style>
+  .measure-chart rect {
+    fill: var(--border);
+  }
+
+  .measure-chart rect[data-zone='before'] {
+    fill: var(--fg-muted);
+  }
+
+  .measure-chart rect[data-zone='after'] {
+    fill: var(--primary);
+  }
+
+  .measure-chart rect[data-zone='incomplete'] {
+    fill: color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+
+  .measure-chart rect[data-zone='notfinal'] {
+    fill: none;
+    stroke: var(--fg-faint);
+    stroke-dasharray: 2 2;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .measure-chart rect {
+      transition: fill 0.25s ease;
+    }
+  }
+
+  .legend-swatch {
+    background: var(--border);
+  }
+
+  .legend-swatch[data-zone='before'] {
+    background: var(--fg-muted);
+  }
+
+  .legend-swatch[data-zone='after'] {
+    background: var(--primary);
+  }
+
+  .legend-swatch[data-zone='notfinal'] {
+    background: transparent;
+    border: 1px dashed var(--fg-faint);
+  }
+
+  .measure-slider {
+    accent-color: var(--primary);
+  }
+</style>
+
+<script>
+  import './seo-agent.client'
+</script>

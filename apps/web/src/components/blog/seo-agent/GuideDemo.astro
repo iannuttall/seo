@@ -1,0 +1,31 @@
+---
+/**
+ * Card shell for the interactive guide demos. The number and label mirror the
+ * section they sit in, the title states the claim the demo proves, and the
+ * description tells the reader what to do with it.
+ */
+type Props = {
+  number: string
+  label: string
+  title: string
+  description: string
+  class?: string
+}
+
+const { number, label, title, description, class: className, ...rest } = Astro.props
+---
+
+<section
+  class:list={['my-10 border-2 border-nav bg-background', className]}
+  data-agent-markdown="exclude"
+  {...rest}
+>
+  <header class="space-y-2 border-b-2 border-nav px-5 py-4 sm:px-6">
+    <p class="font-mono text-xs text-primary">{number} / {label}</p>
+    <h3 class="font-mono text-base font-normal leading-snug">{title}</h3>
+    <p class="max-w-2xl font-sans text-sm font-light leading-6 text-foreground-muted">{description}</p>
+  </header>
+  <div class="px-5 py-5 sm:px-6">
+    <slot />
+  </div>
+</section>

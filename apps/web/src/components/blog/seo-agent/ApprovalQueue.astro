@@ -1,0 +1,189 @@
+---
+import GuideDemo from './GuideDemo.astro'
+
+type Row = {
+  id: string
+  title: string
+  narrowedTitle?: string
+  scope: string
+  narrowedScope?: string
+  evidence: string
+}
+
+const rows: Row[] = [
+  {
+    id: 'r1',
+    title: 'Add meta descriptions to 8 posts that have none',
+    scope: '8 pages',
+    evidence:
+      'Crawl: 8 posts return no description tag. Search Console: all 8 earn impressions, so search engines are writing their snippets for them.',
+  },
+  {
+    id: 'r2',
+    title: 'Rewrite 12 page titles to match the queries they earn',
+    narrowedTitle: 'Rewrite the 3 titles whose clicks fell while impressions held',
+    scope: '12 pages',
+    narrowedScope: '3 pages',
+    evidence:
+      'Search Console: 12 pages where the top query is missing from the title. Only 3 of them are losing clicks. The other 9 are working fine.',
+  },
+  {
+    id: 'r3',
+    title: 'Redirect 4 retired product pages to their categories',
+    scope: '4 redirects',
+    evidence:
+      'Crawl: the 4 pages return 404. Search Console: they still earn clicks from old links, and those visits currently dead-end.',
+  },
+  {
+    id: 'r4',
+    title: 'Rewrite the homepage headline to include more keywords',
+    scope: '1 page',
+    evidence:
+      'None. No query, page, or crawl row connects the headline to a search problem. This one deserves the skip.',
+  },
+]
+
+const smallButtonClasses =
+  'cursor-pointer border-2 border-nav bg-background px-2.5 py-1 font-mono text-[0.6875rem] transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+---
+
+<GuideDemo
+  number="05"
+  label="The approval queue"
+  title="The agent proposes. You decide."
+  description="Work the queue like it is Monday morning. Inspect the evidence, narrow anything too broad, approve what earns it, and skip what does not."
+>
+  <div x-data="approvalQueue" class="space-y-4" data-rows={rows.map((row) => row.id).join(',')}>
+    <ul class="space-y-3">
+      {
+        rows.map((row) => (
+          <li
+            class="queue-row border-2 border-nav"
+            x-bind:data-status={`rows.${row.id}.status`}
+          >
+            <div class="flex flex-wrap items-center gap-2 px-3 py-2.5">
+              <p class="min-w-0 flex-1 font-sans text-sm leading-6">
+                {row.narrowedTitle ? (
+                  <>
+                    <span x-bind:hidden={`rows.${row.id}.narrowed`}>{row.title}</span>
+                    <span hidden x-bind:hidden={`!rows.${row.id}.narrowed`}>
+                      {row.narrowedTitle}
+                    </span>
+                  </>
+                ) : (
+                  row.title
+                )}
+              </p>
+              <p class="font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+                {row.narrowedScope ? (
+                  <>
+                    <span x-bind:hidden={`rows.${row.id}.narrowed`}>{row.scope}</span>
+                    <span hidden x-bind:hidden={`!rows.${row.id}.narrowed`}>
+                      {row.narrowedScope}
+                    </span>
+                  </>
+                ) : (
+                  row.scope
+                )}
+              </p>
+              <span
+                hidden
+                class="status-chip border-2 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wide"
+                x-bind:hidden={`rows.${row.id}.status === 'proposed'`}
+                x-text={`rows.${row.id}.status`}
+              />
+            </div>
+            <div
+              class="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2"
+              x-bind:hidden={`rows.${row.id}.status !== 'proposed'`}
+            >
+              <button
+                type="button"
+                class={smallButtonClasses}
+                x-on:click={`toggleInspect('${row.id}')`}
+              >
+                <span x-text={`rows.${row.id}.open ? 'Hide evidence' : 'Inspect'`}>Inspect</span>
+              </button>
+              {row.narrowedTitle ? (
+                <button
+                  type="button"
+                  class={smallButtonClasses}
+                  x-on:click={`narrow('${row.id}')`}
+                  x-bind:hidden={`rows.${row.id}.narrowed`}
+                >
+                  Narrow
+                </button>
+              ) : null}
+              <button
+                type="button"
+                class="cursor-pointer border-2 border-primary-active bg-primary px-2.5 py-1 font-mono text-[0.6875rem] text-primary-foreground shadow-btn transition-all hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                x-on:click={`approve('${row.id}')`}
+              >
+                Approve
+              </button>
+              <button type="button" class={smallButtonClasses} x-on:click={`skip('${row.id}')`}>
+                Skip
+              </button>
+            </div>
+            <p
+              hidden
+              class="border-t border-border bg-background-subtle px-3 py-2.5 font-sans text-xs font-light leading-5 text-foreground-muted"
+              x-bind:hidden={`!rows.${row.id}.open`}
+            >
+              {row.evidence}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <p aria-live="polite" class="min-w-0 flex-1 font-mono text-xs text-foreground-muted">
+        <span x-text="summary()">
+          Four proposed changes are waiting on you. The agent works through the approved list only.
+        </span>
+      </p>
+      <button
+        type="button"
+        class="cursor-pointer border-2 border-nav bg-background px-3 py-1.5 font-mono text-xs transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        x-on:click="reset()"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: a queue of four proposed changes with Inspect, Narrow, Approve, and Skip actions. Adding
+    missing meta descriptions and fixing dead product pages carry crawl and Search Console evidence. A broad
+    12-title rewrite can be narrowed to the 3 pages that are actually losing clicks. A keyword-stuffed homepage
+    headline rewrite carries no evidence at all, and skipping it is the point. The agent acts on the approved
+    list only, so nothing ships without a human decision.
+  </p>
+</div>
+
+<style>
+  .queue-row[data-status='approved'] {
+    border-color: var(--primary-active);
+  }
+
+  .queue-row[data-status='skipped'] {
+    opacity: 0.55;
+  }
+
+  .queue-row[data-status='approved'] .status-chip {
+    border-color: var(--primary-active);
+    color: var(--primary);
+  }
+
+  .queue-row[data-status='skipped'] .status-chip {
+    border-color: var(--border);
+    color: var(--fg-muted);
+  }
+</style>
+
+<script>
+  import './seo-agent.client'
+</script>

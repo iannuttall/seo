@@ -1,0 +1,165 @@
+---
+import GuideDemo from './GuideDemo.astro'
+
+type Week = { label: string; clicks: string; settling?: boolean }
+
+type State = {
+  key: string
+  name: string
+  provenance: string
+  weeks?: Week[]
+  banner?: string
+  empty?: string
+  sentence: string
+}
+
+const weeks: Week[] = [
+  { label: 'Week 1', clicks: '310' },
+  { label: 'Week 2', clicks: '298' },
+  { label: 'Week 3', clicks: '172' },
+  { label: 'Week 4', clicks: '121' },
+]
+
+const states: State[] = [
+  {
+    key: 'complete',
+    name: 'Complete',
+    provenance: '28 of 28 days final',
+    weeks,
+    sentence:
+      'Clicks fell 61% across the month, and the fall starts the day after the template release. Investigate that release first.',
+  },
+  {
+    key: 'partial',
+    name: 'Partial',
+    provenance: '21 of 28 days final',
+    weeks: weeks.map((week, index) => (index === 3 ? { ...week, settling: true } : week)),
+    sentence:
+      'Clicks look well down, but the last week can still change. I would wait four days, then rerun this before calling it real.',
+  },
+  {
+    key: 'capped',
+    name: 'Capped',
+    provenance: 'Row limit reached',
+    weeks,
+    banner: 'Row 1,000 of 1,000. The provider stops here.',
+    sentence:
+      'The export stops at the row cap, so everything past row 1,000 is unknown, not zero. I will rank what I can see and say what I cannot.',
+  },
+  {
+    key: 'missing',
+    name: 'Missing',
+    provenance: 'No data',
+    empty: 'Search Console is not connected for this project.',
+    sentence:
+      'I have no click data for this site, so I will not invent any. Connect Search Console or hand me an export, and this becomes answerable.',
+  },
+  {
+    key: 'stale',
+    name: 'Stale',
+    provenance: 'Export dated 14 March, 150 days old',
+    weeks,
+    sentence:
+      'This data predates the release you are asking about. Anything I conclude from it may already be fixed, or already worse. Refresh it first.',
+  },
+]
+
+const stateButtonClasses =
+  'cursor-pointer border-2 border-nav bg-background px-3 py-1.5 font-mono text-xs transition-colors hover:bg-background-subtle aria-pressed:bg-foreground aria-pressed:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+---
+
+<GuideDemo
+  number="04"
+  label="Data states"
+  title="The wording follows the evidence"
+  description="The same question in five states of data. Click a state and watch the answer move from claim, to caveat, to request."
+>
+  <div x-data="dataStates" class="space-y-5">
+    <div class="flex flex-wrap gap-2" role="group" aria-label="Data states">
+      {
+        states.map((state) => (
+          <button
+            type="button"
+            class={stateButtonClasses}
+            aria-pressed={state.key === 'complete' ? 'true' : 'false'}
+            x-on:click={`pick('${state.key}')`}
+            x-bind:aria-pressed={`state === '${state.key}' ? 'true' : 'false'`}
+          >
+            {state.name}
+          </button>
+        ))
+      }
+    </div>
+
+    {
+      states.map((state) => (
+        <div
+          class="space-y-4"
+          hidden={state.key !== 'complete'}
+          x-bind:hidden={`state !== '${state.key}'`}
+        >
+          <div class="border-2 border-nav">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-nav px-3 py-2">
+              <p class="font-mono text-[0.625rem] uppercase tracking-wide text-foreground-muted">
+                Clicks &middot; tent footprint sizing
+              </p>
+              <p class="font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">{state.provenance}</p>
+            </div>
+            {state.empty ? (
+              <p class="p-4 font-sans text-sm font-light leading-6 text-foreground-muted">{state.empty}</p>
+            ) : (
+              <div>
+                {state.weeks?.map((week) => (
+                  <div
+                    class:list={[
+                      'flex items-center justify-between border-b border-border px-3 py-2 last:border-b-0',
+                      week.settling && 'opacity-50',
+                    ]}
+                  >
+                    <p class="font-mono text-xs">{week.label}</p>
+                    <p class="font-mono text-xs">
+                      {week.clicks}
+                      {week.settling ? (
+                        <span class="ml-2 text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+                          still settling
+                        </span>
+                      ) : null}
+                    </p>
+                  </div>
+                ))}
+                {state.banner ? (
+                  <p class="border-t-2 border-dashed border-border px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+                    {state.banner}
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <blockquote class="border-l-2 border-primary pl-3 font-sans text-sm font-light leading-6">
+            {state.sentence}
+          </blockquote>
+        </div>
+      ))
+    }
+
+    <p class="font-mono text-xs text-foreground-muted">
+      Zero, missing, capped, and stale are four different facts. Blur them and you will fix the wrong thing.
+    </p>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: the same click question shown in five data states. Complete data earns a direct claim:
+    clicks fell 61% starting the day after a template release. Partial data earns a caveat, since the last week
+    is still settling. A capped export makes the agent say that rows past the limit are unknown rather than
+    zero. Missing data turns the answer into a request to connect Search Console. A stale export makes the
+    agent ask for fresh data before blaming the release. The state of the evidence changes the wording, not
+    just the numbers.
+  </p>
+</div>
+
+<script>
+  import './seo-agent.client'
+</script>

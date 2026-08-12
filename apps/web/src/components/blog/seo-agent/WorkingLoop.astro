@@ -1,0 +1,285 @@
+---
+import Button from '@/components/Button.astro'
+import GuideDemo from './GuideDemo.astro'
+
+/**
+ * The five stages drawn as a closed circuit. The orange line draws itself from
+ * station to station while play runs, in the same spirit as the keep guide's
+ * loop ring, but as a right-angled circuit in this site's hard-border style.
+ */
+const centerX = 330
+const leftX = 140
+const rightX = 520
+const topY = 40
+const midY = 130
+const bottomY = 240
+
+// Find sits top center. Inspect and Propose share the right column, Measure
+// and Verify share the left column, so every line is straight or one right
+// angle. The loop runs clockwise and closes back at Find.
+const stations = [
+  { label: 'Find', x: centerX, y: topY },
+  { label: 'Inspect', x: rightX, y: midY },
+  { label: 'Propose', x: rightX, y: bottomY },
+  { label: 'Verify', x: leftX, y: bottomY },
+  { label: 'Measure', x: leftX, y: midY },
+]
+
+// Legs start and end at pill borders, not centers. If they ran under the
+// pills, the first and last stretch of every draw would happen out of sight
+// and read as a delay at both ends.
+const halfWidth = 52
+const halfHeight = 17
+
+const legs = [
+  `M ${centerX + halfWidth} ${topY} L ${rightX} ${topY} L ${rightX} ${midY - halfHeight}`,
+  `M ${rightX} ${midY + halfHeight} L ${rightX} ${bottomY - halfHeight}`,
+  `M ${rightX - halfWidth} ${bottomY} L ${leftX + halfWidth} ${bottomY}`,
+  `M ${leftX} ${bottomY - halfHeight} L ${leftX} ${midY + halfHeight}`,
+  `M ${leftX} ${midY - halfHeight} L ${leftX} ${topY} L ${centerX - halfWidth} ${topY}`,
+]
+
+// Where the incoming line touches each pill. The orange fill floods the pill
+// from that exact point, the way the keep guide's loop ring fills its nodes.
+const entries = [
+  { x: centerX - halfWidth, y: topY },
+  { x: rightX, y: midY - halfHeight },
+  { x: rightX, y: bottomY - halfHeight },
+  { x: leftX + halfWidth, y: bottomY },
+  { x: leftX, y: midY + halfHeight },
+]
+
+function floodRadius(index: number): number {
+  const station = stations[index]
+  const entry = entries[index]
+  let radius = 0
+  for (const cornerX of [station.x - halfWidth, station.x + halfWidth]) {
+    for (const cornerY of [station.y - halfHeight, station.y + halfHeight]) {
+      radius = Math.max(radius, Math.hypot(cornerX - entry.x, cornerY - entry.y))
+    }
+  }
+  return Math.ceil(radius)
+}
+
+const pillHeight = 34
+
+// One width for every pill keeps the two columns exactly aligned.
+function pillWidth(_label: string): number {
+  return 104
+}
+
+const captions = {
+  problem: [
+    "Find: a weekly crawl flags 14 pages that lost their canonical tag in last night's release.",
+    'Inspect: the agent reads the crawl rows, then checks Search Console to see which of the 14 actually earn clicks.',
+    'Propose: a one-line template fix, with every affected page listed so a human can judge the blast radius.',
+    'Verify: after the deploy, the agent fetches the live pages and confirms the tag is back.',
+    'Measure: four weeks later, it compares clicks across equal windows either side of the fix.',
+  ],
+  opportunity: [
+    'Find: Search Console shows a question earning impressions on page two, and no page on the site answers it.',
+    'Inspect: the agent reads the page that ranks and the queries it already earns before touching anything.',
+    'Propose: a new section that answers the question directly, on the page already closest to it.',
+    'Verify: once the change is live, the agent fetches the page and confirms the new section is really there.',
+    'Measure: it watches position and clicks for that query over the next month, against final data only.',
+  ],
+}
+
+const idleCaption =
+  'Press play, or step through. The five stages are the same whether the trigger is a problem or an opportunity.'
+
+const branchClasses =
+  'cursor-pointer border-2 border-nav bg-background px-3 py-1.5 font-mono text-xs transition-colors hover:bg-background-subtle aria-pressed:bg-foreground aria-pressed:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+---
+
+<GuideDemo
+  number="02"
+  label="The loop"
+  title="Find, inspect, propose, verify, measure"
+  description="An SEO agent runs the same five stages on repeat. Press play and watch the loop go round, then switch what it is chasing."
+>
+  <div
+    x-data="loopCircuit"
+    class="space-y-4"
+    data-captions={JSON.stringify(captions)}
+    data-idle-caption={idleCaption}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <Button type="button" class="px-4 py-2 font-mono text-xs" x-on:click="play()">
+        <span x-text="playing ? 'Pause' : 'Play'">Play</span>
+      </Button>
+      <button
+        type="button"
+        class="cursor-pointer border-2 border-nav bg-background px-3 py-2 font-mono text-xs transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        x-on:click="next()"
+      >
+        Next stage
+      </button>
+      <div class="ml-auto flex gap-2" role="group" aria-label="What the agent is chasing">
+        <button
+          type="button"
+          class={branchClasses}
+          aria-pressed="true"
+          x-on:click="setBranch('problem')"
+          x-bind:aria-pressed="branch === 'problem' ? 'true' : 'false'"
+        >
+          A problem
+        </button>
+        <button
+          type="button"
+          class={branchClasses}
+          aria-pressed="false"
+          x-on:click="setBranch('opportunity')"
+          x-bind:aria-pressed="branch === 'opportunity' ? 'true' : 'false'"
+        >
+          An opportunity
+        </button>
+      </div>
+    </div>
+
+    <div class="loop-circuit overflow-x-auto">
+      <svg
+        viewBox="0 0 660 300"
+        role="img"
+        aria-label="A closed loop through five stations: find, inspect, propose, verify, measure, and back to find"
+        class="block w-full"
+      >
+        {legs.map((d) => <path class="leg-base" d={d} />)}
+        {legs.map((d, index) => <path class="leg-draw" data-leg-draw={index} d={d} />)}
+        {
+          stations.map((station, index) => (
+            <g
+              class="station"
+              data-station={index}
+              x-on:click={`goto(${index})`}
+              x-bind:data-active={`step === ${index}`}
+            >
+              <clipPath id={`loop-pill-${index}`}>
+                <rect
+                  x={station.x - pillWidth(station.label) / 2}
+                  y={station.y - pillHeight / 2}
+                  width={pillWidth(station.label)}
+                  height={pillHeight}
+                />
+              </clipPath>
+              <rect
+                class="pill-bg"
+                x={station.x - pillWidth(station.label) / 2}
+                y={station.y - pillHeight / 2}
+                width={pillWidth(station.label)}
+                height={pillHeight}
+              />
+              <circle
+                class="pill-flood"
+                clip-path={`url(#loop-pill-${index})`}
+                cx={entries[index].x}
+                cy={entries[index].y}
+                r={floodRadius(index)}
+              />
+              <rect
+                class="pill-border"
+                x={station.x - pillWidth(station.label) / 2}
+                y={station.y - pillHeight / 2}
+                width={pillWidth(station.label)}
+                height={pillHeight}
+              />
+              <text x={station.x} y={station.y + 5} text-anchor="middle">
+                {station.label}
+              </text>
+            </g>
+          ))
+        }
+      </svg>
+    </div>
+
+    <p aria-live="polite" class="min-h-12 font-sans text-sm font-light leading-6 text-foreground-muted">
+      <span x-text="caption()">{idleCaption}</span>
+    </p>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: the five stages drawn as a closed circuit that an orange line travels around while it
+    plays. Find (a crawl flags broken canonical tags, or Search Console shows unanswered demand), inspect the
+    evidence, propose a change a human can judge, verify the live result after the deploy, and measure equal
+    windows of final data either side of the change. The measurement feeds the next find. That return edge is
+    what makes it a loop rather than a checklist.
+  </p>
+</div>
+
+<style>
+  /* Below the minimum width the labels become unreadable, so the diagram
+     keeps its size and scrolls sideways instead, like the table frames. */
+  .loop-circuit svg {
+    min-width: 32rem;
+  }
+
+  .leg-base {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 2;
+  }
+
+  .leg-draw {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 2.5;
+    stroke-linecap: square;
+  }
+
+  .station {
+    cursor: pointer;
+  }
+
+  .pill-bg {
+    fill: var(--background);
+  }
+
+  /* The orange fill floods the pill from the point where the line arrives,
+     clipped to the pill shape. The flood starts the moment the line touches. */
+  .pill-flood {
+    fill: var(--primary);
+    transform: scale(0);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .pill-border {
+    fill: none;
+    stroke: var(--nav-bg);
+    stroke-width: 2;
+  }
+
+  .station text {
+    fill: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+
+  .station[data-active] .pill-flood {
+    transform: scale(1);
+  }
+
+  .station[data-active] .pill-border {
+    stroke: var(--primary-active);
+  }
+
+  .station[data-active] text {
+    fill: var(--primary-foreground);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pill-flood {
+      transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .station text {
+      transition: fill 0.25s ease;
+    }
+  }
+</style>
+
+<script>
+  import './seo-agent.client'
+</script>

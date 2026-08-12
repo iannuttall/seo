@@ -1,0 +1,111 @@
+---
+import GuideDemo from './GuideDemo.astro'
+
+const sources = [
+  { key: 'crawl', name: 'Crawl' },
+  { key: 'gsc', name: 'Search Console' },
+  { key: 'analytics', name: 'Analytics' },
+  { key: 'live', name: 'Live results' },
+]
+
+const findings = [
+  {
+    key: 'crawl',
+    source: 'Crawl',
+    text: 'The pricing page loads, returns 200, and nothing on it blocks search engines. The problem is not technical.',
+  },
+  {
+    key: 'gsc',
+    source: 'Search Console',
+    text: 'Clicks fell from 480 to 210 in four weeks while impressions held. The page lost position, not demand.',
+  },
+  {
+    key: 'analytics',
+    source: 'Analytics',
+    text: 'The visitors who still arrive behave the same as before. The drop is in arrivals, not on the page.',
+  },
+  {
+    key: 'live',
+    source: 'Live results',
+    text: 'A competitor comparison page now sits above yours for the main query. That is where the clicks went.',
+  },
+]
+
+const toggleClasses =
+  'group flex cursor-pointer items-center gap-2 border-2 border-nav bg-background px-3 py-1.5 font-mono text-xs transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+---
+
+<GuideDemo
+  number="01"
+  label="The evidence"
+  title="Every claim names its source"
+  description="One question, four sources. Disconnect a source and watch which parts of the answer the agent can no longer make."
+>
+  <div x-data="evidenceSources" class="space-y-5">
+    <p class="font-sans text-sm leading-6">
+      <span aria-hidden="true" class="font-mono text-primary">&rsaquo;</span>
+      Why did clicks fall on the pricing page this month?
+    </p>
+
+    <div class="flex flex-wrap gap-2" role="group" aria-label="Evidence sources">
+      {
+        sources.map((source) => (
+          <button
+            type="button"
+            class={toggleClasses}
+            aria-pressed="true"
+            x-on:click={`toggle('${source.key}')`}
+            x-bind:aria-pressed={`sources.${source.key} ? 'true' : 'false'`}
+          >
+            <span
+              aria-hidden="true"
+              class="size-2 border border-current bg-primary group-aria-[pressed=false]:bg-transparent"
+            />
+            {source.name}
+          </button>
+        ))
+      }
+    </div>
+
+    <ul class="space-y-2">
+      {
+        findings.map((finding) => (
+          <li
+            class="border-2 border-border bg-background p-3"
+            x-bind:hidden={`!sources.${finding.key}`}
+          >
+            <p class="mb-1 font-mono text-[0.625rem] uppercase tracking-wide text-foreground-faint">
+              Observed &middot; {finding.source}
+            </p>
+            <p class="font-sans text-sm font-light leading-6">{finding.text}</p>
+          </li>
+        ))
+      }
+      <li
+        hidden
+        class="border-2 border-dashed border-border p-3 font-sans text-sm font-light leading-6 text-foreground-muted"
+        x-bind:hidden="!allOff()"
+      >
+        With nothing connected, the agent can still write plausible advice. So can any chatbot. The evidence is the difference.
+      </li>
+    </ul>
+
+    <p aria-live="polite" class="font-mono text-xs text-foreground-muted">
+      <span x-text="caption()">All four sources connected. Every claim below names the evidence behind it.</span>
+    </p>
+  </div>
+</GuideDemo>
+
+<div hidden data-agent-markdown="only">
+  <p>
+    Interactive demo: one question, "Why did clicks fall on the pricing page this month?", answered from four
+    separate evidence sources. The crawl shows the page is technically fine. Search Console shows clicks fell
+    while impressions held, so the page lost position, not demand. Analytics shows visitor behavior is unchanged,
+    so the drop is in arrivals. Live results show a competitor page now ranks above it. Disconnecting a source
+    removes the claims that depend on it, because one source cannot prove another's facts.
+  </p>
+</div>
+
+<script>
+  import './seo-agent.client'
+</script>

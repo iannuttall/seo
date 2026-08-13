@@ -1,14 +1,13 @@
 import { z } from 'zod'
 import type { ResearchImportColumns } from './imports/research-columns.js'
 
-export const providerIdSchema = z.enum([
-  'dataforseo',
-  'semrush',
-  'ahrefs',
-  'serpbase',
-])
+export const providerIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u)
 export type ProviderId = z.infer<typeof providerIdSchema>
-export type ExternalServiceId = ProviderId | 'clicky'
+export type ExternalServiceId = string
 
 export const providerCapabilitySchema = z.enum([
   'keyword-metrics',

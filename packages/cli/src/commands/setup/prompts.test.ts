@@ -1,18 +1,41 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { RegisteredProviderExtension } from '@seo/core'
 import { analyticsSetupOptions, authSetupOptions } from './prompts.js'
 
-test('setup offers Clicky as a traffic analytics option', () => {
+const installedProvider: RegisteredProviderExtension = {
+  id: 'fathom',
+  displayName: 'Fathom',
+  description: 'Add Fathom analytics evidence.',
+  package: '@usefathom/seo-provider',
+  version: '1.2.3',
+  kinds: ['traffic-analytics'],
+  connection: {
+    fields: [{ id: 'siteId', label: 'Site ID', kind: 'account' }],
+    verify: async () => undefined,
+  },
+  capabilities: [
+    {
+      id: 'landing-page-visits',
+      run: async () => ({
+        metric: 'landing-page-visits',
+        rows: [],
+        returnedRows: 0,
+        retainedRowLimit: 100,
+        retainedRowLimitReached: false,
+        dataStatus: 'complete',
+        qualityWarnings: [],
+      }),
+    },
+  ],
+}
+
+test('setup offers the supported traffic analytics providers', () => {
   assert.deepEqual(analyticsSetupOptions(), [
     {
       value: 'google',
       label: 'Google Analytics',
       hint: 'Use a property available to your Google login',
-    },
-    {
-      value: 'clicky',
-      label: 'Clicky',
-      hint: 'Use a site ID and sitekey from Clicky',
     },
     { value: 'skip', label: 'Skip traffic analytics' },
   ])
@@ -32,14 +55,18 @@ test('setup can preserve, replace, or remove existing traffic analytics', () => 
         label: 'Google Analytics',
         hint: 'Use a property available to your Google login',
       },
-      {
-        value: 'clicky',
-        label: 'Clicky',
-        hint: 'Use a site ID and sitekey from Clicky',
-      },
       { value: 'remove', label: 'Remove traffic analytics' },
     ],
   )
+})
+
+test('setup offers an installed analytics provider without a new core option', () => {
+  const options = analyticsSetupOptions(undefined, [installedProvider])
+  assert.deepEqual(options.at(-2), {
+    value: 'extension:fathom',
+    label: 'Fathom',
+    hint: 'Installed provider from @usefathom/seo-provider',
+  })
 })
 
 test('saved BYO OAuth clients go directly to Google sign-in', () => {

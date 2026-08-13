@@ -31,6 +31,13 @@ export function analyticsConnection(
 ): AnalyticsConnection | undefined {
   const analytics = client?.analytics
   if (!analytics) return undefined
+  if (analytics.selected?.startsWith('extension:')) {
+    const providerId = analytics.selected.slice('extension:'.length)
+    const saved = analytics.extensions?.[providerId]
+    return saved
+      ? { provider: 'extension', providerId, account: saved.account }
+      : undefined
+  }
   if (analytics.selected === 'clicky') {
     return analytics.clicky
       ? { provider: 'clicky', siteId: analytics.clicky.siteId }
@@ -46,6 +53,11 @@ export function analyticsConnection(
   }
   if (analytics.clicky) {
     return { provider: 'clicky', siteId: analytics.clicky.siteId }
+  }
+  const providerId = Object.keys(analytics.extensions ?? {}).sort()[0]
+  const saved = providerId ? analytics.extensions?.[providerId] : undefined
+  if (providerId && saved) {
+    return { provider: 'extension', providerId, account: saved.account }
   }
   return undefined
 }
@@ -152,35 +164,56 @@ export function setClientAnalyticsConnection(
   if (!client) throw new Error(`Client not found: ${idOrName}`)
   return updateClient(client.id, {
     analytics:
-      connection.provider === 'clicky'
+      connection.provider === 'extension'
         ? {
             ...client.analytics,
-            selected: 'clicky',
-            clicky: { siteId: connection.siteId },
+            selected: `extension:${connection.providerId}` as const,
+            extensions: {
+              ...client.analytics.extensions,
+              [connection.providerId]: { account: connection.account },
+            },
           }
-        : {
-            ...client.analytics,
-            selected: 'google',
-            google: { propertyId: connection.propertyId },
-          },
+        : connection.provider === 'clicky'
+          ? {
+              ...client.analytics,
+              selected: 'clicky',
+              clicky: { siteId: connection.siteId },
+            }
+          : {
+              ...client.analytics,
+              selected: 'google',
+              google: { propertyId: connection.propertyId },
+            },
   })
 }
 
 export function removeClientAnalyticsConnection(
   idOrName: string,
-  provider: AnalyticsConnection['provider'],
+  provider:
+    | Exclude<AnalyticsConnection['provider'], 'extension'>
+    | `extension:${string}`,
 ): ClientProfile {
   const client = getClient(idOrName)
   if (!client) throw new Error(`Client not found: ${idOrName}`)
   const analytics = { ...client.analytics }
-  if (provider === 'clicky') delete analytics.clicky
+  if (provider.startsWith('extension:')) {
+    const providerId = provider.slice('extension:'.length)
+    if (analytics.extensions) {
+      delete analytics.extensions[providerId]
+      if (Object.keys(analytics.extensions).length === 0) {
+        delete analytics.extensions
+      }
+    }
+  } else if (provider === 'clicky') delete analytics.clicky
   else delete analytics.google
   if (analytics.selected === provider) {
     analytics.selected = analytics.google
       ? 'google'
       : analytics.clicky
         ? 'clicky'
-        : undefined
+        : Object.keys(analytics.extensions ?? {}).sort()[0]
+          ? (`extension:${Object.keys(analytics.extensions ?? {}).sort()[0]}` as const)
+          : undefined
   }
   return updateClient(client.id, { analytics })
 }

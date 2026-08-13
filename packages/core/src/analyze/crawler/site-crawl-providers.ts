@@ -1,3 +1,7 @@
+import {
+  analyticsConnectionProviderId,
+  analyticsProviderDetails,
+} from '../../analytics/providers.js'
 import type {
   PageSearchMetrics,
   PageTopQuery,
@@ -53,8 +57,8 @@ export async function joinAnalytics(input: {
   fetchLandingPageValues: LandingPageProvider
   landingValueForUrl: typeof landingValueForUrl
 }): Promise<CrawlAnalyticsDataSource> {
-  const label =
-    input.connection.provider === 'clicky' ? 'Clicky' : 'Google Analytics'
+  const providerId = analyticsConnectionProviderId(input.connection)
+  const label = analyticsProviderDetails(providerId).label
   let analytics: Awaited<ReturnType<LandingPageProvider>>
   try {
     const request = {
@@ -75,7 +79,7 @@ export async function joinAnalytics(input: {
     input.warnings.push(warning)
     return {
       status: 'unavailable',
-      provider: input.connection.provider,
+      provider: providerId,
       observedMetrics: [],
       window: input.window,
       totalPages: input.pages.length,
@@ -90,7 +94,7 @@ export async function joinAnalytics(input: {
     input.warnings.push(warning)
     return {
       status: 'unavailable',
-      provider: input.connection.provider,
+      provider: providerId,
       observedMetrics: analytics.source?.observedMetrics ?? [],
       window: input.window,
       totalPages: input.pages.length,
@@ -135,7 +139,7 @@ export async function joinAnalytics(input: {
         : joinedPages
           ? 'joined'
           : 'none',
-    provider: input.connection.provider,
+    provider: providerId,
     observedMetrics: analytics.source?.observedMetrics,
     window: input.window,
     totalPages: input.pages.length,

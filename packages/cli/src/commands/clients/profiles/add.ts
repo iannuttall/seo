@@ -45,7 +45,7 @@ export const clientAddCommand = defineCommand({
     'clicky-site-id': {
       type: 'string',
       description:
-        'Optional Clicky site ID. Save its sitekey with seo analytics clicky connect.',
+        'Optional legacy Clicky site ID. New connections use seo start.',
     },
     brand: {
       type: 'string',

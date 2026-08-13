@@ -29,12 +29,10 @@ function tableSql(database: Database.Database, table: string): string {
   return row?.sql ?? ''
 }
 
-export function migrateSerpBaseProviderIds(
-  database: Database.Database,
-): boolean {
+export function migrateProviderIds(database: Database.Database): boolean {
   const needsMigration = PROVIDER_TABLES.some((table) => {
     const sql = tableSql(database, table)
-    return sql.includes("'dataforseo'") && !sql.includes("'serpbase'")
+    return /(?:provider|metric_provider)\s+TEXT[^,]*CHECK\(/u.test(sql)
   })
   if (!needsMigration) return false
 
@@ -85,3 +83,5 @@ ALTER TABLE ai_prompt_observations_serpbase_next RENAME TO ai_prompt_observation
     database.pragma('foreign_keys = ON')
   }
 }
+
+export const migrateSerpBaseProviderIds = migrateProviderIds

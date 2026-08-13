@@ -21,6 +21,10 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   assert.equal(packageJson.bin.seo, './dist/cli.js')
   assert.equal(packageJson.exports['.'].import, './dist/index.js')
   assert.equal(packageJson.exports['./mcp'].import, './dist/mcp.js')
+  assert.equal(
+    packageJson.exports['./provider-sdk'].import,
+    './dist/provider-sdk.js',
+  )
   assert.equal(packageJson.license, 'Apache-2.0')
   assert.equal(packageJson.homepage, 'https://seoskill.dev')
   assert.equal(packageJson.repository.url, `git+${repositoryUrl}.git`)
@@ -81,10 +85,11 @@ test('production dogfood waits for the released package before auditing', async 
   assert.doesNotMatch(dogfood, /outputs\.published/)
 })
 
-test('the public TypeScript library and MCP entry points load', async () => {
-  const [core, mcp] = await Promise.all([
+test('the public TypeScript library, MCP, and provider SDK entry points load', async () => {
+  const [core, mcp, providerSdk] = await Promise.all([
     import('../dist/index.js'),
     import('../dist/mcp.js'),
+    import('../dist/provider-sdk.js'),
   ])
 
   assert.equal(typeof core.auditPage, 'function')
@@ -92,6 +97,7 @@ test('the public TypeScript library and MCP entry points load', async () => {
   assert.equal(typeof mcp.createServer, 'function')
   assert.equal(typeof mcp.describeReport, 'function')
   assert.equal(typeof mcp.executeReport, 'function')
+  assert.equal(providerSdk.SEO_PROVIDER_API_VERSION, 1)
   assert.ok(mcp.listReports().length > 0)
 })
 

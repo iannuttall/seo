@@ -831,11 +831,9 @@ test('version aliases and nested command help are available', async () => {
     ['export', 'refresh-priorities', '--help'],
     ['analytics', 'google', 'properties', '--help'],
     ['analytics', 'google', 'report', '--help'],
-    ['analytics', 'clicky', 'connect', '--help'],
-    ['analytics', 'clicky', 'status', '--help'],
-    ['analytics', 'clicky', 'report', '--help'],
-    ['analytics', 'clicky', 'detach', '--help'],
-    ['analytics', 'clicky', 'disconnect', '--help'],
+    ['providers', 'connect', '--help'],
+    ['providers', 'status', '--help'],
+    ['providers', 'disconnect', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
@@ -856,11 +854,11 @@ test('Google Analytics commands only use the provider namespace', async () => {
   assert.doesNotMatch(output, /ga4/i)
 })
 
-test('Clicky connect can attach a verified site to an existing project', async () => {
-  const output = await runSeo(['analytics', 'clicky', 'connect', '--help'])
-  assert.match(output, /--project/)
-  assert.match(output, /--site-id/)
-  assert.match(output, /Validate and save a Clicky sitekey/)
+test('provider extensions use one shared connection command', async () => {
+  const output = await runSeo(['providers', 'connect', '--help'])
+  assert.match(output, /PROVIDER ID|Provider id/i)
+  assert.match(output, /--account/)
+  assert.match(output, /Validate and save one installed provider connection/)
 })
 
 test('unknown commands emit one error and exit with failure', async () => {

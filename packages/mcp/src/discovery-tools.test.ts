@@ -39,12 +39,19 @@ function structured(result: unknown): JsonRecord {
   return value as JsonRecord
 }
 
-test('default MCP server exposes only the compact discovery surface', async () => {
+test('default MCP server exposes compact report and provider discovery', async () => {
   await withClient(async (client) => {
     const result = await client.listTools()
     assert.deepEqual(
       result.tools.map((tool) => tool.name),
-      ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
+      [
+        'seo_list_reports',
+        'seo_describe_report',
+        'seo_run_report',
+        'seo_list_providers',
+        'seo_describe_provider',
+        'seo_run_provider',
+      ],
     )
     assert.ok(result.tools.every((tool) => tool.outputSchema))
     const runTool = result.tools.find((tool) => tool.name === 'seo_run_report')

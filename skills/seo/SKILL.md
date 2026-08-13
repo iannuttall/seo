@@ -68,6 +68,18 @@ Describe a report before its first run. Follow `readOrder`, `doNotClaim`, and
 `related`; do not guess parameters. For fixes, pass `view: "actions"` to MCP or
 `--actions-only` to the JSON CLI command.
 
+Installed provider packages can also add agent actions. Discover them before
+calling provider-specific data:
+
+```bash
+seo providers list --json
+seo providers describe <provider-id> --json
+seo providers run <provider-id> <action-id> --params '<json>' --json
+```
+
+Use the described input schema. Treat the returned provider data as evidence
+with its named source and limits. A provider action is not a report finding.
+
 ## Setup and selection
 
 Use `setup-check` or `seo doctor` when auth is unknown. Use `--project <id>` for
@@ -120,5 +132,7 @@ labels, limitations, and verification. Keep it accessible, print-friendly,
 
 Prefer registered reports. Use `seo help all` for direct provider and
 administration commands, including Google, Bing, links, exports, projects, and
-crawls. IndexNow writes externally: validate with `--dry-run --json` and send
-only when authorised. Refresh only when needed.
+crawls. For installed extension actions, use `seo_list_providers`,
+`seo_describe_provider`, and `seo_run_provider`. IndexNow writes externally:
+validate with `--dry-run --json` and send only when authorised. Refresh only
+when needed.

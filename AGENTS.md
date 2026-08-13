@@ -37,6 +37,11 @@ agent instructions.
   result, domain, competitor, and link estimates. They must never replace or
   silently blend with Search Console, Google Analytics, crawl, or live result
   evidence.
+- Optional provider packages may add analytics or research adapters through the
+  public provider SDK. The main package owns the contracts, installation,
+  credentials, resource limits, registry, report semantics, and provenance.
+  Provider packages return normalized evidence and never add report findings,
+  public commands, MCP tools, or skill files.
 - A future hosted API or remote MCP may live in this monorepo and deploy to
   Cloudflare, but local CLI and library use must remain first class.
 - Report accuracy, deterministic output, and simple onboarding matter more than
@@ -49,13 +54,16 @@ agent instructions.
 
 ## Public Package Contract
 
-The repository is a monorepo internally, but users install one package:
+The repository is a monorepo internally. Users install one main package and
+can add optional provider packages:
 
 ```txt
 seo package     core TypeScript API
 seo/mcp         stdio MCP server API
+seo/provider-sdk provider package types and API version
 bin: seo        executable CLI command
 skills/         packaged agent skills
+provider packages optional capability adapters
 ```
 
 - Do not publish or teach `@seo/core`, `@seo/cli`, or `@seo/mcp`.
@@ -82,6 +90,8 @@ skills/         packaged agent skills
 - `packages/cli`: `seo` command, prompt flows, command help, selection, and
   terminal output.
 - `packages/mcp`: local stdio MCP server exposing core analysis.
+- Optional provider packages are maintained outside this repository. Keep
+  provider-specific API clients and tests in their package repositories.
 - `apps/web`: static Astro documentation and landing site for seoskill.dev.
 - `skills/seo/SKILL.md`: the single router skill agents install. It teaches
   discovery, the jobs table, and evidence rules; per-report depth lives in the
@@ -125,6 +135,9 @@ Useful core areas:
 - `packages/core/src/export`: CSV and export rendering.
 - `packages/core/src/providers`: provider-neutral research contracts and
   provider-specific adapters. Keep provider-native metrics named and typed.
+- `packages/core/src/provider-extensions`: optional package manifests,
+  npm package inspection, local installation, loading, registry, and the public
+  provider SDK contract.
 - `packages/core/src/links`: Bing, file and live-provider link evidence plus
   saved-crawl and Search Console target joins.
 - `packages/core/src/gsc`: Search Console provider boundary.
@@ -173,6 +186,11 @@ The guided flow should not ask humans for implementation details.
   copy property ids if the provider can list them.
 - Keep advanced OAuth, service-account, quota, and cache choices out of the
   default path.
+- Optional provider packages are third-party code. Show the exact package,
+  version, publisher, repository, integrity, and local-permission warning before
+  installation. Package details are not a security audit or endorsement.
+- Install only after explicit approval. JSON and CI mode require the npm
+  package name and `--yes`; they never prompt or choose a package automatically.
 - A service-account auth path may be added as an advanced option, but do not
   document it as available until the implementation and provider tests exist.
 - Printed next steps should start with `seo report --project <id>`.
@@ -265,6 +283,12 @@ Every report must be technically defensible and useful to another program.
   Provider adapters map external fields, capabilities, costs, and errors at the
   boundary. A report must not expose a provider payload or require a
   provider-named implementation type.
+- Load only explicitly installed provider packages declared in the local
+  package registry. Do not scan global or project `node_modules` directories.
+- Provider packages use the versioned `seo/provider-sdk` activation contract.
+  Reject unknown API versions, undeclared entry points, traversal, duplicate
+  provider ids, runtime dependency trees, and packages above the acquisition
+  limit before executing their entry point.
 - Use ASCII unless the file already needs non-ASCII text.
 - Keep dependencies lean. Prefer a small, tested local implementation when the
   behavior is stable and importing a package would add more surface than value.

@@ -4,23 +4,47 @@ import {
   fetchLandingPageValues,
   landingPageRankingPolicy,
   landingPageValuesCanRank,
-  landingPageValuesFromClickyRows,
+  landingPageValuesFromProviderRows,
   landingPageValuesFromRows,
   landingValueForUrl,
 } from './analytics-value.js'
 
-test('Clicky entrance rows become visits without invented user or conversion values', () => {
-  const values = landingPageValuesFromClickyRows([
+test('Clicky report evidence runs through the provider adapter contract', async () => {
+  let providerId = ''
+  const result = await fetchLandingPageValues(
     {
-      value: '12',
-      url: 'https://example.com/pricing?utm_source=search',
+      connection: { provider: 'clicky', siteId: '123' },
+      startDate: '2026-08-01',
+      endDate: '2026-08-07',
+      limit: 100,
     },
-    { value: '3', url: 'https://example.com/pricing/' },
-  ])
+    {
+      analyticsLandingPages: async (input) => {
+        providerId = input.providerId
+        return {
+          metric: 'landing-page-visits',
+          rows: [{ path: '/pricing', visits: 15 }],
+          returnedRows: 1,
+          retainedRowLimit: 100,
+          retainedRowLimitReached: false,
+          dataStatus: 'complete',
+          qualityWarnings: [],
+        }
+      },
+    },
+  )
 
+  assert.equal(providerId, 'clicky')
+  assert.deepEqual(result.values.get('/pricing'), { sessions: 15 })
+  assert.equal(result.source?.provider, 'clicky')
+})
+
+test('normalized provider rows keep only the shared visit meaning', () => {
+  const values = landingPageValuesFromProviderRows([
+    { path: '/pricing', visits: 15 },
+  ])
   assert.deepEqual(values.get('/pricing'), { sessions: 15 })
   assert.equal(values.get('/pricing')?.totalUsers, undefined)
-  assert.equal(values.get('/pricing')?.conversions, undefined)
 })
 
 test('aggregates Google Analytics query-string variants by normalized landing path', () => {

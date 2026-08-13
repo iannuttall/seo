@@ -1,9 +1,14 @@
-import { ClickyClient, type ClickyReportResult } from '../../clicky/client.js'
+import {
+  analyticsConnectionProviderId,
+  analyticsProviderDetails,
+} from '../../analytics/providers.js'
 import {
   ga4ReportQualityWarnings,
   ga4RowsToObjects,
   runGa4Report,
 } from '../../ga4/client.js'
+import { runAnalyticsProviderLandingPages } from '../../provider-extensions/analytics.js'
+import type { SeoAnalyticsLandingPageResult } from '../../provider-extensions/sdk.js'
 import type { AnalyticsConnection } from '../../types.js'
 
 export type LandingPageValue = {
@@ -13,7 +18,7 @@ export type LandingPageValue = {
 }
 
 export type LandingPageValueSource = {
-  provider?: AnalyticsConnection['provider']
+  provider?: string
   observedMetrics?: Array<'sessions' | 'totalUsers' | 'conversions'>
   dataStatus?: 'complete' | 'partial'
   returnedRows: number
@@ -31,15 +36,12 @@ export type LandingPageValueResult = {
 
 type LandingPageValueDependencies = {
   runGa4Report: typeof runGa4Report
-  clickyReport: (
-    siteId: string,
-    input: Parameters<ClickyClient['report']>[0],
-  ) => Promise<ClickyReportResult>
+  analyticsLandingPages: typeof runAnalyticsProviderLandingPages
 }
 
 const defaultDependencies: LandingPageValueDependencies = {
   runGa4Report,
-  clickyReport: (siteId, input) => new ClickyClient({ siteId }).report(input),
+  analyticsLandingPages: runAnalyticsProviderLandingPages,
 }
 
 function normalizePath(value: string): string {
@@ -95,27 +97,10 @@ export function landingPageValuesFromRows(
   return values
 }
 
-export function landingPageValuesFromClickyRows(
-  rows: ClickyReportResult['rows'],
+export function landingPageValuesFromProviderRows(
+  rows: SeoAnalyticsLandingPageResult['rows'],
 ): Map<string, LandingPageValue> {
-  const values = new Map<string, LandingPageValue>()
-  const orderedRows = [...rows].sort((left, right) =>
-    compareText(left.url ?? '', right.url ?? ''),
-  )
-  for (const row of orderedRows) {
-    if (!row.url) continue
-    let path = ''
-    try {
-      path = normalizePath(new URL(row.url).pathname)
-    } catch {
-      continue
-    }
-    const sessions = Number(row.value)
-    if (!path || !Number.isSafeInteger(sessions) || sessions < 0) continue
-    const existing = values.get(path)
-    values.set(path, { sessions: (existing?.sessions ?? 0) + sessions })
-  }
-  return values
+  return new Map(rows.map((row) => [row.path, { sessions: row.visits }]))
 }
 
 export function landingValueForUrl(
@@ -143,7 +128,9 @@ export function landingPageRankingPolicy(input: {
       ? ({ provider: 'google', propertyId: input.propertyId } as const)
       : undefined)
   if (!connection) return { canRank: false, warnings: [] }
-  const label = connection.provider === 'clicky' ? 'Clicky' : 'Google Analytics'
+  const label = analyticsProviderDetails(
+    analyticsConnectionProviderId(connection),
+  ).label
   const warningSuffix =
     'Observed landing-page values remain visible but do not affect priority scores.'
   const warnings = [
@@ -200,38 +187,39 @@ export async function fetchLandingPageValues(
       },
     }
   }
-  if (connection.provider === 'clicky') {
+  if (connection.provider === 'extension') {
     try {
       const result = await (
-        dependencies.clickyReport ?? defaultDependencies.clickyReport
-      )(connection.siteId, {
-        type: 'pages-entrance',
+        dependencies.analyticsLandingPages ??
+        defaultDependencies.analyticsLandingPages
+      )({
+        providerId: connection.providerId,
+        account: connection.account,
         startDate: input.startDate,
         endDate: input.endDate,
         limit: retainedRowLimit,
         refresh: input.refresh,
       })
       return {
-        values: landingPageValuesFromClickyRows(result.rows),
+        values: landingPageValuesFromProviderRows(result.rows),
         source: {
-          provider: 'clicky',
+          provider: connection.providerId,
           observedMetrics: ['sessions'],
-          dataStatus: result.retainedRowLimitReached ? 'partial' : 'complete',
+          dataStatus: result.dataStatus,
           returnedRows: result.returnedRows,
+          ...(result.availableRows !== undefined
+            ? { availableRows: result.availableRows }
+            : {}),
           retainedRowLimit: result.retainedRowLimit,
           retainedRowLimitReached: result.retainedRowLimitReached,
-          qualityWarnings: result.retainedRowLimitReached
-            ? [
-                'Clicky returned the retained landing-page limit. Missing pages are not reliable zero-visit evidence.',
-              ]
-            : [],
+          qualityWarnings: [...result.qualityWarnings],
         },
       }
     } catch (error) {
       return {
         values: new Map(),
         source: {
-          provider: 'clicky',
+          provider: connection.providerId,
           observedMetrics: [],
           dataStatus: 'partial',
           returnedRows: 0,
@@ -243,63 +231,122 @@ export async function fetchLandingPageValues(
       }
     }
   }
-  try {
-    const result = await (
-      dependencies.runGa4Report ?? defaultDependencies.runGa4Report
-    )(
-      connection.propertyId,
-      {
-        dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
-        dimensions: [{ name: 'landingPagePlusQueryString' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'totalUsers' },
-          { name: 'conversions' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: retainedRowLimit,
-      },
-      { refresh: input.refresh },
-    )
-    const rows = ga4RowsToObjects(result)
-    const values = landingPageValuesFromRows(rows)
-    const availableRows = result.rowCount
-    const retainedRowLimitReached =
-      (availableRows !== undefined && availableRows > rows.length) ||
-      rows.length >= retainedRowLimit
-    const qualityWarnings = ga4ReportQualityWarnings(
-      result,
-      'Google Analytics landing-page report',
-    )
-    return {
-      values,
-      source: {
-        provider: 'google',
-        observedMetrics: ['sessions', 'totalUsers', 'conversions'],
-        dataStatus:
-          retainedRowLimitReached || qualityWarnings.length
-            ? 'partial'
-            : 'complete',
-        returnedRows: rows.length,
-        ...(availableRows !== undefined ? { availableRows } : {}),
-        retainedRowLimit,
-        retainedRowLimitReached,
-        qualityWarnings,
-      },
-    }
-  } catch (error) {
-    return {
-      values: new Map(),
-      source: {
-        provider: 'google',
-        observedMetrics: [],
-        dataStatus: 'partial',
-        returnedRows: 0,
-        retainedRowLimit,
-        retainedRowLimitReached: false,
-        qualityWarnings: [],
-      },
-      warning: error instanceof Error ? error.message : String(error),
-    }
+  const fetchers: Record<
+    Exclude<AnalyticsConnection['provider'], 'extension'>,
+    (
+      selected: Exclude<AnalyticsConnection, { provider: 'extension' }>,
+    ) => Promise<LandingPageValueResult>
+  > = {
+    clicky: async (selected) => {
+      if (selected.provider !== 'clicky') {
+        throw new Error('Clicky analytics connection mismatch.')
+      }
+      try {
+        const result = await (
+          dependencies.analyticsLandingPages ??
+          defaultDependencies.analyticsLandingPages
+        )({
+          providerId: 'clicky',
+          account: { siteId: selected.siteId },
+          startDate: input.startDate,
+          endDate: input.endDate,
+          limit: retainedRowLimit,
+          refresh: input.refresh,
+        })
+        return {
+          values: landingPageValuesFromProviderRows(result.rows),
+          source: {
+            provider: 'clicky',
+            observedMetrics: ['sessions'],
+            dataStatus: result.dataStatus,
+            returnedRows: result.returnedRows,
+            retainedRowLimit: result.retainedRowLimit,
+            retainedRowLimitReached: result.retainedRowLimitReached,
+            qualityWarnings: [...result.qualityWarnings],
+          },
+        }
+      } catch (error) {
+        return {
+          values: new Map(),
+          source: {
+            provider: 'clicky',
+            observedMetrics: [],
+            dataStatus: 'partial',
+            returnedRows: 0,
+            retainedRowLimit,
+            retainedRowLimitReached: false,
+            qualityWarnings: [],
+          },
+          warning: error instanceof Error ? error.message : String(error),
+        }
+      }
+    },
+    google: async (selected) => {
+      if (selected.provider !== 'google') {
+        throw new Error('Google Analytics connection mismatch.')
+      }
+      try {
+        const result = await (
+          dependencies.runGa4Report ?? defaultDependencies.runGa4Report
+        )(
+          selected.propertyId,
+          {
+            dateRanges: [
+              { startDate: input.startDate, endDate: input.endDate },
+            ],
+            dimensions: [{ name: 'landingPagePlusQueryString' }],
+            metrics: [
+              { name: 'sessions' },
+              { name: 'totalUsers' },
+              { name: 'conversions' },
+            ],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: retainedRowLimit,
+          },
+          { refresh: input.refresh },
+        )
+        const rows = ga4RowsToObjects(result)
+        const values = landingPageValuesFromRows(rows)
+        const availableRows = result.rowCount
+        const retainedRowLimitReached =
+          (availableRows !== undefined && availableRows > rows.length) ||
+          rows.length >= retainedRowLimit
+        const qualityWarnings = ga4ReportQualityWarnings(
+          result,
+          'Google Analytics landing-page report',
+        )
+        return {
+          values,
+          source: {
+            provider: 'google',
+            observedMetrics: ['sessions', 'totalUsers', 'conversions'],
+            dataStatus:
+              retainedRowLimitReached || qualityWarnings.length
+                ? 'partial'
+                : 'complete',
+            returnedRows: rows.length,
+            ...(availableRows !== undefined ? { availableRows } : {}),
+            retainedRowLimit,
+            retainedRowLimitReached,
+            qualityWarnings,
+          },
+        }
+      } catch (error) {
+        return {
+          values: new Map(),
+          source: {
+            provider: 'google',
+            observedMetrics: [],
+            dataStatus: 'partial',
+            returnedRows: 0,
+            retainedRowLimit,
+            retainedRowLimitReached: false,
+            qualityWarnings: [],
+          },
+          warning: error instanceof Error ? error.message : String(error),
+        }
+      }
+    },
   }
+  return fetchers[connection.provider](connection)
 }

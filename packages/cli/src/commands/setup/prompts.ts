@@ -8,21 +8,24 @@ import {
 } from '@clack/prompts'
 import {
   type AnalyticsConnection,
+  analyticsConnectionLabel,
   authStatus,
-  CLICKY_SITEKEY_ENV,
-  ClickyClient,
   type Ga4WebStreamCandidate,
   type Ga4WebStreamMatch,
   ga4MatchReason,
   ga4PropertyIdFromName,
   listGa4AccountSummaries,
   listGa4DataStreams,
+  loadProviderExtensions,
   loginWithLoopback,
   matchGa4WebStreams,
+  type RegisteredProviderExtension,
   readClickySiteKey,
+  readProviderExtensionCredentials,
   SeoError,
-  writeClickySiteKey,
+  verifyAnalyticsProvider,
   writeOauthClient,
+  writeProviderExtensionCredentials,
 } from '@seo/core'
 import { canPrompt, maybeExitCancelled } from '../../utils.js'
 import { detectMcpClients } from '../mcp-clients.js'
@@ -45,14 +48,12 @@ export type SetupGoogleAnalyticsSelection = {
   selection: 'explicit' | 'matched' | 'manual'
   reason: string
 }
-export type SetupClickySelection = {
-  siteId: string
-  credentialSource: 'environment' | 'keychain' | 'file'
-  selection: 'explicit' | 'manual'
-}
 export type SetupAnalyticsSelection =
   | { provider: 'google'; google: SetupGoogleAnalyticsSelection }
-  | { provider: 'clicky'; clicky: SetupClickySelection }
+  | {
+      provider: 'extension'
+      extension: { providerId: string; account: Record<string, string> }
+    }
   | { provider: 'none' }
 export type SetupSkillInstall = {
   status: 'installed' | 'declined' | 'skipped' | 'failed'
@@ -70,9 +71,17 @@ type GoogleAnalyticsSetupChoice = GoogleAnalyticsPropertyChoice & {
 }
 
 type AuthSetupChoice = 'login' | 'setup' | 'skip'
-type AnalyticsSetupChoice = 'keep' | 'google' | 'clicky' | 'remove' | 'skip'
+type AnalyticsSetupChoice =
+  | 'keep'
+  | 'google'
+  | 'remove'
+  | 'skip'
+  | `extension:${string}`
 
-export function analyticsSetupOptions(current?: AnalyticsConnection): Array<{
+export function analyticsSetupOptions(
+  current?: AnalyticsConnection,
+  installedProviders: readonly RegisteredProviderExtension[] = [],
+): Array<{
   value: AnalyticsSetupChoice
   label: string
   hint?: string
@@ -87,28 +96,137 @@ export function analyticsSetupOptions(current?: AnalyticsConnection): Array<{
       label: 'Google Analytics',
       hint: 'Use a property available to your Google login',
     },
-    {
-      value: 'clicky',
-      label: 'Clicky',
-      hint: 'Use a site ID and sitekey from Clicky',
-    },
+    ...installedProviders
+      .filter(
+        (provider) =>
+          provider.capabilities.some(
+            (capability) => capability.id === 'landing-page-visits',
+          ) && provider.id !== 'google',
+      )
+      .map((provider) => ({
+        value: `extension:${provider.id}` as const,
+        label: provider.displayName,
+        hint: `Installed provider from ${provider.package}`,
+      })),
   ]
   if (!current) {
     return [...providers, { value: 'skip', label: 'Skip traffic analytics' }]
   }
-  const currentLabel =
-    current.provider === 'clicky'
-      ? `Clicky site ${current.siteId}`
-      : `Google Analytics property ${current.propertyId}`
+  const currentLabel = analyticsConnectionLabel(current)
   return [
     {
-      value: 'keep',
+      value: 'keep' as const,
       label: `Keep ${currentLabel}`,
       hint: 'Leave this project connection unchanged',
     },
     ...providers,
     { value: 'remove', label: 'Remove traffic analytics' },
   ]
+}
+
+async function connectAnalyticsExtension(
+  provider: RegisteredProviderExtension,
+  initialAccount: Readonly<Record<string, string>> = {},
+  interactive = true,
+): Promise<Extract<SetupAnalyticsSelection, { provider: 'extension' }>> {
+  if (
+    !provider.capabilities.some(
+      (capability) => capability.id === 'landing-page-visits',
+    )
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Provider ${provider.id} does not supply landing-page visits.`,
+    )
+  }
+  const account: Record<string, string> = { ...initialAccount }
+  const credentials: Record<string, string> = {}
+  for (const field of provider.connection.fields.filter(
+    (item) => item.kind === 'account',
+  )) {
+    if (account[field.id]?.trim()) continue
+    if (!interactive) {
+      if (field.required !== false) {
+        throw new SeoError('INVALID_INPUT', `${field.label} is required.`)
+      }
+      continue
+    }
+    const value = maybeExitCancelled(
+      await text({
+        message: field.label,
+        validate: (input) =>
+          field.required !== false && !input?.trim()
+            ? `${field.label} is required`
+            : undefined,
+      }),
+    ).trim()
+    if (value) account[field.id] = value
+  }
+  const normalizedAccount = provider.connection.normalizeAccount
+    ? provider.connection.normalizeAccount(account)
+    : account
+  try {
+    Object.assign(
+      credentials,
+      await readProviderExtensionCredentials({
+        providerId: provider.id,
+        account: normalizedAccount,
+        fields: provider.connection.fields,
+      }),
+    )
+  } catch {
+    // Missing values are requested below or reported in non-interactive mode.
+  }
+  if (provider.id === 'clicky' && !credentials.sitekey) {
+    const saved = await readClickySiteKey(normalizedAccount.siteId ?? '')
+    if (saved) credentials.sitekey = saved.siteKey
+  }
+  for (const field of provider.connection.fields.filter(
+    (item) => item.kind === 'secret',
+  )) {
+    const environmentValue = field.envVar
+      ? process.env[field.envVar]?.trim()
+      : undefined
+    if (environmentValue) credentials[field.id] = environmentValue
+    if (credentials[field.id]) continue
+    if (!interactive) {
+      throw new SeoError(
+        'AUTH_REQUIRED',
+        field.envVar
+          ? `Set ${field.envVar} to connect ${provider.displayName}.`
+          : `${field.label} is required to connect ${provider.displayName}.`,
+      )
+    }
+    const value = maybeExitCancelled(
+      await password({
+        message: field.label,
+        validate: (input) =>
+          field.required !== false && !input?.trim()
+            ? `${field.label} is required`
+            : undefined,
+      }),
+    ).trim()
+    if (value) credentials[field.id] = value
+  }
+  if (provider.connection.verificationNotice) {
+    note(provider.connection.verificationNotice, 'Connection check')
+  }
+  await verifyAnalyticsProvider({
+    providerId: provider.id,
+    account: normalizedAccount,
+    credentials,
+  })
+  if (Object.keys(credentials).length > 0) {
+    await writeProviderExtensionCredentials({
+      providerId: provider.id,
+      account: normalizedAccount,
+      credentials,
+    })
+  }
+  return {
+    provider: 'extension',
+    extension: { providerId: provider.id, account: normalizedAccount },
+  }
 }
 
 export function authSetupOptions(input: {
@@ -319,61 +437,6 @@ export async function chooseGoogleAnalyticsProperty(input: {
   }
 }
 
-async function chooseClicky(input: {
-  siteId?: string
-  interactive: boolean
-}): Promise<SetupClickySelection> {
-  const siteId =
-    input.siteId ??
-    (input.interactive
-      ? maybeExitCancelled(
-          await text({
-            message: 'Clicky site ID',
-            validate: (value) =>
-              /^\d{1,30}$/u.test(value?.trim() ?? '')
-                ? undefined
-                : 'Enter the numeric site ID from Clicky',
-          }),
-        )
-      : undefined)
-  if (!siteId) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Pass --clicky-site-id when connecting Clicky outside a terminal.',
-    )
-  }
-
-  const existing = await readClickySiteKey(siteId)
-  const siteKey =
-    existing?.siteKey ??
-    (input.interactive
-      ? maybeExitCancelled(
-          await password({
-            message: 'Clicky sitekey',
-            validate: (value) =>
-              /^[A-Za-z0-9]{12,64}$/u.test(value?.trim() ?? '')
-                ? undefined
-                : 'Enter the sitekey from Clicky',
-          }),
-        )
-      : undefined)
-  if (!siteKey) {
-    throw new SeoError(
-      'AUTH_REQUIRED',
-      `Set ${CLICKY_SITEKEY_ENV} when connecting Clicky outside a terminal.`,
-    )
-  }
-
-  await new ClickyClient({ siteId, siteKey }).verify()
-  const credentialSource =
-    existing?.source ?? (await writeClickySiteKey(siteId, siteKey))
-  return {
-    siteId,
-    credentialSource,
-    selection: input.siteId ? 'explicit' : 'manual',
-  }
-}
-
 export async function chooseAnalyticsForSetup(input: {
   googleProperty?: string
   clickySiteId?: string
@@ -389,13 +452,19 @@ export async function chooseAnalyticsForSetup(input: {
   }
   const interactive = input.interactive ?? canPrompt()
   if (input.clickySiteId) {
-    return {
-      provider: 'clicky',
-      clicky: await chooseClicky({
-        siteId: input.clickySiteId,
-        interactive,
-      }),
+    const loaded = await loadProviderExtensions()
+    const provider = loaded.registry.get('clicky')
+    if (!provider) {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'The Clicky provider package is not installed. Run `seo providers install @seoskill/clicky-provider`.',
+      )
     }
+    return connectAnalyticsExtension(
+      provider,
+      { siteId: input.clickySiteId },
+      interactive,
+    )
   }
   if (input.googleProperty) {
     const google = await chooseGoogleAnalyticsProperty({
@@ -407,20 +476,30 @@ export async function chooseAnalyticsForSetup(input: {
   }
   if (!interactive) return undefined
 
+  const loadedProviders = await loadProviderExtensions()
+
   const choice = maybeExitCancelled(
     await select<AnalyticsSetupChoice>({
       message: 'Traffic analytics',
-      options: analyticsSetupOptions(input.current),
+      options: analyticsSetupOptions(
+        input.current,
+        loadedProviders.registry.list(),
+      ),
     }),
   )
   if (choice === 'keep') return undefined
   if (choice === 'remove') return { provider: 'none' }
   if (choice === 'skip') return undefined
-  if (choice === 'clicky') {
-    return {
-      provider: 'clicky',
-      clicky: await chooseClicky({ interactive }),
+  if (choice.startsWith('extension:')) {
+    const id = choice.slice('extension:'.length)
+    const provider = loadedProviders.registry.get(id)
+    if (!provider) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `Provider ${id} is installed but could not be loaded. Run \`seo providers doctor\`.`,
+      )
     }
+    return connectAnalyticsExtension(provider)
   }
   const google = await chooseGoogleAnalyticsProperty({
     site: input.site,

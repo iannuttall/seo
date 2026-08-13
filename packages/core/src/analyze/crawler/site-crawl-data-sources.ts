@@ -1,3 +1,4 @@
+import { analyticsProviderDetails } from '../../analytics/providers.js'
 import type {
   queryPageMetrics,
   queryPagesMetrics,
@@ -73,12 +74,9 @@ export async function crawlDataSources(input: {
           propertyId: input.googleAnalyticsPropertyId,
         } as const)
       : undefined)
-  const analyticsLabel =
-    analyticsConnection?.provider === 'clicky'
-      ? 'Clicky'
-      : analyticsConnection?.provider === 'google'
-        ? 'Google Analytics'
-        : 'Analytics'
+  const analyticsLabel = analyticsConnection
+    ? analyticsProviderDetails(analyticsConnection.provider).label
+    : 'Analytics'
   const dataSources: CrawlReportDataSources = {
     searchConsole: {
       status: 'skipped',

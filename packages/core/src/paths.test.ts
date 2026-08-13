@@ -29,6 +29,14 @@ test('uses an XDG-style config directory on macOS', () => {
   assert.equal(paths.configDir, '/Users/example/.config/seo')
   assert.equal(paths.cacheDir, '/Users/example/Library/Caches/seo')
   assert.equal(paths.logDir, '/Users/example/Library/Logs/seo')
+  assert.equal(
+    paths.providerPackagesDir,
+    '/Users/example/.config/seo/providers',
+  )
+  assert.equal(
+    paths.installedProviderPackagesFile,
+    '/Users/example/.config/seo/provider-packages.json',
+  )
 })
 
 test('respects explicit config and XDG overrides', () => {

@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.2.33",
+  "version": "0.2.34",
   "description": "The SEO command for AI agents. Audit sites and research search opportunities with local, evidence-backed reports.",
   "type": "module",
   "license": "Apache-2.0",
@@ -35,6 +35,10 @@
     "./mcp": {
       "types": "./dist/mcp.d.ts",
       "import": "./dist/mcp.js"
+    },
+    "./provider-sdk": {
+      "types": "./dist/provider-sdk.d.ts",
+      "import": "./dist/provider-sdk.js"
     },
     "./package.json": "./package.json"
   },
@@ -84,10 +88,10 @@
     "test": "turbo run test && pnpm run build:package && pnpm run test:contracts:built && pnpm run test:resources:built",
     "test:built": "turbo run test && pnpm run test:contracts:built && pnpm run test:resources:built",
     "test:cli-shard:built": "node scripts/run-cli-test-shard.mjs",
-    "test:contracts:built": "node --test scripts/package.test.mjs scripts/dogfood-summary.test.mjs scripts/git-hooks.test.mjs scripts/run-cli-test-shard.test.mjs scripts/semrush-live-acceptance.test.mjs && pnpm run skills:validate",
+    "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs scripts/dogfood-summary.test.mjs scripts/git-hooks.test.mjs scripts/run-cli-test-shard.test.mjs scripts/semrush-live-acceptance.test.mjs && pnpm run skills:validate",
     "test:semrush-live": "pnpm run build:package && node scripts/semrush-live-acceptance.mjs",
     "test:resources": "pnpm run build:package && pnpm run test:resources:built",
-    "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/pseo-resource-harness.mjs && node scripts/competitive-opportunities-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && node scripts/clicky-resource-harness.mjs && node scripts/server-log-resource-harness.mjs",
+    "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/pseo-resource-harness.mjs && node scripts/competitive-opportunities-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && node scripts/provider-extension-resource-harness.mjs && node scripts/server-log-resource-harness.mjs",
     "test:rank-resources": "pnpm run build:package && node scripts/rank-tracking-resource-harness.mjs",
     "test:package-install": "pnpm --filter @seo/core build && pnpm --filter @seo/mcp build && pnpm run build:package && node --test scripts/installed-package.test.mjs",
     "test:package-install:built": "node --test scripts/installed-package.test.mjs",

@@ -1,6 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  ClickyClient,
   ga4PropertyIdFromName,
   ga4RowsToObjects,
   inspectUrl,
@@ -10,45 +9,9 @@ import {
   runGa4Report,
 } from '@seo/core'
 import * as z from 'zod/v4'
-import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
 export function registerDataTools(server: McpServer): void {
-  server.registerTool(
-    'clicky_analytics_run_report',
-    {
-      description:
-        'Run a bounded Clicky analytics report using a locally saved sitekey',
-      inputSchema: {
-        siteId: z.string().regex(/^\d{1,30}$/u),
-        type: z.string(),
-        startDate: z.string(),
-        endDate: z.string(),
-        limit: z.number().int().min(1).max(5_000).optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({ siteId, type, startDate, endDate, limit, refresh }) => {
-      try {
-        const result = await new ClickyClient({ siteId }).report({
-          type,
-          startDate,
-          endDate,
-          limit,
-          refresh,
-        })
-        return toolSuccess(
-          `Fetched ${result.returnedRows} Clicky rows.`,
-          compactAgentWorkflowOutput(
-            result as unknown as Record<string, unknown>,
-          ),
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
   server.registerTool(
     'google_analytics_properties',
     {

@@ -47,9 +47,9 @@ review programmatic page patterns, and catch regressions after a release.
 
 - People running their own sites who want a clear audit and a ranked list of
   fixes, without learning a heavy dashboard.
-- AI agents that need real crawl, Search Console, Google Analytics or Clicky, keyword,
-  result, domain, competitor, and link evidence through MCP and one packaged
-  SEO skill instead of screenshots or guesses.
+- AI agents that need real crawl, Search Console, traffic analytics, keyword,
+  result, domain, competitor, and link evidence through MCP and one packaged SEO
+  skill instead of screenshots or guesses.
 - Developers who want to embed the same report engine in a script, a CI job, or
   a TypeScript app.
 
@@ -64,14 +64,13 @@ seo report
 ```
 
 The setup walks you through Google sign-in, your Search Console property, an
-optional Google Analytics or Clicky connection, and a local project profile. Public releases can include
-the shared Google app. If it is unavailable in your build, setup guides you
-through adding your own desktop OAuth client.
+optional traffic analytics connection, and a local project profile. Public
+releases can include the shared Google app. If it is unavailable in your build,
+setup guides you through adding your own desktop OAuth client.
 
-Research providers are optional and connected separately. Start with the main
-report, then add SerpBase, DataForSEO, Semrush, or Ahrefs only when external
-result, keyword, domain, competitor, or link evidence would change the
-decision.
+DataForSEO, Semrush, and Ahrefs are optional research providers built into the
+main package. Connect one only when external result, keyword, domain,
+competitor, or link evidence would change the decision.
 
 That is the normal path. The `seo` command is then available in every terminal,
 script, CI job, and local MCP client on the machine.
@@ -198,24 +197,8 @@ Run `seo help` for the short path or `seo help all` for the full command list.
 
 Connect a research provider when you need independent market estimates or
 competitor evidence. Each connection is local and separate from Google
-sign-in. SerpBase is the smaller option for live Google result snapshots and
-rank tracking:
-
-```sh
-seo providers serpbase connect
-seo providers serpbase status --check
-seo providers serpbase limits
-```
-
-SerpBase uses country, language and desktop or mobile settings. SerpBase-backed
-reports accept a depth of 1 to 100. Every 10 organic positions adds one live
-request, so the default remains 10 and deeper collection is opt-in. The
-provider returns charged credits without an account-specific dollar value, so
-local spend limits use the highest published standard Search price as a
-conservative estimate. Rank tracking checks the total pages, keywords and
-devices against the local request limit before starting paid work.
-
-DataForSEO has the broadest live coverage:
+sign-in. The main package includes DataForSEO, Semrush, and Ahrefs. DataForSEO
+has the broadest live coverage:
 
 ```sh
 seo providers dataforseo connect
@@ -349,26 +332,166 @@ seo analytics google properties
 seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 ```
 
-Clicky uses the numeric site ID and sitekey shown on the site's preferences
-page. Sign in to Clicky, open the site, then open **Preferences**. The page URL
-looks like `https://clicky.com/stats/prefs?site_id=123456789`. Copy the Site ID
-and **sitekey**, not the admin sitekey. Each Clicky site has its own pair.
-
-Connect it during `seo start`, or connect it separately and attach the site ID
-to a project profile:
+Clicky is available through the first-party
+[Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider).
+It supplies landing-page visits and Clicky analytics reports. Its README owns
+the provider setup and service links. Install the package, then use `seo start`
+to attach its site ID to a project profile:
 
 ```sh
-seo analytics clicky connect --site-id 123456789
-seo analytics clicky connect --project example --site-id 123456789
-seo analytics clicky report --project example --start-date 2026-07-01 --end-date 2026-07-28
+seo providers install @seoskill/clicky-provider
+seo providers connect clicky --account '{"siteId":"123456789"}'
+seo start
 ```
 
-The sitekey is saved in the system keychain with a private local file fallback.
-Agents and CI can set `SEO_CLICKY_SITEKEY`. Clicky landing-page visits can inform
-the main crawl and priority reports. Reports that need Google-specific
-conversion, attribution, or geography fields still require Google Analytics.
-See the [Clicky connection guide](https://seoskill.dev/docs/clicky) for setup,
-verification, and report examples.
+The existing Clicky commands still work after the package is installed:
+
+```sh
+seo analytics clicky status --project example
+seo analytics clicky report --project example --start-date 2026-08-01 --end-date 2026-08-07
+```
+
+The sitekey stays in the managed secret store. Agents and CI can set
+`SEO_CLICKY_SITEKEY`. Saved Clicky projects and sitekeys are reused after the
+package move. Clicky landing-page visits can inform the main crawl and priority
+reports. Reports that need Google-specific conversion, attribution, or
+geography fields still require Google Analytics.
+
+Providers can ship separate npm packages and give users one install command.
+The command shows the exact version, publisher, repository, integrity, and code
+warning before it installs anything. After installation, the provider appears
+in `seo providers list`, `seo start`, the CLI, and the MCP server. The main
+package keeps profiles, secrets, cache, network and cost limits, report text,
+and evidence rules.
+
+These first-party packages are public examples for people who want to build
+another provider package:
+
+| Package | What it adds | Package links |
+| --- | --- | --- |
+| `@seoskill/clicky-provider` | Clicky landing-page visits and native Clicky analytics reports. | [GitHub and setup](https://github.com/iannuttall/seoskill-clicky-provider) · [npm](https://www.npmjs.com/package/@seoskill/clicky-provider) |
+| `@seoskill/serpbase-provider` | Live Google result snapshots and live rank tracking through SerpBase. | [GitHub and setup](https://github.com/iannuttall/seoskill-serpbase-provider) · [npm](https://www.npmjs.com/package/@seoskill/serpbase-provider) |
+
+These packages use the same public SDK as third-party packages. Their source,
+tests, limits, release history, and security policy can be reviewed separately
+from the main package.
+
+A package can register either of these extension types:
+
+- A shared capability returns an existing evidence shape, such as
+  `landing-page-visits` or `serp-snapshot`. Compatible reports use it without
+  provider-specific core code.
+- An action supplies its own input and output JSON schemas. Agents discover it
+  with `seo providers describe <id> --json` and run it with
+  `seo providers run <id> <action> --params '<json>' --json`.
+
+The command validates action input and output against the package schemas. A
+new action does not need a core change. A new shared report shape still needs a
+new SDK capability.
+
+A provider package uses the public `seo/provider-sdk` entry point:
+
+```ts
+import type {
+  SeoProviderActivate,
+  SeoProviderRegistration,
+} from 'seo/provider-sdk'
+
+const provider = {
+  id: 'example-analytics',
+  displayName: 'Example Analytics',
+  description: 'Add landing-page visit evidence.',
+  kinds: ['traffic-analytics'],
+  connection: {
+    fields: [
+      { id: 'siteId', label: 'Site ID', kind: 'account', required: true },
+      { id: 'apiKey', label: 'API key', kind: 'secret', required: true },
+    ],
+    async verify(connection, runtime) {
+      await runtime.requestJson({
+        operation: 'verify',
+        url: 'https://api.example.com/verify',
+        headers: {
+          authorization: `Bearer ${connection.credentials.apiKey}`,
+        },
+      })
+    },
+  },
+  capabilities: [
+    {
+      id: 'landing-page-visits',
+      async run(input, runtime) {
+        // Map the provider response to bounded path and visit rows here.
+        return {
+          metric: 'landing-page-visits',
+          rows: [],
+          returnedRows: 0,
+          retainedRowLimit: input.limit,
+          retainedRowLimitReached: false,
+          dataStatus: 'complete',
+          qualityWarnings: [],
+        }
+      },
+    },
+  ],
+} satisfies SeoProviderRegistration
+
+const activate: SeoProviderActivate = (host) => host.registerProvider(provider)
+export default activate
+```
+
+Use an action when the data does not match a shared capability:
+
+```ts
+const provider = {
+  // Keep the connection fields and other provider details above.
+  capabilities: [],
+  actions: [
+    {
+      id: 'inspect-domain',
+      description: 'Return current domain evidence.',
+      inputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { domain: { type: 'string' } },
+        required: ['domain'],
+      },
+      outputSchema: {
+        type: 'object',
+        properties: { rows: { type: 'array', items: { type: 'object' } } },
+        required: ['rows'],
+      },
+      async run(input, runtime) {
+        return runtime.requestJson({
+          operation: 'inspect-domain',
+          url: `https://api.example.com/domain/${input.params.domain}`,
+        })
+      },
+    },
+  ],
+} satisfies SeoProviderRegistration
+```
+
+The agent reads both schemas through `seo providers describe` or
+`seo_describe_provider`. It can then run the action with `seo providers run` or
+`seo_run_provider` without a core change. `seo_list_providers` returns the
+packages that are installed on the same computer as the MCP server.
+
+The package `package.json` declares the built entry point:
+
+```json
+{
+  "seo": {
+    "apiVersion": 1,
+    "providers": ["./dist/index.js"]
+  }
+}
+```
+
+Provider packages must bundle their runtime code and have no runtime dependency
+tree. Publish the package to npm and give users its install command. A change to
+this repository is not required. The provider publisher owns its adapter,
+documentation, tests, security, and releases.
 
 Bing Webmaster is optional. Connect it when you want Bing traffic trends,
 crawl changes, and query and page opportunities beside your Google evidence:

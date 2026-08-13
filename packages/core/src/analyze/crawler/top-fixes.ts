@@ -1,3 +1,4 @@
+import { analyticsProviderDetails } from '../../analytics/providers.js'
 import {
   explainRule,
   type RuleCategory,
@@ -191,10 +192,11 @@ function whyThisRanks(
     : searchStatus && !['joined', 'none'].includes(searchStatus)
       ? `No joined GSC visibility is available for these affected URLs; Search Console evidence is ${searchStatus}.`
       : 'No affected URL has joined GSC visibility yet.'
-  const analyticsLabel =
-    analyticsProvider === 'clicky' ? 'Clicky' : 'Google Analytics'
-  const sessionLabel =
-    analyticsProvider === 'clicky' ? 'landing-page visits' : 'sessions'
+  const analyticsDetails = analyticsProvider
+    ? analyticsProviderDetails(analyticsProvider)
+    : analyticsProviderDetails('google')
+  const analyticsLabel = analyticsDetails.label
+  const sessionLabel = analyticsDetails.landingMetricLabel
   const analytics = input.sessions
     ? ` ${analyticsLabel} adds ${input.sessions} ${sessionLabel}${input.conversions === undefined ? '' : ` and ${input.conversions} conversions`} from affected pages.`
     : ''

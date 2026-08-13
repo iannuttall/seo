@@ -18,6 +18,7 @@ export const PROVIDER_SECRET_NAMES = {
   clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
   indexNowKeys: 'indexnow-keys',
+  providerExtensionCredentials: 'provider-extension-credentials',
   semrushApiKey: 'semrush-api-key',
   serpBaseApiKey: 'serpbase-api-key',
 } as const

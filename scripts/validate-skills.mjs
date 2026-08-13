@@ -135,7 +135,10 @@ const reportIds = new Set([
     return reportIdOverrides.get(internalId) ?? internalId
   }),
 ])
-const mcpSource = await text('packages/mcp/src/discovery-tools.ts')
+const mcpSource = [
+  await text('packages/mcp/src/discovery-tools.ts'),
+  await text('packages/mcp/src/provider-extension-tools.ts'),
+].join('\n')
 const mcpTools = new Set(
   [...mcpSource.matchAll(/registerTool\(\s*'([^']+)'/g)].map(
     (match) => match[1],

@@ -169,14 +169,17 @@ export async function pseoPatternsReport(
     runId,
     report: dependencies.serpResultsReport,
   })
-  const enriched = enrichPseoPatternCandidates({
-    generated: generated.candidates,
-    patternSets: generated.patternSets,
-    queryRows: firstParty.queryRows,
-    discoveredUrls: firstParty.discoveredUrls,
-    keywordMetrics,
-    serps: serps.observations,
-  })
+  const enriched =
+    keywordMetrics.rows.length === 0 && serps.observations.length === 0
+      ? initialCandidates
+      : enrichPseoPatternCandidates({
+          generated: generated.candidates,
+          patternSets: generated.patternSets,
+          queryRows: firstParty.queryRows,
+          discoveredUrls: firstParty.discoveredUrls,
+          keywordMetrics,
+          serps: serps.observations,
+        })
   const templates = pseoPatternTemplateSummaries(firstParty)
   const findings = pseoPatternFindings({
     observedPatterns,

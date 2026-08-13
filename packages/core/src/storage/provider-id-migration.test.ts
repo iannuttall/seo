@@ -3,14 +3,26 @@ import { test } from 'node:test'
 import { AI_PROMPT_OBSERVATION_SCHEMA_SQL } from '../ai-prompt-observations/schema.js'
 import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
 import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
-import { migrateSerpBaseProviderIds } from './provider-id-migration.js'
+import { migrateProviderIds } from './provider-id-migration.js'
 import Database from './sqlite.js'
 
 function oldSchema(sql: string): string {
-  return sql.replaceAll(", 'serpbase'", '')
+  return sql
+    .replaceAll(
+      'provider TEXT NOT NULL,',
+      "provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs')),",
+    )
+    .replaceAll(
+      'metric_provider TEXT,',
+      "metric_provider TEXT CHECK(metric_provider IS NULL OR metric_provider IN ('dataforseo', 'semrush', 'ahrefs')) ,",
+    )
+    .replaceAll(
+      'provider TEXT,',
+      "provider TEXT CHECK(provider IS NULL OR provider IN ('dataforseo', 'semrush', 'ahrefs')) ,",
+    )
 }
 
-test('provider id migration preserves existing rows and accepts SerpBase', () => {
+test('provider id migration preserves rows and accepts package provider ids', () => {
   const db = new Database(':memory:')
   db.pragma('foreign_keys = ON')
   db.exec(oldSchema(KEYWORD_SET_SCHEMA_SQL))
@@ -95,8 +107,8 @@ test('provider id migration preserves existing rows and accepts SerpBase', () =>
        '[]', 2);
   `)
 
-  assert.equal(migrateSerpBaseProviderIds(db), true)
-  assert.equal(migrateSerpBaseProviderIds(db), false)
+  assert.equal(migrateProviderIds(db), true)
+  assert.equal(migrateProviderIds(db), false)
   assert.deepEqual(db.prepare('SELECT id, provider FROM keyword_sets').all(), [
     { id: 'old-set', provider: 'dataforseo' },
   ])

@@ -1,9 +1,33 @@
 import assert from 'node:assert/strict'
-import { readdir, readFile } from 'node:fs/promises'
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+} from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
+import { pathToFileURL } from 'node:url'
 
-test('the provider protocol accepts a self-contained external package', async () => {
-  const root = new URL('./fixtures/provider-extension/', import.meta.url)
+test('the provider protocol accepts a self-contained external package', async (context) => {
+  const fixtureRoot = new URL('./fixtures/provider-extension/', import.meta.url)
+  const packageDirectory = await mkdtemp(
+    join(tmpdir(), 'seo-provider-fixture-'),
+  )
+  context.after(() => rm(packageDirectory, { force: true, recursive: true }))
+  await mkdir(join(packageDirectory, 'dist'))
+  await copyFile(
+    new URL('package.json', fixtureRoot),
+    join(packageDirectory, 'package.json'),
+  )
+  await copyFile(
+    new URL('index.js', fixtureRoot),
+    join(packageDirectory, 'dist', 'index.js'),
+  )
+  const root = pathToFileURL(`${packageDirectory}/`)
   const manifest = JSON.parse(
     await readFile(new URL('package.json', root), 'utf8'),
   )

@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, mkdirSync, readFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 export async function installBuiltProviderFixture(input) {
@@ -19,9 +19,11 @@ export async function installBuiltProviderFixture(input) {
     join(input.sourceDirectory, 'package.json'),
     join(packageDirectory, 'package.json'),
   )
-  cpSync(join(input.sourceDirectory, 'dist'), join(packageDirectory, 'dist'), {
-    recursive: true,
-  })
+  mkdirSync(join(packageDirectory, 'dist'), { recursive: true, mode: 0o700 })
+  copyFileSync(
+    join(input.sourceDirectory, 'index.js'),
+    join(packageDirectory, 'dist', 'index.js'),
+  )
   saveInstalledProviderPackage({
     id: input.id,
     package: packageJson.name,

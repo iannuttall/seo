@@ -107,6 +107,54 @@ test('Clicky can be selected as the project analytics connection', () => {
   })
 })
 
+test('an installed provider can be selected without changing the profile schema again', () => {
+  const client = saveClient({
+    id: 'fathom-example',
+    name: 'Fathom Example',
+    siteUrl: 'sc-domain:example.com',
+    analytics: {
+      selected: 'extension:fathom',
+      extensions: {
+        fathom: { account: { siteId: 'ABCDEFG' } },
+      },
+      google: { propertyId: '456' },
+    },
+  })
+
+  assert.deepEqual(analyticsConnection(client), {
+    provider: 'extension',
+    providerId: 'fathom',
+    account: { siteId: 'ABCDEFG' },
+  })
+})
+
+test('attaching and detaching an installed provider preserves Google Analytics', () => {
+  saveClient({
+    id: 'extension-update',
+    name: 'Extension update',
+    siteUrl: 'sc-domain:example.com',
+    analytics: { google: { propertyId: '123' } },
+  })
+  const attached = setClientAnalyticsConnection('extension-update', {
+    provider: 'extension',
+    providerId: 'fathom',
+    account: { siteId: 'ABCDEFG' },
+  })
+  assert.equal(attached.analytics.selected, 'extension:fathom')
+  assert.deepEqual(attached.analytics.extensions, {
+    fathom: { account: { siteId: 'ABCDEFG' } },
+  })
+
+  const detached = removeClientAnalyticsConnection(
+    'extension-update',
+    'extension:fathom',
+  )
+  assert.deepEqual(detached.analytics, {
+    selected: 'google',
+    google: { propertyId: '123' },
+  })
+})
+
 test('updating one project field preserves every omitted field', () => {
   saveClient({
     id: 'example',

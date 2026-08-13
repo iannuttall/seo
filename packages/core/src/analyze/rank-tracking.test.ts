@@ -31,6 +31,25 @@ const COUNTRY_MARKET = {
   device: 'desktop' as const,
 }
 
+const SERP_EXTENSION = {
+  displayName: 'Fixture SERP',
+  capability: {
+    id: 'serp-snapshot' as const,
+    defaultDepth: 10,
+    maxDepth: 100,
+    maxRequests: 10,
+    markets: [
+      { searchEngines: ['google' as const], location: 'country-only' as const },
+    ],
+    estimateCostMicros: ({ depth }: { depth: number }) =>
+      Math.ceil(depth / 10) * 500,
+    estimateRequests: ({ depth }: { depth: number }) => Math.ceil(depth / 10),
+    run: async () => {
+      throw new Error('The injected collector handles this test.')
+    },
+  },
+}
+
 function database(): Database.Database {
   const db = new Database(':memory:')
   db.pragma('foreign_keys = ON')
@@ -273,15 +292,15 @@ test('recovers an interrupted queued post by provider tag without duplicating sp
   assert.equal(complete.run?.actualCostMicros, null)
 })
 
-test('SerpBase defaults scheduled tracking to live top-page collection', async () => {
+test('a SERP extension defaults scheduled tracking to its live depth', async () => {
   const db = database()
   setupKeywords(db, ['Alpha'], COUNTRY_MARKET)
   let captured: SerpSnapshotRequest | undefined
   const collector: RankTrackingCollector = {
-    provider: 'serpbase',
+    provider: 'fixture-serp',
     live: async (request) => {
       captured = request
-      return { ...evidence(request, 4), provider: 'serpbase' }
+      return { ...evidence(request, 4), provider: 'fixture-serp' }
     },
   }
   const report = await rankTrackingReport(
@@ -289,7 +308,7 @@ test('SerpBase defaults scheduled tracking to live top-page collection', async (
       projectId: 'project-1',
       set: 'set-1',
       targetDomain: 'example.test',
-      provider: 'serpbase',
+      provider: 'fixture-serp',
       cadence: 'weekly',
       keywordLimit: 1,
     },
@@ -298,25 +317,26 @@ test('SerpBase defaults scheduled tracking to live top-page collection', async (
       id: ids(),
       now: () => new Date('2026-08-11T08:00:00.000Z'),
       collector,
+      providerExtension: SERP_EXTENSION,
     },
   )
 
-  assert.equal(report.configuration.provider, 'serpbase')
+  assert.equal(report.configuration.provider, 'fixture-serp')
   assert.equal(report.configuration.collectionMethod, 'live')
   assert.equal(report.configuration.depth, 10)
   assert.equal(captured?.depth, 10)
   assert.equal(report.summary.observed, 1)
 })
 
-test('SerpBase preflights paginated rank work against the request limit', async () => {
+test('a SERP extension preflights rank work from its request estimate', async () => {
   const db = database()
   setupKeywords(db, ['Alpha', 'Beta', 'Gamma'], COUNTRY_MARKET)
   let collectorCalls = 0
   const collector: RankTrackingCollector = {
-    provider: 'serpbase',
+    provider: 'fixture-serp',
     live: async (request) => {
       collectorCalls += 1
-      return { ...evidence(request, 4), provider: 'serpbase' }
+      return { ...evidence(request, 4), provider: 'fixture-serp' }
     },
   }
 
@@ -326,7 +346,7 @@ test('SerpBase preflights paginated rank work against the request limit', async 
         projectId: 'project-1',
         set: 'set-1',
         targetDomain: 'example.test',
-        provider: 'serpbase',
+        provider: 'fixture-serp',
         cadence: 'weekly',
         depth: 100,
         keywordLimit: 3,
@@ -336,6 +356,7 @@ test('SerpBase preflights paginated rank work against the request limit', async 
         id: ids(),
         now: () => new Date('2026-08-11T08:00:00.000Z'),
         collector,
+        providerExtension: SERP_EXTENSION,
         providerSpendLimits: () => ({
           dailyNoticeMicros: 5_000_000,
           dailyHardLimitMicros: null,
@@ -354,12 +375,12 @@ test('partial SERPs cannot become not-observed rank snapshots', async () => {
   const db = database()
   setupKeywords(db, ['Alpha'], COUNTRY_MARKET)
   const collector: RankTrackingCollector = {
-    provider: 'serpbase',
+    provider: 'fixture-serp',
     live: async (request) => {
       const partial = evidence(request, null)
       return {
         ...partial,
-        provider: 'serpbase',
+        provider: 'fixture-serp',
         coverage: { ...partial.coverage, completeness: 'partial' },
       }
     },
@@ -370,7 +391,7 @@ test('partial SERPs cannot become not-observed rank snapshots', async () => {
       projectId: 'project-1',
       set: 'set-1',
       targetDomain: 'example.test',
-      provider: 'serpbase',
+      provider: 'fixture-serp',
       keywordLimit: 1,
     },
     {
@@ -378,6 +399,7 @@ test('partial SERPs cannot become not-observed rank snapshots', async () => {
       id: ids(),
       now: () => new Date('2026-08-11T08:00:00.000Z'),
       collector,
+      providerExtension: SERP_EXTENSION,
     },
   )
 

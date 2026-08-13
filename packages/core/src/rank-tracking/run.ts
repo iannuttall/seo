@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { SeoError } from '../errors.js'
 import { getKeywordSet } from '../keyword-sets/store.js'
+import type { SeoSerpSnapshotCapability } from '../provider-extensions/sdk.js'
+import { installedSerpSnapshotProviders } from '../provider-extensions/serp.js'
 import type {
   ProviderEvidence,
   SerpSnapshot,
@@ -9,10 +11,9 @@ import type {
 import { getProviderSpendLimits } from '../providers/cost-limits.js'
 import { readDataForSeoCredentials } from '../providers/dataforseo/credentials.js'
 import { ProviderError } from '../providers/errors.js'
-import { readSerpBaseApiKey } from '../providers/serpbase/credentials.js'
 import { DataForSeoRankTrackingCollector } from './dataforseo-collector.js'
 import { RANK_TRACKING_LIMITS } from './limits.js'
-import { SerpBaseRankTrackingCollector } from './serpbase-collector.js'
+import { ProviderExtensionRankTrackingCollector } from './provider-extension-collector.js'
 import {
   activeRankTrackingRun,
   failRankTrackingTask,
@@ -44,7 +45,7 @@ export type RankTrackingExecutionInput = {
   targetDomain: string
   tag?: string
   devices?: RankTrackingDevice[]
-  provider?: 'dataforseo' | 'semrush' | 'ahrefs' | 'serpbase'
+  provider?: import('../providers/contracts.js').ProviderId
   collectionMethod?: RankTrackingCollectionMethod
   cadence?: RankTrackingCadence
   depth?: number
@@ -67,6 +68,10 @@ export type RankTrackingExecutionDependencies = RankTrackingStoreOptions & {
   collectorFactory?: (
     provider: RankTrackingConfiguration['provider'],
   ) => Promise<RankTrackingCollector>
+  providerExtension?: {
+    displayName: string
+    capability: SeoSerpSnapshotCapability
+  }
 }
 
 function providerError(error: unknown): SeoError {
@@ -85,19 +90,22 @@ function providerError(error: unknown): SeoError {
 async function defaultCollector(
   provider: RankTrackingConfiguration['provider'],
 ): Promise<RankTrackingCollector> {
-  if (provider === 'serpbase') {
-    if (!(await readSerpBaseApiKey())) {
+  if (provider !== 'dataforseo') {
+    const installed = (await installedSerpSnapshotProviders()).find(
+      (candidate) => candidate.adapter.provider === provider,
+    )
+    if (installed && !installed.connected) {
       throw new SeoError(
         'PROVIDER_UNAVAILABLE',
-        'SerpBase is not connected. Run `seo providers serpbase connect` first.',
+        `${provider} is installed but not connected. Connect it before rank collection.`,
       )
     }
-    return new SerpBaseRankTrackingCollector()
-  }
-  if (provider !== 'dataforseo') {
+    if (installed) {
+      return new ProviderExtensionRankTrackingCollector(installed.adapter)
+    }
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',
-      `${provider} does not yet implement exact rank collection. Use SerpBase or DataForSEO for this report.`,
+      `${provider} does not implement live SERP snapshots. Install a provider with that capability or use DataForSEO.`,
     )
   }
   if (!(await readDataForSeoCredentials())) {
@@ -368,22 +376,36 @@ export async function executeRankTracking(
     dependencies,
   )
   const provider = input.provider ?? selectedSet.set.provider ?? 'dataforseo'
+  const extension =
+    provider === 'dataforseo'
+      ? undefined
+      : (dependencies.providerExtension ??
+        (await installedSerpSnapshotProviders()).find(
+          (candidate) => candidate.adapter.provider === provider,
+        ))
+  if (provider !== 'dataforseo' && !extension) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `${provider} is not installed with SERP snapshot support.`,
+    )
+  }
   const collectionMethod =
     input.collectionMethod ??
-    (provider === 'serpbase' || cadence === 'manual' ? 'live' : 'queued')
-  if (provider === 'serpbase' && collectionMethod !== 'live') {
+    (extension || cadence === 'manual' ? 'live' : 'queued')
+  if (extension && collectionMethod !== 'live') {
     throw new SeoError(
       'INVALID_INPUT',
-      'SerpBase supports live rank collection. Use collectionMethod live.',
+      `${extension.displayName} supports live rank collection. Use collectionMethod live.`,
     )
   }
   const defaultDevice = selectedSet.set.market.device ?? 'desktop'
   const devices = input.devices ?? [defaultDevice]
-  const depth = input.depth ?? (provider === 'serpbase' ? 10 : 100)
-  if (!Number.isSafeInteger(depth) || depth < 1 || depth > 100) {
+  const depth = input.depth ?? extension?.capability.defaultDepth ?? 100
+  const maxDepth = extension?.capability.maxDepth ?? 100
+  if (!Number.isSafeInteger(depth) || depth < 1 || depth > maxDepth) {
     throw new SeoError(
       'INVALID_INPUT',
-      'Rank tracking depth must be from 1 to 100.',
+      `Rank tracking depth must be from 1 to ${maxDepth}.`,
     )
   }
   if (
@@ -399,31 +421,33 @@ export async function executeRankTracking(
   }
   let keywordLimit =
     input.keywordLimit ?? (collectionMethod === 'live' ? 25 : 100)
-  if (provider === 'serpbase') {
-    if (
-      selectedSet.set.market.searchEngine !== 'google' ||
-      selectedSet.set.market.location
-    ) {
+  if (extension) {
+    const requestsPerKeyword =
+      extension.capability.estimateRequests({
+        keyword: selectedSet.items[0]?.keyword ?? 'rank tracking',
+        market: { ...selectedSet.set.market, device: devices[0] },
+        depth,
+      }) * devices.length
+    if (!Number.isSafeInteger(requestsPerKeyword) || requestsPerKeyword < 1) {
       throw new SeoError(
-        'INVALID_INPUT',
-        'SerpBase rank tracking requires a country-level Google keyword set without an exact location.',
+        'PROVIDER_UNAVAILABLE',
+        `${extension.displayName} returned an invalid request estimate.`,
       )
     }
-    const requestsPerKeyword = Math.ceil(depth / 10) * devices.length
     const requestLimit = (
       dependencies.providerSpendLimits ?? getProviderSpendLimits
-    )('serpbase').maxRequestsPerReport
+    )(provider).maxRequestsPerReport
     const maximumKeywords = Math.floor(requestLimit / requestsPerKeyword)
     if (maximumKeywords < 1) {
       throw new SeoError(
         'INVALID_INPUT',
-        `SerpBase needs ${requestsPerKeyword} requests per keyword for this depth and device selection, above the local ${requestLimit}-request report limit. Reduce the depth or devices, or raise the SerpBase request limit.`,
+        `${extension.displayName} needs ${requestsPerKeyword} requests per keyword for this depth and device selection, above the local ${requestLimit}-request report limit. Reduce the depth or devices, or raise the provider request limit.`,
       )
     }
     if (input.keywordLimit !== undefined && keywordLimit > maximumKeywords) {
       throw new SeoError(
         'INVALID_INPUT',
-        `SerpBase can collect at most ${maximumKeywords} keyword${maximumKeywords === 1 ? '' : 's'} at this depth and device selection within the local ${requestLimit}-request report limit. Reduce --rank-limit or raise the SerpBase request limit.`,
+        `${extension.displayName} can collect at most ${maximumKeywords} keyword${maximumKeywords === 1 ? '' : 's'} at this depth and device selection within the local ${requestLimit}-request report limit. Reduce --rank-limit or raise the provider request limit.`,
       )
     }
     keywordLimit = Math.min(keywordLimit, maximumKeywords)

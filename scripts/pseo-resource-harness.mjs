@@ -48,13 +48,14 @@ const queryPageRows = Array.from({ length: QUERY_PAGE_COUNT }, (_, index) => ({
   impressions: 250,
   position: 4 + (index % 7),
 }))
-const sourceRows = queryPageRows.map((row) => ({
+let sourceRows = queryPageRows.map((row) => ({
   keys: [row.query, row.page],
   clicks: row.clicks,
   impressions: row.impressions,
   ctr: row.impressions ? row.clicks / row.impressions : 0,
   position: row.position,
 }))
+const pageUrls = pageRows.map((row) => row.page)
 
 const baselineRss = process.memoryUsage().rss
 let peakRss = baselineRss
@@ -70,7 +71,7 @@ const audit = buildPseoAuditReportFromRows({
   days: 28,
   queryPageRows,
   pageRows,
-  sitemapUrls: pageRows.map((row) => row.page),
+  sitemapUrls: pageUrls,
   templateLimit: 10,
   minimumTemplateUrls: 3,
   minimumTemplateShare: 0,
@@ -91,6 +92,7 @@ const queryClusters = buildQueryClusterReportFromRows({
   rows: sourceRows,
   limit: 10,
 })
+sourceRows = undefined
 const opportunitiesReport = await pseoOpportunitiesReport(
   {
     site: 'sc-domain:example.com',
@@ -140,7 +142,7 @@ const patternsReport = await pseoPatternsReport(
       audit,
       queryRows: queryPageRows,
       pageRows,
-      discoveredUrls: pageRows.map((row) => row.page),
+      discoveredUrls: pageUrls,
     }),
   },
 )

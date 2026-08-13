@@ -8,14 +8,16 @@ providers add keyword estimates, result snapshots, domain footprints, ranking
 pages and competitor rows. Search Console still supplies owner-verified search
 performance. Crawls still supply current page and technical evidence.
 
-SerpBase supports live Google result snapshots and live rank tracking by
-country, language and device. DataForSEO supports the broadest set of current
-research reports. Semrush Version 3 supports limited keyword, domain,
-ranking-page and search-competitor research. Ahrefs API v3 supports those
-shared research reports plus attributed Domain Rating and limited backlink
-evidence. The adapters return the same fields where their capabilities overlap.
-A report fails clearly when a selected provider does not support its operation
-or market.
+DataForSEO supports the broadest set of current research reports. Semrush
+Version 3 supports limited keyword, domain, ranking-page and search-competitor
+research. Ahrefs API v3 supports those shared research reports plus attributed
+Domain Rating and limited backlink evidence. These providers are built into
+the main package. Their adapters return the same fields where their
+capabilities overlap. A report fails clearly when a selected provider does not
+support its operation or market.
+
+The [DataForSEO guide](/docs/dataforseo) covers credentials, local spend
+limits, supported reports, and request data.
 
 Use the [Semrush guide](/docs/semrush) for the exact key, connection commands,
 supported reports and API-unit behavior.
@@ -23,69 +25,17 @@ supported reports and API-unit behavior.
 Use the [Ahrefs guide](/docs/ahrefs) for connection, supported reports, Domain
 Rating attribution, backlink evidence and API-unit limits.
 
-## Connect SerpBase on this computer
+## Use a separate provider package
 
-Create an API key in SerpBase, then run:
+Clicky and SerpBase are maintained as examples outside the main package. Their
+repositories contain setup instructions, service links, tests, release history,
+and the source for each adapter:
 
-```sh
-seo providers serpbase connect
-seo providers serpbase status --check
-```
+- <a href="https://github.com/iannuttall/seoskill-clicky-provider" target="_blank" rel="noreferrer">Clicky provider package</a>
+- <a href="https://github.com/iannuttall/seoskill-serpbase-provider" target="_blank" rel="noreferrer">SerpBase provider package</a>
 
-Both commands validate the key with one billed Google Search request. The key
-is saved in the system keychain when available, with a private local file
-fallback. It is not stored in a project profile, report, cache entry or spend
-record.
-
-Agents and CI can use an environment variable without saving the key:
-
-```sh
-export SEO_SERPBASE_API_KEY='your-serpbase-api-key'
-seo providers serpbase status --check --json
-```
-
-Set local limits before scheduled or broad rank collection:
-
-```sh
-seo providers serpbase limits \
-  --daily-notice 1 \
-  --daily-limit 5 \
-  --monthly-limit 25 \
-  --requests 20 \
-  --rows 200
-```
-
-`serp-results` and `rank-tracking` can collect a depth of 1 to 100 from
-SerpBase, using one live Search request for every 10 organic positions. The
-default depth remains 10, so deeper collection is opt-in. SerpBase accepts
-country and language codes and desktop or mobile devices. It does not use
-queued collection or exact city locations. SerpBase reports the credits charged
-but not the account-specific dollar value, so the local ledger reserves the
-highest published standard Search price. Rank tracking checks the requested
-pages, keywords and devices against that local request limit before any paid
-work starts. Check the current <a href="https://serpbase.dev/docs" target="_blank" rel="noreferrer">SerpBase API documentation</a>
-and <a href="https://serpbase.dev/#pricing" target="_blank" rel="noreferrer">pricing</a> before running paid work.
-
-Run a current result snapshot through the normal report catalog:
-
-```sh
-seo reports run serp-results \
-  --params '{"keyword":"technical seo","countryCode":"GB","languageCode":"en","device":"desktop","provider":"serpbase","depth":10}' \
-  --json
-```
-
-Saved keyword sets can use the same provider for repeated live observations:
-
-```sh
-seo reports run rank-tracking \
-  --params '{"projectId":"example","set":"priority terms","targetDomain":"example.com","provider":"serpbase","cadence":"weekly","depth":10}' \
-  --json
-```
-
-SerpBase logs query text, locale, request metadata and credit use. Its current
-<a href="https://serpbase.dev/privacy" target="_blank" rel="noreferrer">privacy policy</a> does not publish a fixed API-log retention window or provide
-a self-serve query-log deletion control. Removing the local key or cache does
-not remove provider-side logs.
+Use these examples to build another analytics or research provider without
+adding its API client to the main package.
 
 ## Connect DataForSEO on this computer
 

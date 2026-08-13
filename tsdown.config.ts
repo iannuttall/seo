@@ -11,6 +11,7 @@ export default defineConfig([
     entry: {
       index: 'packages/core/src/index.ts',
       mcp: 'packages/mcp/src/index.ts',
+      'provider-sdk': 'packages/core/src/provider-extensions/sdk.ts',
     },
     format: ['esm'],
     platform: 'node',

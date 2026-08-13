@@ -630,6 +630,7 @@ export const reportSurfaces = [
     core: 'refreshPrioritiesWorkflow',
     cli: {
       file: 'packages/cli/src/commands/workflows/refresh-priorities.ts',
+      sharedFiles: ['packages/cli/src/commands/analytics/connection.ts'],
       marker: "'refresh-priorities': refreshPrioritiesCommand",
     },
     mcp: {

@@ -120,7 +120,14 @@ test('the packed package installs globally into an isolated prefix', {
   const mcp = await listInstalledMcpTools(seo, env)
   assert.deepEqual(
     mcp.tools.map((tool) => tool.name),
-    ['seo_list_reports', 'seo_describe_report', 'seo_run_report'],
+    [
+      'seo_list_reports',
+      'seo_describe_report',
+      'seo_run_report',
+      'seo_list_providers',
+      'seo_describe_provider',
+      'seo_run_provider',
+    ],
   )
 })
 
@@ -246,7 +253,7 @@ test('the packed package installs and runs without the workspace', {
     [
       '--input-type=module',
       '-e',
-      "import { auditPage, crawlSite } from 'seo'; import { createServer } from 'seo/mcp'; if (typeof auditPage !== 'function' || typeof crawlSite !== 'function' || typeof createServer !== 'function') process.exit(1)",
+      "import { auditPage, crawlSite } from 'seo'; import { createServer } from 'seo/mcp'; import { SEO_PROVIDER_API_VERSION } from 'seo/provider-sdk'; if (typeof auditPage !== 'function' || typeof crawlSite !== 'function' || typeof createServer !== 'function' || SEO_PROVIDER_API_VERSION !== 1) process.exit(1)",
     ],
     { cwd: consumerDirectory, env },
   )
@@ -254,7 +261,7 @@ test('the packed package installs and runs without the workspace', {
 
   await writeFile(
     join(consumerDirectory, 'consumer.ts'),
-    "import { auditPage, crawlSite } from 'seo'\nimport { createServer } from 'seo/mcp'\n\nvoid auditPage\nvoid crawlSite\nvoid createServer\n",
+    "import { auditPage, crawlSite } from 'seo'\nimport { createServer } from 'seo/mcp'\nimport type { SeoProviderActivate, SeoProviderRegistration } from 'seo/provider-sdk'\n\nvoid auditPage\nvoid crawlSite\nvoid createServer\nconst provider = { id: 'fixture', displayName: 'Fixture', description: 'Fixture analytics.', kinds: ['traffic-analytics'], connection: { fields: [{ id: 'siteId', label: 'Site ID', kind: 'account' }], async verify() {} }, capabilities: [{ id: 'landing-page-visits', async run(input) { return { metric: 'landing-page-visits', rows: [], returnedRows: 0, retainedRowLimit: input.limit, retainedRowLimitReached: false, dataStatus: 'complete', qualityWarnings: [] } } }] } satisfies SeoProviderRegistration\nconst activate: SeoProviderActivate = (host) => host.registerProvider(provider)\nvoid activate\n",
   )
   await execFileAsync(
     process.execPath,

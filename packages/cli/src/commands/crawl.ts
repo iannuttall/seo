@@ -30,6 +30,10 @@ import { writeJsonOutput } from '../json-output.js'
 import { printCrawlHuman } from '../presentation/crawl-report.js'
 import { resolveClientSelection } from '../selection.js'
 import { printKeyValue } from '../utils.js'
+import {
+  analyticsConnectionArgs,
+  analyticsConnectionFromArgs,
+} from './analytics/connection.js'
 import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'
@@ -68,11 +72,7 @@ export const crawlCommand = defineCommand({
       type: 'string',
       description: 'Saved project id or name.',
     },
-    'google-analytics-property': {
-      type: 'string',
-      description:
-        'Google Analytics property ID for landing-page sessions. Defaults from --project when saved.',
-    },
+    ...analyticsConnectionArgs,
     mode: {
       type: 'string',
       description:
@@ -259,12 +259,10 @@ export const crawlCommand = defineCommand({
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
       googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
-      analyticsConnection: stringArg(args['google-analytics-property'])
-        ? {
-            provider: 'google',
-            propertyId: stringArg(args['google-analytics-property']) ?? '',
-          }
-        : analyticsConnection(selection?.client),
+      analyticsConnection: analyticsConnectionFromArgs(
+        args,
+        analyticsConnection(selection?.client),
+      ),
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),

@@ -7,6 +7,7 @@ import {
   getServiceAccountStatus,
 } from './gsc/auth.js'
 import { getSeoCliPaths } from './paths.js'
+import { loadProviderExtensions } from './provider-extensions/runtime.js'
 import { readConfig, readOauthClient, readTokens } from './storage/config.js'
 import { checkDatabaseReadiness } from './storage/database.js'
 
@@ -185,21 +186,33 @@ export async function runDoctor(
 
   const defaultProject = config.clients.find((client) => client.isDefault)
   const defaultAnalytics = analyticsConnection(defaultProject)
-  if (defaultAnalytics?.provider === 'clicky') {
-    const credential = await readClickySiteKey(defaultAnalytics.siteId)
+  const clickySiteId =
+    defaultAnalytics?.provider === 'clicky'
+      ? defaultAnalytics.siteId
+      : defaultAnalytics?.provider === 'extension' &&
+          defaultAnalytics.providerId === 'clicky'
+        ? defaultAnalytics.account.siteId
+        : undefined
+  if (clickySiteId) {
+    const credential = await readClickySiteKey(clickySiteId)
+    const loaded = await loadProviderExtensions()
+    const packageReady = Boolean(loaded.registry.get('clicky'))
     checks.push({
       id: 'default-clicky',
       label: 'Saved Clicky connection',
-      status: credential ? 'pass' : 'fail',
-      detail: credential
-        ? `Site ${defaultAnalytics.siteId}, credential from ${credential.source}.`
-        : `Site ${defaultAnalytics.siteId} has no saved sitekey.`,
-      fix: credential
-        ? undefined
-        : `Run \`seo analytics clicky connect --site-id ${defaultAnalytics.siteId}\`.`,
+      status: credential && packageReady ? 'pass' : 'fail',
+      detail: !packageReady
+        ? `Site ${clickySiteId} is saved, but the Clicky provider package is not installed.`
+        : credential
+          ? `Site ${clickySiteId}, credential from ${credential.source}.`
+          : `Site ${clickySiteId} has no saved sitekey.`,
+      fix: !packageReady
+        ? 'Run `seo providers install @seoskill/clicky-provider`, then run this check again.'
+        : credential
+          ? undefined
+          : 'Run `seo analytics clicky connect` in a terminal.',
     })
   }
-
   const ok = checks.every((check) => check.status !== 'fail')
   return {
     ok,

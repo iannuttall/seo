@@ -6,6 +6,8 @@ export interface SeoCliPaths {
   configDir: string
   cacheDir: string
   logDir: string
+  providerPackagesDir: string
+  installedProviderPackagesFile: string
   configFile: string
   tokensFile: string
   oauthClientFile: string
@@ -85,6 +87,8 @@ export function resolveSeoCliPaths(input: SeoCliPathOptions = {}): SeoCliPaths {
     configDir,
     cacheDir,
     logDir,
+    providerPackagesDir: join(configDir, 'providers'),
+    installedProviderPackagesFile: join(configDir, 'provider-packages.json'),
     configFile: join(configDir, 'config.json'),
     tokensFile: join(configDir, 'tokens.json'),
     oauthClientFile: join(configDir, 'oauth-client.json'),
@@ -138,6 +142,7 @@ export function ensureSeoCliDirs(): SeoCliPaths {
   mkdirSync(paths.configDir, { recursive: true, mode: 0o700 })
   mkdirSync(paths.cacheDir, { recursive: true, mode: 0o700 })
   mkdirSync(paths.logDir, { recursive: true, mode: 0o700 })
+  mkdirSync(paths.providerPackagesDir, { recursive: true, mode: 0o700 })
   return paths
 }
 

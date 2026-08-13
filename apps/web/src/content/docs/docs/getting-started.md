@@ -4,8 +4,8 @@ description: Install the command, connect Search Console, save your site and com
 ---
 
 You need Node 22 or newer. A Google account that can read the site's Search
-Console property adds click and query evidence. Google Analytics and Clicky are optional.
-You can still start with a local technical report before connecting either one.
+Console property adds click and query evidence. Traffic analytics is optional.
+You can still start with a local technical report before connecting it.
 
 ## Install the SEO CLI
 
@@ -21,7 +21,7 @@ without a saved profile. When you create or update one, it then guides you
 through:
 
 1. A Search Console property.
-2. Google Analytics, Clicky, or no traffic analytics connection.
+2. An optional traffic analytics connection.
 3. A name for the project profile saved on your computer.
 
 Choosing an existing project keeps its Search Console property and current
@@ -35,9 +35,6 @@ need no flags.
 
 The [Google connection guide](/docs/google) explains the permissions and data
 limits before you sign in.
-
-If you use Clicky, the [Clicky connection guide](/docs/clicky) shows where to
-find the Site ID and sitekey before setup asks for them.
 
 Do not run the global install with `sudo`. If npm reports a permission error,
 fix npm's global install directory, then run the same command again.

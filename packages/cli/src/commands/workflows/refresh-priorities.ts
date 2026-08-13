@@ -10,6 +10,10 @@ import {
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
+import {
+  analyticsConnectionArgs,
+  analyticsConnectionFromArgs,
+} from '../analytics/connection.js'
 import { printActionDetails } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
 import { printWorkflow } from './output.js'
@@ -43,11 +47,7 @@ export const refreshPrioritiesCommand = defineCommand({
         },
       },
     ),
-    'google-analytics-property': {
-      type: 'string',
-      description:
-        'Google Analytics property ID to use for analytics value. Defaults from the selected project.',
-    },
+    ...analyticsConnectionArgs,
     'verify-content': defaultTrueBooleanArg(
       'Verify top opportunities against page title, meta, and content. Defaults to true.',
       'Skip page content verification.',
@@ -77,12 +77,10 @@ export const refreshPrioritiesCommand = defineCommand({
       brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
-      analyticsConnection: stringArg(args['google-analytics-property'])
-        ? {
-            provider: 'google',
-            propertyId: stringArg(args['google-analytics-property']) ?? '',
-          }
-        : analyticsConnection(selection.client),
+      analyticsConnection: analyticsConnectionFromArgs(
+        args,
+        analyticsConnection(selection.client),
+      ),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

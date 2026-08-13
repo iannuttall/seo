@@ -1,6 +1,7 @@
 import { intro, note, outro, text } from '@clack/prompts'
 import {
   analyticsConnection,
+  analyticsConnectionLabel,
   type ClientProfile,
   deriveBrandTerms,
   ensureSeoCliDirs,
@@ -34,7 +35,6 @@ import {
   maybeInstallMcp,
   maybeInstallSkill,
   type SetupAuthStatus,
-  type SetupClickySelection,
   type SetupGoogleAnalyticsSelection,
   type SetupMcpInstall,
   type SetupSkillInstall,
@@ -45,7 +45,7 @@ type SetupResult = {
   site: string
   auth: SetupAuthStatus
   googleAnalytics?: SetupGoogleAnalyticsSelection
-  clicky?: SetupClickySelection
+  extension?: { providerId: string; account: Record<string, string> }
   mcp: SetupMcpInstall[]
   skill?: SetupSkillInstall
   next: string[]
@@ -225,9 +225,9 @@ export async function runGuidedSetup(
     analyticsSelection?.provider === 'google'
       ? analyticsSelection.google
       : undefined
-  const clicky =
-    analyticsSelection?.provider === 'clicky'
-      ? analyticsSelection.clicky
+  const extension =
+    analyticsSelection?.provider === 'extension'
+      ? analyticsSelection.extension
       : undefined
   const derivedBrandTerms =
     existingProject?.brandTerms ?? deriveBrandTerms({ id, name, siteUrl: site })
@@ -249,11 +249,17 @@ export async function runGuidedSetup(
             selected: 'google' as const,
             google: { propertyId: analyticsSelection.google.propertyId },
           }
-        : analyticsSelection.provider === 'clicky'
+        : analyticsSelection.provider === 'extension'
           ? {
               ...existingProject?.analytics,
-              selected: 'clicky' as const,
-              clicky: { siteId: analyticsSelection.clicky.siteId },
+              selected:
+                `extension:${analyticsSelection.extension.providerId}` as const,
+              extensions: {
+                ...existingProject?.analytics.extensions,
+                [analyticsSelection.extension.providerId]: {
+                  account: analyticsSelection.extension.account,
+                },
+              },
             }
           : {}
 
@@ -283,7 +289,7 @@ export async function runGuidedSetup(
     site,
     auth,
     googleAnalytics,
-    clicky,
+    extension,
     mcp,
     skill,
     next,
@@ -294,6 +300,8 @@ export async function runGuidedSetup(
     return
   }
 
+  const selectedAnalytics = analyticsConnection(client)
+
   printKeyValue([
     ['Project profile', `${client.name} (${client.id})`],
     ['GSC property', client.siteUrl],
@@ -302,11 +310,9 @@ export async function runGuidedSetup(
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
     [
       'Traffic analytics',
-      client.analytics.selected === 'clicky'
-        ? `Clicky site ${client.analytics.clicky?.siteId}`
-        : client.analytics.google?.propertyId
-          ? `Google Analytics property ${client.analytics.google.propertyId}`
-          : 'not connected (optional)',
+      selectedAnalytics
+        ? analyticsConnectionLabel(selectedAnalytics)
+        : 'not connected (optional)',
     ],
     ...(googleAnalytics
       ? [
@@ -314,12 +320,6 @@ export async function runGuidedSetup(
             string,
             string,
           ],
-        ]
-      : []),
-    ...(clicky
-      ? [
-          ['Clicky site', clicky.siteId] as [string, string],
-          ['Clicky credential', clicky.credentialSource] as [string, string],
         ]
       : []),
     ['Auth', auth],

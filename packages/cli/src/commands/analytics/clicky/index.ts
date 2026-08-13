@@ -1,14 +1,23 @@
-import { intro, outro, password, text } from '@clack/prompts'
+import { confirm, intro, note, outro, password, text } from '@clack/prompts'
 import {
   analyticsConnection,
   CLICKY_SITEKEY_ENV,
-  ClickyClient,
   deleteClickySiteKey,
+  deleteProviderExtensionCredentials,
+  inspectProviderPackage,
+  installProviderPackage,
+  loadInstalledProviderExtensions,
+  type RegisteredProviderExtension,
   readClickySiteKey,
+  readProviderExtensionCredentials,
   removeClientAnalyticsConnection,
+  runProviderExtensionAction,
   SeoError,
   setClientAnalyticsConnection,
+  verifyAnalyticsProvider,
   writeClickySiteKey,
+  writeProviderExtensionAccount,
+  writeProviderExtensionCredentials,
 } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
@@ -27,12 +36,79 @@ import {
   printTable,
 } from '../../../utils.js'
 
-function credentialSourceLabel(
-  source: 'environment' | 'keychain' | 'file' | undefined,
-): string {
+const CLICKY_PROVIDER_PACKAGE = '@seoskill/clicky-provider'
+
+function credentialSourceLabel(source: string | undefined): string {
   if (source === 'keychain') return 'system keychain'
   if (source === 'file') return 'private local file'
+  if (source === 'provider-store') return 'provider credential store'
   return source ?? 'missing'
+}
+
+async function clickyProvider(input: {
+  json?: boolean
+}): Promise<RegisteredProviderExtension> {
+  let loaded = await loadInstalledProviderExtensions()
+  const installed = loaded.registry.get('clicky')
+  if (installed) return installed
+  const failure = loaded.failures.find((item) => item.id === 'clicky')
+  if (failure) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `The Clicky provider package could not load: ${failure.message}`,
+    )
+  }
+  const interactive = canPrompt({ json: input.json })
+  if (!interactive) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `Clicky is now an optional provider package. Run \`seo providers install ${CLICKY_PROVIDER_PACKAGE} --yes\`, then run this command again.`,
+    )
+  }
+  let release: Awaited<ReturnType<typeof inspectProviderPackage>>
+  try {
+    release = await inspectProviderPackage(CLICKY_PROVIDER_PACKAGE)
+  } catch (error) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      error instanceof Error ? error.message : String(error),
+    )
+  }
+  note(
+    [
+      `${release.package}@${release.version}`,
+      `Publisher: ${release.publisher ?? 'not supplied by npm'}`,
+      `Repository: ${release.repository ?? 'not supplied by npm'}`,
+      `Integrity: ${release.integrity}`,
+    ].join('\n'),
+    'Clicky package',
+  )
+  note(
+    'This package can read files, use the network, and run with the same local permissions as seo.',
+    'Local permissions',
+  )
+  const approved = maybeExitCancelled(
+    await confirm({
+      message: 'Install the Clicky provider package?',
+      initialValue: true,
+    }),
+  )
+  if (!approved) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      'The Clicky provider package is required for this command.',
+    )
+  }
+  await installProviderPackage(release)
+  loaded = await loadInstalledProviderExtensions()
+  const provider = loaded.registry.get('clicky')
+  if (!provider) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      'The Clicky provider package was installed but could not load. Run `seo providers doctor`.',
+    )
+  }
+  return provider
 }
 
 async function resolveClickySiteId(input: {
@@ -47,10 +123,37 @@ async function resolveClickySiteId(input: {
   })
   const connection = analyticsConnection(client)
   if (connection?.provider === 'clicky') return connection.siteId
+  if (
+    connection?.provider === 'extension' &&
+    connection.providerId === 'clicky' &&
+    connection.account.siteId
+  ) {
+    return connection.account.siteId
+  }
   throw new SeoError(
     'INVALID_INPUT',
     'No Clicky site is selected. Pass --site-id or use a project connected to Clicky.',
   )
+}
+
+async function savedCredentials(
+  provider: RegisteredProviderExtension,
+  siteId: string,
+): Promise<{ siteKey?: string; source?: string }> {
+  const legacy = await readClickySiteKey(siteId)
+  if (legacy) return { siteKey: legacy.siteKey, source: legacy.source }
+  try {
+    const credentials = await readProviderExtensionCredentials({
+      providerId: 'clicky',
+      account: { siteId },
+      fields: provider.connection.fields,
+    })
+    return credentials.sitekey
+      ? { siteKey: credentials.sitekey, source: 'provider-store' }
+      : {}
+  } catch {
+    return {}
+  }
 }
 
 const connectCommand = defineCommand({
@@ -70,6 +173,7 @@ const connectCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const provider = await clickyProvider({ json })
     const interactive = canPrompt({ json })
     const requestedProject = projectArg(args)
     const project = requestedProject
@@ -77,11 +181,16 @@ const connectCommand = defineCommand({
       : undefined
     if (interactive) intro('Connect Clicky')
     const currentConnection = analyticsConnection(project)
+    const currentSiteId =
+      currentConnection?.provider === 'clicky'
+        ? currentConnection.siteId
+        : currentConnection?.provider === 'extension' &&
+            currentConnection.providerId === 'clicky'
+          ? currentConnection.account.siteId
+          : undefined
     const siteId =
       stringArg(args['site-id']) ??
-      (currentConnection?.provider === 'clicky'
-        ? currentConnection.siteId
-        : undefined) ??
+      currentSiteId ??
       (interactive
         ? maybeExitCancelled(
             await text({
@@ -99,9 +208,9 @@ const connectCommand = defineCommand({
         'Pass --site-id when the selected project is not already connected to Clicky.',
       )
     }
-    const existing = await readClickySiteKey(siteId)
+    const existing = await savedCredentials(provider, siteId)
     const siteKey =
-      existing?.siteKey ??
+      existing.siteKey ??
       (interactive
         ? maybeExitCancelled(
             await password({
@@ -119,19 +228,28 @@ const connectCommand = defineCommand({
         `Run this command in a terminal or set ${CLICKY_SITEKEY_ENV}.`,
       )
     }
-    const clickyClient = new ClickyClient({ siteId, siteKey })
-    await clickyClient.verify()
-    const verifiedSiteId = clickyClient.siteId
+    await verifyAnalyticsProvider({
+      providerId: 'clicky',
+      account: { siteId },
+      credentials: { sitekey: siteKey },
+    })
     const source =
-      existing?.source ?? (await writeClickySiteKey(verifiedSiteId, siteKey))
+      existing.source ?? (await writeClickySiteKey(siteId, siteKey))
+    await writeProviderExtensionCredentials({
+      providerId: 'clicky',
+      account: { siteId },
+      credentials: { sitekey: siteKey },
+    })
+    writeProviderExtensionAccount('clicky', { siteId })
     const savedProject = project
       ? setClientAnalyticsConnection(project.id, {
-          provider: 'clicky',
-          siteId: verifiedSiteId,
+          provider: 'extension',
+          providerId: 'clicky',
+          account: { siteId },
         })
       : undefined
     const result = {
-      siteId: verifiedSiteId,
+      siteId,
       connected: true,
       credentialSource: source,
       project: savedProject
@@ -151,10 +269,7 @@ const connectCommand = defineCommand({
 })
 
 const statusCommand = defineCommand({
-  meta: {
-    name: 'status',
-    description: 'Show the local Clicky connection',
-  },
+  meta: { name: 'status', description: 'Show the local Clicky connection' },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
     project: { type: 'string', description: 'Saved project id or name.' },
@@ -172,20 +287,27 @@ const statusCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const provider = await clickyProvider({ json })
     const siteId = await resolveClickySiteId({
       siteId: stringArg(args['site-id']),
       project: projectArg(args),
       json,
     })
-    const credential = await readClickySiteKey(siteId)
+    const credential = await savedCredentials(provider, siteId)
     const check = booleanArg(args.check)
-    if (check && credential) await new ClickyClient({ siteId }).verify()
+    if (check && credential.siteKey) {
+      await verifyAnalyticsProvider({
+        providerId: 'clicky',
+        account: { siteId },
+        credentials: { sitekey: credential.siteKey },
+      })
+    }
     const result = {
       siteId,
-      connected: Boolean(credential),
-      credentialSource: credential?.source,
+      connected: Boolean(credential.siteKey),
+      credentialSource: credential.source,
       liveCheck: check
-        ? credential
+        ? credential.siteKey
           ? ('passed' as const)
           : ('unavailable' as const)
         : ('not-requested' as const),
@@ -245,18 +367,44 @@ const reportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    const provider = await clickyProvider({ json })
     const siteId = await resolveClickySiteId({
       siteId: stringArg(args['site-id']),
       project: projectArg(args),
       json,
     })
-    const result = await new ClickyClient({ siteId }).report({
-      type: stringArg(args.type) ?? 'pages-entrance',
-      startDate: stringArg(args['start-date']),
-      endDate: stringArg(args['end-date']),
-      limit: numberArg(args.limit),
+    const credential = await savedCredentials(provider, siteId)
+    const action = await runProviderExtensionAction({
+      providerId: 'clicky',
+      actionId: 'report',
+      account: { siteId },
+      ...(credential.siteKey
+        ? { credentials: { sitekey: credential.siteKey } }
+        : {}),
+      params: {
+        type: stringArg(args.type) ?? 'pages-entrance',
+        startDate: stringArg(args['start-date']) ?? '',
+        endDate: stringArg(args['end-date']) ?? '',
+        limit: numberArg(args.limit) ?? 100,
+      },
       refresh: booleanArg(args.refresh),
     })
+    if (!action.data || typeof action.data !== 'object') {
+      throw new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        'The Clicky provider returned an invalid report.',
+      )
+    }
+    const result = {
+      ...(action.data as Record<string, unknown>),
+      cache: action.cache,
+    } as {
+      siteId: string
+      type: string
+      rows: Array<Record<string, unknown>>
+      returnedRows: number
+      cache: string
+    }
     if (json) {
       printJson(result)
       return
@@ -271,16 +419,17 @@ const reportCommand = defineCommand({
       ['Value', 'Title', 'URL'],
       result.rows
         .slice(0, 25)
-        .map((row) => [row.value ?? '', row.title ?? '', row.url ?? '']),
+        .map((row) => [
+          String(row.value ?? ''),
+          String(row.title ?? ''),
+          String(row.url ?? ''),
+        ]),
     )
   },
 })
 
 const disconnectCommand = defineCommand({
-  meta: {
-    name: 'disconnect',
-    description: 'Remove a saved Clicky sitekey',
-  },
+  meta: { name: 'disconnect', description: 'Remove a saved Clicky sitekey' },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
     project: { type: 'string', description: 'Saved project id or name.' },
@@ -293,12 +442,17 @@ const disconnectCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
+    await clickyProvider({ json })
     const siteId = await resolveClickySiteId({
       siteId: stringArg(args['site-id']),
       project: projectArg(args),
       json,
     })
     await deleteClickySiteKey(siteId)
+    await deleteProviderExtensionCredentials({
+      providerId: 'clicky',
+      account: { siteId },
+    })
     const environmentCredential = Boolean(process.env[CLICKY_SITEKEY_ENV])
     const result = {
       siteId,
@@ -339,13 +493,20 @@ const detachCommand = defineCommand({
       project: projectArg(args),
       options: { json },
     })
-    if (!project?.analytics.clicky) {
+    const selected = analyticsConnection(project)
+    const provider =
+      selected?.provider === 'extension' && selected.providerId === 'clicky'
+        ? ('extension:clicky' as const)
+        : selected?.provider === 'clicky'
+          ? ('clicky' as const)
+          : undefined
+    if (!project || !provider) {
       throw new SeoError(
         'INVALID_INPUT',
         'The selected project is not attached to Clicky.',
       )
     }
-    const updated = removeClientAnalyticsConnection(project.id, 'clicky')
+    const updated = removeClientAnalyticsConnection(project.id, provider)
     const result = {
       project: { id: updated.id, name: updated.name },
       detached: true,

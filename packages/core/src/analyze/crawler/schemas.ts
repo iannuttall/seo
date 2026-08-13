@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { providerIdSchema } from '../../providers/contracts.js'
 import { listRules } from '../../rules.js'
 import { analyticsConnectionSchema } from '../../types.js'
 import { agentDiscoverySchema } from './agent-discovery-schema.js'
@@ -935,7 +936,7 @@ const crawlSearchDataSourceSchema = z.object({
 })
 
 const crawlAnalyticsDataSourceSchema = z.object({
-  provider: z.enum(['google', 'clicky']).optional(),
+  provider: providerIdSchema.optional(),
   observedMetrics: z
     .array(z.enum(['sessions', 'totalUsers', 'conversions']))
     .optional(),

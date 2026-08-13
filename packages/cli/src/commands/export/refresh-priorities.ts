@@ -1,4 +1,8 @@
-import { refreshPrioritiesCsvFiles, refreshPrioritiesWorkflow } from '@seo/core'
+import {
+  analyticsConnection,
+  refreshPrioritiesCsvFiles,
+  refreshPrioritiesWorkflow,
+} from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -8,6 +12,10 @@ import {
   stringArg,
 } from '../../args.js'
 import { resolveClientSelection } from '../../selection.js'
+import {
+  analyticsConnectionArgs,
+  analyticsConnectionFromArgs,
+} from '../analytics/connection.js'
 import { cliReportArgs } from '../report-options.js'
 import {
   defaultOutDir,
@@ -37,11 +45,7 @@ export const exportRefreshPrioritiesCommand = defineCommand({
         },
       },
     ),
-    'google-analytics-property': {
-      type: 'string',
-      description:
-        'Google Analytics property ID to use for analytics value. Defaults from the selected project.',
-    },
+    ...analyticsConnectionArgs,
     'verify-content': defaultTrueBooleanArg(
       'Verify top opportunities against page title, meta, and content. Defaults to true.',
       'Skip page content verification.',
@@ -67,6 +71,10 @@ export const exportRefreshPrioritiesCommand = defineCommand({
       googleAnalyticsPropertyId:
         stringArg(args['google-analytics-property']) ??
         selection.client?.analytics.google?.propertyId,
+      analyticsConnection: analyticsConnectionFromArgs(
+        args,
+        analyticsConnection(selection.client),
+      ),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

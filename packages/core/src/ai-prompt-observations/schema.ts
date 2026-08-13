@@ -27,7 +27,7 @@ export function aiPromptObservationsTableSql(
   estimated_cost_micros INTEGER,
   actual_cost_micros INTEGER,
   checked_at TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('dataforseo', 'semrush', 'ahrefs', 'serpbase')),
+  provider TEXT NOT NULL,
   provider_task_ids_json TEXT NOT NULL,
   completeness TEXT NOT NULL,
   warnings_json TEXT NOT NULL,

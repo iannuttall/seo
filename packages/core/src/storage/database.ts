@@ -13,7 +13,7 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
-import { migrateSerpBaseProviderIds } from './provider-id-migration.js'
+import { migrateProviderIds } from './provider-id-migration.js'
 import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
@@ -367,7 +367,7 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
     `)
   })
   migrate.immediate()
-  migrateSerpBaseProviderIds(database)
+  migrateProviderIds(database)
   runCacheMaintenance(database, {
     compact: true,
     allowFullVacuum: true,

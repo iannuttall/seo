@@ -240,7 +240,7 @@ export type CrawlSearchDataSource = {
 }
 
 export type CrawlAnalyticsDataSource = {
-  provider?: AnalyticsConnection['provider']
+  provider?: string
   observedMetrics?: Array<'sessions' | 'totalUsers' | 'conversions'>
   status: CrawlDataSourceStatus
   window?: CrawlDataSourceWindow

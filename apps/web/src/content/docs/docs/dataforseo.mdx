@@ -1,0 +1,151 @@
+---
+title: DataForSEO research
+description: Connect DataForSEO, set local spend limits, and run keyword, result, domain, link and AI search research.
+---
+
+Use DataForSEO when you need broad external research after your own crawl and
+Search Console data leave a clear gap. The built-in adapter supplies existing
+reports with keyword estimates, live results, domain rows, ranking pages,
+backlink evidence, and selected AI search datasets. These values remain named
+provider estimates.
+
+## Connect the API login and password
+
+Open the API Access area in your DataForSEO account. Copy the API login and API
+password. The API password is different from the password used to sign in to
+the dashboard. DataForSEO explains this in its
+<a href="https://docs.dataforseo.com/v3/auth/" target="_blank" rel="noreferrer">authentication guide</a>.
+
+Connect through the masked prompts:
+
+```sh
+seo providers dataforseo connect
+seo providers dataforseo status --check
+```
+
+The connection check uses the free account endpoint. The password is saved in
+the system keychain when available, with a private local file as the fallback.
+It is not stored in a project profile, report, cache entry, or spend record.
+
+Agents and CI can supply both values without saving them:
+
+```sh
+SEO_DATAFORSEO_LOGIN='your-api-login' \
+SEO_DATAFORSEO_PASSWORD='your-api-password' \
+  seo providers dataforseo status --check --json
+```
+
+Keep both values in your platform secret manager. Do not put them in a
+repository, script, report parameter, command argument, or issue.
+
+## Set spend and work limits first
+
+Inspect the current account context, spend record, and local limits:
+
+```sh
+seo providers dataforseo status --check
+seo providers dataforseo spend
+seo providers dataforseo limits
+```
+
+Set hard daily and monthly limits in US dollars. You can also cap requests and
+requested rows for one report:
+
+```sh
+seo providers dataforseo limits \
+  --daily-notice 1 \
+  --daily-limit 5 \
+  --monthly-limit 25 \
+  --requests 20 \
+  --rows 10000
+```
+
+The adapter reads current endpoint prices from the free account response. It
+reserves the estimated cost before a paid request and records the returned task
+cost afterward. Unknown price evidence blocks paid work. DataForSEO publishes
+current charges on its
+<a href="https://dataforseo.com/pricing" target="_blank" rel="noreferrer">API pricing page</a>.
+
+## Run the shared research reports
+
+Use the normal report catalog. Read a report description before you script it:
+
+```sh
+seo reports describe keyword-research --json
+seo reports describe serp-results --json
+seo reports describe competitive-opportunities --json
+seo reports describe domain-overview --json
+seo reports describe link-evidence --json
+```
+
+Run a focused report with DataForSEO selected:
+
+```sh
+seo reports run domain-overview \
+  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en","provider":"dataforseo"}' \
+  --json
+```
+
+The connected adapter supports these main evidence groups:
+
+| Work | Reports and commands |
+| --- | --- |
+| Keywords | `keyword-research`, `keyword-metrics`, `competitive-opportunities` |
+| Current results | `serp-results`, `rank-tracking`, optional result checks inside other reports |
+| Domains and competitors | `domain-overview`, `ranked-keywords`, `ranking-pages`, `serp-competitors`, `competitor-keyword-gap` |
+| Links | `seo links --provider dataforseo` and the shared `link-evidence` report |
+| Local research | Limited exact result checks inside `local-search-demand` |
+| AI search | `ai-mention-research` and `ai-prompt-observations` for supported surfaces and models |
+
+A report fails before paid work when the selected endpoint does not support its
+market, location, search engine, device, or requested operation.
+
+## Know what leaves your computer
+
+Live requests send only the inputs needed for the selected DataForSEO endpoint.
+
+| Work | Data sent to DataForSEO |
+| --- | --- |
+| Keyword, result, and domain research | Keywords or seeds, domains or URLs, market, location, device, filters, and limits used by the report. |
+| Link research | The target domain or URL, provider filters, and result limits. |
+| Indexed AI mention research | Target names and aliases, selected surface, market, and result limits. |
+| Fixed AI prompt observations | The full prompt, model, country, web search setting, and output limit. |
+| Optional Search Console enrichment | Selected query text or a derived research seed only when external research is explicitly enabled. |
+
+The software does not send Google OAuth tokens, Google account identity,
+Search Console property IDs, clicks, impressions, positions, or Google
+Analytics rows. Reports keep provider estimates separate from site evidence.
+
+DataForSEO describes its handling of live inputs and tasks in its
+<a href="https://dataforseo.com/privacy-policy" target="_blank" rel="noreferrer">privacy policy</a>.
+Removing a local key or cache does not remove provider-side task records.
+
+## Use cached data when it is still useful
+
+Reports record cache state, observation time, estimated cost, actual cost,
+provider task IDs, row limits, and coverage. A cache hit makes no new provider
+request. Use `refresh: true` only when the decision needs a newer observation.
+
+Inspect or remove local provider rows:
+
+```sh
+seo cache stats
+seo cache clear --provider dataforseo
+```
+
+Provider traffic, volume, difficulty, intent, and ranking history are
+estimates. Search Console remains the source for measured search performance
+on a property you own. One current result snapshot remains evidence for its
+exact query, market, device, and time.
+
+## Disconnect DataForSEO
+
+Remove the locally saved credentials:
+
+```sh
+seo providers dataforseo disconnect
+```
+
+Environment credentials remain under the control of your shell or CI service.
+Use `seo reset --yes` only when you intend to remove all local configuration,
+credentials, caches, histories, logs, and saved reports.

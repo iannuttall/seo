@@ -69,14 +69,14 @@ test('search markets reject ambiguous and extra location input', () => {
   )
 })
 
-test('provider ids and capabilities stay an owned closed vocabulary', () => {
+test('provider ids are extensible and capabilities stay an owned vocabulary', () => {
   assert.equal(providerIdSchema.parse('dataforseo'), 'dataforseo')
   assert.equal(
     providerCapabilitySchema.parse('keyword-metrics'),
     'keyword-metrics',
   )
   assert.equal(keywordDiscoverySourceSchema.parse('ideas'), 'ideas')
-  assert.throws(() => providerIdSchema.parse('vendor-row'))
+  assert.equal(providerIdSchema.parse('vendor-row'), 'vendor-row')
   assert.throws(() => providerCapabilitySchema.parse('magic-score'))
   assert.throws(() => keywordDiscoverySourceSchema.parse('provider-magic'))
 })

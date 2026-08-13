@@ -1,0 +1,11 @@
+{
+  "name": "@seoskill/provider-test-fixture",
+  "version": "0.0.0",
+  "type": "module",
+  "seo": {
+    "apiVersion": 1,
+    "providers": [
+      "./dist/index.js"
+    ]
+  }
+}

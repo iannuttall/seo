@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { providerIdSchema } from '../providers/contracts.js'
 
 export const siteSchema = z.object({
   siteUrl: z.string(),
@@ -12,6 +13,34 @@ export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
 export const analyticsProviderSchema = z.enum(['google', 'clicky'])
 
+const analyticsExtensionIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u)
+
+const analyticsExtensionAccountSchema = z
+  .record(
+    z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[A-Za-z][A-Za-z0-9-]*$/u)
+      .refine(
+        (value) => !['constructor', 'prototype', '__proto__'].includes(value),
+      ),
+    z.string().trim().min(1).max(1_000),
+  )
+  .refine((value) => Object.keys(value).length <= 16, {
+    message: 'An analytics provider account can have at most 16 fields.',
+  })
+
+const providerConnectionAccountsSchema = z
+  .record(providerIdSchema, analyticsExtensionAccountSchema)
+  .refine((value) => Object.keys(value).length <= 20, {
+    message: 'There can be at most 20 provider connection records.',
+  })
+
 export const analyticsConnectionSchema = z.discriminatedUnion('provider', [
   z.object({
     provider: z.literal('google'),
@@ -20,6 +49,11 @@ export const analyticsConnectionSchema = z.discriminatedUnion('provider', [
   z.object({
     provider: z.literal('clicky'),
     siteId: z.string().regex(/^\d{1,30}$/u),
+  }),
+  z.object({
+    provider: z.literal('extension'),
+    providerId: analyticsExtensionIdSchema,
+    account: analyticsExtensionAccountSchema,
   }),
 ])
 
@@ -35,7 +69,12 @@ export const providerSpendLimitOverridesSchema = z
 
 export const analyticsConnectionsSchema = z
   .object({
-    selected: analyticsProviderSchema.optional(),
+    selected: z
+      .union([
+        analyticsProviderSchema,
+        z.string().regex(/^extension:[a-z0-9]+(?:-[a-z0-9]+)*$/u),
+      ])
+      .optional(),
     google: z
       .object({
         propertyId: z.string(),
@@ -44,6 +83,15 @@ export const analyticsConnectionsSchema = z
     clicky: z
       .object({
         siteId: z.string().regex(/^\d{1,30}$/u),
+      })
+      .optional(),
+    extensions: z
+      .record(
+        analyticsExtensionIdSchema,
+        z.object({ account: analyticsExtensionAccountSchema }).strict(),
+      )
+      .refine((value) => Object.keys(value).length <= 20, {
+        message: 'A project can have at most 20 analytics extensions.',
       })
       .optional(),
   })
@@ -102,14 +150,9 @@ export const configSchema = z.object({
       dataForSeoPassword: z.string().optional(),
       prefer: providerPreferenceSchema.default('cheap'),
       costLimits: z
-        .object({
-          dataforseo: providerSpendLimitOverridesSchema.optional(),
-          semrush: providerSpendLimitOverridesSchema.optional(),
-          ahrefs: providerSpendLimitOverridesSchema.optional(),
-          serpbase: providerSpendLimitOverridesSchema.optional(),
-        })
-        .strict()
+        .record(providerIdSchema, providerSpendLimitOverridesSchema)
         .optional(),
+      connections: providerConnectionAccountsSchema.optional(),
     })
     .default({ prefer: 'cheap' }),
   security: z

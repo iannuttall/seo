@@ -6,6 +6,7 @@ import {
   type TelemetryOptions,
 } from '@seo/core'
 import { registerDiscoveryTools } from './discovery-tools.js'
+import { registerProviderExtensionTools } from './provider-extension-tools.js'
 
 export {
   AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
@@ -53,6 +54,7 @@ export function createServer(
   registerDiscoveryTools(server, {
     telemetry: options.telemetry === false ? undefined : telemetryOptions,
   })
+  registerProviderExtensionTools(server)
   if (options.telemetry !== false) {
     server.server.oninitialized = () => {
       initializeTelemetry(telemetryOptions())

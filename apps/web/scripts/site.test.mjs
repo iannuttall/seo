@@ -16,6 +16,17 @@ const { tools } = await import(
 )
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
+  ['features/index.html', 'https://seoskill.dev/features'],
+  ['features/mcp/index.html', 'https://seoskill.dev/features/mcp'],
+  ['features/seo-audit/index.html', 'https://seoskill.dev/features/seo-audit'],
+  [
+    'features/search-console/index.html',
+    'https://seoskill.dev/features/search-console',
+  ],
+  [
+    'features/keyword-research/index.html',
+    'https://seoskill.dev/features/keyword-research',
+  ],
   ['tools/index.html', 'https://seoskill.dev/tools'],
   ...tools.map((tool) => [
     `${tool.path.slice(1)}/index.html`,
@@ -41,6 +52,10 @@ const expectedPages = new Map([
   ['docs/bing/index.html', 'https://seoskill.dev/docs/bing'],
   ['blog/index.html', 'https://seoskill.dev/blog'],
   ['blog/seo-agent/index.html', 'https://seoskill.dev/blog/seo-agent'],
+  [
+    'blog/seo-mcp-servers/index.html',
+    'https://seoskill.dev/blog/seo-mcp-servers',
+  ],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -413,6 +428,7 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
         path === 'index.html' ||
         path.startsWith('blog/') ||
         path.startsWith('docs/') ||
+        path.startsWith('features/') ||
         path.startsWith('tools/') ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
@@ -799,9 +815,7 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   )
   assert.match(
     home,
-    new RegExp(
-      `One SEO skill and ${routeReportIds.length} reports and tools for AI agents\\s+to fix issues, measure performance, research search opportunities,\\s+and improve organic and AI search visibility\\.`,
-    ),
+    /Run an SEO audit from any agent that supports local MCP, or use your\s+terminal\. Find what needs attention, fix it in your code, and check\s+what changed\./,
   )
   assert.match(home, /data-glitch/)
   assert.match(home, /requestAnimationFrame\(enhanceHeadline\)/)

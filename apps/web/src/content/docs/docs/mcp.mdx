@@ -1,13 +1,21 @@
 ---
-title: SEO MCP server for AI agents
-description: Connect the local SEO MCP server to Codex, Claude Code, Cursor or Claude Desktop. Your agent can then run audits using your crawl and Google data.
+title: Set up the local SEO MCP server
+description: Connect the local SEO MCP server to any agent that supports local stdio MCP. Then run audits with crawl, Search Console, analytics, and research evidence.
 ---
 
-The SEO MCP server runs as a local process on your computer and gives Claude
-Code, Claude Desktop, Codex, or Cursor the same structured reports as the CLI.
-The installer points your client at the installed CLI and sends tool calls over
-standard input and output. It does not fetch the package from npm when the
-client starts.
+Connect the [SEO MCP server](/features/mcp) to any agent or client that can
+start a local stdio MCP server. Your agent can then run the same structured
+reports as the CLI and answer questions with your crawl, Search Console,
+Google Analytics, and optional research data.
+
+The guided installer has built-in setup for Codex, Claude Code, Claude
+Desktop, and Cursor. These are examples, not the full compatibility list.
+Other MCP clients can start `seo mcp serve` through their local server
+configuration.
+
+The server runs as a local process on your computer. The installer points your
+client at the installed CLI and sends tool calls over standard input and
+output. It does not fetch the package from npm when the client starts.
 
 MCP supplies the tools. The packaged [SEO skill](/docs/skill) supplies the
 report-specific instructions that help an agent choose the right tool, read
@@ -38,8 +46,8 @@ With `seo` installed globally, run:
 seo mcp install
 ```
 
-The interactive flow detects supported clients and lets you choose one or
-more. It preserves unrelated settings, creates a timestamped backup before it
+The interactive flow detects clients with built-in setup and lets you choose
+one or more. It preserves unrelated settings, creates a timestamped backup before it
 changes a JSON config, and refuses to replace an existing `seo` server that it
 does not manage.
 

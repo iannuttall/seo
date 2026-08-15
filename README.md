@@ -8,11 +8,15 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The only SEO skill your agent needs. Audit sites, find search opportunities, research competitors, and verify the work from one local CLI and MCP server.
+  The SEO command for AI agents. Audit sites, find search opportunities, research competitors, and verify the work from one local command and MCP server.
 </p>
 
 <p align="center">
   <a href="#quick-start">Get started</a>
+  ·
+  <a href="https://seoskill.dev/features">Features</a>
+  ·
+  <a href="https://seoskill.dev/features/mcp">SEO MCP server</a>
   ·
   <a href="https://seoskill.dev/docs">Documentation</a>
   ·
@@ -730,8 +734,8 @@ step or need to reinstall it later, run the packaged installer:
 seo skill install
 ```
 
-If you also skipped the MCP step, install the local server into a supported
-client:
+If you also skipped the MCP step, install the local server into a client with
+built-in setup:
 
 ```sh
 seo mcp install
@@ -745,6 +749,10 @@ seo mcp install --claude-code
 seo mcp install --cursor
 seo mcp install --claude-desktop
 ```
+
+The server works with any client that can start a local stdio MCP server.
+Codex, Claude Code, Claude Desktop, and Cursor have guided setup. Other MCP
+clients can start `seo mcp serve` through their local server configuration.
 
 Your client starts the server when it needs it. Run it directly only for manual
 configuration or testing:

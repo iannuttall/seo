@@ -1,0 +1,104 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FeatureCta from '@/components/FeatureCta.astro'
+import NavCard from '@/components/NavCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO MCP server' },
+]
+
+const prompts = [
+  'Why did search clicks fall, and which pages explain the change?',
+  'Which page-two queries already have enough impressions to work on?',
+  'Crawl the site and show the technical issues with the widest reach.',
+  'Which competitors appear most often for these keywords?',
+] as const
+---
+
+<BaseLayout
+  title="SEO MCP server for AI agents"
+  description="Connect an open source SEO MCP server to any agent that supports local MCP. Run audits with crawl, Search Console, analytics, keyword, and competitor evidence."
+  canonicalPath="/features/mcp"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="SEO MCP server for AI agents"
+      description="Ask your agent what changed, what is broken, and what to fix next. It can inspect your crawl, Search Console, Google Analytics, and optional research data before it answers."
+      align="left"
+    />
+
+    <DottedCard patternId="mcp-prompts">
+      <div class="p-6 pb-10">
+        <ul class="space-y-3 font-sans text-sm leading-6">
+          {prompts.map((prompt) => <li>“{prompt}”</li>)}
+        </ul>
+      </div>
+      <span slot="label">Questions worth asking</span>
+    </DottedCard>
+
+    <section class="docs-prose mt-14" aria-labelledby="work-in-your-agent">
+      <h2 id="work-in-your-agent">Do the SEO work inside your agent</h2>
+      <p>
+        The SEO MCP server works with any agent or client that can start a local stdio MCP server. Your agent can discover the available reports, choose the right one, inspect structured evidence, and suggest the next useful check.
+      </p>
+      <p>
+        You do not need to copy charts, export spreadsheets, or explain every SEO field to the model. The same report logic works in MCP, the command line, and the TypeScript package.
+      </p>
+      <p>
+        The guided installer covers Codex, Claude Code, Claude Desktop, and Cursor. These are examples, not the full compatibility list. Other MCP clients can start <code>seo mcp serve</code> through their local server configuration.
+      </p>
+
+      <h2>Use evidence that can support the answer</h2>
+      <ul>
+        <li>A live or saved crawl shows page content, links, directives, and technical issues.</li>
+        <li>Google Search Console shows clicks, impressions, CTR, position, queries, pages, and URL inspection results.</li>
+        <li>Google Analytics adds landing-page, engagement, and conversion context when you connect it.</li>
+        <li>Optional providers add keyword, SERP, domain, competitor, and backlink estimates with clear source labels.</li>
+      </ul>
+      <p>
+        Missing or partial data stays missing or partial. The report does not turn an unavailable source into a zero or claim that one observation proves a ranking change.
+      </p>
+
+      <h2>Keep the work local</h2>
+      <p>
+        The server runs on your computer. Project profiles, Google tokens, reports, crawls, and caches stay there. The Google connection is read-only. Optional providers receive only the requests needed for the research you choose to run.
+      </p>
+
+      <h2>Connect it without editing config files by hand</h2>
+      <p>
+        Run <code>seo mcp install</code>. The guided flow finds clients with built-in setup, keeps unrelated settings, creates a backup, and refuses to replace an MCP entry it does not manage.
+      </p>
+      <p>
+        Follow the <a href="/docs/mcp">SEO MCP setup guide</a> for client commands and checks. If you are comparing options first, read the <a href="/blog/seo-mcp-servers">SEO MCP server guide</a>.
+      </p>
+    </section>
+
+    <div class="mt-14 grid gap-6 sm:grid-cols-2">
+      <NavCard
+        title="Google Search Console MCP"
+        heading="Ask about your own search performance"
+        description="Find query and page opportunities with your Google data."
+        href="/features/search-console"
+      />
+      <NavCard
+        title="SEO audit tool"
+        heading="Turn findings into fixes"
+        description="Crawl the site and give your coding agent the affected URLs and evidence."
+        href="/features/seo-audit"
+      />
+    </div>
+
+    <FeatureCta
+      title="Connect your SEO MCP server"
+      description="Install the command, run seo start, then run seo mcp install to connect your agent."
+    />
+  </main>
+</BaseLayout>

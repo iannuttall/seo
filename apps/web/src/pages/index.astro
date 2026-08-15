@@ -26,7 +26,7 @@ const faqs = [
   {
     question: 'Does the SEO skill include an AI agent?',
     answer:
-      'No. It gives Claude, ChatGPT, Codex, Cursor, and other agents better SEO context. The model still does the reasoning, writing, and implementation work. The CLI supplies crawl, Search Console, Google Analytics, and optional research-provider evidence.',
+      'No. It gives any compatible agent better SEO context. Codex, Claude, ChatGPT, and Cursor are common examples. The model still does the reasoning, writing, and implementation work. The CLI supplies crawl, Search Console, Google Analytics, and optional research-provider evidence.',
   },
   {
     question: 'Why not build another SEO dashboard?',
@@ -108,9 +108,9 @@ const faqs = [
             The only SEO skill your agent needs
           </h1>
           <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
-            One SEO skill and {reportCountLabel} reports and tools for AI agents
-            to fix issues, measure performance, research search opportunities,
-            and improve organic and AI search visibility.
+            Run an SEO audit from any agent that supports local MCP, or use your
+            terminal. Find what needs attention, fix it in your code, and check
+            what changed.
           </p>
         </div>
         <InstallPicker />
@@ -155,7 +155,7 @@ const faqs = [
       <div class="mx-auto w-full max-w-4xl px-8 py-12 md:px-12">
         <SectionHeading
           eyebrow="Questions about the CLI, MCP, and your data"
-          text="Give the best models better SEO evidence without replacing Claude, ChatGPT, Codex, Cursor, or the agent workflow you already use."
+          text="Give any compatible agent better SEO evidence. Codex, Claude, ChatGPT, and Cursor are common examples."
         />
         <DottedCard patternId="faq-card">
           <FaqAccordion items={faqs} />

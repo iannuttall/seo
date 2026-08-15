@@ -165,6 +165,14 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
     headers,
     new RegExp(
       escapeRegExp(
+        '/features/*.md\n  Link: <https://seoskill.dev/features/:splat>; rel="canonical"',
+      ),
+    ),
+  )
+  assert.match(
+    headers,
+    new RegExp(
+      escapeRegExp(
         '/blog/*.md\n  Link: <https://seoskill.dev/blog/:splat>; rel="canonical"',
       ),
     ),
@@ -188,6 +196,7 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
     if (
       page.markdownPath.startsWith('/blog/') ||
       page.markdownPath.startsWith('/docs/') ||
+      page.markdownPath.startsWith('/features/') ||
       page.markdownPath.startsWith('/tools/')
     )
       continue

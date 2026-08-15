@@ -7,6 +7,11 @@ const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 const paths = [
   '/',
+  '/features',
+  '/features/mcp',
+  '/features/seo-audit',
+  '/features/search-console',
+  '/features/keyword-research',
   '/tools',
   ...toolPaths,
   '/docs',
@@ -26,6 +31,7 @@ const paths = [
   '/docs/skill',
   '/blog',
   '/blog/seo-agent',
+  '/blog/seo-mcp-servers',
   '/stats',
   '/telemetry',
   ...reportIds.map((id) => `/docs/reports/${reportSlugs[id] ?? id}`),

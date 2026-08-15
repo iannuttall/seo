@@ -1,0 +1,141 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FeatureCta from '@/components/FeatureCta.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'SEO MCP servers' },
+]
+
+const servers = [
+  {
+    name: 'SEO Skill',
+    fit: 'Local audits, Search Console analysis, and code changes',
+    detail:
+      'Use it when you want an open source SEO MCP server that runs on your machine. It combines crawl evidence, read-only Google data, optional research estimates, and reports that your coding agent can trace back to affected pages.',
+    href: '/features/mcp',
+    linkLabel: 'See the SEO MCP server',
+  },
+  {
+    name: 'OpenSEO',
+    fit: 'Keyword research with a project interface',
+    detail:
+      'OpenSEO connects agents to keyword metrics, live results, competitor domains, backlink context, rank tracking, and Search Console signals. It can save opportunities back to an OpenSEO project for later review.',
+    href: 'https://openseo.so/features/mcp',
+    linkLabel: 'See OpenSEO MCP',
+  },
+  {
+    name: 'SE Ranking',
+    fit: 'Broad hosted SEO and AI search data',
+    detail:
+      'SE Ranking exposes keyword, backlink, domain, website audit, and AI search data through a hosted MCP connection. Access is part of its plans, and requests use the API credits available to the account.',
+    href: 'https://seranking.com/mcp.html',
+    linkLabel: 'See SE Ranking MCP',
+  },
+  {
+    name: 'DataForSEO',
+    fit: 'Provider data and custom agent workflows',
+    detail:
+      'DataForSEO exposes its search, keyword, backlink, on-page, business, and domain APIs through remote and local MCP options. It suits teams that already use its API credentials and pay for the data each workflow requests.',
+    href: 'https://dataforseo.com/seo-mcp-server',
+    linkLabel: 'See DataForSEO MCP',
+  },
+  {
+    name: 'Frase',
+    fit: 'Content research, writing, and publishing',
+    detail:
+      'Frase covers a content workflow from SERP research and briefs through drafting, scoring, publishing, and AI visibility checks. It is a strong fit when the agent must work across the whole content pipeline.',
+    href: 'https://www.frase.io/agents',
+    linkLabel: 'See Frase for agents',
+  },
+  {
+    name: 'Nightwatch',
+    fit: 'Rank tracking and client reporting',
+    detail:
+      'Nightwatch connects agents to its rank tracking, site audits, competitor monitoring, reporting, and AI visibility data. It suits teams that already manage tracked keywords and reporting inside Nightwatch.',
+    href: 'https://nightwatch.io/seo-mcp/',
+    linkLabel: 'See Nightwatch MCP',
+  },
+] as const
+---
+
+<BaseLayout
+  title="SEO MCP servers for AI agents"
+  description="Compare SEO MCP servers for local audits, Search Console, keyword research, rank tracking, content work, backlinks, and AI search data."
+  canonicalPath="/blog/seo-mcp-servers"
+  schemaType="TechArticle"
+  datePublished="2026-08-13"
+  dateModified="2026-08-13"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="SEO MCP servers for AI agents"
+      description="The useful choice is not the server with the longest tool list. It is the one that has the evidence for the job you need to finish."
+      align="left"
+    />
+
+    <div class="docs-prose">
+      <p>
+        SEO MCP servers let any compatible agent request SEO data while it works. Codex, Claude, and Cursor are common examples. The products below solve different problems. Some run local audits. Some sell large keyword and result datasets. Some focus on rank tracking or content production.
+      </p>
+      <p>
+        This guide compares the public product pages and documentation available on 13 August 2026. It does not claim that one server is best for every team.
+      </p>
+
+      <h2>Choose from the work you need to do</h2>
+      <ul>
+        <li>Choose a local audit tool when your agent must inspect a site, find affected URLs, edit code, and check the result.</li>
+        <li>Choose a research provider when you need large keyword, result, domain, or backlink datasets.</li>
+        <li>Choose a rank tracker when tracked positions and client reporting are the main job.</li>
+        <li>Choose a content platform when the workflow must continue from research into briefs, drafts, and publishing.</li>
+      </ul>
+    </div>
+
+    <div class="mt-10 grid gap-6">
+      {servers.map((server, index) => (
+        <DottedCard patternId={`mcp-server-${index}`}>
+          <article class="p-6 pb-10">
+            <p class="font-sans text-xs font-medium uppercase tracking-wide text-foreground-muted">Good fit for: {server.fit}</p>
+            <h2 class="mt-3 text-xl font-normal leading-7">{server.name}</h2>
+            <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{server.detail}</p>
+            <p class="mt-4 font-sans text-sm">
+              <a class="underline underline-offset-4 hover:decoration-dotted" href={server.href} target={server.href.startsWith('http') ? '_blank' : undefined} rel={server.href.startsWith('http') ? 'noreferrer' : undefined}>{server.linkLabel}</a>
+            </p>
+          </article>
+          <span slot="label">{server.name}</span>
+        </DottedCard>
+      ))}
+    </div>
+
+    <section class="docs-prose mt-14" aria-labelledby="questions-before">
+      <h2 id="questions-before">Ask these questions before you connect one</h2>
+      <ol>
+        <li><strong>Does it have the source I need?</strong> A backlink database cannot replace Search Console, and Search Console cannot replace a live crawl.</li>
+        <li><strong>Where does the data go?</strong> Check whether the server runs locally or remotely, what the provider stores, and which credentials it needs.</li>
+        <li><strong>What will each request cost?</strong> A free connector can still call a paid API. Check credits, row limits, and request prices.</li>
+        <li><strong>Can I inspect the evidence?</strong> Ask whether results retain sources, dates, limits, affected URLs, and partial-data states.</li>
+        <li><strong>Can it finish the work?</strong> Research is enough for some jobs. A coding agent also needs a path from the finding to the code and back to verification.</li>
+      </ol>
+
+      <h2>A practical starting point</h2>
+      <p>
+        If your work starts with your own site, begin with a crawl and Search Console. That tells you what exists, what Google reports, and where real demand already touches your pages. Add outside keyword, result, domain, and backlink data only when it will change the decision.
+      </p>
+      <p>
+        The local <a href="/features/mcp">SEO MCP server</a> follows that order. Run <code>seo report</code> first, inspect the evidence, then use a focused report for the next question.
+      </p>
+    </section>
+
+    <FeatureCta
+      title="Try a local SEO MCP server"
+      description="Install the command, run the guided setup, and connect any agent that supports local MCP."
+    />
+  </main>
+</BaseLayout>

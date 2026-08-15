@@ -1,0 +1,105 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FeatureCta from '@/components/FeatureCta.astro'
+import NavCard from '@/components/NavCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO keyword research tool' },
+]
+
+const evidence = [
+  ['Search demand', 'Compare provider search-volume and difficulty estimates in the market you selected.'],
+  ['Live search results', 'Inspect the pages and result features that appear for the exact query and location.'],
+  ['Search competitors', 'Find domains that recur across the organic results returned without claiming they are business competitors.'],
+  ['Your existing reach', 'Join Search Console queries and landing pages where your own performance should change the priority.'],
+] as const
+---
+
+<BaseLayout
+  title="SEO keyword research tool for AI agents"
+  description="Use an SEO keyword research tool inside your AI agent. Compare keyword demand, live SERPs, ranking pages, competitors, backlinks, and your Search Console evidence."
+  canonicalPath="/features/keyword-research"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="SEO keyword research tool for AI agents"
+      description="Turn a topic into a focused list of keywords, ranking pages, and competitors that deserve your time."
+      align="left"
+    />
+
+    <DottedCard patternId="keyword-question">
+      <div class="p-6 pb-10 font-sans">
+        <p class="text-lg leading-7">“Find the keyword groups we can support, show who ranks now, and tell me what evidence makes each group worth a closer look.”</p>
+      </div>
+      <span slot="label">Start with a decision</span>
+    </DottedCard>
+
+    <section class="docs-prose mt-14" aria-labelledby="shortlist">
+      <h2 id="shortlist">Build a shortlist you can defend</h2>
+      <p>
+        Give the agent a seed topic, market, and goal. It can expand the topic, compare demand, inspect live results, group related terms, and show which domains appear most often. You keep the source and metric names next to every estimate.
+      </p>
+      <p>
+        If Search Console is connected, the agent can also see where your site already earns impressions or clicks. It can use that evidence to separate an existing opportunity from a topic that is new to the site.
+      </p>
+    </section>
+
+    <div class="mt-10 grid gap-6 sm:grid-cols-2">
+      {evidence.map(([title, description], index) => (
+        <DottedCard patternId={`keyword-evidence-${index}`}>
+          <div class="p-5 pb-10">
+            <h2 class="text-sm font-normal leading-5">{title}</h2>
+            <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{description}</p>
+          </div>
+          <span slot="label">Research evidence</span>
+        </DottedCard>
+      ))}
+    </div>
+
+    <section class="docs-prose mt-14" aria-labelledby="estimates">
+      <h2 id="estimates">Know which numbers are estimates</h2>
+      <p>
+        Keyword, domain, competitor, backlink, and result metrics come from optional research providers. They do not replace crawl, Search Console, Google Analytics, or live result evidence. Reports keep provider names, dates, limits, and partial states visible.
+      </p>
+      <p>
+        Provider work can cost money. The CLI shows estimated and completed task costs, uses a local cache, and enforces local request, row, daily, and monthly limits. You choose when the extra research is worth it.
+      </p>
+
+      <h2>Move from research to the page</h2>
+      <p>
+        Open the ranking pages, review search intent, and compare the topic with what your site can support. Then let your coding agent draft or edit the page in the repository where the work will ship.
+      </p>
+      <p>
+        The tool does not promise a ranking or turn volume into a traffic forecast. It gives you a smaller, clearer set of opportunities to investigate.
+      </p>
+    </section>
+
+    <div class="mt-14 grid gap-6 sm:grid-cols-2">
+      <NavCard
+        title="SEO MCP server"
+        heading="Run research from your agent"
+        description="Use the same reports from any agent that supports local MCP."
+        href="/features/mcp"
+      />
+      <NavCard
+        title="Search Console MCP"
+        heading="Add your existing search demand"
+        description="Use your query and page data when it should change the research priority."
+        href="/features/search-console"
+      />
+    </div>
+
+    <FeatureCta
+      title="Start keyword research in your agent"
+      description="Install the command and run seo start. Add a research provider only when you need outside estimates."
+    />
+  </main>
+</BaseLayout>

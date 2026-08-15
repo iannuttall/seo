@@ -100,7 +100,7 @@ export const docsNav: DocsNavEntry[] = [
     path: '/docs/mcp',
     label: 'Local MCP',
     description:
-      'Connect Codex, Claude Code, Claude Desktop, or Cursor to the local report server without hand-editing config.',
+      'Connect any agent that supports local stdio MCP. Guided setup covers Codex, Claude Code, Claude Desktop, and Cursor.',
   },
   {
     path: '/docs/skill',

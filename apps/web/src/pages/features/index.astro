@@ -1,0 +1,77 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import FeatureCta from '@/components/FeatureCta.astro'
+import NavCard from '@/components/NavCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const features = [
+  {
+    title: 'SEO MCP server',
+    heading: 'Ask your agent about your SEO data',
+    description:
+      'Run audits, inspect search performance, and research competitors from any agent that supports local MCP.',
+    href: '/features/mcp',
+  },
+  {
+    title: 'SEO audit tool',
+    heading: 'Find the pages and fixes that need your attention',
+    description:
+      'Crawl the site, connect search data, and get a clear list of evidence, affected URLs, and next actions.',
+    href: '/features/seo-audit',
+  },
+  {
+    title: 'Google Search Console MCP',
+    heading: 'Use your search data in your agent',
+    description:
+      'Find weak CTR, page-two queries, falling pages, indexing candidates, and pages that need a closer look.',
+    href: '/features/search-console',
+  },
+  {
+    title: 'SEO keyword research tool',
+    heading: 'Choose topics from search evidence',
+    description:
+      'Compare keyword demand, live results, ranking pages, competitors, and backlinks without copying rows between tools.',
+    href: '/features/keyword-research',
+  },
+] as const
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features' },
+]
+---
+
+<BaseLayout
+  title="Open source SEO tools for AI agents"
+  description="Use open source SEO tools for audits, Search Console analysis, keyword research, competitor research, and SEO work inside AI agents."
+  canonicalPath="/features"
+  schemaType="CollectionPage"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Open source SEO tools for AI agents"
+      description="Give your agent the crawl, search, keyword, and competitor evidence it needs to help you make better SEO decisions."
+      align="left"
+    />
+
+    <div class="grid gap-6 sm:grid-cols-2">
+      {features.map((feature) => <NavCard {...feature} />)}
+    </div>
+
+    <section class="docs-prose mt-14" aria-labelledby="one-command">
+      <h2 id="one-command">One command, one setup, and one report to start</h2>
+      <p>
+        Install <code>seo</code>, run the guided setup, and start with <code>seo report</code>. The report checks the evidence you have, explains any gaps, and gives you a short investigation queue.
+      </p>
+      <p>
+        Reports, project profiles, Google tokens, crawls, and caches stay on your machine. Optional research providers add keyword, result, domain, competitor, and link estimates when you need them.
+      </p>
+    </section>
+
+    <FeatureCta />
+  </main>
+</BaseLayout>

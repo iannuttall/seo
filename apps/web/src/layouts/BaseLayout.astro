@@ -61,6 +61,7 @@ const footerGroups = [
     heading: 'Product',
     links: [
       { label: 'Home', href: '/' },
+      { label: 'Features', href: '/features' },
       { label: 'Tools', href: '/tools' },
       { label: 'Docs', href: '/docs' },
       { label: 'Reports', href: '/docs/reports' },
@@ -72,7 +73,8 @@ const footerGroups = [
     links: [
       { label: 'How an SEO agent works', href: '/blog/seo-agent' },
       { label: 'Getting started', href: '/docs/getting-started' },
-      { label: 'Local MCP', href: '/docs/mcp' },
+      { label: 'SEO MCP server', href: '/features/mcp' },
+      { label: 'MCP setup', href: '/docs/mcp' },
       { label: 'Agent skill', href: '/docs/skill' },
     ],
   },
@@ -238,7 +240,8 @@ const projectThings = [
         <div class="mx-auto flex w-full max-w-4xl items-center justify-between px-8 py-3 md:px-12">
           <a class="underline underline-offset-2 hover:decoration-dotted" href="/">{site.name}</a>
           <nav class="flex items-center gap-3" aria-label="Main navigation">
-            <a class="underline underline-offset-2 hover:decoration-dotted" href="/tools">Tools</a>
+            <a class="underline underline-offset-2 hover:decoration-dotted" href="/features">Features</a>
+            <a class="hidden underline underline-offset-2 hover:decoration-dotted sm:inline" href="/tools">Tools</a>
             <a class="underline underline-offset-2 hover:decoration-dotted" href="/docs">Docs</a>
             <a class="underline underline-offset-2 hover:decoration-dotted" href={site.repository} target="_blank" rel="noreferrer">GitHub</a>
           </nav>

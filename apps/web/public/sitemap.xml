@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://seoskill.dev</loc></url>
+  <url><loc>https://seoskill.dev/features</loc></url>
+  <url><loc>https://seoskill.dev/features/mcp</loc></url>
+  <url><loc>https://seoskill.dev/features/seo-audit</loc></url>
+  <url><loc>https://seoskill.dev/features/search-console</loc></url>
+  <url><loc>https://seoskill.dev/features/keyword-research</loc></url>
   <url><loc>https://seoskill.dev/tools</loc></url>
   <url><loc>https://seoskill.dev/tools/llms-txt-generator</loc></url>
   <url><loc>https://seoskill.dev/tools/llms-txt-validator</loc></url>
@@ -36,6 +41,7 @@
   <url><loc>https://seoskill.dev/docs/skill</loc></url>
   <url><loc>https://seoskill.dev/blog</loc></url>
   <url><loc>https://seoskill.dev/blog/seo-agent</loc></url>
+  <url><loc>https://seoskill.dev/blog/seo-mcp-servers</loc></url>
   <url><loc>https://seoskill.dev/stats</loc></url>
   <url><loc>https://seoskill.dev/telemetry</loc></url>
   <url><loc>https://seoskill.dev/docs/reports/affected-urls</loc></url>

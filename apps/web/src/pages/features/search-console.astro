@@ -1,0 +1,102 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import DottedCard from '@/components/DottedCard.astro'
+import FeatureCta from '@/components/FeatureCta.astro'
+import NavCard from '@/components/NavCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Google Search Console MCP' },
+]
+
+const jobs = [
+  ['Find pages losing clicks', 'Compare final search periods, keep the dates visible, and show the pages and queries behind the change.'],
+  ['Find near-term opportunities', 'Surface page-two queries, weak CTR, and pages with demand that already exists.'],
+  ['Check indexing evidence', 'Inspect selected URLs and keep inspection results separate from crawl observations.'],
+  ['Measure a change', 'Compare a saved release against later Search Console data without inventing a traffic forecast.'],
+] as const
+---
+
+<BaseLayout
+  title="Google Search Console MCP for AI agents"
+  description="Connect Google Search Console to your AI agent through a local MCP server. Analyze clicks, impressions, CTR, position, queries, pages, and URL inspection evidence."
+  canonicalPath="/features/search-console"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Google Search Console MCP for AI agents"
+      description="Let your agent answer search-performance questions with your clicks, impressions, CTR, position, query, page, and URL inspection data."
+      align="left"
+    />
+
+    <DottedCard patternId="search-console-question">
+      <div class="p-6 pb-10 font-sans">
+        <p class="text-lg leading-7">“Which pages lost clicks, which queries caused the loss, and what should I check first?”</p>
+      </div>
+      <span slot="label">Ask your own data</span>
+    </DottedCard>
+
+    <section class="docs-prose mt-14" aria-labelledby="questions">
+      <h2 id="questions">Get answers without another spreadsheet export</h2>
+      <p>
+        The Google Search Console MCP path gives your agent read-only access through the same local report engine as the command line. It can choose a report, request only the rows it needs, and keep the source, date range, units, and limits with the result.
+      </p>
+    </section>
+
+    <div class="mt-10 grid gap-6 sm:grid-cols-2">
+      {jobs.map(([title, description], index) => (
+        <DottedCard patternId={`search-console-job-${index}`}>
+          <div class="p-5 pb-10">
+            <h2 class="text-sm font-normal leading-5">{title}</h2>
+            <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{description}</p>
+          </div>
+          <span slot="label">Search Console analysis</span>
+        </DottedCard>
+      ))}
+    </div>
+
+    <section class="docs-prose mt-14" aria-labelledby="honest-data">
+      <h2 id="honest-data">Keep Search Console limits visible</h2>
+      <p>
+        Search Console does not expose every query row, and recent data can still change. The reports keep row limits, filters, dates, and skipped sections visible. A missing row does not become a definitive zero.
+      </p>
+      <p>
+        The CLI uses the final-data calendar for reporting windows and aggregates duplicate rows before ranking them. It does not assign Google Analytics geography to a Search Console query.
+      </p>
+
+      <h2>Connect the property you already own</h2>
+      <p>
+        Run <code>seo start</code>, sign in to Google, and choose a Search Console property from the discovered list. The connection requests read-only access. Tokens stay in the local managed store.
+      </p>
+      <p>
+        Then connect the <a href="/features/mcp">SEO MCP server</a> or run reports directly in the terminal. Google Analytics is optional and stays separate from Search Console evidence.
+      </p>
+    </section>
+
+    <div class="mt-14 grid gap-6 sm:grid-cols-2">
+      <NavCard
+        title="Google setup guide"
+        heading="Connect Search Console and Google Analytics"
+        description="Follow the local sign-in and property-selection steps."
+        href="/docs/google"
+      />
+      <NavCard
+        title="SEO audit tool"
+        heading="Join search data to crawl evidence"
+        description="Use the main audit to decide which technical and content checks matter next."
+        href="/features/seo-audit"
+      />
+    </div>
+
+    <FeatureCta
+      title="Ask Search Console a useful question"
+      description="Install the command, run seo start, and choose your Search Console property."
+    />
+  </main>
+</BaseLayout>

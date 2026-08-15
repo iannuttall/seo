@@ -29,6 +29,16 @@
 /docs/*.md
   Link: <https://seoskill.dev/docs/:splat>; rel="canonical"
 
+/features
+  Link: <https://seoskill.dev/features.md>; rel="alternate"; type="text/markdown"
+  Vary: Accept
+
+/features.md
+  Link: <https://seoskill.dev/features>; rel="canonical"
+
+/features/*.md
+  Link: <https://seoskill.dev/features/:splat>; rel="canonical"
+
 /tools.md
   Link: <https://seoskill.dev/tools>; rel="canonical"
 

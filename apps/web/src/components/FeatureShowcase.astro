@@ -8,41 +8,48 @@ const features = [
     description:
       'Ask why traffic dropped, which keywords deserve research, who competes in search, or what blocks a crawl. Your agent answers from Search Console, your crawl and any research providers you connect.',
     demo: 'mcp',
+    href: '/features/mcp',
   },
   {
-    title: 'Use the CLI with Codex or Claude Code to ship SEO fixes fast.',
+    title: 'Use the CLI with your coding agent to ship SEO fixes fast.',
     description:
       'Run an audit in the terminal and let your coding agent trace each problem to the code. You get a reviewable fix without copying findings between tools.',
     demo: 'cli',
+    href: '/docs/cli',
   },
   {
     title: 'Run a complete SEO audit and know what to fix next.',
     description: `Run ${productFacts.reports} reports across crawl health, content, search performance, keyword and competitor research, programmatic SEO, and AI visibility. Each result shows what needs attention and why.`,
     demo: 'crawl',
+    href: '/features/seo-audit',
   },
   {
     title: 'Find keywords worth targeting and see who already ranks for them.',
     description:
       'Compare keyword demand, recurring competitors, ranking pages, and backlinks. Your agent turns the data into a focused shortlist of topics and competitors to investigate.',
     demo: 'research',
+    href: '/features/keyword-research',
   },
   {
     title: 'Make your site easier for AI search engines to understand and cite.',
     description:
       'Check whether AI crawlers can access your pages and understand what your site is about. Your agent can fix the gaps and draft an llms.txt from the pages you choose.',
     demo: 'ai',
+    href: '/docs/ai-search',
   },
   {
     title: 'Build SEO checks into the tools and workflows your team already uses.',
     description:
       'Import the typed crawler and reports from the seo package. Add audits to CI, content pipelines, internal tools, or whatever you are already building.',
     demo: 'library',
+    href: '/docs/typescript',
   },
   {
     title: 'See which SEO fixes worked and where your effort should go next.',
     description:
       'Compare every release against saved crawl and search performance data. See what improved, what stayed flat, and which changes need more time before you call them a win.',
     demo: 'measure',
+    href: '/docs/reports/measure-change',
   },
 ] as const
 ---
@@ -62,7 +69,9 @@ const features = [
                 !demoRight && 'sm:order-2',
               ]}
             >
-              <h2 class="text-lg font-normal tracking-wide">{feature.title}</h2>
+              <h2 class="text-lg font-normal tracking-wide">
+                <a class="underline underline-offset-4 hover:decoration-dotted" href={feature.href}>{feature.title}</a>
+              </h2>
               <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{feature.description}</p>
             </div>
 

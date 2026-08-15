@@ -1,0 +1,23 @@
+---
+import InstallPicker from '@/components/InstallPicker.astro'
+
+type Props = {
+  title?: string
+  description?: string
+}
+
+const {
+  title = 'Give your agent real SEO evidence',
+  description = 'Install the command, run the guided setup, then ask your agent to find the first SEO fixes worth making.',
+} = Astro.props
+---
+
+<section class="mt-14 border-t-2 border-nav pt-10" aria-labelledby="feature-cta-title">
+  <div class="mb-6 max-w-2xl space-y-3">
+    <h2 id="feature-cta-title" class="text-pretty text-2xl font-normal leading-tight tracking-tight sm:text-3xl">
+      {title}
+    </h2>
+    <p class="font-sans leading-7 text-foreground-muted">{description}</p>
+  </div>
+  <InstallPicker standalone />
+</section>

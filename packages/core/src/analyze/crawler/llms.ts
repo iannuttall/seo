@@ -1,5 +1,6 @@
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
-import type { CrawlAgentDiscovery } from './agent-discovery.js'
+import type { CrawlAgentDiscovery } from './agent-discovery-types.js'
+import { inspectLlmsTxtForReport } from './llms-txt-discovery.js'
 import type { CrawlReport } from './report.js'
 
 export type LlmsAuditIssue = {
@@ -54,6 +55,9 @@ export type GeneratedLlmsTxt = {
     warningsTruncated: boolean
   }
 }
+
+const MAX_LLMS_TXT_LINKS = 100
+const MAX_LLMS_TXT_BYTES = 100_000
 
 function estimatedTokens(value: string): number {
   return Math.ceil(value.length / 4)
@@ -132,13 +136,18 @@ function candidatePages(
     )
 }
 
-export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
+function buildLlmsTxtAudit(
+  report: CrawlReport,
+  liveValidation?: CrawlAgentDiscovery['llmsTxt'],
+): LlmsAuditReport {
   const llmsTxt = report.ai?.llmsTxt
-  const validation = (
-    report as CrawlReport & { agentDiscovery?: CrawlAgentDiscovery }
-  ).agentDiscovery?.llmsTxt
+  const validation =
+    liveValidation ??
+    (report as CrawlReport & { agentDiscovery?: CrawlAgentDiscovery })
+      .agentDiscovery?.llmsTxt
   const pages = candidatePages(report)
   const issues: LlmsAuditIssue[] = []
+  const exists = validation?.exists ?? Boolean(llmsTxt?.exists)
 
   if (
     validation?.exists &&
@@ -165,6 +174,18 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
         'Start with one clear title, then group a short list of useful entry points under descriptive headings.',
     })
   }
+  if (validation?.exists && validation.formatValid === false) {
+    const formatErrors = validation.formatErrors ?? []
+    issues.push({
+      id: 'llms-v2-format',
+      severity: 'medium',
+      title: 'llms.txt does not match the v2 file format',
+      plainEnglish: `${formatErrors.length} format problem${formatErrors.length === 1 ? ' was' : 's were'} found in the file body.`,
+      action:
+        'Use one level-one title. Under each level-two section, use Markdown link list items with an optional description after a colon.',
+      evidence: { errors: formatErrors },
+    })
+  }
   if (validation?.duplicateLinks.length) {
     issues.push({
       id: 'llms-duplicate-links',
@@ -174,6 +195,27 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
       action:
         'Remove duplicate entries so the file remains short and deliberate.',
       evidence: { urls: validation.duplicateLinks },
+    })
+  }
+  if (validation?.invalidLinks.length) {
+    issues.push({
+      id: 'llms-invalid-links',
+      severity: 'medium',
+      title: 'llms.txt contains invalid links',
+      plainEnglish: `${validation.invalidLinks.length} link${validation.invalidLinks.length === 1 ? ' is' : 's are'} not a valid URL.`,
+      action: 'Replace each invalid value with a complete HTTP or HTTPS URL.',
+      evidence: { links: validation.invalidLinks },
+    })
+  }
+  if (validation?.linkLimitReached) {
+    issues.push({
+      id: 'llms-link-limit',
+      severity: 'medium',
+      title: 'The link audit reached its limit',
+      plainEnglish: `The file contains ${validation.totalParsedLinks} parsed links. Only the first 100 were checked.`,
+      action:
+        'Keep no more than 100 deliberate links so all file links can be checked.',
+      evidence: { parsedLinks: validation.totalParsedLinks, checkedLinks: 100 },
     })
   }
   const brokenLinks =
@@ -190,6 +232,27 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
       action:
         'Update or remove stale entries, then rerun the focused agent-readiness report.',
       evidence: { links: brokenLinks },
+    })
+  }
+  if (validation?.redirectedLinks.length) {
+    issues.push({
+      id: 'llms-redirected-links',
+      severity: 'low',
+      title: 'llms.txt links redirect',
+      plainEnglish: `${validation.redirectedLinks.length} link${validation.redirectedLinks.length === 1 ? ' redirects' : 's redirect'} before reaching its final page.`,
+      action: 'Replace each redirecting URL with its final URL.',
+      evidence: { urls: validation.redirectedLinks },
+    })
+  }
+  if (validation?.nonIndexableLinks.length) {
+    issues.push({
+      id: 'llms-non-indexable-links',
+      severity: 'low',
+      title: 'llms.txt points to non-indexable pages',
+      plainEnglish: `${validation.nonIndexableLinks.length} same-origin page${validation.nonIndexableLinks.length === 1 ? ' has' : 's have'} a noindex response signal.`,
+      action:
+        'Confirm that each page is useful to the intended reader. Remove stale links when it is not.',
+      evidence: { urls: validation.nonIndexableLinks },
     })
   }
   if (validation?.missingCrawlRoutes.length) {
@@ -214,8 +277,19 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
         'Generate the file during the build and remove timestamps, random ordering, or runtime rewriting.',
     })
   }
+  if (validation?.oversized) {
+    issues.push({
+      id: 'llms-file-size',
+      severity: 'medium',
+      title: 'llms.txt is larger than the review limit',
+      plainEnglish: `The file is ${validation.bytes ?? 'more than 100,000'} bytes. The v2 validator limit is 100,000 bytes.`,
+      action:
+        'Keep the file under 100,000 bytes. Use a short list of useful entry points.',
+      evidence: { bytes: validation.bytes, limitBytes: 100_000 },
+    })
+  }
 
-  if (pages.length < 3) {
+  if (exists && pages.length < 3) {
     issues.push({
       id: 'thin-llms-inventory',
       severity: 'low',
@@ -231,15 +305,17 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
   return {
     reportId: report.id,
     url: report.config.url,
-    exists: Boolean(llmsTxt?.exists),
+    exists,
     llmsTxtUrl:
-      llmsTxt?.url ?? new URL('/llms.txt', report.config.url).toString(),
-    status: llmsTxt?.status,
+      validation?.url ??
+      llmsTxt?.url ??
+      new URL('/llms.txt', report.config.url).toString(),
+    status: validation?.status ?? llmsTxt?.status,
     optional: true,
     googleSearchImpact: 'none',
     guidanceUrl:
       'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
-    headline: llmsTxt?.exists
+    headline: exists
       ? validation
         ? issues.length
           ? `The optional llms.txt file was validated and ${issues.length} content or link issue${issues.length === 1 ? ' needs' : 's need'} review. It has no Google Search visibility impact.`
@@ -259,15 +335,41 @@ export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
   }
 }
 
+export function auditLlmsTxt(report: CrawlReport): LlmsAuditReport {
+  return buildLlmsTxtAudit(report)
+}
+
+export async function auditLlmsTxtLive(
+  report: CrawlReport,
+): Promise<LlmsAuditReport> {
+  const validation = await inspectLlmsTxtForReport(report)
+  return buildLlmsTxtAudit(report, validation)
+}
+
 export function generateLlmsTxt(
   report: CrawlReport,
   options: GenerateLlmsTxtOptions = {},
 ): GeneratedLlmsTxt {
-  const maxUrls = options.maxUrls ?? 250
-  const tokenBudget = options.tokenBudget ?? 12_000
-  const title = options.title ?? originHost(report.config.url)
-  const description =
+  const maxUrls = Math.max(
+    1,
+    Math.min(
+      Math.floor(options.maxUrls ?? MAX_LLMS_TXT_LINKS),
+      MAX_LLMS_TXT_LINKS,
+    ),
+  )
+  const tokenBudget = Math.max(1, Math.floor(options.tokenBudget ?? 12_000))
+  const normalizedTitle = truncateAtWord(
+    options.title ?? originHost(report.config.url),
+    200,
+  ).replace(/#/gu, '')
+  const title = normalizedTitle || originHost(report.config.url)
+  const normalizedDescription = truncateAtWord(
     options.description ??
+      `Curated entry points for agents reading ${originHost(report.config.url)}.`,
+    500,
+  )
+  const description =
+    normalizedDescription ||
     `Curated entry points for agents reading ${originHost(report.config.url)}.`
   const pages = candidatePages(report, options).slice(0, maxUrls)
   const sections = new Map<string, CrawlPageSnapshot[]>()
@@ -284,13 +386,20 @@ export function generateLlmsTxt(
     const sectionLines = [`## ${sectionName}`, '']
     let sectionCount = 0
     for (const page of sectionPages) {
-      const title = cleanTitle(page).replace(/\]/g, '\\]')
+      const title = cleanTitle(page)
+        .replace(/\s+/gu, ' ')
+        .trim()
+        .replace(/\\/gu, '\\\\')
+        .replace(/\]/gu, '\\]')
       const note = page.metaDescription
-        ? ` - ${truncateAtWord(page.metaDescription, 160)}`
+        ? `: ${truncateAtWord(page.metaDescription, 160)}`
         : ''
       const line = `- [${title}](${page.finalUrl})${note}`
       const projected = [...lines, ...sectionLines, line, ''].join('\n')
-      if (estimatedTokens(projected) > tokenBudget && includedUrls > 0) break
+      if (Buffer.byteLength(projected) >= MAX_LLMS_TXT_BYTES) break
+      if (estimatedTokens(projected) > tokenBudget && includedUrls > 0) {
+        break
+      }
       sectionLines.push(line)
       sectionCount += 1
       includedUrls += 1
@@ -300,36 +409,6 @@ export function generateLlmsTxt(
     lines.push(...sectionLines)
     counts[sectionName] = sectionCount
     if (sectionCount < sectionPages.length) break
-  }
-
-  lines.push(
-    '## Notes',
-    '',
-    '- Optional metadata for agents and services that explicitly support llms.txt.',
-    '- [Google Search guidance](https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files) says llms.txt does not affect visibility or rankings.',
-    `- Generated from crawl report ${report.id}.`,
-    `- Crawl generated at ${report.generatedAt}.`,
-    `- Crawl coverage: ${report.status}; retained ${report.summary.crawledUrls} of ${report.summary.discoveredUrls} discovered URLs.`,
-  )
-  if (report.sitemapDiscovery) {
-    lines.push(
-      `- Sitemap discovery: ${report.sitemapDiscovery.dataStatus}; returned ${report.sitemapDiscovery.urlsReturned} URLs.`,
-    )
-  }
-  if (report.caveats.length) {
-    lines.push(...report.caveats.map((caveat) => `- Caveat: ${caveat}`))
-  }
-  if (report.warnings.length) {
-    lines.push(
-      ...report.warnings
-        .slice(0, 10)
-        .map((warning) => `- Source warning: ${warning}`),
-    )
-    if (report.warnings.length > 10) {
-      lines.push(
-        `- Source warnings: ${report.warnings.length - 10} more warnings remain in crawl report ${report.id}.`,
-      )
-    }
   }
 
   const content = `${lines.join('\n')}\n`

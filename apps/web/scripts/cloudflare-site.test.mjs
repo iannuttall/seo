@@ -135,7 +135,7 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
   )
   assert.match(headers, /Strict-Transport-Security: max-age=300/)
   assert.match(headers, /rel="sitemap"; type="application\/xml"/)
-  assert.match(headers, /rel="llms-txt"; type="text\/markdown"/)
+  assert.match(headers, /rel="describedby"; type="text\/markdown"/)
   assert.match(headers, /rel="agent-skills"; type="application\/json"/)
   assert.match(
     headers,

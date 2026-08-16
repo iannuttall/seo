@@ -21,14 +21,12 @@ function failedMarkdownUrls(discovery: CrawlAgentDiscovery): string[] {
         page.negotiated?.status === 200 &&
         /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? '') &&
         page.negotiated.varyAccept
-      const explicitOk = !page.htmlAlternateUnique
-        ? true
-        : page.httpAlternateUrls.length === 1 &&
-          page.explicit?.status === 200 &&
-          /^\s*text\/markdown\b/iu.test(page.explicit.contentType ?? '') &&
-          page.explicitMatchesNegotiated === true &&
-          page.markdownCanonicalMatchesHtml === true
-      return !negotiatedOk || !explicitOk || page.repeatedHashStable !== true
+      const explicitOk =
+        page.advertisedUrls.length === 1 &&
+        page.explicit?.status === 200 &&
+        /^\s*text\/markdown\b/iu.test(page.explicit.contentType ?? '') &&
+        page.markdownCanonicalMatchesHtml !== false
+      return (!negotiatedOk && !explicitOk) || page.repeatedHashStable !== true
     })
     .map((page) => page.htmlUrl)
 }
@@ -117,7 +115,7 @@ export function markdownChecks(
       /^\s*text\/markdown\b/iu.test(page.negotiated.contentType ?? ''),
   ).length
   const explicitPages = markdown.pages.filter(
-    (page) => page.htmlAlternateUnique,
+    (page) => page.advertisedUrls.length === 1,
   ).length
   const coverageComplete =
     markdown.eligibleHtmlPages > 0 &&
@@ -128,7 +126,8 @@ export function markdownChecks(
     markdown.pages.every((page) => page.negotiated?.varyAccept) &&
     markdown.pages.every(
       (page) =>
-        !page.htmlAlternateUnique || page.explicitMatchesNegotiated === true,
+        page.advertisedUrls.length !== 1 ||
+        page.explicitMatchesNegotiated === true,
     )
   const stable =
     markdown.evaluatedPages > 0 &&

@@ -3,16 +3,26 @@ import PQueue from 'p-queue'
 import { contentSketchCoverage } from '../../extract/content-sketch.js'
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
+import {
+  combinedSignal,
+  fetchText,
+  headerValue,
+  linkEntries,
+  normalizedDocumentUrl,
+  readBoundedText,
+  safeError,
+} from './agent-discovery-http.js'
 import type {
   AgentRepresentationResponse,
   AgentSkillObservation,
   CrawlAgentDiscovery,
-  LlmsTxtLinkObservation,
   MarkdownAlternateObservation,
   MarkdownQualityObservation,
 } from './agent-discovery-types.js'
 import { inspectAgentEndpoints } from './agent-endpoints.js'
+import { inspectLlmsTxt } from './llms-txt-discovery.js'
 
+export { fetchText, linkEntries, safeError } from './agent-discovery-http.js'
 export type {
   AgentDiscoveryDataStatus,
   AgentEndpointDiscovery,
@@ -27,57 +37,14 @@ export type {
   MarkdownAlternateObservation,
   MarkdownQualityObservation,
 } from './agent-discovery-types.js'
+export {
+  inspectLlmsTxtForReport,
+  validateLlmsTxtV2,
+} from './llms-txt-discovery.js'
 
-const MAX_BODY_BYTES = 2_000_000
-const MAX_LLMS_LINKS = 100
-const MAX_CURATED_LLMS_BYTES = 100_000
 const MAX_SKILLS = 25
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex')
-}
-
-function headerValue(
-  headers: Record<string, string> | undefined,
-  name: string,
-): string | undefined {
-  if (!headers) return undefined
-  const target = name.toLowerCase()
-  return Object.entries(headers).find(
-    ([key]) => key.toLowerCase() === target,
-  )?.[1]
-}
-
-export function linkEntries(value: string | undefined, base: string) {
-  if (!value) return []
-  return value
-    .split(/,(?=\s*<)/u)
-    .map((entry) => {
-      const match = entry.match(/^\s*<([^>]+)>\s*(.*)$/u)
-      if (!match?.[1]) return undefined
-      try {
-        const url = new URL(match[1], base).toString()
-        const parameters = match[2] ?? ''
-        const rel = parameters.match(/(?:^|;)\s*rel=(?:"([^"]+)"|([^;\s]+))/iu)
-        const type = parameters.match(
-          /(?:^|;)\s*type=(?:"([^"]+)"|([^;\s]+))/iu,
-        )
-        return {
-          url,
-          rel: (rel?.[1] ?? rel?.[2] ?? '').toLowerCase().split(/\s+/u),
-          type: (type?.[1] ?? type?.[2] ?? '').toLowerCase(),
-        }
-      } catch {
-        return undefined
-      }
-    })
-    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
-}
-
-function normalizedDocumentUrl(value: string): string {
-  const url = new URL(value)
-  url.hash = ''
-  if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/$/u, '')
-  return url.toString()
 }
 
 function sameDocument(left?: string, right?: string): boolean | null {
@@ -138,24 +105,6 @@ function repeatedProseLines(markdown: string): number {
     (duplicates, count) => duplicates + Math.max(0, count - 1),
     0,
   )
-}
-
-function responseIsNoindex(response: Response, body: string): boolean {
-  if (
-    (response.headers.get('x-robots-tag') ?? '')
-      .toLowerCase()
-      .includes('noindex')
-  ) {
-    return true
-  }
-  return [...body.matchAll(/<meta\s+[^>]*>/giu)].some((match) => {
-    const tag = match[0]
-    const name = tag.match(/\bname\s*=\s*["']([^"']+)["']/iu)?.[1]
-    const content = tag.match(/\bcontent\s*=\s*["']([^"']+)["']/iu)?.[1]
-    return (
-      name?.toLowerCase() === 'robots' && /\bnoindex\b/iu.test(content ?? '')
-    )
-  })
 }
 
 function markdownQuality(
@@ -219,47 +168,6 @@ function markdownQuality(
           : retainedPanels === evaluatedPanels.length,
     },
   }
-}
-
-function combinedSignal(
-  timeoutMs: number,
-  signal?: AbortSignal,
-): { signal: AbortSignal; cleanup: () => void } {
-  const controller = new AbortController()
-  const abort = () => controller.abort()
-  const timer = setTimeout(abort, timeoutMs)
-  if (signal?.aborted) controller.abort()
-  else signal?.addEventListener('abort', abort, { once: true })
-  return {
-    signal: controller.signal,
-    cleanup: () => {
-      clearTimeout(timer)
-      signal?.removeEventListener('abort', abort)
-    },
-  }
-}
-
-async function readBoundedText(
-  response: Awaited<ReturnType<typeof publicHttpFetch>>,
-): Promise<string> {
-  if (!response.body) return ''
-  const reader = response.body.getReader()
-  const chunks: Uint8Array[] = []
-  let size = 0
-  try {
-    while (true) {
-      const result = await reader.read()
-      if (result.done) break
-      size += result.value.byteLength
-      if (size > MAX_BODY_BYTES) {
-        throw new Error(`Response exceeds ${MAX_BODY_BYTES} bytes.`)
-      }
-      chunks.push(result.value)
-    }
-  } finally {
-    await reader.cancel().catch(() => undefined)
-  }
-  return Buffer.concat(chunks).toString('utf8')
 }
 
 async function fetchRepresentation(input: {
@@ -328,7 +236,7 @@ async function inspectMarkdownPage(input: {
   fetch: typeof publicHttpFetch
   signal?: AbortSignal
 }): Promise<MarkdownAlternateObservation> {
-  const advertisedUrls = [
+  const htmlAlternateUrls = [
     ...new Set(input.page.markdownAlternates ?? []),
   ].sort()
   const httpAlternateUrls = linkEntries(
@@ -341,10 +249,13 @@ async function inspectMarkdownPage(input: {
     )
     .map((entry) => entry.url)
     .sort()
+  const advertisedUrls = [
+    ...new Set([...htmlAlternateUrls, ...httpAlternateUrls]),
+  ].sort()
   const observation: MarkdownAlternateObservation = {
     htmlUrl: input.page.finalUrl,
     advertisedUrls,
-    htmlAlternateUnique: advertisedUrls.length === 1,
+    htmlAlternateUnique: htmlAlternateUrls.length === 1,
     httpAlternateUrls,
     explicitMatchesNegotiated: null,
     repeatedHashStable: null,
@@ -410,32 +321,6 @@ async function inspectMarkdownPage(input: {
     observation.quality = markdownQuality(primary.body, input.page)
   }
   return observation
-}
-
-export async function fetchText(input: {
-  url: string
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-  redirect?: 'follow' | 'manual'
-  accept?: string
-}) {
-  const controller = combinedSignal(input.timeoutMs, input.signal)
-  try {
-    const response = await input.fetch(input.url, {
-      profile: 'bot',
-      redirect: input.redirect ?? 'follow',
-      headers: input.accept ? { accept: input.accept } : undefined,
-      signal: controller.signal,
-    })
-    return { response, body: await readBoundedText(response) }
-  } finally {
-    controller.cleanup()
-  }
-}
-
-export function safeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }
 
 async function inspectAgentSkills(input: {
@@ -562,159 +447,6 @@ async function inspectAgentSkills(input: {
       indexUrl,
       validIndex: false,
       skills: [],
-      error: safeError(error),
-    }
-  }
-}
-
-function markdownLinks(value: string, base: string) {
-  const links: Array<{ label: string; url: string }> = []
-  const invalidLinks: string[] = []
-  for (const match of value.matchAll(
-    /\[([^\u005d]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/gu,
-  )) {
-    if (!match[1] || !match[2]) continue
-    try {
-      links.push({ label: match[1], url: new URL(match[2], base).toString() })
-    } catch {
-      invalidLinks.push(match[2])
-    }
-  }
-  return { links, invalidLinks }
-}
-
-async function inspectLlmsTxt(input: {
-  origin: string
-  pages: CrawlPageSnapshot[]
-  timeoutMs: number
-  fetch: typeof publicHttpFetch
-  signal?: AbortSignal
-}): Promise<CrawlAgentDiscovery['llmsTxt']> {
-  const url = new URL('/llms.txt', input.origin).toString()
-  try {
-    const [first, second] = await Promise.all([
-      fetchText({
-        url,
-        timeoutMs: input.timeoutMs,
-        fetch: input.fetch,
-        signal: input.signal,
-        accept: 'text/plain,text/markdown;q=0.9',
-      }),
-      fetchText({
-        url,
-        timeoutMs: input.timeoutMs,
-        fetch: input.fetch,
-        signal: input.signal,
-        accept: 'text/plain,text/markdown;q=0.9',
-      }),
-    ])
-    const exists = first.response.status >= 200 && first.response.status < 300
-    const parsed = markdownLinks(first.body, url)
-    const links = parsed.links.slice(0, MAX_LLMS_LINKS)
-    const linkLimitReached = parsed.links.length > links.length
-    const counts = new Map<string, number>()
-    for (const link of links)
-      counts.set(link.url, (counts.get(link.url) ?? 0) + 1)
-    const duplicateLinks = [...counts]
-      .filter(([, count]) => count > 1)
-      .map(([link]) => link)
-      .sort()
-    const crawlRoutes = new Set(
-      input.pages.map((page) => normalizedDocumentUrl(page.finalUrl)),
-    )
-    const linkObservations = await Promise.all(
-      links.map(async (link): Promise<LlmsTxtLinkObservation> => {
-        const sameOrigin =
-          new URL(link.url).origin === new URL(input.origin).origin
-        try {
-          const target = await fetchText({
-            url: link.url,
-            timeoutMs: input.timeoutMs,
-            fetch: input.fetch,
-            signal: input.signal,
-          })
-          const indexableTarget =
-            sameOrigin &&
-            target.response.status >= 200 &&
-            target.response.status < 300
-              ? !responseIsNoindex(target.response, target.body)
-              : undefined
-          const finalUrl = target.response.url || undefined
-          return {
-            ...link,
-            sameOrigin,
-            status: target.response.status,
-            finalUrl,
-            redirected: target.response.redirected,
-            ...(indexableTarget === undefined ? {} : { indexableTarget }),
-          }
-        } catch (error) {
-          return {
-            ...link,
-            sameOrigin,
-            redirected: false,
-            error: safeError(error),
-          }
-        }
-      }),
-    )
-    const linkedCrawlRoutes = new Set(
-      linkObservations
-        .filter(
-          (link) =>
-            link.sameOrigin &&
-            !new URL(link.url).pathname.startsWith('/.well-known/') &&
-            !new URL(link.url).pathname.endsWith('.md'),
-        )
-        .map((link) => normalizedDocumentUrl(link.url)),
-    )
-    return {
-      url,
-      exists,
-      status: first.response.status,
-      contentType: first.response.headers.get('content-type') ?? undefined,
-      bytes: Buffer.byteLength(first.body),
-      sha256: sha256(first.body),
-      repeatedHashStable: sha256(first.body) === sha256(second.body),
-      headingCount: first.body.match(/^#{1,2}\s+\S/gmu)?.length ?? 0,
-      totalParsedLinks: parsed.links.length,
-      linkLimitReached,
-      links: linkObservations,
-      invalidLinks: parsed.invalidLinks.sort(),
-      duplicateLinks,
-      offSiteLinks: linkObservations
-        .filter((link) => !link.sameOrigin)
-        .map((link) => link.url)
-        .sort(),
-      redirectedLinks: linkObservations
-        .filter((link) => link.redirected)
-        .map((link) => link.url)
-        .sort(),
-      nonIndexableLinks: linkObservations
-        .filter((link) => link.indexableTarget === false)
-        .map((link) => link.url)
-        .sort(),
-      missingCrawlRoutes: [...linkedCrawlRoutes]
-        .filter((route) => !crawlRoutes.has(route))
-        .sort(),
-      oversized: Buffer.byteLength(first.body) > MAX_CURATED_LLMS_BYTES,
-    }
-  } catch (error) {
-    return {
-      url,
-      exists: false,
-      repeatedHashStable: null,
-      headingCount: 0,
-      totalParsedLinks: 0,
-      linkLimitReached: false,
-      links: [],
-      invalidLinks: [],
-      duplicateLinks: [],
-      offSiteLinks: [],
-      redirectedLinks: [],
-      nonIndexableLinks: [],
-      missingCrawlRoutes: [],
-      oversized: false,
       error: safeError(error),
     }
   }
@@ -861,7 +593,7 @@ export async function collectAgentDiscovery(input: {
     : undefined
   const qZeroContentType = qZero.observation.contentType
   const advertisedPages = observations.filter(
-    (observation) => observation.htmlAlternateUnique,
+    (observation) => observation.advertisedUrls.length === 1,
   ).length
   const evaluatedPages = observations.filter((observation) => {
     const representation = observation.explicit ?? observation.negotiated

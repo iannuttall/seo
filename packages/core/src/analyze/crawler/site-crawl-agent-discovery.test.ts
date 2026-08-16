@@ -47,6 +47,8 @@ const discovery: CrawlAgentDiscovery = {
     status: 200,
     contentType: 'text/plain',
     repeatedHashStable: true,
+    formatValid: true,
+    formatErrors: [],
     headingCount: 1,
     totalParsedLinks: 0,
     linkLimitReached: false,

@@ -3,7 +3,6 @@ import {
   agentReadiness,
   aiReadiness,
   aiSearchScorecard,
-  auditLlmsTxt,
   buildOkfBundle,
   compareCrawlReports,
   countLabel,
@@ -12,7 +11,6 @@ import {
   entityReadiness,
   explainOkfValidation,
   explainRule,
-  generateLlmsTxt,
   geoGapsReport,
   latestCrawlReport,
   listCrawlReports,
@@ -26,6 +24,7 @@ import {
   validateOkfFiles,
 } from '@seo/core'
 import * as z from 'zod/v4'
+import { registerCrawlerLlmsTools } from './crawler-llms-tools.js'
 import {
   assertExclusiveReportInput,
   compactCrawlResult,
@@ -631,129 +630,7 @@ export function registerCrawlerTools(server: McpServer): void {
       }
     },
   )
-
-  server.registerTool(
-    'seo_llms_txt_audit',
-    {
-      description:
-        'Inspect optional llms.txt presence from a saved or freshly crawled report and return current Google guidance plus candidate pages.',
-      inputSchema: {
-        url: z.string().url().optional(),
-        reportId: z.string().optional(),
-        site: z.string().optional(),
-        maxPages: crawlerInputs.crawlPageLimit,
-        fetchIntervalCap: z.number().int().positive().optional(),
-        fetchIntervalMs: z.number().int().positive().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({
-      url,
-      reportId,
-      site,
-      maxPages,
-      fetchIntervalCap,
-      fetchIntervalMs,
-      refresh,
-    }) => {
-      try {
-        const report = url
-          ? await crawlSite({
-              url,
-              site,
-              maxPages,
-              refresh,
-              fetchRate: fetchRateInput({
-                fetchIntervalCap,
-                fetchIntervalMs,
-              }),
-            })
-          : reportId
-            ? loadCrawlReport(reportId)
-            : latestCrawlReport(site)
-        if (!report) {
-          return toolError(
-            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
-          )
-        }
-        const audit = auditLlmsTxt(report)
-        return toolSuccess(audit.headline, audit)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_llms_txt_generate',
-    {
-      description:
-        'Generate an llms.txt draft from a saved or freshly crawled report. Returns content and metadata.',
-      inputSchema: {
-        url: z.string().url().optional(),
-        reportId: z.string().optional(),
-        site: z.string().optional(),
-        maxPages: crawlerInputs.crawlPageLimit,
-        maxUrls: z.number().int().positive().optional(),
-        tokenBudget: z.number().int().positive().optional(),
-        exclude: z.array(z.string()).optional(),
-        title: z.string().optional(),
-        description: z.string().optional(),
-        fetchIntervalCap: z.number().int().positive().optional(),
-        fetchIntervalMs: z.number().int().positive().optional(),
-        refresh: z.boolean().optional(),
-      },
-    },
-    async ({
-      url,
-      reportId,
-      site,
-      maxPages,
-      maxUrls,
-      tokenBudget,
-      exclude,
-      title,
-      description,
-      fetchIntervalCap,
-      fetchIntervalMs,
-      refresh,
-    }) => {
-      try {
-        const report = url
-          ? await crawlSite({
-              url,
-              site,
-              maxPages,
-              refresh,
-              fetchRate: fetchRateInput({
-                fetchIntervalCap,
-                fetchIntervalMs,
-              }),
-            })
-          : reportId
-            ? loadCrawlReport(reportId)
-            : latestCrawlReport(site)
-        if (!report) {
-          return toolError(
-            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
-          )
-        }
-        const generated = generateLlmsTxt(report, {
-          maxUrls,
-          tokenBudget,
-          exclude,
-          title,
-          description,
-        })
-        return toolSuccess(
-          `Generated llms.txt with ${generated.includedUrls} URLs.`,
-          generated,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
+  registerCrawlerLlmsTools(server)
 
   server.registerTool(
     'seo_entity_readiness',

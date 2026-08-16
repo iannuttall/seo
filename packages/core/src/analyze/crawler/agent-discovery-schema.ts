@@ -134,6 +134,8 @@ export const agentDiscoverySchema = z.object({
     bytes: z.number().int().nonnegative().optional(),
     sha256: z.string().optional(),
     repeatedHashStable: z.boolean().nullable(),
+    formatValid: z.boolean().nullable().optional(),
+    formatErrors: z.array(z.string()).optional(),
     headingCount: z.number().int().nonnegative(),
     totalParsedLinks: z.number().int().nonnegative(),
     linkLimitReached: z.boolean(),
@@ -156,6 +158,17 @@ export const agentDiscoverySchema = z.object({
     nonIndexableLinks: z.array(z.string().url()),
     missingCrawlRoutes: z.array(z.string().url()),
     oversized: z.boolean(),
+    discovery: z
+      .object({
+        source: z.enum(['html-link', 'http-link', 'path-probe']),
+        advertisedUrls: z.array(z.string().url()),
+        htmlUrls: z.array(z.string().url()),
+        httpUrls: z.array(z.string().url()),
+        candidateUrls: z.array(z.string().url()),
+        scopePath: z.string(),
+        appliesToStartUrl: z.boolean(),
+      })
+      .optional(),
     error: z.string().optional(),
   }),
   contentSignals: z.object({

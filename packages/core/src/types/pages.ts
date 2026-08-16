@@ -322,6 +322,7 @@ export interface ExtractedPage {
     location: ExtractedLinkLocation
   }>
   markdownAlternates?: string[]
+  describedBy?: string[]
   hreflang: Array<{ hreflang: string; href: string }>
   jsonLd: unknown[]
   invalidJsonLdCount: number

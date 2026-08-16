@@ -496,6 +496,7 @@ export const crawlPageSnapshotSchema = z.object({
     .array(z.object({ href: z.string().url(), text: z.string() }))
     .optional(),
   markdownAlternates: z.array(z.string().url()).optional(),
+  describedBy: z.array(z.string().url()).optional(),
   externalLinkChecks: z
     .array(
       z.object({

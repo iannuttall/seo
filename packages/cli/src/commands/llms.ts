@@ -1,8 +1,17 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { auditLlmsTxt, generateLlmsTxt } from '@seo/core'
+import { auditLlmsTxtLive, crawlSite, generateLlmsTxt } from '@seo/core'
 import { defineCommand } from 'citty'
-import { csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import {
+  booleanArg,
+  csvArg,
+  fetchRateArg,
+  jsonFlag,
+  numberArg,
+  projectArg,
+  stringArg,
+} from '../args.js'
+import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue } from '../utils.js'
 import { printNotes, printReportSummary } from './output.js'
 import { resolveSavedCrawlReport } from './readiness.js'
@@ -18,6 +27,10 @@ async function writeOrPrint(path: string | undefined, content: string) {
 }
 
 const sharedArgs = {
+  url: {
+    type: 'string',
+    description: 'Public site or subpath URL to crawl.',
+  },
   'report-id': {
     type: 'string',
     description: 'Saved crawl report id to use.',
@@ -34,6 +47,23 @@ const sharedArgs = {
     type: 'string',
     description: 'Saved project id or name.',
   },
+  'max-pages': {
+    type: 'string',
+    description: 'Maximum public HTML pages to crawl.',
+  },
+  'fetch-interval-cap': {
+    type: 'string',
+    description: 'Maximum page fetches per interval per host.',
+  },
+  'fetch-interval-ms': {
+    type: 'string',
+    description: 'Fetch rate interval in milliseconds.',
+  },
+  refresh: {
+    type: 'boolean',
+    default: false,
+    description: 'Bypass local HTTP cache and fetch fresh pages.',
+  },
   json: {
     type: 'boolean',
     default: false,
@@ -41,16 +71,49 @@ const sharedArgs = {
   },
 } as const
 
+async function resolveLlmsCrawl(
+  args: Record<string, unknown>,
+  options: { json: boolean },
+) {
+  const url = stringArg(args.url)
+  const reportId = stringArg(args['report-id'])
+  if (url && reportId) {
+    throw new Error('Use either --url or --report-id, not both.')
+  }
+  if (!url) return resolveSavedCrawlReport(args, { json: options.json })
+
+  const project = projectArg(args)
+  const site = stringArg(args.site)
+  const selection =
+    project || site
+      ? await resolveClientSelection({
+          client: project,
+          site,
+          options: { json: options.json },
+        })
+      : undefined
+  return crawlSite({
+    url,
+    projectId: selection?.client?.id,
+    site: selection?.site,
+    maxPages: numberArg(args['max-pages']),
+    fetchRate: fetchRateArg(args),
+    refresh: booleanArg(args.refresh),
+    useSitemap: true,
+    checkExternal: false,
+  })
+}
+
 export const llmsAuditCommand = defineCommand({
   meta: {
     name: 'audit',
-    description: 'Inspect optional llms.txt presence from a saved crawl',
+    description: 'Check an optional llms.txt file body and links',
   },
   args: sharedArgs,
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const report = await resolveSavedCrawlReport(args, { json })
-    const audit = auditLlmsTxt(report)
+    const report = await resolveLlmsCrawl(args, { json })
+    const audit = await auditLlmsTxtLive(report)
     if (json) {
       printJson(audit)
       return
@@ -95,7 +158,7 @@ export const llmsAuditCommand = defineCommand({
 export const llmsGenerateCommand = defineCommand({
   meta: {
     name: 'generate',
-    description: 'Generate an llms.txt draft from a saved crawl',
+    description: 'Generate a valid llms.txt v2 draft from crawl data',
   },
   args: {
     ...sharedArgs,
@@ -105,7 +168,7 @@ export const llmsGenerateCommand = defineCommand({
     },
     'max-urls': {
       type: 'string',
-      description: 'Maximum URLs to include. Defaults to 250.',
+      description: 'Maximum URLs to include. Defaults to 100.',
     },
     'token-budget': {
       type: 'string',
@@ -126,7 +189,7 @@ export const llmsGenerateCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const report = await resolveSavedCrawlReport(args, { json })
+    const report = await resolveLlmsCrawl(args, { json })
     const generated = generateLlmsTxt(report, {
       maxUrls: numberArg(args['max-urls']),
       tokenBudget: numberArg(args['token-budget']),
@@ -152,7 +215,7 @@ export const llmsGenerateCommand = defineCommand({
 export const llmsCommand = defineCommand({
   meta: {
     name: 'llms',
-    description: 'Inspect or generate optional llms.txt from saved crawl data',
+    description: 'Check or generate an optional llms.txt file',
   },
   subCommands: {
     audit: llmsAuditCommand,

@@ -417,6 +417,23 @@ export async function extractPage(
     ),
   ].sort()
 
+  const describedBy = [
+    ...new Set(
+      $('head link[rel][href]')
+        .toArray()
+        .filter((element) =>
+          ($(element).attr('rel') ?? '')
+            .toLowerCase()
+            .split(/\s+/u)
+            .includes('describedby'),
+        )
+        .map((element) =>
+          httpUrl($(element).attr('href'), fetchResult.finalUrl),
+        )
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ].sort()
+
   const openGraph = Object.fromEntries(
     $('meta[property^="og:"]')
       .toArray()
@@ -620,6 +637,7 @@ export async function extractPage(
         }
       : {}),
     markdownAlternates,
+    describedBy,
     hreflang,
     jsonLd: structuredData.jsonLd,
     invalidJsonLdCount: structuredData.invalidJsonLdSamples.length,

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { validateLlmsTxtV2 } from './agent-discovery.js'
 import { aiReadiness } from './ai-readiness.js'
 import { entityReadiness } from './entity-readiness.js'
 import { auditLlmsTxt, generateLlmsTxt } from './llms.js'
@@ -397,7 +398,8 @@ test('llms audit and generator use crawl inventory', () => {
   assert.match(audit.headline, /not an SEO issue/i)
   assert.match(generated.content, /^# example\.com/m)
   assert.match(generated.content, /https:\/\/example.com\/docs/)
-  assert.match(generated.content, /does not affect visibility or rankings/i)
+  assert.deepEqual(validateLlmsTxtV2(generated.content), [])
+  assert.doesNotMatch(generated.content, /^## Notes$/mu)
   assert.equal(generated.includedUrls, 2)
 })
 
@@ -423,15 +425,48 @@ test('llms generator preserves partial source coverage and readable truncation',
   assert.deepEqual(generated.source.warnings, [
     'Sitemap inventory is incomplete.',
   ])
-  assert.match(generated.content, /Crawl coverage: partial/)
-  assert.match(generated.content, /retained 10 of 164 discovered URLs/)
-  assert.match(generated.content, /Source warning: Sitemap inventory/)
+  assert.doesNotMatch(generated.content, /Crawl coverage:/)
+  assert.doesNotMatch(generated.content, /Source warning:/)
   assert.doesNotMatch(generated.content, /unfinished frag\b/)
   assert.doesNotMatch(generated.content, /x{20}/)
   assert.match(
     generated.content,
-    /\[Docs\]\(https:\/\/example\.com\/docs\) - \.\.\./,
+    /\[Docs\]\(https:\/\/example\.com\/docs\): \.\.\./,
   )
+})
+
+test('llms v2 validation rejects non-link section entries', () => {
+  assert.deepEqual(
+    validateLlmsTxtV2(`# Example\n\n## Notes\n\n- Generated today.\n`),
+    [
+      'Section "Notes" contains a line that is not a Markdown link entry: - Generated today.',
+      'Section "Notes" has no Markdown links.',
+    ],
+  )
+})
+
+test('llms generator stays within v2 link and file limits', () => {
+  const report = fixtureReport()
+  const source = report.pages[0]
+  assert.ok(source)
+  report.pages = Array.from({ length: 150 }, (_, index) => ({
+    ...source,
+    url: `https://example.com/docs/page-${index}`,
+    finalUrl: `https://example.com/docs/page-${index}`,
+    title: `Guide ${index}`,
+    contentHash: `hash-${index}`,
+  }))
+  report.summary.crawledUrls = report.pages.length
+  report.summary.discoveredUrls = report.pages.length
+
+  const generated = generateLlmsTxt(report, {
+    maxUrls: 250,
+    tokenBudget: 100_000,
+  })
+
+  assert.equal(generated.includedUrls, 100)
+  assert.ok(Buffer.byteLength(generated.content) < 100_000)
+  assert.deepEqual(validateLlmsTxtV2(generated.content), [])
 })
 
 test('llms.txt remains an informational AI-search observation', () => {

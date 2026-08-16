@@ -123,6 +123,7 @@ export type CrawlPageSnapshot = {
   internalAnchorSamples?: Array<{ href: string; text: string }>
   externalAnchorSamples?: Array<{ href: string; text: string }>
   markdownAlternates?: string[]
+  describedBy?: string[]
   externalLinkChecks?: ExternalLinkCheck[]
   schemaTypes?: string[]
   structuredDataFormats?: Array<'json-ld' | 'microdata' | 'rdfa'>

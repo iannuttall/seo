@@ -384,10 +384,10 @@ function endpointChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
       : advertisedRels.length > 0
         ? `${linkHeader.entries.length} Link header ${linkHeader.entries.length === 1 ? 'entry was' : 'entries were'} observed. Registered relation types: ${linkHeader.registeredRels.join(', ') || 'none'}. Emerging relation types: ${linkHeader.emergingRels.join(', ') || 'none'}.`
         : linkHeader.entries.length > 0
-          ? `${linkHeader.entries.length} Link header ${linkHeader.entries.length === 1 ? 'entry was' : 'entries were'} observed, but none used a recognised agent relation type such as api-catalog, service-desc, service-doc, describedby, llms-txt, or agent-skills.`
+          ? `${linkHeader.entries.length} Link header ${linkHeader.entries.length === 1 ? 'entry was' : 'entries were'} observed, but none used a recognised agent relation type such as api-catalog, service-desc, service-doc, describedby, or agent-skills.`
           : 'The start page response includes no Link header. Advertising machine-readable resources this way is optional.',
     action:
-      'Advertise real machine-readable resources with Link response headers. Use registered relation types such as api-catalog and service-desc, and emerging types such as llms-txt only when the target resolves.',
+      'Advertise real machine-readable resources with Link response headers. Use describedby for llms.txt, registered relation types such as api-catalog and service-desc, and agent-skills only when the target resolves.',
     evidence: linkHeader as unknown as Record<string, unknown>,
   })
   return [
@@ -476,18 +476,6 @@ function endpointChecks(discovery: CrawlAgentDiscovery): AgentReadinessCheck[] {
         'Keep the registration steps accurate and pair the file with real OAuth discovery metadata.',
       requiredNote:
         'auth.md is an emerging proposal, so this is a presence observation only.',
-    }),
-    optionalEndpointCheck(pick('llms-full-txt'), {
-      id: 'llms-full-txt',
-      subject: 'llms-full.txt',
-      absent:
-        '/llms-full.txt returned no document. The expanded companion to llms.txt is optional, and its absence is not a search ranking problem.',
-      absentAction:
-        'Add llms-full.txt only when an intended consumer wants the full expanded content in one file.',
-      presentAction:
-        'Keep the file deterministic and consistent with the curated llms.txt entry points.',
-      requiredNote:
-        'Only presence and content type were checked, not the quality of the expanded content.',
     }),
   ]
 }

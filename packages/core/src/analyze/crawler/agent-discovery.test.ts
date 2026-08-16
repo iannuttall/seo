@@ -7,6 +7,7 @@ import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { collectAgentDiscovery } from './agent-discovery.js'
 import { agentReadiness } from './agent-readiness.js'
+import { auditLlmsTxt } from './llms.js'
 import { createCrawlReport } from './report.js'
 
 const markdown = `---
@@ -200,10 +201,121 @@ test('collectAgentDiscovery validates one deterministic content contract', async
   assert.equal(discovery.agentSkills.validIndex, true)
   assert.equal(discovery.agentSkills.skills[0]?.digestMatches, true)
   assert.equal(discovery.llmsTxt.repeatedHashStable, true)
+  assert.equal(discovery.llmsTxt.formatValid, true)
   assert.equal(discovery.llmsTxt.links[0]?.status, 200)
   assert.equal(discovery.routeManifest.valid, true)
   assert.deepEqual(discovery.routeManifest.orphanMarkdownRoutes, [])
   assert.equal(discovery.protocolVariants.http.permanentRedirectToHttps, true)
+})
+
+test('HTTP Link headers provide complete Markdown alternate discovery', async () => {
+  const httpOnlyPage: CrawlPageSnapshot = {
+    ...page,
+    markdownAlternates: [],
+  }
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/',
+    pages: [httpOnlyPage],
+    timeoutMs: 1_000,
+    fetch: fakeFetch,
+  })
+
+  const observation = discovery.markdownAlternates.pages[0]
+  assert.deepEqual(observation?.advertisedUrls, [
+    'https://example.com/index.md',
+  ])
+  assert.equal(observation?.explicit?.status, 200)
+  assert.equal(discovery.markdownAlternates.advertisedPages, 1)
+})
+
+test('describedby discovers a scoped llms.txt file', async () => {
+  const scopedPage: CrawlPageSnapshot = {
+    ...page,
+    url: 'https://example.com/docs/guide',
+    finalUrl: 'https://example.com/docs/guide',
+    responseHeaders: {
+      link: '</blog/llms.txt>; rel="describedby"; type="text/markdown", <./llms.txt>; rel="describedby"; type="text/markdown"',
+    },
+    markdownAlternates: [],
+    describedBy: [],
+  }
+  const scopedFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    if (requestedUrl === 'https://example.com/docs/llms.txt') {
+      return response(
+        '# Docs\n\n## Guides\n\n- [Guide](https://example.com/docs/guide): Product guide.\n',
+        200,
+        { 'content-type': 'text/markdown' },
+      )
+    }
+    if (requestedUrl === 'https://example.com/docs/guide') {
+      return response('<h1>Guide</h1>', 200, {
+        'content-type': 'text/html',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/docs/guide',
+    pages: [scopedPage],
+    timeoutMs: 1_000,
+    fetch: scopedFetch,
+  })
+
+  assert.equal(discovery.llmsTxt.url, 'https://example.com/docs/llms.txt')
+  assert.equal(discovery.llmsTxt.discovery?.source, 'http-link')
+  assert.equal(discovery.llmsTxt.discovery?.scopePath, '/docs/')
+  assert.equal(discovery.llmsTxt.discovery?.appliesToStartUrl, true)
+  assert.equal(discovery.llmsTxt.links[0]?.status, 200)
+})
+
+test('path discovery prefers the nearest llms.txt file', async () => {
+  const scopedPage: CrawlPageSnapshot = {
+    ...page,
+    url: 'https://example.com/docs/guide',
+    finalUrl: 'https://example.com/docs/guide',
+    responseHeaders: {},
+    markdownAlternates: [],
+    describedBy: [],
+  }
+  const scopedFetch = (async (
+    url: string,
+    input?: Parameters<typeof fakeFetch>[1],
+  ) => {
+    const requestedUrl = String(url)
+    if (requestedUrl === 'https://example.com/docs/llms.txt') {
+      return response(
+        '# Docs\n\n## Guides\n\n- [Guide](https://example.com/docs/guide)\n',
+        200,
+        { 'content-type': 'text/plain' },
+      )
+    }
+    if (requestedUrl === 'https://example.com/docs/guide') {
+      return response('<h1>Guide</h1>', 200, {
+        'content-type': 'text/html',
+      })
+    }
+    return fakeFetch(requestedUrl, input)
+  }) as typeof publicHttpFetch
+
+  const discovery = await collectAgentDiscovery({
+    startUrl: 'https://example.com/docs/guide',
+    pages: [scopedPage],
+    timeoutMs: 1_000,
+    fetch: scopedFetch,
+  })
+
+  assert.equal(discovery.llmsTxt.url, 'https://example.com/docs/llms.txt')
+  assert.equal(discovery.llmsTxt.discovery?.source, 'path-probe')
+  assert.deepEqual(discovery.llmsTxt.discovery?.candidateUrls, [
+    'https://example.com/docs/guide/llms.txt',
+    'https://example.com/docs/llms.txt',
+    'https://example.com/llms.txt',
+  ])
 })
 
 test('collectAgentDiscovery accepts negotiated Markdown without explicit mirrors', async () => {
@@ -673,7 +785,7 @@ test('agent endpoint discovery records optional endpoints and link header relati
     ) {
       return response('<h1>Example</h1>', 200, {
         'content-type': 'text/html; charset=utf-8',
-        link: '<https://example.com/llms.txt>; rel="llms-txt"; type="text/markdown", <https://example.com/.well-known/api-catalog>; rel="api-catalog"',
+        link: '<https://example.com/llms.txt>; rel="describedby"; type="text/markdown", <https://example.com/.well-known/api-catalog>; rel="api-catalog"',
       })
     }
     return fakeFetch(requestedUrl, input)
@@ -688,8 +800,11 @@ test('agent endpoint discovery records optional endpoints and link header relati
 
   const endpointDiscovery = discovery.endpointDiscovery
   assert.ok(endpointDiscovery)
-  assert.deepEqual(endpointDiscovery.linkHeader.registeredRels, ['api-catalog'])
-  assert.deepEqual(endpointDiscovery.linkHeader.emergingRels, ['llms-txt'])
+  assert.deepEqual(endpointDiscovery.linkHeader.registeredRels, [
+    'api-catalog',
+    'describedby',
+  ])
+  assert.deepEqual(endpointDiscovery.linkHeader.emergingRels, [])
   assert.equal(endpointDiscovery.endpoints[0]?.id, 'mcp-server-card')
   const apiCatalog = endpointDiscovery.endpoints.find(
     (endpoint) => endpoint.id === 'api-catalog',
@@ -718,7 +833,6 @@ test('agent endpoint discovery records optional endpoints and link header relati
   assert.equal(status('a2a-agent-card'), 'warning')
   assert.equal(status('mcp-server-card'), 'info')
   assert.equal(status('oauth-discovery'), 'info')
-  assert.equal(status('llms-full-txt'), 'info')
 })
 
 test('an HTML fallback page does not count as a published agent endpoint', async () => {
@@ -874,6 +988,7 @@ test('llms.txt validation reports malformed, stale, redirected, off-site, non-in
   })
 
   assert.equal(discovery.llmsTxt.oversized, true)
+  assert.equal(discovery.llmsTxt.formatValid, false)
   assert.deepEqual(discovery.llmsTxt.invalidLinks, ['https://[broken]'])
   assert.deepEqual(discovery.llmsTxt.offSiteLinks, [
     'https://other.example/resource',
@@ -897,6 +1012,16 @@ test('llms.txt validation reports malformed, stale, redirected, off-site, non-in
     agentDiscovery: typeof discovery
   }
   crawl.agentDiscovery = discovery
+  const audit = auditLlmsTxt(crawl)
+  assert.equal(audit.exists, true)
+  assert.equal(
+    audit.issues.some((issue) => issue.id === 'llms-v2-format'),
+    true,
+  )
+  assert.equal(
+    audit.issues.some((issue) => issue.id === 'llms-broken-links'),
+    true,
+  )
   const readiness = agentReadiness(crawl)
   assert.equal(
     readiness.checks.find((item) => item.id === 'llms-txt')?.status,

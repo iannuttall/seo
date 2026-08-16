@@ -124,15 +124,6 @@ const AGENT_READINESS_FIXES: Readonly<Record<string, CheckFix>> = {
     verify:
       'Fetch llms.txt twice and confirm identical bytes, then spot-check that each listed link returns 200 without redirecting.',
   },
-  'llms-full-txt': {
-    goal: 'Publish llms-full.txt only when a consumer wants the expanded file.',
-    fix: 'Generate /llms-full.txt from the same source as llms.txt, serve it as text/plain or text/markdown, and keep it deterministic. Skip it entirely if nothing consumes it.',
-    prompt:
-      'If an intended consumer needs the expanded companion file, generate /llms-full.txt deterministically from the same content source as llms.txt and serve it with a text content type. Re-run the agent-readiness report and confirm the llms-full-txt check reflects the published file.',
-    resources: [{ title: 'llms.txt proposal', url: 'https://llmstxt.org/' }],
-    verify:
-      'Fetch /llms-full.txt and confirm a 200 with a text content type and stable bytes across two requests.',
-  },
   'content-signals': {
     goal: 'Declare one deliberate Content Signals policy.',
     fix: 'Add a Content-Signal directive to robots.txt stating the search, ai-input, and ai-train preferences the site owner actually wants. If response headers also carry the policy, keep every surface identical.',
@@ -155,9 +146,9 @@ const AGENT_READINESS_FIXES: Readonly<Record<string, CheckFix>> = {
   },
   'link-headers': {
     goal: 'Advertise machine-readable resources with Link response headers.',
-    fix: 'Add Link headers to the start page pointing at resources that exist. Use registered relation types such as api-catalog, service-desc, service-doc, or describedby, and emerging types such as llms-txt or agent-skills only when the target resolves.',
+    fix: 'Add Link headers to the start page pointing at resources that exist. Use describedby for llms.txt, registered relation types such as api-catalog, service-desc, or service-doc, and agent-skills only when the target resolves.',
     prompt:
-      'Add Link response headers to the homepage that point at real machine-readable resources, for example Link: </.well-known/api-catalog>; rel="api-catalog" or Link: </llms.txt>; rel="llms-txt"; type="text/markdown". Confirm every advertised target returns 200, then re-run the agent-readiness report and confirm link-headers passes.',
+      'Add Link response headers to the homepage that point at real machine-readable resources, for example Link: </.well-known/api-catalog>; rel="api-catalog" or Link: </llms.txt>; rel="describedby"; type="text/markdown". Confirm every advertised target returns 200, then re-run the agent-readiness report and confirm link-headers passes.',
     resources: [
       {
         title: 'RFC 8288: Web Linking',

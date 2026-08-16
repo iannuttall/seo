@@ -1,5 +1,5 @@
 import type { publicHttpFetch } from '../../fetch/http-client.js'
-import { fetchText, linkEntries, safeError } from './agent-discovery.js'
+import { fetchText, linkEntries, safeError } from './agent-discovery-http.js'
 import type {
   AgentEndpointObservation,
   CrawlAgentDiscovery,
@@ -17,7 +17,7 @@ const REGISTERED_AGENT_LINK_RELS = [
 ] as const
 
 // Relation types from emerging agent conventions with no IANA registration.
-const EMERGING_AGENT_LINK_RELS = ['agent-skills', 'llms-txt'] as const
+const EMERGING_AGENT_LINK_RELS = ['agent-skills'] as const
 
 type AgentEndpointProbe = {
   id: string
@@ -110,12 +110,6 @@ const AGENT_ENDPOINT_PROBES: readonly AgentEndpointProbe[] = [
     id: 'auth-md',
     path: '/auth.md',
     accept: 'text/markdown,text/plain;q=0.9',
-    expects: 'text',
-  },
-  {
-    id: 'llms-full-txt',
-    path: '/llms-full.txt',
-    accept: 'text/plain,text/markdown;q=0.9',
     expects: 'text',
   },
 ]

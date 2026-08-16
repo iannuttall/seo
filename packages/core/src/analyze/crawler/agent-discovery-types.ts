@@ -171,6 +171,8 @@ export type CrawlAgentDiscovery = {
     bytes?: number
     sha256?: string
     repeatedHashStable: boolean | null
+    formatValid?: boolean | null
+    formatErrors?: string[]
     headingCount: number
     totalParsedLinks: number
     linkLimitReached: boolean
@@ -182,6 +184,15 @@ export type CrawlAgentDiscovery = {
     nonIndexableLinks: string[]
     missingCrawlRoutes: string[]
     oversized: boolean
+    discovery?: {
+      source: 'html-link' | 'http-link' | 'path-probe'
+      advertisedUrls: string[]
+      htmlUrls: string[]
+      httpUrls: string[]
+      candidateUrls: string[]
+      scopePath: string
+      appliesToStartUrl: boolean
+    }
     error?: string
   }
   contentSignals: {

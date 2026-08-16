@@ -50,6 +50,8 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
           <meta name="twitter:card" content="summary_large_image">
           <link rel="canonical" href="/articles/widget-guide">
           <link rel="alternate" hreflang="en-gb" href="/gb/widget-guide">
+          <link rel="alternate" type="text/markdown" href="widget-guide.md">
+          <link rel="describedby" type="text/markdown" href="/articles/llms.txt">
           <script src="http://cdn.example/insecure.js"></script>
           <script type="application/ld+json">
             {
@@ -109,6 +111,10 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
       href: 'https://example.com/gb/widget-guide',
     },
   ])
+  assert.deepEqual(page.markdownAlternates, [
+    'https://example.com/articles/widget-guide.md',
+  ])
+  assert.deepEqual(page.describedBy, ['https://example.com/articles/llms.txt'])
   assert.equal(page.imagesTotal, 6)
   assert.equal(page.imagesMissingAlt, 1)
   assert.deepEqual(page.oversizedImageCandidates, [

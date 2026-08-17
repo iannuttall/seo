@@ -472,7 +472,7 @@ const REPORT_DEPTH_PRIMARY = {
       'the source crawl date, cap, failures, and caveats',
     ],
     doNotClaim: [
-      'Reaching maxUrls or the token budget is possible truncation, not a complete inventory.',
+      'Reaching maxUrls, the token budget, or the output byte budget is possible truncation, not a complete inventory.',
       'A valid draft does not prove search or AI benefit, selection, indexing, or citations.',
       'The crawler cannot determine publisher intent.',
     ],

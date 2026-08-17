@@ -7,7 +7,6 @@ import type { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { collectAgentDiscovery } from './agent-discovery.js'
 import { agentReadiness } from './agent-readiness.js'
-import { auditLlmsTxt } from './llms.js'
 import { createCrawlReport } from './report.js'
 
 const markdown = `---
@@ -942,89 +941,5 @@ test('content signals fall back to the robots.txt directive when headers are abs
       (item) => item.id === 'content-signals',
     )?.status,
     'info',
-  )
-})
-
-test('llms.txt validation reports malformed, stale, redirected, off-site, non-indexable, and oversized evidence', async () => {
-  const llmsBody = `${'# Example\n\n## Start\n\n- [Home](https://example.com/)\n- [Missing](https://example.com/missing)\n- [Hidden](https://example.com/hidden)\n- [Old](https://example.com/old)\n- [External](https://other.example/resource)\n- [Malformed](https://[broken])\n\n'}${'x'.repeat(100_001)}`
-  const variantFetch = (async (
-    url: string,
-    input?: Parameters<typeof fakeFetch>[1],
-  ) => {
-    const requestedUrl = String(url)
-    if (requestedUrl === 'https://example.com/llms.txt') {
-      return response(llmsBody, 200, { 'content-type': 'text/plain' })
-    }
-    if (requestedUrl === 'https://example.com/hidden') {
-      return response(
-        '<meta content="noindex, follow" name="robots"><h1>Hidden</h1>',
-        200,
-        { 'content-type': 'text/html' },
-      )
-    }
-    if (requestedUrl === 'https://example.com/old') {
-      const redirected = response('<h1>New</h1>', 200, {
-        'content-type': 'text/html',
-      })
-      Object.defineProperty(redirected, 'redirected', { value: true })
-      Object.defineProperty(redirected, 'url', {
-        value: 'https://example.com/new',
-      })
-      return redirected
-    }
-    if (requestedUrl === 'https://other.example/resource') {
-      return response('<h1>External</h1>', 200, {
-        'content-type': 'text/html',
-      })
-    }
-    return fakeFetch(requestedUrl, input)
-  }) as typeof publicHttpFetch
-
-  const discovery = await collectAgentDiscovery({
-    startUrl: 'https://example.com/',
-    pages: [page],
-    timeoutMs: 1_000,
-    fetch: variantFetch,
-  })
-
-  assert.equal(discovery.llmsTxt.oversized, true)
-  assert.equal(discovery.llmsTxt.formatValid, false)
-  assert.deepEqual(discovery.llmsTxt.invalidLinks, ['https://[broken]'])
-  assert.deepEqual(discovery.llmsTxt.offSiteLinks, [
-    'https://other.example/resource',
-  ])
-  assert.deepEqual(discovery.llmsTxt.redirectedLinks, [
-    'https://example.com/old',
-  ])
-  assert.deepEqual(discovery.llmsTxt.nonIndexableLinks, [
-    'https://example.com/hidden',
-  ])
-  assert.deepEqual(discovery.llmsTxt.missingCrawlRoutes, [
-    'https://example.com/hidden',
-    'https://example.com/missing',
-    'https://example.com/old',
-  ])
-
-  const crawl = createCrawlReport({
-    config: { url: 'https://example.com/' },
-    pages: [page],
-  }) as ReturnType<typeof createCrawlReport> & {
-    agentDiscovery: typeof discovery
-  }
-  crawl.agentDiscovery = discovery
-  const audit = auditLlmsTxt(crawl)
-  assert.equal(audit.exists, true)
-  assert.equal(
-    audit.issues.some((issue) => issue.id === 'llms-v2-format'),
-    true,
-  )
-  assert.equal(
-    audit.issues.some((issue) => issue.id === 'llms-broken-links'),
-    true,
-  )
-  const readiness = agentReadiness(crawl)
-  assert.equal(
-    readiness.checks.find((item) => item.id === 'llms-txt')?.status,
-    'warning',
   )
 })

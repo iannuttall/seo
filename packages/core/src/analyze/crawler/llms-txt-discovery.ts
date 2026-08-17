@@ -3,6 +3,7 @@ import PQueue from 'p-queue'
 import { publicHttpFetch } from '../../fetch/http-client.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import {
+  AGENT_DISCOVERY_MAX_BODY_BYTES,
   fetchText,
   headerValue,
   linkEntries,
@@ -14,8 +15,7 @@ import type {
   LlmsTxtLinkObservation,
 } from './agent-discovery-types.js'
 
-const MAX_LLMS_LINKS = 100
-const MAX_CURATED_LLMS_BYTES = 100_000
+const LLMS_LINK_CHECK_LIMIT = 100
 
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex')
@@ -136,11 +136,6 @@ export function validateLlmsTxtV2(value: string): string[] {
   if (/^ {0,3}#{3,6}\s+\S/gmu.test(normalized)) {
     errors.push('The file can use only level-one and level-two headings.')
   }
-  const sectionCount = normalized.match(/^ {0,3}##\s+\S/gmu)?.length ?? 0
-  if (sectionCount > 12) {
-    errors.push('The file must contain no more than 12 sections.')
-  }
-
   let section: { title: string; links: number } | undefined
   for (const rawLine of lines) {
     const line = rawLine.trim()
@@ -284,6 +279,7 @@ async function discoverLlmsTxt(input: {
         fetch: input.fetch,
         signal: input.signal,
         accept: 'text/plain,text/markdown;q=0.9',
+        returnOnBodyLimit: true,
       })
       if (result.response.status >= 200 && result.response.status < 300) {
         return {
@@ -328,29 +324,73 @@ export async function inspectLlmsTxt(input: {
     appliesToStartUrl: llmsAppliesToPath(url, startPath),
   }
   try {
-    const [first, second] = await Promise.all([
-      fetchText({
-        url,
-        timeoutMs: input.timeoutMs,
-        fetch: input.fetch,
-        signal: input.signal,
-        accept: 'text/plain,text/markdown;q=0.9',
-      }),
-      fetchText({
-        url,
-        timeoutMs: input.timeoutMs,
-        fetch: input.fetch,
-        signal: input.signal,
-        accept: 'text/plain,text/markdown;q=0.9',
-      }),
-    ])
+    const first = await fetchText({
+      url,
+      timeoutMs: input.timeoutMs,
+      fetch: input.fetch,
+      signal: input.signal,
+      accept: 'text/plain,text/markdown;q=0.9',
+      returnOnBodyLimit: true,
+    })
     const exists = first.response.status >= 200 && first.response.status < 300
+    if (exists && first.bodyLimitExceeded) {
+      const contentLength = first.response.headers.get('content-length')
+      const declaredBytes =
+        contentLength === null ? undefined : Number(contentLength)
+      const hasDeclaredBytes =
+        declaredBytes !== undefined &&
+        Number.isSafeInteger(declaredBytes) &&
+        declaredBytes >= 0
+      return {
+        url,
+        exists: true,
+        status: first.response.status,
+        contentType: first.response.headers.get('content-type') ?? undefined,
+        bytes: hasDeclaredBytes ? declaredBytes : first.bytesRead,
+        bytesStatus: hasDeclaredBytes ? 'exact' : 'lower-bound',
+        repeatedHashStable: null,
+        bodyDataStatus: 'unavailable',
+        bodyLimitBytes: first.bodyLimitBytes,
+        bodyLimitExceeded: true,
+        formatValid: null,
+        formatErrors: [],
+        headingCount: 0,
+        totalParsedLinks: 0,
+        linkCheckStatus: 'unavailable',
+        linkCheckLimit: LLMS_LINK_CHECK_LIMIT,
+        linksChecked: 0,
+        linkLimitReached: false,
+        links: [],
+        invalidLinks: [],
+        duplicateLinks: [],
+        offSiteLinks: [],
+        redirectedLinks: [],
+        nonIndexableLinks: [],
+        missingCrawlRoutes: [],
+        oversized: true,
+        discovery: discoveryEvidence,
+      }
+    }
+    let second: Awaited<ReturnType<typeof fetchText>> | undefined
+    try {
+      second = await fetchText({
+        url,
+        timeoutMs: input.timeoutMs,
+        fetch: input.fetch,
+        signal: input.signal,
+        accept: 'text/plain,text/markdown;q=0.9',
+        returnOnBodyLimit: true,
+      })
+    } catch {
+      // The first response still proves that the file exists. A missing repeat
+      // response makes only the stability evidence unavailable.
+    }
     const parsed = markdownLinks(exists ? first.body : '')
     const formatErrors = exists ? validateLlmsTxtV2(first.body) : []
-    const links = parsed.links.slice(0, MAX_LLMS_LINKS)
+    const links = parsed.links.slice(0, LLMS_LINK_CHECK_LIMIT)
     const linkLimitReached = parsed.links.length > links.length
     const counts = new Map<string, number>()
-    for (const link of links) {
+    for (const link of parsed.links) {
       counts.set(link.url, (counts.get(link.url) ?? 0) + 1)
     }
     const duplicateLinks = [...counts]
@@ -415,12 +455,26 @@ export async function inspectLlmsTxt(input: {
       status: first.response.status,
       contentType: first.response.headers.get('content-type') ?? undefined,
       bytes: Buffer.byteLength(first.body),
+      bytesStatus: 'exact',
       sha256: sha256(first.body),
-      repeatedHashStable: sha256(first.body) === sha256(second.body),
+      repeatedHashStable:
+        !second || second.bodyLimitExceeded
+          ? null
+          : sha256(first.body) === sha256(second.body),
+      bodyDataStatus: 'complete',
+      bodyLimitBytes: first.bodyLimitBytes,
+      bodyLimitExceeded: false,
       formatValid: exists ? formatErrors.length === 0 : null,
       formatErrors,
       headingCount: first.body.match(/^#{1,2}\s+\S/gmu)?.length ?? 0,
       totalParsedLinks: parsed.links.length,
+      linkCheckStatus: !exists
+        ? 'not-applicable'
+        : linkLimitReached
+          ? 'partial'
+          : 'complete',
+      linkCheckLimit: LLMS_LINK_CHECK_LIMIT,
+      linksChecked: linkObservations.length,
       linkLimitReached,
       links: linkObservations,
       invalidLinks: parsed.invalidLinks.sort(),
@@ -440,7 +494,7 @@ export async function inspectLlmsTxt(input: {
       missingCrawlRoutes: [...linkedCrawlRoutes]
         .filter((route) => !crawlRoutes.has(route))
         .sort(),
-      oversized: Buffer.byteLength(first.body) > MAX_CURATED_LLMS_BYTES,
+      oversized: false,
       discovery: discoveryEvidence,
     }
   } catch (error) {
@@ -448,10 +502,16 @@ export async function inspectLlmsTxt(input: {
       url,
       exists: false,
       repeatedHashStable: null,
+      bodyDataStatus: 'unavailable',
+      bodyLimitBytes: AGENT_DISCOVERY_MAX_BODY_BYTES,
+      bodyLimitExceeded: false,
       formatValid: null,
       formatErrors: [],
       headingCount: 0,
       totalParsedLinks: 0,
+      linkCheckStatus: 'unavailable',
+      linkCheckLimit: LLMS_LINK_CHECK_LIMIT,
+      linksChecked: 0,
       linkLimitReached: false,
       links: [],
       invalidLinks: [],

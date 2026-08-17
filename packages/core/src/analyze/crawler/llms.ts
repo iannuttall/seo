@@ -15,6 +15,7 @@ export type LlmsAuditIssue = {
 export type LlmsAuditReport = {
   reportId: string
   url: string
+  dataStatus: 'complete' | 'partial' | 'unavailable'
   exists: boolean
   llmsTxtUrl: string
   status?: number
@@ -22,6 +23,20 @@ export type LlmsAuditReport = {
   googleSearchImpact: 'none'
   guidanceUrl: string
   headline: string
+  caveats: string[]
+  bodyEvidence: {
+    status: 'complete' | 'unavailable' | 'not-applicable'
+    bytes?: number
+    bytesStatus?: 'exact' | 'lower-bound'
+    limitBytes?: number
+    limitExceeded: boolean
+  }
+  linkCheck: {
+    status: 'complete' | 'partial' | 'unavailable' | 'not-applicable'
+    checkedLinks: number
+    totalLinks: number
+    limit: number
+  }
   issues: LlmsAuditIssue[]
   recommendedPages: Array<{
     url: string
@@ -34,6 +49,7 @@ export type LlmsAuditReport = {
 export type GenerateLlmsTxtOptions = {
   maxUrls?: number
   tokenBudget?: number
+  maxBytes?: number
   exclude?: string[]
   title?: string
   description?: string
@@ -44,6 +60,14 @@ export type GeneratedLlmsTxt = {
   includedUrls: number
   estimatedTokens: number
   sections: Record<string, number>
+  limits: {
+    candidateUrls: number
+    maxUrls: number
+    tokenBudget: number
+    maxBytes: number
+    truncated: boolean
+    reasons: Array<'maxUrls' | 'tokenBudget' | 'maxBytes'>
+  }
   source: {
     reportId: string
     status: CrawlReport['status']
@@ -56,8 +80,12 @@ export type GeneratedLlmsTxt = {
   }
 }
 
-const MAX_LLMS_TXT_LINKS = 100
-const MAX_LLMS_TXT_BYTES = 100_000
+export const DEFAULT_LLMS_TXT_MAX_URLS = 250
+export const MAX_LLMS_TXT_URLS = 10_000
+export const DEFAULT_LLMS_TXT_TOKEN_BUDGET = 12_000
+export const MAX_LLMS_TXT_TOKEN_BUDGET = 500_000
+export const MIN_GENERATED_LLMS_TXT_BYTES = 4_096
+export const MAX_GENERATED_LLMS_TXT_BYTES = 2_000_000
 
 function estimatedTokens(value: string): number {
   return Math.ceil(value.length / 4)
@@ -148,6 +176,57 @@ function buildLlmsTxtAudit(
   const pages = candidatePages(report)
   const issues: LlmsAuditIssue[] = []
   const exists = validation?.exists ?? Boolean(llmsTxt?.exists)
+  const bodyStatus = !exists
+    ? 'not-applicable'
+    : validation?.bodyDataStatus === 'unavailable' ||
+        validation?.bodyLimitExceeded
+      ? 'unavailable'
+      : validation
+        ? 'complete'
+        : 'unavailable'
+  const linkCheckStatus = !exists
+    ? 'not-applicable'
+    : (validation?.linkCheckStatus ??
+      (validation?.linkLimitReached
+        ? 'partial'
+        : validation
+          ? 'complete'
+          : 'unavailable'))
+  const checkedLinks = validation?.linksChecked ?? validation?.links.length ?? 0
+  const totalLinks = validation?.totalParsedLinks ?? 0
+  const linkCheckLimit = validation?.linkCheckLimit ?? checkedLinks
+  const caveats: string[] = []
+  if (exists && bodyStatus === 'unavailable') {
+    caveats.push(
+      validation?.bodyLimitExceeded
+        ? `The file body exceeded the ${validation.bodyLimitBytes?.toLocaleString('en-GB') ?? 'configured'}-byte audit limit. Its format and links were not checked.`
+        : 'The file body was not available for format and link checks.',
+    )
+  }
+  if (linkCheckStatus === 'partial') {
+    caveats.push(
+      `The file contains ${totalLinks.toLocaleString('en-GB')} links. This run checked the first ${checkedLinks.toLocaleString('en-GB')}. Findings do not cover the remaining ${(totalLinks - checkedLinks).toLocaleString('en-GB')} links.`,
+    )
+  }
+  if (
+    exists &&
+    bodyStatus === 'complete' &&
+    validation?.repeatedHashStable === null
+  ) {
+    caveats.push(
+      'The repeated fetch was unavailable, so this run did not check body stability.',
+    )
+  }
+  if (validation?.error) caveats.push(validation.error)
+  const dataStatus: LlmsAuditReport['dataStatus'] = validation?.error
+    ? validation.status
+      ? 'partial'
+      : 'unavailable'
+    : bodyStatus === 'unavailable' ||
+        linkCheckStatus === 'partial' ||
+        validation?.repeatedHashStable === null
+      ? 'partial'
+      : 'complete'
 
   if (
     validation?.exists &&
@@ -163,7 +242,11 @@ function buildLlmsTxtAudit(
       evidence: { contentType: validation.contentType },
     })
   }
-  if (validation?.exists && validation.headingCount === 0) {
+  if (
+    validation?.exists &&
+    bodyStatus === 'complete' &&
+    validation.headingCount === 0
+  ) {
     issues.push({
       id: 'llms-structure',
       severity: 'medium',
@@ -205,17 +288,6 @@ function buildLlmsTxtAudit(
       plainEnglish: `${validation.invalidLinks.length} link${validation.invalidLinks.length === 1 ? ' is' : 's are'} not a valid URL.`,
       action: 'Replace each invalid value with a complete HTTP or HTTPS URL.',
       evidence: { links: validation.invalidLinks },
-    })
-  }
-  if (validation?.linkLimitReached) {
-    issues.push({
-      id: 'llms-link-limit',
-      severity: 'medium',
-      title: 'The link audit reached its limit',
-      plainEnglish: `The file contains ${validation.totalParsedLinks} parsed links. Only the first 100 were checked.`,
-      action:
-        'Keep no more than 100 deliberate links so all file links can be checked.',
-      evidence: { parsedLinks: validation.totalParsedLinks, checkedLinks: 100 },
     })
   }
   const brokenLinks =
@@ -277,18 +349,6 @@ function buildLlmsTxtAudit(
         'Generate the file during the build and remove timestamps, random ordering, or runtime rewriting.',
     })
   }
-  if (validation?.oversized) {
-    issues.push({
-      id: 'llms-file-size',
-      severity: 'medium',
-      title: 'llms.txt is larger than the review limit',
-      plainEnglish: `The file is ${validation.bytes ?? 'more than 100,000'} bytes. The v2 validator limit is 100,000 bytes.`,
-      action:
-        'Keep the file under 100,000 bytes. Use a short list of useful entry points.',
-      evidence: { bytes: validation.bytes, limitBytes: 100_000 },
-    })
-  }
-
   if (exists && pages.length < 3) {
     issues.push({
       id: 'thin-llms-inventory',
@@ -305,6 +365,7 @@ function buildLlmsTxtAudit(
   return {
     reportId: report.id,
     url: report.config.url,
+    dataStatus,
     exists,
     llmsTxtUrl:
       validation?.url ??
@@ -316,12 +377,34 @@ function buildLlmsTxtAudit(
     guidanceUrl:
       'https://developers.google.com/search/updates#clarifying-guidance-on-llms-txt-files',
     headline: exists
-      ? validation
-        ? issues.length
-          ? `The optional llms.txt file was validated and ${issues.length} content or link issue${issues.length === 1 ? ' needs' : 's need'} review. It has no Google Search visibility impact.`
-          : `The optional llms.txt file was validated with ${validation.links.length} resolving link${validation.links.length === 1 ? '' : 's'} and a stable body. It has no Google Search visibility impact.`
-        : 'An optional llms.txt file is present, but its body was not validated in this crawl. It has no Google Search visibility impact.'
-      : 'No llms.txt file was found. This is not an SEO issue and requires no action.',
+      ? bodyStatus === 'unavailable'
+        ? 'The optional llms.txt file was found, but its body could not be checked within this audit. It has no Google Search visibility impact.'
+        : validation
+          ? issues.length
+            ? `The optional llms.txt file was validated and ${issues.length} content or link issue${issues.length === 1 ? ' needs' : 's need'} review. It has no Google Search visibility impact.`
+            : linkCheckStatus === 'partial'
+              ? `The optional llms.txt format was validated. ${checkedLinks} of ${totalLinks} links were checked, so the link evidence is partial. It has no Google Search visibility impact.`
+              : validation.repeatedHashStable === null
+                ? `The optional llms.txt format and ${checkedLinks} link${checkedLinks === 1 ? '' : 's'} were checked, but the repeat fetch was unavailable. It has no Google Search visibility impact.`
+                : `The optional llms.txt file was validated with ${checkedLinks} resolving link${checkedLinks === 1 ? '' : 's'} and a stable body. It has no Google Search visibility impact.`
+          : 'An optional llms.txt file is present, but its body was not validated in this crawl. It has no Google Search visibility impact.'
+      : validation?.error
+        ? 'The llms.txt audit could not determine whether the optional file exists. This has no Google Search visibility impact.'
+        : 'No llms.txt file was found. This is not an SEO issue and requires no action.',
+    caveats,
+    bodyEvidence: {
+      status: bodyStatus,
+      bytes: validation?.bytes,
+      bytesStatus: validation?.bytesStatus,
+      limitBytes: validation?.bodyLimitBytes,
+      limitExceeded: validation?.bodyLimitExceeded ?? false,
+    },
+    linkCheck: {
+      status: linkCheckStatus,
+      checkedLinks,
+      totalLinks,
+      limit: linkCheckLimit,
+    },
     issues,
     recommendedPages: pages.slice(0, 25).map((page) => ({
       url: page.finalUrl,
@@ -353,11 +436,24 @@ export function generateLlmsTxt(
   const maxUrls = Math.max(
     1,
     Math.min(
-      Math.floor(options.maxUrls ?? MAX_LLMS_TXT_LINKS),
-      MAX_LLMS_TXT_LINKS,
+      Math.floor(options.maxUrls ?? DEFAULT_LLMS_TXT_MAX_URLS),
+      MAX_LLMS_TXT_URLS,
     ),
   )
-  const tokenBudget = Math.max(1, Math.floor(options.tokenBudget ?? 12_000))
+  const tokenBudget = Math.max(
+    1,
+    Math.min(
+      Math.floor(options.tokenBudget ?? DEFAULT_LLMS_TXT_TOKEN_BUDGET),
+      MAX_LLMS_TXT_TOKEN_BUDGET,
+    ),
+  )
+  const maxBytes = Math.max(
+    MIN_GENERATED_LLMS_TXT_BYTES,
+    Math.min(
+      Math.floor(options.maxBytes ?? MAX_GENERATED_LLMS_TXT_BYTES),
+      MAX_GENERATED_LLMS_TXT_BYTES,
+    ),
+  )
   const normalizedTitle = truncateAtWord(
     options.title ?? originHost(report.config.url),
     200,
@@ -371,7 +467,8 @@ export function generateLlmsTxt(
   const description =
     normalizedDescription ||
     `Curated entry points for agents reading ${originHost(report.config.url)}.`
-  const pages = candidatePages(report, options).slice(0, maxUrls)
+  const candidates = candidatePages(report, options)
+  const pages = candidates.slice(0, maxUrls)
   const sections = new Map<string, CrawlPageSnapshot[]>()
   for (const page of pages) {
     const section = sectionForPage(page)
@@ -381,6 +478,8 @@ export function generateLlmsTxt(
   const lines = [`# ${title}`, '', `> ${description}`, '']
   let includedUrls = 0
   const counts: Record<string, number> = {}
+  let tokenBudgetReached = false
+  let byteBudgetReached = false
 
   for (const [sectionName, sectionPages] of sections) {
     const sectionLines = [`## ${sectionName}`, '']
@@ -395,9 +494,13 @@ export function generateLlmsTxt(
         ? `: ${truncateAtWord(page.metaDescription, 160)}`
         : ''
       const line = `- [${title}](${page.finalUrl})${note}`
-      const projected = [...lines, ...sectionLines, line, ''].join('\n')
-      if (Buffer.byteLength(projected) >= MAX_LLMS_TXT_BYTES) break
+      const projected = `${[...lines, ...sectionLines, line, ''].join('\n')}\n`
+      if (Buffer.byteLength(projected) > maxBytes) {
+        byteBudgetReached = true
+        break
+      }
       if (estimatedTokens(projected) > tokenBudget && includedUrls > 0) {
+        tokenBudgetReached = true
         break
       }
       sectionLines.push(line)
@@ -412,11 +515,25 @@ export function generateLlmsTxt(
   }
 
   const content = `${lines.join('\n')}\n`
+  const reasons: GeneratedLlmsTxt['limits']['reasons'] = []
+  if (candidates.length > maxUrls) reasons.push('maxUrls')
+  if (tokenBudgetReached || estimatedTokens(content) > tokenBudget) {
+    reasons.push('tokenBudget')
+  }
+  if (byteBudgetReached) reasons.push('maxBytes')
   return {
     content,
     includedUrls,
     estimatedTokens: estimatedTokens(content),
     sections: counts,
+    limits: {
+      candidateUrls: candidates.length,
+      maxUrls,
+      tokenBudget,
+      maxBytes,
+      truncated: reasons.length > 0,
+      reasons,
+    },
     source: {
       reportId: report.id,
       status: report.status,

@@ -6,6 +6,7 @@ import { writeTokens } from '../../storage/config.js'
 import type { StoredTokens } from '../../types.js'
 import { oauthCallbackPage } from './callback-page.js'
 import { getAuthModeStatus, getClientConfig } from './client-config.js'
+import { waitForCode } from './loopback-callback.js'
 import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
 import {
   GOOGLE_READONLY_SCOPE_LABELS,
@@ -54,7 +55,7 @@ export async function loginWithLoopback(
     response_type: 'code',
     scope: GOOGLE_SCOPE,
     access_type: 'offline',
-    prompt: 'consent',
+    prompt: 'select_account consent',
     state,
     code_challenge: challenge,
     code_challenge_method: 'S256',
@@ -117,61 +118,6 @@ export async function loginWithLoopback(
   } finally {
     server.close()
   }
-}
-
-function waitForCode(input: {
-  server: http.Server
-  redirectUri: string
-  state: string
-}): Promise<{
-  code: string
-  respond: (status: number, page: string) => void
-}> {
-  return new Promise<{
-    code: string
-    respond: (status: number, page: string) => void
-  }>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error('OAuth flow timed out after 5 minutes.')),
-      300_000,
-    )
-    input.server.on('request', (req, res) => {
-      try {
-        const reqUrl = new URL(req.url ?? '/', input.redirectUri)
-        if (reqUrl.searchParams.get('state') !== input.state) {
-          throw new Error('OAuth state mismatch.')
-        }
-        const error = reqUrl.searchParams.get('error')
-        if (error) {
-          throw new Error(`OAuth error: ${error}`)
-        }
-
-        const incomingCode = reqUrl.searchParams.get('code')
-        if (!incomingCode) {
-          throw new Error('OAuth code missing.')
-        }
-
-        let responded = false
-        clearTimeout(timer)
-        resolve({
-          code: incomingCode,
-          respond: (status, page) => {
-            if (responded) return
-            responded = true
-            res.writeHead(status, {
-              'content-type': 'text/html; charset=utf-8',
-            })
-            res.end(page)
-          },
-        })
-      } catch (error) {
-        res.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
-        res.end(oauthCallbackPage({ status: 'failed' }))
-        clearTimeout(timer)
-        reject(error)
-      }
-    })
-  })
 }
 
 async function exchangeCode(input: {

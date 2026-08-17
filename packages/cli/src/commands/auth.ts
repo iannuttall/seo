@@ -5,14 +5,17 @@ import {
   formatRelativeExpiry,
   getSeoCliPaths,
   getTokenStorageStatus,
+  listGoogleAccounts,
   loginWithLoopback,
+  readTokens,
   refreshAuthToken,
   SeoError,
+  setActiveGoogleAccount,
   setTokenStorageMode,
   writeOauthClient,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag } from '../args.js'
+import { jsonFlag, stringArg } from '../args.js'
 import {
   canPrompt,
   maybeExitCancelled,
@@ -100,18 +103,41 @@ export const authCommand = defineCommand({
       },
     }),
     logout: defineCommand({
-      meta: { name: 'logout', description: 'Delete locally stored tokens' },
-      run: async () => {
+      meta: { name: 'logout', description: 'Delete a local Google login' },
+      args: {
+        account: {
+          type: 'string',
+          description: 'Delete the login for this Google account.',
+        },
+        all: {
+          type: 'boolean',
+          default: false,
+          description: 'Delete every saved Google login.',
+        },
+      },
+      run: async ({ args }) => {
         const status = await authStatus()
-        await deleteTokens()
+        const account = stringArg(args.account)
+        if (account && args.all) {
+          throw new SeoError(
+            'INVALID_INPUT',
+            'Use either --account or --all, not both.',
+          )
+        }
+        const targetAccount = args.all
+          ? undefined
+          : (account ??
+            status.accounts.find((savedAccount) => savedAccount.active)
+              ?.accountEmail)
+        await deleteTokens(targetAccount)
         if (status.activeMode === 'service-account') {
           process.stdout.write(
-            'Deleted local OAuth tokens. Service account credentials remain available through the environment.\n',
+            `${args.all ? 'Deleted all local Google logins.' : targetAccount ? `Deleted the local login for ${targetAccount}.` : 'No local Google login was found.'} Service account credentials remain available through the environment.\n`,
           )
           return
         }
         process.stdout.write(
-          'Deleted local OAuth tokens.\nRevoke at https://myaccount.google.com/permissions if you also want Google to forget the grant.\n',
+          `${args.all ? 'Deleted all local Google logins.' : targetAccount ? `Deleted the local login for ${targetAccount}.` : 'No local Google login was found.'}\nRevoke at https://myaccount.google.com/permissions if you also want Google to forget the grant.\n`,
         )
       },
     }),
@@ -121,6 +147,10 @@ export const authCommand = defineCommand({
         description: 'Show the signed-in Google account',
       },
       args: {
+        account: {
+          type: 'string',
+          description: 'Show this saved Google account.',
+        },
         json: {
           type: 'boolean',
           default: false,
@@ -147,7 +177,16 @@ export const authCommand = defineCommand({
           ])
           return
         }
-        const tokens = status.tokens
+        const requestedAccount = stringArg(args.account)
+        const tokens = requestedAccount
+          ? await readTokens(requestedAccount)
+          : status.tokens
+        if (requestedAccount && !tokens) {
+          throw new SeoError(
+            'AUTH_REQUIRED',
+            `Google account ${requestedAccount} is not connected.`,
+          )
+        }
         if (!tokens) {
           if (jsonFlag(args)) {
             printJson({ mode: 'oauth', account: null })
@@ -182,6 +221,10 @@ export const authCommand = defineCommand({
         description: 'Show local Google auth status',
       },
       args: {
+        account: {
+          type: 'string',
+          description: 'Show status for this saved Google account.',
+        },
         json: {
           type: 'boolean',
           default: false,
@@ -190,6 +233,20 @@ export const authCommand = defineCommand({
       },
       run: async ({ args }) => {
         const status = await authStatus()
+        const requestedAccount = stringArg(args.account)
+        const selectedTokens = requestedAccount
+          ? await readTokens(requestedAccount)
+          : status.tokens
+        if (
+          requestedAccount &&
+          !selectedTokens &&
+          status.activeMode !== 'service-account'
+        ) {
+          throw new SeoError(
+            'AUTH_REQUIRED',
+            `Google account ${requestedAccount} is not connected.`,
+          )
+        }
         const storage =
           status.activeMode === 'oauth'
             ? await getTokenStorageStatus()
@@ -198,23 +255,23 @@ export const authCommand = defineCommand({
           printJson({
             authenticated:
               status.activeMode === 'oauth'
-                ? Boolean(status.tokens)
+                ? Boolean(selectedTokens)
                 : status.serviceAccount.configured,
             mode: status.activeMode,
             identity: status.identity,
             account:
               status.activeMode === 'oauth'
-                ? status.tokens?.account_email
+                ? selectedTokens?.account_email
                 : undefined,
             scopes:
-              status.activeMode === 'oauth' ? status.tokens?.scope : undefined,
+              status.activeMode === 'oauth' ? selectedTokens?.scope : undefined,
             clientSource:
               status.activeMode === 'oauth'
-                ? status.tokens?.client_source
+                ? selectedTokens?.client_source
                 : undefined,
             expiresAt:
               status.activeMode === 'oauth'
-                ? status.tokens?.expires_at
+                ? selectedTokens?.expires_at
                 : undefined,
             sharedConfigured: status.sharedConfigured,
             byoConfigured: status.byoConfigured,
@@ -224,6 +281,7 @@ export const authCommand = defineCommand({
               source: status.serviceAccount.source,
               error: status.serviceAccount.error,
             },
+            accounts: status.accounts,
             ...(storage ? { tokenStorage: storage } : {}),
           })
           return
@@ -242,7 +300,7 @@ export const authCommand = defineCommand({
           printKeyValue(rows)
           return
         }
-        if (!status.tokens) {
+        if (!selectedTokens) {
           const authMode = status.serviceAccount.error
             ? status.serviceAccount.error
             : status.sharedConfigured
@@ -257,10 +315,11 @@ export const authCommand = defineCommand({
         }
         const tokenStorage = storage ?? (await getTokenStorageStatus())
         printKeyValue([
-          ['Account', status.tokens.account_email],
-          ['Scopes', status.tokens.scope],
-          ['Client', oauthClientLabel(status.tokens.client_source)],
-          ['Expires', formatRelativeExpiry(status.tokens.expires_at)],
+          ['Account', selectedTokens.account_email],
+          ['Connected accounts', String(status.accounts.length)],
+          ['Scopes', selectedTokens.scope],
+          ['Client', oauthClientLabel(selectedTokens.client_source)],
+          ['Expires', formatRelativeExpiry(selectedTokens.expires_at)],
           ['Tokens file', getSeoCliPaths().tokensFile],
           ['Token storage', tokenStorageLabel(tokenStorage)],
           ...(tokenStorage.reason
@@ -332,7 +391,13 @@ export const authCommand = defineCommand({
         name: 'refresh',
         description: 'Refresh the Google OAuth token',
       },
-      run: async () => {
+      args: {
+        account: {
+          type: 'string',
+          description: 'Refresh this saved Google account.',
+        },
+      },
+      run: async ({ args }) => {
         const status = await authStatus()
         if (status.activeMode === 'service-account') {
           process.stdout.write(
@@ -340,10 +405,61 @@ export const authCommand = defineCommand({
           )
           return
         }
-        const tokens = await refreshAuthToken()
+        const tokens = await refreshAuthToken(stringArg(args.account))
         process.stdout.write(
           `Refreshed. New expiry ${new Date(tokens.expires_at).toISOString()}.\n`,
         )
+      },
+    }),
+    accounts: defineCommand({
+      meta: {
+        name: 'accounts',
+        description: 'List saved Google accounts',
+      },
+      args: {
+        json: {
+          type: 'boolean',
+          default: false,
+          description: 'Print machine-readable JSON.',
+        },
+      },
+      run: ({ args }) => {
+        const accounts = listGoogleAccounts()
+        if (jsonFlag(args)) {
+          printJson({ accounts })
+          return
+        }
+        if (accounts.length === 0) {
+          process.stdout.write('No Google accounts are connected.\n')
+          return
+        }
+        printKeyValue(
+          accounts.map((account) => [
+            account.active ? 'Active account' : 'Account',
+            account.accountEmail,
+          ]),
+        )
+      },
+    }),
+    use: defineCommand({
+      meta: {
+        name: 'use',
+        description: 'Select the default Google account',
+      },
+      args: {
+        account: {
+          type: 'positional',
+          required: true,
+          description: 'Saved Google account email.',
+        },
+      },
+      run: ({ args }) => {
+        const account = stringArg(args.account)
+        if (!account) {
+          throw new SeoError('INVALID_INPUT', 'Google account is required.')
+        }
+        setActiveGoogleAccount(account)
+        process.stdout.write(`Default Google account: ${account}\n`)
       },
     }),
     'setup-client': defineCommand({

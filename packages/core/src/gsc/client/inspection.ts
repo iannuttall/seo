@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
+import { searchConsoleAccountForSite } from '../auth/account-selection.js'
 import { assertUrlMatchesGscProperty } from '../property-url.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import {
@@ -67,7 +68,9 @@ export async function inspectUrl(
     input.siteUrl,
     input.inspectionUrl,
   )
-  const { client, quotaIdentity } = await getAuthorized()
+  const { client, quotaIdentity } = await getAuthorized(
+    input.accountEmail ?? searchConsoleAccountForSite(input.siteUrl),
+  )
   const reservation = reserveUrlInspectionQuota({
     credentialKey: credentialKey(quotaIdentity),
     property: input.siteUrl,

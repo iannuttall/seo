@@ -1,6 +1,7 @@
 import { SeoError } from '../../errors.js'
 import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
+import { searchConsoleAccountForSite } from '../auth/account-selection.js'
 import { finalGscDateRange } from '../dates.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import type { SearchAnalyticsRequest } from './types.js'
@@ -38,11 +39,13 @@ function resolveSearchDateWindow(
 export async function querySearchAnalytics(
   site: string,
   body: SearchAnalyticsRequest,
-  opts: { refresh?: boolean } = {},
+  opts: { refresh?: boolean; accountEmail?: string } = {},
 ): Promise<{ rows: GscRow[]; calls: number; rowsFetched: number }> {
-  const { client } = await getAuthorized()
+  const { client, identity } = await getAuthorized(
+    opts.accountEmail ?? searchConsoleAccountForSite(site),
+  )
   const db = getDb()
-  const queryHash = hashKey([site, body])
+  const queryHash = hashKey([site, identity, body])
   const cached = db
     .prepare(
       'SELECT response_json, row_count FROM gsc_cache WHERE site_url = ? AND query_hash = ? AND expires_at > ?',

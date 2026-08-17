@@ -17,11 +17,13 @@ export function registerDataTools(server: McpServer): void {
     {
       description:
         'List Google Analytics accounts and properties available to Google OAuth',
-      inputSchema: {},
+      inputSchema: {
+        accountEmail: z.string().email().optional(),
+      },
     },
-    async () => {
+    async ({ accountEmail }) => {
       try {
-        const accountSummaries = await listGa4AccountSummaries()
+        const accountSummaries = await listGa4AccountSummaries(accountEmail)
         const properties = accountSummaries.flatMap((account) =>
           account.propertySummaries.map((property) => ({
             account: account.displayName ?? account.account,
@@ -48,12 +50,15 @@ export function registerDataTools(server: McpServer): void {
       description: 'Raw Search Console searchAnalytics/query passthrough',
       inputSchema: {
         site: z.string(),
+        accountEmail: z.string().email().optional(),
         body: z.record(z.string(), z.any()),
       },
     },
-    async ({ site, body }) => {
+    async ({ site, accountEmail, body }) => {
       try {
-        const result = await querySearchAnalytics(site, body as never)
+        const result = await querySearchAnalytics(site, body as never, {
+          accountEmail,
+        })
         return toolSuccess(
           `Fetched ${result.rows.length} Search Console rows.`,
           result,
@@ -72,14 +77,16 @@ export function registerDataTools(server: McpServer): void {
       inputSchema: {
         site: z.string(),
         url: z.string().url(),
+        accountEmail: z.string().email().optional(),
         languageCode: z.string().optional(),
       },
     },
-    async ({ site, url, languageCode }) => {
+    async ({ site, url, accountEmail, languageCode }) => {
       try {
         const result = await inspectUrl({
           siteUrl: site,
           inspectionUrl: url,
+          accountEmail,
           languageCode,
         })
         const status = result.inspectionResult?.indexStatusResult
@@ -100,12 +107,15 @@ export function registerDataTools(server: McpServer): void {
         'Run a Google Analytics Data API report for a property the signed-in user can access',
       inputSchema: {
         propertyId: z.string(),
+        accountEmail: z.string().email().optional(),
         body: z.record(z.string(), z.any()),
       },
     },
-    async ({ propertyId, body }) => {
+    async ({ propertyId, accountEmail, body }) => {
       try {
-        const result = await runGa4Report(propertyId, body as never)
+        const result = await runGa4Report(propertyId, body as never, {
+          accountEmail,
+        })
         return toolSuccess(
           `Fetched ${result.rowCount ?? result.rows?.length ?? 0} Google Analytics rows.`,
           {

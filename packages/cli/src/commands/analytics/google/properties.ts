@@ -24,9 +24,13 @@ export const googleAnalyticsPropertiesCommand = defineCommand({
       description:
         'Save this numeric Google Analytics property ID as the default.',
     },
+    account: {
+      type: 'string',
+      description: 'Saved Google account email.',
+    },
   },
   run: async ({ args }) => {
-    const summaries = await listGa4AccountSummaries()
+    const summaries = await listGa4AccountSummaries(stringArg(args.account))
     const rows = summaries.flatMap((account) =>
       account.propertySummaries.map((property) => ({
         account: account.displayName ?? account.account,

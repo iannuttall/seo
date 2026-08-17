@@ -10,6 +10,7 @@ export type ClientProfileInput = {
   watchUrls?: string[]
   brandTerms?: string[]
   analytics?: ClientProfile['analytics']
+  googleAccounts?: ClientProfile['googleAccounts']
   searchEngines?: ClientProfile['searchEngines']
   reportDay?: number
   technicalWeekday?: number
@@ -27,7 +28,7 @@ export function googleAnalyticsPropertyId(
 }
 
 export function analyticsConnection(
-  client: Pick<ClientProfile, 'analytics'> | undefined,
+  client: Pick<ClientProfile, 'analytics' | 'googleAccounts'> | undefined,
 ): AnalyticsConnection | undefined {
   const analytics = client?.analytics
   if (!analytics) return undefined
@@ -44,12 +45,21 @@ export function analyticsConnection(
       : undefined
   }
   if (analytics.selected === 'google') {
-    return analytics.google
-      ? { provider: 'google', propertyId: analytics.google.propertyId }
-      : undefined
+    if (!analytics.google) return undefined
+    const accountEmail = client?.googleAccounts?.googleAnalytics
+    return {
+      provider: 'google',
+      propertyId: analytics.google.propertyId,
+      ...(accountEmail ? { accountEmail } : {}),
+    }
   }
   if (analytics.google) {
-    return { provider: 'google', propertyId: analytics.google.propertyId }
+    const accountEmail = client?.googleAccounts?.googleAnalytics
+    return {
+      provider: 'google',
+      propertyId: analytics.google.propertyId,
+      ...(accountEmail ? { accountEmail } : {}),
+    }
   }
   if (analytics.clicky) {
     return { provider: 'clicky', siteId: analytics.clicky.siteId }
@@ -125,6 +135,7 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
         }),
     ),
     analytics: input.analytics ?? existing?.analytics ?? {},
+    googleAccounts: input.googleAccounts ?? existing?.googleAccounts,
     searchEngines: input.searchEngines ?? existing?.searchEngines,
     reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,
@@ -184,6 +195,14 @@ export function setClientAnalyticsConnection(
               selected: 'google',
               google: { propertyId: connection.propertyId },
             },
+    ...(connection.provider === 'google' && connection.accountEmail
+      ? {
+          googleAccounts: {
+            ...client.googleAccounts,
+            googleAnalytics: connection.accountEmail,
+          },
+        }
+      : {}),
   })
 }
 
@@ -215,7 +234,10 @@ export function removeClientAnalyticsConnection(
           ? (`extension:${Object.keys(analytics.extensions ?? {}).sort()[0]}` as const)
           : undefined
   }
-  return updateClient(client.id, { analytics })
+  if (provider !== 'google') return updateClient(client.id, { analytics })
+  const googleAccounts = { ...client.googleAccounts }
+  delete googleAccounts.googleAnalytics
+  return updateClient(client.id, { analytics, googleAccounts })
 }
 
 export function setClientBingSite(

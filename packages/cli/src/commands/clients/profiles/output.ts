@@ -26,12 +26,20 @@ export function printClientProfile(client: ClientProfile): void {
     ['ID', client.id],
     ['Name', client.name],
     ['GSC property', client.siteUrl],
+    [
+      'Search Console account',
+      client.googleAccounts?.searchConsole ?? 'default Google account',
+    ],
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', client.watchUrls.join(', ') || 'not set'],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
     [
       'Google Analytics property',
       client.analytics.google?.propertyId ?? 'not set',
+    ],
+    [
+      'Google Analytics account',
+      client.googleAccounts?.googleAnalytics ?? 'default Google account',
     ],
     ['Clicky site', client.analytics.clicky?.siteId ?? 'not set'],
     ['Selected analytics', client.analytics.selected ?? 'not set'],

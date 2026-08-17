@@ -16,9 +16,13 @@ process.env.SEO_LOCK_FAST = '1'
 
 const { SeoError } = await import('../../errors.js')
 const { setKeyringForTests } = await import('../../storage/keyring.js')
-const { readTokens, writeConfig, writeOauthClient, writeTokens } = await import(
-  '../../storage/config.js'
-)
+const {
+  listGoogleAccounts,
+  readTokens,
+  writeConfig,
+  writeOauthClient,
+  writeTokens,
+} = await import('../../storage/config.js')
 const { createAuthorizedClient, refreshAuthToken } = await import(
   './authorized-client.js'
 )
@@ -153,6 +157,54 @@ test('refresh updates stored access data without changing its client source', {
   assert.ok(refreshed.expires_at <= Date.now() + 3_600_000)
   assert.equal(refreshed.client_source, 'byo')
   assert.deepEqual(await readTokens(), refreshed)
+})
+
+test('refresh updates one account without changing the active account', {
+  timeout: 10_000,
+}, async () => {
+  await writeTokens(
+    storedTokens({
+      account_email: 'analytics@example.com',
+      refresh_token: 'analytics-refresh-token',
+    }),
+  )
+  await writeTokens(
+    storedTokens({
+      account_email: 'search@example.com',
+      access_token: 'search-access-token',
+      refresh_token: 'search-refresh-token',
+      expires_at: Date.now() + 3_600_000,
+    }),
+  )
+  globalThis.fetch = (async (
+    _url: string | URL | Request,
+    init?: RequestInit,
+  ) => {
+    const body = new URLSearchParams(String(init?.body))
+    assert.equal(body.get('refresh_token'), 'analytics-refresh-token')
+    return new Response(
+      JSON.stringify({
+        access_token: 'next-analytics-access-token',
+        expires_in: 3_600,
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    )
+  }) as typeof fetch
+
+  await refreshAuthToken('analytics@example.com')
+
+  assert.equal(
+    (await readTokens('analytics@example.com'))?.access_token,
+    'next-analytics-access-token',
+  )
+  assert.equal(
+    (await readTokens('search@example.com'))?.access_token,
+    'search-access-token',
+  )
+  assert.equal(
+    listGoogleAccounts().find((account) => account.active)?.accountEmail,
+    'search@example.com',
+  )
 })
 
 test('concurrent authorized clients refresh an expiring token once under lock', {

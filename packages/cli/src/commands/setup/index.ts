@@ -14,6 +14,10 @@ export const setupCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    'search-console-account': {
+      type: 'string',
+      description: 'Saved Google account email for Search Console.',
+    },
     url: { type: 'string', description: 'Default technical crawl start URL.' },
     urls: {
       type: 'string',
@@ -22,6 +26,10 @@ export const setupCommand = defineCommand({
     'google-analytics-property': {
       type: 'string',
       description: 'Optional Google Analytics property ID.',
+    },
+    'google-analytics-account': {
+      type: 'string',
+      description: 'Saved Google account email for Google Analytics.',
     },
     'clicky-site-id': {
       type: 'string',

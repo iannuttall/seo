@@ -45,6 +45,7 @@ export const analyticsConnectionSchema = z.discriminatedUnion('provider', [
   z.object({
     provider: z.literal('google'),
     propertyId: z.string(),
+    accountEmail: z.string().email().optional(),
   }),
   z.object({
     provider: z.literal('clicky'),
@@ -105,6 +106,12 @@ export const clientProfileSchema = z.object({
   watchUrls: z.array(z.string()).default([]),
   brandTerms: z.array(z.string()).default([]),
   analytics: analyticsConnectionsSchema,
+  googleAccounts: z
+    .object({
+      searchConsole: z.string().email().optional(),
+      googleAnalytics: z.string().email().optional(),
+    })
+    .optional(),
   searchEngines: z
     .object({
       bing: z

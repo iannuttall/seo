@@ -329,12 +329,17 @@ for setup, costs, caching, country-level limits, competitor classification, and
 programmatic data-source checks.
 
 Traffic analytics commands sit under their provider namespace. Google Analytics
-uses the connected Google account:
+uses the account saved with the project, or the selected default Google account:
 
 ```sh
 seo analytics google properties
 seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
 ```
+
+You can keep several Google logins on one machine. Run `seo auth login` again
+to add an account, then use `seo auth accounts` to list them. During `seo start`
+you can select separate accounts for Search Console and Google Analytics.
+Project reports use those saved choices automatically.
 
 Clicky is available through the first-party
 [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider).
@@ -849,7 +854,7 @@ provider caches are also local. Use these commands to inspect or remove them:
 ```sh
 seo privacy
 seo doctor
-seo auth logout
+seo auth logout --all
 seo reset
 ```
 

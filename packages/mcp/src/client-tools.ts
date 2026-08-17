@@ -60,7 +60,9 @@ export function registerClientTools(server: McpServer): void {
         site: z.string().optional(),
         startUrl: z.string().url().optional(),
         watchUrls: z.array(z.string().url()).optional(),
+        searchConsoleAccountEmail: z.string().email().optional(),
         googleAnalyticsPropertyId: z.string().optional(),
+        googleAnalyticsAccountEmail: z.string().email().optional(),
         clickySiteId: z
           .string()
           .regex(/^\d{1,30}$/u)
@@ -77,7 +79,9 @@ export function registerClientTools(server: McpServer): void {
       site,
       startUrl,
       watchUrls,
+      searchConsoleAccountEmail,
       googleAnalyticsPropertyId,
+      googleAnalyticsAccountEmail,
       clickySiteId,
       reportDay,
       technicalWeekday,
@@ -121,6 +125,13 @@ export function registerClientTools(server: McpServer): void {
               }
             : clickySiteId
               ? { selected: 'clicky', clicky: { siteId: clickySiteId } }
+              : undefined,
+          googleAccounts:
+            searchConsoleAccountEmail || googleAnalyticsAccountEmail
+              ? {
+                  searchConsole: searchConsoleAccountEmail,
+                  googleAnalytics: googleAnalyticsAccountEmail,
+                }
               : undefined,
           reportDay,
           technicalWeekday,

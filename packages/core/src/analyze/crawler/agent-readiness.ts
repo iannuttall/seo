@@ -195,20 +195,34 @@ function discoveryChecks(
   const llmsBroken = llms.links.filter(
     (link) => !link.status || link.status < 200 || link.status >= 400,
   )
-  const llmsValid =
+  const llmsBodyStatus =
+    llms.bodyDataStatus ?? (llms.error ? 'unavailable' : 'complete')
+  const llmsLinkCheckStatus =
+    llms.linkCheckStatus ?? (llms.linkLimitReached ? 'partial' : 'complete')
+  const llmsHasProblems =
     llms.exists &&
-    /^\s*(?:text\/plain|text\/markdown)\b/iu.test(llms.contentType ?? '') &&
-    llms.headingCount > 0 &&
-    llms.links.length > 0 &&
-    !llms.linkLimitReached &&
-    !llms.oversized &&
-    llms.invalidLinks.length === 0 &&
-    llms.duplicateLinks.length === 0 &&
-    llms.redirectedLinks.length === 0 &&
-    llms.nonIndexableLinks.length === 0 &&
-    llms.missingCrawlRoutes.length === 0 &&
-    llmsBroken.length === 0 &&
-    llms.repeatedHashStable === true
+    (!/^\s*(?:text\/plain|text\/markdown)\b/iu.test(llms.contentType ?? '') ||
+      llms.formatValid === false ||
+      llms.invalidLinks.length > 0 ||
+      llms.duplicateLinks.length > 0 ||
+      llms.redirectedLinks.length > 0 ||
+      llms.nonIndexableLinks.length > 0 ||
+      llms.missingCrawlRoutes.length > 0 ||
+      llmsBroken.length > 0 ||
+      llms.repeatedHashStable === false)
+  const llmsReviewPartial =
+    llms.exists &&
+    (llmsBodyStatus !== 'complete' ||
+      llmsLinkCheckStatus === 'partial' ||
+      llmsLinkCheckStatus === 'unavailable' ||
+      llms.repeatedHashStable === null)
+  const llmsStatus = !llms.exists
+    ? 'info'
+    : llmsHasProblems
+      ? 'warning'
+      : llmsReviewPartial
+        ? 'info'
+        : 'pass'
   return [
     check('discovery', {
       id: 'agent-skills',
@@ -225,24 +239,35 @@ function discoveryChecks(
     }),
     check('discovery', {
       id: 'llms-txt',
-      status: llms.exists ? (llmsValid ? 'pass' : 'warning') : 'info',
+      status: llmsStatus,
       title: llms.exists
-        ? llmsValid
-          ? 'llms.txt is short, stable, and its links resolve'
-          : 'llms.txt exists but needs a content or link review'
+        ? llmsHasProblems
+          ? 'llms.txt needs a content or link review'
+          : llmsReviewPartial
+            ? 'llms.txt was found, but the review is partial'
+            : 'llms.txt format and checked links passed review'
         : 'llms.txt is not published',
       plainEnglish: llms.exists
-        ? `${llms.links.length} declared links were checked. ${llms.invalidLinks.length} were malformed, ${llms.duplicateLinks.length} were duplicated, ${llms.redirectedLinks.length} redirected, ${llms.nonIndexableLinks.length} reached non-indexable pages, ${llmsBroken.length} did not resolve, and ${llms.missingCrawlRoutes.length} were missing from the crawl inventory. ${llms.offSiteLinks.length} linked to other sites.`
+        ? `${llms.linksChecked ?? llms.links.length} of ${llms.totalParsedLinks} declared links were checked. ${llms.invalidLinks.length} were malformed, ${llms.duplicateLinks.length} were duplicated, ${llms.redirectedLinks.length} redirected, ${llms.nonIndexableLinks.length} reached non-indexable pages, ${llmsBroken.length} did not resolve, and ${llms.missingCrawlRoutes.length} were missing from the crawl inventory. ${llms.offSiteLinks.length} linked to other sites.`
         : 'llms.txt is optional and its absence is not a search ranking problem.',
       action: llms.exists
-        ? 'Keep the file curated, deterministic, and limited to useful entry points whose links still resolve.'
+        ? llmsReviewPartial && !llmsHasProblems
+          ? 'Review the untested body or links before you treat the file as fully checked.'
+          : 'Keep the file curated, deterministic, and limited to useful entry points whose links still resolve.'
         : 'Add it only when an intended consumer uses it. Do not treat it as a Google ranking requirement.',
       evidence: {
         status: llms.status,
         contentType: llms.contentType,
         bytes: llms.bytes,
+        bytesStatus: llms.bytesStatus,
+        bodyDataStatus: llmsBodyStatus,
+        bodyLimitBytes: llms.bodyLimitBytes,
+        bodyLimitExceeded: llms.bodyLimitExceeded,
         oversized: llms.oversized,
         totalParsedLinks: llms.totalParsedLinks,
+        linkCheckStatus: llmsLinkCheckStatus,
+        linkCheckLimit: llms.linkCheckLimit,
+        linksChecked: llms.linksChecked ?? llms.links.length,
         linkLimitReached: llms.linkLimitReached,
         links: llms.links.length,
         invalidLinks: llms.invalidLinks,

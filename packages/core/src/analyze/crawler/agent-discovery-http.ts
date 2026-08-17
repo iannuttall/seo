@@ -1,6 +1,18 @@
 import type { publicHttpFetch } from '../../fetch/http-client.js'
 
-const MAX_BODY_BYTES = 2_000_000
+export const AGENT_DISCOVERY_MAX_BODY_BYTES = 2_000_000
+
+class ResponseBodyLimitError extends Error {
+  readonly bytesRead: number
+  readonly limitBytes: number
+
+  constructor(bytesRead: number, limitBytes: number) {
+    super(`Response exceeds ${limitBytes} bytes.`)
+    this.name = 'ResponseBodyLimitError'
+    this.bytesRead = bytesRead
+    this.limitBytes = limitBytes
+  }
+}
 
 export function headerValue(
   headers: Record<string, string> | undefined,
@@ -66,6 +78,7 @@ export function combinedSignal(
 
 export async function readBoundedText(
   response: Awaited<ReturnType<typeof publicHttpFetch>>,
+  maxBytes = AGENT_DISCOVERY_MAX_BODY_BYTES,
 ): Promise<string> {
   if (!response.body) return ''
   const reader = response.body.getReader()
@@ -76,8 +89,8 @@ export async function readBoundedText(
       const result = await reader.read()
       if (result.done) break
       size += result.value.byteLength
-      if (size > MAX_BODY_BYTES) {
-        throw new Error(`Response exceeds ${MAX_BODY_BYTES} bytes.`)
+      if (size > maxBytes) {
+        throw new ResponseBodyLimitError(size, maxBytes)
       }
       chunks.push(result.value)
     }
@@ -94,6 +107,8 @@ export async function fetchText(input: {
   signal?: AbortSignal
   redirect?: 'follow' | 'manual'
   accept?: string
+  maxBytes?: number
+  returnOnBodyLimit?: boolean
 }) {
   const controller = combinedSignal(input.timeoutMs, input.signal)
   try {
@@ -103,7 +118,27 @@ export async function fetchText(input: {
       headers: input.accept ? { accept: input.accept } : undefined,
       signal: controller.signal,
     })
-    return { response, body: await readBoundedText(response) }
+    try {
+      const body = await readBoundedText(response, input.maxBytes)
+      return {
+        response,
+        body,
+        bodyLimitExceeded: false,
+        bodyLimitBytes: input.maxBytes ?? AGENT_DISCOVERY_MAX_BODY_BYTES,
+        bytesRead: Buffer.byteLength(body),
+      }
+    } catch (error) {
+      if (input.returnOnBodyLimit && error instanceof ResponseBodyLimitError) {
+        return {
+          response,
+          body: '',
+          bodyLimitExceeded: true,
+          bodyLimitBytes: error.limitBytes,
+          bytesRead: error.bytesRead,
+        }
+      }
+      throw error
+    }
   } finally {
     controller.cleanup()
   }

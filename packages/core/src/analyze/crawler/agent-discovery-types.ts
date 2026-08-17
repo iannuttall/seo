@@ -169,12 +169,19 @@ export type CrawlAgentDiscovery = {
     status?: number
     contentType?: string
     bytes?: number
+    bytesStatus?: 'exact' | 'lower-bound'
     sha256?: string
     repeatedHashStable: boolean | null
+    bodyDataStatus?: AgentDiscoveryDataStatus
+    bodyLimitBytes?: number
+    bodyLimitExceeded?: boolean
     formatValid?: boolean | null
     formatErrors?: string[]
     headingCount: number
     totalParsedLinks: number
+    linkCheckStatus?: 'complete' | 'partial' | 'unavailable' | 'not-applicable'
+    linkCheckLimit?: number
+    linksChecked?: number
     linkLimitReached: boolean
     links: LlmsTxtLinkObservation[]
     invalidLinks: string[]

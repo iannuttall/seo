@@ -30,6 +30,10 @@ export const clientAddCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
+    'search-console-account': {
+      type: 'string',
+      description: 'Saved Google account email for Search Console.',
+    },
     url: {
       type: 'string',
       description: 'Default technical crawl start URL.',
@@ -41,6 +45,10 @@ export const clientAddCommand = defineCommand({
     'google-analytics-property': {
       type: 'string',
       description: 'Optional Google Analytics property ID for this project.',
+    },
+    'google-analytics-account': {
+      type: 'string',
+      description: 'Saved Google account email for Google Analytics.',
     },
     'clicky-site-id': {
       type: 'string',
@@ -76,6 +84,8 @@ export const clientAddCommand = defineCommand({
       ? (getClient(requestedId) ?? getClient(slugId(requestedId)))
       : undefined
     const googleAnalyticsProperty = stringArg(args['google-analytics-property'])
+    const googleAnalyticsAccount = stringArg(args['google-analytics-account'])
+    const searchConsoleAccount = stringArg(args['search-console-account'])
     const clickySiteId = stringArg(args['clicky-site-id'])
     if (googleAnalyticsProperty && clickySiteId) {
       throw new SeoError(
@@ -83,9 +93,19 @@ export const clientAddCommand = defineCommand({
         'Pass either --google-analytics-property or --clicky-site-id, not both.',
       )
     }
+    if (
+      googleAnalyticsAccount &&
+      !googleAnalyticsProperty &&
+      !existing?.analytics.google?.propertyId
+    ) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--google-analytics-account needs a Google Analytics property.',
+      )
+    }
     const siteUrl = await resolveSite({
       site: stringArg(args.site) ?? existing?.siteUrl,
-      options: { json },
+      options: { json, account: searchConsoleAccount },
     })
     const profile = {
       name: stringArg(args.name),
@@ -93,19 +113,35 @@ export const clientAddCommand = defineCommand({
       startUrl: stringArg(args.url),
       watchUrls: args.urls === undefined ? undefined : listArg(args.urls),
       brandTerms: args.brand === undefined ? undefined : listArg(args.brand),
-      analytics: googleAnalyticsProperty
-        ? {
-            ...existing?.analytics,
-            selected: 'google' as const,
-            google: {
-              propertyId: googleAnalyticsProperty,
-            },
-          }
-        : clickySiteId
+      analytics:
+        googleAnalyticsProperty || googleAnalyticsAccount
           ? {
               ...existing?.analytics,
-              selected: 'clicky' as const,
-              clicky: { siteId: clickySiteId },
+              selected: 'google' as const,
+              google: {
+                propertyId:
+                  googleAnalyticsProperty ??
+                  existing?.analytics.google?.propertyId ??
+                  '',
+              },
+            }
+          : clickySiteId
+            ? {
+                ...existing?.analytics,
+                selected: 'clicky' as const,
+                clicky: { siteId: clickySiteId },
+              }
+            : undefined,
+      googleAccounts:
+        searchConsoleAccount || googleAnalyticsAccount
+          ? {
+              ...existing?.googleAccounts,
+              ...(searchConsoleAccount
+                ? { searchConsole: searchConsoleAccount }
+                : {}),
+              ...(googleAnalyticsAccount
+                ? { googleAnalytics: googleAnalyticsAccount }
+                : {}),
             }
           : undefined,
       reportDay: numberArg(args['report-day']),

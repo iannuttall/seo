@@ -31,6 +31,10 @@ export const gscQueryCommand = defineCommand({
       type: 'string',
       description: 'Saved project id or name.',
     },
+    account: {
+      type: 'string',
+      description: 'Saved Google account email.',
+    },
     'start-date': { type: 'string', description: 'Start date YYYY-MM-DD.' },
     'end-date': { type: 'string', description: 'End date YYYY-MM-DD.' },
     dimensions: {
@@ -75,11 +79,16 @@ export const gscQueryCommand = defineCommand({
         client: projectArg(args),
         site: stringArg(args.site) ?? stringArg(body.siteUrl),
       },
-      { json, refresh: booleanArg(args.refresh) },
+      {
+        json,
+        refresh: booleanArg(args.refresh),
+        account: stringArg(args.account),
+      },
     )
     delete body.siteUrl
     const result = await querySearchAnalytics(site, body as never, {
       refresh: booleanArg(args.refresh),
+      accountEmail: stringArg(args.account),
     })
     const limit = numberArg(args.limit)
     const rows = limit ? result.rows.slice(0, limit) : result.rows
@@ -137,6 +146,10 @@ export const urlInspectCommand = defineCommand({
       type: 'string',
       description: 'Saved project id or name.',
     },
+    account: {
+      type: 'string',
+      description: 'Saved Google account email.',
+    },
     url: { type: 'string', description: 'URL to inspect.' },
     language: {
       type: 'string',
@@ -152,13 +165,14 @@ export const urlInspectCommand = defineCommand({
     const json = jsonFlag(args)
     const siteUrl = await selectedSiteOrThrow(
       { client: projectArg(args), site: stringArg(args.site) },
-      { json },
+      { json, account: stringArg(args.account) },
     )
     const inspectionUrl = stringArg(args.url)
     if (!inspectionUrl) throw new Error('Pass --url.')
     const result = await inspectUrl({
       siteUrl,
       inspectionUrl,
+      accountEmail: stringArg(args.account),
       languageCode: stringArg(args.language),
     })
     if (json) {

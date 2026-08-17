@@ -10,7 +10,7 @@ export async function selectedSiteOrThrow(
     project?: string
     site?: string
   },
-  options: { json?: boolean; refresh?: boolean } = {},
+  options: { json?: boolean; refresh?: boolean; account?: string } = {},
 ): Promise<string> {
   return (
     await resolveClientSelection({

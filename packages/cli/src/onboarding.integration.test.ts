@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -215,6 +215,78 @@ test('a new project never inherits the saved default Search Console property', a
       listed.map((client: { id: string }) => client.id),
       ['existing'],
     )
+  } finally {
+    await rm(configDir, { recursive: true, force: true })
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
+
+test('start saves separate Google accounts for Search Console and Analytics', async () => {
+  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-accounts-config-'))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-accounts-cache-'))
+  const env = { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir }
+  const token = (accountEmail: string) => ({
+    provider: 'google',
+    account_email: accountEmail,
+    scope: [
+      'openid',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/webmasters.readonly',
+      'https://www.googleapis.com/auth/analytics.readonly',
+    ].join(' '),
+    token_type: 'Bearer',
+    access_token: `${accountEmail}-access`,
+    refresh_token: `${accountEmail}-refresh`,
+    expires_at: Date.now() + 3_600_000,
+    obtained_at: Date.now(),
+    client_source: 'shared',
+  })
+
+  try {
+    await writeFile(
+      join(configDir, 'config.json'),
+      JSON.stringify({ security: { useKeychain: false } }),
+    )
+    await writeFile(
+      join(configDir, 'tokens.json'),
+      JSON.stringify({
+        version: 2,
+        active_account: 'search@example.com',
+        accounts: [token('search@example.com'), token('analytics@example.com')],
+      }),
+    )
+
+    const result = await runSeoResult(
+      [
+        'start',
+        '--id',
+        'example',
+        '--name',
+        'Example',
+        '--site',
+        'sc-domain:example.com',
+        '--search-console-account',
+        'search@example.com',
+        '--google-analytics-property',
+        '123',
+        '--google-analytics-account',
+        'analytics@example.com',
+        '--skip-mcp',
+        '--skip-skill',
+        '--json',
+      ],
+      env,
+    )
+
+    assert.equal(result.exitCode, 0, result.stderr)
+    const client = JSON.parse(result.stdout).client
+    assert.deepEqual(client.googleAccounts, {
+      searchConsole: 'search@example.com',
+      googleAnalytics: 'analytics@example.com',
+    })
+    assert.deepEqual(client.analytics.google, {
+      propertyId: '123',
+    })
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })

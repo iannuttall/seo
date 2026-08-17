@@ -27,6 +27,7 @@ export interface SearchAnalyticsRequest {
 export interface UrlInspectionRequest {
   siteUrl: string
   inspectionUrl: string
+  accountEmail?: string
   languageCode?: string
   quotaLimit?: number
 }

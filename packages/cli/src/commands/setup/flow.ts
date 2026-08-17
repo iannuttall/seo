@@ -142,11 +142,22 @@ export async function runGuidedSetup(
       refresh: booleanArg(args.refresh),
     },
   }
-  const selectedSite = json ? await resolveSite(siteInput) : undefined
-  const auth = await maybeConnectAuth(
+  const resolvedNonInteractiveSite = interactive
+    ? undefined
+    : await resolveSite(siteInput)
+  const authSelection = await maybeConnectAuth(
     selectedProjectSite ? { ...args, site: selectedProjectSite } : args,
   )
-  const site = selectedSite ?? (await resolveSite(siteInput))
+  const auth = authSelection.status
+  const site =
+    resolvedNonInteractiveSite ??
+    (await resolveSite({
+      ...siteInput,
+      options: {
+        ...siteInput.options,
+        account: authSelection.accountEmail,
+      },
+    }))
   const defaultName = suggestedClientName(site)
 
   if (projectTarget.mode === 'skip') {
@@ -216,6 +227,7 @@ export async function runGuidedSetup(
       : listArg(args.urls)
   const analyticsSelection = await chooseAnalyticsForSetup({
     googleProperty: stringArg(args['google-analytics-property']),
+    googleAccount: stringArg(args['google-analytics-account']),
     clickySiteId: stringArg(args['clicky-site-id']),
     current: analyticsConnection(existingProject),
     site,
@@ -270,6 +282,15 @@ export async function runGuidedSetup(
     watchUrls,
     brandTerms,
     analytics,
+    googleAccounts: {
+      ...existingProject?.googleAccounts,
+      ...(authSelection.accountEmail
+        ? { searchConsole: authSelection.accountEmail }
+        : {}),
+      ...(googleAnalytics?.accountEmail
+        ? { googleAnalytics: googleAnalytics.accountEmail }
+        : {}),
+    },
     reportDay,
     technicalWeekday,
     isDefault,
@@ -305,6 +326,10 @@ export async function runGuidedSetup(
   printKeyValue([
     ['Project profile', `${client.name} (${client.id})`],
     ['GSC property', client.siteUrl],
+    [
+      'Search Console account',
+      client.googleAccounts?.searchConsole ?? 'default Google account',
+    ],
     ['Crawl URL', client.startUrl ?? 'not set'],
     ['Watch URLs', String(client.watchUrls.length)],
     ['Brand terms', client.brandTerms.join(', ') || 'not set'],
@@ -320,6 +345,14 @@ export async function runGuidedSetup(
             string,
             string,
           ],
+        ]
+      : []),
+    ...(client.googleAccounts?.googleAnalytics
+      ? [
+          [
+            'Google Analytics account',
+            client.googleAccounts.googleAnalytics,
+          ] as [string, string],
         ]
       : []),
     ['Auth', auth],

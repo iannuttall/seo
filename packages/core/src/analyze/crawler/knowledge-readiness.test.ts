@@ -445,7 +445,24 @@ test('llms v2 validation rejects non-link section entries', () => {
   )
 })
 
-test('llms generator stays within v2 link and file limits', () => {
+test('llms v2 validation allows more than 12 file sections', () => {
+  const content = [
+    '# Example',
+    '',
+    ...Array.from({ length: 13 }, (_, index) =>
+      [
+        `## Section ${index}`,
+        '',
+        `- [Page ${index}](https://example.com/page-${index}.md)`,
+        '',
+      ].join('\n'),
+    ),
+  ].join('\n')
+
+  assert.deepEqual(validateLlmsTxtV2(content), [])
+})
+
+test('llms generator allows more than 100 links', () => {
   const report = fixtureReport()
   const source = report.pages[0]
   assert.ok(source)
@@ -464,9 +481,45 @@ test('llms generator stays within v2 link and file limits', () => {
     tokenBudget: 100_000,
   })
 
-  assert.equal(generated.includedUrls, 100)
-  assert.ok(Buffer.byteLength(generated.content) < 100_000)
+  assert.equal(generated.includedUrls, 150)
+  assert.equal(generated.limits.maxUrls, 250)
+  assert.equal(generated.limits.truncated, false)
   assert.deepEqual(validateLlmsTxtV2(generated.content), [])
+})
+
+test('llms generator uses an explicit output budget above 100,000 bytes', () => {
+  const report = fixtureReport()
+  const source = report.pages[0]
+  assert.ok(source)
+  report.pages = Array.from({ length: 400 }, (_, index) => ({
+    ...source,
+    url: `https://example.com/docs/page-${index}`,
+    finalUrl: `https://example.com/docs/page-${index}`,
+    title: `Guide ${index} ${'title '.repeat(20)}`,
+    metaDescription: `Description ${index} ${'detail '.repeat(30)}`,
+    contentHash: `hash-${index}`,
+  }))
+  report.summary.crawledUrls = report.pages.length
+  report.summary.discoveredUrls = report.pages.length
+
+  const complete = generateLlmsTxt(report, {
+    maxUrls: 400,
+    tokenBudget: 500_000,
+  })
+  assert.ok(Buffer.byteLength(complete.content) > 100_000)
+  assert.equal(complete.includedUrls, 400)
+  assert.equal(complete.limits.truncated, false)
+  assert.deepEqual(validateLlmsTxtV2(complete.content), [])
+
+  const bounded = generateLlmsTxt(report, {
+    maxUrls: 400,
+    tokenBudget: 500_000,
+    maxBytes: 4_096,
+  })
+  assert.ok(Buffer.byteLength(bounded.content) <= 4_096)
+  assert.equal(bounded.limits.truncated, true)
+  assert.deepEqual(bounded.limits.reasons, ['maxBytes'])
+  assert.deepEqual(validateLlmsTxtV2(bounded.content), [])
 })
 
 test('llms.txt remains an informational AI-search observation', () => {

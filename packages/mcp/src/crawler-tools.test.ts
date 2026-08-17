@@ -57,6 +57,22 @@ function captureCrawlerTools(): Map<string, CapturedTool> {
   return tools
 }
 
+test('llms MCP generation accepts more than 100 URLs and bounds agent output inputs', () => {
+  const tools = captureCrawlerTools()
+  const generate = tools.get('seo_llms_txt_generate')
+  assert.ok(generate)
+  const input = generate.config.inputSchema as Record<
+    string,
+    { safeParse(value: unknown): { success: boolean } }
+  >
+
+  assert.equal(input.maxUrls?.safeParse(101).success, true)
+  assert.equal(input.maxUrls?.safeParse(10_000).success, true)
+  assert.equal(input.maxUrls?.safeParse(10_001).success, false)
+  assert.equal(input.tokenBudget?.safeParse(16_000).success, true)
+  assert.equal(input.tokenBudget?.safeParse(16_001).success, false)
+})
+
 function mcpCrawlerKeySnapshot(result: JsonRecord) {
   const structured = result.structuredContent as JsonRecord
   const firstFix = firstRecord(structured.topFixes)

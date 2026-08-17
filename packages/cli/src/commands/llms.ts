@@ -16,6 +16,8 @@ import { printJson, printKeyValue } from '../utils.js'
 import { printNotes, printReportSummary } from './output.js'
 import { resolveSavedCrawlReport } from './readiness.js'
 
+const JSON_LLMS_TXT_MAX_BYTES = 64 * 1024
+
 async function writeOrPrint(path: string | undefined, content: string) {
   if (!path) {
     process.stdout.write(content)
@@ -122,7 +124,12 @@ export const llmsAuditCommand = defineCommand({
     printReportSummary({
       title: 'llms.txt audit',
       target: audit.url,
-      status: audit.issues.length > 0 ? 'warning' : 'pass',
+      status:
+        audit.issues.length > 0
+          ? 'warning'
+          : audit.dataStatus === 'complete'
+            ? 'pass'
+            : 'info',
       summary: audit.headline,
       metrics: [
         { label: 'SEO impact', value: audit.googleSearchImpact },
@@ -146,6 +153,7 @@ export const llmsAuditCommand = defineCommand({
         },
       ],
     })
+    printNotes('Caveats', audit.caveats)
     printNotes(
       'Recommended pages',
       audit.recommendedPages
@@ -168,7 +176,7 @@ export const llmsGenerateCommand = defineCommand({
     },
     'max-urls': {
       type: 'string',
-      description: 'Maximum URLs to include. Defaults to 100.',
+      description: 'Maximum URLs to include. Defaults to 250.',
     },
     'token-budget': {
       type: 'string',
@@ -193,6 +201,7 @@ export const llmsGenerateCommand = defineCommand({
     const generated = generateLlmsTxt(report, {
       maxUrls: numberArg(args['max-urls']),
       tokenBudget: numberArg(args['token-budget']),
+      maxBytes: json ? JSON_LLMS_TXT_MAX_BYTES : undefined,
       exclude: csvArg(args.exclude),
       title: stringArg(args.title),
       description: stringArg(args.description),
@@ -207,6 +216,12 @@ export const llmsGenerateCommand = defineCommand({
       printKeyValue([
         ['URLs', String(generated.includedUrls)],
         ['Estimated tokens', String(generated.estimatedTokens)],
+        [
+          'Truncated',
+          generated.limits.truncated
+            ? generated.limits.reasons.join(', ')
+            : 'No',
+        ],
       ])
     }
   },

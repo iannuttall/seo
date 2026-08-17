@@ -132,12 +132,21 @@ export const agentDiscoverySchema = z.object({
     status: z.number().int().optional(),
     contentType: z.string().optional(),
     bytes: z.number().int().nonnegative().optional(),
+    bytesStatus: z.enum(['exact', 'lower-bound']).optional(),
     sha256: z.string().optional(),
     repeatedHashStable: z.boolean().nullable(),
+    bodyDataStatus: z.enum(['complete', 'partial', 'unavailable']).optional(),
+    bodyLimitBytes: z.number().int().positive().optional(),
+    bodyLimitExceeded: z.boolean().optional(),
     formatValid: z.boolean().nullable().optional(),
     formatErrors: z.array(z.string()).optional(),
     headingCount: z.number().int().nonnegative(),
     totalParsedLinks: z.number().int().nonnegative(),
+    linkCheckStatus: z
+      .enum(['complete', 'partial', 'unavailable', 'not-applicable'])
+      .optional(),
+    linkCheckLimit: z.number().int().positive().optional(),
+    linksChecked: z.number().int().nonnegative().optional(),
     linkLimitReached: z.boolean(),
     links: z.array(
       z.object({

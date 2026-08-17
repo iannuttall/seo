@@ -5,12 +5,16 @@ import {
   generateLlmsTxt,
   latestCrawlReport,
   loadCrawlReport,
+  MAX_LLMS_TXT_URLS,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { assertExclusiveReportInput } from './crawler-tool-helpers.js'
 import * as crawlerInputs from './crawler-tool-inputs.js'
 import { fetchRateInput } from './fetch-rate.js'
 import { toolError, toolSuccess } from './tool-result.js'
+
+const MCP_LLMS_TXT_MAX_BYTES = 64 * 1024
+const MCP_LLMS_TXT_MAX_TOKENS = 16_000
 
 export function registerCrawlerLlmsTools(server: McpServer): void {
   server.registerTool(
@@ -78,8 +82,13 @@ export function registerCrawlerLlmsTools(server: McpServer): void {
         reportId: z.string().optional(),
         site: z.string().optional(),
         maxPages: crawlerInputs.crawlPageLimit,
-        maxUrls: z.number().int().min(1).max(100).optional(),
-        tokenBudget: z.number().int().positive().optional(),
+        maxUrls: z.number().int().min(1).max(MAX_LLMS_TXT_URLS).optional(),
+        tokenBudget: z
+          .number()
+          .int()
+          .min(1)
+          .max(MCP_LLMS_TXT_MAX_TOKENS)
+          .optional(),
         exclude: z.array(z.string()).optional(),
         title: z.string().optional(),
         description: z.string().optional(),
@@ -125,6 +134,7 @@ export function registerCrawlerLlmsTools(server: McpServer): void {
         const generated = generateLlmsTxt(report, {
           maxUrls,
           tokenBudget,
+          maxBytes: MCP_LLMS_TXT_MAX_BYTES,
           exclude,
           title,
           description,

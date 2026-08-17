@@ -29,6 +29,6 @@ export async function authedFetch(
   })
 }
 
-export async function getAuthorized() {
-  return createGoogleAccessTokenClient()
+export async function getAuthorized(accountEmail?: string) {
+  return createGoogleAccessTokenClient(accountEmail)
 }

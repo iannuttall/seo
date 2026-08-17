@@ -3,8 +3,10 @@ import { ensureSeoCliDirs, getSeoCliPaths } from '../paths.js'
 import {
   type AppConfig,
   configSchema,
+  type StoredTokenStore,
   type StoredTokens,
   tokenSchema,
+  tokenStoreSchema,
 } from '../types.js'
 import { fileMode, readJsonFile, safeRemove, writeJsonAtomic } from './files.js'
 import {
@@ -70,6 +72,36 @@ function tokenMetadata(tokens: StoredTokens): StoredTokens {
   }
 }
 
+function sameAccount(left: string, right: string): boolean {
+  return left.toLowerCase() === right.toLowerCase()
+}
+
+function parseTokenStore(raw: unknown): StoredTokenStore | undefined {
+  if (raw === undefined || raw === null) return undefined
+  const store = tokenStoreSchema.safeParse(raw)
+  if (store.success) return store.data
+  const legacy = tokenSchema.safeParse(raw)
+  if (!legacy.success) return tokenStoreSchema.parse(raw)
+  return {
+    version: 2,
+    active_account: legacy.data.account_email,
+    accounts: [legacy.data],
+  }
+}
+
+function readRawTokenStore(): StoredTokenStore | undefined {
+  ensureSeoCliDirs()
+  return parseTokenStore(readJsonFile<unknown>(getSeoCliPaths().tokensFile))
+}
+
+function writeTokenStore(store: StoredTokenStore): void {
+  writeJsonAtomic(
+    getSeoCliPaths().tokensFile,
+    tokenStoreSchema.parse(store),
+    PRIVATE_FILE_MODE,
+  )
+}
+
 async function readKeyringTokens(tokens: StoredTokens): Promise<{
   accessToken?: string
   refreshToken?: string
@@ -115,53 +147,113 @@ async function deleteKeyringTokens(tokens: StoredTokens): Promise<void> {
   ])
 }
 
-export async function readTokens(): Promise<StoredTokens | undefined> {
-  ensureSeoCliDirs()
-  const raw = readJsonFile<StoredTokens>(getSeoCliPaths().tokensFile)
-  if (!raw) {
-    return undefined
-  }
-
-  const parsed = tokenSchema.parse(raw)
+async function hydrateTokens(tokens: StoredTokens): Promise<StoredTokens> {
   const config = readConfig()
-  if (!config.security.useKeychain) {
-    return parsed
+  if (!config.security.useKeychain || hasTokenSecrets(tokens)) {
+    return tokens
   }
 
   try {
-    const keyringTokens = await readKeyringTokens(parsed)
-    if (hasTokenSecrets(parsed)) {
-      await writeKeyringTokens(parsed)
-      writeJsonAtomic(
-        getSeoCliPaths().tokensFile,
-        tokenMetadata(parsed),
-        PRIVATE_FILE_MODE,
-      )
-      return parsed
-    }
+    const keyringTokens = await readKeyringTokens(tokens)
     return {
-      ...parsed,
+      ...tokens,
       access_token: keyringTokens.accessToken,
       refresh_token: keyringTokens.refreshToken,
     }
   } catch {
-    return parsed
+    return tokens
   }
 }
 
-export async function writeTokens(tokens: StoredTokens): Promise<void> {
+export async function readAllTokens(): Promise<StoredTokens[]> {
+  const store = readRawTokenStore()
+  if (!store) return []
+  return Promise.all(store.accounts.map((tokens) => hydrateTokens(tokens)))
+}
+
+export async function readTokens(
+  accountEmail?: string,
+): Promise<StoredTokens | undefined> {
+  const store = readRawTokenStore()
+  if (!store) return undefined
+  const selected = accountEmail
+    ? store.accounts.find((tokens) =>
+        sameAccount(tokens.account_email, accountEmail),
+      )
+    : store.accounts.find((tokens) =>
+        sameAccount(tokens.account_email, store.active_account),
+      )
+  return selected ? hydrateTokens(selected) : undefined
+}
+
+export function listGoogleAccounts(): Array<{
+  accountEmail: string
+  scopes: string[]
+  expiresAt: number
+  active: boolean
+}> {
+  const store = readRawTokenStore()
+  if (!store) return []
+  return store.accounts.map((tokens) => ({
+    accountEmail: tokens.account_email,
+    scopes: tokens.scope.split(/\s+/u).filter(Boolean),
+    expiresAt: tokens.expires_at,
+    active: sameAccount(tokens.account_email, store.active_account),
+  }))
+}
+
+export function setActiveGoogleAccount(accountEmail: string): void {
+  const store = readRawTokenStore()
+  const account = store?.accounts.find((tokens) =>
+    sameAccount(tokens.account_email, accountEmail),
+  )
+  if (!store || !account) {
+    throw new Error(`Google account is not connected: ${accountEmail}`)
+  }
+  writeTokenStore({ ...store, active_account: account.account_email })
+}
+
+export async function writeTokens(
+  tokens: StoredTokens,
+  options: { makeActive?: boolean } = {},
+): Promise<void> {
   ensureSeoCliDirs()
-  const parsed = tokenSchema.parse(tokens)
+  const parsedInput = tokenSchema.parse(tokens)
   const config = readConfig()
+  const current = readRawTokenStore()
+  const existing = current?.accounts.find((item) =>
+    sameAccount(item.account_email, parsedInput.account_email),
+  )
+  const existingTokens = existing ? await hydrateTokens(existing) : undefined
+  const parsed = tokenSchema.parse({
+    ...parsedInput,
+    refresh_token: parsedInput.refresh_token ?? existingTokens?.refresh_token,
+  })
+  const accounts = [
+    ...(current?.accounts.filter(
+      (item) => !sameAccount(item.account_email, parsed.account_email),
+    ) ?? []),
+    parsed,
+  ]
+  const activeAccount =
+    options.makeActive === false && current
+      ? current.active_account
+      : parsed.account_email
+  const nextStore = tokenStoreSchema.parse({
+    version: 2,
+    active_account: activeAccount,
+    accounts,
+  })
 
   if (config.security.useKeychain) {
     try {
-      await writeKeyringTokens(parsed)
-      writeJsonAtomic(
-        getSeoCliPaths().tokensFile,
-        tokenMetadata(parsed),
-        PRIVATE_FILE_MODE,
-      )
+      for (const item of accounts.filter(hasTokenSecrets)) {
+        await writeKeyringTokens(item)
+      }
+      writeTokenStore({
+        ...nextStore,
+        accounts: nextStore.accounts.map(tokenMetadata),
+      })
       return
     } catch {
       // A headless Linux host or a locked desktop keychain should not prevent
@@ -169,30 +261,53 @@ export async function writeTokens(tokens: StoredTokens): Promise<void> {
     }
   }
 
-  writeJsonAtomic(getSeoCliPaths().tokensFile, parsed, PRIVATE_FILE_MODE)
+  writeTokenStore(nextStore)
 }
 
-export async function deleteTokens(): Promise<void> {
+export async function deleteTokens(accountEmail?: string): Promise<void> {
   const path = getSeoCliPaths().tokensFile
-  const raw = readJsonFile<StoredTokens>(path)
-  if (!raw) {
+  const store = readRawTokenStore()
+  if (!store) {
     safeRemove(path)
     return
   }
-  const tokens = tokenSchema.parse(raw)
-  const keyringBacked = !hasTokenSecrets(tokens)
-  try {
-    await deleteKeyringTokens(tokens)
-  } catch (error) {
-    if (keyringBacked) {
-      throw new Error(
-        'Google tokens could not be removed from the system keychain. Unlock the keychain and try again.',
-        { cause: error },
+  const targets = accountEmail
+    ? store.accounts.filter((tokens) =>
+        sameAccount(tokens.account_email, accountEmail),
       )
+    : store.accounts
+  if (accountEmail && targets.length === 0) {
+    throw new Error(`Google account is not connected: ${accountEmail}`)
+  }
+  for (const tokens of targets) {
+    const keyringBacked = !hasTokenSecrets(tokens)
+    try {
+      await deleteKeyringTokens(tokens)
+    } catch (error) {
+      if (keyringBacked) {
+        throw new Error(
+          'Google tokens could not be removed from the system keychain. Unlock the keychain and try again.',
+          { cause: error },
+        )
+      }
     }
   }
 
-  safeRemove(path)
+  if (!accountEmail || targets.length === store.accounts.length) {
+    safeRemove(path)
+    return
+  }
+  const accounts = store.accounts.filter(
+    (tokens) => !sameAccount(tokens.account_email, accountEmail),
+  )
+  const activeAccount = sameAccount(store.active_account, accountEmail)
+    ? (accounts[0]?.account_email ?? '')
+    : store.active_account
+  writeTokenStore({
+    version: 2,
+    active_account: activeAccount,
+    accounts,
+  })
 }
 
 export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {
@@ -203,10 +318,9 @@ export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {
     return { configured, active: 'file' }
   }
 
-  const raw = readJsonFile<StoredTokens>(getSeoCliPaths().tokensFile)
-  if (!raw) return { configured, active: 'keychain' }
-  const tokens = tokenSchema.parse(raw)
-  if (hasTokenSecrets(tokens)) {
+  const store = readRawTokenStore()
+  if (!store) return { configured, active: 'keychain' }
+  if (store.accounts.some(hasTokenSecrets)) {
     return {
       configured,
       active: 'file',
@@ -216,7 +330,7 @@ export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {
   }
 
   try {
-    await readKeyringTokens(tokens)
+    await Promise.all(store.accounts.map((tokens) => readKeyringTokens(tokens)))
     return { configured, active: 'keychain' }
   } catch {
     return {
@@ -231,17 +345,26 @@ export async function getTokenStorageStatus(): Promise<TokenStorageStatus> {
 export async function setTokenStorageMode(
   mode: TokenStorageMode,
 ): Promise<TokenStorageStatus> {
-  const tokens = await readTokens()
+  const tokens = await readAllTokens()
+  const activeAccount = listGoogleAccounts().find(
+    (account) => account.active,
+  )?.accountEmail
   const config = readConfig()
   writeConfig({
     ...config,
     security: { ...config.security, useKeychain: mode === 'keychain' },
   })
 
-  if (tokens) {
-    await writeTokens(tokens)
+  if (tokens.length > 0) {
+    for (const item of tokens) {
+      await writeTokens(item, {
+        makeActive: sameAccount(item.account_email, activeAccount ?? ''),
+      })
+    }
     if (mode === 'file') {
-      await deleteKeyringTokens(tokens).catch(() => undefined)
+      await Promise.all(
+        tokens.map((item) => deleteKeyringTokens(item).catch(() => undefined)),
+      )
     }
   }
 

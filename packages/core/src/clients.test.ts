@@ -107,6 +107,55 @@ test('Clicky can be selected as the project analytics connection', () => {
   })
 })
 
+test('a project keeps separate Google accounts for each data source', () => {
+  const client = saveClient({
+    id: 'separate-google-accounts',
+    name: 'Separate Google accounts',
+    siteUrl: 'sc-domain:example.com',
+    googleAccounts: {
+      searchConsole: 'search@example.com',
+      googleAnalytics: 'analytics@example.com',
+    },
+    analytics: {
+      selected: 'google',
+      google: { propertyId: '123' },
+    },
+  })
+
+  assert.equal(client.googleAccounts?.searchConsole, 'search@example.com')
+  assert.deepEqual(analyticsConnection(client), {
+    provider: 'google',
+    propertyId: '123',
+    accountEmail: 'analytics@example.com',
+  })
+})
+
+test('removing Google Analytics also removes its saved account', () => {
+  saveClient({
+    id: 'remove-google-analytics',
+    name: 'Remove Google Analytics',
+    siteUrl: 'sc-domain:example.com',
+    googleAccounts: {
+      searchConsole: 'search@example.com',
+      googleAnalytics: 'analytics@example.com',
+    },
+    analytics: {
+      selected: 'google',
+      google: { propertyId: '123' },
+    },
+  })
+
+  const client = removeClientAnalyticsConnection(
+    'remove-google-analytics',
+    'google',
+  )
+
+  assert.deepEqual(client.googleAccounts, {
+    searchConsole: 'search@example.com',
+  })
+  assert.equal(client.analytics.google, undefined)
+})
+
 test('an installed provider can be selected without changing the profile schema again', () => {
   const client = saveClient({
     id: 'fathom-example',

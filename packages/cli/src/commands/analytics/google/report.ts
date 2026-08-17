@@ -28,7 +28,7 @@ export async function resolveGoogleAnalyticsReportProperty(
   input: {
     property?: string
     project?: string
-    options?: { json?: boolean }
+    options?: { json?: boolean; account?: string }
   },
   dependencies: GoogleAnalyticsPropertySelectionDependencies = {
     resolveClient,
@@ -72,6 +72,10 @@ export const googleAnalyticsReportCommand = defineCommand({
       description:
         'Saved project id or name with an optional Google Analytics property.',
     },
+    account: {
+      type: 'string',
+      description: 'Saved Google account email.',
+    },
     'start-date': { type: 'string', default: '28daysAgo' },
     'end-date': { type: 'string', default: 'yesterday' },
     dimensions: { type: 'string', default: 'landingPage' },
@@ -91,7 +95,7 @@ export const googleAnalyticsReportCommand = defineCommand({
     const property = await resolveGoogleAnalyticsReportProperty({
       property: stringArg(args.property),
       project: projectArg(args),
-      options: { json },
+      options: { json, account: stringArg(args.account) },
     })
     const body =
       (await jsonBodyArg(args.body, args['body-file'])) ??
@@ -108,6 +112,7 @@ export const googleAnalyticsReportCommand = defineCommand({
       } as Record<string, unknown>)
     const result = await runGa4Report(property, body as never, {
       refresh: booleanArg(args.refresh),
+      accountEmail: stringArg(args.account),
     })
     if (json) {
       printJson(result)

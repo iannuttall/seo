@@ -1,6 +1,11 @@
 import { SeoError } from '../../errors.js'
 import { getSeoCliPaths } from '../../paths.js'
-import { deleteTokens, readTokens, writeTokens } from '../../storage/config.js'
+import {
+  deleteTokens,
+  listGoogleAccounts,
+  readTokens,
+  writeTokens,
+} from '../../storage/config.js'
 import { withFileLock } from '../../storage/lock.js'
 import type { StoredTokens } from '../../types.js'
 import {
@@ -27,10 +32,12 @@ import {
 
 const REFRESH_BUFFER_MS = 60_000
 
-function authRequired(): SeoError {
+function authRequired(accountEmail?: string): SeoError {
   return new SeoError(
     'AUTH_REQUIRED',
-    'Not logged in. Run `seo auth login` first.',
+    accountEmail
+      ? `Google account ${accountEmail} is not connected. Run \`seo auth login\` first.`
+      : 'Not logged in. Run `seo auth login` first.',
   )
 }
 
@@ -78,10 +85,11 @@ function refreshRejected(error: unknown): boolean {
 
 async function refreshStoredToken(input: {
   onlyIfExpiring: boolean
+  accountEmail?: string
 }): Promise<StoredTokens> {
   return withFileLock(getSeoCliPaths().tokensFile, async () => {
-    const current = await readTokens()
-    if (!current) throw authRequired()
+    const current = await readTokens(input.accountEmail)
+    if (!current) throw authRequired(input.accountEmail)
 
     const clientConfig = requireClientConfig(current)
     const now = Date.now()
@@ -89,7 +97,7 @@ async function refreshStoredToken(input: {
       return current
     }
     if (!current.refresh_token) {
-      await deleteTokens()
+      await deleteTokens(current.account_email)
       throw authExpired()
     }
 
@@ -104,11 +112,11 @@ async function refreshStoredToken(input: {
         refresh_token: refreshed.refreshToken ?? current.refresh_token,
         expires_at: now + refreshed.expiresIn * 1_000,
       }
-      await writeTokens(next)
+      await writeTokens(next, { makeActive: false })
       return next
     } catch (error) {
       if (refreshRejected(error)) {
-        await deleteTokens()
+        await deleteTokens(current.account_email)
         throw authExpired()
       }
       throw error
@@ -123,6 +131,7 @@ class LocalGoogleAccessTokenClient implements GoogleAccessTokenClient {
     if (needsRefresh(this.tokens, Date.now())) {
       this.tokens = await refreshStoredToken({
         onlyIfExpiring: true,
+        accountEmail: this.tokens.account_email,
       })
     }
     if (!this.tokens.access_token) throw authExpired()
@@ -130,18 +139,19 @@ class LocalGoogleAccessTokenClient implements GoogleAccessTokenClient {
   }
 }
 
-export async function createAuthorizedClient(): Promise<{
+export async function createAuthorizedClient(accountEmail?: string): Promise<{
   client: GoogleAccessTokenClient
   tokens: StoredTokens
 }> {
-  let tokens = await readTokens()
-  if (!tokens) throw authRequired()
+  let tokens = await readTokens(accountEmail)
+  if (!tokens) throw authRequired(accountEmail)
 
   requireClientConfig(tokens)
   requireReadonlyScopes(tokens)
   if (needsRefresh(tokens, Date.now())) {
     tokens = await refreshStoredToken({
       onlyIfExpiring: true,
+      accountEmail: tokens.account_email,
     })
   }
 
@@ -151,8 +161,10 @@ export async function createAuthorizedClient(): Promise<{
   }
 }
 
-export async function refreshAuthToken(): Promise<StoredTokens> {
-  return refreshStoredToken({ onlyIfExpiring: false })
+export async function refreshAuthToken(
+  accountEmail?: string,
+): Promise<StoredTokens> {
+  return refreshStoredToken({ onlyIfExpiring: false, accountEmail })
 }
 
 export type AuthorizedGoogleClient = {
@@ -166,7 +178,9 @@ export type AuthorizedGoogleClient = {
   tokens?: StoredTokens
 }
 
-export async function createGoogleAccessTokenClient(): Promise<AuthorizedGoogleClient> {
+export async function createGoogleAccessTokenClient(
+  accountEmail?: string,
+): Promise<AuthorizedGoogleClient> {
   const serviceAccount = getServiceAccountConfig()
   if (serviceAccount) {
     return {
@@ -180,7 +194,7 @@ export async function createGoogleAccessTokenClient(): Promise<AuthorizedGoogleC
     }
   }
 
-  const { client, tokens } = await createAuthorizedClient()
+  const { client, tokens } = await createAuthorizedClient(accountEmail)
   const clientConfig = requireClientConfig(tokens)
   return {
     client,
@@ -196,6 +210,7 @@ export async function createGoogleAccessTokenClient(): Promise<AuthorizedGoogleC
 
 export async function authStatus(): Promise<{
   tokens?: StoredTokens
+  accounts: ReturnType<typeof listGoogleAccounts>
   configured: boolean
   sharedConfigured: boolean
   byoConfigured: boolean
@@ -205,9 +220,11 @@ export async function authStatus(): Promise<{
 }> {
   const status = getAuthModeStatus()
   const serviceAccount = getServiceAccountStatus()
+  const accounts = listGoogleAccounts()
   if (serviceAccount.configured || serviceAccount.error) {
     return {
       configured: serviceAccount.configured,
+      accounts,
       sharedConfigured: status.sharedConfigured,
       byoConfigured: status.byoConfigured,
       activeMode: 'service-account',
@@ -218,6 +235,7 @@ export async function authStatus(): Promise<{
   const tokens = await readTokens()
   return {
     tokens,
+    accounts,
     configured: Boolean(getClientConfig(tokens?.client_source)),
     sharedConfigured: status.sharedConfigured,
     byoConfigured: status.byoConfigured,

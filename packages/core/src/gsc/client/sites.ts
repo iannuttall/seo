@@ -3,10 +3,11 @@ import { authedFetch, getAuthorized } from './fetch.js'
 
 export async function listSites(
   _refresh = false,
+  accountEmail?: string,
 ): Promise<
   Array<{ siteUrl: string; permissionLevel?: string; siteType?: string }>
 > {
-  const { client } = await getAuthorized()
+  const { client } = await getAuthorized(accountEmail)
   const response = await authedFetch(
     client,
     'https://www.googleapis.com/webmasters/v3/sites',

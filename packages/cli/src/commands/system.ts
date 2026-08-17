@@ -95,9 +95,16 @@ export const sitesCommand = defineCommand({
   args: {
     json: { type: 'boolean', default: false },
     refresh: { type: 'boolean', default: false },
+    account: {
+      type: 'string',
+      description: 'Saved Google account email.',
+    },
   },
   run: async ({ args }) => {
-    const sites = await listSites(booleanArg(args.refresh))
+    const sites = await listSites(
+      booleanArg(args.refresh),
+      stringArg(args.account),
+    )
     if (jsonFlag(args)) {
       printJson({ sites })
       return

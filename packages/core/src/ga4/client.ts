@@ -1,5 +1,6 @@
 import { fetch, type RequestInit } from 'undici'
 import { readBoundedResponseText } from '../fetch/http-client.js'
+import { googleAnalyticsAccountForProperty } from '../gsc/auth/account-selection.js'
 import {
   createGoogleAccessTokenClient,
   type GoogleAccessTokenClient,
@@ -92,10 +93,13 @@ async function authedFetch(
 export async function runGa4Report(
   propertyId: string,
   body: Ga4ReportRequest,
-  opts: { refresh?: boolean } = {},
+  opts: { refresh?: boolean; accountEmail?: string } = {},
 ): Promise<Ga4RunReportResult> {
+  const { client, identity } = await createGoogleAccessTokenClient(
+    opts.accountEmail ?? googleAnalyticsAccountForProperty(propertyId),
+  )
   const db = getDb()
-  const queryHash = hashKey([propertyId, body])
+  const queryHash = hashKey([propertyId, identity, body])
   const cacheable = ga4RequestCanUseCache(body)
   const cached = cacheable
     ? (db
@@ -111,7 +115,6 @@ export async function runGa4Report(
     return JSON.parse(cached.response_json) as Ga4RunReportResult
   }
 
-  const { client } = await createGoogleAccessTokenClient()
   const response = await authedFetch(
     client,
     `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
@@ -154,8 +157,10 @@ export async function runGa4Report(
   return result
 }
 
-export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
-  const { client } = await createGoogleAccessTokenClient()
+export async function listGa4AccountSummaries(
+  accountEmail?: string,
+): Promise<Ga4AccountSummary[]> {
+  const { client } = await createGoogleAccessTokenClient(accountEmail)
   return collectGa4AccountSummaries(async (pageToken) => {
     const url = new URL(
       'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
@@ -190,8 +195,11 @@ export async function listGa4AccountSummaries(): Promise<Ga4AccountSummary[]> {
 
 export async function listGa4DataStreams(
   propertyId: string,
+  accountEmail?: string,
 ): Promise<Ga4DataStream[]> {
-  const { client } = await createGoogleAccessTokenClient()
+  const { client } = await createGoogleAccessTokenClient(
+    accountEmail ?? googleAnalyticsAccountForProperty(propertyId),
+  )
   const streams: Ga4DataStream[] = []
   let pageToken: string | undefined
   let pageCount = 0

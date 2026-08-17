@@ -8,6 +8,7 @@ import {
   listSites,
   readConfig,
   SeoError,
+  selectGoogleAccounts,
 } from '@seo/core'
 import { canPrompt, maybeExitCancelled } from './utils.js'
 
@@ -15,6 +16,7 @@ type ResolveOptions = {
   allowDefault?: boolean
   json?: boolean
   refresh?: boolean
+  account?: string
 }
 
 type SiteChoice = {
@@ -31,6 +33,10 @@ type GoogleAnalyticsPropertyChoice = {
 export type ClientSelection = {
   client?: ClientProfile
   site: string
+}
+
+function selectClientGoogleAccounts(client: ClientProfile | undefined): void {
+  selectGoogleAccounts(client?.googleAccounts)
 }
 
 function includesQuery(values: string[], query: string): boolean {
@@ -97,6 +103,11 @@ export async function resolveSite(input: {
     config.defaultSite &&
     defaultSiteKnown
   ) {
+    selectClientGoogleAccounts(
+      config.clients.find(
+        (client) => client.isDefault && client.siteUrl === config.defaultSite,
+      ),
+    )
     return config.defaultSite
   }
 
@@ -109,7 +120,7 @@ export async function resolveSite(input: {
     )
   }
 
-  const sites = await listSites(input.options?.refresh)
+  const sites = await listSites(input.options?.refresh, input.options?.account)
   if (!sites.length) {
     throw new SeoError(
       'PROPERTY_NOT_FOUND',
@@ -151,11 +162,13 @@ export async function resolveClientSelection(input: {
     if (!client) {
       throw new SeoError('INVALID_INPUT', `Project not found: ${project}`)
     }
+    selectClientGoogleAccounts(client)
     return { client, site: client.siteUrl }
   }
 
   const defaultClient = getClient()
   if (!input.site && defaultClient) {
+    selectClientGoogleAccounts(defaultClient)
     return { client: defaultClient, site: defaultClient.siteUrl }
   }
 
@@ -181,17 +194,21 @@ export async function resolveClient(input: {
     if (!client) {
       throw new SeoError('INVALID_INPUT', `Project not found: ${project}`)
     }
+    selectClientGoogleAccounts(client)
     return client
   }
 
   const clients = listClients()
   if (!clients.length) return undefined
   const defaultClient = getClient()
-  if (defaultClient) return defaultClient
+  if (defaultClient) {
+    selectClientGoogleAccounts(defaultClient)
+    return defaultClient
+  }
 
   if (input.options?.json || !canPrompt()) return undefined
 
-  return chooseFromSearch<ClientProfile>({
+  const selected = await chooseFromSearch<ClientProfile>({
     message: 'Choose a project',
     searchMessage: 'Search projects',
     emptyMessage: 'No projects matched that search.',
@@ -200,6 +217,8 @@ export async function resolveClient(input: {
     hint: (client) => client.siteUrl,
     searchValues: (client) => [client.id, client.name, client.siteUrl],
   })
+  selectClientGoogleAccounts(selected)
+  return selected
 }
 
 export async function resolveGoogleAnalyticsProperty(input: {
@@ -220,7 +239,7 @@ export async function resolveGoogleAnalyticsProperty(input: {
     )
   }
 
-  const accountSummaries = await listGa4AccountSummaries()
+  const accountSummaries = await listGa4AccountSummaries(input.options?.account)
   const choices = accountSummaries.flatMap((account) =>
     account.propertySummaries.map((property) => ({
       property: ga4PropertyIdFromName(property.property),

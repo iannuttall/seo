@@ -39,6 +39,37 @@ seo sites
 seo projects list
 ```
 
+## Connect more than one Google account
+
+Run the login command again to add another account. Earlier logins stay saved
+on this machine.
+
+```sh
+seo auth login
+seo auth accounts
+```
+
+During `seo start`, choose one account for Search Console and another account
+for Google Analytics if the site needs that split. The project profile keeps
+both choices. Reports that use the project then select the correct login for
+each data source.
+
+Agents and CI can make the same choice with explicit flags:
+
+```sh
+seo start \
+  --site sc-domain:example.com \
+  --search-console-account <search-account-email> \
+  --google-analytics-property 123456789 \
+  --google-analytics-account <analytics-account-email> \
+  --json
+```
+
+Use `seo auth use <email>` to change the default login for commands that do not
+use a saved project. Direct property commands also accept `--account <email>`.
+Remove one login with `seo auth logout --account <email>`, or remove every
+login with `seo auth logout --all`.
+
 ## Use Search Console to find search demand and affected pages
 
 Search Console reports clicks, impressions, CTR, and average position for the
@@ -325,8 +356,8 @@ seo auth whoami
 config directory. Do not commit it to the repository. Environment-based setups
 can provide `SEO_GOOGLE_CLIENT_ID` and `SEO_GOOGLE_CLIENT_SECRET` instead.
 
-The CLI records which client created a saved login. If you switch from the
-shared client to your own client, run `seo auth logout` before signing in again.
+The CLI records which client created each saved login. If you switch from the
+shared client to your own client, run `seo auth logout --all` before signing in again.
 `seo auth status` shows whether the active login uses the shared SEO Skill app
 or your own client.
 
@@ -435,11 +466,11 @@ credential configuration before a report runs.
 ## Remove access and local tokens
 
 ```sh
-seo auth logout
+seo auth logout --all
 seo privacy
 ```
 
-Logout deletes locally stored Google tokens. It does not delete your Search
+This command deletes all locally stored Google tokens. It does not delete your Search
 Console property or Google Analytics property. The [privacy policy](/privacy) documents the
 local paths and network requests, while the [setup guide](/docs/getting-started)
 covers project profiles and first-run troubleshooting.

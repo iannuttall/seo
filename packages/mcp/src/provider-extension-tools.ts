@@ -10,8 +10,6 @@ import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
-const openOutputSchema = z.looseObject({})
-
 export function registerProviderExtensionTools(server: McpServer): void {
   server.registerTool(
     'seo_list_providers',
@@ -19,7 +17,6 @@ export function registerProviderExtensionTools(server: McpServer): void {
       description:
         'List provider packages installed through the seo CLI. Package installation requires human approval in a terminal.',
       inputSchema: {},
-      outputSchema: openOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -47,7 +44,6 @@ export function registerProviderExtensionTools(server: McpServer): void {
       inputSchema: {
         id: z.string().trim().min(1).max(64),
       },
-      outputSchema: openOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -76,7 +72,6 @@ export function registerProviderExtensionTools(server: McpServer): void {
         params: z.record(z.string(), z.unknown()).optional(),
         refresh: z.boolean().optional(),
       },
-      outputSchema: openOutputSchema,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,

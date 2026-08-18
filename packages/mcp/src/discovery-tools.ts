@@ -15,7 +15,6 @@ import {
 } from './reports.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
-const openOutputSchema = z.looseObject({})
 const reportIds = new Set(listReports().map((report) => report.id))
 
 export function registerDiscoveryTools(
@@ -30,7 +29,6 @@ export function registerDiscoveryTools(
       inputSchema: {
         category: z.enum(REPORT_CATEGORIES).optional(),
       },
-      outputSchema: openOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -56,7 +54,6 @@ export function registerDiscoveryTools(
         id: z.string().trim().min(1).max(100),
         check: z.string().trim().min(1).max(100).optional(),
       },
-      outputSchema: openOutputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -90,7 +87,6 @@ export function registerDiscoveryTools(
         params: z.record(z.string(), z.unknown()).optional(),
         view: z.enum(['full', 'actions']).optional(),
       },
-      outputSchema: openOutputSchema,
       annotations: {
         destructiveHint: false,
       },

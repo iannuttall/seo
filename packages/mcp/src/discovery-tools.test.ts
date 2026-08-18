@@ -53,7 +53,7 @@ test('default MCP server exposes compact report and provider discovery', async (
         'seo_run_provider',
       ],
     )
-    assert.ok(result.tools.every((tool) => tool.outputSchema))
+    assert.ok(result.tools.every((tool) => tool.outputSchema === undefined))
     const runTool = result.tools.find((tool) => tool.name === 'seo_run_report')
     assert.ok(runTool)
     assert.deepEqual(

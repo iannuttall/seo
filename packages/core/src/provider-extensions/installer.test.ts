@@ -34,8 +34,9 @@ function command(
   input: {
     dependencies?: Record<string, string>
     installedIntegrity?: string
+    maintainers?: Array<string | { name: string }>
     metadataIntegrities?: string[]
-    npmUser?: string | { name: string }
+    npmUser?: string | { name: string } | null
     registerSecondProvider?: boolean
     unpackedSize?: number
     version?: string
@@ -61,7 +62,9 @@ function command(
             type: 'git',
             url: 'git+https://github.com/example/fixture.git',
           },
-          _npmUser: input.npmUser ?? 'example',
+          _npmUser:
+            input.npmUser === null ? undefined : (input.npmUser ?? 'example'),
+          maintainers: input.maintainers,
           dependencies: input.dependencies,
           dist: {
             integrity,
@@ -186,6 +189,19 @@ test('direct install accepts an exact version and rejects ranges or URLs', async
     )
   }
   assert.equal(fake.calls.length, 1)
+})
+
+test('package inspection accepts string maintainers from npm metadata', async () => {
+  const fake = command({
+    maintainers: ['Ian Nuttall <npm@example.com>'],
+    npmUser: null,
+  })
+  const release = await inspectProviderPackage('@example/fixture', {
+    packagesDir,
+    run: fake.run,
+  })
+
+  assert.equal(release.publisher, 'Ian Nuttall <npm@example.com>')
 })
 
 test('package inspection rejects dependency trees before installation', async () => {

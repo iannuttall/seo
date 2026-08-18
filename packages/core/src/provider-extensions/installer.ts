@@ -52,7 +52,12 @@ const npmPackageMetadataSchema = z
       ])
       .nullish(),
     maintainers: z
-      .array(z.object({ name: z.string().trim().max(200) }).passthrough())
+      .array(
+        z.union([
+          z.string().trim().max(200),
+          z.object({ name: z.string().trim().max(200) }).passthrough(),
+        ]),
+      )
       .max(100)
       .nullish(),
     _npmUser: z
@@ -233,7 +238,8 @@ function publisher(
   if (metadata._npmUser?.name) return metadata._npmUser.name
   if (typeof metadata.author === 'string') return metadata.author
   if (metadata.author?.name) return metadata.author.name
-  return metadata.maintainers?.[0]?.name
+  const maintainer = metadata.maintainers?.[0]
+  return typeof maintainer === 'string' ? maintainer : maintainer?.name
 }
 
 async function packageMetadata(

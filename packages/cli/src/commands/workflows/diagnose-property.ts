@@ -133,6 +133,15 @@ function compactTechnicalSection(section: ReturnType<typeof technicalSection>) {
   }
 }
 
+export function reportActionsWithTechnicalEvidence<T, U>(
+  reportActions: readonly T[],
+  technicalActions?: readonly U[],
+): Array<T | U> {
+  return technicalActions
+    ? [...reportActions, ...technicalActions]
+    : [...reportActions]
+}
+
 function printTechnicalSection(
   section: ReturnType<typeof technicalSection>,
   options: { providerFree?: boolean } = {},
@@ -853,7 +862,7 @@ function workflowCommandMeta(input: {
               overlap: topicOverlap,
             })
           : undefined
-      const urlModeActions = technicalBaseline?.report
+      const technicalActions = technicalBaseline?.report
         ? technicalCrawlActions({
             crawlReportId: technicalBaseline.report.id,
             topFixes: completeTopFixes(technicalBaseline.report),
@@ -897,6 +906,10 @@ function workflowCommandMeta(input: {
           input.printFollowups && !full
             ? compactMainReportJson(report, input.workflowName)
             : outputReport
+        const completeActions = reportActionsWithTechnicalEvidence(
+          jsonReport.actions,
+          technicalActions,
+        )
         const reportWithTechnicalEvidence =
           !useSearchData && technicalCrawl
             ? {
@@ -911,10 +924,7 @@ function workflowCommandMeta(input: {
                   ...exportWorkflowSteps(exportSummaryInput),
                   ...jsonReport.steps,
                 ],
-                // A provider-free report must surface crawl findings as its
-                // action queue; an empty list here previously read as "the
-                // tool found nothing" while the findings sat below.
-                ...(urlModeActions ? { actions: urlModeActions } : {}),
+                actions: completeActions,
                 // The compact URL-mode report replaces the empty narrative
                 // shell (every section unavailable) with an explicit skip
                 // marker. --full keeps the whole narrative object.
@@ -930,7 +940,7 @@ function workflowCommandMeta(input: {
                       },
                     }),
               }
-            : jsonReport
+            : { ...jsonReport, actions: completeActions }
         const completeReport =
           technicalCrawl || followups
             ? {

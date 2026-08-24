@@ -529,10 +529,10 @@ function byPriority(left: PrefixedFix, right: PrefixedFix): number {
 }
 
 /**
- * Turn the complete crawl issue inventory into workflow actions so a
- * provider-free report never returns an empty action list while the crawl
- * holds findings. Fixes carry high confidence because the state was
- * observed; review observations stay medium because intent is unconfirmed.
+ * Turn the complete crawl issue inventory into workflow actions so the main
+ * report does not return an empty or incomplete action list while the crawl
+ * holds findings. Fixes carry high confidence because the state was observed;
+ * review observations stay medium because intent is unconfirmed.
  */
 export function technicalCrawlActions(input: {
   topFixes: TopFix[]

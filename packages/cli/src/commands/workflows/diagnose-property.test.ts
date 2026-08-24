@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { reportFollowups } from './diagnose-property.js'
+import { agentActionsView } from '@seo/core'
+import {
+  reportActionsWithTechnicalEvidence,
+  reportFollowups,
+} from './diagnose-property.js'
 
 function reportFixture(): Parameters<typeof reportFollowups>[0] {
   return {
@@ -86,4 +90,56 @@ test('technical-only report asks for a crawl before a page follow-up', () => {
       'seo start',
     ],
   )
+})
+
+test('report actions include technical crawl fixes and reviews', () => {
+  const searchActions = [{ id: 'search:quick-win' }]
+  const technicalActions = [
+    {
+      id: 'crawl:title_duplicate',
+      kind: 'fix',
+      title: 'Duplicate titles',
+      action: 'Write a distinct title for each affected page.',
+    },
+    {
+      id: 'crawl:noindex',
+      kind: 'review',
+      title: 'Noindex pages',
+      action: 'Confirm that each noindex directive is intentional.',
+    },
+  ]
+
+  assert.deepEqual(
+    reportActionsWithTechnicalEvidence(searchActions, technicalActions),
+    [...searchActions, ...technicalActions],
+  )
+  assert.deepEqual(
+    reportActionsWithTechnicalEvidence([], technicalActions),
+    technicalActions,
+  )
+
+  const view = agentActionsView(
+    { actions: reportActionsWithTechnicalEvidence([], technicalActions) },
+    { preferRootActions: true },
+  )
+  const findings = view.findings as {
+    counts: {
+      total: number
+      returned: number
+      fixes: number
+      reviews: number
+      open: number
+    }
+    completion: { state: string }
+    sourcePaths: string[]
+  }
+  assert.deepEqual(findings.counts, {
+    total: 2,
+    returned: 2,
+    fixes: 1,
+    reviews: 1,
+    open: 2,
+  })
+  assert.equal(findings.completion.state, 'pending')
+  assert.deepEqual(findings.sourcePaths, ['actions'])
 })

@@ -14,8 +14,8 @@ export const reportPageCopy: Record<string, ReportPageCopy> = {
   'agent-readiness': {
     title: 'AI agent readiness',
     description:
-      'Check Markdown alternatives, agent discovery, crawler access and identity across a content site. Find broken routes without inventing a readiness score.',
-    lead: 'Check whether agents can find and read a clean machine-readable version of every public page. The report tests the content-site contract directly, then keeps unrelated API, application and commerce checks out of the failure count.',
+      'Check raw HTML, missing-page recovery, trust pages, Markdown, agent discovery, crawler access and identity without inventing a readiness score.',
+    lead: 'Check whether agents can read the initial HTML, recover from a missing path, and find a clean machine-readable version of every public page. The report keeps unrelated API, application and commerce checks out of the failure count.',
   },
   'ai-readiness': {
     title: 'AI search readiness audit',

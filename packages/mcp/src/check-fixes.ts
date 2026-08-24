@@ -40,6 +40,76 @@ const AGENT_READINESS_FIXES: Readonly<Record<string, CheckFix>> = {
     verify:
       'curl -I the HTTP and alternate-host variants and confirm one permanent redirect each, then re-run the report.',
   },
+  'raw-html-content': {
+    goal: 'Keep the main public content in the initial HTML response.',
+    fix: 'Render the main text and one clear H1 on the server or at build time. Do not require JavaScript to replace an empty document before the page makes sense.',
+    prompt:
+      'Open the raw-html-content evidence and inspect the start page with JavaScript disabled. Put the main public text and one H1 in the initial HTML response, keep any needed subheadings in logical order, deploy, then re-run agent-readiness and confirm the raw HTML check passes.',
+    resources: [
+      {
+        title: 'Google Search JavaScript SEO basics',
+        url: 'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics',
+      },
+    ],
+    verify:
+      'Fetch the start page with curl, inspect the returned HTML, then re-run the report and confirm the initial document contains the main text and one H1.',
+  },
+  'agent-friendly-404s': {
+    goal: 'Return an honest missing-page status with a useful recovery path.',
+    fix: 'Return HTTP 404 or 410 for a path that does not exist. When the request accepts Markdown, keep that status and return a short text/markdown body with a heading and links to the sitemap, llms.txt, or docs index.',
+    prompt:
+      'Request the missing path from the agent-friendly-404s evidence as HTML and Markdown. Fix any 200 app-shell response so both variants keep a 404 or 410 status. Add a short Markdown recovery body with a heading and working links to the sitemap, llms.txt, or docs index, then re-run agent-readiness.',
+    resources: [
+      {
+        title: 'RFC 9110: 404 Not Found',
+        url: 'https://www.rfc-editor.org/rfc/rfc9110#name-404-not-found',
+      },
+    ],
+    verify:
+      'Request the same nonexistent URL as HTML and with Accept: text/markdown. Confirm both return 404 or 410 and the Markdown response contains working recovery links.',
+  },
+  'developer-resource-links': {
+    goal: 'Give real developer surfaces a named public entry point.',
+    fix: 'Link the real API docs, OpenAPI description, MCP endpoint, auth guide, webhook docs, or developer portal from the start page or llms.txt. Use Link headers for machine-readable descriptions when the protocol defines a relation type.',
+    prompt:
+      'Review the developer-resource-links evidence and list only developer surfaces that really exist. Add clear product-named links from the start page or llms.txt, add registered Link relations for machine-readable API resources where useful, confirm each target resolves, then re-run agent-readiness.',
+    resources: [
+      {
+        title: 'RFC 9727: api-catalog well-known URI',
+        url: 'https://www.rfc-editor.org/rfc/rfc9727',
+      },
+      {
+        title: 'IANA link relation registry',
+        url: 'https://www.iana.org/assignments/link-relations/link-relations.xhtml',
+      },
+    ],
+    verify:
+      'Follow every new link from the deployed start page or llms.txt and confirm the named resource returns the expected content without a redirect or catch-all page.',
+  },
+  'agent-when-to-use': {
+    goal: 'Tell agents which real jobs the site or skill is suitable for.',
+    fix: 'Add specific use cases to the Agent Skill description or to the short llms.txt summary before its link sections. Name the task, the useful public entry point, and any important condition. Keep llms.txt valid as a navigation file.',
+    prompt:
+      'Read the agent-when-to-use evidence and update the published Agent Skill description or llms.txt summary with specific jobs and the correct public entry point. Do not add generic marketing claims or instructions for capabilities that do not exist. Regenerate any Agent Skill digest, deploy, then re-run agent-readiness.',
+    resources: [
+      {
+        title: 'Agent Skills specification',
+        url: 'https://agentskills.io/specification',
+      },
+      { title: 'llms.txt proposal', url: 'https://llmstxt.org/' },
+    ],
+    verify:
+      'Fetch the deployed instruction file, confirm the use cases are specific, verify any skill digest, then re-run the report.',
+  },
+  'trust-anchor-pages': {
+    goal: 'Publish accurate ownership, contact, and privacy information.',
+    fix: 'Publish useful about, contact, and privacy pages at predictable paths. Explain who is responsible for the site, how a person can make contact, and how the site handles data. The content-length review point is a heuristic, not proof of legitimacy.',
+    prompt:
+      'Open the trust-anchor-pages evidence and fix each missing or thin about, contact, or privacy page. Keep the existing site design, use accurate details, and do not invent an email address, address, or legal claim. Deploy, request all three paths directly, then re-run agent-readiness.',
+    resources: [],
+    verify:
+      'Request /about, /contact, and /privacy directly and confirm each returns useful public content with a successful status, then re-run the report.',
+  },
   'markdown-coverage': {
     goal: 'Give every public HTML page a Markdown representation.',
     fix: 'Serve text/markdown through content negotiation or advertise one working Markdown alternative per page with a link rel="alternate" type="text/markdown" tag, generated from the same content source as the HTML.',

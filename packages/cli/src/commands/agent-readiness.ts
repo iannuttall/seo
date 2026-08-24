@@ -68,7 +68,7 @@ export const agentReadinessCommand = defineCommand({
   meta: {
     name: 'agent-readiness',
     description:
-      'Check content-site access, Markdown alternatives, discovery, and identity for AI agents',
+      'Check raw HTML, missing pages, guidance, Markdown, discovery, and identity for AI agents',
   },
   args: {
     agentReadinessUrl: {

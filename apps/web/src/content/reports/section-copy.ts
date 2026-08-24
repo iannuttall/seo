@@ -2,7 +2,7 @@ export const reportNextStepIntros: Record<string, string> = {
   'affected-urls':
     'The URL list is ready for inspection, not bulk editing. Open representative pages, confirm that the rule conflicts with their purpose, then recrawl the same scope after the fix.',
   'agent-readiness':
-    'Fix shared representation failures before patching one generated file. Repeat the same route scope after deployment and confirm the explicit Markdown URL, negotiated response, discovery files, and identity evidence now agree.',
+    'Fix false success responses and empty raw documents first. Then fix shared representation failures before patching one generated file, and repeat the same route scope after deployment.',
   'ai-readiness':
     "Start with hard access, indexability or snippet conflicts that work against the publisher's intent. Keep referral traffic and assistant mentions as separate measurements because this audit cannot observe either one.",
   'ai-referrals':

@@ -17,6 +17,22 @@ const agentRepresentationResponseSchema = z.object({
   error: z.string().optional(),
 })
 
+const agentPublicPageObservationSchema = z.object({
+  requestedUrl: z.string().url(),
+  finalUrl: z.string().url().optional(),
+  status: z.number().int().optional(),
+  contentType: z.string().optional(),
+  characters: z.number().int().nonnegative().optional(),
+  wordCount: z.number().int().nonnegative().optional(),
+  h1Count: z.number().int().nonnegative().optional(),
+  headingLevels: z.array(z.number().int().min(1).max(6)).optional(),
+  maximumHeadingSkip: z.number().int().nonnegative().optional(),
+  links: z.array(z.string().url()).optional(),
+  bodyLimitExceeded: z.boolean().optional(),
+  bodyLimitBytes: z.number().int().positive().optional(),
+  error: z.string().optional(),
+})
+
 export const agentDiscoverySchema = z.object({
   profile: z.literal('content'),
   profileApplicability: z.record(
@@ -119,6 +135,10 @@ export const agentDiscoverySchema = z.object({
         observedDigest: z.string().optional(),
         digestMatches: z.boolean().nullable(),
         frontmatterValid: z.boolean().nullable(),
+        whenToUseGuidance: z.boolean().nullable().optional(),
+        guidanceSource: z
+          .enum(['frontmatter-description', 'body-heading'])
+          .optional(),
         sameOrigin: z.boolean(),
         cors: z.string().optional(),
         error: z.string().optional(),
@@ -167,6 +187,8 @@ export const agentDiscoverySchema = z.object({
     nonIndexableLinks: z.array(z.string().url()),
     missingCrawlRoutes: z.array(z.string().url()),
     oversized: z.boolean(),
+    whenToUseGuidance: z.boolean().nullable().optional(),
+    guidanceSource: z.enum(['heading', 'summary']).optional(),
     discovery: z
       .object({
         source: z.enum(['html-link', 'http-link', 'path-probe']),
@@ -216,6 +238,25 @@ export const agentDiscoverySchema = z.object({
           error: z.string().optional(),
         }),
       ),
+    })
+    .optional(),
+  siteSurfaces: z
+    .object({
+      rawStartPage: agentPublicPageObservationSchema,
+      notFound: z.object({
+        path: z.string(),
+        html: agentPublicPageObservationSchema,
+        markdown: agentPublicPageObservationSchema,
+      }),
+      trustAnchors: z.array(
+        agentPublicPageObservationSchema.extend({
+          id: z.enum(['about', 'contact', 'privacy']),
+        }),
+      ),
+      limits: z.object({
+        bodyBytesPerResponse: z.number().int().positive(),
+        trustAnchorPages: z.number().int().nonnegative(),
+      }),
     })
     .optional(),
   protocolVariants: z.object({

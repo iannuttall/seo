@@ -6,7 +6,6 @@ import {
   getSeoCliPaths,
   getTokenStorageStatus,
   listGoogleAccounts,
-  loginWithLoopback,
   readTokens,
   refreshAuthToken,
   SeoError,
@@ -22,6 +21,7 @@ import {
   printJson,
   printKeyValue,
 } from '../utils.js'
+import { loginWithGuidance } from './google-login.js'
 
 function serviceAccountSource(source?: string): string {
   if (!source) return 'invalid or conflicting configuration'
@@ -91,7 +91,7 @@ export const authCommand = defineCommand({
             'A service account is active from the environment. Unset its credential variable before running browser OAuth.',
           )
         }
-        const tokens = await loginWithLoopback()
+        const tokens = await loginWithGuidance()
         printKeyValue(
           oauthIdentityRows({
             accountEmail: tokens.account_email,

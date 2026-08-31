@@ -18,7 +18,6 @@ import {
   listGa4DataStreams,
   listGoogleAccounts,
   loadProviderExtensions,
-  loginWithLoopback,
   matchGa4WebStreams,
   type RegisteredProviderExtension,
   readClickySiteKey,
@@ -30,6 +29,7 @@ import {
   writeProviderExtensionCredentials,
 } from '@seo/core'
 import { canPrompt, maybeExitCancelled } from '../../utils.js'
+import { loginWithGuidance } from '../google-login.js'
 import { detectMcpClients } from '../mcp-clients.js'
 import { installMcpConfig } from '../mcp-config.js'
 import { installSeoSkill } from '../skill-install.js'
@@ -390,7 +390,7 @@ export async function maybeConnectAuth(
     }
     if (choice.type === 'skip') return { status: 'skipped' }
     if (status.sharedConfigured || status.byoConfigured) {
-      const tokens = await loginWithLoopback()
+      const tokens = await loginWithGuidance()
       note(
         `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
         'Google connected',
@@ -427,7 +427,7 @@ export async function maybeConnectAuth(
     writeOauthClient({ clientId, clientSecret })
   }
 
-  const tokens = await loginWithLoopback()
+  const tokens = await loginWithGuidance()
   note(
     `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
     'Google connected',
@@ -638,7 +638,7 @@ async function chooseGoogleAnalyticsAccount(input: {
     return accounts.find((account) => account.active)?.accountEmail
   }
   if (accounts.length === 0) {
-    const tokens = await loginWithLoopback()
+    const tokens = await loginWithGuidance()
     return tokens.account_email
   }
   const choice = maybeExitCancelled(
@@ -661,7 +661,7 @@ async function chooseGoogleAnalyticsAccount(input: {
     }),
   )
   if (choice.type === 'account') return choice.accountEmail
-  const tokens = await loginWithLoopback()
+  const tokens = await loginWithGuidance()
   note(
     `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
     'Google connected',

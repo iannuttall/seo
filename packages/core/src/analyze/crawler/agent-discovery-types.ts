@@ -73,9 +73,43 @@ export type AgentSkillObservation = {
   observedDigest?: string
   digestMatches: boolean | null
   frontmatterValid: boolean | null
+  whenToUseGuidance?: boolean | null
+  guidanceSource?: 'frontmatter-description' | 'body-heading'
   sameOrigin: boolean
   cors?: string
   error?: string
+}
+
+export type AgentPublicPageObservation = {
+  requestedUrl: string
+  finalUrl?: string
+  status?: number
+  contentType?: string
+  characters?: number
+  wordCount?: number
+  h1Count?: number
+  headingLevels?: number[]
+  maximumHeadingSkip?: number
+  links?: string[]
+  bodyLimitExceeded?: boolean
+  bodyLimitBytes?: number
+  error?: string
+}
+
+export type AgentSiteSurfaceObservation = {
+  rawStartPage: AgentPublicPageObservation
+  notFound: {
+    path: string
+    html: AgentPublicPageObservation
+    markdown: AgentPublicPageObservation
+  }
+  trustAnchors: Array<
+    AgentPublicPageObservation & { id: 'about' | 'contact' | 'privacy' }
+  >
+  limits: {
+    bodyBytesPerResponse: number
+    trustAnchorPages: number
+  }
 }
 
 export type AgentEndpointObservation = {
@@ -191,6 +225,8 @@ export type CrawlAgentDiscovery = {
     nonIndexableLinks: string[]
     missingCrawlRoutes: string[]
     oversized: boolean
+    whenToUseGuidance?: boolean | null
+    guidanceSource?: 'heading' | 'summary'
     discovery?: {
       source: 'html-link' | 'http-link' | 'path-probe'
       advertisedUrls: string[]
@@ -210,6 +246,7 @@ export type CrawlAgentDiscovery = {
     consistent: boolean | null
   }
   endpointDiscovery?: AgentEndpointDiscovery
+  siteSurfaces?: AgentSiteSurfaceObservation
   protocolVariants: {
     http: {
       url: string

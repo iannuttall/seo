@@ -20,6 +20,7 @@ import type {
   MarkdownQualityObservation,
 } from './agent-discovery-types.js'
 import { inspectAgentEndpoints } from './agent-endpoints.js'
+import { inspectAgentSiteSurfaces } from './agent-site-surfaces.js'
 import { inspectLlmsTxt } from './llms-txt-discovery.js'
 
 export { fetchText, linkEntries, safeError } from './agent-discovery-http.js'
@@ -63,6 +64,26 @@ function bodyWordCount(value: string): number {
     .replace(/[#>*_`[\]()|:-]/gu, ' ')
     .split(/\s+/u)
     .filter(Boolean).length
+}
+
+function whenToUseGuidance(value: string): {
+  present: boolean
+  source?: 'frontmatter-description' | 'body-heading'
+} {
+  const frontmatter = value.match(/^---\s*\n([\s\S]*?)^---\s*$/mu)?.[1] ?? ''
+  const description =
+    frontmatter.match(/^description:\s*["']?(.+?)["']?\s*$/imu)?.[1] ?? ''
+  if (
+    /\b(?:use|reach for|best (?:used|suited))\b[^.\n]{0,80}\b(?:when|for)\b/iu.test(
+      description,
+    )
+  ) {
+    return { present: true, source: 'frontmatter-description' }
+  }
+  if (/^#{1,3}\s+when to use(?:\s|$)/imu.test(value)) {
+    return { present: true, source: 'body-heading' }
+  }
+  return { present: false }
 }
 
 function repeatedProseLines(markdown: string): number {
@@ -403,6 +424,7 @@ async function inspectAgentSkills(input: {
             /^---\s*\n[\s\S]*?^name:\s*\S.+$[\s\S]*?^description:\s*\S.+$[\s\S]*?^---\s*$/mu.test(
               skill.body,
             )
+          const guidance = whenToUseGuidance(skill.body)
           return {
             name,
             url,
@@ -418,6 +440,8 @@ async function inspectAgentSkills(input: {
               ? declaredDigest === observedDigest
               : null,
             frontmatterValid,
+            whenToUseGuidance: guidance.present,
+            ...(guidance.source ? { guidanceSource: guidance.source } : {}),
             sameOrigin,
           }
         } catch (error) {
@@ -560,12 +584,13 @@ export async function collectAgentDiscovery(input: {
       ),
     ),
   )
-  const [agentSkills, llmsTxt, routeManifest, endpointDiscovery] =
+  const [agentSkills, llmsTxt, routeManifest, endpointDiscovery, siteSurfaces] =
     await Promise.all([
       inspectAgentSkills({ ...input, origin }),
       inspectLlmsTxt({ ...input, origin, pages }),
       inspectRouteManifest({ ...input, origin }),
       inspectAgentEndpoints({ ...input, origin }),
+      inspectAgentSiteSurfaces({ ...input, origin }),
     ])
   const qZero = await fetchRepresentation({
     url: input.startUrl,
@@ -682,6 +707,7 @@ export async function collectAgentDiscovery(input: {
     agentSkills,
     llmsTxt,
     endpointDiscovery,
+    siteSurfaces,
     contentSignals: {
       htmlValues: [...new Set(htmlContentSignals)].sort(),
       markdownValues: [...new Set(markdownContentSignals)].sort(),

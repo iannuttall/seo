@@ -123,6 +123,24 @@ function markdownLinks(value: string) {
   return { links, invalidLinks }
 }
 
+function llmsWhenToUseGuidance(value: string): {
+  present: boolean
+  source?: 'heading' | 'summary'
+} {
+  if (/^##\s+when to use(?:\s|$)/imu.test(value)) {
+    return { present: true, source: 'heading' }
+  }
+  const summary = value.split(/^##\s+/mu, 1)[0] ?? ''
+  if (
+    /^>\s*.*\b(?:use|reach for|best (?:used|suited))\b.*\b(?:when|for)\b/imu.test(
+      summary,
+    )
+  ) {
+    return { present: true, source: 'summary' }
+  }
+  return { present: false }
+}
+
 export function validateLlmsTxtV2(value: string): string[] {
   const normalized = value.replace(/^\uFEFF/u, '').replace(/\r\n?/gu, '\n')
   const lines = normalized.split('\n')
@@ -387,6 +405,9 @@ export async function inspectLlmsTxt(input: {
     }
     const parsed = markdownLinks(exists ? first.body : '')
     const formatErrors = exists ? validateLlmsTxtV2(first.body) : []
+    const guidance = exists
+      ? llmsWhenToUseGuidance(first.body)
+      : { present: false as const }
     const links = parsed.links.slice(0, LLMS_LINK_CHECK_LIMIT)
     const linkLimitReached = parsed.links.length > links.length
     const counts = new Map<string, number>()
@@ -495,6 +516,8 @@ export async function inspectLlmsTxt(input: {
         .filter((route) => !crawlRoutes.has(route))
         .sort(),
       oversized: false,
+      whenToUseGuidance: exists ? guidance.present : null,
+      ...(guidance.source ? { guidanceSource: guidance.source } : {}),
       discovery: discoveryEvidence,
     }
   } catch (error) {

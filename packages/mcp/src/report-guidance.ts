@@ -38,9 +38,9 @@ export const REPORT_GUIDANCE = {
   'agent-readiness': {
     name: 'AI agent readiness',
     description:
-      'Check whether a content site gives agents clean, stable, machine-readable pages and discovery files.',
+      'Check whether a content site gives agents useful raw HTML, safe missing pages, clear public guidance, stable Markdown, and discovery files.',
     useWhen: [
-      'You want to test Markdown alternatives, content negotiation, Agent Skills, llms.txt, identity, and crawler access together.',
+      'You want to test raw HTML, missing-page recovery, trust pages, Markdown alternatives, Agent Skills, llms.txt, identity, and crawler access together.',
       'You need evidence that the agent-facing version of a content site matches its public HTML routes.',
     ],
     avoidWhen: [

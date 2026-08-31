@@ -46,19 +46,19 @@ export const crawlReports = [
     name: 'AI agent readiness',
     category: 'crawl',
     summary:
-      'Check whether a content site gives agents stable Markdown alternatives, useful discovery files, clear identity, and predictable access.',
+      'Check whether a content site gives agents useful raw HTML, safe missing pages, stable Markdown, clear guidance, and predictable access.',
     question:
-      'Can an agent find, fetch, and read the public content without losing the document structure or guessing which routes exist?',
+      'Can an agent find, fetch, and read the public content, recover from a missing path, and find the next useful entry point?',
     useWhen: [
       'A documentation, publishing, or content site serves machine-readable versions of its pages.',
-      'You want one focused check for Markdown delivery, agent discovery, access, and identity.',
+      'You want one focused check for raw HTML, missing-page recovery, trust pages, Markdown delivery, agent discovery, access, and identity.',
     ],
     avoidWhen: [
       'You need an AI mention, citation, referral, ranking, or selection measurement.',
       'The main job is testing a public API, interactive agent application, or commerce flow.',
     ],
     evidence: [
-      'Public HTML pages, Markdown alternatives, HTTP content negotiation, route manifests, Agent Skills, llms.txt, crawler policies, and structured identity.',
+      'Raw public HTML, missing-page responses, trust pages, developer links, Markdown alternatives, Agent Skills, llms.txt, crawler policies, and structured identity.',
     ],
     methodology: [
       'Selects the content profile, checks each public representation and discovery surface, and marks unrelated capability profiles as not applicable rather than failed.',
@@ -74,6 +74,7 @@ export const crawlReports = [
       'This report has no aggregate score. A clean result cannot prove that an AI service fetched, used, mentioned, cited, ranked, or selected a page.',
     ],
     nextSteps: [
+      'Fix false success responses and empty raw documents before optional discovery improvements.',
       'Fix shared generation or delivery problems before patching individual Markdown files.',
       'Repeat the same public route scope after deployment and compare the affected checks.',
     ],

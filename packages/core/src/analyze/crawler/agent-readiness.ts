@@ -3,6 +3,7 @@ import type {
   CrawlAgentDiscovery,
 } from './agent-discovery.js'
 import { markdownChecks } from './agent-readiness-markdown.js'
+import { publicSiteChecks } from './agent-readiness-site.js'
 import type { CrawlReport } from './report.js'
 
 export type AgentReadinessCheckStatus =
@@ -692,6 +693,11 @@ export function agentReadiness(
       'representations',
       'HTML and Markdown representations',
       markdownChecks(discovery),
+    ),
+    section(
+      'public-site',
+      'Public site recovery and trust',
+      publicSiteChecks(report, discovery),
     ),
     section(
       'discovery',

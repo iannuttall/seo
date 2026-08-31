@@ -1,4 +1,5 @@
 type OAuthCallbackPageOptions =
+  | { status: 'cancelled' }
   | { status: 'connected' }
   | { status: 'failed' }
   | { status: 'permissions-missing'; missing: string[] }
@@ -15,11 +16,19 @@ function callbackCopy(options: OAuthCallbackPageOptions): {
       detail: 'This tab can be closed.',
     }
   }
+  if (options.status === 'cancelled') {
+    return {
+      title: 'Google sign-in cancelled',
+      heading: 'Google sign-in was cancelled.',
+      detail:
+        'No account was connected. Return to your terminal when you are ready.',
+    }
+  }
   if (options.status === 'permissions-missing') {
     return {
-      title: 'Google permissions not granted',
-      heading: 'Google permissions were not granted.',
-      detail: `Return to your terminal and run seo auth login again. Select all permission boxes for ${options.missing.join(' and ')}.`,
+      title: 'Google permissions not selected',
+      heading: 'Required Google permissions were not selected.',
+      detail: `The login needs read-only access for ${options.missing.join(' and ')}. Return to your terminal and run seo auth login again. On Google's permissions screen, choose Select all, then continue.`,
     }
   }
   return {

@@ -84,7 +84,7 @@ export async function loginWithLoopback(
       )
       throw new SeoError(
         'ACCESS_DENIED',
-        `Google login did not grant ${labels.join(' and ')} read-only access. Run \`seo auth login\` again, choose Select all, and approve both permission boxes.`,
+        `Google sign-in finished without the required read-only access for ${labels.join(' and ')}. No account was saved. Run \`seo auth login\` again. On Google's permissions screen, choose Select all, then continue.`,
       )
     }
 

@@ -1,10 +1,34 @@
 import type http from 'node:http'
+import { SeoError } from '../../errors.js'
 import { oauthCallbackPage } from './callback-page.js'
+
+const OAUTH_CALLBACK_TIMEOUT_MS = 300_000
+
+function timeoutError(): SeoError {
+  return new SeoError(
+    'AUTH_REQUIRED',
+    'Google sign-in timed out. No account was connected. Run `seo auth login` again and finish the browser steps within five minutes. Keep the terminal open while you sign in.',
+  )
+}
+
+function callbackError(error: string): SeoError {
+  if (error === 'access_denied') {
+    return new SeoError(
+      'ACCESS_DENIED',
+      'Google sign-in was cancelled. No account was connected. Run `seo auth login` again when you are ready.',
+    )
+  }
+  return new SeoError(
+    'AUTH_REQUIRED',
+    'Google sign-in could not finish. No account was connected. Run `seo auth login` again.',
+  )
+}
 
 export function waitForCode(input: {
   server: http.Server
   redirectUri: string
   state: string
+  timeoutMs?: number
 }): Promise<{
   code: string
   respond: (status: number, page: string) => void
@@ -15,8 +39,8 @@ export function waitForCode(input: {
   }>((resolve, reject) => {
     const callbackPath = new URL(input.redirectUri).pathname
     const timer = setTimeout(
-      () => reject(new Error('OAuth flow timed out after 5 minutes.')),
-      300_000,
+      () => reject(timeoutError()),
+      input.timeoutMs ?? OAUTH_CALLBACK_TIMEOUT_MS,
     )
 
     input.server.on('request', (req, res) => {
@@ -35,7 +59,15 @@ export function waitForCode(input: {
 
         const error = reqUrl.searchParams.get('error')
         if (error) {
-          throw new Error(`OAuth error: ${error}`)
+          res.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
+          res.end(
+            oauthCallbackPage({
+              status: error === 'access_denied' ? 'cancelled' : 'failed',
+            }),
+          )
+          clearTimeout(timer)
+          reject(callbackError(error))
+          return
         }
 
         const incomingCode = reqUrl.searchParams.get('code')

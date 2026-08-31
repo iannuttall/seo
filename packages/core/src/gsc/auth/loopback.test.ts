@@ -23,7 +23,14 @@ test('OAuth callback page explains when required permissions were not granted', 
     missing: ['Search Console', 'Google Analytics'],
   })
 
-  assert.match(page, /Google permissions were not granted/)
-  assert.match(page, /Select all permission boxes/)
+  assert.match(page, /Required Google permissions were not selected/)
+  assert.match(page, /choose Select all/)
   assert.match(page, /Search Console and Google Analytics/)
+})
+
+test('OAuth callback page confirms when the user cancelled sign-in', () => {
+  const page = oauthCallbackPage({ status: 'cancelled' })
+
+  assert.match(page, /Google sign-in was cancelled/)
+  assert.match(page, /No account was connected/)
 })

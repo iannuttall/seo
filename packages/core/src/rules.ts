@@ -215,6 +215,40 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'canonical_streamed_in_body',
+    title: 'Canonical streamed into the body',
+    category: 'canonical',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'This Next.js App Router response put the canonical link in the body because Next.js streamed the page metadata after the head was sent. Next.js streams metadata to Googlebot and browsers, and sends it in the head only to bots on its HTML-limited list, such as Bingbot. Google documents that it only accepts a canonical link in the head. Next.js states that Googlebot reads streamed metadata correctly, but a browser render can leave the link in the body.',
+    howToFix:
+      'If Google must see the canonical in the head, make Next.js send metadata before the body for Googlebot. Set htmlLimitedBots in the Next.js config to a pattern that matches Googlebot as well as the default bots, or to /.*/ to turn streaming metadata off for everyone. Waiting for metadata can slow the first byte.',
+    impactIfIgnored:
+      'Google may ignore the canonical and choose its own, which matters most when the canonical points to another URL. Placement depends on the user agent and cache state, so repeated fetches of the same URL can disagree.',
+    howToVerify:
+      'Fetch the URL with a Googlebot user agent and confirm the canonical is in the head, then re-run the crawl and confirm canonicalStatus is single.',
+    review: {
+      question:
+        'Should Google receive this canonical in the head, or is relying on Next.js streamed metadata acceptable for this site?',
+      changeOnlyIf:
+        'Change the config when canonicals consolidate duplicate or parameter URLs, or when Search Console reports a Google-selected canonical that differs from the declared one.',
+      ifNotNeeded:
+        'Record that Next.js streams metadata into the body for Googlebot, and keep checking Google-selected canonicals in Search Console.',
+      doNot: [
+        'Do not treat the URL Inspection live test as proof of head placement. Its Google-InspectionTool user agent is on the Next.js HTML-limited list, so it receives metadata in the head.',
+        'Do not hand-write a second canonical into the layout; that creates duplicate declarations.',
+      ],
+    },
+    agentHints: {
+      evidenceFields: [
+        'page.canonicalCandidates',
+        'page.canonicalStatus',
+        'page.responseHeaders',
+      ],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'canonical_mismatch',
     title: 'Canonical differs from final URL',
     category: 'canonical',
@@ -1063,6 +1097,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   structured_data_missing: 'review',
   canonical_missing: 'review',
   canonical_multiple: 'review',
+  canonical_streamed_in_body: 'review',
   canonical_mismatch: 'review',
   canonical_non_absolute: 'review',
   canonicalized_page: 'review',

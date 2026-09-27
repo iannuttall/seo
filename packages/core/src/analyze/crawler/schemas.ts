@@ -159,6 +159,7 @@ const canonicalStatusSchema = z.enum([
   'duplicate',
   'conflicting',
   'outside-head-only',
+  'streamed-outside-head',
   'invalid',
 ])
 
@@ -365,6 +366,7 @@ export const crawlPageSnapshotSchema = z.object({
             'non-http-url',
           ])
           .optional(),
+        streamedMetadata: z.literal(true).optional(),
       }),
     )
     .optional(),

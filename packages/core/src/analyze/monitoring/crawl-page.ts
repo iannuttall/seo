@@ -385,6 +385,11 @@ export async function crawlOne(
               'Ignored canonical link elements outside the document head because Google does not accept them.',
             ]
           : []),
+        ...(extracted.canonicalEvidence?.status === 'streamed-outside-head'
+          ? [
+              'Checked the canonical target that Next.js streamed into the body of this response. Google documents that it only accepts canonical links in the head.',
+            ]
+          : []),
       ],
       contentHash: hashText(
         [

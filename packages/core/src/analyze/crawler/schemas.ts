@@ -349,16 +349,7 @@ export const crawlPageSnapshotSchema = z.object({
   metaDescription: z.string().optional(),
   canonical: z.string().url().optional(),
   canonicalRaw: z.string().optional(),
-  canonicalStatus: z
-    .enum([
-      'missing',
-      'single',
-      'duplicate',
-      'conflicting',
-      'outside-head-only',
-      'invalid',
-    ])
-    .optional(),
+  canonicalStatus: canonicalStatusSchema.optional(),
   canonicalCandidates: z
     .array(
       z.object({
@@ -412,6 +403,13 @@ export const crawlPageSnapshotSchema = z.object({
       wordCountSource: z.enum(['defuddle', 'local_cjk_aware']),
       baseUrl: z.string().url(),
       extractorType: z.string().optional(),
+      streamedSegments: z
+        .object({
+          resolved: z.number().int().nonnegative(),
+          skipped: z.number().int().nonnegative(),
+          truncated: z.boolean(),
+        })
+        .optional(),
     })
     .optional(),
   warnings: z.array(z.string()).optional(),

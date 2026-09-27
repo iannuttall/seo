@@ -257,6 +257,12 @@ export interface ContentExtractionDiagnostics {
   wordCountSource: 'defuddle' | 'local_cjk_aware'
   baseUrl: string
   extractorType?: string
+  /** React streaming segments moved into place before extraction. */
+  streamedSegments?: {
+    resolved: number
+    skipped: number
+    truncated: boolean
+  }
 }
 
 export type ExtractedLinkLocation =

@@ -12,6 +12,7 @@ import {
   extractMainContent,
   type MainContentDependencies,
 } from './main-content.js'
+import { resolveStreamedSegments } from './react-streaming.js'
 import {
   extractStructuredData,
   isValidStructuredDate,
@@ -196,8 +197,9 @@ function sanitizedContentHtml(
   $: CheerioAPI,
   html: string,
   base: string,
+  documentChanged: boolean,
 ): string {
-  let changed = false
+  let changed = documentChanged
   for (const element of $('[href], [src]').toArray()) {
     for (const attribute of ['href', 'src'] as const) {
       const value = $(element).attr(attribute)
@@ -210,13 +212,84 @@ function sanitizedContentHtml(
   return changed ? $.html() : html
 }
 
+// A title streamed into the body is still never rendered.
+const NON_TEXT_TAGS = new Set([
+  'script',
+  'style',
+  'noscript',
+  'template',
+  'title',
+])
+const PAGE_CHROME_TAGS = new Set(['nav', 'aside', 'footer'])
+const PAGE_CHROME_ROLES = new Set([
+  'navigation',
+  'complementary',
+  'contentinfo',
+])
+
+type TextNode = {
+  type: string
+  name?: string
+  data?: string
+  attribs?: Record<string, string>
+  children?: TextNode[]
+}
+
+function isPageChrome(node: TextNode): boolean {
+  return (
+    PAGE_CHROME_TAGS.has(node.name ?? '') ||
+    PAGE_CHROME_ROLES.has(node.attribs?.role?.trim().toLowerCase() ?? '')
+  )
+}
+
+// Collects text in document order and skips non-text elements (and page
+// chrome when asked) with tag checks instead of selector queries, which are
+// slow on large documents.
+function visibleText(roots: TextNode[], skipPageChrome: boolean): string {
+  const parts: string[] = []
+  const stack = [...roots].reverse()
+  for (let node = stack.pop(); node; node = stack.pop()) {
+    if (node.type === 'text') {
+      parts.push(node.data ?? '')
+      continue
+    }
+    if (!node.children || NON_TEXT_TAGS.has(node.name ?? '')) continue
+    if (skipPageChrome && isPageChrome(node)) continue
+    for (let index = node.children.length - 1; index >= 0; index -= 1) {
+      const child = node.children[index]
+      if (child) stack.push(child)
+    }
+  }
+  return parts.join('')
+}
+
+// Heuristic main-content selection for the lightweight crawl extractor:
+// an explicit main landmark, then the article holding the page H1, then a
+// lone article, then the body without navigation, sidebars, and footers.
+// A listing page with several article cards falls through to the body rather
+// than counting only its first card.
+function crawlerMainText($: CheerioAPI): string {
+  const main = $('main, [role="main" i]').first()
+  const articles = $('article')
+  const headedArticle = articles
+    .filter((_index, element) => $(element).find('h1').length > 0)
+    .first()
+  const article = headedArticle.length
+    ? headedArticle
+    : articles.length === 1
+      ? articles
+      : undefined
+  const selected = main.length ? main : (article ?? $('body').first())
+  return visibleText(
+    selected.toArray() as unknown as TextNode[],
+    !main.length && !article,
+  )
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function crawlerMainContent($: CheerioAPI, baseUrl: string) {
-  const selected = $('main').first().length
-    ? $('main').first()
-    : $('article').first().length
-      ? $('article').first()
-      : $('body').first()
-  const text = selected.text().replace(/\s+/g, ' ').trim()
+  const text = crawlerMainText($)
   return {
     text,
     excerpt: safeText($('meta[name="description"]').attr('content')),
@@ -311,6 +384,10 @@ export async function extractPage(
     fetchResult.headers,
     fetchResult.finalUrl,
   )
+  // Canonical placement is read from the raw response above. Everything below
+  // reads the document after React's inline streaming moves, which is what a
+  // browser shows before hydration.
+  const streamedSegments = resolveStreamedSegments($)
 
   const headings: ExtractedPage['headings'] = []
   let crawlerH1: string | undefined
@@ -583,6 +660,7 @@ export async function extractPage(
               $,
               fetchResult.html,
               fetchResult.finalUrl,
+              streamedSegments.resolved > 0,
             ),
           },
           extractor,
@@ -676,7 +754,12 @@ export async function extractPage(
       extractor === 'crawler' ? text : text.replace(/\s+/g, ' ').trim(),
     excerpt,
     wordCount: content.wordCount,
-    contentExtraction: content.diagnostics,
+    contentExtraction:
+      streamedSegments.resolved ||
+      streamedSegments.skipped ||
+      streamedSegments.truncated
+        ? { ...content.diagnostics, streamedSegments }
+        : content.diagnostics,
     warnings: [
       ...fetchResult.warnings,
       ...content.warnings,

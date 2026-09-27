@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { type CheerioAPI, load } from 'cheerio'
 import {
+  hasNextAppRouterPayload,
   MAX_STREAMED_SEGMENT_INSTRUCTIONS,
   resolveStreamedSegments,
 } from './react-streaming.js'
@@ -118,4 +119,29 @@ test('documents without streaming instructions are unchanged', () => {
     truncated: false,
   })
   assert.equal($.html(), load(html).html())
+})
+
+test('Next.js App Router payload detection needs inline flight data', () => {
+  const next = load(
+    streamedArticleHtml({
+      canonicalUrl: 'https://example.com/post',
+      metadata: 'body',
+    }),
+  )
+  const fizzOnly = load(
+    streamedArticleHtml({
+      canonicalUrl: 'https://example.com/post',
+      metadata: 'body',
+      nextPayload: false,
+    }),
+  )
+
+  assert.equal(hasNextAppRouterPayload(next), true)
+  assert.equal(hasNextAppRouterPayload(fizzOnly), false)
+  assert.equal(
+    hasNextAppRouterPayload(
+      load('<script src="/_next/static/chunks/main.js"></script>'),
+    ),
+    false,
+  )
 })

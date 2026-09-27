@@ -708,19 +708,31 @@ export function auditCrawlPages(
           candidates: page.canonicalCandidates,
         }),
       )
+    } else if (page.canonicalStatus === 'streamed-outside-head') {
+      issues.push(
+        issue('canonical_streamed_in_body', page, page.canonical, {
+          canonical: page.canonical,
+          candidates: page.canonicalCandidates,
+        }),
+      )
     }
 
-    if (
-      !page.canonical &&
-      !['conflicting', 'outside-head-only'].includes(page.canonicalStatus ?? '')
-    ) {
-      issues.push(
-        page.canonicalRaw
-          ? issue('canonical_invalid', page, page.canonicalRaw, {
-              canonicalRaw: page.canonicalRaw,
-            })
-          : issue('canonical_missing', page),
-      )
+    if (!page.canonical) {
+      // Conflicting and body-only declarations already have their own
+      // findings; their raw values are not an accepted canonical to check.
+      if (
+        !['conflicting', 'outside-head-only'].includes(
+          page.canonicalStatus ?? '',
+        )
+      ) {
+        issues.push(
+          page.canonicalRaw
+            ? issue('canonical_invalid', page, page.canonicalRaw, {
+                canonicalRaw: page.canonicalRaw,
+              })
+            : issue('canonical_missing', page),
+        )
+      }
     } else {
       if (page.canonicalRaw && !absoluteHttpUrl(page.canonicalRaw)) {
         issues.push(

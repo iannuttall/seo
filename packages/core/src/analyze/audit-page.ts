@@ -14,6 +14,7 @@ export const AUDIT_PAGE_RULE_IDS = [
   'canonical_conflict',
   'canonical_multiple',
   'canonical_outside_head',
+  'canonical_streamed_in_body',
   'canonical_mismatch',
 ] as const satisfies readonly RuleId[]
 
@@ -125,6 +126,19 @@ export async function auditPage(
   }
 
   const canonicalEvidence = page.canonicalEvidence
+  // A streamed canonical is still the page's declared target, so the
+  // mismatch check below runs on it as well.
+  if (canonicalEvidence?.status === 'streamed-outside-head') {
+    issues.push({
+      code: 'canonical_streamed_in_body',
+      title: 'Canonical streamed into the body',
+      detail:
+        'Next.js streamed the canonical into the body of this response. Google documents that it only accepts canonical links in the head.',
+      principle: 'C.7',
+      evidenceRef: `Streamed canonical value ${canonicalEvidence.selectedRaw ?? '(empty)'}.`,
+      severity: 'low',
+    })
+  }
   if (canonicalEvidence?.status === 'conflicting') {
     const targets = [
       ...new Set(

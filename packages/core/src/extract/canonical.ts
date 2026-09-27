@@ -1,4 +1,5 @@
 import type { CheerioAPI } from 'cheerio'
+import { hasNextAppRouterPayload } from './react-streaming.js'
 
 export type CanonicalSource = 'html-head' | 'html-body' | 'http-header'
 
@@ -12,6 +13,14 @@ export type CanonicalCandidate = {
     | 'fragment'
     | 'invalid-url'
     | 'non-http-url'
+  /**
+   * Set on an html-body candidate from a Next.js App Router response.
+   * Next.js streams metadata into the body for clients it does not treat as
+   * HTML-limited bots, Googlebot included. The candidate is still a body
+   * declaration; it is kept eligible so its target can be checked, and the
+   * evidence status records that it was streamed.
+   */
+  streamedMetadata?: true
 }
 
 export type CanonicalEvidence = {
@@ -21,6 +30,7 @@ export type CanonicalEvidence = {
     | 'duplicate'
     | 'conflicting'
     | 'outside-head-only'
+    | 'streamed-outside-head'
     | 'invalid'
   selectedRaw?: string
   selectedUrl?: string
@@ -70,6 +80,7 @@ function resolvedCandidate(
 
 function htmlCandidates($: CheerioAPI, baseUrl: string): CanonicalCandidate[] {
   const candidates: CanonicalCandidate[] = []
+  let streamedMetadata: boolean | undefined
   $('link[rel]').each((_index, element) => {
     const rel = ($(element).attr('rel') ?? '')
       .toLowerCase()
@@ -83,17 +94,22 @@ function htmlCandidates($: CheerioAPI, baseUrl: string): CanonicalCandidate[] {
     const alternateQualifier = ['hreflang', 'lang', 'media', 'type'].some(
       (attribute) => $(element).attr(attribute) !== undefined,
     )
+    if (source === 'html-body') {
+      streamedMetadata ??= hasNextAppRouterPayload($)
+    }
+    const streamed = source === 'html-body' && streamedMetadata === true
+    const candidate = resolvedCandidate(
+      source,
+      raw,
+      baseUrl,
+      source === 'html-body' && !streamed
+        ? 'outside-head'
+        : alternateQualifier
+          ? 'alternate-qualifier'
+          : undefined,
+    )
     candidates.push(
-      resolvedCandidate(
-        source,
-        raw,
-        baseUrl,
-        source === 'html-body'
-          ? 'outside-head'
-          : alternateQualifier
-            ? 'alternate-qualifier'
-            : undefined,
-      ),
+      streamed ? { ...candidate, streamedMetadata: true } : candidate,
     )
   })
   return candidates
@@ -187,13 +203,23 @@ function evidenceFromCandidates(
   if (distinct.length === 1) {
     const selected = eligible[0]
     return {
-      status: eligible.length > 1 ? 'duplicate' : 'single',
+      status:
+        eligible.length > 1
+          ? 'duplicate'
+          : selected?.streamedMetadata
+            ? 'streamed-outside-head'
+            : 'single',
       selectedRaw: selected?.raw,
       selectedUrl: selected?.resolved,
       candidates,
     }
   }
-  if (candidates.some((candidate) => candidate.source === 'html-body')) {
+  if (
+    candidates.some(
+      (candidate) =>
+        candidate.source === 'html-body' && !candidate.streamedMetadata,
+    )
+  ) {
     return { status: 'outside-head-only', candidates }
   }
   if (candidates.length) return { status: 'invalid', candidates }

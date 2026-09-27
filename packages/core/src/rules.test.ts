@@ -7,7 +7,7 @@ test('rule registry has unique ids and complete guidance', () => {
   const rules = listRules()
   const ids = new Set<string>()
 
-  assert.equal(rules.length, 57)
+  assert.equal(rules.length, 58)
   for (const rule of rules) {
     assert.equal(ids.has(rule.id), false, `duplicate rule id: ${rule.id}`)
     ids.add(rule.id)
@@ -32,6 +32,11 @@ test('rule guidance marks observations that need confirmation', () => {
   assert.equal(explainRule('hsts_missing')?.recommendation, 'review')
   assert.equal(explainRule('twitter_card_missing')?.recommendation, 'review')
   assert.equal(explainRule('missing_title')?.recommendation, 'fix')
+  assert.equal(
+    explainRule('canonical_streamed_in_body')?.recommendation,
+    'review',
+  )
+  assert.equal(explainRule('canonical_outside_head')?.recommendation, 'fix')
   assert.match(
     explainRule('structured_data_missing')?.review?.doNot?.join(' ') ?? '',
     /Do not add Organization/u,

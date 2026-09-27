@@ -153,13 +153,7 @@ export type RenderingDocumentSnapshot = {
   title?: string
   metaDescription?: string
   canonical: {
-    status:
-      | 'missing'
-      | 'single'
-      | 'duplicate'
-      | 'conflicting'
-      | 'outside-head-only'
-      | 'invalid'
+    status: import('../extract/canonical.js').CanonicalEvidence['status']
     url?: string
   }
   robots: {

@@ -179,3 +179,14 @@ export function resolveStreamedSegments(
   }
   return { resolved, skipped, truncated }
 }
+
+/**
+ * Next.js App Router pages carry their React Server Components payload in
+ * inline `self.__next_f` scripts. On these pages a canonical in the body is
+ * streamed metadata rather than a hand-placed tag.
+ */
+export function hasNextAppRouterPayload($: CheerioAPI): boolean {
+  return $('script:not([src])')
+    .toArray()
+    .some((script) => $(script).text().includes('self.__next_f'))
+}

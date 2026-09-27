@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { SeoError } from '../errors.js'
+import { streamedArticleHtml } from '../extract/react-streaming.test-fixtures.js'
 import type { PageFetchResult } from '../types.js'
 import { type AuditPageDependencies, auditPage } from './audit-page.js'
 
@@ -89,6 +90,27 @@ test('auditPage does not select conflicting canonical declarations', async () =>
     ['html-head', 'http-header'],
   )
   assert.equal(report.issues[0]?.code, 'canonical_conflict')
+})
+
+test('auditPage reports streamed canonicals and still checks their target', async () => {
+  const result = fetched('https://example.com/foo')
+  result.html = streamedArticleHtml({
+    canonicalUrl: 'https://example.com/preferred',
+    metadata: 'body',
+  })
+
+  const report = await auditPage(
+    { url: 'https://example.com/foo', extractor: 'readability' },
+    dependencies(result),
+  )
+
+  assert.equal(report.page.canonicalEvidence?.status, 'streamed-outside-head')
+  assert.deepEqual(
+    report.issues
+      .map((issue) => issue.code)
+      .filter((code) => code.startsWith('canonical')),
+    ['canonical_streamed_in_body', 'canonical_mismatch'],
+  )
 })
 
 test('auditPage preserves case-sensitive URL path identity', async () => {

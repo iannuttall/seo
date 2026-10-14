@@ -49,18 +49,23 @@ repository.
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | Search Console and Google Analytics properties, and which key headers arrived |
-| `seo_report` | site-overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page reports check their top 20 URLs live and merge same-site redirects. |
-| `seo_search_console` | Raw rows for any dimensions, filters and dates, with a comparison period |
-| `seo_inspect_url` | Google index status for up to 10 URLs |
-| `seo_analytics` | Landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible |
-| `seo_research` | Keyword metrics, ranked keywords, SERPs and competitors from DataForSEO, Ahrefs or Semrush |
+| `seo_sites` | Search Console and Google Analytics properties, and which keys arrived |
+| `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page sections check their top 20 URLs live and merge same-site redirects. |
+| `seo_page` | One URL: live page facts, Google index status and its queries against the previous period |
+| `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
+| `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
+| `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO, Ahrefs or Semrush, with a free Ahrefs Domain Rating column |
+| `seo_data` | Raw Search Console rows, or landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible |
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.
 Each tool takes its target and optional dates, nothing more. Start with the
-summary; ask for `rows` or `full` only when you need more. Each report names
-the report to run next.
+summary; ask for `rows` or `full` only when you need more. Each result names
+the tool to run next.
+
+Domain Rating comes from the free Ahrefs endpoint with the server's key
+(`AHREFS_DR_KEY`), or the caller's Ahrefs key when they send one. It appears
+only as a column next to other research data, with "Domain Rating by Ahrefs".
 
 ## What is stored
 
@@ -83,7 +88,7 @@ pnpm --filter @seo/hosted-mcp typecheck
 ```
 
 Deploy with `pnpm --filter @seo/hosted-mcp deploy`. Production secrets
-(`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`) live in
+(`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`, `AHREFS_DR_KEY`) live in
 `.dev.vars.production`; upload them with
 `wrangler deploy --secrets-file .dev.vars.production`. A new `SEAL_KEY`
 signs everyone out. Set `PUBLIC_URL` in `wrangler.jsonc` to move the server,

@@ -33,6 +33,8 @@ const SKIP_KEYS = new Set([
   'sampleQueries',
   'omissions',
   'dimensions',
+  'brand',
+  'pageChecks',
 ])
 const ID_COLUMNS = [
   'metric',
@@ -345,5 +347,20 @@ export function presentReport(input: {
       rows: shown,
       limits,
     },
+  }
+}
+
+// A report's row count and its first few rows as a small table.
+export function preview(
+  report: Row,
+  origin: string,
+  rows: number,
+): { total: number; text: string } {
+  const list = mainList(report)
+  if (!list) return { total: 0, text: '' }
+  const flat = list.rows.map(flatten)
+  return {
+    total: flat.length,
+    text: table(flat.slice(0, rows), columnsFor(flat, 6), origin),
   }
 }

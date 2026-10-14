@@ -103,7 +103,11 @@ export type {
   SearchAnalyticsRequest,
   SearchAnalyticsResult,
 } from './gsc/client/types.js'
-export { finalGscDateRange } from './gsc/dates.js'
+export {
+  finalGscDateRange,
+  latestFinalGscDate,
+  shiftIsoDate,
+} from './gsc/dates.js'
 export type { GscRow } from './types.js'
 export {
   findOverlappingSearchUpdates,

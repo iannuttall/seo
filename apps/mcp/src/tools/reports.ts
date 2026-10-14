@@ -15,7 +15,12 @@ import {
 import { z } from 'zod'
 import { MAX_ROWS, resolveProperty, searchAnalytics } from '../google.ts'
 import { pageFacts, reportUrls } from '../pages.ts'
-import { type Detail as DetailLevel, presentReport, table } from './present.ts'
+import {
+  type Detail as DetailLevel,
+  presentReport,
+  preview,
+  table,
+} from './present.ts'
 import {
   DateWindow,
   Detail,
@@ -29,9 +34,9 @@ import {
 // the open-source CLI. They return facts. Advice fields from the analysis
 // code are removed: the agent and the person decide what to do.
 
-export const REPORTS = {
-  'site-overview':
-    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change. Call it first.',
+export const SECTIONS = {
+  overview:
+    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change.',
   'quick-wins':
     'Query and page pairs at average positions 4 to 10 with a click-through rate below the site’s own curve for that position.',
   'low-ctr':
@@ -41,19 +46,19 @@ export const REPORTS = {
   'second-page':
     'Pages with an average position of 11 to 20 and their queries.',
   'content-decay':
-    'Query and page pairs that lost clicks against the previous period or the same period last year.',
+    'Query and page pairs that lost clicks against the previous period.',
   cannibalization:
     'Queries where more than one page of the site gets impressions, with each page’s share.',
   'traffic-drop':
     'Daily clicks and impressions checked for sudden changes in the last days, with Google updates whose dates overlap. Overlap is timing only, not cause.',
 } as const
 
-export type ReportId = keyof typeof REPORTS
+export type SectionId = keyof typeof SECTIONS
 
-// Reports whose top URLs are checked live on every run: status, redirect,
-// title, description, H1, canonical and robots. Same-site redirects are then
-// merged into their targets.
-const PAGE_CHECKS = new Set<ReportId>([
+// Sections whose top URLs are checked live when the section is asked for:
+// status, redirect, title, description, H1, canonical and robots. Same-site
+// redirects are then merged into their targets.
+const PAGE_CHECKS = new Set<SectionId>([
   'quick-wins',
   'low-ctr',
   'striking-distance',
@@ -62,24 +67,23 @@ const PAGE_CHECKS = new Set<ReportId>([
   'cannibalization',
 ])
 
-// The report to run next when it helps. Agents follow these; nothing else.
-const NEXT: Record<ReportId, string> = {
-  'site-overview':
-    'Next: content-decay for pages that lost clicks, quick-wins and low-ctr for click-through rate, traffic-drop for a sudden change.',
+// What to run next when it helps. Agents follow these; nothing else.
+const NEXT: Record<SectionId, string> = {
+  overview:
+    'Next: seo_compare with a change date, or seo_page for one page that moved.',
   'quick-wins':
-    'Next: seo_search_console with a page filter for one page’s queries; low-ctr for the top positions.',
+    'Next: seo_page for one page’s queries and live facts; section "low-ctr" for the top positions.',
   'low-ctr':
-    'Next: quick-wins for positions 4 to 10; seo_research serp to see who else ranks.',
+    'Next: seo_page for one page; seo_research serp to see who else ranks.',
   'striking-distance':
-    'Next: second-page to see the same pages by page; seo_research keyword_metrics for search volume.',
-  'second-page':
-    'Next: seo_search_console with a page filter for one page’s queries.',
+    'Next: section "second-page" to see the same pages by page; seo_research keyword_metrics for search volume.',
+  'second-page': 'Next: seo_page for one page’s queries and live facts.',
   'content-decay':
-    'Next: seo_inspect_url for lost pages; seo_search_console with a page filter to see which queries moved.',
+    'Next: seo_index for pages that lost most of their clicks; seo_page to see which queries moved.',
   cannibalization:
-    'Next: seo_inspect_url on the competing URLs to see Google’s chosen canonical.',
+    'Next: seo_page on each competing URL to see Google’s chosen canonical.',
   'traffic-drop':
-    'Next: site-overview for the period totals and the pages and queries that moved.',
+    'Next: seo_compare with the date the drop started, for the pages and queries that moved.',
 }
 
 export const FACTS_ONLY =
@@ -124,11 +128,13 @@ export function dateWindow(
 // The CLI's Search Console reader, backed by the caller's Google token. When
 // verify found same-site redirects, rows for a redirect source are merged
 // into its target so both count as one page.
-function reader(
+export function reader(
   google: string,
   redirects: Map<string, string> = new Map(),
+  // One run reads the same rows for several sections; each read happens once.
+  memo: Map<string, ReturnType<SearchAnalyticsQuery>> = new Map(),
 ): SearchAnalyticsQuery {
-  return async (site, body) => {
+  const read: SearchAnalyticsQuery = async (site, body) => {
     const { maxRows, rowLimit, startRow: _startRow, ...query } = body
     const result = await searchAnalytics(
       google,
@@ -150,6 +156,15 @@ function reader(
             }),
           )
     return { rows, calls: result.calls, rowsFetched: result.rows.length }
+  }
+  return (site, body) => {
+    const key = JSON.stringify([site, body])
+    let found = memo.get(key)
+    if (!found) {
+      found = read(site, body)
+      memo.set(key, found)
+    }
+    return found
   }
 }
 
@@ -180,7 +195,7 @@ function mergeRows(rows: Row[]): Row[] {
   return [...merged.values()]
 }
 
-async function googleUpdates(window?: { start: string; end: string }) {
+export async function googleUpdates(window?: { start: string; end: string }) {
   if (!window) return []
   const incidents = await fetch(
     'https://status.search.google.com/incidents.json',
@@ -200,8 +215,8 @@ async function googleUpdates(window?: { start: string; end: string }) {
   })
 }
 
-const DEFAULT_DAYS: Record<ReportId, number> = {
-  'site-overview': 28,
+const DEFAULT_DAYS: Record<SectionId, number> = {
+  overview: 28,
   'quick-wins': 28,
   'low-ctr': 28,
   'striking-distance': 28,
@@ -221,14 +236,15 @@ export function earlierRange(
 const pct = (now: number, before: number) =>
   before === 0 ? null : Math.round(((now - before) / before) * 1000) / 10
 
-// Totals, devices, top pages and top queries, now against before.
-async function siteOverview(
+// Totals, devices, top pages and top queries, now against before. With a
+// page filter, only pages whose URL contains it count.
+export async function siteOverview(
   read: SearchAnalyticsQuery,
   site: string,
   range: { startDate: string; endDate: string },
-  comparison: 'previous-period' | 'year-over-year',
+  before: { startDate: string; endDate: string },
+  pageContains?: string,
 ): Promise<Record<string, unknown>> {
-  const before = earlierRange(range, comparison)
   const get = (dimensions: string[], window: typeof range, maxRows = 1000) =>
     read(site, {
       ...window,
@@ -236,6 +252,22 @@ async function siteOverview(
       type: 'web',
       dataState: 'final',
       maxRows,
+      ...(pageContains
+        ? {
+            dimensionFilterGroups: [
+              {
+                groupType: 'and' as const,
+                filters: [
+                  {
+                    dimension: 'page' as const,
+                    operator: 'contains' as const,
+                    expression: pageContains,
+                  },
+                ],
+              },
+            ],
+          }
+        : {}),
     })
   const [
     total,
@@ -314,7 +346,7 @@ async function siteOverview(
   return {
     range,
     comparisonRange: before,
-    comparison,
+    ...(pageContains ? { pageContains } : {}),
     summary: {
       clicks: now.clicks,
       previousClicks: then.clicks,
@@ -343,37 +375,20 @@ async function siteOverview(
   }
 }
 
-// Runs the same report code as the CLI. Page checks that need a browser are
-// off here; the verify option fetches pages directly instead.
+// Runs the same report code as the CLI. One way to run each section: brand terms, minimums and the comparison
+// period are automatic and shown in the output.
 async function build(
-  google: string,
+  read: SearchAnalyticsQuery,
   site: string,
-  report: ReportId,
+  report: SectionId,
   range: { startDate: string; endDate: string },
-  redirects: Map<string, string>,
-  input: {
-    min_impressions?: number
-    limit: number
-    brand_terms?: string[]
-    include_brand: boolean
-    comparison: 'previous-period' | 'year-over-year'
-  },
 ): Promise<Record<string, unknown>> {
-  const dependencies = {
-    searchAnalytics: reader(google, redirects),
-    now: () => new Date(),
-  }
-  const common = {
-    site,
-    minImpressions: input.min_impressions,
-    limit: Math.min(input.limit, 100),
-    brandTerms: input.brand_terms,
-    includeBrand: input.include_brand,
-  }
+  const dependencies = { searchAnalytics: read, now: () => new Date() }
+  const common = { site, limit: 100, includeBrand: false }
   const explicit = { startDate: range.startDate, endDate: range.endDate }
   const run = {
-    'site-overview': () =>
-      siteOverview(dependencies.searchAnalytics, site, range, input.comparison),
+    overview: () =>
+      siteOverview(read, site, range, earlierRange(range, 'previous-period')),
     'quick-wins': () =>
       quickWinsReportWith(
         { ...common, ...explicit, verifyContent: false },
@@ -393,7 +408,7 @@ async function build(
       ),
     'content-decay': () =>
       decayingReportWith(
-        { ...common, ...explicit, comparison: input.comparison },
+        { ...common, ...explicit, comparison: 'previous-period' },
         dependencies,
       ),
     cannibalization: async () => {
@@ -439,10 +454,18 @@ async function build(
   return (await run()) as unknown as Record<string, unknown>
 }
 
-function overviewText(
+export function originOf(property: string): string {
+  return property.startsWith('sc-domain:')
+    ? `https://${property.slice('sc-domain:'.length)}`
+    : property.replace(/\/$/, '')
+}
+
+// Totals, devices and the pages and queries that moved, as text.
+export function overviewText(
   report: Record<string, unknown>,
-  property: string,
+  heading: string,
   origin: string,
+  rowsPerList: number,
 ): string {
   const range = report.range as { startDate: string; endDate: string }
   const before = report.comparisonRange as {
@@ -453,7 +476,7 @@ function overviewText(
   const change = (value: number | null) =>
     value === null ? 'n/a' : `${value > 0 ? '+' : ''}${value}%`
   const section = (name: string, key: 'page' | 'query') => {
-    const group = report[`${key === 'page' ? 'pages' : 'queries'}`] as Record<
+    const group = report[key === 'page' ? 'pages' : 'queries'] as Record<
       string,
       Record<string, unknown>[]
     >
@@ -468,10 +491,10 @@ function overviewText(
     ]
     const part = (title: string, rows: Record<string, unknown>[]) =>
       rows.length
-        ? `${title}:\n${table(rows.slice(0, 10), columns, origin)}`
+        ? `${title}:\n${table(rows.slice(0, rowsPerList), columns, origin)}`
         : ''
     return [
-      part(`Top ${name} by clicks`, group.top),
+      rowsPerList >= 10 ? part(`Top ${name} by clicks`, group.top) : '',
       part(`Biggest ${name} click losses`, group.biggestLosses) ||
         `No ${name} lost clicks.`,
       part(`Biggest ${name} impression losses`, group.biggestImpressionLosses),
@@ -481,22 +504,20 @@ function overviewText(
       .join('\n\n')
   }
   return [
-    `site-overview on ${property}, ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}.`,
+    `${heading}, ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}${report.pageContains ? `, pages whose URL contains "${report.pageContains}"` : ''}.`,
     `Totals: clicks ${t.clicks} (was ${t.previousClicks}, ${change(t.clicksChangePct)}), impressions ${t.impressions} (was ${t.previousImpressions}, ${change(t.impressionsChangePct)}), CTR ${t.ctr} (was ${t.previousCtr}), average position ${t.position} (was ${t.previousPosition}).`,
     `Devices:\n${table(report.devices as Record<string, unknown>[], ['device', 'clicks', 'previousClicks', 'impressions', 'position'], null)}`,
     section('pages', 'page'),
     section('queries', 'query'),
     `Limits:\n${(report.caveats as string[]).map((line) => `- ${line}`).join('\n')}`,
-    `More: seo_report with report "site-overview", site "${property}", detail "full" for every row.`,
   ].join('\n\n')
 }
 
-function listOfUpdates(value: unknown): string | null {
+export function listOfUpdates(value: unknown): string | null {
   if (typeof value === 'string') return value
   if (!Array.isArray(value)) return null
-  if (value.length === 0)
-    return 'Google updates in the comparison window: none.'
-  return `Google updates in the comparison window (timing only, not cause): ${value
+  if (value.length === 0) return 'Google updates in this window: none.'
+  return `Google updates in this window (timing only, not cause): ${value
     .map(
       (update: { name: string; start: string; end?: string }) =>
         `${update.name} (${update.start.slice(0, 10)} to ${update.end?.slice(0, 10) ?? 'ongoing'})`,
@@ -504,146 +525,204 @@ function listOfUpdates(value: unknown): string | null {
     .join('; ')}.`
 }
 
+function brandNote(report: Record<string, unknown>): string | null {
+  const brand = report.brand as
+    | { terms?: string[]; excluded?: { term: string }[] }
+    | undefined
+  if (!brand?.terms) return null
+  return `Brand terms left out: ${brand.terms.join(', ') || 'none'}${
+    brand.excluded?.length
+      ? `. Not treated as brand: ${brand.excluded.map((item) => item.term).join(', ')}`
+      : ''
+  }.`
+}
+
+const SECTION_IDS = Object.keys(SECTIONS) as [SectionId, ...SectionId[]]
+
+// Every section at once: the overview, then each section's count and top
+// rows. One read of each set of rows serves every section.
+async function allSections(
+  google: string,
+  property: string,
+  input: { start_date?: string; end_date?: string },
+): Promise<string> {
+  const read = reader(google)
+  const origin = originOf(property)
+  const range = dateWindow(input, 28)
+  const runs = await Promise.all(
+    SECTION_IDS.map((id) =>
+      build(
+        read,
+        property,
+        id,
+        id === 'overview' ? range : dateWindow(input, DEFAULT_DAYS[id]),
+      )
+        .then((report) => factsOnly(report) as Record<string, unknown>)
+        .catch((error: unknown) =>
+          error instanceof ToolError ? error : Promise.reject(error),
+        ),
+    ),
+  )
+  const [overview, ...rest] = runs
+  if (overview instanceof ToolError) throw overview
+  const parts = [
+    overviewText(
+      overview as Record<string, unknown>,
+      `Report on ${property}`,
+      origin,
+      5,
+    ),
+  ]
+  const brand = rest.find(
+    (run): run is Record<string, unknown> =>
+      !(run instanceof ToolError) && brandNote(run) !== null,
+  )
+  if (brand) parts.push(brandNote(brand) as string)
+  SECTION_IDS.slice(1).forEach((id, index) => {
+    const run = rest[index]
+    if (run instanceof ToolError) {
+      parts.push(`## ${id}\nNot available: ${run.message}`)
+      return
+    }
+    const report = run as Record<string, unknown>
+    const shown = preview(report, origin, 3)
+    const updates =
+      id === 'traffic-drop' ? listOfUpdates(report.googleUpdates) : null
+    parts.push(
+      [
+        `## ${id}: ${shown.total} ${shown.total === 1 ? 'row' : 'rows'}`,
+        SECTIONS[id],
+        shown.text,
+        updates,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
+  })
+  parts.push(
+    `More: seo_report with site "${property}" and a section (${SECTION_IDS.join(', ')}) for its rows. Page sections also check their top 20 URLs live and merge same-site redirects.`,
+  )
+  return `${parts.join('\n\n')}\n\n${FACTS_ONLY}`
+}
+
+async function oneSection(
+  google: string,
+  property: string,
+  section: SectionId,
+  input: {
+    start_date?: string
+    end_date?: string
+    detail: DetailLevel
+    offset: number
+  },
+): Promise<string> {
+  const range = dateWindow(input, DEFAULT_DAYS[section])
+  const origin = originOf(property)
+  let report = factsOnly(
+    await build(reader(google), property, section, range),
+  ) as Record<string, unknown>
+  if (section === 'overview' && input.detail !== 'full') {
+    return `${overviewText(report, `overview of ${property}`, origin, 10)}\n\nMore: seo_report with site "${property}", section "overview", detail "full" for every row.\n\n${NEXT[section]}\n\n${FACTS_ONLY}`
+  }
+  let checked: Awaited<ReturnType<typeof pageFacts>> = []
+  const merged: string[] = []
+  if (PAGE_CHECKS.has(section)) {
+    const list = Object.values(report).find(
+      (value) => Array.isArray(value) && value.length > 0,
+    ) as unknown[] | undefined
+    checked = await pageFacts(
+      reportUrls((report.items as unknown[] | undefined) ?? list ?? [], origin),
+    )
+    const redirects = new Map<string, string>()
+    for (const page of checked) {
+      if (!page.redirects_to) continue
+      if (new URL(page.redirects_to).host !== new URL(page.url).host) continue
+      redirects.set(page.url, page.redirects_to.replace(/#.*$/, ''))
+      merged.push(`${page.url} → ${page.redirects_to}`)
+    }
+    if (redirects.size) {
+      report = factsOnly(
+        await build(reader(google, redirects), property, section, range),
+      ) as Record<string, unknown>
+    }
+    report.pageChecks = checked
+  }
+  const notes: string[] = []
+  const brand = brandNote(report)
+  if (brand) notes.push(brand)
+  const updates = listOfUpdates(report.googleUpdates)
+  if (updates) notes.push(updates)
+  if (checked.length) {
+    notes.push(
+      `Live page checks (${checked.length} URLs, fetched now, no redirects followed):\n${table(
+        checked as unknown as Record<string, unknown>[],
+        [
+          'url',
+          'status',
+          'redirects_to',
+          'title',
+          'description',
+          'h1',
+          'canonical',
+          'robots',
+          ...(checked.some((page) => page.error) ? ['error'] : []),
+        ],
+        origin,
+        320,
+      )}`,
+    )
+  }
+  if (merged.length) {
+    notes.push(
+      `Redirect sources merged into their targets, so each pair counts as one page here: ${merged.join('; ')}.`,
+    )
+  }
+  const call = (detail: DetailLevel, offset?: number) =>
+    `seo_report with site "${property}", section "${section}", detail "${detail}"${offset ? `, offset ${offset}` : ''}`
+  const before = earlierRange(range, 'previous-period')
+  const shown = presentReport({
+    report,
+    headline: [
+      `${section} on ${property}.`,
+      typeof report.verdict === 'string' ? report.verdict : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
+    label: section,
+    range:
+      section === 'content-decay'
+        ? `${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}`
+        : `${range.startDate} to ${range.endDate}`,
+    notes,
+    origin,
+    detail: input.detail,
+    offset: input.offset,
+    limit: PAGE_SIZE,
+    more: call,
+  })
+  return `${shown.text}\n\n${NEXT[section]}\n\n${FACTS_ONLY}`
+}
+
 export const seoReport = defineTool({
   name: 'seo_report',
-  title: 'Run a Search Console report',
-  description: `Runs one report on a Search Console property and returns facts with their limits. Reports:\n${Object.entries(
-    REPORTS,
+  title: 'Search Console report',
+  description: `The main report for a Search Console property. Without a section it returns the overview plus each section's row count and top rows. With a section it returns that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    SECTIONS,
   )
     .map(([id, text]) => `- ${id}: ${text}`)
-    .join(
-      '\n',
-    )}\nStart with site-overview, then detail "summary" on the report you need.`,
+    .join('\n')}`,
   input: z.object({
     site: Site,
-    report: z.enum(Object.keys(REPORTS) as [ReportId, ...ReportId[]]),
+    section: z
+      .enum(SECTION_IDS)
+      .optional()
+      .describe('Optional. Leave it out first; then ask for one section.'),
     ...DateWindow,
     ...Detail,
   }),
   async run(context, input) {
     const property = await resolveProperty(context.google, input.site)
-    const range = dateWindow(input, DEFAULT_DAYS[input.report])
-    // One way to run each report: brand terms, minimums and the comparison
-    // period are automatic and shown in the output.
-    const options = {
-      limit: 100,
-      include_brand: false,
-      comparison: 'previous-period' as const,
-    }
-    let report = factsOnly(
-      await build(
-        context.google,
-        property,
-        input.report,
-        range,
-        new Map(),
-        options,
-      ),
-    ) as Record<string, unknown>
-    const origin = property.startsWith('sc-domain:')
-      ? `https://${property.slice('sc-domain:'.length)}`
-      : property.replace(/\/$/, '')
-    let checked: Awaited<ReturnType<typeof pageFacts>> = []
-    const merged: string[] = []
-    if (PAGE_CHECKS.has(input.report)) {
-      const list = Object.values(report).find(
-        (value) => Array.isArray(value) && value.length > 0,
-      ) as unknown[] | undefined
-      checked = await pageFacts(
-        reportUrls(
-          (report.items as unknown[] | undefined) ??
-            (report.anomalies as unknown[] | undefined) ??
-            list ??
-            [],
-          origin,
-        ),
-      )
-      const redirects = new Map<string, string>()
-      for (const page of checked) {
-        if (!page.redirects_to) continue
-        if (new URL(page.redirects_to).host !== new URL(page.url).host) continue
-        redirects.set(page.url, page.redirects_to.replace(/#.*$/, ''))
-        merged.push(`${page.url} → ${page.redirects_to}`)
-      }
-      if (redirects.size) {
-        report = factsOnly(
-          await build(
-            context.google,
-            property,
-            input.report,
-            range,
-            redirects,
-            options,
-          ),
-        ) as Record<string, unknown>
-      }
-      report.pageChecks = checked
-    }
-    const notes: string[] = []
-    const brand = report.brand as
-      | { terms?: string[]; excluded?: { term: string; reason?: string }[] }
-      | undefined
-    if (brand?.terms) {
-      notes.push(
-        `Brand terms left out: ${brand.terms.join(', ') || 'none'}${
-          brand.excluded?.length
-            ? `. Not treated as brand: ${brand.excluded.map((item) => item.term).join(', ')}`
-            : ''
-        }.`,
-      )
-    }
-    const updates = listOfUpdates(report.googleUpdates)
-    if (updates) notes.push(updates)
-    if (checked.length) {
-      notes.push(
-        `Live page checks (${checked.length} URLs, fetched now, no redirects followed):\n${table(
-          checked as unknown as Record<string, unknown>[],
-          [
-            'url',
-            'status',
-            'redirects_to',
-            'title',
-            'description',
-            'h1',
-            'canonical',
-            'robots',
-            ...(checked.some((page) => page.error) ? ['error'] : []),
-          ],
-          origin,
-          320,
-        )}`,
-      )
-    }
-    if (merged.length) {
-      notes.push(
-        `Redirect sources merged into their targets, so each pair counts as one page in this report: ${merged.join('; ')}.`,
-      )
-    }
-    if (input.report === 'site-overview' && input.detail !== 'full') {
-      return `${overviewText(report, property, origin)}\n\n${NEXT[input.report]}\n\n${FACTS_ONLY}`
-    }
-    const call = (detail: DetailLevel, offset?: number) =>
-      `seo_report with report "${input.report}", site "${property}", detail "${detail}"${offset ? `, offset ${offset}` : ''}`
-    const shown = presentReport({
-      report,
-      headline: [
-        `${input.report} on ${property}.`,
-        typeof report.verdict === 'string' ? report.verdict : '',
-      ]
-        .filter(Boolean)
-        .join(' '),
-      label: input.report,
-      range:
-        input.report === 'site-overview' || input.report === 'content-decay'
-          ? `${range.startDate} to ${range.endDate} against ${earlierRange(range, 'previous-period').startDate} to ${earlierRange(range, 'previous-period').endDate}`
-          : `${range.startDate} to ${range.endDate}`,
-      notes,
-      origin,
-      detail: input.detail,
-      offset: input.offset,
-      limit: PAGE_SIZE,
-      more: call,
-    })
-    return `${shown.text}\n\n${NEXT[input.report]}\n\n${FACTS_ONLY}`
+    if (!input.section) return allSections(context.google, property, input)
+    return oneSection(context.google, property, input.section, input)
   },
 })

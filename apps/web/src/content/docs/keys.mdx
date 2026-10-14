@@ -25,7 +25,7 @@ This works in every client.
 2. On the sign-in page, open **Add your own API keys** and enter the keys you want.
 3. Continue with Google.
 
-The keys are sealed into the sign-in your agent keeps. To change them, connect again.
+The keys are sealed into the sign-in your agent keeps. To change them, remove the server and connect again.
 
 ## Or send keys as headers
 
@@ -41,10 +41,10 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp \
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
 
-Keep keys in your shell environment or keychain. Never paste one into a chat or commit it to a repository. On cloud agents and CI, put them in the platform secrets and follow the [cloud agents guide](/docs/cloud-agents).
+Keep keys in your shell environment or keychain, never in a chat or a repository file. On cloud agents and CI, put them in the platform secrets and follow the [cloud agents guide](/docs/cloud-agents).
 
 ## How keys are handled
 
 A key arrives sealed inside your sign-in token or as a header on the request. The server uses it for that request only and never saves it. The [what is stored page](/docs/privacy) covers the rest.
 
-The server also has its own short [key setup page](https://seoskill.dev/mcp/keys) if your agent needs a link to give you.
+When the hosted MCP needs a key it does not have, its message links to this page.

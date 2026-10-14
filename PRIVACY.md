@@ -1,18 +1,52 @@
 # Privacy policy
 
-Last updated: 9 August 2026
+Last updated: 14 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
-and the seoskill.dev website.
+the hosted MCP server at seoskill.dev/mcp, and the seoskill.dev website.
 
-The current software runs on your machine. It does not create an SEO account,
-upload reports to a hosted SEO service, or send reports or connected account
-data to the project maintainer.
+In short: the hosted MCP stores nothing, API keys are never stored, and the
+only thing kept about your use is an anonymous usage count (the event,
+report, agent, version and week).
+
+The command-line tool runs on your machine. It does not create an SEO
+account, upload reports to a hosted SEO service, or send reports or connected
+account data to the project maintainer.
 
 Local first describes where the software runs and stores its data. It does not
 mean every command works offline. A command can make a direct request from your
 machine to Google, a research provider, a site, or another service needed for
 the work you requested. The sections below explain what each request can send.
+
+## The hosted MCP server
+
+The hosted MCP server at `https://seoskill.dev/mcp` runs the same reports
+for an MCP client you connect to it. It stores nothing. There is no database,
+account or log of your data.
+
+- **Google sign-in.** You sign in with Google and grant read-only access to
+  Search Console and Google Analytics. The resulting Google tokens are sealed
+  (encrypted) into the tokens your MCP client keeps. The server keeps no
+  copy. Revoking the app in your
+  [Google Account connections](https://myaccount.google.com/connections)
+  stops them working.
+- **API keys.** Keys for DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple
+  Analytics or Plausible are optional. You can enter them on the sign-in
+  page, where they are sealed into the same tokens, or send them as request
+  headers. A key is used for the request it arrives with and is never stored.
+- **Your data.** Search Console, Google Analytics and provider responses are
+  fetched for each request, returned to your MCP client and not kept. Pages
+  checked live are fetched for the request and not kept.
+- **Outside services.** Google answers the Google requests. The provider you
+  choose receives your research request under its own policy. Ahrefs
+  receives the domains in research rows for the free Domain Rating column.
+  Cloudflare runs the server and handles the network requests.
+- **Usage counts.** Each run sends one anonymous event to the same telemetry
+  endpoint the CLI uses, with the event, report, agent, version and week. It
+  never contains a site, URL, query, key, account or report data.
+
+Your MCP client and its model provider receive the results under their own
+terms.
 
 ## Google data the software can access
 

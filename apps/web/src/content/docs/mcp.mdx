@@ -2,7 +2,7 @@
 title: Hosted MCP server
 description: Connect Claude Code, Codex or any remote MCP client to the free SEO Skill server at seoskill.dev/mcp. Sign in with Google. Your data and keys are never stored.
 heading: Hosted MCP
-lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and analytics data. Your data and keys are never stored.
+lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and Google Analytics data. Your data and keys are never stored.
 ---
 
 There is nothing to install and no account to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request.
@@ -39,7 +39,7 @@ Other clients: add a remote MCP server with the same URL.
 
 The first time your client connects, your browser opens a sign-in page. Continue with Google and allow read-only access to Search Console and Google Analytics. You need access to at least one Search Console property.
 
-The page also has an optional **Add your own API keys** section for keyword and analytics providers. The [API keys guide](/docs/keys) explains each one.
+The page also has an optional **Add your own API keys** section for DataForSEO and Ahrefs. The [API keys guide](/docs/keys) explains both.
 
 ## Tools your agent gets
 
@@ -51,11 +51,11 @@ The page also has an optional **Add your own API keys** section for keyword and 
 | `seo_compare` | [Before and after a date](/docs/compare), with Google updates in the window. |
 | `seo_index` | [Pages that lost their clicks](/docs/indexing), checked live and with URL Inspection. |
 | `seo_research` | [Keyword and competitor data](/docs/research) from your own provider key. |
-| `seo_data` | [Raw rows](/docs/data) from Search Console or your analytics. |
+| `seo_data` | [Raw rows](/docs/data) from Search Console, or Google Analytics landing pages. |
 
 Each tool takes a site or URL and optional dates. Results start as a short summary, and your agent can ask for more rows when it needs them. Every result names the tool to run next.
 
-The site crawl and internal links need to fetch many pages from your machine, so they are only in the [CLI](/docs/cli).
+The site crawl, internal links, and analytics tools other than Google Analytics, such as Clicky, run on your own machine, so they are only in the [CLI](/docs/cli). The hosted server tells your agent to use the CLI for them.
 
 ## What the server keeps
 

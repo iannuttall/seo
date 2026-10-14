@@ -48,33 +48,34 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
                 </a>
               ))}
             </div>
+            {section.title === 'Commands' ? (
+            <div class="docs-prose mt-10">
+              <h3 id="docs-tools">Commands and hosted MCP tools</h3>
+              <p>
+                Each command has the same name in the CLI and a matching tool in the
+                hosted MCP, and the results are the same either way. Start with the
+                report: the overview shows where clicks moved, and each section count
+                tells you where to look next.
+              </p>
+              <table>
+                <thead>
+                  <tr><th>CLI</th><th>Hosted MCP tool</th><th>Needs</th></tr>
+                </thead>
+                <tbody>
+                  {commands.map((item) => (
+                    <tr>
+                      <td><a href={item.path}><code>{item.command}</code></a></td>
+                      <td>{item.tool ? <code>{item.tool}</code> : 'CLI only'}</td>
+                      <td>{item.needs}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            ) : null}
           </section>
         ))
       }
-
-      <section aria-labelledby="docs-tools" class="docs-prose">
-        <h2 id="docs-tools">Commands and hosted MCP tools</h2>
-        <p>
-          Each command has the same name in the CLI and a matching tool in the
-          hosted MCP, and the results are the same either way. Start with the
-          report: the overview shows where clicks moved, and each section count
-          tells you where to look next.
-        </p>
-        <table>
-          <thead>
-            <tr><th>CLI</th><th>Hosted MCP tool</th><th>Needs</th></tr>
-          </thead>
-          <tbody>
-            {commands.map((item) => (
-              <tr>
-                <td><a href={item.path}><code>{item.command}</code></a></td>
-                <td>{item.tool ? <code>{item.tool}</code> : 'CLI only'}</td>
-                <td>{item.needs}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
     </div>
   </main>
 </BaseLayout>

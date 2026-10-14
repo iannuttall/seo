@@ -59,12 +59,12 @@ export const commands = [
   },
   {
     id: 'data',
-    needs: 'Search Console, or analytics on the hosted MCP',
+    needs: 'Search Console, or Google Analytics on the hosted MCP',
     command: 'seo data',
     tool: 'seo_data',
     path: '/docs/data',
     icon: Database01Icon,
-    text: 'Raw Search Console rows for any dimensions. The hosted MCP also reads landing pages from your analytics.',
+    text: 'Raw Search Console rows for any dimensions. The hosted MCP also reads Google Analytics landing pages.',
   },
   {
     id: 'crawl',

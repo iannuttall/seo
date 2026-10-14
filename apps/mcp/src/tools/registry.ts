@@ -9,6 +9,8 @@ export type ToolContext = {
   google: string
   // The request headers, which carry optional provider keys.
   headers: Headers
+  // Work that may finish after the response, such as usage counts.
+  waitUntil: (promise: Promise<unknown>) => void
 }
 
 export type ErrorCode =

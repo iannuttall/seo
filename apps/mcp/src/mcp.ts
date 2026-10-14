@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+import { events, send } from './telemetry.ts'
 import { seoData, seoResearch, seoSites } from './tools/data.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
 import { seoReport } from './tools/reports.ts'
@@ -46,12 +47,24 @@ export async function serveMcp(
         },
       },
       async (input: unknown): Promise<CallToolResult> => {
+        const count = (failure: Parameters<typeof events>[0]['failure']) =>
+          context.waitUntil(
+            send(
+              events({
+                tool: tool.name,
+                args: input as Record<string, unknown> | undefined,
+                userAgent: context.headers.get('user-agent'),
+                failure,
+              }),
+            ),
+          )
         try {
-          return {
-            content: [{ type: 'text', text: await tool.run(context, input) }],
-          }
+          const text = await tool.run(context, input)
+          count(null)
+          return { content: [{ type: 'text', text }] }
         } catch (error) {
           const known = error instanceof ToolError
+          count(known ? error.code : 'INTERNAL')
           if (!known) console.error(tool.name, error)
           return {
             content: [

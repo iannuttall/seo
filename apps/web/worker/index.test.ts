@@ -59,6 +59,16 @@ test('ingest schema accepts only fixed anonymous fields', () => {
   assert.equal(
     validateTelemetryPayload({
       ...validPayload,
+      schema: 2,
+      os: 'hosted',
+      arch: 'hosted',
+      node: '0',
+    }),
+    true,
+  )
+  assert.equal(
+    validateTelemetryPayload({
+      ...validPayload,
       url: 'https://private.example',
     }),
     false,

@@ -22,5 +22,5 @@
   "limits": { "cpu_ms": 60000 },
   "vars": { "PUBLIC_URL": "https://seoskill.dev" },
   "observability": { "enabled": true }
-  // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY.
+  // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY.
 }

@@ -40,7 +40,11 @@ export function localPath(env: Env, pathname: string): string {
     : pathname
 }
 
-async function route(request: Request, env: Env): Promise<Response> {
+async function route(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
   const pathname = localPath(env, new URL(request.url).pathname)
   const method = request.method
   if (pathname.startsWith('/.well-known/oauth-protected-resource')) {
@@ -76,13 +80,18 @@ async function route(request: Request, env: Env): Promise<Response> {
     // Keys sent as headers win over keys sealed in at sign-in.
     const headers = new Headers(access.keys)
     for (const [name, value] of request.headers) headers.set(name, value)
-    return serveMcp(request, { env, google: access.token, headers })
+    return serveMcp(request, {
+      env,
+      google: access.token,
+      headers,
+      waitUntil: (promise) => ctx.waitUntil(promise),
+    })
   }
   return new Response('Not found', { status: 404 })
 }
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     const pathname = localPath(env, new URL(request.url).pathname)
     const api =
       pathname !== '/mcp/keys' &&
@@ -92,7 +101,7 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors })
     }
-    const response = await route(request, env)
+    const response = await route(request, env, ctx)
     return api ? withCors(response) : response
   },
 } satisfies ExportedHandler<Env>

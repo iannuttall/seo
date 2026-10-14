@@ -16,6 +16,10 @@ h1 { font-size: 1.5rem; margin: 0 0 1rem; }
 a { color: inherit; }
 button { margin: 0.5rem 0 1rem; padding: 0.7rem 1.2rem; border: 0; border-radius: 8px; background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 600; cursor: pointer; }
 .small { color: var(--muted); font-size: 0.9rem; }
+details { margin: 1rem 0; }
+summary { cursor: pointer; font-weight: 600; }
+label { display: block; margin: 0.6rem 0; font-size: 0.9rem; }
+input { display: block; width: 100%; box-sizing: border-box; margin-top: 0.2rem; padding: 0.5rem; border: 1px solid var(--muted); border-radius: 6px; background: transparent; color: inherit; font: inherit; }
 </style>
 </head>
 <body><main>${body}</main></body>

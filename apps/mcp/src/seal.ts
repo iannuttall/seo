@@ -3,6 +3,9 @@
 // read them, and the MCP client keeps them. Each value names its kind, so one
 // kind can never be used as another.
 
+// Provider keys by request header name, such as x-ahrefs-key.
+export type Keys = Record<string, string>
+
 export type Sealed =
   | { k: 'client'; redirectUris: string[]; name: string }
   | {
@@ -11,6 +14,7 @@ export type Sealed =
       redirectUri: string
       state: string | null
       challenge: string
+      keys?: Keys
       exp: number
     }
   | {
@@ -22,10 +26,17 @@ export type Sealed =
       accessToken: string
       accessExp: number
       scope: string
+      keys?: Keys
       exp: number
     }
-  | { k: 'access'; token: string; scope: string; exp: number }
-  | { k: 'refresh'; clientId: string; token: string; scope: string }
+  | { k: 'access'; token: string; scope: string; keys?: Keys; exp: number }
+  | {
+      k: 'refresh'
+      clientId: string
+      token: string
+      scope: string
+      keys?: Keys
+    }
 
 const PREFIX = 'sk1.'
 const keys = new Map<string, Promise<CryptoKey>>()

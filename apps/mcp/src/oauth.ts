@@ -1,5 +1,11 @@
 import { page } from './page.ts'
-import { type Sealed, seal, sha256Base64Url, unseal } from './seal.ts'
+import {
+  type Keys,
+  type Sealed,
+  seal,
+  sha256Base64Url,
+  unseal,
+} from './seal.ts'
 
 // OAuth for MCP clients, with Google as the only sign-in. Nothing is stored:
 // the client id, sign-in state, code and tokens are sealed values that the
@@ -10,6 +16,37 @@ export const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
   'https://www.googleapis.com/auth/analytics.readonly',
 ]
+
+// Keys a person can add on the sign-in page. They are sealed into the tokens
+// their agent keeps, and sent to tools as these request headers.
+export const KEY_FIELDS: { header: string; label: string; secret: boolean }[] =
+  [
+    {
+      header: 'x-dataforseo-login',
+      label: 'DataForSEO API login',
+      secret: false,
+    },
+    {
+      header: 'x-dataforseo-password',
+      label: 'DataForSEO API password',
+      secret: true,
+    },
+    { header: 'x-ahrefs-key', label: 'Ahrefs API key', secret: true },
+    { header: 'x-semrush-key', label: 'Semrush API key', secret: true },
+    { header: 'x-clicky-sitekey', label: 'Clicky sitekey', secret: true },
+    { header: 'x-fathom-key', label: 'Fathom API key', secret: true },
+    {
+      header: 'x-simple-analytics-key',
+      label: 'Simple Analytics API key',
+      secret: true,
+    },
+    {
+      header: 'x-simple-analytics-user-id',
+      label: 'Simple Analytics user id',
+      secret: false,
+    },
+    { header: 'x-plausible-key', label: 'Plausible API key', secret: true },
+  ]
 
 const FLOW_TTL = 10 * 60_000
 const CODE_TTL = 2 * 60_000
@@ -169,20 +206,42 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
     `<h1>Connect SEO Skill</h1>
 <p><strong>${escapeHtml(client.name)}</strong> wants to read your Search Console and Google Analytics data through SEO Skill. After you sign in, Google sends you back to <strong>${escapeHtml(host)}</strong>.</p>
 <p>SEO Skill stores nothing. Your agent keeps the sign-in, and you can remove it at any time in your <a href="https://myaccount.google.com/connections">Google account</a>.</p>
-<form method="get" action="${escapeHtml(env.PUBLIC_URL)}/oauth/google"><input type="hidden" name="flow" value="${escapeHtml(flow)}"><button type="submit">Continue with Google</button></form>
+<form method="post" action="${escapeHtml(env.PUBLIC_URL)}/oauth/google"><input type="hidden" name="flow" value="${escapeHtml(flow)}">
+<details><summary>Add your own API keys (optional)</summary>
+<p class="small">For keyword, competitor and analytics data from your own accounts. The keys are sealed into your agent's sign-in, not saved here. To change them, connect again.</p>
+${KEY_FIELDS.map((field) => `<label>${field.label}<input name="${field.header}" type="${field.secret ? 'password' : 'text'}" autocomplete="off" spellcheck="false"></label>`).join('\n')}
+</details>
+<button type="submit">Continue with Google</button></form>
 <p class="small">Only continue if you started this from your own agent.</p>`,
   )
 }
 
 export async function toGoogle(request: Request, env: Env): Promise<Response> {
-  const flow = new URL(request.url).searchParams.get('flow')
-  if (!(await unseal(env.SEAL_KEY, flow, 'flow'))) {
+  const form = await request.formData().catch(() => null)
+  const sealedFlow = form?.get('flow')
+  const flow = await unseal(
+    env.SEAL_KEY,
+    typeof sealedFlow === 'string' ? sealedFlow : null,
+    'flow',
+  )
+  if (!flow) {
     return page(
       'Sign-in expired',
       '<p>This sign-in has expired. Start again from your agent.</p>',
       400,
     )
   }
+  const keys: Keys = {}
+  for (const field of KEY_FIELDS) {
+    const value = form?.get(field.header)
+    if (typeof value === 'string' && value.trim()) {
+      keys[field.header] = value.trim().slice(0, 500)
+    }
+  }
+  const state = await seal(env.SEAL_KEY, {
+    ...flow,
+    ...(Object.keys(keys).length ? { keys } : {}),
+  })
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID)
   url.searchParams.set('redirect_uri', `${env.PUBLIC_URL}/oauth/callback`)
@@ -190,7 +249,7 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
   url.searchParams.set('scope', GOOGLE_SCOPES.join(' '))
   url.searchParams.set('access_type', 'offline')
   url.searchParams.set('prompt', 'consent select_account')
-  url.searchParams.set('state', flow ?? '')
+  url.searchParams.set('state', state)
   return Response.redirect(url.toString(), 302)
 }
 
@@ -261,6 +320,7 @@ export async function callback(request: Request, env: Env): Promise<Response> {
       accessToken: tokens.access_token,
       accessExp: now + tokens.expires_in * 1000 - EARLY,
       scope: tokens.scope ?? '',
+      keys: flow.keys,
       exp: now + CODE_TTL,
     }),
   )
@@ -275,12 +335,14 @@ async function issue(
     accessExp: number
     refreshToken: string
     scope: string
+    keys?: Keys
   },
 ): Promise<Response> {
   const access: Sealed = {
     k: 'access',
     token: input.accessToken,
     scope: input.scope,
+    keys: input.keys,
     exp: input.accessExp,
   }
   return json({
@@ -292,6 +354,7 @@ async function issue(
       clientId: input.clientId,
       token: input.refreshToken,
       scope: input.scope,
+      keys: input.keys,
     }),
     scope: input.scope,
   })
@@ -341,6 +404,7 @@ export async function token(request: Request, env: Env): Promise<Response> {
       accessExp: Date.now() + tokens.expires_in * 1000 - EARLY,
       refreshToken: tokens.refresh_token ?? refresh.token,
       scope: tokens.scope ?? refresh.scope,
+      keys: refresh.keys,
     })
   }
   return oauthError(
@@ -353,10 +417,12 @@ export async function token(request: Request, env: Env): Promise<Response> {
 export async function googleAccess(
   request: Request,
   env: Env,
-): Promise<{ token: string; scope: string } | null> {
+): Promise<{ token: string; scope: string; keys: Keys } | null> {
   const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/i)
   const access = await unseal(env.SEAL_KEY, bearer?.[1], 'access')
-  return access ? { token: access.token, scope: access.scope } : null
+  return access
+    ? { token: access.token, scope: access.scope, keys: access.keys ?? {} }
+    : null
 }
 
 export function escapeHtml(value: string): string {

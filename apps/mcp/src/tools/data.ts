@@ -19,7 +19,7 @@ import {
 } from '../providers/research.ts'
 import { table } from './present.ts'
 import { DateWindow, Detail, defineTool, Site, ToolError } from './registry.ts'
-import { dateWindow, FACTS_ONLY } from './reports.ts'
+import { dateWindow, earlierRange, FACTS_ONLY } from './reports.ts'
 
 type Row = Record<string, unknown>
 
@@ -137,7 +137,8 @@ export const seoSearchConsole = defineTool({
       .describe('Adds the same rows from the earlier period and the change.'),
     sort: z
       .enum(['clicks', 'impressions', 'ctr', 'position', 'clicks_change'])
-      .default('clicks'),
+      .optional()
+      .describe('Default: date order with the date dimension, else clicks.'),
     max_rows: z
       .number()
       .int()
@@ -173,42 +174,47 @@ export const seoSearchConsole = defineTool({
     }))
     const notes: string[] = []
     if (input.compare !== 'none') {
-      const days =
-        (Date.parse(range.endDate) - Date.parse(range.startDate)) / 86_400_000 +
-        1
-      const shift = (date: string, by: number) =>
-        new Date(Date.parse(date) - by * 86_400_000).toISOString().slice(0, 10)
-      const previous =
-        input.compare === 'year-over-year'
-          ? {
-              startDate: shift(range.startDate, 364),
-              endDate: shift(range.endDate, 364),
-            }
-          : {
-              startDate: shift(range.startDate, days),
-              endDate: shift(range.startDate, 1),
-            }
+      const previous = earlierRange(range, input.compare)
       const before = await searchAnalytics(
         context.google,
         property,
         { ...query, ...previous },
         input.max_rows,
       )
-      const earlier = new Map(before.rows.map((row) => [name(row.keys), row]))
+      // Dates never match across periods, so a date row pairs with the date
+      // the same number of days into the earlier period.
+      const dateAt = input.dimensions.indexOf('date')
+      const keyOf = (keys: string[], start: string) =>
+        name(
+          keys.map((key, index) =>
+            index === dateAt
+              ? String(
+                  Math.round(
+                    (Date.parse(key) - Date.parse(start)) / 86_400_000,
+                  ),
+                )
+              : key,
+          ),
+        )
+      const earlier = new Map(
+        before.rows.map((row) => [keyOf(row.keys, previous.startDate), row]),
+      )
       const seen = new Set<string>()
       rows = current.rows.map((row, index) => {
-        const key = name(row.keys)
+        const key = keyOf(row.keys, range.startDate)
         seen.add(key)
         const old = earlier.get(key)
         return {
           ...rows[index],
+          ...(dateAt >= 0 ? { previous_date: old?.keys[dateAt] ?? null } : {}),
           previous_clicks: old?.clicks ?? 0,
           clicks_change: row.clicks - (old?.clicks ?? 0),
           previous_position: old?.position ?? null,
         }
       })
       for (const old of before.rows) {
-        if (seen.has(name(old.keys))) continue
+        if (seen.has(keyOf(old.keys, previous.startDate))) continue
+        if (dateAt >= 0) continue
         rows.push({
           ...Object.fromEntries(
             input.dimensions.map((d, i) => [d, old.keys[i]]),
@@ -226,14 +232,33 @@ export const seoSearchConsole = defineTool({
         `Compared with ${previous.startDate} to ${previous.endDate}${before.truncated ? ' (earlier period hit the row limit)' : ''}. 0 clicks with no position means the row had no impressions in the current period.`,
       )
     }
-    const sortKey = input.sort
+    const dateDim = input.dimensions.includes('date')
+    const sortKey = input.sort ?? (dateDim ? 'date' : 'clicks')
     rows.sort((a, b) => {
+      if (sortKey === 'date')
+        return String(a.date).localeCompare(String(b.date))
       const x = Number(a[sortKey] ?? 0)
       const y = Number(b[sortKey] ?? 0)
       return sortKey === 'position' || sortKey === 'clicks_change'
         ? x - y
         : y - x
     })
+    // Rows split only by date, device, country or appearance add up to the
+    // property totals; query and page rows do not.
+    if (
+      !input.dimensions.includes('query') &&
+      !input.dimensions.includes('page')
+    ) {
+      const sum = (key: string) =>
+        rows.reduce((total, row) => total + Number(row[key] ?? 0), 0)
+      notes.unshift(
+        `Totals: clicks ${sum('clicks')}, impressions ${sum('impressions')}${
+          input.compare !== 'none'
+            ? `; earlier period clicks ${sum('previous_clicks')}`
+            : ''
+        }.`,
+      )
+    }
     if (current.truncated) {
       notes.push(`Stopped at max_rows ${input.max_rows}; more rows exist.`)
     }

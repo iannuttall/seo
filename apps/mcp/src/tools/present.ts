@@ -35,7 +35,10 @@ const SKIP_KEYS = new Set([
   'dimensions',
 ])
 const ID_COLUMNS = [
+  'metric',
+  'direction',
   'query',
+  'queryFlags',
   'keyword',
   'url',
   'page',
@@ -47,8 +50,13 @@ const ID_COLUMNS = [
   'rule',
   'severity',
   'status',
+  'urls',
+  'topPage',
 ]
 const METRIC_COLUMNS = [
+  'percentChange',
+  'baselineMean',
+  'comparisonMean',
   'clicks',
   'impressions',
   'ctr',
@@ -108,7 +116,9 @@ function flatten(row: Row): Record<string, Json> {
   const flat: Record<string, Json> = {}
   for (const [key, value] of Object.entries(row)) {
     if (isPrimitive(value)) flat[key] = value
-    else if (isObject(value)) {
+    else if (Array.isArray(value) && value.length && value.every(isPrimitive)) {
+      flat[key] = value.join(' ')
+    } else if (isObject(value)) {
       for (const [inner, innerValue] of Object.entries(value)) {
         if (isPrimitive(innerValue)) flat[`${key}.${inner}`] = innerValue
       }
@@ -143,7 +153,7 @@ function columnsFor(rows: Record<string, Json>[], max: number): string[] {
     .map(([key]) => key)
     .filter(
       (key) =>
-        !/(^|\.)(id|method|heuristic|estimatedClickLift|confidence|label)$/.test(
+        !/(^|\.)(id|method|heuristic|estimatedClickLift|confidence|label)$|^site$/.test(
           key,
         ),
     )
@@ -222,10 +232,42 @@ function keyFacts(report: Row): string | null {
 
 export type Presented = { text: string; data: unknown }
 
+// Non-zero selection counts, so a short or empty list says what removed rows.
+function filteredLine(report: Row): string | null {
+  if (!isObject(report.selection)) return null
+  const counts = Object.entries(report.selection)
+    .filter(
+      ([key, value]) =>
+        typeof value === 'number' &&
+        value > 0 &&
+        !/(source|aggregated|valid|eligible|returned|total|groups|days)/i.test(
+          key,
+        ),
+    )
+    .map(([key, value]) => `${key} ${value}`)
+  return counts.length ? `Filtered out: ${counts.join(', ')}.` : null
+}
+
+// Lists that are mainly bookkeeping go after the findings in full output.
+function findingsFirst(report: Row): Row {
+  const last = Object.keys(report).filter((key) =>
+    /suppress|omitted|excluded/i.test(key),
+  )
+  if (!last.length) return report
+  const out: Row = {}
+  for (const [key, value] of Object.entries(report)) {
+    if (!last.includes(key)) out[key] = value
+  }
+  for (const key of last) out[key] = report[key]
+  return out
+}
+
 export function presentReport(input: {
   report: Row | null
   headline: string
   label: string
+  range?: string | null
+  notes?: string[]
   origin: string
   detail: Detail
   offset: number
@@ -235,16 +277,17 @@ export function presentReport(input: {
   const { report, headline, origin } = input
   if (!report) return { text: headline, data: null }
   if (input.detail === 'full') {
+    const ordered = findingsFirst(report)
     return {
-      text: `${headline}\n\n${JSON.stringify(report)}`,
-      data: report,
+      text: `${headline}\n\n${JSON.stringify(ordered)}`,
+      data: ordered,
     }
   }
   const list = mainList(report)
   const flat = list ? list.rows.map(flatten) : []
   const head = [
     input.label,
-    dateRange(report),
+    input.range ?? dateRange(report),
     findString(report, ['dataStatus']),
   ]
     .filter(Boolean)
@@ -280,6 +323,8 @@ export function presentReport(input: {
     head,
     headline,
     facts ? `Facts: ${facts}.` : '',
+    ...(input.notes ?? []),
+    flat.length < 5 ? filteredLine(report) : null,
     list
       ? `${list.path} (${shown.length} of ${flat.length} shown):\n${table(shown, columns, origin)}`
       : '',

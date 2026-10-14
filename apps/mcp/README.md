@@ -19,7 +19,13 @@ Search Console property.
 ## Keys
 
 DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple Analytics and Plausible
-use your own key. Send it as a header in the client config, never in a chat:
+use your own key. There are two ways to give a key, and neither puts it in a
+chat:
+
+1. **On the sign-in page.** Open "Add your own API keys" before you continue
+   with Google. The keys are sealed into the sign-in your agent keeps. To
+   change them, connect again. This works in every client.
+2. **As headers** in the client config. A header wins over a sealed key.
 
 | Provider | Headers |
 | --- | --- |
@@ -36,7 +42,7 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp \
   --header "X-Ahrefs-Key: ${AHREFS_API_KEY}"
 ```
 
-Keep the values in your shell environment or keychain, not in a file in a
+Keep header values in your shell environment or keychain, not in a file in a
 repository.
 
 ## Tools
@@ -60,8 +66,8 @@ Nothing. There is no database, account or log of your data.
 - The client id, sign-in state, code and tokens are values sealed with
   AES-GCM under `SEAL_KEY`. Your MCP client keeps them. The access token holds
   a Google access token; the refresh token holds the Google refresh token.
-- Provider keys arrive as headers on each request and are used for that
-  request only.
+- Provider keys are sealed into those same tokens, or arrive as headers on
+  each request. They are used for that request only and never saved.
 - Remove access at any time in your
   [Google account](https://myaccount.google.com/connections).
 

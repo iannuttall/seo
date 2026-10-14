@@ -1,3 +1,4 @@
+import { readJson, readJsonOrUndefined } from '../../http/read-json.js'
 import type { OAuthClientConfig } from './types.js'
 
 export const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
@@ -39,7 +40,7 @@ export async function requestGoogleAccessToken(
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => undefined)) as
+    const payload = (await readJsonOrUndefined(response, 'Google sign-in')) as
       | { error?: unknown }
       | undefined
     throw new GoogleTokenEndpointError(
@@ -48,7 +49,7 @@ export async function requestGoogleAccessToken(
     )
   }
 
-  const payload = (await response.json()) as {
+  const payload = (await readJson(response, 'Google sign-in')) as {
     access_token?: unknown
     expires_in?: unknown
     refresh_token?: unknown

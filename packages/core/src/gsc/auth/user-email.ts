@@ -1,3 +1,4 @@
+import { readJson } from '../../http/read-json.js'
 export function decodeJwtEmail(idToken?: string): string | undefined {
   if (!idToken) {
     return undefined
@@ -30,6 +31,8 @@ export async function fetchUserEmail(
   if (!response.ok) {
     return undefined
   }
-  const json = (await response.json()) as { email?: string }
+  const json = (await readJson(response, 'Google user info')) as {
+    email?: string
+  }
   return json.email
 }

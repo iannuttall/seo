@@ -30,6 +30,10 @@
 /docs/ahrefs.md /docs/keys.md 301
 /docs/clicky /docs/analytics 301
 /docs/clicky.md /docs/analytics.md 301
+/trademarks / 301
+/trademarks.md /index.md 301
+/security https://github.com/iannuttall/seo/security/policy 301
+/security.md https://github.com/iannuttall/seo/security/policy 301
 /docs/bing /docs 301
 /docs/bing.md /docs.md 301
 /docs/indexnow /docs 301

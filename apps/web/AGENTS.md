@@ -75,8 +75,10 @@ pnpm deploy:web:dry-run
   Wrangler asset handling.
 - Generate exact sitemap XML into `public/` with
   `scripts/build-sitemap.mjs`. `/sitemap.xml` is the only sitemap.
-- Render privacy, terms, security, and trademark copy from the canonical
-  repository Markdown files. Do not duplicate those policies in site pages.
+- Render privacy and terms copy from the canonical repository Markdown
+  files. Do not duplicate those policies in site pages. The site has no
+  security or trademark page: `/security` redirects to the GitHub security
+  policy and `/trademarks` to the home page.
 - Questions and ordinary support go to GitHub Issues. Vulnerabilities go to
   GitHub private vulnerability reporting. Do not add an email address.
 - Teach the published package path first: `npm i -g seo`, then `seo start`.

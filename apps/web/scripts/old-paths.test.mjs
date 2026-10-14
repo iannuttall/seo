@@ -66,6 +66,8 @@ test('every old URL is a page or one 301 to a page', () => {
     if (redirect.status !== '301') {
       failures.push(`${path}: redirect status ${redirect.status}`)
     }
+    // A few pages now live on another site, such as the security policy.
+    if (redirect.to.startsWith('https://')) continue
     if (redirectFor(redirect.to)) {
       failures.push(
         `${path}: redirects to ${redirect.to}, which redirects again`,

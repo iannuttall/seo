@@ -2,38 +2,14 @@
 import Logo from './Logo.astro'
 import { site } from '@/lib/site'
 
-const linkRows = [
-  [
-    { label: 'Features', href: '/features' },
-    { label: 'Docs', href: '/docs' },
-    { label: 'Hosted MCP', href: '/docs/mcp' },
-    { label: 'CLI', href: '/docs/cli' },
-    { label: 'Tools', href: '/tools' },
-    { label: 'Usage stats', href: '/stats' },
-    { label: 'GitHub', href: site.repository },
-  ],
-  [
-    { label: 'SEO MCP server', href: '/features/mcp' },
-    { label: 'Search Console MCP', href: '/features/search-console' },
-    { label: 'Keyword research tool', href: '/features/keyword-research' },
-    { label: 'SEO audit tool', href: '/features/seo-audit' },
-  ],
-  [
-    { label: 'Domain Rating checker', href: '/tools/domain-rating-checker' },
-    { label: 'Website traffic checker', href: '/tools/website-traffic-checker' },
-    { label: 'robots.txt validator', href: '/tools/robots-txt-validator' },
-    { label: 'Sitemap URL extractor', href: '/tools/sitemap-extractor' },
-    { label: 'Schema markup generator', href: '/tools/schema-markup-generator' },
-    { label: 'SERP preview', href: '/tools/serp-preview' },
-  ],
-  [
-    { label: 'Privacy', href: '/privacy' },
-    { label: 'Telemetry', href: '/telemetry' },
-    { label: 'Terms', href: '/terms' },
-    { label: 'Cookies', href: '/cookies' },
-    { label: 'Security', href: '/security' },
-    { label: 'Trademarks', href: '/trademarks' },
-  ],
+const links = [
+  { label: 'Features', href: '/features' },
+  { label: 'Docs', href: '/docs' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Stats', href: '/stats' },
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
+  { label: 'GitHub', href: site.repository },
 ]
 
 const linkClass =
@@ -67,25 +43,23 @@ const projectThings = [
       <Logo class="size-9" />
     </a>
 
-    <nav class="flex flex-col items-center gap-4" aria-label="Footer">
-      {
-        linkRows.map((row) => (
-          <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-            {row.map((link) => (
-              <li>
-                <a
-                  class={linkClass}
-                  href={link.href}
-                  target={link.href.startsWith("http") ? "_blank" : undefined}
-                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        ))
-      }
+    <nav aria-label="Footer">
+      <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                class={linkClass}
+                href={link.href}
+                target={link.href.startsWith('http') ? '_blank' : undefined}
+                rel={link.href.startsWith('http') ? 'noreferrer' : undefined}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </nav>
 
     <p class="text-sm/6 text-foreground-soft">

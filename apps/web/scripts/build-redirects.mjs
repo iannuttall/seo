@@ -31,6 +31,8 @@ export const pageRedirects = {
   '/docs/semrush': '/docs/keys',
   '/docs/ahrefs': '/docs/keys',
   '/docs/clicky': '/docs/analytics',
+  '/trademarks': '/',
+  '/security': 'https://github.com/iannuttall/seo/security/policy',
   '/docs/bing': '/docs',
   '/docs/indexnow': '/docs',
   '/docs/html-reports': '/docs',
@@ -79,8 +81,12 @@ export function redirectRules() {
   for (const [from, to] of rules) {
     lines.push(`${from} ${to} 301`)
     if (from.endsWith('/')) continue
-    // The Markdown twin of each old page goes to the new page's twin.
-    lines.push(`${from}.md ${to === '/' ? '/index' : to}.md 301`)
+    // The Markdown twin of each old page goes to the new page's twin, or to
+    // the same place when the new home is on another site.
+    const twin = to.startsWith('https://')
+      ? to
+      : `${to === '/' ? '/index' : to}.md`
+    lines.push(`${from}.md ${twin} 301`)
   }
   // Anything else under the old report and feature paths.
   lines.push('/docs/reports/* /docs 301')

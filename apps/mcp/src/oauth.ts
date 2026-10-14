@@ -1,3 +1,4 @@
+import { exchangeGoogleCode, requestGoogleAccessToken } from '@seo/core/hosted'
 import { page } from './page.ts'
 import {
   type Keys,
@@ -239,27 +240,11 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
   return Response.redirect(url.toString(), 302)
 }
 
-type GoogleTokens = {
-  access_token: string
-  expires_in: number
-  refresh_token?: string
-  scope?: string
-}
-
-async function googleToken(
-  env: Env,
-  body: Record<string, string>,
-): Promise<GoogleTokens | { error: string; error_description?: string }> {
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: env.GOOGLE_CLIENT_ID,
-      client_secret: env.GOOGLE_CLIENT_SECRET,
-      ...body,
-    }),
-  })
-  return (await response.json()) as GoogleTokens
+function googleClient(env: Env) {
+  return {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+  }
 }
 
 export async function callback(request: Request, env: Env): Promise<Response> {
@@ -281,12 +266,12 @@ export async function callback(request: Request, env: Env): Promise<Response> {
     back.searchParams.set('error_description', 'Google sign-in was cancelled.')
     return Response.redirect(back.toString(), 302)
   }
-  const tokens = await googleToken(env, {
+  const tokens = await exchangeGoogleCode({
+    clientConfig: googleClient(env),
     code,
-    grant_type: 'authorization_code',
-    redirect_uri: `${env.PUBLIC_URL}/oauth/callback`,
-  })
-  if ('error' in tokens || !tokens.refresh_token) {
+    redirectUri: `${env.PUBLIC_URL}/oauth/callback`,
+  }).catch(() => null)
+  if (!tokens?.refresh_token) {
     back.searchParams.set('error', 'server_error')
     back.searchParams.set(
       'error_description',
@@ -374,11 +359,11 @@ export async function token(request: Request, env: Env): Promise<Response> {
     if (!refresh || refresh.clientId !== field('client_id')) {
       return oauthError('invalid_grant', 'The refresh token is not valid.')
     }
-    const tokens = await googleToken(env, {
-      grant_type: 'refresh_token',
-      refresh_token: refresh.token,
-    })
-    if ('error' in tokens) {
+    const tokens = await requestGoogleAccessToken({
+      clientConfig: googleClient(env),
+      refreshToken: refresh.token,
+    }).catch(() => null)
+    if (!tokens) {
       return oauthError(
         'invalid_grant',
         'Google refused the refresh. Sign in again.',
@@ -386,10 +371,10 @@ export async function token(request: Request, env: Env): Promise<Response> {
     }
     return issue(env, {
       clientId: refresh.clientId,
-      accessToken: tokens.access_token,
-      accessExp: Date.now() + tokens.expires_in * 1000 - EARLY,
-      refreshToken: tokens.refresh_token ?? refresh.token,
-      scope: tokens.scope ?? refresh.scope,
+      accessToken: tokens.accessToken,
+      accessExp: Date.now() + tokens.expiresIn * 1000 - EARLY,
+      refreshToken: tokens.refreshToken ?? refresh.token,
+      scope: refresh.scope,
       keys: refresh.keys,
     })
   }

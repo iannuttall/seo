@@ -99,6 +99,12 @@ export {
 } from './brand-evidence.js'
 export * from './commands/index.js'
 export * from './google/api.js'
+export {
+  exchangeGoogleCode,
+  type GoogleCodeTokens,
+  GoogleTokenEndpointError,
+  requestGoogleAccessToken,
+} from './gsc/auth/token-endpoint.js'
 export type {
   SearchAnalyticsOptions,
   SearchAnalyticsQuery,

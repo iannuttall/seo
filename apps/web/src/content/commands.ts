@@ -58,7 +58,7 @@ export const commands = [
     tool: 'seo_data',
     path: '/docs/commands/data',
     icon: Database01Icon,
-    text: 'Raw Search Console rows, or landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible.',
+    text: 'Raw Search Console rows for any dimensions. The hosted MCP also reads landing pages from your analytics.',
   },
   {
     id: 'crawl',

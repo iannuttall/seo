@@ -5,7 +5,12 @@ heading: seo research
 lead: Keyword metrics, rankings, SERPs, competitors and backlinks from your own DataForSEO, Ahrefs or Semrush account.
 ---
 
-Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. You need a key from one of the three providers, and each request uses your credits with them. The [API keys guide](/docs/keys) shows how to add one.
+Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. You need a key from DataForSEO, Ahrefs or Semrush, and each request uses your credits with them. For the hosted MCP, the [API keys guide](/docs/keys) shows how to add one. For the CLI, connect a provider once:
+
+```sh
+seo providers dataforseo connect
+seo providers ahrefs connect
+```
 
 ## What you can ask for
 
@@ -27,7 +32,14 @@ Ask your agent and name the provider you have a key for:
 Use Ahrefs to show the keywords competitor.com ranks for in the UK
 ```
 
-The hosted MCP runs `seo_research`. In a terminal, `seo research --help` lists the options.
+The hosted MCP runs `seo_research`. In a terminal, put the action first:
+
+```sh
+seo research keyword_metrics --keywords "seo audit,seo report" --country us
+seo research ranked_keywords --provider ahrefs --target competitor.com --country gb
+```
+
+Without `--provider`, the CLI uses the first provider with a saved key.
 
 ## Domain Rating column
 

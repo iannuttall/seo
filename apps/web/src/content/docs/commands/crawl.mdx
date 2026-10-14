@@ -16,15 +16,21 @@ npm i -g seo
 seo start
 ```
 
-Then ask your agent to crawl the site, or see the options yourself:
+Then ask your agent to crawl the site, or run it yourself:
 
 ```sh
-seo crawl --help
+seo crawl https://example.com --save
+```
+
+`--save` keeps the crawl on your machine. The crawl stops at 500 pages unless you raise `--max-pages` (up to 10,000). For a large site, start with a quick sitemap pass that checks status codes and redirects without reading every page:
+
+```sh
+seo crawl --sitemap-url https://example.com/sitemap.xml --health
 ```
 
 ## What comes back
 
-The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. It saves the crawl on your machine so you can compare the next one against it.
+The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. With `--save`, it keeps the crawl on your machine so you can compare the next one against it.
 
 A `noindex` tag or a canonical pointing elsewhere is reported as what the page says. It is only a problem if you did not mean it.
 

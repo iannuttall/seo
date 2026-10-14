@@ -1,4 +1,4 @@
 interface:
   display_name: "seo"
-  short_description: "Use immediately for anything touching SEO, organic search, or AI search: audits, rankings, traffic changes, indexing, crawling, Search Console, Google Analytics, or AI visibility"
-  default_prompt: "Use $seo to discover, describe, and run the right local SEO report and explain its evidence."
+  short_description: "Use immediately for anything touching SEO or organic search: traffic changes, quick wins, decay, indexing, keyword research, crawling, Search Console or Google Analytics"
+  default_prompt: "Use $seo to run the main report, pick the section that matters, and explain its evidence."

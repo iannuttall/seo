@@ -1,8 +1,9 @@
-import { ToolError } from '../tools/registry.ts'
+import { CommandError } from './types.js'
 
-// Keyword and competitor data from the caller's own DataForSEO, Ahrefs or
-// Semrush account. Keys arrive as request headers and are used for this one
-// call only. Each function returns plain rows with the provider's own metric
+// Keyword, competitor and backlink data from the person's own DataForSEO,
+// Ahrefs or Semrush account. Keys come as header-style names (from request
+// headers in the hosted MCP, from the local secret store in the CLI) and are
+// used for this one call only. Each function returns plain rows with the provider's own metric
 // names, so numbers from different providers are never mixed.
 
 export type ResearchProvider = 'dataforseo' | 'ahrefs' | 'semrush'
@@ -39,7 +40,7 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
         ]
       : [headers.get(provider === 'ahrefs' ? 'x-ahrefs-key' : 'x-semrush-key')]
   if (values.some((value) => !value)) {
-    throw new ToolError(
+    throw new CommandError(
       'NO_KEY',
       `No ${provider} key on this connection. Connect this MCP server again and add the key on the sign-in page, or send the ${KEY_HEADERS[provider]} header from the client config.`,
     )
@@ -54,7 +55,7 @@ async function call(
   const response = await fetch(request)
   if (response.ok) return response
   const text = (await response.text()).slice(0, 300)
-  throw new ToolError(
+  throw new CommandError(
     response.status === 401 || response.status === 403
       ? 'NO_KEY'
       : 'PROVIDER_ERROR',
@@ -66,10 +67,10 @@ function requireInput(input: ResearchInput) {
   const needsKeywords =
     input.action === 'keyword_metrics' || input.action === 'serp'
   if (needsKeywords && input.keywords.length === 0) {
-    throw new ToolError('INVALID_INPUT', `${input.action} needs keywords.`)
+    throw new CommandError('INVALID_INPUT', `${input.action} needs keywords.`)
   }
   if (!needsKeywords && !input.target) {
-    throw new ToolError(
+    throw new CommandError(
       'INVALID_INPUT',
       `${input.action} needs a target domain or URL.`,
     )
@@ -126,7 +127,7 @@ async function dataForSeo(
     }
     const result = data.tasks?.[0]
     if (!result || result.status_code >= 40000) {
-      throw new ToolError(
+      throw new CommandError(
         'PROVIDER_ERROR',
         `dataforseo: ${result?.status_message ?? 'no task result'}`,
       )
@@ -421,7 +422,7 @@ async function semrush(key: string, input: ResearchInput): Promise<Row[]> {
 function parseSemrush(text: string): Row[] {
   if (text.startsWith('ERROR')) {
     if (text.includes('NOTHING FOUND')) return []
-    throw new ToolError('PROVIDER_ERROR', `semrush: ${text.slice(0, 200)}`)
+    throw new CommandError('PROVIDER_ERROR', `semrush: ${text.slice(0, 200)}`)
   }
   const [head, ...lines] = text.trim().split(/\r?\n/)
   const names = (head ?? '').split(';')

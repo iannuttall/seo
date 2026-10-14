@@ -153,3 +153,36 @@ export function listOfUpdates(value: unknown): string | null {
     )
     .join('; ')}.`
 }
+
+// The Search Console property that covers a site or URL: an exact name, the
+// longest matching domain property, or a URL-prefix property for the origin.
+export function matchProperty(names: string[], site: string): string | null {
+  if (names.includes(site)) return site
+  let host: string
+  let origin: string
+  try {
+    const url = new URL(
+      site.includes('://')
+        ? site
+        : `https://${site.replace(/^sc-domain:/, '')}`,
+    )
+    host = url.hostname.replace(/^www\./, '')
+    origin = url.origin
+  } catch {
+    return null
+  }
+  const domain = names
+    .filter((name) => name.startsWith('sc-domain:'))
+    .map((name) => name.slice('sc-domain:'.length))
+    .filter((name) => host === name || host.endsWith(`.${name}`))
+    .sort((a, b) => b.length - a.length)[0]
+  if (domain) return `sc-domain:${domain}`
+  return (
+    names.find(
+      (name) =>
+        name === `${origin}/` ||
+        name === `${origin.replace('://', '://www.')}/` ||
+        name === `${origin.replace('://www.', '://')}/`,
+    ) ?? null
+  )
+}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { withDomainRating } from './providers/domain-rating.ts'
+import { withDomainRating } from './domain-rating.js'
 
 const store = new Map<string, Response>()
 Object.assign(globalThis, {

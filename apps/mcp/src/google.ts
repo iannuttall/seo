@@ -1,3 +1,4 @@
+import { matchProperty } from '@seo/core/commands'
 import type { GscRow, SearchAnalyticsRequest } from '@seo/core/hosted'
 import { ToolError } from './tools/registry.ts'
 
@@ -64,30 +65,11 @@ export async function resolveProperty(
   site: string,
 ): Promise<string> {
   const properties = await listProperties(token)
-  const names = properties.map((property) => property.siteUrl)
-  if (names.includes(site)) return site
-  let host: string
-  let origin: string
-  try {
-    const url = new URL(site.includes('://') ? site : `https://${site}`)
-    host = url.hostname.replace(/^www\./, '')
-    origin = url.origin
-  } catch {
-    throw new ToolError('INVALID_INPUT', `"${site}" is not a site or URL.`)
-  }
-  const domain = names
-    .filter((name) => name.startsWith('sc-domain:'))
-    .map((name) => name.slice('sc-domain:'.length))
-    .filter((name) => host === name || host.endsWith(`.${name}`))
-    .sort((a, b) => b.length - a.length)[0]
-  if (domain) return `sc-domain:${domain}`
-  const prefix = names.find(
-    (name) =>
-      name === `${origin}/` ||
-      name === `${origin.replace('://', '://www.')}/` ||
-      name === `${origin.replace('://www.', '://')}/`,
+  const found = matchProperty(
+    properties.map((property) => property.siteUrl),
+    site,
   )
-  if (prefix) return prefix
+  if (found) return found
   throw new ToolError(
     'NO_ACCESS',
     `This Google account has no Search Console property for ${site}. Call seo_sites to list the properties it can read.`,

@@ -2,14 +2,15 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import {
+  commandErrorFrom,
   MCP_INSTRUCTIONS,
   runSharedTool,
   SHARED_TOOLS,
   type SharedTool,
 } from '@seo/core/commands'
-import { resolveProperty } from './google.ts'
+import { googleFetch, resolveProperty, SIGN_IN } from './google.ts'
 import { events, send } from './telemetry.ts'
-import { hostedAnalytics, seoSites } from './tools/data.ts'
+import { seoSites } from './tools/data.ts'
 import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
 
@@ -29,7 +30,8 @@ function sharedTool(shared: SharedTool): Tool {
           resolveSite: (site) => resolveProperty(context.google, site),
           keys: async () => context.headers,
           drKey: context.env.AHREFS_DR_KEY,
-          analytics: (analytics) => hostedAnalytics(context, analytics),
+          google: async () => googleFetch(context.google),
+          signIn: SIGN_IN.signIn,
         },
         input,
       )
@@ -81,7 +83,9 @@ export async function serveMcp(
           const text = await tool.run(context, input)
           count(null)
           return { content: [{ type: 'text', text }] }
-        } catch (error) {
+        } catch (thrown) {
+          // Core errors (from the shared Google calls) report like tool errors.
+          const error = commandErrorFrom(thrown)
           const known = error instanceof ToolError
           count(known ? error.code : 'INTERNAL')
           if (!known) console.error(tool.name, error)

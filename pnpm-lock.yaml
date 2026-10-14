@@ -53,6 +53,9 @@ importers:
       defuddle:
         specifier: ^0.19.1
         version: 0.19.1
+      htmlparser2:
+        specifier: 10.1.0
+        version: 10.1.0
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
@@ -260,6 +263,9 @@ importers:
       defuddle:
         specifier: ^0.19.1
         version: 0.19.1
+      htmlparser2:
+        specifier: 10.1.0
+        version: 10.1.0
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1

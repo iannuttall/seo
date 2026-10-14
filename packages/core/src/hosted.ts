@@ -98,6 +98,7 @@ export {
   resolveReportBrandTerms,
 } from './brand-evidence.js'
 export * from './commands/index.js'
+export * from './google/api.js'
 export type {
   SearchAnalyticsOptions,
   SearchAnalyticsQuery,
@@ -109,6 +110,13 @@ export {
   latestFinalGscDate,
   shiftIsoDate,
 } from './gsc/dates.js'
+export { readJson, readJsonOrUndefined } from './http/read-json.js'
+export {
+  agentFromClientName,
+  isoWeek,
+  TELEMETRY_ENDPOINT,
+  TELEMETRY_SCHEMA_VERSION,
+} from './telemetry-shared.js'
 export type { GscRow } from './types.js'
 export {
   findOverlappingSearchUpdates,

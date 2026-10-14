@@ -1,17 +1,9 @@
-import {
-  type AnalyticsInput,
-  dateWindow,
-  PAGE_SIZE,
-  rowsText,
-  table,
-} from '@seo/core/commands'
+import { table } from '@seo/core/commands'
 import { z } from 'zod'
 import { listAnalyticsProperties, listProperties } from '../google.ts'
-import { landingPages } from '../providers/analytics.ts'
-import { defineTool, type ToolContext, ToolError } from './registry.ts'
+import { defineTool, ToolError } from './registry.ts'
 
-// The two hosted-only parts: listing what this sign-in can read, and landing
-// pages from analytics accounts.
+// The hosted-only listing of what this sign-in can read.
 
 export const seoSites = defineTool({
   name: 'seo_sites',
@@ -45,30 +37,3 @@ export const seoSites = defineTool({
     ].join('\n\n')
   },
 })
-
-export async function hostedAnalytics(
-  context: ToolContext,
-  input: AnalyticsInput,
-): Promise<{ text: string; data: unknown }> {
-  const range = dateWindow(input, 28)
-  const result = await landingPages(context.google, {
-    site: input.site,
-    ...range,
-    searchOnly: true,
-    limit: Math.min(1000, input.offset + PAGE_SIZE),
-  })
-  return {
-    text: rowsText({
-      title: `${input.source} search landing pages for ${input.site}, ${range.startDate} to ${range.endDate}.`,
-      rows: result.rows,
-      offset: input.offset,
-      limit: PAGE_SIZE,
-      detail: input.detail,
-      notes: result.notes,
-    }),
-    data: {
-      range,
-      rows: result.rows.slice(input.offset, input.offset + PAGE_SIZE),
-    },
-  }
-}

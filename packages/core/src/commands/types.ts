@@ -1,3 +1,4 @@
+import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 
 // The eight public commands. Each runs the same core code in the CLI, the
@@ -107,3 +108,25 @@ export type CommandDeps = {
 }
 
 export type CommandResult = { text: string; data: unknown }
+
+const FROM_SEO: Partial<Record<SeoErrorCode, CommandErrorCode>> = {
+  AUTH_EXPIRED: 'NOT_CONNECTED',
+  AUTH_REQUIRED: 'NOT_CONNECTED',
+  ACCESS_DENIED: 'NO_ACCESS',
+  PROPERTY_NOT_FOUND: 'NO_ACCESS',
+  AUTH_CONFIG_REQUIRED: 'NO_KEY',
+  RATE_LIMITED: 'RATE_LIMITED',
+  INVALID_INPUT: 'INVALID_INPUT',
+  PROVIDER_UNAVAILABLE: 'GOOGLE_ERROR',
+  OPTIONAL_PROVIDER_UNAVAILABLE: 'PROVIDER_ERROR',
+}
+
+// A core error as a command error, so MCP surfaces report both the same way.
+// Other errors pass through unchanged.
+export function commandErrorFrom(error: unknown): unknown {
+  if (error instanceof CommandError || !(error instanceof SeoError)) {
+    return error
+  }
+  const code = FROM_SEO[error.code]
+  return code ? new CommandError(code, error.message) : error
+}

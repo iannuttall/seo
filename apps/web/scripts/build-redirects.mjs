@@ -16,31 +16,45 @@ const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 export const pageRedirects = {
   '/features': '/',
   '/features/mcp': '/docs/mcp',
-  '/features/seo-audit': '/docs/commands/crawl',
-  '/features/search-console': '/docs/commands/report',
-  '/features/keyword-research': '/docs/commands/research',
+  '/features/seo-audit': '/docs/crawl',
+  '/features/search-console': '/docs/report',
+  '/features/keyword-research': '/docs/research',
   '/blog': '/docs',
   '/blog/seo-agent': '/docs/getting-started',
   '/blog/seo-mcp-servers': '/docs/mcp',
   '/docs/start': '/docs/getting-started',
-  '/docs/reports': '/docs/commands',
+  '/docs/reports': '/docs',
   '/docs/google': '/docs/getting-started',
   '/docs/agents': '/docs/mcp',
   '/docs/skill': '/docs/cli',
   '/docs/typescript': '/docs/cli',
-  '/docs/crawler': '/docs/commands/crawl',
+  '/docs/crawler': '/docs/crawl',
   // The CLI crawler's user agent links here with a trailing slash.
-  '/docs/crawler/': '/docs/commands/crawl',
+  '/docs/crawler/': '/docs/crawl',
   '/docs/research-providers': '/docs/keys',
   '/docs/dataforseo': '/docs/keys',
   '/docs/semrush': '/docs/keys',
   '/docs/ahrefs': '/docs/keys',
-  '/docs/clicky': '/docs/keys',
+  '/docs/clicky': '/docs/analytics',
   '/docs/bing': '/docs',
   '/docs/indexnow': '/docs',
   '/docs/html-reports': '/docs',
   '/docs/ai-search': '/docs',
   '/docs/ai-visibility': '/docs',
+  // The command pages moved up a level after the redesign preview.
+  '/docs/commands': '/docs',
+  ...Object.fromEntries(
+    [
+      'report',
+      'page',
+      'compare',
+      'indexing',
+      'research',
+      'data',
+      'crawl',
+      'internal-links',
+    ].map((command) => [`/docs/commands/${command}`, `/docs/${command}`]),
+  ),
 }
 
 /** Every old report URL and where it goes now. */
@@ -74,7 +88,8 @@ export function redirectRules() {
     lines.push(`${from}.md ${to === '/' ? '/index' : to}.md 301`)
   }
   // Anything else under the old report and feature paths.
-  lines.push('/docs/reports/* /docs/commands 301')
+  lines.push('/docs/reports/* /docs 301')
+  lines.push('/docs/commands/* /docs 301')
   lines.push('/features/* / 301')
   lines.push('/blog/* /docs 301')
   return lines

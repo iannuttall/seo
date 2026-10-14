@@ -92,13 +92,13 @@ export const reportIds = Object.keys(reportCommands)
 
 /** The docs page that now covers each command group. */
 export const commandPaths = {
-  report: '/docs/commands/report',
-  page: '/docs/commands/page',
-  compare: '/docs/commands/compare',
-  index: '/docs/commands/indexing',
-  research: '/docs/commands/research',
-  crawl: '/docs/commands/crawl',
-  'internal-links': '/docs/commands/internal-links',
+  report: '/docs/report',
+  page: '/docs/page',
+  compare: '/docs/compare',
+  index: '/docs/indexing',
+  research: '/docs/research',
+  crawl: '/docs/crawl',
+  'internal-links': '/docs/internal-links',
   setup: '/docs/getting-started',
   removed: '/docs',
 }
@@ -122,8 +122,8 @@ export const legacyReportAliases = {
   'knowledge-export': 'okf-build',
   'okf-export': 'okf-build',
   'search-console-actions': 'refresh-priorities',
-  'search-console-query': '/docs/commands/data',
-  'search-status-updates': '/docs/commands/compare',
+  'search-console-query': '/docs/data',
+  'search-status-updates': '/docs/compare',
   'seo-tests': 'measure-change',
-  'url-inspection': '/docs/commands/page',
+  'url-inspection': '/docs/page',
 }

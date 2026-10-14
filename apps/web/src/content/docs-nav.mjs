@@ -28,6 +28,12 @@ export const docsSections = [
           'Add your own DataForSEO, Ahrefs or analytics key. Keys are never stored.',
       },
       {
+        path: '/docs/analytics',
+        label: 'Analytics',
+        description:
+          'Read landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible.',
+      },
+      {
         path: '/docs/cli',
         label: 'CLI',
         description:
@@ -39,54 +45,48 @@ export const docsSections = [
     title: 'Commands',
     items: [
       {
-        path: '/docs/commands',
-        label: 'All commands',
-        description:
-          'Eight commands, from the main report to a site crawl, and which tool each one maps to.',
-      },
-      {
-        path: '/docs/commands/report',
+        path: '/docs/report',
         label: 'seo report',
         description:
           'The main Search Console report: an overview first, then one section.',
       },
       {
-        path: '/docs/commands/page',
+        path: '/docs/page',
         label: 'seo page',
         description:
           'One URL: live page facts, Google index status and its queries.',
       },
       {
-        path: '/docs/commands/compare',
+        path: '/docs/compare',
         label: 'seo compare',
         description:
           'Before and after a date, with the Google updates in the window.',
       },
       {
-        path: '/docs/commands/indexing',
+        path: '/docs/indexing',
         label: 'seo index',
         description:
           'Pages that lost their clicks, checked live and with URL Inspection.',
       },
       {
-        path: '/docs/commands/research',
+        path: '/docs/research',
         label: 'seo research',
         description:
           'Keyword metrics, rankings, SERPs, competitors and backlinks from your own key.',
       },
       {
-        path: '/docs/commands/data',
+        path: '/docs/data',
         label: 'seo data',
         description:
           'Raw Search Console rows, or landing pages from your analytics.',
       },
       {
-        path: '/docs/commands/crawl',
+        path: '/docs/crawl',
         label: 'seo crawl',
         description: 'Crawl your site and list technical issues. CLI only.',
       },
       {
-        path: '/docs/commands/internal-links',
+        path: '/docs/internal-links',
         label: 'seo internal-links',
         description:
           'Find pages that could link to a page you choose. CLI only.',
@@ -122,9 +122,6 @@ export function docsNavFor(path) {
     { label: 'Home', href: '/' },
     { label: 'Docs', href: '/docs' },
   ]
-  if (current.path.startsWith('/docs/commands/')) {
-    breadcrumbs.push({ label: 'Commands', href: '/docs/commands' })
-  }
   breadcrumbs.push({ label: current.label })
 
   return {

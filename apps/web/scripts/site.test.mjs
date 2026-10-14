@@ -166,11 +166,11 @@ test('stats page maps every report id to the command that covers it', () => {
   assert.deepEqual(Object.keys(map).sort(), [...reportIds].sort())
   assert.deepEqual(map['ctr-underperformers'], {
     command: 'seo report',
-    path: '/docs/commands/report',
+    path: '/docs/report',
   })
   assert.deepEqual(map['affected-urls'], {
     command: 'seo crawl',
-    path: '/docs/commands/crawl',
+    path: '/docs/crawl',
   })
   assert.deepEqual(map['ai-readiness'], {
     command: 'Removed reports',
@@ -532,7 +532,7 @@ test('every old report URL redirects permanently to its command page', () => {
     for (const id of ids) {
       covered.add(id)
       const slug = reportSlugs[id] ?? id
-      const destination = `/docs/commands/${page}`
+      const destination = `/docs/${page}`
       assert.equal(rules.get(`/docs/reports/${slug}`), destination, id)
       assert.equal(rules.get(`/docs/reports/${slug}.md`), `${destination}.md`)
       assert.equal(reportDestination(id), destination, id)
@@ -542,14 +542,14 @@ test('every old report URL redirects permanently to its command page', () => {
   for (const id of reportIds.filter((value) => !covered.has(value))) {
     assert.equal(rules.get(`/docs/reports/${id}`), '/docs', `${id} is removed`)
   }
-  assert.equal(
-    rules.get('/docs/reports/index-coverage-plan'),
-    '/docs/commands/indexing',
-  )
+  assert.equal(rules.get('/docs/reports/index-coverage-plan'), '/docs/indexing')
   for (const alias of Object.keys(legacyReportAliases)) {
     assert.ok(rules.has(`/docs/reports/${alias}`), alias)
   }
-  assert.equal(rules.get('/docs/reports/*'), '/docs/commands')
+  assert.equal(rules.get('/docs/reports/*'), '/docs')
+  assert.equal(rules.get('/docs/commands/report'), '/docs/report')
+  assert.equal(rules.get('/docs/commands'), '/docs')
+  assert.equal(rules.get('/docs/clicky'), '/docs/analytics')
   assert.equal(rules.get('/features/mcp'), '/docs/mcp')
   assert.equal(rules.get('/blog/seo-mcp-servers'), '/docs/mcp')
 
@@ -727,7 +727,7 @@ test('site uses the ilo visual system and one-click setup commands', () => {
     'crawl',
     'internal-links',
   ]) {
-    assert.match(home, new RegExp(`href="/docs/commands/${command}"`))
+    assert.match(home, new RegExp(`href="/docs/${command}"`))
   }
 
   assert.match(home, /data-faq-accordion/)

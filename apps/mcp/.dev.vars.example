@@ -1,0 +1,4 @@
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# 32 random bytes, base64: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+SEAL_KEY=

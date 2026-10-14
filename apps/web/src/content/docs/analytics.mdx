@@ -1,0 +1,70 @@
+---
+title: Connect analytics
+description: Read search landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible with the hosted MCP, and connect Google Analytics or Clicky to the CLI.
+heading: Analytics
+lead: See which landing pages get visits from search, from your own Google Analytics, Clicky, Fathom, Simple Analytics or Plausible account.
+---
+
+Search Console tells you what happens in Google before the click. Your analytics tells you what happens after it. Connect the tool you already use and your agent can read both.
+
+## What each source needs
+
+| Source | Hosted MCP | CLI |
+| --- | --- | --- |
+| Google Analytics | Your Google sign-in | `seo start`, then `seo analytics google` |
+| Clicky | A sitekey on the sign-in page, or the `X-Clicky-Sitekey` header | The Clicky provider package |
+| Fathom | An API key on the sign-in page, or the `X-Fathom-Key` header | Not in the CLI |
+| Simple Analytics | An API key and, if you use one, your user ID, on the sign-in page or as headers | Not in the CLI |
+| Plausible | An API key on the sign-in page, or the `X-Plausible-Key` header | Not in the CLI |
+
+The [API keys guide](/docs/keys) shows how to add a key on the sign-in page or as a header. Keys are used for the request they arrive with and never stored.
+
+## Read landing pages with the hosted MCP
+
+Ask your agent which pages people land on from search:
+
+```text
+Show the search landing pages for example.com from Plausible
+```
+
+The agent runs `seo_data` with your analytics as the source. It returns landing pages for visits from search, for the last 28 days unless you ask for other dates. Each source tells it which site to read in its own way:
+
+- **Google Analytics:** the numeric property ID. `seo_sites` lists the properties your Google sign-in can read.
+- **Clicky and Fathom:** the site ID.
+- **Simple Analytics and Plausible:** the domain, such as `example.com`.
+
+## What comes back from each source
+
+Every source keeps its own metric names, because they count different things. A Clicky visitor is not a Google Analytics user, so compare them with care.
+
+| Source | Search visits | Columns |
+| --- | --- | --- |
+| Google Analytics | Sessions in the Organic Search channel | sessions, users, engaged sessions, key events |
+| Clicky | Visits from search engines | visitors who entered on the page |
+| Fathom | Visits with a referrer like google | visits, uniques, pageviews |
+| Simple Analytics | Visits with the referrer google.com | visitors, pageviews |
+| Plausible | Visits in the Organic Search channel | visitors, visits that started on the page |
+
+Each result also says how it was filtered, and Google Analytics adds a note when it hides small rows or groups some into "(other)".
+
+## Use analytics in the CLI
+
+In the CLI, `seo data` reads Search Console only. Analytics sources in `seo_data` work on the hosted MCP.
+
+**Google Analytics.** `seo start` signs you in with Google and can save a Google Analytics property with your project. To read it yourself:
+
+```sh
+seo analytics google properties
+seo analytics google report --help
+```
+
+**Clicky.** Clicky lives in a separate [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider). Install it, then connect your site ID and enter the sitekey when asked:
+
+```sh
+seo providers install @seoskill/clicky-provider
+seo providers connect clicky --account '{"siteId":"123456789"}'
+```
+
+The sitekey goes into your system keychain, or a private local file where there is no keychain. Run `seo start` afterwards to pick Clicky as the analytics source for a project.
+
+For the rows behind a page, use [`seo page`](/docs/page). For raw Search Console rows, use [`seo data`](/docs/data).

@@ -23,16 +23,16 @@
   <url><loc>https://seoskill.dev/docs/getting-started</loc></url>
   <url><loc>https://seoskill.dev/docs/mcp</loc></url>
   <url><loc>https://seoskill.dev/docs/keys</loc></url>
+  <url><loc>https://seoskill.dev/docs/analytics</loc></url>
   <url><loc>https://seoskill.dev/docs/cli</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/report</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/page</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/compare</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/indexing</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/research</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/data</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/crawl</loc></url>
-  <url><loc>https://seoskill.dev/docs/commands/internal-links</loc></url>
+  <url><loc>https://seoskill.dev/docs/report</loc></url>
+  <url><loc>https://seoskill.dev/docs/page</loc></url>
+  <url><loc>https://seoskill.dev/docs/compare</loc></url>
+  <url><loc>https://seoskill.dev/docs/indexing</loc></url>
+  <url><loc>https://seoskill.dev/docs/research</loc></url>
+  <url><loc>https://seoskill.dev/docs/data</loc></url>
+  <url><loc>https://seoskill.dev/docs/crawl</loc></url>
+  <url><loc>https://seoskill.dev/docs/internal-links</loc></url>
   <url><loc>https://seoskill.dev/docs/privacy</loc></url>
   <url><loc>https://seoskill.dev/stats</loc></url>
   <url><loc>https://seoskill.dev/telemetry</loc></url>

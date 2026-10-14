@@ -120,3 +120,12 @@
 /tools/spam-score-checker
 /tools/website-traffic-checker
 /tools/word-combiner
+/docs/commands
+/docs/commands/report
+/docs/commands/page
+/docs/commands/compare
+/docs/commands/indexing
+/docs/commands/research
+/docs/commands/data
+/docs/commands/crawl
+/docs/commands/internal-links

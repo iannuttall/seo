@@ -13,7 +13,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@seo/core": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260719.1",

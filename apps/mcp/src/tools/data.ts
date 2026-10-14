@@ -1,34 +1,17 @@
 import {
+  type AnalyticsInput,
   dateWindow,
-  KEY_HEADERS,
-  RESEARCH_ACTIONS,
-  RESEARCH_HELP,
-  RESEARCH_PROVIDERS,
+  PAGE_SIZE,
   rowsText,
-  runResearch,
-  runRows,
   table,
 } from '@seo/core/commands'
 import { z } from 'zod'
-import {
-  listAnalyticsProperties,
-  listProperties,
-  resolveProperty,
-} from '../google.ts'
-import {
-  ANALYTICS_HEADERS,
-  type AnalyticsProvider,
-  landingPages,
-} from '../providers/analytics.ts'
-import { deps } from './deps.ts'
-import {
-  DateWindow,
-  Detail,
-  defineTool,
-  PAGE_SIZE,
-  Site,
-  ToolError,
-} from './registry.ts'
+import { listAnalyticsProperties, listProperties } from '../google.ts'
+import { type AnalyticsProvider, landingPages } from '../providers/analytics.ts'
+import { defineTool, type ToolContext, ToolError } from './registry.ts'
+
+// The two hosted-only parts: listing what this sign-in can read, and landing
+// pages from analytics accounts.
 
 export const seoSites = defineTool({
   name: 'seo_sites',
@@ -68,197 +51,32 @@ export const seoSites = defineTool({
   },
 })
 
-const Filter = z.object({
-  dimension: z.enum(['query', 'page', 'country', 'device', 'searchAppearance']),
-  operator: z
-    .enum([
-      'contains',
-      'equals',
-      'notContains',
-      'notEquals',
-      'includingRegex',
-      'excludingRegex',
-    ])
-    .default('contains'),
-  expression: z.string().min(1),
-})
-
-const searchConsoleRows = defineTool({
-  name: 'seo_data',
-  title: 'Read Search Console rows',
-  description:
-    'Search Console rows for any dimensions and filters, each with the same rows from the previous period and the change. Use it for questions the reports do not answer, such as one page’s queries.',
-  input: z.object({
-    site: Site,
-    dimensions: z
-      .array(
-        z.enum([
-          'query',
-          'page',
-          'date',
-          'country',
-          'device',
-          'searchAppearance',
-        ]),
-      )
-      .max(4)
-      .default(['query']),
-    filters: z.array(Filter).max(10).default([]),
-    ...DateWindow,
-    ...Detail,
-  }),
-  async run(context, input) {
-    const site = await resolveProperty(context.google, input.site)
-    const result = await runRows(
-      {
-        site,
-        dimensions: input.dimensions,
-        filters: input.filters,
-        startDate: input.start_date,
-        endDate: input.end_date,
-        detail: input.detail,
-        offset: input.offset,
-      },
-      deps(context.google),
-    )
-    return result.text
-  },
-})
-
-const analyticsRows = defineTool({
-  name: 'seo_data',
-  title: 'Read landing page traffic',
-  description: `Landing pages for visits from search, from Google Analytics (Google sign-in) or from Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
-    ANALYTICS_HEADERS,
-  )
-    .filter(([provider]) => provider !== 'google')
-    .map(([provider, header]) => `${provider} ${header}`)
-    .join('; ')}). Each provider keeps its own metric names.`,
-  input: z.object({
-    provider: z
-      .enum(['google', 'clicky', 'fathom', 'simple_analytics', 'plausible'])
-      .default('google'),
-    site: z
-      .string()
-      .min(1)
-      .describe(
-        'google: numeric property id from seo_sites. clicky: site id. fathom: site id. simple_analytics and plausible: the domain.',
-      ),
-    ...DateWindow,
-    ...Detail,
-  }),
-  async run(context, input) {
-    const range = dateWindow(
-      { startDate: input.start_date, endDate: input.end_date },
-      28,
-    )
-    const result = await landingPages(
-      input.provider as AnalyticsProvider,
-      context,
-      {
-        site: input.site,
-        ...range,
-        searchOnly: true,
-        limit: Math.min(1000, input.offset + PAGE_SIZE),
-      },
-    )
-    return rowsText({
-      title: `${input.provider} search landing pages for ${input.site}, ${range.startDate} to ${range.endDate}.`,
+export async function hostedAnalytics(
+  context: ToolContext,
+  input: AnalyticsInput,
+): Promise<{ text: string; data: unknown }> {
+  const provider = (
+    input.source === 'google_analytics' ? 'google' : input.source
+  ) as AnalyticsProvider
+  const range = dateWindow(input, 28)
+  const result = await landingPages(provider, context, {
+    site: input.site,
+    ...range,
+    searchOnly: true,
+    limit: Math.min(1000, input.offset + PAGE_SIZE),
+  })
+  return {
+    text: rowsText({
+      title: `${input.source} search landing pages for ${input.site}, ${range.startDate} to ${range.endDate}.`,
       rows: result.rows,
       offset: input.offset,
       limit: PAGE_SIZE,
       detail: input.detail,
       notes: result.notes,
-    })
-  },
-})
-
-const SOURCES = [
-  'search_console',
-  'google_analytics',
-  'clicky',
-  'fathom',
-  'simple_analytics',
-  'plausible',
-] as const
-
-export const seoData = defineTool({
-  name: 'seo_data',
-  title: 'Raw rows',
-  description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions and filters, each with the previous period and the change. The other sources: landing pages for visits from search, from Google Analytics (Google sign-in) or Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
-    ANALYTICS_HEADERS,
-  )
-    .filter(([provider]) => provider !== 'google')
-    .map(([provider, header]) => `${provider} ${header}`)
-    .join('; ')}); each keeps its own metric names.`,
-  input: z.object({
-    source: z.enum(SOURCES).default('search_console'),
-    site: z
-      .string()
-      .min(1)
-      .describe(
-        'search_console: the property or site. google_analytics: numeric property id from seo_sites. clicky and fathom: site id. simple_analytics and plausible: the domain.',
-      ),
-    dimensions: z
-      .array(
-        z.enum([
-          'query',
-          'page',
-          'date',
-          'country',
-          'device',
-          'searchAppearance',
-        ]),
-      )
-      .max(4)
-      .default(['query'])
-      .describe('search_console only.'),
-    filters: z
-      .array(Filter)
-      .max(10)
-      .default([])
-      .describe('search_console only.'),
-    ...DateWindow,
-    ...Detail,
-  }),
-  async run(context, input) {
-    if (input.source === 'search_console') {
-      return searchConsoleRows.run(context, input)
-    }
-    const { dimensions: _d, filters: _f, source, ...rest } = input
-    return analyticsRows.run(context, {
-      ...rest,
-      provider: source === 'google_analytics' ? 'google' : source,
-    })
-  },
-})
-
-export const seoResearch = defineTool({
-  name: 'seo_research',
-  title: 'Keyword, competitor and backlink data',
-  description: `Data from the person’s own DataForSEO, Ahrefs or Semrush account, which costs them credits. Key headers: ${Object.entries(
-    KEY_HEADERS,
-  )
-    .map(([provider, header]) => `${provider} ${header}`)
-    .join('; ')}. Actions: ${RESEARCH_HELP}`,
-  input: z.object({
-    provider: z.enum(RESEARCH_PROVIDERS),
-    action: z.enum(RESEARCH_ACTIONS),
-    keywords: z.array(z.string().min(1)).max(100).default([]),
-    target: z.string().default('').describe('Domain or URL.'),
-    country: z
-      .string()
-      .regex(/^[a-z]{2}$/)
-      .default('us')
-      .describe('Two-letter country code.'),
-    ...Detail,
-  }),
-  async run(context, input) {
-    const result = await runResearch(input, context.headers, {
-      drKey: context.env.AHREFS_DR_KEY,
-      call: (offset) =>
-        `seo_research with the same input, detail "rows", offset ${offset}`,
-    })
-    return result.text
-  },
-})
+    }),
+    data: {
+      range,
+      rows: result.rows.slice(input.offset, input.offset + PAGE_SIZE),
+    },
+  }
+}

@@ -2,13 +2,23 @@ import { load } from 'cheerio'
 import type {
   Caller,
   CommandDeps,
+  CommandErrorCode,
   IndexStatus,
   PageFacts,
 } from './commands/index.js'
-import { indexStatusFrom } from './commands/index.js'
+import {
+  CommandError,
+  indexStatusFrom,
+  matchProperty,
+} from './commands/index.js'
+import { SeoError, type SeoErrorCode } from './errors.js'
 import { SEO_CRAWLER_USER_AGENT } from './fetch/crawler-identity.js'
 import { inspectUrl } from './gsc/client/inspection.js'
 import { querySearchAnalytics } from './gsc/client/search-analytics.js'
+import { listSites } from './gsc/client/sites.js'
+import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
+import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
+import { readSemrushApiKey } from './providers/semrush/credentials.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
 // with the local Google sign-in and cache, and live page checks from this
@@ -95,4 +105,59 @@ export function nodeCommandDeps(options: {
     },
     call: options.call,
   }
+}
+
+// Provider keys from the local secret store, as header-style names. Keys go
+// only to their provider.
+export async function localResearchKeys(): Promise<Headers> {
+  const [dataForSeo, ahrefs, semrush] = await Promise.all([
+    readDataForSeoCredentials().catch(() => undefined),
+    readAhrefsApiKey().catch(() => undefined),
+    readSemrushApiKey().catch(() => undefined),
+  ])
+  const keys = new Headers()
+  if (dataForSeo) {
+    keys.set('x-dataforseo-login', dataForSeo.login)
+    keys.set('x-dataforseo-password', dataForSeo.password)
+  }
+  if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
+  if (semrush?.apiKey) keys.set('x-semrush-key', semrush.apiKey)
+  return keys
+}
+
+// The Search Console property this Google login can read that covers a site
+// or URL.
+export async function resolveLocalSite(
+  site: string,
+  options: { account?: string; refresh?: boolean } = {},
+): Promise<string> {
+  const names = (await listSites(options.refresh, options.account)).map(
+    (entry) => entry.siteUrl,
+  )
+  const found = matchProperty(names, site)
+  if (!found) {
+    throw new CommandError(
+      'NO_ACCESS',
+      `This Google login has no Search Console property for ${site}. Run \`seo sites\` to list the properties it can read.`,
+    )
+  }
+  return found
+}
+
+const ERROR_CODES: Record<CommandErrorCode, SeoErrorCode> = {
+  INVALID_INPUT: 'INVALID_INPUT',
+  NOT_CONNECTED: 'AUTH_REQUIRED',
+  NO_ACCESS: 'PROPERTY_NOT_FOUND',
+  NO_KEY: 'AUTH_CONFIG_REQUIRED',
+  RATE_LIMITED: 'RATE_LIMITED',
+  GOOGLE_ERROR: 'PROVIDER_UNAVAILABLE',
+  PROVIDER_ERROR: 'PROVIDER_UNAVAILABLE',
+}
+
+// A command error as the CLI and local MCP report errors; other errors pass
+// through unchanged.
+export function localError(error: unknown): unknown {
+  return error instanceof CommandError
+    ? new SeoError(ERROR_CODES[error.code], error.message)
+    : error
 }

@@ -2,17 +2,7 @@
 // description, first H1, canonical and robots. One request per URL, no
 // redirects followed, nothing stored.
 
-export type PageFacts = {
-  url: string
-  status: number | null
-  redirects_to: string | null
-  title: string | null
-  description: string | null
-  h1: string | null
-  canonical: string | null
-  robots: string | null
-  error?: string
-}
+import type { PageFacts } from '@seo/core/commands'
 
 const ENTITIES: Record<string, string> = {
   amp: '&',
@@ -147,28 +137,6 @@ async function facts(url: string): Promise<PageFacts> {
     out.error = error instanceof Error ? error.message : 'fetch failed'
   }
   return out
-}
-
-// URLs in a report's main rows, in order, at most MAX_PAGES.
-export function reportUrls(rows: unknown[], origin: string): string[] {
-  const found: string[] = []
-  const visit = (value: unknown, key = '') => {
-    if (found.length >= MAX_PAGES) return
-    if (typeof value === 'string') {
-      if (/^(url|page|finalUrl|targetUrl)$/i.test(key)) {
-        const url = value.startsWith('/') ? `${origin}${value}` : value
-        if (/^https?:\/\//.test(url) && !found.includes(url)) found.push(url)
-      }
-      return
-    }
-    if (Array.isArray(value)) {
-      for (const item of value) visit(item, key)
-    } else if (value && typeof value === 'object') {
-      for (const [child, item] of Object.entries(value)) visit(item, child)
-    }
-  }
-  for (const row of rows) visit(row)
-  return found
 }
 
 export async function pageFacts(urls: string[]): Promise<PageFacts[]> {

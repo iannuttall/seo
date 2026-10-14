@@ -114,3 +114,4 @@ export {
   searchUpdatesFromIncidents,
 } from './updates/search-updates.js'
 export { SEO_VERSION } from './version.js'
+export * from './commands/index.js'

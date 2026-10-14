@@ -11,7 +11,7 @@ export function keysPage(env: Env): Response {
   return page(
     'API keys for SEO Skill',
     `<h1>API keys</h1>
-<p>Keyword, competitor and extra analytics data use your own DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple Analytics or Plausible account. SEO Skill never stores a key.</p>
+<p>Keyword, competitor and extra analytics data use your own DataForSEO, Ahrefs, Clicky, Fathom, Simple Analytics or Plausible account. SEO Skill never stores a key.</p>
 <h2>On the sign-in page</h2>
 <p>Remove the SEO Skill server from your agent and add it again with <code>${url}</code>. On the sign-in page, open <strong>Add your own API keys</strong>, enter the keys, then continue with Google. The keys are sealed into the sign-in your agent keeps. This works in every client.</p>
 <h2>As headers</h2>

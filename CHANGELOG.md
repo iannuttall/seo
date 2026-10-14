@@ -97,3 +97,5 @@ stops.
 - Local search demand
 - Server logs (`seo server-logs`)
 - Monthly and narrative reports (`seo monthly-report`, `seo report-narrative`)
+- Semrush as a research provider. Its terms do not allow its data as input
+  to an AI model, so `seo research` uses DataForSEO or Ahrefs only.

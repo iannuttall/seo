@@ -30,7 +30,6 @@ export const RESEARCH_ACTIONS = [
 export const RESEARCH_PROVIDERS = [
   'dataforseo',
   'ahrefs',
-  'semrush',
 ] as const satisfies readonly ResearchProvider[]
 
 export const RESEARCH_HELP =

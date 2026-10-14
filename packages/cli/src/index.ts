@@ -156,7 +156,7 @@ const helpSections: HelpSection[] = [
       ['seo projects list', 'List saved project profiles'],
       ['seo sites', 'List Search Console properties'],
       ['seo mcp install', 'Add the local MCP server to your agents'],
-      ['seo providers', 'Connect DataForSEO, Ahrefs or Semrush'],
+      ['seo providers', 'Connect DataForSEO or Ahrefs'],
       ['seo doctor', 'Check local auth and config'],
     ],
   },

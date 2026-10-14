@@ -1,12 +1,12 @@
 import { CommandError } from './types.js'
 
 // Keyword, competitor and backlink data from the person's own DataForSEO,
-// Ahrefs or Semrush account. Keys come as header-style names (from request
+// Ahrefs account. Keys come as header-style names (from request
 // headers in the hosted MCP, from the local secret store in the CLI) and are
 // used for this one call only. Each function returns plain rows with the provider's own metric
 // names, so numbers from different providers are never mixed.
 
-export type ResearchProvider = 'dataforseo' | 'ahrefs' | 'semrush'
+export type ResearchProvider = 'dataforseo' | 'ahrefs'
 export type ResearchAction =
   | 'keyword_metrics'
   | 'ranked_keywords'
@@ -26,7 +26,6 @@ export type ResearchInput = {
 export const KEY_HEADERS: Record<ResearchProvider, string> = {
   dataforseo: 'X-DataForSEO-Login and X-DataForSEO-Password',
   ahrefs: 'X-Ahrefs-Key',
-  semrush: 'X-Semrush-Key',
 }
 
 type Row = Record<string, string | number | boolean | null>
@@ -38,7 +37,7 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
           headers.get('x-dataforseo-login'),
           headers.get('x-dataforseo-password'),
         ]
-      : [headers.get(provider === 'ahrefs' ? 'x-ahrefs-key' : 'x-semrush-key')]
+      : [headers.get('x-ahrefs-key')]
   if (values.some((value) => !value)) {
     throw new CommandError(
       'NO_KEY',
@@ -85,8 +84,7 @@ export async function research(
   requireInput(input)
   const keys = need(headers, provider)
   if (provider === 'dataforseo') return dataForSeo(keys, input)
-  if (provider === 'ahrefs') return ahrefs(keys[0] ?? '', input)
-  return semrush(keys[0] ?? '', input)
+  return ahrefs(keys[0] ?? '', input)
 }
 
 // DataForSEO
@@ -335,105 +333,4 @@ function flattenIntents(row: Row): Row {
     .filter(([, value]) => value === true)
     .map(([name]) => name.replace(/^is_/, ''))
   return { ...row, intents: names.join(' ') || null }
-}
-
-// Semrush Standard API (CSV)
-
-async function semrush(key: string, input: ResearchInput): Promise<Row[]> {
-  const get = async (
-    type: string,
-    params: Record<string, string>,
-    columns: string[],
-  ) => {
-    const url = new URL('https://api.semrush.com/')
-    url.searchParams.set('type', type)
-    url.searchParams.set('key', key)
-    url.searchParams.set('database', input.country)
-    url.searchParams.set('export_columns', columns.join(','))
-    for (const [name, value] of Object.entries(params)) {
-      url.searchParams.set(name, value)
-    }
-    const response = await call('semrush', new Request(url))
-    return parseSemrush(await response.text())
-  }
-  if (input.action === 'keyword_metrics') {
-    return get(
-      'phrase_these',
-      { phrase: input.keywords.slice(0, 100).join(';') },
-      ['Ph', 'Nq', 'Kd', 'Cp', 'Co', 'In'],
-    )
-  }
-  if (input.action === 'ranked_keywords') {
-    const isUrl = isPage(input.target)
-    return get(
-      isUrl ? 'url_organic' : 'domain_organic',
-      {
-        [isUrl ? 'url' : 'domain']: isUrl
-          ? input.target
-          : bareTarget(input.target),
-        display_limit: String(input.limit),
-        display_sort: 'tr_desc',
-      },
-      ['Ph', 'Po', 'Nq', 'Kd', 'Ur', 'Tr', 'Cp'],
-    )
-  }
-  if (input.action === 'serp') {
-    const rows: Row[] = []
-    for (const keyword of input.keywords.slice(0, 5)) {
-      const found = await get(
-        'phrase_organic',
-        { phrase: keyword, display_limit: String(Math.min(input.limit, 100)) },
-        ['Dn', 'Ur'],
-      )
-      for (const [index, row] of found.entries()) {
-        rows.push({ keyword, position: index + 1, ...row })
-      }
-    }
-    return rows
-  }
-  if (input.action === 'backlinks') {
-    // The backlinks API has its own base URL and no database.
-    const url = new URL('https://api.semrush.com/analytics/v1/')
-    url.searchParams.set('type', 'backlinks_refdomains')
-    url.searchParams.set('key', key)
-    url.searchParams.set(
-      'target',
-      isPage(input.target) ? input.target : bareTarget(input.target),
-    )
-    url.searchParams.set(
-      'target_type',
-      isPage(input.target) ? 'url' : 'root_domain',
-    )
-    url.searchParams.set(
-      'export_columns',
-      'domain,domain_ascore,backlinks_num,first_seen,last_seen',
-    )
-    url.searchParams.set('display_limit', String(input.limit))
-    url.searchParams.set('display_sort', 'domain_ascore_desc')
-    return parseSemrush(await (await call('semrush', new Request(url))).text())
-  }
-  return get(
-    'domain_organic_organic',
-    { domain: bareTarget(input.target), display_limit: String(input.limit) },
-    ['Dn', 'Cr', 'Np', 'Or', 'Ot'],
-  )
-}
-
-function parseSemrush(text: string): Row[] {
-  if (text.startsWith('ERROR')) {
-    if (text.includes('NOTHING FOUND')) return []
-    throw new CommandError('PROVIDER_ERROR', `semrush: ${text.slice(0, 200)}`)
-  }
-  const [head, ...lines] = text.trim().split(/\r?\n/)
-  const names = (head ?? '').split(';')
-  return lines.map((line) => {
-    const cells = line.split(';')
-    return Object.fromEntries(
-      names.map((name, index) => {
-        const cell = cells[index] ?? ''
-        const number = Number(cell)
-        return [name, cell !== '' && !Number.isNaN(number) ? number : cell]
-      }),
-    ) as Row
-  })
 }

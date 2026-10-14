@@ -1,7 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  LOCAL_SIGN_IN,
   listSites,
   localError,
+  localGoogleFetch,
   localResearchKeys,
   nodeCommandDeps,
   resolveLocalSite,
@@ -105,6 +107,8 @@ export function registerSharedTools(
     resolveSite: (site: string) => resolveLocalSite(site),
     keys: localResearchKeys,
     drKey: null,
+    google: () => localGoogleFetch(),
+    signIn: LOCAL_SIGN_IN.signIn,
   }
   for (const shared of SHARED_TOOLS) {
     server.registerTool(

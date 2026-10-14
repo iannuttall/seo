@@ -1,22 +1,20 @@
-import { fetch, type RequestInit } from 'undici'
-import { readBoundedResponseText } from '../fetch/http-client.js'
+import {
+  googleJson,
+  listAnalyticsAccounts,
+  runAnalyticsReport,
+} from '../google/api.js'
 import { googleAnalyticsAccountForProperty } from '../gsc/auth/account-selection.js'
-import {
-  createGoogleAccessTokenClient,
-  type GoogleAccessTokenClient,
-} from '../gsc/auth.js'
+import { createGoogleAccessTokenClient } from '../gsc/auth.js'
+import { googleFetchFor, LOCAL_SIGN_IN } from '../gsc/client/fetch.js'
 import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
-import {
-  collectGa4AccountSummaries,
-  type Ga4AccountSummary,
-} from './account-summaries.js'
+import type { Ga4AccountSummary } from './account-summaries.js'
 
 export type {
   Ga4AccountSummary,
   Ga4PropertySummary,
 } from './account-summaries.js'
 
-const GA4_ACCOUNT_SUMMARY_RESPONSE_LIMIT_BYTES = 10 * 1024 * 1024
+const _GA4_ACCOUNT_SUMMARY_RESPONSE_LIMIT_BYTES = 10 * 1024 * 1024
 
 export interface Ga4ReportRequest {
   dateRanges: Array<{ startDate: string; endDate: string }>
@@ -69,27 +67,6 @@ export function ga4RequestCanUseCache(body: Ga4ReportRequest): boolean {
   )
 }
 
-async function authedFetch(
-  client: GoogleAccessTokenClient,
-  url: string,
-  init?: RequestInit,
-) {
-  const accessToken = await client.getAccessToken()
-  if (!accessToken) {
-    throw new Error('Could not obtain Google access token.')
-  }
-
-  return fetch(url, {
-    method: init?.method,
-    body: init?.body,
-    headers: {
-      ...(init?.headers as Record<string, string> | undefined),
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-    },
-  })
-}
-
 export async function runGa4Report(
   propertyId: string,
   body: Ga4ReportRequest,
@@ -115,25 +92,12 @@ export async function runGa4Report(
     return JSON.parse(cached.response_json) as Ga4RunReportResult
   }
 
-  const response = await authedFetch(
-    client,
-    `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
-    {
-      method: 'POST',
-      body: JSON.stringify(body),
-    },
+  const result = await runAnalyticsReport<Ga4RunReportResult>(
+    googleFetchFor(client),
+    propertyId,
+    body,
+    LOCAL_SIGN_IN,
   )
-
-  if (!response.ok) {
-    if (response.status === 403) {
-      throw new Error(
-        `Google Analytics report failed with 403. Check access to property ${propertyId}.`,
-      )
-    }
-    throw new Error(`Google Analytics report failed with ${response.status}.`)
-  }
-
-  const result = (await response.json()) as Ga4RunReportResult
   if (cacheable) {
     const requestJson = JSON.stringify(body)
     const responseJson = JSON.stringify(result)
@@ -161,36 +125,7 @@ export async function listGa4AccountSummaries(
   accountEmail?: string,
 ): Promise<Ga4AccountSummary[]> {
   const { client } = await createGoogleAccessTokenClient(accountEmail)
-  return collectGa4AccountSummaries(async (pageToken) => {
-    const url = new URL(
-      'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
-    )
-    url.searchParams.set('pageSize', '200')
-    if (pageToken) url.searchParams.set('pageToken', pageToken)
-
-    const response = await authedFetch(client, url.toString())
-    if (!response.ok) {
-      if (response.status === 403) {
-        throw new Error(
-          'Google Analytics account summary fetch failed with 403. Enable the Google Analytics Admin API and check Analytics access.',
-        )
-      }
-      throw new Error(
-        `Google Analytics account summary fetch failed with ${response.status}.`,
-      )
-    }
-
-    const text = await readBoundedResponseText(
-      response,
-      GA4_ACCOUNT_SUMMARY_RESPONSE_LIMIT_BYTES,
-      'Google Analytics account summary response',
-    )
-    try {
-      return JSON.parse(text) as unknown
-    } catch {
-      throw new Error('Google Analytics account summary response was invalid.')
-    }
-  })
+  return listAnalyticsAccounts(googleFetchFor(client), LOCAL_SIGN_IN)
 }
 
 export async function listGa4DataStreams(
@@ -217,22 +152,14 @@ export async function listGa4DataStreams(
     url.searchParams.set('pageSize', '200')
     if (pageToken) url.searchParams.set('pageToken', pageToken)
 
-    const response = await authedFetch(client, url.toString())
-    if (!response.ok) {
-      if (response.status === 403) {
-        throw new Error(
-          `Google Analytics data stream fetch failed with 403 for property ${propertyId}. Check Analytics access.`,
-        )
-      }
-      throw new Error(
-        `Google Analytics data stream fetch failed with ${response.status} for property ${propertyId}.`,
-      )
-    }
-
-    const json = (await response.json()) as {
+    const json = await googleJson<{
       dataStreams?: Ga4DataStream[]
       nextPageToken?: string
-    }
+    }>(googleFetchFor(client), url.toString(), {
+      ...LOCAL_SIGN_IN,
+      label: 'Google Analytics data streams',
+      subject: `property ${propertyId}`,
+    })
     streams.push(...(json.dataStreams ?? []))
     pageToken = json.nextPageToken
     pageCount += 1

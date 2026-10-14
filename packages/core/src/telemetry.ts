@@ -14,10 +14,19 @@ import {
   type TelemetryFailureReason,
   type TelemetryOperation,
 } from './telemetry-failures.js'
+import {
+  agentFromClientName,
+  isoWeek,
+  TELEMETRY_ENDPOINT,
+  TELEMETRY_SCHEMA_VERSION,
+} from './telemetry-shared.js'
 import { SEO_VERSION } from './version.js'
 
-export const TELEMETRY_ENDPOINT = 'https://seoskill.dev/api/t'
-export const TELEMETRY_SCHEMA_VERSION = 2
+export {
+  isoWeek,
+  TELEMETRY_ENDPOINT,
+  TELEMETRY_SCHEMA_VERSION,
+} from './telemetry-shared.js'
 export const TELEMETRY_TIMEOUT_MS = 2_000
 
 export const TELEMETRY_EVENTS = [
@@ -310,19 +319,6 @@ function writeState(path: string, state: TelemetryState): void {
   writeJsonAtomic(path, state, 0o600)
 }
 
-export function isoWeek(date: Date): string {
-  const utc = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  )
-  const day = utc.getUTCDay() || 7
-  utc.setUTCDate(utc.getUTCDate() + 4 - day)
-  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1))
-  const week = Math.ceil(
-    ((utc.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
-  )
-  return `${utc.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
-}
-
 function newState(options: TelemetryOptions, enabled = true): TelemetryState {
   const now = optionNow(options)
   return {
@@ -337,11 +333,8 @@ export function detectTelemetryAgent(
   input: { clientName?: string; env?: NodeJS.ProcessEnv } = {},
 ): TelemetryAgent {
   const env = input.env ?? process.env
-  const clientName = input.clientName?.toLowerCase() ?? ''
-  if (clientName.includes('claude')) return 'claude-code'
-  if (clientName.includes('cursor')) return 'cursor'
-  if (clientName.includes('codex')) return 'codex'
-  if (input.clientName) return 'unknown'
+  const fromClient = agentFromClientName(input.clientName)
+  if (fromClient) return fromClient
   if (env.CLAUDECODE || env.CLAUDE_CODE) return 'claude-code'
   if (env.CURSOR_AGENT || env.CURSOR_TRACE_ID || env.CURSOR_SESSION_ID) {
     return 'cursor'

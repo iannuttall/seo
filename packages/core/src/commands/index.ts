@@ -5,7 +5,9 @@ export type {
   SearchAnalyticsQuery,
   SearchAnalyticsRequest,
 } from '../gsc/client/types.js'
+export * from './analytics.js'
 export * from './domain-rating.js'
+export * from './page-facts.js'
 export * from './present.js'
 export * from './report.js'
 export * from './research.js'

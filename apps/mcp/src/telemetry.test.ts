@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { events, isoWeek, reportFor } from './telemetry.ts'
+import { isoWeek } from '@seo/core/hosted'
+import { events, reportFor } from './telemetry.ts'
 
 test('tool calls count as the CLI report ids', () => {
   assert.equal(reportFor('seo_report', {}), 'search-performance-overview')

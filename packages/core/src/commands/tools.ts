@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import type { GoogleFetch } from '../google/api.js'
+import { runAnalyticsRows } from './analytics.js'
 import { runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -28,19 +30,10 @@ export type ToolSurface = {
   keys: () => Promise<Headers>
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
-  // Landing pages from an analytics source, when this surface can read one.
-  analytics?: (
-    input: AnalyticsInput,
-  ) => Promise<{ text: string; data: unknown }>
-}
-
-export type AnalyticsInput = {
-  source: Exclude<(typeof DATA_SOURCES)[number], 'search_console'>
-  site: string
-  startDate?: string
-  endDate?: string
-  detail: 'summary' | 'rows' | 'full'
-  offset: number
+  // Google API calls with this surface's sign-in, for Google Analytics.
+  google: () => Promise<GoogleFetch>
+  // What to do when Google rejects the sign-in.
+  signIn: string
 }
 
 const site = z
@@ -261,21 +254,22 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...detail,
     }),
     run: async (surface, input) => {
-      if (input.source !== 'search_console') {
-        if (!surface.analytics) {
-          throw new CommandError(
-            'INVALID_INPUT',
-            'Google Analytics rows are not available here. Use the hosted MCP at https://seoskill.dev/mcp, or `seo analytics google report` in the CLI.',
-          )
-        }
-        return surface.analytics({
-          source: input.source,
-          site: input.site,
-          startDate: input.start_date,
-          endDate: input.end_date,
-          detail: input.detail,
-          offset: input.offset,
-        })
+      if (input.source === 'google_analytics') {
+        return runAnalyticsRows(
+          {
+            property: input.site,
+            startDate: input.start_date,
+            endDate: input.end_date,
+            detail: input.detail,
+            offset: input.offset,
+          },
+          await surface.google(),
+          {
+            signIn: surface.signIn,
+            call: (offset) =>
+              `seo_data with source "google_analytics", site "${input.site}", detail "rows", offset ${offset}`,
+          },
+        )
       }
       return runRows(
         {

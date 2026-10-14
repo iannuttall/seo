@@ -20,17 +20,47 @@ export function normalizeBrandText(value: string): string {
     .trim()
 }
 
-function domainStem(siteUrl: string): string | undefined {
-  const value = siteUrl.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '')
-  const host = value.split('/')[0]
-  if (!host) return undefined
-  const parts = host.split('.').filter(Boolean)
-  if (!parts.length) return undefined
+function hostLabels(siteUrl: string): string[] {
+  const value = siteUrl
+    .trim()
+    .toLowerCase()
+    .replace(/^sc-domain:/, '')
+    .replace(/^https?:\/\//, '')
+  const host = (value.split('/')[0] ?? '').split(':')[0] ?? ''
+  return host.split('.').filter(Boolean)
+}
+
+function suffixDepth(parts: string[]): number {
   const last = parts.at(-1) ?? ''
   const secondLast = parts.at(-2) ?? ''
-  const suffixDepth =
-    last.length === 2 && COUNTRY_CODE_SECOND_LEVELS.has(secondLast) ? 2 : 1
-  return parts.at(-(suffixDepth + 1)) ?? parts[0]
+  return last.length === 2 &&
+    COUNTRY_CODE_SECOND_LEVELS.has(secondLast) &&
+    parts.length > 2
+    ? 2
+    : 1
+}
+
+/**
+ * The registrable part of a Search Console property host, using the small
+ * built-in list of country-code second levels. `sc-domain:docs.example.co.uk`
+ * returns `{ domain: 'example.co.uk', stem: 'example', suffix: 'co.uk' }`.
+ */
+export function registrableDomain(
+  siteUrl: string,
+): { domain: string; stem: string; suffix: string } | undefined {
+  const parts = hostLabels(siteUrl)
+  if (parts.length < 2) return undefined
+  const depth = suffixDepth(parts)
+  const stem = parts.at(-(depth + 1))
+  if (!stem) return undefined
+  const suffix = parts.slice(-depth).join('.')
+  return { domain: `${stem}.${suffix}`, stem, suffix }
+}
+
+function domainStem(siteUrl: string): string | undefined {
+  const parts = hostLabels(siteUrl)
+  if (!parts.length) return undefined
+  return parts.at(-(suffixDepth(parts) + 1)) ?? parts[0]
 }
 
 function unique(values: string[]): string[] {
@@ -80,21 +110,54 @@ export function deriveBrandTerms(input: {
   return unique(candidates)
 }
 
+// Offsets in the compact (space-free) query where a query token starts or
+// ends. An ASCII compact brand match must start and end on these offsets, so
+// `examplecom` matches "example.com" and "example com" but not
+// "example compare".
+function tokenBoundaries(queryTokens: string[]): Set<number> {
+  const boundaries = new Set<number>([0])
+  let offset = 0
+  for (const token of queryTokens) {
+    offset += token.length
+    boundaries.add(offset)
+  }
+  return boundaries
+}
+
+function alignedCompactMatch(
+  compactQuery: string,
+  compactTerm: string,
+  boundaries: Set<number>,
+): boolean {
+  let index = compactQuery.indexOf(compactTerm)
+  while (index !== -1) {
+    if (boundaries.has(index) && boundaries.has(index + compactTerm.length)) {
+      return true
+    }
+    index = compactQuery.indexOf(compactTerm, index + 1)
+  }
+  return false
+}
+
 export function isBrandQuery(query: string, brandTerms: string[]): boolean {
   const normalized = normalizeBrandText(query)
   if (!normalized || !brandTerms.length) return false
 
   const queryTokens = normalized.split(' ')
   const compactQuery = normalized.replace(/\s+/g, '')
+  const boundaries = tokenBoundaries(queryTokens)
   return brandTerms.some((term) => {
     const normalizedTerm = normalizeBrandText(term)
     if (!normalizedTerm) return false
     const compactTerm = normalizedTerm.replace(/\s+/g, '')
     const compactTermLength = [...compactTerm].length
-    const compactMatches =
-      (compactTermLength >= 6 ||
-        (/[^\p{ASCII}]/u.test(compactTerm) && compactTermLength >= 2)) &&
-      compactQuery.includes(compactTerm)
+    const nonAscii = /[^\p{ASCII}]/u.test(compactTerm)
+    // Scripts written without spaces keep substring matching; ASCII terms
+    // must align with query token boundaries.
+    const compactMatches = nonAscii
+      ? compactTermLength >= 2 && compactQuery.includes(compactTerm)
+      : compactTermLength >= 6 &&
+        alignedCompactMatch(compactQuery, compactTerm, boundaries)
     const termTokens = normalizedTerm.split(' ')
     if (termTokens.length === 1) {
       return (

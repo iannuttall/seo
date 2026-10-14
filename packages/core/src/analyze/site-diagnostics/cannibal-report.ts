@@ -198,6 +198,7 @@ export async function cannibalReportWith(
       searchIntentChecked: false,
     },
     filters: analysis.filters,
+    brand: analysis.brand,
     selection: analysis.selection,
     summary: {
       eligibleClusters: analysis.selection.eligibleClusters,

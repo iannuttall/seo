@@ -6,12 +6,19 @@ import {
   CTR_MAX_LIMIT,
   CTR_MAX_MIN_IMPRESSIONS,
 } from './ctr-underperformers-analysis.js'
-import { defaultDateRange } from './shared.js'
-import { integerOption } from './site-diagnostics/quick-wins-report-input.js'
+import { QUERY_FLAG_METHOD } from './query-quality.js'
+import { CTR_SPLIT_POSITION, SITE_CTR_CURVE_METHOD } from './site-ctr-curve.js'
+import {
+  defaultDateRange,
+  explicitDateRange,
+  integerOption,
+} from './site-diagnostics/quick-wins-report-input.js'
 
 export type * from './ctr-underperformers-types.js'
 
 const MAX_GSC_ROWS = 100_000
+const DEFAULT_DAYS = 28
+const MAX_DAYS = 548
 
 function plural(count: number, singular: string, pluralLabel = `${singular}s`) {
   return count === 1 ? singular : pluralLabel
@@ -24,6 +31,12 @@ export interface CtrUnderperformerDependencies {
 
 export type CtrUnderperformersInput = {
   site: string
+  /** Window length in days; ignored when startDate and endDate are given. */
+  days?: number
+  /** Explicit window start (YYYY-MM-DD); pass with endDate. */
+  startDate?: string
+  /** Explicit window end (YYYY-MM-DD); pass with startDate. */
+  endDate?: string
   minImpressions?: number
   limit?: number
   brandTerms?: string[]
@@ -53,8 +66,18 @@ export async function ctrUnderperformersReportWith(
     maximum: CTR_MAX_LIMIT,
     label: 'limit',
   })
+  const explicitRange = explicitDateRange(input, MAX_DAYS)
+  const days =
+    explicitRange?.days ??
+    integerOption({
+      value: input.days,
+      fallback: DEFAULT_DAYS,
+      minimum: 1,
+      maximum: MAX_DAYS,
+      label: 'Days',
+    })
   const now = dependencies.now()
-  const range = defaultDateRange(28, now)
+  const range = explicitRange?.range ?? defaultDateRange(days, now)
   const source = await dependencies.searchAnalytics(
     input.site,
     {
@@ -66,15 +89,21 @@ export async function ctrUnderperformersReportWith(
     },
     { refresh: input.refresh },
   )
-  const { items, totalClickShortfall, returnedClickShortfall, selection } =
-    analyzeCtrUnderperformersFromRows({
-      rows: source.rows,
-      site: input.site,
-      minImpressions,
-      limit,
-      brandTerms: input.brandTerms,
-      includeBrand: input.includeBrand,
-    })
+  const {
+    items,
+    totalClickShortfall,
+    returnedClickShortfall,
+    selection,
+    brand,
+    benchmarkByPosition,
+  } = analyzeCtrUnderperformersFromRows({
+    rows: source.rows,
+    site: input.site,
+    minImpressions,
+    limit,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
   const top = items[0]
   const possiblyTruncated = source.rowsFetched >= MAX_GSC_ROWS
   const partialValidation = selection.invalidRows > 0
@@ -99,6 +128,7 @@ export async function ctrUnderperformersReportWith(
     schemaVersion: 1 as const,
     site: input.site,
     range,
+    rangeDays: days,
     generatedAt: now.toISOString(),
     dataStatus,
     source: {
@@ -119,6 +149,27 @@ export async function ctrUnderperformersReportWith(
       },
     },
     selection,
+    methodology: {
+      id: 'gsc_ctr_underperformers_v2' as const,
+      position: {
+        metric: 'gsc_average_position' as const,
+        minimumInclusive: 1 as const,
+        maximumExclusive: CTR_SPLIT_POSITION,
+        splitWith: 'quick-wins' as const,
+      },
+      threshold: {
+        rule: 'observed CTR below 0.6 x expected CTR' as const,
+        heuristic: true as const,
+      },
+      benchmark: SITE_CTR_CURVE_METHOD,
+      queryFlags: QUERY_FLAG_METHOD,
+    },
+    benchmark: {
+      method: SITE_CTR_CURVE_METHOD.method,
+      peerRows: selection.benchmarkRows,
+      byPosition: benchmarkByPosition,
+    },
+    brand,
     summary: {
       underperformers: selection.eligibleUnderperformers,
       returnedUnderperformers: selection.returnedUnderperformers,
@@ -131,14 +182,24 @@ export async function ctrUnderperformersReportWith(
         ? `${selection.eligibleUnderperformers} CTR ${plural(selection.eligibleUnderperformers, 'underperformer')} found in retained rows, with a calculated heuristic shortfall of ${totalClickShortfall.toFixed(0)} clicks for this window. Start review with "${top.query}" because it has the largest gap.`
         : dataStatus === 'partial'
           ? 'No material CTR underperformers remained in the validated retained rows, but partial evidence prevents an all-clear.'
-          : 'No high-impression page-one queries in the retained rows are materially below the heuristic CTR benchmark.',
+          : `No high-impression rows at average position below ${CTR_SPLIT_POSITION} in the retained rows are materially below the heuristic CTR benchmark.`,
     },
     items,
     caveats: [
-      `Date window: ${range.startDate} to ${range.endDate} (28 days), using final GSC data where available.`,
-      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}.`,
-      `Only queries ranking position 1-10 with at least ${minImpressions} impressions were checked.`,
-      'Expected CTR uses a robust site-aware position benchmark when enough peer data exists, otherwise the fallback position curve.',
+      `Date window: ${range.startDate} to ${range.endDate} (${days} ${plural(days, 'day')}), using final GSC data where available.`,
+      `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}. Brand terms used: ${brand.terms.join(', ') || 'none'} (${brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
+      `Only rows at average position below ${CTR_SPLIT_POSITION} with at least ${minImpressions} impressions were checked. Rows at position ${CTR_SPLIT_POSITION} to 10 belong to quick-wins, which uses the same site CTR curve.`,
+      'Expected CTR uses the site CTR curve from all page-one rows (75th percentile of qualified URL CTRs per position) when enough peer data exists, otherwise the fallback position curve.',
+      ...(selection.fragmentRows
+        ? [
+            `${selection.fragmentRows} source ${plural(selection.fragmentRows, 'row')} with a #fragment URL ${selection.fragmentRows === 1 ? 'was' : 'were'} merged into the base URL.`,
+          ]
+        : []),
+      ...(selection.flaggedRows
+        ? [
+            `${selection.flaggedRows} eligible ${plural(selection.flaggedRows, 'row')} carry heuristic query flags (likely-automated or navigational-other) and rank after unflagged rows.`,
+          ]
+        : []),
       'CTR benchmarks and calculated click shortfalls are directional heuristics, not forecasts or proof that clicks are available. Validate the search intent and live SERP before editing.',
       ...(selection.invalidRows
         ? [

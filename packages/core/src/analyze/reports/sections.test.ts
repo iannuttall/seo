@@ -56,6 +56,7 @@ function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
       peerRows: 0,
       byPosition: analysis.benchmarkByPosition,
     },
+    brand: analysis.brand,
     verification: {
       requested: false,
       attemptedRows: 0,
@@ -296,6 +297,8 @@ function emptyDiagnosis(): DiagnosePropertyReport {
         completeness: 'retained-query-rows-only',
       },
       dataStatus: striking.dataStatus,
+      minImpressions: striking.minImpressionsPolicy,
+      brand: striking.brand,
       selection: striking.selection,
       methodology: striking.methodology,
       verification: {

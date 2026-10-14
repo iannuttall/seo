@@ -226,6 +226,7 @@ export async function decayingReportWith(
       limit,
       brand: input.includeBrand ? 'included' : 'excluded',
     },
+    brand: analysis.brand,
     selection: analysis.selection,
     summary: {
       eligibleRows: analysis.selection.eligibleRows,

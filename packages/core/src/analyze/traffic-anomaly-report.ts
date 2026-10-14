@@ -58,11 +58,23 @@ export async function trafficAnomalyWith(
     recentDays,
   })
 
+  const coverage = analyzed.coverage
   return {
     site: input.site,
     generatedAt: dependencies.now().toISOString(),
+    range,
     anomalies: analyzed.anomalies,
     rows: result.rows.length,
-    coverage: analyzed.coverage,
+    selection: {
+      sourceRows: result.rows.length,
+      invalidRows: coverage.invalidRows,
+      duplicateRows: coverage.duplicateRows,
+      observedDays: coverage.observedDays,
+      expectedDays: coverage.expectedDays,
+      missingDays: coverage.missingDays,
+      baselineDays: coverage.baseline.observedDays,
+      comparisonDays: coverage.comparison.observedDays,
+    },
+    coverage,
   }
 }

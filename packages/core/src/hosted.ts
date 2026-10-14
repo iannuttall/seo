@@ -22,7 +22,20 @@ export {
   type CtrUnderperformersReport,
   ctrUnderperformersReportWith,
 } from './analyze/ctr-underperformers-report.js'
+export {
+  collapseFragmentPageRows,
+  type FragmentCollapseProvenance,
+  type FragmentCollapseResult,
+  stripPageFragment,
+} from './analyze/page-fragments.js'
 export { analyzeQueryClustersFromRows } from './analyze/query-cluster-analysis.js'
+export {
+  isLikelyAutomatedQuery,
+  isLikelyNavigationalOtherQuery,
+  QUERY_FLAG_METHOD,
+  type QueryFlag,
+  queryFlags,
+} from './analyze/query-quality.js'
 export { analyzeSecondPageRows } from './analyze/second-page-analysis.js'
 export type { SecondPageReport } from './analyze/second-page-analysis-types.js'
 export {
@@ -30,6 +43,11 @@ export {
   type SecondPageInput,
   secondPageWith,
 } from './analyze/second-page-report.js'
+export {
+  CTR_SPLIT_POSITION,
+  createSiteCtrCurve,
+  SITE_CTR_CURVE_METHOD,
+} from './analyze/site-ctr-curve.js'
 export { analyzeCannibalRows } from './analyze/site-diagnostics/cannibal-analysis.js'
 export {
   type CannibalDependencies,
@@ -69,7 +87,16 @@ export {
   type TrafficAnomalyInput,
   trafficAnomalyWith,
 } from './analyze/traffic-anomaly-report.js'
-export { deriveBrandTerms, isBrandQuery } from './brand.js'
+export { deriveBrandTerms, isBrandQuery, registrableDomain } from './brand.js'
+export {
+  type BrandTermEvidence,
+  type BrandTermsFromQueryRows,
+  brandTermsFromQueryRows,
+  type ExcludedBrandTerm,
+  NAVIGATIONAL_STEM_THRESHOLDS,
+  type ReportBrandTerms,
+  resolveReportBrandTerms,
+} from './brand-evidence.js'
 export type {
   SearchAnalyticsOptions,
   SearchAnalyticsQuery,

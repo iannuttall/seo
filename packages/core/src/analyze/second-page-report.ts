@@ -18,12 +18,18 @@ import {
   type SecondPageRecommendation,
 } from './second-page-analysis.js'
 import type { SecondPageReport } from './second-page-analysis-types.js'
+import { explicitDateRange } from './site-diagnostics/quick-wins-report-input.js'
 
 const MAX_SOURCE_ROWS = 100_000
 
 export type SecondPageInput = {
   site: string
+  /** Window length in days; ignored when startDate and endDate are given. */
   range?: number
+  /** Explicit window start (YYYY-MM-DD); pass with endDate. */
+  startDate?: string
+  /** Explicit window end (YYYY-MM-DD); pass with startDate. */
+  endDate?: string
   minImpressions?: number
   limit?: number
   js?: boolean | 'auto'
@@ -189,13 +195,16 @@ export async function secondPageWith(
   input: SecondPageInput,
   dependencies: SecondPageDependencies,
 ): Promise<SecondPageReport> {
-  const days = integerOption({
-    value: input.range,
-    fallback: 28,
-    minimum: 1,
-    maximum: 548,
-    label: 'Days',
-  })
+  const explicitRange = explicitDateRange(input, 548)
+  const days =
+    explicitRange?.days ??
+    integerOption({
+      value: input.range,
+      fallback: 28,
+      minimum: 1,
+      maximum: 548,
+      label: 'Days',
+    })
   const verifyLimit = integerOption({
     value: input.verifyLimit,
     fallback: 5,
@@ -204,7 +213,7 @@ export async function secondPageWith(
     label: 'Verification limit',
   })
   const now = dependencies.now()
-  const range = reportDateRange(days, now)
+  const range = explicitRange?.range ?? reportDateRange(days, now)
   const result = await dependencies.searchAnalytics(
     input.site,
     {
@@ -282,7 +291,8 @@ export async function secondPageWith(
 
   return {
     site: input.site,
-    range: days,
+    range,
+    rangeDays: days,
     dateRange: range,
     generatedAt,
     source: {
@@ -297,6 +307,7 @@ export async function secondPageWith(
       completeness: 'retained-query-rows-only',
     },
     dataStatus: analysis.dataStatus,
+    brand: analysis.brand,
     selection: analysis.selection,
     methodology: analysis.methodology,
     provenance: {
@@ -337,6 +348,7 @@ export async function secondPageWith(
       `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.eligibleRows} eligible query/page rows, ${analysis.selection.eligiblePages} eligible page groups, ${analysis.selection.returnedPages} returned.`,
       `Positions use GSC average position per query/page row and must be greater than 10 and at most 20. Page position is impression-weighted across retained queries.`,
       `Minimum impressions (${analysis.minImpressions}) are applied after eligible rows are aggregated by page.`,
+      `Brand queries: ${analysis.brand.filtering}. Brand terms used: ${analysis.brand.terms.join(', ') || 'none'} (${analysis.brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
       verificationRequested
         ? `Content verification was attempted for the first ${verificationItems.length} returned pages in priority order.`
         : 'Content verification was not requested; unverified items are investigation prompts, not content findings.',

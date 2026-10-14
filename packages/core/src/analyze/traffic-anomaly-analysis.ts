@@ -52,11 +52,26 @@ export interface TrafficAnomalyCoverage {
   caveats: string[]
 }
 
+export type TrafficAnomalySelection = {
+  sourceRows: number
+  invalidRows: number
+  duplicateRows: number
+  observedDays: number
+  expectedDays: number
+  missingDays: number
+  baselineDays: number
+  comparisonDays: number
+}
+
 export interface TrafficAnomalyReport {
   site: string
   generatedAt: string
+  /** The Search Console window used. Optional only for older fixtures. */
+  range?: { startDate: string; endDate: string }
   anomalies: TrafficAnomaly[]
   rows: number
+  /** Row and day counts behind the anomaly test. Optional only for older fixtures. */
+  selection?: TrafficAnomalySelection
   coverage?: TrafficAnomalyCoverage
 }
 

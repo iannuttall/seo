@@ -57,6 +57,7 @@ test('uses the decimal >10 to <=20 boundary without a CTR gate', () => {
 test('validates rows and records exclusions in a stable sequential order', () => {
   const result = analyzeStrikingDistanceRows({
     site,
+    minImpressions: 100,
     rows: [
       row({ query: '', position: 5 }),
       row({ query: 'bad url', url: 'not-a-url' }),
@@ -64,28 +65,36 @@ test('validates rows and records exclusions in a stable sequential order', () =>
       row({ query: 'wrong position', position: 9 }),
       row({ query: 'too small', impressions: 99, clicks: 1 }),
       row({ query: 'site:example.com technical seo' }),
-      row({ query: 'acme pricing' }),
+      row({ query: 'acme.test pricing' }),
       row({ query: 'eligible technical query' }),
     ],
   })
 
   assert.deepEqual(result.selection, {
     sourceRows: 8,
+    fragmentRows: 0,
+    mergedRows: 0,
     invalidRows: 3,
     outsidePositionRows: 1,
     belowMinimumRows: 1,
     lowActionabilityRows: 1,
     brandRows: 1,
     eligibleRows: 1,
+    likelyAutomatedRows: 0,
+    navigationalOtherRows: 0,
+    flaggedRows: 0,
     returnedRows: 1,
     limitedRows: 0,
   })
+  assert.equal(result.minImpressionsPolicy.source, 'explicit')
   assert.deepEqual(result.provenance.selectionOrder, [
+    'fragment_and_duplicate_merge',
     'valid_row',
     'position',
     'minimum_impressions',
     'query_quality',
     'brand',
+    'query_flag_ranking',
   ])
 })
 
@@ -116,7 +125,11 @@ test('normalizes numeric options and keeps all-eligible totals before limit', ()
   assert.equal(bounded.summary.eligibleImpressions, 600)
   assert.equal(bounded.summary.returnedImpressions, 300)
   assert.equal(bounded.groups[0]?.rowCount, 3)
-  assert.equal(fallback.minImpressions, 100)
+  // A non-finite request falls back to the scaled default: 600 retained
+  // impressions scale below the floor, so the floor of 10 applies.
+  assert.equal(fallback.minImpressions, 10)
+  assert.equal(fallback.minImpressionsPolicy.source, 'scaled-default')
+  assert.equal(fallback.minImpressionsPolicy.basisImpressions, 600)
   assert.equal(fallback.limit, 25)
 })
 
@@ -168,7 +181,17 @@ test('excludes configured and derived Unicode brand terms', () => {
   })
   const derived = analyzeStrikingDistanceRows({
     site: 'sc-domain:品牌.公司',
-    rows: [row({ query: '品牌 評測', url: 'https://品牌.公司/review' })],
+    rows: [
+      // Navigational evidence for the bare stem: the site is its top answer.
+      row({
+        query: '品牌',
+        url: 'https://品牌.公司/',
+        position: 1.1,
+        clicks: 60,
+        impressions: 100,
+      }),
+      row({ query: '品牌 評測', url: 'https://品牌.公司/review' }),
+    ],
   })
   const included = analyzeStrikingDistanceRows({
     site,
@@ -241,4 +264,111 @@ test('distinguishes empty, filtered, and available data', () => {
     available.methodology.grouping.population,
     'all_eligible_rows_before_limit',
   )
+})
+
+test('treats the bare domain stem as brand only with navigational evidence', () => {
+  const generic = analyzeStrikingDistanceRows({
+    site: 'sc-domain:example.dev',
+    rows: [
+      row({ query: 'example', position: 34, clicks: 0, impressions: 900 }),
+      row({ query: 'image example api', url: 'https://example.dev/a' }),
+      row({ query: 'example.dev pricing', url: 'https://example.dev/p' }),
+    ],
+  })
+  assert.deepEqual(
+    generic.items.map((item) => item.query),
+    ['image example api'],
+  )
+  assert.equal(generic.selection.brandRows, 1)
+  assert.equal(generic.brand.source, 'search-console-navigational')
+  assert.deepEqual(generic.brand.terms, [
+    'example.dev',
+    'example dev',
+    'exampledev',
+    'example-dev',
+  ])
+  assert.equal(generic.brand.excluded[0]?.term, 'example')
+
+  const navigational = analyzeStrikingDistanceRows({
+    site: 'sc-domain:acme.test',
+    rows: [
+      row({ query: 'acme', position: 1.2, clicks: 80, impressions: 200 }),
+      row({ query: 'acme pricing', url: 'https://acme.test/pricing' }),
+    ],
+  })
+  assert.equal(navigational.selection.brandRows, 1)
+  assert.equal(navigational.items.length, 0)
+  assert.ok(navigational.brand.terms.includes('acme'))
+})
+
+test('scales the default minimum with retained impressions and records it', () => {
+  const rows = [
+    row({ query: 'large head term', position: 3, impressions: 400_000 }),
+    row({ query: 'long tail guide', impressions: 60 }),
+    row({ query: 'bigger tail guide', impressions: 90 }),
+  ]
+  const result = analyzeStrikingDistanceRows({ site, rows })
+  // 400,150 retained impressions x 1/5000 = 80.03, rounded up to 81.
+  assert.equal(result.minImpressions, 81)
+  assert.equal(result.minImpressionsPolicy.source, 'scaled-default')
+  assert.equal(result.minImpressionsPolicy.basisImpressions, 400_150)
+  assert.deepEqual(
+    result.items.map((item) => item.query),
+    ['bigger tail guide'],
+  )
+  assert.equal(result.selection.belowMinimumRows, 1)
+
+  const large = analyzeStrikingDistanceRows({
+    site,
+    rows: [row({ query: 'head', position: 2, impressions: 5_000_000 })],
+  })
+  assert.equal(large.minImpressions, 100)
+})
+
+test('merges #fragment URLs and ranks heuristic query flags last', () => {
+  const result = analyzeStrikingDistanceRows({
+    site: 'sc-domain:example.dev',
+    minImpressions: 0,
+    rows: [
+      row({
+        query: 'flux image api',
+        url: 'https://example.dev/flux',
+        impressions: 100,
+        clicks: 1,
+        position: 12,
+      }),
+      row({
+        query: 'flux image api',
+        url: 'https://example.dev/flux#pricing',
+        impressions: 300,
+        clicks: 2,
+        position: 16,
+      }),
+      row({
+        query:
+          'aieos v1.1 skill.md manifest spec openai anthropic google llama mistral prompt',
+        impressions: 5000,
+        clicks: 0,
+      }),
+      row({ query: 'agentskills.io directory', impressions: 4000, clicks: 0 }),
+      row({ query: 'skills sh', impressions: 3000, clicks: 0 }),
+    ],
+  })
+
+  assert.equal(result.selection.fragmentRows, 1)
+  assert.equal(result.selection.mergedRows, 1)
+  assert.equal(result.selection.likelyAutomatedRows, 1)
+  assert.equal(result.selection.navigationalOtherRows, 2)
+  assert.equal(result.selection.flaggedRows, 3)
+  const first = result.items[0]
+  assert.equal(first?.query, 'flux image api')
+  assert.equal(first?.url, 'https://example.dev/flux')
+  assert.equal(first?.impressions, 400)
+  assert.equal(first?.position, 15)
+  assert.deepEqual(first?.queryFlags, [])
+  assert.deepEqual(
+    result.items.slice(1).map((item) => item.queryFlags),
+    [['likely-automated'], ['navigational-other'], ['navigational-other']],
+  )
+  assert.equal(result.methodology.queryFlags.heuristic, true)
 })

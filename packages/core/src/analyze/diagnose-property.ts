@@ -391,6 +391,8 @@ function emptyStriking(input: {
       completeness: 'retained-query-rows-only',
     },
     dataStatus: analysis.dataStatus,
+    minImpressions: analysis.minImpressionsPolicy,
+    brand: analysis.brand,
     selection: analysis.selection,
     methodology: analysis.methodology,
     verification: {
@@ -455,6 +457,7 @@ function emptyQuickWins(input: {
       peerRows: 0,
       byPosition: analysis.benchmarkByPosition,
     },
+    brand: analysis.brand,
     verification: {
       requested: false,
       attemptedRows: 0,

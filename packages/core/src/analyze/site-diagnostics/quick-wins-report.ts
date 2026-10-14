@@ -224,6 +224,7 @@ export async function quickWinsReportWith(
         fetchDeduplication: 'exact_url' as const,
       },
     },
+    brand: analysis.brand,
     benchmark: {
       method: analysis.methodology.benchmark.method,
       peerRows: analysis.selection.benchmarkRows,
@@ -263,7 +264,15 @@ export async function quickWinsReportWith(
       `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,
       `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.benchmarkRows} benchmark rows, ${analysis.selection.eligibleRows} eligible rows, ${analysis.selection.returnedRows} returned.`,
       'Position is GSC average position across impressions; a value from 4 to 10 does not mean the URL ranked on page one for every impression.',
-      'Target CTR is a deterministic site-peer or versioned built-in heuristic. The calculated CTR click shortfall is for prioritisation and is not a traffic forecast.',
+      'Target CTR comes from the site CTR curve that ctr-underperformers also uses, or a versioned built-in heuristic. The calculated CTR click shortfall is for prioritisation and is not a traffic forecast.',
+      'Rows at average position below 4 belong to ctr-underperformers, so the two reports do not repeat rows.',
+      `Brand queries: ${analysis.brand.filtering}. Brand terms used: ${analysis.brand.terms.join(', ') || 'none'} (${analysis.brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
+      analysis.selection.fragmentRows
+        ? `${countLabel(analysis.selection.fragmentRows, 'source row')} with a #fragment URL merged into the base URL.`
+        : '',
+      analysis.selection.flaggedRows
+        ? `${countLabel(analysis.selection.flaggedRows, 'eligible row')} carry heuristic query flags (likely-automated or navigational-other) and rank after unflagged rows.`
+        : '',
       'Search Analytics exposes top retained query rows only. Anonymized and lower-value queries can be absent even after pagination is exhausted.',
       source.rowsFetched >= MAX_SOURCE_ROWS
         ? `The report reached its ${MAX_SOURCE_ROWS.toLocaleString('en-US')}-row safety cap.`

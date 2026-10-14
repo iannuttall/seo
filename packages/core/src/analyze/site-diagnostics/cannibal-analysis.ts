@@ -1,4 +1,5 @@
 import { shouldExcludeBrandQuery } from '../../brand.js'
+import { resolveReportBrandTerms } from '../../brand-evidence.js'
 import { detectPageTemplate, summarizeTemplates } from '../page-patterns.js'
 import { isLowActionabilityQuery } from '../query-quality.js'
 import {
@@ -72,6 +73,12 @@ export function analyzeCannibalRows(
     returnedSuppressions: 0,
     limitedSuppressions: 0,
   }
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: input.propertyRows?.length ? input.propertyRows : input.rows,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
   const groups = new Map<string, CannibalQueryGroup>()
   const propertyImpressions = new Map<string, number>()
   for (const row of input.propertyRows ?? []) {
@@ -119,7 +126,7 @@ export function analyzeCannibalRows(
       shouldExcludeBrandQuery({
         query: group.query,
         siteUrl: input.site,
-        brandTerms: input.brandTerms,
+        brandTerms: brand.terms,
         includeBrand: input.includeBrand,
       })
     ) {
@@ -218,6 +225,7 @@ export function analyzeCannibalRows(
       limit,
       brand: input.includeBrand ? 'included' : 'excluded',
     },
+    brand,
     selection,
     items: returnedItems,
     suppressed,

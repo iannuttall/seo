@@ -128,6 +128,16 @@ Useful CLI areas:
 
 Useful core areas:
 
+- `packages/core/src/commands`: the one engine for the eight commands and the
+  MCP tools (`tools.ts`). Runs in Node and in Workers. Surfaces pass a
+  `ToolSurface` (Google fetch, keys, sign-in hint); they add no report logic.
+- `packages/core/src/google/api.ts`: every Search Console, URL Inspection and
+  Google Analytics call, shared by the CLI, both MCP servers and any other
+  host. The Node binding adds the local sign-in, cache and quotas.
+- `packages/core/src/commands-node.ts`: the Node functions the CLI and local
+  MCP pass to the commands.
+- `packages/core/src/http/read-json.ts`: read every JSON API response through
+  `readJson`, never `response.json()`.
 - `packages/core/src/analyze/reports`: narrative report assembly.
 - `packages/core/src/analyze/workflows`: focused agent workflow reports.
 - `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.

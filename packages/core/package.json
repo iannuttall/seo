@@ -15,6 +15,11 @@
       "types": "./src/server-logs/browser.ts",
       "browser": "./src/server-logs/browser.ts",
       "import": "./dist/server-logs/browser.js"
+    },
+    "./hosted": {
+      "types": "./src/hosted.ts",
+      "workerd": "./src/hosted.ts",
+      "import": "./dist/hosted.js"
     }
   },
   "files": [

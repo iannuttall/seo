@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import http from 'node:http'
 import open from 'open'
 import { SeoError } from '../../errors.js'
+import { readJson } from '../../http/read-json.js'
 import { writeTokens } from '../../storage/config.js'
 import type { StoredTokens } from '../../types.js'
 import { oauthCallbackPage } from './callback-page.js'
@@ -152,12 +153,12 @@ async function exchangeCode(input: {
     throw new Error(`Token exchange failed with ${tokenResponse.status}.`)
   }
 
-  return tokenResponse.json() as Promise<{
+  return readJson<{
     access_token: string
     refresh_token?: string
     token_type: string
     expires_in: number
     scope: string
     id_token?: string
-  }>
+  }>(tokenResponse, 'Google sign-in')
 }

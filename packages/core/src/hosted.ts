@@ -113,3 +113,4 @@ export {
   findOverlappingSearchUpdates,
   searchUpdatesFromIncidents,
 } from './updates/search-updates.js'
+export { SEO_VERSION } from './version.js'

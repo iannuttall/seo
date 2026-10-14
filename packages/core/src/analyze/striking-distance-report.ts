@@ -8,6 +8,7 @@ import {
   type QueryContentCoverage,
   type QueryContentVerifier,
 } from './content-coverage-analysis.js'
+import { minImpressionsCaveat } from './min-impressions-policy.js'
 import type { TemplateSummary } from './page-patterns.js'
 import { explicitDateRange } from './site-diagnostics/quick-wins-report-input.js'
 import {
@@ -292,9 +293,10 @@ export async function strikingDistanceWith(
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,
       `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.eligibleRows} eligible, ${analysis.selection.returnedRows} returned.`,
-      analysis.minImpressionsPolicy.source === 'scaled-default'
-        ? `Minimum impressions per query/page row: ${analysis.minImpressions}, scaled from ${analysis.minImpressionsPolicy.basisImpressions} retained impressions (1 in 5,000, between ${analysis.minImpressionsPolicy.scale.floor} and ${analysis.minImpressionsPolicy.scale.ceiling}); ${analysis.selection.belowMinimumRows} rows were below it. This scaling is a heuristic.`
-        : `Minimum impressions per query/page row: ${analysis.minImpressions} (requested); ${analysis.selection.belowMinimumRows} rows were below it.`,
+      minImpressionsCaveat({
+        policy: analysis.minImpressionsPolicy,
+        belowMinimumRows: analysis.selection.belowMinimumRows,
+      }),
       `Brand queries: ${analysis.brand.filtering}. Brand terms used: ${analysis.brand.terms.join(', ') || 'none'} (${analysis.brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
       analysis.selection.fragmentRows
         ? `${countLabel(analysis.selection.fragmentRows, 'source row')} with a #fragment URL merged into the base URL.`

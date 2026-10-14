@@ -1,5 +1,9 @@
 import { resolveReportBrandTerms } from '../../brand-evidence.js'
 import {
+  CTR_MIN_IMPRESSIONS_SCALE,
+  resolveMinImpressionsPolicy,
+} from '../min-impressions-policy.js'
+import {
   countQueryFlags,
   QUERY_FLAG_METHOD,
   queryFlags,
@@ -29,7 +33,6 @@ export type {
   QuickWinSelection,
 } from './quick-wins-types.js'
 
-const DEFAULT_MIN_IMPRESSIONS = 200
 const MAX_MIN_IMPRESSIONS = 1_000_000_000
 const DEFAULT_LIMIT = 25
 const MAX_LIMIT = 100
@@ -37,12 +40,14 @@ const MAX_LIMIT = 100
 export function analyzeQuickWinsFromRows(
   input: AnalyzeQuickWinsInput,
 ): QuickWinAnalysis {
-  const minImpressions = boundedInteger(
-    input.minImpressions,
-    DEFAULT_MIN_IMPRESSIONS,
-    0,
-    MAX_MIN_IMPRESSIONS,
-  )
+  const minImpressionsPolicy = resolveMinImpressionsPolicy({
+    explicit: input.minImpressions,
+    rows: input.rows,
+    scale: CTR_MIN_IMPRESSIONS_SCALE,
+    minimum: 0,
+    maximum: MAX_MIN_IMPRESSIONS,
+  })
+  const minImpressions = minImpressionsPolicy.effective
   const limit = boundedInteger(input.limit, DEFAULT_LIMIT, 1, MAX_LIMIT)
   const brand = resolveReportBrandTerms({
     siteUrl: input.site,
@@ -89,6 +94,7 @@ export function analyzeQuickWinsFromRows(
   return {
     site: input.site,
     minImpressions,
+    minImpressionsPolicy,
     limit,
     dataStatus:
       input.rows.length === 0

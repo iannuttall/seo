@@ -1,5 +1,9 @@
 import { resolveReportBrandTerms } from '../brand-evidence.js'
 import type { GscRow } from '../types.js'
+import {
+  POSITION_MIN_IMPRESSIONS_SCALE,
+  resolveMinImpressionsPolicy,
+} from './min-impressions-policy.js'
 import { collapseFragmentPageRows } from './page-fragments.js'
 import {
   countQueryFlags,
@@ -27,18 +31,6 @@ export type {
   StrikingDistanceAnalysisItem,
 } from './striking-distance-analysis-types.js'
 
-// The default minimum scales with the property's retained impressions so a
-// small site is not filtered to nothing: one row in 5,000 retained
-// query/page impressions, rounded up, between 10 and 100. A site with
-// 500,000 or more retained impressions keeps the earlier fixed 100. This is
-// a heuristic, recorded in `minImpressionsPolicy`.
-export const STRIKING_DISTANCE_MIN_IMPRESSIONS_SCALE = {
-  share: 0.0002,
-  floor: 10,
-  ceiling: 100,
-  basis: 'sum_of_retained_query_page_impressions',
-  heuristic: true,
-} as const
 const MAX_MIN_IMPRESSIONS = 1_000_000_000
 const DEFAULT_LIMIT = 25
 const MAX_LIMIT = 100
@@ -51,40 +43,6 @@ function integerInRange(
 ): number {
   if (value === undefined || !Number.isFinite(value)) return fallback
   return Math.min(maximum, Math.max(minimum, Math.floor(value)))
-}
-
-function scaledMinimum(basisImpressions: number): number {
-  const scale = STRIKING_DISTANCE_MIN_IMPRESSIONS_SCALE
-  return Math.min(
-    scale.ceiling,
-    Math.max(scale.floor, Math.ceil(basisImpressions * scale.share)),
-  )
-}
-
-function minimumPolicy(input: {
-  explicit: number | undefined
-  rows: GscRow[]
-}): StrikingDistanceAnalysis['minImpressionsPolicy'] {
-  let basisImpressions = 0
-  for (const row of input.rows) {
-    if (Number.isFinite(row.impressions) && row.impressions > 0) {
-      basisImpressions += row.impressions
-    }
-  }
-  if (input.explicit !== undefined && Number.isFinite(input.explicit)) {
-    return {
-      effective: integerInRange(input.explicit, 0, 0, MAX_MIN_IMPRESSIONS),
-      source: 'explicit',
-      basisImpressions,
-      scale: STRIKING_DISTANCE_MIN_IMPRESSIONS_SCALE,
-    }
-  }
-  return {
-    effective: scaledMinimum(basisImpressions),
-    source: 'scaled-default',
-    basisImpressions,
-    scale: STRIKING_DISTANCE_MIN_IMPRESSIONS_SCALE,
-  }
 }
 
 function selectRows(input: {
@@ -147,9 +105,12 @@ export function analyzeStrikingDistanceRows(
   input: AnalyzeStrikingDistanceInput,
 ): StrikingDistanceAnalysis {
   const collapsed = collapseFragmentPageRows(input.rows, { pageKeyIndex: 1 })
-  const minImpressionsPolicy = minimumPolicy({
+  const minImpressionsPolicy = resolveMinImpressionsPolicy({
     explicit: input.minImpressions,
     rows: collapsed.rows,
+    scale: POSITION_MIN_IMPRESSIONS_SCALE,
+    minimum: 0,
+    maximum: MAX_MIN_IMPRESSIONS,
   })
   const minImpressions = minImpressionsPolicy.effective
   const limit = integerInRange(input.limit, DEFAULT_LIMIT, 1, MAX_LIMIT)

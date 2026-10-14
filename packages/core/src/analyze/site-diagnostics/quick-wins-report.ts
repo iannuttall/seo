@@ -11,6 +11,7 @@ import {
   requirePageVerification,
   verifyQueryContentWith,
 } from '../content-coverage-analysis.js'
+import { minImpressionsCaveat } from '../min-impressions-policy.js'
 import { groupQuickWins } from './quick-win-groups.js'
 import { analyzeQuickWinsFromRows } from './quick-wins-analysis.js'
 import {
@@ -215,6 +216,7 @@ export async function quickWinsReportWith(
     },
     dataStatus: analysis.dataStatus,
     selection: analysis.selection,
+    minImpressionsPolicy: analysis.minImpressionsPolicy,
     methodology: analysis.methodology,
     provenance: {
       ...analysis.provenance,
@@ -263,6 +265,10 @@ export async function quickWinsReportWith(
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,
       `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.benchmarkRows} benchmark rows, ${analysis.selection.eligibleRows} eligible rows, ${analysis.selection.returnedRows} returned.`,
+      minImpressionsCaveat({
+        policy: analysis.minImpressionsPolicy,
+        belowMinimumRows: analysis.selection.belowMinimumRows,
+      }),
       'Position is GSC average position across impressions; a value from 4 to 10 does not mean the URL ranked on page one for every impression.',
       'Target CTR comes from the site CTR curve that ctr-underperformers also uses, or a versioned built-in heuristic. The calculated CTR click shortfall is for prioritisation and is not a traffic forecast.',
       'Rows at average position below 4 belong to ctr-underperformers, so the two reports do not repeat rows.',

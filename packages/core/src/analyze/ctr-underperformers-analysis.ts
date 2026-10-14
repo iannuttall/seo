@@ -8,6 +8,11 @@ import type {
   CtrUnderperformerSelection,
 } from './ctr-underperformers-types.js'
 import {
+  CTR_MIN_IMPRESSIONS_SCALE,
+  type MinImpressionsPolicy,
+  resolveMinImpressionsPolicy,
+} from './min-impressions-policy.js'
+import {
   type PositionBenchmark,
   roundedPosition,
 } from './opportunity-primitives.js'
@@ -23,7 +28,6 @@ import {
   selectSiteCtrCurveRows,
 } from './site-ctr-curve.js'
 
-export const CTR_DEFAULT_MIN_IMPRESSIONS = 200
 export const CTR_MAX_MIN_IMPRESSIONS = 1_000_000_000
 export const CTR_DEFAULT_LIMIT = 25
 export const CTR_MAX_LIMIT = 100
@@ -88,17 +92,20 @@ export function analyzeCtrUnderperformersFromRows(input: {
   totalClickShortfall: number
   returnedClickShortfall: number
   minImpressions: number
+  minImpressionsPolicy: MinImpressionsPolicy
   limit: number
   selection: CtrUnderperformerSelection
   brand: ReportBrandTerms
   benchmarkByPosition: Record<string, PositionBenchmark>
 } {
-  const minImpressions = boundedInteger(
-    input.minImpressions,
-    CTR_DEFAULT_MIN_IMPRESSIONS,
-    1,
-    CTR_MAX_MIN_IMPRESSIONS,
-  )
+  const minImpressionsPolicy = resolveMinImpressionsPolicy({
+    explicit: input.minImpressions,
+    rows: input.rows,
+    scale: CTR_MIN_IMPRESSIONS_SCALE,
+    minimum: 1,
+    maximum: CTR_MAX_MIN_IMPRESSIONS,
+  })
+  const minImpressions = minImpressionsPolicy.effective
   const limit = boundedInteger(input.limit, CTR_DEFAULT_LIMIT, 1, CTR_MAX_LIMIT)
   const selection = initialSelection(input.rows.length)
   const brand = resolveReportBrandTerms({
@@ -199,6 +206,7 @@ export function analyzeCtrUnderperformersFromRows(input: {
       0,
     ),
     minImpressions,
+    minImpressionsPolicy,
     limit,
     selection,
     brand,

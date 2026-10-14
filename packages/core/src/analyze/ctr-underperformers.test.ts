@@ -238,7 +238,7 @@ test('CTR analysis excludes brand, junk, and low-impression candidates', () => {
         query: 'technical seo audit',
         url: 'https://example.com/audit',
         clicks: 0,
-        impressions: 199,
+        impressions: 29,
         position: 3,
       }),
     ],
@@ -247,6 +247,12 @@ test('CTR analysis excludes brand, junk, and low-impression candidates', () => {
   })
 
   assert.deepEqual(result.items, [])
+  // 2,029 retained impressions scale below the CTR floor, so the default
+  // minimum is the floor of 30 and the 29-impression row is excluded.
+  assert.equal(result.minImpressions, 30)
+  assert.equal(result.minImpressionsPolicy.source, 'scaled-default')
+  assert.equal(result.minImpressionsPolicy.basisImpressions, 2029)
+  assert.equal(result.selection.belowMinimumRows, 1)
 })
 
 test('aggregates repeated query/page rows before CTR and position analysis', () => {
@@ -442,4 +448,77 @@ test('report validates numeric options before calling Search Console', async () 
     /minImpressions must be a whole number/,
   )
   assert.equal(calls, 0)
+})
+
+test('a mid-size site gets a scaled default minimum and keeps low-CTR rows', async () => {
+  // Regression: a fixed 200-impression default returned no rows for a site
+  // with about 150,000 retained impressions, where page-one rows carry 30 to
+  // 150 impressions each.
+  const candidates = Array.from({ length: 20 }, (_, index) =>
+    row({
+      query: `widget question ${String(index).padStart(2, '0')}`,
+      url: `https://example.com/widgets/${index}`,
+      clicks: 0,
+      impressions: 30 + index * 6,
+      position: 1 + (index % 3),
+    }),
+  )
+  const deeper = Array.from({ length: 300 }, (_, index) =>
+    row({
+      query: `deep topic ${index}`,
+      url: `https://example.com/deep/${index}`,
+      clicks: 1,
+      impressions: 494,
+      position: 25,
+    }),
+  )
+  const rows = [
+    ...candidates,
+    ...deeper,
+    row({
+      query: 'deep remainder',
+      url: 'https://example.com/deep/remainder',
+      clicks: 0,
+      impressions: 60,
+      position: 30,
+    }),
+  ]
+  const dependencies: CtrUnderperformerDependencies = {
+    searchAnalytics: async () => ({ rows, calls: 1, rowsFetched: rows.length }),
+    now: () => new Date('2026-07-09T12:00:00.000Z'),
+  }
+
+  const report = await ctrUnderperformersReport(
+    { site: 'sc-domain:example.com' },
+    dependencies,
+  )
+
+  assert.deepEqual(report.minImpressionsPolicy, {
+    effective: 30,
+    source: 'scaled-default',
+    basisImpressions: 150_000,
+    scale: {
+      share: 0.0002,
+      floor: 30,
+      ceiling: 200,
+      basis: 'sum_of_retained_query_page_impressions',
+      heuristic: true,
+    },
+  })
+  assert.equal(report.summary.minImpressions, 30)
+  assert.equal(report.summary.underperformers, 20)
+  assert.equal(report.dataStatus, 'complete')
+  assert.match(
+    report.caveats.join('\n'),
+    /scaled from 150000 retained impressions \(1 in 5,000, between 30 and 200\)/,
+  )
+
+  const fixed = await ctrUnderperformersReport(
+    { site: 'sc-domain:example.com', minImpressions: 200 },
+    dependencies,
+  )
+  assert.equal(fixed.minImpressionsPolicy.source, 'explicit')
+  assert.equal(fixed.summary.underperformers, 0)
+  assert.equal(fixed.selection.belowMinimumRows, 20)
+  assert.match(fixed.caveats.join('\n'), /200 \(requested\)/)
 })

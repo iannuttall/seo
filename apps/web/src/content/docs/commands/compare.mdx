@@ -15,12 +15,16 @@ Ask your agent:
 Compare example.com before and after 2026-09-15
 ```
 
-The hosted MCP runs `seo_compare`. In a terminal, `seo compare --help` lists the options.
+The hosted MCP runs `seo_compare`. In a terminal, run:
 
-You can narrow it to part of the site with some URL text, such as `/blog/`:
+```sh
+seo compare --site example.com --date 2026-09-15
+```
 
-```text
-Compare the /blog/ pages on example.com before and after 2026-09-15
+The date is the first day after the change. You can narrow it to part of the site with some URL text, such as `/blog/`:
+
+```sh
+seo compare --site example.com --date 2026-09-15 --pages /blog/
 ```
 
 ## What comes back

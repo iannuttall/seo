@@ -9,11 +9,13 @@ Use it when a page deserves more links from the rest of your site. Pick the targ
 
 ## Run it
 
-Install the CLI and run setup if you have not yet, then ask your agent or see the options:
+Install the CLI and run setup if you have not yet, then ask your agent or run it with the page that should get the links:
 
 ```sh
-seo internal-links --help
+seo internal-links --url https://example.com/pricing --site sc-domain:example.com
 ```
+
+It looks at the last 28 days of Search Console data. Change that with `--days`.
 
 ## What comes back
 

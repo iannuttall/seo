@@ -14,11 +14,14 @@ Ask your agent:
 Run the SEO report for example.com
 ```
 
-The hosted MCP runs `seo_report`. In a terminal, run:
+The hosted MCP runs `seo_report`. In a terminal, run it for your saved project, or name the site:
 
 ```sh
 seo report
+seo report --site example.com
 ```
+
+`--site` takes a domain, a URL or a Search Console property. Without it, the report uses your saved default project.
 
 ## What comes back
 
@@ -43,11 +46,23 @@ Ask for a section by name:
 Show me the low-ctr section for example.com
 ```
 
+In a terminal:
+
+```sh
+seo report --site example.com --section low-ctr
+```
+
+The first answer is a summary. Add `--detail rows` for the next page of rows, with `--offset` to move through them, or `--detail full` for every field. Add `--json` for structured output.
+
 Sections that list pages also check their top 20 URLs live, so you can see a page that now redirects or returns an error before you spend time on it.
 
 ## Dates
 
-The report uses the latest final Search Console data: the last 28 days, or 90 days for `traffic-drop`. You can ask for a start and end date instead.
+The report uses the latest final Search Console data: the last 28 days, or 90 days for `traffic-drop`. You can ask for a start and end date instead:
+
+```sh
+seo report --site example.com --start-date 2026-09-01 --end-date 2026-09-28
+```
 
 ## Read it carefully
 

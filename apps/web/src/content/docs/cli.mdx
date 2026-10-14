@@ -31,15 +31,30 @@ Setup walks you through three things:
 | `seo compare` | [Before and after a date](/docs/commands/compare), with Google updates |
 | `seo index` | [Pages that lost their clicks](/docs/commands/indexing), checked live |
 | `seo research` | [Keyword and competitor data](/docs/commands/research) from your own key |
-| `seo data` | [Raw rows](/docs/commands/data) from Search Console or your analytics |
+| `seo data` | [Raw Search Console rows](/docs/commands/data) for any dimensions |
 | `seo crawl` | [Crawl your site](/docs/commands/crawl) and list technical issues |
 | `seo internal-links` | [Pages that could link](/docs/commands/internal-links) to a page you choose |
 
-Add `--help` to any command to see its options:
+A few examples:
 
 ```sh
-seo report --help
+seo report --site example.com
+seo report --site example.com --section quick-wins
+seo page --url https://example.com/pricing
+seo compare --site example.com --date 2026-09-15
 ```
+
+Add `--json` to any of them for structured output, or `--help` to see every option.
+
+Research needs a provider key. Connect one once and the CLI keeps it on your machine:
+
+```sh
+seo providers dataforseo connect
+```
+
+## Coming from 0.2
+
+The old report names, such as `seo quick-wins`, still run in 0.3 and print the new command to use. They stop working in 0.4. Reports that were removed print a short message saying so.
 
 Your agent runs the same commands for you once setup has added the skill, so most days you just ask it a question.
 

@@ -1,28 +1,18 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import type { SchemaBreadcrumb } from '@/lib/schema'
-
-const breadcrumbs: SchemaBreadcrumb[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Tools' },
-]
 ---
 
 <BaseLayout
   title="Free SEO tools"
   description="Use free SEO tools to check websites, technical files, search traffic, structured data and keyword lists in your browser without signing in."
   canonicalPath="/tools"
-  {breadcrumbs}
   schemaType="CollectionPage"
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-
     <section class="flex flex-col items-center pt-8 text-center sm:pt-12">
       <h1 class="max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
         Free SEO tools

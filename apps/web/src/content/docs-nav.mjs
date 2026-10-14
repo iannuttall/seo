@@ -25,7 +25,7 @@ export const docsSections = [
         path: '/docs/keys',
         label: 'API keys',
         description:
-          'Add your own DataForSEO, Ahrefs, Semrush or analytics key. Keys are never stored.',
+          'Add your own DataForSEO, Ahrefs or analytics key. Keys are never stored.',
       },
       {
         path: '/docs/cli',

@@ -14,19 +14,19 @@ const clients = [
     id: 'claude',
     label: 'Claude Code',
     command: setupCommands.claude,
-    note: 'Run it in your terminal, then sign in with Google when Claude asks.',
+    note: 'Run it in a terminal, then sign in with Google.',
   },
   {
     id: 'codex',
     label: 'Codex',
     command: setupCommands.codex,
-    note: 'Run it in your terminal, then sign in with Google when Codex asks.',
+    note: 'Run it in a terminal, then sign in with Google.',
   },
   {
     id: 'other',
     label: 'Other clients',
     command: setupCommands.url,
-    note: 'Add this URL as a remote MCP server in Cursor, VS Code, Claude on the web or any client that supports them.',
+    note: 'Add it as a remote MCP server in your client.',
   },
 ]
 ---
@@ -55,15 +55,18 @@ const clients = [
     }
   </div>
 
+  {/* Every panel sits in the same grid cell, so the box is always as tall
+      as the tallest panel and switching clients never shifts the page. */}
+  <div class="mt-3 grid">
   {
     clients.map((client, index) => (
       <div
         role="tabpanel"
         id={`${id}-panel-${client.id}`}
         aria-labelledby={`${id}-tab-${client.id}`}
-        hidden={index !== 0}
+        aria-hidden={index === 0 ? undefined : 'true'}
         data-setup-panel={client.id}
-        class="mt-3"
+        class:list={['[grid-area:1/1]', index !== 0 && 'invisible']}
       >
         <button
           type="button"
@@ -81,35 +84,23 @@ const clients = [
       </div>
     ))
   }
+  </div>
 
   <div class="mt-6">
     <p class="text-sm font-medium text-foreground">Or run it on your machine</p>
-    <div class="mt-2 flex flex-col gap-2 sm:flex-row">
-      <button
-        type="button"
-        class="group flex min-w-0 flex-1 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
-        data-copy-value={setupCommands.npm}
-        aria-label="Copy the install command"
-      >
-        <span class="min-w-0 flex-1">{setupCommands.npm}</span>
-        <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
-          <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
-          <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
-        </span>
-      </button>
-      <button
-        type="button"
-        class="group flex min-w-0 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
-        data-copy-value={setupCommands.start}
-        aria-label="Copy the setup command"
-      >
-        <span class="min-w-0 flex-1">{setupCommands.start}</span>
-        <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
-          <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
-          <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
-        </span>
-      </button>
-    </div>
+    <button
+      type="button"
+      class="group mt-2 flex w-full min-w-0 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+      data-copy-value={setupCommands.install}
+      aria-label="Copy the install command"
+    >
+      <span class="min-w-0 flex-1 break-all">{setupCommands.install}</span>
+      <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+        <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+        <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+      </span>
+    </button>
+    <p class="mt-2 text-sm/6 text-foreground-muted">Installs the CLI, then signs you in and saves your site.</p>
   </div>
 </div>
 
@@ -128,7 +119,11 @@ const clients = [
         if (selected) other.removeAttribute('tabindex')
         else other.tabIndex = -1
         const panel = root.querySelector(`[data-setup-panel="${other.dataset.setupTab}"]`)
-        if (panel instanceof HTMLElement) panel.hidden = !selected
+        if (panel instanceof HTMLElement) {
+          panel.classList.toggle('invisible', !selected)
+          if (selected) panel.removeAttribute('aria-hidden')
+          else panel.setAttribute('aria-hidden', 'true')
+        }
       }
     }
 

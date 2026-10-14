@@ -1,6 +1,6 @@
 ---
 title: API keys for the hosted MCP
-description: Add your own DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple Analytics or Plausible key to the hosted MCP. Keys are never stored.
+description: Add your own DataForSEO, Ahrefs, Clicky, Fathom, Simple Analytics or Plausible key to the hosted MCP. Keys are never stored.
 heading: API keys
 lead: Keyword, competitor and extra analytics data use your own account with the provider. SEO Skill never stores a key.
 ---
@@ -11,7 +11,7 @@ Search Console and Google Analytics come with your Google sign-in. Everything el
 
 | Provider | What it adds | Tool |
 | --- | --- | --- |
-| DataForSEO, Ahrefs or Semrush | Keyword metrics, ranked keywords, SERPs, competitors and backlinks | `seo_research` |
+| DataForSEO or Ahrefs | Keyword metrics, ranked keywords, SERPs, competitors and backlinks | `seo_research` |
 | Clicky, Fathom, Simple Analytics or Plausible | Landing pages for visits from search | `seo_data` |
 
 Research rows also get a free Domain Rating column, with no key needed. It is Domain Rating by [Ahrefs](https://ahrefs.com).
@@ -39,7 +39,6 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp \
 | --- | --- |
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
-| Semrush | `X-Semrush-Key` |
 | Clicky | `X-Clicky-Sitekey` |
 | Fathom | `X-Fathom-Key` |
 | Simple Analytics | `X-Simple-Analytics-Key`, optional `X-Simple-Analytics-User-Id` |

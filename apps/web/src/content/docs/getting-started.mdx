@@ -18,7 +18,7 @@ Both run the same reports and return the same facts. The hosted MCP is the quick
 
 | | Hosted MCP | CLI |
 | --- | --- | --- |
-| Install | Nothing | `npm i -g seo` |
+| Install | Nothing | `npm i -g seo && seo start` |
 | Where it runs | seoskill.dev | Your machine |
 | Sign in | Google, in your browser | Google, during `seo start` |
 | Crawl and internal links | No | Yes |
@@ -34,11 +34,10 @@ The [hosted MCP guide](/docs/mcp) covers other clients, the tools and how sign-i
 
 ## Or install the CLI
 
-Install the package, then run setup:
+Install the package and run setup in one line:
 
 ```sh
-npm i -g seo
-seo start
+npm i -g seo && seo start
 ```
 
 Setup signs you in with Google, saves a project for your site, and can add the skill and MCP server to your agents (if you skip that step, you can add them later). The [CLI guide](/docs/cli) explains each choice.

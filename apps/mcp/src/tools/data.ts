@@ -1,7 +1,6 @@
 import { collapseFragmentPageRows } from '@seo/core/hosted'
 import { z } from 'zod'
 import {
-  inspectUrl,
   listAnalyticsProperties,
   listProperties,
   resolveProperty,
@@ -39,7 +38,7 @@ type Row = Record<string, unknown>
 // Most Search Console rows read per period: one Google request.
 const ROWS = 25_000
 
-function rowsText(input: {
+export function rowsText(input: {
   title: string
   rows: Row[]
   offset: number
@@ -102,7 +101,7 @@ export const seoSites = defineTool({
         ? 'Google Analytics: not granted on this sign-in.'
         : `Google Analytics properties (${analytics.length}):\n${table(analytics, ['property', 'name', 'account'], null)}`,
       `Provider keys on this connection: ${keys.length ? keys.join(', ') : 'none'}.`,
-      'Next: seo_report for a report, seo_search_console for raw rows.',
+      'Next: seo_report with a site.',
     ].join('\n\n')
   },
 })
@@ -122,8 +121,8 @@ const Filter = z.object({
   expression: z.string().min(1),
 })
 
-export const seoSearchConsole = defineTool({
-  name: 'seo_search_console',
+const searchConsoleRows = defineTool({
+  name: 'seo_data',
   title: 'Read Search Console rows',
   description:
     'Search Console rows for any dimensions and filters, each with the same rows from the previous period and the change. Use it for questions the reports do not answer, such as one page’s queries.',
@@ -287,41 +286,8 @@ export const seoSearchConsole = defineTool({
   },
 })
 
-export const seoInspect = defineTool({
-  name: 'seo_inspect_url',
-  title: 'Inspect URLs in Google',
-  description:
-    'Google’s index status for up to 10 URLs from the URL Inspection API: verdict, coverage, last crawl, canonicals and robots. Google allows about 2,000 inspections a day per property.',
-  input: z.object({
-    site: Site,
-    urls: z.array(z.url()).min(1).max(10),
-  }),
-  async run(context, input) {
-    const property = await resolveProperty(context.google, input.site)
-    const rows: Row[] = []
-    for (const url of input.urls) {
-      const result = (await inspectUrl(context.google, property, url)) as {
-        indexStatusResult?: Record<string, unknown>
-      } | null
-      const status = result?.indexStatusResult ?? {}
-      rows.push({
-        url,
-        verdict: status.verdict ?? null,
-        coverage: status.coverageState ?? null,
-        indexing: status.indexingState ?? null,
-        robots: status.robotsTxtState ?? null,
-        fetch: status.pageFetchState ?? null,
-        last_crawl: status.lastCrawlTime ?? null,
-        google_canonical: status.googleCanonical ?? null,
-        user_canonical: status.userCanonical ?? null,
-      })
-    }
-    return `URL Inspection for ${property}:\n\n${table(rows, Object.keys(rows[0] ?? {}), null)}`
-  },
-})
-
-export const seoAnalytics = defineTool({
-  name: 'seo_analytics',
+const analyticsRows = defineTool({
+  name: 'seo_data',
   title: 'Read landing page traffic',
   description: `Landing pages for visits from search, from Google Analytics (Google sign-in) or from Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
     ANALYTICS_HEADERS,
@@ -365,6 +331,66 @@ export const seoAnalytics = defineTool({
   },
 })
 
+const SOURCES = [
+  'search_console',
+  'google_analytics',
+  'clicky',
+  'fathom',
+  'simple_analytics',
+  'plausible',
+] as const
+
+export const seoData = defineTool({
+  name: 'seo_data',
+  title: 'Raw rows',
+  description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions and filters, each with the previous period and the change. The other sources: landing pages for visits from search, from Google Analytics (Google sign-in) or Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
+    ANALYTICS_HEADERS,
+  )
+    .filter(([provider]) => provider !== 'google')
+    .map(([provider, header]) => `${provider} ${header}`)
+    .join('; ')}); each keeps its own metric names.`,
+  input: z.object({
+    source: z.enum(SOURCES).default('search_console'),
+    site: z
+      .string()
+      .min(1)
+      .describe(
+        'search_console: the property or site. google_analytics: numeric property id from seo_sites. clicky and fathom: site id. simple_analytics and plausible: the domain.',
+      ),
+    dimensions: z
+      .array(
+        z.enum([
+          'query',
+          'page',
+          'date',
+          'country',
+          'device',
+          'searchAppearance',
+        ]),
+      )
+      .max(4)
+      .default(['query'])
+      .describe('search_console only.'),
+    filters: z
+      .array(Filter)
+      .max(10)
+      .default([])
+      .describe('search_console only.'),
+    ...DateWindow,
+    ...Detail,
+  }),
+  async run(context, input) {
+    if (input.source === 'search_console') {
+      return searchConsoleRows.run(context, input)
+    }
+    const { dimensions: _d, filters: _f, source, ...rest } = input
+    return analyticsRows.run(context, {
+      ...rest,
+      provider: source === 'google_analytics' ? 'google' : source,
+    })
+  },
+})
+
 export const seoResearch = defineTool({
   name: 'seo_research',
   title: 'Keyword and competitor data',
@@ -374,7 +400,7 @@ export const seoResearch = defineTool({
     .map(([provider, header]) => `${provider} ${header}`)
     .join(
       '; ',
-    )}. Actions: keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`,
+    )}. Actions: keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords), backlinks (target: referring domains). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`,
   input: z.object({
     provider: z.enum(['dataforseo', 'ahrefs', 'semrush']),
     action: z.enum([
@@ -382,6 +408,7 @@ export const seoResearch = defineTool({
       'ranked_keywords',
       'serp',
       'competitors',
+      'backlinks',
     ]),
     keywords: z.array(z.string().min(1)).max(100).default([]),
     target: z.string().default('').describe('Domain or URL.'),

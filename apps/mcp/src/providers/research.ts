@@ -11,6 +11,7 @@ export type ResearchAction =
   | 'ranked_keywords'
   | 'serp'
   | 'competitors'
+  | 'backlinks'
 
 export type ResearchInput = {
   action: ResearchAction
@@ -207,6 +208,22 @@ async function dataForSeo(
     }
     return rows
   }
+  if (input.action === 'backlinks') {
+    const items = await post('v3/backlinks/referring_domains/live', {
+      target: bareTarget(input.target),
+      limit: input.limit,
+      order_by: ['rank,desc'],
+    })
+    return items.map((item) =>
+      pick(item, {
+        domain: 'domain',
+        rank: 'rank',
+        backlinks: 'backlinks',
+        referring_pages: 'referring_pages',
+        first_seen: 'first_seen',
+      }),
+    )
+  }
   const items = await post(
     'v3/dataforseo_labs/google/competitors_domain/live',
     {
@@ -285,6 +302,18 @@ async function ahrefs(key: string, input: ResearchInput): Promise<Row[]> {
     }
     return rows
   }
+  if (input.action === 'backlinks') {
+    const data = await get('site-explorer/refdomains', {
+      select:
+        'domain,domain_rating,links_to_target,dofollow_links,first_seen,last_seen',
+      target: input.target,
+      mode: isPage(input.target) ? 'exact' : 'subdomains',
+      history: 'live',
+      limit: String(input.limit),
+      order_by: 'domain_rating:desc',
+    })
+    return data.refdomains ?? []
+  }
   const data = await get('site-explorer/organic-competitors', {
     select:
       'competitor_domain,keywords_common,keywords_competitor,keywords_target,share,traffic,domain_rating',
@@ -324,23 +353,7 @@ async function semrush(key: string, input: ResearchInput): Promise<Row[]> {
       url.searchParams.set(name, value)
     }
     const response = await call('semrush', new Request(url))
-    const text = await response.text()
-    if (text.startsWith('ERROR')) {
-      if (text.includes('NOTHING FOUND')) return []
-      throw new ToolError('PROVIDER_ERROR', `semrush: ${text.slice(0, 200)}`)
-    }
-    const [head, ...lines] = text.trim().split(/\r?\n/)
-    const names = (head ?? '').split(';')
-    return lines.map((line) => {
-      const cells = line.split(';')
-      return Object.fromEntries(
-        names.map((name, index) => {
-          const cell = cells[index] ?? ''
-          const number = Number(cell)
-          return [name, cell !== '' && !Number.isNaN(number) ? number : cell]
-        }),
-      ) as Row
-    })
+    return parseSemrush(await response.text())
   }
   if (input.action === 'keyword_metrics') {
     return get(
@@ -377,9 +390,49 @@ async function semrush(key: string, input: ResearchInput): Promise<Row[]> {
     }
     return rows
   }
+  if (input.action === 'backlinks') {
+    // The backlinks API has its own base URL and no database.
+    const url = new URL('https://api.semrush.com/analytics/v1/')
+    url.searchParams.set('type', 'backlinks_refdomains')
+    url.searchParams.set('key', key)
+    url.searchParams.set(
+      'target',
+      isPage(input.target) ? input.target : bareTarget(input.target),
+    )
+    url.searchParams.set(
+      'target_type',
+      isPage(input.target) ? 'url' : 'root_domain',
+    )
+    url.searchParams.set(
+      'export_columns',
+      'domain,domain_ascore,backlinks_num,first_seen,last_seen',
+    )
+    url.searchParams.set('display_limit', String(input.limit))
+    url.searchParams.set('display_sort', 'domain_ascore_desc')
+    return parseSemrush(await (await call('semrush', new Request(url))).text())
+  }
   return get(
     'domain_organic_organic',
     { domain: bareTarget(input.target), display_limit: String(input.limit) },
     ['Dn', 'Cr', 'Np', 'Or', 'Ot'],
   )
+}
+
+function parseSemrush(text: string): Row[] {
+  if (text.startsWith('ERROR')) {
+    if (text.includes('NOTHING FOUND')) return []
+    throw new ToolError('PROVIDER_ERROR', `semrush: ${text.slice(0, 200)}`)
+  }
+  const [head, ...lines] = text.trim().split(/\r?\n/)
+  const names = (head ?? '').split(';')
+  return lines.map((line) => {
+    const cells = line.split(';')
+    return Object.fromEntries(
+      names.map((name, index) => {
+        const cell = cells[index] ?? ''
+        const number = Number(cell)
+        return [name, cell !== '' && !Number.isNaN(number) ? number : cell]
+      }),
+    ) as Row
+  })
 }

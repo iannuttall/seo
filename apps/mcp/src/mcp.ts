@@ -1,30 +1,26 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
-import {
-  seoAnalytics,
-  seoInspect,
-  seoResearch,
-  seoSearchConsole,
-  seoSites,
-} from './tools/data.ts'
+import { seoData, seoResearch, seoSites } from './tools/data.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
 import { seoReport } from './tools/reports.ts'
+import { seoCompare, seoIndex, seoPage } from './tools/site-tools.ts'
 
 export const TOOLS: Tool[] = [
   seoSites,
   seoReport,
-  seoSearchConsole,
-  seoInspect,
-  seoAnalytics,
+  seoPage,
+  seoCompare,
+  seoIndex,
   seoResearch,
+  seoData,
 ]
 
 const INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice and stores nothing.
 1. seo_sites: the properties this sign-in can read.
-2. seo_report: start with site-overview. Each report ends with the report to run next. Ask for detail "rows" or "full" only when the summary is not enough.
-3. seo_search_console for raw rows, seo_inspect_url for index status, seo_analytics for landing page traffic, seo_research for keyword and competitor data from the person's own DataForSEO, Ahrefs or Semrush key.
-Crawls and page audits run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run for example \`npx -y seo crawl https://example.com --max-pages 500 --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo audit-page --url https://example.com/page --json\`; \`npx -y seo help all\` lists every command. Page reports check their top 20 URLs live.
+2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the person's own DataForSEO, Ahrefs or Semrush key, seo_data for raw rows.
+Crawls run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
 
 // A new stateless server for each request, with JSON responses.

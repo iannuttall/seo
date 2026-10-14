@@ -148,6 +148,22 @@ Useful core areas:
 - `packages/core/src/clicky`: Clicky API adapter and sitekey storage boundary.
   Profiles store the site ID only. Keep sitekeys in the managed secret store.
 
+## One Way To Run
+
+Keep every report, tool and command simple and linear, for people and for
+agents.
+
+- A report needs only its target (site, URL or property) and, optionally, a
+  date window. It returns everything it has.
+- Do not add flags, options or environment switches that change what a
+  report returns or means. Choices such as brand terms, minimums, page checks
+  and redirect merges are automatic, deterministic and shown in the output.
+- More detail comes only through progressive disclosure: summary, then rows,
+  then every field.
+- Each report may end by naming the report to run next. That is the only
+  routing.
+- When a new option seems necessary, first try to make the default right.
+
 ## Product Rules
 
 - `seo start` is the human onboarding entry point.

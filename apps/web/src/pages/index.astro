@@ -10,6 +10,7 @@ import SectionHeading from '@/components/SectionHeading.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { commands } from '@/content/commands'
+import { features } from '@/content/features'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -146,6 +147,21 @@ const faqs = [
                 icon={item.icon}
                 href={item.path}
               />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="features-heading">
+        <SectionHeading
+          id="features-heading"
+          title="Pick the SEO job"
+          text="A Search Console MCP, keyword research, a site audit, or the MCP server that ties them together."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            features.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />
             ))
           }
         </div>

@@ -129,3 +129,5 @@
 /docs/commands/data
 /docs/commands/crawl
 /docs/commands/internal-links
+/trademarks
+/security

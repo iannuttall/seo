@@ -40,8 +40,6 @@ const expectedPages = new Map([
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
   ['terms/index.html', 'https://seoskill.dev/terms'],
-  ['security/index.html', 'https://seoskill.dev/security'],
-  ['trademarks/index.html', 'https://seoskill.dev/trademarks'],
   ['cookies/index.html', 'https://seoskill.dev/cookies'],
   ['404.html', 'https://seoskill.dev/404'],
 ])
@@ -187,13 +185,7 @@ test('stats page maps every report id to the command that covers it', () => {
 })
 
 test('legal and error pages are noindex but remain crawlable', () => {
-  for (const page of [
-    'privacy',
-    'terms',
-    'security',
-    'trademarks',
-    'cookies',
-  ]) {
+  for (const page of ['privacy', 'terms', 'cookies']) {
     const html = readFileSync(resolve(dist, page, 'index.html'), 'utf8')
     assert.match(html, /<meta name="robots" content="noindex, follow">/)
   }
@@ -233,7 +225,7 @@ test('every content page has one deterministic Markdown alternative', () => {
   )
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
-    ['/cookies', '/privacy', '/security', '/terms', '/trademarks'],
+    ['/cookies', '/privacy', '/terms'],
   )
   assert.equal(representedHtml.length, manifest.pages.length)
 
@@ -575,8 +567,13 @@ test('every old report URL redirects permanently to its command page', () => {
   )
   assert.equal(rules.get('/blog/seo-mcp-servers'), '/docs/mcp')
 
+  assert.equal(
+    rules.get('/security'),
+    'https://github.com/iannuttall/seo/security/policy',
+  )
+  assert.equal(rules.get('/trademarks'), '/')
   for (const [from, to] of rules) {
-    if (from.includes('*')) continue
+    if (from.includes('*') || to.startsWith('https://')) continue
     const target = to.endsWith('.md')
       ? resolve(dist, to.slice(1))
       : resolve(dist, pagePath(to))
@@ -738,7 +735,15 @@ test('site uses the ilo visual system and one-click setup commands', () => {
   assert.doesNotMatch(home, /data-copy-value="npm i -g seo"/)
   assert.match(home, /Your data and keys are never stored\./)
   assert.doesNotMatch(home, /Nothing stored/)
-  assert.match(home, /<a[^>]+href="\/cookies"[^>]*>\s*Cookies\s*<\/a>/)
+  for (const feature of [
+    'search-console',
+    'keyword-research',
+    'seo-audit',
+    'mcp',
+  ]) {
+    assert.match(home, new RegExp(`href="/features/${feature}"`))
+  }
+  assert.doesNotMatch(home, /href="\/(?:security|trademarks)"/)
   for (const command of [
     'report',
     'page',

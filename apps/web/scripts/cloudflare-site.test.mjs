@@ -198,13 +198,7 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
     )
   }
 
-  for (const page of [
-    'cookies',
-    'privacy',
-    'security',
-    'terms',
-    'trademarks',
-  ]) {
+  for (const page of ['cookies', 'privacy', 'terms']) {
     assert.match(
       headers,
       new RegExp(

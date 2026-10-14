@@ -1,4 +1,3 @@
-import { keysPage } from './keys-page.ts'
 import { serveMcp } from './mcp.ts'
 import {
   authorize,
@@ -68,8 +67,12 @@ async function route(
   if (pathname === '/oauth/token' && method === 'POST') {
     return token(request, env)
   }
+  // Key setup lives in the site docs.
   if (pathname === '/mcp/keys' && method === 'GET') {
-    return keysPage(env)
+    return new Response(null, {
+      status: 301,
+      headers: { location: '/docs/keys' },
+    })
   }
   if (pathname === '/mcp') {
     const access = await googleAccess(request, env)

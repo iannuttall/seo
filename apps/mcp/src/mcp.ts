@@ -95,7 +95,7 @@ export async function serveMcp(
                 text: known
                   ? `Error ${error.code}: ${error.message}${
                       error.code === 'NO_KEY'
-                        ? ` How keys work: ${context.env.PUBLIC_URL}/mcp/keys`
+                        ? ` How keys work: ${new URL(context.env.PUBLIC_URL).origin}/docs/keys`
                         : ''
                     }`
                   : 'Error INTERNAL: the tool failed. Try again; if it fails again, report it at https://github.com/iannuttall/seo/issues.',

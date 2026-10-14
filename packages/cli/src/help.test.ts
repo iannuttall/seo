@@ -87,15 +87,22 @@ describe('CLI help and integration contracts', { concurrency: 3 }, () => {
 test('root help stays curated and useful', async () => {
   const output = await runSeo(['help'])
 
-  assert.match(output, /seo start/)
-  assert.match(output, /seo report/)
-  assert.match(output, /seo projects list/)
-  assert.match(output, /seo refresh-priorities/)
-  assert.match(output, /seo quick-wins/)
-  assert.match(output, /seo second-page/)
-  assert.match(output, /seo technical-watch/)
+  for (const command of [
+    'seo start',
+    'seo report',
+    'seo page',
+    'seo compare',
+    'seo index',
+    'seo research',
+    'seo data',
+    'seo crawl',
+    'seo internal-links',
+    'seo projects list',
+  ]) {
+    assert.match(output, new RegExp(command))
+  }
   assert.doesNotMatch(output, /Unknown command help/)
-  assert.doesNotMatch(output, /seo crawl\s/)
+  assert.doesNotMatch(output, /seo quick-wins/)
 })
 
 test('command help works through the short help alias', async () => {
@@ -447,19 +454,9 @@ test('auth status reports a service account identity without printing the key', 
 
 test('long help and crawler command help are available', async () => {
   const all = await runSeo(['help', 'all'])
-  assert.match(
-    all,
-    /seo crawl --sitemap-url <url> --health\s+Run the fast sitemap gate before a full crawl/,
-  )
-  assert.match(
-    all,
-    /seo crawl\s+Run a full crawl for page and content evidence/,
-  )
-  assert.match(
-    all,
-    /seo agent-readiness\s+Check content-site readiness for AI agents/,
-  )
+  assert.match(all, /seo crawl\s+Crawl a site and list technical issues/)
   assert.match(all, /seo crawl-reports\s+List saved crawl reports/)
+  assert.doesNotMatch(all, /seo agent-readiness/)
 
   for (const args of [
     ['report', '--help'],
@@ -472,25 +469,17 @@ test('long help and crawler command help are available', async () => {
     ['internal-links', '--help'],
     ['cannibal', '--help'],
     ['decaying', '--help'],
-    ['pseo', 'audit', '--help'],
     ['ai-referrals', '--help'],
-    ['agent-readiness', '--help'],
+    ['page', '--help'],
+    ['compare', '--help'],
+    ['index', '--help'],
+    ['research', '--help'],
+    ['data', '--help'],
   ]) {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
   }
-})
-
-test('agent readiness help exposes URL and saved-report paths', async () => {
-  const output = await runSeo(['agent-readiness', '--help'])
-
-  assert.match(output, /Public site URL to check/)
-  assert.match(output, /--report-id/)
-  assert.match(output, /--project/)
-  assert.match(output, /--max-pages/)
-  assert.match(output, /--json/)
-  assert.doesNotMatch(output, /aggregate score/i)
 })
 
 test('AI referrals help exposes bounded evidence controls', async () => {
@@ -528,49 +517,6 @@ test('AI referrals JSON rejects invalid evidence controls before auth', async ()
     assert.equal(result.exitCode, 2)
     assert.equal(result.stderr, '')
     assert.equal(output.error.code, 'INVALID_INPUT')
-  }
-})
-
-test('query opportunity help exposes bounded retained evidence', async () => {
-  for (const command of ['seo-to-ai-query', 'community-intent']) {
-    const output = await runSeo([command, '--help'])
-    for (const flag of [
-      '--days',
-      '--start-date',
-      '--end-date',
-      '--limit',
-      '--min-impressions',
-      '--max-rows',
-      '--brand-terms',
-      '--json',
-    ]) {
-      assert.match(output, new RegExp(flag), `${command} ${flag}`)
-    }
-  }
-})
-
-test('query opportunity JSON rejects malformed bounds before auth', async () => {
-  for (const command of ['seo-to-ai-query', 'community-intent']) {
-    for (const args of [
-      ['--days', 'nope'],
-      ['--days', '0'],
-      ['--limit', '1.5'],
-      ['--max-rows', '50001'],
-      ['--start-date', '2026-06-01'],
-    ]) {
-      const result = await runSeoResult([
-        command,
-        '--site',
-        'sc-domain:example.com',
-        ...args,
-        '--json',
-      ])
-      assert.notEqual(result.exitCode, 0, `${command} ${args.join(' ')}`)
-      assert.match(
-        `${result.stdout}${result.stderr}`,
-        /INVALID_INPUT|must|provided together/i,
-      )
-    }
   }
 })
 
@@ -613,7 +559,7 @@ test('segment impact JSON rejects malformed bounds before auth', async () => {
     const output = JSON.parse(result.stdout)
 
     assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
+    assert.match(result.stderr, /is now `seo /)
     assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
@@ -697,7 +643,7 @@ test('decaying JSON rejects invalid flags before authentication', async () => {
     const output = JSON.parse(result.stdout)
 
     assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
+    assert.match(result.stderr, /is now `seo /)
     assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
@@ -715,47 +661,6 @@ test('internal-links help exposes bounded matching and fetch controls', async ()
     '--refresh',
   ]) {
     assert.match(output, new RegExp(flag))
-  }
-})
-
-test('pSEO help exposes bounded discovery and sampling controls', async () => {
-  const output = await runSeo(['pseo', 'audit', '--help'])
-
-  for (const flag of [
-    '--days',
-    '--limit',
-    '--minimum-template-urls',
-    '--minimum-template-share',
-    '--minimum-template-impressions',
-    '--max-sitemap-urls',
-    '--crawl-samples',
-    '--inspect-samples',
-    '--fetch-concurrency',
-    '--refresh',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('pSEO JSON rejects invalid bounds before authentication', async () => {
-  for (const args of [
-    ['--crawl-samples', '11'],
-    ['--minimum-template-share', '1.1'],
-    ['--days', 'later'],
-  ]) {
-    const result = await runSeoResult([
-      'pseo',
-      'audit',
-      '--site',
-      'sc-domain:example.com',
-      ...args,
-      '--json',
-    ])
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
-    assert.equal(output.error.code, 'INVALID_INPUT')
   }
 })
 

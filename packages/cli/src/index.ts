@@ -10,6 +10,11 @@ import {
   trackTelemetryReportStart,
   trackTelemetrySetupComplete,
 } from '@seo/core'
+import {
+  COMMANDS,
+  type CommandId,
+  telemetryReportFor,
+} from '@seo/core/commands'
 import { listReports } from '@seo/mcp'
 import { defineCommand, runCommand, runMain } from 'citty'
 import { agentReadinessCommand } from './commands/agent-readiness.js'
@@ -18,6 +23,14 @@ import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { clientCommand, projectCommand } from './commands/clients/index.js'
 import { contentCommand } from './commands/content.js'
+import {
+  compareCommand,
+  dataCommand,
+  indexCommand,
+  pageCommand,
+  reportCommand,
+  researchCommand,
+} from './commands/core-commands.js'
 import { crawlCommand } from './commands/crawl.js'
 import { crawlReportsCommand } from './commands/crawl-reports.js'
 import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
@@ -90,13 +103,13 @@ import {
 import { telemetryCommand } from './commands/telemetry.js'
 import {
   crawlQueueCommand,
-  diagnosePropertyWorkflowCommand,
   mainReportCommand,
   refreshPrioritiesCommand,
   technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
 import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
+import { removedNotice, renamedNotice } from './renames.js'
 import { maybeOfferSelfUpdate } from './self-update.js'
 import { printCatalog, printHeading, printSection } from './utils.js'
 
@@ -114,41 +127,37 @@ const helpSections: HelpSection[] = [
   {
     title: 'Start here',
     commands: [
-      ['seo start', 'Connect first-party data and save a project profile'],
-      ['seo report', 'Run the main SEO report for the default project'],
-      ['seo report --site sc-domain:example.com', 'Run without a profile'],
+      ['seo start', 'Connect Search Console and save a project profile'],
+      ['seo report', 'The main report: overview and every section'],
       [
-        'seo report --url https://example.com',
-        'Start with a local technical report',
+        'seo report --section quick-wins',
+        'One section of the report, with live page checks',
       ],
     ],
   },
   {
-    title: 'Projects',
+    title: 'Commands',
+    commands: [
+      ['seo page --url <url>', 'One page: live facts, index status, queries'],
+      ['seo compare --date <date>', 'Before and after a date'],
+      ['seo index', 'Pages that lost most of their clicks'],
+      [
+        'seo research <action>',
+        'Keyword, SERP, competitor and backlink data from your key',
+      ],
+      ['seo data', 'Raw Search Console rows'],
+      ['seo crawl', 'Crawl a site and list technical issues'],
+      ['seo internal-links', 'Pages that could link to a target page'],
+    ],
+  },
+  {
+    title: 'Setup',
     commands: [
       ['seo projects list', 'List saved project profiles'],
-      ['seo projects add', 'Create or update a project profile'],
       ['seo sites', 'List Search Console properties'],
+      ['seo mcp install', 'Add the local MCP server to your agents'],
+      ['seo providers', 'Connect DataForSEO, Ahrefs or Semrush'],
       ['seo doctor', 'Check local auth and config'],
-    ],
-  },
-  {
-    title: 'Act on a report',
-    commands: [
-      ['seo refresh-priorities', 'Rank the next best SEO actions'],
-      ['seo quick-wins', 'Find ranking 4-10 low-CTR wins'],
-      ['seo second-page', 'Investigate URLs averaging positions 10-20'],
-      ['seo technical-watch', 'Crawl and index-monitor a site'],
-    ],
-  },
-  {
-    title: 'Agent and power tools',
-    commands: [
-      ['seo report --json', 'Run the main report as structured JSON'],
-      ['seo export diagnose', 'Export report data to CSV'],
-      ['seo mcp install', 'Install SEO tools into MCP clients'],
-      ['seo skill list', 'Show the packaged SEO skill'],
-      ['seo reports list', 'Discover every structured report'],
     ],
   },
 ]
@@ -156,72 +165,30 @@ const helpSections: HelpSection[] = [
 const allHelpSections: HelpSection[] = [
   ...helpSections,
   {
-    title: 'Deeper analysis',
+    title: 'More commands',
     commands: [
-      ['seo decaying', 'Find pages and queries losing clicks'],
-      ['seo cannibal', 'Review queries exposed across multiple URLs'],
-      ['seo ctr-underperformers', 'Find weak CTR by ranking position'],
-      ['seo query-cluster', 'Cluster repeated demand themes'],
-      ['seo page-opportunities', 'Analyze one URL for growth ideas'],
-      ['seo content optimize', 'Build a content optimization report'],
-      ['seo perf audit', 'Run a page performance audit'],
-      ['seo internal-links', 'Find internal link opportunities'],
-      ['seo community-intent', 'Find forum, review, and comparison intent'],
-      ['seo ai-referrals', 'Find AI referral traffic in Google Analytics'],
-      ['seo seo-to-ai-query', 'Convert searches into AI-monitor prompts'],
-    ],
-  },
-  {
-    title: 'Technical and data',
-    commands: [
-      ['seo audit-page', 'Audit one page'],
-      [
-        'seo crawl --sitemap-url <url> --health',
-        'Run the fast sitemap gate before a full crawl',
-      ],
-      ['seo crawl', 'Run a full crawl for page and content evidence'],
-      ['seo agent-readiness', 'Check content-site readiness for AI agents'],
-      ['seo ai-readiness', 'Review AI-search technical evidence'],
-      ['seo llms audit', 'Inspect optional llms.txt presence'],
-      ['seo entity-readiness', 'Check brand/entity signals from a saved crawl'],
-      ['seo okf export', 'Export a saved crawl as an OKF knowledge bundle'],
-      ['seo crawl-queue', 'Run a crawl and rank the implementation queue'],
       ['seo crawl-reports', 'List saved crawl reports'],
+      ['seo crawl-diff', 'Compare crawl changes'],
+      ['seo crawl-queue', 'Run a crawl and rank the fix queue'],
       ['seo rules', 'List crawler rule ids'],
       ['seo explain --rule missing_title', 'Explain a crawler rule'],
-      ['seo crawl-diff', 'Compare crawl changes'],
-      ['seo index-coverage', 'Choose pages for URL Inspection'],
-      ['seo index-watch', 'Check URL Inspection status'],
-      ['seo indexnow submit', 'Notify IndexNow about changed URLs'],
-      ['seo link-recover', 'Find broken search-value URLs'],
-      ['seo links', 'Review bounded referring-link evidence'],
-      ['seo server-logs analyze', 'Review crawler requests in an access log'],
       ['seo redirect-trace', 'Trace redirects'],
-      ['seo gsc-query', 'Run a raw GSC query'],
-      ['seo url-inspect', 'Run URL Inspection'],
-      ['seo analytics google properties', 'List Google Analytics properties'],
+      ['seo perf audit', 'Run a page performance audit'],
+      ['seo index-coverage', 'Choose pages for URL Inspection'],
+      ['seo index-watch', 'Check saved URL Inspection snapshots'],
+      ['seo indexnow submit', 'Notify IndexNow about changed URLs'],
+      ['seo ai-referrals', 'AI referral traffic in Google Analytics'],
       ['seo analytics google report', 'Run a Google Analytics report'],
       ['seo updates', 'List official Google ranking updates'],
-    ],
-  },
-  {
-    title: 'Reports and ops',
-    commands: [
-      ['seo monthly-report', 'Generate a monthly narrative'],
-      ['seo report-narrative', 'Generate a client-ready narrative'],
-      ['seo update-postmortem', 'Analyze update winners and losers'],
-      ['seo schedule cron', 'Print cron entries'],
-      ['seo monitoring', 'Run and review monitoring'],
       ['seo change-log', 'Track SEO changes'],
       ['seo tests', 'Create and report local SEO tests'],
-      ['seo content-groups', 'Manage reusable page/query groups'],
-      ['seo pseo', 'Audit programmatic SEO templates'],
+      ['seo content-groups', 'Manage reusable page and query groups'],
+      ['seo monitoring', 'Run and review monitoring'],
+      ['seo schedule cron', 'Print cron entries'],
+      ['seo export', 'Export report data to CSV'],
+      ['seo reports list', 'List every structured report'],
+      ['seo skill list', 'Show the packaged SEO skill'],
       ['seo auth', 'Manage Google auth'],
-      ['seo providers bing', 'Connect and report on Bing Webmaster'],
-      ['seo providers dataforseo', 'Connect optional search data'],
-      ['seo providers semrush', 'Connect optional Semrush data'],
-      ['seo providers list', 'List optional provider packages'],
-      ['seo providers connect', 'Connect an installed provider package'],
       ['seo cache', 'Manage local cache'],
       ['seo privacy', 'Show local storage paths'],
       ['seo telemetry status', 'Check anonymous usage telemetry'],
@@ -292,7 +259,8 @@ const main = defineCommand({
     'content-groups': contentGroupsCommand,
     'crawl-diff': crawlDiffCommand,
     diagnose: diagnoseCommand,
-    'diagnose-property': diagnosePropertyWorkflowCommand,
+    // The 0.2 main report, kept under its old name for one release.
+    'diagnose-property': mainReportCommand,
     export: exportCommand,
     'index-coverage': indexCoverageCommand,
     'index-watch': indexWatchCommand,
@@ -310,7 +278,12 @@ const main = defineCommand({
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,
-    report: mainReportCommand,
+    report: reportCommand,
+    page: pageCommand,
+    compare: compareCommand,
+    index: indexCommand,
+    data: dataCommand,
+    research: researchCommand,
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
@@ -393,9 +366,23 @@ const directReportIds = new Set([
 ])
 const knownReportIds = new Set(listReports().map((report) => report.id))
 
+function flagValue(args: string[], flag: string): string | undefined {
+  const at = args.indexOf(flag)
+  if (at >= 0) return args[at + 1]
+  return args.find((arg) => arg.startsWith(`${flag}=`))?.slice(flag.length + 1)
+}
+
 function telemetryReportId(args: string[]): string | undefined {
   const [command, subcommand, id] = args
   if (!command) return undefined
+  if (command in COMMANDS) {
+    return (
+      telemetryReportFor(command as CommandId, {
+        section: flagValue(args, '--section'),
+        action: subcommand,
+      }) ?? undefined
+    )
+  }
   if (command === 'reports' && subcommand === 'run') {
     return id && knownReportIds.has(id) ? id : undefined
   }
@@ -425,6 +412,15 @@ function telemetryReportId(args: string[]): string | undefined {
 }
 
 const argv = process.argv.slice(2)
+const removed = removedNotice(argv[0] ?? '')
+if (removed) {
+  process.stderr.write(`${removed}\n`)
+  process.exit(2)
+}
+const renamed = renamedNotice(argv[0] ?? '')
+if (renamed && !argv.some((arg) => ['--help', '-h'].includes(arg))) {
+  process.stderr.write(`${renamed}\n`)
+}
 const telemetryOptions = { agent: detectTelemetryAgent() }
 const isTelemetryControl = argv[0] === 'telemetry'
 const isMcpServer = argv[0] === 'mcp' && argv[1] === 'serve'

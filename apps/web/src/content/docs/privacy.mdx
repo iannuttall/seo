@@ -1,0 +1,37 @@
+---
+title: What is stored
+description: What the SEO Skill hosted MCP and CLI keep. The hosted MCP stores nothing, keys are never stored, and only anonymous usage counts are kept.
+lead: The hosted MCP stores nothing. Keys are never stored. The only thing kept is an anonymous count of what ran.
+---
+
+## The hosted MCP
+
+| What | What happens to it |
+| --- | --- |
+| Your Search Console and analytics data | Fetched for each request and returned to your agent. Never saved. |
+| Your Google sign-in | Sealed into the tokens your MCP client keeps. The server keeps no copy. |
+| API keys | Sealed into your sign-in, or sent as a header. Used for that request only. Never saved. |
+| Pages checked live | Fetched for the request and not kept. |
+| Usage counts | An anonymous count of each run. See below. |
+
+There is no database, no account and no log of your data. To cut access, remove the server from your agent and revoke SEO Skill in your [Google account connections](https://myaccount.google.com/connections).
+
+## The CLI
+
+The CLI runs on your machine. Your Google tokens, project settings, cached responses and crawls are files on your computer, and they stay there. Nothing is sent to SEO Skill except the anonymous usage counts below.
+
+## Anonymous usage counts
+
+Both the hosted MCP and the CLI send small anonymous events, such as "a report ran". An event holds the event name, the report, the agent, the version and the week. The CLI also sends the operating system, chip type and Node version. An event never holds a site, URL, query, key, account or any report data.
+
+The totals are public on the [usage stats page](/stats), and the [telemetry page](/telemetry) lists every field. In the CLI you can turn it off with `seo telemetry disable`.
+
+## Who else sees your data
+
+- **Google** answers the Search Console, Google Analytics and URL Inspection requests.
+- **The provider you choose** gets your research request and bills your account.
+- **Ahrefs** gets the domains in research rows for the free Domain Rating column.
+- **Your AI agent** sends the results to its model provider, under that provider's terms.
+- **Cloudflare** runs the hosted server and this website, and handles the network requests.
+
+The full [privacy policy](/privacy) covers the website, the free tools and the CLI in detail.

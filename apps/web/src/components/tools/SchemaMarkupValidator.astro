@@ -1,15 +1,15 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
 ---
 
 <section data-schema-validator class="space-y-6">
-  <DottedCard patternId="schema-validator-input">
+  <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Validate JSON-LD markup</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Validate JSON-LD markup</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Paste a JSON-LD object, a script element, or HTML containing JSON-LD. You can also open a local file.
         </p>
       </div>
@@ -26,47 +26,47 @@ import FormTextarea from '@/components/FormTextarea.astro'
         <Button data-example type="button" class="px-4 py-2.5 text-xs">Use example</Button>
         <Button data-clear type="button" class="px-4 py-2.5 text-xs">Clear</Button>
       </div>
-      <p data-input-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+      <p data-input-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
         Your markup stays in this browser tab. The validator checks up to 500,000 characters.
       </p>
     </div>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="schema-validator-summary" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-1">
-            <strong data-verdict class="font-mono text-2xl font-normal text-primary"></strong>
-            <p data-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+            <strong data-verdict class="text-2xl font-medium text-primary"></strong>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
           </div>
-          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+          <span data-coverage class="font-mono text-xs text-foreground-muted"></span>
         </div>
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-5">
-          <div><dt class="text-xs text-panel-foreground/65">Entities</dt><dd data-entities class="mt-1 font-mono text-lg">0</dd></div>
-          <div><dt class="text-xs text-panel-foreground/65">Recognized</dt><dd data-recognized class="mt-1 font-mono text-lg">0</dd></div>
-          <div><dt class="text-xs text-panel-foreground/65">Errors</dt><dd data-errors class="mt-1 font-mono text-lg">0</dd></div>
-          <div><dt class="text-xs text-panel-foreground/65">Warnings</dt><dd data-warnings class="mt-1 font-mono text-lg">0</dd></div>
-          <div><dt class="text-xs text-panel-foreground/65">Advice</dt><dd data-advice class="mt-1 font-mono text-lg">0</dd></div>
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-5">
+          <div><dt class="text-xs text-foreground-muted">Entities</dt><dd data-entities class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-foreground-muted">Recognized</dt><dd data-recognized class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-foreground-muted">Errors</dt><dd data-errors class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-foreground-muted">Warnings</dt><dd data-warnings class="mt-1 font-mono text-lg">0</dd></div>
+          <div><dt class="text-xs text-foreground-muted">Advice</dt><dd data-advice class="mt-1 font-mono text-lg">0</dd></div>
         </dl>
-        <div class="flex flex-wrap gap-2 border-t border-panel-foreground/30 pt-5">
+        <div class="flex flex-wrap gap-2 border-t border-border pt-5">
           <Button data-copy type="button" class="px-3 py-2.5 text-xs">Copy JSON report</Button>
           <Button data-download type="button" class="px-3 py-2.5 text-xs">Download JSON report</Button>
         </div>
-        <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+        <p data-action-status class="text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="schema-validator-findings">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-lg font-normal">Validation findings</h3>
-          <p data-types class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+          <h3 class="text-lg font-medium">Validation findings</h3>
+          <p data-types class="text-xs leading-5 text-foreground-muted"></p>
         </div>
         <ol data-issues class="divide-y divide-border border-y border-border"></ol>
-        <p data-no-issues hidden class="font-sans text-sm font-light leading-6 text-foreground-muted">No findings were returned for the supported profile.</p>
+        <p data-no-issues hidden class="text-sm leading-6 text-foreground-muted">No findings were returned for the supported profile.</p>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 
@@ -146,7 +146,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
         location.textContent = [finding.block ? `block ${finding.block}` : '', finding.line ? `line ${finding.line}` : '', finding.path || ''].filter(Boolean).join(', ')
         heading.append(badge, location)
         const message = document.createElement('p')
-        message.className = 'font-sans text-sm font-light leading-6 text-foreground'
+        message.className = 'text-sm leading-6 text-foreground'
         message.textContent = finding.message
         item.append(heading, message)
         issues.append(item)

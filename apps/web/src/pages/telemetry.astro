@@ -1,9 +1,9 @@
 ---
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import CopyCode from '@/components/docs/CopyCode.astro'
-import { reportIds } from '@/content/reports/manifest.mjs'
+import CodeBlock from '@/components/CodeBlock.astro'
+import { reportIds } from '@/content/telemetry/report-ids.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import {
   TELEMETRY_ERROR_CATEGORIES,
@@ -73,7 +73,6 @@ const localState = `{
     <PageHeader
       title="Anonymous telemetry"
       description="SEO sends small anonymous usage events so the project can count installs, completed setup and audits, retention, agent usage, and report popularity."
-      align="left"
     />
 
     <div class="docs-prose mb-14">
@@ -93,20 +92,20 @@ const localState = `{
 
     <section aria-labelledby="first-run-notice" class="mb-14 space-y-5">
       <div class="space-y-2">
-        <h2 id="first-run-notice" class="font-mono text-xl font-normal leading-tight">
+        <h2 id="first-run-notice" class="text-xl font-medium leading-tight">
           First run notice
         </h2>
-        <p class="font-sans text-[0.9375rem] font-light leading-7">
+        <p class="text-[0.9375rem] leading-7">
           This notice is shown before the first event is sent.
         </p>
       </div>
       <div class="docs-prose">
-        <CopyCode label="The notice shown before anonymous telemetry starts." value={firstRunNotice} wrap />
+        <CodeBlock label="The notice shown before anonymous telemetry starts." value={firstRunNotice} wrap />
       </div>
     </section>
 
     <section aria-labelledby="every-event" class="mb-14 space-y-5">
-      <h2 id="every-event" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="every-event" class="text-xl font-medium leading-tight">
         Every event
       </h2>
       <div class="docs-prose">
@@ -133,7 +132,7 @@ const localState = `{
     </section>
 
     <section aria-labelledby="every-field" class="mb-14 space-y-5">
-      <h2 id="every-field" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="every-field" class="text-xl font-medium leading-tight">
         Every field sent
       </h2>
       <div class="docs-prose">
@@ -161,7 +160,7 @@ const localState = `{
         </div>
       </div>
 
-      <DottedCard patternId="telemetry-report-values">
+      <Card>
         <FaqAccordion
           items={[
             { question: 'Allowed report values', values: reportIds },
@@ -171,21 +170,21 @@ const localState = `{
             { question: 'Allowed command values', values: failureOperations },
           ]}
         />
-      </DottedCard>
+      </Card>
 
       <div class="docs-prose space-y-7">
-        <CopyCode label="A successful report completion event." value={exampleEvent} wrap />
-        <CopyCode label="A schema 2 report failure event." value={failureEvent} wrap />
+        <CodeBlock label="A successful report completion event." value={exampleEvent} wrap />
+        <CodeBlock label="A schema 2 report failure event." value={failureEvent} wrap />
       </div>
     </section>
 
     <section aria-labelledby="never-collected" class="mb-14">
-      <DottedCard patternId="telemetry-never-collected" inverted>
+      <Card inverted>
         <div class="space-y-5 p-5 sm:p-6">
-          <h2 id="never-collected" class="font-mono text-xl font-normal leading-tight">
+          <h2 id="never-collected" class="text-xl font-medium leading-tight">
             Never collected or transmitted
           </h2>
-          <ul class="list-disc space-y-2 pl-5 font-sans text-sm font-light leading-6">
+          <ul class="list-disc space-y-2 pl-5 text-sm leading-6">
             <li>User IDs, machine IDs, UUIDs, advertising IDs, or fingerprints of any kind.</li>
             <li>Audited domains, URLs, hostnames, page content, search queries, or crawl results.</li>
             <li>Report findings, recommendations, scores, exports, or other report content.</li>
@@ -195,21 +194,21 @@ const localState = `{
             <li>Country, region, city, coordinates, or any other location data.</li>
           </ul>
         </div>
-      </DottedCard>
+      </Card>
     </section>
 
     <section aria-labelledby="disable-telemetry" class="mb-14 space-y-5">
       <div class="space-y-2">
-        <h2 id="disable-telemetry" class="font-mono text-xl font-normal leading-tight">
+        <h2 id="disable-telemetry" class="text-xl font-medium leading-tight">
           How to disable it
         </h2>
-        <p class="font-sans text-[0.9375rem] font-light leading-7">
+        <p class="text-[0.9375rem] leading-7">
           The local command is the simplest permanent setting. Environment settings can disable every telemetry network call without changing the saved preference.
         </p>
       </div>
       <div class="docs-prose space-y-7">
-        <CopyCode label="Change or check the saved telemetry setting." value={telemetryCommands} wrap />
-        <CopyCode label="Disable telemetry for the current environment." value={telemetryEnvironment} wrap />
+        <CodeBlock label="Change or check the saved telemetry setting." value={telemetryCommands} wrap />
+        <CodeBlock label="Disable telemetry for the current environment." value={telemetryEnvironment} wrap />
       </div>
       <div class="docs-prose text-foreground-muted">
         <p class="!mb-0 text-sm leading-6">
@@ -224,7 +223,7 @@ const localState = `{
 
     <section aria-labelledby="local-state" class="mb-14 space-y-5">
       <div class="space-y-2">
-        <h2 id="local-state" class="font-mono text-xl font-normal leading-tight">
+        <h2 id="local-state" class="text-xl font-medium leading-tight">
           Local state
         </h2>
         <div class="docs-prose">
@@ -237,7 +236,7 @@ const localState = `{
         </div>
       </div>
       <div class="docs-prose">
-        <CopyCode label="The complete local telemetry state file." value={localState} wrap />
+        <CodeBlock label="The complete local telemetry state file." value={localState} wrap />
       </div>
       <div class="docs-prose text-foreground-muted">
         <p class="!mb-0 text-sm leading-6">
@@ -250,7 +249,7 @@ const localState = `{
     </section>
 
     <section aria-labelledby="transport-storage" class="mb-14 space-y-5">
-      <h2 id="transport-storage" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="transport-storage" class="text-xl font-medium leading-tight">
         Transport and storage
       </h2>
       <div class="docs-prose">
@@ -280,14 +279,14 @@ const localState = `{
     </section>
 
     <section aria-labelledby="read-source" class="space-y-5">
-      <h2 id="read-source" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="read-source" class="text-xl font-medium leading-tight">
         Read the source
       </h2>
-      <DottedCard patternId="telemetry-source-links">
-        <ul class="divide-y divide-border font-sans text-sm leading-6">
+      <Card>
+        <ul class="divide-y divide-border text-sm leading-6">
           <li class="px-5 py-4">
             <a
-              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              class="text-primary underline underline-offset-4 hover:text-primary-hover"
               href="https://github.com/iannuttall/seo/blob/main/packages/core/src/telemetry.ts"
               target="_blank"
               rel="noreferrer"
@@ -295,7 +294,7 @@ const localState = `{
           </li>
           <li class="px-5 py-4">
             <a
-              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              class="text-primary underline underline-offset-4 hover:text-primary-hover"
               href="https://github.com/iannuttall/seo/blob/main/apps/web/worker/index.ts"
               target="_blank"
               rel="noreferrer"
@@ -303,7 +302,7 @@ const localState = `{
           </li>
           <li class="px-5 py-4">
             <a
-              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              class="text-primary underline underline-offset-4 hover:text-primary-hover"
               href="https://github.com/iannuttall/seo/blob/main/apps/web/migrations/0002_add_failure_details.sql"
               target="_blank"
               rel="noreferrer"
@@ -311,12 +310,12 @@ const localState = `{
           </li>
           <li class="px-5 py-4">
             <a
-              class="text-primary underline underline-offset-4 hover:decoration-dotted"
+              class="text-primary underline underline-offset-4 hover:text-primary-hover"
               href="/stats"
             >Public aggregate usage stats</a>
           </li>
         </ul>
-      </DottedCard>
+      </Card>
     </section>
   </main>
 </BaseLayout>

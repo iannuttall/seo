@@ -1,0 +1,96 @@
+---
+import Logo from './Logo.astro'
+import { site } from '@/lib/site'
+
+const linkRows = [
+  [
+    { label: 'Docs', href: '/docs' },
+    { label: 'Hosted MCP', href: '/docs/mcp' },
+    { label: 'CLI', href: '/docs/cli' },
+    { label: 'Tools', href: '/tools' },
+    { label: 'Usage stats', href: '/stats' },
+    { label: 'GitHub', href: site.repository },
+  ],
+  [
+    { label: 'Domain Rating checker', href: '/tools/domain-rating-checker' },
+    { label: 'Website traffic checker', href: '/tools/website-traffic-checker' },
+    { label: 'robots.txt validator', href: '/tools/robots-txt-validator' },
+    { label: 'Sitemap URL extractor', href: '/tools/sitemap-extractor' },
+    { label: 'Schema markup generator', href: '/tools/schema-markup-generator' },
+    { label: 'SERP preview', href: '/tools/serp-preview' },
+  ],
+  [
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Telemetry', href: '/telemetry' },
+    { label: 'Terms', href: '/terms' },
+    { label: 'Cookies', href: '/cookies' },
+    { label: 'Security', href: '/security' },
+    { label: 'Trademarks', href: '/trademarks' },
+  ],
+]
+
+const linkClass =
+  'text-sm/6 text-foreground-muted underline-offset-4 transition-colors hover:text-foreground hover:underline'
+const year = new Date().getFullYear()
+
+// The byline picks one of these at random on each load. Every entry has to
+// read naturally in "an Ian Nuttall ___".
+const projectThings = [
+  'joint',
+  'jam',
+  'thing',
+  'production',
+  'contraption',
+  'experiment',
+  'side quest',
+  'passion project',
+  'labor of love',
+  'rabbit hole',
+  'weekend build',
+  'deep cut',
+  'banger',
+  'shenanigan',
+  'special',
+]
+---
+
+<footer class="mt-20 py-14">
+  <div class="site-frame flex flex-col items-center gap-8 text-center">
+    <a href="/" class="text-foreground no-underline" aria-label={`${site.name} home`}>
+      <Logo class="size-9" />
+    </a>
+
+    <nav class="flex flex-col items-center gap-4" aria-label="Footer">
+      {
+        linkRows.map((row) => (
+          <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+            {row.map((link) => (
+              <li>
+                <a
+                  class={linkClass}
+                  href={link.href}
+                  target={link.href.startsWith("http") ? "_blank" : undefined}
+                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </nav>
+
+    <p class="text-sm/6 text-foreground-soft">
+      &copy; {year} {site.name}, an{' '}
+      <a class="underline-offset-4 hover:text-foreground hover:underline" href="https://ian.is" target="_blank" rel="noreferrer">Ian Nuttall</a>{' '}
+      <span data-project-thing>joint</span>
+    </p>
+  </div>
+  <script is:inline define:vars={{ projectThings }}>
+    const thing = document.querySelector('[data-project-thing]')
+    if (thing) {
+      thing.textContent = projectThings[Math.floor(Math.random() * projectThings.length)]
+    }
+  </script>
+</footer>

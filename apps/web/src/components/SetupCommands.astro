@@ -1,0 +1,149 @@
+---
+// One click to copy the hosted MCP command for a client, or the CLI install.
+// The client switch is the ilo toggle group; each command row is one button.
+import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import HugeIcon from './HugeIcon.astro'
+import { setupCommands } from '@/lib/site'
+
+type Props = { class?: string; id?: string }
+
+const { class: className, id = 'setup' } = Astro.props
+
+const clients = [
+  {
+    id: 'claude',
+    label: 'Claude Code',
+    command: setupCommands.claude,
+    note: 'Run it in your terminal, then sign in with Google when Claude asks.',
+  },
+  {
+    id: 'codex',
+    label: 'Codex',
+    command: setupCommands.codex,
+    note: 'Run it in your terminal, then sign in with Google when Codex asks.',
+  },
+  {
+    id: 'other',
+    label: 'Other clients',
+    command: setupCommands.url,
+    note: 'Add this URL as a remote MCP server in Cursor, VS Code, Claude on the web or any client that supports them.',
+  },
+]
+---
+
+<div class:list={['w-full text-left', className]} data-setup-commands>
+  <div
+    role="tablist"
+    aria-label="MCP client"
+    class="inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-muted p-0.5 text-foreground-muted"
+  >
+    {
+      clients.map((client, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`${id}-tab-${client.id}`}
+          aria-controls={`${id}-panel-${client.id}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? undefined : -1}
+          data-setup-tab={client.id}
+          class="inline-flex h-8 min-w-7 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+        >
+          {client.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    clients.map((client, index) => (
+      <div
+        role="tabpanel"
+        id={`${id}-panel-${client.id}`}
+        aria-labelledby={`${id}-tab-${client.id}`}
+        hidden={index !== 0}
+        data-setup-panel={client.id}
+        class="mt-3"
+      >
+        <button
+          type="button"
+          class="group flex w-full min-w-0 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+          data-copy-value={client.command}
+          aria-label={`Copy ${client.label} command`}
+        >
+          <span class="min-w-0 flex-1 break-all">{client.command}</span>
+          <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+            <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+            <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+          </span>
+        </button>
+        <p class="mt-2 text-sm/6 text-foreground-muted">{client.note}</p>
+      </div>
+    ))
+  }
+
+  <div class="mt-6">
+    <p class="text-sm font-medium text-foreground">Or run it on your machine</p>
+    <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+      <button
+        type="button"
+        class="group flex min-w-0 flex-1 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+        data-copy-value={setupCommands.npm}
+        aria-label="Copy the install command"
+      >
+        <span class="min-w-0 flex-1">{setupCommands.npm}</span>
+        <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+          <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+          <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+        </span>
+      </button>
+      <button
+        type="button"
+        class="group flex min-w-0 items-center gap-3 rounded-lg bg-muted px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
+        data-copy-value={setupCommands.start}
+        aria-label="Copy the setup command"
+      >
+        <span class="min-w-0 flex-1">{setupCommands.start}</span>
+        <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+          <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+          <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll('[data-setup-commands]')) {
+    if (!(root instanceof HTMLElement) || root.dataset.setupReady === 'true') continue
+    root.dataset.setupReady = 'true'
+
+    const tabs = Array.from(root.querySelectorAll('[data-setup-tab]')).filter(
+      (tab): tab is HTMLButtonElement => tab instanceof HTMLButtonElement,
+    )
+    const select = (tab: HTMLButtonElement) => {
+      for (const other of tabs) {
+        const selected = other === tab
+        other.setAttribute('aria-selected', String(selected))
+        if (selected) other.removeAttribute('tabindex')
+        else other.tabIndex = -1
+        const panel = root.querySelector(`[data-setup-panel="${other.dataset.setupTab}"]`)
+        if (panel instanceof HTMLElement) panel.hidden = !selected
+      }
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => select(tab))
+      tab.addEventListener('keydown', (event) => {
+        const index = tabs.indexOf(tab)
+        let next = index
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+        else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+        else return
+        event.preventDefault()
+        tabs[next]?.focus()
+        if (tabs[next]) select(tabs[next])
+      })
+    }
+  }
+</script>

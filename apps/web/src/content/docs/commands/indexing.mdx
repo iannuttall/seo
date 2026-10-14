@@ -1,0 +1,31 @@
+---
+title: Find pages that lost their clicks
+description: Find pages that lost most of their Search Console clicks with seo index, then see which ones are broken, redirect, block indexing or dropped out of Google.
+heading: seo index
+lead: Pages that lost most of their clicks, checked live and with Google URL Inspection.
+---
+
+Use it when traffic dropped and you want to know if pages broke or left Google's index.
+
+## Find lost pages
+
+Ask your agent:
+
+```text
+Which pages on example.com lost their clicks?
+```
+
+The hosted MCP runs `seo_index`. In a terminal, run:
+
+```sh
+seo index
+```
+
+## What comes back
+
+The command looks for pages that had at least 3 clicks in the previous 28 days and kept 20% or less of them in the last 28 days. Then it checks them:
+
+- The top 20 pages are fetched live, so you see pages that now return an error, redirect, or block indexing.
+- The top 10 pages are checked with Search Console URL Inspection, so you see pages Google no longer has in its index.
+
+A page that lost clicks but looks fine on both checks may have lost rankings rather than broken. Use [`seo page`](/docs/commands/page) to look at its queries.

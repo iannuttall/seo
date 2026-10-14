@@ -1,0 +1,66 @@
+---
+title: Hosted MCP server
+description: Connect Claude Code, Codex or any remote MCP client to the free SEO Skill server at seoskill.dev/mcp. Sign in with Google. Nothing is stored.
+heading: Hosted MCP
+lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and analytics data. Nothing is stored.
+---
+
+There is nothing to install and no account to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request.
+
+## Add the server
+
+Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex:
+
+```sh
+codex mcp add seoskill --url https://seoskill.dev/mcp
+```
+
+Cursor, in `.cursor/mcp.json` or `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "seoskill": { "url": "https://seoskill.dev/mcp" }
+  }
+}
+```
+
+Claude on the web or desktop: open Settings, then Connectors, add a custom connector, and enter `https://seoskill.dev/mcp`.
+
+Other clients: add a remote MCP server with the same URL.
+
+## Sign in with Google
+
+The first time your client connects, your browser opens a sign-in page. Continue with Google and allow read-only access to Search Console and Google Analytics. You need access to at least one Search Console property.
+
+The page also has an optional **Add your own API keys** section for keyword and analytics providers. The [API keys guide](/docs/keys) explains each one.
+
+## Tools your agent gets
+
+| Tool | What it returns |
+| --- | --- |
+| `seo_sites` | The Search Console and Google Analytics properties you can read, and which keys arrived. |
+| `seo_report` | The [main report](/docs/commands/report). An overview first, then one section. |
+| `seo_page` | [One URL](/docs/commands/page): live page facts, Google index status and its queries. |
+| `seo_compare` | [Before and after a date](/docs/commands/compare), with Google updates in the window. |
+| `seo_index` | [Pages that lost their clicks](/docs/commands/indexing), checked live and with URL Inspection. |
+| `seo_research` | [Keyword and competitor data](/docs/commands/research) from your own provider key. |
+| `seo_data` | [Raw rows](/docs/commands/data) from Search Console or your analytics. |
+
+Each tool takes a site or URL and optional dates. Results start as a short summary, and your agent can ask for more rows when it needs them. Every result names the tool to run next.
+
+The site crawl and internal links need to fetch many pages from your machine, so they are only in the [CLI](/docs/cli).
+
+## What the server keeps
+
+Nothing. There is no database, account or log of your data. Your Google sign-in and any keys are sealed into the tokens your MCP client keeps, and the server uses them for one request at a time. [What is stored](/docs/privacy) has the details.
+
+## Remove access
+
+Remove the server from your agent, and revoke SEO Skill in your [Google account connections](https://myaccount.google.com/connections). Revoking stops the sealed tokens from working, even if a client still has a copy.

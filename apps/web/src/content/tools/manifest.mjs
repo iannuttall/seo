@@ -48,7 +48,7 @@ export const tools = [
     path: '/tools/domain-rating-checker',
     title: 'Domain Rating checker',
     action: 'Open the Domain Rating checker',
-    description: 'Check the Domain Rating for any website.',
+    description: 'Check Domain Rating by Ahrefs for any website.',
     kind: 'protected',
   },
   {

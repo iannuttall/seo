@@ -1,0 +1,33 @@
+---
+title: Raw Search Console and analytics data
+description: Pull raw Search Console rows by query, page, date, country, device or search appearance, or landing pages from your analytics, with seo data.
+heading: seo data
+lead: Raw rows for questions the report does not answer. Search Console by default, or landing pages from your analytics.
+---
+
+Use it when you need a cut of the data the report does not show, such as clicks by country for one folder, or which landing pages got visits from search.
+
+## Search Console rows
+
+Ask your agent for the rows you want:
+
+```text
+Show Search Console clicks by country for pages containing /blog/ on example.com
+```
+
+You can group by up to four of `query`, `page`, `date`, `country`, `device` and `searchAppearance`, and add up to ten filters. Each row comes with the previous period and the change.
+
+## Analytics landing pages
+
+The same command reads landing pages for visits from search from:
+
+- Google Analytics, with your Google sign-in.
+- Clicky, Fathom, Simple Analytics or Plausible, with your own key. The [API keys guide](/docs/keys) shows how to add one.
+
+Each source keeps its own metric names. A Clicky visit and a Google Analytics session are counted differently, so compare them with care.
+
+## Run it
+
+The hosted MCP runs `seo_data`. In a terminal, `seo data --help` lists the options.
+
+For the usual questions, start with the [SEO report](/docs/commands/report). It already sorts the rows that matter most.

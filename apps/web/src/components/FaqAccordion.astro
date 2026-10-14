@@ -1,6 +1,6 @@
 ---
-import PixelIcon from '@/components/icons/PixelIcon.astro'
-
+// The ilo accordion: one muted panel with ruled rows. Opening a row closes
+// the others. Arrow keys, Home and End move between questions.
 type FaqItem = {
   question: string
   answer?: string
@@ -9,53 +9,62 @@ type FaqItem = {
 
 type Props = {
   items: FaqItem[]
+  id?: string
 }
 
-const { items } = Astro.props
+const { items, id = 'faq' } = Astro.props
 ---
 
-<div class="w-full" data-faq-accordion>
+<div class="w-full overflow-hidden rounded-lg bg-muted" data-faq-accordion>
   {
     items.map((item, index) => (
       <div
-        class="border-b border-border bg-background last:border-b-0"
+        class="border-t border-border px-6 first:border-t-0"
         data-faq-item
         data-state="closed"
       >
-        <h3 class="flex text-sm font-normal tracking-wide">
+        <h3 class="flex">
           <button
-            id={`faq-trigger-${index + 1}`}
+            id={`${id}-trigger-${index + 1}`}
             type="button"
-            aria-controls={`faq-content-${index + 1}`}
+            aria-controls={`${id}-content-${index + 1}`}
             aria-expanded="false"
-            class="group flex flex-1 cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left text-sm outline-none transition-colors hover:bg-background-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            class="group flex flex-1 items-center justify-between gap-4 rounded-md border border-transparent py-5 text-left text-base font-medium text-foreground outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
             data-faq-trigger
           >
             <span>{item.question}</span>
-            <PixelIcon
-              name="chevron-down-2"
+            <svg
               class="size-3.5 shrink-0 text-foreground transition-transform duration-200 group-aria-expanded:rotate-180"
-            />
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
           </button>
         </h3>
         <div
-          id={`faq-content-${index + 1}`}
+          id={`${id}-content-${index + 1}`}
           role="region"
-          aria-labelledby={`faq-trigger-${index + 1}`}
+          aria-labelledby={`${id}-trigger-${index + 1}`}
           aria-hidden="true"
           class="faq-content grid text-sm"
           data-faq-content
           data-state="closed"
         >
           <div class="overflow-hidden">
-            <div class="max-w-3xl px-6 pb-5 pt-3 font-sans text-sm leading-6 text-foreground-muted">
+            <div class="pb-5 text-base leading-7 text-foreground-muted">
               {item.answer ? <p>{item.answer}</p> : null}
               {
                 item.values ? (
                   <ul class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
                     {item.values.map((value) => (
                       <li>
-                        <code class="block break-words bg-background-subtle px-2 py-1 font-mono text-xs leading-5 text-foreground">
+                        <code class="block break-words rounded-md bg-background px-2 py-1 font-mono text-xs leading-5 text-foreground">
                           {value}
                         </code>
                       </li>
@@ -134,7 +143,7 @@ const { items } = Astro.props
 <style>
   .faq-content {
     grid-template-rows: 0fr;
-    transition: grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: grid-template-rows 200ms ease-out;
   }
 
   .faq-content[data-state='open'] {

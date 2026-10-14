@@ -25,7 +25,7 @@ test('sitemap extractor uses the full bounded limit and keeps actions above long
   )
   assert.match(
     source,
-    /<DottedCard patternId="sitemap-extractor-results" inverted>[\s\S]+?<\/DottedCard>\s+<DottedCard patternId="sitemap-extractor-details">[\s\S]+?<\/DottedCard>\s+<DottedCard patternId="sitemap-extractor-url-list">/,
+    /<Card inverted>[\s\S]+?<\/Card>\s+<Card>[\s\S]+?<\/Card>\s+<Card>/,
   )
   assert.ok(
     source.indexOf('sitemap-extractor-details') <

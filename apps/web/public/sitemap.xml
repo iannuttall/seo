@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://seoskill.dev</loc></url>
-  <url><loc>https://seoskill.dev/features</loc></url>
-  <url><loc>https://seoskill.dev/features/mcp</loc></url>
-  <url><loc>https://seoskill.dev/features/seo-audit</loc></url>
-  <url><loc>https://seoskill.dev/features/search-console</loc></url>
-  <url><loc>https://seoskill.dev/features/keyword-research</loc></url>
   <url><loc>https://seoskill.dev/tools</loc></url>
   <url><loc>https://seoskill.dev/tools/llms-txt-generator</loc></url>
   <url><loc>https://seoskill.dev/tools/llms-txt-validator</loc></url>
@@ -25,97 +20,20 @@
   <url><loc>https://seoskill.dev/tools/serp-preview</loc></url>
   <url><loc>https://seoskill.dev/tools/canonical-checker</loc></url>
   <url><loc>https://seoskill.dev/docs</loc></url>
-  <url><loc>https://seoskill.dev/docs/agents</loc></url>
-  <url><loc>https://seoskill.dev/docs/ai-search</loc></url>
-  <url><loc>https://seoskill.dev/docs/ai-visibility</loc></url>
-  <url><loc>https://seoskill.dev/docs/bing</loc></url>
-  <url><loc>https://seoskill.dev/docs/cli</loc></url>
-  <url><loc>https://seoskill.dev/docs/crawler</loc></url>
   <url><loc>https://seoskill.dev/docs/getting-started</loc></url>
-  <url><loc>https://seoskill.dev/docs/google</loc></url>
-  <url><loc>https://seoskill.dev/docs/html-reports</loc></url>
-  <url><loc>https://seoskill.dev/docs/indexnow</loc></url>
-  <url><loc>https://seoskill.dev/docs/typescript</loc></url>
   <url><loc>https://seoskill.dev/docs/mcp</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports</loc></url>
-  <url><loc>https://seoskill.dev/docs/skill</loc></url>
-  <url><loc>https://seoskill.dev/blog</loc></url>
-  <url><loc>https://seoskill.dev/blog/seo-agent</loc></url>
-  <url><loc>https://seoskill.dev/blog/seo-mcp-servers</loc></url>
+  <url><loc>https://seoskill.dev/docs/keys</loc></url>
+  <url><loc>https://seoskill.dev/docs/cli</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/report</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/page</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/compare</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/indexing</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/research</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/data</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/crawl</loc></url>
+  <url><loc>https://seoskill.dev/docs/commands/internal-links</loc></url>
+  <url><loc>https://seoskill.dev/docs/privacy</loc></url>
   <url><loc>https://seoskill.dev/stats</loc></url>
   <url><loc>https://seoskill.dev/telemetry</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/affected-urls</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/agent-readiness</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ai-readiness</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ai-referrals</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ai-mention-research</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ai-prompt-observations</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ai-search-scorecard</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/audit-page</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/audit-urls</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/bing-webmaster-overview</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/cannibalisation</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/community-intent</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/compare-crawls</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/competitive-opportunities</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/competitor-keyword-gap</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/content-optimization</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/crawl-diff</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/site-crawl</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ctr-underperformers</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/decaying-pages</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/domain-rating</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/domain-overview</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/setup-check</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/entity-readiness</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/explain-crawl-issue</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/geo-gaps</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/crawl-report</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/index-coverage</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/index-plan</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/index-monitor</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/index-watch</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/internal-links</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/keyword-metrics</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/keyword-opportunities</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/keyword-research</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/saved-keywords</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/link-evidence</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/server-log-analysis</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/link-recovery</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/local-search-demand</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/crawl-history</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/crawler-rules</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/llms-txt-audit</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/generate-llms-txt</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/measure-change</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/monthly-report</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/okf-build</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/okf-validate</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/page-opportunities</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/performance-audit</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/pseo-audit</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/pseo-opportunities</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/pseo-patterns</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/query-clusters</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/quick-wins</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/rank-tracking</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ranked-keywords</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/ranking-pages</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/redirect-trace</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/narrative-report</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/second-page</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/segment-impact</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/serp-results</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/serp-competitors</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/striking-distance</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/seo-to-ai-query</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/top-fixes</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/traffic-anomaly</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/update-correlation</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/search-performance-overview</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/monthly-action-plan</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/refresh-priorities</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/technical-watch</loc></url>
-  <url><loc>https://seoskill.dev/docs/reports/update-postmortem</loc></url>
 </urlset>

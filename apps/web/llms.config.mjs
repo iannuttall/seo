@@ -14,7 +14,11 @@ export const llmsTxt = {
   sections: [
     {
       heading: 'Start here',
-      items: [{ path: '/', label: 'SEO Skill' }, ...docsSection('Start')],
+      items: [
+        { path: '/', label: 'SEO Skill' },
+        { path: '/features' },
+        ...docsSection('Start'),
+      ],
     },
     {
       heading: 'Commands',

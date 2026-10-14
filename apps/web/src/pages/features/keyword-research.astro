@@ -1,0 +1,55 @@
+---
+import {
+  Database01Icon,
+  Key01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo research', text: 'Every research action, its inputs and how to run it.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'seo data', text: 'The queries your site already gets, from Search Console.', href: '/docs/data', icon: Database01Icon },
+]
+---
+
+<FeaturePage
+  title="SEO keyword research tool for AI agents"
+  description="Run keyword research from your AI agent with your own DataForSEO or Ahrefs key: keyword metrics, SERPs, ranked keywords, competitors and backlinks."
+  path="/features/keyword-research"
+  lead="Ask your agent for search volume, who ranks, and what a competitor ranks for, with data from your own DataForSEO or Ahrefs account."
+  {related}
+>
+  <h2>Research with the account you already pay for</h2>
+  <p>
+    Keyword research uses your own DataForSEO or Ahrefs key, so the provider
+    bills you directly and nothing is marked up. Add the key on the hosted MCP
+    sign-in page, as a header, or with <code>seo providers dataforseo connect</code>
+    in the CLI. Keys are never stored on the hosted server.
+  </p>
+
+  <h2>What you can look up</h2>
+  <table>
+    <thead><tr><th>Action</th><th>What comes back</th></tr></thead>
+    <tbody>
+      <tr><td><code>keyword_metrics</code></td><td>Search volume, keyword difficulty and cost per click for up to 100 keywords.</td></tr>
+      <tr><td><code>serp</code></td><td>The pages that rank for up to 5 keywords.</td></tr>
+      <tr><td><code>ranked_keywords</code></td><td>The keywords a domain or URL ranks for.</td></tr>
+      <tr><td><code>competitors</code></td><td>Domains that rank for the same keywords.</td></tr>
+      <tr><td><code>backlinks</code></td><td>Referring domains for a domain or URL.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Rows with a domain also get a free Domain Rating column, with no key
+    needed. It is Domain Rating by <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+  </p>
+
+  <h2>Start from the queries you already get</h2>
+  <p>
+    Provider numbers are estimates. Your Search Console queries are what
+    people actually typed before they found you. Ask for those first with
+    <a href="/docs/data">seo data</a> or the <a href="/docs/report">SEO report</a>,
+    then use research to size the topics around them. The two sources stay
+    apart and are never mixed into one number.
+  </p>
+</FeaturePage>

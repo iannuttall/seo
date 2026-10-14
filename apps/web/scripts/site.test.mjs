@@ -23,6 +23,13 @@ const pagePath = (path) =>
   path === '/' ? 'index.html' : `${path.slice(1)}/index.html`
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
+  ...[
+    '/features',
+    '/features/mcp',
+    '/features/search-console',
+    '/features/keyword-research',
+    '/features/seo-audit',
+  ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['tools/index.html', 'https://seoskill.dev/tools'],
   ...tools.map((tool) => [
     `${tool.path.slice(1)}/index.html`,
@@ -415,6 +422,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
       ([path]) =>
         path === 'index.html' ||
         path.startsWith('docs/') ||
+        path.startsWith('features/') ||
         path.startsWith('tools/') ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
@@ -422,7 +430,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
     .map(([, canonical]) => canonical)
 
   assert.deepEqual(locations.sort(), indexable.sort())
-  assert.doesNotMatch(sitemap, /\/docs\/reports\/|\/features|\/blog/)
+  assert.doesNotMatch(sitemap, /\/docs\/reports\/|\/docs\/commands|\/blog/)
   assert.match(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Sitemap: https:\/\/seoskill\.dev\/sitemap\.xml/,
@@ -550,7 +558,21 @@ test('every old report URL redirects permanently to its command page', () => {
   assert.equal(rules.get('/docs/commands/report'), '/docs/report')
   assert.equal(rules.get('/docs/commands'), '/docs')
   assert.equal(rules.get('/docs/clicky'), '/docs/analytics')
-  assert.equal(rules.get('/features/mcp'), '/docs/mcp')
+  // The feature pages keep their URLs, so nothing may redirect them.
+  for (const path of [
+    '/features',
+    '/features/mcp',
+    '/features/search-console',
+    '/features/keyword-research',
+    '/features/seo-audit',
+  ]) {
+    assert.equal(rules.has(path), false, path)
+    assert.ok(existsSync(resolve(dist, pagePath(path))), path)
+  }
+  assert.equal(
+    [...rules.keys()].some((from) => from.startsWith('/features')),
+    false,
+  )
   assert.equal(rules.get('/blog/seo-mcp-servers'), '/docs/mcp')
 
   for (const [from, to] of rules) {

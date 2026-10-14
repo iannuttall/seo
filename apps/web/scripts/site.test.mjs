@@ -149,15 +149,45 @@ test('every non-home page suffixes the site name', () => {
   }
 })
 
-test('built links keep whitespace before the following word', () => {
+test('built text keeps a space around inline elements', () => {
+  // A source line that ends in text and a next line that starts with an
+  // inline element (or the reverse) can lose the space between them. Scan
+  // the visible markup and the Markdown copies for words that touch.
+  const inline = 'a|code|strong|em|span|b|i'
+  const opening = new RegExp(`[A-Za-z0-9.,;:)]<(?:${inline})[\\s>]`, 'g')
+  const closing = new RegExp(`</(?:${inline})>[A-Za-z0-9(]`, 'g')
+  const failures = []
+
   for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
-    const relativePath = file.slice(dist.length + 1)
-    assert.doesNotMatch(
-      readFileSync(file, 'utf8'),
-      /<\/a>[A-Za-z]/,
-      `${relativePath} joins a link to the following word`,
+    const visible = readFileSync(file, 'utf8').replace(
+      /<(script|style|pre|template|svg|textarea|head)\b[\s\S]*?<\/\1>/g,
+      '',
     )
+    for (const pattern of [opening, closing]) {
+      for (const match of visible.matchAll(pattern)) {
+        failures.push(
+          `${file.slice(dist.length + 1)}: ${visible.slice(Math.max(0, match.index - 30), match.index + 30)}`,
+        )
+      }
+    }
   }
+
+  const markdownJoins =
+    /[A-Za-z0-9.,;:)]\[[^\]\n]+\]\(|\]\([^)\s]+\)(?:[A-Za-z0-9(]|\[(?!\s))|[A-Za-z0-9]`[^`\s]+`|`[^`\s]+`[A-Za-z0-9(]/g
+  const markdownFiles = [
+    ...walkFiles(dist, (path) => path.endsWith('.md')),
+    resolve(dist, 'llms.txt'),
+  ]
+  for (const file of markdownFiles) {
+    const text = readFileSync(file, 'utf8').replace(/```[\s\S]*?```/g, '')
+    for (const match of text.matchAll(markdownJoins)) {
+      failures.push(
+        `${file.slice(dist.length + 1)}: ${text.slice(Math.max(0, match.index - 30), match.index + 30)}`,
+      )
+    }
+  }
+
+  assert.deepEqual(failures, [])
 })
 
 test('stats page maps every report id to the command that covers it', () => {

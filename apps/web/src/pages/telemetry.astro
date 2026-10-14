@@ -265,7 +265,7 @@ const localState = `{
           UTC receipt month, such as <code>2026-07</code>, for monthly totals. It
           does not store the exact request time. There is no account or identity
           column, and no telemetry KV, R2, or Analytics Engine dataset. Worker
-          invocation logs are disabled, and the code never reads
+          invocation logs are disabled, and the code never reads{' '}
           <code>request.cf</code>, IP headers, or location fields. Cloudflare
           handles the ordinary network request at the edge, but no IP address or
           geography is written to D1.

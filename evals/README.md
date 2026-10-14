@@ -2,20 +2,23 @@
 
 Evals are behaviour tests for the `seo` skill. Each one pairs a realistic user
 request with a description of the correct agent behaviour and a list of
-checkable assertions. They exist to catch the skill routing to the wrong report
-id, building bad parameters, skipping the evidence checks, or breaking a report
-truth rule such as calling capped data an all-clear or promising traffic from a
-heuristic.
+checkable assertions. They exist to catch the skill picking the wrong command
+or report section, building bad inputs, skipping the evidence checks, or
+breaking a report truth rule such as calling capped data an all-clear or
+promising traffic from a heuristic.
 
-Each file targets one report id or one common job. A report eval checks that the
-skill discovers, describes, and runs that report and reads its evidence
-correctly. A job eval checks a router-level chain, such as a full site audit or
-a fix queue, where the correct move spans several reports in order.
+Each file targets one command, one report section, or one common job. A
+command eval checks that the agent runs that command (or its MCP tool) with
+the right target and reads the result correctly. A section eval checks that
+the agent runs `seo report` without a section first, then the right section.
+A job eval checks a router-level chain, such as a traffic drop that moves from
+the report to `seo compare` and `seo page`, or a request for a report that was
+removed.
 
 ## File shape
 
-One file per subject at `evals/<subject>.json`. The `subject` names the report
-id or the job the eval targets. It matches the filename.
+One file per subject at `evals/<subject>.json`. The `subject` names the
+command, section or job the eval targets. It matches the filename.
 
 ```json
 {
@@ -26,8 +29,8 @@ id or the job the eval targets. It matches the filename.
       "prompt": "Where can we get some easy SEO wins without new content?",
       "expected_output": "Prose describing what a correct agent does.",
       "assertions": [
-        "Uses report id quick-wins for the opportunity queue",
-        "Clarifies quick win names the review queue, not expected traffic"
+        "Runs the quick-wins section of the report",
+        "Says the section is a review queue, not expected traffic"
       ],
       "files": []
     }
@@ -82,8 +85,14 @@ sandbox problem is visible in the output rather than silent.
 Write assertions about outcomes, not narration. An agent that used a field
 rarely names it, so "presents the diagnosis from the check results" is
 judgeable where "reads generatedAt last" is not. Accept both surfaces in
-assertions: the MCP tools and the `seo reports` CLI flow are equivalent, and
-an agent without MCP configured will correctly use the CLI.
+assertions: an MCP tool such as `seo_report` and its CLI command `seo report`
+are equivalent, and an agent without MCP configured will correctly use the
+CLI. Write "Runs seo_report or `seo report`", not one of them alone.
+
+Prompts expect the 0.3 flow: the main report without a section first, then
+one section, then the command the result names next. Do not write evals that
+expect the removed `seo_list_reports`, `seo_describe_report` or
+`seo_run_report` tools.
 
 ### Judging
 

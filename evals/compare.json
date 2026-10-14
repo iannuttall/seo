@@ -1,0 +1,39 @@
+{
+  "subject": "compare",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We launched a site redesign on 2026-09-15. Did it hurt our search traffic?",
+      "expected_output": "Should run seo_compare with date 2026-09-15 (or `seo compare --date 2026-09-15`), the first day after the change. Should present equal periods before and after, the totals, devices, and the pages and queries that moved, with any Google updates in the window. Should keep the answer to observed changes and not claim the redesign caused them.",
+      "assertions": [
+        "Runs seo_compare or `seo compare` with date 2026-09-15",
+        "Presents equal periods before and after with the pages and queries that moved",
+        "Mentions Google updates in the window",
+        "Does not claim the redesign caused the change"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Compare only our blog before and after the August core update started.",
+      "expected_output": "Should run seo_compare with the first day after the update as the date and pages set to /blog/ (or `seo compare --date <date> --pages /blog/`). If the update date is not known, should find it in the result or ask, and not guess a date.",
+      "assertions": [
+        "Uses seo_compare with a pages filter for /blog/",
+        "Uses the first day after the update as the date",
+        "Does not guess an update date it does not know"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The compare result shows a Google update in the window and our clicks are down. Confirm the update hit us.",
+      "expected_output": "Should not confirm that the update caused the loss. Should explain that an update in the window is timing, not cause. Should point to the pages and queries that moved and suggest seo_page on the main ones.",
+      "assertions": [
+        "Does not confirm the update caused the loss",
+        "Explains that an update in the window is timing, not cause",
+        "Suggests seo_page on the pages that moved"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "subject": "cannibalization",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Are two of our pages competing for the same keyword?",
+      "expected_output": "Should run seo_report with section cannibalization (or `seo report --section cannibalization`). Should describe the rows as queries where more than one page gets impressions, with each page's share. Should suggest seo_page on each competing URL to see Google's chosen canonical.",
+      "assertions": [
+        "Runs the cannibalization section of the report",
+        "Describes rows as queries where more than one page gets impressions",
+        "Mentions each page's share of impressions",
+        "Suggests seo_page on each URL to see the Google-selected canonical"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Merge all the competing pages and redirect the weaker ones today.",
+      "expected_output": "Should not recommend merging or redirecting from the section alone. Should explain that two pages sharing impressions for a query is an observation and does not prove harm. Should check each URL with seo_page and ask the person what they intend before any change.",
+      "assertions": [
+        "Does not recommend merges or redirects from the section alone",
+        "Says shared impressions do not prove harm",
+        "Checks each URL with seo_page before deciding",
+        "Asks the person before any change"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "One of the competing URLs has a canonical pointing to the other. Is that a mistake?",
+      "expected_output": "Should treat the canonical as an observation, not a defect. Should use seo_page to confirm the live canonical and Google's chosen canonical, then ask the person whether it is intended.",
+      "assertions": [
+        "Treats the canonical as an observation",
+        "Uses seo_page to check the live and Google-selected canonical",
+        "Asks the person whether the canonical is intended"
+      ],
+      "files": []
+    }
+  ]
+}

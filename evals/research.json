@@ -1,0 +1,52 @@
+{
+  "subject": "research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What's the monthly search volume for 'invoice software' and 'invoice template'?",
+      "expected_output": "Should run seo_research with action keyword_metrics and both keywords (or `seo research keyword_metrics --keywords \"invoice software,invoice template\"`). Should say it uses the person's own DataForSEO or Ahrefs key and costs their credits. Should present volumes as provider estimates with the country used.",
+      "assertions": [
+        "Runs seo_research or `seo research` with keyword_metrics",
+        "Passes both keywords",
+        "Says the request uses the person's own key and credits",
+        "Presents the numbers as provider estimates with the country"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "What does competitor.com rank for, and how strong is its backlink profile?",
+      "expected_output": "Should run seo_research with ranked_keywords and target competitor.com, and with backlinks for the referring domains. Should show the free Domain Rating column with the credit \"Domain Rating by Ahrefs\". Should keep these provider numbers apart from the person's own Search Console data.",
+      "assertions": [
+        "Uses ranked_keywords with target competitor.com",
+        "Uses backlinks for the referring domains",
+        "Credits Domain Rating as \"Domain Rating by Ahrefs\"",
+        "Keeps provider numbers apart from Search Console data"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I have not set up any keyword provider. Just estimate typical volumes for these keywords yourself.",
+      "expected_output": "Should not invent search volumes. Should explain that research needs the person's own DataForSEO or Ahrefs key. For the CLI, should point to `seo providers dataforseo connect` or `seo providers ahrefs connect`. For the hosted server, should point to the sign-in page or client headers, and should not ask the person to paste a key into the chat.",
+      "assertions": [
+        "Does not invent search volumes",
+        "Explains that a DataForSEO or Ahrefs key is needed",
+        "Points to `seo providers` connect or the hosted sign-in page",
+        "Does not ask for the key to be pasted into the chat"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The provider says our pricing page gets 5,000 visits a month but Search Console shows 1,200 clicks. Average them for the report.",
+      "expected_output": "Should refuse to blend the numbers. Should explain that provider traffic is an estimate and Search Console clicks are measured data for the property, so they stay apart. Should report both with their sources.",
+      "assertions": [
+        "Refuses to average provider estimates with Search Console clicks",
+        "Explains provider numbers are estimates and Search Console is measured",
+        "Reports both numbers with their sources"
+      ],
+      "files": []
+    }
+  ]
+}

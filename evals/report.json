@@ -1,0 +1,64 @@
+{
+  "subject": "report",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Give me an SEO overview of sc-domain:example.com.",
+      "expected_output": "Should run seo_report (or `seo report --site sc-domain:example.com`) without a section and with the default summary detail. Should present site totals against the previous period, the devices, the pages and queries that moved, and each section count with its top rows. Should state the date window the report used. Should offer the next step the result names rather than running every section.",
+      "assertions": [
+        "Runs seo_report or `seo report` without a section",
+        "Keeps the default summary detail on the first call",
+        "Presents totals against the previous period with the date window",
+        "Mentions the section counts and top rows",
+        "Offers the next step the result names instead of running every section"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agent task: run every section of the report for example.com with full detail and dump all of it into the chat.",
+      "expected_output": "Should run the report without a section first, then pick only the sections that matter for the question. Should not request detail full for every section, because full detail is for when every field is needed. Should use detail rows with an offset to page through rows when more are needed. Should keep the output bounded and summarize the facts that matter.",
+      "assertions": [
+        "Runs the report without a section first",
+        "Does not request full detail for every section at once",
+        "Uses detail rows with an offset to page through more rows",
+        "Keeps the output bounded and summarizes the facts that matter"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The report says it left out the brand term acme. Add a flag so brand queries are included.",
+      "expected_output": "Should explain that the report has no such flag: brand terms are set automatically and shown in the output, so the run stays the same every time. Should not invent a flag or parameter. If the person needs brand query rows, should offer seo_data (or `seo data`) with a query filter for the brand term.",
+      "assertions": [
+        "Explains that brand terms are set automatically and shown in the output",
+        "Does not invent a brand flag or parameter",
+        "Offers seo_data or `seo data` with a query filter for brand rows"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The overview says clicks are down 12% against the previous period. So Google penalised us, right?",
+      "expected_output": "Should not claim a penalty or any cause from a period change. Should say the overview shows a change, not its cause. Should suggest the traffic-drop section to see when it started and the Google updates whose dates overlap, then seo_compare (or `seo compare`) with the date the drop started. Should state that an overlapping Google update is timing, not proof of cause.",
+      "assertions": [
+        "Does not confirm a penalty or cause",
+        "Says the overview shows a change, not its cause",
+        "Suggests the traffic-drop section or seo_compare with the start date",
+        "States that an overlapping Google update is timing, not cause"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Show me the next 20 rows of the quick-wins section after the first 20.",
+      "expected_output": "Should run seo_report with section quick-wins, detail rows and offset 20 (or `seo report --section quick-wins --detail rows --offset 20`). Should not rerun the whole report with full detail to get more rows.",
+      "assertions": [
+        "Requests section quick-wins with detail rows",
+        "Uses offset 20 for the next page",
+        "Does not switch to full detail just to get more rows"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -18,9 +18,12 @@ Search Console property.
 
 ## Keys
 
-DataForSEO, Ahrefs, Clicky, Fathom, Simple Analytics and Plausible
-use your own key. There are two ways to give a key, and neither puts it in a
-chat:
+Clicky and other analytics run on your own machine with the `seo` CLI and a
+provider package, so this server never needs their keys.
+
+
+DataForSEO and Ahrefs use your own key. There are two ways to give a key,
+and neither puts it in a chat:
 
 1. **On the sign-in page.** Open "Add your own API keys" before you continue
    with Google. The keys are sealed into the sign-in your agent keeps. To
@@ -31,10 +34,6 @@ chat:
 | --- | --- |
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
-| Clicky | `X-Clicky-Sitekey` |
-| Fathom | `X-Fathom-Key` |
-| Simple Analytics | `X-Simple-Analytics-Key`, optional `X-Simple-Analytics-User-Id` |
-| Plausible | `X-Plausible-Key` |
 
 ```sh
 claude mcp add --transport http seoskill https://seoskill.dev/mcp \
@@ -54,7 +53,7 @@ repository.
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
-| `seo_data` | Raw Search Console rows, or landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible |
+| `seo_data` | Raw Search Console rows, or search landing pages from Google Analytics. Clicky and other analytics run locally with the CLI and a provider package. |
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.

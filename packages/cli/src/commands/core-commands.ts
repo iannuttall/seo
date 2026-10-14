@@ -370,7 +370,7 @@ export const researchCommand = defineCommand({
   meta: {
     name: 'research',
     description:
-      'Keyword, SERP, competitor and backlink data from your DataForSEO, Ahrefs or Semrush key',
+      'Keyword, SERP, competitor and backlink data from your DataForSEO or Ahrefs key',
   },
   args: {
     action: {
@@ -403,7 +403,6 @@ export const researchCommand = defineCommand({
     const header: Record<ResearchProvider, string> = {
       dataforseo: 'x-dataforseo-login',
       ahrefs: 'x-ahrefs-key',
-      semrush: 'x-semrush-key',
     }
     const chosen = stringArg(args.provider)
     const provider = (chosen ??

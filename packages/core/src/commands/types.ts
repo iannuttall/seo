@@ -28,7 +28,7 @@ export const COMMANDS = {
   research: {
     where: 'anywhere',
     summary:
-      'Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO, Ahrefs or Semrush.',
+      'Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs.',
   },
   data: {
     where: 'anywhere',

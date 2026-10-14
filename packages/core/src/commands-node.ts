@@ -18,7 +18,6 @@ import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
-import { readSemrushApiKey } from './providers/semrush/credentials.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
 // with the local Google sign-in and cache, and live page checks from this
@@ -110,10 +109,9 @@ export function nodeCommandDeps(options: {
 // Provider keys from the local secret store, as header-style names. Keys go
 // only to their provider.
 export async function localResearchKeys(): Promise<Headers> {
-  const [dataForSeo, ahrefs, semrush] = await Promise.all([
+  const [dataForSeo, ahrefs] = await Promise.all([
     readDataForSeoCredentials().catch(() => undefined),
     readAhrefsApiKey().catch(() => undefined),
-    readSemrushApiKey().catch(() => undefined),
   ])
   const keys = new Headers()
   if (dataForSeo) {
@@ -121,7 +119,6 @@ export async function localResearchKeys(): Promise<Headers> {
     keys.set('x-dataforseo-password', dataForSeo.password)
   }
   if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
-  if (semrush?.apiKey) keys.set('x-semrush-key', semrush.apiKey)
   return keys
 }
 

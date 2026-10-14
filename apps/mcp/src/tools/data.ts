@@ -29,7 +29,6 @@ export const seoSites = defineTool({
     const keys = [
       ['dataforseo', 'x-dataforseo-login'],
       ['ahrefs', 'x-ahrefs-key'],
-      ['semrush', 'x-semrush-key'],
       ['clicky', 'x-clicky-sitekey'],
       ['fathom', 'x-fathom-key'],
       ['simple_analytics', 'x-simple-analytics-key'],

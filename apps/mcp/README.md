@@ -18,7 +18,7 @@ Search Console property.
 
 ## Keys
 
-DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple Analytics and Plausible
+DataForSEO, Ahrefs, Clicky, Fathom, Simple Analytics and Plausible
 use your own key. There are two ways to give a key, and neither puts it in a
 chat:
 
@@ -31,7 +31,6 @@ chat:
 | --- | --- |
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
-| Semrush | `X-Semrush-Key` |
 | Clicky | `X-Clicky-Sitekey` |
 | Fathom | `X-Fathom-Key` |
 | Simple Analytics | `X-Simple-Analytics-Key`, optional `X-Simple-Analytics-User-Id` |
@@ -54,7 +53,7 @@ repository.
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
-| `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO, Ahrefs or Semrush, with a free Ahrefs Domain Rating column |
+| `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, or landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible |
 
 Reports run the same `@seo/core` code as the CLI, through

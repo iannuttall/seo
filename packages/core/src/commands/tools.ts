@@ -207,7 +207,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_research',
     command: 'research',
     title: 'Keyword, competitor and backlink data',
-    description: `Data from the person’s own DataForSEO, Ahrefs or Semrush account, which costs them credits. Key headers on the hosted server: ${Object.entries(
+    description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. Key headers on the hosted server: ${Object.entries(
       KEY_HEADERS,
     )
       .map(([provider, header]) => `${provider} ${header}`)
@@ -337,7 +337,7 @@ export async function runSharedTool(
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties this sign-in can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the person's own DataForSEO, Ahrefs or Semrush key, seo_data for raw rows.
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the person's own DataForSEO or Ahrefs key, seo_data for raw rows.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.

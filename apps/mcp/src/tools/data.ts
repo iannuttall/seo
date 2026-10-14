@@ -13,6 +13,12 @@ import {
   landingPages,
 } from '../providers/analytics.ts'
 import {
+  bareDomain,
+  DR_ATTRIBUTION,
+  domainRatings,
+  withDomainRating,
+} from '../providers/domain-rating.ts'
+import {
   KEY_HEADERS,
   type ResearchProvider,
   research,
@@ -368,7 +374,7 @@ export const seoResearch = defineTool({
     .map(([provider, header]) => `${provider} ${header}`)
     .join(
       '; ',
-    )}. Actions: keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords). Numbers are provider estimates, not Search Console data.`,
+    )}. Actions: keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`,
   input: z.object({
     provider: z.enum(['dataforseo', 'ahrefs', 'semrush']),
     action: z.enum([
@@ -399,13 +405,28 @@ export const seoResearch = defineTool({
         limit: Math.min(1000, Math.max(100, input.offset + PAGE_SIZE)),
       },
     )
+    const drKey =
+      context.headers.get('x-ahrefs-key') ?? context.env.AHREFS_DR_KEY
+    const rated = await withDomainRating(rows, drKey)
+    const targetDr = input.target
+      ? (await domainRatings([input.target], drKey)).get(
+          bareDomain(input.target),
+        )
+      : undefined
+    const hasDr = rated.added || (targetDr !== undefined && targetDr !== null)
     return rowsText({
       title: `${input.provider} ${input.action}${input.target ? ` for ${input.target}` : ''}, ${input.country}.`,
-      rows,
+      rows: rated.rows,
       offset: input.offset,
       limit: PAGE_SIZE,
       detail: input.detail,
-      notes: [`${input.provider} estimates, in the provider’s own units.`],
+      notes: [
+        `${input.provider} estimates, in the provider’s own units.`,
+        ...(targetDr !== undefined && targetDr !== null
+          ? [`${bareDomain(input.target)} domain_rating: ${targetDr}.`]
+          : []),
+        ...(hasDr ? [DR_ATTRIBUTION] : []),
+      ],
     })
   },
 })

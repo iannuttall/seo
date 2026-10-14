@@ -5,8 +5,8 @@ Last updated: 14 October 2026
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp, and the seoskill.dev website.
 
-In short: the hosted MCP stores nothing, API keys are never stored, and the
-only thing kept about your use is an anonymous usage count (the event,
+In short: the hosted MCP never stores your data, API keys are never stored,
+and the only thing kept about your use is an anonymous usage count (the event,
 report, agent, version and week).
 
 The command-line tool runs on your machine. It does not create an SEO
@@ -21,8 +21,9 @@ the work you requested. The sections below explain what each request can send.
 ## The hosted MCP server
 
 The hosted MCP server at `https://seoskill.dev/mcp` runs the same reports
-for an MCP client you connect to it. It stores nothing. There is no database,
-account or log of your data.
+for an MCP client you connect to it. It never stores your data or your keys.
+There is no database, account or log of your data. The only thing it keeps is
+the anonymous usage count described below.
 
 - **Google sign-in.** You sign in with Google and grant read-only access to
   Search Console and Google Analytics. The resulting Google tokens are sealed

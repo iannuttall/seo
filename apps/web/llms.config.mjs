@@ -42,7 +42,7 @@ export const llmsTxt = {
           label: 'Hosted MCP server',
           url: 'https://seoskill.dev/mcp',
           description:
-            'Connect any remote MCP client. Sign in with Google; nothing is stored.',
+            'Connect any remote MCP client. Sign in with Google. Your data and keys are never stored.',
         },
         {
           label: 'Agent Skills index',

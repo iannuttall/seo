@@ -714,7 +714,8 @@ test('site uses the ilo visual system and one-click setup commands', () => {
   assert.match(home, /\[grid-area:1\/1\]/)
   assert.doesNotMatch(home, /data-setup-panel="[^"]+"[^>]*\shidden[\s>=]/)
   assert.doesNotMatch(home, /data-copy-value="npm i -g seo"/)
-  assert.match(home, /Nothing stored/)
+  assert.match(home, /Your data and keys are never stored\./)
+  assert.doesNotMatch(home, /Nothing stored/)
   assert.match(home, /<a[^>]+href="\/cookies"[^>]*>\s*Cookies\s*<\/a>/)
   for (const command of [
     'report',

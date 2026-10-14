@@ -35,6 +35,7 @@ export const pageRedirects = {
   '/docs/dataforseo': '/docs/keys',
   '/docs/semrush': '/docs/keys',
   '/docs/ahrefs': '/docs/keys',
+  '/docs/clicky': '/docs/keys',
   '/docs/bing': '/docs',
   '/docs/indexnow': '/docs',
   '/docs/html-reports': '/docs',

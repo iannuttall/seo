@@ -48,13 +48,13 @@ const surfaces = [
   },
   {
     title: 'API keys',
-    text: 'Optional. Your own research and analytics accounts, never stored.',
+    text: 'Optional. Your own DataForSEO or Ahrefs account, never stored.',
     code: null,
     href: '/docs/keys',
   },
   {
     title: 'What is stored',
-    text: 'Nothing on the hosted server. Only anonymous usage counts.',
+    text: 'None of your data or keys. Only anonymous usage counts.',
     code: null,
     href: '/docs/privacy',
   },
@@ -188,26 +188,28 @@ const faqs = [
             facts. Pick the one that suits how you work (you can switch later).
           </p>
         </div>
-        <div class="divide-y divide-border rounded-lg bg-muted px-6">
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
           {
             surfaces.map((item) => (
+              <li>
               <a
                 class="group block py-4 no-underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
                 href={item.href}
               >
                 <span class="flex items-center justify-between gap-4">
-                  <span class="text-sm font-medium text-foreground group-hover:underline">{item.title}</span>
+                  <span class="text-sm font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
                   {item.code ? (
                     <code class="truncate rounded-md bg-background px-2 py-0.5 font-mono text-xs text-foreground-muted">{item.code}</code>
                   ) : (
                     <span aria-hidden="true" class="text-foreground-soft group-hover:text-foreground">&rarr;</span>
                   )}
-                </span>
+                </span>{' '}
                 <span class="mt-1 block text-sm leading-6 text-foreground-muted">{item.text}</span>
               </a>
+              </li>
             ))
           }
-        </div>
+        </ul>
       </section>
 
       <section class="site-frame" aria-labelledby="tools-heading">

@@ -22,9 +22,9 @@ export const TOOLS: Tool[] = [
 
 const INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice and stores nothing.
 1. seo_sites: the properties this sign-in can read.
-2. seo_report: a report such as quick-wins, low-ctr, content-decay, cannibalization or traffic-drop. Start with detail "summary".
+2. seo_report: start with site-overview. Each report ends with the report to run next. Ask for detail "rows" or "full" only when the summary is not enough.
 3. seo_search_console for raw rows, seo_inspect_url for index status, seo_analytics for landing page traffic, seo_research for keyword and competitor data from the person's own DataForSEO, Ahrefs or Semrush key.
-Crawls and page audits run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run for example \`npx -y seo crawl https://example.com --max-pages 500 --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo audit-page --url https://example.com/page --json\`; \`npx -y seo help all\` lists every command. seo_report with verify true checks up to 20 report URLs live.
+Crawls and page audits run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run for example \`npx -y seo crawl https://example.com --max-pages 500 --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo audit-page --url https://example.com/page --json\`; \`npx -y seo help all\` lists every command. Page reports check their top 20 URLs live.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
 
 // A new stateless server for each request, with JSON responses.
@@ -62,7 +62,11 @@ export async function serveMcp(
               {
                 type: 'text',
                 text: known
-                  ? `Error ${error.code}: ${error.message}`
+                  ? `Error ${error.code}: ${error.message}${
+                      error.code === 'NO_KEY'
+                        ? ` How keys work: ${context.env.PUBLIC_URL}/mcp/keys`
+                        : ''
+                    }`
                   : 'Error INTERNAL: the tool failed. Try again; if it fails again, report it at https://github.com/iannuttall/seo/issues.',
               },
             ],

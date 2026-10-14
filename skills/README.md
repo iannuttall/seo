@@ -3,13 +3,10 @@
 This package ships one skill: `seo`. It teaches an agent how to use `seo`
 without reading the whole repo.
 
-The skill is a router, not a manual. It explains the discover, describe, run
-flow, names the report ids for common jobs, and states the evidence rules that
-apply to every report. It does not memorise each report. Per-report depth, when
-to use a report, when to avoid it, its schema, the order to read its output,
-what its evidence cannot support, and one verification step, is fetched at
-runtime with `describe`. This keeps the skill small and always in sync with the
-registry.
+The skill is a router, not a manual. It teaches the eight commands, the
+report-first flow (run `seo report`, then one section), the commands for
+common jobs, and the evidence rules. Each command's result names what to run
+next, so the skill stays small.
 
 ## Install during setup
 
@@ -33,31 +30,20 @@ package and repository contain the same skill.
 Use `seo skill list` or `seo skill path seo` to inspect the copy bundled with
 the npm package.
 
-## Discover, describe, run
+## The commands
 
-The MCP path is deliberately small: discover ids with `seo_list_reports`, load
-one report's full depth with `seo_describe_report`, then execute it with
-`seo_run_report`. The same catalog is available without MCP:
-
-```bash
-seo reports list --json
-seo reports describe <report-id> --json
-seo reports run <report-id> --params '<json>' --json
-```
-
-Always describe a report before its first run. The describe response is the
-per-report manual: its `readOrder`, `doNotClaim` limits, `verify` step, and
-`related` ids come straight from the registry.
+The MCP tools and CLI commands are the same set: `seo_report` and
+`seo report`, `seo_page` and `seo page`, and so on. They are defined once in
+`packages/core/src/commands/tools.ts`, so the hosted server, the local server
+and the CLI cannot drift apart. The local server adds `seo_crawl` and
+`seo_internal_links`.
 
 ## Adding a report
 
-Register the report once in `packages/mcp/src/report-registry.ts`, including its
-depth guidance in `packages/mcp/src/report-guidance.ts` and
-`packages/mcp/src/report-depth.ts` (`readOrder`, `doNotClaim`, `verify`,
-`related`). CLI discovery, MCP discovery, and the skill then share its id,
-description, input schema, handler, and depth automatically. No new skill file
-is needed. The router only lists report ids for common jobs; a report earns a
-mention there when it belongs in one of those chains.
+A new Search Console analysis becomes a section of `seo report`, not a new
+command: add it to `SECTIONS` in `packages/core/src/commands/report.ts` with
+its core report function. Every surface then shows it. No new skill file is
+needed. Add a command only when Ian changes the product contract.
 
 Run `pnpm skills:validate` after changing the skill or the registry. The
 validator checks the skill frontmatter and word count, that every command and

@@ -94,8 +94,8 @@ provider packages optional capability adapters
   provider-specific API clients and tests in their package repositories.
 - `apps/web`: static Astro documentation and landing site for seoskill.dev.
 - `skills/seo/SKILL.md`: the single router skill agents install. It teaches
-  discovery, the jobs table, and evidence rules; per-report depth lives in the
-  registry.
+  the eight commands, the report-first flow, the jobs table, and evidence
+  rules.
 - `evals/`: behaviour evals keyed by report id or job, shipped in the package.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: git-ignored local notes, audit evidence, and working material.
@@ -303,7 +303,7 @@ Every report must be technically defensible and useful to another program.
 
 - TypeScript ESM only.
 - Keep CLI and MCP wrappers thin. Reusable behavior belongs in `packages/core`.
-- Register structured reports once so CLI discovery, MCP discovery, and skills stay in sync.
+- Define commands and MCP tools once in `packages/core/src/commands` so the CLI, both MCP servers, and the skill stay in sync.
 - Prefer structured APIs and schemas over string parsing.
 - Prefer small modules with one clear responsibility. Split files when a real
   boundary appears; do not create abstract layers that only rename calls.

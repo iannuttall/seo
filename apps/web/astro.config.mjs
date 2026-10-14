@@ -5,6 +5,7 @@ import { agentMarkdown } from '@iannuttall/seo-graph-astro'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
+import rehypeRelativeLinks from './scripts/rehype-relative-links.mjs'
 import { llmsTxt } from './llms.config.mjs'
 
 export default defineConfig({
@@ -13,7 +14,7 @@ export default defineConfig({
   trailingSlash: 'never',
   markdown: {
     syntaxHighlight: false,
-    processor: unified({ rehypePlugins: [rehypeCodeFrame] }),
+    processor: unified({ rehypePlugins: [rehypeRelativeLinks, rehypeCodeFrame] }),
   },
   integrations: [
     mdx(),

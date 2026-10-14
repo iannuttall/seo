@@ -149,6 +149,24 @@ test('every non-home page suffixes the site name', () => {
   }
 })
 
+test('internal links in the built pages are relative', () => {
+  // Canonical, Open Graph and JSON-LD URLs live in <head> and stay absolute,
+  // as do the sitemap, llms.txt and Markdown copies. Copyable commands are
+  // text, not links. Every link a person clicks on the site is a path.
+  const absolute = /<a\b[^>]*\shref="https?:\/\/(?:www\.)?seoskill\.dev[^"]*"/g
+  const failures = []
+  for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
+    for (const match of readFileSync(file, 'utf8').matchAll(absolute)) {
+      failures.push(`${file.slice(dist.length + 1)}: ${match[0]}`)
+    }
+  }
+  assert.deepEqual(failures, [])
+  assert.doesNotMatch(
+    readFileSync(resolve(dist, 'docs/keys/index.html'), 'utf8'),
+    /mcp\/keys/,
+  )
+})
+
 test('built text keeps a space around inline elements', () => {
   // A source line that ends in text and a next line that starts with an
   // inline element (or the reverse) can lose the space between them. Scan

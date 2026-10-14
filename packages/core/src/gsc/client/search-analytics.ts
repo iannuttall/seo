@@ -4,7 +4,11 @@ import type { GscRow } from '../../types.js'
 import { searchConsoleAccountForSite } from '../auth/account-selection.js'
 import { finalGscDateRange } from '../dates.js'
 import { authedFetch, getAuthorized } from './fetch.js'
-import type { SearchAnalyticsRequest } from './types.js'
+import type {
+  SearchAnalyticsOptions,
+  SearchAnalyticsRequest,
+  SearchAnalyticsResult,
+} from './types.js'
 
 export type PageSearchMetrics = {
   clicks: number
@@ -39,8 +43,8 @@ function resolveSearchDateWindow(
 export async function querySearchAnalytics(
   site: string,
   body: SearchAnalyticsRequest,
-  opts: { refresh?: boolean; accountEmail?: string } = {},
-): Promise<{ rows: GscRow[]; calls: number; rowsFetched: number }> {
+  opts: SearchAnalyticsOptions = {},
+): Promise<SearchAnalyticsResult> {
   const { client, identity } = await getAuthorized(
     opts.accountEmail ?? searchConsoleAccountForSite(site),
   )

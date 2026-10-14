@@ -1,7 +1,5 @@
 import { isBrandQuery } from '../brand.js'
-import { querySearchAnalytics } from '../gsc/client.js'
 import { finalGscDateRange } from '../gsc/dates.js'
-import type { GscRow } from '../types.js'
 
 export const CTR_BASELINE: Record<number, number> = {
   1: 0.27,
@@ -74,25 +72,3 @@ export function looksLikeBrand(
 ): boolean {
   return isBrandQuery(query, brandTerms)
 }
-
-export async function fetchSiteQueryPageRows(
-  site: string,
-  days = 28,
-  refresh = false,
-  filters: SearchAnalyticsLike['dimensionFilterGroups'] = [],
-): Promise<{ rows: GscRow[]; calls: number; rowsFetched: number }> {
-  const range = defaultDateRange(days)
-  return querySearchAnalytics(
-    site,
-    {
-      ...range,
-      dimensions: ['query', 'page'],
-      type: 'web',
-      dataState: 'final',
-      dimensionFilterGroups: filters,
-    },
-    { refresh },
-  )
-}
-
-type SearchAnalyticsLike = Parameters<typeof querySearchAnalytics>[1]

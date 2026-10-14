@@ -1,3 +1,5 @@
+import type { GscRow } from '../../types.js'
+
 export interface SearchAnalyticsRequest {
   startDate: string
   endDate: string
@@ -23,6 +25,27 @@ export interface SearchAnalyticsRequest {
     }>
   }>
 }
+
+export type SearchAnalyticsOptions = {
+  refresh?: boolean
+  accountEmail?: string
+}
+
+export type SearchAnalyticsResult = {
+  rows: GscRow[]
+  calls: number
+  rowsFetched: number
+}
+
+/**
+ * Runs one Search Analytics query and follows pagination up to `maxRows`.
+ * The local binding adds the token store and the response cache.
+ */
+export type SearchAnalyticsQuery = (
+  site: string,
+  body: SearchAnalyticsRequest,
+  opts?: SearchAnalyticsOptions,
+) => Promise<SearchAnalyticsResult>
 
 export interface UrlInspectionRequest {
   siteUrl: string

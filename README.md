@@ -8,17 +8,15 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The SEO command for AI agents. Audit sites, find search opportunities, research competitors, and verify the work from one local command and MCP server.
+  The SEO command for AI agents. Give your agent your own Search Console and analytics data, with Google update dates beside it, and keyword data from your own provider key.
 </p>
 
 <p align="center">
-  <a href="#quick-start">Get started</a>
-  ·
-  <a href="https://seoskill.dev/features">Features</a>
-  ·
-  <a href="https://seoskill.dev/features/mcp">SEO MCP server</a>
+  <a href="#install-and-run-setup">Get started</a>
   ·
   <a href="https://seoskill.dev/docs">Documentation</a>
+  ·
+  <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
@@ -30,7 +28,7 @@
   ·
   <a href="LICENSE">License</a>
   ·
-  <a href="AGENTS.md">Agent notes</a>
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 <p align="center">
@@ -42,661 +40,221 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat-square"></a>
 </p>
 
-The `seo` command turns crawl, Search Console, connected traffic analytics, and
-optional research-provider data into work you can inspect and ship. Find technical
-blockers, recover existing demand, research new keywords and competitors,
-review programmatic page patterns, and catch regressions after a release.
+Ask your agent what is happening in search and get an answer built from your
+own Search Console, Google Analytics and Clicky data, with Google update dates
+laid over it. Add your own DataForSEO or Ahrefs key when you need keyword,
+SERP, competitor or backlink data.
 
-## Who this is for
+The results are facts with their dates and limits. There is no advice baked
+in. Your agent reads the facts, shows you what matters and asks before it
+changes a page.
 
-- People running their own sites who want a clear audit and a ranked list of
-  fixes, without learning a heavy dashboard.
-- AI agents that need real crawl, Search Console, traffic analytics, keyword,
-  result, domain, competitor, and link evidence through MCP and one packaged SEO
-  skill instead of screenshots or guesses.
-- Developers who want to embed the same report engine in a script, a CI job, or
-  a TypeScript app.
+## Install and run setup
 
-## Quick start
-
-Requires Node 22 or newer.
+You need Node 22 or newer.
 
 ```sh
 npm i -g seo
 seo start
-seo report
 ```
 
-The setup walks you through Google sign-in, your Search Console property, an
-optional traffic analytics connection, and a local project profile. Public
-releases can include the shared Google app. If it is unavailable in your build,
-setup guides you through adding your own desktop OAuth client.
+`seo start` signs you in with Google, lists the Search Console properties you
+can read, lets you pick a Google Analytics property, and saves a project
+profile (a local shortcut for the site and its data sources). It can also add
+the skill and the local MCP server to your agents.
 
-DataForSEO, Semrush, and Ahrefs are optional research providers built into the
-main package. Connect one only when external result, keyword, domain,
-competitor, or link evidence would change the decision.
-
-That is the normal path. The `seo` command is then available in every terminal,
-script, CI job, and local MCP client on the machine.
-
-The main report uses the evidence you have, explains what it could not check,
-and recommends a short list of follow-up commands. You can start with a local
-technical report before connecting Google: `seo report --url` crawls the site
-and returns findings and an action list with no sign-in at all.
-
-Running `seo help` shows the shape of the tool:
-
-```txt
-Run SEO audits, find what needs fixing, and ship the changes with your agent.
-
-Start here
-  seo start                                Connect first-party data and save a project profile
-  seo report                               Run the main SEO report for the default project
-  seo report --site sc-domain:example.com  Run without a profile
-  seo report --url https://example.com     Start with a local technical report
-
-Projects
-  seo projects list  List saved project profiles
-  seo projects add   Create or update a project profile
-  seo sites          List Search Console properties
-  seo doctor         Check local auth and config
-
-Act on a report
-  seo refresh-priorities  Rank the next best SEO actions
-  seo quick-wins          Find ranking 4-10 low-CTR wins
-  seo second-page         Investigate URLs averaging positions 10-20
-  seo technical-watch     Crawl and index-monitor a site
-
-Agent and power tools
-  seo report --json    Run the main report as structured JSON
-  seo export diagnose  Export report data to CSV
-  seo mcp install      Install SEO tools into MCP clients
-  seo skill list       Show the packaged SEO skill
-  seo reports list     Discover every structured report
-
-Use `seo help <command>` or `seo <command> --help` for command help.
-Use `seo help all` for the longer command list.
-```
-
-## What you get
-
-- Find technical blockers across metadata, links, indexability, canonicals,
-  structured data, performance, security, mobile, international SEO, and
-  social previews.
-- Rank the work using affected URLs, rule severity, search visibility, and
-  analytics value instead of treating every warning equally.
-- See why a finding matters, what evidence supports it, how to fix it, and how
-  to verify the change.
-- Save and compare crawl reports without running the same crawl again.
-- Measure SEO changes with matched before and after Search Console windows.
-- Discover keyword ideas, compare market estimates, inspect current results,
-  and keep useful terms in local saved sets.
-- Find recurring search competitors, inspect their ranking pages, and filter
-  possible keyword gaps through Search Console data and existing provider
-  rankings.
-- Find repeatable Search Console searches and review planned terms, comparison
-  pairs or other useful combinations.
-- Find repeated page patterns on your site and competitor sites, then check
-  what information a useful new page would need.
-- Find location-specific Search Console demand and repeated local page patterns,
-  then add a few exact local result snapshots when the decision needs them.
-- Give scripts and agents deterministic JSON, Markdown, stable rule IDs, and a
-  compact local MCP surface.
-
-## How the reports stay honest
-
-The point of a report is to be defensible, so the design keeps a few rules:
-
-- Observed evidence stays separate from derived findings and recommended
-  actions. You can always see the crawl row or provider row behind a claim.
-- Partial data is never reported as a zero. A capped, filtered, or sampled
-  source says so, and it cannot support a definitive all-clear.
-- Heuristics are labeled as heuristics. A convention or threshold is not
-  presented as a search-engine rule.
-- Each recommendation comes with a way to check that the fix worked, rather than
-  a promise about rankings or traffic.
-
-## Everyday use
-
-`seo start` can save a project profile, which is a local shortcut for a site,
-Search Console property, traffic analytics connection, and brand terms. If you have one default
-project, most commands need no flags.
+Then run the main report:
 
 ```sh
 seo report
-seo refresh-priorities
-seo quick-wins
-seo second-page
-seo technical-watch
 ```
 
-Use `--project` when you have more than one:
+## Connect the hosted MCP server
+
+If you would rather not install anything, connect your agent to the free
+hosted server at `https://seoskill.dev/mcp`:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+codex mcp add seoskill --url https://seoskill.dev/mcp
+```
+
+Sign in with Google when the client asks. The server stores nothing. Your
+sign-in and any provider keys are sealed into the token your MCP client
+keeps, or sent as headers on each request. The
+[hosted MCP guide](https://seoskill.dev/docs/mcp) covers other clients, and the
+[API keys guide](https://seoskill.dev/docs/keys) shows how to add a key
+without pasting it into a chat.
+
+A crawl fetches many pages, so `seo crawl` and `seo internal-links` run only
+on your machine, through the CLI or the local MCP server.
+
+## The eight commands
+
+| Command | MCP tool | What it returns |
+| --- | --- | --- |
+| `seo report` | `seo_report` | The main report: an overview against the previous period, then every section's count and top rows |
+| `seo page --url <url>` | `seo_page` | One URL: live page facts, Google index status and its queries |
+| `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with the Google updates in the window |
+| `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
+| `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from your key |
+| `seo data` | `seo_data` | Raw Search Console rows; the hosted tool also reads analytics landing pages |
+| `seo crawl <url>` | `seo_crawl` | A site crawl with technical issues and the URLs they affect (local only) |
+| `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page (local only) |
+
+Each command takes its target (a site, URL or property) and an optional date
+window. Commands that return rows also take `--detail summary|rows|full` and
+`--offset`. Brand terms, minimum impressions and the comparison period are set
+for you and shown in the output, so there is nothing else to tune.
+
+Run `seo help` for the short list, or `seo <command> --help` for one command.
+The [command docs](https://seoskill.dev/docs/commands) explain each one.
+
+## Start with one report
+
+Run the report without a section first:
+
+```sh
+seo report
+```
+
+It shows site totals against the previous period, the pages and queries that
+moved, and a short count with top rows for each section. Then ask for the one
+section that matters:
+
+```sh
+seo report --section quick-wins
+```
+
+The sections are `overview`, `quick-wins`, `low-ctr`, `striking-distance`,
+`second-page`, `content-decay`, `cannibalization` and `traffic-drop`. Page
+sections check their top 20 URLs live and merge same-site redirects.
+
+Each result ends with the command to run next. A traffic drop usually leads to
+`seo compare` with the date it started, then `seo page` for the URLs that
+moved:
+
+```sh
+seo compare --date 2026-09-15
+seo page --url https://example.com/pricing
+```
+
+Start with the summary. Ask for `--detail rows --offset 20` for the next page
+of rows, or `--detail full` for every field, only when you need them.
+
+Use `--project` when you have more than one saved project, or `--site` to work
+without one:
 
 ```sh
 seo report --project example
-seo projects list
-```
-
-You can also work without a saved profile:
-
-```sh
 seo report --site sc-domain:example.com
-seo report --url https://example.com
-seo crawl https://example.com
-seo audit-page --url https://example.com/pricing
 ```
 
-`seo report --url` crawls the site and saves technical evidence. It does not
-pretend to know traffic, queries, or rankings until you add a Search Console
-property with `seo start`. If you have a Search Console performance download on
-disk, point the same report at the folder or CSV with
-`--search-console-export`. The report reads the query and page tables, keeps
-them separate from the crawl, and tells you which exported pages the crawl
-could not reach. Large page inventories return stable pages; continue with
-`--inventory-page <number>` until `nextPage` is `null`.
+## Add keyword and competitor data
 
-Run `seo help` for the short path or `seo help all` for the full command list.
-
-## Research keywords and competitors
-
-Connect a research provider when you need independent market estimates or
-competitor evidence. Each connection is local and separate from Google
-sign-in. The main package includes DataForSEO, Semrush, and Ahrefs. DataForSEO
-has the broadest live coverage:
+Research uses your own provider account, so each request costs your credits
+with that provider. Connect a key once:
 
 ```sh
 seo providers dataforseo connect
-seo providers dataforseo status --check
-seo providers dataforseo limits
-```
-
-Credentials use the system keychain when available, with a private local file
-fallback. Semrush Version 3 and Ahrefs API v3 use the same local credential
-boundary:
-
-```sh
-seo providers semrush connect
-seo providers semrush status --check
-
 seo providers ahrefs connect
-seo providers ahrefs status --check
-seo providers ahrefs limits
 ```
 
-Read the [Semrush guide](https://seoskill.dev/docs/semrush) and
-[Ahrefs guide](https://seoskill.dev/docs/ahrefs) before running paid research.
-Supported reports record the applicable API units or USD cost, cache state,
-request limits and row counts. Cached results avoid repeating paid work during
-their retention window.
-
-Use the existing report catalog. There are no separate provider-named report
-commands:
+Then ask for one action:
 
 ```sh
-seo reports describe keyword-research --json
-seo reports describe competitive-opportunities --json
-seo reports describe domain-overview --json
-seo reports describe competitor-keyword-gap --json
-seo reports describe local-search-demand --json
-seo reports describe pseo-patterns --json
-seo reports describe pseo-opportunities --json
-seo reports describe ai-mention-research --json
-seo reports describe ai-prompt-observations --json
-
-seo reports run domain-overview \
-  --params '{"domain":"example.com","countryCode":"GB","languageCode":"en"}' \
-  --json
+seo research keyword_metrics --keywords "invoice software,invoice template"
+seo research serp --keywords "invoice software"
+seo research ranked_keywords --target example.com
+seo research competitors --target example.com
+seo research backlinks --target example.com
 ```
 
-Ranked-keyword exports work without provider API access. Pass one to four
-local DataForSEO, Semrush or Ahrefs files through the same report pipeline:
+Rows with a domain get a free Domain Rating column, credited "Domain Rating by
+Ahrefs". The hosted server adds it for everyone; the CLI adds it when you have
+saved an Ahrefs key. Provider numbers are estimates. Search Console stays the
+record of what your own site actually got.
 
-```sh
-seo reports run competitor-keyword-gap \
-  --params-file ./competitor-gap-run.json \
-  --json
-```
+## Add your analytics
 
-The parameter file uses `researchFiles`. Each item records
-`dataset: "ranked-keywords"`, the local `file`, its `provider`, and the real
-`exportedAt` date. CSV, TSV, JSON, JSONL and NDJSON are supported. UTF-8 and
-UTF-16 CSV files are detected automatically, including Ahrefs downloads that
-use tabs despite a `.csv` name. The output keeps the detected encoding and
-delimiter, a SHA-256 hash, included fields, explicit column mapping, row counts,
-filtered historical rows, invalid rows, duplicates and caps under
-`evidence.imports`. Add `columns` when an export uses unfamiliar headings.
-Each entry maps a canonical field such as `keyword`, `url`, `position` or
-`searchVolume` to the source heading. Imported files can feed `ranked-keywords`,
-`ranking-pages`, `serp-competitors` and `competitor-keyword-gap` without
-adding another command or MCP tool. The [research provider guide](https://seoskill.dev/docs/research-providers)
-has the exact JSON format, market guidance and file limits.
+Google Analytics comes with your Google sign-in. Pick the property during
+`seo start`.
 
-The research flow now covers:
-
-- `competitive-opportunities` for turning a small topic set into a focused
-  keyword and competitor investigation order using current results, free
-  Domain Rating observations, and optional paid link summaries;
-- `keyword-research`, `keyword-metrics`, and `saved-keywords` for discovery,
-  estimates, and local persistence;
-- `serp-results` and `rank-tracking` for current or repeated exact market and
-  device-specific observations;
-- `domain-overview`, `ranked-keywords`, and `ranking-pages` for country-level
-  domain, term, page, and repeated path evidence;
-- `serp-competitors` for finding domains that recur across an explicit keyword
-  set without guessing whether they are a business, publisher, directory,
-  community, or marketplace;
-- `competitor-keyword-gap` for comparing up to three relevant domains with
-  Search Console themes, the site's provider-observed rankings, and
-  programmatic page patterns;
-- `local-search-demand` for matching explicit place names, nearby phrases, and
-  postal codes in Search Console, reviewing repeated local page
-  patterns, optionally joining Analytics geography by exact landing-page path,
-  and optionally adding up to three exact local result checks;
-- `pseo-patterns` for recognising repeatable query wording in Search Console
-  and checking planned terms, comparison pairs and other useful combinations,
-  including deliberate product sets that do not depend on search volume;
-- `pseo-opportunities` for deeper keyword, result-page, competitor-pattern, and
-  data research tied to existing page patterns and Search Console themes;
-- `link-evidence` for a current link summary, one representative backlink per
-  referring domain, and linked-target checks against saved crawl and Search
-  Console evidence;
-- `domain-rating` for one free, attributed Ahrefs observation of backlink
-  profile strength, kept separate from ranking and traffic evidence;
-- `ai-mention-research` for provider-indexed mentions, cited domains, and
-  question samples in one exact AI surface and market, with optional
-  Search Console overlap for a property you own;
-- `ai-prompt-observations` for a small fixed set of prompts across explicit
-  current ChatGPT, Claude, Gemini, or Perplexity models, with answers,
-  citations, compatible history, exact returned costs, and optional Search
-  Console context stored locally.
-
-Provider traffic, volume, difficulty, intent, visibility, and ranking history
-are estimates. Search Console remains the evidence for measured search
-performance on a property you own. A live result snapshot remains the evidence
-for one query, market, device, and observation time. Reports can combine these
-sources without blending their meanings or turning a missing row into zero.
-Local query wording does not establish the searcher's physical location, and an
-observed local pack does not establish that a particular listing appeared.
-Provider-indexed AI mentions are not live prompt observations. Each live answer
-is one sample under its exact prompt, requested and effective model, market
-label, settings, and collection time. Neither source proves referral traffic or
-technical eligibility. A missing target in one answer does not prove universal
-absence. The requested model is the model you chose; the effective model is the
-model the provider reports actually running.
-
-Read the [research provider guide](https://seoskill.dev/docs/research-providers)
-for setup, costs, caching, country-level limits, competitor classification, and
-programmatic data-source checks.
-
-Traffic analytics commands sit under their provider namespace. Google Analytics
-uses the account saved with the project, or the selected default Google account:
-
-```sh
-seo analytics google properties
-seo analytics google report --property 123456789 --dimensions landingPage --metrics sessions,totalUsers
-```
-
-You can keep several Google logins on one machine. Run `seo auth login` again
-to add an account, then use `seo auth accounts` to list them. During `seo start`
-you can select separate accounts for Search Console and Google Analytics.
-Project reports use those saved choices automatically.
-
-Clicky is available through the first-party
+Clicky is available through the
 [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider).
-It supplies landing-page visits and Clicky analytics reports. Its README owns
-the provider setup and service links. Install the package, then use `seo start`
-to attach its site ID to a project profile:
+Install it, then attach its site ID to a project with `seo start`:
 
 ```sh
 seo providers install @seoskill/clicky-provider
-seo providers connect clicky --account '{"siteId":"123456789"}'
 seo start
 ```
 
-The existing Clicky commands still work after the package is installed:
+On the hosted server, Clicky, Fathom, Simple Analytics and Plausible keys add
+landing pages for visits from search to `seo_data`. Each source keeps its own
+metric names, so a Clicky visit is never relabelled as a Google Analytics user.
+
+## Use it with agents
+
+The skill teaches your agent the eight commands, the one-report flow and the
+evidence rules. If you skipped it during `seo start`, add it now:
 
 ```sh
-seo analytics clicky status --project example
-seo analytics clicky report --project example --start-date 2026-08-01 --end-date 2026-08-07
+seo skill install
 ```
 
-The sitekey stays in the managed secret store. Agents and CI can set
-`SEO_CLICKY_SITEKEY`. Saved Clicky projects and sitekeys are reused after the
-package move. Clicky landing-page visits can inform the main crawl and priority
-reports. Reports that need Google-specific conversion, attribution, or
-geography fields still require Google Analytics.
-
-Providers can ship separate npm packages and give users one install command.
-The command shows the exact version, publisher, repository, integrity, and code
-warning before it installs anything. After installation, the provider appears
-in `seo providers list`, `seo start`, the CLI, and the MCP server. The main
-package keeps profiles, secrets, cache, network and cost limits, report text,
-and evidence rules.
-
-These first-party packages are public examples for people who want to build
-another provider package:
-
-| Package | What it adds | Package links |
-| --- | --- | --- |
-| `@seoskill/clicky-provider` | Clicky landing-page visits and native Clicky analytics reports. | [GitHub and setup](https://github.com/iannuttall/seoskill-clicky-provider) · [npm](https://www.npmjs.com/package/@seoskill/clicky-provider) |
-| `@seoskill/serpbase-provider` | Live Google result snapshots and live rank tracking through SerpBase. | [GitHub and setup](https://github.com/iannuttall/seoskill-serpbase-provider) · [npm](https://www.npmjs.com/package/@seoskill/serpbase-provider) |
-
-These packages use the same public SDK as third-party packages. Their source,
-tests, limits, release history, and security policy can be reviewed separately
-from the main package.
-
-A package can register either of these extension types:
-
-- A shared capability returns an existing evidence shape, such as
-  `landing-page-visits` or `serp-snapshot`. Compatible reports use it without
-  provider-specific core code.
-- An action supplies its own input and output JSON schemas. Agents discover it
-  with `seo providers describe <id> --json` and run it with
-  `seo providers run <id> <action> --params '<json>' --json`.
-
-The command validates action input and output against the package schemas. A
-new action does not need a core change. A new shared report shape still needs a
-new SDK capability.
-
-A provider package uses the public `seo/provider-sdk` entry point:
-
-```ts
-import type {
-  SeoProviderActivate,
-  SeoProviderRegistration,
-} from 'seo/provider-sdk'
-
-const provider = {
-  id: 'example-analytics',
-  displayName: 'Example Analytics',
-  description: 'Add landing-page visit evidence.',
-  kinds: ['traffic-analytics'],
-  connection: {
-    fields: [
-      { id: 'siteId', label: 'Site ID', kind: 'account', required: true },
-      { id: 'apiKey', label: 'API key', kind: 'secret', required: true },
-    ],
-    async verify(connection, runtime) {
-      await runtime.requestJson({
-        operation: 'verify',
-        url: 'https://api.example.com/verify',
-        headers: {
-          authorization: `Bearer ${connection.credentials.apiKey}`,
-        },
-      })
-    },
-  },
-  capabilities: [
-    {
-      id: 'landing-page-visits',
-      async run(input, runtime) {
-        // Map the provider response to bounded path and visit rows here.
-        return {
-          metric: 'landing-page-visits',
-          rows: [],
-          returnedRows: 0,
-          retainedRowLimit: input.limit,
-          retainedRowLimitReached: false,
-          dataStatus: 'complete',
-          qualityWarnings: [],
-        }
-      },
-    },
-  ],
-} satisfies SeoProviderRegistration
-
-const activate: SeoProviderActivate = (host) => host.registerProvider(provider)
-export default activate
-```
-
-Use an action when the data does not match a shared capability:
-
-```ts
-const provider = {
-  // Keep the connection fields and other provider details above.
-  capabilities: [],
-  actions: [
-    {
-      id: 'inspect-domain',
-      description: 'Return current domain evidence.',
-      inputSchema: {
-        type: 'object',
-        additionalProperties: false,
-        properties: { domain: { type: 'string' } },
-        required: ['domain'],
-      },
-      outputSchema: {
-        type: 'object',
-        properties: { rows: { type: 'array', items: { type: 'object' } } },
-        required: ['rows'],
-      },
-      async run(input, runtime) {
-        return runtime.requestJson({
-          operation: 'inspect-domain',
-          url: `https://api.example.com/domain/${input.params.domain}`,
-        })
-      },
-    },
-  ],
-} satisfies SeoProviderRegistration
-```
-
-The agent reads both schemas through `seo providers describe` or
-`seo_describe_provider`. It can then run the action with `seo providers run` or
-`seo_run_provider` without a core change. `seo_list_providers` returns the
-packages that are installed on the same computer as the MCP server.
-
-The package `package.json` declares the built entry point:
-
-```json
-{
-  "seo": {
-    "apiVersion": 1,
-    "providers": ["./dist/index.js"]
-  }
-}
-```
-
-Provider packages must bundle their runtime code and have no runtime dependency
-tree. Publish the package to npm and give users its install command. A change to
-this repository is not required. The provider publisher owns its adapter,
-documentation, tests, security, and releases.
-
-Bing Webmaster is optional. Connect it when you want Bing traffic trends,
-crawl changes, and query and page opportunities beside your Google evidence:
+To add the local MCP server to Codex, Claude Code, Claude Desktop or Cursor:
 
 ```sh
-seo providers bing connect
-seo providers bing report --project example
+seo mcp install
 ```
 
-The guided connection asks for the API key from Bing Webmaster Tools Settings,
-then API Access. It validates the key, lists verified sites, matches one to the
-selected project when the hostname is unambiguous, and stores the key in the
-system keychain with a private local file fallback. Agents and CI can set
-`SEO_BING_API_KEY` and run the report without saving the key.
+Scripts can pick clients with `--codex`, `--claude-code`, `--cursor` or
+`--claude-desktop`. Other clients can start `seo mcp serve` as a local stdio
+server.
 
-The report compares recent traffic periods, highlights crawl changes and
-returns query and page lists to review. Bing's `inIndex` crawl statistic is a
-site-level number, so check important URLs directly before treating them as
-indexed.
+The local server and the hosted server serve the same tools: `seo_sites`,
+`seo_report`, `seo_page`, `seo_compare`, `seo_index`, `seo_research` and
+`seo_data`. The local server adds `seo_crawl` and `seo_internal_links`, plus
+`seo_list_providers`, `seo_describe_provider` and `seo_run_provider` for
+installed provider packages.
 
-Review referring links from Ahrefs, DataForSEO, Bing or a
-local export:
+## What the results can show
 
-```sh
-seo links --provider ahrefs --target example.com --json
-seo links --provider dataforseo --target example.com --json
-seo links --provider dataforseo --target example.com \
-  --search-site sc-domain:example.com --json
-seo links --project example --json
-seo links --file ./links.csv --row-limit 10000 --json
-```
+- Missing, partial, capped and filtered data is named. It never becomes a zero
+  or an all-clear.
+- Search Console, analytics, live page checks and provider estimates stay
+  apart. Query rows do not add up to site totals.
+- Flags such as likely automated queries and CTR gaps against the site's own
+  curve are heuristics. They point at rows worth a look.
+- A Google update in the same window is timing, not cause.
+- An intentional `noindex`, canonical or redirect is an observation until you
+  say it is wrong.
 
-The Ahrefs and DataForSEO paths request one summary and a selected set of live
-representative backlinks, one per referring domain by default. Ahrefs keeps
-estimated and actual API units in the evidence. DataForSEO keeps current
-endpoint prices, estimated and actual USD cost, and task ids. Both retain cache
-state, provider filters and row counts. A cached repeat does not repeat paid
-work during the retention window.
+Nothing here promises clicks, rankings or indexing. Check a change by running
+the same command again over a later, complete window.
 
-When a matching saved crawl or Search Console property is available, the same
-report checks linked target pages for observed error responses, redirects,
-canonical conflicts and non-indexable states. Search Console metrics add
-search performance for matching pages.
-Verify the live target and the referring page before changing anything.
+## Upgrading from 0.2
 
-CSV and JSONL imports stream from disk. Regular JSON arrays have a smaller
-file limit to avoid a memory spike. Every result includes the number of rows
-read, rejected, deduplicated, omitted, or stopped by a limit. It is evidence
-from the selected source, not a complete backlink index. Provider rank and
-spam metrics keep their provider-specific names and scales. They are context,
-not search-engine ranking factors or universal authority scores.
-
-## Create an HTML report for a client
-
-The built-in renderer creates a standalone report when you need a predictable
-file without asking an agent to design it:
-
-```sh
-seo report --project example --format html
-seo monthly-report --project example --format html
-seo report-narrative --project example --format html --view analyst
-```
-
-Client view keeps the presentation concise. Analyst view adds evidence coverage
-and unavailable sections. Use `--output ./report.html` to choose the file path.
-The file contains its own CSS, works offline, prints cleanly, and is marked
-`noindex,nofollow`.
-
-An agent can instead design its own report from the structured result:
-
-```sh
-seo report --project example --full --json > seo-report.json
-```
-
-Ask the agent to turn that evidence into one responsive, print-friendly HTML
-file for the intended audience. It can choose the layout and visual style, but
-it must keep provider labels, reporting dates, data status, limitations, and
-verification steps visible. Missing or partial data must not become zero, and
-the presentation must not invent forecasts, causes, scores, or conclusions.
-The installed skill teaches agents this contract automatically.
-
-## Analyze crawler traffic in server logs
-
-Stream a local NGINX or Apache-style combined access log without importing or
-retaining every raw request:
-
-```sh
-seo server-logs analyze --file ./access.log --json
-seo server-logs analyze --file ./access.jsonl --format jsonl --json
-```
-
-The report groups observed search and AI crawler user agents by response class
-and path. You can limit the file size, rows, line size, unique paths and detail
-returned. User-agent names can be spoofed, so the result describes the request
-strings found in the log rather than verified crawler identity.
-
-## Notify IndexNow after a change
-
-Generate a key file in the public asset directory for your site, then deploy
-it before sending notifications:
-
-```sh
-seo indexnow setup --site https://example.com --output ./public
-seo indexnow verify --site https://example.com
-seo indexnow submit --site https://example.com --url https://example.com/changed-page
-```
-
-Use `--dry-run --json` to validate a submission without notifying IndexNow.
-The command accepts one URL, a comma-separated list, or a newline-delimited
-file. A run is limited to 1,000 unique URLs, every URL must use the configured
-host, and the public key file is checked before a live request. The local key
-mapping stays in the system keychain with a private file fallback. Agents and
-CI can set `SEO_INDEXNOW_KEY` for the current process instead.
-
-An accepted IndexNow request confirms receipt only. It does not prove that a
-URL was crawled, indexed, ranked, or shown in search results.
-
-## Crawl a site
-
-For a large or unfamiliar site, start with the sitemap health pass:
-
-```sh
-seo crawl --sitemap-url https://example.com/sitemap.xml --health --format pretty
-```
-
-This reads the sitemap, then checks each listed URL for status, redirects,
-robots decisions, network failures, and access blocks. It does not parse or
-render page bodies, join Google data, check external links, or write page and
-robots responses to the local cache. Requests begin one at a time and increase
-only after clean responses.
-
-Run the full crawl second when the health evidence points to a problem, or when
-you need metadata, canonicals, indexability, links, structured data, or page
-content:
-
-```sh
-seo crawl https://example.com --format pretty
-```
-
-Save it, export it, or compare it with an earlier crawl:
-
-```sh
-seo crawl https://example.com --save
-seo crawl https://example.com --format html --output report.html
-seo crawl-reports
-seo crawl-reports --compare latest --against previous
-```
-
-Useful crawl controls include `--max-pages`, `--max-depth`, `--include`,
-`--exclude`, `--no-sitemap`, `--no-external`, and `--fail-on` for CI. Every
-request uses the stable versioned identity
-`SEO-Skill/<version> (+https://seoskill.dev)`.
-
-If a site denies or challenges that identity, the report keeps the HTTP status,
-provider indicators, request ID when available, and practical access guidance.
-Do not allow requests based on User-Agent alone because it can be spoofed.
-Scope any temporary exception to the audit machine source IP, required host or
-paths, and the exact blocking rule.
+Version 0.3.0 moved most reports into the eight commands. Old names such as
+`seo quick-wins` still run in 0.3 and print the new command to use. They stop
+working in 0.4.0. Some reports were removed, including rank tracking,
+programmatic SEO, AI search readiness, llms.txt, Bing Webmaster, local search,
+server logs and the monthly and narrative reports. The [changelog](CHANGELOG.md)
+lists every old name and where it went.
 
 ## Use it in CI and scripts
 
-JSON mode never prompts. Pass the site or project explicitly in unattended
-runs.
+Add `--json` to any command. JSON mode never prompts, so pass `--project` or
+`--site` in unattended runs.
 
 ```sh
-seo report --project example --json
-seo crawl --sitemap-url https://example.com/sitemap.xml --health --format junit --output sitemap-health.xml --fail-on high
-seo crawl https://example.com --json --output crawl.json
+seo report --site sc-domain:example.com --json
+seo report --site sc-domain:example.com --section content-decay --json
 ```
 
-Reports keep observed data, derived findings, skipped sections, limits, and
-provider errors separate so automation can make decisions without parsing
-terminal prose.
-
-`seo report --json` returns a compact summary, action queue, and crawl findings
-so an agent can choose its next call without loading every raw report.
-Use `--full` only when a script needs the complete report object.
-
-Use the action view when an agent will implement the findings:
-
-```sh
-seo report --project example --actions-only --json
-seo reports run audit-page --params '{"url":"https://example.com"}' --actions-only --json
-```
-
-It puts stable `findings` and any bounded migration `inventories` near the top.
-Check finding coverage and use each item's allowed outcomes. A fix carries an
-implementation instruction. A review carries the evidence needed to decide
-whether any change is justified. Verify changed items and rerun the originating
-report. The MCP catalog exposes the same view through `seo_run_report` with
-`view: "actions"`.
-
-When a CI job needs Search Console or Google Analytics data, give it a Google service
-account JSON key through its secret store. The service account needs access to
-the exact properties it will query. This GitHub Actions step runs without a
-browser or a copied local token:
+A CI job can read Search Console with a Google service account. Give it the
+JSON key through your secret store and grant it access to the exact
+properties:
 
 ```yaml
 - name: Run the SEO report
@@ -707,149 +265,41 @@ browser or a copied local token:
     SEO_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SEO_GOOGLE_SERVICE_ACCOUNT_JSON }}
 ```
 
-The [Google data guide](https://seoskill.dev/docs/google) covers Search
-Console and Google Analytics permissions, mounted secret files, and how to check the active
-identity safely.
-
-Agents can discover and run the same report catalog as MCP without starting a
-server:
-
-```sh
-seo reports list --category crawl --json
-seo reports describe audit-page --json
-seo reports run audit-page --params '{"url":"https://example.com"}' --json
-```
-
-Always describe a report before constructing its parameters. The CLI and MCP
-surfaces read from the same registry, so their ids and JSON Schemas cannot
-drift.
-
-## Use it with AI agents
-
-Your agent carries one short SEO skill, and the CLI and MCP server do the
-heavy lifting. The skill teaches an agent how to discover the full audit and
-research catalog at runtime, and the agent asks the CLI for the detail on each
-tool only when it is about to run it. You get the whole toolkit without fifty
-skill files sitting in the context window on every session.
-
-`seo start` offers to install the SEO skill during setup. If you skipped that
-step or need to reinstall it later, run the packaged installer:
-
-```sh
-seo skill install
-```
-
-If you also skipped the MCP step, install the local server into a client with
-built-in setup:
-
-```sh
-seo mcp install
-```
-
-The prompt detects installed clients. Scripts can choose one or more explicitly:
-
-```sh
-seo mcp install --codex
-seo mcp install --claude-code
-seo mcp install --cursor
-seo mcp install --claude-desktop
-```
-
-The server works with any client that can start a local stdio MCP server.
-Codex, Claude Code, Claude Desktop, and Cursor have guided setup. Other MCP
-clients can start `seo mcp serve` through their local server configuration.
-
-Your client starts the server when it needs it. Run it directly only for manual
-configuration or testing:
-
-```sh
-seo mcp serve
-```
-
-The repository ships one skill under `skills/seo`. It is a router: it teaches an
-agent to discover reports, describe one to load its depth at runtime, inspect
-the evidence, and request a smaller follow-up instead of loading a giant result
-into context. Per-report guidance lives in the registry and is fetched with
-`seo reports describe <id> --json`, so it never drifts from the skill.
-
-The npm package includes the same file for local inspection:
-
-```sh
-seo skill list
-seo skill path seo
-```
-
-Agents can also discover the canonical skill from
-`https://seoskill.dev/.well-known/agent-skills/index.json`. The entry links to
-the canonical skill instructions and includes a content digest for verification.
-
-See [MCP and agents](https://seoskill.dev/docs/agents) for setup and tool
-details.
-
 ## Use it as a library
 
-Install the same unscoped package in any Node 22 or newer project:
+Install the same package in any Node 22 or newer project:
 
 ```sh
 npm install seo
 ```
 
-Run any public report by id with the same definition, input schema, and
-evidence used by the CLI and MCP server:
-
 ```ts
-import { describeReport, executeReport } from 'seo/mcp'
+import { executeReport } from 'seo/mcp'
+import { crawlSite } from 'seo'
 
-const description = describeReport('quick-wins')
-const result = await executeReport('quick-wins', {
+const wins = await executeReport('quick-wins', {
   site: 'sc-domain:example.com',
-  days: 90,
-})
-
-console.log(description.inputSchema)
-console.log(result)
-```
-
-Or call typed analysis functions directly when your app already knows the job
-it needs to run:
-
-```ts
-import { auditPage, crawlSite } from 'seo'
-
-const page = await auditPage({
-  url: 'https://example.com/pricing',
-})
-
-const health = await crawlSite({
-  url: 'https://example.com',
-  mode: 'sitemap',
-  strategy: 'health',
-  sitemapUrl: 'https://example.com/sitemap.xml',
 })
 
 const crawl = await crawlSite({
   url: 'https://example.com',
   maxPages: 100,
-  maxDepth: 4,
 })
 
-console.log(page.issues)
-console.log(health.summary, health.access)
+console.log(wins)
 console.log(crawl.summary, crawl.issueGroups)
 ```
 
-The main `seo` export contains the report, provider, crawler, storage, and
-rendering APIs. `seo/mcp` exposes report discovery, report execution, and the
-embeddable MCP server. See the [TypeScript library
-guide](https://seoskill.dev/docs/typescript) for structured error handling,
-local Google access, and more examples.
+`seo/provider-sdk` is the public contract for provider packages. The
+[Clicky provider](https://github.com/iannuttall/seoskill-clicky-provider) is a
+working example.
 
 ## Local data and Google access
 
-Google OAuth tokens use your system keychain when it is available. On a
-headless machine or a locked keychain, the CLI falls back to a private
-`0600` file in your user config directory. Project profiles, crawl reports, and
-provider caches are also local. Use these commands to inspect or remove them:
+Google tokens use your system keychain, with a private `0600` file fallback on
+headless machines. Project profiles, crawls and caches stay in your local
+config directory. A command still reaches the network when it needs Google,
+your site or a provider you connected.
 
 ```sh
 seo privacy
@@ -858,71 +308,26 @@ seo auth logout --all
 seo reset
 ```
 
-`seo auth status` shows the active storage mode. Power users can choose it with
-`seo auth storage --keychain` or `seo auth storage --file`.
-
-Power users can bring their own Google OAuth client or use a service account in
-CI. The [Google data guide](https://seoskill.dev/docs/google) covers both auth
-paths, including OAuth testing-mode limits.
-
-## Common questions
-
-### Does my site data stay on my machine?
-
-Yes. Reports, project profiles, Google tokens, crawls, and caches stay in your
-local config directory. Local first does not mean offline. A command can
-request a site, connected Google or Bing account, research provider, Chrome UX
-Report, IndexNow, or the npm registry when the work needs it.
-
-Optional external enrichment can send selected Search Console query or derived
-seed text to the chosen research provider only when you explicitly enable it.
-It does not send Google credentials, property IDs, Search Console metrics, or
-Google Analytics rows. Local provider file imports are not uploaded. Read the
+The hosted server keeps no data at all. Read the
 [privacy policy](https://seoskill.dev/privacy) for every network boundary and
-the [telemetry page](https://seoskill.dev/telemetry) for the fixed anonymous
-usage-event schema and opt-out controls.
-
-### Do I need a Google API key?
-
-No. `seo start` uses a normal Google sign-in for read-only Search Console and
-Google Analytics access. Public releases can include a shared desktop OAuth client, and if
-your build does not have one, setup helps you add your own. You can also run a
-local technical crawl with no Google connection at all.
-
-### What does it cost?
-
-The `seo` package is free and open source under Apache-2.0. It calls Google APIs
-you already have access to, so the core crawl and Google workflows need no
-separate subscription. Optional research providers can charge for API
-requests. Their estimated and actual costs, local spend limits, cache state,
-and request bounds stay visible in each supported report.
-
-### How is this different from a paid SEO tool?
-
-A hosted SEO tool keeps your data on its servers and shows you a dashboard. This
-runs on your machine, works from your own crawl and Google data, and returns
-clear report data your agent can read and act on. Every finding shows the
-evidence behind it and a way to verify a fix, so you are not trusting a score
-you cannot inspect.
+the [telemetry page](https://seoskill.dev/telemetry) for the anonymous usage
+counts and how to turn them off.
 
 ## Documentation
 
-Questions, bug reports, and feature requests go through
+Questions, bug reports and feature requests go through
 [GitHub Issues](https://github.com/iannuttall/seo/issues). Report suspected
 vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
 - [Getting started](https://seoskill.dev/docs/getting-started)
-- [CLI commands](https://seoskill.dev/docs/cli)
-- [Crawler](https://seoskill.dev/docs/crawler)
-- [Reports and data](https://seoskill.dev/docs/reports)
-- [Research providers](https://seoskill.dev/docs/research-providers)
-- [MCP and agents](https://seoskill.dev/docs/agents)
-- [AI-search evidence](https://seoskill.dev/docs/ai-search)
+- [Hosted MCP](https://seoskill.dev/docs/mcp)
+- [API keys](https://seoskill.dev/docs/keys)
+- [CLI](https://seoskill.dev/docs/cli)
+- [Commands](https://seoskill.dev/docs/commands)
+- [What is stored](https://seoskill.dev/docs/privacy)
 - [Privacy policy](https://seoskill.dev/privacy)
-- [Anonymous telemetry](https://seoskill.dev/telemetry)
 - [Public usage stats](https://seoskill.dev/stats)
 - [Terms of use](https://seoskill.dev/terms)
-- [Security policy](https://seoskill.dev/security)
 - [Contributing](CONTRIBUTING.md)
 - [Trademark and brand policy](TRADEMARKS.md)
 
@@ -948,7 +353,7 @@ pnpm lint
 pnpm pack --dry-run
 ```
 
-Contributor architecture and report-quality rules live in [AGENTS.md](AGENTS.md).
+Contributor architecture and report rules live in [AGENTS.md](AGENTS.md).
 
 ## License
 

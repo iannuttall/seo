@@ -14,9 +14,9 @@
 <p align="center">
   <a href="#quick-start">Get started</a>
   ·
-  <a href="https://seoskill.dev/features">Features</a>
+  <a href="https://seoskill.dev/docs/commands">Commands</a>
   ·
-  <a href="https://seoskill.dev/features/mcp">SEO MCP server</a>
+  <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
   ·
   <a href="https://seoskill.dev/docs">Documentation</a>
   ·
@@ -223,8 +223,8 @@ seo providers ahrefs status --check
 seo providers ahrefs limits
 ```
 
-Read the [Semrush guide](https://seoskill.dev/docs/semrush) and
-[Ahrefs guide](https://seoskill.dev/docs/ahrefs) before running paid research.
+Read the [research command guide](https://seoskill.dev/docs/commands/research)
+before running paid research.
 Supported reports record the applicable API units or USD cost, cache state,
 request limits and row counts. Cached results avoid repeating paid work during
 their retention window.
@@ -268,8 +268,8 @@ filtered historical rows, invalid rows, duplicates and caps under
 Each entry maps a canonical field such as `keyword`, `url`, `position` or
 `searchVolume` to the source heading. Imported files can feed `ranked-keywords`,
 `ranking-pages`, `serp-competitors` and `competitor-keyword-gap` without
-adding another command or MCP tool. The [research provider guide](https://seoskill.dev/docs/research-providers)
-has the exact JSON format, market guidance and file limits.
+adding another command or MCP tool. Run `seo providers --help` for the exact
+import options.
 
 The research flow now covers:
 
@@ -324,9 +324,8 @@ technical eligibility. A missing target in one answer does not prove universal
 absence. The requested model is the model you chose; the effective model is the
 model the provider reports actually running.
 
-Read the [research provider guide](https://seoskill.dev/docs/research-providers)
-for setup, costs, caching, country-level limits, competitor classification, and
-programmatic data-source checks.
+Read the [research command guide](https://seoskill.dev/docs/commands/research)
+for what each provider returns and how its costs work.
 
 Traffic analytics commands sit under their provider namespace. Google Analytics
 uses the account saved with the project, or the selected default Google account:
@@ -707,9 +706,8 @@ browser or a copied local token:
     SEO_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SEO_GOOGLE_SERVICE_ACCOUNT_JSON }}
 ```
 
-The [Google data guide](https://seoskill.dev/docs/google) covers Search
-Console and Google Analytics permissions, mounted secret files, and how to check the active
-identity safely.
+The [getting started guide](https://seoskill.dev/docs/getting-started) covers
+the Search Console and Google Analytics sign-in.
 
 Agents can discover and run the same report catalog as MCP without starting a
 server:
@@ -783,8 +781,8 @@ Agents can also discover the canonical skill from
 `https://seoskill.dev/.well-known/agent-skills/index.json`. The entry links to
 the canonical skill instructions and includes a content digest for verification.
 
-See [MCP and agents](https://seoskill.dev/docs/agents) for setup and tool
-details.
+See the [hosted MCP guide](https://seoskill.dev/docs/mcp) for the hosted
+server and its tools.
 
 ## Use it as a library
 
@@ -840,9 +838,7 @@ console.log(crawl.summary, crawl.issueGroups)
 
 The main `seo` export contains the report, provider, crawler, storage, and
 rendering APIs. `seo/mcp` exposes report discovery, report execution, and the
-embeddable MCP server. See the [TypeScript library
-guide](https://seoskill.dev/docs/typescript) for structured error handling,
-local Google access, and more examples.
+embeddable MCP server. The exported types document structured errors and local Google access.
 
 ## Local data and Google access
 
@@ -862,8 +858,7 @@ seo reset
 `seo auth storage --keychain` or `seo auth storage --file`.
 
 Power users can bring their own Google OAuth client or use a service account in
-CI. The [Google data guide](https://seoskill.dev/docs/google) covers both auth
-paths, including OAuth testing-mode limits.
+CI. Run `seo auth --help` to see both auth paths.
 
 ## Common questions
 
@@ -912,12 +907,11 @@ Questions, bug reports, and feature requests go through
 vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 
 - [Getting started](https://seoskill.dev/docs/getting-started)
-- [CLI commands](https://seoskill.dev/docs/cli)
-- [Crawler](https://seoskill.dev/docs/crawler)
-- [Reports and data](https://seoskill.dev/docs/reports)
-- [Research providers](https://seoskill.dev/docs/research-providers)
-- [MCP and agents](https://seoskill.dev/docs/agents)
-- [AI-search evidence](https://seoskill.dev/docs/ai-search)
+- [Hosted MCP](https://seoskill.dev/docs/mcp)
+- [API keys](https://seoskill.dev/docs/keys)
+- [CLI](https://seoskill.dev/docs/cli)
+- [Commands](https://seoskill.dev/docs/commands)
+- [What is stored](https://seoskill.dev/docs/privacy)
 - [Privacy policy](https://seoskill.dev/privacy)
 - [Anonymous telemetry](https://seoskill.dev/telemetry)
 - [Public usage stats](https://seoskill.dev/stats)

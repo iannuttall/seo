@@ -1,0 +1,50 @@
+---
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  FileSearchIcon,
+  Route01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo crawl', text: 'Crawl the site from your machine and list technical issues.', href: '/docs/crawl', icon: Route01Icon },
+  { title: 'seo page', text: 'One URL: what it serves now, its index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'seo index', text: 'Pages that lost their clicks, checked live and with URL Inspection.', href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'seo report', text: 'Search Console sections that show where to look first.', href: '/docs/report', icon: Analytics01Icon },
+]
+---
+
+<FeaturePage
+  title="SEO audit tool for AI agents"
+  description="Run a website SEO audit with your AI agent: a technical site crawl, single page checks, pages that lost their clicks and the Search Console report."
+  path="/features/seo-audit"
+  lead="Find the pages that are broken, blocked or losing search traffic, and give your agent enough evidence to fix the cause."
+  {related}
+>
+  <h2>What an audit covers</h2>
+  <table>
+    <thead><tr><th>Part</th><th>What it checks</th></tr></thead>
+    <tbody>
+      <tr><td><a href="/docs/crawl">seo crawl</a></td><td>Status codes, redirects, titles, descriptions, canonical and robots tags, and broken internal links across the site. Runs on your machine with the CLI.</td></tr>
+      <tr><td><a href="/docs/page">seo page</a></td><td>One URL as it is served now, plus what Google URL Inspection reports for it.</td></tr>
+      <tr><td><a href="/docs/indexing">seo index</a></td><td>Pages that lost most of their clicks, checked live and with URL Inspection, so you see which ones broke or left the index.</td></tr>
+      <tr><td><a href="/docs/report">seo report</a></td><td>Search Console sections such as content decay, cannibalization and traffic drops.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Start with a crawl, then follow the clicks</h2>
+  <p>
+    Run the crawl first to get a technical baseline, and save it so the next
+    crawl can be compared after a release. Then use the index check and the
+    report to see which issues line up with lost search traffic. A long list
+    of warnings matters less than the few pages that stopped getting clicks.
+  </p>
+
+  <h2>Observations, not verdicts</h2>
+  <p>
+    A <code>noindex</code> tag or a canonical that points elsewhere is
+    reported as what the page says. It is only a problem if you did not mean
+    it. The audit gives your agent the evidence, and you decide what to fix.
+  </p>
+</FeaturePage>

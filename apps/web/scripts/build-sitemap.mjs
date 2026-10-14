@@ -5,8 +5,18 @@ import { toolPaths } from '../src/content/tools/manifest.mjs'
 
 const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
+// The feature pages target search phrases from the earlier site and keep
+// their URLs. src/content/features.ts lists the same pages.
+const featurePaths = [
+  '/features',
+  '/features/mcp',
+  '/features/search-console',
+  '/features/keyword-research',
+  '/features/seo-audit',
+]
 const paths = [
   '/',
+  ...featurePaths,
   '/tools',
   ...toolPaths,
   ...docsPaths,

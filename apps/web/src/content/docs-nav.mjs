@@ -39,6 +39,12 @@ export const docsSections = [
         description:
           'Install the open source seo command and run the same reports on your machine.',
       },
+      {
+        path: '/docs/cloud-agents',
+        label: 'Cloud agents',
+        description:
+          'Run on machines that are rebuilt each time, such as Amp, Codex cloud and CI.',
+      },
     ],
   },
   {

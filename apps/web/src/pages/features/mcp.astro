@@ -1,0 +1,56 @@
+---
+import {
+  ComputerTerminal01Icon,
+  Key01Icon,
+  LockKeyIcon,
+  McpServerIcon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp to Claude Code, Codex or any remote MCP client.', href: '/docs/mcp', icon: McpServerIcon },
+  { title: 'CLI and local MCP', text: 'Install seo and add the local MCP server to your agents.', href: '/docs/cli', icon: ComputerTerminal01Icon },
+  { title: 'API keys', text: 'Add DataForSEO or Ahrefs for keyword and competitor research.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'What is stored', text: 'What the hosted MCP and the CLI keep, and what they never keep.', href: '/docs/privacy', icon: LockKeyIcon },
+]
+---
+
+<FeaturePage
+  title="SEO MCP server for AI agents"
+  description="Connect a free SEO MCP server to Claude, Codex, Cursor or any agent. Read Search Console, Google Analytics and keyword data. Your data and keys are never stored."
+  path="/features/mcp"
+  lead="Ask your agent what changed, what is broken and where the opportunities are. It reads your own search data before it answers."
+  {related}
+>
+  <h2>Hosted or local, same tools</h2>
+  <p>
+    The hosted MCP at <code>https://seoskill.dev/mcp</code> needs nothing
+    installed: add it to your agent and sign in with Google. The local MCP runs
+    on your machine with the CLI. Run <code>seo mcp install</code> after setup
+    to add it to your agents. Both serve the same tools, and the local one adds
+    the site crawl and internal links.
+  </p>
+
+  <h2>The tools your agent gets</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>What it returns</th></tr></thead>
+    <tbody>
+      <tr><td><code>seo_sites</code></td><td>The Search Console and Google Analytics properties you can read.</td></tr>
+      <tr><td><code>seo_report</code></td><td>The main Search Console report: an overview, then one section.</td></tr>
+      <tr><td><code>seo_page</code></td><td>One URL: live page facts, Google index status and its queries.</td></tr>
+      <tr><td><code>seo_compare</code></td><td>Before and after a date, with Google updates in the window.</td></tr>
+      <tr><td><code>seo_index</code></td><td>Pages that lost their clicks, checked live and with URL Inspection.</td></tr>
+      <tr><td><code>seo_research</code></td><td>Keyword and competitor data from your DataForSEO or Ahrefs key.</td></tr>
+      <tr><td><code>seo_data</code></td><td>Raw Search Console rows, or Google Analytics landing pages.</td></tr>
+      <tr><td><code>seo_crawl</code>, <code>seo_internal_links</code></td><td>The site crawl and internal links. Local MCP only.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What the hosted server keeps</h2>
+  <p>
+    Your data and keys are never stored. Your Google sign-in and any keys are
+    sealed into the tokens your MCP client keeps, and the server uses them for
+    one request at a time. The only thing kept is an anonymous count of what
+    ran. <a href="/docs/privacy">What is stored</a> has the details.
+  </p>
+</FeaturePage>

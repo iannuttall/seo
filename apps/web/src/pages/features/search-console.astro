@@ -1,0 +1,55 @@
+---
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  Calendar03Icon,
+  FileSearchIcon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo report', text: 'The overview and each section, from quick wins to traffic drops.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'seo page', text: 'One URL: live page facts, Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'seo compare', text: 'Before and after a date, with the Google updates in the window.', href: '/docs/compare', icon: Calendar03Icon },
+  { title: 'seo index', text: 'Pages that lost their clicks, checked live and with URL Inspection.', href: '/docs/indexing', icon: Alert02Icon },
+]
+---
+
+<FeaturePage
+  title="Google Search Console MCP for AI agents"
+  description="Connect Google Search Console to Claude, Codex or any AI agent with a free MCP server. Read clicks, impressions, CTR, positions, queries, pages and URL Inspection."
+  path="/features/search-console"
+  lead="Ask your agent about your own search performance. It reads your clicks, impressions, CTR, positions, queries and pages straight from Search Console."
+  {related}
+>
+  <h2>Connect Search Console in one step</h2>
+  <p>
+    Add the hosted MCP to your agent and sign in with Google. Access is read
+    only, and you need to be able to see at least one Search Console property.
+    Your data and keys are never stored: the server fetches what your agent
+    asks for and returns it. Prefer to keep everything local? The CLI reads the
+    same data from your machine.
+  </p>
+
+  <h2>What your agent can ask Search Console</h2>
+  <table>
+    <thead><tr><th>Question</th><th>What runs</th></tr></thead>
+    <tbody>
+      <tr><td>What is going on in search?</td><td>The <a href="/docs/report">SEO report</a> overview: totals against the previous period by device, with the top pages and queries.</td></tr>
+      <tr><td>Where are the quick wins?</td><td>Report sections for quick wins, low CTR, striking distance, second page, content decay, cannibalization and traffic drops.</td></tr>
+      <tr><td>What is happening with this page?</td><td><a href="/docs/page">seo page</a>: live page facts, URL Inspection status and the page's queries.</td></tr>
+      <tr><td>Did the release or the update change anything?</td><td><a href="/docs/compare">seo compare</a>: equal periods before and after a date, with Google updates in the window.</td></tr>
+      <tr><td>Which pages fell out of search?</td><td><a href="/docs/indexing">seo index</a>: pages that lost their clicks, checked live and with URL Inspection.</td></tr>
+      <tr><td>Anything else?</td><td><a href="/docs/data">seo data</a>: raw rows by query, page, date, country, device or search appearance.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Facts with their limits visible</h2>
+  <p>
+    Search Console hides some rare queries and reports average positions, and
+    recent days are not final. The reports use the latest final days and say
+    when a section is empty or capped, rather than turning missing rows into a
+    zero. A Google update that overlaps a drop is reported as timing, not as
+    the cause.
+  </p>
+</FeaturePage>

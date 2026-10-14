@@ -1,7 +1,7 @@
 import {
   type CommandDeps,
-  type CommandId,
   indexStatusFrom,
+  mcpCall,
   type SearchAnalyticsQuery,
 } from '@seo/core/commands'
 import { inspectUrl, MAX_ROWS, searchAnalytics } from '../google.ts'
@@ -11,10 +11,6 @@ import { ToolError } from './registry.ts'
 // The core commands' functions for the hosted MCP: Search Console with the
 // caller's Google token, live page checks with HTMLRewriter, and calls written
 // as MCP tool names.
-
-export function tool(command: CommandId): string {
-  return `seo_${command.replace('-', '_')}`
-}
 
 export function deps(google: string): CommandDeps {
   const read: SearchAnalyticsQuery = async (site, body) => {
@@ -40,13 +36,6 @@ export function deps(google: string): CommandDeps {
         .catch((error) =>
           error instanceof ToolError ? null : Promise.reject(error),
         ),
-    call: (command, args) => {
-      const shown = Object.entries(args ?? {}).filter(
-        ([, value]) => value !== undefined,
-      )
-      return shown.length
-        ? `${tool(command)} with ${shown.map(([key, value]) => `${key} ${typeof value === 'number' ? value : `"${value}"`}`).join(', ')}`
-        : tool(command)
-    },
+    call: mcpCall,
   }
 }

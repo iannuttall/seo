@@ -1,16 +1,12 @@
 import {
   listSites,
+  localError,
+  localResearchKeys,
   nodeCommandDeps,
-  readAhrefsApiKey,
-  readDataForSeoCredentials,
-  readSemrushApiKey,
   SeoError,
-  type SeoErrorCode,
 } from '@seo/core'
 import {
   type Caller,
-  CommandError,
-  type CommandErrorCode,
   type CommandResult,
   DIMENSIONS,
   type Dimension,
@@ -67,16 +63,6 @@ export const cliCall: Caller = (command, args) =>
         ([key, value]) => `${FLAGS[key] ?? `--${key}`} ${quote(value ?? '')}`,
       ),
   ].join(' ')
-
-const ERRORS: Record<CommandErrorCode, SeoErrorCode> = {
-  INVALID_INPUT: 'INVALID_INPUT',
-  NOT_CONNECTED: 'AUTH_REQUIRED',
-  NO_ACCESS: 'PROPERTY_NOT_FOUND',
-  NO_KEY: 'AUTH_CONFIG_REQUIRED',
-  RATE_LIMITED: 'RATE_LIMITED',
-  GOOGLE_ERROR: 'PROVIDER_UNAVAILABLE',
-  PROVIDER_ERROR: 'PROVIDER_UNAVAILABLE',
-}
 
 const common = {
   project: { type: 'string', description: 'Saved project id or name.' },
@@ -155,10 +141,7 @@ async function run(
     if (jsonFlag(args)) printJson(result.data)
     else process.stdout.write(`${result.text}\n`)
   } catch (error) {
-    if (error instanceof CommandError) {
-      throw new SeoError(ERRORS[error.code], error.message)
-    }
-    throw error
+    throw localError(error)
   }
 }
 
@@ -383,24 +366,6 @@ export const dataCommand = defineCommand({
   },
 })
 
-// Header-style key names from the local secret store, as the shared research
-// code expects. Keys go only to their provider.
-async function localKeys(): Promise<Headers> {
-  const [dataForSeo, ahrefs, semrush] = await Promise.all([
-    readDataForSeoCredentials().catch(() => undefined),
-    readAhrefsApiKey().catch(() => undefined),
-    readSemrushApiKey().catch(() => undefined),
-  ])
-  const keys = new Headers()
-  if (dataForSeo) {
-    keys.set('x-dataforseo-login', dataForSeo.login)
-    keys.set('x-dataforseo-password', dataForSeo.password)
-  }
-  if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
-  if (semrush?.apiKey) keys.set('x-semrush-key', semrush.apiKey)
-  return keys
-}
-
 export const researchCommand = defineCommand({
   meta: {
     name: 'research',
@@ -434,7 +399,7 @@ export const researchCommand = defineCommand({
         `The action is one of ${RESEARCH_ACTIONS.join(', ')}.`,
       )
     }
-    const keys = await localKeys()
+    const keys = await localResearchKeys()
     const header: Record<ResearchProvider, string> = {
       dataforseo: 'x-dataforseo-login',
       ahrefs: 'x-ahrefs-key',

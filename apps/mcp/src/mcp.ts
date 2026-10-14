@@ -1,28 +1,47 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+import {
+  MCP_INSTRUCTIONS,
+  runSharedTool,
+  SHARED_TOOLS,
+  type SharedTool,
+} from '@seo/core/commands'
+import { resolveProperty } from './google.ts'
 import { events, send } from './telemetry.ts'
-import { seoData, seoResearch, seoSites } from './tools/data.ts'
+import { hostedAnalytics, seoSites } from './tools/data.ts'
+import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
-import { seoReport } from './tools/reports.ts'
-import { seoCompare, seoIndex, seoPage } from './tools/site-tools.ts'
 
-export const TOOLS: Tool[] = [
-  seoSites,
-  seoReport,
-  seoPage,
-  seoCompare,
-  seoIndex,
-  seoResearch,
-  seoData,
-]
+// The shared tools from core, run with this request's Google token, key
+// headers and analytics adapters.
+function sharedTool(shared: SharedTool): Tool {
+  return {
+    name: shared.name,
+    title: shared.title,
+    description: shared.description,
+    input: shared.input,
+    async run(context, input) {
+      const result = await runSharedTool(
+        shared,
+        {
+          deps: deps(context.google),
+          resolveSite: (site) => resolveProperty(context.google, site),
+          keys: async () => context.headers,
+          drKey: context.env.AHREFS_DR_KEY,
+          analytics: (analytics) => hostedAnalytics(context, analytics),
+        },
+        input,
+      )
+      return result.text
+    },
+  }
+}
 
-const INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice and stores nothing.
-1. seo_sites: the properties this sign-in can read.
-2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the person's own DataForSEO, Ahrefs or Semrush key, seo_data for raw rows.
-Crawls run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`.
-Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
+export const TOOLS: Tool[] = [seoSites, ...SHARED_TOOLS.map(sharedTool)]
+
+const INSTRUCTIONS = `${MCP_INSTRUCTIONS}
+Crawls run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. This server stores nothing.`
 
 // A new stateless server for each request, with JSON responses.
 export async function serveMcp(

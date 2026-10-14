@@ -11,6 +11,7 @@ import {
 import { KEY_HEADERS } from './research-providers.js'
 import { DIMENSIONS, runRows } from './rows.js'
 import { LOST_PAGES_RULE, runCompare, runLostPages, runPage } from './site.js'
+import { runSites } from './sites.js'
 import {
   type Caller,
   type CommandDeps,
@@ -99,6 +100,16 @@ function tool<S extends z.ZodObject>(spec: {
 }
 
 export const SHARED_TOOLS: SharedTool[] = [
+  tool({
+    name: 'seo_sites',
+    command: 'data',
+    title: 'List sites',
+    description:
+      'Lists the Search Console and Google Analytics properties this Google sign-in can read, and which research keys are set. Call it first.',
+    input: z.object({}),
+    run: async (surface) =>
+      runSites(await surface.google(), await surface.keys(), surface.signIn),
+  }),
   tool({
     name: 'seo_report',
     command: 'report',

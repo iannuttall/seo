@@ -10,7 +10,6 @@ import {
 } from '@seo/core/commands'
 import { googleFetch, resolveProperty, SIGN_IN } from './google.ts'
 import { events, send } from './telemetry.ts'
-import { seoSites } from './tools/data.ts'
 import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
 
@@ -40,7 +39,7 @@ function sharedTool(shared: SharedTool): Tool {
   }
 }
 
-export const TOOLS: Tool[] = [seoSites, ...SHARED_TOOLS.map(sharedTool)]
+export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 
 const INSTRUCTIONS = `${MCP_INSTRUCTIONS}
 Crawls run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. This server stores nothing.`

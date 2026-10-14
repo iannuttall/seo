@@ -1,10 +1,8 @@
-import { matchProperty } from '@seo/core/commands'
+import { matchProperty, readableSites } from '@seo/core/commands'
 import {
   bearerFetch,
   type GoogleFetch,
   inspectSearchConsoleUrl,
-  listAnalyticsAccounts,
-  listSearchConsoleSites,
   type SearchAnalyticsQuery,
   searchAnalyticsRows,
 } from '@seo/core/hosted'
@@ -22,16 +20,8 @@ export function googleFetch(token: string): GoogleFetch {
   return bearerFetch(() => token)
 }
 
-export type Property = { siteUrl: string; permissionLevel: string }
-
-export async function listProperties(token: string): Promise<Property[]> {
-  return (await listSearchConsoleSites(googleFetch(token), SIGN_IN))
-    .filter((entry) => entry.permissionLevel !== 'siteUnverifiedUser')
-    .map((entry) => ({
-      siteUrl: entry.siteUrl,
-      permissionLevel: entry.permissionLevel ?? '',
-    }))
-    .sort((a, b) => a.siteUrl.localeCompare(b.siteUrl))
+export function listProperties(token: string) {
+  return readableSites(googleFetch(token), SIGN_IN.signIn)
 }
 
 // The property the caller means: an exact property, else the closest domain
@@ -66,23 +56,4 @@ export function inspectUrl(token: string, site: string, url: string) {
     ...SIGN_IN,
     languageCode: 'en-US',
   })
-}
-
-export type AnalyticsProperty = {
-  property: string
-  name: string
-  account: string
-}
-
-export async function listAnalyticsProperties(
-  token: string,
-): Promise<AnalyticsProperty[]> {
-  const accounts = await listAnalyticsAccounts(googleFetch(token), SIGN_IN)
-  return accounts.flatMap((account) =>
-    account.propertySummaries.map((property) => ({
-      property: property.property.replace('properties/', ''),
-      name: property.displayName ?? '',
-      account: account.displayName ?? '',
-    })),
-  )
 }

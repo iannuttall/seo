@@ -70,44 +70,35 @@ export const Site = z
     'Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
   )
 
+// Every tool takes the same optional dates. Without them it uses the latest
+// final Search Console days (28, or 90 for traffic-drop).
 export const DateWindow = {
-  days: z
-    .number()
-    .int()
-    .min(1)
-    .max(480)
-    .optional()
-    .describe('Days of final data ending on the latest final day.'),
   start_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .describe('YYYY-MM-DD. Use with end_date instead of days.'),
+    .describe('YYYY-MM-DD. Optional; send with end_date.'),
   end_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .describe('YYYY-MM-DD. Use with start_date.'),
+    .describe('YYYY-MM-DD. Optional; send with start_date.'),
 }
+
+// Rows shown per page when detail is "rows".
+export const PAGE_SIZE = 50
 
 export const Detail = {
   detail: z
     .enum(['summary', 'rows', 'full'])
     .default('summary')
     .describe(
-      'summary: headline, key facts, top rows and limits. rows: a page of rows. full: every field as JSON. Start with summary.',
+      'summary first. rows: the next page of rows. full: every field as JSON.',
     ),
   offset: z
     .number()
     .int()
     .min(0)
     .default(0)
-    .describe('rows only: first row to return.'),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(500)
-    .default(50)
-    .describe('rows: rows to return. Reports: most items to keep.'),
+    .describe('rows only: the first row to return.'),
 }

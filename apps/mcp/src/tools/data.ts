@@ -1,9 +1,9 @@
+import { collapseFragmentPageRows } from '@seo/core/hosted'
 import { z } from 'zod'
 import {
   inspectUrl,
   listAnalyticsProperties,
   listProperties,
-  MAX_ROWS,
   resolveProperty,
   searchAnalytics,
 } from '../google.ts'
@@ -18,10 +18,20 @@ import {
   research,
 } from '../providers/research.ts'
 import { table } from './present.ts'
-import { DateWindow, Detail, defineTool, Site, ToolError } from './registry.ts'
+import {
+  DateWindow,
+  Detail,
+  defineTool,
+  PAGE_SIZE,
+  Site,
+  ToolError,
+} from './registry.ts'
 import { dateWindow, earlierRange, FACTS_ONLY } from './reports.ts'
 
 type Row = Record<string, unknown>
+
+// Most Search Console rows read per period: one Google request.
+const ROWS = 25_000
 
 function rowsText(input: {
   title: string
@@ -110,7 +120,7 @@ export const seoSearchConsole = defineTool({
   name: 'seo_search_console',
   title: 'Read Search Console rows',
   description:
-    'Reads Search Console performance rows for any dimensions, filters and dates, with an optional comparison period. Use it for questions the reports do not answer, such as one page’s queries, or pages that lost clicks.',
+    'Search Console rows for any dimensions and filters, each with the same rows from the previous period and the change. Use it for questions the reports do not answer, such as one page’s queries.',
   input: z.object({
     site: Site,
     dimensions: z
@@ -127,25 +137,7 @@ export const seoSearchConsole = defineTool({
       .max(4)
       .default(['query']),
     filters: z.array(Filter).max(10).default([]),
-    type: z
-      .enum(['web', 'image', 'video', 'news', 'discover', 'googleNews'])
-      .default('web'),
     ...DateWindow,
-    compare: z
-      .enum(['none', 'previous-period', 'year-over-year'])
-      .default('none')
-      .describe('Adds the same rows from the earlier period and the change.'),
-    sort: z
-      .enum(['clicks', 'impressions', 'ctr', 'position', 'clicks_change'])
-      .optional()
-      .describe('Default: date order with the date dimension, else clicks.'),
-    max_rows: z
-      .number()
-      .int()
-      .min(1)
-      .max(MAX_ROWS)
-      .default(5000)
-      .describe('Most rows to read from Google.'),
     ...Detail,
   }),
   async run(context, input) {
@@ -153,7 +145,7 @@ export const seoSearchConsole = defineTool({
     const range = dateWindow(input, 28)
     const query = {
       dimensions: input.dimensions,
-      type: input.type,
+      type: 'web' as const,
       dimensionFilterGroups: input.filters.length
         ? [{ groupType: 'and' as const, filters: input.filters }]
         : undefined,
@@ -162,8 +154,19 @@ export const seoSearchConsole = defineTool({
       context.google,
       property,
       { ...query, ...range },
-      input.max_rows,
+      ROWS,
     )
+    const pageAt = input.dimensions.indexOf('page')
+    const notes: string[] = []
+    // Page URLs with #fragments are one page; their rows merge.
+    const merge = (found: typeof current) => {
+      if (pageAt < 0) return found.rows
+      const collapsed = collapseFragmentPageRows(found.rows, {
+        pageKeyIndex: pageAt,
+      })
+      return collapsed.rows
+    }
+    current.rows = merge(current)
     const name = (keys: string[]) => keys.join('\u0000')
     let rows: Row[] = current.rows.map((row) => ({
       ...Object.fromEntries(input.dimensions.map((d, i) => [d, row.keys[i]])),
@@ -172,15 +175,15 @@ export const seoSearchConsole = defineTool({
       ctr: row.ctr,
       position: row.position,
     }))
-    const notes: string[] = []
-    if (input.compare !== 'none') {
-      const previous = earlierRange(range, input.compare)
+    {
+      const previous = earlierRange(range, 'previous-period')
       const before = await searchAnalytics(
         context.google,
         property,
         { ...query, ...previous },
-        input.max_rows,
+        ROWS,
       )
+      before.rows = merge(before)
       // Dates never match across periods, so a date row pairs with the date
       // the same number of days into the earlier period.
       const dateAt = input.dimensions.indexOf('date')
@@ -233,15 +236,13 @@ export const seoSearchConsole = defineTool({
       )
     }
     const dateDim = input.dimensions.includes('date')
-    const sortKey = input.sort ?? (dateDim ? 'date' : 'clicks')
+    const sortKey = dateDim ? 'date' : 'clicks'
     rows.sort((a, b) => {
       if (sortKey === 'date')
         return String(a.date).localeCompare(String(b.date))
       const x = Number(a[sortKey] ?? 0)
       const y = Number(b[sortKey] ?? 0)
-      return sortKey === 'position' || sortKey === 'clicks_change'
-        ? x - y
-        : y - x
+      return y - x
     })
     // Rows split only by date, device, country or appearance add up to the
     // property totals; query and page rows do not.
@@ -252,24 +253,25 @@ export const seoSearchConsole = defineTool({
       const sum = (key: string) =>
         rows.reduce((total, row) => total + Number(row[key] ?? 0), 0)
       notes.unshift(
-        `Totals: clicks ${sum('clicks')}, impressions ${sum('impressions')}${
-          input.compare !== 'none'
-            ? `; earlier period clicks ${sum('previous_clicks')}`
-            : ''
-        }.`,
+        `Totals: clicks ${sum('clicks')}, impressions ${sum('impressions')}${`; previous period clicks ${sum('previous_clicks')}`}.`,
       )
     }
+    if (pageAt >= 0) {
+      notes.push('Page URLs with #fragments are merged into their page.')
+    }
     if (current.truncated) {
-      notes.push(`Stopped at max_rows ${input.max_rows}; more rows exist.`)
+      notes.push(
+        `Search Console has more than ${ROWS} rows; add a filter to narrow it.`,
+      )
     }
     notes.push(
       'Search Console hides some rare queries for privacy, so query rows do not add up to the site totals.',
     )
     return `${rowsText({
-      title: `Search Console ${property}, ${range.startDate} to ${range.endDate}, ${input.type}, by ${input.dimensions.join(' and ')}.`,
+      title: `Search Console ${property}, ${range.startDate} to ${range.endDate}, web, by ${input.dimensions.join(' and ')}.`,
       rows,
       offset: input.offset,
-      limit: input.limit,
+      limit: PAGE_SIZE,
       detail: input.detail,
       notes,
       origin: property.startsWith('sc-domain:')
@@ -315,7 +317,7 @@ export const seoInspect = defineTool({
 export const seoAnalytics = defineTool({
   name: 'seo_analytics',
   title: 'Read landing page traffic',
-  description: `Landing page traffic from Google Analytics (Google sign-in) or from Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
+  description: `Landing pages for visits from search, from Google Analytics (Google sign-in) or from Clicky, Fathom, Simple Analytics or Plausible (key headers: ${Object.entries(
     ANALYTICS_HEADERS,
   )
     .filter(([provider]) => provider !== 'google')
@@ -332,12 +334,6 @@ export const seoAnalytics = defineTool({
         'google: numeric property id from seo_sites. clicky: site id. fathom: site id. simple_analytics and plausible: the domain.',
       ),
     ...DateWindow,
-    search_only: z
-      .boolean()
-      .default(true)
-      .describe(
-        'Only visits from search engines, where the provider can filter.',
-      ),
     ...Detail,
   }),
   async run(context, input) {
@@ -348,15 +344,15 @@ export const seoAnalytics = defineTool({
       {
         site: input.site,
         ...range,
-        searchOnly: input.search_only,
-        limit: Math.min(1000, input.offset + input.limit),
+        searchOnly: true,
+        limit: Math.min(1000, input.offset + PAGE_SIZE),
       },
     )
     return rowsText({
-      title: `${input.provider} landing pages for ${input.site}, ${range.startDate} to ${range.endDate}.`,
+      title: `${input.provider} search landing pages for ${input.site}, ${range.startDate} to ${range.endDate}.`,
       rows: result.rows,
       offset: input.offset,
-      limit: input.limit,
+      limit: PAGE_SIZE,
       detail: input.detail,
       notes: result.notes,
     })
@@ -388,10 +384,6 @@ export const seoResearch = defineTool({
       .regex(/^[a-z]{2}$/)
       .default('us')
       .describe('Two-letter country code.'),
-    language: z
-      .string()
-      .regex(/^[a-z]{2}$/)
-      .default('en'),
     ...Detail,
   }),
   async run(context, input) {
@@ -403,18 +395,15 @@ export const seoResearch = defineTool({
         keywords: input.keywords,
         target: input.target,
         country: input.country,
-        language: input.language,
-        limit: Math.min(
-          1000,
-          Math.max(input.limit, input.offset + input.limit),
-        ),
+        language: 'en',
+        limit: Math.min(1000, Math.max(100, input.offset + PAGE_SIZE)),
       },
     )
     return rowsText({
       title: `${input.provider} ${input.action}${input.target ? ` for ${input.target}` : ''}, ${input.country}.`,
       rows,
       offset: input.offset,
-      limit: input.limit,
+      limit: PAGE_SIZE,
       detail: input.detail,
       notes: [`${input.provider} estimates, in the provider’s own units.`],
     })

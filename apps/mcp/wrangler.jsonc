@@ -12,6 +12,7 @@
   "preview_urls": false,
   "routes": [
     { "pattern": "seoskill.dev/mcp", "zone_name": "seoskill.dev" },
+    { "pattern": "seoskill.dev/mcp/*", "zone_name": "seoskill.dev" },
     { "pattern": "seoskill.dev/oauth/*", "zone_name": "seoskill.dev" },
     {
       "pattern": "seoskill.dev/.well-known/oauth-*",

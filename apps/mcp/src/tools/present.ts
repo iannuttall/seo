@@ -161,7 +161,7 @@ function columnsFor(rows: Record<string, Json>[], max: number): string[] {
     .slice(0, max)
 }
 
-function cell(value: Json, origin: string | null): string {
+function cell(value: Json, origin: string | null, max = CELL_MAX): string {
   if (value === null || value === undefined) return ''
   let text = String(value)
   if (origin && text.startsWith(origin)) text = text.slice(origin.length) || '/'
@@ -170,20 +170,22 @@ function cell(value: Json, origin: string | null): string {
     const places = Math.abs(value) < 1 ? 1000 : 100
     text = String(Math.round(value * places) / places)
   }
-  text = text.replaceAll('|', '/').replaceAll('\n', ' ')
-  return text.length > CELL_MAX ? `${text.slice(0, CELL_MAX - 1)}…` : text
+  // A pipe would split the cell, so it is escaped, not changed.
+  text = text.replaceAll('|', '\\|').replaceAll('\n', ' ')
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
 export function table(
   rows: Record<string, Json>[],
   columns: string[],
   origin: string | null,
+  max = CELL_MAX,
 ): string {
   if (rows.length === 0 || columns.length === 0) return ''
   return [
     columns.join(' | '),
     ...rows.map((row) =>
-      columns.map((key) => cell(row[key], origin)).join(' | '),
+      columns.map((key) => cell(row[key], origin, max)).join(' | '),
     ),
   ].join('\n')
 }

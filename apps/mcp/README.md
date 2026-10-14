@@ -50,7 +50,7 @@ repository.
 | Tool | What it returns |
 | --- | --- |
 | `seo_sites` | Search Console and Google Analytics properties, and which key headers arrived |
-| `seo_report` | quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop |
+| `seo_report` | site-overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page reports check their top 20 URLs live and merge same-site redirects. |
 | `seo_search_console` | Raw rows for any dimensions, filters and dates, with a comparison period |
 | `seo_inspect_url` | Google index status for up to 10 URLs |
 | `seo_analytics` | Landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible |
@@ -58,6 +58,9 @@ repository.
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.
+Each tool takes its target and optional dates, nothing more. Start with the
+summary; ask for `rows` or `full` only when you need more. Each report names
+the report to run next.
 
 ## What is stored
 

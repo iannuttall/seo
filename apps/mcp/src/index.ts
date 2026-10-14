@@ -1,3 +1,4 @@
+import { keysPage } from './keys-page.ts'
 import { serveMcp } from './mcp.ts'
 import {
   authorize,
@@ -63,6 +64,9 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (pathname === '/oauth/token' && method === 'POST') {
     return token(request, env)
   }
+  if (pathname === '/mcp/keys' && method === 'GET') {
+    return keysPage(env)
+  }
   if (pathname === '/mcp') {
     const access = await googleAccess(request, env)
     if (!access) return challenge(env)
@@ -81,6 +85,7 @@ export default {
   async fetch(request, env): Promise<Response> {
     const pathname = localPath(env, new URL(request.url).pathname)
     const api =
+      pathname !== '/mcp/keys' &&
       !pathname.startsWith('/oauth/authorize') &&
       !pathname.startsWith('/oauth/google') &&
       !pathname.startsWith('/oauth/callback')

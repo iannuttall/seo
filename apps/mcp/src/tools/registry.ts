@@ -13,23 +13,15 @@ export type ToolContext = {
   waitUntil: (promise: Promise<unknown>) => void
 }
 
-export type ErrorCode =
-  | 'INVALID_INPUT'
-  | 'NOT_CONNECTED'
-  | 'NO_ACCESS'
-  | 'NO_KEY'
-  | 'RATE_LIMITED'
-  | 'GOOGLE_ERROR'
-  | 'PROVIDER_ERROR'
+// Errors share one class with the core commands, so both are reported the
+// same way.
+import {
+  type CommandErrorCode,
+  CommandError as ToolError,
+} from '@seo/core/commands'
 
-export class ToolError extends Error {
-  constructor(
-    readonly code: ErrorCode,
-    message: string,
-  ) {
-    super(message)
-  }
-}
+export { ToolError }
+export type ErrorCode = CommandErrorCode
 
 export type Tool = {
   name: string

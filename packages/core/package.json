@@ -20,6 +20,11 @@
       "types": "./src/hosted.ts",
       "workerd": "./src/hosted.ts",
       "import": "./dist/hosted.js"
+    },
+    "./commands": {
+      "types": "./src/commands/index.ts",
+      "workerd": "./src/commands/index.ts",
+      "import": "./dist/commands/index.js"
     }
   },
   "files": [

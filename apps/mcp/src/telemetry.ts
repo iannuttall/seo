@@ -1,3 +1,8 @@
+import {
+  COMMANDS,
+  type CommandId,
+  telemetryReportFor,
+} from '@seo/core/commands'
 import { SEO_VERSION } from '@seo/core/hosted'
 import type { ErrorCode } from './tools/registry.ts'
 
@@ -10,41 +15,17 @@ const ENDPOINT = 'https://seoskill.dev/api/t'
 
 type Input = Record<string, unknown> | undefined
 
-const SECTION_REPORTS: Record<string, string> = {
-  overview: 'search-performance-overview',
-  'quick-wins': 'quick-wins',
-  'low-ctr': 'ctr-underperformers',
-  'striking-distance': 'striking-distance',
-  'second-page': 'second-page',
-  'content-decay': 'decaying-pages',
-  cannibalization: 'cannibalisation',
-  'traffic-drop': 'traffic-anomaly',
-}
-
-const RESEARCH_REPORTS: Record<string, string> = {
-  keyword_metrics: 'keyword-metrics',
-  ranked_keywords: 'ranked-keywords',
-  serp: 'serp-results',
-  competitors: 'serp-competitors',
-  backlinks: 'link-evidence',
-}
-
 // The CLI report id each tool call counts as. Listing and raw-row calls are
 // not reports, so they send nothing.
 export function reportFor(tool: string, input: Input): string | null {
+  const command = tool.replace(/^seo_/, '').replace('_', '-')
+  if (!(command in COMMANDS)) return null
   const value = (key: string) =>
-    typeof input?.[key] === 'string' ? (input[key] as string) : ''
-  if (tool === 'seo_report') {
-    return SECTION_REPORTS[value('section') || 'overview'] ?? null
-  }
-  if (tool === 'seo_research') return RESEARCH_REPORTS[value('action')] ?? null
-  return (
-    {
-      seo_page: 'page-opportunities',
-      seo_compare: 'measure-change',
-      seo_index: 'link-recovery',
-    }[tool] ?? null
-  )
+    typeof input?.[key] === 'string' ? (input[key] as string) : undefined
+  return telemetryReportFor(command as CommandId, {
+    section: value('section'),
+    action: value('action'),
+  })
 }
 
 export function agentFor(userAgent: string | null): string {

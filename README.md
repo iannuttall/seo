@@ -189,9 +189,12 @@ seo providers install @seoskill/clicky-provider
 seo start
 ```
 
-On the hosted server, Clicky, Fathom, Simple Analytics and Plausible keys add
-landing pages for visits from search to `seo_data`. Each source keeps its own
-metric names, so a Clicky visit is never relabelled as a Google Analytics user.
+The hosted server reads Google Analytics only. Clicky runs on your machine,
+and the hosted server tells your agent to use the CLI for it, as it does for
+crawls. For any other analytics tool, build a provider package with the
+public provider SDK; the Clicky package is the example. Each source keeps its
+own metric names, so a Clicky visit is never relabelled as a Google Analytics
+user.
 
 ## Use it with agents
 

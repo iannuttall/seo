@@ -78,14 +78,12 @@ const detail = {
     .describe('rows only: the first row to return.'),
 }
 
-export const DATA_SOURCES = [
-  'search_console',
-  'google_analytics',
-  'clicky',
-  'fathom',
-  'simple_analytics',
-  'plausible',
-] as const
+export const DATA_SOURCES = ['search_console', 'google_analytics'] as const
+
+// Other analytics sources run on the person's machine through provider
+// packages, like crawls. Agents with a shell use the CLI for them.
+export const LOCAL_ANALYTICS =
+  'Clicky and other analytics run on the person’s machine with the CLI and a provider package: `npx -y seo providers install @seoskill/clicky-provider`, connect it once with `seo providers connect clicky`, then `npx -y seo analytics clicky report --json`. `seo providers list` shows installed providers.'
 
 export type SharedTool = {
   name: string
@@ -235,15 +233,14 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description:
-      'Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. The other sources: landing pages for visits from search, from Google Analytics or from Clicky, Fathom, Simple Analytics or Plausible with the person’s key; each keeps its own metric names.',
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. ${LOCAL_ANALYTICS}`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
         .string()
         .min(1)
         .describe(
-          'search_console: the property or site. google_analytics: numeric property id from seo_sites. clicky and fathom: site id. simple_analytics and plausible: the domain.',
+          'search_console: the property or site. google_analytics: numeric property id from seo_sites.',
         ),
       dimensions: z
         .array(z.enum(DIMENSIONS))
@@ -268,7 +265,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         if (!surface.analytics) {
           throw new CommandError(
             'INVALID_INPUT',
-            `${input.source} is not available here. Use the hosted MCP at https://seoskill.dev/mcp, or \`seo analytics\` in the CLI.`,
+            'Google Analytics rows are not available here. Use the hosted MCP at https://seoskill.dev/mcp, or `seo analytics google report` in the CLI.',
           )
         }
         return surface.analytics({

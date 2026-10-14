@@ -7,7 +7,7 @@ import {
 } from '@seo/core/commands'
 import { z } from 'zod'
 import { listAnalyticsProperties, listProperties } from '../google.ts'
-import { type AnalyticsProvider, landingPages } from '../providers/analytics.ts'
+import { landingPages } from '../providers/analytics.ts'
 import { defineTool, type ToolContext, ToolError } from './registry.ts'
 
 // The two hosted-only parts: listing what this sign-in can read, and landing
@@ -29,10 +29,6 @@ export const seoSites = defineTool({
     const keys = [
       ['dataforseo', 'x-dataforseo-login'],
       ['ahrefs', 'x-ahrefs-key'],
-      ['clicky', 'x-clicky-sitekey'],
-      ['fathom', 'x-fathom-key'],
-      ['simple_analytics', 'x-simple-analytics-key'],
-      ['plausible', 'x-plausible-key'],
     ]
       .filter(([, name]) => context.headers.get(name ?? ''))
       .map(([provider]) => provider)
@@ -54,11 +50,8 @@ export async function hostedAnalytics(
   context: ToolContext,
   input: AnalyticsInput,
 ): Promise<{ text: string; data: unknown }> {
-  const provider = (
-    input.source === 'google_analytics' ? 'google' : input.source
-  ) as AnalyticsProvider
   const range = dateWindow(input, 28)
-  const result = await landingPages(provider, context, {
+  const result = await landingPages(context.google, {
     site: input.site,
     ...range,
     searchOnly: true,

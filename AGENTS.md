@@ -405,15 +405,11 @@ node dist/cli.js projects --help
 node dist/cli.js start --help
 ```
 
-Root help must keep this curated path:
-
-- `seo start`
-- `seo report`
-- `seo projects list`
-- `seo refresh-priorities`
-- `seo quick-wins`
-- `seo second-page`
-- `seo technical-watch`
+Root help must keep this curated path: `seo start`, `seo report`, then the
+eight commands (`seo page`, `seo compare`, `seo index`, `seo research`,
+`seo data`, `seo crawl`, `seo internal-links`) and setup commands. Old report
+names are not taught; they print their new command for one release
+(`packages/cli/src/renames.ts`).
 
 Do not let `seo help` return `Unknown command help`.
 

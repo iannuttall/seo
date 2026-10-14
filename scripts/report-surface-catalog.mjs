@@ -269,7 +269,7 @@ export const reportSurfaces = [
     core: 'diagnosePropertyWorkflow',
     cli: {
       file: 'packages/cli/src/commands/workflows/diagnose-property.ts',
-      marker: "'diagnose-property': diagnosePropertyWorkflowCommand",
+      marker: "'diagnose-property': mainReportCommand",
     },
     mcp: {
       file: 'packages/mcp/src/workflow-tools.ts',

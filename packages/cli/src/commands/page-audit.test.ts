@@ -64,7 +64,7 @@ test('audit-page works with only a URL and does not require Google data', async 
   }
 })
 
-test('report runs a technical crawl when given only a URL', async () => {
+test('the old main report still runs a technical crawl from a URL', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-report-config-'))
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-report-cache-'))
   const exportDir = await mkdtemp(join(tmpdir(), 'seo-report-export-'))
@@ -93,7 +93,7 @@ test('report runs a technical crawl when given only a URL', async () => {
       process.execPath,
       [
         cliPath,
-        'report',
+        'diagnose-property',
         '--url',
         reportUrl,
         '--crawl-max-pages',
@@ -179,7 +179,7 @@ test('report runs a technical crawl when given only a URL', async () => {
       process.execPath,
       [
         cliPath,
-        'report',
+        'diagnose-property',
         '--url',
         reportUrl,
         '--crawl-max-pages',
@@ -225,7 +225,7 @@ test('report runs a technical crawl when given only a URL', async () => {
       process.execPath,
       [
         cliPath,
-        'report',
+        'diagnose-property',
         '--url',
         reportUrl,
         '--crawl-max-pages',
@@ -257,7 +257,7 @@ test('report runs a technical crawl when given only a URL', async () => {
       process.execPath,
       [
         cliPath,
-        'report',
+        'diagnose-property',
         '--url',
         reportUrl,
         '--crawl-max-pages',

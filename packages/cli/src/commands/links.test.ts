@@ -54,7 +54,7 @@ test('links command imports a bounded local file as structured JSON', async () =
         env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' },
       },
     )
-    assert.equal(stderr, '')
+    assert.match(stderr, /is now `seo research backlinks/)
     const report = JSON.parse(stdout)
     assert.equal(report.provenance.provider, 'json-import')
     assert.equal(report.summary.observedLinks, 1)

@@ -1,0 +1,56 @@
+---
+title: SEO report
+description: Run the main Search Console report. Get an overview first, then one section such as quick wins, low CTR, content decay, cannibalization or a traffic drop.
+lead: The main report for a Search Console property. An overview first, then one section at a time.
+---
+
+Use it first for any site. It answers "what is going on in search?" before you ask anything narrower.
+
+## Run the report
+
+Ask your agent:
+
+```text
+Run the SEO report for example.com
+```
+
+The hosted MCP runs `seo_report`. In a terminal, run:
+
+```sh
+seo report
+```
+
+## What comes back
+
+Without a section, the report returns the overview: clicks, impressions, click-through rate and average position against the previous period, split by device, with the top pages and queries and how they changed. It also returns each section's row count and its top rows, so you can see which section is worth opening.
+
+## Ask for one section
+
+| Section | What it lists |
+| --- | --- |
+| `overview` | Site totals against the previous period, by device, with the top pages and queries. |
+| `quick-wins` | Query and page pairs at positions 4 to 10 with a click-through rate below your site's own curve for that position. |
+| `low-ctr` | Query and page pairs at positions 1 to 4 with a click-through rate below your site's own curve. These are titles and snippets to review. |
+| `striking-distance` | Queries just outside the top positions, with impressions, for pages that already rank. |
+| `second-page` | Pages with an average position of 11 to 20, and their queries. |
+| `content-decay` | Query and page pairs that lost clicks against the previous period. |
+| `cannibalization` | Queries where more than one of your pages gets impressions, with each page's share. |
+| `traffic-drop` | Daily clicks and impressions checked for sudden changes, with Google updates whose dates overlap. |
+
+Ask for a section by name:
+
+```text
+Show me the low-ctr section for example.com
+```
+
+Sections that list pages also check their top 20 URLs live, so you can see a page that now redirects or returns an error before you spend time on it.
+
+## Dates
+
+The report uses the latest final Search Console data: the last 28 days, or 90 days for `traffic-drop`. You can ask for a start and end date instead.
+
+## Read it carefully
+
+The click-through rate curve is built from your own site's data. It is a useful yardstick, not a Google rule. In `traffic-drop`, a Google update that overlaps a change only shows the timing matched. It does not prove the update caused it.
+
+For one page, use [`seo page`](/docs/commands/page). To check a release or an update, use [`seo compare`](/docs/commands/compare).

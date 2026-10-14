@@ -1,0 +1,31 @@
+---
+title: Technical SEO site crawl
+description: Crawl your site with seo crawl on your own machine and list technical issues such as broken pages, redirects, titles, canonicals and noindex tags.
+heading: seo crawl
+lead: Crawl your site from your own machine and list technical issues. CLI only.
+---
+
+Use it to get a technical baseline: before a release, after one, or when you suspect something broke across many pages. A crawl fetches a lot of pages, so it runs on your machine with the [CLI](/docs/cli), not on the hosted server.
+
+## Run a crawl
+
+Install the CLI and run setup if you have not yet:
+
+```sh
+npm i -g seo
+seo start
+```
+
+Then ask your agent to crawl the site, or see the options yourself:
+
+```sh
+seo crawl --help
+```
+
+## What comes back
+
+The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. It saves the crawl on your machine so you can compare the next one against it.
+
+A `noindex` tag or a canonical pointing elsewhere is reported as what the page says. It is only a problem if you did not mean it.
+
+To see which pages lost search clicks rather than which pages have issues, use [`seo index`](/docs/commands/indexing).

@@ -1,352 +1,495 @@
 @import "tailwindcss";
 
+/* The design system is copied from Ian's ilo web app: Inter for text,
+   JetBrains Mono for code, neutral oklch surfaces, one cyan accent, soft
+   muted panels instead of borders, and automatic light and dark mode. */
+
 @font-face {
-  font-family: "Martian Grotesk";
-  src: url("/fonts/MartianGroteskVF.woff2") format("woff2");
-  font-weight: 100 1000;
-  font-stretch: 75% 200%;
+  font-family: "InterVariable";
+  src: url("/fonts/InterVF.woff2") format("woff2");
   font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
 }
 
 @font-face {
-  font-family: "Martian Mono";
-  src: url("/fonts/MartianMonoVF.woff2") format("woff2");
-  font-weight: 100 800;
-  font-stretch: 75% 112.5%;
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMonoVF.woff2") format("woff2");
   font-display: swap;
+  font-style: normal;
+  font-weight: 100 800;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-raised: var(--background-raised);
   --color-background-subtle: var(--background-subtle);
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
-  --color-foreground-faint: var(--fg-faint);
+  --color-foreground-soft: var(--foreground-soft);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
   --color-primary-foreground: var(--primary-foreground);
-  --color-report-header: var(--report-header);
-  --color-report-header-foreground: var(--report-header-foreground);
-  --color-panel: var(--panel);
-  --color-panel-foreground: var(--panel-fg);
-  --color-nav: var(--nav-bg);
-  --color-header: var(--header-bg);
-  --color-header-foreground: var(--header-fg);
-  --color-header-border: var(--header-border);
-  --font-sans: "Martian Grotesk", system-ui, sans-serif;
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-active: var(--secondary-active);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-overlay-scrim: var(--overlay-scrim);
+  /* Result panels in the free tools sit on the muted surface. */
+  --color-panel: var(--muted);
+  --color-panel-foreground: var(--foreground);
+  --color-foreground-faint: var(--foreground-soft);
+  --radius-xs: calc(var(--radius) - 6px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    "Martian Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
-  /* Button 3D comes from inset light and shade only. Never add an outer
-     offset drop shadow to these. */
-  --shadow-btn:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.3);
-  --shadow-btn-hover:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.3);
-  --shadow-btn-active: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Shared design tokens from keep-brutal. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --radius: 0.625rem;
 
-  --bg: #ffffff;
-  --bg-secondary: #f5f5f5;
-  --fg: #171717;
-  --fg-muted: #525252;
-  --fg-faint: #a3a3a3;
-  --border: #e5e5e5;
+  /* One value sets the page frame for every page, header and footer. */
+  --frame-max: 48rem;
 
-  --nav-bg: #171717;
-  --nav-fg: #ffffff;
-  --nav-border: #333333;
-  --header-bg: var(--nav-bg);
-  --header-fg: var(--nav-fg);
-  --header-border: var(--nav-border);
+  --background: oklch(98.5% 0 0);
+  --background-raised: oklch(100% 0 0);
+  --background-subtle: oklch(96% 0 0);
+  --foreground: oklch(20.5% 0 0);
+  --foreground-muted: oklch(45% 0 0);
+  --foreground-soft: oklch(60% 0 0);
+  --border: oklch(92% 0 0);
+  --border-subtle: oklch(95% 0 0);
+  --border-strong: oklch(85% 0 0);
+  --input: oklch(92% 0 0);
+  --ring: oklch(60.9% 0.126 221.723);
 
-  --primary: #ff4500;
-  --primary-foreground: #ffffff;
-  --background: var(--bg);
-  --background-subtle: var(--bg-secondary);
-  --foreground: var(--fg);
-  --foreground-muted: var(--fg-muted);
-  --primary-hover: #e63e00;
-  --primary-active: #cc3700;
-  --report-header: var(--nav-bg);
-  --report-header-foreground: var(--nav-fg);
+  --card: oklch(100% 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: var(--foreground);
 
-  /* The inverted band: dark nav ink in light mode; in dark mode it blends
-     into the page background instead of flipping to white. */
-  --panel: var(--nav-bg);
-  --panel-fg: var(--nav-fg);
+  --primary: oklch(60.9% 0.126 221.723);
+  --primary-soft: oklch(95% 0.04 221.723);
+  --primary-hover: oklch(54% 0.13 221.723);
+  --primary-active: oklch(48% 0.13 221.723);
+  --primary-foreground: oklch(98.5% 0 0);
+
+  --secondary: oklch(96% 0 0);
+  --secondary-soft: oklch(98% 0 0);
+  --secondary-hover: oklch(92% 0 0);
+  --secondary-active: oklch(88% 0 0);
+  --secondary-foreground: var(--foreground);
+
+  --muted: oklch(96% 0 0);
+  --muted-foreground: oklch(45% 0 0);
+  --accent: oklch(96% 0 0);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(57% 0.22 27);
+  --destructive-soft: oklch(95% 0.05 27);
+  --destructive-hover: oklch(50% 0.22 27);
+  --destructive-foreground: oklch(98.5% 0 0);
+
+  --success: oklch(60% 0.16 145);
+  --success-soft: oklch(95% 0.04 145);
+  --warning: oklch(75% 0.16 80);
+  --warning-soft: oklch(95% 0.05 80);
+  --warning-foreground: oklch(30% 0.06 80);
+  --info: oklch(60% 0.13 240);
+  --info-soft: oklch(95% 0.04 240);
+
+  --overlay-scrim: oklch(0% 0 0 / 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: oklch(17% 0.00365 228.89);
-    --bg-secondary: oklch(30.284% 0.00916 248.14);
-    --fg: oklch(92.565% 0.00459 78.3);
-    --fg-muted: oklch(76% 0 0);
-    --fg-faint: oklch(42.615% 0.00201 228.84);
-    --border: oklch(42.615% 0.00201 228.84);
+    color-scheme: dark;
+    --background: oklch(20.5% 0 0);
+    --background-raised: oklch(24% 0 0);
+    --background-subtle: oklch(17% 0 0);
+    --foreground: oklch(98.5% 0 0);
+    --foreground-muted: oklch(72% 0 0);
+    --foreground-soft: oklch(55% 0 0);
+    --border: oklch(28% 0 0);
+    --border-subtle: oklch(24% 0 0);
+    --border-strong: oklch(38% 0 0);
+    --input: oklch(28% 0 0);
+    --ring: oklch(78.9% 0.154 211.53);
 
-    --nav-bg: oklch(92.565% 0.00459 78.3);
-    --nav-fg: oklch(21.604% 0.00365 228.89);
-    --nav-border: oklch(42.615% 0.00201 228.84);
-    --header-bg: var(--primary);
-    --header-fg: var(--fg);
-    --header-border: var(--primary-active);
+    --card: oklch(24% 0 0);
+    --popover: oklch(24% 0 0);
 
-    --background: var(--bg);
-    --foreground: var(--fg);
+    --primary: oklch(78.9% 0.154 211.53);
+    --primary-soft: oklch(30% 0.07 211.53);
+    --primary-hover: oklch(72% 0.16 211.53);
+    --primary-active: oklch(65% 0.17 211.53);
+    --primary-foreground: oklch(15% 0.05 211.53);
 
-    /* In dark mode the band blends into the page background. */
-    --panel: var(--bg);
-    --panel-fg: var(--fg);
+    --secondary: oklch(28% 0 0);
+    --secondary-soft: oklch(24% 0 0);
+    --secondary-hover: oklch(34% 0 0);
+    --secondary-active: oklch(40% 0 0);
+
+    --muted: oklch(28% 0 0);
+    --accent: oklch(28% 0 0);
+
+    --destructive: oklch(65% 0.22 27);
+    --destructive-soft: oklch(30% 0.1 27);
+    --destructive-hover: oklch(58% 0.22 27);
+
+    --success: oklch(70% 0.16 145);
+    --success-soft: oklch(28% 0.07 145);
+    --warning: oklch(80% 0.16 80);
+    --warning-soft: oklch(30% 0.08 80);
+    --info: oklch(72% 0.13 240);
+    --info-soft: oklch(28% 0.07 240);
   }
-
 }
 
 @layer base {
-  ::selection {
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 15%, transparent);
+  body {
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 550;
+    letter-spacing: 0;
+    font-variation-settings: "opsz" 32;
+  }
+
+  code,
+  pre {
+    font-family:
+      "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+      Consolas, monospace;
+  }
+
+  button:not(:disabled),
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  /* Code fonts turn some character pairs into ligatures. Tool inputs show
+     exactly what was typed. */
   input,
   textarea {
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "clig" 0, "calt" 0;
-  }
-}
-
-/* Inner scrollers hide their scrollbars entirely; wheel, trackpad, and keys
-   still scroll, and code blocks have a copy button. The page keeps its own. */
-* {
-  scrollbar-width: none;
-}
-
-html {
-  scrollbar-width: auto;
-}
-
-@layer components {
-  /* The floating label keeps Turbopuffer's offset, clipped at the card rule. */
-  .clipped-dot-pattern {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    z-index: 0;
-    width: calc(100% + 3px);
-    height: calc(100% + 3px);
-    clip-path: inset(25px 0 0);
-  }
-
-
-  /* Markdown is CMS content, so it needs one scoped prose pattern. */
-  .docs-prose {
-    color: var(--fg);
-    font-family: "Martian Grotesk", system-ui, sans-serif;
-    font-size: 0.9375rem;
-    font-weight: 300;
-    line-height: 1.7;
-  }
-
-  .docs-prose a {
-    font-weight: 400;
-  }
-
-  .docs-prose strong {
-    font-weight: 500;
   }
 
   .docs-prose > :first-child {
     margin-top: 0;
   }
 
-  .docs-prose > h1,
-  .docs-prose > h2,
-  .docs-prose > h3,
-  .docs-prose > h4,
-  .docs-prose > h5,
-  .docs-prose > h6 {
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    font-family: "Martian Mono", ui-monospace, monospace;
-    font-weight: 400;
-    line-height: 1.3;
-  }
-
   .docs-prose > h1 {
-    font-size: 1.6em;
+    margin-bottom: 1.5rem;
+    color: var(--foreground);
+    font-weight: 500;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    text-wrap: pretty;
   }
 
   .docs-prose > h2 {
-    font-size: 1.333em;
+    margin-top: 3rem;
+    color: var(--foreground);
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    letter-spacing: 0;
   }
 
   .docs-prose > h3 {
-    font-size: 1.173em;
+    margin-top: 2rem;
+    color: var(--foreground);
+    font-weight: 500;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    letter-spacing: 0;
+  }
+
+  .docs-prose > h4 {
+    margin-top: 1.5rem;
+    color: var(--foreground);
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
 
   .docs-prose > p {
-    margin-top: 0;
-    margin-bottom: 1em;
-  }
-
-  .docs-prose > p a,
-  .docs-prose > ul a,
-  .docs-prose > ol a {
-    color: var(--primary);
-    text-decoration-line: underline;
-    text-underline-offset: 2px;
-  }
-
-  .docs-prose > p a:hover,
-  .docs-prose > ul a:hover,
-  .docs-prose > ol a:hover {
-    text-decoration-style: dotted;
-  }
-
-  .docs-prose > img {
-    max-width: 100%;
-    height: auto;
-    margin: 1em 0;
-  }
-
-  .docs-prose > blockquote {
-    margin: 1em 0;
-    border-left: 3px solid var(--border);
-    background-color: var(--bg-secondary);
-    padding: 0.875em 1em;
+    margin-top: 0.75rem;
+    color: var(--foreground-muted);
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
 
   .docs-prose > ul,
   .docs-prose > ol {
-    margin: 1em 0;
-    padding-left: 1.5em;
+    margin-top: 0.75rem;
+    padding-left: 1.25rem;
   }
 
   .docs-prose > ul {
-    list-style-type: disc;
+    list-style: disc;
   }
 
   .docs-prose > ol {
-    list-style-type: decimal;
+    list-style: decimal;
   }
 
-  .docs-prose > li {
-    margin-bottom: 0.35em;
+  .docs-prose > ul li,
+  .docs-prose > ol li {
+    color: var(--foreground-muted);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .docs-prose > ul li + li,
+  .docs-prose > ol li + li {
+    margin-top: 0.375rem;
+  }
+
+  .docs-prose > ul li::marker,
+  .docs-prose > ol li::marker {
+    color: var(--foreground-soft);
+  }
+
+  .docs-prose > p strong,
+  .docs-prose > ul strong,
+  .docs-prose > ol strong {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .docs-prose > p a,
+  .docs-prose > ul a,
+  .docs-prose > ol a,
+  .docs-prose td a {
+    color: var(--primary);
+    text-decoration-line: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 4px;
+    transition:
+      color 150ms,
+      text-decoration-color 150ms;
+  }
+
+  .docs-prose > p a:hover,
+  .docs-prose > ul a:hover,
+  .docs-prose > ol a:hover,
+  .docs-prose td a:hover {
+    color: var(--primary-hover);
+    text-decoration-color: var(--primary-hover);
   }
 
   .docs-prose > p code,
   .docs-prose > ul code,
   .docs-prose > ol code,
   .docs-prose > h2 code,
-  .docs-prose > h3 code {
-    background-color: var(--bg-secondary);
-    padding: 0.125rem 0.25rem;
-    font-size: 0.875em;
-  }
-
-  /* Code blocks share the hero command card's look: hard frame plus a dotted
-     offset shadow peeking bottom-right. The shadow and copy button live on the
-     .code-frame wrapper (added by the layout script) because the scrolling pre
-     would clip its own pseudo-element. */
-  .docs-prose pre:where(:not([data-prose-ignore] pre)) {
-    margin: 1.5em 0;
-    overflow-x: auto;
-    border: 2px solid var(--nav-bg);
-    background-color: var(--background);
-    padding: 1em;
-    padding-right: 3rem;
+  .docs-prose > h3 code,
+  .docs-prose td code {
+    border-radius: 0.375rem;
+    background-color: var(--muted);
+    padding: 0.125rem 0.375rem;
     font-size: 0.85em;
-    line-height: 1.5;
   }
 
-  .code-frame,
-  .table-frame {
-    position: relative;
-    isolation: isolate;
-    margin: 1.75em 0;
+  .docs-prose > blockquote {
+    margin-top: 1.25rem;
+    border-radius: 0.5rem;
+    background: var(--muted);
+    padding: 1rem 1.25rem;
+    color: var(--foreground-muted);
   }
 
-  /* The same halftone tile the home cards use (DotPattern's shadow variant),
-     applied as a mask so the colour stays on the --fg token. */
-  .code-frame::after,
-  .table-frame::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset: 8px -8px -8px 8px;
-    background-color: var(--fg);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='7'%20height='13'%3E%3Cpath%20d='M5.58984%2012.2344V10.7051H6.52734V12.2344H5.58984ZM1.86328%2012.2344V10.7051H2.79492V12.2344H1.86328ZM3.72656%2010.0957V8.56641H4.6582V10.0957H3.72656ZM0%2010.0957V8.56641H0.925781V10.0957H0ZM5.58984%207.95117V6.42188H6.52734V7.95117H5.58984ZM1.86328%207.95117V6.42188H2.79492V7.95117H1.86328ZM3.72656%205.8125V4.2832H4.6582V5.8125H3.72656ZM0%205.8125V4.2832H0.925781V5.8125H0ZM5.58984%203.66797V2.13867H6.52734V3.66797H5.58984ZM1.86328%203.66797V2.13867H2.79492V3.66797H1.86328ZM3.72656%201.5293V0H4.6582V1.5293H3.72656ZM0%201.5293V0H0.925781V1.5293H0Z'%20fill='white'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='7'%20height='13'%3E%3Cpath%20d='M5.58984%2012.2344V10.7051H6.52734V12.2344H5.58984ZM1.86328%2012.2344V10.7051H2.79492V12.2344H1.86328ZM3.72656%2010.0957V8.56641H4.6582V10.0957H3.72656ZM0%2010.0957V8.56641H0.925781V10.0957H0ZM5.58984%207.95117V6.42188H6.52734V7.95117H5.58984ZM1.86328%207.95117V6.42188H2.79492V7.95117H1.86328ZM3.72656%205.8125V4.2832H4.6582V5.8125H3.72656ZM0%205.8125V4.2832H0.925781V5.8125H0ZM5.58984%203.66797V2.13867H6.52734V3.66797H5.58984ZM1.86328%203.66797V2.13867H2.79492V3.66797H1.86328ZM3.72656%201.5293V0H4.6582V1.5293H3.72656ZM0%201.5293V0H0.925781V1.5293H0Z'%20fill='white'/%3E%3C/svg%3E");
-    -webkit-mask-repeat: repeat;
-    mask-repeat: repeat;
+  .docs-prose > hr {
+    margin-top: 2rem;
+    border-color: var(--border);
   }
 
-  .code-frame pre {
-    margin: 0;
-  }
-
-  .table-frame {
-    padding-right: 0.5rem;
-    padding-bottom: 0.5rem;
+  .docs-prose pre {
+    margin-top: 1.25rem;
     overflow-x: auto;
+    border-radius: 0.5rem;
+    background: var(--muted) !important;
+    padding: 1rem;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    line-height: 1.5rem;
   }
-
-  .table-frame::after {
-    right: 0;
-    bottom: 0;
-  }
-
 
   .docs-prose pre code {
-    background: none;
+    border-radius: 0;
+    background-color: transparent;
     padding: 0;
+    color: var(--foreground);
     font-size: inherit;
   }
 
-  .docs-prose hr {
-    margin: 1.5em 0;
-    border: 0;
-    border-top: 1px solid var(--border);
+  .docs-prose pre span {
+    color: var(--foreground) !important;
+  }
+
+  .code-frame {
+    position: relative;
+    margin-top: 1.25rem;
+    min-width: 0;
+  }
+
+  .docs-prose .code-frame pre {
+    margin-top: 0;
+    padding-right: 3.25rem;
+  }
+
+  .code-copy-strip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-start;
+    border-radius: 0 0.5rem 0.5rem 0;
+    background: linear-gradient(to right, transparent, var(--muted) 42%);
+    padding: 0.45rem 0.45rem 0 1.75rem;
+  }
+
+  .code-copy-button {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    background: var(--muted);
+    color: var(--foreground-muted);
+    transition: color 150ms;
+  }
+
+  .code-copy-button:hover {
+    color: var(--foreground);
+  }
+
+  .code-copy-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .code-copy-icon.hidden {
+    display: none;
   }
 
   .docs-prose table {
+    margin-top: 1.25rem;
     width: 100%;
-    min-width: 36rem;
-    margin: 0;
     border-collapse: collapse;
-    border: 2px solid var(--nav-bg);
-    background: var(--background);
-    font-size: 0.8125em;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
   }
 
-  .docs-prose th,
-  .docs-prose td {
-    border: 2px solid var(--nav-bg);
-    padding: 0.75rem 1rem;
+  .docs-prose th {
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    color: var(--foreground);
+    font-weight: 500;
     text-align: left;
+  }
+
+  .docs-prose td {
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    color: var(--foreground-muted);
     vertical-align: top;
   }
 
-  .docs-prose thead th {
-    background: var(--report-header);
-    color: var(--report-header-foreground);
-    font-family: "Martian Mono", ui-monospace, monospace;
-    font-weight: 400;
+  .docs-prose th.text-right,
+  .docs-prose td.text-right {
+    text-align: right;
   }
 
-  .docs-prose tbody th {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: "Martian Grotesk", system-ui, sans-serif;
-    font-weight: 600;
+  .table-frame {
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .table-frame > table {
+    margin-top: 0;
+  }
+
+  @media (max-width: 40rem) {
+    .docs-prose > table {
+      display: block;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+
+    .docs-prose th,
+    .docs-prose td {
+      min-width: 9rem;
+    }
+  }
+}
+
+@layer components {
+  /* The shared page frame: centred, full width up to --frame-max, with the
+     standard gutter. The header, footer and every page use it. */
+  .site-frame {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--frame-max);
+    padding-inline: 1.5rem;
+  }
+
+  .tool-form-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--card);
+    box-shadow: 0 8px 44px -12px rgb(0 0 0 / 0.1);
+  }
+
+  @media (width >= 64rem) {
+    .site-frame {
+      padding-inline: 2.5rem;
+    }
   }
 }

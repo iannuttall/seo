@@ -1,0 +1,21 @@
+---
+// A framed surface in the ilo style. The default card is a raised white
+// panel with a soft shadow for forms and inputs. An inverted card is the
+// muted panel ilo uses for results and grouped content.
+type Props = {
+  class?: string
+  inverted?: boolean
+}
+
+const { class: className, inverted = false } = Astro.props
+---
+
+<div
+  class:list={[
+    'min-w-0 text-foreground',
+    inverted ? 'rounded-lg bg-muted' : 'tool-form-panel',
+    className,
+  ]}
+>
+  <slot />
+</div>

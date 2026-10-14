@@ -1,17 +1,18 @@
 ---
 import type { CollectionEntry } from 'astro:content'
 import { getCollection, render } from 'astro:content'
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import PagerNav from '@/components/PagerNav.astro'
 import { docsMdxComponents } from '@/components/docs/mdx'
-import { docsNavFor } from '@/content/docs-nav'
+import { docsNavFor } from '@/content/docs-nav.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 export async function getStaticPaths() {
   const docs = await getCollection('docs')
 
   return docs.map((entry) => ({
-    params: { slug: entry.id === 'index' ? undefined : entry.id },
+    params: { slug: entry.id },
     props: { entry },
   }))
 }
@@ -20,63 +21,35 @@ type Props = { entry: CollectionEntry<'docs'> }
 
 const { entry } = Astro.props
 const { Content } = await render(entry)
-const path = entry.id === 'index' ? '/docs' : `/docs/${entry.id}`
+const path = `/docs/${entry.id}`
 const nav = docsNavFor(path)
-const breadcrumbs = nav?.breadcrumbs
-const schemaType =
-  entry.id === 'index' || entry.id === 'reports'
-    ? 'CollectionPage'
-    : 'TechArticle'
+if (!nav) throw new Error(`${path} is missing from src/content/docs-nav.mjs`)
+const schemaType = entry.id === 'commands' ? 'CollectionPage' : 'TechArticle'
 ---
 
 <BaseLayout
   title={entry.data.title}
   description={entry.data.description}
   canonicalPath={path}
-  {breadcrumbs}
+  breadcrumbs={nav.breadcrumbs}
   {schemaType}
 >
-  <main>
-      {nav ? (
-        <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
-          <ol class="flex flex-wrap items-center gap-1.5">
-            {nav.breadcrumbs.map((crumb, index) => (
-              <li class="flex items-center gap-1.5">
-                {crumb.href ? (
-                  <a
-                    class="underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
-                    href={crumb.href}
-                  >
-                    {crumb.label}
-                  </a>
-                ) : (
-                  <span class="text-foreground">{crumb.label}</span>
-                )}
-                {index < nav.breadcrumbs.length - 1 ? (
-                  <span aria-hidden="true" class="text-border">/</span>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-        </nav>
-      ) : null}
+  <main data-agent-content>
+    <Breadcrumbs breadcrumbs={nav.breadcrumbs} />
 
-      <PageHeader
-        title={entry.data.heading ?? entry.data.title}
-        description={entry.data.lead ?? entry.data.description}
-        align="left"
-      />
+    <PageHeader
+      title={entry.data.heading ?? entry.data.title}
+      description={entry.data.lead ?? entry.data.description}
+    />
 
-      <div class="docs-prose">
-        <Content components={docsMdxComponents} />
-      </div>
+    <article class="docs-prose min-w-0">
+      <Content components={docsMdxComponents} />
+    </article>
 
-      {nav && (nav.prev || nav.next) ? (
-        <PagerNav
-          ariaLabel="Docs pages"
-          previous={nav.prev ? { label: nav.prev.label, href: nav.prev.path } : undefined}
-          next={nav.next ? { label: nav.next.label, href: nav.next.path } : undefined}
-        />
-      ) : null}
+    <PagerNav
+      ariaLabel="Docs pages"
+      previous={nav.prev ? { label: nav.prev.label, href: nav.prev.path } : undefined}
+      next={nav.next ? { label: nav.next.label, href: nav.next.path } : undefined}
+    />
   </main>
 </BaseLayout>

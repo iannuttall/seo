@@ -1,18 +1,18 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
 ---
 
 <section data-word-combiner class="space-y-6">
-  <DottedCard patternId="word-combiner-input">
+  <Card>
     <form data-combiner-form class="space-y-6 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="font-mono text-lg font-normal">Build your word lists</h2>
-          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+          <h2 class="text-lg font-medium">Build your word lists</h2>
+          <p class="text-sm leading-6 text-foreground-muted">
             Add one word or phrase per line. Every item is combined in list order.
           </p>
         </div>
@@ -25,16 +25,16 @@ import FormTextarea from '@/components/FormTextarea.astro'
 
       <div data-word-lists class="grid gap-4 lg:grid-cols-3"></div>
 
-      <section class="space-y-5 border border-border bg-background-subtle p-4" aria-labelledby="combination-settings-heading">
+      <section class="space-y-5 rounded-lg bg-muted p-4" aria-labelledby="combination-settings-heading">
         <div class="space-y-1">
-          <h3 id="combination-settings-heading" class="font-mono text-sm font-normal">Choose and format the combinations</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          <h3 id="combination-settings-heading" class="text-sm font-medium">Choose and format the combinations</h3>
+          <p class="text-xs leading-5 text-foreground-muted">
             Choose which list patterns to generate, then control how every result is formatted.
           </p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Combination pattern</span>
             <FormSelect data-pattern>
               <option value="all-lists">All populated lists</option>
@@ -43,7 +43,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             </FormSelect>
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Word separator</span>
             <FormSelect data-word-separator>
               <option value="space">Space</option>
@@ -54,7 +54,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             </FormSelect>
           </label>
 
-          <label data-custom-word-separator-field hidden class="space-y-2 font-sans text-sm font-medium">
+          <label data-custom-word-separator-field hidden class="space-y-2 text-sm font-medium">
             <span>Custom word separator</span>
             <FormInput
               data-custom-word-separator
@@ -65,7 +65,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             />
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Output separator</span>
             <FormSelect data-output-separator>
               <option value="newline">New line</option>
@@ -78,7 +78,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             </FormSelect>
           </label>
 
-          <label data-custom-output-separator-field hidden class="space-y-2 font-sans text-sm font-medium">
+          <label data-custom-output-separator-field hidden class="space-y-2 text-sm font-medium">
             <span>Custom output separator</span>
             <FormInput
               data-custom-output-separator
@@ -89,7 +89,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             />
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Letter case</span>
             <FormSelect data-case-mode>
               <option value="preserve">Keep input case</option>
@@ -99,8 +99,8 @@ import FormTextarea from '@/components/FormTextarea.astro'
             </FormSelect>
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
-            <span>Prefix <span class="font-light text-foreground-muted">(optional)</span></span>
+          <label class="space-y-2 text-sm font-medium">
+            <span>Prefix <span class="text-foreground-muted">(optional)</span></span>
             <FormInput
               data-prefix
               type="text"
@@ -109,8 +109,8 @@ import FormTextarea from '@/components/FormTextarea.astro'
             />
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
-            <span>Suffix <span class="font-light text-foreground-muted">(optional)</span></span>
+          <label class="space-y-2 text-sm font-medium">
+            <span>Suffix <span class="text-foreground-muted">(optional)</span></span>
             <FormInput
               data-suffix
               type="text"
@@ -119,7 +119,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
             />
           </label>
 
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Prefix and suffix scope</span>
             <FormSelect data-affix-scope>
               <option value="combination">Whole combination</option>
@@ -127,15 +127,15 @@ import FormTextarea from '@/components/FormTextarea.astro'
             </FormSelect>
           </label>
 
-          <label class="flex min-h-12 items-center gap-3 self-end font-sans text-sm font-medium">
+          <label class="flex min-h-10 items-center gap-3 self-end text-sm font-medium">
             <input data-dedupe type="checkbox" checked class="size-4 accent-primary" />
             Remove duplicates
           </label>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-2 font-sans text-sm font-medium">
-            <span>Keep combinations containing <span class="font-light text-foreground-muted">(optional)</span></span>
+          <label class="space-y-2 text-sm font-medium">
+            <span>Keep combinations containing <span class="text-foreground-muted">(optional)</span></span>
             <FormTextarea
               data-include
               class="min-h-20"
@@ -143,8 +143,8 @@ import FormTextarea from '@/components/FormTextarea.astro'
               placeholder="One phrase per line. Any match is kept."
             />
           </label>
-          <label class="space-y-2 font-sans text-sm font-medium">
-            <span>Remove combinations containing <span class="font-light text-foreground-muted">(optional)</span></span>
+          <label class="space-y-2 text-sm font-medium">
+            <span>Remove combinations containing <span class="text-foreground-muted">(optional)</span></span>
             <FormTextarea
               data-exclude
               class="min-h-20"
@@ -158,15 +158,15 @@ import FormTextarea from '@/components/FormTextarea.astro'
       <div class="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
         <div class="space-y-1">
           <p data-projected-count class="font-mono text-lg">0 projected combinations</p>
-          <p data-projection-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          <p data-projection-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
             Add words to at least two lists, or include individual items. Up to 100,000 candidate combinations are checked.
           </p>
         </div>
-        <Button data-generate type="submit" class="min-h-12 shrink-0 px-5 text-xs" disabled>Combine words</Button>
+        <Button data-generate type="submit" class="min-h-10 shrink-0 px-5 text-xs" disabled>Combine words</Button>
       </div>
 
       <div data-progress class="hidden space-y-2" aria-live="polite">
-        <div class="flex items-baseline justify-between gap-4 font-sans text-xs font-light text-foreground-muted">
+        <div class="flex items-baseline justify-between gap-4 text-xs text-foreground-muted">
           <span data-progress-status>Starting...</span>
           <span data-progress-count class="shrink-0 font-mono">0 checked</span>
         </div>
@@ -175,19 +175,19 @@ import FormTextarea from '@/components/FormTextarea.astro'
         </div>
       </div>
 
-      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+      <p class="text-xs leading-5 text-foreground-muted">
         Your lists stay in this browser tab. They are not uploaded.
       </p>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="word-combiner-summary" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-1">
-            <strong data-result-title class="font-mono text-2xl font-normal text-primary">Combinations generated</strong>
-            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+            <strong data-result-title class="text-2xl font-medium text-primary">Combinations generated</strong>
+            <p data-result-summary class="text-sm leading-6 text-foreground-muted"></p>
           </div>
           <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
             <Button data-copy type="button" class="w-full px-3 py-2.5 text-xs" disabled>Copy</Button>
@@ -196,35 +196,35 @@ import FormTextarea from '@/components/FormTextarea.astro'
           </div>
         </div>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Generated</dt>
+            <dt class="text-xs text-foreground-muted">Generated</dt>
             <dd data-stat-generated class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Projected</dt>
+            <dt class="text-xs text-foreground-muted">Projected</dt>
             <dd data-stat-projected class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Candidates checked</dt>
+            <dt class="text-xs text-foreground-muted">Candidates checked</dt>
             <dd data-stat-checked class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Lists used</dt>
+            <dt class="text-xs text-foreground-muted">Lists used</dt>
             <dd data-stat-lists class="mt-1 font-mono text-lg">0</dd>
           </div>
         </dl>
 
-        <p data-export-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite">
+        <p data-export-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
           Copy and downloads use the active result search. Copy and TXT also use the selected output separator.
         </p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="word-combiner-results">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <label class="flex-1 space-y-2 font-sans text-sm font-medium">
+          <label class="flex-1 space-y-2 text-sm font-medium">
             <span>Search generated combinations</span>
             <FormInput
               data-result-filter
@@ -232,16 +232,16 @@ import FormTextarea from '@/components/FormTextarea.astro'
               placeholder="Filter the generated list"
             />
           </label>
-          <p data-filter-count class="pb-3 font-sans text-xs font-light text-foreground-muted">0 combinations</p>
+          <p data-filter-count class="pb-3 text-xs text-foreground-muted">0 combinations</p>
         </div>
 
-        <p data-empty-results hidden class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <p data-empty-results hidden class="text-sm leading-6 text-foreground-muted">
           No generated combinations match this search.
         </p>
 
         <div data-result-table class="overflow-x-auto border border-border">
           <table class="w-full min-w-[32rem] border-collapse text-left">
-            <thead class="border-b border-border bg-background-subtle font-sans text-xs font-medium text-foreground-muted">
+            <thead class="border-b border-border bg-background-subtle text-xs font-medium text-foreground-muted">
               <tr>
                 <th class="w-20 px-3 py-2.5 text-right">Number</th>
                 <th class="px-3 py-2.5">Combination</th>
@@ -252,18 +252,18 @@ import FormTextarea from '@/components/FormTextarea.astro'
         </div>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p data-page-status class="font-sans text-xs font-light text-foreground-muted"></p>
+          <p data-page-status class="text-xs text-foreground-muted"></p>
           <div class="grid grid-cols-2 gap-2">
             <Button data-previous type="button" class="px-3 py-2 text-xs" disabled>Previous</Button>
             <Button data-next type="button" class="px-3 py-2 text-xs" disabled>Next</Button>
           </div>
         </div>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 
   <template data-list-template>
-    <fieldset data-word-list class="space-y-3 border border-border bg-background-subtle p-4">
+    <fieldset data-word-list class="space-y-3 rounded-lg bg-muted p-4">
       <legend data-list-legend class="sr-only">Word list</legend>
       <div class="flex items-center justify-between gap-3">
         <span data-list-heading class="font-mono text-sm">List</span>
@@ -280,8 +280,8 @@ import FormTextarea from '@/components/FormTextarea.astro'
         />
       </label>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <p data-list-count class="font-sans text-xs font-light text-foreground-muted">0 items</p>
-        <label class="flex items-center gap-2 font-sans text-xs font-medium">
+        <p data-list-count class="text-xs text-foreground-muted">0 items</p>
+        <label class="flex items-center gap-2 text-xs font-medium">
           <input data-include-individual type="checkbox" class="size-4 accent-primary" />
           Include individual items
         </label>

@@ -29,31 +29,15 @@
 /docs/*.md
   Link: <https://seoskill.dev/docs/:splat>; rel="canonical"
 
-/features
-  Link: <https://seoskill.dev/features.md>; rel="alternate"; type="text/markdown"
+/tools
+  Link: <https://seoskill.dev/tools.md>; rel="alternate"; type="text/markdown"
   Vary: Accept
-
-/features.md
-  Link: <https://seoskill.dev/features>; rel="canonical"
-
-/features/*.md
-  Link: <https://seoskill.dev/features/:splat>; rel="canonical"
 
 /tools.md
   Link: <https://seoskill.dev/tools>; rel="canonical"
 
 /tools/*.md
   Link: <https://seoskill.dev/tools/:splat>; rel="canonical"
-
-/blog
-  Link: <https://seoskill.dev/blog.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/blog.md
-  Link: <https://seoskill.dev/blog>; rel="canonical"
-
-/blog/*.md
-  Link: <https://seoskill.dev/blog/:splat>; rel="canonical"
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

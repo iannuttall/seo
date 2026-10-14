@@ -1,6 +1,6 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
 
@@ -23,14 +23,14 @@ const targetLabel = kind === 'spam-score' ? 'Domain or page URL' : 'Domain'
   data-endpoint={endpoint}
   class="space-y-6"
 >
-  <DottedCard patternId={`${kind}-input`}>
+  <Card>
     <form data-checker-form class="space-y-5 p-5 sm:p-6" novalidate>
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">{heading}</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">{description}</p>
+        <h2 class="text-lg font-medium">{heading}</h2>
+        <p class="text-sm leading-6 text-foreground-muted">{description}</p>
       </div>
 
-      <label class="block space-y-2 font-sans text-sm font-medium">
+      <label class="block space-y-2 text-sm font-medium">
         <span>{targetLabel}</span>
         <FormInput
           data-target
@@ -48,57 +48,63 @@ const targetLabel = kind === 'spam-score' ? 'Domain or page URL' : 'Domain'
       <TurnstileWidget {action} />
 
       <div class="flex justify-end">
-        <Button data-submit type="submit" class="min-h-12 shrink-0 px-5 text-xs">{buttonLabel}</Button>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{buttonLabel}</Button>
       </div>
-      <p data-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId={`${kind}-summary`} inverted>
+    <Card inverted>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p data-score class="mt-1 font-mono text-5xl font-normal text-primary"></p>
-            <p data-label class="mt-2 font-sans text-sm font-light text-panel-foreground/70"></p>
+            <p data-score class="mt-1 text-5xl font-medium text-primary"></p>
+            <p data-label class="mt-2 text-sm text-foreground-muted"></p>
+            {kind === 'domain-rating' ? (
+              <p class="mt-1 text-sm text-foreground-muted">
+                Domain Rating by{' '}
+                <a class="text-primary underline underline-offset-4 hover:text-primary-hover" href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>
+              </p>
+            ) : null}
           </div>
           <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy result</Button>
         </div>
-        <dl class="grid gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-2">
+        <dl class="grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Checked target</dt>
+            <dt class="text-xs text-foreground-muted">Checked target</dt>
             <dd data-result-target class="mt-1 break-all font-mono text-xs"></dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Checked</dt>
+            <dt class="text-xs text-foreground-muted">Checked</dt>
             <dd data-checked-at class="mt-1 font-mono text-xs"></dd>
           </div>
         </dl>
-        <p data-copy-status class="font-sans text-xs font-light text-panel-foreground/65" aria-live="polite"></p>
+        <p data-copy-status class="text-xs text-foreground-muted" aria-live="polite"></p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId={`${kind}-meaning`}>
+    <Card>
       <div class="space-y-4 p-5 sm:p-6">
-        <h3 class="font-mono text-sm font-normal">
+        <h3 class="text-sm font-medium">
           {kind === 'spam-score' ? 'What the score highlights' : 'Compare the sites you actually compete with'}
         </h3>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <p class="text-sm leading-6 text-foreground-muted">
           {kind === 'spam-score'
             ? 'Use the score to find domains or pages that need a closer review. A lower score suggests fewer spam patterns, while a higher score suggests more.'
-            : 'One Domain Rating has little context on its own. The competitive opportunities report combines current search results, keyword demand, Domain Rating, and optional referring-domain counts to find the competitors and topics worth inspecting.'}
+            : 'One Domain Rating has little context on its own. The research command lists the domains that rank for the same keywords as yours, with a Domain Rating next to each one.'}
         </p>
         {kind === 'domain-rating' ? (
           <Button
-            href="/docs/reports/competitive-opportunities"
+            href="/docs/commands/research"
             class="min-h-10 w-fit px-4 text-xs"
           >
-            Open the competitor research report
+            See the research command
           </Button>
         ) : null}
-        <p data-warning hidden class="border-t border-border pt-3 font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+        <p data-warning hidden class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 
@@ -183,7 +189,7 @@ const targetLabel = kind === 'spam-score' ? 'Domain or page URL' : 'Domain'
               : score <= 60
                 ? 'Medium Spam Score'
                 : 'High Spam Score'
-            : 'Domain Rating by Ahrefs'
+            : 'Domain Rating'
         setText('[data-label]', scoreLabel)
         setText('[data-result-target]', metric.target)
         setText('[data-checked-at]', new Date(metric.provenance.checkedAt).toLocaleString())

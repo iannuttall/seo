@@ -1,6 +1,5 @@
 ---
 import PageHeader from '@/components/PageHeader.astro'
-import CopyCode from '@/components/docs/CopyCode.astro'
 import ServerLogAnalyzer from '@/components/tools/ServerLogAnalyzer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -39,7 +38,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <PageHeader
       title="SEO log file analyzer"
       description="Find Googlebot, Bingbot, and AI crawler activity in a server access log. The file is processed in your browser and can be exported as four useful CSV tables."
-      align="left"
     />
 
     <ServerLogAnalyzer />
@@ -78,28 +76,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         case, rather than a clean zero.
       </p>
 
-      <h2>Run repeatable log analysis from the terminal</h2>
-      <p>
-        The command uses the same parser and returns the same crawler evidence.
-        JSON output is useful for an agent or script.
-      </p>
-      <CopyCode
-        label="Analyze a server log as JSON"
-        value="seo server-logs analyze --file ./access.log --json"
-      />
-      <p>
-        Choose one CSV table when you need a file for a spreadsheet or another
-        analysis tool.
-      </p>
-      <CopyCode
-        label="Export crawler errors as CSV"
-        value="seo server-logs analyze --file ./access.log --csv crawler-errors --output ./crawler-errors.csv"
-        wrap
-      />
-      <p>
-        The <a href="/docs/reports/server-log-analysis">server log analysis report guide</a>{' '}
-        covers the available command limits and structured result.
-      </p>
     </div>
   </main>
 </BaseLayout>

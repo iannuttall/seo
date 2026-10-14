@@ -1,0 +1,56 @@
+---
+title: SEO CLI
+description: Install the open source seo command, run setup, and use the same SEO reports from your terminal, plus a site crawl and internal links.
+heading: CLI
+lead: The open source seo command runs the same reports on your machine, and adds a site crawl and internal links.
+---
+
+Use the CLI when you want everything local, when you script reports, or when you need the two commands that fetch many pages from your machine.
+
+## Install and run setup
+
+You need Node 22 or newer.
+
+```sh
+npm i -g seo
+seo start
+```
+
+Setup walks you through three things:
+
+1. Sign in with Google for read-only Search Console and Google Analytics access.
+2. Save a project, which remembers your site so you do not type it each time.
+3. Add the skill and MCP server to the agents it finds on your machine. If you skip this, you can add them later.
+
+## Run the commands
+
+| Command | What it does |
+| --- | --- |
+| `seo report` | The [main report](/docs/commands/report), an overview first, then one section |
+| `seo page` | [One URL](/docs/commands/page): live page facts, Google index status and its queries |
+| `seo compare` | [Before and after a date](/docs/commands/compare), with Google updates |
+| `seo index` | [Pages that lost their clicks](/docs/commands/indexing), checked live |
+| `seo research` | [Keyword and competitor data](/docs/commands/research) from your own key |
+| `seo data` | [Raw rows](/docs/commands/data) from Search Console or your analytics |
+| `seo crawl` | [Crawl your site](/docs/commands/crawl) and list technical issues |
+| `seo internal-links` | [Pages that could link](/docs/commands/internal-links) to a page you choose |
+
+Add `--help` to any command to see its options:
+
+```sh
+seo report --help
+```
+
+Your agent runs the same commands for you once setup has added the skill, so most days you just ask it a question.
+
+## Where your data lives
+
+Your Google tokens, project settings, cached responses and crawls stay on your machine. Nothing is sent to SEO Skill except the [anonymous usage counts](/telemetry), which you can turn off:
+
+```sh
+seo telemetry disable
+```
+
+## Open source
+
+The CLI is Apache-2.0 licensed. The code, issues and releases are on [GitHub](https://github.com/iannuttall/seo), and the package is [seo on npm](https://www.npmjs.com/package/seo).

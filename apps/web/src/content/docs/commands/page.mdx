@@ -1,0 +1,28 @@
+---
+title: Check one page
+description: Check one URL with seo page. See the live status, redirect, title, description, H1, canonical and robots tags, Google index status and the page's queries.
+heading: seo page
+lead: Everything for one URL. What the live page shows, whether Google has it indexed, and the queries it gets.
+---
+
+Use it when one page matters: a page that dropped, a page you just changed, or a page from a report section you want to look at closely.
+
+## Check a page
+
+Ask your agent:
+
+```text
+Check https://example.com/pricing with SEO Skill
+```
+
+The hosted MCP runs `seo_page`. In a terminal, `seo page --help` shows how to pass the URL.
+
+## What comes back
+
+- **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now.
+- **Google index status.** What Search Console URL Inspection reports for the URL.
+- **Queries.** The page's Search Console queries for the last 28 days against the previous period.
+
+The page has to belong to a Search Console property you can read. URL Inspection reports Google's last known state, which can lag behind a change you just made.
+
+To check many pages that lost clicks at once, use [`seo index`](/docs/commands/indexing).

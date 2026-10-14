@@ -1,0 +1,37 @@
+---
+// A copyable code block from the ilo docs. The base layout binds the copy
+// button.
+import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import HugeIcon from './HugeIcon.astro'
+
+type Props = {
+  label?: string
+  value: string
+  wrap?: boolean
+  class?: string
+}
+
+const { label, value, wrap = false, class: className } = Astro.props
+---
+
+<div class:list={['mt-5 min-w-0', className]}>
+  {label ? <p class="mb-2 text-sm/6 text-foreground-muted">{label}</p> : null}
+  <div class="code-frame !mt-0">
+    <pre
+      class:list={[
+        '!mt-0 overflow-x-auto rounded-lg bg-muted p-4 pr-13 font-mono text-sm leading-6 text-foreground',
+        wrap && 'whitespace-pre-wrap break-words',
+      ]}><code>{value}</code></pre>
+    <div class="code-copy-strip">
+      <button
+        type="button"
+        class="code-copy-button"
+        aria-label={label ? `Copy ${label.toLowerCase()}` : 'Copy code'}
+        data-code-copy
+      >
+        <HugeIcon icon={Copy01Icon} class="code-copy-icon" data-copy-icon />
+        <HugeIcon icon={Tick02Icon} class="code-copy-icon hidden" data-copy-check-icon />
+      </button>
+    </div>
+  </div>
+</div>

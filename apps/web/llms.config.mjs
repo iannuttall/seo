@@ -1,27 +1,24 @@
+import { docsSections } from './src/content/docs-nav.mjs'
 import { tools } from './src/content/tools/manifest.mjs'
+
+const docsSection = (title) =>
+  docsSections
+    .find((section) => section.title === title)
+    ?.items.map((item) => ({ path: item.path })) ?? []
 
 /** @satisfies {import('@iannuttall/seo-graph-core').LlmsTxtConfig} */
 export const llmsTxt = {
   title: 'SEO Skill',
   summary:
-    'Local SEO audits and reports for coding agents through the CLI, MCP, and TypeScript package.',
+    'Free SEO data for AI agents: facts from Search Console, analytics and your own keyword data through a hosted MCP server or the open source seo CLI.',
   sections: [
     {
       heading: 'Start here',
-      items: [
-        { path: '/', label: 'SEO Skill' },
-        { path: '/docs/getting-started' },
-        { path: '/docs/skill' },
-      ],
+      items: [{ path: '/', label: 'SEO Skill' }, ...docsSection('Start')],
     },
     {
-      heading: 'Use the product',
-      items: [
-        { path: '/docs/reports' },
-        { path: '/docs/cli' },
-        { path: '/docs/mcp' },
-        { path: '/docs/typescript' },
-      ],
+      heading: 'Commands',
+      items: docsSection('Commands'),
     },
     {
       heading: 'Free web tools',
@@ -31,17 +28,22 @@ export const llmsTxt = {
       ],
     },
     {
-      heading: 'Agent and AI guidance',
+      heading: 'Data and privacy',
       items: [
-        { path: '/blog/seo-agent' },
-        { path: '/docs/ai-search' },
-        { path: '/docs/ai-visibility' },
-        { path: '/docs/agents' },
+        ...docsSection('Reference'),
+        { path: '/telemetry' },
+        { path: '/stats' },
       ],
     },
     {
       heading: 'Machine-readable capability',
       items: [
+        {
+          label: 'Hosted MCP server',
+          url: 'https://seoskill.dev/mcp',
+          description:
+            'Connect any remote MCP client. Sign in with Google; nothing is stored.',
+        },
         {
           label: 'Agent Skills index',
           url: '/.well-known/agent-skills/index.json',

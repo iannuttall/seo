@@ -23,7 +23,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <PageHeader
       title="Domain Rating checker"
       description="Get the Domain Rating for your website, a client site, or a competitor."
-      align="left"
     />
 
     <ProtectedMetricChecker
@@ -38,7 +37,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <div class="docs-prose mt-16">
       <h2>Domain Rating is not Domain Authority</h2>
       <p>
-        Domain Rating, or DR, is Ahrefs' estimate of a website's backlink
+        Domain Rating, or DR, is Domain Rating by{' '}
+        <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
+        an estimate of a website's backlink
         profile strength on a logarithmic 0 to 100 scale. Domain Authority, or
         DA, is a separate Moz metric. The names sound similar, but their
         indexes and calculations are not interchangeable.
@@ -64,10 +65,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <p>
         Check competitors, publications, directories, and potential partners.
         Comparing their Domain Ratings can help you decide which backlink
-        opportunities deserve a closer look first. The{' '}
-        <a href="/docs/reports/link-evidence">link evidence report</a>{' '}
-        adds representative backlinks and referring-domain totals when a score
-        deserves closer inspection.
+        opportunities deserve a closer look first. With your own provider key,
+        the <a href="/docs/commands/research">research command</a>{' '}
+        lists referring domains with a Domain Rating next to each one.
       </p>
     </div>
   </main>

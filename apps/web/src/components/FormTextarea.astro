@@ -8,7 +8,9 @@ const { class: className, ...attrs } = Astro.props
 
 <textarea
   class:list={[
-    'w-full resize-y border border-border bg-background px-3 py-3 font-mono text-sm font-normal leading-6 text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary',
+    'w-full min-w-0 resize-y rounded-lg border border-input bg-card px-3 py-2.5 font-mono text-sm leading-6 text-foreground outline-none transition-[color,box-shadow] placeholder:text-foreground-soft',
+    'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
+    'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
     className,
   ]}
   {...attrs}

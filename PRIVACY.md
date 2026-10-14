@@ -30,7 +30,7 @@ account or log of your data.
   copy. Revoking the app in your
   [Google Account connections](https://myaccount.google.com/connections)
   stops them working.
-- **API keys.** Keys for DataForSEO, Ahrefs, Semrush, Clicky, Fathom, Simple
+- **API keys.** Keys for DataForSEO, Ahrefs, Clicky, Fathom, Simple
   Analytics or Plausible are optional. You can enter them on the sign-in
   page, where they are sealed into the same tokens, or send them as request
   headers. A key is used for the request it arrives with and is never stored.
@@ -163,9 +163,7 @@ operation. Depending on the provider and report, these can include:
 - the full fixed prompt, selected model, country, web search setting, and
   output limit used for an AI prompt observation.
 
-DataForSEO requests use your login and API password. Semrush requests use your
-Version 3 API key and can include the regional database, selected columns, and
-report limits. Ahrefs requests use your API v3 bearer key and can include the
+DataForSEO requests use your login and API password. Ahrefs requests use your API v3 bearer key and can include the
 target mode and country filter. Each provider also receives ordinary network
 metadata.
 
@@ -173,12 +171,10 @@ The project maintainer does not receive these credentials, inputs, or
 responses. DataForSEO processes them under its
 [privacy policy](https://dataforseo.com/privacy-policy). As of the date of this
 policy, DataForSEO says it stores API task data for 365 days. Its policy and
-retention can change independently of this project. Semrush and Ahrefs process
-requests under their respective
-[Semrush privacy policy](https://www.semrush.com/company/legal/privacy-policy/)
-and [Ahrefs privacy policy](https://ahrefs.com/legal/privacy-policy).
+retention can change independently of this project. Ahrefs processes requests
+under the [Ahrefs privacy policy](https://ahrefs.com/legal/privacy-policy).
 
-Importing a local DataForSEO, Semrush, or Ahrefs file does not upload it to the
+Importing a local DataForSEO or Ahrefs file does not upload it to the
 provider or the project maintainer.
 
 ## Bing Webmaster requests
@@ -221,7 +217,7 @@ That transfer is controlled by the client and model service, not by the local
 ## How long research data is kept locally
 
 DataForSEO responses are cached locally for up to 24 hours or seven days,
-depending on the operation. Semrush responses are cached for up to seven days.
+depending on the operation.
 Ahrefs Domain Rating responses are cached for up to 24 hours, and other Ahrefs
 responses are cached for up to seven days. Cache maintenance removes provider
 cache entries older than 30 days and enforces a 32 MiB provider-cache limit.
@@ -234,8 +230,7 @@ exact configuration, 10,000 observations in total, and 128 MiB of logical
 storage. The local provider spend ledger is kept for up to 730 days, 50,000
 rows, or 32 MiB.
 
-Run `seo cache clear --provider dataforseo`,
-`seo cache clear --provider semrush`, or
+Run `seo cache clear --provider dataforseo` or
 `seo cache clear --provider ahrefs` to remove one provider's cached responses.
 Run the matching `seo providers <provider> disconnect` command to remove its
 saved credential. These commands do not delete data already processed by an
@@ -348,8 +343,7 @@ copy, publish, transmit, or pass it to an agent or application yourself.
 ## Removing access and local data
 
 Use `seo auth logout` to remove local Google tokens. Use
-`seo providers dataforseo disconnect`,
-`seo providers semrush disconnect`, `seo providers ahrefs disconnect`, or
+`seo providers dataforseo disconnect`, `seo providers ahrefs disconnect`, or
 `seo providers bing disconnect` to remove the corresponding saved provider
 credential. Use `seo indexnow remove --site https://example.com` to remove a
 saved IndexNow key for one site. Environment variables are controlled by your

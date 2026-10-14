@@ -50,7 +50,7 @@ export const commands = [
     tool: 'seo_research',
     path: '/docs/commands/research',
     icon: SearchList01Icon,
-    text: 'Keyword metrics, rankings, SERPs, competitors and backlinks from your own DataForSEO, Ahrefs or Semrush key.',
+    text: 'Keyword metrics, rankings, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs key.',
   },
   {
     id: 'data',

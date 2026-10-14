@@ -701,8 +701,7 @@ test('site uses the ilo visual system and one-click setup commands', () => {
     'claude mcp add --transport http seoskill https://seoskill.dev/mcp',
     'codex mcp add seoskill --url https://seoskill.dev/mcp',
     'https://seoskill.dev/mcp',
-    'npm i -g seo',
-    'seo start',
+    'npm i -g seo &amp;&amp; seo start',
   ]) {
     assert.match(
       home,
@@ -711,6 +710,10 @@ test('site uses the ilo visual system and one-click setup commands', () => {
     )
   }
   assert.match(home, /role="tablist" aria-label="MCP client"/)
+  // Client panels share one grid cell, so switching never changes height.
+  assert.match(home, /\[grid-area:1\/1\]/)
+  assert.doesNotMatch(home, /data-setup-panel="[^"]+"[^>]*\shidden[\s>=]/)
+  assert.doesNotMatch(home, /data-copy-value="npm i -g seo"/)
   assert.match(home, /Nothing stored/)
   assert.match(home, /<a[^>]+href="\/cookies"[^>]*>\s*Cookies\s*<\/a>/)
   for (const command of [
@@ -748,6 +751,12 @@ test('site uses the ilo visual system and one-click setup commands', () => {
   assert.match(css, /--frame-max: 48rem/)
   assert.match(css, /prefers-color-scheme: dark/)
   assert.doesNotMatch(css, /Martian|dither|clipped-dot/)
+  assert.match(css, /:root:not\(\[data-theme="light"\]\)/)
+  assert.match(css, /:root\[data-theme="dark"\]/)
+  assert.doesNotMatch(
+    readFileSync(resolve(appRoot, 'public/favicon.svg'), 'utf8'),
+    /focus-point/,
+  )
   assert.match(layout, /site-frame/)
   assert.doesNotMatch(
     readdirSync(resolve(appRoot, 'public/fonts')).join(' '),

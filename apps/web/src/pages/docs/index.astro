@@ -1,27 +1,17 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { docsSections } from '@/content/docs-nav.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import type { SchemaBreadcrumb } from '@/lib/schema'
-
-const breadcrumbs: SchemaBreadcrumb[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Docs' },
-]
 ---
 
 <BaseLayout
   title="Docs"
   description="Connect the free hosted MCP or install the seo CLI, then learn the eight commands that give your agent facts from your search data."
   canonicalPath="/docs"
-  {breadcrumbs}
   schemaType="CollectionPage"
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-
     <PageHeader
       title="Docs"
       description="Connect the hosted MCP or install the CLI. Both run the same reports and give your agent the same facts."

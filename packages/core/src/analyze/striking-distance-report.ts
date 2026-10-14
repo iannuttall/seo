@@ -9,6 +9,7 @@ import {
   type QueryContentVerifier,
 } from './content-coverage-analysis.js'
 import type { TemplateSummary } from './page-patterns.js'
+import { explicitDateRange } from './site-diagnostics/quick-wins-report-input.js'
 import {
   analyzeStrikingDistanceRows,
   type StrikingDistanceAnalysis,
@@ -23,7 +24,12 @@ const MAX_SOURCE_ROWS = 100_000
 
 export type StrikingDistanceInput = {
   site: string
+  /** Window length in days; ignored when startDate and endDate are given. */
   days?: number
+  /** Explicit window start (YYYY-MM-DD); pass with endDate. */
+  startDate?: string
+  /** Explicit window end (YYYY-MM-DD); pass with startDate. */
+  endDate?: string
   minImpressions?: number
   limit?: number
   brandTerms?: string[]
@@ -56,6 +62,8 @@ export type StrikingDistanceReport = {
     completeness: 'retained-query-rows-only'
   }
   dataStatus: StrikingDistanceAnalysis['dataStatus']
+  minImpressions: StrikingDistanceAnalysis['minImpressionsPolicy']
+  brand: StrikingDistanceAnalysis['brand']
   selection: StrikingDistanceAnalysis['selection']
   methodology: StrikingDistanceAnalysis['methodology']
   verification:
@@ -166,9 +174,10 @@ export async function strikingDistanceWith(
   input: StrikingDistanceInput,
   dependencies: StrikingDistanceDependencies,
 ): Promise<StrikingDistanceReport> {
-  const days = reportDays(input.days)
+  const explicitRange = explicitDateRange(input, MAX_DAYS)
+  const days = explicitRange?.days ?? reportDays(input.days)
   const generatedAt = dependencies.now().toISOString()
-  const range = dateRange(days, new Date(generatedAt))
+  const range = explicitRange?.range ?? dateRange(days, new Date(generatedAt))
   const result = await dependencies.searchAnalytics(
     input.site,
     {
@@ -248,6 +257,8 @@ export async function strikingDistanceWith(
       completeness: 'retained-query-rows-only',
     },
     dataStatus: analysis.dataStatus,
+    minImpressions: analysis.minImpressionsPolicy,
+    brand: analysis.brand,
     selection: analysis.selection,
     methodology: analysis.methodology,
     verification: verificationRequested
@@ -281,6 +292,16 @@ export async function strikingDistanceWith(
     caveats: [
       `Date window: ${range.startDate} to ${range.endDate}, using final GSC data where available.`,
       `Selection: ${analysis.selection.sourceRows} source rows, ${analysis.selection.eligibleRows} eligible, ${analysis.selection.returnedRows} returned.`,
+      analysis.minImpressionsPolicy.source === 'scaled-default'
+        ? `Minimum impressions per query/page row: ${analysis.minImpressions}, scaled from ${analysis.minImpressionsPolicy.basisImpressions} retained impressions (1 in 5,000, between ${analysis.minImpressionsPolicy.scale.floor} and ${analysis.minImpressionsPolicy.scale.ceiling}); ${analysis.selection.belowMinimumRows} rows were below it. This scaling is a heuristic.`
+        : `Minimum impressions per query/page row: ${analysis.minImpressions} (requested); ${analysis.selection.belowMinimumRows} rows were below it.`,
+      `Brand queries: ${analysis.brand.filtering}. Brand terms used: ${analysis.brand.terms.join(', ') || 'none'} (${analysis.brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
+      analysis.selection.fragmentRows
+        ? `${countLabel(analysis.selection.fragmentRows, 'source row')} with a #fragment URL merged into the base URL.`
+        : '',
+      analysis.selection.flaggedRows
+        ? `${countLabel(analysis.selection.flaggedRows, 'eligible row')} carry heuristic query flags (likely-automated or navigational-other) and rank after unflagged rows.`
+        : '',
       "Position is GSC average position for the property's topmost result per impression; it does not prove a URL ranked on a literal second results page every time.",
       'Search Analytics exposes retained query rows only. Anonymized and lower-value queries can be absent even when pagination is exhausted.',
       'Priority is a demand-and-position heuristic, not an estimated click lift or proof that a change will improve rankings.',

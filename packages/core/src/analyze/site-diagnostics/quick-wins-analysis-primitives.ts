@@ -1,8 +1,11 @@
-import { shouldExcludeBrandQuery } from '../../brand.js'
 import type { GscRow } from '../../types.js'
 import type { PositionBenchmark } from '../opportunity-primitives.js'
 import { detectPageTemplate } from '../page-patterns.js'
-import { isLowActionabilityQuery } from '../query-quality.js'
+import { compareQueryFlags, type QueryFlag } from '../query-quality.js'
+import {
+  prepareQueryPageRows,
+  selectSiteCtrCurveRows,
+} from '../site-ctr-curve.js'
 import type {
   AnalyzeQuickWinsInput,
   QuickWinBenchmark,
@@ -20,78 +23,41 @@ export function boundedInteger(
   return Math.min(maximum, Math.max(minimum, Math.floor(value)))
 }
 
-function validHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value)
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
-}
-
-function validRow(row: GscRow, query: string, url: string): boolean {
-  return (
-    row.keys.length >= 2 &&
-    Boolean(query) &&
-    validHttpUrl(url) &&
-    Number.isFinite(row.clicks) &&
-    row.clicks >= 0 &&
-    Number.isFinite(row.impressions) &&
-    row.impressions > 0 &&
-    row.clicks <= row.impressions &&
-    Number.isFinite(row.ctr) &&
-    row.ctr >= 0 &&
-    row.ctr <= 1 &&
-    Number.isFinite(row.position) &&
-    row.position >= 1
-  )
-}
-
-export function selectBenchmarkRows(input: AnalyzeQuickWinsInput): {
+export function selectBenchmarkRows(
+  input: AnalyzeQuickWinsInput,
+  brandTerms: string[],
+): {
   rows: GscRow[]
   selection: QuickWinSelection
 } {
+  const prepared = prepareQueryPageRows(input.rows)
+  const curveRows = selectSiteCtrCurveRows({
+    rows: prepared.rows,
+    site: input.site,
+    brandTerms,
+    includeBrand: input.includeBrand,
+  })
   const selection: QuickWinSelection = {
-    sourceRows: input.rows.length,
-    invalidRows: 0,
-    outsideBenchmarkPositionRows: 0,
-    lowActionabilityRows: 0,
-    brandRows: 0,
-    benchmarkRows: 0,
+    sourceRows: prepared.sourceRows,
+    invalidRows: prepared.invalidRows,
+    fragmentRows: prepared.fragment.fragmentRows,
+    duplicateRows: prepared.duplicateRows,
+    aggregatedRows: prepared.aggregatedRows,
+    outsideBenchmarkPositionRows: curveRows.outsidePageOneRows,
+    lowActionabilityRows: curveRows.lowActionabilityRows,
+    brandRows: curveRows.brandRows,
+    benchmarkRows: curveRows.rows.length,
     outsideCandidatePositionRows: 0,
     belowMinimumRows: 0,
     atOrAboveTargetRows: 0,
     eligibleRows: 0,
+    likelyAutomatedRows: 0,
+    navigationalOtherRows: 0,
+    flaggedRows: 0,
     returnedRows: 0,
     limitedRows: 0,
   }
-  const rows: GscRow[] = []
-
-  for (const row of input.rows) {
-    const query = row.keys[0]?.trim() ?? ''
-    const url = row.keys[1]?.trim() ?? ''
-    if (!validRow(row, query, url)) {
-      selection.invalidRows++
-    } else if (row.position > 10) {
-      selection.outsideBenchmarkPositionRows++
-    } else if (isLowActionabilityQuery(query)) {
-      selection.lowActionabilityRows++
-    } else if (
-      shouldExcludeBrandQuery({
-        query,
-        siteUrl: input.site,
-        brandTerms: input.brandTerms,
-        includeBrand: input.includeBrand,
-      })
-    ) {
-      selection.brandRows++
-    } else {
-      rows.push({ ...row, keys: [query, url] })
-      selection.benchmarkRows++
-    }
-  }
-
-  return { rows, selection }
+  return { rows: curveRows.rows, selection }
 }
 
 function benchmarkDetails(input: {
@@ -120,6 +86,7 @@ export function quickWinItem(input: {
   row: GscRow
   benchmark: PositionBenchmark
   excludedTargetRows: number
+  queryFlags: QueryFlag[]
 }): QuickWinItem {
   const query = input.row.keys[0] ?? ''
   const url = input.row.keys[1] ?? ''
@@ -143,6 +110,7 @@ export function quickWinItem(input: {
     ctr: input.row.ctr,
     targetCtr: input.benchmark.ctr,
     benchmark,
+    queryFlags: input.queryFlags,
     estimatedCtrClickShortfall,
     priority: {
       method: 'impressions_x_target_ctr_shortfall',
@@ -172,6 +140,7 @@ export function compareQuickWinItems(
   right: QuickWinItem,
 ): number {
   return (
+    compareQueryFlags(left.queryFlags, right.queryFlags) ||
     right.estimatedCtrClickShortfall - left.estimatedCtrClickShortfall ||
     right.impressions - left.impressions ||
     compareText(left.query, right.query) ||

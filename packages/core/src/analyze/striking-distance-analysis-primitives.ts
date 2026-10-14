@@ -1,6 +1,7 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
 import type { GscRow } from '../types.js'
 import { detectPageTemplate } from './page-patterns.js'
+import { compareQueryFlags, type QueryFlag } from './query-quality.js'
 import type {
   StrikingDistanceAnalysisGroup,
   StrikingDistanceAnalysisItem,
@@ -80,6 +81,7 @@ function itemRecommendation(input: {
 
 export function strikingDistanceItem(
   row: GscRow,
+  queryFlags: QueryFlag[] = [],
 ): StrikingDistanceAnalysisItem {
   const query = row.keys[0]?.trim() ?? ''
   const url = row.keys[1]?.trim() ?? ''
@@ -94,6 +96,7 @@ export function strikingDistanceItem(
     impressions: Number(row.impressions.toFixed(3)),
     ctr: Number(row.ctr.toFixed(4)),
     position: Number(row.position.toFixed(2)),
+    queryFlags,
     priority: {
       method: 'impressions_x_position_proximity',
       score: Number((row.impressions * proximity).toFixed(2)),
@@ -116,6 +119,7 @@ export function compareStrikingDistanceItems(
   right: StrikingDistanceAnalysisItem,
 ): number {
   return (
+    compareQueryFlags(left.queryFlags, right.queryFlags) ||
     right.priority.score - left.priority.score ||
     right.impressions - left.impressions ||
     left.position - right.position ||

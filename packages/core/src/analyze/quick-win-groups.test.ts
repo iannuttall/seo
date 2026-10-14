@@ -32,6 +32,7 @@ function item(input: Partial<QuickWinItem> = {}): QuickWinItem {
       confidence: 'fallback',
       heuristic: true,
     },
+    queryFlags: input.queryFlags ?? [],
     estimatedCtrClickShortfall,
     priority: input.priority ?? {
       method: 'impressions_x_target_ctr_shortfall',

@@ -1,14 +1,27 @@
-import { shouldExcludeBrandQuery } from '../brand.js'
+import {
+  type ReportBrandTerms,
+  resolveReportBrandTerms,
+} from '../brand-evidence.js'
 import type { GscRow } from '../types.js'
 import type {
   CtrUnderperformer,
   CtrUnderperformerSelection,
 } from './ctr-underperformers-types.js'
 import {
-  createCtrBenchmarkContext,
+  type PositionBenchmark,
   roundedPosition,
 } from './opportunity-primitives.js'
-import { isLowActionabilityQuery } from './query-quality.js'
+import {
+  compareQueryFlags,
+  countQueryFlags,
+  queryFlags,
+} from './query-quality.js'
+import {
+  CTR_SPLIT_POSITION,
+  createSiteCtrCurve,
+  prepareQueryPageRows,
+  selectSiteCtrCurveRows,
+} from './site-ctr-curve.js'
 
 export const CTR_DEFAULT_MIN_IMPRESSIONS = 200
 export const CTR_MAX_MIN_IMPRESSIONS = 1_000_000_000
@@ -39,111 +52,25 @@ function boundedInteger(
   return Math.min(maximum, Math.max(minimum, Math.floor(value)))
 }
 
-function normalizedQuery(value: string): string {
-  return value.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim()
-}
-
-function normalizedHttpUrl(value: string): string | undefined {
-  try {
-    const url = new URL(value)
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined
-    url.hash = ''
-    return url.toString()
-  } catch {
-    return undefined
-  }
-}
-
-function validMetrics(row: GscRow): boolean {
-  return (
-    Number.isFinite(row.clicks) &&
-    row.clicks >= 0 &&
-    Number.isFinite(row.impressions) &&
-    row.impressions > 0 &&
-    row.clicks <= row.impressions &&
-    Number.isFinite(row.ctr) &&
-    row.ctr >= 0 &&
-    row.ctr <= 1 &&
-    Number.isFinite(row.position) &&
-    row.position > 0
-  )
-}
-
-type AggregatedCtrRow = GscRow & { sourceRows: number }
-
-function aggregateCtrRows(
-  rows: GscRow[],
-  selection: CtrUnderperformerSelection,
-): AggregatedCtrRow[] {
-  const groups = new Map<
-    string,
-    {
-      query: string
-      url: string
-      clicks: number
-      impressions: number
-      weightedPosition: number
-      sourceRows: number
-    }
-  >()
-
-  for (const row of rows) {
-    const query = row.keys[0]?.trim() ?? ''
-    const url = normalizedHttpUrl(row.keys[1]?.trim() ?? '')
-    if (row.keys.length !== 2 || !query || !url || !validMetrics(row)) {
-      selection.invalidRows++
-      continue
-    }
-    selection.validRows++
-    const key = `${normalizedQuery(query)}\u0000${url}`
-    const group = groups.get(key) ?? {
-      query,
-      url,
-      clicks: 0,
-      impressions: 0,
-      weightedPosition: 0,
-      sourceRows: 0,
-    }
-    if (compareText(query, group.query) < 0) group.query = query
-    group.clicks += row.clicks
-    group.impressions += row.impressions
-    group.weightedPosition += row.position * row.impressions
-    group.sourceRows++
-    groups.set(key, group)
-  }
-
-  const aggregated = [...groups.values()].map(
-    (group): AggregatedCtrRow => ({
-      keys: [group.query, group.url],
-      clicks: group.clicks,
-      impressions: group.impressions,
-      ctr: group.clicks / group.impressions,
-      position: group.weightedPosition / group.impressions,
-      sourceRows: group.sourceRows,
-    }),
-  )
-  selection.duplicateRows = aggregated.reduce(
-    (count, row) => count + row.sourceRows - 1,
-    0,
-  )
-  selection.aggregatedRows = aggregated.length
-  return aggregated
-}
-
 function initialSelection(sourceRows: number): CtrUnderperformerSelection {
   return {
     sourceRows,
     invalidRows: 0,
     validRows: 0,
+    fragmentRows: 0,
     duplicateRows: 0,
     aggregatedRows: 0,
     outsidePageOneRows: 0,
     lowActionabilityRows: 0,
     brandRows: 0,
     benchmarkRows: 0,
+    outsideCandidatePositionRows: 0,
     belowMinimumRows: 0,
     evaluatedRows: 0,
     eligibleUnderperformers: 0,
+    likelyAutomatedRows: 0,
+    navigationalOtherRows: 0,
+    flaggedRows: 0,
     returnedUnderperformers: 0,
     limitedUnderperformers: 0,
   }
@@ -163,6 +90,8 @@ export function analyzeCtrUnderperformersFromRows(input: {
   minImpressions: number
   limit: number
   selection: CtrUnderperformerSelection
+  brand: ReportBrandTerms
+  benchmarkByPosition: Record<string, PositionBenchmark>
 } {
   const minImpressions = boundedInteger(
     input.minImpressions,
@@ -172,34 +101,36 @@ export function analyzeCtrUnderperformersFromRows(input: {
   )
   const limit = boundedInteger(input.limit, CTR_DEFAULT_LIMIT, 1, CTR_MAX_LIMIT)
   const selection = initialSelection(input.rows.length)
-  const aggregatedRows = aggregateCtrRows(input.rows, selection)
-  const benchmarkRows = aggregatedRows.filter((row) => {
-    const query = row.keys[0] ?? ''
-    if (row.position < 1 || row.position > 10) {
-      selection.outsidePageOneRows++
-      return false
-    }
-    if (isLowActionabilityQuery(query)) {
-      selection.lowActionabilityRows++
-      return false
-    }
-    if (
-      shouldExcludeBrandQuery({
-        query,
-        siteUrl: input.site,
-        brandTerms: input.brandTerms,
-        includeBrand: input.includeBrand,
-      })
-    ) {
-      selection.brandRows++
-      return false
-    }
-    return true
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: input.rows,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
   })
+  const prepared = prepareQueryPageRows(input.rows)
+  selection.invalidRows = prepared.invalidRows
+  selection.validRows = prepared.validRows
+  selection.fragmentRows = prepared.fragment.fragmentRows
+  selection.duplicateRows = prepared.duplicateRows
+  selection.aggregatedRows = prepared.aggregatedRows
+  const curveRows = selectSiteCtrCurveRows({
+    rows: prepared.rows,
+    site: input.site,
+    brandTerms: brand.terms,
+    includeBrand: input.includeBrand,
+  })
+  selection.outsidePageOneRows = curveRows.outsidePageOneRows
+  selection.lowActionabilityRows = curveRows.lowActionabilityRows
+  selection.brandRows = curveRows.brandRows
+  const benchmarkRows = curveRows.rows
   selection.benchmarkRows = benchmarkRows.length
-  const benchmarkContext = createCtrBenchmarkContext(benchmarkRows)
+  const benchmarkContext = createSiteCtrCurve(benchmarkRows)
 
   const evaluatedRows = benchmarkRows.filter((row) => {
+    if (row.position >= CTR_SPLIT_POSITION) {
+      selection.outsideCandidatePositionRows++
+      return false
+    }
     if (row.impressions < minImpressions) {
       selection.belowMinimumRows++
       return false
@@ -224,6 +155,7 @@ export function analyzeCtrUnderperformersFromRows(input: {
         clicks: row.clicks,
         expectedClicks,
         clickShortfall,
+        queryFlags: queryFlags(row.keys[0] ?? '', { siteUrl: input.site }),
         benchmark: {
           expectedCtr: benchmark.ctr,
           source: benchmark.source,
@@ -245,12 +177,14 @@ export function analyzeCtrUnderperformersFromRows(input: {
     .filter((item) => item.actualCtr < item.expectedCtr * 0.6)
     .sort(
       (left, right) =>
+        compareQueryFlags(left.queryFlags, right.queryFlags) ||
         right.clickShortfall - left.clickShortfall ||
         compareText(left.query, right.query) ||
         compareText(left.url, right.url),
     )
   const items = eligibleItems.slice(0, limit)
   selection.eligibleUnderperformers = eligibleItems.length
+  Object.assign(selection, countQueryFlags(eligibleItems))
   selection.returnedUnderperformers = items.length
   selection.limitedUnderperformers = eligibleItems.length - items.length
 
@@ -267,5 +201,7 @@ export function analyzeCtrUnderperformersFromRows(input: {
     minImpressions,
     limit,
     selection,
+    brand,
+    benchmarkByPosition: benchmarkContext.byPosition,
   }
 }

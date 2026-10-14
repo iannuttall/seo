@@ -1,3 +1,4 @@
+import type { ReportBrandTerms } from '../../brand-evidence.js'
 import type {
   ProviderImportEvidence,
   ProviderWarning,
@@ -86,6 +87,9 @@ export interface CannibalSelection {
 
 export interface CannibalReport {
   schemaVersion: 1
+  // Optional only so pre-existing fixtures stay valid; cannibalReport always
+  // sets it.
+  brand?: ReportBrandTerms
   // Optional only so pre-existing fixtures stay valid; cannibalReport always
   // sets it.
   dataSource?: 'search-console-api'
@@ -278,6 +282,7 @@ export interface AnalyzeCannibalRowsInput {
 
 export interface CannibalAnalysis {
   filters: CannibalReport['filters']
+  brand: ReportBrandTerms
   selection: CannibalSelection
   items: CannibalItem[]
   suppressed: CannibalSuppression[]

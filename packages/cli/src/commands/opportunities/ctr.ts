@@ -33,7 +33,8 @@ export const ctrUnderperformersCommand = defineCommand({
     client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['includeBrand', 'minImpressions'], {
       minImpressions: {
-        description: 'Minimum query impressions. Defaults to 200.',
+        description:
+          'Minimum query impressions. Defaults to 1 per 5,000 retained impressions, from 30 to 200.',
       },
     }),
     json: { type: 'boolean', default: false },

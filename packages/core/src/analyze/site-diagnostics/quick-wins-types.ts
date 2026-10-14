@@ -1,6 +1,7 @@
 import type { ReportBrandTerms } from '../../brand-evidence.js'
 import type { GscRow, Recommendation } from '../../types.js'
 import type { QueryContentCoverage } from '../content-coverage.js'
+import type { MinImpressionsPolicy } from '../min-impressions-policy.js'
 import type { PageTemplate } from '../page-patterns.js'
 import type { QUERY_FLAG_METHOD, QueryFlag } from '../query-quality.js'
 import type { SITE_CTR_CURVE_METHOD } from '../site-ctr-curve.js'
@@ -96,6 +97,7 @@ export type QuickWinTemplateRecommendation = {
 export type QuickWinAnalysis = {
   site: string
   minImpressions: number
+  minImpressionsPolicy: MinImpressionsPolicy
   limit: number
   dataStatus: 'empty' | 'filtered' | 'available'
   selection: QuickWinSelection

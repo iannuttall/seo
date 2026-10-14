@@ -2,10 +2,10 @@ import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import {
   analyzeCtrUnderperformersFromRows,
   CTR_DEFAULT_LIMIT,
-  CTR_DEFAULT_MIN_IMPRESSIONS,
   CTR_MAX_LIMIT,
   CTR_MAX_MIN_IMPRESSIONS,
 } from './ctr-underperformers-analysis.js'
+import { minImpressionsCaveat } from './min-impressions-policy.js'
 import { QUERY_FLAG_METHOD } from './query-quality.js'
 import { CTR_SPLIT_POSITION, SITE_CTR_CURVE_METHOD } from './site-ctr-curve.js'
 import {
@@ -52,13 +52,18 @@ export async function ctrUnderperformersReportWith(
   input: CtrUnderperformersInput,
   dependencies: CtrUnderperformerDependencies,
 ) {
-  const minImpressions = integerOption({
-    value: input.minImpressions,
-    fallback: CTR_DEFAULT_MIN_IMPRESSIONS,
-    minimum: 1,
-    maximum: CTR_MAX_MIN_IMPRESSIONS,
-    label: 'minImpressions',
-  })
+  // Validate an explicit minimum here; leave it undefined so the analysis
+  // scales the default to the site.
+  const requestedMinImpressions =
+    input.minImpressions === undefined
+      ? undefined
+      : integerOption({
+          value: input.minImpressions,
+          fallback: 1,
+          minimum: 1,
+          maximum: CTR_MAX_MIN_IMPRESSIONS,
+          label: 'minImpressions',
+        })
   const limit = integerOption({
     value: input.limit,
     fallback: CTR_DEFAULT_LIMIT,
@@ -96,10 +101,12 @@ export async function ctrUnderperformersReportWith(
     selection,
     brand,
     benchmarkByPosition,
+    minImpressions,
+    minImpressionsPolicy,
   } = analyzeCtrUnderperformersFromRows({
     rows: source.rows,
     site: input.site,
-    minImpressions,
+    minImpressions: requestedMinImpressions,
     limit,
     brandTerms: input.brandTerms,
     includeBrand: input.includeBrand,
@@ -149,6 +156,7 @@ export async function ctrUnderperformersReportWith(
       },
     },
     selection,
+    minImpressionsPolicy,
     methodology: {
       id: 'gsc_ctr_underperformers_v2' as const,
       position: {
@@ -189,6 +197,10 @@ export async function ctrUnderperformersReportWith(
       `Date window: ${range.startDate} to ${range.endDate} (${days} ${plural(days, 'day')}), using final GSC data where available.`,
       `Brand queries: ${input.includeBrand ? 'included' : 'excluded'}. Brand terms used: ${brand.terms.join(', ') || 'none'} (${brand.source === 'provided' ? 'provided' : 'host forms, plus the bare domain stem only when Search Console shows the site is its navigational answer'}).`,
       `Only rows at average position below ${CTR_SPLIT_POSITION} with at least ${minImpressions} impressions were checked. Rows at position ${CTR_SPLIT_POSITION} to 10 belong to quick-wins, which uses the same site CTR curve.`,
+      minImpressionsCaveat({
+        policy: minImpressionsPolicy,
+        belowMinimumRows: selection.belowMinimumRows,
+      }),
       'Expected CTR uses the site CTR curve from all page-one rows (75th percentile of qualified URL CTRs per position) when enough peer data exists, otherwise the fallback position curve.',
       ...(selection.fragmentRows
         ? [

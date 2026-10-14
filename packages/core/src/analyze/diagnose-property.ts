@@ -443,6 +443,7 @@ function emptyQuickWins(input: {
     },
     dataStatus: analysis.dataStatus,
     selection: analysis.selection,
+    minImpressionsPolicy: analysis.minImpressionsPolicy,
     methodology: analysis.methodology,
     provenance: {
       ...analysis.provenance,

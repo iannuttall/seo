@@ -248,3 +248,58 @@ test('does not hide Search Console failures', async () => {
     /Search Console unavailable/,
   )
 })
+
+test('a mid-size site gets a scaled default minimum and keeps quick wins', async () => {
+  // Regression: a fixed 200-impression default filtered every row of a site
+  // with about 150,000 retained impressions.
+  const candidates = Array.from({ length: 12 }, (_, index) =>
+    row({
+      query: `widget comparison ${String(index).padStart(2, '0')}`,
+      url: `https://example.com/widgets/${index}`,
+      impressions: 30 + index * 10,
+      position: 4 + (index % 7),
+    }),
+  )
+  const deeper = Array.from({ length: 300 }, (_, index) =>
+    row({
+      query: `deep topic ${index}`,
+      url: `https://example.com/deep/${index}`,
+      clicks: 1,
+      impressions: 496,
+      position: 25,
+    }),
+  )
+  // 1,020 candidate + 148,800 deeper + 180 remainder = 150,000 impressions.
+  const rows = [
+    ...candidates,
+    ...deeper,
+    row({
+      query: 'deep remainder',
+      url: 'https://example.com/deep/remainder',
+      impressions: 180,
+      position: 30,
+    }),
+  ]
+
+  const report = await quickWinsReport({ site }, dependencies(rows))
+
+  assert.equal(report.minImpressionsPolicy.effective, 30)
+  assert.equal(report.minImpressionsPolicy.source, 'scaled-default')
+  assert.equal(report.minImpressionsPolicy.basisImpressions, 150_000)
+  assert.equal(report.minImpressionsPolicy.scale.floor, 30)
+  assert.equal(report.minImpressionsPolicy.scale.ceiling, 200)
+  assert.equal(report.dataStatus, 'available')
+  assert.equal(report.summary.eligibleRows, 12)
+  assert.match(
+    report.caveats.join('\n'),
+    /scaled from 150000 retained impressions \(1 in 5,000, between 30 and 200\)/,
+  )
+
+  const fixed = await quickWinsReport(
+    { site, minImpressions: 200 },
+    dependencies(rows),
+  )
+  assert.equal(fixed.minImpressionsPolicy.source, 'explicit')
+  assert.equal(fixed.dataStatus, 'filtered')
+  assert.equal(fixed.selection.belowMinimumRows, 12)
+})

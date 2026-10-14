@@ -200,7 +200,7 @@ test('validates rows and records sequential sparse states', () => {
         query: 'low demand',
         url: 'https://example.com/low',
         clicks: 0,
-        impressions: 199,
+        impressions: 29,
         position: 8,
       }),
     ],
@@ -213,6 +213,8 @@ test('validates rows and records sequential sparse states', () => {
   assert.equal(result.selection.outsideBenchmarkPositionRows, 1)
   assert.equal(result.selection.brandRows, 1)
   assert.equal(result.selection.belowMinimumRows, 1)
+  assert.equal(result.minImpressions, 30)
+  assert.equal(result.minImpressionsPolicy.source, 'scaled-default')
 })
 
 test('uses inclusive GSC average-position boundaries from 4 through 10', () => {

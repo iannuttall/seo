@@ -1,0 +1,38 @@
+{
+  "subject": "content-decay",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which pages are slowly losing traffic?",
+      "expected_output": "Should run seo_report with section content-decay (or `seo report --section content-decay`). Should describe the rows as query and page pairs that lost clicks against the previous period. Should offer seo_index for pages that lost most of their clicks and seo_page to see which queries moved.",
+      "assertions": [
+        "Runs the content-decay section of the report",
+        "Describes rows as pairs that lost clicks against the previous period",
+        "Offers seo_index or seo_page as the next step"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The decay rows show clicks down 40% in the same month as a core update. Write it up as the update causing the loss.",
+      "expected_output": "Should not attribute the loss to the update. Should say that a Google update in the same window is timing, not cause. Should suggest seo_compare with the first day after the update to see which pages and queries moved, and keep the write-up to the observed facts.",
+      "assertions": [
+        "Does not say the update caused the loss",
+        "States that overlap with an update is timing, not cause",
+        "Suggests seo_compare with the update date"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "These decaying pages are dead weight. Delete or redirect all of them.",
+      "expected_output": "Should not recommend deleting or redirecting pages from the section alone. Should show the person the rows and suggest seo_page on the pages that matter to see their live state, index status and queries. Should ask the person before any change to the site.",
+      "assertions": [
+        "Does not recommend deleting or redirecting from the section alone",
+        "Suggests seo_page to check the pages",
+        "Asks the person before any change"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -14,6 +14,11 @@ const DOMAIN_FIELDS = ['domain', 'competitor_domain', 'Dn'] as const
 
 type Row = Record<string, string | number | boolean | null>
 
+type SharedCache = {
+  match(request: Request): Promise<Response | undefined>
+  put(request: Request, response: Response): Promise<void>
+}
+
 export function bareDomain(value: string): string {
   return value
     .replace(/^sc-domain:/, '')
@@ -27,8 +32,11 @@ async function lookup(domain: string, key: string): Promise<number | null> {
   const url = `${ENDPOINT}?target=${encodeURIComponent(domain)}`
   // DR of a public domain is the same for everyone, so one cached copy per
   // domain for a day keeps calls to Ahrefs low.
+  // The Workers cache; the CLI has none and asks each time.
+  const cache = (globalThis as { caches?: { default?: SharedCache } }).caches
+    ?.default
   const cacheKey = new Request(url)
-  const cached = await caches.default.match(cacheKey)
+  const cached = await cache?.match(cacheKey)
   const response =
     cached ??
     (await fetch(url, {
@@ -39,10 +47,10 @@ async function lookup(domain: string, key: string): Promise<number | null> {
   const body = (await response.clone().json()) as {
     domain_rating?: { domain_rating?: number | null }
   }
-  if (!cached) {
+  if (cache && !cached) {
     const copy = new Response(response.body, response)
     copy.headers.set('cache-control', `max-age=${TTL_SECONDS}`)
-    await caches.default.put(cacheKey, copy)
+    await cache.put(cacheKey, copy)
   }
   return body.domain_rating?.domain_rating ?? null
 }

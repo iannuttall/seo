@@ -1,4 +1,14 @@
-import { dateWindow, rowsText, runRows, table } from '@seo/core/commands'
+import {
+  dateWindow,
+  KEY_HEADERS,
+  RESEARCH_ACTIONS,
+  RESEARCH_HELP,
+  RESEARCH_PROVIDERS,
+  rowsText,
+  runResearch,
+  runRows,
+  table,
+} from '@seo/core/commands'
 import { z } from 'zod'
 import {
   listAnalyticsProperties,
@@ -10,17 +20,6 @@ import {
   type AnalyticsProvider,
   landingPages,
 } from '../providers/analytics.ts'
-import {
-  bareDomain,
-  DR_ATTRIBUTION,
-  domainRatings,
-  withDomainRating,
-} from '../providers/domain-rating.ts'
-import {
-  KEY_HEADERS,
-  type ResearchProvider,
-  research,
-} from '../providers/research.ts'
 import { deps } from './deps.ts'
 import {
   DateWindow,
@@ -236,23 +235,15 @@ export const seoData = defineTool({
 
 export const seoResearch = defineTool({
   name: 'seo_research',
-  title: 'Keyword and competitor data',
-  description: `Keyword and competitor data from the person’s own DataForSEO, Ahrefs or Semrush account, which costs them credits. Key headers: ${Object.entries(
+  title: 'Keyword, competitor and backlink data',
+  description: `Data from the person’s own DataForSEO, Ahrefs or Semrush account, which costs them credits. Key headers: ${Object.entries(
     KEY_HEADERS,
   )
     .map(([provider, header]) => `${provider} ${header}`)
-    .join(
-      '; ',
-    )}. Actions: keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords), backlinks (target: referring domains). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`,
+    .join('; ')}. Actions: ${RESEARCH_HELP}`,
   input: z.object({
-    provider: z.enum(['dataforseo', 'ahrefs', 'semrush']),
-    action: z.enum([
-      'keyword_metrics',
-      'ranked_keywords',
-      'serp',
-      'competitors',
-      'backlinks',
-    ]),
+    provider: z.enum(RESEARCH_PROVIDERS),
+    action: z.enum(RESEARCH_ACTIONS),
     keywords: z.array(z.string().min(1)).max(100).default([]),
     target: z.string().default('').describe('Domain or URL.'),
     country: z
@@ -263,40 +254,11 @@ export const seoResearch = defineTool({
     ...Detail,
   }),
   async run(context, input) {
-    const rows = await research(
-      input.provider as ResearchProvider,
-      context.headers,
-      {
-        action: input.action,
-        keywords: input.keywords,
-        target: input.target,
-        country: input.country,
-        language: 'en',
-        limit: Math.min(1000, Math.max(100, input.offset + PAGE_SIZE)),
-      },
-    )
-    const drKey =
-      context.headers.get('x-ahrefs-key') ?? context.env.AHREFS_DR_KEY
-    const rated = await withDomainRating(rows, drKey)
-    const targetDr = input.target
-      ? (await domainRatings([input.target], drKey)).get(
-          bareDomain(input.target),
-        )
-      : undefined
-    const hasDr = rated.added || (targetDr !== undefined && targetDr !== null)
-    return rowsText({
-      title: `${input.provider} ${input.action}${input.target ? ` for ${input.target}` : ''}, ${input.country}.`,
-      rows: rated.rows,
-      offset: input.offset,
-      limit: PAGE_SIZE,
-      detail: input.detail,
-      notes: [
-        `${input.provider} estimates, in the provider’s own units.`,
-        ...(targetDr !== undefined && targetDr !== null
-          ? [`${bareDomain(input.target)} domain_rating: ${targetDr}.`]
-          : []),
-        ...(hasDr ? [DR_ATTRIBUTION] : []),
-      ],
+    const result = await runResearch(input, context.headers, {
+      drKey: context.env.AHREFS_DR_KEY,
+      call: (offset) =>
+        `seo_research with the same input, detail "rows", offset ${offset}`,
     })
+    return result.text
   },
 })

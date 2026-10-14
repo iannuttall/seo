@@ -24,6 +24,7 @@ const INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google An
 1. seo_sites: the properties this sign-in can read.
 2. seo_report: a report such as quick-wins, low-ctr, content-decay, cannibalization or traffic-drop. Start with detail "summary".
 3. seo_search_console for raw rows, seo_inspect_url for index status, seo_analytics for landing page traffic, seo_research for keyword and competitor data from the person's own DataForSEO, Ahrefs or Semrush key.
+Crawls and page audits run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run for example \`npx -y seo crawl https://example.com --max-pages 500 --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo audit-page --url https://example.com/page --json\`; \`npx -y seo help all\` lists every command. seo_report with verify true checks up to 20 report URLs live.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
 
 // A new stateless server for each request, with JSON responses.

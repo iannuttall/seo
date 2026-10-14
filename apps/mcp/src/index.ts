@@ -54,7 +54,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (pathname === '/oauth/authorize' && method === 'GET') {
     return authorize(request, env)
   }
-  if (pathname === '/oauth/google' && method === 'GET') {
+  if (pathname === '/oauth/google' && method === 'POST') {
     return toGoogle(request, env)
   }
   if (pathname === '/oauth/callback' && method === 'GET') {
@@ -69,11 +69,10 @@ async function route(request: Request, env: Env): Promise<Response> {
     if (method !== 'POST') {
       return new Response(null, { status: 405, headers: { allow: 'POST' } })
     }
-    return serveMcp(request, {
-      env,
-      google: access.token,
-      headers: request.headers,
-    })
+    // Keys sent as headers win over keys sealed in at sign-in.
+    const headers = new Headers(access.keys)
+    for (const [name, value] of request.headers) headers.set(name, value)
+    return serveMcp(request, { env, google: access.token, headers })
   }
   return new Response('Not found', { status: 404 })
 }

@@ -1,6 +1,7 @@
 import {
   cannibalReportWith,
   ctrUnderperformersReportWith,
+  decayComparisonRange,
   decayingReportWith,
   finalGscDateRange,
   findOverlappingSearchUpdates,
@@ -13,7 +14,8 @@ import {
 } from '@seo/core/hosted'
 import { z } from 'zod'
 import { MAX_ROWS, resolveProperty, searchAnalytics } from '../google.ts'
-import { type Detail as DetailLevel, presentReport } from './present.ts'
+import { pageFacts, reportUrls } from '../pages.ts'
+import { type Detail as DetailLevel, presentReport, table } from './present.ts'
 import { DateWindow, Detail, defineTool, Site, ToolError } from './registry.ts'
 
 // Reports built only from Search Console rows, with the same analysis code as
@@ -21,10 +23,12 @@ import { DateWindow, Detail, defineTool, Site, ToolError } from './registry.ts'
 // code are removed: the agent and the person decide what to do.
 
 export const REPORTS = {
+  'site-overview':
+    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change. Call it first.',
   'quick-wins':
-    'Query and page pairs in positions 4 to 20 with a click-through rate below the site’s own curve for that position.',
+    'Query and page pairs at average positions 4 to 10 with a click-through rate below the site’s own curve for that position.',
   'low-ctr':
-    'Query and page pairs on page one whose click-through rate is below the expected rate for their position. Review titles and snippets with the person.',
+    'Query and page pairs at average positions 1 to 4 with a click-through rate below the site’s own curve: titles and snippets to review with the person.',
   'striking-distance':
     'Queries just outside the top positions, with impressions, for pages that already rank.',
   'second-page':
@@ -116,16 +120,151 @@ async function googleUpdates(window?: { start: string; end: string }) {
   })
 }
 
+const DEFAULT_DAYS: Record<ReportId, number> = {
+  'site-overview': 28,
+  'quick-wins': 28,
+  'low-ctr': 28,
+  'striking-distance': 28,
+  'second-page': 28,
+  'content-decay': 28,
+  cannibalization: 28,
+  'traffic-drop': 90,
+}
+
+export function earlierRange(
+  range: { startDate: string; endDate: string },
+  comparison: 'previous-period' | 'year-over-year',
+): { startDate: string; endDate: string } {
+  return decayComparisonRange(range, comparison)
+}
+
+const pct = (now: number, before: number) =>
+  before === 0 ? null : Math.round(((now - before) / before) * 1000) / 10
+
+// Totals, devices, top pages and top queries, now against before.
+async function siteOverview(
+  read: SearchAnalyticsQuery,
+  site: string,
+  range: { startDate: string; endDate: string },
+  comparison: 'previous-period' | 'year-over-year',
+): Promise<Record<string, unknown>> {
+  const before = earlierRange(range, comparison)
+  const get = (dimensions: string[], window: typeof range, maxRows = 1000) =>
+    read(site, {
+      ...window,
+      dimensions,
+      type: 'web',
+      dataState: 'final',
+      maxRows,
+    })
+  const [
+    total,
+    totalBefore,
+    device,
+    deviceBefore,
+    pages,
+    pagesBefore,
+    queries,
+    queriesBefore,
+  ] = await Promise.all([
+    get([], range),
+    get([], before),
+    get(['device'], range),
+    get(['device'], before),
+    get(['page'], range, 5000),
+    get(['page'], before, 5000),
+    get(['query'], range, 5000),
+    get(['query'], before, 5000),
+  ])
+  const row = (r?: {
+    clicks: number
+    impressions: number
+    ctr: number
+    position: number
+  }) => r ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 }
+  const now = row(total.rows[0])
+  const then = row(totalBefore.rows[0])
+  const compare = (
+    current: typeof pages.rows,
+    earlier: typeof pages.rows,
+    name: string,
+    limit: number,
+  ) => {
+    const old = new Map(earlier.map((r) => [r.keys[0], r]))
+    const seen = new Set(current.map((r) => r.keys[0]))
+    const rows = current.map((r) => ({
+      [name]: r.keys[0],
+      clicks: r.clicks,
+      previousClicks: old.get(r.keys[0])?.clicks ?? 0,
+      clicksChange: r.clicks - (old.get(r.keys[0])?.clicks ?? 0),
+      impressions: r.impressions,
+      position: r.position,
+    }))
+    for (const r of earlier) {
+      if (seen.has(r.keys[0])) continue
+      rows.push({
+        [name]: r.keys[0],
+        clicks: 0,
+        previousClicks: r.clicks,
+        clicksChange: -r.clicks,
+        impressions: 0,
+        position: 0,
+      })
+    }
+    const byClicks = rows.slice(0, limit)
+    const losers = [...rows]
+      .sort((a, b) => a.clicksChange - b.clicksChange)
+      .slice(0, limit)
+    const gainers = [...rows]
+      .sort((a, b) => b.clicksChange - a.clicksChange)
+      .slice(0, limit)
+    return {
+      top: byClicks,
+      biggestLosses: losers.filter((r) => r.clicksChange < 0),
+      biggestGains: gainers.filter((r) => r.clicksChange > 0),
+    }
+  }
+  const devices = new Map(deviceBefore.rows.map((r) => [r.keys[0], r]))
+  return {
+    range,
+    comparisonRange: before,
+    comparison,
+    summary: {
+      clicks: now.clicks,
+      previousClicks: then.clicks,
+      clicksChangePct: pct(now.clicks, then.clicks),
+      impressions: now.impressions,
+      previousImpressions: then.impressions,
+      impressionsChangePct: pct(now.impressions, then.impressions),
+      ctr: Math.round(now.ctr * 10000) / 10000,
+      previousCtr: Math.round(then.ctr * 10000) / 10000,
+      position: Math.round(now.position * 10) / 10,
+      previousPosition: Math.round(then.position * 10) / 10,
+    },
+    devices: device.rows.map((r) => ({
+      device: r.keys[0],
+      clicks: r.clicks,
+      previousClicks: devices.get(r.keys[0])?.clicks ?? 0,
+      impressions: r.impressions,
+      position: r.position,
+    })),
+    pages: compare(pages.rows, pagesBefore.rows, 'page', 15),
+    queries: compare(queries.rows, queriesBefore.rows, 'query', 15),
+    caveats: [
+      'Totals come from Search Console with no dimension, so they include queries that Search Console hides for privacy.',
+      'Page and query lists cover the top 5,000 rows in each period.',
+    ],
+  }
+}
+
 // Runs the same report code as the CLI. Page checks that need a browser are
-// off here.
+// off here; the verify option fetches pages directly instead.
 async function build(
   google: string,
   site: string,
   report: ReportId,
+  range: { startDate: string; endDate: string },
   input: {
-    days?: number
-    start_date?: string
-    end_date?: string
     min_impressions?: number
     limit: number
     brand_terms?: string[]
@@ -144,38 +283,61 @@ async function build(
     brandTerms: input.brand_terms,
     includeBrand: input.include_brand,
   }
-  const range = {
-    days: input.days,
-    startDate: input.start_date,
-    endDate: input.end_date,
-  }
+  const explicit = { startDate: range.startDate, endDate: range.endDate }
   const run = {
+    'site-overview': () =>
+      siteOverview(dependencies.searchAnalytics, site, range, input.comparison),
     'quick-wins': () =>
       quickWinsReportWith(
-        { ...common, ...range, verifyContent: false },
+        { ...common, ...explicit, verifyContent: false },
         dependencies,
       ),
-    'low-ctr': () => ctrUnderperformersReportWith(common, dependencies),
+    'low-ctr': () =>
+      ctrUnderperformersReportWith({ ...common, ...explicit }, dependencies),
     'striking-distance': () =>
       strikingDistanceWith(
-        { ...common, days: input.days, verifyContent: false },
+        { ...common, ...explicit, verifyContent: false },
         dependencies,
       ),
     'second-page': () =>
       secondPageWith(
-        { ...common, range: input.days, verifyContent: false },
+        { ...common, ...explicit, verifyContent: false },
         dependencies,
       ),
     'content-decay': () =>
       decayingReportWith(
-        { ...common, ...range, comparison: input.comparison },
+        { ...common, ...explicit, comparison: input.comparison },
         dependencies,
       ),
-    cannibalization: () =>
-      cannibalReportWith({ ...common, ...range }, dependencies),
+    cannibalization: async () => {
+      const result = (await cannibalReportWith(
+        { ...common, ...explicit },
+        dependencies,
+      )) as unknown as Record<string, unknown>
+      // The competing URLs and the page with the most clicks, in each row.
+      const items =
+        (result.items as Record<string, unknown>[] | undefined) ?? []
+      return {
+        ...result,
+        items: items.map((item) => {
+          const pages =
+            (item.pages as { url: string; impressionShare: number }[]) ?? []
+          return {
+            ...item,
+            urls: pages
+              .map(
+                (page) =>
+                  `${page.url} (${Math.round(page.impressionShare * 100)}%)`,
+              )
+              .join(' ; '),
+            topPage: item.suggestedOwnerUrl,
+          }
+        }),
+      }
+    },
     'traffic-drop': async () => {
       const result = await trafficAnomalyWith(
-        { site, ...range, recentDays: 7 },
+        { site, ...explicit, recentDays: 7 },
         dependencies,
       )
       const first = result.anomalies[0]
@@ -190,6 +352,68 @@ async function build(
   return (await run()) as unknown as Record<string, unknown>
 }
 
+function overviewText(
+  report: Record<string, unknown>,
+  property: string,
+  origin: string,
+): string {
+  const range = report.range as { startDate: string; endDate: string }
+  const before = report.comparisonRange as {
+    startDate: string
+    endDate: string
+  }
+  const t = report.summary as Record<string, number | null>
+  const change = (value: number | null) =>
+    value === null ? 'n/a' : `${value > 0 ? '+' : ''}${value}%`
+  const section = (name: string, key: 'page' | 'query') => {
+    const group = report[`${key === 'page' ? 'pages' : 'queries'}`] as Record<
+      string,
+      Record<string, unknown>[]
+    >
+    const columns = [
+      key,
+      'clicks',
+      'previousClicks',
+      'clicksChange',
+      'impressions',
+      'position',
+    ]
+    return [
+      `Top ${name} by clicks:\n${table(group.top.slice(0, 10), columns, origin)}`,
+      group.biggestLosses.length
+        ? `Biggest ${name} losses:\n${table(group.biggestLosses.slice(0, 10), columns, origin)}`
+        : `No ${name} lost clicks.`,
+      group.biggestGains.length
+        ? `Biggest ${name} gains:\n${table(group.biggestGains.slice(0, 10), columns, origin)}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+  }
+  return [
+    `site-overview on ${property}, ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}.`,
+    `Totals: clicks ${t.clicks} (was ${t.previousClicks}, ${change(t.clicksChangePct)}), impressions ${t.impressions} (was ${t.previousImpressions}, ${change(t.impressionsChangePct)}), CTR ${t.ctr} (was ${t.previousCtr}), average position ${t.position} (was ${t.previousPosition}).`,
+    `Devices:\n${table(report.devices as Record<string, unknown>[], ['device', 'clicks', 'previousClicks', 'impressions', 'position'], null)}`,
+    section('pages', 'page'),
+    section('queries', 'query'),
+    `Limits:\n${(report.caveats as string[]).map((line) => `- ${line}`).join('\n')}`,
+    `More: seo_report with report "site-overview", site "${property}", detail "full" for every row.`,
+  ].join('\n\n')
+}
+
+function listOfUpdates(value: unknown): string | null {
+  if (typeof value === 'string') return value
+  if (!Array.isArray(value)) return null
+  if (value.length === 0)
+    return 'Google updates in the comparison window: none.'
+  return `Google updates in the comparison window (timing only, not cause): ${value
+    .map(
+      (update: { name: string; start: string; end?: string }) =>
+        `${update.name} (${update.start.slice(0, 10)} to ${update.end?.slice(0, 10) ?? 'ongoing'})`,
+    )
+    .join('; ')}.`
+}
+
 export const seoReport = defineTool({
   name: 'seo_report',
   title: 'Run a Search Console report',
@@ -197,7 +421,9 @@ export const seoReport = defineTool({
     REPORTS,
   )
     .map(([id, text]) => `- ${id}: ${text}`)
-    .join('\n')}\nStart with detail "summary".`,
+    .join(
+      '\n',
+    )}\nStart with site-overview, then detail "summary" on the report you need.`,
   input: z.object({
     site: Site,
     report: z.enum(Object.keys(REPORTS) as [ReportId, ...ReportId[]]),
@@ -205,13 +431,15 @@ export const seoReport = defineTool({
     comparison: z
       .enum(['previous-period', 'year-over-year'])
       .default('previous-period')
-      .describe('content-decay only.'),
+      .describe('site-overview and content-decay.'),
     min_impressions: z
       .number()
       .int()
       .min(0)
       .optional()
-      .describe('Leave out rows below this many impressions.'),
+      .describe(
+        'Leave out rows below this many impressions. Lower it when a report filters out most rows.',
+      ),
     brand_terms: z
       .array(z.string())
       .max(20)
@@ -220,28 +448,101 @@ export const seoReport = defineTool({
         'Brand words. Queries with them are left out unless include_brand.',
       ),
     include_brand: z.boolean().default(false),
+    verify: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Fetch up to 20 report URLs live: status, redirect target, title, meta description, H1, canonical and robots.',
+      ),
     ...Detail,
   }),
   async run(context, input) {
     const property = await resolveProperty(context.google, input.site)
+    const range = dateWindow(input, DEFAULT_DAYS[input.report])
     const report = factsOnly(
-      await build(context.google, property, input.report, {
+      await build(context.google, property, input.report, range, {
         ...input,
         limit: input.detail === 'rows' ? 100 : input.limit,
       }),
     ) as Record<string, unknown>
+    const origin = property.startsWith('sc-domain:')
+      ? `https://${property.slice('sc-domain:'.length)}`
+      : property.replace(/\/$/, '')
+    const notes: string[] = []
+    const brand = report.brand as
+      | { terms?: string[]; excluded?: { term: string; reason?: string }[] }
+      | undefined
+    if (brand?.terms) {
+      notes.push(
+        `Brand terms ${input.include_brand ? 'kept' : 'left out'}: ${brand.terms.join(', ') || 'none'}${
+          brand.excluded?.length
+            ? `. Not treated as brand: ${brand.excluded.map((item) => item.term).join(', ')}`
+            : ''
+        }. Pass brand_terms to change them.`,
+      )
+    }
+    const updates = listOfUpdates(report.googleUpdates)
+    if (updates) notes.push(updates)
+    if (input.verify) {
+      const list = Object.values(report).find(
+        (value) => Array.isArray(value) && value.length > 0,
+      ) as unknown[] | undefined
+      const checked = await pageFacts(
+        reportUrls(
+          (report.items as unknown[] | undefined) ??
+            (report.anomalies as unknown[] | undefined) ??
+            list ??
+            [],
+          origin,
+        ),
+      )
+      report.pageChecks = checked
+      if (checked.length) {
+        notes.push(
+          `Live page checks (${checked.length} URLs, fetched now, no redirects followed):\n${table(
+            checked as unknown as Record<string, unknown>[],
+            [
+              'url',
+              'status',
+              'redirects_to',
+              'title',
+              'description',
+              'h1',
+              'canonical',
+              'robots',
+              ...(checked.some((page) => page.error) ? ['error'] : []),
+            ],
+            origin,
+          )}`,
+        )
+        const moved = checked.filter((page) => page.redirects_to)
+        if (moved.length) {
+          notes.push(
+            `${moved.length} report URL(s) redirect. Search Console can still report clicks for a redirect source; treat it and its target as one page.`,
+          )
+        }
+      }
+    }
+    if (input.report === 'site-overview' && input.detail !== 'full') {
+      return `${overviewText(report, property, origin)}\n\n${FACTS_ONLY}`
+    }
     const call = (detail: DetailLevel, offset?: number) =>
       `seo_report with report "${input.report}", site "${property}", detail "${detail}"${offset ? `, offset ${offset}` : ''}`
     const shown = presentReport({
       report,
-      headline:
-        typeof report.verdict === 'string'
-          ? `${input.report} on ${property}: ${report.verdict}`
-          : `${input.report} on ${property}.`,
+      headline: [
+        `${input.report} on ${property}.`,
+        typeof report.verdict === 'string' ? report.verdict : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
       label: input.report,
-      origin: property.startsWith('sc-domain:')
-        ? `https://${property.slice('sc-domain:'.length)}`
-        : property.replace(/\/$/, ''),
+      range:
+        input.report === 'site-overview' || input.report === 'content-decay'
+          ? `${range.startDate} to ${range.endDate} against ${earlierRange(range, input.comparison).startDate} to ${earlierRange(range, input.comparison).endDate}`
+          : `${range.startDate} to ${range.endDate}`,
+      notes,
+      origin,
       detail: input.detail,
       offset: input.offset,
       limit: input.limit,

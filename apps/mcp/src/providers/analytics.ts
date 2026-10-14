@@ -41,7 +41,7 @@ function header(
   if (!value) {
     throw new ToolError(
       'NO_KEY',
-      `No ${provider} key on this connection. Add the ${ANALYTICS_HEADERS[provider]} header to this MCP server in the client config. See https://github.com/iannuttall/seo/tree/main/apps/mcp#keys`,
+      `No ${provider} key on this connection. Connect this MCP server again and add the key on the sign-in page, or send the ${ANALYTICS_HEADERS[provider]} header from the client config. See https://github.com/iannuttall/seo/tree/main/apps/mcp#keys`,
     )
   }
   return value

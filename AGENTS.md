@@ -217,6 +217,21 @@ The guided flow should not ask humans for implementation details.
 
 ## MCP Rules
 
+- There are two MCP servers with one tool set. The hosted server in
+  `apps/mcp` (`https://seoskill.dev/mcp`) and the local stdio server in
+  `packages/mcp` (`seo mcp serve`) both serve `seo_sites` and the shared
+  tools defined once in `packages/core/src/commands/tools.ts`: `seo_report`,
+  `seo_page`, `seo_compare`, `seo_index`, `seo_research` and `seo_data`.
+- Each server only supplies a `ToolSurface`: how it reaches Google, resolves
+  a site and reads provider keys. Tool names, inputs, descriptions and result
+  text come from the shared definition, so both servers stay identical.
+- Only the local server adds `seo_crawl`, `seo_internal_links` and the
+  provider package tools (`seo_list_providers`, `seo_describe_provider`,
+  `seo_run_provider`), because they need the person's machine.
+- The hosted server stores nothing. No database, no account, and no log of
+  user data. Google tokens and provider keys are sealed into the token the
+  client keeps or arrive as request headers, and are used for that request
+  only.
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
 - Preserve unrelated client settings, create backups, and refuse to replace
@@ -315,29 +330,40 @@ Every report must be technically defensible and useful to another program.
 ## Skills And MCP
 
 The package ships exactly one skill, the router at `skills/seo/SKILL.md`. Do
-not add per-report skills. Per-report guidance lives in the registry depth
-tables (`packages/mcp/src/report-depth*.ts`) and is served at runtime by
-`seo reports describe` and `seo_describe_report`.
+not add per-report skills. The skill teaches the eight commands, the matching
+MCP tools, the one-report flow and the evidence rules.
 
 - Follow the format rules in `skills/README.md`.
-- A new report registers once with its schema and depth guidance (readOrder,
-  doNotClaim, verify, related); no skill file is added for it.
+- The public surface is eight commands (`seo report`, `seo page`,
+  `seo compare`, `seo index`, `seo research`, `seo data`, `seo crawl`,
+  `seo internal-links`) plus `seo start`. For the six shared commands, the
+  CLI command in `packages/cli/src/commands/core-commands.ts` and the MCP
+  tool in `packages/core/src/commands/tools.ts` call the same `run*`
+  function in `packages/core/src/commands`, with the same result text. Crawl
+  and internal links run the same core reports from the CLI and the local
+  server.
+- Add new analysis as a section of `seo report` or as part of an existing
+  command first. A new command or MCP tool changes the product contract.
+- Define a new MCP tool once in `packages/core/src/commands/tools.ts` so both
+  servers serve it. Register a tool in only one server when it needs the
+  local machine, such as a crawl.
+- Do not bring back report discovery tools (`seo_list_reports`,
+  `seo_describe_report`, `seo_run_report`). Each result ends with the command
+  to run next; that is the only routing. `seo reports list`, `describe` and
+  `run` stay in the CLI for the remaining catalog, served by the registry
+  depth tables in `packages/mcp/src/report-depth*.ts`.
 - Keep the router description broad enough to trigger on any SEO-adjacent
   request, and keep its body under roughly a thousand words.
-- Teach agents to start compact, inspect evidence, then request detail through
-  describe.
-- Behaviour evals live in `evals/` (see `evals/README.md`) and are validated
-  by `scripts/validate-skills.mjs`.
-- Skills and MCP must call the same core functions as the CLI.
-- Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
-  tools when discovery plus a report id can cover them cleanly.
-- New reports must use the existing list, describe, and run tools. Do not add a
-  report-specific public MCP tool unless the product contract explicitly changes.
-- Define new reports directly in the shared registry. Do not register a fake MCP
-  tool only to capture its schema and handler for discovery.
+- Teach agents to run the report without a section first, then one section,
+  then the next command the result names. More detail comes from `rows` with
+  an offset, then `full`.
+- Behaviour evals live in `evals/`, one file per command, report section or
+  job (see `evals/README.md`), and are validated by
+  `scripts/validate-skills.mjs`.
 - Bound inputs and outputs. Large pages, issue inventories, and raw provider
   rows should be opt-in.
-- Preserve structured error and report schemas across CLI and MCP surfaces.
+- Preserve structured error and result shapes across the CLI and both MCP
+  servers.
 
 ## Project Selection
 

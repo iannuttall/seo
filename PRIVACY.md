@@ -31,10 +31,9 @@ the anonymous usage count described below.
   copy. Revoking the app in your
   [Google Account connections](https://myaccount.google.com/connections)
   stops them working.
-- **API keys.** Keys for DataForSEO, Ahrefs, Clicky, Fathom, Simple
-  Analytics or Plausible are optional. You can enter them on the sign-in
-  page, where they are sealed into the same tokens, or send them as request
-  headers. A key is used for the request it arrives with and is never stored.
+- **API keys.** Keys for DataForSEO and Ahrefs are optional. You can enter
+  them on the sign-in page, where they are sealed into the same tokens, or
+  send them as request headers. A key is used for the request it arrives with and is never stored.
 - **Your data.** Search Console, Google Analytics and provider responses are
   fetched for each request, returned to your MCP client and not kept. Pages
   checked live are fetched for the request and not kept.

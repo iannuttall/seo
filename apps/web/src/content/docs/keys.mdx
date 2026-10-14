@@ -1,18 +1,19 @@
 ---
 title: API keys for the hosted MCP
-description: Add your own DataForSEO, Ahrefs, Clicky, Fathom, Simple Analytics or Plausible key to the hosted MCP. Keys are never stored.
+description: Add your own DataForSEO or Ahrefs key to the hosted MCP for keyword and competitor research. Keys are never stored.
 heading: API keys
-lead: Keyword, competitor and extra analytics data use your own account with the provider. SEO Skill never stores a key.
+lead: Keyword and competitor research uses your own DataForSEO or Ahrefs account. SEO Skill never stores a key.
 ---
 
-Search Console and Google Analytics come with your Google sign-in. Everything else is optional and uses a key from your own account, so the provider bills you directly for what you use.
+Search Console and Google Analytics come with your Google sign-in. Research is optional and uses a key from your own account, so the provider bills you directly for what you use.
 
 ## What each key adds
 
 | Provider | What it adds | Tool |
 | --- | --- | --- |
 | DataForSEO or Ahrefs | Keyword metrics, ranked keywords, SERPs, competitors and backlinks | `seo_research` |
-| Clicky, Fathom, Simple Analytics or Plausible | Landing pages for visits from search ([analytics guide](/docs/analytics)) | `seo_data` |
+
+Analytics tools other than Google Analytics, such as Clicky, run on your own machine with the CLI. The [analytics guide](/docs/analytics) explains how.
 
 Research rows also get a free Domain Rating column, with no key needed. It is Domain Rating by [Ahrefs](https://ahrefs.com).
 
@@ -39,10 +40,6 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp \
 | --- | --- |
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
-| Clicky | `X-Clicky-Sitekey` |
-| Fathom | `X-Fathom-Key` |
-| Simple Analytics | `X-Simple-Analytics-Key`, optional `X-Simple-Analytics-User-Id` |
-| Plausible | `X-Plausible-Key` |
 
 Keep keys in your shell environment or keychain. Never paste one into a chat or commit it to a repository.
 

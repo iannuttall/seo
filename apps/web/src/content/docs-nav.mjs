@@ -31,7 +31,7 @@ export const docsSections = [
         path: '/docs/analytics',
         label: 'Analytics',
         description:
-          'Read landing pages from Google Analytics, Clicky, Fathom, Simple Analytics or Plausible.',
+          'Google Analytics on the hosted MCP and the CLI, and Clicky or other tools on your machine.',
       },
       {
         path: '/docs/cli',

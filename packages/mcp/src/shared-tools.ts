@@ -1,7 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   LOCAL_SIGN_IN,
-  listSites,
   localError,
   localGoogleFetch,
   localResearchKeys,
@@ -17,7 +16,6 @@ import {
   mcpCall,
   runSharedTool,
   SHARED_TOOLS,
-  table,
   telemetryReportFor,
 } from '@seo/core/commands'
 import * as z from 'zod/v4'
@@ -75,33 +73,6 @@ export function registerSharedTools(
   server: McpServer,
   options: { telemetry?: () => TelemetryOptions } = {},
 ): void {
-  server.registerTool(
-    'seo_sites',
-    {
-      title: 'List sites',
-      description:
-        'Lists the Search Console properties this Google login can read. Call it first.',
-      inputSchema: {},
-      annotations: readOnly,
-    },
-    async () => {
-      try {
-        const sites = await listSites()
-        return text(
-          [
-            `Search Console properties (${sites.length}):`,
-            sites.length
-              ? table(sites, ['siteUrl', 'permissionLevel'], null)
-              : 'None. Run `seo start` to sign in with a Google account that has Search Console access.',
-            'Next: seo_report with a site.',
-          ].join('\n\n'),
-        )
-      } catch (error) {
-        return toolError(localError(error))
-      }
-    },
-  )
-
   const surface = {
     deps: nodeCommandDeps({ call: mcpCall }),
     resolveSite: (site: string) => resolveLocalSite(site),

@@ -6,6 +6,7 @@ import {
 import { listChanges } from './experiments/change-log.js'
 import {
   changesInWindow,
+  changeWindow,
   interpretUpdateCorrelation,
   type TrafficAnomaly,
   type TrafficAnomalyReport,
@@ -50,8 +51,11 @@ export async function updateCorrelation(input: {
   const paddingDays = input.paddingDays ?? 3
   const anomalies =
     input.trafficAnomalies ?? (await trafficAnomaly(input)).anomalies
-  const comparisonStart = anomalies[0]?.comparisonStart
-  const comparisonEnd = anomalies[0]?.comparisonEnd
+  // A step change is checked at its own date, not across the whole
+  // comparison window, so a later update is not reported as overlapping.
+  const window = changeWindow(anomalies)
+  const comparisonStart = window?.start
+  const comparisonEnd = window?.end
   const updates = await listSearchUpdates({ product: 'Ranking', limit: 50 })
   const overlappingUpdates =
     comparisonStart && comparisonEnd

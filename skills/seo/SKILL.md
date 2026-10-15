@@ -1,138 +1,96 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search or AI search presence. That includes site audits, rankings, keyword research, competitors, backlinks, click or traffic changes, indexing problems, crawling, redirects, sitemaps, metadata, structured data, Core Web Vitals, internal links, content opportunities, programmatic SEO, local search, Search Console, Google Analytics or Clicky questions, Google update impact, llms.txt, AI search visibility in ChatGPT, Claude, Perplexity, or Google AI Overviews, and client SEO reporting. Routes to evidence-backed local reports through the SEO CLI and MCP server.
+description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search. That includes clicks or traffic changes, quick wins, CTR, rankings, content decay, cannibalization, Google update impact, indexing problems, one page's performance, keyword research, competitors, backlinks, crawling, redirects, metadata, internal links, Search Console, Google Analytics or Clicky questions, and client SEO reporting. Routes to first-party search data through the seo CLI and MCP tools.
 ---
 
 # seo
 
-Use structured reports for evidence, then inspect source only where a finding
-needs it. Reports keep observations, findings, caveats, costs, and provenance
-separate. Data stays local unless a requested crawl or provider call needs the
-network.
+SEO Skill returns facts from the person's own Search Console and analytics,
+with Google update dates, plus keyword and competitor data from their own
+DataForSEO or Ahrefs key. It gives no advice. You read the facts, show the
+person what matters, and decide with them what to change.
 
-Before the first CLI call, run `command -v seo`. If it is missing, run
-`npm i -g seo`, confirm `seo --version`, then continue. Use available MCP tools
-without reinstalling.
+There are two ways to reach the same commands:
 
-## Broad audits and source changes
+- **MCP tools**, from the hosted server at `https://seoskill.dev/mcp` or the
+  local server from `seo mcp serve`. Use them when they are connected.
+- **The CLI**. Before the first call, run `command -v seo`. If it is missing,
+  run `npm i -g seo`, then `seo start` to sign in with Google. Add `--json`
+  for machine-readable output; JSON mode never prompts.
 
-For a broad audit, run this before manual page exploration:
+Crawls and internal links run only on the person's machine, through the CLI
+or the local MCP server.
 
-```bash
-seo report --url <absolute-url> --search-console-export <path> --actions-only --json
-```
+## The commands
 
-Omit `--search-console-export` when no export was supplied. Capture the whole
-JSON. Do not pipe it through `head`.
+| CLI | MCP tool | What it returns |
+|---|---|---|
+| `seo report` | `seo_report` | The main report: overview, then every section's count and top rows |
+| `seo page --url <url>` | `seo_page` | One URL: live page facts, Google index status, its queries |
+| `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with Google updates |
+| `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
+| `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERP, competitors, backlinks |
+| `seo data` | `seo_data` | Raw Search Console rows; the MCP tool also reads analytics landing pages |
+| `seo crawl` | `seo_crawl` | A site crawl with technical issues and the URLs they affect |
+| `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page |
 
-Follow this sequence:
+Start with `seo_sites` (or `seo sites`) when you do not know the property.
+Sites can be given as `example.com`, a URL or `sc-domain:example.com`.
 
-1. Read every field in `findings`, plus `inventories`, retained evidence,
-   caveats, and warnings. A `fix` contains an instruction. A `review` contains
-   change conditions; it is not an instruction to edit.
-2. Compare the live homepage identity with source metadata and content. Treat
-   the live product as current unless the user says the source is an undeployed
-   pivot. Search history describes past demand, not product direction.
-3. Track every finding id and exact title, plus every inventory URL. Counts must
-   match `findings.counts.returned` and `returnedItems`. Decide inventory rows
-   separately from their evidence; never apply one blanket policy.
-4. Use the allowed outcomes. For a fix, choose `fixed`,
-   `deferred`, or `not-needed`. For a review, answer its question and choose
-   `changed`, `no-change`, or `deferred`, with an evidence-backed reason. Apply
-   only supported changes. Build or test the source, run each changed
-   item's verification, then rerun the same report against the local build.
-5. Return both complete tables. Include each finding's outcome, reason, and
-   verification, and each inventory URL's disposition and evidence.
+## How to run them
 
-Do not finish while a finding or inventory row is absent from the handoff. If
-an inventory returns `nextPage`, fetch every page first.
+1. Run `seo report` (or `seo_report`) without a section. It shows totals
+   against the previous period, the pages and queries that moved, and a short
+   count with top rows for each section.
+2. Pick the one section that matters and run it with `--section <id>` (or
+   `section`). Sections: overview, quick-wins, low-ctr, striking-distance,
+   second-page, content-decay, cannibalization, traffic-drop. Page sections
+   check their top 20 URLs live and merge same-site redirects.
+3. Use `detail` `rows` with `offset` for the next page of rows, or `full` for
+   every field. Start with the summary; ask for more only when you need it.
+4. Each result ends with the command to run next. Follow it when it fits the
+   question.
 
-## Discover, describe, run
-
-With MCP:
-
-1. `seo_list_reports` lists report ids and purposes.
-2. `seo_describe_report` returns usage, schema, reading order, limits,
-   verification, and related reports.
-3. `seo_run_report` runs bounded `params`. Read `structuredContent`.
-
-The CLI has the same catalog:
-
-```bash
-seo reports list --json
-seo reports describe <report-id> --json
-seo reports run <report-id> --params '<json>' --json
-```
-
-Describe a report before its first run. Follow `readOrder`, `doNotClaim`, and
-`related`; do not guess parameters. For fixes, pass `view: "actions"` to MCP or
-`--actions-only` to the JSON CLI command.
-
-Installed provider packages can also add agent actions. Discover them before
-calling provider-specific data:
-
-```bash
-seo providers list --json
-seo providers describe <provider-id> --json
-seo providers run <provider-id> <action-id> --params '<json>' --json
-```
-
-Use the described input schema. Treat the returned provider data as evidence
-with its named source and limits. A provider action is not a report finding.
-
-## Setup and selection
-
-Use `setup-check` or `seo doctor` when auth is unknown. Use `--project <id>` for
-a saved project. Without one, pass `--site sc-domain:example.com` or
-`--url https://example.com`. Crawl audits need no Google connection. Agent
-commands use `--json`, which never prompts.
+Each command takes its target and optional dates, nothing more. Brand terms,
+minimum impressions and the comparison period are set automatically and shown
+in the output.
 
 ## Common jobs
 
-Run the first report, read it, then decide. Do not run every report blindly.
-
-| Job | Reports |
+| Job | Commands |
 |---|---|
-| Page not indexed or missing from Google | `index-coverage`, `index-monitor` (URL Inspection), `audit-page`, `redirect-trace` |
-| Traffic or clicks dropped | `search-performance-overview`, `traffic-anomaly`, `update-correlation`, `segment-impact`, `decaying-pages`, `link-recovery` |
-| Audit a whole site | `report`, then `site-crawl`, `top-fixes`, or `ai-search-scorecard` when needed |
-| More clicks from existing pages | `quick-wins`, `ctr-underperformers`, `striking-distance`, `second-page`, `internal-links` |
-| AI search visibility or readiness | `ai-readiness`, `agent-readiness`, `geo-gaps`, `ai-mention-research`, `ai-prompt-observations`, `ai-referrals` |
-| Plan content from real demand | `query-clusters`, `page-opportunities`, `content-optimization`, `cannibalisation` |
-| Research keywords and competitors | `competitive-opportunities`, `keyword-research`, `serp-results`, `ranked-keywords`, `ranking-pages`, `serp-competitors`, `competitor-keyword-gap` |
-| Local or programmatic SEO | `local-search-demand`, `pseo-patterns`, `pseo-opportunities`, `pseo-audit` |
-| Links, Bing, or server logs | `domain-rating`, `link-evidence`, `bing-webmaster-overview`, `server-log-analysis` |
-| Catch regressions | `technical-watch`, `crawl-diff`, `index-watch`, `measure-change` |
-| Client-ready reporting | `monthly-report`, `narrative-report`, `monthly-action-plan` |
-| Turn crawl findings into tickets | `top-fixes`, `affected-urls`, `explain-crawl-issue` |
+| Traffic or clicks dropped | `report`, then `compare` with the date the drop started, then `page` |
+| More clicks from existing pages | `report` with the quick-wins, low-ctr or striking-distance section, then `page` |
+| Pages losing clicks over time | `report` with the content-decay section, then `index` |
+| Page missing from Google or lost all its clicks | `index`, then `page` |
+| Two pages compete for one query | `report` with the cannibalization section, then `page` on each URL |
+| A site change or Google update | `compare` with its date |
+| Keyword and competitor research | `research` with keyword_metrics, serp, ranked_keywords or competitors |
+| Backlinks | `research` with backlinks |
+| Technical issues on a site | `crawl` |
+| Internal links to a page | `internal-links` |
+| A question the report does not answer | `data` |
 
-When provider access is unavailable, describe the report and use its
-`researchFiles` and `columns` schema. Read import provenance and never guess
-column mappings.
+## Research keys
 
-For a branded client report, use built-in HTML output or create one standalone
-local HTML file from structured JSON. Preserve evidence states, provider
-labels, limitations, and verification. Keep it accessible, print-friendly,
-`noindex,nofollow`, and free of remote scripts or assets.
+Research costs the person's own provider credits. On the hosted server, keys
+come from the sign-in page or from client headers. In the CLI and the local
+server, keys come from `seo providers <name> connect`. Domain Rating appears
+as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 
 ## Evidence rules
 
-- Name missing, skipped, partial, capped, filtered, or sampled evidence before
-  interpreting the result. These states never support a zero or an all-clear.
-- Keep live crawl, source code, Search Console, analytics, and research-provider
-  evidence separate. Query and page tables are not interchangeable.
-- Grouped Search Console totals can undercount.
-- Heuristics prioritise review; they do not prove defects or forecast results.
-- Treat provider traffic, volume, difficulty, authority, and history as
-  estimates. Keep `principle` and `evidenceRef` with recommendations.
-- Intentional controls such as `noindex`, canonicals, and robots rules are
-  observations until the user confirms they are unintended.
-- Never promise clicks, rankings, indexing, traffic, or AI citations.
-- Keep the report's verification with every recommendation.
+- Name missing, partial, capped or filtered data before you interpret it. It
+  never supports a zero or an all-clear.
+- Keep Search Console, analytics, live page checks and provider estimates
+  apart. Query rows do not add up to site totals.
+- Flags such as likely-automated queries and curve-based CTR gaps are
+  heuristics. They point to rows worth a look; they prove nothing.
+- A Google update in the same window is timing, not cause.
+- Intentional `noindex`, canonicals and redirects are observations until the
+  person says they are wrong.
+- Never promise clicks, rankings, indexing or traffic.
+- Show the facts, for example in a table, and ask before you edit any page.
 
-Prefer registered reports. Use `seo help all` for direct provider and
-administration commands, including Google, Bing, links, exports, projects, and
-crawls. For installed extension actions, use `seo_list_providers`,
-`seo_describe_provider`, and `seo_run_provider`. IndexNow writes externally:
-validate with `--dry-run --json` and send only when authorised. Refresh only
-when needed.
+Old report names from version 0.2, such as `seo quick-wins`, still run in
+0.3 and print their new command. Use the new commands.

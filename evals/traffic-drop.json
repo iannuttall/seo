@@ -1,0 +1,39 @@
+{
+  "subject": "traffic-drop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our clicks fell off a cliff this week. What happened?",
+      "expected_output": "Should run seo_report with section traffic-drop (or `seo report --section traffic-drop`). Should describe daily clicks and impressions checked for sudden changes, with the Google updates whose dates overlap. Should then run seo_compare with the date the drop started to see which pages and queries moved.",
+      "assertions": [
+        "Runs the traffic-drop section of the report",
+        "Mentions Google updates whose dates overlap the change",
+        "Follows with seo_compare or `seo compare` using the start date of the drop"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The traffic-drop section lists a core update that started two days before our drop. Tell the client the update caused it.",
+      "expected_output": "Should refuse to state that the update caused the drop. Should explain that overlap is timing only. Should suggest seo_compare with the first day after the change and seo_page on the pages that moved, and keep the client note to observed facts with dates.",
+      "assertions": [
+        "Refuses to state the update caused the drop",
+        "Explains that overlap is timing only",
+        "Suggests seo_compare and seo_page for the pages that moved",
+        "Keeps the client note to observed facts with dates"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The traffic-drop section found no sudden change, so the site is fine, right?",
+      "expected_output": "Should not call it an all-clear. Should explain that the section only checks daily totals for sudden changes, so slow losses or losses on a few pages can be missed. Should suggest the content-decay section or seo_index for pages that lost their clicks.",
+      "assertions": [
+        "Does not treat no sudden change as an all-clear",
+        "Explains that slow or page-level losses can be missed",
+        "Suggests the content-decay section or seo_index"
+      ],
+      "files": []
+    }
+  ]
+}

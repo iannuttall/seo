@@ -1,0 +1,35 @@
+---
+// Hugeicons drawn as static SVG at a stroke width of 1.7, as in the ilo web
+// app. Pass an icon from @hugeicons/core-free-icons.
+type IconElement = readonly [string, { readonly [key: string]: string | number }]
+
+type Props = {
+  icon: readonly IconElement[]
+  class?: string
+  [attribute: `data-${string}`]: string | boolean | undefined
+}
+
+const { icon, class: className, ...attributes } = Astro.props
+
+// The data uses React prop names (strokeWidth); SVG wants stroke-width.
+const toAttributes = (attrs: { readonly [key: string]: string | number }) =>
+  Object.fromEntries(
+    Object.entries(attrs)
+      .filter(([name]) => name !== 'key')
+      .map(([name, value]) => [
+        name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+        name === 'strokeWidth' ? 1.7 : value,
+      ]),
+  )
+---
+
+<svg
+  {...attributes}
+  class={className}
+  viewBox="0 0 24 24"
+  fill="none"
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {icon.map(([Tag, attrs]) => <Tag {...toAttributes(attrs)} />)}
+</svg>

@@ -1,10 +1,34 @@
 ---
-import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
-import NavCard from '@/components/NavCard.astro'
-import PixelIcon from '@/components/icons/PixelIcon.astro'
+import {
+  BookOpen01Icon,
+  Home01Icon,
+  Wrench01Icon,
+} from '@hugeicons/core-free-icons'
+import HomeCard from '@/components/HomeCard.astro'
+import { getButtonClasses } from '@/components/ui/button'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { productFacts } from '@/lib/facts'
+import { site } from '@/lib/site'
+
+const routes = [
+  {
+    title: 'Home',
+    text: 'Connect the hosted MCP or install the CLI.',
+    href: '/',
+    icon: Home01Icon,
+  },
+  {
+    title: 'Docs',
+    text: 'Getting started, the eight commands and what is stored.',
+    href: '/docs',
+    icon: BookOpen01Icon,
+  },
+  {
+    title: 'Free SEO tools',
+    text: 'Check a website, a technical file or a keyword list.',
+    href: '/tools',
+    icon: Wrench01Icon,
+  },
+]
 ---
 
 <BaseLayout
@@ -13,75 +37,41 @@ import { productFacts } from '@/lib/facts'
   canonicalPath="/404"
   noindex
 >
-  <section class="space-y-12" aria-labelledby="not-found-title">
-    <DottedCard patternId="not-found-status" inverted>
-      <div class="grid gap-8 p-6 sm:p-8 md:grid-cols-[12rem_1fr] md:items-center">
-        <div class="flex items-center justify-between gap-5 md:block">
-          <p class="font-mono text-6xl leading-none text-primary sm:text-7xl">404</p>
-          <PixelIcon name="map-pin-x" class="size-10 text-primary md:mt-8" />
-        </div>
-        <div class="space-y-4">
-          <h1 id="not-found-title" class="text-pretty text-3xl font-normal leading-tight sm:text-4xl">
-            That page is not here.
-          </h1>
-          <p class="max-w-2xl font-sans text-lg font-light leading-7 text-panel-foreground/75">
-            The URL may be old or typed incorrectly. Either way there is
-            nothing useful waiting here, so pick a route below and keep going.
-          </p>
-        </div>
-      </div>
-    </DottedCard>
+  <main>
+    <section class="flex flex-col items-center pt-8 text-center sm:pt-14" aria-labelledby="not-found-title">
+      <p class="font-mono text-sm text-foreground-muted">404</p>
+      <h1 id="not-found-title" class="mt-3 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px]">
+        That page is not here
+      </h1>
+      <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+        The URL may be old or mistyped. Many older report pages now live on
+        a command page in the docs.
+      </p>
+    </section>
 
-    <div class="space-y-5">
-      <header class="space-y-2">
-        <h2 class="font-mono text-xl font-normal leading-tight">
-          Get back to something useful
-        </h2>
-        <p class="max-w-2xl font-sans text-[0.9375rem] font-light leading-7 text-foreground-muted">
-          Start with the product, follow the setup guide or find the exact SEO
-          job you were looking for.
+    <section class="mt-14" aria-labelledby="not-found-routes">
+      <h2 id="not-found-routes" class="text-2xl/8 font-medium tracking-normal">Get back to something useful</h2>
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {routes.map((route) => <HomeCard {...route} />)}
+      </div>
+    </section>
+
+    <section class="mt-14 flex flex-col gap-5 rounded-lg bg-muted p-6 sm:flex-row sm:items-center sm:justify-between">
+      <div class="max-w-xl">
+        <h2 class="text-base font-medium text-foreground">Did one of our links send you here?</h2>
+        <p class="mt-1 text-sm leading-6 text-foreground-muted">
+          That is a bug. Include the broken URL in a GitHub issue so it can be
+          fixed.
         </p>
-      </header>
-      <div class="grid gap-6 sm:grid-cols-3">
-        <NavCard
-          title="Home"
-          description="See what SEO Skill does and install the CLI."
-          href="/"
-        />
-        <NavCard
-          title="Getting started"
-          description="Run seo start, connect your site and get the first useful report."
-          href="/docs/getting-started"
-        />
-        <NavCard
-          title="Report catalog"
-          description={`Browse ${productFacts.reports} audits and reports by the job you need done.`}
-          href="/docs/reports"
-        />
       </div>
-    </div>
-
-    <DottedCard patternId="not-found-report">
-      <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-        <div class="space-y-2">
-          <h2 class="font-mono text-base font-normal">Did one of our links send you here?</h2>
-          <p class="max-w-xl font-sans text-sm font-light leading-6 text-foreground-muted">
-            That is a bug. Include the broken URL in a GitHub issue and it can
-            be fixed without making anyone else hunt for the missing page.
-          </p>
-        </div>
-        <Button
-          href="https://github.com/iannuttall/seo/issues/new"
-          target="_blank"
-          rel="noreferrer"
-          class="w-fit px-5 py-3 font-mono text-xs sm:text-sm"
-        >
-          <span class="inline-flex items-center gap-2">
-            Report the broken link
-            <PixelIcon name="external-link" class="size-4 shrink-0" />
-          </span>
-        </Button>
-      </div>
-    </DottedCard>
-  </section>
+      <a
+        class={getButtonClasses('outline', 'default')}
+        href={`${site.repository}/issues/new`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Report the broken link
+      </a>
+    </section>
+  </main>
 </BaseLayout>

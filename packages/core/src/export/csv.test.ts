@@ -33,6 +33,7 @@ function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
     },
     dataStatus: analysis.dataStatus,
     selection: analysis.selection,
+    minImpressionsPolicy: analysis.minImpressionsPolicy,
     methodology: analysis.methodology,
     provenance: {
       ...analysis.provenance,
@@ -47,6 +48,7 @@ function emptyQuickWins(): DiagnosePropertyReport['quickWins'] {
       peerRows: 0,
       byPosition: analysis.benchmarkByPosition,
     },
+    brand: analysis.brand,
     verification: {
       requested: false,
       attemptedRows: 0,
@@ -308,6 +310,8 @@ test('diagnoseCsvFiles includes schemas for empty detail tables', () => {
         completeness: 'retained-query-rows-only',
       },
       dataStatus: striking.dataStatus,
+      minImpressions: striking.minImpressionsPolicy,
+      brand: striking.brand,
       selection: striking.selection,
       methodology: striking.methodology,
       verification: {

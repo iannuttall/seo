@@ -1,14 +1,24 @@
+import type { ReportBrandTerms } from '../brand-evidence.js'
 import type { GscRow } from '../types.js'
+import type { MinImpressionsPolicy } from './min-impressions-policy.js'
 import type { PageTemplate } from './page-patterns.js'
+import type { QUERY_FLAG_METHOD, QueryFlag } from './query-quality.js'
 
 export type StrikingDistanceSelection = {
   sourceRows: number
+  /** Source rows whose page URL had a #fragment; merged into the base URL. */
+  fragmentRows: number
+  /** Source rows merged into another row after fragment removal. */
+  mergedRows: number
   invalidRows: number
   outsidePositionRows: number
   belowMinimumRows: number
   lowActionabilityRows: number
   brandRows: number
   eligibleRows: number
+  likelyAutomatedRows: number
+  navigationalOtherRows: number
+  flaggedRows: number
   returnedRows: number
   limitedRows: number
 }
@@ -41,6 +51,8 @@ export type StrikingDistanceAnalysisItem = {
   impressions: number
   ctr: number
   position: number
+  /** Heuristic labels; flagged rows rank after unflagged rows. */
+  queryFlags: QueryFlag[]
   priority: StrikingDistancePriority
   recommendation: StrikingDistanceRecommendation
 }
@@ -64,8 +76,10 @@ export type StrikingDistanceAnalysisGroup = {
 export type StrikingDistanceAnalysis = {
   site: string
   minImpressions: number
+  minImpressionsPolicy: MinImpressionsPolicy
   limit: number
   dataStatus: 'empty' | 'filtered' | 'available'
+  brand: ReportBrandTerms
   selection: StrikingDistanceSelection
   methodology: {
     id: 'gsc_striking_distance_v2'
@@ -78,6 +92,7 @@ export type StrikingDistanceAnalysis = {
       heuristic: true
       estimatedClickLift: false
     }
+    queryFlags: typeof QUERY_FLAG_METHOD
     grouping: {
       population: 'all_eligible_rows_before_limit'
       sharedTemplateMinimumUniqueUrls: 2
@@ -87,11 +102,13 @@ export type StrikingDistanceAnalysis = {
   provenance: {
     inputScope: 'provided_rows'
     selectionOrder: readonly [
+      'fragment_and_duplicate_merge',
       'valid_row',
       'position',
       'minimum_impressions',
       'query_quality',
       'brand',
+      'query_flag_ranking',
     ]
     selection: StrikingDistanceSelection
   }

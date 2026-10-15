@@ -1,105 +1,55 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import DottedCard from '@/components/DottedCard.astro'
-import FeatureCta from '@/components/FeatureCta.astro'
-import NavCard from '@/components/NavCard.astro'
-import PageHeader from '@/components/PageHeader.astro'
-import BaseLayout from '@/layouts/BaseLayout.astro'
-import type { SchemaBreadcrumb } from '@/lib/schema'
+import {
+  Database01Icon,
+  Key01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
 
-const breadcrumbs: SchemaBreadcrumb[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Features', href: '/features' },
-  { label: 'SEO keyword research tool' },
+const related = [
+  { title: 'seo research', text: 'Every research action, its inputs and how to run it.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'seo data', text: 'The queries your site already gets, from Search Console.', href: '/docs/data', icon: Database01Icon },
 ]
-
-const evidence = [
-  ['Search demand', 'Compare provider search-volume and difficulty estimates in the market you selected.'],
-  ['Live search results', 'Inspect the pages and result features that appear for the exact query and location.'],
-  ['Search competitors', 'Find domains that recur across the organic results returned without claiming they are business competitors.'],
-  ['Your existing reach', 'Join Search Console queries and landing pages where your own performance should change the priority.'],
-] as const
 ---
 
-<BaseLayout
+<FeaturePage
   title="SEO keyword research tool for AI agents"
-  description="Use an SEO keyword research tool inside your AI agent. Compare keyword demand, live SERPs, ranking pages, competitors, backlinks, and your Search Console evidence."
-  canonicalPath="/features/keyword-research"
-  {breadcrumbs}
+  description="Run keyword research from your AI agent with your own DataForSEO or Ahrefs key: keyword metrics, SERPs, ranked keywords, competitors and backlinks."
+  path="/features/keyword-research"
+  lead="Ask your agent for search volume, who ranks, and what a competitor ranks for, with data from your own DataForSEO or Ahrefs account."
+  {related}
 >
-  <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="SEO keyword research tool for AI agents"
-      description="Turn a topic into a focused list of keywords, ranking pages, and competitors that deserve your time."
-      align="left"
-    />
+  <h2>Research with the account you already pay for</h2>
+  <p>
+    Keyword research uses your own DataForSEO or Ahrefs key, so the provider
+    bills you directly and nothing is marked up. Add the key on the hosted MCP
+    sign-in page, as a header, or with <code>seo providers dataforseo connect</code>{' '}
+    in the CLI. Keys are never stored on the hosted server.
+  </p>
 
-    <DottedCard patternId="keyword-question">
-      <div class="p-6 pb-10 font-sans">
-        <p class="text-lg leading-7">“Find the keyword groups we can support, show who ranks now, and tell me what evidence makes each group worth a closer look.”</p>
-      </div>
-      <span slot="label">Start with a decision</span>
-    </DottedCard>
+  <h2>What you can look up</h2>
+  <table>
+    <thead><tr><th>Action</th><th>What comes back</th></tr></thead>
+    <tbody>
+      <tr><td><code>keyword_metrics</code></td><td>Search volume, keyword difficulty and cost per click for up to 100 keywords.</td></tr>
+      <tr><td><code>serp</code></td><td>The pages that rank for up to 5 keywords.</td></tr>
+      <tr><td><code>ranked_keywords</code></td><td>The keywords a domain or URL ranks for.</td></tr>
+      <tr><td><code>competitors</code></td><td>Domains that rank for the same keywords.</td></tr>
+      <tr><td><code>backlinks</code></td><td>Referring domains for a domain or URL.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Rows with a domain also get a free Domain Rating column, with no key
+    needed. It is Domain Rating by <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+  </p>
 
-    <section class="docs-prose mt-14" aria-labelledby="shortlist">
-      <h2 id="shortlist">Build a shortlist you can defend</h2>
-      <p>
-        Give the agent a seed topic, market, and goal. It can expand the topic, compare demand, inspect live results, group related terms, and show which domains appear most often. You keep the source and metric names next to every estimate.
-      </p>
-      <p>
-        If Search Console is connected, the agent can also see where your site already earns impressions or clicks. It can use that evidence to separate an existing opportunity from a topic that is new to the site.
-      </p>
-    </section>
-
-    <div class="mt-10 grid gap-6 sm:grid-cols-2">
-      {evidence.map(([title, description], index) => (
-        <DottedCard patternId={`keyword-evidence-${index}`}>
-          <div class="p-5 pb-10">
-            <h2 class="text-sm font-normal leading-5">{title}</h2>
-            <p class="mt-3 font-sans text-sm leading-6 text-foreground-muted">{description}</p>
-          </div>
-          <span slot="label">Research evidence</span>
-        </DottedCard>
-      ))}
-    </div>
-
-    <section class="docs-prose mt-14" aria-labelledby="estimates">
-      <h2 id="estimates">Know which numbers are estimates</h2>
-      <p>
-        Keyword, domain, competitor, backlink, and result metrics come from optional research providers. They do not replace crawl, Search Console, Google Analytics, or live result evidence. Reports keep provider names, dates, limits, and partial states visible.
-      </p>
-      <p>
-        Provider work can cost money. The CLI shows estimated and completed task costs, uses a local cache, and enforces local request, row, daily, and monthly limits. You choose when the extra research is worth it.
-      </p>
-
-      <h2>Move from research to the page</h2>
-      <p>
-        Open the ranking pages, review search intent, and compare the topic with what your site can support. Then let your coding agent draft or edit the page in the repository where the work will ship.
-      </p>
-      <p>
-        The tool does not promise a ranking or turn volume into a traffic forecast. It gives you a smaller, clearer set of opportunities to investigate.
-      </p>
-    </section>
-
-    <div class="mt-14 grid gap-6 sm:grid-cols-2">
-      <NavCard
-        title="SEO MCP server"
-        heading="Run research from your agent"
-        description="Use the same reports from any agent that supports local MCP."
-        href="/features/mcp"
-      />
-      <NavCard
-        title="Search Console MCP"
-        heading="Add your existing search demand"
-        description="Use your query and page data when it should change the research priority."
-        href="/features/search-console"
-      />
-    </div>
-
-    <FeatureCta
-      title="Start keyword research in your agent"
-      description="Install the command and run seo start. Add a research provider only when you need outside estimates."
-    />
-  </main>
-</BaseLayout>
+  <h2>Start from the queries you already get</h2>
+  <p>
+    Provider numbers are estimates. Your Search Console queries are what
+    people actually typed before they found you. Ask for those first with{' '}
+    <a href="/docs/data">seo data</a> or the <a href="/docs/report">SEO report</a>,
+    then use research to size the topics around them. The two sources stay
+    apart and are never mixed into one number.
+  </p>
+</FeaturePage>

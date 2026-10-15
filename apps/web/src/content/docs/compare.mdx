@@ -1,0 +1,43 @@
+---
+title: Compare before and after a date
+description: Compare equal Search Console periods before and after a release or Google update with seo compare, and see the Google updates that fall in the window.
+heading: seo compare
+lead: Equal periods before and after a date, such as a site release or a Google update, with the updates that fall in the window.
+---
+
+Use it to check what changed after something happened. Give it the first day after the change.
+
+## Compare a date
+
+Ask your agent:
+
+```text
+Compare example.com before and after 2026-09-15
+```
+
+The hosted MCP runs `seo_compare`. In a terminal, run:
+
+```sh
+seo compare --site example.com --date 2026-09-15
+```
+
+The date is the first day after the change. You can narrow it to part of the site with some URL text, such as `/blog/`:
+
+```sh
+seo compare --site example.com --date 2026-09-15 --pages /blog/
+```
+
+## What comes back
+
+- Totals for clicks, impressions, click-through rate and position in each period.
+- The same split by device.
+- The pages and queries that moved the most.
+- The Google algorithm updates whose dates fall in the window.
+
+The periods are the same length, so the comparison is fair. It needs at least three days of final Search Console data after the date, so very recent changes have to wait a few days.
+
+## Timing is not cause
+
+An update in the window shows that the dates match. It does not prove the update caused the change. Check releases, tracking and seasonality before you decide.
+
+For a sudden drop you have not explained yet, the `traffic-drop` section of the [SEO report](/docs/report) finds the date for you.

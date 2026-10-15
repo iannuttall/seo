@@ -1,24 +1,24 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormSelect from '@/components/FormSelect.astro'
 ---
 
 <section data-sitemap-extractor class="space-y-6">
-  <DottedCard patternId="sitemap-extractor-input">
+  <Card>
     <form data-extractor-form class="space-y-5 p-5 sm:p-6" novalidate>
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Enter a sitemap or domain</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Enter a sitemap or domain</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Use an exact sitemap URL, or enter a domain and we will check robots.txt and common sitemap locations.
         </p>
       </div>
 
-      <label class="block space-y-2 font-sans text-sm font-medium">
+      <label class="block space-y-2 text-sm font-medium">
         <span>Sitemap URL or domain</span>
         <input
           data-sitemap-url
-          class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-sm font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+          class="min-h-10 w-full rounded-lg border border-input bg-card px-3 py-3 font-mono text-sm font-normal text-foreground outline-none transition-colors hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
           type="text"
           inputmode="url"
           autocomplete="url"
@@ -30,14 +30,14 @@ import FormSelect from '@/components/FormSelect.astro'
       </label>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p data-input-help class="font-sans text-xs font-light leading-5 text-foreground-muted">
+        <p data-input-help class="text-xs leading-5 text-foreground-muted">
           The server fetches sitemap files only and returns up to 50,000 unique URLs. It does not crawl the pages listed inside them.
         </p>
-        <Button data-extract type="submit" class="min-h-12 shrink-0 px-5 text-xs">Extract URLs</Button>
+        <Button data-extract type="submit" class="min-h-10 shrink-0 px-5 text-xs">Extract URLs</Button>
       </div>
 
       <div data-progress class="hidden space-y-2" aria-live="polite">
-        <div class="flex items-baseline justify-between gap-4 font-sans text-xs font-light text-foreground-muted">
+        <div class="flex items-baseline justify-between gap-4 text-xs text-foreground-muted">
           <span data-status>Starting extraction...</span>
           <span data-progress-count class="shrink-0 font-mono">0 URLs</span>
         </div>
@@ -46,52 +46,52 @@ import FormSelect from '@/components/FormSelect.astro'
         </div>
       </div>
 
-      <p data-error class="hidden font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      <p data-error class="hidden text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="sitemap-extractor-results" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
           <div class="space-y-1">
-            <strong data-result-title class="font-mono text-2xl font-normal text-primary">URLs extracted</strong>
-            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+            <strong data-result-title class="text-2xl font-medium text-primary">URLs extracted</strong>
+            <p data-result-summary class="text-sm leading-6 text-foreground-muted"></p>
           </div>
-          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+          <span data-coverage class="font-mono text-xs text-foreground-muted"></span>
         </div>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-3 lg:grid-cols-6">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Unique URLs</dt>
+            <dt class="text-xs text-foreground-muted">Unique URLs</dt>
             <dd data-stat-urls class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Sitemaps</dt>
+            <dt class="text-xs text-foreground-muted">Sitemaps</dt>
             <dd data-stat-sitemaps class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Duplicates</dt>
+            <dt class="text-xs text-foreground-muted">Duplicates</dt>
             <dd data-stat-duplicates class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Invalid URLs</dt>
+            <dt class="text-xs text-foreground-muted">Invalid URLs</dt>
             <dd data-stat-invalid class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Large files</dt>
+            <dt class="text-xs text-foreground-muted">Large files</dt>
             <dd data-stat-large class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Downloaded</dt>
+            <dt class="text-xs text-foreground-muted">Downloaded</dt>
             <dd data-stat-bytes class="mt-1 font-mono text-lg">0 KB</dd>
           </div>
         </dl>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="download-heading">
+        <section class="border-t border-border pt-5" aria-labelledby="download-heading">
           <div class="space-y-1">
-            <h3 id="download-heading" class="font-mono text-sm font-normal">Copy or download URLs</h3>
-            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+            <h3 id="download-heading" class="text-sm font-medium">Copy or download URLs</h3>
+            <p class="text-xs leading-5 text-foreground-muted">
               Actions use the active filters. CSV and JSON include sitemap metadata. TXT contains one URL per line.
             </p>
           </div>
@@ -101,26 +101,26 @@ import FormSelect from '@/components/FormSelect.astro'
             <Button data-export="txt" type="button" class="w-full px-3 py-2.5 text-xs">Download TXT</Button>
             <Button data-export="json" type="button" class="w-full px-3 py-2.5 text-xs">Download JSON</Button>
           </div>
-          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+          <p data-export-status class="mt-3 text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
         </section>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="sitemap-extractor-details">
+    <Card>
       <div class="space-y-6 p-5 sm:p-6">
         <section data-warning-section hidden class="border-b border-border pb-5" aria-labelledby="sitemap-warning-heading">
-          <h3 id="sitemap-warning-heading" class="font-mono text-sm font-normal">Check these sitemap files</h3>
-          <ul data-warning-list class="mt-3 space-y-3 font-sans text-xs font-light leading-5 text-foreground-muted"></ul>
+          <h3 id="sitemap-warning-heading" class="text-sm font-medium">Check these sitemap files</h3>
+          <ul data-warning-list class="mt-3 space-y-3 text-xs leading-5 text-foreground-muted"></ul>
         </section>
 
         <section aria-labelledby="sitemap-files-heading">
           <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 id="sitemap-files-heading" class="font-mono text-sm font-normal">Sitemap files</h3>
-            <p class="font-sans text-xs font-light text-foreground-muted">Files over 10,000 URL entries are flagged</p>
+            <h3 id="sitemap-files-heading" class="text-sm font-medium">Sitemap files</h3>
+            <p class="text-xs text-foreground-muted">Files over 10,000 URL entries are flagged</p>
           </div>
           <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[42rem] border-collapse text-left">
-              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <thead class="border-b border-border text-xs font-medium text-foreground-muted">
                 <tr>
                   <th class="pb-2 pr-4">Sitemap</th>
                   <th class="pb-2 pr-4">Type</th>
@@ -128,52 +128,52 @@ import FormSelect from '@/components/FormSelect.astro'
                   <th class="pb-2 text-right">Depth</th>
                 </tr>
               </thead>
-              <tbody data-sitemap-rows class="divide-y divide-border font-sans text-xs"></tbody>
+              <tbody data-sitemap-rows class="divide-y divide-border text-xs"></tbody>
             </table>
           </div>
         </section>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="sitemap-extractor-url-list">
+    <Card>
       <div class="space-y-6 p-5 sm:p-6">
         <section aria-labelledby="filter-heading">
           <div class="space-y-1">
-            <h3 id="filter-heading" class="font-mono text-sm font-normal">Filter the URL list</h3>
-            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            <h3 id="filter-heading" class="text-sm font-medium">Filter the URL list</h3>
+            <p class="text-xs leading-5 text-foreground-muted">
               Copy and download actions use the active filters. Clear the fields to include every extracted URL.
             </p>
           </div>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
-            <label class="space-y-2 font-sans text-xs font-medium">
+            <label class="space-y-2 text-xs font-medium">
               <span>Search URLs</span>
               <input
                 data-search
-                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                class="min-h-10 w-full rounded-lg border border-input bg-card px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
                 type="search"
                 placeholder="product, /blog/, ?page="
               />
             </label>
-            <label class="space-y-2 font-sans text-xs font-medium">
+            <label class="space-y-2 text-xs font-medium">
               <span>Source sitemap</span>
               <FormSelect data-source-filter>
                 <option value="">All sitemap files</option>
               </FormSelect>
             </label>
-            <label class="space-y-2 font-sans text-xs font-medium">
+            <label class="space-y-2 text-xs font-medium">
               <span>URL must include</span>
               <input
                 data-include
-                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                class="min-h-10 w-full rounded-lg border border-input bg-card px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
                 type="text"
                 placeholder="/products/"
               />
             </label>
-            <label class="space-y-2 font-sans text-xs font-medium">
+            <label class="space-y-2 text-xs font-medium">
               <span>URL must exclude</span>
               <input
                 data-exclude
-                class="min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary"
+                class="min-h-10 w-full rounded-lg border border-input bg-card px-3 py-3 font-mono text-xs font-normal text-foreground outline-none transition-colors hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
                 type="text"
                 placeholder="?filter="
               />
@@ -183,12 +183,12 @@ import FormSelect from '@/components/FormSelect.astro'
 
         <section class="border-t border-border pt-5" aria-labelledby="url-preview-heading">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 id="url-preview-heading" class="font-mono text-sm font-normal">URL preview</h3>
-            <p data-filter-count class="font-sans text-xs font-light text-foreground-muted"></p>
+            <h3 id="url-preview-heading" class="text-sm font-medium">URL preview</h3>
+            <p data-filter-count class="text-xs text-foreground-muted"></p>
           </div>
           <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[56rem] border-collapse text-left">
-              <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+              <thead class="border-b border-border text-xs font-medium text-foreground-muted">
                 <tr>
                   <th class="pb-2 pr-4">URL</th>
                   <th class="pb-2 pr-4">Last modified</th>
@@ -197,10 +197,10 @@ import FormSelect from '@/components/FormSelect.astro'
                   <th class="pb-2 text-right">Depth</th>
                 </tr>
               </thead>
-              <tbody data-url-rows class="divide-y divide-border font-sans text-xs"></tbody>
+              <tbody data-url-rows class="divide-y divide-border text-xs"></tbody>
             </table>
           </div>
-          <p data-empty-filter hidden class="mt-4 font-sans text-sm font-light text-foreground-muted">
+          <p data-empty-filter hidden class="mt-4 text-sm text-foreground-muted">
             No extracted URLs match these filters.
           </p>
           <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -212,7 +212,7 @@ import FormSelect from '@/components/FormSelect.astro'
           </div>
         </section>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 

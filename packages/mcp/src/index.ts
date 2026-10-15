@@ -5,8 +5,9 @@ import {
   SEO_VERSION,
   type TelemetryOptions,
 } from '@seo/core'
-import { registerDiscoveryTools } from './discovery-tools.js'
+import { MCP_INSTRUCTIONS } from '@seo/core/commands'
 import { registerProviderExtensionTools } from './provider-extension-tools.js'
+import { registerSharedTools } from './shared-tools.js'
 
 export {
   AGENT_STRUCTURED_OUTPUT_MAX_BYTES,
@@ -45,13 +46,17 @@ export function createServer(
       name: 'seo',
       version: SEO_VERSION,
     },
-    { capabilities: { logging: {} } },
+    {
+      capabilities: { logging: {} },
+      instructions: `${MCP_INSTRUCTIONS}
+seo_crawl and seo_internal_links run on this machine. Keys and Google sign-in come from \`seo start\` and \`seo providers <name> connect\`.`,
+    },
   )
 
   const telemetryOptions = (): TelemetryOptions => ({
     clientName: server.server.getClientVersion()?.name,
   })
-  registerDiscoveryTools(server, {
+  registerSharedTools(server, {
     telemetry: options.telemetry === false ? undefined : telemetryOptions,
   })
   registerProviderExtensionTools(server)

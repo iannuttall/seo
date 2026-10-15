@@ -1,6 +1,3 @@
-import { querySearchAnalytics } from './gsc/client.js'
-import { finalGscDateRange } from './gsc/dates.js'
-
 const COUNTRY_CODE_SECOND_LEVELS = new Set([
   'ac',
   'co',
@@ -11,7 +8,7 @@ const COUNTRY_CODE_SECOND_LEVELS = new Set([
   'org',
 ])
 
-function normalizeBrandText(value: string): string {
+export function normalizeBrandText(value: string): string {
   return value
     .normalize('NFKC')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -23,17 +20,47 @@ function normalizeBrandText(value: string): string {
     .trim()
 }
 
-function domainStem(siteUrl: string): string | undefined {
-  const value = siteUrl.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '')
-  const host = value.split('/')[0]
-  if (!host) return undefined
-  const parts = host.split('.').filter(Boolean)
-  if (!parts.length) return undefined
+function hostLabels(siteUrl: string): string[] {
+  const value = siteUrl
+    .trim()
+    .toLowerCase()
+    .replace(/^sc-domain:/, '')
+    .replace(/^https?:\/\//, '')
+  const host = (value.split('/')[0] ?? '').split(':')[0] ?? ''
+  return host.split('.').filter(Boolean)
+}
+
+function suffixDepth(parts: string[]): number {
   const last = parts.at(-1) ?? ''
   const secondLast = parts.at(-2) ?? ''
-  const suffixDepth =
-    last.length === 2 && COUNTRY_CODE_SECOND_LEVELS.has(secondLast) ? 2 : 1
-  return parts.at(-(suffixDepth + 1)) ?? parts[0]
+  return last.length === 2 &&
+    COUNTRY_CODE_SECOND_LEVELS.has(secondLast) &&
+    parts.length > 2
+    ? 2
+    : 1
+}
+
+/**
+ * The registrable part of a Search Console property host, using the small
+ * built-in list of country-code second levels. `sc-domain:docs.example.co.uk`
+ * returns `{ domain: 'example.co.uk', stem: 'example', suffix: 'co.uk' }`.
+ */
+export function registrableDomain(
+  siteUrl: string,
+): { domain: string; stem: string; suffix: string } | undefined {
+  const parts = hostLabels(siteUrl)
+  if (parts.length < 2) return undefined
+  const depth = suffixDepth(parts)
+  const stem = parts.at(-(depth + 1))
+  if (!stem) return undefined
+  const suffix = parts.slice(-depth).join('.')
+  return { domain: `${stem}.${suffix}`, stem, suffix }
+}
+
+function domainStem(siteUrl: string): string | undefined {
+  const parts = hostLabels(siteUrl)
+  if (!parts.length) return undefined
+  return parts.at(-(suffixDepth(parts) + 1)) ?? parts[0]
 }
 
 function unique(values: string[]): string[] {
@@ -83,21 +110,54 @@ export function deriveBrandTerms(input: {
   return unique(candidates)
 }
 
+// Offsets in the compact (space-free) query where a query token starts or
+// ends. An ASCII compact brand match must start and end on these offsets, so
+// `examplecom` matches "example.com" and "example com" but not
+// "example compare".
+function tokenBoundaries(queryTokens: string[]): Set<number> {
+  const boundaries = new Set<number>([0])
+  let offset = 0
+  for (const token of queryTokens) {
+    offset += token.length
+    boundaries.add(offset)
+  }
+  return boundaries
+}
+
+function alignedCompactMatch(
+  compactQuery: string,
+  compactTerm: string,
+  boundaries: Set<number>,
+): boolean {
+  let index = compactQuery.indexOf(compactTerm)
+  while (index !== -1) {
+    if (boundaries.has(index) && boundaries.has(index + compactTerm.length)) {
+      return true
+    }
+    index = compactQuery.indexOf(compactTerm, index + 1)
+  }
+  return false
+}
+
 export function isBrandQuery(query: string, brandTerms: string[]): boolean {
   const normalized = normalizeBrandText(query)
   if (!normalized || !brandTerms.length) return false
 
   const queryTokens = normalized.split(' ')
   const compactQuery = normalized.replace(/\s+/g, '')
+  const boundaries = tokenBoundaries(queryTokens)
   return brandTerms.some((term) => {
     const normalizedTerm = normalizeBrandText(term)
     if (!normalizedTerm) return false
     const compactTerm = normalizedTerm.replace(/\s+/g, '')
     const compactTermLength = [...compactTerm].length
-    const compactMatches =
-      (compactTermLength >= 6 ||
-        (/[^\p{ASCII}]/u.test(compactTerm) && compactTermLength >= 2)) &&
-      compactQuery.includes(compactTerm)
+    const nonAscii = /[^\p{ASCII}]/u.test(compactTerm)
+    // Scripts written without spaces keep substring matching; ASCII terms
+    // must align with query token boundaries.
+    const compactMatches = nonAscii
+      ? compactTermLength >= 2 && compactQuery.includes(compactTerm)
+      : compactTermLength >= 6 &&
+        alignedCompactMatch(compactQuery, compactTerm, boundaries)
     const termTokens = normalizedTerm.split(' ')
     if (termTokens.length === 1) {
       return (
@@ -121,142 +181,4 @@ export function shouldExcludeBrandQuery(input: {
     ? input.brandTerms
     : deriveBrandTerms({ siteUrl: input.siteUrl })
   return isBrandQuery(input.query, terms)
-}
-
-type BrandEvidence = {
-  query: string
-  clicks: number
-  impressions: number
-  ctr: number
-  position: number
-}
-
-export type BrandTermCandidate = {
-  term: string
-  score: number
-  evidence: BrandEvidence[]
-}
-
-function defaultDateRange(days = 28): { startDate: string; endDate: string } {
-  return finalGscDateRange(days)
-}
-
-function addCandidate(
-  candidates: Map<string, BrandTermCandidate>,
-  term: string,
-  evidence: BrandEvidence,
-): void {
-  const normalized = normalizeBrandText(term)
-  if (!normalized) return
-  const existing = candidates.get(normalized) ?? {
-    term: normalized,
-    score: 0,
-    evidence: [],
-  }
-  existing.score +=
-    evidence.clicks * 2 +
-    evidence.impressions * evidence.ctr +
-    Math.max(0, 5 - evidence.position) * 10
-  existing.evidence.push(evidence)
-  candidates.set(normalized, existing)
-}
-
-function isExactBrandVariant(query: string, terms: string[]): boolean {
-  const normalizedQuery = normalizeBrandText(query)
-  const compactQuery = normalizedQuery.replace(/\s+/g, '')
-  return terms.some((term) => {
-    const normalizedTerm = normalizeBrandText(term)
-    const compactTerm = normalizedTerm.replace(/\s+/g, '')
-    return normalizedQuery === normalizedTerm || compactQuery === compactTerm
-  })
-}
-
-export async function detectBrandTerms(input: {
-  site: string
-  id?: string
-  name?: string
-  days?: number
-  limit?: number
-  minImpressions?: number
-  refresh?: boolean
-}): Promise<{
-  site: string
-  generatedAt: string
-  derivedTerms: string[]
-  suggestedTerms: string[]
-  candidates: BrandTermCandidate[]
-}> {
-  const derivedTerms = deriveBrandTerms({
-    id: input.id,
-    name: input.name,
-    siteUrl: input.site,
-  })
-  const range = defaultDateRange(input.days ?? 28)
-  const { rows } = await querySearchAnalytics(
-    input.site,
-    {
-      ...range,
-      dimensions: ['query'],
-      type: 'web',
-      dataState: 'final',
-    },
-    { refresh: input.refresh },
-  )
-
-  const minImpressions = input.minImpressions ?? 10
-  const candidates = new Map<string, BrandTermCandidate>()
-
-  for (const row of rows) {
-    const query = row.keys[0] ?? ''
-    if (
-      row.impressions < minImpressions ||
-      row.position > 3 ||
-      row.ctr < 0.1 ||
-      !isBrandQuery(query, derivedTerms)
-    ) {
-      continue
-    }
-
-    const evidence = {
-      query,
-      clicks: row.clicks,
-      impressions: row.impressions,
-      ctr: row.ctr,
-      position: row.position,
-    }
-    const normalizedQuery = normalizeBrandText(query)
-    const queryTokens = normalizedQuery.split(' ')
-    if (
-      queryTokens.length <= 4 &&
-      (isExactBrandVariant(query, derivedTerms) || query.includes('.'))
-    ) {
-      addCandidate(candidates, normalizedQuery, evidence)
-    }
-    for (const term of derivedTerms) {
-      if (isBrandQuery(query, [term])) {
-        addCandidate(candidates, term, evidence)
-      }
-    }
-  }
-
-  const ranked = [...candidates.values()]
-    .map((candidate) => ({
-      ...candidate,
-      score: Number(candidate.score.toFixed(2)),
-      evidence: candidate.evidence
-        .sort((a, b) => b.clicks - a.clicks)
-        .slice(0, 3),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, input.limit ?? 10)
-
-  return {
-    site: input.site,
-    generatedAt: new Date().toISOString(),
-    derivedTerms,
-    suggestedTerms: ranked.length
-      ? ranked.map((candidate) => candidate.term)
-      : derivedTerms,
-    candidates: ranked,
-  }
 }

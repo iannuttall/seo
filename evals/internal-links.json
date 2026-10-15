@@ -3,53 +3,34 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Find pages on our site that should link to this new article.",
-      "expected_output": "Should use report id internal-links to find relevant pages that could add a useful internal link to a target URL. Should follow the discovery flow: seo_list_reports with category opportunities, seo_describe_report with id internal-links, then seo_run_report with the required site and targetUrl. Should read dataStatus, target verification, aliases, canonical, and technical signals first, then source completeness and selection attempted, checked, failed, unchecked, and exclusions. Should clarify query overlap does not prove a link belongs.",
+      "prompt": "Which pages on our site should link to https://example.com/pricing?",
+      "expected_output": "Should run seo_internal_links with the URL on the local server, or `seo internal-links --url https://example.com/pricing` in the CLI. Should present the candidate pages and why they relate. Should note that this runs only on the person's machine.",
       "assertions": [
-        "Uses report id internal-links for the source-page candidates",
-        "Notes the report requires both site and targetUrl",
-        "Follows seo_list_reports, seo_describe_report, seo_run_report in order",
-        "Reads dataStatus, target verification, aliases, canonical, and technical signals first",
-        "States query overlap does not prove a link belongs"
+        "Runs seo_internal_links or `seo internal-links` with the URL",
+        "Presents the candidate pages",
+        "Notes the command runs only locally"
       ],
       "files": []
     },
     {
       "id": 2,
-      "prompt": "Run internal links for site sc-domain:example.com and targetUrl https://example.com/new-guide, top 20 candidates, check 100 of them.",
-      "expected_output": "Should run report id internal-links with site sc-domain:example.com, targetUrl https://example.com/new-guide, limit 20, and checkLimit 100. Should read source completeness and selection attempted, checked, failed, unchecked, and exclusions, then per-item exact versus lexical matches and linkEvidence. Should use only parameters defined in the schema.",
+      "prompt": "Add the internal links to all the candidate pages for me.",
+      "expected_output": "Should show the candidates and the suggested anchor context first, and ask the person to approve specific changes before editing any page. Should not promise ranking gains from internal links.",
       "assertions": [
-        "Runs report id internal-links with site and targetUrl",
-        "Sets limit 20 and checkLimit 100 as requested",
-        "Reads selection attempted, checked, failed, unchecked, and exclusions",
-        "Reads per-item exact versus lexical matches and linkEvidence",
-        "Uses only parameters defined in the report schema"
+        "Shows the candidates before editing",
+        "Asks for approval before editing pages",
+        "Does not promise ranking gains"
       ],
       "files": []
     },
     {
       "id": 3,
-      "prompt": "Great, add all these internal links automatically. They will boost our rankings.",
-      "expected_output": "Should decline to add links automatically and should not promise a ranking gain. Should state the report should be avoided when links are to be added automatically, that query overlap does not prove a link belongs or that adding one improves rankings, and that priority is a heuristic, not estimated impact. Should recommend reading the source passage, adding one contextual link only if the target is genuinely useful, and re-crawling to confirm it.",
+      "prompt": "The internal-links result only has three candidates, so our internal linking is done.",
+      "expected_output": "Should not call internal linking complete. Should explain that the candidates come from Search Console queries and live page checks with limits, so pages outside them are not covered. Should present the three as a starting point.",
       "assertions": [
-        "Declines to add the links automatically",
-        "States query overlap does not prove a link belongs or that adding one improves rankings",
-        "States priority is a heuristic, not estimated impact",
-        "Recommends reading the source passage before adding a link",
-        "Recommends re-crawling to confirm any added link"
-      ],
-      "files": []
-    },
-    {
-      "id": 4,
-      "prompt": "We set checkLimit to 20 and only a couple of candidates came back, so there are no internal link opportunities for this page.",
-      "expected_output": "Should refuse to read the small result as proven absence. Should state a low checkLimit can leave plausible candidates unchecked, so absence is not proven, and read selection attempted, checked, failed, and unchecked to see how many were actually inspected. Should recommend raising checkLimit or inspecting the unchecked candidates before concluding there are no opportunities.",
-      "assertions": [
-        "Refuses to read the small result as proven absence",
-        "States a low checkLimit can leave plausible candidates unchecked, so absence is not proven",
-        "Reads selection attempted, checked, failed, and unchecked",
-        "Recommends raising checkLimit or inspecting the unchecked candidates",
-        "Keeps unchecked and checked states distinct"
+        "Does not call internal linking complete",
+        "Explains the candidate list has limits",
+        "Presents the candidates as a starting point"
       ],
       "files": []
     }

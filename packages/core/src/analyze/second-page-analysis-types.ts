@@ -1,3 +1,4 @@
+import type { ReportBrandTerms } from '../brand-evidence.js'
 import type {
   GscRow,
   PageFetchDiagnostics,
@@ -67,6 +68,7 @@ export type SecondPageAnalysis = {
   minImpressions: number
   limit: number
   dataStatus: 'empty' | 'filtered' | 'available'
+  brand: ReportBrandTerms
   selection: SecondPageSelection
   methodology: {
     id: 'gsc_second_page_v2'
@@ -130,7 +132,10 @@ export type AnalyzeSecondPageInput = {
 
 export type SecondPageReport = {
   site: string
-  range: number
+  /** The Search Console window used. */
+  range: { startDate: string; endDate: string }
+  rangeDays: number
+  /** Same window as `range`; kept for earlier readers. */
   dateRange: { startDate: string; endDate: string }
   generatedAt: string
   source: {
@@ -145,6 +150,7 @@ export type SecondPageReport = {
     completeness: 'retained-query-rows-only'
   }
   dataStatus: SecondPageAnalysis['dataStatus']
+  brand: SecondPageAnalysis['brand']
   selection: SecondPageSelection
   methodology: SecondPageAnalysis['methodology']
   provenance: SecondPageAnalysis['provenance'] & {

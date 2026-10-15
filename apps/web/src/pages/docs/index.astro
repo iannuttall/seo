@@ -1,0 +1,81 @@
+---
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import { commands } from '@/content/commands'
+import { docsSections } from '@/content/docs-nav.mjs'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="Docs"
+  description="Connect the free hosted MCP or install the seo CLI, then learn the eight commands that give your agent facts from your search data."
+  canonicalPath="/docs"
+  schemaType="CollectionPage"
+>
+  <main data-agent-content>
+    <PageHeader
+      title="Docs"
+      description="Connect the hosted MCP or install the CLI. Both run the same reports and give your agent the same facts."
+    />
+
+    <section aria-labelledby="docs-setup">
+      <h2 id="docs-setup" class="sr-only">Connect or install</h2>
+      <SetupCommands id="docs-setup-commands" />
+    </section>
+
+    <div class="mt-16 space-y-14">
+      {
+        docsSections.map((section) => (
+          <section aria-labelledby={`docs-${section.title.toLowerCase()}`}>
+            <h2
+              id={`docs-${section.title.toLowerCase()}`}
+              class="text-2xl/8 font-medium tracking-normal"
+            >
+              {section.title}
+            </h2>
+            <div class="mt-6 grid gap-3 sm:grid-cols-2">
+              {section.items.map((doc) => (
+                <a
+                  class="rounded-lg bg-muted p-5 no-underline transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
+                  href={doc.path}
+                >
+                  <h3 class:list={['text-base font-medium text-foreground', doc.label.startsWith('seo ') && 'font-mono text-[0.9375rem]']}>
+                    {doc.label}
+                  </h3>
+                  <p class="mt-2 text-sm leading-6 text-foreground-muted">
+                    {doc.description}
+                  </p>
+                </a>
+              ))}
+            </div>
+            {section.title === 'Commands' ? (
+            <div class="docs-prose mt-10">
+              <h3 id="docs-tools">Commands and hosted MCP tools</h3>
+              <p>
+                Each command has the same name in the CLI and a matching tool in the
+                hosted MCP, and the results are the same either way. Start with the
+                report: the overview shows where clicks moved, and each section count
+                tells you where to look next.
+              </p>
+              <table>
+                <thead>
+                  <tr><th>CLI</th><th>Hosted MCP tool</th><th>Needs</th></tr>
+                </thead>
+                <tbody>
+                  {commands.map((item) => (
+                    <tr>
+                      <td><a href={item.path}><code>{item.command}</code></a></td>
+                      <td>{item.tool ? <code>{item.tool}</code> : 'CLI only'}</td>
+                      <td>{item.needs}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            ) : null}
+          </section>
+        ))
+      }
+    </div>
+  </main>
+</BaseLayout>

@@ -1,10 +1,31 @@
 ---
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import { reports } from '@/content/reports'
+import {
+  reportCommands,
+  reportDestination,
+  reportIds,
+} from '@/content/telemetry/report-ids.mjs'
 
-const reportLabelsJson = JSON.stringify(
-  Object.fromEntries(reports.map((report) => [report.id, report.name])),
+// Each report id a client can send, with the command it now belongs to and
+// the docs page that covers it. Removed reports count under "Removed".
+const commandLabels: Record<string, string> = {
+  setup: 'seo start',
+  removed: 'Removed reports',
+}
+const reportMapJson = JSON.stringify(
+  Object.fromEntries(
+    reportIds.map((id) => {
+      const command = reportCommands[id] ?? 'removed'
+      return [
+        id,
+        {
+          command: commandLabels[command] ?? `seo ${command}`,
+          path: reportDestination(id),
+        },
+      ]
+    }),
+  ),
 )
 
 const metrics = [
@@ -20,13 +41,12 @@ const metrics = [
 ] as const
 ---
 
-<div data-stats-root data-report-labels={reportLabelsJson} aria-busy="true">
+<div data-stats-root data-report-map={reportMapJson} aria-busy="true">
   <PageHeader
     title="Anonymous usage stats"
     description="Aggregate event counts from installs that leave anonymous telemetry enabled. No user, machine, site, URL, report content, Google data, or location is attached to any event."
-    align="left"
   >
-    <p slot="actions" class="animate-pulse font-sans text-sm text-foreground-muted" data-stats-status data-stats-loading data-agent-markdown="exclude" aria-live="polite">
+    <p slot="actions" class="animate-pulse text-sm text-foreground-muted" data-stats-status data-stats-loading data-agent-markdown="exclude" aria-live="polite">
       Fetching current totals.
     </p>
     <p slot="actions" hidden data-agent-markdown="only">
@@ -36,17 +56,17 @@ const metrics = [
   </PageHeader>
 
   <section class="mb-14" aria-label="Usage totals" data-agent-markdown="exclude">
-    <div class="grid items-stretch gap-5 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid items-stretch gap-2 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">
       {
         metrics.map(([key, label]) => (
-          <DottedCard patternId={`telemetry-stat-${key}`}>
-            <article class="flex h-full min-h-32 flex-col justify-between gap-5 p-5 sm:p-6">
-              <p class="font-sans text-sm text-foreground-muted">{label}</p>
-              <p class="animate-pulse text-2xl sm:text-3xl" data-stat={key} data-stats-loading>
+          <Card inverted>
+            <article class="flex h-full min-h-32 flex-col justify-between gap-5 p-6">
+              <p class="text-sm text-foreground-muted">{label}</p>
+              <p class="animate-pulse text-2xl font-medium tabular-nums sm:text-3xl" data-stat={key} data-stats-loading>
                 {key === 'firstAuditConversionPercent' ? '0%' : '0'}
               </p>
             </article>
-          </DottedCard>
+          </Card>
         ))
       }
     </div>
@@ -54,7 +74,7 @@ const metrics = [
 
   <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-breakdowns data-agent-markdown="exclude">
     <section class="min-w-0 space-y-5" aria-labelledby="agent-installs-heading">
-      <h2 id="agent-installs-heading" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="agent-installs-heading" class="text-xl font-medium leading-tight">
         Install agent breakdown
       </h2>
       <div class="docs-prose">
@@ -67,7 +87,7 @@ const metrics = [
       </div>
     </section>
     <section class="min-w-0 space-y-5" aria-labelledby="agent-audits-heading">
-      <h2 id="agent-audits-heading" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="agent-audits-heading" class="text-xl font-medium leading-tight">
         Audit agent breakdown
       </h2>
       <div class="docs-prose">
@@ -83,10 +103,10 @@ const metrics = [
 
   <section class="mb-14 space-y-5" aria-labelledby="retention-heading" data-agent-markdown="exclude">
     <div class="space-y-2">
-      <h2 id="retention-heading" class="font-mono text-xl font-normal leading-tight">
+      <h2 id="retention-heading" class="text-xl font-medium leading-tight">
         Day 7 retention by install week
       </h2>
-      <p class="font-sans text-[0.9375rem] font-light leading-7">
+      <p class="text-[0.9375rem] leading-7">
         A returning install ran the tool at least seven days after its first run.
         Only complete weekly cohorts are shown.
       </p>
@@ -104,10 +124,10 @@ const metrics = [
   <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
     <section class="min-w-0 space-y-5" aria-labelledby="failure-categories-heading">
       <div class="space-y-2">
-        <h2 id="failure-categories-heading" class="font-mono text-xl font-normal leading-tight">
+        <h2 id="failure-categories-heading" class="text-xl font-medium leading-tight">
           Why runs failed
         </h2>
-        <p class="font-sans text-[0.9375rem] font-light leading-7">
+        <p class="text-[0.9375rem] leading-7">
           Broad categories from every recorded failure.
         </p>
       </div>
@@ -122,10 +142,10 @@ const metrics = [
     </section>
     <section class="min-w-0 space-y-5 lg:col-span-2" aria-labelledby="failure-details-heading">
       <div class="space-y-2">
-        <h2 id="failure-details-heading" class="font-mono text-xl font-normal leading-tight">
+        <h2 id="failure-details-heading" class="text-xl font-medium leading-tight">
           Detailed failure signals
         </h2>
-        <p class="font-sans text-[0.9375rem] font-light leading-7">
+        <p class="text-[0.9375rem] leading-7">
           Fixed classifications from compatible versions. Raw errors and user data are never sent.
         </p>
       </div>
@@ -140,47 +160,62 @@ const metrics = [
     </section>
   </div>
 
-  <div class="mb-14 grid items-stretch gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
-    <section class="flex h-full flex-col gap-5" aria-labelledby="popular-reports-heading">
-      <h2 id="popular-reports-heading" class="font-mono text-xl font-normal leading-tight">
-        Most run reports
-      </h2>
-      <DottedCard patternId="telemetry-popular-reports" class="h-full">
-        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="popular" data-stats-loading><li class="p-4">No recorded events</li></ol>
-      </DottedCard>
+  <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-markdown="exclude">
+    <section class="min-w-0 space-y-5" aria-labelledby="command-runs-heading">
+      <div class="space-y-2">
+        <h2 id="command-runs-heading" class="text-xl font-medium leading-tight">
+          Runs by command
+        </h2>
+        <p class="text-base leading-7 text-foreground-muted">
+          Older versions sent a report id. Each one is counted under the command that covers it now.
+        </p>
+      </div>
+      <div class="docs-prose">
+        <div class="table-frame">
+          <table class="min-w-0">
+            <thead><tr><th>Command</th><th class="text-right">Runs</th></tr></thead>
+            <tbody class="animate-pulse" data-command-table data-stats-loading><tr><td colspan="2">No recorded events</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </section>
-    <section class="flex h-full flex-col gap-5" aria-labelledby="quiet-reports-heading">
-      <h2 id="quiet-reports-heading" class="font-mono text-xl font-normal leading-tight">
-        Least run reports
-      </h2>
-      <DottedCard patternId="telemetry-quiet-reports" class="h-full">
-        <ol class="animate-pulse divide-y divide-border font-sans text-sm" data-report-list="quiet" data-stats-loading><li class="p-4">No recorded events</li></ol>
-      </DottedCard>
+    <section class="min-w-0 space-y-5" aria-labelledby="popular-reports-heading">
+      <div class="space-y-2">
+        <h2 id="popular-reports-heading" class="text-xl font-medium leading-tight">
+          Most run reports
+        </h2>
+        <p class="text-base leading-7 text-foreground-muted">
+          The ten report ids with the most runs.
+        </p>
+      </div>
+      <Card inverted>
+        <ol class="animate-pulse divide-y divide-border text-sm" data-report-list="popular" data-stats-loading><li class="px-5 py-4">No recorded events</li></ol>
+      </Card>
     </section>
   </div>
 
   <section aria-labelledby="reading-stats">
-    <DottedCard patternId="telemetry-reading-stats" inverted>
-      <div class="space-y-5 p-5 sm:p-6">
-        <h2 id="reading-stats" class="font-mono text-xl font-normal leading-tight">
+    <Card inverted>
+      <div class="space-y-4 p-6">
+        <h2 id="reading-stats" class="text-xl font-medium leading-tight">
           How to read these numbers
         </h2>
-        <div class="space-y-4 font-sans text-sm font-light leading-6">
+        <div class="space-y-4 text-sm leading-6 text-foreground-muted">
           <p>
             These are event totals, not people. One person can use several machines,
             clearing local state creates a new install, and disabled or CI runs do not
             appear. The first audit ratio divides first completed audit events by
-            all recorded first run events. It is not an identity-linked funnel.
+            all recorded first run events. It is not an identity-linked funnel. Runs through the hosted MCP count as audits with no install behind them.
           </p>
           <p>
             The totals cover events recorded since anonymous collection began. Read
-            the <a class="text-primary underline underline-offset-4 hover:decoration-dotted" href="/telemetry">full telemetry specification</a>
+            the <a class="text-primary underline underline-offset-4 hover:text-primary-hover" href="/telemetry">full telemetry specification</a>
             {' '}or inspect the{' '}
-            <a class="text-primary underline underline-offset-4 hover:decoration-dotted" href="/api/stats">aggregate JSON</a>.
+            <a class="text-primary underline underline-offset-4 hover:text-primary-hover" href="/api/stats">aggregate JSON</a>.
           </p>
         </div>
       </div>
-    </DottedCard>
+    </Card>
   </section>
 </div>
 
@@ -268,27 +303,23 @@ const metrics = [
     }
   }
 
-  const reportPath = (report: string) =>
-    `/docs/reports/${report === 'index-coverage-plan' ? 'index-plan' : report}`
-
-  const reportLabels = (() => {
+  type ReportInfo = { command: string; path: string }
+  const reportMap = (() => {
     const value = document
       .querySelector('[data-stats-root]')
-      ?.getAttribute('data-report-labels')
-    if (!value) return {} as Record<string, string>
+      ?.getAttribute('data-report-map')
+    if (!value) return {} as Record<string, ReportInfo>
     try {
-      return JSON.parse(value) as Record<string, string>
+      return JSON.parse(value) as Record<string, ReportInfo>
     } catch {
-      return {} as Record<string, string>
+      return {} as Record<string, ReportInfo>
     }
   })()
 
-  const reportLabel = (report: string) =>
-    reportLabels[report] ??
-    report
-      .split('-')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ')
+  const reportPath = (report: string) => reportMap[report]?.path ?? '/docs'
+  const reportCommand = (report: string) =>
+    reportMap[report]?.command ?? 'Removed reports'
+  const reportLabel = (report: string) => report
 
   const failureLabel = (value: string) =>
     value
@@ -365,22 +396,55 @@ const metrics = [
     list.replaceChildren()
     if (rows.length === 0) {
       const row = document.createElement('li')
-      row.className = 'p-4'
+      row.className = 'px-5 py-4'
       row.textContent = 'No recorded events'
       list.append(row)
       return
     }
     for (const item of rows) {
       const row = document.createElement('li')
-      row.className = 'flex items-center justify-between gap-4 p-4'
+      row.className = 'flex items-center justify-between gap-4 px-5 py-3'
+      const name = document.createElement('span')
+      name.className = 'flex min-w-0 flex-col'
       const link = document.createElement('a')
-      link.className = 'text-primary underline underline-offset-2 hover:decoration-dotted'
+      link.className = 'truncate font-mono text-primary underline underline-offset-4 hover:text-primary-hover'
       link.href = reportPath(item.report)
       link.textContent = reportLabel(item.report)
+      const command = document.createElement('span')
+      command.className = 'text-xs text-foreground-muted'
+      command.textContent = reportCommand(item.report)
+      name.append(link, command)
       const value = document.createElement('span')
+      value.className = 'tabular-nums'
       value.textContent = count(item.count)
-      row.append(link, value)
+      row.append(name, value)
       list.append(row)
+    }
+  }
+
+  const renderCommands = (
+    table: Element | null,
+    rows: Array<{ report: string; count: number }>,
+  ) => {
+    if (!(table instanceof HTMLElement)) return
+    table.replaceChildren()
+    const totals = new Map<string, number>()
+    for (const item of rows) {
+      if (!(item.count > 0)) continue
+      const command = reportCommand(item.report)
+      totals.set(command, (totals.get(command) ?? 0) + item.count)
+    }
+    const sorted = [...totals.entries()].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    )
+    if (sorted.length === 0) {
+      table.append(emptyRow(2))
+      return
+    }
+    for (const [command, total] of sorted) {
+      const row = document.createElement('tr')
+      row.append(cell(command), cell(count(total), 'right'))
+      table.append(row)
     }
   }
 
@@ -436,12 +500,9 @@ const metrics = [
           .filter((item: { count: number }) => item.count > 0)
           .slice(0, 10),
       )
-      renderReports(
-        document.querySelector('[data-report-list="quiet"]'),
-        [...reports]
-          .filter((item: { count: number }) => item.count > 0)
-          .sort((a, b) => a.count - b.count || a.report.localeCompare(b.report))
-          .slice(0, 10),
+      renderCommands(
+        document.querySelector('[data-command-table]'),
+        reports,
       )
       const generated = new Date(stats.generatedAt)
       text(

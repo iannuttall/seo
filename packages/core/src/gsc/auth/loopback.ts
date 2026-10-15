@@ -7,12 +7,11 @@ import type { StoredTokens } from '../../types.js'
 import { oauthCallbackPage } from './callback-page.js'
 import { getAuthModeStatus, getClientConfig } from './client-config.js'
 import { waitForCode } from './loopback-callback.js'
-import { GOOGLE_TOKEN_ENDPOINT } from './token-endpoint.js'
+import { exchangeGoogleCode } from './token-endpoint.js'
 import {
   GOOGLE_READONLY_SCOPE_LABELS,
   GOOGLE_SCOPE,
   missingGoogleReadonlyScopes,
-  type OAuthClientConfig,
 } from './types.js'
 import { decodeJwtEmail, fetchUserEmail } from './user-email.js'
 
@@ -66,7 +65,7 @@ export async function loginWithLoopback(
   let callback: Awaited<ReturnType<typeof waitForCode>> | undefined
   try {
     callback = await waitForCode({ server, redirectUri, state })
-    const tokenJson = await exchangeCode({
+    const tokenJson = await exchangeGoogleCode({
       clientConfig,
       code: callback.code,
       redirectUri,
@@ -118,46 +117,4 @@ export async function loginWithLoopback(
   } finally {
     server.close()
   }
-}
-
-async function exchangeCode(input: {
-  clientConfig: OAuthClientConfig
-  code: string
-  redirectUri: string
-  verifier: string
-}): Promise<{
-  access_token: string
-  refresh_token?: string
-  token_type: string
-  expires_in: number
-  scope: string
-  id_token?: string
-}> {
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: input.clientConfig.clientId,
-    client_secret: input.clientConfig.clientSecret,
-    code: input.code,
-    redirect_uri: input.redirectUri,
-    code_verifier: input.verifier,
-  })
-
-  const tokenResponse = await fetch(GOOGLE_TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-
-  if (!tokenResponse.ok) {
-    throw new Error(`Token exchange failed with ${tokenResponse.status}.`)
-  }
-
-  return tokenResponse.json() as Promise<{
-    access_token: string
-    refresh_token?: string
-    token_type: string
-    expires_in: number
-    scope: string
-    id_token?: string
-  }>
 }

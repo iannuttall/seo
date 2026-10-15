@@ -14,7 +14,7 @@ const wide = field.kind === 'textarea'
 const maxLength = field.maxLength ?? (wide ? 10_000 : 2_048)
 ---
 
-<label class:list={['block space-y-2 font-sans text-sm font-medium', wide && 'sm:col-span-2']}>
+<label class:list={['block space-y-2 text-sm font-medium', wide && 'sm:col-span-2']}>
   <span>{field.label}{field.required ? ' *' : ''}</span>
   {
     field.kind === 'textarea' ? (
@@ -54,7 +54,7 @@ const maxLength = field.maxLength ?? (wide ? 10_000 : 2_048)
   }
   {
     field.help && (
-      <small class="block font-sans text-xs font-light leading-5 text-foreground-muted">
+      <small class="block text-xs leading-5 text-foreground-muted">
         {field.help}
       </small>
     )

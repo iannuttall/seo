@@ -1,29 +1,29 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
 ---
 
 <section data-sitemap-validator class="space-y-6">
-  <DottedCard patternId="sitemap-validator-input">
+  <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Validate an XML sitemap</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Validate an XML sitemap</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Check a public sitemap URL, paste XML, or open an XML or gzip file from your computer.
         </p>
       </div>
 
-      <div class="flex gap-2" role="tablist" aria-label="Sitemap input method">
+      <div class="inline-flex w-fit gap-1 rounded-lg bg-muted p-0.5" role="tablist" aria-label="Sitemap input method">
         <button
           data-input-tab="url"
           type="button"
           role="tab"
           aria-selected="true"
           aria-controls="sitemap-validator-url-panel"
-          class="cursor-pointer border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-card text-foreground shadow-xs"
         >From URL</button>
         <button
           data-input-tab="local"
@@ -32,13 +32,13 @@ import FormTextarea from '@/components/FormTextarea.astro'
           aria-selected="false"
           aria-controls="sitemap-validator-local-panel"
           tabindex="-1"
-          class="cursor-pointer border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-foreground-muted hover:text-foreground"
         >Paste or open file</button>
       </div>
 
       <div id="sitemap-validator-url-panel" data-input-panel="url" role="tabpanel">
         <form data-url-form class="space-y-3" novalidate>
-          <label for="sitemap-validator-url" class="block font-sans text-sm font-medium">Sitemap URL</label>
+          <label for="sitemap-validator-url" class="block text-sm font-medium">Sitemap URL</label>
           <div class="flex flex-col gap-2 sm:flex-row">
             <FormInput
               id="sitemap-validator-url"
@@ -52,18 +52,18 @@ import FormTextarea from '@/components/FormTextarea.astro'
               maxlength="2048"
               placeholder="https://example.com/sitemap.xml"
             />
-            <Button data-check-url type="submit" class="min-h-12 px-5 text-xs sm:min-w-36">Validate URL</Button>
+            <Button data-check-url type="submit" class="min-h-10 px-5 text-xs sm:min-w-36">Validate URL</Button>
           </div>
-          <p data-url-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          <p data-url-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
             The checker reads the sitemap file without requesting the pages listed inside it.
           </p>
-          <p data-url-error hidden class="font-sans text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+          <p data-url-error hidden class="text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
         </form>
       </div>
 
       <div id="sitemap-validator-local-panel" data-input-panel="local" role="tabpanel" hidden>
         <div class="space-y-3">
-          <label for="sitemap-validator-content" class="block font-sans text-sm font-medium">Sitemap XML</label>
+          <label for="sitemap-validator-content" class="block text-sm font-medium">Sitemap XML</label>
           <FormTextarea
             id="sitemap-validator-content"
             data-content-input
@@ -82,81 +82,81 @@ import FormTextarea from '@/components/FormTextarea.astro'
             <Button data-use-example type="button" class="px-4 py-2.5 text-xs">Use example</Button>
             <Button data-clear type="button" class="px-4 py-2.5 text-xs">Clear</Button>
           </div>
-          <p data-local-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          <p data-local-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
             Pasted XML and local files stay in this browser tab. Files can be up to 50 MiB.
           </p>
         </div>
       </div>
     </div>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="sitemap-validator-summary" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-1">
-            <strong data-verdict class="font-mono text-2xl font-normal text-primary">Sitemap checked</strong>
-            <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+            <strong data-verdict class="text-2xl font-medium text-primary">Sitemap checked</strong>
+            <p data-result-summary class="text-sm leading-6 text-foreground-muted"></p>
           </div>
-          <span data-coverage class="shrink-0 font-mono text-xs text-panel-foreground/70"></span>
+          <span data-coverage class="shrink-0 font-mono text-xs text-foreground-muted"></span>
         </div>
 
-        <div class="flex flex-wrap gap-2 border-t border-panel-foreground/30 pt-5">
+        <div class="flex flex-wrap gap-2 border-t border-border pt-5">
           <Button data-copy-report type="button" class="px-3 py-2.5 text-xs">Copy JSON</Button>
           <Button data-download-report type="button" class="px-3 py-2.5 text-xs">Download JSON</Button>
         </div>
-        <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+        <p data-action-status class="text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3 lg:grid-cols-6">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-3 lg:grid-cols-6">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Entries</dt>
+            <dt class="text-xs text-foreground-muted">Entries</dt>
             <dd data-stat-entries class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Valid locations</dt>
+            <dt class="text-xs text-foreground-muted">Valid locations</dt>
             <dd data-stat-valid class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Errors</dt>
+            <dt class="text-xs text-foreground-muted">Errors</dt>
             <dd data-stat-errors class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Warnings</dt>
+            <dt class="text-xs text-foreground-muted">Warnings</dt>
             <dd data-stat-warnings class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Advice</dt>
+            <dt class="text-xs text-foreground-muted">Advice</dt>
             <dd data-stat-advice class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Uncompressed</dt>
+            <dt class="text-xs text-foreground-muted">Uncompressed</dt>
             <dd data-stat-bytes class="mt-1 font-mono text-lg">0 B</dd>
           </div>
         </dl>
       </div>
-    </DottedCard>
+    </Card>
 
     <div data-index-sitemaps hidden>
-      <DottedCard patternId="sitemap-validator-index">
+      <Card>
         <div class="space-y-5 p-5 sm:p-6">
           <div class="space-y-1">
-            <h3 class="font-mono text-lg font-normal">Validate the sitemaps in this index</h3>
-            <p data-index-summary class="font-sans text-sm font-light leading-6 text-foreground-muted"></p>
+            <h3 class="text-lg font-medium">Validate the sitemaps in this index</h3>
+            <p data-index-summary class="text-sm leading-6 text-foreground-muted"></p>
           </div>
           <ul data-index-list class="max-h-96 divide-y divide-border overflow-y-auto border-y border-border"></ul>
-          <p data-index-omitted hidden class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+          <p data-index-omitted hidden class="text-xs leading-5 text-foreground-muted"></p>
         </div>
-      </DottedCard>
+      </Card>
     </div>
 
-    <DottedCard patternId="sitemap-validator-findings">
+    <Card>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div class="space-y-1">
-            <h3 class="font-mono text-lg font-normal">Validation findings</h3>
-            <p data-document-summary class="font-sans text-xs font-light leading-5 text-foreground-muted"></p>
+            <h3 class="text-lg font-medium">Validation findings</h3>
+            <p data-document-summary class="text-xs leading-5 text-foreground-muted"></p>
           </div>
-          <label class="w-full space-y-2 font-sans text-xs font-medium sm:w-52">
+          <label class="w-full space-y-2 text-xs font-medium sm:w-52">
             <span>Show findings</span>
             <FormSelect data-issue-filter>
               <option value="all">All findings</option>
@@ -167,12 +167,12 @@ import FormTextarea from '@/components/FormTextarea.astro'
           </label>
         </div>
         <ol data-issue-list class="divide-y divide-border border-y border-border"></ol>
-        <p data-no-issues class="font-sans text-sm font-light leading-6 text-foreground-muted" hidden>
+        <p data-no-issues class="text-sm leading-6 text-foreground-muted" hidden>
           No findings match this filter.
         </p>
-        <p data-omitted class="font-sans text-xs font-light leading-5 text-foreground-muted" hidden></p>
+        <p data-omitted class="text-xs leading-5 text-foreground-muted" hidden></p>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 
@@ -196,8 +196,8 @@ import FormTextarea from '@/components/FormTextarea.astro'
     <lastmod>2026-08-09</lastmod>
   </url>
 </urlset>`
-  const activeTabClasses = ['border-primary', 'bg-primary', 'text-primary-foreground']
-  const inactiveTabClasses = ['border-border', 'bg-background-subtle', 'text-foreground-muted']
+  const activeTabClasses = ['bg-card', 'text-foreground', 'shadow-xs']
+  const inactiveTabClasses = ['text-foreground-muted']
 
   function initialiseSitemapValidator(root: HTMLElement): void {
     if (root.dataset.initialised === 'true') return
@@ -308,12 +308,12 @@ import FormTextarea from '@/components/FormTextarea.astro'
         href.hash = ''
         href.searchParams.set('url', child)
         link.href = href.toString()
-        link.className = 'group flex cursor-pointer items-center justify-between gap-4 py-3 font-sans text-sm transition-colors hover:text-primary'
+        link.className = 'group flex cursor-pointer items-center justify-between gap-4 py-3 text-sm transition-colors hover:text-primary'
         const url = document.createElement('span')
         url.className = 'min-w-0 break-all font-mono text-xs underline decoration-border underline-offset-4 group-hover:decoration-primary'
         url.textContent = child
         const action = document.createElement('span')
-        action.className = 'shrink-0 font-sans text-xs font-medium'
+        action.className = 'shrink-0 text-xs font-medium'
         action.textContent = 'Validate'
         link.append(url, action)
         item.append(link)
@@ -350,7 +350,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
       heading.append(severity)
       if (location.textContent) heading.append(location)
       const message = document.createElement('p')
-      message.className = 'font-sans text-sm font-light leading-6 text-foreground-muted'
+      message.className = 'text-sm leading-6 text-foreground-muted'
       message.textContent = issue.message
       row.append(heading, message)
       if (issue.value) {

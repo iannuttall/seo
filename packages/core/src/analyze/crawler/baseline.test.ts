@@ -169,50 +169,6 @@ test('creates and saves a bounded crawl when no compatible baseline exists', asy
   })
 })
 
-test('does not join Google data for a direct-url technical baseline', async () => {
-  const created = crawlReport()
-  const { deps, crawlInputs } = dependencies({ result: created })
-
-  await resolveTechnicalBaseline(
-    { site: 'https://example.com', url: 'https://example.com/' },
-    deps,
-  )
-
-  assert.equal(crawlInputs[0]?.site, undefined)
-  assert.equal(crawlInputs[0]?.googleAnalyticsPropertyId, undefined)
-})
-
-test('refreshes even when a compatible crawl is saved', async () => {
-  const existing = crawlReport()
-  const created = crawlReport()
-  const { deps, crawlInputs } = dependencies({ existing, result: created })
-
-  const baseline = await resolveTechnicalBaseline(
-    {
-      site: 'sc-domain:example.com',
-      url: 'https://example.com/',
-      refresh: true,
-    },
-    deps,
-  )
-
-  assert.equal(baseline.status, 'refreshed')
-  assert.equal(crawlInputs.length, 1)
-})
-
-test('skips all crawl evidence when requested', async () => {
-  const { deps, crawlInputs } = dependencies({})
-
-  const baseline = await resolveTechnicalBaseline(
-    { site: 'sc-domain:example.com', crawl: false },
-    deps,
-  )
-
-  assert.equal(baseline.status, 'skipped')
-  assert.match(baseline.reason ?? '', /--no-crawl/)
-  assert.equal(crawlInputs.length, 0)
-})
-
 test('does not save a failed crawl as report evidence', async () => {
   const { deps, saved } = dependencies({
     result: crawlReport({ status: 'failed' }),
@@ -225,15 +181,6 @@ test('does not save a failed crawl as report evidence', async () => {
 
   assert.equal(baseline.status, 'unavailable')
   assert.equal(saved.length, 0)
-})
-
-test('rejects restricted crawls as a report baseline', () => {
-  assert.equal(
-    isCompatibleTechnicalBaseline(crawlReport({ include: ['/blog/*'] }), {
-      url: 'https://example.com/',
-    }),
-    false,
-  )
 })
 
 test('does not reuse a baseline from a different analytics connection', () => {

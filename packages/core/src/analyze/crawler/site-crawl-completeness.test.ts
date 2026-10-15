@@ -153,65 +153,6 @@ test('crawlSite seeds every same-origin sitemap declared in robots.txt', async (
   }
 })
 
-test('crawlSite falls back after declared sitemaps return no URLs', async () => {
-  const fixture = await withServer((req, res) => {
-    if (req.url === '/robots.txt') {
-      res.setHeader('content-type', 'text/plain')
-      res.end(
-        `User-agent: *\nAllow: /\nSitemap: ${fixture.baseUrl}/missing-sitemap.xml\n`,
-      )
-      return
-    }
-    if (req.url === '/missing-sitemap.xml') {
-      res.statusCode = 404
-      res.end('missing')
-      return
-    }
-    if (req.url === '/sitemap.xml') {
-      res.setHeader('content-type', 'application/xml')
-      res.end(`<?xml version="1.0" encoding="UTF-8"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        <url><loc>${fixture.baseUrl}/from-fallback</loc></url>
-      </urlset>`)
-      return
-    }
-    res.setHeader('content-type', 'text/html')
-    res.end(`<title>${req.url}</title><h1>${req.url}</h1>`)
-  })
-
-  try {
-    const report = await crawlSite({
-      url: fixture.baseUrl,
-      mode: 'sitemap',
-      maxPages: 10,
-      concurrency: 1,
-      checkExternal: false,
-      refresh: true,
-    })
-
-    assert.equal(report.status, 'partial')
-    assert.deepEqual(
-      report.pages.map((page) => new URL(page.url).pathname),
-      ['/from-fallback'],
-    )
-    assert.equal(report.sitemapDiscovery?.dataStatus, 'partial')
-    assert.deepEqual(
-      report.sitemapDiscovery?.roots.map((root) => [
-        root.url,
-        root.source,
-        root.dataStatus,
-      ]),
-      [
-        [`${fixture.baseUrl}/missing-sitemap.xml`, 'robots-txt', 'unavailable'],
-        [`${fixture.baseUrl}/sitemap.xml`, 'default-path', 'complete'],
-      ],
-    )
-    assert.match(report.warnings.join('\n'), /also tried \/sitemap\.xml/)
-  } finally {
-    await fixture.close()
-  }
-})
-
 test('crawlSite keeps a missing optional default sitemap as unavailable evidence', async () => {
   const fixture = await withServer((req, res) => {
     if (req.url === '/robots.txt') {

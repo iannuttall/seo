@@ -47,7 +47,6 @@ export const REMOVED: Record<string, string | null> = {
   indexnow: null,
   'project keyword-sets': null,
   'projects keyword-sets': null,
-  'providers bing': null,
   'providers semrush': 'seo providers',
   'providers limits': null,
   'providers spend': null,

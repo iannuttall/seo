@@ -33,7 +33,6 @@ export const pageRedirects = {
   '/docs/clicky': '/docs/analytics',
   '/trademarks': '/',
   '/security': 'https://github.com/iannuttall/seo/security/policy',
-  '/docs/bing': '/docs',
   '/docs/indexnow': '/docs',
   '/docs/html-reports': '/docs',
   '/docs/ai-search': '/docs',

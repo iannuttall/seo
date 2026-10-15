@@ -1,8 +1,8 @@
 ---
 title: API keys for the hosted MCP
-description: Add your own DataForSEO or Ahrefs key to the hosted MCP for keyword and competitor research. Keys are never stored.
+description: Add your own DataForSEO or Ahrefs key to the hosted MCP for keyword and competitor research. Save it encrypted on your account page, or send it as a header.
 heading: API keys
-lead: Keyword and competitor research uses your own DataForSEO or Ahrefs account. SEO Skill never stores a key.
+lead: Keyword and competitor research uses your own DataForSEO or Ahrefs account. Save the key on your account page, or send it as a header.
 ---
 
 Search Console and Google Analytics come with your Google sign-in. Research is optional and uses a key from your own account, so the provider bills you directly for what you use.
@@ -17,19 +17,18 @@ Analytics tools other than Google Analytics, such as Clicky, run on your own mac
 
 Research rows also get a free Domain Rating column, with no key needed. It is Domain Rating by [Ahrefs](https://ahrefs.com).
 
-## Add keys on the sign-in page
+## Save keys on your account page
 
-This works in every client.
+This works in every client, and you never paste a key into a chat.
 
-1. Remove the SEO Skill server from your agent, then add it again with `https://seoskill.dev/mcp`.
-2. On the sign-in page, open **Add your own API keys** and enter the keys you want.
-3. Continue with Google.
+1. Open your [account page](https://seoskill.dev/account) and sign in with Google.
+2. Under **API keys**, enter the keys you want and choose **Save keys**.
 
-The keys are sealed into the sign-in your agent keeps. To change them, remove the server and connect again.
+Saved keys are encrypted and never shown again. To change one, enter the new value and save. **Remove all keys** deletes them.
 
 ## Or send keys as headers
 
-Clients such as Claude Code, Codex, Cursor and VS Code can send headers with each request. A header wins over a key from the sign-in page.
+Clients such as Claude Code, Codex, Cursor and VS Code can send headers with each request. A header wins over a saved key. Headers suit cloud agents and CI, where nothing should be saved.
 
 ```sh
 claude mcp add --transport http seoskill https://seoskill.dev/mcp \
@@ -45,6 +44,6 @@ Keep keys in your shell environment or keychain, never in a chat or a repository
 
 ## How keys are handled
 
-A key arrives sealed inside your sign-in token or as a header on the request. The server uses it for that request only and never saves it. The [what is stored page](/docs/privacy) covers the rest.
+A saved key is encrypted before it is written and is used only for your own research requests. A key sent as a header is used for that request only and never saved. The [what is stored page](/docs/privacy) covers the rest.
 
-When the hosted MCP needs a key it does not have, its message links to this page.
+When the hosted MCP needs a key it does not have, its message says where to add one.

@@ -18,6 +18,8 @@ type Props = {
   framed?: boolean
   canonicalPath?: string
   noindex?: boolean
+  // Off for the account pages the hosted MCP serves.
+  analytics?: boolean
   schemaType?: PageSchemaType
   breadcrumbs?: readonly SchemaBreadcrumb[]
   dateModified?: string
@@ -31,6 +33,7 @@ const {
   framed = true,
   canonicalPath = Astro.url.pathname,
   noindex = false,
+  analytics = true,
   schemaType = 'WebPage',
   breadcrumbs,
   dateModified,
@@ -45,7 +48,8 @@ const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,
 )
-const showClicky = import.meta.env.PROD && !isLocalHost && site.clickySiteId
+const showClicky =
+  analytics && import.meta.env.PROD && !isLocalHost && site.clickySiteId
 const schema = pageSchema({
   breadcrumbs,
   canonical,

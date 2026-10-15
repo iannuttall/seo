@@ -1,17 +1,21 @@
+import { account, accountCallback, bingCallback } from './account.ts'
+import { Directory } from './google.ts'
 import { serveMcp } from './mcp.ts'
 import {
   authorize,
   callback,
   challenge,
-  googleAccess,
   register,
   resourceMetadata,
   serverMetadata,
   toGoogle,
   token,
+  userOf,
 } from './oauth.ts'
+import { accountsOf, keysOf } from './store.ts'
 
-// seoskill.dev routes /mcp, /oauth/* and /.well-known/oauth-* to this Worker.
+// seoskill.dev routes /mcp, /oauth/*, /account and /.well-known/oauth-* to
+// this Worker.
 // The static site Worker serves everything else.
 
 const cors = {
@@ -62,7 +66,15 @@ async function route(
     return toGoogle(request, env)
   }
   if (pathname === '/oauth/callback' && method === 'GET') {
-    return callback(request, env)
+    return callback(request, env, (req, state) =>
+      accountCallback(req, env, state),
+    )
+  }
+  if (pathname === '/oauth/bing/callback' && method === 'GET') {
+    return bingCallback(request, env)
+  }
+  if (pathname === '/account' || pathname.startsWith('/account/')) {
+    return account(request, env, pathname)
   }
   if (pathname === '/oauth/token' && method === 'POST') {
     return token(request, env)
@@ -75,17 +87,25 @@ async function route(
     })
   }
   if (pathname === '/mcp') {
-    const access = await googleAccess(request, env)
-    if (!access) return challenge(env)
+    const userId = await userOf(request, env)
+    if (!userId) return challenge(env)
     if (method !== 'POST') {
       return new Response(null, { status: 405, headers: { allow: 'POST' } })
     }
-    // Keys sent as headers win over keys sealed in at sign-in.
-    const headers = new Headers(access.keys)
+    const [accounts, keys] = await Promise.all([
+      accountsOf(env, userId),
+      keysOf(env, userId),
+    ])
+    // A deleted person, or one with no Google account, signs in again.
+    if (!accounts.some((item) => item.provider === 'google')) {
+      return challenge(env)
+    }
+    // Keys sent as headers win over saved keys.
+    const headers = new Headers(keys)
     for (const [name, value] of request.headers) headers.set(name, value)
     return serveMcp(request, {
       env,
-      google: access.token,
+      directory: new Directory(env, accounts),
       headers,
       waitUntil: (promise) => ctx.waitUntil(promise),
     })
@@ -98,9 +118,12 @@ export default {
     const pathname = localPath(env, new URL(request.url).pathname)
     const api =
       pathname !== '/mcp/keys' &&
+      pathname !== '/account' &&
+      !pathname.startsWith('/account/') &&
       !pathname.startsWith('/oauth/authorize') &&
       !pathname.startsWith('/oauth/google') &&
-      !pathname.startsWith('/oauth/callback')
+      !pathname.startsWith('/oauth/callback') &&
+      !pathname.startsWith('/oauth/bing/')
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors })
     }

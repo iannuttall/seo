@@ -27,6 +27,8 @@ seo report --site example.com
 
 Without a section, the report returns the overview: clicks, impressions, click-through rate and average position against the previous period, split by device, with the top pages and queries and how they changed. It also returns each section's row count and its top rows, so you can see which section is worth opening.
 
+If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together.
+
 ## Ask for one section
 
 | Section | What it lists |
@@ -39,6 +41,7 @@ Without a section, the report returns the overview: clicks, impressions, click-t
 | `content-decay` | Query and page pairs that lost clicks against the previous period. |
 | `cannibalization` | Queries where more than one of your pages gets impressions, with each page's share. |
 | `traffic-drop` | Daily clicks and impressions checked for sudden changes, with Google updates whose dates overlap. |
+| `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
 
 Ask for a section by name:
 

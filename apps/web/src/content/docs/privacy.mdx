@@ -1,7 +1,7 @@
 ---
 title: What is stored
-description: What the SEO Skill hosted MCP and CLI keep. Your data and keys are never stored on the hosted MCP, and only anonymous usage counts are kept.
-lead: The hosted MCP never stores your data or your keys. The only thing kept is an anonymous count of what ran.
+description: What the SEO Skill hosted MCP and CLI keep. The hosted MCP keeps only your sign-ins and saved keys, encrypted, and never your data.
+lead: The hosted MCP keeps only your linked Google accounts and any keys you save, encrypted. It never keeps your data, your reports or a log of your requests.
 ---
 
 ## The hosted MCP
@@ -9,16 +9,21 @@ lead: The hosted MCP never stores your data or your keys. The only thing kept is
 | What | What happens to it |
 | --- | --- |
 | Your Search Console and analytics data | Fetched for each request and returned to your agent. Never saved. |
-| Your Google sign-in | Sealed into the tokens your MCP client keeps. The server keeps no copy. |
-| API keys | Sealed into your sign-in, or sent as a header. Used for that request only. Never saved. |
+| Your Google sign-ins | The email and tokens for each Google account you link, encrypted. Used only to fetch your own data when you ask. |
+| API keys | Encrypted if you save them on your [account page](https://seoskill.dev/account). A key sent as a header is used for that request only and never saved. |
+| Reports, site lists and request logs | Not kept. Request logs are turned off. |
 | Pages checked live | Fetched for the request and not kept. |
 | Usage counts | An anonymous count of each run. See below. |
 
-There is no database, no account and no log of your data. To cut access, remove the server from your agent and revoke SEO Skill in your [Google account connections](https://myaccount.google.com/connections).
+The store lives in Cloudflare D1, and every token and key is encrypted with a server key before it is written. Your first Google sign-in is your account, so there is no password. The token your agent keeps holds only a random person id.
+
+## Delete what the hosted MCP keeps
+
+Sign in on your [account page](https://seoskill.dev/account) and choose **Delete everything**. It deletes your linked accounts and keys and revokes the Google sign-ins (your agents will ask you to sign in again). You can also revoke SEO Skill in your [Google account connections](https://myaccount.google.com/connections), which stops the stored Google tokens working.
 
 ## The CLI
 
-The CLI runs on your machine. Your Google tokens, project settings, cached responses and crawls are files on your computer, and they stay there. Nothing is sent to SEO Skill except the anonymous usage counts below.
+The CLI runs on your machine. Your Google tokens, Bing key, project settings, cached responses and crawls are files on your computer, and they stay there. Nothing is sent to SEO Skill except the anonymous usage counts below.
 
 ## Anonymous usage counts
 
@@ -29,9 +34,10 @@ The totals are public on the [usage stats page](/stats), and the [telemetry page
 ## Who else sees your data
 
 - **Google** answers the Search Console, Google Analytics and URL Inspection requests.
+- **Bing** answers the Bing Webmaster Tools requests from the CLI, if you connect Bing there.
 - **The provider you choose** gets your research request and bills your account.
 - **Ahrefs** gets the domains in research rows for the free Domain Rating column.
 - **Your AI agent** sends the results to its model provider, under that provider's terms.
-- **Cloudflare** runs the hosted server and this website, and handles the network requests.
+- **Cloudflare** runs the hosted server and this website, stores the encrypted sign-ins and keys, and handles the network requests.
 
 The full [privacy policy](/privacy) covers the website, the free tools and the CLI in detail.

@@ -31,8 +31,9 @@ pnpm deploy:web:dry-run
   account system, cookies, analytics, or another hosted product surface
   without an explicit product decision. The hosted MCP at
   `seoskill.dev/mcp` is a separate Worker in `apps/mcp`; it owns `/mcp`,
-  `/mcp/*`, `/oauth/*` and `/.well-known/oauth-*`, so the site must never
-  publish pages on those paths.
+  `/mcp/*`, `/oauth/*`, `/account`, `/account/*` and
+  `/.well-known/oauth-*`, so the site must never publish pages on those
+  paths. The `/account` page and its session cookie belong to that Worker.
 - Keep canonical metadata, structured data, navigation, and footer markup in
   `src/layouts/BaseLayout.astro`, with the shared `Header.astro` and
   `Footer.astro`. The home page, docs, tools, stats, policy pages, and the
@@ -86,9 +87,12 @@ pnpm deploy:web:dry-run
 - Teach the hosted MCP next to the CLI: `claude mcp add --transport http
   seoskill https://seoskill.dev/mcp`, `codex mcp add seoskill --url
   https://seoskill.dev/mcp`, or the URL as a remote MCP server. Keep hosted
-  facts in step with `apps/mcp/README.md`: Google sign-in, nothing stored,
-  keys never stored. Wherever Domain Rating appears, credit it as Domain
-  Rating by Ahrefs with a link to ahrefs.com.
+  facts in step with `apps/mcp/README.md`: Google sign-in, no password, and
+  only linked Google accounts and saved keys kept, encrypted. Search data,
+  reports and request logs are never stored. Bing runs only in the CLI and
+  the local MCP server for now. Keys can be saved on `/account` or sent as
+  headers. Wherever Domain Rating appears, credit it as Domain Rating by
+  Ahrefs with a link to ahrefs.com.
 - Generate `/.well-known/agent-skills/` from the root `skills/` directory.
   Never hand-edit or commit the generated files.
 - Use plain, human copy with sentence-case headings. Lead with the outcome,

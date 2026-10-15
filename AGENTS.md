@@ -31,7 +31,9 @@ agent instructions.
 ## Product Direction
 
 - The product is local first. Do not add a required hosted backend, account,
-  database, job queue, or telemetry service.
+  database, job queue, or telemetry service. The optional hosted MCP keeps a
+  small encrypted sign-in store (see MCP Rules); the CLI and library never
+  need it.
 - Reports, tokens, project profiles, and caches stay on the user's machine.
 - Optional research providers extend first-party evidence with keyword,
   result, domain, competitor, and link estimates. They must never replace or
@@ -148,8 +150,11 @@ Useful core areas:
 - `packages/core/src/provider-extensions`: optional package manifests,
   npm package inspection, local installation, loading, registry, and the public
   provider SDK contract.
-- `packages/core/src/links`: Bing, file and live-provider link evidence plus
-  saved-crawl and Search Console target joins.
+- `packages/core/src/bing/api.ts`: every Bing Webmaster Tools call, shared
+  by the CLI, both MCP servers and any other host.
+- `packages/core/src/commands/bing.ts`: Bing beside Search Console for the
+  report's engines line, the `bing` section and `seo data --source bing`.
+  Bing and Google numbers are never added together.
 - `packages/core/src/gsc`: Search Console provider boundary.
 - `packages/core/src/ga4`: Google Analytics Data/Admin API adapter. Keep `ga4`
   naming inside this implementation boundary only. Product commands, config,
@@ -238,10 +243,16 @@ The guided flow should not ask humans for implementation details.
 - Only the local server adds `seo_crawl`, `seo_internal_links` and the
   provider package tools (`seo_list_providers`, `seo_describe_provider`,
   `seo_run_provider`), because they need the person's machine.
-- The hosted server stores nothing. No database, no account, and no log of
-  user data. Google tokens and provider keys are sealed into the token the
-  client keeps or arrive as request headers, and are used for that request
-  only.
+- The hosted server keeps only a person id, the linked Google accounts, and
+  saved research keys, sealed with `SEAL_KEY` in Cloudflare D1.
+  It keeps no report data, provider rows, site lists or request logs, and
+  Workers Logs stay off. The token the client keeps carries only the person
+  id. Key headers win over saved keys and are used for that request only.
+  The `/account` page links accounts, saves keys and deletes everything.
+- Bing runs only in the CLI and the local server. Bing blocks the hosted
+  server's network, so `HOSTED_BING` in `apps/mcp/src/tools/deps.ts` stays
+  off until hosted Bing calls go through another route. The hosted server
+  sends agents to the CLI for Bing, as it does for crawls.
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
 - Preserve unrelated client settings, create backups, and refuse to replace
@@ -484,6 +495,10 @@ fix commit plus verification evidence when it is resolved. This log is local
 working material and must not be committed.
 
 ## Tests
+
+Do not add a test unless Ian asks for it or it guards a real bug that hit a
+user. When unsure, do not add one. Never test a switch, flag, message or
+wiring.
 
 Keep few tests, and make each one prove real behaviour. Prefer one test that
 runs a whole command or report end to end over many tests of its helpers.

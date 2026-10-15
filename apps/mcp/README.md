@@ -1,8 +1,9 @@
 # Hosted MCP
 
 A free remote MCP server at `https://seoskill.dev/mcp`. It reads your own
-Search Console and Google Analytics data, plus optional keyword and analytics
-accounts, and returns facts. It gives no advice and stores nothing.
+Search Console and Google Analytics data, plus optional keyword accounts, and
+returns facts. It gives no advice. It keeps only your Google sign-ins and saved
+keys, encrypted, and never your data.
 
 ## Connect
 
@@ -14,7 +15,21 @@ codex mcp add seoskill --url https://seoskill.dev/mcp
 ```
 
 Sign in with Google when the client asks. You need access to at least one
-Search Console property.
+Search Console property. That first Google account is your account; there is
+no password or separate signup.
+
+## Your account page
+
+Sign in with Google at `https://seoskill.dev/account` to:
+
+- see your linked Google accounts and add another one,
+- save or remove DataForSEO and Ahrefs keys (never shown again),
+- delete everything, which also revokes the Google sign-ins, or sign out.
+
+Each tool call uses the linked Google account that can read the site, the one
+with the most access. `seo_sites` lists properties from every linked account
+with an account column. A `NO_ACCESS` error names the linked accounts and
+links to the account page.
 
 ## Keys
 
@@ -25,10 +40,10 @@ provider package, so this server never needs their keys.
 DataForSEO and Ahrefs use your own key. There are two ways to give a key,
 and neither puts it in a chat:
 
-1. **On the sign-in page.** Open "Add your own API keys" before you continue
-   with Google. The keys are sealed into the sign-in your agent keeps. To
-   change them, connect again. This works in every client.
-2. **As headers** in the client config. A header wins over a sealed key.
+1. **On your account page.** Save the keys at `https://seoskill.dev/account`.
+   They are encrypted and work in every client.
+2. **As headers** in the client config. A header wins over a saved key and is
+   used for that request only, which suits cloud agents and CI.
 
 | Provider | Headers |
 | --- | --- |
@@ -47,13 +62,19 @@ repository.
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | Search Console and Google Analytics properties, and which keys arrived |
+| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, and which keys are set |
 | `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page sections check their top 20 URLs live and merge same-site redirects. |
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, or search landing pages from Google Analytics. Clicky and other analytics run locally with the CLI and a provider package. |
+
+Bing Webmaster Tools runs only in the CLI and the local MCP server for now,
+because Bing blocks this server's network. When an agent asks for Bing, the
+server tells it to run `npx -y seo providers bing connect` once, then
+`npx -y seo report --site <site> --section bing --json`. The Bing code stays
+in place, turned off by `HOSTED_BING` in `src/tools/deps.ts`.
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.
@@ -67,28 +88,40 @@ only as a column next to other research data, with "Domain Rating by Ahrefs".
 
 ## What is stored
 
-Nothing. There is no database, account or log of your data.
+A small Cloudflare D1 database (`migrations/`) keeps only:
 
-- The client id, sign-in state, code and tokens are values sealed with
-  AES-GCM under `SEAL_KEY`. Your MCP client keeps them. The access token holds
-  a Google access token; the refresh token holds the Google refresh token.
-- Provider keys are sealed into those same tokens, or arrive as headers on
-  each request. They are used for that request only and never saved.
-- Remove access at any time in your
-  [Google account](https://myaccount.google.com/connections).
+- a random person id, created at your first Google sign-in,
+- each linked Google account's email and refresh and access tokens,
+- your DataForSEO and Ahrefs keys, if you save them.
+
+Tokens and keys are sealed with AES-GCM under `SEAL_KEY` before they are
+written. They are used only to fetch your own data when you ask. The token
+your MCP client keeps, and the account page cookie, hold only your sealed
+person id.
+
+There are no reports, Search Console or analytics rows, site lists or
+request logs. Workers Logs are off. **Delete everything** on the account page
+removes every row for you and revokes the Google sign-ins, so your agents
+ask you to sign in again. You can also remove access in your
+[Google account](https://myaccount.google.com/connections).
 
 ## Develop
 
 ```sh
 cp .dev.vars.example .dev.vars   # fill in a Google web client and a SEAL_KEY
+pnpm --filter @seo/hosted-mcp exec wrangler d1 migrations apply seo-mcp --local
 pnpm --filter @seo/hosted-mcp dev
 pnpm --filter @seo/hosted-mcp typecheck
 ```
 
 Deploy with `pnpm --filter @seo/hosted-mcp deploy`. Production secrets
-(`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`, `AHREFS_DR_KEY`) live in
+(`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`, `AHREFS_DR_KEY`,
+and the unused-for-now `BING_CLIENT_ID`, `BING_CLIENT_SECRET`) live in
 `.dev.vars.production`; upload them with
-`wrangler deploy --secrets-file .dev.vars.production`. A new `SEAL_KEY`
-signs everyone out. Set `PUBLIC_URL` in `wrangler.jsonc` to move the server,
+`wrangler deploy --secrets-file .dev.vars.production`. Apply new migrations
+with `wrangler d1 migrations apply seo-mcp --remote` before deploying. A new
+`SEAL_KEY` signs everyone out and makes every stored token and key
+unreadable. Set `PUBLIC_URL` in `wrangler.jsonc` to move the server,
 for example to `https://example.com/seo`, and add `<PUBLIC_URL>/oauth/callback` to
-the Google client's redirect URIs.
+the Google client's redirect URIs and `<PUBLIC_URL>/oauth/bing/callback` to
+the Bing client's.

@@ -3,11 +3,14 @@
 Last updated: 15 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
-the hosted MCP server at seoskill.dev/mcp, and the seoskill.dev website.
+the hosted MCP server at seoskill.dev/mcp with its account page, and the
+seoskill.dev website.
 
-In short: the hosted MCP never stores your data, API keys are never stored,
-and the only thing kept about your use is an anonymous usage count (the event,
-report, agent, version and week).
+In short: the hosted MCP keeps only your linked Google accounts and any API
+keys you save, encrypted, so it can fetch your own data when you ask. It never
+keeps your Search Console or analytics data, your reports or a log of your
+requests. The only thing kept about your use is an anonymous usage
+count (the event, report, agent, version and week).
 
 The command-line tool runs on your machine. It does not create an SEO
 account, upload reports to a hosted SEO service, or send reports or connected
@@ -21,29 +24,51 @@ the work you requested. The sections below explain what each request can send.
 ## The hosted MCP server
 
 The hosted MCP server at `https://seoskill.dev/mcp` runs the same reports
-for an MCP client you connect to it. It never stores your data or your keys.
-There is no database, account or log of your data. The only thing it keeps is
-the anonymous usage count described below.
+for an MCP client you connect to it. To do that it keeps a small store in
+Cloudflare D1 with only these things:
 
-- **Google sign-in.** You sign in with Google and grant read-only access to
-  Search Console and Google Analytics. The resulting Google tokens are sealed
-  (encrypted) into the tokens your MCP client keeps. The server keeps no
-  copy. Revoking the app in your
-  [Google Account connections](https://myaccount.google.com/connections)
-  stops them working.
-- **API keys.** Keys for DataForSEO and Ahrefs are optional. You can enter
-  them on the sign-in page, where they are sealed into the same tokens, or
-  send them as request headers. A key is used for the request it arrives with and is never stored.
+- **A person id.** A random id created the first time you sign in with
+  Google. That first Google account is your account. There is no password.
+- **Your linked Google accounts.** The email address of each Google account
+  you link, and its refresh and access tokens. You grant read-only access to
+  Search Console and Google Analytics.
+- **Your API keys, if you save them.** A DataForSEO login and password and an
+  Ahrefs key.
+
+Every token and key is encrypted with a server key before it is written. The
+tokens are used only to fetch your own data when you or your agent ask for
+it. The token your MCP client keeps carries only your person id.
+
+The server keeps nothing else. It does not keep reports, Search Console
+or Google Analytics rows, lists of your sites, or the pages it checked.
+Request logs are turned off.
+
 - **Your data.** Search Console, Google Analytics and provider responses are
-  fetched for each request, returned to your MCP client and not kept. Pages
-  checked live are fetched for the request and not kept.
-- **Outside services.** Google answers the Google requests. The provider you
-  choose receives your research request under its own policy. Ahrefs
-  receives the domains in research rows for the free Domain Rating column.
-  Cloudflare runs the server and handles the network requests.
+  fetched for each request, returned to your MCP client and not kept. Pages checked live are fetched for the request and not kept.
+- **API key headers.** You can send `X-DataForSEO-Login`,
+  `X-DataForSEO-Password` and `X-Ahrefs-Key` headers instead of saving keys.
+  A header wins over a saved key and is used for that request only.
+- **The account page.** At [seoskill.dev/account](https://seoskill.dev/account)
+  you sign in with Google to see your linked accounts, add or remove them,
+  and save or remove keys. It sets one essential cookie that holds your
+  encrypted person id for up to 30 days.
+- **Outside services.** Google answers its own requests. The provider you
+  choose receives your research request under its own policy.
+  Ahrefs receives the domains in research rows for the free Domain Rating
+  column. Cloudflare runs the server, stores the encrypted data and handles
+  the network requests.
 - **Usage counts.** Each run sends one anonymous event to the same telemetry
   endpoint the CLI uses, with the event, report, agent, version and week. It
   never contains a site, URL, query, key, account or report data.
+
+### Delete your hosted data
+
+Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
+**Delete everything**. It deletes your person id, linked accounts and keys,
+and revokes the Google sign-ins. Your agents will ask you to sign in again if
+you use the hosted server later. You can also revoke SEO Skill in your
+[Google Account connections](https://myaccount.google.com/connections), which
+stops the stored Google tokens working.
 
 Your MCP client and its model provider receive the results under their own
 terms.
@@ -85,6 +110,16 @@ system keychain when available, with a private local file fallback. Agents and
 CI can use `SEO_CLICKY_SITEKEY` without saving it. Clicky responses are cached
 locally for up to 24 hours, and cache keys and cached responses do not contain
 the sitekey.
+
+## Bing data the software can access
+
+Bing access is optional. In the command-line tool and local MCP server, you
+save a Bing Webmaster API key with `seo providers bing connect`, or set
+`SEO_BING_API_KEY`. The key is saved in the system keychain when available,
+with a private local file fallback. Requests go directly from your machine to
+Bing over HTTPS and can read the sites that key can read. Run
+`seo providers bing disconnect` to remove the saved key. The hosted MCP
+server does not read Bing data.
 
 ## How Google data is protected
 
@@ -300,8 +335,10 @@ copy, publish, transmit, or pass it to an agent or application yourself.
 ## Removing access and local data
 
 Use `seo auth logout` to remove local Google tokens. Use
-`seo providers dataforseo disconnect` or `seo providers ahrefs disconnect` to
-remove the corresponding saved provider credential. Environment variables are
+`seo providers dataforseo disconnect`, `seo providers ahrefs disconnect` or
+`seo providers bing disconnect` to remove the corresponding saved credential.
+To remove what the hosted MCP keeps, use **Delete everything** on the
+[account page](https://seoskill.dev/account). Environment variables are
 controlled by your shell or runtime and are not changed by these commands. Use `seo privacy` to
 inspect local paths and `seo reset --yes` to remove every saved credential and
 local file managed by the software.

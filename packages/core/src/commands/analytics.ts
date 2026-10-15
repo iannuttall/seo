@@ -1,8 +1,43 @@
-import { type GoogleFetch, runAnalyticsReport } from '../google/api.js'
+import {
+  type GoogleFetch,
+  listAnalyticsAccounts,
+  runAnalyticsReport,
+} from '../google/api.js'
 import type { Detail } from './present.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { dateWindow } from './shared.js'
-import type { CommandResult } from './types.js'
+import type { GoogleAccount } from './sites.js'
+import { CommandError, type CommandResult } from './types.js'
+
+// The sign-in that can read a Google Analytics property.
+export async function analyticsSignIn(
+  accounts: GoogleAccount[],
+  property: string,
+  signIn: string,
+): Promise<GoogleFetch> {
+  const only = accounts.length === 1 ? accounts[0] : undefined
+  if (only) return only.google
+  const found = await Promise.all(
+    accounts.map(async (account) => {
+      const summaries = await listAnalyticsAccounts(account.google, {
+        signIn,
+      }).catch(() => [])
+      return summaries.some((summary) =>
+        summary.propertySummaries.some(
+          (item) => item.property === `properties/${property}`,
+        ),
+      )
+        ? account
+        : null
+    }),
+  )
+  const account = found.find(Boolean)
+  if (account) return account.google
+  throw new CommandError(
+    'NO_ACCESS',
+    `No connected Google account can read Google Analytics property ${property}. Call seo_sites to list the properties.`,
+  )
+}
 
 // Landing pages for visits from search, from Google Analytics. Metric names
 // stay Google Analytics' own: sessions, users, engaged sessions, key events.

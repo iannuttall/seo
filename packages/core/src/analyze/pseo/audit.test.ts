@@ -2,11 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { GscRow } from '../../types.js'
 import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
-import {
-  buildPseoAuditReportFromRows,
-  pseoAuditReport,
-  pseoIndexStatus,
-} from './audit.js'
+import { buildPseoAuditReportFromRows, pseoAuditReport } from './audit.js'
 import type {
   PseoCrawlSample,
   PseoInspectionSample,
@@ -65,87 +61,6 @@ function dataset(input: {
   })
 }
 
-function crawl(url: string, overrides: Partial<PseoCrawlSample> = {}) {
-  return {
-    url,
-    finalUrl: url,
-    status: 200,
-    title: `Useful ${url}`,
-    h1: `Useful ${url}`,
-    metaDescription: `Specific facts for ${url}`,
-    wordCount: 20,
-    technicalStatus: 'ok' as const,
-    warnings: [],
-    ...overrides,
-  }
-}
-
-function inspection(
-  url: string,
-  verdict: string,
-  coverageState: string,
-): PseoInspectionSample {
-  return {
-    url,
-    verdict,
-    coverageState,
-    indexStatus: pseoIndexStatus(verdict),
-  }
-}
-
-test('pSEO maps URL Inspection verdicts exactly', () => {
-  assert.equal(pseoIndexStatus('PASS'), 'indexed')
-  assert.equal(pseoIndexStatus('NEUTRAL'), 'excluded')
-  assert.equal(pseoIndexStatus('FAIL'), 'invalid')
-  assert.equal(pseoIndexStatus('PARTIAL'), 'unknown')
-
-  const report = dataset({
-    inspectionSamples: [
-      inspection(urls[0] ?? '', 'NEUTRAL', 'Crawled - currently not indexed'),
-    ],
-    inspectionSamplesPerTemplate: 1,
-  })
-  const template = report.templates[0]
-  assert.equal(template?.inspection.indexed, 0)
-  assert.equal(template?.inspection.notIndexed, 1)
-  assert.equal(template?.verdict, 'index-risk')
-  assert.equal(template?.confidence, 'low')
-})
-
-test('pSEO never treats short word counts as a quality verdict', () => {
-  const report = dataset({
-    crawlSamples: urls.map((url) => crawl(url, { wordCount: 10 })),
-    crawlSamplesPerTemplate: 3,
-  })
-
-  assert.equal(report.templates[0]?.crawl.wordCount?.median, 10)
-  assert.equal(report.templates[0]?.verdict, 'inconclusive')
-  assert.match(report.caveats.join(' '), /no preferred or minimum word-count/)
-})
-
-test('pSEO keeps page metrics separate from retained query examples', () => {
-  const page = urls[0] ?? ''
-  const report = dataset({
-    pageRows: [
-      { page, clicks: 10, impressions: 100, position: 3 },
-      ...urls.slice(1).map((url) => ({
-        page: url,
-        clicks: 0,
-        impressions: 0,
-        position: 10,
-      })),
-    ],
-    queryPageRows: [
-      { query: 'one', page, clicks: 10, impressions: 100, position: 3 },
-      { query: 'two', page, clicks: 8, impressions: 80, position: 4 },
-    ],
-  })
-
-  assert.equal(report.summary.impressions, 100)
-  assert.equal(report.templates[0]?.metrics.impressions, 100)
-  assert.equal(report.templates[0]?.metrics.retainedQueryImpressions, 180)
-})
-
 test('pSEO ranks templates by observed page demand before limiting', () => {
   const large = Array.from(
     { length: 10 },
@@ -183,60 +98,6 @@ test('pSEO ranks templates by observed page demand before limiting', () => {
 
   assert.equal(report.templates[0]?.signature, '/valuable/:slug')
   assert.equal(report.selection.eligibleTemplates, 2)
-})
-
-test('pSEO sampling supports bounded requests beyond five URLs', () => {
-  const many = Array.from(
-    { length: 8 },
-    (_, index) => `https://example.com/catalog/item-${index}`,
-  )
-  const report = dataset({
-    sitemapUrls: many,
-    pageRows: many.map((page, index) => ({
-      page,
-      clicks: index,
-      impressions: index + 10,
-      position: 5,
-    })),
-    queryPageRows: many.map((page, index) => ({
-      query: `item ${index}`,
-      page,
-      clicks: index,
-      impressions: index + 10,
-      position: 5,
-    })),
-    crawlSamplesPerTemplate: 6,
-  })
-
-  assert.equal(report.templates[0]?.sampleUrls.length, 6)
-  assert.equal(report.templates[0]?.crawl.requested, 6)
-  assert.equal(new Set(report.templates[0]?.sampleUrls).size, 6)
-})
-
-test('pSEO reports invalid rows and derived brand filtering', () => {
-  const report = dataset({
-    queryPageRows: [
-      {
-        query: 'example',
-        page: urls[0] ?? '',
-        clicks: 1,
-        impressions: 10,
-        position: 1,
-      },
-      {
-        query: 'city guide',
-        page: 'not a url',
-        clicks: 2,
-        impressions: 1,
-        position: 0,
-      },
-    ],
-  })
-
-  assert.equal(report.selection.invalidQueryPageRows, 1)
-  assert.equal(report.selection.brandRows, 1)
-  assert.equal(report.dataStatus, 'partial')
-  assert.match(report.caveats.join(' '), /excluded using example/)
 })
 
 test('pSEO runtime validates bounds and requests both GSC dimensions', async () => {

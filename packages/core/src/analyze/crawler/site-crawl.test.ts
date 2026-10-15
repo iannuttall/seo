@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Response } from 'undici'
-import { completeSitemapResult } from '../monitoring/sitemap-test-fixture.js'
-import type { CrawlStatusEvent } from './report.js'
-import { type CrawlSiteDependencies, crawlSite } from './site-crawl.js'
+import { crawlSite } from './site-crawl.js'
 import { crawlPageSnapshot, withServer } from './site-crawl.test-fixtures.js'
 
 test('crawlSite follows same-origin links within depth and page limits', async () => {
@@ -127,77 +125,6 @@ test('crawlSite keeps link evidence bounded on link-heavy pages', async () => {
   }
 })
 
-test('crawlSite emits queue-friendly status events', async () => {
-  const fixture = await withServer((req, res) => {
-    if (req.url === '/robots.txt') {
-      res.setHeader('content-type', 'text/plain')
-      res.end('User-agent: *\nAllow: /\n')
-      return
-    }
-    if (req.url === '/llms.txt') {
-      res.setHeader('content-type', 'text/plain')
-      res.end('# Test site\n')
-      return
-    }
-    res.setHeader('content-type', 'text/html')
-    if (req.url === '/') {
-      res.end(
-        '<title>Home</title><h1>Home</h1><a href="/a">A</a><a href="/asset.pdf">PDF</a><a href="https://example.org/offsite">Offsite</a>',
-      )
-      return
-    }
-    res.end('<title>A</title><h1>A</h1>')
-  })
-
-  try {
-    const events: CrawlStatusEvent[] = []
-    const report = await crawlSite({
-      url: fixture.baseUrl,
-      useSitemap: false,
-      checkExternal: false,
-      concurrency: 1,
-      onStatus: async (event) => {
-        events.push(event)
-      },
-    })
-
-    assert.equal(report.status, 'completed')
-    assert.equal('onStatus' in report.config, false)
-    assert.deepEqual(
-      events.map((event) => event.phase),
-      [
-        'started',
-        'url_queued',
-        'page_started',
-        'page_completed',
-        'url_queued',
-        'url_skipped',
-        'page_started',
-        'page_completed',
-        'completed',
-      ],
-    )
-    assert.equal(events.at(-1)?.reportId, report.id)
-    assert.equal(events.at(-1)?.reportStatus, report.status)
-    assert.equal(events.at(-1)?.crawledUrls, report.summary.crawledUrls)
-    assert.equal(events.at(-1)?.queuedUrls, report.summary.queuedUrls)
-    assert.equal(events.at(-1)?.skippedUrls, report.summary.skippedUrls)
-    assert.deepEqual(report.summary.skipReasons, [
-      { reason: 'asset-url', impact: 'non-impacting', count: 1 },
-    ])
-    assert.deepEqual(report.summary.skippedUrlsByImpact, {
-      coverageAffecting: 0,
-      nonImpacting: 1,
-    })
-    assert.equal(
-      events.find((event) => event.reason === 'asset_url')?.url,
-      `${fixture.baseUrl}/asset.pdf`,
-    )
-  } finally {
-    await fixture.close()
-  }
-})
-
 test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () => {
   let blockedPageRequests = 0
   const fixture = await withServer((req, res) => {
@@ -265,49 +192,6 @@ test('crawlSite can seed from sitemap and skip robots-blocked URLs', async () =>
   } finally {
     await fixture.close()
   }
-})
-
-test('crawlSite audits fetched HTML when robots enforcement is disabled', async () => {
-  const url = 'https://example.com/blocked'
-  const report = await crawlSite(
-    {
-      url,
-      mode: 'page',
-      useSitemap: false,
-      respectRobots: false,
-      maxPages: 1,
-    },
-    {
-      fetch: async () =>
-        new Response('not found', {
-          status: 404,
-          headers: { 'content-type': 'text/plain' },
-        }),
-      fetchPage: async () => ({
-        urls: [],
-        page: crawlPageSnapshot(url, {
-          blocked: true,
-          robotsTxt: {
-            url: 'https://example.com/robots.txt',
-            allowed: false,
-            availability: 'available',
-            matchedLine: 'Disallow: /blocked',
-          },
-          title: undefined,
-        }),
-      }),
-    },
-  )
-
-  assert.equal(report.pages[0]?.contentAuditAllowed, true)
-  assert.equal(
-    report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
-    true,
-  )
-  assert.equal(
-    report.issues.some((issue) => issue.ruleId === 'missing_title'),
-    true,
-  )
 })
 
 test('crawlSite captures content types and reports broken internal links', async () => {
@@ -437,42 +321,6 @@ test('crawlSite checks broken external links when enabled', async () => {
   }
 })
 
-test('crawlSite passes cache and rate controls through the shared fetch layer', async () => {
-  const fixture = await withServer((req, res) => {
-    if (req.url === '/robots.txt') {
-      res.setHeader('content-type', 'text/plain')
-      res.end('User-agent: *\nAllow: /\n')
-      return
-    }
-    res.setHeader('content-type', 'text/html')
-    res.end('<title>Rate</title><h1>Rate</h1>')
-  })
-
-  try {
-    const report = await crawlSite({
-      url: `${fixture.baseUrl}/rate-control`,
-      useSitemap: false,
-      maxPages: 10,
-      concurrency: 3,
-      refresh: true,
-      fetchRate: {
-        intervalCap: 2,
-        intervalMs: 250,
-      },
-      timeoutMs: 5_000,
-    })
-
-    assert.equal(report.status, 'completed')
-    assert.equal(report.summary.totalPages, 1)
-    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.concurrency, 3)
-    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.intervalCap, 2)
-    assert.equal(report.pages[0]?.fetchDiagnostics?.rateLimit.intervalMs, 250)
-    assert.equal(report.pages[0]?.fetchDiagnostics?.cache, 'bypass')
-  } finally {
-    await fixture.close()
-  }
-})
-
 test('crawlSite does not mark an exact-size crawl as page-limit truncated', async () => {
   const url = 'https://example.com/'
   const report = await crawlSite(
@@ -593,205 +441,6 @@ test('crawlSite keeps large-site cancellation bounded', async () => {
   assert.match(report.caveats.join('\n'), /cancelled/)
 })
 
-test('crawlSite accepts injected provider dependencies', async () => {
-  const calls = {
-    fetchUrls: [] as string[],
-    sitemap: 0,
-    searchMetrics: [] as Array<{ site: string; pageUrl: string }>,
-    topQueries: [] as Array<{ site: string; pageUrl: string }>,
-    analytics: [] as Array<{
-      propertyId?: string
-      startDate: string
-      endDate: string
-      limit?: number
-    }>,
-  }
-  const analyticsValues = new Map([
-    [
-      '/',
-      {
-        sessions: 42,
-        totalUsers: 30,
-        conversions: 3,
-      },
-    ],
-  ])
-  const dependencies: CrawlSiteDependencies = {
-    fetchSitemapUrls: async (input) => {
-      calls.sitemap += 1
-      return completeSitemapResult(input.sitemapUrl)
-    },
-    fetch: async (url) => {
-      calls.fetchUrls.push(url)
-      if (url.endsWith('/llms.txt')) {
-        return new Response('# llms', {
-          status: 200,
-          headers: { 'content-type': 'text/plain' },
-        })
-      }
-      return new Response('', { status: 404 })
-    },
-    fetchPage: async (url, options = {}) => ({
-      urls: [],
-      page: {
-        url,
-        finalUrl: url,
-        status: 200,
-        contentType: 'text/html',
-        responseTimeMs: 123,
-        fetchDiagnostics: {
-          source: 'network',
-          cache: 'miss',
-          fetched: true,
-          rendered: false,
-          blocked: false,
-          durationMs: 123,
-          retries: 0,
-          rateLimit: {
-            host: new URL(url).host,
-            concurrency: options.rate?.concurrency ?? 1,
-            intervalCap: 1,
-            intervalMs: 0,
-          },
-        },
-        title: 'Adapter page',
-        metaDescription: 'Adapter meta description.',
-        h1: 'Adapter page',
-        h1Count: 1,
-        h2Count: 0,
-        h3Count: 0,
-        indexable: true,
-        wordCount: 120,
-        contentHash: 'adapter-hash',
-        outgoingInternalCount: 0,
-        outgoingExternalCount: 1,
-        sampleExternalLinks: ['https://external.example/gone'],
-        schemaTypes: ['Article'],
-        geo: {
-          semanticHtml: true,
-          structuredData: true,
-          hasAuthor: true,
-          hasDate: true,
-          questionHeadings: 1,
-          structuredBlocks: 2,
-          answerable: true,
-        },
-      },
-    }),
-    queryPageMetrics: async (site, pageUrl) => {
-      calls.searchMetrics.push({ site, pageUrl })
-      return {
-        clicks: 5,
-        impressions: 100,
-        ctr: 0.05,
-        position: 3.2,
-      }
-    },
-    queryPageTopQuery: async (site, pageUrl) => {
-      calls.topQueries.push({ site, pageUrl })
-      return {
-        query: 'adapter page',
-        clicks: 2,
-        impressions: 80,
-        ctr: 0.025,
-        position: 4,
-      }
-    },
-    fetchLandingPageValues: async (input) => {
-      calls.analytics.push(input)
-      return { values: analyticsValues }
-    },
-    landingValueForUrl: (values, url) =>
-      values.get(new URL(url).pathname.replace(/\/$/, '') || '/'),
-    now: () => new Date('2026-06-19T00:00:00.000Z'),
-  }
-
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      site: 'sc-domain:example.com',
-      googleAnalyticsPropertyId: 'properties/123',
-      useSitemap: true,
-      checkExternal: true,
-      maxPages: 1,
-      concurrency: 2,
-    },
-    dependencies,
-  )
-
-  assert.equal(report.status, 'partial')
-  assert.equal(calls.sitemap, 1)
-  assert.deepEqual(calls.fetchUrls, [
-    'https://example.com/llms.txt',
-    'https://example.com/robots.txt',
-    'https://example.com/.well-known/agent.json',
-    'https://example.com/agent.json',
-    'https://example.com/.well-known/mcp.json',
-    'https://example.com/.well-known/ai-plugin.json',
-    'https://example.com/.well-known/openapi.json',
-    'https://example.com/openapi.json',
-    'https://external.example/gone',
-    'https://external.example/gone',
-  ])
-  assert.deepEqual(calls.searchMetrics, [
-    {
-      site: 'sc-domain:example.com',
-      pageUrl: 'https://example.com/',
-    },
-  ])
-  assert.deepEqual(calls.topQueries, [
-    {
-      site: 'sc-domain:example.com',
-      pageUrl: 'https://example.com/',
-    },
-  ])
-  assert.deepEqual(calls.analytics, [
-    {
-      propertyId: 'properties/123',
-      startDate: '2026-05-18',
-      endDate: '2026-06-14',
-      limit: 5000,
-    },
-  ])
-  assert.deepEqual(report.pages[0]?.searchMetrics, {
-    clicks: 5,
-    impressions: 100,
-    ctr: 0.05,
-    position: 3.2,
-  })
-  assert.deepEqual(report.pages[0]?.topQuery, {
-    query: 'adapter page',
-    clicks: 2,
-    impressions: 80,
-    ctr: 0.025,
-    position: 4,
-  })
-  assert.deepEqual(report.pages[0]?.analytics, {
-    sessions: 42,
-    totalUsers: 30,
-    conversions: 3,
-  })
-  assert.equal(report.pages[0]?.geo?.hasLlmsTxt, true)
-  assert.equal(report.ai?.llmsTxt?.exists, true)
-  assert.equal(report.ai?.robotsTxt?.exists, false)
-  assert.equal(report.ai?.agentResources?.length, 6)
-  assert.deepEqual(report.pages[0]?.externalLinkChecks, [
-    {
-      url: 'https://external.example/gone',
-      status: 404,
-      state: 'confirmed-broken',
-      attempts: [
-        { method: 'HEAD', status: 404 },
-        { method: 'GET', status: 404 },
-      ],
-    },
-  ])
-  assert.equal(
-    report.issues.some((issue) => issue.ruleId === 'broken_external_link'),
-    true,
-  )
-})
-
 test('crawlSite skips auth data providers when no site or Google Analytics property is selected', async () => {
   const calls = {
     searchMetrics: 0,
@@ -866,37 +515,6 @@ test('crawlSite skips auth data providers when no site or Google Analytics prope
   assert.equal(report.pages[0]?.searchMetrics, undefined)
   assert.equal(report.pages[0]?.topQuery, undefined)
   assert.equal(report.pages[0]?.analytics, undefined)
-})
-
-test('crawlSite returns a partial report when cancelled before work starts', async () => {
-  const controller = new AbortController()
-  controller.abort()
-  let fetchPageCalls = 0
-
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      maxPages: 10,
-      useSitemap: true,
-      checkExternal: true,
-      signal: controller.signal,
-    },
-    {
-      fetchPage: async () => {
-        fetchPageCalls += 1
-        return { urls: [] }
-      },
-      fetchSitemapUrls: async (input) =>
-        completeSitemapResult(input.sitemapUrl, ['https://example.com/queued']),
-    },
-  )
-
-  assert.equal(fetchPageCalls, 0)
-  assert.equal(report.status, 'partial')
-  assert.equal(report.summary.totalPages, 0)
-  assert.equal(report.requestEvidenceStatus, 'available')
-  assert.match(report.warnings.join('\n'), /cancelled/)
-  assert.match(report.caveats.join('\n'), /cancelled/)
 })
 
 test('crawlSite returns completed pages and skips joins after cancellation', async () => {

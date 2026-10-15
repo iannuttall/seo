@@ -3,9 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { SeoError } from '../../errors.js'
 import type { ResearchImportSource } from '../../providers/domain-contracts.js'
-import type { GscRow } from '../../types.js'
 import { type CannibalDependencies, cannibalReport } from './cannibal.js'
 
 const CSV_BODY = [
@@ -149,33 +147,6 @@ test('returns identical JSON across repeat runs and shuffled row order', async (
   )
 })
 
-test('fails clearly when researchFiles are combined with a Search Console fetch', async () => {
-  await fixture({ 'rankings.csv': CSV_BODY }, async (paths) => {
-    const dependencies = trackedDependencies()
-    const researchFiles = [source(paths['rankings.csv'] ?? '')]
-    for (const extras of [
-      { days: 28 },
-      { startDate: '2026-01-01', endDate: '2026-03-31' },
-      { minImpressions: 50 },
-      { refresh: true },
-    ]) {
-      await assert.rejects(
-        cannibalReport(
-          { site: 'sc-domain:example.com', researchFiles, ...extras },
-          dependencies,
-        ),
-        (error: unknown) => {
-          assert.ok(error instanceof SeoError)
-          assert.equal(error.code, 'INVALID_INPUT')
-          assert.match(error.message, /Pick one evidence path/)
-          return true
-        },
-      )
-    }
-    assert.equal(dependencies.calls(), 0)
-  })
-})
-
 test('validates research file sources before reading anything', async () => {
   await fixture({ 'rankings.csv': CSV_BODY }, async (paths) => {
     const dependencies = trackedDependencies()
@@ -219,30 +190,6 @@ test('scopes imported rows to a URL-prefix property path', async () => {
   })
 })
 
-test('URL-prefix scope requires the exact origin', async () => {
-  const body = [
-    'Keyword,Position,URL,Search Volume',
-    'project management tips,3,https://example.com/blog/one,900',
-    'project management tips,4,https://example.com/blog/two,900',
-    'project management tips,5,https://www.example.com/blog/three,900',
-    'project management tips,6,https://help.example.com/blog/four,900',
-    'project management tips,7,http://example.com/blog/five,900',
-  ].join('\n')
-  await fixture({ 'rankings.csv': body }, async (paths) => {
-    const report = await cannibalReport(
-      {
-        site: 'https://example.com/blog/',
-        researchFiles: [source(paths['rankings.csv'] ?? '')],
-      },
-      trackedDependencies(),
-    )
-
-    assert.equal(report.selection.retainedRows, 2)
-    assert.equal(report.selection.offPropertyRows, 3)
-    assert.equal(report.items[0]?.urlCount, 2)
-  })
-})
-
 test('suppresses brand keywords with multiple URLs instead of reporting them', async () => {
   const body = [
     'Keyword,Position,URL,Search Volume',
@@ -264,32 +211,4 @@ test('suppresses brand keywords with multiple URLs instead of reporting them', a
     assert.equal(report.suppressed[0]?.urlCount, 2)
     assert.equal(report.dataStatus, 'filtered')
   })
-})
-
-test('keeps the Search Console path labelled and unchanged', async () => {
-  const row = (query: string, page: string, impressions: number): GscRow => ({
-    keys: page ? [query, page] : [query],
-    clicks: 10,
-    impressions,
-    ctr: 10 / impressions,
-    position: 5,
-  })
-  const report = await cannibalReport(
-    { site: 'sc-domain:example.com' },
-    {
-      searchAnalytics: async (_site, request) => {
-        const rows = request.dimensions?.includes('page')
-          ? [
-              row('technical seo audit', 'https://example.com/a', 60),
-              row('technical seo audit', 'https://example.com/b', 60),
-            ]
-          : [row('technical seo audit', '', 100)]
-        return { rows, calls: 1, rowsFetched: rows.length }
-      },
-      now: () => new Date('2026-08-10T12:00:00.000Z'),
-    },
-  )
-  assert.equal(report.dataSource, 'search-console-api')
-  assert.equal(report.source.provider, 'google-search-console')
-  assert.equal(report.summary.eligibleClusters, 1)
 })

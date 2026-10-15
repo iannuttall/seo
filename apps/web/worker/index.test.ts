@@ -176,6 +176,7 @@ test('ingest writes only the documented anonymous fields to D1', async () => {
   assert.match(statements[0]?.query ?? '', /^INSERT INTO telemetry_events/)
   assert.deepEqual(statements[0]?.values, [
     '2026-07',
+    '2026-07-16',
     'audit_complete',
     '0.2.5',
     'codex',
@@ -226,6 +227,7 @@ test('schema 2 ingest writes fixed failure classifications without raw errors', 
   assert.equal(response.status, 204)
   assert.deepEqual(statements[0]?.values, [
     '2026-08',
+    '2026-08-09',
     'audit_failed',
     '0.2.5',
     'codex',

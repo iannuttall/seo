@@ -191,6 +191,27 @@ type TelemetryWriteDatabase = {
   prepare(query: string): TelemetryWriteStatement
 }
 
+// Day by day use since days were recorded, month by month before that, and
+// the daily skills.sh check.
+export type Timeline = {
+  daily: Array<{
+    day: string
+    installs: number
+    cliRuns: number
+    hostedRuns: number
+  }>
+  monthly: Array<{ month: string; installs: number; runs: number }>
+  skills: {
+    installs: Array<{ day: string; installs: number }>
+    queries: Array<{
+      query: string
+      day: string
+      position: number | null
+      weekAgo: number | null
+    }>
+  }
+}
+
 export type Stats = {
   schema: 1
   generatedAt: string
@@ -416,10 +437,12 @@ export async function handleTelemetryIngest(
   }
 
   const receivedMonth = now.toISOString().slice(0, 7)
+  const receivedDay = now.toISOString().slice(0, 10)
   try {
     await env.TELEMETRY_DB.prepare(
       `INSERT INTO telemetry_events (
         received_month,
+        received_day,
         event,
         version,
         agent,
@@ -433,10 +456,11 @@ export async function handleTelemetryIngest(
         failure_reason,
         failure_context,
         operation
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)`,
     )
       .bind(
         receivedMonth,
+        receivedDay,
         value.event,
         value.version,
         value.agent,
@@ -642,8 +666,166 @@ export function aggregateStats(
   }
 }
 
-async function liveStats(env: Env): Promise<Stats> {
+const TIMELINE_DAYS = 90
+
+export function timeline(input: {
+  daily: StatsRow[]
+  monthly: StatsRow[]
+  skills: StatsRow[]
+}): Timeline {
+  const days = new Map<string, Timeline['daily'][number]>()
+  for (const row of input.daily) {
+    const day = rowString(row, 'day')
+    const entry = days.get(day) ?? {
+      day,
+      installs: 0,
+      cliRuns: 0,
+      hostedRuns: 0,
+    }
+    const event = rowString(row, 'event')
+    if (event === 'first_run') entry.installs += rowCount(row)
+    else if (row.hosted === 1) entry.hostedRuns += rowCount(row)
+    else entry.cliRuns += rowCount(row)
+    days.set(day, entry)
+  }
+  const months = new Map<string, Timeline['monthly'][number]>()
+  for (const row of input.monthly) {
+    const month = rowString(row, 'month')
+    const entry = months.get(month) ?? { month, installs: 0, runs: 0 }
+    if (rowString(row, 'event') === 'first_run') entry.installs += rowCount(row)
+    else entry.runs += rowCount(row)
+    months.set(month, entry)
+  }
+  const position = (value: unknown) =>
+    typeof value === 'number' && value >= 1 ? value : null
+  const installs = input.skills
+    .filter((row) => rowString(row, 'query') === '')
+    .map((row) => ({
+      day: rowString(row, 'day'),
+      installs: typeof row.installs === 'number' ? row.installs : 0,
+    }))
+    .sort((a, b) => a.day.localeCompare(b.day))
+  const latestDay = input.skills
+    .map((row) => rowString(row, 'day'))
+    .sort()
+    .at(-1)
+  const weekBefore = latestDay
+    ? new Date(Date.parse(`${latestDay}T00:00:00Z`) - 7 * 86_400_000)
+        .toISOString()
+        .slice(0, 10)
+    : null
+  const queries = input.skills
+    .filter(
+      (row) => rowString(row, 'day') === latestDay && rowString(row, 'query'),
+    )
+    .map((row) => {
+      const query = rowString(row, 'query')
+      const before = input.skills.find(
+        (item) =>
+          rowString(item, 'day') === weekBefore &&
+          rowString(item, 'query') === query,
+      )
+      return {
+        query,
+        day: latestDay ?? '',
+        position: position(row.position),
+        weekAgo: before ? position(before.position) : null,
+      }
+    })
+    .sort(
+      (a, b) =>
+        (a.position ?? 999) - (b.position ?? 999) ||
+        a.query.localeCompare(b.query),
+    )
+  return {
+    daily: [...days.values()].sort((a, b) => a.day.localeCompare(b.day)),
+    monthly: [...months.values()].sort((a, b) =>
+      a.month.localeCompare(b.month),
+    ),
+    skills: { installs, queries },
+  }
+}
+
+// What people and agents type into `npx skills find`. The daily check
+// records where iannuttall/seo shows for each.
+export const SKILL_QUERIES = [
+  'seo',
+  'seo audit',
+  'seo mcp',
+  'search console',
+  'google search console',
+  'search console mcp',
+  'gsc',
+  'traffic drop',
+  'keyword research',
+  'google analytics',
+  'content decay',
+  'cannibalization',
+  'indexing',
+  'dataforseo',
+  'ahrefs',
+] as const
+
+const SKILL_SOURCE = 'iannuttall/seo'
+
+type SkillHit = { source?: unknown; installs?: unknown }
+
+async function searchSkills(
+  query: string,
+  owner?: string,
+): Promise<SkillHit[]> {
+  const params = new URLSearchParams({ q: query, limit: '50' })
+  if (owner) params.set('owner', owner)
+  const response = await fetch(`https://skills.sh/api/search?${params}`, {
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!response.ok) throw new Error(`skills.sh answered ${response.status}`)
+  const json = (await response.json()) as { skills?: SkillHit[] }
+  return Array.isArray(json.skills) ? json.skills : []
+}
+
+// Once a day: the install count, and the place `npx skills find` shows the
+// skill for each query (the CLI sorts matches by installs).
+export async function recordSkills(env: Env, now = new Date()): Promise<void> {
+  const day = now.toISOString().slice(0, 10)
+  const installs = (hits: SkillHit[]) => {
+    const value = hits.find((hit) => hit.source === SKILL_SOURCE)?.installs
+    return typeof value === 'number' ? value : null
+  }
+  const own = await searchSkills('seo', 'iannuttall').catch(() => [])
+  const rows: {
+    query: string
+    position: number | null
+    installs: number | null
+  }[] = [{ query: '', position: null, installs: installs(own) }]
+  for (const query of SKILL_QUERIES) {
+    const hits = await searchSkills(query).catch(() => null)
+    if (!hits) continue
+    const sorted = [...hits].sort(
+      (a, b) => Number(b.installs ?? 0) - Number(a.installs ?? 0),
+    )
+    const index = sorted.findIndex((hit) => hit.source === SKILL_SOURCE)
+    rows.push({
+      query,
+      position: index >= 0 ? index + 1 : null,
+      installs: installs(hits),
+    })
+  }
+  await env.TELEMETRY_DB.batch(
+    rows.map((row) =>
+      env.TELEMETRY_DB.prepare(
+        `INSERT OR REPLACE INTO skills_daily (day, query, position, installs)
+         VALUES (?1, ?2, ?3, ?4)`,
+      ).bind(day, row.query, row.position, row.installs),
+    ),
+  )
+}
+
+async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
   const currentMonth = new Date().toISOString().slice(0, 7)
+  const sinceDay = new Date(Date.now() - TIMELINE_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
   const results = await env.TELEMETRY_DB.batch<StatsRow>([
     env.TELEMETRY_DB.prepare(
       `SELECT event, COUNT(*) AS count, MIN(received_month) AS first_month
@@ -702,6 +884,24 @@ async function liveStats(env: Env): Promise<Stats> {
        ORDER BY count DESC, event, report, operation, reason, version
        LIMIT 20`,
     ),
+    env.TELEMETRY_DB.prepare(
+      `SELECT received_day AS day, event, (os = 'hosted') AS hosted,
+              COUNT(*) AS count
+       FROM telemetry_events
+       WHERE received_day >= ?1 AND event IN ('first_run', 'audit_start')
+       GROUP BY received_day, event, hosted`,
+    ).bind(sinceDay),
+    env.TELEMETRY_DB.prepare(
+      `SELECT received_month AS month, event, COUNT(*) AS count
+       FROM telemetry_events
+       WHERE event IN ('first_run', 'audit_start')
+       GROUP BY received_month, event`,
+    ),
+    env.TELEMETRY_DB.prepare(
+      `SELECT day, query, position, installs
+       FROM skills_daily
+       WHERE day >= ?1`,
+    ).bind(sinceDay),
   ])
   const [
     events,
@@ -711,16 +911,22 @@ async function liveStats(env: Env): Promise<Stats> {
     reports,
     failureCategories,
     failureDetails,
+    daily,
+    monthly,
+    skills,
   ] = results.map((result) => result.results)
-  return aggregateStats({
-    events,
-    month,
-    agents,
-    cohorts,
-    reports,
-    failureCategories,
-    failureDetails,
-  })
+  return {
+    ...aggregateStats({
+      events,
+      month,
+      agents,
+      cohorts,
+      reports,
+      failureCategories,
+      failureDetails,
+    }),
+    timeline: timeline({ daily, monthly, skills }),
+  }
 }
 
 async function handleStats(
@@ -731,7 +937,7 @@ async function handleStats(
   if (request.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
   }
-  const cacheKey = new Request(new URL('/api/stats', request.url), {
+  const cacheKey = new Request(new URL('/api/stats?v=2', request.url), {
     method: 'GET',
   })
   const cached = await caches.default.match(cacheKey)
@@ -739,11 +945,7 @@ async function handleStats(
 
   try {
     const stats = await liveStats(env)
-    const response = jsonResponse(
-      stats,
-      200,
-      'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
-    )
+    const response = jsonResponse(stats, 200, 'public, max-age=30, s-maxage=60')
     ctx.waitUntil(caches.default.put(cacheKey, response.clone()))
     return response
   } catch {
@@ -798,4 +1000,9 @@ app.all('/api/tools/website-traffic', (context) =>
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))
 
-export default app
+export default {
+  fetch: app.fetch,
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(recordSkills(env))
+  },
+} satisfies ExportedHandler<Env>

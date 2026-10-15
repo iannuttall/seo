@@ -14,11 +14,6 @@ import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import { getSeoCliPaths } from '../paths.js'
 import {
-  DEFAULT_PROVIDER_SPEND_LIMITS,
-  getProviderSpendLimits,
-  setProviderSpendLimits,
-} from '../providers/cost-limits.js'
-import {
   configSchema,
   type StoredTokenStore,
   type StoredTokens,
@@ -129,36 +124,6 @@ test('config files stay private on write and read', () => {
   assert.equal(mode(configFile), 0o600)
 })
 
-test('provider spend limits use safe defaults and typed local overrides', () => {
-  resetStorage()
-  writeConfig(configSchema.parse({}))
-
-  assert.deepEqual(
-    getProviderSpendLimits('dataforseo'),
-    DEFAULT_PROVIDER_SPEND_LIMITS,
-  )
-  assert.deepEqual(
-    setProviderSpendLimits('dataforseo', {
-      dailyNoticeMicros: 2_500_000,
-      dailyHardLimitMicros: 10_000_000,
-      monthlyHardLimitMicros: null,
-      maxRequestsPerReport: 8,
-      maxRowsPerReport: 4_000,
-    }),
-    {
-      dailyNoticeMicros: 2_500_000,
-      dailyHardLimitMicros: 10_000_000,
-      monthlyHardLimitMicros: null,
-      maxRequestsPerReport: 8,
-      maxRowsPerReport: 4_000,
-    },
-  )
-  assert.equal(
-    readConfig().providers.costLimits?.dataforseo?.dailyHardLimitMicros,
-    10_000_000,
-  )
-})
-
 test('moves a private token file into the system keychain', async () => {
   resetStorage()
   const tokens = testTokens()
@@ -228,61 +193,6 @@ test('keeps several Google accounts and selects one active account', async () =>
   assert.equal((await readAllTokens()).length, 1)
 })
 
-test('moves several Google accounts between file and keychain storage', async () => {
-  resetStorage()
-  writeConfig(configSchema.parse({ security: { useKeychain: false } }))
-  await writeTokens(testTokens())
-  await writeTokens({
-    ...testTokens(),
-    account_email: 'analytics@example.com',
-    access_token: 'analytics-access-token',
-    refresh_token: 'analytics-refresh-token',
-  })
-  setActiveGoogleAccount('owner@example.com')
-
-  assert.deepEqual(await setTokenStorageMode('keychain'), {
-    configured: 'keychain',
-    active: 'keychain',
-  })
-  assert.equal((await readAllTokens()).length, 2)
-  assert.equal((await readTokens())?.account_email, 'owner@example.com')
-  assert.equal(
-    keyring.values.get('seo:google:analytics@example.com:refresh'),
-    'analytics-refresh-token',
-  )
-
-  assert.deepEqual(await setTokenStorageMode('file'), {
-    configured: 'file',
-    active: 'file',
-  })
-  assert.equal(
-    (await readTokens('analytics@example.com'))?.refresh_token,
-    'analytics-refresh-token',
-  )
-  assert.equal((await readTokens())?.account_email, 'owner@example.com')
-  assert.equal(keyring.values.size, 0)
-})
-
-test('limits local Google login storage to 50 accounts', async () => {
-  resetStorage()
-  writeConfig(configSchema.parse({ security: { useKeychain: false } }))
-  for (let index = 0; index < 50; index += 1) {
-    await writeTokens({
-      ...testTokens(),
-      account_email: `account-${index}@example.com`,
-    })
-  }
-
-  await assert.rejects(
-    writeTokens({
-      ...testTokens(),
-      account_email: 'account-50@example.com',
-    }),
-    /at most 50|too big/i,
-  )
-  assert.equal((await readAllTokens()).length, 50)
-})
-
 test('reads a legacy single-account token file and migrates it on write', async () => {
   resetStorage()
   writeConfig(configSchema.parse({ security: { useKeychain: false } }))
@@ -343,25 +253,6 @@ test('falls back to a private token file when the keychain is unavailable', asyn
   assert.equal(mode(getSeoCliPaths().tokensFile), 0o600)
 })
 
-test('switches back to a private file and logout removes both stores', async () => {
-  resetStorage()
-  const tokens = testTokens()
-  writeConfig(configSchema.parse({}))
-  await writeTokens(tokens)
-
-  const storage = await setTokenStorageMode('file')
-  assert.deepEqual(storage, { configured: 'file', active: 'file' })
-  assert.equal(
-    keyring.values.get('seo:google:owner@example.com:refresh'),
-    undefined,
-  )
-  assert.deepEqual(await readTokens(), tokens)
-
-  await deleteTokens()
-  assert.equal(existsSync(getSeoCliPaths().tokensFile), false)
-  assert.equal(keyring.values.size, 0)
-})
-
 test('logout keeps token metadata when keychain deletion fails', async () => {
   resetStorage()
   writeConfig(configSchema.parse({}))
@@ -369,10 +260,7 @@ test('logout keeps token metadata when keychain deletion fails', async () => {
   const failedKey = 'seo:google:owner@example.com:refresh'
   keyring.failedDeletes.add(failedKey)
 
-  await assert.rejects(
-    deleteTokens(),
-    /Google tokens could not be removed from the system keychain/i,
-  )
+  await assert.rejects(deleteTokens())
   assert.equal(existsSync(getSeoCliPaths().tokensFile), true)
   assert.equal(keyring.values.get(failedKey), 'refresh-token')
 

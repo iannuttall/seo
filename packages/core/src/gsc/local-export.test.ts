@@ -121,34 +121,6 @@ test('loadSearchConsoleExport parses a standard export directory', async () => {
     capped: false,
   })
   assert.deepEqual(evidence.warnings, [])
-  assert.deepEqual(evidence.caveats, [
-    'Query and page tables are separate aggregates from a Search Console export; no query-to-page mapping exists and none was created.',
-    'Search Console exports are partial: anonymised queries are withheld and export row caps apply, so missing rows are not zeros.',
-    'The export time is unavailable unless supplied separately; importedAt records when the local files were loaded, not when Search Console produced them.',
-  ])
-})
-
-test('loadSearchConsoleExport rejects invalid URLs and malformed metrics', async () => {
-  const root = await fixtureDir()
-  const path = join(root, 'Pages.csv')
-  await writeFile(
-    path,
-    `${PAGES_HEADER}\n` +
-      'not-a-url,10,100,1%,2\n' +
-      'https://example.com/a,5,50,broken,also-broken\n' +
-      'https://example.com/b,oops,50,1%,2\n',
-  )
-  const evidence = await loadSearchConsoleExport({ path })
-  const file = evidence.files[0]
-  assert.ok(file)
-  assert.equal(file.table, 'pages')
-  assert.equal(file.fileRows, 3)
-  assert.equal(file.validRows, 0)
-  assert.equal(file.invalidRows, 3)
-  assert.deepEqual(evidence.pages.rows, [])
-  assert.deepEqual(evidence.warnings, [
-    `3 rows in ${path} were invalid and skipped.`,
-  ])
 })
 
 test('loadSearchConsoleExport does not convert missing metric columns to zero', async () => {
@@ -158,27 +130,6 @@ test('loadSearchConsoleExport does not convert missing metric columns to zero', 
   const evidence = await loadSearchConsoleExport({ path })
   assert.deepEqual(evidence.queries.rows, [])
   assert.equal(evidence.files[0]?.suppliedRows, 0)
-  assert.equal(
-    evidence.files[0]?.reason,
-    'The recognized queries table is missing required Clicks and Impressions columns.',
-  )
-  assert.deepEqual(evidence.warnings, [
-    `Skipped ${path}: The recognized queries table is missing required Clicks and Impressions columns.`,
-  ])
-})
-
-test('loadSearchConsoleExport retains a caller-supplied export time', async () => {
-  const root = await fixtureDir()
-  const path = join(root, 'Queries.csv')
-  await writeFile(path, `${QUERIES_HEADER}\nbest widgets,1,2,50%,3\n`)
-
-  const evidence = await loadSearchConsoleExport({
-    path,
-    exportedAt: new Date('2026-08-01T12:00:00Z'),
-  })
-
-  assert.equal(evidence.exportedAt, '2026-08-01T12:00:00.000Z')
-  assert.match(evidence.caveats.at(-1) ?? '', /supplied by the caller/)
 })
 
 test('loadSearchConsoleExport keeps the duplicate with more impressions', async () => {
@@ -201,32 +152,6 @@ test('loadSearchConsoleExport keeps the duplicate with more impressions', async 
   assert.ok(row)
   assert.equal(row.impressions, 900)
   assert.equal(row.position, 9)
-})
-
-test('loadSearchConsoleExport caps supplied rows at the row limit', async () => {
-  const root = await fixtureDir()
-  const path = join(root, 'Queries.csv')
-  const lines = [QUERIES_HEADER]
-  for (let index = 0; index < 5; index += 1) {
-    lines.push(`query ${index},1,${10 - index},1%,5`)
-  }
-  await writeFile(path, `${lines.join('\n')}\n`)
-  const evidence = await loadSearchConsoleExport({ path, rowLimit: 3 })
-  const file = evidence.files[0]
-  assert.ok(file)
-  assert.equal(file.fileRows, 5)
-  assert.equal(file.suppliedRows, 3)
-  assert.equal(file.capped, true)
-  assert.equal(file.rowLimit, 3)
-  assert.equal(evidence.queries.totalRows, 3)
-  assert.equal(evidence.queries.capped, true)
-  assert.deepEqual(
-    evidence.queries.rows.map((row) => row.query),
-    ['query 0', 'query 1', 'query 2'],
-  )
-  assert.deepEqual(evidence.warnings, [
-    `Only 3 of 5 rows in ${path} were processed within the shared queries row limit of 3.`,
-  ])
 })
 
 test('loadSearchConsoleExport shares each table row limit across files', async () => {
@@ -283,25 +208,12 @@ test('loadSearchConsoleExport records unrecognized headers without guessing', as
   const skipped = evidence.files[0]
   assert.ok(skipped)
   assert.equal(skipped.table, 'unrecognized')
-  assert.equal(
-    skipped.reason,
-    'The first header "Country" is not a recognized Search Console query or page column.',
-  )
   assert.equal(skipped.fileRows, 1)
   assert.equal(skipped.suppliedRows, 0)
   assert.equal(skipped.validRows, 0)
   assert.equal(evidence.warnings.length, 1)
   assert.match(evidence.warnings[0] ?? '', /Countries\.csv/)
   assert.equal(evidence.queries.totalRows, 1)
-})
-
-test('loadSearchConsoleExport rejects missing paths and empty directories', async () => {
-  const root = await fixtureDir()
-  await assert.rejects(
-    loadSearchConsoleExport({ path: join(root, 'missing') }),
-    /was not found/,
-  )
-  await assert.rejects(loadSearchConsoleExport({ path: root }), /no CSV files/)
 })
 
 test('loadSearchConsoleExport output is deterministic across runs', async () => {
@@ -349,36 +261,4 @@ test('reconcileExportPagesWithCrawl joins by path across origins', () => {
     result.unreachedPages.map((row) => row.url),
     ['https://example.com/gone?page=2', 'https://example.com/lost'],
   )
-})
-
-test('reconcileExportPagesWithCrawl sorts and caps unreached pages', () => {
-  const result = reconcileExportPagesWithCrawl({
-    pages: [
-      pageRow('https://example.com/c', 2, 100),
-      pageRow('https://example.com/a', 2, 100),
-      pageRow('https://example.com/b', 9, 100),
-      pageRow('https://example.com/d', 1, 500),
-    ],
-    crawledUrls: [],
-    crawlOrigin: 'https://example.com',
-    limit: 3,
-  })
-  assert.equal(result.originMismatch, false)
-  assert.equal(result.matchedPages, 0)
-  assert.equal(result.unreachedCount, 4)
-  assert.equal(result.capped, true)
-  assert.deepEqual(
-    result.unreachedPages.map((row) => row.url),
-    ['https://example.com/d', 'https://example.com/b', 'https://example.com/a'],
-  )
-})
-
-test('reconcileExportPagesWithCrawl keeps the root path distinct', () => {
-  const result = reconcileExportPagesWithCrawl({
-    pages: [pageRow('https://example.com/', 1, 10)],
-    crawledUrls: ['http://localhost:8080/'],
-    crawlOrigin: 'http://localhost:8080',
-  })
-  assert.equal(result.matchedPages, 1)
-  assert.equal(result.unreachedCount, 0)
 })

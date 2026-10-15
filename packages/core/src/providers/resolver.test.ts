@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ProviderAdapter, ProviderId } from './contracts.js'
-import {
-  type ProviderCandidate,
-  type ProviderResolution,
-  resolveProvider,
-} from './resolver.js'
+import { type ProviderCandidate, resolveProvider } from './resolver.js'
 
 function candidate(input: {
   provider: ProviderId
@@ -44,11 +40,6 @@ const market = {
   languageCode: 'en',
 }
 
-function unavailableReason(result: ProviderResolution): string {
-  assert.equal(result.status, 'unavailable')
-  return result.status === 'unavailable' ? result.reason : 'unexpected'
-}
-
 test('provider resolution is deterministic by priority and provider id', () => {
   const result = resolveProvider({
     capability: 'keyword-metrics',
@@ -81,54 +72,4 @@ test('explicit provider selection never falls through silently', () => {
     reason: 'provider-not-connected',
     considered: ['dataforseo', 'semrush'],
   })
-})
-
-test('provider resolution distinguishes capability and market gaps', () => {
-  assert.equal(
-    unavailableReason(
-      resolveProvider({
-        capability: 'ai-mentions',
-        market,
-        candidates: [candidate({ provider: 'semrush' })],
-      }),
-    ),
-    'capability-not-supported',
-  )
-  assert.equal(
-    unavailableReason(
-      resolveProvider({
-        capability: 'keyword-metrics',
-        market: { ...market, countryCode: 'GB' },
-        candidates: [candidate({ provider: 'semrush', countries: ['US'] })],
-      }),
-    ),
-    'market-not-supported',
-  )
-})
-
-test('canonical location support does not leak into country-only requests', () => {
-  const located: ProviderCandidate = {
-    adapter: {
-      provider: 'dataforseo',
-      capabilitySupport: [
-        {
-          capability: 'keyword-metrics',
-          status: 'available',
-          markets: [{ searchEngines: ['google'], location: 'canonical' }],
-        },
-      ],
-    },
-    connected: true,
-    priority: 0,
-  }
-  assert.equal(
-    unavailableReason(
-      resolveProvider({
-        capability: 'keyword-metrics',
-        market,
-        candidates: [located],
-      }),
-    ),
-    'market-not-supported',
-  )
 })

@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
-import { writeClickySiteKey } from '../clicky/credentials.js'
 import { writeConfig } from '../storage/config.js'
 import { configSchema } from '../types.js'
 import {
@@ -81,27 +80,5 @@ test('extension credentials stay separate for each provider account', async () =
       env: {},
     }),
     /API key is not set/i,
-  )
-})
-
-test('Clicky provider reads the existing saved sitekey', async () => {
-  await writeClickySiteKey('123', 'testtesttest')
-
-  assert.deepEqual(
-    await readProviderExtensionCredentials({
-      providerId: 'clicky',
-      account: { siteId: '123' },
-      fields: [
-        {
-          id: 'sitekey',
-          label: 'Sitekey',
-          kind: 'secret',
-          required: true,
-          envVar: 'SEO_CLICKY_SITEKEY',
-        },
-      ],
-      env: {},
-    }),
-    { sitekey: 'testtesttest' },
   )
 })

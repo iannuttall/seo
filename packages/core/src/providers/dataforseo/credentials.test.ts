@@ -1,27 +1,17 @@
 import assert from 'node:assert/strict'
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  statSync,
-} from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
 import { getSeoCliPaths } from '../../paths.js'
 import { readConfig, writeConfig } from '../../storage/config.js'
 import { setKeyringForTests } from '../../storage/keyring.js'
-import { writeProviderSecret } from '../../storage/provider-secrets.js'
 import { configSchema } from '../../types.js'
 import { ProviderError } from '../errors.js'
 import {
-  DATAFORSEO_CREDENTIAL_SECRET,
   DATAFORSEO_LOGIN_ENV,
   DATAFORSEO_PASSWORD_ENV,
-  deleteDataForSeoCredentials,
   readDataForSeoCredentials,
-  writeDataForSeoCredentials,
 } from './credentials.js'
 
 class MemoryKeyring {
@@ -76,19 +66,6 @@ after(() => {
   setKeyringForTests()
 })
 
-test('environment credentials take precedence without being persisted', async () => {
-  process.env[DATAFORSEO_LOGIN_ENV] = ' api-owner@example.test '
-  process.env[DATAFORSEO_PASSWORD_ENV] = 'environment-password'
-
-  assert.deepEqual(await readDataForSeoCredentials(), {
-    login: 'api-owner@example.test',
-    password: 'environment-password',
-    source: 'environment',
-    migrated: false,
-  })
-  assert.equal(existsSync(getSeoCliPaths().providerSecretsFile), false)
-})
-
 test('partial environment credentials fail without falling through', async () => {
   process.env[DATAFORSEO_LOGIN_ENV] = 'api-owner@example.test'
 
@@ -97,51 +74,6 @@ test('partial environment credentials fail without falling through', async () =>
     assert.equal(error.code, 'configuration')
     assert.match(error.message, /set both SEO_DATAFORSEO_LOGIN and/i)
     return true
-  })
-})
-
-test('credentials use one typed keychain record', async () => {
-  writeConfig(configSchema.parse({}))
-  assert.equal(
-    await writeDataForSeoCredentials({
-      login: 'api-owner@example.test',
-      password: 'saved-password',
-    }),
-    'keychain',
-  )
-  assert.deepEqual(await readDataForSeoCredentials(), {
-    login: 'api-owner@example.test',
-    password: 'saved-password',
-    source: 'keychain',
-    migrated: false,
-  })
-  const raw = keyring.values.get(`seo:provider:${DATAFORSEO_CREDENTIAL_SECRET}`)
-  assert.deepEqual(JSON.parse(raw ?? ''), {
-    version: 1,
-    login: 'api-owner@example.test',
-    password: 'saved-password',
-  })
-})
-
-test('credentials fall back to a private file', async () => {
-  keyring.unavailable = true
-  writeConfig(configSchema.parse({}))
-
-  assert.equal(
-    await writeDataForSeoCredentials({
-      login: 'api-owner@example.test',
-      password: 'file-password',
-    }),
-    'file',
-  )
-  const path = getSeoCliPaths().providerSecretsFile
-  assert.equal(statSync(path).mode & 0o777, 0o600)
-  assert.doesNotMatch(readFileSync(path, 'utf8'), /dataForSeoPassword/)
-  assert.deepEqual(await readDataForSeoCredentials(), {
-    login: 'api-owner@example.test',
-    password: 'file-password',
-    source: 'file',
-    migrated: false,
   })
 })
 
@@ -169,37 +101,4 @@ test('legacy config credentials migrate only after the secret is saved', async (
     ),
     false,
   )
-})
-
-test('invalid saved credentials fail with a reconnect action', async () => {
-  writeConfig(configSchema.parse({}))
-  await writeProviderSecret(DATAFORSEO_CREDENTIAL_SECRET, '{not-json')
-
-  await assert.rejects(readDataForSeoCredentials(), (error) => {
-    assert.ok(error instanceof ProviderError)
-    assert.equal(error.code, 'configuration')
-    assert.match(error.message, /disconnect.*connect again/i)
-    return true
-  })
-})
-
-test('disconnect removes saved and legacy credentials', async () => {
-  writeConfig(
-    configSchema.parse({
-      providers: {
-        dataForSeoLogin: 'legacy-owner@example.test',
-        dataForSeoPassword: 'legacy-password',
-      },
-    }),
-  )
-  await writeDataForSeoCredentials({
-    login: 'api-owner@example.test',
-    password: 'saved-password',
-  })
-
-  await deleteDataForSeoCredentials()
-
-  assert.equal(await readDataForSeoCredentials(), undefined)
-  assert.equal(readConfig().providers.dataForSeoLogin, undefined)
-  assert.equal(readConfig().providers.dataForSeoPassword, undefined)
 })

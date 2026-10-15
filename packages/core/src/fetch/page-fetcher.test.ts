@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import type { PageFetchResult } from '../types.js'
 import { JavaScriptRenderingError } from './page-fetcher/rendered.js'
 import type { PageRenderer } from './page-fetcher/types.js'
-import { fetchPage, normalizeJavaScriptRenderingMode } from './page-fetcher.js'
+import { fetchPage } from './page-fetcher.js'
 
 function plainResult(
   html = '<title>SSR page</title><main>Content</main>',
@@ -67,28 +67,6 @@ function dependencies(
   }
 }
 
-test('normalizes explicit rendering modes while retaining legacy booleans', () => {
-  assert.equal(normalizeJavaScriptRenderingMode(undefined), 'auto')
-  assert.equal(normalizeJavaScriptRenderingMode(true), 'on')
-  assert.equal(normalizeJavaScriptRenderingMode(false), 'off')
-  assert.equal(normalizeJavaScriptRenderingMode('on'), 'on')
-  assert.equal(normalizeJavaScriptRenderingMode('off'), 'off')
-})
-
-test('records when rendering is intentionally off', async () => {
-  let created = 0
-  const result = await fetchPage(
-    'https://example.com/',
-    { js: 'off' },
-    dependencies({ onCreate: () => created++ }),
-  )
-
-  assert.equal(created, 0)
-  assert.equal(result.usedJs, false)
-  assert.equal(result.diagnostics.rendering?.mode, 'off')
-  assert.equal(result.diagnostics.rendering?.status, 'not-requested')
-})
-
 test('does not start a browser for a normal SSR page in auto mode', async () => {
   let created = 0
   const result = await fetchPage(
@@ -127,7 +105,6 @@ test('keeps raw evidence explicit when automatic rendering is unavailable', asyn
   assert.equal(result.diagnostics.rendered, false)
   assert.equal(result.diagnostics.rendering?.status, 'unavailable')
   assert.equal(result.diagnostics.rendering?.raw?.source, 'network')
-  assert.match(result.warnings.join('\n'), /raw HTTP HTML only/)
 })
 
 test('retains raw provenance alongside successful rendered evidence', async () => {

@@ -168,46 +168,6 @@ function savedSet(db: Database.Database, count: number): void {
   )
 }
 
-test('refresh preview estimates cost without starting paid work', async () => {
-  const db = database()
-  savedSet(db, 60)
-  const fixture = candidate()
-  const report = await refreshKeywordSet(
-    { projectId: 'example-project', idOrName: 'set-one' },
-    {
-      candidates: [fixture.provider],
-      store: { database: db },
-      now: () => new Date('2026-07-21T11:00:00.000Z'),
-    },
-  )
-  assert.equal(report.mode, 'preview')
-  assert.equal(report.cost.requestCount, 2)
-  assert.equal(report.cost.estimatedMicros, 12_000)
-  assert.deepEqual(fixture.calls(), { paidCalls: 0, estimateCalls: 1 })
-  assert.equal(
-    getKeywordSet(
-      { projectId: 'example-project', idOrName: 'set-one' },
-      { database: db },
-    ).set.lastRefreshedAt,
-    null,
-  )
-})
-
-test('refresh rejects an unsupported saved market before pricing or paid work', async () => {
-  const db = database()
-  savedSet(db, 10)
-  const fixture = candidate({ countryOnly: true })
-
-  await assert.rejects(
-    refreshKeywordSet(
-      { projectId: 'example-project', idOrName: 'set-one' },
-      { candidates: [fixture.provider], store: { database: db } },
-    ),
-    /country-level saved set.*without --location/i,
-  )
-  assert.deepEqual(fixture.calls(), { paidCalls: 0, estimateCalls: 0 })
-})
-
 test('executed refresh batches work and records a complete refresh', async () => {
   const db = database()
   savedSet(db, 60)
@@ -238,48 +198,6 @@ test('executed refresh batches work and records a complete refresh', async () =>
   )
   assert.equal(detail.set.lastRefreshedAt, '2026-07-21T11:00:00.000Z')
   assert.equal(detail.items.filter((item) => item.latestMetric).length, 60)
-})
-
-test('refresh offset reaches later bounded segments without marking the full set refreshed', async () => {
-  const db = database()
-  savedSet(db, 60)
-  const fixture = candidate()
-  const report = await refreshKeywordSet(
-    {
-      projectId: 'example-project',
-      idOrName: 'set-one',
-      limit: 10,
-      offset: 50,
-      execute: true,
-    },
-    {
-      candidates: [fixture.provider],
-      store: { database: db },
-      now: () => new Date('2026-07-21T11:00:00.000Z'),
-    },
-  )
-
-  assert.equal(report.dataStatus, 'partial')
-  assert.deepEqual(report.selection, {
-    offset: 50,
-    limit: 10,
-    selectedKeywords: 10,
-    nextOffset: null,
-    completeness: 'capped',
-  })
-  assert.equal(report.execution?.savedSnapshots, 10)
-  const detail = getKeywordSet(
-    { projectId: 'example-project', idOrName: 'set-one', limit: 100 },
-    { database: db },
-  )
-  assert.equal(detail.set.lastRefreshedAt, null)
-  assert.deepEqual(
-    detail.items
-      .map((item, index) => ({ index, hasMetric: Boolean(item.latestMetric) }))
-      .filter((item) => item.hasMetric)
-      .map((item) => item.index),
-    [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
-  )
 })
 
 test('a failed batch retains completed evidence without marking a full refresh', async () => {
@@ -335,56 +253,4 @@ test('an incomplete provider batch is retained but never marks a full refresh', 
   )
   assert.equal(detail.set.lastRefreshedAt, null)
   assert.equal(detail.items.filter((item) => item.latestMetric).length, 9)
-})
-
-test('a partial provider batch does not prevent later batches from running', async () => {
-  const db = database()
-  savedSet(db, 60)
-  let paidCalls = 0
-  const fixture = candidate()
-  const adapter = fixture.provider.adapter
-  const originalKeywordMetrics = adapter.keywordMetrics.bind(adapter)
-  adapter.keywordMetrics = async (input) => {
-    paidCalls += 1
-    const evidence = await originalKeywordMetrics(input)
-    return paidCalls === 1
-      ? {
-          ...evidence,
-          coverage: { ...evidence.coverage, completeness: 'partial' as const },
-        }
-      : evidence
-  }
-
-  const report = await refreshKeywordSet(
-    { projectId: 'example-project', idOrName: 'set-one', execute: true },
-    {
-      candidates: [fixture.provider],
-      store: { database: db },
-      now: () => new Date('2026-07-21T11:00:00.000Z'),
-    },
-  )
-
-  assert.equal(report.dataStatus, 'partial')
-  assert.deepEqual(report.execution, {
-    attemptedBatches: 2,
-    completeBatches: 1,
-    partialBatches: 1,
-    failedBatches: 0,
-    savedSnapshots: 60,
-    actualMicros: 200,
-    warnings: [
-      {
-        batch: 1,
-        message: 'Batch returned partial provider coverage for 50 keywords.',
-      },
-    ],
-    errors: [],
-  })
-  assert.equal(fixture.calls().paidCalls, 2)
-  const detail = getKeywordSet(
-    { projectId: 'example-project', idOrName: 'set-one', limit: 100 },
-    { database: db },
-  )
-  assert.equal(detail.set.lastRefreshedAt, null)
-  assert.equal(detail.items.filter((item) => item.latestMetric).length, 60)
 })

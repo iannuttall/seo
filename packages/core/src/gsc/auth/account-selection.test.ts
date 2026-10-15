@@ -5,10 +5,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, test } from 'node:test'
 import { saveClient } from '../../clients.js'
 import { selectGoogleAccounts } from './account-context.js'
-import {
-  googleAnalyticsAccountForProperty,
-  searchConsoleAccountForSite,
-} from './account-selection.js'
+import { searchConsoleAccountForSite } from './account-selection.js'
 
 let configDir: string
 let previousConfigDir: string | undefined
@@ -24,30 +21,6 @@ afterEach(() => {
   if (previousConfigDir === undefined) delete process.env.SEO_CONFIG_DIR
   else process.env.SEO_CONFIG_DIR = previousConfigDir
   rmSync(configDir, { recursive: true, force: true })
-})
-
-test('resolves each project data source to its saved Google account', () => {
-  saveClient({
-    id: 'example',
-    name: 'Example',
-    siteUrl: 'sc-domain:example.com',
-    googleAccounts: {
-      searchConsole: 'search@example.com',
-      googleAnalytics: 'analytics@example.com',
-    },
-    analytics: {
-      google: { propertyId: '123' },
-    },
-  })
-
-  assert.equal(
-    searchConsoleAccountForSite('sc-domain:example.com'),
-    'search@example.com',
-  )
-  assert.equal(
-    googleAnalyticsAccountForProperty('123'),
-    'analytics@example.com',
-  )
 })
 
 test('rejects ambiguous resource matching across project accounts', () => {

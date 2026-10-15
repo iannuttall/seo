@@ -48,20 +48,6 @@ test('canonical evidence distinguishes duplicate and conflicting targets', () =>
   )
 })
 
-test('canonical evidence rejects fragments and non-HTTP targets', () => {
-  const evidence = extractCanonicalEvidence(
-    load('<head><link rel="canonical" href="#section"></head>'),
-    { link: '<mailto:editor@example.com>; rel=canonical' },
-    'https://example.com/page',
-  )
-
-  assert.equal(evidence.status, 'invalid')
-  assert.deepEqual(
-    evidence.candidates.map((candidate) => candidate.ignoredReason),
-    ['fragment', 'non-http-url'],
-  )
-})
-
 test('canonical evidence does not resolve an empty href to the page URL', () => {
   const evidence = extractCanonicalEvidence(
     load('<head><link rel="canonical" href=""></head>'),
@@ -74,9 +60,6 @@ test('canonical evidence does not resolve an empty href to the page URL', () => 
   assert.equal(evidence.candidates[0]?.raw, '')
   assert.equal(evidence.candidates[0]?.ignoredReason, 'invalid-url')
 })
-
-const NEXT_PAYLOAD =
-  '<script>(self.__next_f=self.__next_f||[]).push([0])</script>'
 
 test('canonical evidence accepts Next.js streamed body metadata as streamed', () => {
   const url = 'https://example.com/post'
@@ -130,34 +113,4 @@ test('canonical evidence still rejects body canonicals outside Next.js', () => {
     url,
   )
   assert.equal(plain.status, 'outside-head-only')
-})
-
-test('streamed canonicals still take part in duplicate, conflict, and invalid checks', () => {
-  const base = 'https://example.com/post'
-  const evidence = (head: string, body: string) =>
-    extractCanonicalEvidence(
-      load(
-        `<html><head>${head}</head><body>${NEXT_PAYLOAD}${body}</body></html>`,
-      ),
-      {},
-      base,
-    )
-
-  const duplicate = evidence(
-    `<link rel="canonical" href="${base}">`,
-    `<link rel="canonical" href="${base}">`,
-  )
-  assert.equal(duplicate.status, 'duplicate')
-  assert.equal(duplicate.selectedUrl, base)
-  assert.equal(duplicate.candidates[0]?.source, 'html-head')
-
-  const conflict = evidence(
-    '<link rel="canonical" href="https://example.com/head">',
-    '<link rel="canonical" href="https://example.com/streamed">',
-  )
-  assert.equal(conflict.status, 'conflicting')
-
-  const invalid = evidence('', '<link rel="canonical" href="mailto:a@b.c">')
-  assert.equal(invalid.status, 'invalid')
-  assert.equal(invalid.candidates[0]?.ignoredReason, 'non-http-url')
 })

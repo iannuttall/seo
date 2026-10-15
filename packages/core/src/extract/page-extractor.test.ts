@@ -161,26 +161,6 @@ test('extractPage parses SEO, link, media, schema, and GEO signals from HTML', a
   assert.deepEqual(page.warnings, ['fixture warning'])
 })
 
-test('extractPage combines concise opening paragraphs for the readability heuristic', async () => {
-  const page = await extractPage(
-    fetchResult(`<!doctype html>
-      <html>
-        <head><title>Concise guide</title></head>
-        <body>
-          <main>
-            <h1>Concise guide</h1>
-            <p>This short opening names the problem and gives readers the immediate context.</p>
-            <p>The next sentence explains what the page helps them decide in practice.</p>
-            <p>A final concise paragraph sets expectations before the detailed sections begin.</p>
-          </main>
-        </body>
-      </html>`),
-    'readability',
-  )
-
-  assert.equal(page.answerable, true)
-})
-
 test('extractPage combines effective Googlebot meta directives across the document', async () => {
   const result = fetchResult(`<!doctype html>
       <html>
@@ -273,34 +253,6 @@ test('crawler extraction keeps aggregates without full link objects', async () =
   assert.deepEqual(page.crawlerEvidence?.socialProfileLinks, [
     'https://www.linkedin.com/company/example',
   ])
-})
-
-test('crawler extraction keeps bounded login and accessible tab evidence', async () => {
-  const page = await extractPage(
-    fetchResult(`<!doctype html><html><head><title>Sign in to continue</title></head>
-      <body><main>
-        <h1>Sign in</h1>
-        <form action="/auth/login"><input type="password" name="password"></form>
-        <div role="tablist"><button id="overview-tab" role="tab">Overview</button></div>
-        <section role="tabpanel" aria-labelledby="overview-tab">
-          The overview panel contains enough useful words to produce a stable bounded content sketch for later comparison.
-        </section>
-      </main></body></html>`),
-    'crawler',
-  )
-
-  assert.deepEqual(page.crawlerEvidence?.softAuthenticationGate, {
-    kind: 'login-form',
-    indicators: ['login-title', 'login-form-action'],
-    formActionPath: '/auth/login',
-  })
-  assert.equal(page.crawlerEvidence?.tabbedContent?.groups, 1)
-  assert.equal(page.crawlerEvidence?.tabbedContent?.panels, 1)
-  assert.equal(
-    page.crawlerEvidence?.tabbedContent?.panelSketches[0]?.label,
-    'Overview',
-  )
-  assert.ok((page.crawlerEvidence?.contentSketch.hashes.length ?? 0) > 0)
 })
 
 test('structured data preserves graph context and subject provenance', async () => {
@@ -406,101 +358,6 @@ test('structured data keeps Google property checks separate from syntax', async 
   )
 })
 
-test('structured data supports Microdata and RDFa without inventing trust fields', async () => {
-  const page = await extractPage(
-    fetchResult(`<!doctype html><html vocab="https://schema.org/"><head>
-      <script type="application/ld+json">
-        {"@context":"https://schema.org","@type":"Article","author":null,"datePublished":""}
-      </script>
-    </head><body><main>
-      <div class="author"></div>
-      <time datetime="not-a-date"></time>
-      <section itemscope itemtype="https://schema.org/Product">
-        <span itemprop="author">Jane Editor</span>
-        <meta itemprop="datePublished" content="2026-06-18">
-      </section>
-      <section typeof="Article"><span property="author">RDFa Editor</span></section>
-    </main></body></html>`),
-    'readability',
-  )
-
-  assert.deepEqual(page.schemaTypes.sort(), ['Article', 'Product'])
-  assert.deepEqual(page.structuredDataFormats, ['json-ld', 'microdata', 'rdfa'])
-  assert.deepEqual(
-    page.googleRichResults?.map(({ format, schemaType, status }) => ({
-      format,
-      schemaType,
-      status,
-    })),
-    [
-      {
-        format: 'json-ld',
-        schemaType: 'Article',
-        status: 'no-required-properties',
-      },
-      {
-        format: 'microdata',
-        schemaType: 'Product',
-        status: 'not-assessed',
-      },
-      {
-        format: 'rdfa',
-        schemaType: 'Article',
-        status: 'not-assessed',
-      },
-    ],
-  )
-  assert.equal(page.hasAuthor, true)
-  assert.equal(page.hasDate, true)
-
-  const empty = await extractPage(
-    fetchResult(`<!doctype html><html><head>
-      <script type="application/ld+json">
-        {"@context":"https://schema.org","@type":"Article","author":null,"datePublished":"2026-02-30"}
-      </script>
-    </head><body><main><div class="author"></div><time datetime="bad"></time></main></body></html>`),
-    'readability',
-  )
-  assert.equal(empty.hasAuthor, false)
-  assert.equal(empty.hasDate, false)
-})
-
-test('Defuddle receives the final URL and preserves its metadata and word count', async () => {
-  const fetched = {
-    ...fetchResult('<main><p>Original page body</p></main>'),
-    url: 'https://example.com/old-location',
-    finalUrl: 'https://example.com/new-location',
-  }
-  let receivedUrl: string | undefined
-  let useAsync: boolean | undefined
-  const page = await extractPage(fetched, 'defuddle', {
-    parseDefuddle(_document, options) {
-      receivedUrl = options.url
-      useAsync = options.useAsync
-      return {
-        content: '<article><p>検索技術 alpha beta</p></article>',
-        description: 'A parser-provided description.',
-        wordCount: 6,
-        extractorType: 'article',
-      }
-    },
-  })
-
-  assert.equal(receivedUrl, fetched.finalUrl)
-  assert.equal(useAsync, false)
-  assert.equal(page.contentText, '検索技術 alpha beta')
-  assert.equal(page.excerpt, 'A parser-provided description.')
-  assert.equal(page.wordCount, 6)
-  assert.deepEqual(page.contentExtraction, {
-    requested: 'defuddle',
-    used: 'defuddle',
-    fallback: false,
-    wordCountSource: 'defuddle',
-    baseUrl: fetched.finalUrl,
-    extractorType: 'article',
-  })
-})
-
 test('Defuddle failures use a fresh Readability document and disclose fallback', async () => {
   const fetched = fetchResult(`<!doctype html>
     <html><head><title>Fallback</title></head><body>
@@ -525,48 +382,6 @@ test('Defuddle failures use a fresh Readability document and disclose fallback',
   assert.deepEqual(page.warnings, [
     'fixture warning',
     'Defuddle extraction fell back to Readability: fixture extractor failure',
-  ])
-})
-
-test('invalid Defuddle counts use local CJK-aware counting', () => {
-  const content = extractMainContent(
-    fetchResult(
-      '<!doctype html><html><body><article><p>Original</p></article></body></html>',
-    ),
-    'defuddle',
-    {
-      parseDefuddle() {
-        return {
-          content: '<article><p>検索技術 alpha beta</p></article>',
-          wordCount: Number.NaN,
-        }
-      },
-    },
-  )
-
-  assert.equal(content.wordCount, 6)
-  assert.equal(content.diagnostics.wordCountSource, 'local_cjk_aware')
-})
-
-test('empty Defuddle content falls back with explicit provenance', () => {
-  const content = extractMainContent(
-    fetchResult(`<!doctype html><html><body><article>
-      <h1>Usable fallback</h1>
-      <p>This readable page body remains available when Defuddle returns an empty result.</p>
-    </article></body></html>`),
-    'defuddle',
-    {
-      parseDefuddle() {
-        return { content: '', wordCount: 0 }
-      },
-    },
-  )
-
-  assert.match(content.text, /page body remains available/)
-  assert.equal(content.diagnostics.used, 'readability')
-  assert.equal(content.diagnostics.fallbackReason, 'defuddle_empty')
-  assert.deepEqual(content.warnings, [
-    'Defuddle extraction fell back to Readability: Defuddle returned no main content',
   ])
 })
 

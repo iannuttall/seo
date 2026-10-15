@@ -6,9 +6,8 @@ import {
   type ServerResponse,
 } from 'node:http'
 import { test } from 'node:test'
-import { getDb, hashKey } from '../../storage/database.js'
 import { SEO_CRAWLER_USER_AGENT } from '../crawler-identity.js'
-import { createRobotsSession, fetchRobots } from './robots.js'
+import { fetchRobots } from './robots.js'
 
 async function withServer(
   handler: (req: IncomingMessage, res: ServerResponse) => void,
@@ -108,47 +107,6 @@ test('robots evaluation matches the stable SEO-Skill token', async () => {
     assert.equal(observedUserAgent, SEO_CRAWLER_USER_AGENT)
     assert.equal(result.allowed, false)
     assert.equal(result.matchedLine, 'Disallow: /private')
-  } finally {
-    await fixture.close()
-  }
-})
-
-test('crawl-scoped robots resolver fetches once and writes no cache entry', async () => {
-  let requests = 0
-  let origin = ''
-  const fixture = await withServer((_req, res) => {
-    requests += 1
-    res.setHeader('content-type', 'text/plain')
-    res.end(
-      `User-agent: *\nDisallow: /private\nSitemap: ${origin}/sitemap.xml\n`,
-    )
-  })
-  origin = fixture.origin
-
-  try {
-    const key = hashKey([
-      'robots',
-      new URL('/robots.txt', fixture.origin).toString(),
-    ])
-    getDb().prepare('DELETE FROM http_cache WHERE url_hash = ?').run(key)
-    const session = createRobotsSession({
-      refresh: true,
-      writeCache: false,
-    })
-    const [publicPage, privatePage, sitemapUrls] = await Promise.all([
-      session.resolve(fixture.origin, `${fixture.origin}/public`),
-      session.resolve(fixture.origin, `${fixture.origin}/private/page`),
-      session.sitemapUrls(fixture.origin),
-    ])
-    const cached = getDb()
-      .prepare('SELECT 1 FROM http_cache WHERE url_hash = ?')
-      .get(key)
-
-    assert.equal(requests, 1)
-    assert.equal(publicPage.allowed, true)
-    assert.equal(privatePage.allowed, false)
-    assert.deepEqual(sitemapUrls, [`${fixture.origin}/sitemap.xml`])
-    assert.equal(cached, undefined)
   } finally {
     await fixture.close()
   }

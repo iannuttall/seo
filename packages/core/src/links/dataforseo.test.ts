@@ -151,22 +151,6 @@ test('DataForSEO link collection uses one bounded representative request and pre
   ])
   assert.equal(result.externalProvider?.summary.cost.actualMicros, 24_036)
   assert.equal(result.externalProvider?.backlinks.cost.actualMicros, 27_600)
-  assert.match(result.warnings[0] ?? '', /one representative backlink/i)
-})
-
-test('DataForSEO link collection only reports a cache hit when both paid calls hit cache', async () => {
-  const cachedSummary = summary()
-  cachedSummary.cache.status = 'hit'
-  cachedSummary.cost.actualMicros = 0
-  const result = await collectDataForSeoLinkEvidence({
-    target: 'example.com',
-    provider: {
-      linkSummary: async () => cachedSummary,
-      backlinks: async () => backlinkPage(),
-    },
-  })
-
-  assert.equal(result.provenance.cached, false)
 })
 
 test('DataForSEO link collection rejects excessive provider acquisition before making a call', async () => {

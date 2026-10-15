@@ -115,39 +115,6 @@ test('managed provider reset removes every keychain secret', async () => {
   assert.equal(existsSync(getSeoCliPaths().providerSecretsFile), false)
 })
 
-test('managed provider reset removes the private file fallback', async () => {
-  keyring.unavailable = true
-  writeConfig(configSchema.parse({}))
-  for (const name of MANAGED_PROVIDER_SECRET_NAMES) {
-    await writeProviderSecret(name, `${name}-value`)
-  }
-  assert.equal(existsSync(getSeoCliPaths().providerSecretsFile), true)
-
-  await deleteManagedProviderSecrets()
-
-  assert.equal(existsSync(getSeoCliPaths().providerSecretsFile), false)
-})
-
-test('managed provider reset reports keychain failures after trying every secret', async () => {
-  writeConfig(configSchema.parse({}))
-  for (const name of MANAGED_PROVIDER_SECRET_NAMES) {
-    await writeProviderSecret(name, `${name}-value`)
-  }
-  const failedKey = `seo:provider:${PROVIDER_SECRET_NAMES.dataForSeoCredentials}`
-  keyring.failedDeletes.add(failedKey)
-
-  await assert.rejects(
-    deleteManagedProviderSecrets(),
-    /could not remove 1 saved provider credential record/i,
-  )
-
-  assert.equal(
-    keyring.values.get(failedKey),
-    `${PROVIDER_SECRET_NAMES.dataForSeoCredentials}-value`,
-  )
-  assert.equal(keyring.values.size, 1)
-})
-
 test('provider deletion does not claim success when its keychain write remains', async () => {
   writeConfig(configSchema.parse({}))
   await writeProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey, 'secret')

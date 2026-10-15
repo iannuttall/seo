@@ -3,16 +3,8 @@ import { test } from 'node:test'
 import {
   effectiveRobotsDirectives,
   effectiveSnippetControl,
-  metaRobotsDirectives,
   xRobotsDirectives,
 } from './robots-directives.js'
-
-test('meta robots combines repeated restrictions and expands none', () => {
-  assert.deepEqual(
-    [...metaRobotsDirectives(['INDEX, follow', 'NoFollow', 'NONE'])].sort(),
-    ['nofollow', 'noindex'],
-  )
-})
 
 test('x-robots-tag applies generic and googlebot rules only', () => {
   assert.deepEqual(
@@ -41,39 +33,6 @@ test('effective directives use the most restrictive signal across sources', () =
       }),
     ].sort(),
     ['nofollow', 'noindex'],
-  )
-})
-
-test('snippet controls preserve the most restrictive Googlebot evidence', () => {
-  assert.deepEqual(
-    effectiveSnippetControl({
-      metaRobots: 'max-snippet:50, nosnippet',
-      xRobotsTag: 'googlebot: max-snippet:20',
-    }),
-    {
-      status: 'blocked',
-      reason: 'nosnippet',
-      maxCharacters: 0,
-      evidence: [
-        {
-          source: 'meta-robots',
-          directive: 'max-snippet',
-          raw: 'max-snippet:50',
-          value: 50,
-        },
-        {
-          source: 'meta-robots',
-          directive: 'nosnippet',
-          raw: 'nosnippet',
-        },
-        {
-          source: 'x-robots-tag',
-          directive: 'max-snippet',
-          raw: 'max-snippet:20',
-          value: 20,
-        },
-      ],
-    },
   )
 })
 

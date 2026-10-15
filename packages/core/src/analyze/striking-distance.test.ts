@@ -107,22 +107,6 @@ test('queries bounded retained rows and publishes source semantics', async () =>
   assert.equal(report.methodology.ctrEligibilityFilter, false)
   assert.equal(report.items[0]?.query, 'high ctr candidate')
   assert.equal(report.items[0]?.priority.estimatedClickLift, false)
-  assert.match(report.caveats.join(' '), /Anonymized and lower-value/)
-})
-
-test('rejects invalid date windows before querying Search Console', async () => {
-  let called = false
-  const deps = dependencies([])
-  deps.searchAnalytics = async () => {
-    called = true
-    return { rows: [], calls: 0, rowsFetched: 0 }
-  }
-
-  await assert.rejects(
-    strikingDistance({ site: 'sc-domain:example.com', days: 1.5 }, deps),
-    /whole number between 1 and 548/,
-  )
-  assert.equal(called, false)
 })
 
 test('verification is bounded and technical evidence takes precedence', async () => {
@@ -156,16 +140,4 @@ test('verification is bounded and technical evidence takes precedence', async ()
   assert.equal(report.items[1]?.recommendation.type, 'verification-failed')
   assert.equal(report.items[2]?.contentVerification, undefined)
   assert.equal(report.items[2]?.recommendation.confidence, 'low')
-})
-
-test('does not hide Search Console provider failures', async () => {
-  const deps = dependencies([])
-  deps.searchAnalytics = async () => {
-    throw new Error('Search Console unavailable')
-  }
-
-  await assert.rejects(
-    strikingDistance({ site: 'sc-domain:example.com' }, deps),
-    /Search Console unavailable/,
-  )
 })

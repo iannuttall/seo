@@ -1,12 +1,7 @@
 import { linkRecover } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -17,7 +12,6 @@ import {
   truncate,
 } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
-import { selectedSiteOrThrow } from '../shared.js'
 
 export const linkRecoverCommand = defineCommand({
   meta: {
@@ -27,8 +21,6 @@ export const linkRecoverCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'limit', 'minImpressions', 'refresh', 'js'], {
       days: {
         description: 'GSC lookback window. Defaults to 90.',
@@ -59,10 +51,7 @@ export const linkRecoverCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const report = await linkRecover({
-      site: await selectedSiteOrThrow(
-        { client: projectArg(args), site: stringArg(args.site) },
-        { json },
-      ),
+      site: requireSite(stringArg(args.site)),
       days: numberArg(args.days),
       limit: numberArg(args.limit),
       minClicks: numberArg(args['min-clicks']),

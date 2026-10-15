@@ -10,7 +10,7 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../../../index.js', import.meta.url))
 
-test('legacy Clicky projects use the extracted report action', async () => {
+test('Clicky reports read a legacy sitekey and ignore old saved projects', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-clicky-command-'))
   const packageDir = join(
     configDir,
@@ -97,8 +97,8 @@ test('legacy Clicky projects use the extracted report action', async () => {
         'analytics',
         'clicky',
         'report',
-        '--project',
-        'legacy',
+        '--site-id',
+        '123',
         '--start-date',
         '2026-08-01',
         '--end-date',

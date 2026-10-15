@@ -1,10 +1,7 @@
 import { aiReferralsReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, projectArg, strictNumberArg, stringArg } from '../../args.js'
-import {
-  resolveClient,
-  resolveGoogleAnalyticsProperty,
-} from '../../selection.js'
+import { jsonFlag, strictNumberArg, stringArg } from '../../args.js'
+import { requireGoogleAnalyticsProperty } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -23,16 +20,7 @@ export const aiReferralsCommand = defineCommand({
     property: {
       type: 'string',
       description:
-        'Google Analytics property ID. If omitted in a terminal, choose one.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description:
-        'Saved project id or name with an optional Google Analytics property.',
+        'Numeric Google Analytics property ID. Run `seo analytics google properties` to list them.',
     },
     'start-date': { type: 'string', default: '28daysAgo' },
     'end-date': { type: 'string', default: 'yesterday' },
@@ -58,15 +46,7 @@ export const aiReferralsCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const client = await resolveClient({
-      client: projectArg(args),
-      options: { json },
-    })
-    const property = await resolveGoogleAnalyticsProperty({
-      property:
-        stringArg(args.property) ?? client?.analytics.google?.propertyId,
-      options: { json },
-    })
+    const property = requireGoogleAnalyticsProperty(stringArg(args.property))
     const report = await aiReferralsReport({
       property,
       startDate: stringArg(args['start-date']),

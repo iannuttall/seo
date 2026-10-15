@@ -1,14 +1,13 @@
-import { analyticsConnection, refreshPrioritiesWorkflow } from '@seo/core'
+import { refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
   defaultTrueBooleanArg,
   jsonFlag,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import {
   analyticsConnectionArgs,
@@ -27,14 +26,6 @@ export const refreshPrioritiesCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
     },
     ...cliReportArgs(
       ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
@@ -64,23 +55,15 @@ export const refreshPrioritiesCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await refreshPrioritiesWorkflow({
-      site: selection.site,
+      site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
-      analyticsConnection: analyticsConnectionFromArgs(
-        args,
-        analyticsConnection(selection.client),
-      ),
+      analyticsConnection: analyticsConnectionFromArgs(args),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),

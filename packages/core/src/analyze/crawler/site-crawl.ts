@@ -787,7 +787,6 @@ export async function crawlSite(
 
     const report = createCrawlReport({
       config,
-      projectId: input.projectId,
       site,
       googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
       analyticsConnection: input.analyticsConnection,

@@ -1,17 +1,12 @@
-import {
-  analyticsConnection,
-  refreshPrioritiesCsvFiles,
-  refreshPrioritiesWorkflow,
-} from '@seo/core'
+import { refreshPrioritiesCsvFiles, refreshPrioritiesWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
   defaultTrueBooleanArg,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import {
   analyticsConnectionArgs,
   analyticsConnectionFromArgs,
@@ -56,25 +51,15 @@ export const exportRefreshPrioritiesCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await refreshPrioritiesWorkflow({
-      site: selection.site,
+      site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
-      googleAnalyticsPropertyId:
-        stringArg(args['google-analytics-property']) ??
-        selection.client?.analytics.google?.propertyId,
-      analyticsConnection: analyticsConnectionFromArgs(
-        args,
-        analyticsConnection(selection.client),
-      ),
+      googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
+      analyticsConnection: analyticsConnectionFromArgs(args),
       verifyContent: booleanArg(args['verify-content']),
       verifyLimit: numberArg(args['verify-limit']),
       refresh: booleanArg(args.refresh),
@@ -83,8 +68,7 @@ export const exportRefreshPrioritiesCommand = defineCommand({
       stringArg(args.out) ??
       defaultOutDir({
         report: 'refresh-priorities',
-        clientId: selection.client?.id,
-        site: selection.site,
+        site,
       })
     const written = await writeCsvFiles(
       outDir,

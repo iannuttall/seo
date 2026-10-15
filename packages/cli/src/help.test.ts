@@ -102,46 +102,10 @@ test('report JSON never prompts without a selector', async () => {
       error: {
         code: 'INVALID_INPUT',
         message:
-          'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
+          'No site given. Pass --site with a domain, URL or sc-domain: property. Run `seo sites` to list your Search Console properties.',
         retryable: false,
       },
     })
-  } finally {
-    await rm(configDir, { recursive: true, force: true })
-    await rm(cacheDir, { recursive: true, force: true })
-  }
-})
-
-test('start JSON creates a usable project without interactive output', async () => {
-  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
-  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
-
-  try {
-    const result = await runSeoResult(
-      [
-        'start',
-        '--site',
-        'sc-domain:example.com',
-        '--skip-auth',
-        '--skip-mcp',
-        '--json',
-      ],
-      { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir },
-    )
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 0)
-    assert.equal(result.stderr, '')
-    assert.equal(output.auth, 'skipped')
-    assert.equal(output.client.id, 'example-com')
-    assert.equal(output.client.siteUrl, 'sc-domain:example.com')
-    assert.equal(output.client.startUrl, 'https://example.com/')
-    assert.deepEqual(output.next, [
-      'seo report --project example-com',
-      'seo refresh-priorities --project example-com --verify-content',
-      'seo technical-watch --project example-com',
-    ])
-    assert.doesNotMatch(result.stdout, /seo start|Setup complete|[┌◇└]/)
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })
@@ -153,10 +117,10 @@ test('start JSON does not silently skip missing authentication', async () => {
   const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
 
   try {
-    const result = await runSeoResult(
-      ['start', '--site', 'sc-domain:example.com', '--json'],
-      { SEO_CONFIG_DIR: configDir, SEO_CACHE_DIR: cacheDir },
-    )
+    const result = await runSeoResult(['start', '--json'], {
+      SEO_CONFIG_DIR: configDir,
+      SEO_CACHE_DIR: cacheDir,
+    })
     const output = JSON.parse(result.stdout)
 
     assert.equal(result.exitCode, 3)
@@ -166,7 +130,7 @@ test('start JSON does not silently skip missing authentication', async () => {
       error: {
         code: 'AUTH_REQUIRED',
         message:
-          'Not logged in. Run `seo auth login`, or pass --skip-auth to save a project profile without connecting Google.',
+          'Not signed in. Run `seo start` or `seo auth login` in a terminal.',
         retryable: false,
       },
     })

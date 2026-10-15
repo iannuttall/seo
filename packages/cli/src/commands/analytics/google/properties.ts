@@ -1,9 +1,4 @@
-import {
-  ga4PropertyIdFromName,
-  listGa4AccountSummaries,
-  readConfig,
-  writeConfig,
-} from '@seo/core'
+import { ga4PropertyIdFromName, listGa4AccountSummaries } from '@seo/core'
 import { defineCommand } from 'citty'
 import { jsonFlag, stringArg } from '../../../args.js'
 import { printJson, printTable } from '../../../utils.js'
@@ -18,11 +13,6 @@ export const googleAnalyticsPropertiesCommand = defineCommand({
       type: 'boolean',
       default: false,
       description: 'Print machine-readable JSON.',
-    },
-    save: {
-      type: 'string',
-      description:
-        'Save this numeric Google Analytics property ID as the default.',
     },
     account: {
       type: 'string',
@@ -39,19 +29,9 @@ export const googleAnalyticsPropertiesCommand = defineCommand({
       })),
     )
 
-    const save = stringArg(args.save)
-    if (save) {
-      const config = readConfig()
-      config.analytics.google.defaultPropertyId = save
-      writeConfig(config)
-    }
-
     if (jsonFlag(args)) {
-      printJson({ accountSummaries: summaries, properties: rows, saved: save })
+      printJson({ accountSummaries: summaries, properties: rows })
       return
-    }
-    if (save) {
-      process.stdout.write(`Saved default Google Analytics property ${save}.\n`)
     }
     printTable(
       ['Property', 'Name', 'Account'],

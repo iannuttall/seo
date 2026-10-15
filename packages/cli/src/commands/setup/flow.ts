@@ -1,67 +1,56 @@
-import { intro, note, outro, text } from '@clack/prompts'
-import {
-  analyticsConnection,
-  analyticsConnectionLabel,
-  type ClientProfile,
-  deriveBrandTerms,
-  ensureSeoCliDirs,
-  listClients,
-  saveClient,
-  updateClient,
-} from '@seo/core'
-import {
-  booleanArg,
-  jsonFlag,
-  listArg,
-  numberArg,
-  stringArg,
-} from '../../args.js'
-import { resolveSite } from '../../selection.js'
+import { intro, note, outro } from '@clack/prompts'
+import { ensureSeoCliDirs } from '@seo/core'
+import { jsonFlag } from '../../args.js'
 import {
   canPrompt,
-  maybeExitCancelled,
   printCallout,
   printJson,
   printKeyValue,
 } from '../../utils.js'
-import { slugId, startUrlForSite, suggestedClientName } from '../shared.js'
 import {
-  chooseSetupProjectTarget,
-  nextAvailableProjectId,
-} from './project-target.js'
-import {
-  chooseAnalyticsForSetup,
   maybeConnectAuth,
   maybeInstallMcp,
   maybeInstallSkill,
-  type SetupAuthStatus,
-  type SetupGoogleAnalyticsSelection,
+  type SetupAuthResult,
   type SetupMcpInstall,
   type SetupSkillInstall,
 } from './prompts.js'
 
-type SetupResult = {
-  client?: ClientProfile
-  site: string
-  auth: SetupAuthStatus
-  googleAnalytics?: SetupGoogleAnalyticsSelection
-  extension?: { providerId: string; account: Record<string, string> }
-  mcp: SetupMcpInstall[]
-  skill?: SetupSkillInstall
-  next: string[]
+// `seo start` signs in, offers the MCP server and the skill, and says what to
+// run next. It saves no site, project or report choices: every command takes
+// its target each time.
+
+const NEXT = ['seo sites', 'seo report --site <site>']
+
+const STEPS = [
+  'Sign in with Google (read-only Search Console and Google Analytics).',
+  'Add an MCP server to the agents found on this machine.',
+  'Install the SEO skill for your agents.',
+]
+
+function authLabel(auth: SetupAuthResult): string {
+  if (auth.status === 'skipped') return 'skipped'
+  if (auth.status === 'service-account') {
+    return `service account${auth.accountEmail ? ` ${auth.accountEmail}` : ''}`
+  }
+  return auth.accountEmail ?? 'connected'
 }
 
-function skillInstallLabel(skill: SetupSkillInstall): string {
+function skillLabel(skill: SetupSkillInstall): string {
   if (skill.status === 'installed') return 'installed'
   if (skill.status === 'failed') return 'install failed'
   return 'not installed'
 }
 
-function shellArg(value: string): string {
-  if (/^[A-Za-z0-9_./:@-]+$/.test(value)) {
-    return value
-  }
-  return `'${value.replaceAll("'", "'\\''")}'`
+function mcpLabel(installs: SetupMcpInstall[]): string {
+  if (installs.length === 0) return 'not added'
+  return installs
+    .map((install) =>
+      install.error
+        ? `${install.client} skipped`
+        : `${install.client} (${install.server})`,
+    )
+    .join(', ')
 }
 
 function printStarAsk(): void {
@@ -73,293 +62,61 @@ function printStarAsk(): void {
   })
 }
 
-function mcpInstallLabel(installs: SetupMcpInstall[]): string {
-  const failed = installs.filter((install) => install.error).length
-  const installed = installs.length - failed
-  if (installs.length === 0) return 'not installed'
-  if (failed === 0) return `${installed} installed`
-  if (installed === 0) return `${failed} skipped`
-  return `${installed} installed, ${failed} skipped`
-}
-
-function mcpFailureMessage(installs: SetupMcpInstall[]): string | undefined {
-  const failures = installs.filter(
-    (install): install is SetupMcpInstall & { error: string } =>
-      Boolean(install.error),
-  )
-  if (failures.length === 0) return undefined
-  return failures
-    .map((install) => `${install.client}: ${install.error}`)
-    .join('\n')
-}
-
 export async function runGuidedSetup(
   args: Record<string, unknown>,
 ): Promise<void> {
   const json = jsonFlag(args)
-  if (!json) intro(process.argv[2] === 'start' ? 'seo start' : 'seo setup')
+  if (!json) intro(process.argv[2] === 'setup' ? 'seo setup' : 'seo start')
 
   if (args['dry-run']) {
-    const next = [
-      'seo auth login',
-      'seo start',
-      'seo report --project acme',
-      'seo refresh-priorities --project acme --verify-content',
-      'seo technical-watch --project acme',
-    ]
     if (json) {
-      printJson({ dryRun: true, next })
+      printJson({ dryRun: true, steps: STEPS, next: NEXT })
     } else {
-      note(next.join('\n'), 'This setup will guide you through')
-      outro('Dry run complete.')
+      note(
+        STEPS.map((step, index) => `${index + 1}. ${step}`).join('\n'),
+        'Setup will',
+      )
+      note(NEXT.join('\n'), 'Then run')
+      outro('Dry run complete. Nothing was changed.')
     }
     return
   }
 
   ensureSeoCliDirs()
   const interactive = canPrompt({ json })
-  if (interactive) {
-    note(
-      'A project profile remembers one site and its report defaults so future commands stay short.',
-      'Project profiles',
-    )
-  }
-  const clients = listClients()
-  const projectTarget = await chooseSetupProjectTarget({
-    clients,
-    interactive,
-    requestedId: stringArg(args.id),
-    skipProfile: booleanArg(args['skip-profile']),
-  })
-  const existingProject =
-    projectTarget.mode === 'update' ? projectTarget.client : undefined
-  const selectedProjectSite = stringArg(args.site) ?? existingProject?.siteUrl
-  const siteInput = {
-    site: selectedProjectSite,
-    options: {
-      allowDefault: projectTarget.mode === 'update',
-      json,
-      refresh: booleanArg(args.refresh),
-    },
-  }
-  const resolvedNonInteractiveSite = interactive
-    ? undefined
-    : await resolveSite(siteInput)
-  const authSelection = await maybeConnectAuth(
-    selectedProjectSite ? { ...args, site: selectedProjectSite } : args,
-  )
-  const auth = authSelection.status
-  const site =
-    resolvedNonInteractiveSite ??
-    (await resolveSite({
-      ...siteInput,
-      options: {
-        ...siteInput.options,
-        account: authSelection.accountEmail,
-      },
-    }))
-  const defaultName = suggestedClientName(site)
-
-  if (projectTarget.mode === 'skip') {
-    const mcp = await maybeInstallMcp(args)
-    const skill = await maybeInstallSkill(args)
-    const siteArg = `--site ${shellArg(site)}`
-    const next = [
-      `seo report ${siteArg}`,
-      `seo refresh-priorities ${siteArg} --verify-content`,
-      `seo technical-watch ${siteArg}`,
-    ]
-    const result: SetupResult = { site, auth, mcp, skill, next }
-
-    if (json) {
-      printJson(result)
-      return
-    }
-
-    printKeyValue([
-      ['Project profile', 'not saved'],
-      ['GSC property', site],
-      ['Auth', auth],
-      ['MCP', mcpInstallLabel(mcp)],
-      ['SEO skill', skillInstallLabel(skill)],
-    ])
-    const mcpFailure = mcpFailureMessage(mcp)
-    if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
-    if (skill.error) note(skill.error, 'SEO skill install failed')
-    note(next.join('\n'), 'Try next')
-    outro('Setup complete.')
-    printStarAsk()
-    return
-  }
-
-  const name =
-    stringArg(args.name) ??
-    (interactive
-      ? maybeExitCancelled(
-          await text({
-            message: 'Project name',
-            placeholder: existingProject?.name ?? defaultName,
-            defaultValue: existingProject?.name ?? defaultName,
-          }),
-        )
-      : (existingProject?.name ?? defaultName))
-  const id =
-    existingProject?.id ??
-    (projectTarget.mode === 'create' && projectTarget.requestedId
-      ? slugId(projectTarget.requestedId)
-      : nextAvailableProjectId(name, clients))
-  const defaultStartUrl =
-    existingProject?.startUrl ?? startUrlForSite(site) ?? ''
-  const startUrl =
-    stringArg(args.url) ??
-    (interactive
-      ? maybeExitCancelled(
-          await text({
-            message: 'Website URL to crawl',
-            placeholder: defaultStartUrl || 'https://example.com',
-            defaultValue: defaultStartUrl,
-          }),
-        )
-      : defaultStartUrl || undefined)
-  const watchUrls =
-    args.urls === undefined
-      ? (existingProject?.watchUrls ?? [])
-      : listArg(args.urls)
-  const analyticsSelection = await chooseAnalyticsForSetup({
-    googleProperty: stringArg(args['google-analytics-property']),
-    googleAccount: stringArg(args['google-analytics-account']),
-    clickySiteId: stringArg(args['clicky-site-id']),
-    current: analyticsConnection(existingProject),
-    site,
-    interactive,
-  })
-  const googleAnalytics =
-    analyticsSelection?.provider === 'google'
-      ? analyticsSelection.google
-      : undefined
-  const extension =
-    analyticsSelection?.provider === 'extension'
-      ? analyticsSelection.extension
-      : undefined
-  const derivedBrandTerms =
-    existingProject?.brandTerms ?? deriveBrandTerms({ id, name, siteUrl: site })
-  const brandTerms =
-    args.brand === undefined ? derivedBrandTerms : listArg(args.brand)
-  const technicalWeekday =
-    numberArg(args.weekday) ?? existingProject?.technicalWeekday ?? 1
-  const isDefault =
-    booleanArg(args.default) ?? existingProject?.isDefault ?? true
-
-  const analytics =
-    analyticsSelection === undefined
-      ? undefined
-      : analyticsSelection.provider === 'google'
-        ? {
-            ...existingProject?.analytics,
-            selected: 'google' as const,
-            google: { propertyId: analyticsSelection.google.propertyId },
-          }
-        : analyticsSelection.provider === 'extension'
-          ? {
-              ...existingProject?.analytics,
-              selected:
-                `extension:${analyticsSelection.extension.providerId}` as const,
-              extensions: {
-                ...existingProject?.analytics.extensions,
-                [analyticsSelection.extension.providerId]: {
-                  account: analyticsSelection.extension.account,
-                },
-              },
-            }
-          : {}
-
-  const profile = {
-    name,
-    siteUrl: site,
-    startUrl,
-    watchUrls,
-    brandTerms,
-    analytics,
-    googleAccounts: {
-      ...existingProject?.googleAccounts,
-      ...(authSelection.accountEmail
-        ? { searchConsole: authSelection.accountEmail }
-        : {}),
-      ...(googleAnalytics?.accountEmail
-        ? { googleAnalytics: googleAnalytics.accountEmail }
-        : {}),
-    },
-    technicalWeekday,
-    isDefault,
-  }
-  const client = existingProject
-    ? updateClient(existingProject.id, profile)
-    : saveClient({ id, ...profile })
-  const mcp = await maybeInstallMcp(args)
-  const skill = await maybeInstallSkill(args)
-  const next = [
-    `seo report --project ${client.id}`,
-    `seo refresh-priorities --project ${client.id} --verify-content`,
-    `seo technical-watch --project ${client.id}`,
-  ]
-  const result: SetupResult = {
-    client,
-    site,
-    auth,
-    googleAnalytics,
-    extension,
-    mcp,
-    skill,
-    next,
-  }
+  const auth = await maybeConnectAuth({ interactive })
+  const mcp = interactive ? await maybeInstallMcp() : []
+  const skill: SetupSkillInstall = interactive
+    ? await maybeInstallSkill()
+    : { status: 'skipped' }
 
   if (json) {
-    printJson(result)
+    printJson({ auth, mcp, skill, next: NEXT })
     return
   }
 
-  const selectedAnalytics = analyticsConnection(client)
-
   printKeyValue([
-    ['Project profile', `${client.name} (${client.id})`],
-    ['GSC property', client.siteUrl],
-    [
-      'Search Console account',
-      client.googleAccounts?.searchConsole ?? 'default Google account',
-    ],
-    ['Crawl URL', client.startUrl ?? 'not set'],
-    ['Watch URLs', String(client.watchUrls.length)],
-    ['Brand terms', client.brandTerms.join(', ') || 'not set'],
-    [
-      'Traffic analytics',
-      selectedAnalytics
-        ? analyticsConnectionLabel(selectedAnalytics)
-        : 'not connected (optional)',
-    ],
-    ...(googleAnalytics
-      ? [
-          ['Google Analytics selection', googleAnalytics.reason] as [
-            string,
-            string,
-          ],
-        ]
-      : []),
-    ...(client.googleAccounts?.googleAnalytics
-      ? [
-          [
-            'Google Analytics account',
-            client.googleAccounts.googleAnalytics,
-          ] as [string, string],
-        ]
-      : []),
-    ['Auth', auth],
-    ['MCP', mcpInstallLabel(mcp)],
-    ['SEO skill', skillInstallLabel(skill)],
+    ['Google', authLabel(auth)],
+    ['MCP server', mcpLabel(mcp)],
+    ['SEO skill', skillLabel(skill)],
   ])
-  const mcpFailure = mcpFailureMessage(mcp)
-  if (mcpFailure) note(mcpFailure, 'MCP setup skipped')
+  const mcpFailures = mcp.filter((install) => install.error)
+  if (mcpFailures.length) {
+    note(
+      mcpFailures
+        .map((install) => `${install.client}: ${install.error}`)
+        .join('\n'),
+      'MCP setup skipped',
+    )
+  }
   if (skill.error) note(skill.error, 'SEO skill install failed')
-  note(next.join('\n'), 'Try next')
+  note(
+    [
+      'seo sites                  list your Search Console properties',
+      'seo report --site <site>   run the main report for one of them',
+    ].join('\n'),
+    'Try next',
+  )
   outro('Setup complete.')
   printStarAsk()
 }

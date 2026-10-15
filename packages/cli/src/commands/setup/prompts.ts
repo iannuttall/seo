@@ -7,74 +7,32 @@ import {
   text,
 } from '@clack/prompts'
 import {
-  type AnalyticsConnection,
-  analyticsConnectionLabel,
   authStatus,
-  type Ga4WebStreamCandidate,
-  type Ga4WebStreamMatch,
-  ga4MatchReason,
-  ga4PropertyIdFromName,
-  listGa4AccountSummaries,
-  listGa4DataStreams,
   listGoogleAccounts,
-  loadProviderExtensions,
-  matchGa4WebStreams,
-  type RegisteredProviderExtension,
-  readClickySiteKey,
-  readProviderExtensionCredentials,
   SeoError,
   setActiveGoogleAccount,
-  verifyAnalyticsProvider,
   writeOauthClient,
-  writeProviderExtensionCredentials,
 } from '@seo/core'
-import { canPrompt, maybeExitCancelled } from '../../utils.js'
+import { maybeExitCancelled } from '../../utils.js'
 import { loginWithGuidance } from '../google-login.js'
 import { detectMcpClients } from '../mcp-clients.js'
 import { installMcpConfig } from '../mcp-config.js'
 import { installSeoSkill } from '../skill-install.js'
 
-export type SetupAuthStatus =
-  | 'connected'
-  | 'already-connected'
-  | 'service-account'
-  | 'skipped'
 export type SetupAuthResult = {
-  status: SetupAuthStatus
+  status: 'connected' | 'already-connected' | 'service-account' | 'skipped'
   accountEmail?: string
 }
 export type SetupMcpInstall = {
   client: string
   path: string
+  server: 'local'
   changed: boolean
   error?: string
 }
-export type SetupGoogleAnalyticsSelection = {
-  propertyId: string
-  accountEmail?: string
-  selection: 'explicit' | 'matched' | 'manual'
-  reason: string
-}
-export type SetupAnalyticsSelection =
-  | { provider: 'google'; google: SetupGoogleAnalyticsSelection }
-  | {
-      provider: 'extension'
-      extension: { providerId: string; account: Record<string, string> }
-    }
-  | { provider: 'none' }
 export type SetupSkillInstall = {
   status: 'installed' | 'declined' | 'skipped' | 'failed'
   error?: string
-}
-
-type GoogleAnalyticsPropertyChoice = {
-  property: string
-  label: string
-  account: string
-}
-
-type GoogleAnalyticsSetupChoice = GoogleAnalyticsPropertyChoice & {
-  match?: Ga4WebStreamMatch
 }
 
 type AuthSetupChoice = 'login' | 'setup' | 'skip'
@@ -82,186 +40,24 @@ type SavedGoogleAccountChoice =
   | { type: 'account'; accountEmail: string }
   | { type: 'connect' }
   | { type: 'skip' }
-type AnalyticsSetupChoice =
-  | 'keep'
-  | 'google'
-  | 'remove'
-  | 'skip'
-  | `extension:${string}`
-
-export function analyticsSetupOptions(
-  current?: AnalyticsConnection,
-  installedProviders: readonly RegisteredProviderExtension[] = [],
-): Array<{
-  value: AnalyticsSetupChoice
-  label: string
-  hint?: string
-}> {
-  const providers: Array<{
-    value: AnalyticsSetupChoice
-    label: string
-    hint?: string
-  }> = [
-    {
-      value: 'google',
-      label: 'Google Analytics',
-      hint: 'Use a property available to your Google login',
-    },
-    ...installedProviders
-      .filter(
-        (provider) =>
-          provider.capabilities.some(
-            (capability) => capability.id === 'landing-page-visits',
-          ) && provider.id !== 'google',
-      )
-      .map((provider) => ({
-        value: `extension:${provider.id}` as const,
-        label: provider.displayName,
-        hint: `Installed provider from ${provider.package}`,
-      })),
-  ]
-  if (!current) {
-    return [...providers, { value: 'skip', label: 'Skip traffic analytics' }]
-  }
-  const currentLabel = analyticsConnectionLabel(current)
-  return [
-    {
-      value: 'keep' as const,
-      label: `Keep ${currentLabel}`,
-      hint: 'Leave this project connection unchanged',
-    },
-    ...providers,
-    { value: 'remove', label: 'Remove traffic analytics' },
-  ]
-}
-
-async function connectAnalyticsExtension(
-  provider: RegisteredProviderExtension,
-  initialAccount: Readonly<Record<string, string>> = {},
-  interactive = true,
-): Promise<Extract<SetupAnalyticsSelection, { provider: 'extension' }>> {
-  if (
-    !provider.capabilities.some(
-      (capability) => capability.id === 'landing-page-visits',
-    )
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `Provider ${provider.id} does not supply landing-page visits.`,
-    )
-  }
-  const account: Record<string, string> = { ...initialAccount }
-  const credentials: Record<string, string> = {}
-  for (const field of provider.connection.fields.filter(
-    (item) => item.kind === 'account',
-  )) {
-    if (account[field.id]?.trim()) continue
-    if (!interactive) {
-      if (field.required !== false) {
-        throw new SeoError('INVALID_INPUT', `${field.label} is required.`)
-      }
-      continue
-    }
-    const value = maybeExitCancelled(
-      await text({
-        message: field.label,
-        validate: (input) =>
-          field.required !== false && !input?.trim()
-            ? `${field.label} is required`
-            : undefined,
-      }),
-    ).trim()
-    if (value) account[field.id] = value
-  }
-  const normalizedAccount = provider.connection.normalizeAccount
-    ? provider.connection.normalizeAccount(account)
-    : account
-  try {
-    Object.assign(
-      credentials,
-      await readProviderExtensionCredentials({
-        providerId: provider.id,
-        account: normalizedAccount,
-        fields: provider.connection.fields,
-      }),
-    )
-  } catch {
-    // Missing values are requested below or reported in non-interactive mode.
-  }
-  if (provider.id === 'clicky' && !credentials.sitekey) {
-    const saved = await readClickySiteKey(normalizedAccount.siteId ?? '')
-    if (saved) credentials.sitekey = saved.siteKey
-  }
-  for (const field of provider.connection.fields.filter(
-    (item) => item.kind === 'secret',
-  )) {
-    const environmentValue = field.envVar
-      ? process.env[field.envVar]?.trim()
-      : undefined
-    if (environmentValue) credentials[field.id] = environmentValue
-    if (credentials[field.id]) continue
-    if (!interactive) {
-      throw new SeoError(
-        'AUTH_REQUIRED',
-        field.envVar
-          ? `Set ${field.envVar} to connect ${provider.displayName}.`
-          : `${field.label} is required to connect ${provider.displayName}.`,
-      )
-    }
-    const value = maybeExitCancelled(
-      await password({
-        message: field.label,
-        validate: (input) =>
-          field.required !== false && !input?.trim()
-            ? `${field.label} is required`
-            : undefined,
-      }),
-    ).trim()
-    if (value) credentials[field.id] = value
-  }
-  if (provider.connection.verificationNotice) {
-    note(provider.connection.verificationNotice, 'Connection check')
-  }
-  await verifyAnalyticsProvider({
-    providerId: provider.id,
-    account: normalizedAccount,
-    credentials,
-  })
-  if (Object.keys(credentials).length > 0) {
-    await writeProviderExtensionCredentials({
-      providerId: provider.id,
-      account: normalizedAccount,
-      credentials,
-    })
-  }
-  return {
-    provider: 'extension',
-    extension: { providerId: provider.id, account: normalizedAccount },
-  }
-}
 
 export function authSetupOptions(input: {
   sharedConfigured: boolean
   byoConfigured: boolean
-  canSkip: boolean
 }): Array<{
   value: AuthSetupChoice
   label: string
   hint?: string
 }> {
-  const skipOption = input.canSkip
-    ? [{ value: 'skip' as const, label: 'Skip for now' }]
-    : []
-  const hasOauthClient = input.sharedConfigured || input.byoConfigured
-
-  return hasOauthClient
+  const skip = { value: 'skip' as const, label: 'Skip for now' }
+  return input.sharedConfigured || input.byoConfigured
     ? [
         {
           value: 'login',
           label: 'Connect Google',
           hint: 'Opens your browser for read-only Search Console and Google Analytics access',
         },
-        ...skipOption,
+        skip,
       ]
     : [
         {
@@ -269,78 +65,27 @@ export function authSetupOptions(input: {
           label: 'Set up Google login for local development',
           hint: 'This source checkout does not include the public app credentials',
         },
-        ...skipOption,
+        skip,
       ]
 }
 
-async function findGoogleAnalyticsWebStreamCandidates(
-  properties: GoogleAnalyticsPropertyChoice[],
-  accountEmail?: string,
-): Promise<{ candidates: Ga4WebStreamCandidate[]; complete: boolean }> {
-  const candidates: Ga4WebStreamCandidate[] = []
-  let complete = true
-  let nextIndex = 0
-
-  async function worker(): Promise<void> {
-    while (nextIndex < properties.length) {
-      const property = properties[nextIndex]
-      nextIndex += 1
-      if (!property) continue
-
-      try {
-        const streams = await listGa4DataStreams(
-          property.property,
-          accountEmail,
-        )
-        candidates.push(
-          ...streams
-            .filter((stream) => stream.webStreamData)
-            .map((stream) => ({
-              account: property.account,
-              property: property.property,
-              propertyName: property.label,
-              stream,
-            })),
-        )
-      } catch {
-        complete = false
-      }
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(properties.length, 4) }, () => worker()),
+async function login(): Promise<SetupAuthResult> {
+  const tokens = await loginWithGuidance()
+  note(
+    `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
+    'Google connected',
   )
-  return { candidates, complete }
+  return { status: 'connected', accountEmail: tokens.account_email }
 }
 
-export async function maybeConnectAuth(
-  args: Record<string, unknown>,
-): Promise<SetupAuthResult> {
+export async function maybeConnectAuth(input: {
+  interactive: boolean
+}): Promise<SetupAuthResult> {
   const status = await authStatus()
   if (status.activeMode === 'service-account') {
     return { status: 'service-account', accountEmail: status.identity }
   }
-  const requestedAccount =
-    typeof args['search-console-account'] === 'string'
-      ? args['search-console-account']
-      : undefined
-  const connectedAccounts = listGoogleAccounts()
-  if (requestedAccount) {
-    const selected = connectedAccounts.find(
-      (account) =>
-        account.accountEmail.toLowerCase() === requestedAccount.toLowerCase(),
-    )
-    if (!selected) {
-      throw new SeoError(
-        'AUTH_REQUIRED',
-        `Google account ${requestedAccount} is not connected. Run \`seo auth login\` first.`,
-      )
-    }
-    return { status: 'already-connected', accountEmail: selected.accountEmail }
-  }
-  if (args['skip-auth']) return { status: 'skipped' }
-  if (!canPrompt({ json: args.json === true })) {
+  if (!input.interactive) {
     if (status.tokens) {
       return {
         status: 'already-connected',
@@ -349,16 +94,17 @@ export async function maybeConnectAuth(
     }
     throw new SeoError(
       'AUTH_REQUIRED',
-      'Not logged in. Run `seo auth login`, or pass --skip-auth to save a project profile without connecting Google.',
+      'Not signed in. Run `seo start` or `seo auth login` in a terminal.',
     )
   }
 
-  if (connectedAccounts.length > 0) {
+  const accounts = listGoogleAccounts()
+  if (accounts.length > 0) {
     const choice = maybeExitCancelled(
       await select<SavedGoogleAccountChoice>({
-        message: 'Google account for Search Console',
+        message: 'Google account to use',
         options: [
-          ...connectedAccounts.map((account) => ({
+          ...accounts.map((account) => ({
             value: {
               type: 'account' as const,
               accountEmail: account.accountEmail,
@@ -370,33 +116,14 @@ export async function maybeConnectAuth(
             value: { type: 'connect' as const },
             label: 'Connect another Google account',
           },
-          ...(typeof args.site === 'string'
-            ? [
-                {
-                  value: { type: 'skip' as const },
-                  label: 'Skip for now',
-                },
-              ]
-            : []),
         ],
       }),
     )
     if (choice.type === 'account') {
       setActiveGoogleAccount(choice.accountEmail)
-      return {
-        status: 'already-connected',
-        accountEmail: choice.accountEmail,
-      }
+      return { status: 'already-connected', accountEmail: choice.accountEmail }
     }
-    if (choice.type === 'skip') return { status: 'skipped' }
-    if (status.sharedConfigured || status.byoConfigured) {
-      const tokens = await loginWithGuidance()
-      note(
-        `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
-        'Google connected',
-      )
-      return { status: 'connected', accountEmail: tokens.account_email }
-    }
+    if (status.sharedConfigured || status.byoConfigured) return login()
   }
 
   const choice = maybeExitCancelled(
@@ -405,11 +132,9 @@ export async function maybeConnectAuth(
       options: authSetupOptions({
         sharedConfigured: status.sharedConfigured,
         byoConfigured: status.byoConfigured,
-        canSkip: typeof args.site === 'string' && args.site.length > 0,
       }),
     }),
   )
-
   if (choice === 'skip') return { status: 'skipped' }
   if (choice === 'setup') {
     const clientId = maybeExitCancelled(
@@ -426,276 +151,26 @@ export async function maybeConnectAuth(
     )
     writeOauthClient({ clientId, clientSecret })
   }
-
-  const tokens = await loginWithGuidance()
-  note(
-    `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
-    'Google connected',
-  )
-  return { status: 'connected', accountEmail: tokens.account_email }
+  return login()
 }
 
-export async function chooseGoogleAnalyticsProperty(input: {
-  property?: string
-  accountEmail?: string
-  site: string
-  interactive?: boolean
-}): Promise<SetupGoogleAnalyticsSelection | undefined> {
-  if (input.property) {
-    return {
-      propertyId: input.property,
-      accountEmail: input.accountEmail,
-      selection: 'explicit',
-      reason: 'Set with --google-analytics-property.',
-    }
-  }
-  const interactive = input.interactive ?? canPrompt()
-  if (!interactive) return undefined
-
-  const summaries = await listGa4AccountSummaries(input.accountEmail).catch(
-    () => [],
-  )
-  const properties: GoogleAnalyticsPropertyChoice[] = summaries.flatMap(
-    (account) =>
-      account.propertySummaries.map((property) => ({
-        property: ga4PropertyIdFromName(property.property),
-        label: property.displayName ?? property.property,
-        account: account.displayName ?? account.account,
-      })),
-  )
-  if (!properties.length) return undefined
-
-  const { candidates, complete: streamsComplete } =
-    await findGoogleAnalyticsWebStreamCandidates(properties, input.accountEmail)
-  const matches = streamsComplete
-    ? matchGa4WebStreams(input.site, candidates)
-    : []
-  const matchesByProperty = new Map<string, Ga4WebStreamMatch>()
-  for (const match of matches) {
-    matchesByProperty.set(match.property, match)
-  }
-  const matchedProperties = [...matchesByProperty.values()]
-
-  if (matchedProperties.length === 1) {
-    const match = matchedProperties[0]
-    if (!match) return undefined
-    return {
-      propertyId: match.property,
-      accountEmail: input.accountEmail,
-      selection: 'matched',
-      reason: ga4MatchReason(match, input.site),
-    }
-  }
-
-  const choices: GoogleAnalyticsSetupChoice[] = matchedProperties.length
-    ? matchedProperties.map((match) => ({
-        property: match.property,
-        label: match.propertyName,
-        account: match.account,
-        match,
-      }))
-    : properties
-
-  const choice = maybeExitCancelled(
-    await select<GoogleAnalyticsSetupChoice | ''>({
-      message: matchedProperties.length
-        ? 'Several Google Analytics properties match this site. Which property should seo use?'
-        : streamsComplete
-          ? 'No Google Analytics web stream clearly matches this site. Attach a property?'
-          : 'Some Google Analytics web streams could not be read. Attach a property?',
-      options: [
-        { value: '', label: 'Skip Google Analytics for now' },
-        ...choices.map((property) => ({
-          value: property,
-          label: `${property.label} (${property.property})`,
-          hint: property.match
-            ? ga4MatchReason(property.match, input.site)
-            : property.account,
-        })),
-      ],
-    }),
-  )
-  if (!choice) return undefined
-
-  return {
-    propertyId: choice.property,
-    accountEmail: input.accountEmail,
-    selection: 'manual',
-    reason: choice.match
-      ? ga4MatchReason(choice.match, input.site)
-      : streamsComplete
-        ? `Selected ${choice.label} during setup. Its web stream did not clearly match ${input.site}.`
-        : `Selected ${choice.label} during setup. seo could not read every Google Analytics web stream, so it did not guess a match.`,
-  }
-}
-
-export async function chooseAnalyticsForSetup(input: {
-  googleProperty?: string
-  googleAccount?: string
-  clickySiteId?: string
-  current?: AnalyticsConnection
-  site: string
-  interactive?: boolean
-}): Promise<SetupAnalyticsSelection | undefined> {
-  if (input.googleProperty && input.clickySiteId) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Pass either --google-analytics-property or --clicky-site-id, not both.',
-    )
-  }
-  const interactive = input.interactive ?? canPrompt()
-  if (input.clickySiteId) {
-    const loaded = await loadProviderExtensions()
-    const provider = loaded.registry.get('clicky')
-    if (!provider) {
-      throw new SeoError(
-        'PROVIDER_UNAVAILABLE',
-        'The Clicky provider package is not installed. Run `seo providers install @seoskill/clicky-provider`.',
-      )
-    }
-    return connectAnalyticsExtension(
-      provider,
-      { siteId: input.clickySiteId },
-      interactive,
-    )
-  }
-  if (input.googleProperty) {
-    const accountEmail = await chooseGoogleAnalyticsAccount({
-      requested: input.googleAccount,
-      interactive,
-    })
-    const google = await chooseGoogleAnalyticsProperty({
-      property: input.googleProperty,
-      accountEmail,
-      site: input.site,
-      interactive,
-    })
-    return google ? { provider: 'google', google } : undefined
-  }
-  if (!interactive) return undefined
-
-  const loadedProviders = await loadProviderExtensions()
-
-  const choice = maybeExitCancelled(
-    await select<AnalyticsSetupChoice>({
-      message: 'Traffic analytics',
-      options: analyticsSetupOptions(
-        input.current,
-        loadedProviders.registry.list(),
-      ),
-    }),
-  )
-  if (choice === 'keep') return undefined
-  if (choice === 'remove') return { provider: 'none' }
-  if (choice === 'skip') return undefined
-  if (choice.startsWith('extension:')) {
-    const id = choice.slice('extension:'.length)
-    const provider = loadedProviders.registry.get(id)
-    if (!provider) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        `Provider ${id} is installed but could not be loaded. Run \`seo providers doctor\`.`,
-      )
-    }
-    return connectAnalyticsExtension(provider)
-  }
-  const accountEmail = await chooseGoogleAnalyticsAccount({ interactive })
-  const google = await chooseGoogleAnalyticsProperty({
-    accountEmail,
-    site: input.site,
-    interactive,
-  })
-  if (!google) {
-    note(
-      'No Google Analytics property was available for this Google login. You can connect one later.',
-      'Traffic analytics skipped',
-    )
-  }
-  return google ? { provider: 'google', google } : undefined
-}
-
-async function chooseGoogleAnalyticsAccount(input: {
-  requested?: string
-  interactive: boolean
-}): Promise<string | undefined> {
-  const status = await authStatus()
-  if (status.activeMode === 'service-account') return status.identity
-  const accounts = listGoogleAccounts()
-  if (input.requested) {
-    const selected = accounts.find(
-      (account) =>
-        account.accountEmail.toLowerCase() === input.requested?.toLowerCase(),
-    )
-    if (!selected) {
-      throw new SeoError(
-        'AUTH_REQUIRED',
-        `Google account ${input.requested} is not connected. Run \`seo auth login\` first.`,
-      )
-    }
-    return selected.accountEmail
-  }
-  if (!input.interactive) {
-    return accounts.find((account) => account.active)?.accountEmail
-  }
-  if (accounts.length === 0) {
-    const tokens = await loginWithGuidance()
-    return tokens.account_email
-  }
-  const choice = maybeExitCancelled(
-    await select<SavedGoogleAccountChoice>({
-      message: 'Google account for Google Analytics',
-      options: [
-        ...accounts.map((account) => ({
-          value: {
-            type: 'account' as const,
-            accountEmail: account.accountEmail,
-          },
-          label: account.accountEmail,
-          hint: account.active ? 'Current default' : undefined,
-        })),
-        {
-          value: { type: 'connect' as const },
-          label: 'Connect another Google account',
-        },
-      ],
-    }),
-  )
-  if (choice.type === 'account') return choice.accountEmail
-  const tokens = await loginWithGuidance()
-  note(
-    `Connected as ${tokens.account_email}. seo has read-only access and cannot change your site.`,
-    'Google connected',
-  )
-  return tokens.account_email
-}
-
-export async function maybeInstallSkill(
-  args: Record<string, unknown>,
-): Promise<SetupSkillInstall> {
-  if (args['skip-skill'] || !canPrompt({ json: args.json === true })) {
-    return { status: 'skipped' }
-  }
+export async function maybeInstallSkill(): Promise<SetupSkillInstall> {
   const shouldInstall = maybeExitCancelled(
     await confirm({
-      message:
-        'Install the SEO skill so coding agents know how to run reports?',
+      message: 'Install the SEO skill so your agents know how to use seo?',
       initialValue: true,
     }),
   )
   if (!shouldInstall) return { status: 'declined' }
-
   return installSeoSkill()
 }
 
-export async function maybeInstallMcp(
-  args: Record<string, unknown>,
-): Promise<SetupMcpInstall[]> {
-  if (args['skip-mcp'] || !canPrompt({ json: args.json === true })) return []
+export async function maybeInstallMcp(): Promise<SetupMcpInstall[]> {
   const detected = detectMcpClients()
   if (detected.length === 0) return []
   const shouldInstall = maybeExitCancelled(
     await confirm({
-      message: 'Install seo as an MCP server too?',
+      message: 'Add the seo MCP server to your agents?',
       initialValue: true,
     }),
   )
@@ -703,7 +178,7 @@ export async function maybeInstallMcp(
 
   const selected = maybeExitCancelled(
     await multiselect({
-      message: 'Which MCP clients?',
+      message: 'Which agents?',
       options: detected.map((target) => ({
         value: target.client,
         label: target.label,
@@ -717,11 +192,12 @@ export async function maybeInstallMcp(
     .filter((target) => selected.includes(target.client))
     .map((target) => {
       try {
-        return installMcpConfig(target)
+        return { ...installMcpConfig(target), server: 'local' as const }
       } catch (error) {
         return {
           client: target.client,
           path: target.path,
+          server: 'local' as const,
           changed: false,
           error: error instanceof Error ? error.message : String(error),
         }

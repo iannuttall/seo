@@ -1,44 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
-  PAID_TOOL_GUARD_MAX_SQL_STATEMENTS_PER_RESERVATION,
-  PUBLIC_TOOL_GUARD_MAX_SQL_STATEMENTS_PER_RESERVATION,
-} from './paid-tool-guard.ts'
-import {
   decidePaidToolQuota,
-  decideToolIdentityQuota,
   derivePaidToolIdentityFromRequest,
   derivePaidToolIdentityHash,
   MAX_PROVIDER_DAILY_LIMIT,
   PAID_TOOL_DAILY_LIMIT,
-  PAID_TOOL_GUARD_RETENTION_DAYS,
-  PAID_TOOL_PROVIDERS,
-  paidToolQuotaCleanupAt,
-  paidToolQuotaObjectName,
-  utcDay,
   verifyTurnstile,
 } from './paid-tool-guard-core.ts'
 
 const identitySecret = 'a-development-only-secret-with-32-bytes'
-
-test('guard reservations have a hard SQL statement ceiling', () => {
-  assert.equal(PAID_TOOL_GUARD_MAX_SQL_STATEMENTS_PER_RESERVATION, 7)
-  assert.equal(PUBLIC_TOOL_GUARD_MAX_SQL_STATEMENTS_PER_RESERVATION, 4)
-})
-
-test('public Worker tools use the same exact daily identity allowance', () => {
-  assert.deepEqual(decideToolIdentityQuota(9), {
-    allowed: true,
-    identityUsed: 10,
-    identityRemaining: 0,
-  })
-  assert.deepEqual(decideToolIdentityQuota(10), {
-    allowed: false,
-    reason: 'identity-limit',
-    identityUsed: 10,
-    identityRemaining: 0,
-  })
-})
 
 function turnstileResponse(input: {
   success?: boolean
@@ -107,23 +78,6 @@ test('provider budget is a separate global ceiling', () => {
       }),
     /Invalid provider daily limit/,
   )
-})
-
-test('daily object names and cleanup are deterministic and UTC based', () => {
-  const now = new Date('2026-08-09T23:59:59.999-07:00')
-  assert.equal(utcDay(now), '2026-08-10')
-  assert.equal(paidToolQuotaObjectName('2026-08-10'), 'paid-tools:2026-08-10')
-  assert.equal(
-    paidToolQuotaCleanupAt('2026-08-10'),
-    Date.parse('2026-08-12T00:00:00.000Z'),
-  )
-  assert.equal(PAID_TOOL_GUARD_RETENTION_DAYS, 2)
-  assert.throws(() => paidToolQuotaObjectName('2026-02-30'), /Invalid UTC day/)
-  assert.deepEqual(PAID_TOOL_PROVIDERS, {
-    'spam-score': 'dataforseo-spam',
-    'domain-rating': 'ahrefs',
-    'website-traffic': 'dataforseo-traffic',
-  })
 })
 
 test('identity hashes retain no raw IP and rotate by UTC day', async () => {

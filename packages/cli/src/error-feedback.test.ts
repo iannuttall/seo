@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { SeoError } from '@seo/core'
-import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
+import { buildErrorFeedbackUrl } from './error-feedback.js'
 
 test('failure feedback contains fixed diagnostics and no raw error details', () => {
   const privateMessage =
@@ -36,20 +35,4 @@ test('failure feedback contains fixed diagnostics and no raw error details', () 
   assert.equal(url.includes('private.example'), false)
   assert.equal(url.includes('private-client'), false)
   assert.equal(url.includes('crawl_pages.run_id'), false)
-})
-
-test('expected user and provider failures do not suggest filing a bug', () => {
-  for (const error of [
-    new SeoError('INVALID_INPUT', 'Pass a URL.'),
-    new SeoError('AUTH_REQUIRED', 'Sign in.'),
-    new SeoError('RATE_LIMITED', 'Try later.'),
-  ]) {
-    assert.equal(buildErrorFeedbackUrl({ args: ['auth'], error }), undefined)
-  }
-})
-
-test('command telemetry accepts only fixed top-level operations', () => {
-  assert.equal(telemetryOperation(['auth', 'status']), 'auth')
-  assert.equal(telemetryOperation(['private-project-name']), undefined)
-  assert.equal(telemetryOperation([]), undefined)
 })

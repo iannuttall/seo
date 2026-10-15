@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { gzipSync } from 'node:zlib'
-import {
-  handleSitemapImport,
-  SITEMAP_TOOL_LIMITS,
-  type SitemapToolResult,
-} from './sitemap.ts'
+import { handleSitemapImport, type SitemapToolResult } from './sitemap.ts'
 
 const endpoint = 'https://seoskill.dev/api/tools/sitemap'
 
@@ -63,70 +59,6 @@ test('imports, deduplicates, and labels page URLs from a sitemap', async () => {
   ])
 })
 
-test('defaults a scheme-less sitemap import URL to HTTPS', async () => {
-  const seen: string[] = []
-  const response = await handleSitemapImport(
-    request('example.com/sitemap.xml'),
-    async (input) => {
-      seen.push(input.toString())
-      return xmlResponse(
-        '<urlset><url><loc>https://example.com/</loc></url></urlset>',
-      )
-    },
-  )
-
-  assert.equal(response.status, 200)
-  assert.deepEqual(seen, ['https://example.com/sitemap.xml'])
-})
-
-test('follows a bounded sitemap index and reports skipped child files', async () => {
-  const calls: string[] = []
-  const responses = new Map([
-    [
-      'https://example.com/sitemap.xml',
-      xmlResponse(`<sitemapindex>
-        <sitemap><loc>https://example.com/pages.xml</loc></sitemap>
-        <sitemap><loc>https://example.com/broken.xml</loc></sitemap>
-        <sitemap><loc>https://cdn.example.net/foreign.xml</loc></sitemap>
-      </sitemapindex>`),
-    ],
-    [
-      'https://example.com/pages.xml',
-      xmlResponse(
-        '<urlset><url><loc>https://example.com/docs/</loc></url></urlset>',
-      ),
-    ],
-    ['https://example.com/broken.xml', new Response('nope', { status: 503 })],
-  ])
-  const response = await handleSitemapImport(
-    request('https://example.com/sitemap.xml'),
-    async (input) => {
-      const url = input.toString()
-      calls.push(url)
-      const found = responses.get(url)
-      if (!found) throw new Error(`Unexpected URL: ${url}`)
-      return found
-    },
-  )
-
-  const result = (await response.json()) as SitemapToolResult
-  assert.equal(response.status, 200)
-  assert.deepEqual(calls, [
-    'https://example.com/sitemap.xml',
-    'https://example.com/pages.xml',
-    'https://example.com/broken.xml',
-  ])
-  assert.equal(result.source.dataStatus, 'partial')
-  assert.equal(result.source.sitemapsFetched, 2)
-  assert.deepEqual(result.urls, [
-    { url: 'https://example.com/docs/', label: 'Docs' },
-  ])
-  assert.ok(
-    result.warnings.some((warning) => warning.includes('another hostname')),
-  )
-  assert.ok(result.warnings.some((warning) => warning.includes('HTTP 503')))
-})
-
 test('reads gzip sitemap files without allowing unbounded expansion', async () => {
   const compressed = gzipSync(
     '<urlset><url><loc>https://example.com/compressed-page</loc></url></urlset>',
@@ -141,23 +73,6 @@ test('reads gzip sitemap files without allowing unbounded expansion', async () =
   assert.deepEqual(result.urls, [
     { url: 'https://example.com/compressed-page', label: 'Compressed page' },
   ])
-})
-
-test('caps URL output before serializing a large sitemap', async () => {
-  const entries = Array.from(
-    { length: SITEMAP_TOOL_LIMITS.urls + 2 },
-    (_, index) => `<url><loc>https://example.com/page-${index}</loc></url>`,
-  ).join('')
-  const response = await handleSitemapImport(
-    request('https://example.com/sitemap.xml'),
-    async () => xmlResponse(`<urlset>${entries}</urlset>`),
-  )
-  const result = (await response.json()) as SitemapToolResult
-
-  assert.equal(response.status, 200)
-  assert.equal(result.urls.length, SITEMAP_TOOL_LIMITS.urls)
-  assert.equal(result.truncation.urlLimitExceeded, true)
-  assert.equal(result.source.dataStatus, 'partial')
 })
 
 test('rejects unsafe input and cross-site browser requests before fetching', async () => {

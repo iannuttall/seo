@@ -31,33 +31,20 @@ export function bingCall(
     const headers: Record<string, string> = { accept: 'application/json' }
     if ('apiKey' in auth) url.searchParams.set('apikey', auth.apiKey)
     else headers.authorization = `Bearer ${await auth.accessToken()}`
-    let response: Response | undefined
-    let detail = ''
-    // Bing throttles busy networks with HTTP 400 "ThrottleIP"; one retry
-    // after a short wait often gets through.
-    for (const wait of [0, 2000]) {
-      if (wait) await new Promise((done) => setTimeout(done, wait))
-      try {
-        response = await fetch(url, {
-          headers,
-          signal: AbortSignal.timeout(30_000),
-        })
-      } catch (error) {
-        throw new SeoError(
-          'OPTIONAL_PROVIDER_UNAVAILABLE',
-          `Bing Webmaster did not respond: ${error instanceof Error ? error.message : String(error)}`,
-        )
-      }
-      if (response.ok) break
-      detail = (await response.text().catch(() => '')).slice(0, 200)
-      if (!/throttle/i.test(detail)) break
-    }
-    if (!response)
+    let response: Response
+    try {
+      response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(30_000),
+      })
+    } catch (error) {
       throw new SeoError(
         'OPTIONAL_PROVIDER_UNAVAILABLE',
-        'Bing Webmaster did not respond.',
+        `Bing Webmaster did not respond: ${error instanceof Error ? error.message : String(error)}`,
       )
+    }
     if (!response.ok) {
+      const detail = (await response.text().catch(() => '')).slice(0, 200)
       if (response.status === 401 || /invalidapikey/i.test(detail)) {
         throw new SeoError(
           'AUTH_REQUIRED',
@@ -70,10 +57,19 @@ export function bingCall(
           'Bing Webmaster denied access to this site. It must be verified in the connected Bing account.',
         )
       }
+      // ErrorCode 17 "ThrottleIP" blocks the caller's network, often for
+      // days; waiting or retrying does not lift it. 4 and 5 are user and
+      // host limits that do pass.
+      if (/ThrottleIP/i.test(detail)) {
+        throw new SeoError(
+          'RATE_LIMITED',
+          'Bing Webmaster is blocking requests from this network (ThrottleIP). Run the same report with the CLI on your own machine, where Bing answers.',
+        )
+      }
       if (response.status === 429 || /throttle/i.test(detail)) {
         throw new SeoError(
           'RATE_LIMITED',
-          'Bing Webmaster is limiting requests from this network. Try again in a few minutes.',
+          'Bing Webmaster is limiting requests. Try again in a few minutes.',
         )
       }
       throw new SeoError(

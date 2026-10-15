@@ -31,20 +31,33 @@ export function bingCall(
     const headers: Record<string, string> = { accept: 'application/json' }
     if ('apiKey' in auth) url.searchParams.set('apikey', auth.apiKey)
     else headers.authorization = `Bearer ${await auth.accessToken()}`
-    let response: Response
-    try {
-      response = await fetch(url, {
-        headers,
-        signal: AbortSignal.timeout(30_000),
-      })
-    } catch (error) {
-      throw new SeoError(
-        'PROVIDER_UNAVAILABLE',
-        `Bing Webmaster did not respond: ${error instanceof Error ? error.message : String(error)}`,
-      )
+    let response: Response | undefined
+    let detail = ''
+    // Bing throttles busy networks with HTTP 400 "ThrottleIP"; one retry
+    // after a short wait often gets through.
+    for (const wait of [0, 2000]) {
+      if (wait) await new Promise((done) => setTimeout(done, wait))
+      try {
+        response = await fetch(url, {
+          headers,
+          signal: AbortSignal.timeout(30_000),
+        })
+      } catch (error) {
+        throw new SeoError(
+          'OPTIONAL_PROVIDER_UNAVAILABLE',
+          `Bing Webmaster did not respond: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+      if (response.ok) break
+      detail = (await response.text().catch(() => '')).slice(0, 200)
+      if (!/throttle/i.test(detail)) break
     }
+    if (!response)
+      throw new SeoError(
+        'OPTIONAL_PROVIDER_UNAVAILABLE',
+        'Bing Webmaster did not respond.',
+      )
     if (!response.ok) {
-      const detail = (await response.text().catch(() => '')).slice(0, 200)
       if (response.status === 401 || /invalidapikey/i.test(detail)) {
         throw new SeoError(
           'AUTH_REQUIRED',
@@ -57,14 +70,14 @@ export function bingCall(
           'Bing Webmaster denied access to this site. It must be verified in the connected Bing account.',
         )
       }
-      if (response.status === 429) {
+      if (response.status === 429 || /throttle/i.test(detail)) {
         throw new SeoError(
           'RATE_LIMITED',
-          'Bing Webmaster rate limited this request. Try again later.',
+          'Bing Webmaster is limiting requests from this network. Try again in a few minutes.',
         )
       }
       throw new SeoError(
-        'PROVIDER_UNAVAILABLE',
+        'OPTIONAL_PROVIDER_UNAVAILABLE',
         `Bing Webmaster answered ${response.status}. ${detail}`.trim(),
       )
     }
@@ -91,7 +104,7 @@ const count = (value: unknown) =>
 function list(data: unknown, label: string): Record<string, unknown>[] {
   if (!Array.isArray(data)) {
     throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
+      'OPTIONAL_PROVIDER_UNAVAILABLE',
       `Bing Webmaster returned an invalid ${label}.`,
     )
   }

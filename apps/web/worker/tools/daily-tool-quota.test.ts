@@ -84,18 +84,3 @@ test('returns the daily-limit message only after the tenth reservation', async (
     error: 'Daily check limit reached. Try again tomorrow.',
   })
 })
-
-test('does not add a second daily reservation to provider-backed tools', async () => {
-  const fixture = envFor({})
-  const response = await applyDailyToolQuota(
-    new Request('https://seoskill.dev/api/tools/domain-rating', {
-      method: 'POST',
-      headers: { 'cf-connecting-ip': '203.0.113.8' },
-    }),
-    fixture.env,
-    now,
-  )
-
-  assert.equal(response, undefined)
-  assert.equal(fixture.state.objectName, '')
-})

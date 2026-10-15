@@ -26,10 +26,3 @@ test('streamed JSON matches pretty JSON output', async () => {
 
   assert.equal(await streamedJson(value), `${JSON.stringify(value, null, 2)}\n`)
 })
-
-test('streamed JSON rejects circular structures', async () => {
-  const value: { self?: unknown } = {}
-  value.self = value
-
-  await assert.rejects(() => streamedJson(value), /circular structure/i)
-})

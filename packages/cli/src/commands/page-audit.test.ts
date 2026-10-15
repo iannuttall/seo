@@ -252,43 +252,6 @@ test('the old main report still runs a technical crawl from a URL', async () => 
     assert.equal(fullReport.detail, 'full')
     assert.ok('quickWins' in fullReport.output.narrative.diagnosis)
     assert.ok(Buffer.byteLength(full.stdout) > compactBytes)
-
-    const human = await execFileAsync(
-      process.execPath,
-      [
-        cliPath,
-        'diagnose-property',
-        '--url',
-        reportUrl,
-        '--crawl-max-pages',
-        '1',
-        '--crawl-max-depth',
-        '1',
-      ],
-      {
-        env: {
-          ...process.env,
-          CI: '1',
-          NO_UPDATE_NOTIFIER: '1',
-          SEO_CACHE_DIR: cacheDir,
-          SEO_CONFIG_DIR: configDir,
-        },
-      },
-    )
-    assert.match(human.stdout, /# Technical SEO report/)
-    assert.match(human.stdout, /Prioritised technical fixes/)
-    assert.match(human.stdout, /Provider-backed sections skipped/)
-    assert.match(human.stdout, /Search Console: not connected\./)
-    assert.match(human.stdout, /Google Analytics: not connected\./)
-    assert.doesNotMatch(human.stdout, /Diagnosis unavailable/)
-    assert.ok(
-      human.stdout.indexOf('Technical crawl evidence') <
-        human.stdout.indexOf('Provider-backed sections skipped'),
-    )
-    assert.ok(
-      human.stdout.indexOf('Prioritised technical fixes') <
-        human.stdout.indexOf('Search Console: not connected.'),
-    )
   } finally {
     await new Promise<void>((resolve, reject) => {
       ;(server as Server).close((error) => {

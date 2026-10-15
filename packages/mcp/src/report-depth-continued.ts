@@ -283,6 +283,7 @@ export const REPORT_DEPTH_CONTINUED = {
       'coverage with requested dates, expected versus observed days, missing days, invalid rows, and status',
       'anomalies with metric, baseline and comparison dates, percentChange, zScore, and significanceMethod',
       'direction and significant',
+      'detection, changeDate and the detection thresholds: a step change compares every day before its change date with every day from it',
     ],
     doNotClaim: [
       'Statistical unusualness does not identify a cause, diagnose a defect, or prove an external event affected the property.',

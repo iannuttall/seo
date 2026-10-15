@@ -118,6 +118,9 @@ export function sharedReader(
 
 // Google Search ranking updates that overlap a window, from Google's public
 // status feed. Overlap is timing only, not cause.
+// Days either side of the checked dates that still count as overlap.
+export const UPDATE_PADDING_DAYS = 3
+
 export async function googleUpdates(window?: {
   start: string
   end: string
@@ -138,15 +141,32 @@ export async function googleUpdates(window?: {
     }),
     startDate: window.start,
     endDate: window.end,
-    paddingDays: 3,
+    paddingDays: UPDATE_PADDING_DAYS,
   })
 }
 
-export function listOfUpdates(value: unknown): string | null {
+// Names the dates checked when a report checked fewer than its whole window.
+function checkedDates(checked: unknown): string {
+  const window = checked as
+    | { start?: string; end?: string; paddingDays?: number }
+    | undefined
+  if (!window?.start || !window.end) return 'in this window'
+  const dates =
+    window.start === window.end
+      ? window.start
+      : `${window.start} to ${window.end}`
+  return `within ${window.paddingDays ?? UPDATE_PADDING_DAYS} days of ${dates}`
+}
+
+export function listOfUpdates(
+  value: unknown,
+  checked?: unknown,
+): string | null {
   if (typeof value === 'string') return value
   if (!Array.isArray(value)) return null
-  if (value.length === 0) return 'Google updates in this window: none.'
-  return `Google updates in this window (timing only, not cause): ${value
+  const where = checkedDates(checked)
+  if (value.length === 0) return `Google updates ${where}: none.`
+  return `Google updates ${where} (timing only, not cause): ${value
     .map(
       (update: { name: string; start: string; end?: string }) =>
         `${update.name} (${update.start.slice(0, 10)} to ${update.end?.slice(0, 10) ?? 'ongoing'})`,

@@ -4,6 +4,7 @@ import { cannibalReportWith } from '../analyze/site-diagnostics/cannibal-report.
 import { decayingReportWith } from '../analyze/site-diagnostics/decaying-report.js'
 import { quickWinsReportWith } from '../analyze/site-diagnostics/quick-wins-report.js'
 import { strikingDistanceWith } from '../analyze/striking-distance-report.js'
+import { changeWindow } from '../analyze/traffic-anomaly-analysis.js'
 import { trafficAnomalyWith } from '../analyze/traffic-anomaly-report.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import {
@@ -25,6 +26,7 @@ import {
   originOf,
   pct,
   sharedReader,
+  UPDATE_PADDING_DAYS,
 } from './shared.js'
 import type {
   Caller,
@@ -54,7 +56,7 @@ export const SECTIONS = {
   cannibalization:
     'Queries where more than one page of the site gets impressions, with each page’s share.',
   'traffic-drop':
-    'Daily clicks and impressions checked for sudden changes in the last days, with Google updates whose dates overlap. Overlap is timing only, not cause.',
+    'Daily clicks and impressions checked for a sudden change that lasted, with the date it started (else the last 7 days against the days before), and Google updates within 3 days of that date. Overlap is timing only, not cause.',
   bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages.',
 } as const
 
@@ -382,12 +384,13 @@ async function build(
         { site, ...range, recentDays: 7 },
         dependencies,
       )
-      const first = result.anomalies[0]
+      // A step change is checked at its own date, so an update that starts
+      // weeks later is not reported as overlapping it.
+      const window = changeWindow(result.anomalies)
       return {
         ...result,
-        googleUpdates: await googleUpdates(
-          first && { start: first.comparisonStart, end: first.comparisonEnd },
-        ),
+        updateWindow: window && { ...window, paddingDays: UPDATE_PADDING_DAYS },
+        googleUpdates: await googleUpdates(window),
       }
     },
     bing: async () => bingSection(await bing(), read, site, range),
@@ -511,7 +514,9 @@ async function allSections(
         `## ${id}: ${shown.total} ${shown.total === 1 ? 'row' : 'rows'}`,
         SECTIONS[id],
         shown.text,
-        id === 'traffic-drop' ? listOfUpdates(run.googleUpdates) : null,
+        id === 'traffic-drop'
+          ? listOfUpdates(run.googleUpdates, run.updateWindow)
+          : null,
       ]
         .filter(Boolean)
         .join('\n'),
@@ -582,7 +587,7 @@ async function oneSection(
   const notes: string[] = []
   const brand = brandNote(report)
   if (brand) notes.push(brand)
-  const updates = listOfUpdates(report.googleUpdates)
+  const updates = listOfUpdates(report.googleUpdates, report.updateWindow)
   if (updates) notes.push(updates)
   if (checked.length) {
     notes.push(

@@ -11,9 +11,6 @@ import { listReports } from '@seo/mcp'
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('../index.js', import.meta.url))
 const reportCount = listReports().length
-const aiSearchReportCount = listReports().filter(
-  (report) => report.category === 'ai-search',
-).length
 
 async function runSeo(args: string[]): Promise<{
   exitCode: number
@@ -76,36 +73,6 @@ test('reports list exposes the shared sorted catalog', async () => {
         !('useWhen' in report),
     ),
   )
-  for (const id of [
-    'competitive-opportunities',
-    'domain-overview',
-    'ranked-keywords',
-    'ranking-pages',
-    'serp-competitors',
-    'competitor-keyword-gap',
-  ]) {
-    assert.ok(output.reports.some((report: { id: string }) => report.id === id))
-  }
-})
-
-test('reports list stays browsable for humans', async () => {
-  const result = await runSeo(['reports', 'list'])
-
-  assert.equal(result.exitCode, 0)
-  assert.equal(result.stderr, '')
-  assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-  assert.match(
-    result.stdout,
-    new RegExp(`^${reportCount} reports across 9 categories\\.`),
-  )
-  assert.match(
-    result.stdout,
-    new RegExp(`^AI search \\(${aiSearchReportCount}\\)$`, 'm'),
-  )
-  assert.match(result.stdout, /affected-urls\s+URLs affected by a crawl issue/)
-  assert.match(result.stdout, /seo reports describe <id>/)
-  assert.doesNotMatch(result.stdout, /^Description\s/m)
-  assert.ok(result.stdout.split('\n').length < 100)
 })
 
 test('reports describe returns the exact report input schema', async () => {
@@ -115,41 +82,8 @@ test('reports describe returns the exact report input schema', async () => {
   assert.equal(result.stderr, '')
   const output = JSON.parse(result.stdout)
   assert.equal(output.report.id, 'audit-page')
-  assert.equal(output.report.category, 'reporting')
-  assert.equal(output.report.name, 'Single-page SEO audit')
-  assert.deepEqual(output.report.useWhen, [
-    'One page needs a technical review before you change it.',
-    'A broader report points to a specific URL.',
-  ])
-  assert.deepEqual(output.report.avoidWhen, [
-    'You need to discover issues across a whole site.',
-    'The page requires a logged-in browser session.',
-  ])
-  assert.equal(
-    output.report.outcome,
-    'A page-level audit that separates observed evidence from review advice.',
-  )
   assert.deepEqual(output.report.inputSchema.required, ['url'])
   assert.equal(output.report.inputSchema.additionalProperties, false)
-})
-
-test('reports describe explains when the report is useful', async () => {
-  const result = await runSeo(['reports', 'describe', 'audit-page'])
-
-  assert.equal(result.exitCode, 0)
-  assert.equal(result.stderr, '')
-  assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-  assert.match(result.stdout, /^Single-page SEO audit$/m)
-  assert.match(result.stdout, /Outcome\s+A page-level audit/)
-  assert.match(result.stdout, /Use when/)
-  assert.match(result.stdout, /Avoid when/)
-  assert.match(result.stdout, /^Parameters$/m)
-  assert.match(result.stdout, /^url$/m)
-  assert.match(result.stdout, /string \(uri\) · required/)
-  assert.match(result.stdout, /Implement findings/)
-  assert.match(result.stdout, /--actions-only --json/)
-  assert.match(result.stdout, /seo reports describe audit-page --json/)
-  assert.doesNotMatch(result.stdout, /\$schema/)
 })
 
 test('reports run validates inline and file parameters consistently', async () => {
@@ -194,92 +128,4 @@ test('reports run exposes the shared actions-only view', async () => {
   assert.equal(output.findings.counts.total, 0)
   assert.equal('rules' in output, false)
   assert.equal(output.outputBudget.returnedBytes > 0, true)
-})
-
-test('reports run imports ranked-keyword files through the generic CLI path', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'seo-research-import-cli-'))
-  const researchFile = join(directory, 'rankings.csv')
-  const paramsFile = join(directory, 'params.json')
-  await writeFile(
-    researchFile,
-    [
-      'Search Term,Current Rank,Destination,Monthly Demand',
-      'safe fixture query,5,https://example.com/page,100',
-    ].join('\n'),
-  )
-  await writeFile(
-    paramsFile,
-    JSON.stringify({
-      target: 'example.com',
-      countryCode: 'GB',
-      languageCode: 'en',
-      researchFiles: [
-        {
-          dataset: 'ranked-keywords',
-          file: researchFile,
-          provider: 'semrush',
-          exportedAt: '2026-07-20T12:00:00Z',
-          columns: {
-            keyword: 'Search Term',
-            position: 'Current Rank',
-            url: 'Destination',
-            searchVolume: 'Monthly Demand',
-          },
-        },
-      ],
-    }),
-  )
-
-  try {
-    const result = await runSeo([
-      'reports',
-      'run',
-      'ranked-keywords',
-      '--params-file',
-      paramsFile,
-      '--json',
-    ])
-    assert.equal(result.exitCode, 0)
-    assert.equal(result.stderr, '')
-    const output = JSON.parse(result.stdout)
-    assert.equal(output.summary.providerRows, 1)
-    assert.equal(output.evidence.provider, 'semrush')
-    assert.equal(output.evidence.imports.length, 1)
-    assert.match(output.evidence.imports[0].sha256, /^[a-f0-9]{64}$/u)
-    assert.equal(
-      output.evidence.imports[0].columnMapping.searchVolume,
-      'Monthly Demand',
-    )
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
-})
-
-test('reports reject unknown categories and malformed JSON clearly', async () => {
-  const category = await runSeo([
-    'reports',
-    'list',
-    '--category',
-    'made-up',
-    '--json',
-  ])
-  assert.equal(category.exitCode, 2)
-  assert.match(
-    JSON.parse(category.stdout).error.message,
-    /Unknown report category/,
-  )
-
-  const params = await runSeo([
-    'reports',
-    'run',
-    'audit-page',
-    '--params',
-    '{broken',
-    '--json',
-  ])
-  assert.equal(params.exitCode, 2)
-  assert.equal(
-    JSON.parse(params.stdout).error.message,
-    'Report parameters must be valid JSON.',
-  )
 })

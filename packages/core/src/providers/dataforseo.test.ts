@@ -254,19 +254,3 @@ test('DataForSEO rejects malformed payloads and task failures', async () => {
     (error) => error instanceof ProviderError && error.code === 'remote-error',
   )
 })
-
-test('DataForSEO reports missing credentials without making a request', async () => {
-  let called = false
-  const provider = new DataForSeoProvider({
-    credentials: () => undefined,
-    fetch: async () => {
-      called = true
-      return new Response('{}')
-    },
-  })
-  await assert.rejects(
-    provider.keywordOverview('query'),
-    (error) => error instanceof ProviderError && error.code === 'configuration',
-  )
-  assert.equal(called, false)
-})

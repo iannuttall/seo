@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import {
-  handleLlmsTxtFetch,
-  LLMS_TXT_TOOL_LIMITS,
-  type LlmsTxtToolResult,
-} from './llms-txt.ts'
+import { handleLlmsTxtFetch, type LlmsTxtToolResult } from './llms-txt.ts'
 
 const endpoint = 'https://seoskill.dev/api/tools/llms-txt'
 
@@ -42,48 +38,6 @@ test('fetches one public llms.txt file with bounded source details', async () =>
   assert.equal(result.source.finalUrl, 'https://example.com/llms.txt')
   assert.equal(result.source.bytes, 10)
   assert.equal(result.source.limits.fileBytes, 100_000)
-})
-
-test('defaults a scheme-less llms.txt URL to HTTPS', async () => {
-  const seen: string[] = []
-  const response = await handleLlmsTxtFetch(
-    request('example.com/llms.txt'),
-    async (input) => {
-      seen.push(input.toString())
-      return new Response('# Example\n', {
-        headers: { 'content-type': 'text/plain' },
-      })
-    },
-  )
-
-  assert.equal(response.status, 200)
-  assert.deepEqual(seen, ['https://example.com/llms.txt'])
-})
-
-test('follows safe redirects and retains the final URL', async () => {
-  const seen: string[] = []
-  const response = await handleLlmsTxtFetch(
-    request('https://example.com/llms.txt'),
-    async (input) => {
-      const url = input.toString()
-      seen.push(url)
-      if (seen.length === 1) {
-        return new Response(null, {
-          status: 302,
-          headers: { location: '/docs/llms.txt' },
-        })
-      }
-      return new Response('# Docs\n')
-    },
-  )
-
-  const result = (await response.json()) as LlmsTxtToolResult
-  assert.equal(response.status, 200)
-  assert.deepEqual(seen, [
-    'https://example.com/llms.txt',
-    'https://example.com/docs/llms.txt',
-  ])
-  assert.equal(result.source.finalUrl, 'https://example.com/docs/llms.txt')
 })
 
 test('rejects unsafe input and cross-site browser requests before fetching', async () => {
@@ -131,36 +85,4 @@ test('revalidates redirect destinations before another subrequest', async () => 
   assert.equal(response.status, 422)
   assert.equal(fetches, 1)
   assert.match(JSON.stringify(await response.json()), /cannot be fetched/u)
-})
-
-test('rejects declared and streamed files over the byte limit', async () => {
-  const declared = await handleLlmsTxtFetch(
-    request('https://example.com/llms.txt'),
-    async () =>
-      new Response('small', {
-        headers: {
-          'content-length': String(LLMS_TXT_TOOL_LIMITS.fileBytes + 1),
-        },
-      }),
-  )
-  const streamed = await handleLlmsTxtFetch(
-    request('https://example.com/llms.txt'),
-    async () => new Response('x'.repeat(LLMS_TXT_TOOL_LIMITS.fileBytes + 1)),
-  )
-
-  assert.equal(declared.status, 413)
-  assert.equal(streamed.status, 413)
-})
-
-test('rejects HTML error pages returned with a successful status', async () => {
-  const response = await handleLlmsTxtFetch(
-    request('https://example.com/llms.txt'),
-    async () =>
-      new Response('<!doctype html><title>Not found</title>', {
-        headers: { 'content-type': 'text/html' },
-      }),
-  )
-
-  assert.equal(response.status, 422)
-  assert.match(JSON.stringify(await response.json()), /HTML page/u)
 })

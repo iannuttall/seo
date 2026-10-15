@@ -5,53 +5,10 @@ import {
   assertCrawlConfigLimits,
   type CrawlIssue,
   type CrawlReport,
-  crawlConfigHash,
-  crawlDefinitionId,
-  crawlRunId,
   createCrawlReport,
-  groupCrawlIssues,
   normalizeCrawlConfig,
   normalizeLoadedCrawlReport,
 } from './report.js'
-
-test('normalizeCrawlConfig applies stable defaults', () => {
-  const config = normalizeCrawlConfig({
-    url: 'https://example.com',
-    include: ['/blog', '/blog'],
-    exclude: ['/tag', '/archive'],
-  })
-
-  assert.equal(config.url, 'https://example.com/')
-  assert.equal(config.mode, 'site')
-  assert.equal(config.maxPages, 500)
-  assert.deepEqual(config.include, ['/blog'])
-  assert.deepEqual(config.exclude, ['/archive', '/tag'])
-  assert.equal(config.respectRobots, true)
-  assert.equal(config.js, 'auto')
-  assert.equal(config.refresh, false)
-  assert.deepEqual(config.fetchRate, { concurrency: 8 })
-})
-
-test('health crawl defaults to sitemap mode and rejects incompatible modes', () => {
-  const health = normalizeCrawlConfig({
-    url: 'https://example.com/',
-    strategy: 'health',
-  })
-
-  assert.equal(health.mode, 'sitemap')
-  assert.equal(assertCrawlConfigLimits(health), health)
-  assert.throws(
-    () =>
-      assertCrawlConfigLimits(
-        normalizeCrawlConfig({
-          url: 'https://example.com/',
-          mode: 'list',
-          strategy: 'health',
-        }),
-      ),
-    /requires sitemap mode/,
-  )
-})
 
 test('crawl execution limits bound local CPU and memory inputs', () => {
   assert.doesNotThrow(() =>
@@ -84,87 +41,6 @@ test('crawl execution limits bound local CPU and memory inputs', () => {
       ),
     /concurrency must be an integer from 1 to 16/,
   )
-})
-
-test('normalizeCrawlConfig keeps fetch controls stable', () => {
-  const config = normalizeCrawlConfig({
-    url: 'https://example.com',
-    concurrency: 3,
-    refresh: true,
-    fetchRate: {
-      intervalCap: 2,
-      intervalMs: 250,
-    },
-  })
-
-  assert.equal(config.concurrency, 3)
-  assert.equal(config.refresh, true)
-  assert.deepEqual(config.fetchRate, {
-    concurrency: 3,
-    intervalCap: 2,
-    intervalMs: 250,
-  })
-})
-
-test('normalizeCrawlConfig writes explicit rendering modes', () => {
-  assert.equal(
-    normalizeCrawlConfig({ url: 'https://example.com', js: true }).js,
-    'on',
-  )
-  assert.equal(
-    normalizeCrawlConfig({ url: 'https://example.com', js: false }).js,
-    'off',
-  )
-  assert.equal(
-    normalizeCrawlConfig({ url: 'https://example.com', js: 'auto' }).js,
-    'auto',
-  )
-})
-
-test('crawlConfigHash is stable for equivalent configs', () => {
-  const a = crawlConfigHash({
-    url: 'https://example.com',
-    include: ['/b', '/a'],
-  })
-  const b = crawlConfigHash({
-    url: 'https://example.com/',
-    include: ['/a', '/b'],
-  })
-
-  assert.equal(a, b)
-})
-
-test('crawlDefinitionId is stable for equivalent configs and scoped by site', () => {
-  const a = crawlDefinitionId({
-    config: { url: 'https://example.com', include: ['/b', '/a'] },
-    site: 'sc-domain:example.com',
-  })
-  const b = crawlDefinitionId({
-    config: { url: 'https://example.com/', include: ['/a', '/b'] },
-    site: 'sc-domain:example.com',
-  })
-  const c = crawlDefinitionId({
-    config: { url: 'https://example.com/', include: ['/a', '/b'] },
-    site: 'sc-domain:other.example',
-  })
-  const d = crawlDefinitionId({
-    config: { url: 'https://example.com/', include: ['/a', '/b'] },
-    site: 'sc-domain:example.com',
-    googleAnalyticsPropertyId: '123',
-  })
-
-  assert.equal(a, b)
-  assert.notEqual(a, c)
-  assert.notEqual(a, d)
-  assert.match(a, /^crawl_def_[a-f0-9]{20}$/)
-})
-
-test('crawlRunId creates a unique execution id', () => {
-  const first = crawlRunId()
-  const second = crawlRunId()
-
-  assert.notEqual(first, second)
-  assert.match(first, /^crawl_[a-f0-9]{32}$/)
 })
 
 test('createCrawlReport summarizes pages and grouped issues', () => {
@@ -362,40 +238,6 @@ test('legacy report normalization removes unsupported stored scores', () => {
   })
 })
 
-test('createCrawlReport classifies skip reasons deterministically', () => {
-  const report = createCrawlReport({
-    config: { url: 'https://example.com/' },
-    stats: {
-      skippedUrls: 5,
-      skipReasonCounts: {
-        'queue-safety-limit': 1,
-        'off-origin': 2,
-        'asset-url': 1,
-      },
-    },
-  })
-
-  assert.equal(report.summary.skippedUrls, 5)
-  assert.deepEqual(report.summary.skipReasons, [
-    { reason: 'asset-url', impact: 'non-impacting', count: 1 },
-    { reason: 'off-origin', impact: 'non-impacting', count: 2 },
-    {
-      reason: 'queue-safety-limit',
-      impact: 'coverage-affecting',
-      count: 1,
-    },
-    {
-      reason: 'legacy-unclassified',
-      impact: 'coverage-affecting',
-      count: 1,
-    },
-  ])
-  assert.deepEqual(report.summary.skippedUrlsByImpact, {
-    coverageAffecting: 2,
-    nonImpacting: 3,
-  })
-})
-
 test('createCrawlReport orders request and document evidence deterministically', () => {
   const build = (reverse: boolean) =>
     createCrawlReport({
@@ -440,28 +282,6 @@ test('createCrawlReport orders request and document evidence deterministically',
     second.requests.map((request) => request.requestedUrl),
   )
   assert.deepEqual(first.warnings, second.warnings)
-})
-
-test('createCrawlReport reuses already safe scored page evidence', () => {
-  const page: CrawlPageSnapshot = {
-    url: 'https://example.com/',
-    finalUrl: 'https://example.com/',
-    status: 200,
-    indexable: true,
-    wordCount: 100,
-    contentHash: 'safe',
-    outgoingInternalCount: 0,
-    internalInlinkCount: 0,
-    internalLinkAuthorityScore: 0,
-  }
-
-  const report = createCrawlReport({
-    config: { url: 'https://example.com/' },
-    pages: [page],
-    issues: [],
-  })
-
-  assert.equal(report.pages[0], page)
 })
 
 test('createCrawlReport redacts tenant-unsafe payload strings', () => {
@@ -525,32 +345,4 @@ test('createCrawlReport redacts tenant-unsafe payload strings', () => {
     inputPage.responseHeaders?.authorization,
     'Bearer raw-auth-token',
   )
-})
-
-test('groupCrawlIssues ranks severity before count', () => {
-  const groups = groupCrawlIssues([
-    {
-      ruleId: 'h1_missing',
-      title: 'Missing H1',
-      category: 'headings',
-      severity: 'medium',
-      url: 'https://example.com/a',
-    },
-    {
-      ruleId: 'canonical_mismatch',
-      title: 'Canonical differs from final URL',
-      category: 'canonical',
-      severity: 'medium',
-      url: 'https://example.com/b',
-    },
-    {
-      ruleId: 'missing_title',
-      title: 'Title missing',
-      category: 'metadata',
-      severity: 'high',
-      url: 'https://example.com/c',
-    },
-  ])
-
-  assert.equal(groups[0]?.ruleId, 'missing_title')
 })

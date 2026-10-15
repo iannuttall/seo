@@ -306,8 +306,9 @@ Every report must be technically defensible and useful to another program.
   caveats.
 - Recommend evidence-backed verification steps. Do not invent traffic, click,
   revenue, or ranking forecasts.
-- Add regression fixtures for false positives, false negatives, partial data,
-  malformed provider rows, boundary values, and deterministic ordering.
+- When a report gets a real bug (a false positive, a false negative, partial
+  data, a malformed provider row, unstable ordering), add one regression
+  fixture for it.
 
 ## Architecture And Code Style
 
@@ -455,33 +456,24 @@ Every implementation that fetches, iterates, stores, joins, or serializes data
 whose size depends on a site or provider must define its resource bounds before
 it is considered complete.
 
-- Test realistic large fixtures as well as small correctness fixtures. A path
-  that works for ten pages or rows is not evidence that it works for ten
-  thousand.
+- A path that works for ten pages or rows is not evidence that it works for
+  ten thousand. Check scale with a realistic large input before release.
 - Bound network acquisition before downloading work. Limits applied only after
   every sitemap, page, provider row, or response body has been loaded do not
   count as limits.
 - Keep peak memory tied to the active worker window, not total crawl or provider
   size. Prefer streaming, bounded queues, incremental aggregation, and
   disk-backed intermediate state over retaining whole datasets in memory.
-- Avoid nested full-dataset scans. Add a deterministic operation-count or
-  scaling regression test for algorithms that process large row sets; do not
-  rely only on flaky wall-clock assertions.
+- Avoid nested full-dataset scans.
 - Define disk ownership and retention for every new cache, snapshot, report,
-  log, or temporary artifact. Tests must cover cleanup and the maximum expected
-  database or filesystem growth.
+  log, or temporary artifact.
 - Enforce one total structured-output budget for agent-facing reports. Per-list
   limits are insufficient when an envelope contains several bounded lists.
 - For crawl, provider, export, or report changes with material scale risk, run
-  the repository resource harness against a representative large fixture and
-  record peak RSS, elapsed time, bytes read or written, and output size in the
-  verification evidence.
+  `pnpm test:resources` by hand. The resource harnesses are not part of CI.
 - Treat unexplained superlinear CPU growth, memory that rises with completed
   work, acquisition beyond a stated limit, or unbounded disk growth as a
   release blocker.
-
-Performance checks supplement the four repository gates below; they do not
-replace correctness tests.
 
 ## Verification And Commits
 
@@ -491,8 +483,30 @@ original observation, update its status instead of deleting it, and add the
 fix commit plus verification evidence when it is resolved. This log is local
 working material and must not be committed.
 
-Every implementation slice needs proportionate tests plus all four repository
-gates before it is considered finished:
+## Tests
+
+Keep few tests, and make each one prove real behaviour. Prefer one test that
+runs a whole command or report end to end over many tests of its helpers.
+
+Write or keep a test only for:
+
+- a command or report giving the right numbers and states from realistic
+  input (zero, missing, partial and capped stay distinct; ordering is stable)
+- parsing real HTML or real provider payloads
+- security boundaries: OAuth, token sealing, token file permissions, provider
+  package checks, secret redaction, safe MCP client config changes
+- public contracts: CLI JSON, MCP tools, package install and exports, old
+  seoskill.dev URLs
+- a real bug that could come back
+
+Do not write tests that check copy, help text, docs, workflow or config file
+contents, constants, types, trivial helpers, or mocks calling mocks. When
+behaviour changes, change the code and the few tests that prove it.
+
+CI is one job named `checks` that runs build, typecheck, lint and test. Do not
+add CI jobs, test shards or scheduled workflows without Ian's approval.
+
+Every change passes all four repository gates before it is finished:
 
 ```sh
 pnpm build

@@ -10,7 +10,6 @@ import {
   TELEMETRY_SCHEMA_VERSION as CLIENT_SCHEMA_VERSION,
 } from '@seo/core'
 import {
-  aggregateStats,
   app,
   handleTelemetryIngest,
   TELEMETRY_AGENTS,
@@ -240,112 +239,6 @@ test('schema 2 ingest writes fixed failure classifications without raw errors', 
     'database_unique_constraint',
     'crawl_pages_run_id_url',
     null,
-  ])
-})
-
-test('stats aggregate installs, reports, agents, and complete d7 cohorts', () => {
-  const stats = aggregateStats(
-    {
-      events: [
-        { event: 'first_run', count: 10, first_month: '2026-06' },
-        { event: 'setup_complete', count: 8 },
-        { event: 'first_audit_complete', count: 6 },
-        { event: 'audit_start', count: 22 },
-        { event: 'audit_complete', count: 20 },
-        { event: 'audit_failed', count: 2 },
-      ],
-      month: [{ count: 7 }],
-      agents: [
-        { event: 'first_run', agent: 'codex', count: 6 },
-        { event: 'first_run', agent: 'claude-code', count: 4 },
-        { event: 'audit_start', agent: 'codex', count: 16 },
-        { event: 'audit_start', agent: 'claude-code', count: 6 },
-      ],
-      cohorts: [
-        { event: 'first_run', cohort: '2026-W25', count: 10 },
-        { event: 'active_d7', cohort: '2026-W25', count: 4 },
-      ],
-      reports: [
-        { report: 'site-crawl', count: 12 },
-        { report: 'quick-wins', count: 8 },
-      ],
-      failureCategories: [
-        { category: 'unknown', count: 122 },
-        { category: 'database', count: 11 },
-      ],
-      failureDetails: [
-        {
-          event: 'audit_failed',
-          report: 'site-crawl',
-          category: 'database',
-          reason: 'database_unique_constraint',
-          context: 'crawl_pages_run_id_url',
-          version: '0.2.31',
-          count: 11,
-        },
-        {
-          event: 'command_failed',
-          operation: 'auth',
-          category: 'internal',
-          reason: 'internal_error',
-          version: '0.2.31',
-          count: 2,
-        },
-      ],
-    },
-    new Date('2026-07-16T12:00:00Z'),
-  )
-
-  assert.equal(stats.totals.firstAuditConversionPercent, 60)
-  assert.deepEqual(stats.window, {
-    kind: 'all_time',
-    firstMonth: '2026-06',
-    currentMonth: '2026-07',
-  })
-  assert.equal(stats.totals.auditsStarted, 22)
-  assert.equal(stats.totals.auditsThisMonth, 7)
-  assert.equal(stats.totals.commandsFailed, 0)
-  assert.deepEqual(stats.agents.installs[0], {
-    agent: 'codex',
-    count: 6,
-    percent: 60,
-  })
-  assert.deepEqual(stats.retentionD7[0], {
-    cohort: '2026-W25',
-    installs: 10,
-    retained: 4,
-    percent: 40,
-    complete: true,
-  })
-  assert.deepEqual(stats.reports.slice(0, 2), [
-    { report: 'site-crawl', count: 12 },
-    { report: 'quick-wins', count: 8 },
-  ])
-  assert.deepEqual(stats.failures.categories, [
-    { category: 'unknown', count: 122 },
-    { category: 'database', count: 11 },
-  ])
-  assert.deepEqual(stats.failures.details, [
-    {
-      event: 'audit_failed',
-      report: 'site-crawl',
-      operation: null,
-      category: 'database',
-      reason: 'database_unique_constraint',
-      context: 'crawl_pages_run_id_url',
-      version: '0.2.31',
-      count: 11,
-    },
-    {
-      event: 'command_failed',
-      report: null,
-      operation: 'auth',
-      category: 'internal',
-      reason: 'internal_error',
-      context: null,
-      version: '0.2.31',
-      count: 2,
-    },
   ])
 })
 

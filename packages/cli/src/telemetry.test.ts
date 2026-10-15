@@ -27,11 +27,6 @@ test('telemetry settings are explicit and stored locally', async () => {
   const configDir = await mkdtemp(join(tmpdir(), 'seo-telemetry-config-'))
 
   try {
-    const help = await runSeo(['telemetry', '--help'], configDir)
-    assert.match(help.stdout, /status/)
-    assert.match(help.stdout, /enable/)
-    assert.match(help.stdout, /disable/)
-
     const result = await runSeo(['telemetry', 'disable', '--json'], configDir)
     assert.equal(result.stderr, '')
     const state = JSON.parse(

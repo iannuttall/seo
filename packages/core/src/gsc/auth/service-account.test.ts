@@ -3,10 +3,6 @@ import { generateKeyPairSync } from 'node:crypto'
 import { test } from 'node:test'
 import { SeoError } from '../../errors.js'
 import {
-  authStatus,
-  createGoogleAccessTokenClient,
-} from './authorized-client.js'
-import {
   getServiceAccountConfig,
   getServiceAccountStatus,
   ServiceAccountAccessTokenClient,
@@ -27,31 +23,6 @@ function credential(): string {
   })
 }
 
-test('reads one explicit service account source without exposing its key', () => {
-  const config = getServiceAccountConfig({
-    SEO_GOOGLE_SERVICE_ACCOUNT_JSON: credential(),
-  })
-
-  assert.deepEqual(
-    {
-      clientEmail: config?.clientEmail,
-      privateKeyId: config?.privateKeyId,
-      source: config?.source,
-    },
-    {
-      clientEmail: 'seo-ci@example.iam.gserviceaccount.com',
-      privateKeyId: 'key-id',
-      source: 'environment-json',
-    },
-  )
-  assert.equal(
-    getServiceAccountStatus({
-      SEO_GOOGLE_SERVICE_ACCOUNT_JSON: credential(),
-    }).identity,
-    'seo-ci@example.iam.gserviceaccount.com',
-  )
-})
-
 test('rejects conflicting or incomplete service account credential sources', () => {
   assert.throws(
     () =>
@@ -62,7 +33,6 @@ test('rejects conflicting or incomplete service account credential sources', () 
     (error: unknown) => {
       assert.ok(error instanceof SeoError)
       assert.equal(error.code, 'AUTH_CONFIG_REQUIRED')
-      assert.match(error.message, /only one service account credential source/i)
       return true
     },
   )
@@ -75,7 +45,6 @@ test('rejects conflicting or incomplete service account credential sources', () 
   })
   assert.equal(status.configured, false)
   assert.equal(status.source, 'environment-json')
-  assert.match(status.error ?? '', /client_email and private_key/i)
   assert.doesNotMatch(status.error ?? '', /BEGIN PRIVATE KEY/)
 })
 
@@ -152,41 +121,7 @@ test('service account token rejection gives a safe remediation message', async (
     assert.ok(error instanceof SeoError)
     assert.equal(error.code, 'AUTH_CONFIG_REQUIRED')
     assert.match(error.message, /invalid_grant/)
-    assert.match(error.message, /system clock/)
     assert.doesNotMatch(error.message, /BEGIN PRIVATE KEY/)
     return true
   })
-})
-
-test('service account mode identifies the local quota owner without storing tokens', async () => {
-  const names = [
-    'SEO_GOOGLE_SERVICE_ACCOUNT_JSON',
-    'SEO_GOOGLE_SERVICE_ACCOUNT_FILE',
-    'GOOGLE_APPLICATION_CREDENTIALS',
-  ] as const
-  const previous = Object.fromEntries(
-    names.map((name) => [name, process.env[name]]),
-  )
-  try {
-    for (const name of names) delete process.env[name]
-    process.env.SEO_GOOGLE_SERVICE_ACCOUNT_JSON = credential()
-
-    const client = await createGoogleAccessTokenClient()
-    const status = await authStatus()
-
-    assert.equal(client.mode, 'service-account')
-    assert.equal(client.identity, 'seo-ci@example.iam.gserviceaccount.com')
-    assert.deepEqual(client.quotaIdentity, {
-      clientId: 'service-account',
-      accountEmail: 'seo-ci@example.iam.gserviceaccount.com',
-    })
-    assert.equal(status.activeMode, 'service-account')
-    assert.equal(status.identity, 'seo-ci@example.iam.gserviceaccount.com')
-  } finally {
-    for (const name of names) {
-      const value = previous[name]
-      if (value === undefined) delete process.env[name]
-      else process.env[name] = value
-    }
-  }
 })

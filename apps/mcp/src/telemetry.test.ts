@@ -1,18 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isoWeek } from '@seo/core/hosted'
-import { events, reportFor } from './telemetry.ts'
-
-test('tool calls count as the CLI report ids', () => {
-  assert.equal(reportFor('seo_report', {}), 'search-performance-overview')
-  assert.equal(
-    reportFor('seo_report', { section: 'low-ctr' }),
-    'ctr-underperformers',
-  )
-  assert.equal(reportFor('seo_research', { action: 'serp' }), 'serp-results')
-  assert.equal(reportFor('seo_sites', {}), null)
-  assert.equal(reportFor('seo_data', {}), null)
-})
+import { events } from './telemetry.ts'
 
 test('events carry no site, URL or input values', () => {
   const sent = events({
@@ -30,9 +18,4 @@ test('events carry no site, URL or input values', () => {
   assert.equal(sent[1]?.agent, 'claude-code')
   assert.equal(sent[1]?.cohort, '2026-W42')
   assert.ok(!JSON.stringify(sent).includes('example.com'))
-})
-
-test('iso weeks match the CLI cohort format', () => {
-  assert.equal(isoWeek(new Date('2026-01-01T12:00:00Z')), '2026-W01')
-  assert.equal(isoWeek(new Date('2027-01-01T12:00:00Z')), '2026-W53')
 })

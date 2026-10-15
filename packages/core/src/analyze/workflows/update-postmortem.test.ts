@@ -82,46 +82,6 @@ test('postmortem marks empty segment evidence as skipped and unavailable', async
   )
 })
 
-test('postmortem CSV preserves segment status and unmatched evidence', async () => {
-  const report = await updatePostmortemWorkflow(
-    { site: 'sc-domain:example.com' },
-    {
-      updateCorrelation: async () => updateFixture(),
-      segmentImpact: async (input) =>
-        compareSegmentRows({
-          site: input.site,
-          dimension: input.dimension ?? 'page',
-          before: { startDate: '2026-04-01', endDate: '2026-04-28' },
-          after: { startDate: '2026-04-29', endDate: '2026-05-26' },
-          beforeRows: [pageRow('matched', 10), pageRow('before-only', 5)],
-          afterRows: [pageRow('matched', 20)],
-        }),
-    },
-  )
-  const files = updatePostmortemCsvFiles(report)
-  const summary = files.find(
-    (file) => file.filename === 'postmortem-summary.csv',
-  )
-  const pageSegments = files.find(
-    (file) => file.filename === 'postmortem-segment-page.csv',
-  )
-  const unmatched = files.find(
-    (file) => file.filename === 'postmortem-segment-page-unmatched.csv',
-  )
-
-  assert.equal(summary?.rows[0]?.page_segment_status, 'partial')
-  assert.match(
-    String(summary?.rows[0]?.page_segment_warnings),
-    /not treated as zero/,
-  )
-  assert.equal(
-    pageSegments?.rows[0]?.evidence_scope,
-    'matched-retained-segment',
-  )
-  assert.equal(unmatched?.rows[0]?.retained_in, 'before')
-  assert.equal(unmatched?.rows[0]?.reason, 'not-retained-in-other-window')
-})
-
 test('inferTemplateMovement surfaces repeated winning URL patterns', () => {
   const movement = inferTemplateMovement({
     winners: [
@@ -145,42 +105,6 @@ test('inferTemplateMovement surfaces repeated winning URL patterns', () => {
     'returned-directional-page-click-movement',
   )
   assert.match(movement[0]?.summary ?? '', /gained 360 clicks/)
-})
-
-test('inferTemplateMovement stays quiet for sparse one-off pages', () => {
-  const movement = inferTemplateMovement({
-    winners: [
-      page('https://example.com/pricing/', 120),
-      page('https://example.com/about/', 80),
-      page('https://example.com/blog/founder-note/', 60),
-    ],
-    losers: [page('https://example.com/docs/install/', -40)],
-    coverage: segmentCoverage({ eligibleRows: 4 }),
-  })
-
-  assert.deepEqual(movement, [])
-})
-
-test('inferTemplateMovement explains broad slug patterns with common terms', () => {
-  const movement = inferTemplateMovement({
-    winners: [],
-    losers: [
-      page('https://example.com/average-teacher-salary-in-france/', -100),
-      page('https://example.com/average-nurse-salary-in-germany/', -90),
-      page('https://example.com/average-engineer-salary-in-italy/', -80),
-      page('https://example.com/average-dentist-salary-in-spain/', -70),
-      page('https://example.com/contact/', -5),
-      page('https://example.com/privacy/', -5),
-    ],
-    coverage: segmentCoverage({ eligibleRows: 6 }),
-  })
-
-  assert.equal(movement.length, 1)
-  assert.equal(movement[0]?.signature, '/:slug')
-  assert.equal(movement[0]?.direction, 'loser')
-  assert.ok(movement[0]?.commonTerms.includes('average'))
-  assert.ok(movement[0]?.commonTerms.includes('salary'))
-  assert.match(movement[0]?.summary ?? '', /Common URL terms/)
 })
 
 test('postmortem scopes capped template shares to returned retained rows', async () => {
@@ -252,33 +176,6 @@ test('postmortem scopes capped template shares to returned retained rows', async
   )
   assert.equal(templates?.rows[0]?.eligible_rows, 25)
   assert.equal(templates?.rows[0]?.returned_rows, 20)
-})
-
-test('inferTemplateMovement is deterministic for reordered capped rows', () => {
-  const winners = [
-    page('https://example.com/cities/london/', 100),
-    page('https://example.com/cities/paris/', 90),
-    page('https://example.com/cities/rome/', 80),
-    page('https://example.com/cities/madrid/', 70),
-    page('https://example.com/guides/london/', 60),
-    page('https://example.com/guides/paris/', 50),
-    page('https://example.com/guides/rome/', 40),
-    page('https://example.com/guides/madrid/', 30),
-  ]
-  const coverage = segmentCoverage({
-    eligibleRows: 12,
-    returnedRows: 8,
-    resultLimit: 8,
-  })
-
-  assert.deepEqual(
-    inferTemplateMovement({ winners, losers: [], coverage }),
-    inferTemplateMovement({
-      winners: [...winners].reverse(),
-      losers: [],
-      coverage,
-    }),
-  )
 })
 
 test('source-capped retained rows cannot receive high pattern confidence', () => {

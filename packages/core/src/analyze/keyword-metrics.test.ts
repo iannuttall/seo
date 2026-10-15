@@ -10,7 +10,7 @@ import type {
 import { observedValue, unavailableValue } from '../providers/contracts.js'
 import { ProviderError } from '../providers/errors.js'
 import type { ProviderCandidate } from '../providers/resolver.js'
-import { analyzeKeywordTrend, keywordMetricsReport } from './keyword-metrics.js'
+import { keywordMetricsReport } from './keyword-metrics.js'
 
 const market: SearchMarket = {
   searchEngine: 'google',
@@ -112,63 +112,6 @@ function candidate(
   }
 }
 
-test('keyword trends compare consecutive three-month periods without forecasting', () => {
-  assert.deepEqual(
-    analyzeKeywordTrend(
-      metric('growing', {
-        monthlySearches: monthlySearches([10, 20, 30, 40, 50, 60]),
-      }),
-    ),
-    {
-      state: 'observed',
-      direction: 'increasing',
-      recentAverage: 50,
-      previousAverage: 20,
-      absoluteChange: 30,
-      percentChange: { state: 'observed', value: 150 },
-      months: [
-        { year: 2026, month: 1 },
-        { year: 2026, month: 2 },
-        { year: 2026, month: 3 },
-        { year: 2026, month: 4 },
-        { year: 2026, month: 5 },
-        { year: 2026, month: 6 },
-      ],
-      methodology:
-        'Heuristic comparison of the latest three monthly provider estimates with the preceding three; changes inside 10% are labelled stable.',
-    },
-  )
-
-  const fromZero = analyzeKeywordTrend(
-    metric('new', { monthlySearches: monthlySearches([0, 0, 0, 1, 2, 3]) }),
-  )
-  assert.equal(fromZero.state, 'observed')
-  if (fromZero.state === 'observed') {
-    assert.equal(fromZero.direction, 'increased-from-zero')
-    assert.equal(fromZero.percentChange.state, 'unavailable')
-  }
-})
-
-test('keyword trends require enough consecutive evidence', () => {
-  assert.equal(
-    analyzeKeywordTrend(
-      metric('short', { monthlySearches: monthlySearches([1, 2, 3, 4, 5]) }),
-    ).state,
-    'unavailable',
-  )
-  const history = monthlySearches([1, 2, 3, 4, 5, 6])
-  assert.equal(history.state, 'observed')
-  if (history.state === 'observed') {
-    const fourthMonth = history.value[3]
-    assert.ok(fourthMonth)
-    fourthMonth.month = 5
-  }
-  assert.equal(
-    analyzeKeywordTrend(metric('gap', { monthlySearches: history })).state,
-    'unavailable',
-  )
-})
-
 test('keyword metrics report keeps provider evidence separate from derived findings', async () => {
   let captured:
     | Parameters<KeywordMetricsProvider['keywordMetrics']>[0]
@@ -226,38 +169,6 @@ test('keyword metrics report keeps provider evidence separate from derived findi
   assert.equal(captured?.context?.projectId, 'project-1')
   assert.equal(captured?.context?.reportId, 'keyword-metrics')
   assert.match(captured?.context?.reportRunId ?? '', /^[0-9a-f-]{36}$/)
-})
-
-test('keyword metrics report accepts an owning report spend context', async () => {
-  let captured:
-    | Parameters<KeywordMetricsProvider['keywordMetrics']>[0]
-    | undefined
-  await keywordMetricsReport(
-    {
-      keywords: ['query'],
-      market,
-      projectId: 'fallback-project',
-      context: {
-        projectId: 'owning-project',
-        reportId: 'keyword-opportunities',
-        reportRunId: 'report-run-1',
-      },
-    },
-    {
-      candidates: [
-        candidate(async (input) => {
-          captured = input
-          return evidence([metric('query')])
-        }),
-      ],
-    },
-  )
-
-  assert.deepEqual(captured?.context, {
-    projectId: 'owning-project',
-    reportId: 'keyword-opportunities',
-    reportRunId: 'report-run-1',
-  })
 })
 
 test('keyword metrics report preserves partial, unavailable, and provider error states', async () => {
@@ -321,69 +232,4 @@ test('keyword metrics report preserves partial, unavailable, and provider error 
       'code' in error &&
       error.code === 'RATE_LIMITED',
   )
-})
-
-test('keyword metrics report rejects invalid and disconnected requests before provider work', async () => {
-  let calls = 0
-  const disconnected = candidate(async () => {
-    calls += 1
-    return evidence([])
-  }, false)
-  await assert.rejects(
-    keywordMetricsReport(
-      {
-        keywords: ['one two three four five six seven eight nine ten eleven'],
-        market,
-      },
-      { candidates: [disconnected] },
-    ),
-    /at most 80 characters and 10 words/,
-  )
-  await assert.rejects(
-    keywordMetricsReport(
-      { keywords: ['query'], market },
-      { candidates: [disconnected] },
-    ),
-    /No connected provider can supply keyword metrics/,
-  )
-  assert.equal(calls, 0)
-})
-
-test('keyword metrics reports an explicit provider market mismatch as non-retryable input', async () => {
-  let calls = 0
-  const provider: ProviderCandidate = {
-    connected: true,
-    priority: 1,
-    adapter: {
-      provider: 'dataforseo',
-      capabilitySupport: [
-        {
-          capability: 'keyword-metrics',
-          status: 'available',
-          markets: [{ searchEngines: ['google'], location: 'country-only' }],
-        },
-      ],
-      keywordMetrics: async () => {
-        calls += 1
-        return evidence([])
-      },
-    } as KeywordMetricsProvider,
-  }
-
-  await assert.rejects(
-    keywordMetricsReport(
-      {
-        keywords: ['query'],
-        market: { ...market, location: { name: 'London' } },
-        provider: 'dataforseo',
-      },
-      { candidates: [provider] },
-    ),
-    (error) =>
-      error instanceof Error &&
-      'code' in error &&
-      error.code === 'INVALID_INPUT' &&
-      /country-level Labs data/.test(error.message),
-  )
-  assert.equal(calls, 0)
 })

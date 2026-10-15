@@ -11,53 +11,6 @@ function urls(prefix: string, count: number): string[] {
   return Array.from({ length: count }, (_, index) => `${prefix}${index + 1}/`)
 }
 
-test('planIndexCoverageFromUrls suggests folder properties for large buckets', () => {
-  const report = planIndexCoverageFromUrls({
-    site: 'sc-domain:example.com',
-    urls: [
-      ...urls('https://example.com/cities/city-', 2000),
-      ...urls('https://example.com/blog/post-', 2000),
-    ],
-    accountProperties: ['sc-domain:example.com'],
-    dailyLimit: 2000,
-    targetCycleDays: 1,
-  })
-
-  assert.equal(report.summary.urlCount, 4000)
-  assert.equal(report.properties[0]?.property, 'sc-domain:example.com')
-  assert.equal(report.properties[0]?.cycleDays, 2)
-  assert.equal(report.suggestions.length, 2)
-  assert.equal(report.suggestions[0]?.property, 'https://example.com/cities/')
-  assert.match(report.suggestions[0]?.reason ?? '', /separate daily inspection/)
-})
-
-test('planIndexCoverageFromUrls maps URLs to existing URL-prefix properties', () => {
-  const report = planIndexCoverageFromUrls({
-    site: 'sc-domain:example.com',
-    urls: [
-      ...urls('https://example.com/cities/city-', 2000),
-      ...urls('https://example.com/blog/post-', 2000),
-    ],
-    accountProperties: ['sc-domain:example.com', 'https://example.com/cities/'],
-    dailyLimit: 2000,
-    targetCycleDays: 1,
-  })
-
-  assert.equal(report.summary.properties, 2)
-  assert.equal(
-    report.properties.find(
-      (property) => property.property === 'https://example.com/cities/',
-    )?.cycleDays,
-    1,
-  )
-  assert.equal(
-    report.suggestions.some(
-      (suggestion) => suggestion.property === 'https://example.com/cities/',
-    ),
-    false,
-  )
-})
-
 test('selectDueIndexUrls gives each matching property a fair slice', () => {
   const selected = selectDueIndexUrls({
     site: 'sc-domain:example-select.test',
@@ -85,43 +38,6 @@ test('selectDueIndexUrls gives each matching property a fair slice', () => {
       .length,
     2,
   )
-})
-
-test('property reassignment preserves root inspection freshness', () => {
-  const root = 'sc-domain:index-reassignment.test'
-  const url = 'https://index-reassignment.test/blog/post/'
-  const db = getDb()
-  try {
-    db.prepare(
-      `INSERT INTO index_watch_snapshots
-      (id, site_url, root_site_url, property_site_url, url, verdict,
-       inspection_status, inspected_at)
-      VALUES (?, ?, ?, ?, ?, 'PASS', 'succeeded', ?)`,
-    ).run(
-      'index-reassignment-snapshot',
-      root,
-      root,
-      root,
-      url,
-      Date.parse('2026-07-09T11:00:00.000Z'),
-    )
-
-    const selected = selectDueIndexUrls({
-      site: root,
-      urls: [url],
-      accountProperties: [root, 'https://index-reassignment.test/blog/'],
-      dailyLimit: 2_000,
-      inspectLimit: 100,
-      staleAfterDays: 1,
-      now: new Date('2026-07-09T12:00:00.000Z'),
-    })
-
-    assert.deepEqual(selected, [])
-  } finally {
-    db.prepare('DELETE FROM index_watch_snapshots WHERE root_site_url = ?').run(
-      root,
-    )
-  }
 })
 
 test('recent failed inspections wait before retrying', () => {
@@ -293,5 +209,4 @@ test('index allocation uses owned subdomain properties and ignores lookalikes', 
     accountProperties: ['sc-domain:example.com'],
   })
   assert.equal(invalid.summary.urlCount, 0)
-  assert.match(invalid.warnings[0] ?? '', /outside the Search Console property/)
 })

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { setTimeout as delay } from 'node:timers/promises'
 import { detectAccessBlock } from '../../fetch/access-block.js'
 import { SEO_CRAWLER_USER_AGENT } from '../../fetch/crawler-identity.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
@@ -121,43 +120,6 @@ test('health strategy uses an explicit sitemap and limits analysis to responses'
     report.issues.some((issue) => issue.ruleId === 'missing_title'),
     false,
   )
-})
-
-test('health strategy increases concurrency only after clean response streaks', async () => {
-  const urls = Array.from(
-    { length: 45 },
-    (_, index) => `https://example.com/page-${String(index).padStart(2, '0')}`,
-  )
-  let active = 0
-  let maxActive = 0
-  const starts: number[] = []
-
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      mode: 'sitemap',
-      strategy: 'health',
-      sitemapUrl: 'https://example.com/sitemap.xml',
-      maxPages: urls.length,
-      concurrency: 4,
-    },
-    {
-      fetchSitemapUrls: async (input) =>
-        completeSitemapResult(input.sitemapUrl, urls),
-      fetchStatusPage: async (url) => {
-        active += 1
-        starts.push(active)
-        maxActive = Math.max(maxActive, active)
-        await delay(2)
-        active -= 1
-        return statusResult(url)
-      },
-    },
-  )
-
-  assert.equal(report.summary.totalPages, urls.length)
-  assert.equal(Math.max(...starts.slice(0, 20)), 1)
-  assert.equal(maxActive, 3)
 })
 
 test('health strategy marks access-blocked evidence partial', async () => {

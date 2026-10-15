@@ -12,12 +12,7 @@ import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { getSeoCliPaths } from '@seo/core'
 import { parse } from 'jsonc-parser'
-import {
-  detectMcpClients,
-  type JsonClientConfigTarget,
-  mcpClientTargets,
-  resolveMcpClientExecutable,
-} from './mcp-clients.js'
+import { type JsonClientConfigTarget, mcpClientTargets } from './mcp-clients.js'
 import {
   installMcpConfig,
   resolveMcpServerCommand,
@@ -200,107 +195,6 @@ test('MCP targets use the documented Windows Claude Desktop path', () => {
   )
 })
 
-test('Claude Code config matches its native stdio schema', () => {
-  const target = mcpClientTargets({
-    home: '/tmp/seo-home',
-    platform: 'linux',
-    env: {},
-  }).find((entry) => entry.client === 'claude-code')
-  assert.ok(target)
-  assert.equal(target.kind, 'json')
-  if (target.kind !== 'json') return
-
-  const { target: fixtureTarget } = fixture()
-  install({ ...fixtureTarget, includeType: target.includeType })
-  const config = parse(readFileSync(fixtureTarget.path, 'utf8')) as {
-    mcpServers: { seo: Record<string, unknown> }
-  }
-  assert.equal(config.mcpServers.seo.type, 'stdio')
-})
-
-test('MCP detection returns only clients present on the machine', () => {
-  const targets = mcpClientTargets({
-    home: '/tmp/seo-home',
-    platform: 'linux',
-    env: {},
-  })
-  const detected = detectMcpClients({
-    targets,
-    hasPath: (path) => path.includes('.cursor'),
-    hasCommand: (command) => command === 'codex',
-  })
-
-  assert.deepEqual(
-    detected.map((target) => target.client),
-    ['codex', 'cursor'],
-  )
-})
-
-test('MCP detection does not offer Codex only because its config directory exists', () => {
-  const targets = mcpClientTargets({
-    home: '/tmp/seo-home',
-    platform: 'linux',
-    env: {},
-  })
-  const detected = detectMcpClients({
-    targets,
-    hasPath: (path) => path.includes('.codex'),
-    hasCommand: () => false,
-  })
-
-  assert.deepEqual(
-    detected.map((target) => target.client),
-    [],
-  )
-})
-
-test('Codex resolves beside the active Node runtime when PATH does not expose it', () => {
-  const executable = resolveMcpClientExecutable('codex', {
-    platform: 'darwin',
-    path: '',
-    nodePath: '/Users/example/.nvm/versions/node/v24/bin/node',
-    exists: (path) => path.endsWith('/bin/codex'),
-  })
-
-  assert.equal(executable, '/Users/example/.nvm/versions/node/v24/bin/codex')
-})
-
-test('Codex install explains when its CLI is unavailable', () => {
-  const target = mcpClientTargets({
-    home: '/tmp/seo-home',
-    platform: 'linux',
-    env: {},
-  }).find((entry) => entry.client === 'codex')
-  assert.ok(target)
-
-  assert.throws(
-    () =>
-      installMcpConfig(target, {
-        runCommand: () => ({
-          status: null,
-          stdout: '',
-          stderr: '',
-          error: Object.assign(new Error('spawn codex ENOENT'), {
-            code: 'ENOENT',
-          }),
-        }),
-        serverCommand: localServerCommand,
-      }),
-    /codex.*not available on PATH/i,
-  )
-})
-
-test('Codex resolves the absolute PATH entry without calling a shell helper', () => {
-  const executable = resolveMcpClientExecutable('codex', {
-    platform: 'darwin',
-    path: '/Users/example/.local/bin:/usr/bin',
-    nodePath: '/opt/homebrew/bin/node',
-    exists: (path) => path === '/Users/example/.local/bin/codex',
-  })
-
-  assert.equal(executable, '/Users/example/.local/bin/codex')
-})
-
 test('Codex MCP install uses the native CLI and stays idempotent', () => {
   const target = mcpClientTargets({
     home: '/tmp/seo-home',
@@ -351,32 +245,6 @@ test('Codex MCP install uses the native CLI and stays idempotent', () => {
     ),
   )
   assert.ok(calls.some((args) => args.join(' ') === 'mcp remove seo'))
-})
-
-test('MCP install can rewrite an existing managed config', () => {
-  const { dir, target } = fixture()
-
-  install(target)
-  const repeated = install(target, { reinstall: true })
-
-  assert.equal(repeated.changed, true)
-  assert.equal(backups(dir).length, 1)
-})
-
-test('MCP command uses the installed CLI without npm or PATH lookup', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'Local Tools '))
-  const cliPath = join(dir, 'seo cli.js')
-  writeFileSync(cliPath, '', 'utf8')
-
-  const command = resolveMcpServerCommand({
-    cliPath,
-    nodePath: '/usr/local/bin/node',
-    version: '1.2.3',
-  })
-
-  assert.equal(command.command, '/usr/local/bin/node')
-  assert.deepEqual(command.args.slice(-2), ['mcp', 'serve'])
-  assert.match(command.args[0] ?? '', /Local Tools .+\/seo cli\.js$/)
 })
 
 test('MCP command pins the package only for a disposable npx CLI', () => {

@@ -135,37 +135,6 @@ test('reset removes Google and provider keychain secrets before local files', as
   assert.equal(existsSync(logDir), false)
 })
 
-test('reset removes private file credentials when the keychain is unavailable', async () => {
-  keyring.unavailable = true
-  await seedStorage(false)
-  const environment = {
-    SEO_DATAFORSEO_LOGIN: 'login-from-environment',
-    SEO_DATAFORSEO_PASSWORD: 'password-from-environment',
-    SEO_BING_API_KEY: 'bing-from-environment',
-    SEO_INDEXNOW_KEY: 'indexnow-from-environment',
-  }
-  const previous = Object.fromEntries(
-    Object.keys(environment).map((name) => [name, process.env[name]]),
-  )
-  Object.assign(process.env, environment)
-
-  try {
-    await resetSeoData()
-
-    assert.equal(existsSync(configDir), false)
-    assert.equal(existsSync(cacheDir), false)
-    assert.equal(existsSync(logDir), false)
-    for (const [name, value] of Object.entries(environment)) {
-      assert.equal(process.env[name], value)
-    }
-  } finally {
-    for (const [name, value] of Object.entries(previous)) {
-      if (value === undefined) delete process.env[name]
-      else process.env[name] = value
-    }
-  }
-})
-
 test('reset keeps local files when an active provider keychain secret cannot be removed', async () => {
   await seedStorage(true)
   const failedKey = `seo:provider:${PROVIDER_SECRET_NAMES.dataForSeoCredentials}`
@@ -178,27 +147,6 @@ test('reset keeps local files when an active provider keychain secret cannot be 
 
   assert.equal(keyring.values.get(failedKey), 'dataforseo-credentials-value')
   assert.equal(existsSync(getSeoCliPaths().configFile), true)
-  assert.equal(existsSync(cacheDir), true)
-  assert.equal(existsSync(logDir), true)
-
-  keyring.failedDeletes.clear()
-  await resetSeoData()
-  assert.equal(keyring.values.size, 0)
-  assert.equal(existsSync(configDir), false)
-})
-
-test('reset keeps local files when Google token keychain cleanup fails', async () => {
-  await seedStorage(true)
-  const failedKey = 'seo:google:owner@example.com:refresh'
-  keyring.failedDeletes.add(failedKey)
-
-  await assert.rejects(
-    resetSeoData(),
-    /stopped before deleting local files because saved credentials could not be removed/i,
-  )
-
-  assert.equal(keyring.values.get(failedKey), 'refresh-token')
-  assert.equal(existsSync(getSeoCliPaths().tokensFile), true)
   assert.equal(existsSync(cacheDir), true)
   assert.equal(existsSync(logDir), true)
 

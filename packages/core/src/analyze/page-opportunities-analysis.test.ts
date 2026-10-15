@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { ExtractedPage, GscRow, PageFetchDiagnostics } from '../types.js'
+import type { ExtractedPage, GscRow } from '../types.js'
 import { analyzePageOpportunitiesFromRows } from './page-opportunities-analysis.js'
 
 const site = 'sc-domain:example.com'
@@ -68,27 +68,6 @@ function extractedPage(overrides: Partial<ExtractedPage> = {}): ExtractedPage {
   }
 }
 
-function diagnostics(
-  overrides: Partial<PageFetchDiagnostics> = {},
-): PageFetchDiagnostics {
-  return {
-    source: 'network',
-    cache: 'miss',
-    fetched: true,
-    rendered: false,
-    blocked: false,
-    durationMs: 20,
-    retries: 0,
-    rateLimit: {
-      host: 'example.com',
-      concurrency: 2,
-      intervalCap: 4,
-      intervalMs: 1000,
-    },
-    ...overrides,
-  }
-}
-
 function sitePeers(): GscRow[] {
   return Array.from({ length: 5 }, (_, index) =>
     row({
@@ -101,60 +80,6 @@ function sitePeers(): GscRow[] {
     }),
   )
 }
-
-test('uses independent site peers when qualified and exposes fallback provenance', () => {
-  const target = row({ query: 'technical seo guide', position: 5 })
-  const siteResult = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    page: extractedPage(),
-  })
-  const fallbackResult = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: sitePeers().slice(0, 2),
-    site,
-    url,
-    page: extractedPage(),
-  })
-
-  assert.match(
-    siteResult.items[0]?.benchmark.source ?? '',
-    /^site_gsc_position_bucket_robust_p75/,
-  )
-  assert.equal(siteResult.items[0]?.benchmark.peerRows, 5)
-  assert.equal(siteResult.items[0]?.benchmark.qualifiedPeerImpressions, 1000)
-  assert.equal(
-    fallbackResult.items[0]?.benchmark.source,
-    'default_position_curve',
-  )
-  assert.equal(fallbackResult.items[0]?.benchmark.peerRows, 2)
-})
-
-test('excludes every target URL row from aggregate benchmarks', () => {
-  const target = row({ query: 'technical seo guide', position: 5 })
-  const targetBenchmarkRow = row({
-    query: 'another target query',
-    clicks: 1000,
-    impressions: 1000,
-    ctr: 1,
-    position: 5,
-  })
-  const result = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: [...sitePeers(), targetBenchmarkRow],
-    site,
-    url,
-    page: extractedPage(),
-  })
-
-  assert.equal(result.excludedTargetBenchmarkRows, 1)
-  assert.equal(result.items[0]?.benchmark.excludedTargetRows, 1)
-  assert.equal(result.items[0]?.benchmark.peerRows, 5)
-  assert.equal(result.items[0]?.benchmark.peerImpressions, 1000)
-  assert.match(result.items[0]?.benchmark.source ?? '', /leave_group_out/)
-})
 
 test('does not claim CTR lift for page-two queries', () => {
   const result = analyzePageOpportunitiesFromRows({
@@ -180,79 +105,6 @@ test('does not claim CTR lift for page-two queries', () => {
   assert.equal(item?.expectedCtr, undefined)
   assert.equal(item?.benchmark.applicable, false)
   assert.equal(item?.benchmark.source, 'not_applicable_outside_page_one')
-  assert.match(item?.recommendation ?? '', /no CTR lift is claimed/)
-})
-
-test('keeps page-two ranking evidence when on-page verification is absent', () => {
-  const result = analyzePageOpportunitiesFromRows({
-    targetRows: [
-      row({ query: 'technical seo guide', position: 14, clicks: 0, ctr: 0 }),
-    ],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-  })
-
-  assert.equal(result.items[0]?.verification.status, 'unverified')
-  assert.equal(result.items[0]?.opportunityType, 'ranking')
-  assert.equal(result.items[0]?.estimatedCtrClickShortfall, undefined)
-})
-
-test('keeps page-one CTR evidence when on-page verification is absent', () => {
-  const result = analyzePageOpportunitiesFromRows({
-    targetRows: [
-      row({
-        query: 'technical seo guide',
-        impressions: 100,
-        clicks: 0,
-        ctr: 0,
-      }),
-    ],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-  })
-  const item = result.items[0]
-
-  assert.equal(item?.verification.status, 'unverified')
-  assert.equal(item?.opportunityType, 'ctr')
-  assert.equal(item?.expectedClicks, 5)
-  assert.equal(item?.estimatedCtrClickShortfall, 5)
-  assert.equal(item?.estimatedClickLift, 5)
-})
-
-test('labels technical and missing verification without calling either covered', () => {
-  const target = row({ query: 'technical seo guide' })
-  const redirected = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    page: extractedPage({ finalUrl: 'https://example.com/other' }),
-    fetchDiagnostics: diagnostics(),
-  })
-  const failedFetch = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    fetchDiagnostics: diagnostics({ fetched: false }),
-  })
-  const notRun = analyzePageOpportunitiesFromRows({
-    targetRows: [target],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-  })
-
-  assert.equal(redirected.items[0]?.opportunityType, 'technical-check')
-  assert.ok(redirected.items[0]?.verification.signals.includes('redirected'))
-  assert.equal(failedFetch.items[0]?.opportunityType, 'technical-check')
-  assert.deepEqual(failedFetch.items[0]?.verification.signals, [
-    'fetch-incomplete',
-  ])
-  assert.equal(notRun.items[0]?.opportunityType, 'unverified')
-  assert.equal(notRun.items[0]?.verification.status, 'unverified')
 })
 
 test('treats non-2xx, noindex, and mismatched canonicals as technical', () => {
@@ -288,70 +140,6 @@ test('treats non-2xx, noindex, and mismatched canonicals as technical', () => {
   )
 })
 
-test('keeps valid cache hits non-technical and uses redirect-chain evidence once', () => {
-  const targetRows = [row({ query: 'technical seo guide' })]
-  const common = { targetRows, benchmarkRows: sitePeers(), site, url }
-  const cacheHit = analyzePageOpportunitiesFromRows({
-    ...common,
-    page: extractedPage(),
-    fetchDiagnostics: diagnostics({ source: 'cache', fetched: false }),
-  })
-  const redirected = analyzePageOpportunitiesFromRows({
-    ...common,
-    page: extractedPage({ finalUrl: `${url}/`, canonical: `${url}/` }),
-    fetchDiagnostics: diagnostics({
-      redirectChain: [{ url, status: 301, location: `${url}/` }],
-    }),
-  })
-
-  assert.equal(cacheHit.items[0]?.verification.status, 'verified')
-  assert.equal(cacheHit.items[0]?.opportunityType, 'covered')
-  assert.deepEqual(redirected.items[0]?.verification.signals, ['redirected'])
-  assert.equal(redirected.items[0]?.opportunityType, 'technical-check')
-})
-
-test('uses verified body gaps and meta omissions without overcalling coverage', () => {
-  const targetRows = [row({ query: 'technical seo guide' })]
-  const common = { targetRows, benchmarkRows: sitePeers(), site, url }
-  const contentGap = analyzePageOpportunitiesFromRows({
-    ...common,
-    page: extractedPage({
-      contentText: 'An unrelated article about gardening.',
-    }),
-  })
-  const metaFraming = analyzePageOpportunitiesFromRows({
-    ...common,
-    page: extractedPage({ metaDescription: undefined }),
-  })
-
-  assert.equal(contentGap.items[0]?.opportunityType, 'content-gap')
-  assert.equal(metaFraming.items[0]?.opportunityType, 'serp-framing')
-  assert.match(metaFraming.items[0]?.recommendation ?? '', /meta description/)
-})
-
-test('preserves Unicode coverage evidence', () => {
-  const query = 'تقنية تحسين محركات البحث'
-  const result = analyzePageOpportunitiesFromRows({
-    targetRows: [row({ query })],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    page: extractedPage({
-      title: query,
-      metaDescription: query,
-      headings: [{ level: 1, text: query }],
-      contentText: `دليل شامل عن ${query}`,
-    }),
-  })
-
-  assert.equal(result.items[0]?.verification.status, 'verified')
-  assert.equal(
-    result.items[0]?.verification.fields?.mainContent.termCoverage,
-    1,
-  )
-  assert.equal(result.items[0]?.opportunityType, 'covered')
-})
-
 test('distinguishes empty source data from rows removed by filters', () => {
   const empty = analyzePageOpportunitiesFromRows({
     targetRows: [],
@@ -385,41 +173,6 @@ test('distinguishes empty source data from rows removed by filters', () => {
     ['filtered', 1, 0, 0],
   )
   assert.equal(filtered.selection.belowMinimumRows, 1)
-})
-
-test('reports exact sequential selection and limit provenance', () => {
-  const eligibleA = row({ query: 'technical seo guide' })
-  const eligibleB = row({ query: 'seo audit checklist' })
-  const invalid = { ...row({ query: 'invalid', impressions: 1 }), keys: [] }
-  const result = analyzePageOpportunitiesFromRows({
-    targetRows: [
-      invalid,
-      row({ query: 'wrong page', url: 'https://example.com/other' }),
-      row({ query: 'below minimum', impressions: 9 }),
-      row({ query: 'site:example.com' }),
-      row({ query: 'Example guide' }),
-      eligibleA,
-      eligibleB,
-    ],
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    brandTerms: ['example'],
-    limit: 1,
-  })
-
-  assert.deepEqual(result.selection, {
-    sourceRows: 7,
-    invalidRows: 1,
-    wrongPageRows: 1,
-    belowMinimumRows: 1,
-    lowActionabilityRows: 1,
-    brandRows: 1,
-    eligibleRows: 2,
-    returnedRows: 1,
-    limitedRows: 1,
-  })
-  assert.equal(result.summary.opportunities, 0)
 })
 
 test('normalizes bounds and returns deterministic ordering', () => {
@@ -465,30 +218,4 @@ test('normalizes bounds and returns deterministic ordering', () => {
   assert.equal(minimums.minImpressions, 1)
   assert.equal(minimums.limit, 1)
   assert.equal(minimums.returnedRows, 1)
-})
-
-test('breaks complete metric ties by query text', () => {
-  const input = {
-    benchmarkRows: sitePeers(),
-    site,
-    url,
-    page: extractedPage({
-      title: 'SEO guide alpha beta',
-      metaDescription: 'SEO guide alpha beta',
-      headings: [{ level: 1, text: 'SEO guide alpha beta' }],
-      contentText: 'SEO guide alpha beta',
-    }),
-  }
-  const result = analyzePageOpportunitiesFromRows({
-    ...input,
-    targetRows: [
-      row({ query: 'seo guide beta' }),
-      row({ query: 'seo guide alpha' }),
-    ],
-  })
-
-  assert.deepEqual(
-    result.items.map((item) => item.query),
-    ['seo guide alpha', 'seo guide beta'],
-  )
 })

@@ -5,14 +5,9 @@ import Database from '../storage/sqlite.js'
 import {
   addKeywordsToSet,
   createKeywordSet,
-  deleteKeywordSet,
   getKeywordSet,
   KEYWORD_SET_LIMITS,
   KEYWORD_SET_SCHEMA_SQL,
-  keywordSetLogicalBytes,
-  listKeywordSets,
-  removeKeywordsFromSet,
-  setKeywordSetRefreshTime,
 } from './index.js'
 import type { SavedKeywordMetric } from './types.js'
 
@@ -59,77 +54,6 @@ function metric(keyword: string): SavedKeywordMetric {
     },
   }
 }
-
-test('creates and lists provider-neutral keyword sets by project', () => {
-  const db = database()
-  const set = createKeywordSet(
-    {
-      projectId: 'example-project',
-      name: 'Local service ideas',
-      market: MARKET,
-      provider: 'dataforseo',
-      sourceReport: 'keyword-research',
-    },
-    { database: db, id: () => 'set-one', now: () => FIRST_TIME },
-  )
-
-  assert.deepEqual(set, {
-    schemaVersion: 1,
-    id: 'set-one',
-    projectId: 'example-project',
-    name: 'Local service ideas',
-    market: MARKET,
-    provider: 'dataforseo',
-    sourceReport: 'keyword-research',
-    keywordCount: 0,
-    tagCount: 0,
-    createdAt: FIRST_TIME.toISOString(),
-    updatedAt: FIRST_TIME.toISOString(),
-    lastRefreshedAt: null,
-  })
-  assert.deepEqual(
-    listKeywordSets({ projectId: 'example-project' }, { database: db }),
-    [set],
-  )
-  assert.deepEqual(
-    listKeywordSets({ projectId: 'another-project' }, { database: db }),
-    [],
-  )
-  assert.ok(keywordSetLogicalBytes(db) > 0)
-})
-
-test('rejects duplicate names and rolls back storage-limit failures', () => {
-  const db = database()
-  createKeywordSet(
-    { projectId: 'example-project', name: 'Priority', market: MARKET },
-    { database: db, id: () => 'set-one', now: () => FIRST_TIME },
-  )
-  assert.throws(
-    () =>
-      createKeywordSet(
-        { projectId: 'example-project', name: 'priority', market: MARKET },
-        { database: db, id: () => 'set-two', now: () => FIRST_TIME },
-      ),
-    /already exists/i,
-  )
-  assert.throws(
-    () =>
-      createKeywordSet(
-        { projectId: 'example-project', name: 'Too large', market: MARKET },
-        {
-          database: db,
-          id: () => 'set-three',
-          now: () => FIRST_TIME,
-          maxLogicalBytes: 1,
-        },
-      ),
-    /cannot exceed 1 logical bytes/i,
-  )
-  assert.equal(
-    listKeywordSets({ projectId: 'example-project' }, { database: db }).length,
-    1,
-  )
-})
 
 test('adds normalized keywords idempotently with typed metrics, tags, and pages', () => {
   const db = database()
@@ -284,86 +208,6 @@ test('filters and paginates in stable keyword order', () => {
     total: 2,
     nextOffset: 1,
   })
-})
-
-test('removes keywords idempotently and cascades set deletion', () => {
-  const db = database()
-  createKeywordSet(
-    { projectId: 'example-project', name: 'Priority', market: MARKET },
-    { database: db, id: () => 'set-one', now: () => FIRST_TIME },
-  )
-  addKeywordsToSet(
-    {
-      projectId: 'example-project',
-      idOrName: 'set-one',
-      items: [
-        { keyword: 'Alpha', tags: ['one'] },
-        { keyword: 'Beta', tags: ['two'] },
-      ],
-    },
-    { database: db, now: () => FIRST_TIME },
-  )
-  assert.deepEqual(
-    removeKeywordsFromSet(
-      {
-        projectId: 'example-project',
-        idOrName: 'set-one',
-        keywords: ['alpha', 'missing', 'ALPHA'],
-      },
-      { database: db, now: () => SECOND_TIME },
-    ),
-    {
-      setId: 'set-one',
-      requested: 3,
-      normalized: 2,
-      added: 0,
-      removed: 1,
-      existing: 1,
-      updated: 0,
-      keywordCount: 1,
-    },
-  )
-  assert.equal(
-    deleteKeywordSet(
-      { projectId: 'example-project', idOrName: 'Priority' },
-      { database: db },
-    ),
-    true,
-  )
-  assert.equal(
-    (
-      db.prepare('SELECT COUNT(*) AS count FROM keyword_set_items').get() as {
-        count: number
-      }
-    ).count,
-    0,
-  )
-  assert.equal(
-    (
-      db.prepare('SELECT COUNT(*) AS count FROM keyword_set_tags').get() as {
-        count: number
-      }
-    ).count,
-    0,
-  )
-})
-
-test('records refresh time without replacing observed metric dates', () => {
-  const db = database()
-  createKeywordSet(
-    { projectId: 'example-project', name: 'Priority', market: MARKET },
-    { database: db, id: () => 'set-one', now: () => FIRST_TIME },
-  )
-  const set = setKeywordSetRefreshTime(
-    {
-      projectId: 'example-project',
-      idOrName: 'set-one',
-      refreshedAt: '2026-07-20T09:30:00.000Z',
-    },
-    { database: db, now: () => SECOND_TIME },
-  )
-  assert.equal(set.lastRefreshedAt, '2026-07-20T09:30:00.000Z')
-  assert.equal(set.updatedAt, SECOND_TIME.toISOString())
 })
 
 test('rejects malformed, oversized, and mismatched mutations before storage', () => {

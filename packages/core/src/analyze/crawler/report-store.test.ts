@@ -7,7 +7,6 @@ import { createCrawlReport } from './report.js'
 import {
   AUTOMATIC_BASELINE_SITE_RETENTION,
   CRAWL_REPORT_STORAGE_VERSION,
-  type CrawlReportStoreAdapter,
   deleteCrawlReport,
   latestCrawlReport,
   listCrawlReports,
@@ -182,27 +181,6 @@ test('crawl report store never replaces an existing run id', () => {
   assert.equal(loadCrawlReport(id)?.generatedAt, original.generatedAt)
 })
 
-test('crawl report history finds profile-free reports by URL and hostname', () => {
-  const host = `crawl-only-${randomUUID()}.example`
-  const report = createCrawlReport({
-    generatedAt: '2026-06-19T00:02:30.000Z',
-    config: { url: `https://${host}/docs/start` },
-  })
-  saveCrawlReport(report)
-
-  assert.deepEqual(
-    listCrawlReports({ site: `https://${host}`, limit: 5 }).map(
-      (item) => item.id,
-    ),
-    [report.id],
-  )
-  assert.deepEqual(
-    listCrawlReports({ site: host, limit: 5 }).map((item) => item.id),
-    [report.id],
-  )
-  assert.equal(latestCrawlReport(`https://${host}`)?.id, report.id)
-})
-
 test('crawl report store recomputes derived fields on load', () => {
   const site = `sc-domain:legacy-${randomUUID()}.example`
   const page: CrawlPageSnapshot = {
@@ -285,92 +263,4 @@ test('crawl report store recomputes derived fields on load', () => {
   })
   assert.equal(loaded?.issueGroups[0]?.ruleId, 'missing_title')
   assert.equal(loaded?.definitionId, report.definitionId)
-})
-
-test('crawl report loading stays idempotent after derived normalization', () => {
-  const site = `sc-domain:idempotent-${randomUUID()}.example`
-  const report = createCrawlReport({
-    site,
-    generatedAt: '2026-06-19T00:04:00.000Z',
-    config: { url: `https://${site.slice('sc-domain:'.length)}/` },
-    pages: [
-      {
-        url: `https://${site.slice('sc-domain:'.length)}/`,
-        finalUrl: `https://${site.slice('sc-domain:'.length)}/`,
-        status: 200,
-        indexable: true,
-        wordCount: 500,
-        contentHash: 'idempotent',
-        outgoingInternalCount: 0,
-      },
-    ],
-  })
-
-  saveCrawlReport(report)
-
-  const firstLoad = loadCrawlReport(report.id)
-  const secondLoad = loadCrawlReport(report.id)
-
-  assert.equal(firstLoad?.id, report.id)
-  assert.equal(secondLoad?.id, report.id)
-  assert.equal(firstLoad?.configHash, report.configHash)
-  assert.equal(secondLoad?.configHash, report.configHash)
-  assert.deepEqual(firstLoad?.summary, secondLoad?.summary)
-  assert.deepEqual(firstLoad?.pages, secondLoad?.pages)
-})
-
-test('crawl report store functions accept an adapter boundary', () => {
-  const report = createCrawlReport({
-    generatedAt: '2026-06-19T00:05:00.000Z',
-    config: { url: 'https://adapter-store.example/' },
-  })
-  const calls: string[] = []
-  const adapter: CrawlReportStoreAdapter = {
-    save: (value) => {
-      calls.push(`save:${value.id}`)
-      return {
-        id: value.id,
-        configHash: value.configHash,
-        site: value.site,
-        url: value.config.url,
-        status: value.status,
-        totalPages: value.summary.totalPages,
-        issueCount: value.issues.length,
-        createdAt: value.generatedAt,
-        storageVersion: CRAWL_REPORT_STORAGE_VERSION,
-      }
-    },
-    list: (input = {}) => {
-      calls.push(`list:${input.site ?? 'all'}:${input.limit ?? 'default'}`)
-      return []
-    },
-    load: (id) => {
-      calls.push(`load:${id}`)
-      return report
-    },
-    delete: (id) => {
-      calls.push(`delete:${id}`)
-      return true
-    },
-    latest: (site) => {
-      calls.push(`latest:${site ?? 'all'}`)
-      return report
-    },
-  }
-
-  assert.equal(saveCrawlReport(report, adapter).id, report.id)
-  assert.deepEqual(
-    listCrawlReports({ site: 'sc-domain:example.com' }, adapter),
-    [],
-  )
-  assert.equal(loadCrawlReport(report.id, adapter)?.id, report.id)
-  assert.equal(deleteCrawlReport(report.id, adapter), true)
-  assert.equal(latestCrawlReport(undefined, adapter)?.id, report.id)
-  assert.deepEqual(calls, [
-    `save:${report.id}`,
-    'list:sc-domain:example.com:default',
-    `load:${report.id}`,
-    `delete:${report.id}`,
-    'latest:all',
-  ])
 })

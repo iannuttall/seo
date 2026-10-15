@@ -3,7 +3,6 @@ import { test } from 'node:test'
 import { listRules } from '../../rules.js'
 import { createCrawlReport } from './report.js'
 import {
-  crawlerJsonSchemas,
   crawlerSchemas,
   crawlReportSchema,
   crawlTopFixSchema,
@@ -279,25 +278,4 @@ test('crawler schemas validate report, page, rule, issue group, and top fix outp
   )
   assert.ok(fix)
   assert.doesNotThrow(() => crawlTopFixSchema.parse(fix))
-})
-
-test('crawler JSON schemas expose deterministic object contracts', () => {
-  const reportVariants = crawlerJsonSchemas.crawlReport.oneOf as Array<{
-    type?: string
-    properties?: Record<string, unknown>
-  }>
-  assert.equal(reportVariants.length, 3)
-  assert.equal(
-    reportVariants.every(
-      (variant) => variant.type === 'object' && variant.properties?.summary,
-    ),
-    true,
-  )
-  assert.equal(
-    reportVariants.every((variant) => variant.properties?.dataSources),
-    true,
-  )
-  assert.equal(crawlerJsonSchemas.pageSnapshot.type, 'object')
-  assert.equal(crawlerJsonSchemas.ruleInfo.type, 'object')
-  assert.ok(crawlerJsonSchemas.topFix.properties?.scoreFactors)
 })

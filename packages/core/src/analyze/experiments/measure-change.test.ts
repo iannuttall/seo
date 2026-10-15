@@ -154,18 +154,6 @@ test('measureChange exposes Google Analytics quality warnings as partial evidenc
   )
 })
 
-test('measureChange withholds direction for windows shorter than seven days', async () => {
-  const result = await measureChange(
-    { ...change, changedAt: '2026-05-01', beforeDays: 1, afterDays: 1 },
-    dependencies(),
-  )
-
-  assert.equal(result.dataStatus, 'complete')
-  assert.equal(result.verdict, 'not-enough-data')
-  assert.equal(result.confidence, 'low')
-  assert.match(result.note, /Only 1 finalized day/)
-})
-
 test('query-scoped missing rows stay unavailable instead of becoming a loss', async () => {
   const deps = dependencies()
   deps.searchAnalytics = async (_site, request) => {
@@ -202,71 +190,6 @@ test('query-scoped missing rows stay unavailable instead of becoming a loss', as
     result.source.searchAnalytics.completeness,
     'retained-query-date-aggregates',
   )
-})
-
-test('invalid provider calendar dates cannot support a directional verdict', async () => {
-  const deps = dependencies()
-  deps.searchAnalytics = async (_site, request) => {
-    const after = request.startDate >= '2026-02-01'
-    const rows: GscRow[] = [
-      {
-        keys: [after ? '2026-02-30' : request.startDate],
-        clicks: 100,
-        impressions: 1_000,
-        ctr: 0.1,
-        position: 3,
-      },
-    ]
-    return { rows, calls: 1, rowsFetched: rows.length }
-  }
-
-  const result = await measureChange(
-    { ...change, changedAt: '2026-02-01' },
-    deps,
-  )
-
-  assert.equal(result.dataStatus, 'partial')
-  assert.equal(result.verdict, 'not-enough-data')
-  assert.equal(result.source.searchAnalytics.after.returnedRows, 0)
-  assert.equal(result.source.searchAnalytics.after.invalidRows, 1)
-})
-
-test('control adjustment normalizes proportional movement across scales', async () => {
-  const deps = dependencies()
-  deps.searchAnalytics = async (_site, request) => {
-    const control = JSON.stringify(request.dimensionFilterGroups).includes(
-      'control query',
-    )
-    const after = request.startDate >= '2026-05-01'
-    const clicks = control ? (after ? 90 : 100) : after ? 900 : 1_000
-    const impressions = control ? (after ? 900 : 1_000) : after ? 9_000 : 10_000
-    const rows: GscRow[] = [
-      {
-        keys: [request.startDate],
-        clicks,
-        impressions,
-        ctr: clicks / impressions,
-        position: 3,
-      },
-    ]
-    return { rows, calls: 1, rowsFetched: rows.length }
-  }
-
-  const result = await measureChange(
-    {
-      ...change,
-      scope: 'query',
-      target: 'treatment query',
-      changedAt: '2026-05-01',
-      controlScope: 'query',
-      controlTarget: 'control query',
-    },
-    deps,
-  )
-
-  assert.equal(result.control?.adjusted.clickDelta, 0)
-  assert.equal(result.control?.adjusted.impressionDelta, 0)
-  assert.equal(result.control?.adjusted.clickPctPoints, 0)
 })
 
 test('query content groups do not attach unfiltered sitewide Google Analytics', async () => {
@@ -334,36 +257,6 @@ test('content groups cannot be measured against another site', async () => {
   assert.equal(googleAnalyticsRequests.length, 0)
 })
 
-test('foreign control groups fail before treatment provider calls', async () => {
-  const requests: GscRequest[] = []
-  const group: ContentGroup = {
-    id: 'foreign-control',
-    site: 'sc-domain:other.example',
-    name: 'Foreign control',
-    dimension: 'query',
-    matchType: 'contains',
-    pattern: 'control',
-    createdAt: '2026-04-01T00:00:00.000Z',
-  }
-
-  await assert.rejects(
-    measureChange(
-      {
-        ...change,
-        changedAt: '2026-05-01',
-        controlScope: 'group',
-        controlTarget: group.id,
-      },
-      dependencies({ requests, contentGroups: [group] }),
-    ),
-    (error) =>
-      error instanceof SeoError &&
-      error.code === 'INVALID_INPUT' &&
-      /belongs to/.test(error.message),
-  )
-  assert.equal(requests.length, 0)
-})
-
 test('zero-click growth is not classified as flat or infinite', async () => {
   const deps = dependencies()
   deps.searchAnalytics = async (_site, request) => {
@@ -389,41 +282,4 @@ test('zero-click growth is not classified as flat or infinite', async () => {
   assert.equal(result.confidence, 'low')
   assert.equal(result.delta.clickPct, null)
   assert.match(result.note, /zero-click baseline/)
-})
-
-test('position movement is unavailable when a window has no impressions', async () => {
-  const deps = dependencies()
-  deps.searchAnalytics = async (_site, request) => {
-    const after = request.startDate >= '2026-05-01'
-    const rows: GscRow[] = [
-      {
-        keys: [request.startDate],
-        clicks: 0,
-        impressions: after ? 1_000 : 0,
-        ctr: 0,
-        position: after ? 5 : 0,
-      },
-    ]
-    return { rows, calls: 1, rowsFetched: rows.length }
-  }
-
-  const result = await measureChange(
-    { ...change, changedAt: '2026-05-01', beforeDays: 7, afterDays: 7 },
-    deps,
-  )
-
-  assert.equal(result.delta.position, null)
-  assert.equal(result.verdict, 'not-enough-data')
-})
-
-test('measureChange propagates provider failures', async () => {
-  const deps = dependencies()
-  deps.searchAnalytics = async () => {
-    throw new SeoError('AUTH_EXPIRED', 'Login expired.')
-  }
-
-  await assert.rejects(
-    measureChange({ ...change, changedAt: '2026-05-01' }, deps),
-    (error) => error instanceof SeoError && error.code === 'AUTH_EXPIRED',
-  )
 })

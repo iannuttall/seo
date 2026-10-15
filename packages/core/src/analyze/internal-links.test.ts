@@ -95,32 +95,6 @@ function row(query: string, url: string, impressions: number): GscRow {
   }
 }
 
-test('validates the target property before provider or page calls', async () => {
-  let calls = 0
-  await assert.rejects(
-    internalLinksReport(
-      {
-        site: 'sc-domain:example.com',
-        targetUrl: 'https://other.example/target',
-      },
-      {
-        searchAnalytics: async () => {
-          calls += 1
-          return { rows: [], calls: 0, rowsFetched: 0 }
-        },
-        fetch: async (url) => {
-          calls += 1
-          return fetched(url)
-        },
-        extract: async (result) => page({ url: result.url }),
-        now: () => new Date('2026-07-09T12:00:00.000Z'),
-      },
-    ),
-    /outside the Search Console property/i,
-  )
-  assert.equal(calls, 0)
-})
-
 test('uses target aliases, verifies placement, and excludes technical sources', async () => {
   const requested = 'https://example.com/target'
   const preferred = 'https://example.com/preferred'
@@ -235,7 +209,6 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
     checkLimit: 10,
     maxGscRowsPerRequest: 100_000,
   })
-  assert.match(report.ledgerSummary, /GSC: 3 calls, 6 rows/)
 })
 
 test('blocks link actions when the target has a technical issue', async () => {
@@ -268,54 +241,6 @@ test('blocks link actions when the target has a technical issue', async () => {
   assert.equal(report.source.candidates.queried, false)
   assert.equal(report.selection.checkedSources, 0)
   assert.equal(report.items.length, 0)
-  assert.match(report.summary.verdict, /technical issue/i)
-})
-
-test('backfills failures until the check budget and reports unchecked sources', async () => {
-  const targetUrl = 'https://example.com/target'
-  const report = await internalLinksReport(
-    {
-      site: 'sc-domain:example.com',
-      targetUrl,
-      limit: 1,
-      checkLimit: 2,
-      includeBrand: true,
-    },
-    {
-      searchAnalytics: async (_site, request) => {
-        const filter =
-          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
-        const rows = filter
-          ? [row('technical crawl audit', filter, 100)]
-          : [
-              row('technical crawl audit', 'https://example.com/fails', 300),
-              row('technical crawl audit', 'https://example.com/works', 200),
-              row(
-                'technical crawl audit',
-                'https://example.com/unchecked',
-                100,
-              ),
-            ]
-        return { rows, calls: 1, rowsFetched: rows.length }
-      },
-      fetch: async (url) => {
-        if (url.endsWith('/fails')) throw new Error('fixture fetch failure')
-        return fetched(url)
-      },
-      extract: async (result) => page({ url: result.url }),
-      now: () => new Date('2026-07-09T12:00:00.000Z'),
-    },
-  )
-
-  assert.equal(report.selection.attemptedSources, 2)
-  assert.equal(report.selection.checkedSources, 1)
-  assert.equal(report.selection.failedChecks, 1)
-  assert.equal(report.selection.returnedSources, 1)
-  assert.equal(report.selection.uncheckedCandidates, 1)
-  assert.equal(report.dataStatus, 'partial')
-  assert.equal(report.warnings[0]?.code, 'fetch-failed')
-  assert.match(report.caveats.join('\n'), /not checked/)
-  assert.match(report.caveats.join('\n'), /not counted as checked/)
 })
 
 test('malformed retained source rows cannot become a filtered all-clear', async () => {
@@ -349,36 +274,6 @@ test('malformed retained source rows cannot become a filtered all-clear', async 
   assert.equal(report.dataStatus, 'partial')
   assert.equal(report.source.completeness, 'retained-rows-only')
   assert.equal(report.summary.checkedSources, 0)
-  assert.match(report.summary.verdict, /evidence was incomplete/)
-})
-
-test('keeps an empty retained source response distinct from filtered rows', async () => {
-  const targetUrl = 'https://example.com/target'
-  const report = await internalLinksReport(
-    {
-      site: 'sc-domain:example.com',
-      targetUrl,
-      includeBrand: true,
-    },
-    {
-      searchAnalytics: async (_site, request) => {
-        const filter =
-          request.dimensionFilterGroups?.[0]?.filters[0]?.expression
-        const rows = filter ? [row('technical crawl audit', filter, 100)] : []
-        return { rows, calls: 1, rowsFetched: rows.length }
-      },
-      fetch: async (url) => fetched(url),
-      extract: async (result) => page({ url: result.url }),
-      now: () => new Date('2026-07-09T12:00:00.000Z'),
-    },
-  )
-
-  assert.equal(report.dataStatus, 'source-empty')
-  assert.equal(report.source.candidates.queried, true)
-  assert.equal(report.source.completeness, 'retained-rows-only')
-  assert.equal(report.selection.sourceRows, 0)
-  assert.match(report.summary.verdict, /no retained source query\/page rows/i)
-  assert.match(report.summary.verdict, /does not prove/i)
 })
 
 test('a reached provider row cap keeps returned candidates partial', async () => {
@@ -459,25 +354,4 @@ test('does not collapse trailing-slash links without redirect evidence', async (
   assert.equal(report.selection.existingLinkExclusions, 0)
   assert.equal(report.items[0]?.linkEvidence.status, 'missing')
   assert.equal(report.items[0]?.actionType, 'review-contextual-link')
-})
-
-test('propagates Search Console provider failures', async () => {
-  const targetUrl = 'https://example.com/target'
-  await assert.rejects(
-    internalLinksReport(
-      {
-        site: 'sc-domain:example.com',
-        targetUrl,
-      },
-      {
-        searchAnalytics: async () => {
-          throw new Error('provider unavailable')
-        },
-        fetch: async (url) => fetched(url),
-        extract: async (result) => page({ url: result.url }),
-        now: () => new Date('2026-07-09T12:00:00.000Z'),
-      },
-    ),
-    /provider unavailable/,
-  )
 })

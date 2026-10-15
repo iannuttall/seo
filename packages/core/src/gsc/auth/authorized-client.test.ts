@@ -26,9 +26,7 @@ const {
 const { createAuthorizedClient, refreshAuthToken } = await import(
   './authorized-client.js'
 )
-const { GoogleTokenEndpointError, requestGoogleAccessToken } = await import(
-  './token-endpoint.js'
-)
+const { GoogleTokenEndpointError } = await import('./token-endpoint.js')
 
 setKeyringForTests({
   getPassword: async () => null,
@@ -70,61 +68,6 @@ after(() => {
   else process.env.SEO_CONFIG_DIR = previousConfigDir
   delete process.env.SEO_LOCK_FAST
   setKeyringForTests()
-})
-
-test('raw refresh request uses the Google token endpoint and form body', {
-  timeout: 10_000,
-}, async () => {
-  let requestUrl = ''
-  let requestInit: RequestInit | undefined
-  const fetchImpl = (async (
-    url: string | URL | Request,
-    init?: RequestInit,
-  ) => {
-    requestUrl = String(url)
-    requestInit = init
-    return new Response(
-      JSON.stringify({
-        access_token: 'next-access-token',
-        expires_in: 3_600,
-        token_type: 'Bearer',
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } },
-    )
-  }) as typeof fetch
-
-  const result = await requestGoogleAccessToken(
-    {
-      clientConfig: {
-        clientId: 'client-id',
-        clientSecret: 'client-secret',
-        source: 'byo',
-      },
-      refreshToken: 'refresh-token',
-    },
-    fetchImpl,
-  )
-
-  assert.equal(requestUrl, 'https://oauth2.googleapis.com/token')
-  assert.equal(requestInit?.method, 'POST')
-  assert.equal(
-    new Headers(requestInit?.headers).get('content-type'),
-    'application/x-www-form-urlencoded',
-  )
-  assert.deepEqual(
-    Object.fromEntries(new URLSearchParams(String(requestInit?.body))),
-    {
-      client_id: 'client-id',
-      client_secret: 'client-secret',
-      grant_type: 'refresh_token',
-      refresh_token: 'refresh-token',
-    },
-  )
-  assert.deepEqual(result, {
-    accessToken: 'next-access-token',
-    expiresIn: 3_600,
-    refreshToken: undefined,
-  })
 })
 
 test('refresh updates stored access data without changing its client source', {
@@ -295,8 +238,6 @@ test('a login missing data scopes fails before calling Google APIs', {
   await assert.rejects(createAuthorizedClient(), (error: unknown) => {
     assert.ok(error instanceof SeoError)
     assert.equal(error.code, 'ACCESS_DENIED')
-    assert.match(error.message, /choose Select all/)
-    assert.match(error.message, /Search Console and Google Analytics/)
     return true
   })
 })

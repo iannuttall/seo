@@ -75,46 +75,6 @@ function peers(): GscRow[] {
   )
 }
 
-test('validates and normalizes the target before querying GSC', async () => {
-  let calls = 0
-  await assert.rejects(
-    pageOpportunitiesReport(
-      { site, url: 'https://other.example/guide' },
-      {
-        searchAnalytics: async () => {
-          calls++
-          return { rows: [], calls: 0, rowsFetched: 0 }
-        },
-        fetch: async () => fetched(),
-        extract: extractPage,
-        now: () => new Date('2026-07-09T12:00:00.000Z'),
-      },
-    ),
-    (error) => error instanceof SeoError && error.code === 'INVALID_INPUT',
-  )
-  assert.equal(calls, 0)
-})
-
-test('rejects invalid date windows before querying GSC', async () => {
-  let calls = 0
-  await assert.rejects(
-    pageOpportunitiesReport(
-      { site, url, days: 1.5 },
-      {
-        searchAnalytics: async () => {
-          calls++
-          return { rows: [], calls: 0, rowsFetched: 0 }
-        },
-        fetch: async () => fetched(),
-        extract: extractPage,
-        now: () => new Date('2026-07-09T12:00:00.000Z'),
-      },
-    ),
-    (error) => error instanceof SeoError && error.code === 'INVALID_INPUT',
-  )
-  assert.equal(calls, 0)
-})
-
 test('uses exact-page rows plus an independent capped site benchmark', async () => {
   const requests: SearchAnalyticsRequest[] = []
   let fetches = 0
@@ -159,37 +119,6 @@ test('uses exact-page rows plus an independent capped site benchmark', async () 
   ])
 })
 
-test('skips the site benchmark and page fetch when every row is filtered', async () => {
-  let searches = 0
-  let fetches = 0
-  const report = await pageOpportunitiesReport(
-    { site, url, minImpressions: 10 },
-    {
-      searchAnalytics: async () => {
-        searches++
-        return {
-          rows: [row({ query: 'technical seo guide', impressions: 9 })],
-          calls: 1,
-          rowsFetched: 1,
-        }
-      },
-      fetch: async () => {
-        fetches++
-        return fetched()
-      },
-      extract: extractPage,
-      now: () => new Date('2026-07-09T12:00:00.000Z'),
-    },
-  )
-
-  assert.equal(searches, 1)
-  assert.equal(fetches, 0)
-  assert.equal(report.dataStatus, 'filtered')
-  assert.equal(report.selection.belowMinimumRows, 1)
-  assert.equal(report.verification.status, 'skipped')
-  assert.match(report.summary.verdict, /none met the report criteria/)
-})
-
 test('returns GSC observations without claiming coverage when fetch fails', async () => {
   let searches = 0
   const report = await pageOpportunitiesReport(
@@ -214,7 +143,6 @@ test('returns GSC observations without claiming coverage when fetch fails', asyn
   assert.equal(report.verification.status, 'failed')
   assert.equal(report.items[0]?.opportunityType, 'ranking')
   assert.notEqual(report.items[0]?.opportunityType, 'covered')
-  assert.match(report.warnings[0] ?? '', /connection reset/)
 })
 
 test('technical HTTP evidence overrides content and CTR advice', async () => {

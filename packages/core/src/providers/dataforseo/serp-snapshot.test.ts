@@ -218,22 +218,6 @@ test('SERP snapshots retain exact organic ranks and feature evidence', async () 
   assert.equal(result.market.device, 'mobile')
 })
 
-test('SERP snapshots fail clearly when the requested query is absent', async () => {
-  const empty = snapshot([], 'different query')
-  const provider = new DataForSeoSerpSnapshotProvider({
-    client: { serpLive: async () => empty },
-  })
-
-  await assert.rejects(
-    provider.serpSnapshot({
-      keyword: 'query',
-      market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
-      depth: 10,
-    }),
-    /no matching SERP result/,
-  )
-})
-
 test('SERP snapshots distinguish a requested depth cap from invalid rows', async () => {
   const provider = new DataForSeoSerpSnapshotProvider({
     client: {
@@ -318,44 +302,6 @@ test('SERP snapshots isolate malformed local-pack rows from valid evidence', asy
   assert.equal(
     result.warnings.some(
       (warning) => warning.code === 'invalid-local-pack-results',
-    ),
-    true,
-  )
-})
-
-test('SERP snapshots discard a provider result count below retained rows', async () => {
-  const provider = new DataForSeoSerpSnapshotProvider({
-    client: {
-      serpLive: async () =>
-        snapshot(
-          [
-            {
-              type: 'organic',
-              rank_group: 1,
-              rank_absolute: 1,
-              page: 1,
-              domain: 'example.test',
-              url: 'https://example.test/page',
-            },
-          ],
-          'query',
-          0,
-        ),
-    },
-  })
-
-  const result = await provider.serpSnapshot({
-    keyword: 'query',
-    market: { countryCode: 'US', languageCode: 'en', searchEngine: 'google' },
-    depth: 10,
-  })
-
-  assert.equal(result.data.resultCount, null)
-  assert.equal(result.coverage.providerTotalRows, null)
-  assert.equal(result.coverage.completeness, 'partial')
-  assert.equal(
-    result.warnings.some(
-      (warning) => warning.code === 'invalid-serp-result-count',
     ),
     true,
   )

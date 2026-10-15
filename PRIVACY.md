@@ -183,16 +183,17 @@ That transfer is controlled by the client and model service, not by the local
 `seo research` does not cache DataForSEO or Ahrefs responses. Older versions
 did, and cache maintenance removes those entries once they are 30 days old.
 On a machine where the command is no longer run, they can remain until you
-clear the cache or reset the software. The local provider spend ledger is kept
-for up to 730 days, 50,000 rows, or 32 MiB.
+clear the cache or reset the software. Older versions also kept a local
+provider spend ledger. The software deletes it the next time it opens its
+cache.
 
 Run `seo cache clear --provider dataforseo` or
 `seo cache clear --provider ahrefs` to remove one provider's cached responses.
 Run the matching `seo providers <provider> disconnect` command to remove its
 saved credential. These commands do not delete data already processed by an
 external provider. Run `seo reset --yes` to remove every saved provider
-credential along with local configuration, caches, histories, spend records,
-logs, and saved reports.
+credential along with local configuration, caches, histories, logs, and saved
+reports.
 
 ## Anonymous tool usage
 

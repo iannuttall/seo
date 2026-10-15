@@ -465,6 +465,21 @@ test('unknown and removed commands exit 2 with one clear error', async () => {
     assert.equal(removed.stdout, '', command)
     assert.match(removed.stderr, /was removed in 0\.3\.0/, command)
   }
+
+  for (const args of [
+    ['providers', 'dataforseo', 'spend'],
+    ['providers', 'dataforseo', 'limits', '--json'],
+    ['providers', 'ahrefs', 'limits'],
+    ['providers', 'limits', 'example-provider'],
+    ['providers', 'spend', 'example-provider', '--json'],
+  ]) {
+    const removed = await runSeoResult(args)
+    const command = args.join(' ')
+    assert.equal(removed.exitCode, 2, command)
+    assert.equal(removed.stdout, '', command)
+    assert.match(removed.stderr, /was removed in 0\.3\.0/, command)
+    assert.match(removed.stderr, /provider account/, command)
+  }
 })
 
 test('report JSON fails clearly when Google auth is missing', async () => {

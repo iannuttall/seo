@@ -4,29 +4,6 @@ const userDataMoneySchema = z
   .object({
     total: z.number().finite().nonnegative().optional(),
     balance: z.number().finite().optional(),
-    limits: z
-      .object({
-        day: z
-          .object({
-            total: z.number().finite().nonnegative().optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
-    statistics: z
-      .object({
-        day: z
-          .object({
-            total: z.number().finite().nonnegative().optional(),
-            value: z.string().max(100).optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
   })
   .passthrough()
 

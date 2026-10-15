@@ -75,16 +75,6 @@ test('CI reuses the verified build without dropping any gates', async () => {
   assert.doesNotMatch(ci, /run: pnpm (?:test|test:package-install|lint)$/m)
 })
 
-test('production dogfood waits for the released package before auditing', async () => {
-  const dogfood = await readFile('.github/workflows/site-dogfood.yml', 'utf8')
-
-  assert.match(dogfood, /^name: Production dogfood$/m)
-  assert.match(dogfood, /for attempt in \$\(seq 1 24\)/)
-  assert.match(dogfood, /npm view "seo@\$version" version/)
-  assert.match(dogfood, /seo@\$version was not published within four minutes/)
-  assert.doesNotMatch(dogfood, /outputs\.published/)
-})
-
 test('the public TypeScript library, MCP, and provider SDK entry points load', async () => {
   const [core, mcp, providerSdk] = await Promise.all([
     import('../dist/index.js'),

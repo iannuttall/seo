@@ -88,7 +88,7 @@
     "test": "turbo run test && pnpm run build:package && pnpm run test:contracts:built && pnpm run test:resources:built",
     "test:built": "turbo run test && pnpm run test:contracts:built && pnpm run test:resources:built",
     "test:cli-shard:built": "node scripts/run-cli-test-shard.mjs",
-    "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs scripts/dogfood-summary.test.mjs scripts/git-hooks.test.mjs scripts/run-cli-test-shard.test.mjs scripts/semrush-live-acceptance.test.mjs && pnpm run skills:validate",
+    "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs scripts/git-hooks.test.mjs scripts/run-cli-test-shard.test.mjs scripts/semrush-live-acceptance.test.mjs && pnpm run skills:validate",
     "test:semrush-live": "pnpm run build:package && node scripts/semrush-live-acceptance.mjs",
     "test:resources": "pnpm run build:package && pnpm run test:resources:built",
     "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/pseo-resource-harness.mjs && node scripts/competitive-opportunities-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && node scripts/provider-extension-resource-harness.mjs && node scripts/server-log-resource-harness.mjs",

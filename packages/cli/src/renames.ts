@@ -43,21 +43,22 @@ export const REMOVED: Record<string, string | null> = {
   'export monthly': 'seo report --json',
   'export narrative': 'seo report --json',
   'export pseo': null,
+  indexnow: null,
   'project keyword-sets': null,
   'projects keyword-sets': null,
-  'providers bing report': null,
+  'providers bing': null,
   'providers semrush': 'seo providers',
 }
 
 const PROJECT_ALIASES = new Set(['client', 'project', 'projects'])
 
-// The removed command an argument list names, if any: the longest matching
-// key, so `seo providers bing report` matches before `seo providers bing`.
+// The removed command an argument list names, if any. Only the leading
+// words before the first flag count, so a flag value never matches.
 export function removedCommand(args: string[]): string | null {
   const flag = args.findIndex((arg) => arg.startsWith('-'))
   const words = flag === -1 ? args : args.slice(0, flag)
   const start = words[0] === 'help' ? 1 : 0
-  for (let length = 3; length >= 1; length -= 1) {
+  for (let length = 2; length >= 1; length -= 1) {
     const key = words.slice(start, start + length).join(' ')
     if (words.length - start >= length && Object.hasOwn(REMOVED, key)) {
       return key

@@ -14,16 +14,19 @@ const PRIVATE_FILE_MODE = 0o600
 
 export const PROVIDER_SECRET_NAMES = {
   ahrefsApiKey: 'ahrefs-api-key',
-  bingApiKey: 'bing-api-key',
   clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
-  indexNowKeys: 'indexnow-keys',
   providerExtensionCredentials: 'provider-extension-credentials',
 } as const
 
 // Secrets of providers removed in 0.3.0. Nothing reads them, but reset still
 // deletes any that an older version saved.
-const REMOVED_PROVIDER_SECRET_NAMES = ['semrush-api-key', 'serpbase-api-key']
+const REMOVED_PROVIDER_SECRET_NAMES = [
+  'bing-api-key',
+  'indexnow-keys',
+  'semrush-api-key',
+  'serpbase-api-key',
+]
 
 export const MANAGED_PROVIDER_SECRET_NAMES = Object.freeze([
   ...Object.values(PROVIDER_SECRET_NAMES),

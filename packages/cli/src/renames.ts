@@ -1,9 +1,8 @@
 // Version 0.3.0 moved most reports into eight commands. Old names keep
 // working for this one release and say where they went. Removed commands say
-// so and stop. Both lists go in 0.4.0.
+// so and stop with exit code 2.
 
 export const RENAMED: Record<string, string> = {
-  'diagnose-property': 'seo report',
   'refresh-priorities': 'seo report',
   'query-cluster': 'seo report',
   'quick-wins': 'seo report --section quick-wins',
@@ -53,7 +52,24 @@ export const REMOVED: Record<string, string | null> = {
   'providers dataforseo limits': null,
   'providers dataforseo spend': null,
   'providers ahrefs limits': null,
+  // Removed after 0.3.0: commands that saved history or decisions. The
+  // agent keeps its own notes now.
+  'change-log': null,
+  'content-groups': null,
+  'crawl-diff': 'seo crawl',
+  'crawl-reports': 'seo crawl',
+  diagnose: 'seo report',
+  'diagnose-property': 'seo report',
+  'export diagnose': 'seo report --json',
+  'index-watch': 'seo page --url <url>',
+  monitoring: 'seo crawl',
+  schedule: null,
+  'technical-watch': 'seo crawl',
+  tests: 'seo compare --date <date>',
 }
+
+const HISTORY_REASON =
+  'It saved history between runs. Your agent keeps its own notes now.'
 
 const SPEND_REASON =
   'Spend is controlled in your provider account. Set limits in DataForSEO, Ahrefs or the other provider.'
@@ -65,6 +81,18 @@ const REMOVED_REASONS: Record<string, string> = {
   'providers dataforseo limits': SPEND_REASON,
   'providers dataforseo spend': SPEND_REASON,
   'providers ahrefs limits': SPEND_REASON,
+  'change-log': HISTORY_REASON,
+  'content-groups': HISTORY_REASON,
+  'crawl-diff': HISTORY_REASON,
+  'crawl-reports': HISTORY_REASON,
+  diagnose: HISTORY_REASON,
+  'diagnose-property': HISTORY_REASON,
+  'export diagnose': HISTORY_REASON,
+  'index-watch': HISTORY_REASON,
+  monitoring: HISTORY_REASON,
+  schedule: HISTORY_REASON,
+  'technical-watch': HISTORY_REASON,
+  tests: HISTORY_REASON,
 }
 
 const PROJECT_ALIASES = new Set(['client', 'project', 'projects'])
@@ -106,5 +134,5 @@ export function removedNotice(args: string[]): string | null {
   const reason = Object.hasOwn(REMOVED_REASONS, command)
     ? REMOVED_REASONS[command]
     : 'SEO Skill now focuses on Search Console, analytics and keyword data.'
-  return `\`seo ${command}\` was removed in 0.3.0. ${reason} ${next}`
+  return `\`seo ${command}\` was removed. ${reason} ${next}`
 }

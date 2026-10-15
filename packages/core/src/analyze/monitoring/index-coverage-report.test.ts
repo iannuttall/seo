@@ -52,8 +52,7 @@ function dependencies(
 ): IndexCoverageReportDependencies {
   const report = crawl()
   return {
-    loadCrawl: () => report,
-    latestCrawl: () => report,
+    crawl: async () => report,
     searchAnalytics: async (_site, _request) => ({
       rows: [
         {
@@ -154,7 +153,7 @@ test('compares the latest saved crawl with finalized page visibility and declare
   assert.match(report.caveats.join('\n'), /not proven unindexed/i)
 })
 
-test('keeps sitemap inventory unavailable when a saved crawl has no sitemap source', async () => {
+test('keeps sitemap inventory unavailable when the crawl has no sitemap source', async () => {
   const reportWithoutSitemap = createCrawlReport({
     id: 'crawl_no_sitemap',
     site: 'sc-domain:example.com',
@@ -165,7 +164,7 @@ test('keeps sitemap inventory unavailable when a saved crawl has no sitemap sour
   const report = await indexCoverageSignals(
     { site: 'sc-domain:example.com' },
     dependencies({
-      latestCrawl: () => reportWithoutSitemap,
+      crawl: async () => reportWithoutSitemap,
       fetchSitemap: async () => {
         sitemapCalls += 1
         throw new Error('unexpected sitemap fetch')
@@ -177,17 +176,4 @@ test('keeps sitemap inventory unavailable when a saved crawl has no sitemap sour
   assert.equal(report.sources.sitemap.completeness, 'unavailable')
   assert.equal(report.input.sitemapDocuments.source, 'unavailable')
   assert.match(report.caveats.join('\n'), /No sitemap inventory was supplied/)
-})
-
-test('rejects a saved crawl from a different Search Console property', async () => {
-  await assert.rejects(
-    indexCoverageSignals(
-      {
-        site: 'sc-domain:other.example',
-        crawlReportId: 'crawl_saved',
-      },
-      dependencies(),
-    ),
-    /belongs to sc-domain:example\.com/,
-  )
 })

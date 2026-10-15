@@ -16,21 +16,6 @@ export type ReportGuidance = {
 export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
-  'affected-urls': {
-    name: 'URLs affected by a crawl issue',
-    description:
-      'Open the exact pages behind a crawl finding so you can review or fix the right URLs.',
-    useWhen: [
-      'A crawl summary shows an issue that needs a closer look.',
-      'You need the affected URLs for one rule, category, or severity.',
-    ],
-    avoidWhen: [
-      'You have not run or selected a crawl yet.',
-      'You need an overview of the most important crawl findings first.',
-    ],
-    outcome:
-      'A focused list of affected URLs with the evidence for each match.',
-  },
   'ai-referrals': {
     name: 'AI referral traffic',
     description:
@@ -90,21 +75,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A ranked review list of queries, URLs, and their share of search exposure.',
   },
-  'compare-crawls': {
-    name: 'Compare saved crawls',
-    description:
-      'Compare two saved crawl snapshots to see which pages and technical findings changed.',
-    useWhen: [
-      'You want to check what changed after a release or migration.',
-      'You need evidence that a technical fix appeared in a later crawl.',
-    ],
-    avoidWhen: [
-      'The two crawls used materially different scope or settings.',
-      'You have only one saved crawl.',
-    ],
-    outcome:
-      'A before-and-after view of added, removed, fixed, and new findings.',
-  },
   'content-optimization': {
     name: 'Search-led content brief',
     description:
@@ -119,49 +89,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A page brief with query evidence, content checks, and specific review points.',
-  },
-  'crawl-diff': {
-    name: 'Monitor crawl changes',
-    description:
-      'Crawl a site and compare it with the previous matching run to catch technical changes.',
-    useWhen: [
-      'You want a repeatable technical check after deployments.',
-      'You need newly introduced or resolved crawl findings.',
-    ],
-    avoidWhen: [
-      'There is no comparable earlier crawl.',
-      'You need to compare two specific saved crawl IDs.',
-    ],
-    outcome:
-      'A fresh crawl plus a clear list of technical changes since the previous run.',
-  },
-  'crawl-history': {
-    name: 'Saved crawl history',
-    description:
-      'List local crawl snapshots so you can choose the right report by site and date.',
-    useWhen: [
-      'You need to find a crawl ID for review or comparison.',
-      'You want to confirm which crawl snapshots exist locally.',
-    ],
-    avoidWhen: [
-      'You need the findings inside a crawl rather than its saved metadata.',
-    ],
-    outcome:
-      'A compact list of saved crawls with IDs, sites, dates, and scope.',
-  },
-  'crawl-report': {
-    name: 'Open a saved crawl',
-    description:
-      'Load a saved crawl by ID, or open the latest local crawl for a site.',
-    useWhen: [
-      'You already know which saved crawl you want to inspect.',
-      'Another report asks for crawl evidence by report ID.',
-    ],
-    avoidWhen: [
-      'You need to create a new crawl.',
-      'You only need a filtered list for one issue.',
-    ],
-    outcome: 'The selected crawl summary with optional page and issue detail.',
   },
   'crawler-rules': {
     name: 'Crawler rule catalog',
@@ -219,20 +146,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A plain-English rule explanation with fix and verification steps.',
   },
-  'index-coverage-plan': {
-    name: 'URL Inspection coverage plan',
-    description:
-      'Choose which sitemap URLs and Search Console properties should use limited URL Inspection checks.',
-    useWhen: [
-      'A large site needs a practical sampling plan for URL Inspection.',
-      'You want to spread checks across useful URL-prefix properties.',
-    ],
-    avoidWhen: [
-      'You need current Google index results rather than a plan.',
-      'You want complete coverage beyond the available quota.',
-    ],
-    outcome: 'A quota-aware list of URLs and properties to inspect next.',
-  },
   'index-coverage': {
     name: 'Index coverage signals',
     description:
@@ -243,40 +156,10 @@ export const REPORT_GUIDANCE = {
     ],
     avoidWhen: [
       'You need proof that a URL is indexed or excluded. Use URL Inspection for that URL.',
-      'You do not have a saved crawl for the selected site.',
+      'The site blocks crawlers, so the crawl cannot list its pages.',
     ],
     outcome:
       'Cross-source URL groups with clear evidence limits and a representative review queue for URL Inspection.',
-  },
-  'index-monitor': {
-    name: 'Collect index snapshots',
-    description:
-      'Check selected sitemap URLs with Google URL Inspection and save the results locally for later comparison.',
-    useWhen: [
-      'You want current Google index evidence for a controlled URL set.',
-      'You need repeatable snapshots for future monitoring.',
-    ],
-    avoidWhen: [
-      'You expect every URL in a large site to be checked at once.',
-      'You only need to review previously saved snapshots.',
-    ],
-    outcome:
-      'Saved URL Inspection results with quota skips and provider failures separated.',
-  },
-  'index-watch': {
-    name: 'Review index changes',
-    description:
-      'Compare current Google index evidence with saved snapshots to find regressions and recoveries.',
-    useWhen: [
-      'You want to see which monitored URLs changed index state.',
-      'You need to separate page issues from quota or provider failures.',
-    ],
-    avoidWhen: [
-      'No earlier index snapshots exist.',
-      'You want a complete index count for the whole site.',
-    ],
-    outcome:
-      'A review queue of current issues, regressions, recoveries, and failed checks.',
   },
   'internal-links': {
     name: 'Internal link opportunities',
@@ -307,21 +190,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A ranked recovery list with current URL checks and prior search value.',
-  },
-  'measure-change': {
-    name: 'Measure an SEO change',
-    description:
-      'Compare equal Search Console periods before and after a known site change.',
-    useWhen: [
-      'A release, migration, or content change has a clear date.',
-      'Both comparison periods contain final and comparable data.',
-    ],
-    avoidWhen: [
-      'The after period is incomplete.',
-      'You need proof that the change caused the movement.',
-    ],
-    outcome:
-      'A before-and-after search comparison with confounders and data limits shown.',
   },
   'page-opportunities': {
     name: 'Opportunities for one page',
@@ -481,7 +349,7 @@ export const REPORT_GUIDANCE = {
       'Do not run a full crawl on a large or unknown site before health=true, or when important content requires browser rendering that is not enabled.',
     ],
     outcome:
-      'A fast sitemap response gate or a full crawl summary with page evidence, technical findings, crawler identity, access guidance, and an optional saved report ID.',
+      'A fast sitemap response gate or a full crawl summary with page evidence, technical findings, crawler identity and access guidance.',
   },
   'striking-distance': {
     name: 'Queries near page one',
@@ -497,21 +365,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A ranked list of near-page-one query and URL pairs with search evidence.',
-  },
-  'technical-watch': {
-    name: 'Technical SEO watch',
-    description:
-      'Run crawl and index checks together to catch technical regressions on a schedule.',
-    useWhen: [
-      'You want recurring checks after releases or site changes.',
-      'You need crawl changes and selected Google index checks in one run.',
-    ],
-    avoidWhen: [
-      'You have not chosen any crawl, index, or link recovery input.',
-      'You need a one-off deep audit rather than ongoing monitoring.',
-    ],
-    outcome:
-      'A combined technical change report with failures and skipped checks kept separate.',
   },
   'top-fixes': {
     name: 'Top technical SEO fixes',

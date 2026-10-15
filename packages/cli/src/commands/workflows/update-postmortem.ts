@@ -147,11 +147,6 @@ export const updatePostmortemCommand = defineCommand({
       description:
         'Manual site-side change to treat as a confounder, for example pruning pages or blocking traffic.',
     },
-    'ignore-change-log': {
-      type: 'boolean',
-      default: false,
-      description: 'Do not use saved change-log entries as confounders.',
-    },
     json: {
       type: 'boolean',
       default: false,
@@ -175,7 +170,6 @@ export const updatePostmortemCommand = defineCommand({
       knownConfounders: stringArg(args['known-change'])
         ? [stringArg(args['known-change']) ?? '']
         : undefined,
-      includeChangeLog: !booleanArg(args['ignore-change-log']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {

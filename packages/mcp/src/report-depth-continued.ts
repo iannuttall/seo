@@ -215,7 +215,6 @@ export const REPORT_DEPTH_CONTINUED = {
       'Re-run the same health configuration first. Use a full crawl only when the health evidence is clean and the question needs page-body analysis.',
     related: [
       { id: 'top-fixes', reason: 'Ranks the fix queue.' },
-      { id: 'affected-urls', reason: 'Lists URLs for a rule.' },
       { id: 'index-coverage', reason: 'Checks coverage signals.' },
     ],
   },
@@ -239,26 +238,6 @@ export const REPORT_DEPTH_CONTINUED = {
       { id: 'page-opportunities', reason: 'Reviews one URL.' },
     ],
   },
-  'technical-watch': {
-    readOrder: [
-      'each workflow step and nested crawl, index, and recovery output independently',
-      'crawl run ids, limits, failures, and changed items',
-      'inspection selected, unselected-due, attempted, failed, quota-blocked, deferred, and regression states',
-      'recovery clicks-at-risk as history',
-    ],
-    doNotClaim: [
-      'A successful run does not prove every URL is crawlable, indexed, unchanged, or issue-free.',
-      'URL Inspection is a provider snapshot and sitemap discovery is not proof of indexing.',
-      'Partial crawls, capped inventories, quotas, and failed subqueries must stay visible in any all-clear.',
-    ],
-    verify:
-      'Reproduce new failures and confirmed regressions, then schedule another bounded run with a rollback path.',
-    related: [
-      { id: 'crawl-diff', reason: 'Isolates crawl change.' },
-      { id: 'index-watch', reason: 'Isolates index change.' },
-      { id: 'link-recovery', reason: 'Recovers search-value URLs.' },
-    ],
-  },
   'top-fixes': {
     readOrder: [
       'dataSources, summary, warnings, and caveats',
@@ -271,9 +250,8 @@ export const REPORT_DEPTH_CONTINUED = {
       'This is not a forecast of rankings, traffic, or revenue.',
     ],
     verify:
-      'Run affected-urls for the same rule and report id, then repeat the crawl configuration after implementation.',
+      'Repeat the same crawl configuration after implementation and confirm the rule no longer triggers.',
     related: [
-      { id: 'affected-urls', reason: 'Lists URLs for a rule.' },
       { id: 'explain-crawl-issue', reason: 'Explains the rule.' },
       { id: 'site-crawl', reason: 'Provides the source crawl.' },
     ],
@@ -333,7 +311,6 @@ export const REPORT_DEPTH_CONTINUED = {
     related: [
       { id: 'update-correlation', reason: 'Adds update timing.' },
       { id: 'segment-impact', reason: 'Shows where movement sits.' },
-      { id: 'measure-change', reason: 'Evaluates a fix.' },
     ],
   },
 } satisfies Record<string, ReportDepth>

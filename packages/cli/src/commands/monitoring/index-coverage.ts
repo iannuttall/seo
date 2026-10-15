@@ -31,10 +31,9 @@ export const indexCoverageCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
-    'crawl-report-id': {
+    url: {
       type: 'string',
-      description:
-        'Saved crawl report id. Defaults to the latest for the site.',
+      description: 'Start URL to crawl. Defaults to the home page.',
     },
     sitemaps: {
       type: 'string',
@@ -79,7 +78,7 @@ export const indexCoverageCommand = defineCommand({
     const sitemapValues = listArg(args.sitemaps)
     const report = await indexCoverageSignals({
       site: selection.site,
-      crawlReportId: stringArg(args['crawl-report-id']),
+      url: stringArg(args.url),
       sitemaps: sitemapValues.length ? sitemapValues : undefined,
       days: numberArg(args.days),
       rowLimit: numberArg(args['row-limit']),

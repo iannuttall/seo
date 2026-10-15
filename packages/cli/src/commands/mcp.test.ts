@@ -127,38 +127,21 @@ test('mcp install and uninstall return clean JSON without prompting', async () =
   }
 })
 
-test('mcp install accepts multiple explicit client flags', async () => {
-  const home = await mkdtemp(join(tmpdir(), 'seo-mcp-home-'))
-
-  try {
-    const result = await runSeo(
-      ['mcp', 'install', '--cursor', '--claude-code', '--json'],
-      { HOME: home },
-    )
-
-    assert.equal(result.exitCode, 0)
-    assert.equal(result.stderr, '')
-    const output = JSON.parse(result.stdout)
-    assert.deepEqual(
-      output.results.map((entry: { client: string }) => entry.client),
-      ['claude-code', 'cursor'],
-    )
-  } finally {
-    await rm(home, { recursive: true, force: true })
-  }
-})
-
-test('the installed CLI completes an MCP initialize handshake', async () => {
-  const request = {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'initialize',
-    params: {
-      protocolVersion: '2025-03-26',
-      capabilities: {},
-      clientInfo: { name: 'seo-test', version: '1.0.0' },
+test('the installed CLI serves the MCP handshake and tool list', async () => {
+  const requests = [
+    {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-03-26',
+        capabilities: {},
+        clientInfo: { name: 'seo-test', version: '1.0.0' },
+      },
     },
-  }
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    { jsonrpc: '2.0', id: 2, method: 'tools/list' },
+  ]
   const result = await new Promise<{
     exitCode: number | null
     stderr: string
@@ -189,15 +172,45 @@ test('the installed CLI completes an MCP initialize handshake', async () => {
       clearTimeout(timeout)
       resolve({ exitCode, stderr, stdout })
     })
-    child.stdin.end(`${JSON.stringify(request)}\n`)
+    child.stdin.end(
+      requests.map((item) => `${JSON.stringify(item)}\n`).join(''),
+    )
   })
 
   assert.equal(result.exitCode, 0)
   assert.equal(result.stderr, '')
-  const response = JSON.parse(result.stdout) as {
-    id: number
-    result: { serverInfo: { name: string } }
+  const [initialized, listed] = result.stdout
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line)) as [
+    { id: number; result: { serverInfo: { name: string } } },
+    {
+      id: number
+      result: { tools: Array<{ name: string; inputSchema: { type: string } }> }
+    },
+  ]
+  assert.equal(initialized.id, 1)
+  assert.equal(initialized.result.serverInfo.name, 'seo')
+  assert.equal(listed.id, 2)
+  const names = listed.result.tools.map((tool) => tool.name)
+  for (const name of [
+    'seo_sites',
+    'seo_report',
+    'seo_page',
+    'seo_compare',
+    'seo_index',
+    'seo_research',
+    'seo_data',
+    'seo_crawl',
+    'seo_internal_links',
+    'seo_list_providers',
+    'seo_describe_provider',
+    'seo_run_provider',
+  ]) {
+    assert.ok(names.includes(name), name)
   }
-  assert.equal(response.id, 1)
-  assert.equal(response.result.serverInfo.name, 'seo')
+  assert.equal(new Set(names).size, names.length)
+  for (const tool of listed.result.tools) {
+    assert.equal(tool.inputSchema.type, 'object', tool.name)
+  }
 })

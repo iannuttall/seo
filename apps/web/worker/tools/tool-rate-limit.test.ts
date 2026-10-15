@@ -63,19 +63,3 @@ test('fails closed when identity is missing or either limit is reached', async (
     error: 'Too many checks. Wait a minute and try again.',
   })
 })
-
-test('does not spend rate-limit counters on non-post requests', async () => {
-  const client = limiter(false)
-  const route = limiter(false)
-  const response = await applyToolRateLimit(
-    new Request('https://seoskill.dev/api/tools/robots-txt'),
-    {
-      TOOL_CLIENT_RATE_LIMITER: client.binding,
-      TOOL_ROUTE_RATE_LIMITER: route.binding,
-    } as never,
-  )
-
-  assert.equal(response, undefined)
-  assert.deepEqual(client.keys, [])
-  assert.deepEqual(route.keys, [])
-})

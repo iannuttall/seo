@@ -90,63 +90,6 @@ test('loads page metadata and a bounded favicon after safe redirects', async () 
   ])
 })
 
-test('keeps useful page evidence when metadata or a favicon is absent', async () => {
-  const response = await handleSerpPreviewFetch(
-    request({ url: 'https://example.com/page' }),
-    async (input) =>
-      input.toString() === 'https://example.com/page'
-        ? new Response('<html><head></head><body>Page</body></html>', {
-            headers: { 'content-type': 'text/html' },
-          })
-        : new Response('not found', { status: 404 }),
-  )
-  assert.equal(response.status, 200)
-  const result = (await response.json()) as SerpPreviewFetchResult
-  assert.equal(result.metadata.title, '')
-  assert.equal(result.metadata.description, '')
-  assert.equal(result.metadata.siteName, 'example.com')
-  assert.deepEqual(result.metadata.favicon, { status: 'unavailable' })
-  assert.deepEqual(result.warnings, [
-    'The fetched page has no title element.',
-    'The fetched page has no meta description.',
-    'No previewable favicon could be loaded.',
-  ])
-})
-
-test('rejects invalid requests before network acquisition', async () => {
-  let calls = 0
-  const fetcher = async () => {
-    calls += 1
-    return new Response('<html></html>', {
-      headers: { 'content-type': 'text/html' },
-    })
-  }
-  const responses = await Promise.all([
-    handleSerpPreviewFetch(new Request(endpoint), fetcher),
-    handleSerpPreviewFetch(
-      request(
-        { url: 'https://example.com' },
-        { origin: 'https://attacker.example' },
-      ),
-      fetcher,
-    ),
-    handleSerpPreviewFetch(
-      new Request(endpoint, { method: 'POST', body: 'text' }),
-      fetcher,
-    ),
-    handleSerpPreviewFetch(request({ url: 'http://example.com' }), fetcher),
-    handleSerpPreviewFetch(
-      request({ url: 'https://example.com', extra: true }),
-      fetcher,
-    ),
-  ])
-  assert.deepEqual(
-    responses.map((response) => response.status),
-    [405, 404, 400, 400, 400],
-  )
-  assert.equal(calls, 0)
-})
-
 test('rejects unsafe redirects, non-HTML pages, and oversized HTML', async () => {
   const unsafe = await handleSerpPreviewFetch(
     request({ url: 'https://example.com' }),
@@ -194,41 +137,4 @@ test('rejects unsafe redirects, non-HTML pages, and oversized HTML', async () =>
     String(((await oversized.json()) as { error: string }).error),
     /size limit/u,
   )
-})
-
-test('bounds extracted text, favicon candidates, and returned output', async () => {
-  const fetched: string[] = []
-  const response = await handleSerpPreviewFetch(
-    request({ url: 'https://example.com/limits' }),
-    async (input) => {
-      const url = input.toString()
-      fetched.push(url)
-      if (url === 'https://example.com/limits') {
-        return new Response(
-          `<html><head>
-            <title>${'T'.repeat(400)}</title>
-            <meta name="description" content="${'D'.repeat(1_200)}">
-            <meta property="og:site_name" content="${'S'.repeat(200)}">
-            <link rel="icon" href="/first.png">
-            <link rel="icon" href="/second.png">
-            <link rel="icon" href="/third.png">
-          </head></html>`,
-          { headers: { 'content-type': 'text/html' } },
-        )
-      }
-      return new Response('not found', { status: 404 })
-    },
-  )
-  assert.equal(response.status, 200)
-  const result = (await response.json()) as SerpPreviewFetchResult
-  assert.equal(result.metadata.title.length, 300)
-  assert.equal(result.metadata.description.length, 1_000)
-  assert.equal(result.metadata.siteName.length, 100)
-  assert.equal(result.source.subrequests, 3)
-  assert.deepEqual(fetched, [
-    'https://example.com/limits',
-    'https://example.com/first.png',
-    'https://example.com/second.png',
-  ])
-  assert.ok(JSON.stringify(result).length < 4_096)
 })

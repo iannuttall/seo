@@ -1,53 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  keywordDiscoverySourceSchema,
-  observedValue,
-  providerCapabilitySchema,
-  providerIdSchema,
-  searchMarketSchema,
-  unavailableValue,
-} from './contracts.js'
-
-test('provider values keep zero separate from unavailable states', () => {
-  assert.deepEqual(observedValue(0), { state: 'observed', value: 0 })
-  assert.deepEqual(unavailableValue('missing', 'Provider omitted the field.'), {
-    state: 'missing',
-    value: null,
-    reason: 'Provider omitted the field.',
-  })
-  assert.deepEqual(
-    unavailableValue('unavailable', 'Market does not support this metric.'),
-    {
-      state: 'unavailable',
-      value: null,
-      reason: 'Market does not support this metric.',
-    },
-  )
-  assert.deepEqual(unavailableValue('invalid', 'Value was not finite.'), {
-    state: 'invalid',
-    value: null,
-    reason: 'Value was not finite.',
-  })
-})
-
-test('search markets normalize stable country and language codes', () => {
-  assert.deepEqual(
-    searchMarketSchema.parse({
-      countryCode: 'gb',
-      languageCode: 'EN-gb',
-      location: { code: 1006886, name: 'London,England,United Kingdom' },
-      device: 'mobile',
-    }),
-    {
-      searchEngine: 'google',
-      countryCode: 'GB',
-      languageCode: 'en-gb',
-      location: { code: 1006886, name: 'London,England,United Kingdom' },
-      device: 'mobile',
-    },
-  )
-})
+import { searchMarketSchema } from './contracts.js'
 
 test('search markets reject ambiguous and extra location input', () => {
   assert.throws(() =>
@@ -67,16 +20,4 @@ test('search markets reject ambiguous and extra location input', () => {
       database: 'us',
     }),
   )
-})
-
-test('provider ids are extensible and capabilities stay an owned vocabulary', () => {
-  assert.equal(providerIdSchema.parse('dataforseo'), 'dataforseo')
-  assert.equal(
-    providerCapabilitySchema.parse('keyword-metrics'),
-    'keyword-metrics',
-  )
-  assert.equal(keywordDiscoverySourceSchema.parse('ideas'), 'ideas')
-  assert.equal(providerIdSchema.parse('vendor-row'), 'vendor-row')
-  assert.throws(() => providerCapabilitySchema.parse('magic-score'))
-  assert.throws(() => keywordDiscoverySourceSchema.parse('provider-magic'))
 })

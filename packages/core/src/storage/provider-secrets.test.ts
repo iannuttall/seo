@@ -74,9 +74,9 @@ after(() => {
 test('provider secrets prefer the environment without persisting it', async () => {
   assert.deepEqual(
     await readProviderSecret({
-      name: 'bing-api-key',
-      envVar: 'SEO_BING_API_KEY',
-      env: { SEO_BING_API_KEY: ' environment-key ' },
+      name: 'ahrefs-api-key',
+      envVar: 'SEO_AHREFS_API_KEY',
+      env: { SEO_AHREFS_API_KEY: ' environment-key ' },
     }),
     { value: 'environment-key', source: 'environment' },
   )
@@ -86,19 +86,19 @@ test('provider secrets prefer the environment without persisting it', async () =
 test('provider secrets use the keychain when available', async () => {
   writeConfig(configSchema.parse({}))
   assert.equal(
-    await writeProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey, 'secret'),
+    await writeProviderSecret(PROVIDER_SECRET_NAMES.ahrefsApiKey, 'secret'),
     'keychain',
   )
   assert.deepEqual(
-    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.bingApiKey }),
+    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.ahrefsApiKey }),
     {
       value: 'secret',
       source: 'keychain',
     },
   )
-  await deleteProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey)
+  await deleteProviderSecret(PROVIDER_SECRET_NAMES.ahrefsApiKey)
   assert.equal(
-    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.bingApiKey }),
+    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.ahrefsApiKey }),
     undefined,
   )
 })
@@ -117,16 +117,16 @@ test('managed provider reset removes every keychain secret', async () => {
 
 test('provider deletion does not claim success when its keychain write remains', async () => {
   writeConfig(configSchema.parse({}))
-  await writeProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey, 'secret')
-  const failedKey = `seo:provider:${PROVIDER_SECRET_NAMES.bingApiKey}`
+  await writeProviderSecret(PROVIDER_SECRET_NAMES.ahrefsApiKey, 'secret')
+  const failedKey = `seo:provider:${PROVIDER_SECRET_NAMES.ahrefsApiKey}`
   keyring.failedDeletes.add(failedKey)
 
   await assert.rejects(
-    deleteProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey),
+    deleteProviderSecret(PROVIDER_SECRET_NAMES.ahrefsApiKey),
     /could not be removed from the system keychain/i,
   )
   assert.deepEqual(
-    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.bingApiKey }),
+    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.ahrefsApiKey }),
     {
       value: 'secret',
       source: 'keychain',
@@ -138,13 +138,13 @@ test('provider secrets fall back to a private file', async () => {
   keyring.unavailable = true
   writeConfig(configSchema.parse({}))
   assert.equal(
-    await writeProviderSecret(PROVIDER_SECRET_NAMES.bingApiKey, 'secret'),
+    await writeProviderSecret(PROVIDER_SECRET_NAMES.ahrefsApiKey, 'secret'),
     'file',
   )
   const path = getSeoCliPaths().providerSecretsFile
   assert.equal(statSync(path).mode & 0o777, 0o600)
   assert.deepEqual(
-    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.bingApiKey }),
+    await readProviderSecret({ name: PROVIDER_SECRET_NAMES.ahrefsApiKey }),
     {
       value: 'secret',
       source: 'file',
@@ -155,11 +155,11 @@ test('provider secrets fall back to a private file', async () => {
 test('provider secret reads repair permissive file permissions', async () => {
   keyring.unavailable = true
   writeConfig(configSchema.parse({}))
-  await writeProviderSecret('bing-api-key', 'secret')
+  await writeProviderSecret('ahrefs-api-key', 'secret')
   const path = getSeoCliPaths().providerSecretsFile
   chmodSync(path, 0o644)
 
-  assert.deepEqual(await readProviderSecret({ name: 'bing-api-key' }), {
+  assert.deepEqual(await readProviderSecret({ name: 'ahrefs-api-key' }), {
     value: 'secret',
     source: 'file',
   })
@@ -173,7 +173,7 @@ test('corrupt provider secret files fail clearly', async () => {
   writeFileSync(path, '{not-json', { mode: 0o600 })
 
   await assert.rejects(
-    readProviderSecret({ name: 'bing-api-key' }),
+    readProviderSecret({ name: 'ahrefs-api-key' }),
     /saved provider credentials are invalid/i,
   )
 })

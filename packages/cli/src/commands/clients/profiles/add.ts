@@ -59,10 +59,6 @@ export const clientAddCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated branded query terms to exclude by default.',
     },
-    'report-day': {
-      type: 'string',
-      description: 'Preferred monthly report day, 1-31.',
-    },
     weekday: {
       type: 'string',
       description: 'Preferred technical-watch weekday, 0-7.',
@@ -144,7 +140,6 @@ export const clientAddCommand = defineCommand({
                 : {}),
             }
           : undefined,
-      reportDay: numberArg(args['report-day']),
       technicalWeekday: numberArg(args.weekday),
       isDefault: booleanArg(args.default),
     }

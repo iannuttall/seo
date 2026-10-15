@@ -40,10 +40,6 @@ export const setupCommand = defineCommand({
       type: 'string',
       description: 'Comma-separated branded query terms to exclude by default.',
     },
-    'report-day': {
-      type: 'string',
-      description: 'Preferred monthly report day. Defaults to 1.',
-    },
     weekday: {
       type: 'string',
       description: 'Preferred technical-watch weekday. Defaults to Monday.',

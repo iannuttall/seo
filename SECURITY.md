@@ -25,7 +25,7 @@ use the operating-system keychain when enabled; fallback token files and local
 credential files use private file permissions.
 
 Local first does not mean offline. Crawls, connected accounts, research
-providers, Chrome UX Report, IndexNow, package checks, and anonymous telemetry
+providers, Chrome UX Report, package checks, and anonymous telemetry
 can make the direct network requests described in the
 [privacy policy](https://seoskill.dev/privacy).
 
@@ -40,7 +40,7 @@ placeholders and Cloudflare's documented local test keys belong in tracked
 examples. Public forms never receive provider credentials.
 
 Use `seo privacy` to inspect local files. `seo reset --yes` removes Google
-tokens, saved provider credentials, saved IndexNow keys, and the local config,
+tokens, saved provider credentials, and the local config,
 cache, and log directories. Reset stops before deleting those directories if
 an active keychain credential cannot be removed. Environment variables remain
 under the control of your shell or runtime. Google grants can also be revoked at

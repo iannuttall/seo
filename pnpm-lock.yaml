@@ -50,12 +50,6 @@ importers:
       cli-table3:
         specifier: ^0.6.5
         version: 0.6.5
-      consola:
-        specifier: ^3.4.2
-        version: 3.4.2
-      debug:
-        specifier: ^4.4.3
-        version: 4.4.3
       defuddle:
         specifier: ^0.19.1
         version: 0.19.1
@@ -101,9 +95,6 @@ importers:
       robots-parser:
         specifier: ^3.0.1
         version: 3.0.1
-      schema-dts:
-        specifier: ^2.0.0
-        version: 2.0.0(typescript@6.0.3)
       string-width:
         specifier: ^8.2.2
         version: 8.2.2
@@ -113,9 +104,6 @@ importers:
       update-notifier:
         specifier: ^7.3.1
         version: 7.3.1
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -260,12 +248,6 @@ importers:
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
-      consola:
-        specifier: ^3.4.2
-        version: 3.4.2
-      debug:
-        specifier: ^4.4.3
-        version: 4.4.3
       defuddle:
         specifier: ^0.19.1
         version: 0.19.1
@@ -308,15 +290,9 @@ importers:
       robots-parser:
         specifier: ^3.0.1
         version: 3.0.1
-      schema-dts:
-        specifier: ^2.0.0
-        version: 2.0.0(typescript@6.0.3)
       undici:
         specifier: ^8.10.2
         version: 8.11.2
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -2288,10 +2264,6 @@ packages:
   configstore@7.1.0:
     resolution: {integrity: sha512-N4oog6YJWbR9kGyXvS7jEykLDXIE2C0ILYqNBZBp9iwiJpoCBWYsuAdW6PPFn6w06jjnC+3JstVvWHO4cZqvRg==}
     engines: {node: '>=18'}
-
-  consola@3.4.2:
-    resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
-    engines: {node: ^14.18.0 || >=16.10.0}
 
   content-disposition@1.1.0:
     resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
@@ -6326,8 +6298,6 @@ snapshots:
       dot-prop: 9.0.0
       graceful-fs: 4.2.11
       xdg-basedir: 5.1.0
-
-  consola@3.4.2: {}
 
   content-disposition@1.1.0: {}
 

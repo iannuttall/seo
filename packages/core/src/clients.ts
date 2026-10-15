@@ -11,8 +11,6 @@ export type ClientProfileInput = {
   brandTerms?: string[]
   analytics?: ClientProfile['analytics']
   googleAccounts?: ClientProfile['googleAccounts']
-  searchEngines?: ClientProfile['searchEngines']
-  reportDay?: number
   technicalWeekday?: number
   isDefault?: boolean
 }
@@ -70,12 +68,6 @@ export function analyticsConnection(
     return { provider: 'extension', providerId, account: saved.account }
   }
   return undefined
-}
-
-export function bingWebmasterSiteUrl(
-  client: Pick<ClientProfile, 'searchEngines'> | undefined,
-): string | undefined {
-  return client?.searchEngines?.bing?.siteUrl
 }
 
 function slug(value: string): string {
@@ -136,8 +128,6 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
     ),
     analytics: input.analytics ?? existing?.analytics ?? {},
     googleAccounts: input.googleAccounts ?? existing?.googleAccounts,
-    searchEngines: input.searchEngines ?? existing?.searchEngines,
-    reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,
     isDefault: input.isDefault ?? existing?.isDefault,
     createdAt: existing?.createdAt ?? now,
@@ -238,20 +228,6 @@ export function removeClientAnalyticsConnection(
   const googleAccounts = { ...client.googleAccounts }
   delete googleAccounts.googleAnalytics
   return updateClient(client.id, { analytics, googleAccounts })
-}
-
-export function setClientBingSite(
-  idOrName: string,
-  siteUrl: string,
-): ClientProfile {
-  const client = getClient(idOrName)
-  if (!client) throw new Error(`Client not found: ${idOrName}`)
-  return updateClient(client.id, {
-    searchEngines: {
-      ...client.searchEngines,
-      bing: { siteUrl },
-    },
-  })
 }
 
 export function deleteClient(idOrName: string): boolean {

@@ -165,7 +165,6 @@ test('crawler CLI JSON output schema stays stable', async () => {
         'warning',
       ],
       config: [
-        'checkAgentDiscovery',
         'checkExternal',
         'concurrency',
         'exclude',

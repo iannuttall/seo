@@ -1,10 +1,10 @@
+import { type SegmentImpactItem, segmentImpact } from '../segment-impact.js'
+import { updateCorrelation } from '../traffic-anomaly.js'
 import {
   clusterPseoTemplates,
   type PseoTemplateCluster,
   templateForUrl,
-} from '../pseo/templates.js'
-import { type SegmentImpactItem, segmentImpact } from '../segment-impact.js'
-import { updateCorrelation } from '../traffic-anomaly.js'
+} from '../url-templates.js'
 import { workflowReport } from './report.js'
 import { splitSegments } from './segments.js'
 import type { WorkflowAction, WorkflowReport } from './types.js'

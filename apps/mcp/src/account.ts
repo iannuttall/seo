@@ -17,6 +17,7 @@ import {
   setKey,
   userExists,
 } from './store.ts'
+import { HOSTED_BING } from './tools/deps.ts'
 
 // The account page: the person's linked Google accounts, Bing and research
 // keys, with add, remove and delete everything. Google sign-in only; a
@@ -92,9 +93,9 @@ async function accountPage(
         .filter((account) => account.provider === 'google')
         .map((account) => ({ email: account.label, subject: account.subject })),
       bing: accounts
-        .filter((account) => account.provider === 'bing')
+        .filter((account) => HOSTED_BING && account.provider === 'bing')
         .map((account) => ({ label: account.label, subject: account.subject })),
-      bingReady: Boolean(env.BING_CLIENT_ID),
+      bingReady: HOSTED_BING && Boolean(env.BING_CLIENT_ID),
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
       ),
@@ -152,7 +153,7 @@ export async function account(
         ),
       )
     case '/account/bing':
-      if (!env.BING_CLIENT_ID) {
+      if (!HOSTED_BING || !env.BING_CLIENT_ID) {
         return accountPage(env, userId, 'Bing sign-in is not set up yet.')
       }
       return redirect(

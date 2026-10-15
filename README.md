@@ -81,18 +81,20 @@ codex mcp add seoskill --url https://seoskill.dev/mcp
 
 Sign in with Google when the client asks. That first Google account is your
 account, so there is no password or separate signup. The server keeps only
-your Google and Bing sign-ins and any API keys you save, encrypted. It keeps
-no report data, no Search Console or analytics rows and no request logs.
+your linked Google accounts and any API keys you save, encrypted. It keeps no
+report data, no Search Console or analytics rows and no request logs.
 
 Your [account page](https://seoskill.dev/account) lets you add more Google
-accounts, connect Bing, save DataForSEO or Ahrefs keys, or delete everything.
+accounts, save DataForSEO or Ahrefs keys, or delete everything.
 Each request uses the linked Google account that can read the site. The
 [hosted MCP guide](https://seoskill.dev/docs/mcp) covers other clients, and the
 [API keys guide](https://seoskill.dev/docs/keys) shows how to add a key
 without pasting it into a chat.
 
 A crawl fetches many pages, so `seo crawl` and `seo internal-links` run only
-on your machine, through the CLI or the local MCP server.
+on your machine, through the CLI or the local MCP server. Bing data also runs
+only there for now; when you ask the hosted server for Bing, it tells your
+agent which CLI command to run.
 
 ## The eight commands
 
@@ -103,7 +105,7 @@ on your machine, through the CLI or the local MCP server.
 | `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with the Google updates in the window |
 | `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from your key |
-| `seo data` | `seo_data` | Raw Search Console or Bing rows; the hosted tool also reads analytics landing pages |
+| `seo data` | `seo_data` | Raw Search Console rows, or Bing rows in the CLI and local server; the hosted tool also reads analytics landing pages |
 | `seo crawl <url>` | `seo_crawl` | A site crawl with technical issues and the URLs they affect (local only) |
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page (local only) |
 
@@ -184,17 +186,17 @@ record of what your own site actually got.
 
 ## Add Bing Webmaster Tools
 
-Bing data is free. In the CLI and local MCP server, save a Bing Webmaster API
-key (Bing Webmaster Tools, then Settings, then API access):
+Bing data is free. It works in the CLI and the local MCP server. Save a Bing
+Webmaster API key (Bing Webmaster Tools, then Settings, then API access):
 
 ```sh
 seo providers bing connect
 ```
 
 Agents and CI can set `SEO_BING_API_KEY` instead. `seo providers bing status`
-shows the connection and `seo providers bing disconnect` removes it. On the
-hosted server, connect Bing on your
-[account page](https://seoskill.dev/account).
+shows the connection and `seo providers bing disconnect` removes it. The
+hosted server has no Bing for now. When you ask it for Bing, it tells your
+agent to run the CLI instead, the same way it does for a crawl.
 
 `seo report` then shows Google and Bing clicks and impressions for the same
 dates, and each engine's share of those clicks. The `bing` section puts Bing's

@@ -6,10 +6,10 @@ This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp with its account page, and the
 seoskill.dev website.
 
-In short: the hosted MCP keeps only your linked Google and Bing sign-ins and
-any API keys you save, encrypted, so it can fetch your own data when you ask.
-It never keeps your Search Console, analytics or Bing data, your reports or a
-log of your requests. The only thing kept about your use is an anonymous usage
+In short: the hosted MCP keeps only your linked Google accounts and any API
+keys you save, encrypted, so it can fetch your own data when you ask. It never
+keeps your Search Console or analytics data, your reports or a log of your
+requests. The only thing kept about your use is an anonymous usage
 count (the event, report, agent, version and week).
 
 The command-line tool runs on your machine. It does not create an SEO
@@ -32,8 +32,6 @@ Cloudflare D1 with only these things:
 - **Your linked Google accounts.** The email address of each Google account
   you link, and its refresh and access tokens. You grant read-only access to
   Search Console and Google Analytics.
-- **Your Bing sign-in, if you connect it.** The refresh and access tokens
-  from Bing's own sign-in, with read-only access to Bing Webmaster Tools.
 - **Your API keys, if you save them.** A DataForSEO login and password and an
   Ahrefs key.
 
@@ -41,22 +39,21 @@ Every token and key is encrypted with a server key before it is written. The
 tokens are used only to fetch your own data when you or your agent ask for
 it. The token your MCP client keeps carries only your person id.
 
-The server keeps nothing else. It does not keep reports, Search Console,
-Google Analytics or Bing rows, lists of your sites, or the pages it checked.
+The server keeps nothing else. It does not keep reports, Search Console
+or Google Analytics rows, lists of your sites, or the pages it checked.
 Request logs are turned off.
 
-- **Your data.** Search Console, Google Analytics, Bing and provider
-  responses are fetched for each request, returned to your MCP client and not
-  kept. Pages checked live are fetched for the request and not kept.
+- **Your data.** Search Console, Google Analytics and provider responses are
+  fetched for each request, returned to your MCP client and not kept. Pages checked live are fetched for the request and not kept.
 - **API key headers.** You can send `X-DataForSEO-Login`,
   `X-DataForSEO-Password` and `X-Ahrefs-Key` headers instead of saving keys.
   A header wins over a saved key and is used for that request only.
 - **The account page.** At [seoskill.dev/account](https://seoskill.dev/account)
   you sign in with Google to see your linked accounts, add or remove them,
-  connect Bing, and save or remove keys. It sets one essential cookie that
-  holds your encrypted person id for up to 30 days.
-- **Outside services.** Google and Bing answer their own requests. The
-  provider you choose receives your research request under its own policy.
+  and save or remove keys. It sets one essential cookie that holds your
+  encrypted person id for up to 30 days.
+- **Outside services.** Google answers its own requests. The provider you
+  choose receives your research request under its own policy.
   Ahrefs receives the domains in research rows for the free Domain Rating
   column. Cloudflare runs the server, stores the encrypted data and handles
   the network requests.
@@ -121,7 +118,8 @@ save a Bing Webmaster API key with `seo providers bing connect`, or set
 `SEO_BING_API_KEY`. The key is saved in the system keychain when available,
 with a private local file fallback. Requests go directly from your machine to
 Bing over HTTPS and can read the sites that key can read. Run
-`seo providers bing disconnect` to remove the saved key.
+`seo providers bing disconnect` to remove the saved key. The hosted MCP
+server does not read Bing data.
 
 ## How Google data is protected
 

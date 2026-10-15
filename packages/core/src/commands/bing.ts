@@ -34,6 +34,12 @@ export const BING_LIMITS = [
   'Bing lists only its top queries and pages, grouped by week. A query or page missing from Bing’s list is unknown, not zero.',
 ]
 
+// Surfaces without Bing (the hosted MCP, until Bing calls go through a
+// relay: Bing blocks Cloudflare's network with ThrottleIP) send agents to
+// the CLI, as they do for crawls.
+export const LOCAL_BING =
+  'Bing data runs on the person’s machine with the CLI: connect a Bing Webmaster API key once with `npx -y seo providers bing connect`, then run `npx -y seo report --site <site> --section bing --json`.'
+
 export type BingSource =
   | { call: BingCall; site: string }
   | { call: null; site: null; missing: string }
@@ -45,7 +51,8 @@ export async function bingFor(
   deps: CommandDeps,
   property: string,
 ): Promise<BingSource> {
-  const call = (await deps.bing?.()) ?? null
+  if (!deps.bing) return { call: null, site: null, missing: LOCAL_BING }
+  const call = await deps.bing()
   if (!call) {
     return {
       call: null,

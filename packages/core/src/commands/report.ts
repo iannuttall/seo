@@ -468,8 +468,10 @@ async function allSections(
   const read = sharedReader(deps.searchAnalytics)
   const origin = originOf(input.site)
   const bing = once(() => bingFor(deps, input.site))
+  // A surface without Bing leaves the bing section out.
+  const ids = SECTION_IDS.filter((id) => id !== 'bing' || deps.bing)
   const runs = await Promise.all(
-    SECTION_IDS.map((id) =>
+    ids.map((id) =>
       build(
         read,
         input.site,
@@ -486,17 +488,15 @@ async function allSections(
   if (!overview || overview instanceof Error) {
     throw overview ?? new Error('The overview did not run.')
   }
-  const parts = [
-    overviewText(overview, `Report on ${input.site}`, origin, 5),
-    await enginesLine(overview, bing),
-  ]
+  const parts = [overviewText(overview, `Report on ${input.site}`, origin, 5)]
+  if (deps.bing) parts.push(await enginesLine(overview, bing))
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
   )
   if (brand) parts.push(brandNote(brand) as string)
   const sections: Record<string, unknown> = {}
-  SECTION_IDS.slice(1).forEach((id, index) => {
+  ids.slice(1).forEach((id, index) => {
     const run = rest[index]
     if (!run || run instanceof Error) {
       const message = run?.message ?? 'did not run'
@@ -518,7 +518,7 @@ async function allSections(
     )
   })
   parts.push(
-    `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${SECTION_IDS.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
+    `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${ids.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
   )
   return {
     text: `${parts.join('\n\n')}\n\n${FACTS_ONLY}`,
@@ -547,7 +547,7 @@ async function oneSection(
   const next = nextFor(section, deps.call)
   if (section === 'overview' && detail !== 'full') {
     return {
-      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${await enginesLine(report, bing)}\n\nMore: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
+      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${deps.bing ? `${await enginesLine(report, bing)}\n\n` : ''}More: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
       data: report,
     }
   }

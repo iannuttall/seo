@@ -1,6 +1,6 @@
 ---
 title: Connect Bing Webmaster Tools
-description: Add Bing clicks, impressions, queries and pages beside Search Console in the SEO report, with the hosted MCP or the CLI. Bing data is free.
+description: Add Bing clicks, impressions, queries and pages beside Search Console in the SEO report, with the CLI or the local MCP server. Bing data is free.
 heading: Bing Webmaster Tools
 lead: See Bing's clicks, impressions, queries and pages next to Google's for the same site. Bing data is free.
 ---
@@ -9,9 +9,7 @@ Google is not the only search engine sending visits. Connect Bing Webmaster Tool
 
 You need a site verified in [Bing Webmaster Tools](https://www.bing.com/webmasters). Bing can import your sites from Search Console, which is the quickest way to add them.
 
-## Connect Bing on the hosted MCP
-
-Open your [account page](https://seoskill.dev/account), sign in with Google and choose **Connect Bing**. Bing's own sign-in opens and asks for read-only access to Bing Webmaster Tools. The sign-in is encrypted and kept with your account until you remove it.
+Bing runs with the CLI and the local MCP server. The [hosted MCP](/docs/mcp) has no Bing for now (Bing blocks requests from its network). If you use the hosted MCP, your agent runs the CLI for Bing, the same way it does for a crawl.
 
 ## Connect Bing in the CLI
 
@@ -44,7 +42,16 @@ For raw Bing query or page rows with the previous period, use [`seo data`](/docs
 seo data --site example.com --source bing --dimensions query
 ```
 
-On the hosted MCP, ask your agent for the Bing section or for raw Bing rows, and it runs `seo_report` or `seo_data`. `seo_sites` shows the Bing site for each Search Console property, and any Bing sites with no property.
+With the local MCP server, ask your agent for the Bing section or for raw Bing rows, and it runs `seo_report` or `seo_data`. `seo_sites` shows the Bing site for each Search Console property, and any Bing sites with no property.
+
+## Bing with the hosted MCP
+
+When you ask the hosted MCP for Bing, it tells your agent to run the CLI instead. An agent with a shell connects the key once, then runs the Bing section:
+
+```sh
+npx -y seo providers bing connect
+npx -y seo report --site example.com --section bing --json
+```
 
 ## How to read Bing's numbers
 

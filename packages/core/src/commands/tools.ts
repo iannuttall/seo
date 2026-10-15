@@ -119,7 +119,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         accounts: await surface.accounts(),
         keys: await surface.keys(),
         signIn: surface.signIn,
-        bing: (await surface.deps.bing?.()) ?? null,
+        bing: surface.deps.bing ? await surface.deps.bing() : undefined,
         connect: surface.connect,
       }),
   }),

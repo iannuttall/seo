@@ -43,6 +43,7 @@ export async function runSites(input: {
   accounts: GoogleAccount[]
   keys: Headers
   signIn: string
+  // null when Bing is not connected; left out on a surface without Bing.
   bing?: BingCall | null
   // Where to add a Google account, Bing or keys on this surface.
   connect: string
@@ -127,15 +128,17 @@ export async function runSites(input: {
     analytics.length
       ? `Google Analytics properties (${analytics.length}):\n${table(analytics, ['property', 'name', 'account', ...(named ? ['signIn'] : [])], null)}`
       : 'Google Analytics: no properties readable with these sign-ins.',
-    bing === null
-      ? 'Bing Webmaster: not connected.'
-      : bing instanceof Error
-        ? `Bing Webmaster: could not list sites. ${bing.message}`
-        : bingOnly.length
-          ? `Bing Webmaster sites with no Search Console property here (${bingOnly.length}): ${bingOnly.map((site) => site.url).join(', ')}.`
-          : `Bing Webmaster: ${bingSites.length} verified sites; the bing column shows each one.`,
+    input.bing === undefined
+      ? null
+      : bing === null
+        ? 'Bing Webmaster: not connected.'
+        : bing instanceof Error
+          ? `Bing Webmaster: could not list sites. ${bing.message}`
+          : bingOnly.length
+            ? `Bing Webmaster sites with no Search Console property here (${bingOnly.length}): ${bingOnly.map((site) => site.url).join(', ')}.`
+            : `Bing Webmaster: ${bingSites.length} verified sites; the bing column shows each one.`,
     `Research keys: ${research.length ? research.join(', ') : 'none'}.`,
-    `Add a Google account, Bing or a key: ${input.connect}`,
+    `Add a Google account${input.bing === undefined ? '' : ', Bing'} or a key: ${input.connect}`,
     'Next: seo_report with a site.',
   ]
   return {

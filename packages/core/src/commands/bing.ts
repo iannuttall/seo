@@ -40,6 +40,11 @@ export const BING_LIMITS = [
 export const LOCAL_BING =
   'Bing data runs on the person’s machine with the CLI: connect a Bing Webmaster API key once with `npx -y seo providers bing connect`, then run `npx -y seo report --site <site> --section bing --json`.'
 
+// The overview line on a surface without Bing: missing Bing data is not
+// "no Bing traffic", and some sites get most of their search visits there.
+export const NO_BING_HERE =
+  'Bing: not included here, so these totals show Google only. Some sites get most of their search visits from Bing; run `npx -y seo report --site <site> --section bing --json` with the CLI to see them.'
+
 export type BingSource =
   | { call: BingCall; site: string }
   | { call: null; site: null; missing: string }

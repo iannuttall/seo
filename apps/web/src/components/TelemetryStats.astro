@@ -38,6 +38,7 @@ const metrics = [
   ['firstAuditConversionPercent', 'Installs completing first audit'],
   ['auditsFailed', 'Failed audits'],
   ['commandsFailed', 'Failed commands'],
+  ['hostedAccounts', 'Hosted MCP accounts'],
 ] as const
 ---
 
@@ -91,6 +92,10 @@ const metrics = [
             <span><span class="mr-1 inline-block size-2 rounded-full bg-primary"></span> CLI and local MCP</span>
             <span><span class="mr-1 inline-block size-2 rounded-full bg-foreground-muted"></span> Hosted MCP</span>
           </p>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium">Hosted MCP sign-ups per day</h3>
+          <div class="mt-3" data-chart="daily-signups"></div>
         </div>
         <div>
           <h3 class="text-sm font-medium">New installs per day</h3>
@@ -527,6 +532,8 @@ const metrics = [
   }
 
   type Timeline = {
+    hostedAccounts: number
+    hostedSignups: Array<{ day: string; count: number }>
     daily: Array<{ day: string; installs: number; cliRuns: number; hostedRuns: number }>
     monthly: Array<{ month: string; installs: number; runs: number }>
     skills: {
@@ -537,6 +544,18 @@ const metrics = [
 
   const renderTimeline = (value: Timeline | undefined) => {
     const daily = value?.daily ?? []
+    text(
+      document.querySelector('[data-stat="hostedAccounts"]'),
+      count(value?.hostedAccounts ?? 0),
+    )
+    const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
+    barChart(
+      document.querySelector('[data-chart="daily-signups"]'),
+      (value?.hostedSignups ?? [])
+        .filter((day) => day.day >= since)
+        .map((day) => ({ label: day.day, values: [day.count] })),
+      ['sign-ups'],
+    )
     barChart(
       document.querySelector('[data-chart="daily-runs"]'),
       daily.map((day) => ({ label: day.day, values: [day.cliRuns, day.hostedRuns] })),

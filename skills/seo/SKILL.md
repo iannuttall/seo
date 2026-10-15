@@ -51,9 +51,8 @@ Sites can be given as `example.com`, a URL or `sc-domain:example.com`.
 4. Each result ends with the command to run next. Follow it when it fits the
    question.
 
-Each command takes its target and optional dates, nothing more. Brand terms,
-minimum impressions and the comparison period are set automatically and shown
-in the output.
+Each command takes a target and optional dates. Everything else is automatic
+and shown in the output.
 
 ## Common jobs
 
@@ -78,7 +77,8 @@ The report overview shows Google and Bing clicks for the same dates. The
 add Bing to Google. Bing lists only its top rows by week, so a missing row is
 unknown, not zero. Bing runs in the CLI and local MCP server: connect it once
 with `seo providers bing connect` (or `SEO_BING_API_KEY`). The hosted server
-has no Bing yet; run `npx -y seo report --site <site> --section bing --json`.
+has no Bing yet, so its totals are Google only: no Bing data there is not
+"no Bing traffic". Run `npx -y seo report --site <site> --section bing --json`.
 
 ## Research keys
 
@@ -102,5 +102,4 @@ as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 - Never promise clicks, rankings, indexing or traffic.
 - Show the facts, for example in a table, and ask before you edit any page.
 
-Old report names from version 0.2, such as `seo quick-wins`, still run in
-0.3 and print their new command. Use the new commands.
+Old 0.2 report names, such as `seo quick-wins`, print their new command.

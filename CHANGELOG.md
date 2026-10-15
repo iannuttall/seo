@@ -55,6 +55,11 @@ changes a page.
   for the remaining report catalog.
 - Quick wins and low CTR minimums now scale to the site, and brand terms, the
   CTR curve and likely automated query flags were tightened.
+- `seo schedule cron` prints the technical watch line only. Project profiles
+  no longer keep a monthly report day or a Bing site.
+- Crawl JSON no longer has `config.checkAgentDiscovery` or `agentDiscovery`.
+  Comparing a crawl saved before this change with a new one asks for review
+  once, because the crawl settings changed.
 
 ### Moved
 
@@ -81,21 +86,38 @@ Old 0.2 command names still run in 0.3.0. Each one prints its new command.
 | `seo update-postmortem` | `seo compare --date <date>` |
 | `seo link-recover` | `seo index` |
 | `seo gsc-query` | `seo data` |
-| `seo links` | `seo research backlinks --target <domain>` |
 
 ### Removed
 
-These reports were removed. A removed command prints a removal message and
-stops.
+These were removed. A removed command or report id prints a removal message,
+names the command to use instead when there is one, and stops.
 
-- Rank tracking
-- Programmatic SEO (`seo pseo`)
+- Rank tracking and saved keyword sets (`seo projects keyword-sets`)
+- Programmatic SEO (`seo pseo`, `seo export pseo`)
 - AI, GEO and AEO readiness (`seo ai-readiness`, `seo agent-readiness`,
-  `seo entity-readiness`, `seo seo-to-ai-query`, `seo community-intent`)
-- llms.txt and OKF (`seo llms`, `seo okf`)
-- Bing Webmaster
+  `seo entity-readiness`, `seo seo-to-ai-query`, `seo community-intent`,
+  `seo export knowledge`)
+- llms.txt and OKF (`seo llms`, `seo okf`). The free llms.txt checker on the
+  website still works.
+- AI prompt observations and AI mention research
 - Local search demand
-- Server logs (`seo server-logs`)
-- Monthly and narrative reports (`seo monthly-report`, `seo report-narrative`)
-- Semrush as a research provider. Its terms do not allow its data as input
-  to an AI model, so `seo research` uses DataForSEO or Ahrefs only.
+- Server logs (`seo server-logs`). The free log file analyzer on the website
+  still works.
+- Monthly and narrative reports (`seo monthly-report`, `seo report-narrative`,
+  `seo export monthly`, `seo export narrative`)
+- The old research reports: `keyword-research`, `keyword-metrics`,
+  `keyword-opportunities`, `competitive-opportunities`,
+  `competitor-keyword-gap`, `domain-overview`, `ranked-keywords`,
+  `ranking-pages`, `serp-competitors`, `serp-results`, `domain-rating` and
+  `link-evidence`. Use `seo research <action>` instead.
+- `seo links`. Use `seo research backlinks --target <domain>` instead.
+- Semrush (`seo providers semrush`). Its terms do not allow its data as input
+  to an AI model, so `seo research` uses DataForSEO or Ahrefs only. Research
+  file imports accept DataForSEO and Ahrefs exports only.
+- The SerpBase stub
+- Bing Webmaster (`seo providers bing`)
+- IndexNow (`seo indexnow`)
+- `seo reports describe --check`, which only covered agent readiness checks
+
+`seo reset` still deletes Semrush, SerpBase, Bing and IndexNow keys that an
+older version saved.

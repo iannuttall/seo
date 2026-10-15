@@ -242,10 +242,11 @@ the same command again over a later, complete window.
 
 Version 0.3.0 moved most reports into the eight commands. Old names such as
 `seo quick-wins` still run in 0.3 and print the new command to use. They stop
-working in 0.4.0. Some reports were removed, including rank tracking,
-programmatic SEO, AI search readiness, llms.txt, Bing Webmaster, local search,
-server logs and the monthly and narrative reports. The [changelog](CHANGELOG.md)
-lists every old name and where it went.
+working in 0.4.0. Some reports and commands were removed, including rank
+tracking, programmatic SEO, AI search readiness, llms.txt, Bing Webmaster,
+IndexNow, Semrush, local search, server logs and the monthly and narrative
+reports. The old research reports became `seo research`. The
+[changelog](CHANGELOG.md) lists every old name and where it went.
 
 ## Use it in CI and scripts
 

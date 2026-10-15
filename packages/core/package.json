@@ -33,9 +33,7 @@
   "scripts": {
     "build": "pnpm run clean && tsc -p tsconfig.json",
     "clean": "node -e \"require('node:fs').rmSync('dist', { force: true, recursive: true })\"",
-    "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "node scripts/run-tests.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "test": "node scripts/run-tests.mjs"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

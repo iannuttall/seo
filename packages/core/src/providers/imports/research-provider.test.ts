@@ -5,13 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import type { ResearchImportSource } from '../domain-contracts.js'
-import { ResearchImportProvider } from './research-provider.js'
-
-const market = {
-  searchEngine: 'google' as const,
-  countryCode: 'US',
-  languageCode: 'en',
-}
+import { combineResearchRows } from './research-provider.js'
 
 async function fixture<T extends string | Uint8Array>(
   name: string,
@@ -50,35 +44,28 @@ test('semicolon CSV imports map provider aliases and retain file provenance', as
     'beta shoes;8;120;34;0.8;0.2;https://shop.example/beta;9;Transactional',
   ].join('\n')
   await fixture('rankings.csv', body, async (path) => {
-    const provider = new ResearchImportProvider([source(path)])
-    const result = await provider.rankedKeywords({
-      target: 'shop.example',
-      market,
-      limit: 50,
-    })
+    const result = await combineResearchRows([source(path)])
+    const alpha = result.rows.find((row) => row.keyword === 'alpha shoes')
 
-    assert.equal(result.provider, 'dataforseo')
-    assert.equal(result.observedAt, '2026-07-20T12:00:00.000Z')
-    assert.equal(result.cost.actualMicros, 0)
-    assert.equal(result.coverage.completeness, 'partial')
-    assert.equal(result.coverage.invalidRows, 1)
-    assert.equal(result.data.rows.length, 2)
-    assert.equal(result.imports?.[0]?.encoding, 'utf-8')
-    assert.equal(result.imports?.[0]?.delimiter, ';')
-    assert.equal(result.data.rows[0]?.rankAbsolute, 2)
-    assert.deepEqual(result.data.rows[0]?.monthlySearchVolume, {
+    assert.equal(result.imports[0]?.provider, 'dataforseo')
+    assert.equal(result.imports[0]?.invalidRows, 1)
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.imports[0]?.encoding, 'utf-8')
+    assert.equal(result.imports[0]?.delimiter, ';')
+    assert.equal(alpha?.rankAbsolute, 2)
+    assert.deepEqual(alpha?.monthlySearchVolume, {
       state: 'observed',
       value: 0,
     })
-    assert.equal(result.imports?.[0]?.duplicateRows, 1)
-    assert.equal(result.imports?.[0]?.bytesRead, Buffer.byteLength(body))
-    assert.equal(result.imports?.[0]?.fileBytes, Buffer.byteLength(body))
-    assert.equal(result.imports?.[0]?.fileRows, 4)
+    assert.equal(result.imports[0]?.duplicateRows, 1)
+    assert.equal(result.imports[0]?.bytesRead, Buffer.byteLength(body))
+    assert.equal(result.imports[0]?.fileBytes, Buffer.byteLength(body))
+    assert.equal(result.imports[0]?.fileRows, 4)
     assert.equal(
-      result.imports?.[0]?.sha256,
+      result.imports[0]?.sha256,
       createHash('sha256').update(body).digest('hex'),
     )
-    assert.ok(result.imports?.[0]?.includedFields.includes('Search Volume'))
+    assert.ok(result.imports[0]?.includedFields.includes('Search Volume'))
     assert.match(
       result.warnings.find((warning) => warning.code === 'invalid-import-rows')
         ?.message ?? '',
@@ -93,7 +80,7 @@ test('custom column mappings override aliases and stay in provenance', async () 
     'custom shoes,https://shop.example/custom,7,99,900,42,4.2%,Local pack',
   ].join('\n')
   await fixture('custom-rankings.csv', body, async (path) => {
-    const provider = new ResearchImportProvider([
+    const result = await combineResearchRows([
       source(path, {
         columns: {
           keyword: 'Search Term',
@@ -105,12 +92,7 @@ test('custom column mappings override aliases and stay in provenance', async () 
         },
       }),
     ])
-    const result = await provider.rankedKeywords({
-      target: 'shop.example',
-      market,
-      limit: 10,
-    })
-    const row = result.data.rows[0]
+    const row = result.rows[0]
 
     assert.equal(row?.keyword, 'custom shoes')
     assert.equal(row?.rankGroup, 7)
@@ -124,7 +106,7 @@ test('custom column mappings override aliases and stay in provenance', async () 
       value: 42,
     })
     assert.equal(row?.resultType, 'local_pack')
-    assert.deepEqual(result.imports?.[0]?.columnMapping, {
+    assert.deepEqual(result.imports[0]?.columnMapping, {
       keyword: 'Search Term',
       url: 'Destination',
       position: 'Reported Rank',
@@ -231,39 +213,40 @@ test('Ahrefs UTF-16LE tab exports retain bytes and boolean intent fields', async
     Buffer.from(decoded, 'utf16le'),
   ])
   await fixture('ahrefs-organic-keywords.csv', body, async (path) => {
-    const provider = new ResearchImportProvider([
+    const result = await combineResearchRows([
       source(path, { provider: 'ahrefs' }),
     ])
-    const result = await provider.rankedKeywords({
-      target: 'docs.example',
-      market,
-      limit: 10,
-    })
+    const contract = result.rows.find(
+      (row) => row.keyword === 'provider contract',
+    )
+    const adapters = result.rows.find(
+      (row) => row.keyword === 'research adapters',
+    )
 
-    assert.equal(result.data.rows.length, 2)
-    assert.equal(result.imports?.[0]?.encoding, 'utf-16le')
-    assert.equal(result.imports?.[0]?.delimiter, '\t')
-    assert.equal(result.data.rows[0]?.resultType, 'image_pack')
-    assert.deepEqual(result.data.rows[0]?.intent, {
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.imports[0]?.encoding, 'utf-16le')
+    assert.equal(result.imports[0]?.delimiter, '\t')
+    assert.equal(contract?.resultType, 'image_pack')
+    assert.deepEqual(contract?.intent, {
       state: 'observed',
       value: 'informational, commercial',
     })
-    assert.deepEqual(result.data.rows[0]?.estimatedMonthlyTraffic, {
+    assert.deepEqual(contract?.estimatedMonthlyTraffic, {
       state: 'observed',
       value: 47_389,
     })
-    assert.equal(result.data.rows[0]?.searchVolumeUpdatedAt.state, 'missing')
-    assert.equal(result.data.rows[1]?.resultType, 'organic')
-    assert.equal(result.imports?.[0]?.bytesRead, body.byteLength)
-    assert.equal(result.imports?.[0]?.fileBytes, body.byteLength)
-    assert.equal(result.imports?.[0]?.fileRows, 3)
-    assert.equal(result.imports?.[0]?.filteredRows, 1)
-    assert.equal(result.imports?.[0]?.invalidRows, 0)
+    assert.equal(contract?.searchVolumeUpdatedAt.state, 'missing')
+    assert.equal(adapters?.resultType, 'organic')
+    assert.equal(result.imports[0]?.bytesRead, body.byteLength)
+    assert.equal(result.imports[0]?.fileBytes, body.byteLength)
+    assert.equal(result.imports[0]?.fileRows, 3)
+    assert.equal(result.imports[0]?.filteredRows, 1)
+    assert.equal(result.imports[0]?.invalidRows, 0)
     assert.equal(
-      result.imports?.[0]?.sha256,
+      result.imports[0]?.sha256,
       createHash('sha256').update(body).digest('hex'),
     )
-    assert.ok(result.imports?.[0]?.includedFields.includes('Current URL'))
+    assert.ok(result.imports[0]?.includedFields.includes('Current URL'))
     assert.equal(
       result.warnings.some(
         (warning) => warning.code === 'historical-import-rows',
@@ -271,7 +254,7 @@ test('Ahrefs UTF-16LE tab exports retain bytes and boolean intent fields', async
       true,
     )
     assert.equal(
-      result.imports?.[0]?.includedFields.some((field) => field.includes('\0')),
+      result.imports[0]?.includedFields.some((field) => field.includes('\0')),
       false,
     )
   })
@@ -286,21 +269,15 @@ test('JSONL imports scan a bounded file for a complete hash while capping normal
     }),
   ).join('\n')
   await fixture('rankings.jsonl', body, async (path) => {
-    const provider = new ResearchImportProvider([
+    const result = await combineResearchRows([
       source(path, { provider: 'ahrefs', rowLimit: 3 }),
     ])
-    const result = await provider.rankedKeywords({
-      target: 'example.com',
-      market,
-      limit: 10,
-    })
 
-    assert.equal(result.provider, 'ahrefs')
-    assert.equal(result.imports?.[0]?.suppliedRows, 3)
-    assert.equal(result.imports?.[0]?.fileRows, 1_000)
-    assert.equal(result.imports?.[0]?.capped, true)
-    assert.equal(result.imports?.[0]?.bytesRead, Buffer.byteLength(body))
-    assert.equal(result.coverage.completeness, 'capped')
-    assert.equal(result.data.rows.length, 3)
+    assert.equal(result.imports[0]?.provider, 'ahrefs')
+    assert.equal(result.imports[0]?.suppliedRows, 3)
+    assert.equal(result.imports[0]?.fileRows, 1_000)
+    assert.equal(result.imports[0]?.capped, true)
+    assert.equal(result.imports[0]?.bytesRead, Buffer.byteLength(body))
+    assert.equal(result.rows.length, 3)
   })
 })

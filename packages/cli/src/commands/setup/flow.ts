@@ -245,8 +245,6 @@ export async function runGuidedSetup(
     existingProject?.brandTerms ?? deriveBrandTerms({ id, name, siteUrl: site })
   const brandTerms =
     args.brand === undefined ? derivedBrandTerms : listArg(args.brand)
-  const reportDay =
-    numberArg(args['report-day']) ?? existingProject?.reportDay ?? 1
   const technicalWeekday =
     numberArg(args.weekday) ?? existingProject?.technicalWeekday ?? 1
   const isDefault =
@@ -291,7 +289,6 @@ export async function runGuidedSetup(
         ? { googleAnalytics: googleAnalytics.accountEmail }
         : {}),
     },
-    reportDay,
     technicalWeekday,
     isDefault,
   }

@@ -89,7 +89,6 @@ export const clientBrandCommand = defineCommand({
                 watchUrls: client.watchUrls,
                 analytics: client.analytics,
                 brandTerms: detection.suggestedTerms,
-                reportDay: client.reportDay,
                 technicalWeekday: client.technicalWeekday,
                 isDefault: client.isDefault,
               })

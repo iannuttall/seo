@@ -11,7 +11,6 @@ export type ClientProfileInput = {
   brandTerms?: string[]
   analytics?: ClientProfile['analytics']
   googleAccounts?: ClientProfile['googleAccounts']
-  reportDay?: number
   technicalWeekday?: number
   isDefault?: boolean
 }
@@ -129,7 +128,6 @@ export function saveClient(input: ClientProfileInput): ClientProfile {
     ),
     analytics: input.analytics ?? existing?.analytics ?? {},
     googleAccounts: input.googleAccounts ?? existing?.googleAccounts,
-    reportDay: input.reportDay ?? existing?.reportDay,
     technicalWeekday: input.technicalWeekday ?? existing?.technicalWeekday,
     isDefault: input.isDefault ?? existing?.isDefault,
     createdAt: existing?.createdAt ?? now,

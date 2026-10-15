@@ -80,7 +80,6 @@ test('updating one project field preserves every omitted field', () => {
     watchUrls: ['https://example.com/pricing'],
     brandTerms: ['example'],
     analytics: { google: { propertyId: '123' } },
-    reportDay: 12,
     technicalWeekday: 3,
     isDefault: true,
   })
@@ -93,7 +92,6 @@ test('updating one project field preserves every omitted field', () => {
   assert.deepEqual(updated.watchUrls, ['https://example.com/pricing'])
   assert.deepEqual(updated.brandTerms, ['example'])
   assert.equal(updated.analytics.google?.propertyId, '123')
-  assert.equal(updated.reportDay, 12)
   assert.equal(updated.technicalWeekday, 3)
   assert.equal(updated.isDefault, true)
 })

@@ -112,7 +112,6 @@ export const clientProfileSchema = z.object({
       googleAnalytics: z.string().email().optional(),
     })
     .optional(),
-  reportDay: z.number().int().min(1).max(31).optional(),
   technicalWeekday: z.number().int().min(0).max(7).optional(),
   isDefault: z.boolean().optional(),
   createdAt: z.number().int(),

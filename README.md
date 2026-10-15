@@ -8,7 +8,7 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The SEO command for AI agents. Give your agent your own Search Console and analytics data, with Google update dates beside it, and keyword data from your own provider key.
+  The SEO command for AI agents. A free Google Search Console MCP server and CLI: your agent reads your real Search Console, Google Analytics and Bing data, with Google update dates beside it, plus keyword research from your own DataForSEO or Ahrefs key.
 </p>
 
 <p align="center">

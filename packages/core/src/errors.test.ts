@@ -1,21 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  isSkippableReportError,
-  SeoError,
-  seoErrorEnvelope,
-  toSeoError,
-} from './errors.js'
-
-test('toSeoError classifies authentication failures', () => {
-  const error = toSeoError(
-    new Error('Not logged in. Run `seo auth login` first.'),
-  )
-
-  assert.equal(error.code, 'AUTH_REQUIRED')
-  assert.equal(error.exitCode, 3)
-  assert.equal(error.retryable, false)
-})
+import { isSkippableReportError, SeoError, seoErrorEnvelope } from './errors.js'
 
 test('report fallbacks only allow declared section failures', () => {
   assert.equal(

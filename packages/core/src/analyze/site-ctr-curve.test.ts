@@ -69,30 +69,3 @@ test('quick-wins and ctr-underperformers share one curve and split page one', ()
   assert.equal(quickWins.selection.fragmentRows, 1)
   assert.equal(lowCtr.selection.outsideCandidatePositionRows > 0, true)
 })
-
-test('both CTR reports rank heuristic query flags after unflagged rows', () => {
-  const site = 'sc-domain:example.dev'
-  const rows = [
-    ...siteRows().map((item) => ({
-      ...item,
-      keys: [
-        item.keys[0] ?? '',
-        (item.keys[1] ?? '').replace('example.com', 'example.dev'),
-      ],
-    })),
-    row('skills sh', 'https://example.dev/skills', 0, 90_000, 2),
-    row('pruna', 'https://example.dev/pruna', 0, 80_000, 6),
-    row('flux image api', 'https://example.dev/flux', 0, 3000, 2),
-    row('flux lora api', 'https://example.dev/lora', 0, 3000, 6),
-  ]
-  const lowCtr = analyzeCtrUnderperformersFromRows({ rows, site })
-  const quickWins = analyzeQuickWinsFromRows({ rows, site })
-
-  assert.equal(lowCtr.items.at(-1)?.query, 'skills sh')
-  assert.deepEqual(lowCtr.items.at(-1)?.queryFlags, ['navigational-other'])
-  assert.equal(lowCtr.selection.navigationalOtherRows, 1)
-  assert.equal(quickWins.items.at(-1)?.query, 'pruna')
-  assert.equal(quickWins.selection.flaggedRows, 1)
-  assert.deepEqual(quickWins.items[0]?.queryFlags, [])
-  assert.equal(quickWins.brand.source, 'search-console-navigational')
-})

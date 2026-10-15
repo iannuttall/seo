@@ -88,7 +88,7 @@ export type View =
       account: {
         form: string
         google: { email: string; subject: string }[]
-        bing: { subject: string } | null
+        bing: { label: string; subject: string }[]
         bingReady: boolean
         keys: string[]
       }

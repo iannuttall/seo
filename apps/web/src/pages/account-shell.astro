@@ -103,26 +103,16 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
         <div class={panel}>
           <h2 class={heading}>Bing Webmaster Tools</h2>
-          <div data-bing="connected" hidden>
-            <p class={note}>Connected. Reports show Bing beside Search Console.</p>
-            <form method="post" data-action="/account/remove" class="mt-4">
-              <input type="hidden" name="form" />
-              <input type="hidden" name="provider" value="bing" />
-              <input type="hidden" name="subject" data-bing-subject />
-              <button type="submit" class={outline}>Disconnect Bing</button>
-            </form>
-          </div>
-          <div data-bing="ready" hidden>
-            <p class={note}>
-              Adds Bing clicks, impressions, queries and pages beside Search
-              Console.
-            </p>
-            <form method="post" data-action="/account/bing" class="mt-4">
-              <input type="hidden" name="form" />
-              <button type="submit" class={outline}>Connect Bing</button>
-            </form>
-          </div>
-          <p class={note} data-bing="unavailable" hidden>
+          <p class={note}>
+            Adds Bing clicks, impressions, queries and pages beside Search
+            Console. Each report uses the Bing account that has the site.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-bing-list></ul>
+          <form method="post" data-action="/account/bing" class="mt-4" data-bing-add>
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline} data-bing-button>Connect Bing</button>
+          </form>
+          <p class={note} data-bing-unavailable hidden>
             Bing sign-in is not set up yet.
           </p>
         </div>
@@ -186,12 +176,12 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       </div>
     </section>
 
-    <template data-google-row>
+    <template data-account-row>
       <li class="flex items-center justify-between gap-4 py-2.5">
         <span class="min-w-0 break-all text-foreground" data-email></span>
         <form method="post" data-action="/account/remove" data-remove>
           <input type="hidden" name="form" />
-          <input type="hidden" name="provider" value="google" />
+          <input type="hidden" name="provider" data-provider />
           <input type="hidden" name="subject" data-subject />
           <button type="submit" class={quiet}>Remove</button>
         </form>
@@ -210,7 +200,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     account?: {
       form: string
       google: { email: string; subject: string }[]
-      bing: { subject: string } | null
+      bing: { label: string; subject: string }[]
       bingReady: boolean
       keys: string[]
     }
@@ -231,27 +221,36 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     // The account rows come first so their forms get actions below.
     const account = state.account
     if (account) {
-      const list = root.querySelector('[data-google-list]')
-      const row = root.querySelector<HTMLTemplateElement>('[data-google-row]')
-      for (const item of account.google) {
-        const copy = row?.content.cloneNode(true) as DocumentFragment
-        const email = copy.querySelector('[data-email]')
-        if (email) email.textContent = item.email
-        const subject = copy.querySelector<HTMLInputElement>('[data-subject]')
-        if (subject) subject.value = item.subject
-        if (account.google.length < 2) copy.querySelector('[data-remove]')?.remove()
-        list?.append(copy)
+      const row = root.querySelector<HTMLTemplateElement>('[data-account-row]')
+      const fill = (
+        list: Element | null,
+        provider: 'google' | 'bing',
+        items: { label: string; subject: string }[],
+        removable: boolean,
+      ) => {
+        for (const item of items) {
+          const copy = row?.content.cloneNode(true) as DocumentFragment
+          const label = copy.querySelector('[data-email]')
+          if (label) label.textContent = item.label
+          const kind = copy.querySelector<HTMLInputElement>('[data-provider]')
+          if (kind) kind.value = provider
+          const subject = copy.querySelector<HTMLInputElement>('[data-subject]')
+          if (subject) subject.value = item.subject
+          if (!removable) copy.querySelector('[data-remove]')?.remove()
+          list?.append(copy)
+        }
       }
-      const bing = account.bing
-        ? 'connected'
-        : account.bingReady
-          ? 'ready'
-          : 'unavailable'
-      for (const element of all('[data-bing]')) {
-        show(element, element.getAttribute('data-bing') === bing)
-      }
-      const bingSubject = root.querySelector<HTMLInputElement>('[data-bing-subject]')
-      if (bingSubject && account.bing) bingSubject.value = account.bing.subject
+      fill(
+        root.querySelector('[data-google-list]'),
+        'google',
+        account.google.map((item) => ({ label: item.email, subject: item.subject })),
+        account.google.length > 1,
+      )
+      fill(root.querySelector('[data-bing-list]'), 'bing', account.bing, true)
+      const bingButton = root.querySelector('[data-bing-button]')
+      if (bingButton && account.bing.length) bingButton.textContent = 'Add a Bing account'
+      show(root.querySelector('[data-bing-add]'), account.bingReady)
+      show(root.querySelector('[data-bing-unavailable]'), !account.bingReady)
       for (const name of account.keys) {
         show(root.querySelector(`[data-saved="${name}"]`))
         const input = root.querySelector<HTMLInputElement>(`[data-key-input="${name}"]`)

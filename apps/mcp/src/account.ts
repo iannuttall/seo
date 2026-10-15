@@ -1,3 +1,4 @@
+import { bingCall, listBingSites } from '@seo/core/commands'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
 import {
@@ -78,7 +79,6 @@ async function accountPage(
     accountsOf(env, userId),
     keysOf(env, userId),
   ])
-  const bing = accounts.find((account) => account.provider === 'bing')
   return view(env, {
     view: 'account',
     message: message || undefined,
@@ -91,7 +91,9 @@ async function accountPage(
       google: accounts
         .filter((account) => account.provider === 'google')
         .map((account) => ({ email: account.label, subject: account.subject })),
-      bing: bing ? { subject: bing.subject } : null,
+      bing: accounts
+        .filter((account) => account.provider === 'bing')
+        .map((account) => ({ label: account.label, subject: account.subject })),
       bingReady: Boolean(env.BING_CLIENT_ID),
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
@@ -268,14 +270,34 @@ export async function bingCallback(
       'Bing did not return a sign-in. Try again.',
     )
   }
-  // One Bing connection per person; connecting again replaces it.
+  // Bing's sign-in names no account, so each link gets its own id and is
+  // named by its sites. Linking the same sites again replaces that link.
+  const label = await bingLabel(tokens.access)
+  const existing = (await accountsOf(env, state.userId)).find(
+    (item) => item.provider === 'bing' && item.label === label,
+  )
   await linkAccount(env, state.userId, {
     provider: 'bing',
-    subject: state.userId,
-    label: 'Bing Webmaster Tools',
+    subject: existing?.subject ?? crypto.randomUUID(),
+    label,
     refresh: tokens.refresh,
     access: tokens.access,
     accessExp: tokens.accessExp,
   })
   return redirect(`${env.PUBLIC_URL}/account`)
+}
+
+// "ian.is and 31 more", from the account's verified sites.
+async function bingLabel(access: string): Promise<string> {
+  const sites = await listBingSites(
+    bingCall({ accessToken: () => access }, { signIn: '' }),
+  ).catch(() => null)
+  const verified = (sites ?? [])
+    .filter((site) => site.verified)
+    .map((site) => site.url.replace(/^https?:\/\//, '').replace(/\/$/, ''))
+  const first = verified[0]
+  if (!first) return 'Bing Webmaster account'
+  return verified.length > 1
+    ? `${first} and ${verified.length - 1} more`
+    : first
 }

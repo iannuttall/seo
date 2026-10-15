@@ -155,7 +155,10 @@ test('validates research file sources before reading anything', async () => {
       cannibalReport(
         {
           site: 'sc-domain:example.com',
-          researchFiles: [source(path), source(path, { provider: 'semrush' })],
+          researchFiles: [
+            source(path),
+            source(path, { provider: 'dataforseo' }),
+          ],
         },
         dependencies,
       ),

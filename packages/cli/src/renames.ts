@@ -46,6 +46,7 @@ export const REMOVED: Record<string, string | null> = {
   'project keyword-sets': null,
   'projects keyword-sets': null,
   'providers bing report': null,
+  'providers semrush': 'seo providers',
 }
 
 const PROJECT_ALIASES = new Set(['client', 'project', 'projects'])

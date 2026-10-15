@@ -1,11 +1,7 @@
 import { normalizedResearchColumnName } from '@seo/core'
 import * as z from 'zod/v4'
 
-const researchImportProviderIdInput = z.enum([
-  'dataforseo',
-  'semrush',
-  'ahrefs',
-])
+const researchImportProviderIdInput = z.enum(['dataforseo', 'ahrefs'])
 
 const sourceColumnInput = (meaning: string) =>
   z.string().trim().min(1).max(500).describe(meaning).optional()

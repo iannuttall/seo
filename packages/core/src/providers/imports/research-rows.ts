@@ -31,7 +31,6 @@ export const MAX_RESEARCH_ROW_LIMIT = 100_000
 const MAX_INCLUDED_FIELDS = 500
 const RESEARCH_IMPORT_PROVIDERS = new Set<ResearchImportSource['provider']>([
   'dataforseo',
-  'semrush',
   'ahrefs',
 ])
 

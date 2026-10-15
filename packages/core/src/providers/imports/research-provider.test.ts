@@ -35,7 +35,7 @@ function source(
   return {
     dataset: 'ranked-keywords',
     file,
-    provider: 'semrush',
+    provider: 'dataforseo',
     exportedAt: '2026-07-20T12:00:00Z',
     ...overrides,
   }
@@ -57,7 +57,7 @@ test('semicolon CSV imports map provider aliases and retain file provenance', as
       limit: 50,
     })
 
-    assert.equal(result.provider, 'semrush')
+    assert.equal(result.provider, 'dataforseo')
     assert.equal(result.observedAt, '2026-07-20T12:00:00.000Z')
     assert.equal(result.cost.actualMicros, 0)
     assert.equal(result.coverage.completeness, 'partial')

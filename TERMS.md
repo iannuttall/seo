@@ -35,7 +35,7 @@ Your use of Google APIs is also subject to Google's terms and policies. Google
 can change API behaviour, quotas, scopes, or availability without notice to
 this project.
 
-Optional research providers, Bing Webmaster, Chrome UX Report, and IndexNow are
+Optional research providers and Chrome UX Report are
 also controlled by their respective operators. A provider can charge for a
 request, retain task data, change its prices or limits, or withdraw a feature.
 Review the provider's current terms, privacy policy, and report cost evidence

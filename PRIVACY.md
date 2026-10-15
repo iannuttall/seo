@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 14 October 2026
+Last updated: 15 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp, and the seoskill.dev website.
@@ -86,34 +86,14 @@ CI can use `SEO_CLICKY_SITEKEY` without saving it. Clicky responses are cached
 locally for up to 24 hours, and cache keys and cached responses do not contain
 the sitekey.
 
-## When Search Console query text can leave your machine
-
-External enrichment is off by default. Three reports can send selected Search
-Console search terms to the connected research provider when you explicitly
-enable it:
-
-- `keyword-opportunities` can send selected query text for keyword metrics when
-  `includeExternal` is `true`;
-- `local-search-demand` can send selected local-intent query text for live
-  results when `includeSerps` is `true`; and
-- `pseo-opportunities` can send research seeds derived from Search Console
-  searches and existing page patterns when `includeExternal` is `true`.
-
-These requests do not send Google OAuth tokens, Google account identity,
-Search Console property IDs, clicks, impressions, click-through rate,
-positions, or Google Analytics rows. The selected query or seed text is
-processed by the research provider under its own privacy policy. The report
-shows that outside research was requested and keeps it separate from Search
-Console metrics.
-
 ## How Google data is protected
 
 The software stores project profiles, settings, OAuth tokens, cached API
 responses, logs, and saved reports in local user directories. It does not
 upload Google API responses to a hosted SEO account or project database.
 Google API requests go directly from your machine to Google over HTTPS. The
-only external research-provider use of selected query or seed text is the
-explicit enrichment described above.
+software does not send Search Console data to a research provider. `seo
+research` sends only the keywords or target you give it.
 
 OAuth tokens use the operating system keychain when that option is enabled.
 The fallback token file and any bring-your-own OAuth client file are written
@@ -157,11 +137,7 @@ it before trying again.
 Research-provider requests send only the inputs needed for the selected
 operation. Depending on the provider and report, these can include:
 
-- keywords, research seeds, domains, URLs, filters, result limits, country,
-  language, location, and device;
-- target names and aliases used for indexed AI mention research; and
-- the full fixed prompt, selected model, country, web search setting, and
-  output limit used for an AI prompt observation.
+- keywords, domains, URLs, result limits, country, and language.
 
 DataForSEO requests use your login and API password. Ahrefs requests use your API v3 bearer key and can include the
 target mode and country filter. Each provider also receives ordinary network
@@ -177,15 +153,6 @@ under the [Ahrefs privacy policy](https://ahrefs.com/legal/privacy-policy).
 Importing a local DataForSEO or Ahrefs file does not upload it to the
 provider or the project maintainer.
 
-## Bing Webmaster requests
-
-Bing Webmaster is optional. If you connect it, the software sends your API key
-or OAuth bearer token, verified site URL, and the parameters needed for the
-report directly to Bing over HTTPS. Bing can return verified-site, traffic,
-crawl, query, page, and link data. The current report does not cache Bing
-responses. Microsoft processes the request under its
-[privacy statement](https://privacy.microsoft.com/privacystatement).
-
 ## Other network requests
 
 Other commands can make these direct requests:
@@ -198,9 +165,6 @@ Other commands can make these direct requests:
   metrics, and your API key to Google.
 - Search status checks request Google's public incident feed without sending a
   site or property.
-- A live IndexNow submission sends the host, changed URLs, key, and public key
-  location to IndexNow. A dry run does not submit them. IndexNow handles the
-  request under its [terms](https://www.indexnow.org/terms).
 - Package update checks can request current package information from the npm
   registry.
 - Anonymous usage events can be sent to seoskill.dev as described in the next
@@ -216,19 +180,11 @@ That transfer is controlled by the client and model service, not by the local
 
 ## How long research data is kept locally
 
-DataForSEO responses are cached locally for up to 24 hours or seven days,
-depending on the operation.
-Ahrefs Domain Rating responses are cached for up to 24 hours, and other Ahrefs
-responses are cached for up to seven days. Cache maintenance removes provider
-cache entries older than 30 days and enforces a 32 MiB provider-cache limit.
-On a machine where the command is no longer run, expired rows can remain until
-you clear the cache or reset the software.
-
-Fixed AI prompt observations are saved locally so repeated runs can show
-compatible changes over time. The software keeps up to 90 observations for one
-exact configuration, 10,000 observations in total, and 128 MiB of logical
-storage. The local provider spend ledger is kept for up to 730 days, 50,000
-rows, or 32 MiB.
+`seo research` does not cache DataForSEO or Ahrefs responses. Older versions
+did, and cache maintenance removes those entries once they are 30 days old.
+On a machine where the command is no longer run, they can remain until you
+clear the cache or reset the software. The local provider spend ledger is kept
+for up to 730 days, 50,000 rows, or 32 MiB.
 
 Run `seo cache clear --provider dataforseo` or
 `seo cache clear --provider ahrefs` to remove one provider's cached responses.
@@ -343,18 +299,16 @@ copy, publish, transmit, or pass it to an agent or application yourself.
 ## Removing access and local data
 
 Use `seo auth logout` to remove local Google tokens. Use
-`seo providers dataforseo disconnect`, `seo providers ahrefs disconnect`, or
-`seo providers bing disconnect` to remove the corresponding saved provider
-credential. Use `seo indexnow remove --site https://example.com` to remove a
-saved IndexNow key for one site. Environment variables are controlled by your
-shell or runtime and are not changed by these commands. Use `seo privacy` to
+`seo providers dataforseo disconnect` or `seo providers ahrefs disconnect` to
+remove the corresponding saved provider credential. Environment variables are
+controlled by your shell or runtime and are not changed by these commands. Use `seo privacy` to
 inspect local paths and `seo reset --yes` to remove every saved credential and
 local file managed by the software.
 
 You can also revoke the app from your
 [Google Account connections](https://myaccount.google.com/connections).
 Deleting local files does not delete data already held by Google, a research
-provider, Bing, IndexNow, npm, GitHub, a site you crawled, an agent or model
+provider, npm, GitHub, a site you crawled, an agent or model
 provider, or your operating system backups.
 
 ## Changes to this policy

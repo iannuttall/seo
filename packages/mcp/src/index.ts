@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
@@ -5,7 +6,7 @@ import {
   SEO_VERSION,
   type TelemetryOptions,
 } from '@seo/core'
-import { MCP_INSTRUCTIONS } from '@seo/core/commands'
+import { MCP_INSTRUCTIONS, SKILL_RESOURCE } from '@seo/core/commands'
 import { registerProviderExtensionTools } from './provider-extension-tools.js'
 import { registerSharedTools } from './shared-tools.js'
 
@@ -36,6 +37,22 @@ export interface SeoMcpServer {
   close(): Promise<void>
 }
 
+// The packaged skill: next to dist/ in the npm package, or at the repository
+// root in a source checkout.
+function readSkill(): string | null {
+  for (const path of [
+    '../skills/seo/SKILL.md',
+    '../../../skills/seo/SKILL.md',
+  ]) {
+    try {
+      return readFileSync(new URL(path, import.meta.url), 'utf8')
+    } catch {
+      // Try the next place.
+    }
+  }
+  return null
+}
+
 export function createServer(
   options: { telemetry?: boolean } = {},
 ): SeoMcpServer {
@@ -58,6 +75,13 @@ seo_crawl and seo_internal_links run on this machine. Keys and Google sign-in co
     telemetry: options.telemetry === false ? undefined : telemetryOptions,
   })
   registerProviderExtensionTools(server)
+  const skill = readSkill()
+  if (skill) {
+    const { name, uri, ...meta } = SKILL_RESOURCE
+    server.registerResource(name, uri, meta, async (url) => ({
+      contents: [{ uri: url.href, mimeType: meta.mimeType, text: skill }],
+    }))
+  }
   if (options.telemetry !== false) {
     server.server.oninitialized = () => {
       initializeTelemetry(telemetryOptions())

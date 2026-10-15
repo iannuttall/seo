@@ -22,6 +22,8 @@
     }
   ],
   "limits": { "cpu_ms": 60000 },
+  // Bundles skills/seo/SKILL.md as text for the skill resource.
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
   "vars": { "PUBLIC_URL": "https://seoskill.dev" },
   // The site Worker, for the account page design (/account-shell).
   "services": [{ "binding": "SITE", "service": "seo-skill" }],

@@ -117,7 +117,7 @@ const helpSections: HelpSection[] = [
         'seo research <action>',
         'Keyword, SERP, competitor and backlink data from your key',
       ],
-      ['seo data', 'Raw Search Console rows'],
+      ['seo data', 'Raw Search Console or Bing rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
     ],
@@ -162,7 +162,7 @@ const allHelpSections: HelpSection[] = [
 function printHelpSections(sections: HelpSection[]): void {
   printHeading(
     `seo v${pkg.version}`,
-    'Run SEO audits, find what needs fixing, and ship the changes with your agent.',
+    'Your own Search Console, Google Analytics and Bing data, as facts for your agent.',
   )
   process.stdout.write('\n')
   printCatalog(

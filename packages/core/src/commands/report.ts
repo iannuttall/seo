@@ -6,6 +6,13 @@ import { quickWinsReportWith } from '../analyze/site-diagnostics/quick-wins-repo
 import { strikingDistanceWith } from '../analyze/striking-distance-report.js'
 import { trafficAnomalyWith } from '../analyze/traffic-anomaly-report.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import {
+  type BingSource,
+  bingFor,
+  bingSection,
+  bingTotals,
+  enginesText,
+} from './bing.js'
 import { type Detail, presentReport, preview, table } from './present.js'
 import {
   type DateInput,
@@ -48,6 +55,7 @@ export const SECTIONS = {
     'Queries where more than one page of the site gets impressions, with each page’s share.',
   'traffic-drop':
     'Daily clicks and impressions checked for sudden changes in the last days, with Google updates whose dates overlap. Overlap is timing only, not cause.',
+  bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages.',
 } as const
 
 export type SectionId = keyof typeof SECTIONS
@@ -73,6 +81,7 @@ const DEFAULT_DAYS: Record<SectionId, number> = {
   'content-decay': 28,
   cannibalization: 28,
   'traffic-drop': 90,
+  bing: 28,
 }
 
 // What to run next when it helps. Agents follow these; nothing else.
@@ -87,6 +96,7 @@ function nextFor(section: SectionId, call: Caller): string {
     'content-decay': `Next: ${call('index')} for pages that lost most of their clicks; ${call('page')} to see which queries moved.`,
     cannibalization: `Next: ${call('page')} on each competing URL to see Google’s chosen canonical.`,
     'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved.`,
+    bing: `Next: ${call('data', { source: 'bing' })} for every Bing row; ${call('page')} for one page.`,
   }[section]
 }
 
@@ -282,6 +292,39 @@ export function overviewText(
   ].join('\n\n')
 }
 
+function once<T>(make: () => Promise<T>): () => Promise<T> {
+  let made: Promise<T> | undefined
+  return () => {
+    made ??= make()
+    return made
+  }
+}
+
+// Google and Bing totals for the overview's dates. A Bing failure is named
+// and never stops the report.
+async function enginesLine(
+  overview: Record<string, unknown>,
+  bing: () => Promise<BingSource>,
+): Promise<string> {
+  const summary = overview.summary as {
+    clicks: number
+    previousClicks: number
+    impressions: number
+  }
+  try {
+    return enginesText(
+      summary,
+      await bingTotals(
+        await bing(),
+        overview.range as DateRange,
+        overview.comparisonRange as DateRange,
+      ),
+    )
+  } catch (error) {
+    return `Bing: could not be read. ${error instanceof Error ? error.message : String(error)}`
+  }
+}
+
 // One way to run each section: brand terms, minimums and the comparison
 // period are automatic and shown in the output.
 async function build(
@@ -290,6 +333,7 @@ async function build(
   section: SectionId,
   range: DateRange,
   now: () => Date,
+  bing: () => Promise<BingSource>,
 ): Promise<Record<string, unknown>> {
   const dependencies = { searchAnalytics: read, now }
   const common = { site, limit: 100, includeBrand: false, ...range }
@@ -346,6 +390,7 @@ async function build(
         ),
       }
     },
+    bing: async () => bingSection(await bing(), read, site, range),
   }[section]
   return factsOnly(await run()) as Record<string, unknown>
 }
@@ -422,6 +467,7 @@ async function allSections(
   const now = deps.now ?? (() => new Date())
   const read = sharedReader(deps.searchAnalytics)
   const origin = originOf(input.site)
+  const bing = once(() => bingFor(deps, input.site))
   const runs = await Promise.all(
     SECTION_IDS.map((id) =>
       build(
@@ -430,6 +476,7 @@ async function allSections(
         id,
         dateWindow(input, DEFAULT_DAYS[id]),
         now,
+        bing,
       ).catch((error: unknown) =>
         error instanceof Error ? error : new Error(String(error)),
       ),
@@ -439,7 +486,10 @@ async function allSections(
   if (!overview || overview instanceof Error) {
     throw overview ?? new Error('The overview did not run.')
   }
-  const parts = [overviewText(overview, `Report on ${input.site}`, origin, 5)]
+  const parts = [
+    overviewText(overview, `Report on ${input.site}`, origin, 5),
+    await enginesLine(overview, bing),
+  ]
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
@@ -485,17 +535,19 @@ async function oneSection(
   const detail = input.detail ?? 'summary'
   const range = dateWindow(input, DEFAULT_DAYS[section])
   const origin = originOf(site)
+  const bing = once(() => bingFor(deps, site))
   let report = await build(
     sharedReader(deps.searchAnalytics),
     site,
     section,
     range,
     now,
+    bing,
   )
   const next = nextFor(section, deps.call)
   if (section === 'overview' && detail !== 'full') {
     return {
-      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\nMore: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
+      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${await enginesLine(report, bing)}\n\nMore: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
       data: report,
     }
   }
@@ -522,6 +574,7 @@ async function oneSection(
         section,
         range,
         now,
+        bing,
       )
     }
     report.pageChecks = checked
@@ -563,8 +616,12 @@ async function oneSection(
     more: (level, offset) =>
       deps.call('report', { site, section, detail: level, offset }),
   })
+  const facts =
+    section === 'bing'
+      ? FACTS_ONLY.replace('Search Console', 'Search Console and Bing')
+      : FACTS_ONLY
   return {
-    text: `${shown.text}\n\n${next}\n\n${FACTS_ONLY}`,
+    text: `${shown.text}\n\n${next}\n\n${facts}`,
     data: detail === 'full' ? report : shown.data,
   }
 }

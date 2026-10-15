@@ -78,8 +78,10 @@ export function registerSharedTools(
     resolveSite: (site: string) => resolveLocalSite(site),
     keys: localResearchKeys,
     drKey: null,
-    google: () => localGoogleFetch(),
+    accounts: async () => [{ email: null, google: await localGoogleFetch() }],
     signIn: LOCAL_SIGN_IN.signIn,
+    connect:
+      'run `seo auth login` for Google, `seo providers bing connect` for Bing, and `seo providers dataforseo connect` or `seo providers ahrefs connect` for keys.',
   }
   for (const shared of SHARED_TOOLS) {
     server.registerTool(

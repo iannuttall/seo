@@ -14,6 +14,7 @@ const PRIVATE_FILE_MODE = 0o600
 
 export const PROVIDER_SECRET_NAMES = {
   ahrefsApiKey: 'ahrefs-api-key',
+  bingApiKey: 'bing-api-key',
   clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
   providerExtensionCredentials: 'provider-extension-credentials',
@@ -22,7 +23,6 @@ export const PROVIDER_SECRET_NAMES = {
 // Secrets of providers removed in 0.3.0. Nothing reads them, but reset still
 // deletes any that an older version saved.
 const REMOVED_PROVIDER_SECRET_NAMES = [
-  'bing-api-key',
   'indexnow-keys',
   'semrush-api-key',
   'serpbase-api-key',

@@ -382,3 +382,15 @@ export const mcpCall: Caller = (command, args) => {
     ? `${name} with ${shown.map(([key, value]) => `${key} ${typeof value === 'number' ? value : `"${value}"`}`).join(', ')}`
     : name
 }
+
+// The skill as an MCP resource (Skills over MCP, SEP-2640), so a client that
+// loads skills from a server gets the same skills/seo/SKILL.md as
+// `npx skills add`. Each server supplies the file's text.
+export const SKILL_RESOURCE = {
+  name: 'seo-skill',
+  uri: 'skill://seo/SKILL.md',
+  title: 'SEO Skill',
+  description:
+    'How to use these tools: the commands, the one-report flow and the evidence rules.',
+  mimeType: 'text/markdown',
+} as const

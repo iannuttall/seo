@@ -8,7 +8,11 @@ import {
   runSharedTool,
   SHARED_TOOLS,
   type SharedTool,
+  SKILL_RESOURCE,
 } from '@seo/core/commands'
+// The same skills/seo/SKILL.md that `npx skills add` installs, bundled as
+// text by the Text rule in wrangler.jsonc.
+import skill from '../../../skills/seo/SKILL.md'
 import { accountUrl, openForPerson, signInHint } from './google.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
@@ -54,6 +58,10 @@ export async function serveMcp(
     { name: 'seo', title: 'SEO Skill', version: '1.0.0' },
     { instructions: instructions(context.env) },
   )
+  const { name, uri, ...meta } = SKILL_RESOURCE
+  server.registerResource(name, uri, meta, async (url) => ({
+    contents: [{ uri: url.href, mimeType: meta.mimeType, text: skill }],
+  }))
   for (const tool of TOOLS) {
     server.registerTool(
       tool.name,

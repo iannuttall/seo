@@ -1,7 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   diagnosePropertyWorkflow,
-  monthlyReportWorkflow,
   refreshPrioritiesWorkflow,
   renderWorkflowMarkdown,
   technicalWatchWorkflow,
@@ -11,7 +10,7 @@ import {
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
-import { calendarMonthSchema, resolveJsOption } from './input-schemas.js'
+import { resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
 
@@ -90,31 +89,6 @@ export function registerWorkflowTools(server: McpServer): void {
           site,
           days,
           recentDays,
-          limit,
-          includeBrand,
-          refresh,
-        })
-        return workflowSuccess(result)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_workflow_monthly_report',
-    {
-      description: 'Run the monthly reporting workflow with next actions',
-      inputSchema: {
-        ...mcpReportInputSchema(['site', 'limit', 'includeBrand', 'refresh']),
-        month: calendarMonthSchema.optional(),
-      },
-    },
-    async ({ site, month, limit, includeBrand, refresh }) => {
-      try {
-        const result = await monthlyReportWorkflow({
-          site,
-          month,
           limit,
           includeBrand,
           refresh,

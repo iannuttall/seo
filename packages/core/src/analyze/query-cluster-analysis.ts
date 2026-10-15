@@ -4,7 +4,6 @@ import {
   createCtrBenchmarkContext,
   type PositionBenchmark,
 } from './opportunity-primitives.js'
-import { clusterPseoTemplates } from './pseo/templates.js'
 import {
   compareQueryClusterText,
   iterateQueryClusters,
@@ -12,6 +11,7 @@ import {
   type QueryClusterRow,
 } from './query-cluster-primitives.js'
 import { tokenize } from './shared.js'
+import { clusterPseoTemplates } from './url-templates.js'
 
 function quotedLabel(label: string): string {
   return label.includes('"') ? `'${label}'` : `"${label}"`

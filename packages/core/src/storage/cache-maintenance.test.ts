@@ -24,11 +24,6 @@ function cacheDatabase(input: { incremental?: boolean } = {}): {
       fetched_at INTEGER, expires_at INTEGER,
       PRIMARY KEY(property_id, query_hash)
     );
-    CREATE TABLE semrush_cache (
-      endpoint TEXT, query_hash TEXT, request_json TEXT, response_json TEXT,
-      fetched_at INTEGER, expires_at INTEGER,
-      PRIMARY KEY(endpoint, query_hash)
-    );
     CREATE TABLE provider_cache (
       provider TEXT, credential_scope TEXT, operation TEXT, request_hash TEXT,
       request_json TEXT, response_json TEXT, task_ids_json TEXT,

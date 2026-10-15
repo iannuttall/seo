@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Response } from 'undici'
-import { aiReadiness } from './ai-readiness.js'
 import { crawlSite } from './site-crawl.js'
 import { withServer } from './site-crawl.test-fixtures.js'
 
@@ -284,12 +283,6 @@ test('crawlSite keeps robots server failures unknown', async () => {
     assert.equal(
       report.issues.some((issue) => issue.ruleId === 'robots_blocked'),
       false,
-    )
-    const readiness = aiReadiness(report)
-    assert.equal(readiness.dataStatus, 'partial')
-    assert.equal(
-      readiness.checks.find((check) => check.id === 'robots-ai-bots')?.status,
-      'unknown',
     )
   } finally {
     await fixture.close()

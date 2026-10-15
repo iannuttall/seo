@@ -10,7 +10,6 @@ export const CACHE_MAINTENANCE_WRITE_COUNT = 50
 type CacheTable =
   | 'gsc_cache'
   | 'ga4_cache'
-  | 'semrush_cache'
   | 'provider_cache'
   | 'http_cache'
   | 'performance_reports'
@@ -20,7 +19,6 @@ export type CacheLimits = Record<CacheTable, number>
 export const CACHE_LIMITS: CacheLimits = {
   gsc_cache: 48 * MEBIBYTE,
   ga4_cache: 24 * MEBIBYTE,
-  semrush_cache: 16 * MEBIBYTE,
   provider_cache: 32 * MEBIBYTE,
   http_cache: 128 * MEBIBYTE,
   performance_reports: 8 * MEBIBYTE,
@@ -51,12 +49,6 @@ const CACHE_POLICIES: CachePolicy[] = [
     keys: ['property_id', 'query_hash'],
     timestamp: 'fetched_at',
     sizeColumns: ['property_id', 'query_hash', 'request_json', 'response_json'],
-  },
-  {
-    table: 'semrush_cache',
-    keys: ['endpoint', 'query_hash'],
-    timestamp: 'fetched_at',
-    sizeColumns: ['endpoint', 'query_hash', 'request_json', 'response_json'],
   },
   {
     table: 'provider_cache',

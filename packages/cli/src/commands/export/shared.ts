@@ -1,12 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { type CsvFile, countLabel, renderCsv } from '@seo/core'
-import { reportFetchArgs } from '../reports/args.js'
-
-const { json: _json, ...reportFetchArgsWithoutJson } = reportFetchArgs
-
-export const exportReportFetchArgs = reportFetchArgsWithoutJson
-
 export const exportSelectionArgs = {
   client: {
     type: 'string',

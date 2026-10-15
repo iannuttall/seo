@@ -17,7 +17,6 @@ import {
 } from '@seo/core/commands'
 import { listReports } from '@seo/mcp'
 import { defineCommand, runCommand, runMain } from 'citty'
-import { agentReadinessCommand } from './commands/agent-readiness.js'
 import { analyticsCommand } from './commands/analytics/index.js'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
@@ -38,17 +37,13 @@ import {
   trafficAnomalyCommand,
   updateCorrelateCommand,
 } from './commands/diagnosis-reports.js'
-import { entityReadinessCommand } from './commands/entity-readiness.js'
 import {
   changeLogCommand,
   contentGroupsCommand,
   testsCommand,
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
-import { indexNowCommand } from './commands/indexnow.js'
 import { initCommand } from './commands/init.js'
-import { linksCommand } from './commands/links.js'
-import { llmsCommand } from './commands/llms.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -59,11 +54,9 @@ import {
   monitoringCommand,
   redirectTraceCommand,
 } from './commands/monitoring.js'
-import { okfCommand } from './commands/okf.js'
 import {
   aiReferralsCommand,
   cannibalCommand,
-  communityIntentCommand,
   ctrUnderperformersCommand,
   decayingCommand,
   internalLinksCommand,
@@ -71,7 +64,6 @@ import {
   queryClusterCommand,
   quickWinsCommand,
   secondPageCommand,
-  seoToAiQueryCommand,
 } from './commands/opportunities/index.js'
 import { auditPageCommand } from './commands/page-audit.js'
 import { performanceCommand } from './commands/performance.js'
@@ -82,16 +74,9 @@ import {
   strikingDistanceCommand,
 } from './commands/product/index.js'
 import { providersCommand } from './commands/providers/index.js'
-import { pseoCommand } from './commands/pseo/index.js'
-import { aiReadinessCommand } from './commands/readiness.js'
 import { reportCatalogCommand } from './commands/report-catalog.js'
-import {
-  monthlyReportCommand,
-  reportNarrativeCommand,
-} from './commands/reports.js'
 import { explainCommand, rulesCommand } from './commands/rules.js'
 import { scheduleCommand } from './commands/schedule.js'
-import { serverLogsCommand } from './commands/server-logs.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
 import { skillsCommand } from './commands/skills.js'
 import {
@@ -176,7 +161,6 @@ const allHelpSections: HelpSection[] = [
       ['seo perf audit', 'Run a page performance audit'],
       ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo index-watch', 'Check saved URL Inspection snapshots'],
-      ['seo indexnow submit', 'Notify IndexNow about changed URLs'],
       ['seo ai-referrals', 'AI referral traffic in Google Analytics'],
       ['seo analytics google report', 'Run a Google Analytics report'],
       ['seo updates', 'List official Google ranking updates'],
@@ -234,12 +218,9 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
-    indexnow: indexNowCommand,
     analytics: analyticsCommand,
-    llms: llmsCommand,
     auth: authCommand,
     mcp: mcpCommand,
-    okf: okfCommand,
     doctor: doctorCommand,
     privacy: privacyCommand,
     telemetry: telemetryCommand,
@@ -265,16 +246,12 @@ const main = defineCommand({
     'index-coverage': indexCoverageCommand,
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
-    links: linksCommand,
-    'monthly-report': monthlyReportCommand,
     monitoring: monitoringCommand,
-    'report-narrative': reportNarrativeCommand,
     rules: rulesCommand,
     explain: explainCommand,
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
     schedule: scheduleCommand,
-    'server-logs': serverLogsCommand,
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,
@@ -296,13 +273,9 @@ const main = defineCommand({
     'traffic-anomaly': trafficAnomalyCommand,
     'update-correlate': updateCorrelateCommand,
     'ai-referrals': aiReferralsCommand,
-    'agent-readiness': agentReadinessCommand,
-    'ai-readiness': aiReadinessCommand,
-    'entity-readiness': entityReadinessCommand,
     'audit-page': auditPageCommand,
     'second-page': secondPageCommand,
     cannibal: cannibalCommand,
-    'community-intent': communityIntentCommand,
     decaying: decayingCommand,
     'quick-wins': quickWinsCommand,
     'page-opportunities': pageOpportunitiesCommand,
@@ -310,8 +283,6 @@ const main = defineCommand({
     'internal-links': internalLinksCommand,
     'ctr-underperformers': ctrUnderperformersCommand,
     'query-cluster': queryClusterCommand,
-    'seo-to-ai-query': seoToAiQueryCommand,
-    pseo: pseoCommand,
   },
   run: async () => {
     if (process.argv.slice(2).length === 0) {
@@ -331,34 +302,26 @@ const reportAliases: Record<string, string> = {
   doctor: 'setup-check',
   explain: 'explain-crawl-issue',
   'link-recover': 'link-recovery',
-  'monthly-report': 'monthly-report',
   'query-cluster': 'query-clusters',
   report: 'search-performance-overview',
-  'report-narrative': 'narrative-report',
   rules: 'crawler-rules',
   'update-correlate': 'update-correlation',
 }
 
 const directReportIds = new Set([
-  'agent-readiness',
-  'ai-readiness',
   'ai-referrals',
   'audit-page',
-  'community-intent',
   'crawl-diff',
   'ctr-underperformers',
-  'entity-readiness',
   'index-coverage',
   'index-watch',
   'internal-links',
-  'link-evidence',
   'page-opportunities',
   'quick-wins',
   'redirect-trace',
   'refresh-priorities',
   'second-page',
   'segment-impact',
-  'seo-to-ai-query',
   'striking-distance',
   'technical-watch',
   'traffic-anomaly',
@@ -392,18 +355,10 @@ function telemetryReportId(args: string[]): string | undefined {
   if (command === 'change-log' && subcommand === 'measure') {
     return 'measure-change'
   }
-  if (command === 'llms' && subcommand === 'audit') return 'llms-txt-audit'
-  if (command === 'links') return 'link-evidence'
-  if (command === 'llms' && subcommand === 'generate') {
-    return 'generate-llms-txt'
-  }
-  if (command === 'okf' && subcommand === 'export') return 'okf-build'
-  if (command === 'okf' && subcommand === 'validate') return 'okf-validate'
   if (command === 'monitoring' && subcommand === 'run') {
     return 'technical-watch'
   }
   if (command === 'perf' && subcommand === 'audit') return 'performance-audit'
-  if (command === 'pseo' && subcommand === 'audit') return 'pseo-audit'
   if (command === 'tests' && subcommand === 'report') return 'measure-change'
   return (
     reportAliases[command] ??
@@ -412,7 +367,7 @@ function telemetryReportId(args: string[]): string | undefined {
 }
 
 const argv = process.argv.slice(2)
-const removed = removedNotice(argv[0] ?? '')
+const removed = removedNotice(argv)
 if (removed) {
   process.stderr.write(`${removed}\n`)
   process.exit(2)

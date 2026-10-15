@@ -1,13 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   aiReferralsReport,
-  communityIntentReport,
   contentOptimizationReport,
   countLabel,
   pageOpportunitiesReport,
   performanceAudit,
   SeoError,
-  seoToAiQueryReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { calendarDateSchema, resolveJsOption } from './input-schemas.js'
@@ -21,27 +19,12 @@ const googleAnalyticsDateSchema = z
   ])
   .describe('Use YYYY-MM-DD or a Google Analytics relative date.')
 
-const queryOpportunitySchema = {
-  site: z.string().trim().min(1),
-  days: z.number().int().min(1).max(548).optional(),
-  startDate: calendarDateSchema.optional(),
-  endDate: calendarDateSchema.optional(),
-  limit: z.number().int().min(1).max(100).optional(),
-  minImpressions: z.number().int().min(0).max(1_000_000_000).optional(),
-  maxRows: z.number().int().min(1).max(50_000).optional(),
-  brandTerms: z.array(z.string().trim().min(1)).max(100).optional(),
-  includeBrand: z.boolean().optional(),
-  refresh: z.boolean().optional(),
-} as const
-
 export function registerAiOpportunityTools(
   server: McpServer,
   dependencies: {
     aiReferralsReport?: typeof aiReferralsReport
     contentOptimizationReport?: typeof contentOptimizationReport
     pageOpportunitiesReport?: typeof pageOpportunitiesReport
-    seoToAiQueryReport?: typeof seoToAiQueryReport
-    communityIntentReport?: typeof communityIntentReport
   } = {},
 ): void {
   server.registerTool(
@@ -245,94 +228,6 @@ export function registerAiOpportunityTools(
           refresh,
         })
         return toolSuccess(result.headline, result)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_to_ai_query',
-    {
-      description:
-        'Convert retained GSC queries into deterministic AI monitoring-prompt suggestions with source completeness and heuristic caveats',
-      inputSchema: queryOpportunitySchema,
-    },
-    async ({
-      site,
-      days,
-      startDate,
-      endDate,
-      limit,
-      minImpressions,
-      maxRows,
-      brandTerms,
-      includeBrand,
-      refresh,
-    }) => {
-      try {
-        const result = await (
-          dependencies.seoToAiQueryReport ?? seoToAiQueryReport
-        )({
-          site,
-          days,
-          startDate,
-          endDate,
-          limit,
-          minImpressions,
-          maxRows,
-          brandTerms,
-          includeBrand,
-          refresh,
-        })
-        return toolSuccess(
-          `${countLabel(result.summary.prompts, 'monitoring-prompt suggestion')} generated from ${countLabel(result.summary.returnedQueries, 'retained GSC query')}; evidence is ${result.dataStatus}.`,
-          result,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_community_intent',
-    {
-      description:
-        'Classify explicit forum, review, comparison, experience, and recommendation language in retained GSC queries as review hypotheses',
-      inputSchema: queryOpportunitySchema,
-    },
-    async ({
-      site,
-      days,
-      startDate,
-      endDate,
-      limit,
-      minImpressions,
-      maxRows,
-      brandTerms,
-      includeBrand,
-      refresh,
-    }) => {
-      try {
-        const result = await (
-          dependencies.communityIntentReport ?? communityIntentReport
-        )({
-          site,
-          days,
-          startDate,
-          endDate,
-          limit,
-          minImpressions,
-          maxRows,
-          brandTerms,
-          includeBrand,
-          refresh,
-        })
-        return toolSuccess(
-          `Evidence status: ${result.dataStatus}. ${result.summary.verdict}`,
-          result,
-        )
       } catch (error) {
         return toolError(error)
       }

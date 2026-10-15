@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clusterPseoTemplates } from './templates.js'
+import { clusterPseoTemplates } from './url-templates.js'
 
 test('clusterPseoTemplates infers static and variable path shape', () => {
   const urls = [

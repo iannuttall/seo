@@ -1,9 +1,6 @@
 import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { AI_PROMPT_OBSERVATION_SCHEMA_SQL } from '../ai-prompt-observations/schema.js'
-import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
 import { fileSize, getSeoCliPaths } from '../paths.js'
-import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
 import type { CacheStats } from '../types.js'
 import {
   CACHE_MAINTENANCE_WRITE_BYTES,
@@ -13,7 +10,6 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
-import { migrateProviderIds } from './provider-id-migration.js'
 import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
@@ -64,18 +60,6 @@ CREATE TABLE IF NOT EXISTS ga4_cache (
   PRIMARY KEY(property_id, query_hash)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_ga4_expires ON ga4_cache(expires_at);
-
-CREATE TABLE IF NOT EXISTS semrush_cache (
-  endpoint TEXT,
-  query_hash TEXT,
-  request_json TEXT,
-  response_json TEXT,
-  credits_used INTEGER,
-  fetched_at INTEGER,
-  expires_at INTEGER,
-  PRIMARY KEY(endpoint, query_hash)
-) WITHOUT ROWID;
-CREATE INDEX IF NOT EXISTS idx_semrush_expires ON semrush_cache(expires_at);
 
 CREATE TABLE IF NOT EXISTS provider_cache (
   provider TEXT NOT NULL,
@@ -330,11 +314,9 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
-    database.exec(AI_PROMPT_OBSERVATION_SCHEMA_SQL)
-    database.exec(KEYWORD_SET_SCHEMA_SQL)
-    database.exec(RANK_TRACKING_SCHEMA_SQL)
     database.exec(PROVIDER_SPEND_SCHEMA_SQL)
-    database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
+    // Semrush was removed in 0.3.0. Its old cache table goes with it.
+    database.exec('DROP TABLE IF EXISTS semrush_cache')
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
     ensureColumn(
@@ -367,7 +349,6 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
     `)
   })
   migrate.immediate()
-  migrateProviderIds(database)
   runCacheMaintenance(database, {
     compact: true,
     allowFullVacuum: true,
@@ -440,11 +421,6 @@ export function getCacheStats(): CacheStats {
         )
         .get(provider) as { count: number }
     ).count
-  const legacySemrushCount = (
-    database.prepare('SELECT COUNT(*) AS count FROM semrush_cache').get() as {
-      count: number
-    }
-  ).count
   const counts = {
     sites: database.prepare('SELECT COUNT(*) AS count FROM sites').get() as {
       count: number
@@ -455,9 +431,7 @@ export function getCacheStats(): CacheStats {
     google_analytics_cache: database
       .prepare('SELECT COUNT(*) AS count FROM ga4_cache')
       .get() as { count: number },
-    semrush_cache: { count: legacySemrushCount + providerCount('semrush') },
     provider_cache: { count: providerCount('dataforseo') },
-    serpbase_cache: { count: providerCount('serpbase') },
     ahrefs_cache: { count: providerCount('ahrefs') },
     clicky_cache: { count: providerCount('clicky') },
     http_cache: database
@@ -490,10 +464,8 @@ export function clearCache(
   provider?:
     | 'gsc'
     | 'google-analytics'
-    | 'semrush'
     | 'dataforseo'
     | 'ahrefs'
-    | 'serpbase'
     | 'clicky'
     | 'http',
   olderThanMs?: number,
@@ -503,9 +475,7 @@ export function clearCache(
 
   if (
     provider === 'dataforseo' ||
-    provider === 'semrush' ||
     provider === 'ahrefs' ||
-    provider === 'serpbase' ||
     provider === 'clicky'
   ) {
     const sql = cutoff
@@ -515,16 +485,8 @@ export function clearCache(
     const info = cutoff
       ? database.prepare(sql).run(providerName, cutoff)
       : database.prepare(sql).run(providerName)
-    const legacy =
-      provider === 'semrush'
-        ? cutoff
-          ? database
-              .prepare('DELETE FROM semrush_cache WHERE fetched_at < ?')
-              .run(cutoff).changes
-          : database.prepare('DELETE FROM semrush_cache').run().changes
-        : 0
     compactCacheDatabase(database, { allowFullVacuum: true })
-    return info.changes + legacy
+    return info.changes
   }
 
   const tables =
@@ -534,13 +496,7 @@ export function clearCache(
         ? ['ga4_cache']
         : provider === 'http'
           ? ['http_cache']
-          : [
-              'gsc_cache',
-              'ga4_cache',
-              'semrush_cache',
-              'provider_cache',
-              'http_cache',
-            ]
+          : ['gsc_cache', 'ga4_cache', 'provider_cache', 'http_cache']
 
   let removed = 0
 

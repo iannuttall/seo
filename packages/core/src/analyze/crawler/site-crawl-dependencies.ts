@@ -14,7 +14,6 @@ import {
   fetchLandingPageValues,
   landingValueForUrl,
 } from '../workflows/analytics-value.js'
-import { collectAgentDiscovery } from './agent-discovery.js'
 
 export type ResolvedCrawlSiteDependencies = {
   fetchPage: typeof crawlOne
@@ -29,7 +28,6 @@ export type ResolvedCrawlSiteDependencies = {
   queryPagesTopQueriesBatch?: typeof queryPagesTopQueriesBatch
   fetchLandingPageValues: typeof fetchLandingPageValues
   landingValueForUrl: typeof landingValueForUrl
-  collectAgentDiscovery: typeof collectAgentDiscovery
   now: () => Date
   memoryUsage: () => Pick<NodeJS.MemoryUsage, 'rss' | 'heapUsed' | 'external'>
   totalMemory: () => number
@@ -99,8 +97,6 @@ export function resolveCrawlSiteDependencies(
     fetchLandingPageValues:
       dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
-    collectAgentDiscovery:
-      dependencies.collectAgentDiscovery ?? collectAgentDiscovery,
     now: dependencies.now ?? (() => new Date()),
     memoryUsage: dependencies.memoryUsage ?? (() => process.memoryUsage()),
     totalMemory: dependencies.totalMemory ?? totalmem,

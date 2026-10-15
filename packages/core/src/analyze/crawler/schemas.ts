@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { providerIdSchema } from '../../providers/contracts.js'
 import { listRules } from '../../rules.js'
 import { analyticsConnectionSchema } from '../../types.js'
-import { agentDiscoverySchema } from './agent-discovery-schema.js'
 import { CRAWL_SKIP_REASONS } from './crawl-skip-reasons.js'
 import { crawlSiteChecksSchema } from './site-checks-schema.js'
 
@@ -846,7 +845,6 @@ export const crawlConfigSchema = z.object({
   respectRobots: z.boolean(),
   useSitemap: z.boolean(),
   checkExternal: z.boolean(),
-  checkAgentDiscovery: z.boolean(),
   js: z.union([z.enum(['auto', 'on', 'off']), z.boolean()]),
   refresh: z.boolean(),
   fetchRate: z.object({
@@ -996,7 +994,6 @@ const crawlReportBaseSchema = z.object({
   sitemapDiscovery: crawlSitemapDiscoverySchema.optional(),
   externalLinkVerification: crawlExternalLinkVerificationSchema.optional(),
   siteChecks: crawlSiteChecksSchema.optional(),
-  agentDiscovery: agentDiscoverySchema.optional(),
   warnings: z.array(z.string()),
   caveats: z.array(z.string()),
 })

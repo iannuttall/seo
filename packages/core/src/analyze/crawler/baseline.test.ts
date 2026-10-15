@@ -37,7 +37,6 @@ function crawlReport(
       respectRobots: true,
       useSitemap: true,
       checkExternal: false,
-      checkAgentDiscovery: false,
       js: 'off',
       refresh: false,
       fetchRate: { concurrency: 8 },

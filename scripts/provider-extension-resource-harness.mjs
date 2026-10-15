@@ -16,7 +16,6 @@ process.env.SEO_CONFIG_DIR = configDir
 process.env.SEO_CACHE_DIR = join(configDir, 'cache')
 
 let analyticsCalls = 0
-let serpCalls = 0
 let responseBytes = 0
 const startedAt = performance.now()
 const rssBefore = process.memoryUsage().rss
@@ -57,51 +56,7 @@ try {
     },
   })
 
-  const { runProviderSerpSnapshot } = await import(
-    '../packages/core/dist/provider-extensions/serp.js'
-  )
-  const serp = await runProviderSerpSnapshot({
-    providerId: 'fixture',
-    account: {},
-    credentials: { apiKey: 'fixture-key' },
-    keyword: 'technical seo',
-    market: {
-      searchEngine: 'google',
-      countryCode: 'GB',
-      languageCode: 'en',
-      device: 'desktop',
-    },
-    depth: 100,
-    refresh: true,
-    context: {
-      reportId: 'resource-harness',
-      reportRunId: 'provider-extension-resource',
-    },
-    runtime: {
-      fetch: async (value) => {
-        serpCalls += 1
-        const page = Number(new URL(String(value)).searchParams.get('page'))
-        const body = JSON.stringify({
-          organicResults: Array.from({ length: 10 }, (_, index) => ({
-            rankGroup: index + 1,
-            rankAbsolute: (page - 1) * 10 + index + 1,
-            page,
-            domain: 'example.com',
-            url: `https://example.com/${page}/${index + 1}`,
-            title: `Result ${page}-${index + 1}`,
-            description: null,
-            isFeaturedSnippet: null,
-          })),
-        })
-        responseBytes += Buffer.byteLength(body)
-        return new Response(body, {
-          headers: { 'content-type': 'application/json' },
-        })
-      },
-    },
-  })
-
-  const outputBytes = Buffer.byteLength(JSON.stringify({ analytics, serp }))
+  const outputBytes = Buffer.byteLength(JSON.stringify({ analytics }))
   const elapsedMs = performance.now() - startedAt
   const rssGrowthBytes = Math.max(0, process.memoryUsage().rss - rssBefore)
   const diskBytes = readdirSync(configDir, { recursive: true }).reduce(
@@ -114,15 +69,12 @@ try {
 
   assert.equal(analyticsCalls, 5)
   assert.equal(analytics.returnedRows, 5_000)
-  assert.equal(serpCalls, 10)
-  assert.equal(serp.data.organicResults.length, 100)
   assert.ok(rssGrowthBytes <= MAX_RSS_GROWTH)
 
   process.stdout.write(
     `${JSON.stringify({
       analyticsRows: analytics.returnedRows,
-      serpRows: serp.data.organicResults.length,
-      requests: analyticsCalls + serpCalls,
+      requests: analyticsCalls,
       elapsedMs: Number(elapsedMs.toFixed(2)),
       rssGrowthBytes,
       responseBytes,

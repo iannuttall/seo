@@ -89,7 +89,7 @@
     "test:built": "turbo run test && pnpm run test:contracts:built",
     "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs && pnpm run skills:validate",
     "test:resources": "pnpm run build:package && pnpm run test:resources:built",
-    "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/competitive-opportunities-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && node scripts/provider-extension-resource-harness.mjs",
+    "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/provider-extension-resource-harness.mjs",
     "test:package-install": "pnpm --filter @seo/core build && pnpm --filter @seo/mcp build && pnpm run build:package && node --test scripts/installed-package.test.mjs",
     "test:package-install:built": "node --test scripts/installed-package.test.mjs",
     "typecheck": "turbo run typecheck"
@@ -101,8 +101,6 @@
     "@types/node": "^22.20.1",
     "citty": "^0.2.2",
     "cli-table3": "^0.6.5",
-    "consola": "^3.4.2",
-    "debug": "^4.4.3",
     "defuddle": "^0.19.1",
     "htmlparser2": "10.1.0",
     "jsonc-parser": "^3.3.1",
@@ -118,11 +116,9 @@
     "playwright-core": "1.61.1",
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
-    "schema-dts": "^2.0.0",
     "string-width": "^8.2.2",
     "undici": "^8.10.2",
     "update-notifier": "^7.3.1",
-    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

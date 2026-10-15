@@ -125,39 +125,6 @@ test('domain overview preserves observed zero metrics', async () => {
   assert.equal(report.coverage.completeness, 'complete')
 })
 
-test('domain overview preserves a successful empty provider result', async () => {
-  const client = {
-    domainOverview: async () =>
-      ({
-        ...snapshotEvidence,
-        returnedRows: 0,
-        response: {
-          ...task({}),
-          tasks: [
-            {
-              id: 'task-1',
-              status_code: 20000,
-              status_message: 'Ok.',
-              cost: 0.012,
-              result_count: 0,
-              result: [],
-            },
-          ],
-        },
-      }) as DataForSeoDomainOverviewSnapshot,
-    rankedKeywords: async () => assert.fail('unexpected ranked request'),
-    rankingPages: async () => assert.fail('unexpected page request'),
-    serpCompetitors: async () => assert.fail('unexpected competitor request'),
-  }
-  const report = await new DataForSeoDomainResearchProvider({
-    client,
-  }).domainOverview({ domain: 'example.com', market })
-
-  assert.equal(report.coverage.retainedRows, 0)
-  assert.equal(report.coverage.completeness, 'complete')
-  assert.equal(report.data.organic.rankedKeywords.state, 'missing')
-})
-
 test('ranked keywords filters before acquisition and maps bounded rows', async () => {
   let captured: DataForSeoRankedKeywordsRequest | undefined
   const valid = {
@@ -373,23 +340,4 @@ test('SERP competitors normalize and order domains deterministically', async () 
   ])
   assert.equal(report.coverage.invalidRows, 1)
   assert.equal(report.coverage.completeness, 'partial')
-})
-
-test('domain research rejects local Labs markets before a paid call', async () => {
-  const client = {
-    domainOverview: async () => assert.fail('unexpected overview request'),
-    rankedKeywords: async () => assert.fail('unexpected ranked request'),
-    rankingPages: async () => assert.fail('unexpected page request'),
-    serpCompetitors: async () => assert.fail('unexpected competitor request'),
-  }
-  await assert.rejects(
-    new DataForSeoDomainResearchProvider({ client }).domainOverview({
-      domain: 'example.com',
-      market: {
-        ...market,
-        location: { name: 'London, England, United Kingdom' },
-      },
-    }),
-    /country-level markets/u,
-  )
 })

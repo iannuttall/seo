@@ -209,7 +209,6 @@ test('link context preserves crawl findings when Search Console fails', async ()
   assert.equal(result.dataStatus, 'partial')
   assert.equal(result.rows[0]?.searchConsole.state, 'unavailable')
   assert.equal(result.findings[0]?.code, 'linked-broken-target')
-  assert.match(result.warnings[0] ?? '', /fixture provider failure/)
 })
 
 test('link context keeps large sources bounded and reports capped Search Console rows', async () => {

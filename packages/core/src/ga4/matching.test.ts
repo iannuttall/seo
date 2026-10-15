@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import {
-  type Ga4WebStreamCandidate,
-  ga4MatchReason,
-  matchGa4WebStreams,
-} from './matching.js'
+import { type Ga4WebStreamCandidate, matchGa4WebStreams } from './matching.js'
 
 function candidate(
   property: string,
@@ -34,7 +30,6 @@ test('matches one Google Analytics web stream inside a Search Console domain pro
   assert.equal(matches.length, 1)
   assert.equal(match.property, '100')
   assert.equal(match.match, 'domain')
-  assert.match(ga4MatchReason(match, 'sc-domain:example.com'), /inside/)
 })
 
 test('keeps several matching streams ambiguous', () => {

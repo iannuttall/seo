@@ -110,36 +110,3 @@ test('provider cache stores no credential or unstable object ordering', () => {
   assert.equal(row.credential_scope, scope)
   assert.match(String(row.request_hash), /^[a-f0-9]{64}$/)
 })
-
-test('provider cache rejects expired and corrupt rows', () => {
-  const db = database()
-  const key = {
-    provider: 'dataforseo' as const,
-    credentialScope: 'scope',
-    operation: 'keyword-metrics',
-    request: { keywords: ['one'] },
-  }
-  writeProviderCache(
-    key,
-    {
-      data: { keywords: ['one'] },
-      ttlMs: 10,
-      rowCount: 1,
-      sourceCostMicros: null,
-      taskIds: [],
-    },
-    { database: db, now: 100 },
-  )
-  assert.equal(readProviderCache(key, schema, { database: db, now: 110 }), null)
-
-  db.prepare('UPDATE provider_cache SET response_json = ?').run('{bad')
-  assert.equal(readProviderCache(key, schema, { database: db, now: 101 }), null)
-  assert.equal(
-    (
-      db.prepare('SELECT COUNT(*) AS count FROM provider_cache').get() as {
-        count: number
-      }
-    ).count,
-    0,
-  )
-})

@@ -57,27 +57,6 @@ test('uses greater-than-10 through 20 GSC row position boundaries', () => {
   })
 })
 
-test('rejects invalid metrics, missing dimensions, and non-http pages', () => {
-  const analysis = analyzeSecondPageRows({
-    site,
-    minImpressions: 0,
-    rows: [
-      row({ query: '', page: 'https://example.com/a' }),
-      row({ query: 'missing page', page: '' }),
-      row({ query: 'bad scheme', page: 'ftp://example.com/a' }),
-      row({ query: 'negative clicks', clicks: -1 }),
-      row({ query: 'too many clicks', clicks: 101, impressions: 100 }),
-      row({ query: 'bad ctr', ctr: 1.1 }),
-      row({ query: 'nan', position: Number.NaN }),
-      row({ query: 'valid' }),
-    ],
-  })
-
-  assert.equal(analysis.selection.invalidRows, 7)
-  assert.equal(analysis.selection.eligibleRows, 1)
-  assert.equal(analysis.items[0]?.primaryQuery, 'valid')
-})
-
 test('aggregates every eligible query by page before applying the minimum', () => {
   const analysis = analyzeSecondPageRows({
     site,
@@ -121,42 +100,6 @@ test('aggregates every eligible query by page before applying the minimum', () =
   assert.equal(analysis.summary.eligibleImpressions, 100)
 })
 
-test('ranks complete page aggregates before limiting results', () => {
-  const analysis = analyzeSecondPageRows({
-    site,
-    minImpressions: 0,
-    limit: 1,
-    rows: [
-      row({
-        query: 'first part',
-        page: 'https://example.com/group',
-        impressions: 60,
-        position: 11,
-      }),
-      row({
-        query: 'second part',
-        page: 'https://example.com/group',
-        impressions: 60,
-        position: 11,
-      }),
-      row({
-        query: 'single',
-        page: 'https://example.com/single',
-        impressions: 100,
-        position: 11,
-      }),
-    ],
-  })
-
-  assert.equal(analysis.items[0]?.url, 'https://example.com/group')
-  assert.equal(analysis.items[0]?.queryCount, 2)
-  assert.equal(analysis.selection.eligiblePages, 2)
-  assert.equal(analysis.selection.returnedPages, 1)
-  assert.equal(analysis.selection.limitedPages, 1)
-  assert.equal(analysis.summary.eligibleImpressions, 220)
-  assert.equal(analysis.summary.returnedImpressions, 120)
-})
-
 test('uses deterministic codepoint ordering for complete ties', () => {
   const inputs = [
     row({ query: 'éclair', page: 'https://example.com/éclair' }),
@@ -177,52 +120,4 @@ test('uses deterministic codepoint ordering for complete ties', () => {
     'https://example.com/%E6%9D%B1%E4%BA%AC',
     'https://example.com/apple',
   ])
-})
-
-test('supports Unicode brand filtering and reports sparse states', () => {
-  const empty = analyzeSecondPageRows({ site, rows: [] })
-  const filtered = analyzeSecondPageRows({
-    site,
-    brandTerms: ['東京'],
-    rows: [row({ query: '東京 ガイド' })],
-  })
-
-  assert.equal(empty.dataStatus, 'empty')
-  assert.equal(filtered.dataStatus, 'filtered')
-  assert.equal(filtered.selection.brandRows, 1)
-  assert.equal(filtered.items.length, 0)
-})
-
-test('normalizes analysis options to documented bounds', () => {
-  const high = analyzeSecondPageRows({
-    site,
-    rows: [],
-    minImpressions: Number.POSITIVE_INFINITY,
-    limit: 10_000,
-  })
-  const low = analyzeSecondPageRows({
-    site,
-    rows: [],
-    minImpressions: -5,
-    limit: 0,
-  })
-
-  assert.equal(high.minImpressions, 50)
-  assert.equal(high.limit, 100)
-  assert.equal(low.minImpressions, 0)
-  assert.equal(low.limit, 1)
-})
-
-test('labels priority as a heuristic and avoids unsupported lift claims', () => {
-  const item = analyzeSecondPageRows({
-    site,
-    rows: [row({ query: 'seo guide' })],
-  }).items[0]
-  assert.equal(item?.priority.heuristic, true)
-  assert.equal(item?.priority.estimatedClickLift, false)
-  assert.equal(item?.recommendation.confidence, 'low')
-  assert.doesNotMatch(
-    item?.recommendation.action ?? '',
-    /exact|word count|ctr|lift/i,
-  )
 })

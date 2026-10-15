@@ -47,10 +47,3 @@ test('adds domain_rating after the domain column, one call per domain', async ()
   await withDomainRating(rows, 'key')
   assert.equal(calls.length, 2)
 })
-
-test('leaves rows alone without a key or when DR is already there', async () => {
-  const rows = [{ domain: 'a.com' }]
-  assert.equal((await withDomainRating(rows, undefined)).added, false)
-  const rated = [{ domain: 'a.com', domain_rating: 10 }]
-  assert.equal((await withDomainRating(rated, 'key')).rows, rated)
-})

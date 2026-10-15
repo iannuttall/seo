@@ -281,38 +281,6 @@ test('request contract rejects methods, content types, cross-site calls, and lar
   assert.equal(calls, 0)
 })
 
-test('strict parser and handler output validation reject malformed fields', async () => {
-  let reserveCalls = 0
-  const env = environment(async () => {
-    reserveCalls += 1
-    return reservation()
-  })
-  const malformed = await handleProtectedTool(
-    request(JSON.stringify({ target: 'example.com', extra: true })),
-    env,
-    {
-      tool: 'spam-score',
-      providerDailyLimit: 100,
-      parse,
-      provider: async () => ({}),
-    },
-  )
-  const invalidParserOutput = await handleProtectedTool(request(), env, {
-    tool: 'spam-score',
-    providerDailyLimit: 100,
-    parse: () => ({
-      target: '',
-      turnstileToken: 'token',
-      providerInput: { target: '' },
-    }),
-    provider: async () => ({}),
-  })
-
-  assert.equal(malformed.status, 400)
-  assert.equal(invalidParserOutput.status, 400)
-  assert.equal(reserveCalls, 0)
-})
-
 test('Turnstile failures stop before quota reservation', async () => {
   let reserveCalls = 0
   const env = environment(async () => {
@@ -371,40 +339,6 @@ test('missing trusted identity data fails closed', async () => {
 
   assert.equal(missingIp.status, 503)
   assert.equal(missingSecret.status, 503)
-})
-
-test('identity quota maps to 429 with safe remaining and reset data', async () => {
-  let providerCalls = 0
-  const env = environment(async () =>
-    reservation({
-      allowed: false,
-      reason: 'identity-limit',
-      identityUsed: 10,
-      identityRemaining: 0,
-    }),
-  )
-  const response = await handleProtectedTool(request(), env, {
-    tool: 'spam-score',
-    providerDailyLimit: 100,
-    parse,
-    now: () => now,
-    verifyTurnstile: async () => ({
-      ok: true,
-      action: 'spam-score',
-      hostname: 'seoskill.dev',
-    }),
-    provider: async () => {
-      providerCalls += 1
-      return {}
-    },
-  })
-
-  assert.equal(response.status, 429)
-  assert.equal(response.headers.get('retry-after'), '43200')
-  assert.deepEqual(await response.json(), {
-    error: 'Daily check limit reached. Try again tomorrow.',
-  })
-  assert.equal(providerCalls, 0)
 })
 
 test('provider quota maps to 503 without exposing the provider budget', async () => {

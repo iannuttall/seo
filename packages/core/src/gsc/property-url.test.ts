@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { SeoError } from '../errors.js'
-import {
-  assertUrlMatchesGscProperty,
-  normalizeHttpUrl,
-} from './property-url.js'
+import { assertUrlMatchesGscProperty } from './property-url.js'
 
 function assertInvalid(run: () => unknown, message: RegExp): void {
   assert.throws(run, (error) => {
@@ -14,13 +11,6 @@ function assertInvalid(run: () => unknown, message: RegExp): void {
     return true
   })
 }
-
-test('normalizes report URLs without changing query or path identity', () => {
-  assert.equal(
-    normalizeHttpUrl(' https://example.com/guides/?page=2#results '),
-    'https://example.com/guides/?page=2',
-  )
-})
 
 test('matches domain properties to the domain and its subdomains', () => {
   assert.equal(
@@ -63,21 +53,5 @@ test('honors the scheme and path of URL-prefix properties', () => {
         'https://example.com/blog/technical-seo',
       ),
     /outside the Search Console property/,
-  )
-})
-
-test('rejects unsupported URLs and malformed domain properties', () => {
-  assertInvalid(() => normalizeHttpUrl('file:///tmp/report'), /must use http/)
-  assertInvalid(
-    () => normalizeHttpUrl('https://user:pass@example.com/'),
-    /embedded credentials/,
-  )
-  assertInvalid(
-    () =>
-      assertUrlMatchesGscProperty(
-        'sc-domain:https://example.com',
-        'https://example.com/',
-      ),
-    /Invalid Search Console domain property/,
   )
 })

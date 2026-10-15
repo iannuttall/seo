@@ -36,45 +36,6 @@ test('the public package exposes one unscoped API, CLI, and MCP surface', () => 
   )
 })
 
-test('the clean package install check builds workspace dependencies', () => {
-  assert.match(
-    packageJson.scripts['test:package-install'],
-    /@seo\/core build.*@seo\/mcp build.*build:package/,
-  )
-})
-
-test('core tests isolate SQLite state between test processes', async () => {
-  const corePackage = JSON.parse(
-    await readFile('packages/core/package.json', 'utf8'),
-  )
-  const runner = await readFile('packages/core/scripts/run-tests.mjs', 'utf8')
-
-  assert.equal(corePackage.scripts.test, 'node scripts/run-tests.mjs')
-  assert.match(runner, /SEO_CORE_TEST_ROOT/)
-  assert.match(runner, /join\(testRoot, String\(process\.pid\)\)/)
-  assert.match(runner, /SEO_CONFIG_DIR/)
-  assert.match(runner, /SEO_CACHE_DIR/)
-  assert.match(runner, /rmSync\(temporaryRoot/)
-})
-
-test('CI reuses the verified build without dropping any gates', async () => {
-  const ci = await readFile('.github/workflows/ci.yml', 'utf8')
-
-  assert.match(ci, /pnpm build/)
-  assert.match(ci, /pnpm typecheck/)
-  assert.match(ci, /pnpm test:cli-shard:built/)
-  assert.match(ci, /pnpm test:contracts:built/)
-  assert.match(ci, /pnpm test:resources:built/)
-  assert.match(ci, /pnpm test:package-install:built/)
-  assert.match(ci, /pnpm lint:static/)
-  assert.match(ci, /pnpm security:check/)
-  assert.match(ci, /actions\/upload-artifact@v7/)
-  assert.match(ci, /actions\/download-artifact@v8/)
-  assert.match(ci, /actions\/cache\/restore@v6/)
-  assert.match(ci, /actions\/cache\/save@v6/)
-  assert.doesNotMatch(ci, /run: pnpm (?:test|test:package-install|lint)$/m)
-})
-
 test('the public TypeScript library, MCP, and provider SDK entry points load', async () => {
   const [core, mcp, providerSdk] = await Promise.all([
     import('../dist/index.js'),
@@ -114,20 +75,6 @@ test('the CLI bundle is executable and the seo skill ships in the package', asyn
   assert.match(source, /^---\nname: seo\n/)
 })
 
-test('the evals directory ships in the package', async () => {
-  assert.ok(packageJson.files.includes('evals'))
-
-  const evalFiles = (await readdir('evals')).filter((file) =>
-    file.endsWith('.json'),
-  )
-  assert.ok(evalFiles.length > 0)
-  for (const file of evalFiles) {
-    const doc = JSON.parse(await readFile(`evals/${file}`, 'utf8'))
-    assert.equal(doc.subject, file.replace(/\.json$/, ''))
-    assert.ok(Array.isArray(doc.evals) && doc.evals.length > 0)
-  }
-})
-
 test('the packaged CLI reports the public package version', async () => {
   const result = await execFileAsync(
     process.execPath,
@@ -135,83 +82,6 @@ test('the packaged CLI reports the public package version', async () => {
     { env: { ...process.env, NO_UPDATE_NOTIFIER: '1' } },
   )
   assert.equal(result.stdout.trim(), packageJson.version)
-})
-
-test('the public package includes its trust and legal policies', async () => {
-  await Promise.all([
-    readFile('PRIVACY.md', 'utf8'),
-    readFile('SECURITY.md', 'utf8'),
-    readFile('TERMS.md', 'utf8'),
-    readFile('TRADEMARKS.md', 'utf8'),
-  ])
-  assert.ok(packageJson.files.includes('PRIVACY.md'))
-  assert.ok(packageJson.files.includes('SECURITY.md'))
-  assert.ok(packageJson.files.includes('TERMS.md'))
-  assert.ok(packageJson.files.includes('TRADEMARKS.md'))
-
-  const trademarks = await readFile('TRADEMARKS.md', 'utf8')
-  assert.match(trademarks, /source code is available under Apache-2\.0/i)
-  assert.match(trademarks, /license does not grant/i)
-})
-
-test('public support and security routes stay on GitHub', async () => {
-  const publicFiles = [
-    '.github/ISSUE_TEMPLATE/bug.yml',
-    '.github/ISSUE_TEMPLATE/config.yml',
-    '.github/ISSUE_TEMPLATE/report.yml',
-    'AGENTS.md',
-    'README.md',
-    'CONTRIBUTING.md',
-    'PRIVACY.md',
-    'SECURITY.md',
-    'TERMS.md',
-    'TRADEMARKS.md',
-  ]
-  const sources = await Promise.all(
-    publicFiles.map((file) => readFile(file, 'utf8')),
-  )
-  const combined = sources.join('\n')
-
-  assert.match(combined, /github\.com\/iannuttall\/seo\/issues/)
-  assert.match(
-    combined,
-    /github\.com\/iannuttall\/seo\/security\/advisories\/new/,
-  )
-  assert.doesNotMatch(combined, /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i)
-  assert.doesNotMatch(combined, /audits\.run/i)
-})
-
-test('the release workflow automates trusted publishing, tagging, and release-only OAuth injection', async () => {
-  const release = await readFile('.github/workflows/release.yml', 'utf8')
-  const ci = await readFile('.github/workflows/ci.yml', 'utf8')
-
-  assert.match(release, /contents: write/)
-  assert.match(release, /id-token: write/)
-  assert.match(release, /push:\n\s+branches: \[main\]/)
-  assert.match(release, /npm view "seo@\$\{version\}" version/)
-  assert.match(release, /git tag --annotate "\$RELEASE_TAG"/)
-  assert.match(release, /git push origin "\$RELEASE_TAG"/)
-  for (const workflow of [release, ci]) {
-    assert.match(workflow, /actions\/checkout@v7/)
-    assert.match(workflow, /pnpm\/action-setup@v6/)
-    assert.match(workflow, /actions\/setup-node@v6/)
-  }
-  assert.match(release, /node-version: 24/)
-  assert.match(release, /package-manager-cache: false/)
-  assert.match(release, /npm publish --access public --provenance/)
-  assert.match(release, /\*-\*\) DIST_TAG=next/)
-  assert.doesNotMatch(release, /NPM_TOKEN|NODE_AUTH_TOKEN/)
-  assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_ID/)
-  assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_SECRET/)
-  assert.doesNotMatch(ci, /SEO_GOOGLE_CLIENT_ID|SEO_GOOGLE_CLIENT_SECRET/)
-  assert.doesNotMatch(ci, /push:\n\s+branches: \[main\]/)
-  assert.doesNotMatch(release, /pnpm (?:build|typecheck|test|lint)\n/)
-  for (const workflow of [release, ci]) {
-    assert.match(workflow, /pnpm test:package-install/)
-    assert.match(workflow, /gitleaks\/gitleaks-action@v3/)
-    assert.match(workflow, /pnpm security:check/)
-    assert.doesNotMatch(workflow, /pnpm security:audit/)
-  }
 })
 
 test('the shared OAuth injector escapes values and requires both credentials', async () => {

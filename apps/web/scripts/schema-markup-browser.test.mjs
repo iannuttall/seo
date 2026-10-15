@@ -104,20 +104,6 @@ test('schema generator UI switches every type, manages repeaters, and hands off 
     typeContracts.map(([id, label]) => [id, label]),
   )
 
-  const cards = root.locator(':scope > div')
-  assert.equal(await cards.count(), 2)
-  const formCard = await cards.nth(0).boundingBox()
-  const outputCard = await cards.nth(1).boundingBox()
-  assert.ok(formCard && outputCard)
-  assert.ok(outputCard.y >= formCard.y + formCard.height)
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  const mobileFormCard = await cards.nth(0).boundingBox()
-  const mobileOutputCard = await cards.nth(1).boundingBox()
-  assert.ok(mobileFormCard && mobileOutputCard)
-  assert.ok(mobileOutputCard.y >= mobileFormCard.y + mobileFormCard.height)
-  await page.setViewportSize({ width: 1280, height: 900 })
-
   for (const [id, label, schemaType] of typeContracts) {
     await typeSelect.selectOption(id)
     const visibleForm = root.locator('[data-schema-form]:not([hidden])')

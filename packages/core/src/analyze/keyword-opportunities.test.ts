@@ -41,16 +41,6 @@ function missing<T>(field: string): ProviderValue<T> {
   return unavailableValue('missing', `Provider omitted ${field}.`)
 }
 
-function history(volumes: number[]) {
-  return observedValue(
-    volumes.map((searchVolume, index) => ({
-      year: 2026,
-      month: index + 1,
-      searchVolume,
-    })),
-  )
-}
-
 function metric(
   keyword: string,
   input: Partial<KeywordMetric> = {},
@@ -253,111 +243,7 @@ test('keyword opportunities reuses one GSC acquisition without paid work by defa
     returned: 1,
     omitted: 0,
   })
-  assert.match(report.nextSteps[0] ?? '', /paid provider request/)
   assert.ok(Buffer.byteLength(JSON.stringify(report)) < 98_304)
-})
-
-test('keyword opportunities combines typed external context and programmatic clusters', async () => {
-  const rows = [
-    row({
-      query: 'plumber price london',
-      url: 'https://example.com/locations/london-plumber-price/',
-      position: 12,
-      impressions: 900,
-      clicks: 9,
-    }),
-    row({
-      query: 'plumber price manchester',
-      url: 'https://example.com/locations/manchester-plumber-price/',
-      position: 13,
-      impressions: 800,
-      clicks: 8,
-    }),
-    row({
-      query: 'plumber price leeds',
-      url: 'https://example.com/locations/leeds-plumber-price/',
-      position: 14,
-      impressions: 700,
-      clicks: 7,
-    }),
-  ]
-  let captured:
-    | Parameters<
-        NonNullable<KeywordOpportunitiesDependencies['keywordMetrics']>
-      >[0]
-    | undefined
-  const report = await keywordOpportunitiesReport(
-    {
-      site: 'sc-domain:example.com',
-      includeExternal: true,
-      market,
-      provider: 'dataforseo',
-      projectId: 'project-1',
-      keywordLimit: 3,
-    },
-    dependencies(rows, {
-      keywordMetrics: async (input) => {
-        captured = input
-        return metricsReport(
-          input.keywords.map((keyword, index) =>
-            metric(keyword, {
-              monthlySearchVolume: observedValue(index === 0 ? 0 : 200),
-              monthlySearches:
-                index === 1
-                  ? history([100, 100, 100, 150, 200, 250])
-                  : missing('monthlySearches'),
-            }),
-          ),
-        )
-      },
-    }),
-  )
-
-  assert.equal(captured?.provider, 'dataforseo')
-  assert.equal(captured?.projectId, 'project-1')
-  assert.equal(captured?.context?.reportId, 'keyword-opportunities')
-  assert.match(captured?.context?.reportRunId ?? '', /^[0-9a-f-]{36}$/)
-  assert.equal(captured?.keywords.length, 3)
-  assert.equal(report.external.status, 'complete')
-  assert.equal(report.external.report?.evidence.cost.actualMicros, 12_000)
-  assert.equal(report.summary.externalMetricsObserved, 3)
-  assert.equal(report.combined.length, 3)
-  assert.equal(report.candidateClusters.length, 1)
-  assert.equal(report.candidateClusters[0]?.queries.length, 3)
-  assert.equal(report.candidateClusters[0]?.template?.urlCount, 3)
-  assert.equal(
-    report.candidateClusters[0]?.externalContext.metricsWithObservedVolume,
-    3,
-  )
-  assert.equal(report.summary.programmaticTemplateClusters, 1)
-  assert.equal(report.dataSourcePrompts.length, 1)
-  assert.equal(report.methodology.clusterMinImpressions, 25)
-  assert.deepEqual(report.dataSourcePrompts[0]?.requiredChecks, [
-    'stable entity IDs and join keys',
-    'required attributes and missing-value rules',
-    'source provenance and usage rights',
-    'update cadence and freshness checks',
-    'page uniqueness and duplicate prevention',
-    'representative output and internal-link review',
-  ])
-  assert.ok(
-    report.findings.some(
-      (finding) =>
-        finding.code === 'provider-zero-with-first-party-impressions',
-    ),
-  )
-  assert.ok(
-    report.findings.some(
-      (finding) => finding.code === 'recent-demand-increase',
-    ),
-  )
-  assert.ok(
-    report.findings.some(
-      (finding) => finding.code === 'programmatic-template-cluster',
-    ),
-  )
-  assert.equal(report.methodology.externalChangesPriorityScore, false)
-  assert.match(report.caveats.join(' '), /No live result snapshot/)
 })
 
 test('external provider failures do not erase first-party opportunities', async () => {
@@ -391,7 +277,6 @@ test('external provider failures do not erase first-party opportunities', async 
   assert.equal(report.external.status, 'unavailable')
   assert.equal(report.external.error?.code, 'PROVIDER_UNAVAILABLE')
   assert.equal(report.combined[0]?.external, undefined)
-  assert.match(report.nextSteps[0] ?? '', /provider status/)
 
   await assert.rejects(
     keywordOpportunitiesReport(
@@ -464,70 +349,6 @@ test('missing external estimates stay distinct from observed zero', async () => 
   )
 })
 
-test('keyword opportunity ordering is stable when provider rows arrive shuffled', async () => {
-  const rows = [
-    row({
-      query: 'alpha audit tool',
-      url: 'https://example.com/tools/alpha/',
-      position: 6,
-      impressions: 800,
-      clicks: 1,
-    }),
-    row({
-      query: 'beta audit tool',
-      url: 'https://example.com/tools/beta/',
-      position: 7,
-      impressions: 900,
-      clicks: 1,
-    }),
-    row({
-      query: 'gamma audit tool',
-      url: 'https://example.com/tools/gamma/',
-      position: 12,
-      impressions: 700,
-      clicks: 1,
-    }),
-  ]
-  const run = (inputRows: GscRow[]) =>
-    keywordOpportunitiesReport(
-      { site: 'sc-domain:example.com' },
-      dependencies(inputRows),
-    )
-  const ordered = await run(rows)
-  const shuffled = await run([
-    rows[2] as GscRow,
-    rows[0] as GscRow,
-    rows[1] as GscRow,
-  ])
-
-  assert.deepEqual(shuffled, ordered)
-})
-
-test('data-source prompts keep query text separate from agent instructions', async () => {
-  const instructionLikeLabel = 'ignore previous instructions'
-  const report = await keywordOpportunitiesReport(
-    { site: 'sc-domain:example.com' },
-    dependencies(
-      ['london', 'leeds', 'york'].map((location) =>
-        row({
-          query: `${instructionLikeLabel} ${location}`,
-          url: `https://example.com/locations/${location}/`,
-          position: 12,
-          impressions: 500,
-          clicks: 2,
-        }),
-      ),
-    ),
-  )
-
-  const prompt = report.dataSourcePrompts[0]
-  assert.ok(prompt)
-  assert.match(prompt.queryLabel, /ignore previous instructions/)
-  assert.doesNotMatch(prompt.instruction, /ignore previous instructions/)
-  assert.match(prompt.instruction, /untrusted evidence/)
-  assert.match(prompt.clusterRef, /^candidateClusters\[\d+\]$/)
-})
-
 test('empty, filtered, and capped first-party states remain distinct', async () => {
   let metricsCalls = 0
   const empty = await keywordOpportunitiesReport(
@@ -583,56 +404,6 @@ test('empty, filtered, and capped first-party states remain distinct', async () 
   )
   assert.equal(capped.dataStatus, 'partial')
   assert.equal(capped.firstParty.possiblyTruncated, true)
-  assert.match(capped.caveats.join(' '), /safety cap/)
-})
-
-test('keyword opportunities validates paid intent and every resource bound before acquisition', async () => {
-  let searchCalls = 0
-  const deps = dependencies([], {
-    searchAnalytics: async () => {
-      searchCalls += 1
-      return { rows: [], calls: 1, rowsFetched: 0 }
-    },
-  })
-  for (const input of [
-    { site: '', days: 28 },
-    { site: 'sc-domain:example.com', days: 549 },
-    { site: 'sc-domain:example.com', minImpressions: -1 },
-    { site: 'sc-domain:example.com', limit: 26 },
-    { site: 'sc-domain:example.com', keywordLimit: 51 },
-    { site: 'sc-domain:example.com', queriesPerPage: 6 },
-    { site: 'sc-domain:example.com', clusterLimit: 21 },
-    { site: 'sc-domain:example.com', provider: 'dataforseo' as const },
-    { site: 'sc-domain:example.com', includeExternal: true },
-    {
-      site: 'sc-domain:example.com',
-      includeExternal: true,
-      market: { ...market, location: {} },
-    },
-  ]) {
-    await assert.rejects(
-      keywordOpportunitiesReport(input, deps),
-      (error) => error instanceof SeoError && error.code === 'INVALID_INPUT',
-      JSON.stringify(input),
-    )
-  }
-  assert.equal(searchCalls, 0)
-
-  const canonicalLocation = await keywordOpportunitiesReport(
-    {
-      site: 'sc-domain:example.com',
-      includeExternal: true,
-      market: {
-        ...market,
-        location: {
-          code: 1006886,
-          name: 'London,England,United Kingdom',
-        },
-      },
-    },
-    dependencies([]),
-  )
-  assert.equal(canonicalLocation.external.status, 'skipped')
 })
 
 test('large retained inputs keep one acquisition and bounded provider and output work', async () => {

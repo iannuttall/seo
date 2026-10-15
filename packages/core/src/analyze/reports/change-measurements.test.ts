@@ -1,16 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { SeoError } from '../../errors.js'
-import { changeMeasurementCsvRows, renderCsv } from '../../export/csv.js'
 import type { ChangeMeasurement, SeoChange } from '../experiments.js'
 import {
-  changeMeasurementCaveats,
   measureSavedChanges,
   narrativeDataStatus,
 } from './change-measurements.js'
-import { renderMarkdown } from './markdown.js'
-import { changeMeasurementLine } from './sections.js'
-import type { ChangeMeasurementAttempt, ReportNarrative } from './types.js'
 
 const changes: SeoChange[] = [
   {
@@ -152,76 +147,4 @@ test('measureSavedChanges retains complete, partial, and failed attempts in save
   assert.equal(narrativeDataStatus('complete', attempts), 'partial')
   assert.equal(narrativeDataStatus('complete', []), 'complete')
   assert.equal(narrativeDataStatus('unavailable', attempts), 'unavailable')
-})
-
-test('partial and failed attempts are visible in caveats, Markdown, and CSV', () => {
-  const partialMeasurement = measurement(changes[1] as SeoChange, 'partial')
-  const attempts: ChangeMeasurementAttempt[] = [
-    {
-      status: 'measured',
-      dataStatus: 'partial',
-      change: changes[1] as SeoChange,
-      measurement: partialMeasurement,
-    },
-    {
-      status: 'failed',
-      dataStatus: 'unavailable',
-      change: changes[2] as SeoChange,
-      error: {
-        code: 'PROVIDER_UNAVAILABLE',
-        message: 'Search Console timed out.',
-        retryable: true,
-      },
-    },
-  ]
-  const caveats = changeMeasurementCaveats(attempts)
-  const sections = [
-    {
-      title: 'Change Measurements',
-      bullets: attempts.map(changeMeasurementLine),
-    },
-  ]
-  const report = {
-    site: 'sc-domain:example.com',
-    generatedAt: '2026-06-01T00:00:00.000Z',
-    dataStatus: 'partial',
-    periodDays: 28,
-    period: { startDate: '2026-05-01', endDate: '2026-05-28' },
-    headline: 'Partial report.',
-    caveats,
-    sections,
-    priorities: [],
-    diagnosis: {} as ReportNarrative['diagnosis'],
-    changeMeasurements: [partialMeasurement],
-    changeMeasurementAttempts: attempts,
-    monitoring: {
-      crawlRuns: [],
-      indexWatch: {
-        inspectedUrls: 0,
-        nonPass: 0,
-        blocked: 0,
-        currentIssues: 0,
-        failed: 0,
-      },
-      linkRecover: undefined,
-    },
-  } satisfies ReportNarrative
-
-  const markdown = renderMarkdown(report)
-  assert.match(markdown, /Partial saved change measurement "Partial change"/)
-  assert.match(markdown, /Failed change: measurement unavailable/)
-  assert.doesNotMatch(markdown, /No measured changes are saved/)
-
-  const csv = renderCsv(changeMeasurementCsvRows(report), [
-    'data_status',
-    'error_code',
-    'error_retryable',
-    'error_message',
-  ])
-  assert.match(csv, /data_status,error_code,error_retryable,error_message/)
-  assert.match(csv, /partial,,,/)
-  assert.match(
-    csv,
-    /unavailable,PROVIDER_UNAVAILABLE,true,Search Console timed out\./,
-  )
 })

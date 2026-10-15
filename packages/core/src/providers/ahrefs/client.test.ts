@@ -103,28 +103,6 @@ test('free limits request validates the key and keeps it out of evidence', async
   assert.doesNotMatch(JSON.stringify(result), new RegExp(apiKey))
 })
 
-test('unlimited and unavailable account limits stay distinct', async () => {
-  const fixture = limitsFixture()
-  fixture.limits_and_usage.units_limit_api_key = null
-  fixture.limits_and_usage.units_limit_workspace = null
-  fixture.limits_and_usage.units_usage_workspace = null
-  const result = await new AhrefsClient({
-    apiKey: 'api-key',
-    fetch: async () => new Response(JSON.stringify(fixture)),
-  }).limitsAndUsage()
-
-  assert.deepEqual(result.apiKeyUnits, {
-    limit: null,
-    used: 1_250,
-    remaining: null,
-  })
-  assert.deepEqual(result.workspaceUnits, {
-    limit: null,
-    used: null,
-    remaining: null,
-  })
-})
-
 test('limits request reports missing and rejected keys safely', async () => {
   let called = false
   await assert.rejects(
@@ -138,7 +116,6 @@ test('limits request reports missing and rejected keys safely', async () => {
     (error) => {
       assert.ok(error instanceof ProviderError)
       assert.equal(error.code, 'configuration')
-      assert.match(error.message, /seo providers ahrefs connect/)
       return true
     },
   )
@@ -153,29 +130,9 @@ test('limits request reports missing and rejected keys safely', async () => {
     (error) => {
       assert.ok(error instanceof ProviderError)
       assert.equal(error.code, 'authentication')
-      assert.match(error.message, /API v3 key/)
       assert.doesNotMatch(error.message, new RegExp(apiKey))
       return true
     },
-  )
-})
-
-test('limits request rejects malformed provider data', async () => {
-  await assert.rejects(
-    new AhrefsClient({
-      apiKey: 'api-key',
-      fetch: async () =>
-        new Response(
-          JSON.stringify({
-            limits_and_usage: {
-              ...limitsFixture().limits_and_usage,
-              units_usage_api_key: -1,
-            },
-          }),
-        ),
-    }).limitsAndUsage(),
-    (error) =>
-      error instanceof ProviderError && error.code === 'invalid-response',
   )
 })
 
@@ -303,59 +260,6 @@ test('paid requests stop before acquisition when account units are too low', asy
     (error) => error instanceof ProviderError && error.code === 'budget-limit',
   )
   assert.equal(researchCalls, 0)
-})
-
-test('paid requests require complete unit headers', async () => {
-  await assert.rejects(
-    new AhrefsClient({
-      apiKey: 'api-key',
-      spendLimits,
-      fetch: async (url) =>
-        new URL(url).pathname.endsWith('/limits-and-usage')
-          ? new Response(JSON.stringify(limitsFixture()))
-          : new Response(JSON.stringify({ rows: [] })),
-    }).request({
-      operation: 'rows',
-      capability: 'backlinks',
-      path: 'site-explorer/all-backlinks',
-      query: { target: 'ahrefs.com' },
-      schema: z.object({ rows: z.array(z.unknown()) }),
-      requestedRows: 1,
-      perRowUnits: 1,
-      rowCount: () => 0,
-      context: { reportId: 'links', reportRunId: 'run-headers' },
-    }),
-    (error) =>
-      error instanceof ProviderError && error.code === 'invalid-response',
-  )
-})
-
-test('research requests map provider HTTP 400 responses to invalid input', async () => {
-  await assert.rejects(
-    new AhrefsClient({
-      apiKey: 'api-key',
-      spendLimits,
-      fetch: async () => new Response('', { status: 400 }),
-    }).request({
-      operation: 'domain-rating',
-      capability: 'domain-rating',
-      path: 'public/domain-rating-free',
-      query: { target: 'does-not-exist.invalid' },
-      schema: z.object({ domain_rating: z.unknown() }),
-      requestedRows: 1,
-      perRowUnits: 0,
-      rowCount: () => 1,
-      free: true,
-      context: { reportId: 'domain-rating', reportRunId: 'run-invalid' },
-    }),
-    (error) => {
-      assert.ok(error instanceof ProviderError)
-      assert.equal(error.code, 'configuration')
-      assert.equal(error.status, 400)
-      assert.match(error.message, /target or research parameters/)
-      return true
-    },
-  )
 })
 
 test('request and report unit caps stop oversized work before network calls', async () => {

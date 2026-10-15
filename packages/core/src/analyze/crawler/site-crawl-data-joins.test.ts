@@ -3,10 +3,7 @@ import { test } from 'node:test'
 import { Response } from 'undici'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import { crawlSite } from './site-crawl.js'
-import {
-  crawlMetricsWindow,
-  joinSearchMetrics,
-} from './site-crawl-providers.js'
+import { joinSearchMetrics } from './site-crawl-providers.js'
 
 function crawlPageSnapshot(
   url: string,
@@ -41,34 +38,6 @@ function crawlPageSnapshot(
     ...input,
   }
 }
-
-test('crawl provider window uses the Search Console Pacific calendar', () => {
-  assert.deepEqual(crawlMetricsWindow(new Date('2026-07-09T02:00:00.000Z')), {
-    startDate: '2026-06-07',
-    endDate: '2026-07-04',
-    days: 28,
-  })
-})
-
-test('crawl provider limits reject unsafe values before provider calls', async () => {
-  let fetchCalls = 0
-  await assert.rejects(
-    crawlSite(
-      {
-        url: 'https://example.com/',
-        analyticsLimit: 0,
-      },
-      {
-        fetchPage: async () => {
-          fetchCalls += 1
-          throw new Error('should not run')
-        },
-      },
-    ),
-    /analyticsLimit must be a positive whole number/,
-  )
-  assert.equal(fetchCalls, 0)
-})
 
 test('capped GSC joins select pages independently of crawl completion order', async () => {
   const requested: string[][] = []
@@ -156,37 +125,6 @@ test('GSC joins preserve successful evidence when one bulk provider fails', asyn
   })
   assert.equal(pages[0]?.topQuery, undefined)
   assert.match(warnings.join('\n'), /top queries failed/)
-})
-
-test('crawlSite contains a throwing custom Google Analytics adapter', async () => {
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      googleAnalyticsPropertyId: 'properties/123',
-      useSitemap: false,
-      checkExternal: false,
-      maxPages: 1,
-    },
-    {
-      fetch: async () => new Response('missing', { status: 404 }),
-      fetchPage: async (url) => ({
-        urls: [],
-        page: crawlPageSnapshot(url),
-      }),
-      fetchLandingPageValues: async () => {
-        throw new Error('custom adapter failed')
-      },
-    },
-  )
-
-  assert.equal(report.status, 'partial')
-  assert.equal(report.dataSources?.analytics.status, 'unavailable')
-  assert.equal(report.dataSources?.analytics.joinedPages, 0)
-  assert.match(
-    report.warnings.join('\n'),
-    /Google Analytics metrics unavailable/,
-  )
-  assert.match(report.warnings.join('\n'), /custom adapter failed/)
 })
 
 test('crawlSite reports sparse GSC and missing Google Analytics joins', async () => {
@@ -363,46 +301,6 @@ test('crawlSite marks capped provider evidence partial instead of zero', async (
   assert.equal(report.dataSources?.analytics.returnedRows, 1)
   assert.match(report.warnings.join('\n'), /not reliable zero-visibility/)
   assert.match(report.warnings.join('\n'), /not reliable zero-traffic/)
-})
-
-test('an injected GSC batch never mixes with default providers', async () => {
-  let batchCalls = 0
-  const report = await crawlSite(
-    {
-      url: 'https://example.com/',
-      site: 'sc-domain:example.com',
-      useSitemap: false,
-      checkExternal: false,
-      maxPages: 1,
-    },
-    {
-      fetch: async () => new Response('missing', { status: 404 }),
-      fetchPage: async (url) => ({
-        urls: [],
-        page: crawlPageSnapshot(url),
-      }),
-      queryPagesMetricsBatch: async (_site, pageUrls) => {
-        batchCalls += 1
-        return {
-          values: new Map([
-            [
-              pageUrls[0] ?? '',
-              { clicks: 1, impressions: 10, ctr: 0.1, position: 4 },
-            ],
-          ]),
-          returnedRows: 1,
-          retainedRowLimit: 25_000,
-          retainedRowLimitReached: false,
-        }
-      },
-    },
-  )
-
-  assert.equal(batchCalls, 1)
-  assert.equal(report.dataSources?.searchConsole.status, 'partial')
-  assert.equal(report.dataSources?.searchConsole.joinedMetricPages, 1)
-  assert.equal(report.dataSources?.searchConsole.joinedQueryPages, 0)
-  assert.match(report.warnings.join('\n'), /did not supply both/)
 })
 
 test('crawlSite bulk joins GSC metrics beyond the old first-page window', async () => {

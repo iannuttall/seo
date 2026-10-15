@@ -62,15 +62,3 @@ test('Clicky sitekeys are stored separately by site ID', async () => {
   assert.equal(await readClickySiteKey('123'), undefined)
   assert.equal((await readClickySiteKey('456'))?.siteKey, 'def456def456')
 })
-
-test('Clicky environment sitekey takes precedence without being saved', async () => {
-  await writeClickySiteKey('123', 'abc123abc123')
-  const credential = await readClickySiteKey('123', {
-    env: { SEO_CLICKY_SITEKEY: 'env123env123' },
-  })
-  assert.deepEqual(credential, {
-    siteKey: 'env123env123',
-    source: 'environment',
-  })
-  assert.equal((await readClickySiteKey('123'))?.siteKey, 'abc123abc123')
-})

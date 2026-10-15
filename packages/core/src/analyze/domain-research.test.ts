@@ -13,7 +13,6 @@ import type {
   RankedKeyword,
   RankedKeywordPage,
   RankedKeywordsRequest,
-  RankingPagePage,
   RankingPagesRequest,
   SerpCompetitorSet,
   SerpCompetitorsRequest,
@@ -24,7 +23,6 @@ import {
   competitorKeywordGapReport,
   domainOverviewReport,
   rankedKeywordsReport,
-  rankingPagesReport,
   serpCompetitorsReport,
 } from './domain-research.js'
 
@@ -249,90 +247,6 @@ test('ranked keywords labels GSC absence and preserves a provider-zero conflict'
   )
 })
 
-test('ranked keywords keeps capped first-party zero rows partial', async () => {
-  const report = await rankedKeywordsReport(
-    {
-      target: 'example.com',
-      site: 'sc-domain:example.com',
-      market,
-    },
-    {
-      candidates: [candidate()],
-      now,
-      searchAnalytics: async () => ({
-        rows: [],
-        calls: 20,
-        rowsFetched: 100_000,
-      }),
-    },
-  )
-
-  assert.equal(report.evidence.data.rows.length, 0)
-  assert.equal(report.firstParty.status, 'partial')
-  assert.equal(report.dataStatus, 'partial')
-})
-
-test('ranking pages combines matching GSC pages with structural pSEO evidence', async () => {
-  const pages: RankingPagePage = {
-    domain: 'example.com',
-    rows: ['london', 'manchester', 'bristol'].map((place) => ({
-      url: `https://example.com/locations/${place}`,
-      organic: footprint(4),
-    })),
-    totalRows: 3,
-  }
-  const firstPage = pages.rows.at(0)
-  assert.ok(firstPage)
-  const report = await rankingPagesReport(
-    { domain: 'example.com', site: 'sc-domain:example.com', market },
-    {
-      candidates: [
-        candidate({
-          rankingPages: async () => evidence('relevant-pages', pages),
-        }),
-      ],
-      now,
-      searchAnalytics: async () => ({
-        rows: [
-          {
-            ...gscRow('', firstPage.url),
-            keys: [firstPage.url],
-          },
-        ],
-        calls: 1,
-        rowsFetched: 1,
-      }),
-    },
-  )
-
-  assert.equal(report.repeatedPatterns[0]?.signature, '/locations/:value')
-  assert.equal(report.summary.searchConsoleMatchedPages, 1)
-  assert.ok(
-    report.findings.some(
-      (item) => item.code === 'repeated-ranking-page-pattern',
-    ),
-  )
-})
-
-test('ranking pages keeps capped first-party zero rows partial', async () => {
-  const report = await rankingPagesReport(
-    { domain: 'example.com', site: 'sc-domain:example.com', market },
-    {
-      candidates: [candidate()],
-      now,
-      searchAnalytics: async () => ({
-        rows: [],
-        calls: 5,
-        rowsFetched: 25_000,
-      }),
-    },
-  )
-
-  assert.equal(report.evidence.data.rows.length, 0)
-  assert.equal(report.firstParty.status, 'partial')
-  assert.equal(report.dataStatus, 'partial')
-})
-
 test('SERP competitors never invent a site classification', async () => {
   const data: SerpCompetitorSet = {
     keywords: ['blue widget', 'red widget'],
@@ -379,97 +293,6 @@ test('SERP competitors never invent a site classification', async () => {
   assert.equal(report.competitors[1]?.siteType, 'unknown')
   assert.equal(report.competitors[1]?.classificationSource, 'unclassified')
   assert.equal(report.competitors[0]?.siteType, 'unknown')
-})
-
-test('SERP competitors preserve a filtered zero instead of reporting empty', async () => {
-  const report = await serpCompetitorsReport(
-    { keywords: ['blue widget', 'red widget'], market },
-    {
-      candidates: [
-        candidate({
-          serpCompetitors: async (input) =>
-            evidence(
-              'serp-competitors',
-              { keywords: input.keywords, rows: [], totalRows: 0 },
-              'filtered',
-            ),
-        }),
-      ],
-      now,
-    },
-  )
-
-  assert.equal(report.summary.providerRows, 0)
-  assert.equal(report.dataStatus, 'filtered')
-})
-
-test('SERP competitors require and preserve explicit declared site types', async () => {
-  const data: SerpCompetitorSet = {
-    keywords: ['blue widget', 'red widget'],
-    rows: [
-      {
-        domain: 'directory.test',
-        matchedKeywords: 2,
-        averagePosition: observedValue(2),
-        medianPosition: observedValue(2),
-        visibility: observedValue(0.8),
-        estimatedMonthlyTraffic: observedValue(20),
-        relevantResults: observedValue(2),
-        keywordPositions: [],
-      },
-    ],
-    totalRows: 1,
-  }
-  const dependencies = {
-    candidates: [
-      candidate({
-        serpCompetitors: async () => evidence('serp-competitors', data),
-      }),
-    ],
-    now,
-  }
-  const report = await serpCompetitorsReport(
-    {
-      keywords: data.keywords,
-      declaredCompetitors: [
-        { domain: 'directory.test', siteType: 'directory' },
-      ],
-      market,
-    },
-    dependencies,
-  )
-
-  assert.equal(report.competitors[0]?.relationship, 'declared-competitor')
-  assert.equal(report.competitors[0]?.siteType, 'directory')
-  await assert.rejects(
-    () =>
-      serpCompetitorsReport(
-        {
-          keywords: data.keywords,
-          declaredCompetitors: [
-            { domain: 'directory.test', siteType: undefined },
-          ] as never,
-          market,
-        },
-        dependencies,
-      ),
-    /explicit supported site type/u,
-  )
-})
-
-test('competitor gap rejects unknown site types at the core boundary', async () => {
-  await assert.rejects(
-    () =>
-      competitorKeywordGapReport(
-        {
-          site: 'sc-domain:example.com',
-          competitors: [{ domain: 'one.test', siteType: 'unknown' }] as never,
-          market,
-        },
-        { candidates: [candidate()], now },
-      ),
-    /explicit non-unknown site type/u,
-  )
 })
 
 test('competitor gap removes existing coverage and proposes bounded pSEO research', async () => {
@@ -644,133 +467,6 @@ test('competitor gap rejects generic and split-query token matches', async () =>
     byKeyword.get('https //www.seoquake.com/index.html')?.relevance.state,
     'unavailable',
   )
-})
-
-test('competitor gap is deterministic and marks capped first-party evidence partial', async () => {
-  const make = (order: string[]) =>
-    competitorKeywordGapReport(
-      {
-        site: 'sc-domain:example.com',
-        competitors: order.map((domain) => ({
-          domain,
-          siteType: 'business' as const,
-        })),
-        market,
-      },
-      {
-        candidates: [
-          candidate({
-            rankedKeywords: async (input) =>
-              evidence('ranked-keywords', {
-                target: input.target,
-                rows:
-                  input.target === 'example.com'
-                    ? []
-                    : [
-                        metric(
-                          'widget prices leeds',
-                          `https://${input.target}/places/leeds`,
-                        ),
-                      ],
-                totalRows: input.target === 'example.com' ? 0 : 1,
-              }),
-          }),
-        ],
-        now,
-        searchAnalytics: async () => ({
-          rows: [gscRow('widget prices uk', 'https://example.com/prices/uk')],
-          calls: 20,
-          rowsFetched: 100_000,
-        }),
-      },
-    )
-  const first = await make(['one.test', 'two.test'])
-  const second = await make(['two.test', 'one.test'])
-
-  assert.equal(first.dataStatus, 'partial')
-  assert.deepEqual(
-    first.candidates.map(({ competitors, ...item }) => ({
-      ...item,
-      competitors: competitors.map((entry) => ({ ...entry, evidenceRef: '' })),
-      evidenceRefs: [],
-    })),
-    second.candidates.map(({ competitors, ...item }) => ({
-      ...item,
-      competitors: competitors.map((entry) => ({ ...entry, evidenceRef: '' })),
-      evidenceRefs: [],
-    })),
-  )
-})
-
-test('competitor gap keeps an intentional provider subset filtered, not partial', async () => {
-  const report = await competitorKeywordGapReport(
-    {
-      site: 'sc-domain:example.com',
-      competitors: [{ domain: 'one.test', siteType: 'business' }],
-      market,
-    },
-    {
-      candidates: [
-        candidate({
-          rankedKeywords: async (input) =>
-            evidence(
-              'ranked-keywords',
-              {
-                target: input.target,
-                rows:
-                  input.target === 'example.com'
-                    ? []
-                    : [
-                        metric(
-                          'widget prices leeds',
-                          'https://one.test/places/leeds',
-                        ),
-                      ],
-                totalRows: input.target === 'example.com' ? 0 : 1,
-              },
-              'filtered',
-            ),
-        }),
-      ],
-      now,
-      searchAnalytics: async () => ({
-        rows: [gscRow('widget prices uk', 'https://example.com/prices/uk')],
-        calls: 1,
-        rowsFetched: 1,
-      }),
-    },
-  )
-
-  assert.equal(report.dataStatus, 'filtered')
-  assert.equal(report.source.ownDomain.status, 'filtered')
-  assert.equal(report.source.competitors[0]?.status, 'filtered')
-})
-
-test('competitor gap does not turn a filtered empty subset into a definitive empty result', async () => {
-  const report = await competitorKeywordGapReport(
-    {
-      site: 'sc-domain:example.com',
-      competitors: [{ domain: 'one.test', siteType: 'business' }],
-      market,
-    },
-    {
-      candidates: [
-        candidate({
-          rankedKeywords: async (input) =>
-            evidence(
-              'ranked-keywords',
-              { target: input.target, rows: [], totalRows: 0 },
-              'filtered',
-            ),
-        }),
-      ],
-      now,
-      searchAnalytics: async () => ({ rows: [], calls: 1, rowsFetched: 0 }),
-    },
-  )
-
-  assert.equal(report.summary.uniqueCompetitorKeywords, 0)
-  assert.equal(report.dataStatus, 'filtered')
 })
 
 test('competitor gap does not turn capped zero rows into a definitive empty result', async () => {

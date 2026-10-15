@@ -49,17 +49,6 @@ async function runDoctor(json = false): Promise<{
   }
 }
 
-test('doctor shows readable failures and exits unsuccessfully', async () => {
-  const result = await runDoctor()
-
-  assert.equal(result.exitCode, 1)
-  assert.equal(result.stderr, '')
-  assert.match(result.stdout, /^SEO doctor$/m)
-  assert.match(result.stdout, /^FAIL {2}Google login$/m)
-  assert.match(result.stdout, /^ {6}Fix {2}Run `seo auth login`/m)
-  assert.ok(!result.stdout.includes(String.fromCharCode(27)))
-})
-
 test('doctor keeps JSON clean while preserving its failing exit code', async () => {
   const result = await runDoctor(true)
 

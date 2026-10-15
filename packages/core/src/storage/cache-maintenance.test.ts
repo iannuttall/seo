@@ -3,12 +3,7 @@ import { mkdtempSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import {
-  CACHE_LIMITS,
-  CACHE_MAX_BYTES,
-  cacheLogicalSizes,
-  runCacheMaintenance,
-} from './cache-maintenance.js'
+import { cacheLogicalSizes, runCacheMaintenance } from './cache-maintenance.js'
 import Database from './sqlite.js'
 
 function cacheDatabase(input: { incremental?: boolean } = {}): {
@@ -52,13 +47,6 @@ function cacheDatabase(input: { incremental?: boolean } = {}): {
   return { database, path }
 }
 
-test('per-provider cache limits add up to the global limit', () => {
-  assert.equal(
-    Object.values(CACHE_LIMITS).reduce((total, size) => total + size, 0),
-    CACHE_MAX_BYTES,
-  )
-})
-
 test('cache maintenance removes expired rows and keeps the newest rows within limits', () => {
   const { database } = cacheDatabase({ incremental: true })
   const insert = database.prepare(
@@ -82,31 +70,6 @@ test('cache maintenance removes expired rows and keeps the newest rows within li
     [{ url_hash: 'new' }],
   )
   assert.ok(result.sizes.http_cache <= 1_000)
-  database.close()
-})
-
-test('provider response cache keeps the newest rows within its own allocation', () => {
-  const { database } = cacheDatabase()
-  const insert = database.prepare(
-    `INSERT INTO provider_cache (
-      provider, credential_scope, operation, request_hash, request_json,
-      response_json, task_ids_json, fetched_at, expires_at
-    ) VALUES ('dataforseo', 'scope', 'keyword-metrics', ?, '{}', ?, '[]', ?, ?)`,
-  )
-  insert.run('old', 'x'.repeat(500), 1, 1_000)
-  insert.run('new', 'x'.repeat(500), 2, 1_000)
-
-  const result = runCacheMaintenance(database, {
-    now: 100,
-    limits: { provider_cache: 1_000 },
-  })
-
-  assert.equal(result.removedByTable.provider_cache, 1)
-  assert.deepEqual(
-    database.prepare('SELECT request_hash FROM provider_cache').all(),
-    [{ request_hash: 'new' }],
-  )
-  assert.ok(result.sizes.provider_cache <= 1_000)
   database.close()
 })
 

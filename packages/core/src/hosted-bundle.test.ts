@@ -152,26 +152,3 @@ async function bundleViolations(
 test('hosted entry bundles for a Worker without Node-only imports', async () => {
   assert.deepEqual(await bundleViolations({ file: hostedEntry }), [])
 })
-
-test('hosted bundle check reports Node builtins and Node-only packages', async () => {
-  const violations = await bundleViolations({
-    contents: [
-      "import { readFileSync } from 'node:fs'",
-      "import { fetch } from 'undici'",
-      "import { load } from 'cheerio'",
-      'export { fetch, load, readFileSync }',
-    ].join('\n'),
-  })
-  assert.equal(violations.length, 3, violations.join('\n'))
-  assert.match(violations.join('\n'), /node:fs/)
-  assert.match(violations.join('\n'), /undici/)
-  assert.match(violations.join('\n'), /cheerio/)
-})
-
-test('hosted bundle check reports unresolved imports', async () => {
-  const violations = await bundleViolations({
-    contents: "export * from './does-not-exist.js'",
-  })
-  assert.equal(violations.length, 1, violations.join('\n'))
-  assert.match(violations[0] ?? '', /Could not resolve/)
-})

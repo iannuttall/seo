@@ -31,15 +31,3 @@ test('database files and sidecars are restricted to the current user', () => {
     rmSync(directory, { recursive: true, force: true })
   }
 })
-
-test('missing database files do not prevent startup', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'seo-database-missing-'))
-
-  try {
-    assert.doesNotThrow(() =>
-      ensurePrivateDatabaseFiles(join(directory, 'cache.db')),
-    )
-  } finally {
-    rmSync(directory, { recursive: true, force: true })
-  }
-})

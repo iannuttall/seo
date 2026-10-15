@@ -1,42 +1,39 @@
-// Sealed values replace a database. Client ids, sign-in state, codes and
-// tokens are JSON encrypted with AES-GCM under SEAL_KEY. Only this server can
-// read them, and the MCP client keeps them. Each value names its kind, so one
-// kind can never be used as another.
-
-// Provider keys by request header name, such as x-ahrefs-key.
-export type Keys = Record<string, string>
+// Sealed values: client ids, sign-in state, codes, tokens and the secrets
+// kept in D1 are JSON encrypted with AES-GCM under SEAL_KEY. Only this server
+// can read them. Each value names its kind, so one kind can never be used as
+// another.
 
 export type Sealed =
   | { k: 'client'; redirectUris: string[]; name: string }
+  // An MCP client's sign-in, from /oauth/authorize to the Google callback.
   | {
       k: 'flow'
       clientId: string
       redirectUri: string
       state: string | null
       challenge: string
-      keys?: Keys
       exp: number
     }
+  // A Google sign-in from the account page: to sign in, or to link another
+  // account to a signed-in person.
+  | { k: 'web'; userId: string | null; exp: number }
+  // A Bing sign-in from the account page.
+  | { k: 'bing'; userId: string; exp: number }
   | {
       k: 'code'
       clientId: string
       redirectUri: string
       challenge: string
-      refreshToken: string
-      accessToken: string
-      accessExp: number
-      scope: string
-      keys?: Keys
+      userId: string
       exp: number
     }
-  | { k: 'access'; token: string; scope: string; keys?: Keys; exp: number }
-  | {
-      k: 'refresh'
-      clientId: string
-      token: string
-      scope: string
-      keys?: Keys
-    }
+  | { k: 'user-access'; userId: string; exp: number }
+  | { k: 'user-refresh'; clientId: string; userId: string }
+  // The account page's sign-in cookie, and its form token.
+  | { k: 'session'; userId: string; exp: number }
+  | { k: 'form'; userId: string; exp: number }
+  // A refresh token, access token or key kept in D1.
+  | { k: 'secret'; value: string }
 
 const PREFIX = 'sk1.'
 const keys = new Map<string, Promise<CryptoKey>>()

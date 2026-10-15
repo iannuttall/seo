@@ -3,7 +3,6 @@ import type { ExternalServiceId } from './contracts.js'
 export type ProviderErrorCode =
   | 'configuration'
   | 'authentication'
-  | 'budget-limit'
   | 'rate-limit'
   | 'timeout'
   | 'response-too-large'

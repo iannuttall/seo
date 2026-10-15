@@ -10,7 +10,6 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
-import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
 const PRIVATE_DATABASE_FILE_MODE = 0o600
@@ -314,9 +313,11 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
-    database.exec(PROVIDER_SPEND_SCHEMA_SQL)
     // Semrush was removed in 0.3.0. Its old cache table goes with it.
     database.exec('DROP TABLE IF EXISTS semrush_cache')
+    // The provider spend ledger was removed in 0.3.0. Its tables go too.
+    database.exec('DROP TABLE IF EXISTS provider_spend_ledger')
+    database.exec('DROP TABLE IF EXISTS provider_spend_notices')
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
     ensureColumn(

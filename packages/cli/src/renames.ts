@@ -24,7 +24,8 @@ export const RENAMED: Record<string, string> = {
 }
 
 // Removed commands, with the command to use instead when there is one. A key
-// with a space is a subcommand, such as `seo export pseo`.
+// with a space is a subcommand, such as `seo export pseo`, and can have up to
+// three words.
 export const REMOVED: Record<string, string | null> = {
   'agent-readiness': null,
   'ai-readiness': null,
@@ -48,6 +49,23 @@ export const REMOVED: Record<string, string | null> = {
   'projects keyword-sets': null,
   'providers bing': null,
   'providers semrush': 'seo providers',
+  'providers limits': null,
+  'providers spend': null,
+  'providers dataforseo limits': null,
+  'providers dataforseo spend': null,
+  'providers ahrefs limits': null,
+}
+
+const SPEND_REASON =
+  'Spend is controlled in your provider account. Set limits in DataForSEO, Ahrefs or the other provider.'
+
+// Why a command was removed, when the general reason does not fit.
+const REMOVED_REASONS: Record<string, string> = {
+  'providers limits': SPEND_REASON,
+  'providers spend': SPEND_REASON,
+  'providers dataforseo limits': SPEND_REASON,
+  'providers dataforseo spend': SPEND_REASON,
+  'providers ahrefs limits': SPEND_REASON,
 }
 
 const PROJECT_ALIASES = new Set(['client', 'project', 'projects'])
@@ -58,7 +76,7 @@ export function removedCommand(args: string[]): string | null {
   const flag = args.findIndex((arg) => arg.startsWith('-'))
   const words = flag === -1 ? args : args.slice(0, flag)
   const start = words[0] === 'help' ? 1 : 0
-  for (let length = 2; length >= 1; length -= 1) {
+  for (let length = 3; length >= 1; length -= 1) {
     const key = words.slice(start, start + length).join(' ')
     if (words.length - start >= length && Object.hasOwn(REMOVED, key)) {
       return key
@@ -78,11 +96,16 @@ export function removedNotice(args: string[]): string | null {
   const command = removedCommand(args)
   if (!command) return null
   const replacement = REMOVED[command]
-  const project = PROJECT_ALIASES.has(command.split(' ')[0] ?? '')
+  const group = command.split(' ')[0] ?? ''
   const next = replacement
     ? `Use \`${replacement}\` instead.`
-    : project
+    : PROJECT_ALIASES.has(group)
       ? 'Run `seo projects --help` for the project commands.'
-      : 'Run `seo help` for the commands.'
-  return `\`seo ${command}\` was removed in 0.3.0. SEO Skill now focuses on Search Console, analytics and keyword data. ${next}`
+      : group === 'providers'
+        ? 'Run `seo providers --help` for the provider commands.'
+        : 'Run `seo help` for the commands.'
+  const reason = Object.hasOwn(REMOVED_REASONS, command)
+    ? REMOVED_REASONS[command]
+    : 'SEO Skill now focuses on Search Console, analytics and keyword data.'
+  return `\`seo ${command}\` was removed in 0.3.0. ${reason} ${next}`
 }

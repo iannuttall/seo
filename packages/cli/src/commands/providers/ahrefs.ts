@@ -3,10 +3,8 @@ import {
   AHREFS_API_KEY_ENV,
   AhrefsClient,
   deleteAhrefsApiKey,
-  getProviderSpendLimits,
   readAhrefsApiKey,
   SeoError,
-  setProviderSpendLimits,
   writeAhrefsApiKey,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -17,7 +15,7 @@ import {
   printJson,
   printKeyValue,
 } from '../../utils.js'
-import { boundedIntegerArg, credentialSourceLabel } from './shared.js'
+import { credentialSourceLabel } from './shared.js'
 
 function unitUsage(input: {
   limit: number | null
@@ -182,65 +180,6 @@ const disconnectCommand = defineCommand({
   },
 })
 
-const limitsCommand = defineCommand({
-  meta: {
-    name: 'limits',
-    description: 'Show or change local Ahrefs report work limits',
-  },
-  args: {
-    requests: {
-      type: 'string',
-      description: 'Maximum Ahrefs requests in one report run.',
-    },
-    rows: {
-      type: 'string',
-      description: 'Maximum requested Ahrefs rows in one report run.',
-    },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const current = getProviderSpendLimits('ahrefs')
-    const maxRequestsPerReport = boundedIntegerArg(
-      args.requests,
-      '--requests',
-      1,
-      100,
-    )
-    const maxRowsPerReport = boundedIntegerArg(args.rows, '--rows', 1, 100_000)
-    const changed =
-      maxRequestsPerReport !== undefined || maxRowsPerReport !== undefined
-    const limits = changed
-      ? setProviderSpendLimits('ahrefs', {
-          ...current,
-          maxRequestsPerReport:
-            maxRequestsPerReport ?? current.maxRequestsPerReport,
-          maxRowsPerReport: maxRowsPerReport ?? current.maxRowsPerReport,
-        })
-      : current
-    const result = {
-      provider: 'ahrefs' as const,
-      maxRequestsPerReport: limits.maxRequestsPerReport,
-      maxRowsPerReport: limits.maxRowsPerReport,
-      changed,
-      note: 'Paid requests also preflight the live API-unit balance and enforce fixed per-request and per-report unit caps.',
-    }
-    if (jsonFlag(args)) {
-      printJson(result)
-      return
-    }
-    printKeyValue([
-      ['Requests per report', String(result.maxRequestsPerReport)],
-      ['Rows per report', String(result.maxRowsPerReport)],
-      ['Changed', result.changed ? 'yes' : 'no'],
-      ['Note', result.note],
-    ])
-  },
-})
-
 export const ahrefsProviderCommand = defineCommand({
   meta: {
     name: 'ahrefs',
@@ -249,7 +188,6 @@ export const ahrefsProviderCommand = defineCommand({
   subCommands: {
     connect: connectCommand,
     status: statusCommand,
-    limits: limitsCommand,
     disconnect: disconnectCommand,
   },
 })

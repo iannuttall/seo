@@ -2,25 +2,16 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { type CsvFile, countLabel, renderCsv } from '@seo/core'
 export const exportSelectionArgs = {
-  client: {
-    type: 'string',
-    description: 'Legacy alias for --project.',
-  },
-  project: {
-    type: 'string',
-    description:
-      'Saved project id or name. Defaults to the configured default.',
-  },
   site: {
     type: 'string',
-    description: 'GSC property URL/id when not using a saved project.',
+    description: 'Search Console property, for example sc-domain:example.com.',
   },
 } as const
 
 export function outArg(report: string) {
   return {
     type: 'string',
-    description: `Output folder. Defaults to ./seo-export/<project>-${report}-YYYY-MM-DD.`,
+    description: `Output folder. Defaults to ./seo-export/<site>-${report}-YYYY-MM-DD.`,
   } as const
 }
 
@@ -33,13 +24,9 @@ function slug(value: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-export function defaultOutDir(input: {
-  report: string
-  clientId?: string
-  site: string
-}) {
+export function defaultOutDir(input: { report: string; site: string }) {
   const day = new Date().toISOString().slice(0, 10)
-  const id = slug(input.clientId ?? input.site)
+  const id = slug(input.site)
   return resolve(process.cwd(), 'seo-export', `${id}-${input.report}-${day}`)
 }
 

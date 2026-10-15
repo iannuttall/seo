@@ -1,7 +1,7 @@
 import { updatePostmortemCsvFiles, updatePostmortemWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, numberArg, projectArg, stringArg } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { booleanArg, numberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { cliReportArgs } from '../report-options.js'
 import {
   defaultOutDir,
@@ -36,37 +36,25 @@ export const exportUpdatePostmortemCommand = defineCommand({
       description:
         'Manual site-side change to treat as a confounder, for example pruning pages or blocking traffic.',
     },
-    'ignore-change-log': {
-      type: 'boolean',
-      default: false,
-      description: 'Do not use saved change-log entries as confounders.',
-    },
   },
   run: async ({ args }) => {
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await updatePostmortemWorkflow({
-      site: selection.site,
+      site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       knownConfounders: stringArg(args['known-change'])
         ? [stringArg(args['known-change']) ?? '']
         : undefined,
-      includeChangeLog: !booleanArg(args['ignore-change-log']),
       refresh: booleanArg(args.refresh),
     })
     const outDir =
       stringArg(args.out) ??
       defaultOutDir({
         report: 'update-postmortem',
-        clientId: selection.client?.id,
-        site: selection.site,
+        site,
       })
     const written = await writeCsvFiles(
       outDir,

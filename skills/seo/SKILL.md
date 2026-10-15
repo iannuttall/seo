@@ -34,12 +34,13 @@ the CLI or the local MCP server.
 | `seo crawl` | `seo_crawl` | A site crawl with technical issues and the URLs they affect |
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page |
 
-Start with `seo_sites` (or `seo sites`) when you do not know the property.
-Sites can be given as `example.com`, a URL or `sc-domain:example.com`.
+Run `seo_sites` (or `seo sites`) when you do not know the property.
+CLI commands need `--site` (or `--url`): `example.com`, a URL or
+`sc-domain:example.com`. Nothing is saved between runs; keep your own notes.
 
 ## How to run them
 
-1. Run `seo report` (or `seo_report`) without a section. It shows totals
+1. Run `seo report --site <site>` (or `seo_report`) without a section. It shows totals
    against the previous period, the pages and queries that moved, and a short
    count with top rows for each section.
 2. Pick the one section that matters and run it with `--section <id>` (or
@@ -99,7 +100,6 @@ as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 - A Google update in the same window is timing, not cause.
 - Intentional `noindex`, canonicals and redirects are observations until the
   person says they are wrong.
-- Never promise clicks, rankings, indexing or traffic.
-- Show the facts, for example in a table, and ask before you edit any page.
+- Show the facts in a table and ask before you edit any page.
 
 Old 0.2 report names, such as `seo quick-wins`, print their new command.

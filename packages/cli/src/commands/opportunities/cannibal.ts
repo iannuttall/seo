@@ -4,11 +4,10 @@ import {
   booleanArg,
   csvArg,
   jsonFlag,
-  projectArg,
   strictNumberArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -27,8 +26,6 @@ export const cannibalCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(
       ['days', 'limit', 'includeBrand', 'minImpressions', 'refresh'],
       {
@@ -46,23 +43,16 @@ export const cannibalCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const refresh = booleanArg(args.refresh)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await cannibalReport({
-      site: selection.site,
+      site,
       days: strictNumberArg(args.days, '--days'),
       limit: strictNumberArg(args.limit, '--limit'),
       minImpressions: strictNumberArg(
         args['min-impressions'],
         '--min-impressions',
       ),
-      brandTerms: [
-        ...(selection.client?.brandTerms ?? []),
-        ...(csvArg(args['brand-terms']) ?? []),
-      ],
+      brandTerms: [...(csvArg(args['brand-terms']) ?? [])],
       includeBrand: booleanArg(args['include-brand']),
       refresh,
     })

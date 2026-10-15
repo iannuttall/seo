@@ -1,12 +1,7 @@
 import { trafficAnomaly, updateCorrelation } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import { requireSite } from '../selection.js'
 import { printJson, printTable } from '../utils.js'
 import {
   printLimitedTable,
@@ -15,7 +10,6 @@ import {
   printReportSummary,
 } from './output.js'
 import { cliReportArgs } from './report-options.js'
-import { selectedSiteOrThrow } from './shared.js'
 
 function formatNumber(value: number): string {
   return value.toLocaleString('en-GB', {
@@ -36,8 +30,6 @@ export const trafficAnomalyCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'recentDays', 'refresh'], {
       days: { description: 'Baseline window length in days. Defaults to 90.' },
       recentDays: {
@@ -56,13 +48,7 @@ export const trafficAnomalyCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const report = await trafficAnomaly({
-      site: await selectedSiteOrThrow(
-        { client: projectArg(args), site: stringArg(args.site) },
-        {
-          json,
-          refresh: booleanArg(args.refresh),
-        },
-      ),
+      site: requireSite(stringArg(args.site)),
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       refresh: booleanArg(args.refresh),
@@ -136,8 +122,6 @@ export const updateCorrelateCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'recentDays', 'refresh'], {
       days: { description: 'Baseline window length in days. Defaults to 90.' },
       recentDays: {
@@ -156,11 +140,6 @@ export const updateCorrelateCommand = defineCommand({
       description:
         'Manual site-side change to treat as a confounder, for example pruning pages or blocking traffic.',
     },
-    'ignore-change-log': {
-      type: 'boolean',
-      default: false,
-      description: 'Do not use saved change-log entries as confounders.',
-    },
     json: {
       type: 'boolean',
       default: false,
@@ -169,14 +148,7 @@ export const updateCorrelateCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const client = projectArg(args)
-    const site = await selectedSiteOrThrow(
-      { client, site: stringArg(args.site) },
-      {
-        json,
-        refresh: booleanArg(args.refresh),
-      },
-    )
+    const site = requireSite(stringArg(args.site))
     const report = await updateCorrelation({
       site,
       days: numberArg(args.days),
@@ -185,7 +157,6 @@ export const updateCorrelateCommand = defineCommand({
       knownConfounders: stringArg(args['known-change'])
         ? [stringArg(args['known-change']) ?? '']
         : undefined,
-      includeChangeLog: !booleanArg(args['ignore-change-log']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -238,9 +209,8 @@ export const updateCorrelateCommand = defineCommand({
         ]),
       )
     }
-    const target = client
-      ? `--project ${JSON.stringify(client)}`
-      : `--site ${JSON.stringify(site)}`
-    printNextCommand(`seo segment-impact ${target} --dimension page`)
+    printNextCommand(
+      `seo segment-impact --site ${JSON.stringify(site)} --dimension page`,
+    )
   },
 })

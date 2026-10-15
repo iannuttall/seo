@@ -1,14 +1,6 @@
 import { z } from 'zod'
 import { providerIdSchema } from '../providers/contracts.js'
 
-export const siteSchema = z.object({
-  siteUrl: z.string(),
-  displayName: z.string().optional(),
-  permission: z.string().optional(),
-  addedAt: z.number().int().optional(),
-  isDefault: z.boolean().optional(),
-})
-
 export const providerPreferenceSchema = z.enum(['cheap', 'authoritative'])
 
 export const analyticsProviderSchema = z.enum(['google', 'clicky'])
@@ -58,78 +50,9 @@ export const analyticsConnectionSchema = z.discriminatedUnion('provider', [
   }),
 ])
 
-export const analyticsConnectionsSchema = z
-  .object({
-    selected: z
-      .union([
-        analyticsProviderSchema,
-        z.string().regex(/^extension:[a-z0-9]+(?:-[a-z0-9]+)*$/u),
-      ])
-      .optional(),
-    google: z
-      .object({
-        propertyId: z.string(),
-      })
-      .optional(),
-    clicky: z
-      .object({
-        siteId: z.string().regex(/^\d{1,30}$/u),
-      })
-      .optional(),
-    extensions: z
-      .record(
-        analyticsExtensionIdSchema,
-        z.object({ account: analyticsExtensionAccountSchema }).strict(),
-      )
-      .refine((value) => Object.keys(value).length <= 20, {
-        message: 'A project can have at most 20 analytics extensions.',
-      })
-      .optional(),
-  })
-  .default({})
-
-export const clientProfileSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  siteUrl: z.string(),
-  startUrl: z.string().optional(),
-  watchUrls: z.array(z.string()).default([]),
-  brandTerms: z.array(z.string()).default([]),
-  analytics: analyticsConnectionsSchema,
-  googleAccounts: z
-    .object({
-      searchConsole: z.string().email().optional(),
-      googleAnalytics: z.string().email().optional(),
-    })
-    .optional(),
-  technicalWeekday: z.number().int().min(0).max(7).optional(),
-  isDefault: z.boolean().optional(),
-  createdAt: z.number().int(),
-  updatedAt: z.number().int(),
-})
-
-export const configSchema = z.object({
-  defaultSite: z.string().optional(),
-  sites: z.array(siteSchema).default([]),
-  clients: z.array(clientProfileSchema).default([]),
-  analytics: z
-    .object({
-      google: z
-        .object({
-          defaultPropertyId: z.string().optional(),
-          propertyMappings: z
-            .array(
-              z.object({
-                siteUrl: z.string(),
-                propertyId: z.string(),
-                addedAt: z.number().int().optional(),
-              }),
-            )
-            .default([]),
-        })
-        .default({ propertyMappings: [] }),
-    })
-    .default({ google: { propertyMappings: [] } }),
+// Unknown keys survive a rewrite, so an older version's saved projects,
+// default site and default Google Analytics property stay in the file.
+export const configSchema = z.looseObject({
   providers: z
     .object({
       dataForSeoLogin: z.string().optional(),
@@ -154,4 +77,3 @@ export const configSchema = z.object({
 export type AppConfig = z.infer<typeof configSchema>
 export type AnalyticsConnection = z.infer<typeof analyticsConnectionSchema>
 export type AnalyticsProvider = z.infer<typeof analyticsProviderSchema>
-export type ClientProfile = z.infer<typeof clientProfileSchema>

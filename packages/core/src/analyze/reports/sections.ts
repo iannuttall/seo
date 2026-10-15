@@ -1,7 +1,5 @@
 import { countLabel } from '../../phrasing.js'
 import type { DiagnosePropertyReport } from '../diagnose-property.js'
-import type { ChangeMeasurement } from '../experiments.js'
-import type { ChangeMeasurementAttempt, ReportNarrative } from './types.js'
 
 function skippedReason(
   report: DiagnosePropertyReport,
@@ -154,85 +152,6 @@ export function updateAttributionLine(report: DiagnosePropertyReport): string {
     return `${countLabel(overlapCount, 'official Google update window')} overlapped the comparison window, but no significant movement was detected.`
   }
   return `${countLabel(overlapCount, 'official Google update window')} overlapped the significant movement comparison window. This timing does not establish that the update caused the movement.`
-}
-
-export function changeLine(measurement: ChangeMeasurement): string {
-  const status = measurement.dataStatus === 'partial' ? 'partial; ' : ''
-  if (measurement.delta.clicks === null) {
-    return `${measurement.change.title}: ${status}${measurement.verdict}; comparable click movement is unavailable.`
-  }
-  const pct =
-    measurement.delta.clickPct === null
-      ? ''
-      : ` (${measurement.delta.clickPct}%)`
-  return `${measurement.change.title}: ${status}${measurement.verdict}, ${measurement.delta.clicks} clicks${pct}.`
-}
-
-export function changeMeasurementLine(
-  attempt: ChangeMeasurementAttempt,
-): string {
-  if (attempt.status === 'failed') {
-    return `${attempt.change.title}: measurement unavailable (${attempt.error.code}); ${attempt.error.message.replace(/[.!?]+$/, '')}.`
-  }
-  return changeLine(attempt.measurement)
-}
-
-export function monitoringBullets(
-  report: Pick<ReportNarrative, 'monitoring'>,
-): string[] {
-  const bullets: string[] = []
-  const crawl = report.monitoring.crawlRuns[0]
-  const recovery = report.monitoring.linkRecover
-  if (crawl) {
-    bullets.push(
-      `Latest crawl checked ${countLabel(crawl.urlCount, 'URL')} with ${countLabel(crawl.statusErrors, 'status error')}, ${countLabel(crawl.nonIndexable, 'non-indexable page')}, and ${countLabel(crawl.highPriorityRecommendations, 'high-priority crawl action')}.`,
-    )
-    if (crawl.topRecommendation) {
-      bullets.push(
-        `Top crawl action: ${crawl.topRecommendation.url}. ${crawl.topRecommendation.action}`,
-      )
-    }
-    if ((crawl.statusErrors || crawl.nonIndexable) && !recovery) {
-      bullets.push(
-        'Run link-recover before content work if those URLs have GSC search value; recoverable 4xx, noindex, and canonical issues can look like content decay.',
-      )
-    }
-  } else {
-    bullets.push('No crawl-diff run is saved yet.')
-  }
-
-  const watch = report.monitoring.indexWatch
-  if (watch.inspectedUrls) {
-    bullets.push(
-      `Index watch tracks ${countLabel(watch.inspectedUrls, 'URL')}; ${countLabel(watch.currentIssues, 'current indexing review')} and ${countLabel(watch.failed, 'failed inspection')}.`,
-    )
-    if (watch.currentIssues || watch.failed) {
-      bullets.push(
-        `Index watch currently has ${countLabel(watch.blocked, 'exact blocked state')}; inspect stable verdict, robots, indexing, fetch, and canonical evidence before changing copy.`,
-      )
-    }
-  } else {
-    bullets.push('No index-watch snapshot is saved yet.')
-  }
-
-  if (recovery) {
-    bullets.push(
-      `Latest link-recover checked ${countLabel(recovery.checked, 'search-value URL')}; ${countLabel(recovery.recoverable, 'recoverable issue')}, ${recovery.high} high severity, ${recovery.clicksAtRisk.toFixed(0)} clicks at risk.`,
-    )
-    if (recovery.topUrl && recovery.topAction) {
-      bullets.push(
-        `Top recovery target: ${recovery.topUrl}. ${recovery.topAction}`,
-      )
-    }
-    if (recovery.repeatedUrls) {
-      bullets.push(
-        `${countLabel(recovery.repeatedUrls, 'recoverable URL')} appeared in multiple recent link-recover runs${recovery.repeatedTopUrl ? `; first repeat: ${recovery.repeatedTopUrl}` : ''}.`,
-      )
-    }
-  } else {
-    bullets.push('No link-recover run is saved yet.')
-  }
-  return bullets
 }
 
 export function verificationFetchLine(

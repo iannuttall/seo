@@ -2,7 +2,6 @@ import { SeoError } from '../errors.js'
 import { shiftIsoDate } from '../gsc/dates.js'
 import type { GscRow } from '../types.js'
 import type { SearchUpdate } from '../updates/search-updates.js'
-import type { ChangeScope, SeoChange } from './experiments/types.js'
 
 // Pure traffic anomaly detection and Google update correlation. The local
 // report in traffic-anomaly.ts fetches rows and calls these functions.
@@ -154,12 +153,8 @@ export interface UpdateCorrelationReport {
 }
 
 export type UpdateConfounder = {
-  source: 'change-log' | 'manual'
+  source: 'manual'
   title: string
-  date?: string
-  scope?: ChangeScope
-  target?: string
-  description?: string
 }
 
 function mean(values: number[]): number {
@@ -228,26 +223,6 @@ function strongestSignal(
   })[0]
 }
 
-function dateMs(value: string): number {
-  return new Date(value).getTime()
-}
-
-export function changesInWindow(input: {
-  changes: SeoChange[]
-  startDate?: string
-  endDate?: string
-  paddingDays: number
-}): SeoChange[] {
-  if (!input.startDate || !input.endDate) return []
-  const paddingMs = input.paddingDays * 86_400_000
-  const start = dateMs(input.startDate) - paddingMs
-  const end = dateMs(input.endDate) + paddingMs
-  return input.changes.filter((change) => {
-    const changedAt = dateMs(change.changedAt)
-    return changedAt >= start && changedAt <= end
-  })
-}
-
 function movementIsLarge(anomalies: TrafficAnomaly[]): boolean {
   const significant = anomalies.filter((anomaly) => anomaly.significant)
   if (significant.length < 2) return false
@@ -274,12 +249,6 @@ function movementIsLarge(anomalies: TrafficAnomaly[]): boolean {
     Math.min(clickChange, impressionChange) >= 45 &&
     Math.max(clickChange, impressionChange) >= 60
   )
-}
-
-function confounderTitle(confounder: UpdateConfounder): string {
-  const date = confounder.date ? `${confounder.date}: ` : ''
-  const scope = confounder.scope ? `${confounder.scope} ` : ''
-  return `${date}${scope}${confounder.title}`
 }
 
 export function interpretUpdateCorrelation(input: {
@@ -344,7 +313,7 @@ export function interpretUpdateCorrelation(input: {
     significant.length && hasUpdate && hasConfounders
       ? [
           'Start with the overlapping site changes. Test whether pruning, blocking, redirects, deploys, or tracking changes explain the observed movement.',
-          'Run segment-impact for page and query and compare affected sections against the saved change targets.',
+          'Run segment-impact for page and query and compare affected sections against the changed sections.',
           'Compare changed and unchanged sections, then record which explanation the segment evidence supports.',
         ]
       : significant.length && hasUpdate
@@ -353,7 +322,6 @@ export function interpretUpdateCorrelation(input: {
             direction === 'drop'
               ? 'For a collapse, avoid broad rewrites first. Identify the templates that lost impressions, then check indexability, intent fit, and SERP changes.'
               : 'For a surge, document the winning templates and reinforce them with internal links before changing pages that improved.',
-            'Add any missed deploy, pruning, blocking, or content changes to change-log so later comparisons include that evidence.',
           ]
         : hasUpdate
           ? [
@@ -378,8 +346,8 @@ export function interpretUpdateCorrelation(input: {
         ? 'Both clicks and impressions moved sharply in the same direction.'
         : 'Clicks and impressions did not both meet the sharp-movement evidence threshold.',
       hasConfounders
-        ? `Known overlapping site changes: ${confounders.map(confounderTitle).join('; ')}.`
-        : 'No saved or manually supplied overlapping site changes were found.',
+        ? `Known overlapping site changes: ${confounders.map((confounder) => confounder.title).join('; ')}.`
+        : 'No overlapping site changes were supplied.',
     ],
     caveats: [
       `GSC window: ${input.days} days; recent comparison window: ${input.recentDays} days.`,

@@ -3,57 +3,14 @@ import {
   diagnosePropertyWorkflow,
   refreshPrioritiesWorkflow,
   renderWorkflowMarkdown,
-  technicalWatchWorkflow,
   updatePostmortemWorkflow,
   type WorkflowReport,
   workflowPresentation,
 } from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
-import { resolveJsOption } from './input-schemas.js'
 import { mcpReportInputSchema } from './report-options.js'
 import { toolError, toolSuccess } from './tool-result.js'
-
-const technicalWatchInputSchema = z
-  .strictObject({
-    site: z.string().trim().min(1).max(2_048),
-    startUrl: z.string().url().optional(),
-    urls: z.array(z.string().url()).min(1).max(100).optional(),
-    sitemaps: z.array(z.string().url()).min(1).max(20).optional(),
-    properties: z
-      .array(z.string().trim().min(1).max(2_048))
-      .min(1)
-      .max(1_000)
-      .optional(),
-    limit: z.number().int().min(1).max(250_000).optional(),
-    refresh: z.boolean().optional(),
-    js: z.boolean().optional(),
-    languageCode: z.string().trim().min(1).max(35).optional(),
-    dailyLimit: z.number().int().min(1).max(2_000).optional(),
-    inspectLimit: z.number().int().min(1).max(100).optional(),
-    maxUrls: z.number().int().min(1).max(250_000).optional(),
-    recoverLinks: z.boolean().optional(),
-    recoverDays: z.number().int().min(1).max(548).optional(),
-    recoverLimit: z.number().int().min(1).max(100).optional(),
-    recoverMinClicks: z.number().int().min(0).max(1_000_000_000).optional(),
-    recoverMinImpressions: z
-      .number()
-      .int()
-      .min(0)
-      .max(1_000_000_000)
-      .optional(),
-  })
-  .superRefine((input, context) => {
-    const hasIndexInput = Boolean(input.urls?.length || input.sitemaps?.length)
-    if (!input.startUrl && !hasIndexInput && input.recoverLinks === false) {
-      context.addIssue({
-        code: 'custom',
-        path: ['recoverLinks'],
-        message:
-          'Pass startUrl, urls, sitemaps, or enable link recovery for technical-watch.',
-      })
-    }
-  })
 
 function workflowSuccess(result: WorkflowReport<unknown>) {
   const presentation = workflowPresentation(result)
@@ -115,7 +72,6 @@ export function registerWorkflowTools(server: McpServer): void {
           'refresh',
         ]),
         knownConfounders: z.array(z.string()).optional(),
-        includeChangeLog: z.boolean().optional(),
       },
     },
     async ({
@@ -125,7 +81,6 @@ export function registerWorkflowTools(server: McpServer): void {
       limit,
       includeBrand,
       knownConfounders,
-      includeChangeLog,
       refresh,
     }) => {
       try {
@@ -136,61 +91,7 @@ export function registerWorkflowTools(server: McpServer): void {
           limit,
           includeBrand,
           knownConfounders,
-          includeChangeLog,
           refresh,
-        })
-        return workflowSuccess(result)
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_workflow_technical_watch',
-    {
-      description:
-        'Run scheduled-style crawl-diff and index-watch monitoring in one workflow',
-      inputSchema: technicalWatchInputSchema,
-    },
-    async ({
-      site,
-      startUrl,
-      urls,
-      sitemaps,
-      properties,
-      limit,
-      refresh,
-      js,
-      languageCode,
-      dailyLimit,
-      inspectLimit,
-      maxUrls,
-      recoverLinks,
-      recoverDays,
-      recoverLimit,
-      recoverMinClicks,
-      recoverMinImpressions,
-    }) => {
-      try {
-        const result = await technicalWatchWorkflow({
-          site,
-          startUrl,
-          urls,
-          sitemaps,
-          properties,
-          limit,
-          refresh,
-          js: resolveJsOption(js, 'auto'),
-          languageCode,
-          dailyLimit,
-          inspectLimit,
-          maxUrls,
-          recoverLinks,
-          recoverDays,
-          recoverLimit,
-          recoverMinClicks,
-          recoverMinImpressions,
         })
         return workflowSuccess(result)
       } catch (error) {

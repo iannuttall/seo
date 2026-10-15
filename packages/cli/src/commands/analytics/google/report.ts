@@ -1,56 +1,15 @@
-import {
-  ga4RowsToObjects,
-  googleAnalyticsPropertyId,
-  runGa4Report,
-} from '@seo/core'
+import { ga4RowsToObjects, runGa4Report } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
   csvArg,
   jsonBodyArg,
   jsonFlag,
-  projectArg,
   stringArg,
 } from '../../../args.js'
-import {
-  resolveClient,
-  resolveGoogleAnalyticsProperty,
-} from '../../../selection.js'
+import { requireGoogleAnalyticsProperty } from '../../../selection.js'
 import { printJson, printTable } from '../../../utils.js'
 import { printReportSummary } from '../../output.js'
-
-type GoogleAnalyticsPropertySelectionDependencies = {
-  resolveClient: typeof resolveClient
-  resolveGoogleAnalyticsProperty: typeof resolveGoogleAnalyticsProperty
-}
-
-export async function resolveGoogleAnalyticsReportProperty(
-  input: {
-    property?: string
-    project?: string
-    options?: { json?: boolean; account?: string }
-  },
-  dependencies: GoogleAnalyticsPropertySelectionDependencies = {
-    resolveClient,
-    resolveGoogleAnalyticsProperty,
-  },
-): Promise<string> {
-  if (input.property) {
-    return dependencies.resolveGoogleAnalyticsProperty({
-      property: input.property,
-      options: input.options,
-    })
-  }
-
-  const client = await dependencies.resolveClient({
-    client: input.project,
-    options: input.options,
-  })
-  return dependencies.resolveGoogleAnalyticsProperty({
-    property: googleAnalyticsPropertyId(client),
-    options: input.options,
-  })
-}
 
 export const googleAnalyticsReportCommand = defineCommand({
   meta: {
@@ -61,16 +20,7 @@ export const googleAnalyticsReportCommand = defineCommand({
     property: {
       type: 'string',
       description:
-        'Google Analytics property ID. If omitted in a terminal, choose one.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description:
-        'Saved project id or name with an optional Google Analytics property.',
+        'Numeric Google Analytics property ID. Run `seo analytics google properties` to list them.',
     },
     account: {
       type: 'string',
@@ -92,11 +42,7 @@ export const googleAnalyticsReportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const property = await resolveGoogleAnalyticsReportProperty({
-      property: stringArg(args.property),
-      project: projectArg(args),
-      options: { json, account: stringArg(args.account) },
-    })
+    const property = requireGoogleAnalyticsProperty(stringArg(args.property))
     const body =
       (await jsonBodyArg(args.body, args['body-file'])) ??
       ({

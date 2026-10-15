@@ -1,7 +1,6 @@
 import { querySearchAnalytics } from '../../gsc/client.js'
 import type { GscRow, Recommendation } from '../../types.js'
 import { defaultDateRange } from '../shared.js'
-import { insertLinkRecoverRun } from './link-recover-store.js'
 import {
   type RedirectTraceIssue,
   type RedirectTraceReport,
@@ -256,6 +255,5 @@ export async function linkRecover(input: {
     items,
     warnings: [...new Set(warnings)].slice(0, 50),
   }
-  insertLinkRecoverRun(report)
   return report
 }

@@ -4,11 +4,10 @@ import {
   booleanArg,
   csvArg,
   jsonFlag,
-  projectArg,
   strictNumberArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -33,8 +32,6 @@ export const decayingCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['days', 'limit', 'includeBrand', 'refresh']),
     comparison: {
       type: 'string',
@@ -84,20 +81,13 @@ export const decayingCommand = defineCommand({
         '--comparison must be previous-period or year-over-year.',
       )
     }
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await decayingReport({
-      site: selection.site,
+      site,
       days,
       limit,
       comparison,
-      brandTerms: [
-        ...(selection.client?.brandTerms ?? []),
-        ...(csvArg(args['brand-terms']) ?? []),
-      ],
+      brandTerms: [...(csvArg(args['brand-terms']) ?? [])],
       includeBrand: booleanArg(args['include-brand']),
       minDropPct,
       minPreviousClicks,

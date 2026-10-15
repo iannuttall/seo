@@ -3,7 +3,6 @@ import * as z from 'zod/v4'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
-import { registerExperimentTools } from './experiment-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import {
@@ -19,7 +18,6 @@ export const REPORT_CATEGORIES = [
   'ai-search',
   'crawl',
   'diagnosis',
-  'experiments',
   'monitoring',
   'opportunities',
   'reporting',
@@ -96,13 +94,9 @@ const legacyReportGroups: readonly ReportGroup[] = [
     category: 'crawl',
     register: registerCrawlerTools,
     names: [
-      'seo_affected_urls',
       'seo_audit_urls',
-      'seo_compare_crawl_reports',
       'seo_crawl_site',
       'seo_explain_issue',
-      'seo_get_crawl_report',
-      'seo_list_crawl_reports',
       'seo_list_rules',
       'seo_top_fixes',
     ],
@@ -110,15 +104,7 @@ const legacyReportGroups: readonly ReportGroup[] = [
   {
     category: 'monitoring',
     register: registerMonitoringTools,
-    names: [
-      'seo_crawl_diff',
-      'seo_index_coverage',
-      'seo_index_coverage_plan',
-      'seo_index_monitor',
-      'seo_index_watch',
-      'seo_link_recover',
-      'seo_redirect_trace',
-    ],
+    names: ['seo_index_coverage', 'seo_link_recover', 'seo_redirect_trace'],
   },
   {
     category: 'reporting',
@@ -126,17 +112,11 @@ const legacyReportGroups: readonly ReportGroup[] = [
     names: ['seo_audit_page', 'seo_second_page'],
   },
   {
-    category: 'experiments',
-    register: registerExperimentTools,
-    names: ['seo_measure_change'],
-  },
-  {
     category: 'workflows',
     register: registerWorkflowTools,
     names: [
       'seo_workflow_diagnose_property',
       'seo_workflow_refresh_priorities',
-      'seo_workflow_technical_watch',
       'seo_workflow_update_postmortem',
     ],
   },
@@ -168,15 +148,11 @@ const REPORT_ID_OVERRIDES = {
   'link-recover': 'link-recovery',
   'query-cluster': 'query-clusters',
   'workflow-refresh-priorities': 'refresh-priorities',
-  'workflow-technical-watch': 'technical-watch',
   'workflow-update-postmortem': 'update-postmortem',
   'workflow-diagnose-property': 'search-performance-overview',
   doctor: 'setup-check',
   'update-correlate': 'update-correlation',
-  'compare-crawl-reports': 'compare-crawls',
-  'list-crawl-reports': 'crawl-history',
   'list-rules': 'crawler-rules',
-  'get-crawl-report': 'crawl-report',
   'explain-issue': 'explain-crawl-issue',
 } as const satisfies Record<string, string>
 

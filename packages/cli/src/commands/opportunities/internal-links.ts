@@ -4,12 +4,11 @@ import {
   booleanArg,
   csvArg,
   jsonFlag,
-  projectArg,
   strictFetchRateArg,
   strictNumberArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -31,8 +30,6 @@ export const internalLinksCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     url: {
       type: 'string',
       required: true,
@@ -71,22 +68,15 @@ export const internalLinksCommand = defineCommand({
       '--min-impressions',
     )
     const rate = strictFetchRateArg(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await internalLinksReport({
-      site: selection.site,
+      site,
       targetUrl: stringArg(args.url) ?? '',
       days,
       limit,
       checkLimit,
       minImpressions,
-      brandTerms: [
-        ...(selection.client?.brandTerms ?? []),
-        ...(csvArg(args['brand-terms']) ?? []),
-      ],
+      brandTerms: [...(csvArg(args['brand-terms']) ?? [])],
       includeBrand: booleanArg(args['include-brand']),
       js: booleanArg(args.js) ? true : undefined,
       rate,

@@ -1,13 +1,7 @@
 import { updatePostmortemWorkflow } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { printNextCommand, printNotes, printReportSummary } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -123,14 +117,6 @@ export const updatePostmortemCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
-    },
     ...cliReportArgs(
       ['days', 'recentDays', 'limit', 'includeBrand', 'refresh'],
       {
@@ -147,11 +133,6 @@ export const updatePostmortemCommand = defineCommand({
       description:
         'Manual site-side change to treat as a confounder, for example pruning pages or blocking traffic.',
     },
-    'ignore-change-log': {
-      type: 'boolean',
-      default: false,
-      description: 'Do not use saved change-log entries as confounders.',
-    },
     json: {
       type: 'boolean',
       default: false,
@@ -160,22 +141,16 @@ export const updatePostmortemCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await updatePostmortemWorkflow({
-      site: selection.site,
+      site,
       days: numberArg(args.days),
       recentDays: numberArg(args.recent),
       limit: numberArg(args.limit),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       knownConfounders: stringArg(args['known-change'])
         ? [stringArg(args['known-change']) ?? '']
         : undefined,
-      includeChangeLog: !booleanArg(args['ignore-change-log']),
       refresh: booleanArg(args.refresh),
     })
     if (json) {
@@ -233,9 +208,8 @@ export const updatePostmortemCommand = defineCommand({
       'Country winners and losers',
       report.output.segments.country,
     )
-    const target = selection.client
-      ? `--project ${JSON.stringify(selection.client.id)}`
-      : `--site ${JSON.stringify(selection.site)}`
-    printNextCommand(`seo export update-postmortem ${target}`)
+    printNextCommand(
+      `seo export update-postmortem --site ${JSON.stringify(site)}`,
+    )
   },
 })

@@ -20,8 +20,14 @@ The first part installs the package. `seo start` then runs setup.
 Setup walks you through three things:
 
 1. Sign in with Google for read-only Search Console and Google Analytics access.
-2. Save a project, which remembers your site so you do not type it each time.
-3. Add the skill and MCP server to the agents it finds on your machine. If you skip this, you can add them later.
+2. Add an MCP server to the agents it finds on your machine. The free [hosted server](/docs/mcp) is the first choice; the local one runs on your machine with this sign-in. Claude Desktop takes the hosted server only from its Connectors settings, so setup gives it the local one.
+3. Install the skill, which teaches your agent the commands.
+
+If you skip a step, you can do it later with `seo mcp install` or `seo skill install`. Setup saves nothing about your site, so each command names the site it works on. To see the sites your sign-in can read:
+
+```sh
+seo sites
+```
 
 ## Run the commands
 
@@ -53,9 +59,11 @@ Research needs a provider key. Connect one once and the CLI keeps it on your mac
 seo providers dataforseo connect
 ```
 
-## Coming from 0.2
+## Coming from an older version
 
-The old report names, such as `seo quick-wins`, still run in 0.3 and print the new command to use. They stop working in 0.4. Reports that were removed print a short message saying so.
+Saved projects are gone, so pass `--site` instead of `--project`. Commands that saved history between runs, such as `seo change-log`, `seo technical-watch` and `seo crawl-reports`, were removed (your agent keeps its own notes now). Removed commands and flags stop with a short message that names what to use instead.
+
+The old report names, such as `seo quick-wins`, still run and print the new command to use. To stay on the old version, run `npm i -g seo@0.2.41`.
 
 Your agent runs the same commands for you once setup has added the skill, so most days you just ask it a question.
 
@@ -65,7 +73,7 @@ On a machine that is rebuilt each time, such as Amp, Codex cloud or CI, the CLI 
 
 ## Where your data lives
 
-Your Google tokens, project settings, cached responses and crawls stay on your machine. Nothing is sent to SEO Skill except the [anonymous usage counts](/telemetry), which you can turn off:
+Your Google tokens, settings, keys and a short cache of responses stay on your machine. Reports and crawls are not saved. Nothing is sent to SEO Skill except the [anonymous usage counts](/telemetry), which you can turn off:
 
 ```sh
 seo telemetry disable

@@ -959,7 +959,6 @@ const crawlReportDataSourcesSchema = z.object({
 const crawlReportBaseSchema = z.object({
   id: z.string(),
   definitionId: z.string(),
-  projectId: z.string().optional(),
   site: z.string().optional(),
   googleAnalyticsPropertyId: z.string().optional(),
   analyticsConnection: analyticsConnectionSchema.optional(),

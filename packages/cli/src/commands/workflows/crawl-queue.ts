@@ -1,8 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import {
-  analyticsConnection,
-  crawlImplementationQueueWorkflow,
-} from '@seo/core'
+import { crawlImplementationQueueWorkflow, SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -11,10 +8,8 @@ import {
   jsonFlag,
   negatedBooleanArg,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import {
   analyticsConnectionArgs,
@@ -37,20 +32,11 @@ export const crawlQueueCommand = defineCommand({
     },
     url: {
       type: 'string',
-      description:
-        'Start URL to crawl. Optional when --project has a saved crawl URL.',
+      description: 'Start URL to crawl. Defaults to the --site home page.',
     },
     site: {
       type: 'string',
       description: 'GSC property URL for joining page metrics.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
     },
     ...analyticsConnectionArgs,
     mode: {
@@ -131,32 +117,21 @@ export const crawlQueueCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const project = projectArg(args)
     const urls = await urlListArgs(args)
     const explicitUrl = crawlUrlArg(args)
-    const selection =
-      stringArg(args.site) || project || (!explicitUrl && !urls.length)
-        ? await resolveClientSelection({
-            client: project,
-            site: stringArg(args.site),
-            options: { json },
-          })
-        : undefined
+    const site = stringArg(args.site)
     const crawlUrl =
-      explicitUrl ??
-      selection?.client?.startUrl ??
-      (selection?.site ? startUrlForSite(selection.site) : undefined) ??
-      urls[0]
+      explicitUrl ?? (site ? startUrlForSite(site) : undefined) ?? urls[0]
     if (!crawlUrl) {
-      throw new Error(
-        'No crawl URL selected. Pass a URL, --url, or use --project with a saved crawl URL.',
+      throw new SeoError(
+        'INVALID_INPUT',
+        'No crawl URL given. Pass a URL, --url or --site. Run `seo sites` to list your Search Console properties.',
       )
     }
 
     const report = await crawlImplementationQueueWorkflow({
       url: crawlUrl,
-      projectId: selection?.client?.id,
-      site: selection?.site,
+      site,
       mode: crawlModeArg(args.mode) ?? (urls.length ? 'list' : undefined),
       urls,
       maxPages: numberArg(args['max-pages']),
@@ -170,10 +145,7 @@ export const crawlQueueCommand = defineCommand({
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
       googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
-      analyticsConnection: analyticsConnectionFromArgs(
-        args,
-        analyticsConnection(selection?.client),
-      ),
+      analyticsConnection: analyticsConnectionFromArgs(args),
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),

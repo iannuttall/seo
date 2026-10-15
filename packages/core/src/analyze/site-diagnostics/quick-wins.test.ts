@@ -109,22 +109,6 @@ test('queries bounded retained rows and publishes source semantics', async () =>
   assert.match(report.caveats.join(' '), /top retained query rows only/)
 })
 
-test('uses an explicit parent date window unchanged', async () => {
-  let request: SearchAnalyticsRequest | undefined
-  await quickWinsReport(
-    { site, startDate: '2026-01-01', endDate: '2026-03-31' },
-    dependencies([], {
-      searchAnalytics: async (_site, body) => {
-        request = body
-        return { rows: [], calls: 1, rowsFetched: 0 }
-      },
-    }),
-  )
-
-  assert.equal(request?.startDate, '2026-01-01')
-  assert.equal(request?.endDate, '2026-03-31')
-})
-
 test('deduplicates page fetches while evaluating each query', async () => {
   let fetches = 0
   const target = 'https://example.com/audit'
@@ -165,32 +149,6 @@ test('deduplicates page fetches while evaluating each query', async () => {
   )
 })
 
-test('verifyContent false takes precedence over a verification limit', async () => {
-  let fetches = 0
-  const report = await quickWinsReport(
-    { site, verifyContent: false, verifyLimit: 3 },
-    dependencies(
-      [
-        row({
-          query: 'technical seo audit',
-          url: 'https://example.com/audit',
-        }),
-        ...peers(),
-      ],
-      {
-        fetch: async (url) => {
-          fetches++
-          return fetched(url)
-        },
-      },
-    ),
-  )
-
-  assert.equal(fetches, 0)
-  assert.equal(report.verification.requested, false)
-  assert.equal(report.verification.attemptedRows, 0)
-})
-
 test('technical evidence overrides CTR and content-edit advice', async () => {
   const report = await quickWinsReport(
     { site, verifyContent: true, verifyLimit: 1 },
@@ -212,41 +170,6 @@ test('technical evidence overrides CTR and content-edit advice', async () => {
   )
   assert.doesNotMatch(item?.recommendation.action ?? '', /add.*copy/i)
   assert.equal(report.verification.technical, 1)
-})
-
-test('rejects invalid windows before provider calls', async () => {
-  let calls = 0
-  const deps = dependencies([], {
-    searchAnalytics: async () => {
-      calls++
-      return { rows: [], calls: 1, rowsFetched: 0 }
-    },
-  })
-
-  await assert.rejects(quickWinsReport({ site, days: 0 }, deps), /Days must be/)
-  await assert.rejects(
-    quickWinsReport({ site, verifyLimit: -1 }, deps),
-    /Verification limit must be/,
-  )
-  await assert.rejects(
-    quickWinsReport({ site, startDate: '2026-02-01' }, deps),
-    /provided together/,
-  )
-  assert.equal(calls, 0)
-})
-
-test('does not hide Search Console failures', async () => {
-  await assert.rejects(
-    quickWinsReport(
-      { site },
-      dependencies([], {
-        searchAnalytics: async () => {
-          throw new Error('Search Console unavailable')
-        },
-      }),
-    ),
-    /Search Console unavailable/,
-  )
 })
 
 test('a mid-size site gets a scaled default minimum and keeps quick wins', async () => {

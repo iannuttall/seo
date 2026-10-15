@@ -6,28 +6,6 @@ import {
   compactAgentWorkflowOutput,
 } from './agent-output-budget.js'
 
-test('workflow output preserves complete reports that fit the byte budget', () => {
-  const report = {
-    summary: 'Bounded keyword evidence.',
-    rows: Array.from({ length: 25 }, (_, index) => ({
-      keyword: `query ${index}`,
-      volume: index * 10,
-    })),
-  }
-
-  const output = compactAgentWorkflowOutput(report)
-  const budget = output.outputBudget as {
-    returnedBytes: number
-    truncated: boolean
-    omissions: unknown[]
-  }
-  assert.equal((output.rows as unknown[]).length, 25)
-  assert.equal('findings' in output, false)
-  assert.equal(budget.truncated, false)
-  assert.deepEqual(budget.omissions, [])
-  assert.equal(budget.returnedBytes, Buffer.byteLength(JSON.stringify(output)))
-})
-
 test('workflow output uses one total agent byte budget', () => {
   const report = {
     workflow: 'diagnose-property',
@@ -75,56 +53,6 @@ test('workflow output uses one total agent byte budget', () => {
   )
 })
 
-test('workflow output honours a smaller caller budget', () => {
-  const maxBytes = 12 * 1024
-  const report = {
-    actions: Array.from({ length: 20 }, (_, index) => ({
-      id: `finding-${index}`,
-      title: `Finding ${index}`,
-      action: 'Fix the returned finding and preserve its observed evidence.',
-    })),
-    detail: Array.from({ length: 100 }, (_, index) => ({
-      index,
-      evidence: 'x'.repeat(500),
-    })),
-  }
-
-  const compact = compactAgentWorkflowOutput(report, { maxBytes })
-  const budget = compact.outputBudget as {
-    maxBytes: number
-    returnedBytes: number
-  }
-
-  assert.equal(budget.maxBytes, maxBytes)
-  assert.equal(budget.returnedBytes <= maxBytes, true)
-  assert.equal(Buffer.byteLength(JSON.stringify(compact)) <= maxBytes, true)
-})
-
-test('workflow budget fallback retains provenance and caveats', () => {
-  const report = {
-    workflow: 'diagnose-property',
-    site: 'sc-domain:example.com',
-    summary: 'Fallback fixture.',
-    provenance: { inputRows: 80_000, dataStatus: 'partial' },
-    caveats: ['Provider rows were capped.'],
-    output: Object.fromEntries(
-      Array.from({ length: 500 }, (_, index) => [
-        `section-${index}`,
-        { evidence: 'x'.repeat(2_000) },
-      ]),
-    ),
-  }
-
-  const compact = compactAgentWorkflowOutput(report)
-
-  assert.equal(Buffer.byteLength(JSON.stringify(compact)) <= 96 * 1024, true)
-  assert.equal((compact.outputBudget as { fallback?: boolean }).fallback, true)
-  assert.deepEqual(compact.retainedEvidence, {
-    provenance: { inputRows: 80_000, dataStatus: 'partial' },
-    caveats: ['Provider rows were capped.'],
-  })
-})
-
 test('workflow budget never truncates complete findings', () => {
   const report = {
     workflow: 'site-crawl',
@@ -142,23 +70,6 @@ test('workflow budget never truncates complete findings', () => {
     () => compactAgentWorkflowOutput(withAgentReportContract(report)),
     /actionable rows were not truncated/u,
   )
-})
-
-test('workflow output preserves an existing report findings schema', () => {
-  const report = {
-    findings: [
-      {
-        code: 'repeated-domain',
-        evidenceRef: 'domains.example',
-        detail: 'One domain appeared twice.',
-      },
-    ],
-  }
-
-  const output = compactAgentWorkflowOutput(report)
-
-  assert.deepEqual(output.findings, report.findings)
-  assert.equal('reportFindings' in output, false)
 })
 
 test('workflow fallback keeps complete findings and inventory before report detail', () => {

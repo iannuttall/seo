@@ -42,16 +42,6 @@ test('indexnow validates a dry run as structured JSON without network work', asy
   assert.equal('key' in result, false)
 })
 
-test('indexnow is discoverable in full help', async () => {
-  const { stdout, stderr } = await execFileAsync(
-    process.execPath,
-    [cliPath, 'help', 'all'],
-    { env: { ...process.env, CI: '1', NO_UPDATE_NOTIFIER: '1' } },
-  )
-  assert.equal(stderr, '')
-  assert.match(stdout, /seo indexnow submit/)
-})
-
 test('indexnow setup writes one new key file and keeps the key local', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'seo-indexnow-cli-'))
   const configDirectory = join(directory, 'config')

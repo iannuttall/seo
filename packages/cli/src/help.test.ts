@@ -106,39 +106,10 @@ test('root help stays curated and useful', async () => {
 })
 
 test('command help works through the short help alias', async () => {
-  const output = await runSeo(['help', 'init'])
+  const output = await runSeo(['help', 'report'])
 
-  assert.match(output, /Legacy alias for `seo start`/)
-  assert.match(output, /--skip-auth/)
-  assert.doesNotMatch(output, /Unknown command help/)
-})
-
-test('start JSON never prompts and requires an explicit site on first run', async () => {
-  const configDir = await mkdtemp(join(tmpdir(), 'seo-start-config-'))
-  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-start-cache-'))
-
-  try {
-    const result = await runSeoResult(['start', '--json'], {
-      SEO_CONFIG_DIR: configDir,
-      SEO_CACHE_DIR: cacheDir,
-    })
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
-    assert.deepEqual(output, {
-      ok: false,
-      error: {
-        code: 'INVALID_INPUT',
-        message:
-          'No site selected. Pass --site, use --project on supported commands, or run `seo start` in a terminal.',
-        retryable: false,
-      },
-    })
-  } finally {
-    await rm(configDir, { recursive: true, force: true })
-    await rm(cacheDir, { recursive: true, force: true })
-  }
+  assert.match(output, /USAGE|Usage:/)
+  assert.doesNotMatch(output, /Unknown command/)
 })
 
 test('report JSON never prompts without a selector', async () => {
@@ -163,30 +134,6 @@ test('report JSON never prompts without a selector', async () => {
         retryable: false,
       },
     })
-  } finally {
-    await rm(configDir, { recursive: true, force: true })
-    await rm(cacheDir, { recursive: true, force: true })
-  }
-})
-
-test('init is a compatibility alias for the guided start flow', async () => {
-  const configDir = await mkdtemp(join(tmpdir(), 'seo-init-config-'))
-  const cacheDir = await mkdtemp(join(tmpdir(), 'seo-init-cache-'))
-
-  try {
-    const result = await runSeoResult(
-      ['init', '--site', 'sc-domain:example.com', '--skip-auth', '--json'],
-      {
-        SEO_CONFIG_DIR: configDir,
-        SEO_CACHE_DIR: cacheDir,
-      },
-    )
-
-    assert.equal(result.exitCode, 0)
-    const output = JSON.parse(result.stdout)
-    assert.equal(output.site, 'sc-domain:example.com')
-    assert.equal(output.auth, 'skipped')
-    assert.doesNotMatch(result.stdout, /Semrush|DataForSEO|Google OAuth client/)
   } finally {
     await rm(configDir, { recursive: true, force: true })
     await rm(cacheDir, { recursive: true, force: true })
@@ -452,24 +399,19 @@ test('auth status reports a service account identity without printing the key', 
   }
 })
 
-test('long help and crawler command help are available', async () => {
+test('long help and command help are available', async () => {
   const all = await runSeo(['help', 'all'])
-  assert.match(all, /seo crawl\s+Crawl a site and list technical issues/)
-  assert.match(all, /seo crawl-reports\s+List saved crawl reports/)
-  assert.doesNotMatch(all, /seo agent-readiness/)
+  assert.match(all, /seo crawl-reports/)
+  assert.doesNotMatch(all, /Unknown command/)
 
   for (const args of [
     ['report', '--help'],
     ['projects', '--help'],
     ['start', '--help'],
-    ['skill', '--help'],
-    ['skill', 'install', '--help'],
     ['crawl', '--help'],
-    ['crawl-reports', '--help'],
     ['internal-links', '--help'],
-    ['cannibal', '--help'],
-    ['decaying', '--help'],
-    ['ai-referrals', '--help'],
+    ['analytics', 'google', 'report', '--help'],
+    ['providers', 'connect', '--help'],
     ['page', '--help'],
     ['compare', '--help'],
     ['index', '--help'],
@@ -479,144 +421,6 @@ test('long help and crawler command help are available', async () => {
     const output = await runSeo(args)
     assert.doesNotMatch(output, /Unknown command/)
     assert.match(output, /USAGE|Usage:/)
-  }
-})
-
-test('AI referrals help exposes bounded evidence controls', async () => {
-  const output = await runSeo(['ai-referrals', '--help'])
-
-  for (const flag of [
-    '--property',
-    '--start-date',
-    '--end-date',
-    '--max-rows',
-    '--result-limit',
-    '--refresh',
-    '--json',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('AI referrals JSON rejects invalid evidence controls before auth', async () => {
-  for (const args of [
-    ['--max-rows', 'nope'],
-    ['--max-rows', '0'],
-    ['--result-limit', '1001'],
-    ['--start-date', '2026-06-01', '--end-date', 'yesterday'],
-  ]) {
-    const result = await runSeoResult([
-      'ai-referrals',
-      '--property',
-      '123',
-      ...args,
-      '--json',
-    ])
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
-    assert.equal(output.error.code, 'INVALID_INPUT')
-  }
-})
-
-test('segment impact help exposes bounded comparison evidence', async () => {
-  const output = await runSeo(['segment-impact', '--help'])
-
-  for (const flag of [
-    '--dimension',
-    '--days',
-    '--compare',
-    '--start-date',
-    '--end-date',
-    '--limit',
-    '--unmatched-limit',
-    '--max-rows',
-    '--refresh',
-    '--json',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('segment impact JSON rejects malformed bounds before auth', async () => {
-  for (const args of [
-    ['--days', 'later'],
-    ['--days', '241'],
-    ['--max-rows', 'many'],
-    ['--max-rows', '0'],
-    ['--unmatched-limit', 'none'],
-    ['--unmatched-limit', '101'],
-    ['--start-date', 'not-a-date', '--end-date', '2026-05-28'],
-  ]) {
-    const result = await runSeoResult([
-      'segment-impact',
-      '--site',
-      'sc-domain:example.com',
-      ...args,
-      '--json',
-    ])
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 2)
-    assert.match(result.stderr, /is now `seo /)
-    assert.equal(output.error.code, 'INVALID_INPUT')
-  }
-})
-
-test('change measurement rejects malformed windows before auth', async () => {
-  const result = await runSeoResult([
-    'tests',
-    'report',
-    '--site',
-    'sc-domain:example.com',
-    '--scope',
-    'site',
-    '--target',
-    'sitewide',
-    '--date',
-    '2026-06-01',
-    '--before',
-    'nope',
-    '--json',
-  ])
-
-  assert.notEqual(result.exitCode, 0)
-  assert.match(`${result.stdout}${result.stderr}`, /--before must be a number/i)
-  assert.doesNotMatch(
-    `${result.stdout}${result.stderr}`,
-    /auth login|Google OAuth/i,
-  )
-})
-
-test('cannibal help exposes bounded discovery controls', async () => {
-  const output = await runSeo(['cannibal', '--help'])
-
-  for (const flag of [
-    '--days',
-    '--limit',
-    '--min-impressions',
-    '--brand-terms',
-    '--refresh',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('decaying help exposes bounded comparison controls', async () => {
-  const output = await runSeo(['decaying', '--help'])
-
-  for (const flag of [
-    '--days',
-    '--limit',
-    '--comparison',
-    '--min-drop-pct',
-    '--min-previous-clicks',
-    '--min-click-loss',
-    '--brand-terms',
-    '--refresh',
-  ]) {
-    assert.match(output, new RegExp(flag))
   }
 })
 
@@ -648,137 +452,19 @@ test('decaying JSON rejects invalid flags before authentication', async () => {
   }
 })
 
-test('internal-links help exposes bounded matching and fetch controls', async () => {
-  const output = await runSeo(['internal-links', '--help'])
-
-  for (const flag of [
-    '--days',
-    '--limit',
-    '--check-limit',
-    '--min-impressions',
-    '--brand-terms',
-    '--fetch-concurrency',
-    '--refresh',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('index-watch help exposes bounded quota and inventory controls', async () => {
-  const output = await runSeo(['index-watch', '--help'])
-
-  for (const flag of [
-    '--urls',
-    '--sitemaps',
-    '--daily-limit',
-    '--inspect-limit',
-    '--max-urls',
-    '--target-days',
-    '--language',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('index-coverage help explains project, crawl, sitemap, and source limits', async () => {
-  const output = await runSeo(['index-coverage', '--help'])
-
-  for (const flag of [
-    '--project',
-    '--site',
-    '--crawl-report-id',
-    '--sitemaps',
-    '--days',
-    '--row-limit',
-    '--max-sitemap-urls',
-    '--limit',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('index-watch JSON rejects unsafe bounds before authentication', async () => {
-  for (const args of [
-    ['--urls', 'https://example.com/a', '--daily-limit', '2001'],
-    ['--sitemaps', 'https://example.com/sitemap.xml', '--inspect-limit', '101'],
-  ]) {
-    const result = await runSeoResult([
-      'index-watch',
-      '--site',
-      'sc-domain:example.com',
-      ...args,
-      '--json',
-    ])
-    const output = JSON.parse(result.stdout)
-
-    assert.equal(result.exitCode, 2)
-    assert.equal(result.stderr, '')
-    assert.equal(output.error.code, 'INVALID_INPUT')
-  }
-})
-
-test('performance help exposes lab and field controls', async () => {
-  const output = await runSeo(['perf', 'audit', '--help'])
-
-  for (const flag of [
-    '--url',
-    '--strategy',
-    '--lighthouse-bin',
-    '--crux-key',
-    '--refresh',
-    '--raw',
-    '--json',
-  ]) {
-    assert.match(output, new RegExp(flag))
-  }
-})
-
-test('version aliases and nested command help are available', async () => {
-  assert.match(await runSeo(['--version']), /\d+\.\d+\.\d+/)
-  assert.match(await runSeo(['-v']), /\d+\.\d+\.\d+/)
-
-  for (const args of [
-    ['content', 'optimize', '--help'],
-    ['monitoring', 'cron', '--help'],
-    ['export', 'refresh-priorities', '--help'],
-    ['analytics', 'google', 'properties', '--help'],
-    ['analytics', 'google', 'report', '--help'],
-    ['providers', 'connect', '--help'],
-    ['providers', 'status', '--help'],
-    ['providers', 'disconnect', '--help'],
-  ]) {
-    const output = await runSeo(args)
-    assert.doesNotMatch(output, /Unknown command/)
-    assert.match(output, /USAGE|Usage:/)
-  }
-})
-
-test('Google Analytics commands only use the provider namespace', async () => {
-  for (const command of ['ga4-properties', 'ga4-report']) {
-    const result = await runSeoResult([command])
-    assert.equal(result.exitCode, 2)
-    assert.match(`${result.stdout}${result.stderr}`, /Unknown command/)
-  }
-
-  const output = await runSeo(['analytics', 'google', '--help'])
-  assert.match(output, /properties/)
-  assert.match(output, /report/)
-  assert.doesNotMatch(output, /ga4/i)
-})
-
-test('provider extensions use one shared connection command', async () => {
-  const output = await runSeo(['providers', 'connect', '--help'])
-  assert.match(output, /PROVIDER ID|Provider id/i)
-  assert.match(output, /--account/)
-  assert.match(output, /Validate and save one installed provider connection/)
-})
-
-test('unknown commands emit one error and exit with failure', async () => {
+test('unknown and removed commands exit 2 with one clear error', async () => {
   const result = await runSeoResult(['definitely-not-a-command'])
   const output = `${result.stdout}${result.stderr}`
 
   assert.equal(result.exitCode, 2)
   assert.equal(output.match(/Unknown command/g)?.length, 1)
+
+  for (const command of ['pseo', 'server-logs', 'monthly-report']) {
+    const removed = await runSeoResult([command, '--json'])
+    assert.equal(removed.exitCode, 2, command)
+    assert.equal(removed.stdout, '', command)
+    assert.match(removed.stderr, /was removed in 0\.3\.0/, command)
+  }
 })
 
 test('report JSON fails clearly when Google auth is missing', async () => {

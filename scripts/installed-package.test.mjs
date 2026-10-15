@@ -65,7 +65,7 @@ async function createPackedTarball() {
     { cwd: root, env: consumerEnv('archive') },
   )
   const archive = (await readdir(archiveDirectory)).find((file) =>
-    /^seo-[\d.]+\.tgz$/.test(file),
+    /^seo-\d+\.\d+\.\d+(-[\w.]+)?\.tgz$/.test(file),
   )
   assert.ok(archive, 'npm pack should create an seo tarball')
   return join(archiveDirectory, archive)
@@ -103,7 +103,7 @@ test('the packed package installs globally into an isolated prefix', {
     cwd: root,
     env,
   })
-  assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+$/)
+  assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+(-[\w.]+)?$/)
 
   const start = await execFileAsync(seo, ['start', '--dry-run', '--json'], {
     cwd: root,
@@ -121,9 +121,15 @@ test('the packed package installs globally into an isolated prefix', {
   assert.deepEqual(
     mcp.tools.map((tool) => tool.name),
     [
-      'seo_list_reports',
-      'seo_describe_report',
-      'seo_run_report',
+      'seo_sites',
+      'seo_report',
+      'seo_page',
+      'seo_compare',
+      'seo_index',
+      'seo_research',
+      'seo_data',
+      'seo_crawl',
+      'seo_internal_links',
       'seo_list_providers',
       'seo_describe_provider',
       'seo_run_provider',
@@ -209,7 +215,7 @@ test('the packed package installs and runs without the workspace', {
     cwd: consumerDirectory,
     env,
   })
-  assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+$/)
+  assert.match(version.stdout.trim(), /^\d+\.\d+\.\d+(-[\w.]+)?$/)
 
   const start = await execFileAsync(
     process.execPath,
@@ -239,7 +245,7 @@ test('the packed package installs and runs without the workspace', {
     [cli, 'report', '--help'],
     { cwd: consumerDirectory, env },
   )
-  assert.match(reportHelp.stdout, /Run the main SEO report/)
+  assert.match(reportHelp.stdout, /The main Search Console report/)
 
   const mcp = await execFileAsync(
     process.execPath,

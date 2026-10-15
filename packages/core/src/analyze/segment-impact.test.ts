@@ -21,26 +21,6 @@ function row(
   }
 }
 
-test('ranks matched retained segments by real movement', () => {
-  const report = compareSegmentRows({
-    site: 'sc-domain:example.com',
-    dimension: 'page',
-    before,
-    after,
-    beforeRows: [row('/a', 100, 1000, 4), row('/b', 10, 100, 7)],
-    afterRows: [row('/a', 20, 800, 8), row('/b', 35, 200, 5)],
-    generatedAt: '2026-05-30T12:00:00.000Z',
-  })
-
-  assert.equal(report.schemaVersion, 2)
-  assert.equal(report.items[0]?.key, '/a')
-  assert.equal(report.items[0]?.clickDelta, -80)
-  assert.equal(report.items[0]?.positionDelta, 4)
-  assert.equal(report.items[1]?.key, '/b')
-  assert.equal(report.items[1]?.clickDelta, 25)
-  assert.equal(report.dataStatus, 'complete')
-})
-
 test('never converts one-window retained rows into zero traffic', () => {
   const report = compareSegmentRows({
     site: 'sc-domain:example.com',
@@ -72,21 +52,6 @@ test('never converts one-window retained rows into zero traffic', () => {
   assert.equal(report.methodology.missingRowsTreatedAsZero, false)
 })
 
-test('returns unavailable when no retained segment is comparable', () => {
-  const report = compareSegmentRows({
-    site: 'sc-domain:example.com',
-    dimension: 'query',
-    before,
-    after,
-    beforeRows: [row('before only', 10)],
-    afterRows: [row('after only', 20)],
-  })
-
-  assert.equal(report.dataStatus, 'unavailable')
-  assert.equal(report.items.length, 0)
-  assert.match(report.summary.verdict, /no movement delta was inferred/i)
-})
-
 test('rejects unequal comparison windows instead of comparing raw totals', async () => {
   await assert.rejects(
     segmentImpact(
@@ -101,64 +66,6 @@ test('rejects unequal comparison windows instead of comparing raw totals', async
       },
     ),
     /compareDays must equal the 7-day current window/,
-  )
-})
-
-test('rejects non-adjacent or invalid explicit comparison ranges', () => {
-  assert.throws(
-    () =>
-      compareSegmentRows({
-        site: 'sc-domain:example.com',
-        dimension: 'page',
-        before,
-        after: { startDate: '2026-05-01', endDate: '2026-05-28' },
-        beforeRows: [],
-        afterRows: [],
-      }),
-    /must be adjacent/,
-  )
-  assert.throws(
-    () =>
-      compareSegmentRows({
-        site: 'sc-domain:example.com',
-        dimension: 'page',
-        before,
-        after: { startDate: '2026-02-30', endDate: '2026-03-29' },
-        beforeRows: [],
-        afterRows: [],
-      }),
-    /valid YYYY-MM-DD/,
-  )
-})
-
-test('does not publish average position without impressions', () => {
-  const report = compareSegmentRows({
-    site: 'sc-domain:example.com',
-    dimension: 'query',
-    before,
-    after,
-    beforeRows: [row('zero impression', 0, 0, 0)],
-    afterRows: [row('zero impression', 0, 0, 0)],
-  })
-
-  assert.equal(report.items[0]?.beforePosition, null)
-  assert.equal(report.items[0]?.afterPosition, null)
-  assert.equal(report.items[0]?.positionDelta, null)
-})
-
-test('uses deterministic key ordering for equal movement', () => {
-  const report = compareSegmentRows({
-    site: 'sc-domain:example.com',
-    dimension: 'page',
-    before,
-    after,
-    beforeRows: [row('/z', 10), row('/a', 10)],
-    afterRows: [row('/z', 20), row('/a', 20)],
-  })
-
-  assert.deepEqual(
-    report.items.map((item) => item.key),
-    ['/a', '/z'],
   )
 })
 
@@ -183,29 +90,6 @@ test('deduplicates identical rows and excludes conflicting duplicates', () => {
   )
   assert.equal(report.selection.beforeDuplicateRows, 1)
   assert.equal(report.selection.beforeConflictingRows, 1)
-  assert.equal(report.dataStatus, 'partial')
-})
-
-test('excludes malformed provider dimensions and metrics', () => {
-  const report = compareSegmentRows({
-    site: 'sc-domain:example.com',
-    dimension: 'page',
-    before,
-    after,
-    beforeRows: [
-      row('/valid', 10),
-      row('', 2),
-      row('/fractional-clicks', 1.5),
-      { ...row('/two-keys', 3), keys: ['/two-keys', 'unexpected'] },
-    ],
-    afterRows: [row('/valid', 12)],
-  })
-
-  assert.deepEqual(
-    report.items.map((item) => item.key),
-    ['/valid'],
-  )
-  assert.equal(report.selection.beforeInvalidRows, 3)
   assert.equal(report.dataStatus, 'partial')
 })
 

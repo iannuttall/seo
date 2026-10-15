@@ -29,6 +29,8 @@ const CSV_SCHEMAS: Record<string, string[]> = {
     'comparison_total',
     'percent_change',
     'z_score',
+    'detection',
+    'change_date',
   ],
   'decay.csv': [
     'rank',
@@ -275,6 +277,8 @@ export function diagnoseCsvFiles(report: DiagnosePropertyReport): CsvFile[] {
         comparison_total: item.comparisonTotal,
         percent_change: item.percentChange,
         z_score: item.zScore,
+        detection: item.detection ?? null,
+        change_date: item.changeDate ?? null,
       })),
     },
     ...diagnosisSegmentCsvFiles(report),

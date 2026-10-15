@@ -76,5 +76,6 @@ export async function trafficAnomalyWith(
       comparisonDays: coverage.comparison.observedDays,
     },
     coverage,
+    detection: analyzed.detection,
   }
 }

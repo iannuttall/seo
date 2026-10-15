@@ -39,6 +39,7 @@ const SKIP_KEYS = new Set([
 const ID_COLUMNS = [
   'metric',
   'direction',
+  'changeDate',
   'query',
   'queryFlags',
   'keyword',

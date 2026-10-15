@@ -20,9 +20,57 @@ export interface TrafficAnomaly {
   comparisonTotal: number
   percentChange: number | null
   zScore: number | null
-  significanceMethod: 'z-score' | 'outside-flat-baseline' | 'none'
+  significanceMethod:
+    | 'z-score'
+    | 'outside-flat-baseline'
+    | 'step-change'
+    | 'none'
   direction: 'drop' | 'spike' | 'normal'
   significant: boolean
+  /**
+   * How the comparison was chosen. `step-change`: the daily series has a
+   * sustained level change, so the baseline is every day before it and the
+   * comparison is every day from it. `recent-window`: no step change, so the
+   * last recentDays are compared with the days before them. Optional only
+   * for older fixtures.
+   */
+  detection?: 'step-change' | 'recent-window'
+  /** First observed day at the new level for a step change, else null. */
+  changeDate?: string | null
+}
+
+/** The step-change heuristic and its thresholds, returned with the report. */
+export const STEP_CHANGE_RULES = {
+  method: 'best-split',
+  description:
+    'Heuristic. The change date is the split of the daily series where the mean before and the mean after differ most, weighted by segment length. It counts as a step change only when it is sudden and sustained. Sudden: the median of up to localDays observed days after the date differs from the median of up to localDays days before it by at least minLocalShiftInStdDevs pooled within-segment standard deviations, so one unusual day is not a step and a slow trend is not a step. Sustained: the mean of every day from the date differs from the mean before it by a z-score of at least minZScore, stricter than the recent-window test because the date is chosen from the data. Otherwise the last recentDays are compared with the days before them.',
+  minDaysBefore: 7,
+  minDaysAfter: 3,
+  localDays: 7,
+  minLocalShiftInStdDevs: 2,
+  minZScore: 3,
+} as const
+
+export type TrafficAnomalyDetection = typeof STEP_CHANGE_RULES & {
+  recentDays: number
+}
+
+/**
+ * The dates to check against Google updates (before padding): the change
+ * date of the first significant step change, else the comparison window.
+ */
+export function changeWindow(
+  anomalies: TrafficAnomaly[],
+): { start: string; end: string } | undefined {
+  const step = anomalies.find(
+    (anomaly) =>
+      anomaly.significant &&
+      anomaly.detection === 'step-change' &&
+      anomaly.changeDate,
+  )
+  if (step?.changeDate) return { start: step.changeDate, end: step.changeDate }
+  const first = anomalies[0]
+  return first && { start: first.comparisonStart, end: first.comparisonEnd }
 }
 
 export interface TrafficAnomalyCoverage {
@@ -35,6 +83,10 @@ export interface TrafficAnomalyCoverage {
   duplicateRows: number
   expectedDays: number
   missingDays: number
+  /**
+   * The recent-window split (last recentDays against the days before). A
+   * metric with a step change uses its own dates, shown on its anomaly row.
+   */
   baseline: {
     start: string
     end: string
@@ -73,6 +125,8 @@ export interface TrafficAnomalyReport {
   /** Row and day counts behind the anomaly test. Optional only for older fixtures. */
   selection?: TrafficAnomalySelection
   coverage?: TrafficAnomalyCoverage
+  /** Detection method and thresholds. Optional only for older fixtures. */
+  detection?: TrafficAnomalyDetection
 }
 
 export interface UpdateCorrelationReport {
@@ -149,7 +203,7 @@ function anomalyEvidence(anomaly: TrafficAnomaly): string {
   const changePhrase =
     change === null
       ? 'from a zero baseline; percentage change is undefined'
-      : `${formatPercent(change)} vs baseline`
+      : `${formatPercent(change)} vs baseline${anomaly.detection === 'step-change' && anomaly.changeDate ? `, starting ${anomaly.changeDate}` : ''}`
   if (anomaly.direction === 'normal') {
     return `${formatMetric(anomaly.metric)} changed ${changePhrase} (${anomaly.baselineMean.toLocaleString('en-GB')} -> ${anomaly.comparisonMean.toLocaleString('en-GB')} per observed day${anomaly.zScore === null ? '; the baseline had no observed variance' : `, z ${anomaly.zScore}`}).`
   }
@@ -284,7 +338,7 @@ export function interpretUpdateCorrelation(input: {
       ? `${input.site} ${movement} during a period that overlaps ${updateNames.join(', ')}.${hasConfounders ? ` ${knownChangePhrase} this window.` : ''} The overlap is timing context and does not establish what caused the movement.`
       : hasUpdate
         ? `${input.site} overlaps ${updateNames.join(', ')}, but no significant GSC movement was detected in this window.`
-        : `${input.site} had no official Google Ranking update overlap in the recent comparison window.`
+        : `${input.site} had no official Google Ranking update overlap around the change date or in the recent comparison window.`
 
   const actions =
     significant.length && hasUpdate && hasConfounders
@@ -318,8 +372,8 @@ export function interpretUpdateCorrelation(input: {
     evidence: [
       ...input.anomalies.map(anomalyEvidence),
       hasUpdate
-        ? `${input.overlappingUpdates.length} official Google Ranking update ${plural(input.overlappingUpdates.length, 'window')} overlapped the comparison period: ${updateNames.join(', ')}.`
-        : 'No official Google Ranking update windows overlapped the comparison period.',
+        ? `${input.overlappingUpdates.length} official Google Ranking update ${plural(input.overlappingUpdates.length, 'window')} overlapped the change date or comparison window: ${updateNames.join(', ')}.`
+        : 'No official Google Ranking update windows overlapped the change date or comparison window.',
       largeMovement
         ? 'Both clicks and impressions moved sharply in the same direction.'
         : 'Clicks and impressions did not both meet the sharp-movement evidence threshold.',
@@ -329,7 +383,7 @@ export function interpretUpdateCorrelation(input: {
     ],
     caveats: [
       `GSC window: ${input.days} days; recent comparison window: ${input.recentDays} days.`,
-      `Update overlap padding: ${input.paddingDays} ${plural(input.paddingDays, 'day')} either side of the comparison window.`,
+      `Update overlap padding: ${input.paddingDays} ${plural(input.paddingDays, 'day')} either side of the step-change date, or of the recent comparison window when no step change was found.`,
       input.refresh
         ? 'Data freshness: cache bypassed for GSC data.'
         : 'Data freshness: local GSC cache may have been used.',
@@ -413,6 +467,133 @@ function aggregateDailyRows(input: {
   }
 }
 
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2
+    ? (sorted[middle] ?? 0)
+    : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
+}
+
+function sumOfSquaredDeviations(values: number[]): number {
+  const average = mean(values)
+  return values.reduce((sum, value) => sum + (value - average) ** 2, 0)
+}
+
+// Finds the most likely level change in observed daily values (date order)
+// and tests it against STEP_CHANGE_RULES. Linear in the number of days. Ties
+// keep the earliest split, so the result does not depend on input order.
+function findStepChange(
+  values: number[],
+): { index: number; flat: boolean } | null {
+  const {
+    minDaysBefore,
+    minDaysAfter,
+    localDays,
+    minLocalShiftInStdDevs,
+    minZScore,
+  } = STEP_CHANGE_RULES
+  const count = values.length
+  if (count < minDaysBefore + minDaysAfter) return null
+  const sums = [0]
+  for (const value of values) sums.push((sums.at(-1) ?? 0) + value)
+  const total = sums[count] ?? 0
+  let index = -1
+  let bestScore = 0
+  for (let split = minDaysBefore; split <= count - minDaysAfter; split++) {
+    const before = (sums[split] ?? 0) / split
+    const after = (total - (sums[split] ?? 0)) / (count - split)
+    const score =
+      Math.abs(after - before) * Math.sqrt((split * (count - split)) / count)
+    if (score > bestScore) {
+      bestScore = score
+      index = split
+    }
+  }
+  if (index < 0) return null
+
+  const before = values.slice(0, index)
+  const after = values.slice(index)
+  const shift = mean(after) - mean(before)
+  const pooledStdDev = Math.sqrt(
+    (sumOfSquaredDeviations(before) + sumOfSquaredDeviations(after)) / count,
+  )
+  if (pooledStdDev === 0) return shift === 0 ? null : { index, flat: true }
+  const localShift =
+    median(after.slice(0, localDays)) - median(before.slice(-localDays))
+  const sudden =
+    Math.abs(localShift) >= minLocalShiftInStdDevs * pooledStdDev &&
+    Math.sign(localShift) === Math.sign(shift)
+  const beforeStdDev = standardDeviation(before)
+  const sustained =
+    beforeStdDev === 0 ||
+    Math.abs(shift) / (beforeStdDev / Math.sqrt(after.length)) >= minZScore
+  return sudden && sustained ? { index, flat: false } : null
+}
+
+function compareSegments(input: {
+  site: string
+  metric: TrafficAnomaly['metric']
+  baseline: number[]
+  comparison: number[]
+  baselineStart: string
+  baselineEnd: string
+  comparisonStart: string
+  comparisonEnd: string
+  step?: { changeDate: string; flat: boolean }
+}): TrafficAnomaly {
+  const baselineMean = mean(input.baseline)
+  const comparisonMean = mean(input.comparison)
+  const baselineTotal = input.baseline.reduce((sum, value) => sum + value, 0)
+  const comparisonTotal = input.comparison.reduce(
+    (sum, value) => sum + value,
+    0,
+  )
+  const stdDev = standardDeviation(input.baseline)
+  const standardError = stdDev / Math.sqrt(input.comparison.length)
+  const zScore =
+    standardError > 0 ? (comparisonMean - baselineMean) / standardError : null
+  const outsideFlatBaseline = zScore === null && comparisonMean !== baselineMean
+  const significant = input.step
+    ? true
+    : outsideFlatBaseline || (zScore !== null && Math.abs(zScore) >= 2)
+  const direction = significant
+    ? comparisonMean < baselineMean
+      ? 'drop'
+      : 'spike'
+    : 'normal'
+  const relativeChange = percentChange(baselineMean, comparisonMean)
+
+  return {
+    site: input.site,
+    metric: input.metric,
+    baselineStart: input.baselineStart,
+    baselineEnd: input.baselineEnd,
+    comparisonStart: input.comparisonStart,
+    comparisonEnd: input.comparisonEnd,
+    baselineMean: toFixedNumber(baselineMean),
+    comparisonMean: toFixedNumber(comparisonMean),
+    baselineTotal: toFixedNumber(baselineTotal),
+    comparisonTotal: toFixedNumber(comparisonTotal),
+    percentChange:
+      relativeChange === null ? null : toFixedNumber(relativeChange),
+    zScore: zScore === null ? null : toFixedNumber(zScore),
+    significanceMethod: !significant
+      ? 'none'
+      : input.step
+        ? input.step.flat
+          ? 'outside-flat-baseline'
+          : 'step-change'
+        : outsideFlatBaseline
+          ? 'outside-flat-baseline'
+          : 'z-score',
+    direction,
+    significant,
+    detection: input.step ? 'step-change' : 'recent-window',
+    changeDate: input.step?.changeDate ?? null,
+  }
+}
+
 export function analyzeTrafficAnomalyRows(input: {
   site: string
   rows: GscRow[]
@@ -422,6 +603,7 @@ export function analyzeTrafficAnomalyRows(input: {
 }): {
   anomalies: TrafficAnomaly[]
   coverage: TrafficAnomalyCoverage
+  detection: TrafficAnomalyDetection
 } {
   if (
     !validIsoDate(input.startDate) ||
@@ -470,53 +652,45 @@ export function analyzeTrafficAnomalyRows(input: {
   }
 
   const metrics: Array<'clicks' | 'impressions'> = ['clicks', 'impressions']
-  const anomalies = metrics.map((metric) => {
-    const baselineValues = baselineRows.map((row) => row[metric])
-    const comparisonValues = comparisonRows.map((row) => row[metric])
-    const baselineMean = mean(baselineValues)
-    const comparisonMean = mean(comparisonValues)
-    const baselineTotal = baselineValues.reduce((sum, value) => sum + value, 0)
-    const comparisonTotal = comparisonValues.reduce(
-      (sum, value) => sum + value,
-      0,
-    )
-    const stdDev = standardDeviation(baselineValues)
-    const standardError = stdDev / Math.sqrt(comparisonValues.length)
-    const zScore =
-      standardError > 0 ? (comparisonMean - baselineMean) / standardError : null
-    const outsideFlatBaseline =
-      zScore === null && comparisonMean !== baselineMean
-    const significant =
-      outsideFlatBaseline || (zScore !== null && Math.abs(zScore) >= 2)
-    const direction = significant
-      ? comparisonMean < baselineMean
-        ? 'drop'
-        : 'spike'
-      : 'normal'
-    const relativeChange = percentChange(baselineMean, comparisonMean)
-
-    return {
+  const stepCaveats: string[] = []
+  const anomalies = metrics.map((metric): TrafficAnomaly => {
+    const values = aggregated.rows.map((row) => row[metric])
+    const step = findStepChange(values)
+    const changeRow = step ? aggregated.rows[step.index] : undefined
+    const changeDate = changeRow?.keys[0]
+    if (step && changeDate) {
+      const previousDate = aggregated.rows[step.index - 1]?.keys[0]
+      const gap = previousDate ? calendarDays(previousDate, changeDate) - 2 : 0
+      stepCaveats.push(
+        `${formatMetric(metric)} changed level on ${changeDate}, so its baseline is every observed day before that date and its comparison is every observed day from it.`,
+        ...(gap > 0
+          ? [
+              `The ${metric} change date follows ${gap} missing ${plural(gap, 'day')}; the change may have started on one of them.`,
+            ]
+          : []),
+      )
+      return compareSegments({
+        site: input.site,
+        metric,
+        baseline: values.slice(0, step.index),
+        comparison: values.slice(step.index),
+        baselineStart: input.startDate,
+        baselineEnd: shiftIsoDate(changeDate, -1),
+        comparisonStart: changeDate,
+        comparisonEnd: input.endDate,
+        step: { changeDate, flat: step.flat },
+      })
+    }
+    return compareSegments({
       site: input.site,
       metric,
+      baseline: baselineRows.map((row) => row[metric]),
+      comparison: comparisonRows.map((row) => row[metric]),
       baselineStart: input.startDate,
       baselineEnd,
       comparisonStart,
       comparisonEnd: input.endDate,
-      baselineMean: toFixedNumber(baselineMean),
-      comparisonMean: toFixedNumber(comparisonMean),
-      baselineTotal: toFixedNumber(baselineTotal),
-      comparisonTotal: toFixedNumber(comparisonTotal),
-      percentChange:
-        relativeChange === null ? null : toFixedNumber(relativeChange),
-      zScore: zScore === null ? null : toFixedNumber(zScore),
-      significanceMethod: significant
-        ? outsideFlatBaseline
-          ? 'outside-flat-baseline'
-          : 'z-score'
-        : 'none',
-      direction,
-      significant,
-    } satisfies TrafficAnomaly
+    })
   })
 
   const baselineMissingDays = baselineExpectedDays - baselineRows.length
@@ -538,10 +712,12 @@ export function analyzeTrafficAnomalyRows(input: {
           `${aggregated.duplicateRows} duplicate date ${plural(aggregated.duplicateRows, 'row')} ${aggregated.duplicateRows === 1 ? 'was' : 'were'} aggregated before analysis.`,
         ]
       : []),
+    ...stepCaveats,
   ]
 
   return {
     anomalies,
+    detection: { ...STEP_CHANGE_RULES, recentDays: input.recentDays },
     coverage: {
       status:
         missingDays > 0 || aggregated.invalidRows > 0 ? 'partial' : 'complete',

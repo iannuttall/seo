@@ -1,6 +1,5 @@
 import { defineCommand } from 'citty'
 import { ahrefsProviderCommand } from './ahrefs.js'
-import { bingProviderCommand } from './bing.js'
 import { dataForSeoProviderCommand } from './dataforseo.js'
 import { providerExtensionCommands } from './extensions.js'
 
@@ -9,7 +8,6 @@ export const providersCommand = defineCommand({
   subCommands: {
     ...providerExtensionCommands,
     ahrefs: ahrefsProviderCommand,
-    bing: bingProviderCommand,
     dataforseo: dataForSeoProviderCommand,
   },
 })

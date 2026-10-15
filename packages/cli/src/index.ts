@@ -43,7 +43,6 @@ import {
   testsCommand,
 } from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
-import { indexNowCommand } from './commands/indexnow.js'
 import { initCommand } from './commands/init.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
@@ -162,7 +161,6 @@ const allHelpSections: HelpSection[] = [
       ['seo perf audit', 'Run a page performance audit'],
       ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo index-watch', 'Check saved URL Inspection snapshots'],
-      ['seo indexnow submit', 'Notify IndexNow about changed URLs'],
       ['seo ai-referrals', 'AI referral traffic in Google Analytics'],
       ['seo analytics google report', 'Run a Google Analytics report'],
       ['seo updates', 'List official Google ranking updates'],
@@ -220,7 +218,6 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
-    indexnow: indexNowCommand,
     analytics: analyticsCommand,
     auth: authCommand,
     mcp: mcpCommand,

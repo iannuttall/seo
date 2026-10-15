@@ -1,8 +1,8 @@
 import { SeoError } from '../../errors.js'
 import { querySearchAnalytics } from '../../gsc/client.js'
 import { finalGscDateRange } from '../../gsc/dates.js'
-import type { CrawlReport } from '../crawler/report.js'
-import { latestCrawlReport, loadCrawlReport } from '../crawler/report-store.js'
+import type { CrawlConfigInput, CrawlReport } from '../crawler/report.js'
+import { crawlSite } from '../crawler/site-crawl.js'
 import { integerOption } from '../site-diagnostics/quick-wins-report-input.js'
 import {
   analyzeIndexCoverageSignals,
@@ -24,7 +24,8 @@ type FetchSitemap = typeof fetchSitemapUrls
 
 export type IndexCoverageReportInput = {
   site: string
-  crawlReportId?: string
+  /** Start URL for the crawl. Defaults to the property's home page. */
+  url?: string
   sitemaps?: string[]
   days?: number
   rowLimit?: number
@@ -60,43 +61,30 @@ export type IndexCoverageReport = IndexCoverageSignalsReport & {
 }
 
 export type IndexCoverageReportDependencies = {
-  loadCrawl: (id: string) => CrawlReport | undefined
-  latestCrawl: (site: string) => CrawlReport | undefined
+  crawl: (input: CrawlConfigInput) => Promise<CrawlReport>
   searchAnalytics: SearchAnalytics
   fetchSitemap: FetchSitemap
   now: () => Date
 }
 
 const defaultDependencies: IndexCoverageReportDependencies = {
-  loadCrawl: loadCrawlReport,
-  latestCrawl: latestCrawlReport,
+  crawl: (input) => crawlSite(input),
   searchAnalytics: querySearchAnalytics,
   fetchSitemap: fetchSitemapUrls,
   now: () => new Date(),
 }
 
-function selectedCrawl(
-  input: IndexCoverageReportInput,
-  dependencies: IndexCoverageReportDependencies,
-): CrawlReport {
-  const report = input.crawlReportId
-    ? dependencies.loadCrawl(input.crawlReportId)
-    : dependencies.latestCrawl(input.site)
-  if (!report) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      input.crawlReportId
-        ? `No saved crawl report found for ${input.crawlReportId}.`
-        : `No saved crawl report found for ${input.site}. Run a site crawl first or pass crawlReportId.`,
-    )
+// The property's home page: sc-domain:example.com crawls https://example.com/.
+function crawlStartUrl(input: IndexCoverageReportInput): string {
+  if (input.url) return input.url
+  if (input.site.startsWith('sc-domain:')) {
+    return `https://${input.site.slice('sc-domain:'.length)}/`
   }
-  if (report.site && report.site !== input.site) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `Crawl report ${report.id} belongs to ${report.site}, not ${input.site}.`,
-    )
-  }
-  return report
+  if (/^https?:\/\//.test(input.site)) return input.site
+  throw new SeoError(
+    'INVALID_INPUT',
+    `Pass a start URL to crawl for ${input.site}.`,
+  )
 }
 
 function sitemapDocuments(input: {
@@ -154,7 +142,12 @@ export async function indexCoverageSignals(
     maximum: MAX_SITEMAP_URLS,
     label: 'maxSitemapUrls',
   })
-  const report = selectedCrawl(input, dependencies)
+  const report = await dependencies.crawl({
+    url: crawlStartUrl(input),
+    site: input.site,
+    mode: 'site',
+    refresh: input.refresh,
+  })
   const documents = sitemapDocuments({
     explicit: input.sitemaps,
     report,

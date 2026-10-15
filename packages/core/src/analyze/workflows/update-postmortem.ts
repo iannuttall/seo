@@ -410,7 +410,6 @@ export async function updatePostmortemWorkflow(
     brandTerms?: string[]
     includeBrand?: boolean
     knownConfounders?: string[]
-    includeChangeLog?: boolean
     refresh?: boolean
   },
   dependencies: {

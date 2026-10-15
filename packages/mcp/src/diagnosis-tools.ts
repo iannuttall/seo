@@ -1,6 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  diagnoseProperty,
   runDoctor,
   segmentImpact,
   strikingDistance,
@@ -47,42 +46,6 @@ export function registerDiagnosisTools(
           result.ok
             ? 'Local seo setup is ready.'
             : 'Local seo setup needs attention.',
-          result,
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_diagnose_property',
-    {
-      description:
-        'Run end-to-end property diagnosis across anomaly, update, segment, decay, cannibalisation, and opportunity signals',
-      inputSchema: {
-        ...mcpReportInputSchema([
-          'site',
-          'days',
-          'recentDays',
-          'limit',
-          'includeBrand',
-          'refresh',
-        ]),
-      },
-    },
-    async ({ site, days, recentDays, limit, includeBrand, refresh }) => {
-      try {
-        const result = await diagnoseProperty({
-          site,
-          days,
-          recentDays,
-          limit,
-          includeBrand,
-          refresh,
-        })
-        return toolSuccess(
-          `Diagnosis ${result.dataStatus}. Update attribution: ${result.summary.updateAttribution}.`,
           result,
         )
       } catch (error) {

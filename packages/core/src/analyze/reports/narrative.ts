@@ -2,25 +2,12 @@ import type { FetchRateControls } from '../../fetch/page-fetcher.js'
 import { countLabel } from '../../phrasing.js'
 import type { ProgressReporter } from '../../progress.js'
 import { diagnoseProperty } from '../diagnose-property.js'
-import { listChanges } from '../experiments.js'
-import {
-  latestCrawlSummaries,
-  latestIndexWatchSummary,
-  latestLinkRecoverSummary,
-} from '../monitoring.js'
-import {
-  changeMeasurementCaveats,
-  measureSavedChanges,
-  narrativeDataStatus,
-} from './change-measurements.js'
 import { rangeDays } from './dates.js'
 import { renderMarkdown } from './markdown.js'
 import {
-  changeMeasurementLine,
   contentOpportunityBullets,
   diagnosisAvailabilityCaveats,
   headlineLine,
-  monitoringBullets,
   movementLine,
   topSegmentLine,
   updateAttributionLine,
@@ -67,7 +54,6 @@ export async function reportNarrative(input: {
   startDate?: string
   endDate?: string
   limit?: number
-  changeLimit?: number
   brandTerms?: string[]
   includeBrand?: boolean
   verifyContent?: boolean
@@ -107,22 +93,6 @@ export async function reportNarrative(input: {
     skipSearchData: input.skipSearchData,
     progress: input.progress,
   })
-  input.progress?.('Measuring saved changes')
-  const changes = listChanges({
-    site: input.site,
-    limit: input.changeLimit ?? 5,
-  })
-  const changeMeasurementAttempts = await measureSavedChanges(changes, {
-    refresh: input.refresh,
-  })
-  const changeMeasurements = changeMeasurementAttempts.flatMap((attempt) =>
-    attempt.status === 'measured' ? [attempt.measurement] : [],
-  )
-  const monitoring = {
-    crawlRuns: latestCrawlSummaries(input.site),
-    indexWatch: latestIndexWatchSummary(input.site),
-    linkRecover: latestLinkRecoverSummary(input.site),
-  }
   input.progress?.('Rendering narrative')
   const diagnosisPeriod = period ?? {
     startDate:
@@ -136,10 +106,7 @@ export async function reportNarrative(input: {
   const report: ReportNarrative = {
     site: input.site,
     generatedAt: new Date().toISOString(),
-    dataStatus: narrativeDataStatus(
-      diagnosis.dataStatus,
-      changeMeasurementAttempts,
-    ),
+    dataStatus: diagnosis.dataStatus,
     periodDays: period ? rangeDays(period) : periodDays,
     period: diagnosisPeriod,
     headline: headlineLine(diagnosis),
@@ -156,7 +123,6 @@ export async function reportNarrative(input: {
         skipSearchData: input.skipSearchData,
       }),
       ...diagnosisAvailabilityCaveats(diagnosis),
-      ...changeMeasurementCaveats(changeMeasurementAttempts),
     ],
     sections: [
       {
@@ -171,16 +137,6 @@ export async function reportNarrative(input: {
         title: 'Content Opportunities',
         bullets: contentOpportunityBullets(diagnosis),
       },
-      {
-        title: 'Change Measurements',
-        bullets: changeMeasurementAttempts.length
-          ? changeMeasurementAttempts.map(changeMeasurementLine)
-          : ['No measured changes are saved for this property yet.'],
-      },
-      {
-        title: 'Technical Monitoring',
-        bullets: monitoringBullets({ monitoring }),
-      },
     ],
     priorities: diagnosis.priorities.map((priority) => ({
       title: priority.label,
@@ -188,9 +144,6 @@ export async function reportNarrative(input: {
       action: priority.action,
     })),
     diagnosis,
-    changeMeasurements,
-    changeMeasurementAttempts,
-    monitoring,
   }
 
   return { ...report, markdown: renderMarkdown(report) }

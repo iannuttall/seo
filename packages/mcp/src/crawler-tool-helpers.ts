@@ -1,11 +1,4 @@
-import {
-  type crawlSite,
-  listCrawlReports,
-  loadCrawlReport,
-  reviewObservations,
-  SeoError,
-  topFixes,
-} from '@seo/core'
+import { type crawlSite, reviewObservations, topFixes } from '@seo/core'
 
 export function compactCrawlResult(
   report: Awaited<ReturnType<typeof crawlSite>>,
@@ -50,28 +43,4 @@ export function compactCrawlResult(
     payload.pages = report.pages
   }
   return payload
-}
-
-export function resolveSavedReportAlias(input: {
-  value?: string
-  site?: string
-  skipId?: string
-}) {
-  if (!input.value || input.value === 'latest' || input.value === 'previous') {
-    const reports = listCrawlReports({ site: input.site, limit: 20 }).filter(
-      (report) => report.id !== input.skipId,
-    )
-    const meta = input.value === 'previous' ? reports[1] : reports[0]
-    return meta ? loadCrawlReport(meta.id) : undefined
-  }
-  return loadCrawlReport(input.value)
-}
-
-export function assertExclusiveReportInput(
-  url?: string,
-  reportId?: string,
-): void {
-  if (url && reportId) {
-    throw new SeoError('INVALID_INPUT', 'Use either url or reportId, not both.')
-  }
 }

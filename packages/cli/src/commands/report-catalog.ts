@@ -24,7 +24,6 @@ const CATEGORY_LABELS: Record<ReportCategory, string> = {
   'ai-search': 'AI search',
   crawl: 'Crawling and technical checks',
   diagnosis: 'Diagnosis',
-  experiments: 'Experiments',
   monitoring: 'Monitoring',
   opportunities: 'Opportunities',
   reporting: 'Reporting',

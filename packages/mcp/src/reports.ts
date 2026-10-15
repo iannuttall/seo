@@ -18,9 +18,10 @@ function validationMessage(error: z.ZodError): string {
     .join('; ')
 }
 
-// Report ids removed in 0.3.0, with the command to use instead when there
-// is one. Running one fails with a notice instead of `Unknown report`.
+// Removed report ids, with the command to use instead when there is one.
+// Running one fails with a notice instead of `Unknown report`.
 export const REMOVED_REPORT_IDS: Readonly<Record<string, string | null>> = {
+  'affected-urls': 'seo crawl',
   'agent-readiness': null,
   'ai-mention-research': null,
   'ai-prompt-observations': null,
@@ -28,19 +29,27 @@ export const REMOVED_REPORT_IDS: Readonly<Record<string, string | null>> = {
   'ai-search-scorecard': null,
   'bing-webmaster-overview': null,
   'community-intent': null,
+  'compare-crawls': 'seo crawl',
   'competitive-opportunities': 'seo research',
   'competitor-keyword-gap': 'seo research competitors',
+  'crawl-diff': 'seo crawl',
+  'crawl-history': 'seo crawl',
+  'crawl-report': 'seo crawl',
   'domain-overview': 'seo research ranked_keywords',
   'domain-rating': 'seo research',
   'entity-readiness': null,
   'generate-llms-txt': null,
   'geo-gaps': null,
+  'index-coverage-plan': 'seo index',
+  'index-monitor': 'seo index',
+  'index-watch': 'seo page --url <url>',
   'keyword-metrics': 'seo research keyword_metrics',
   'keyword-opportunities': 'seo research',
   'keyword-research': 'seo research keyword_metrics',
   'link-evidence': 'seo research backlinks',
   'llms-txt-audit': null,
   'local-search-demand': null,
+  'measure-change': 'seo compare --date <date>',
   'monthly-action-plan': 'seo report',
   'monthly-report': 'seo report',
   'narrative-report': 'seo report',
@@ -57,6 +66,7 @@ export const REMOVED_REPORT_IDS: Readonly<Record<string, string | null>> = {
   'serp-competitors': 'seo research competitors',
   'serp-results': 'seo research serp',
   'server-log-analysis': null,
+  'technical-watch': 'seo crawl',
 }
 
 function activeReport(id: string) {
@@ -65,8 +75,8 @@ function activeReport(id: string) {
     throw new SeoError(
       'INVALID_INPUT',
       replacement
-        ? `The ${id} report was removed in 0.3.0. Use \`${replacement}\` instead.`
-        : `The ${id} report was removed in 0.3.0. Run \`seo help\` for the commands.`,
+        ? `The ${id} report was removed. Use \`${replacement}\` instead.`
+        : `The ${id} report was removed. Run \`seo help\` for the commands.`,
     )
   }
   const report = getReportDefinition(id)

@@ -11,7 +11,6 @@ import {
   renderCrawlPagesCsv,
   renderCrawlPretty,
   reviewObservations,
-  saveCrawlReport,
   topFixes,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -175,11 +174,6 @@ export const crawlCommand = defineCommand({
       type: 'string',
       description: 'CSV table to render: issues or pages. Defaults to issues.',
     },
-    save: {
-      type: 'boolean',
-      default: false,
-      description: 'Save the crawl report locally.',
-    },
     severity: {
       type: 'string',
       description: 'Only show top fixes at this severity.',
@@ -268,7 +262,6 @@ export const crawlCommand = defineCommand({
       checkExternal: !negatedBooleanArg(args, 'external'),
       js: renderingModeArg(args),
     })
-    const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
     const rankedFixes = topFixes(report, { severity })
     const failedThreshold = failOn
       ? report.issues.some(
@@ -282,7 +275,6 @@ export const crawlCommand = defineCommand({
       topFixes: rankedFixes,
       reviewObservations: reviewObservations(report, { severity }),
       ...(failOn ? { failOn, failedThreshold } : {}),
-      ...(saved ? { saved } : {}),
     }
 
     if (format === 'json') {
@@ -328,12 +320,9 @@ export const crawlCommand = defineCommand({
     }
 
     printCrawlHuman(report, rankedFixes)
-    if (saved || failOn) {
+    if (failOn) {
       process.stdout.write('\nRun metadata\n')
-      printKeyValue([
-        ['Saved report', saved?.id ?? 'no'],
-        ['Fail threshold', failOn ?? 'off'],
-      ])
+      printKeyValue([['Fail threshold', failOn]])
     }
     if (failedRun || failedThreshold) {
       process.exitCode = 1

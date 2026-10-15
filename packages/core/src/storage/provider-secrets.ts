@@ -19,13 +19,16 @@ export const PROVIDER_SECRET_NAMES = {
   dataForSeoCredentials: 'dataforseo-credentials',
   indexNowKeys: 'indexnow-keys',
   providerExtensionCredentials: 'provider-extension-credentials',
-  semrushApiKey: 'semrush-api-key',
-  serpBaseApiKey: 'serpbase-api-key',
 } as const
 
-export const MANAGED_PROVIDER_SECRET_NAMES = Object.freeze(
-  Object.values(PROVIDER_SECRET_NAMES),
-)
+// Secrets of providers removed in 0.3.0. Nothing reads them, but reset still
+// deletes any that an older version saved.
+const REMOVED_PROVIDER_SECRET_NAMES = ['semrush-api-key', 'serpbase-api-key']
+
+export const MANAGED_PROVIDER_SECRET_NAMES = Object.freeze([
+  ...Object.values(PROVIDER_SECRET_NAMES),
+  ...REMOVED_PROVIDER_SECRET_NAMES,
+])
 
 type ProviderSecretsFile = {
   version: 1

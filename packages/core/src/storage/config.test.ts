@@ -114,13 +114,15 @@ after(() => {
 
 test('config files stay private on write and read', () => {
   resetStorage()
-  writeConfig(configSchema.parse({ providers: { semrushApiKey: 'secret' } }))
+  writeConfig(
+    configSchema.parse({ providers: { dataForSeoPassword: 'secret' } }),
+  )
 
   const configFile = getSeoCliPaths().configFile
   assert.equal(mode(configFile), 0o600)
 
   chmodSync(configFile, 0o644)
-  assert.equal(readConfig().providers.semrushApiKey, 'secret')
+  assert.equal(readConfig().providers.dataForSeoPassword, 'secret')
   assert.equal(mode(configFile), 0o600)
 })
 

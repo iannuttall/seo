@@ -11,7 +11,7 @@ import type { ResearchImportColumns } from './imports/research-columns.js'
 export type ResearchImportSource = {
   dataset: 'ranked-keywords'
   file: string
-  provider: 'dataforseo' | 'semrush' | 'ahrefs'
+  provider: 'dataforseo' | 'ahrefs'
   exportedAt: string
   format?: 'csv' | 'json' | 'jsonl'
   rowLimit?: number

@@ -13,5 +13,4 @@ test('provider API endpoints stay outside the main runtime bundles', async () =>
   const bundledSource = rootBundles.join('\n')
 
   assert.doesNotMatch(bundledSource, /api\.clicky\.com/)
-  assert.doesNotMatch(bundledSource, /api\.serpbase\.dev/)
 })

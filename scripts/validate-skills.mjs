@@ -61,9 +61,7 @@ function documentedCliCommands(source) {
 function documentedMcpTools(source) {
   return new Set(
     [
-      ...source.matchAll(
-        /`((?:seo|gsc|google_analytics|search|semrush)_[a-z0-9_]+)`/g,
-      ),
+      ...source.matchAll(/`((?:seo|gsc|google_analytics|search)_[a-z0-9_]+)`/g),
     ].map((match) => match[1]),
   )
 }

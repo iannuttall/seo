@@ -152,7 +152,6 @@ export const configSchema = z.object({
     .default({ google: { propertyMappings: [] } }),
   providers: z
     .object({
-      semrushApiKey: z.string().optional(),
       dataForSeoLogin: z.string().optional(),
       dataForSeoPassword: z.string().optional(),
       prefer: providerPreferenceSchema.default('cheap'),

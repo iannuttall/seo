@@ -9,7 +9,7 @@ import {
   SHARED_TOOLS,
   type SharedTool,
 } from '@seo/core/commands'
-import { accountUrl, signInHint } from './google.ts'
+import { accountUrl, openForPerson, signInHint } from './google.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
@@ -43,7 +43,7 @@ function sharedTool(shared: SharedTool): Tool {
 export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 
 const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
-Crawls and Bing data run on the person's own machine with the open-source CLI, not on this server. ${LOCAL_BING} If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. The person adds Google accounts and research keys at ${accountUrl(env)}; give them that link when a site or key is missing. This server keeps only those sign-ins and keys, encrypted, and no report data.`
+Crawls and Bing data run on the person's own machine with the open-source CLI, not on this server. ${LOCAL_BING} If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
 // A new stateless server for each request, with JSON responses.
 export async function serveMcp(
@@ -96,7 +96,7 @@ export async function serveMcp(
                 text: known
                   ? `Error ${error.code}: ${error.message}${
                       error.code === 'NO_KEY'
-                        ? ` Add a key at ${accountUrl(context.env)}.`
+                        ? ` ${openForPerson(`${accountUrl(context.env)}#keys`, 'save the key')}`
                         : ''
                     }`
                   : 'Error INTERNAL: the tool failed. Try again; if it fails again, report it at https://github.com/iannuttall/seo/issues.',

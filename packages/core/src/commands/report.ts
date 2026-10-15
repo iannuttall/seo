@@ -12,6 +12,7 @@ import {
   bingSection,
   bingTotals,
   enginesText,
+  NO_BING_HERE,
 } from './bing.js'
 import { type Detail, presentReport, preview, table } from './present.js'
 import {
@@ -489,7 +490,7 @@ async function allSections(
     throw overview ?? new Error('The overview did not run.')
   }
   const parts = [overviewText(overview, `Report on ${input.site}`, origin, 5)]
-  if (deps.bing) parts.push(await enginesLine(overview, bing))
+  parts.push(deps.bing ? await enginesLine(overview, bing) : NO_BING_HERE)
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
@@ -547,7 +548,7 @@ async function oneSection(
   const next = nextFor(section, deps.call)
   if (section === 'overview' && detail !== 'full') {
     return {
-      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${deps.bing ? `${await enginesLine(report, bing)}\n\n` : ''}More: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
+      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${deps.bing ? await enginesLine(report, bing) : NO_BING_HERE}\n\nMore: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
       data: report,
     }
   }

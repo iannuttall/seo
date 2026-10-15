@@ -91,7 +91,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
     <section data-view="account" hidden>
       <div class="flex flex-col gap-4">
-        <div class={panel}>
+        <div class={panel} id="google">
           <h2 class={heading}>Google accounts</h2>
           <p class={note}>Each report uses the account that can read the site.</p>
           <ul class="mt-4 divide-y divide-border text-sm" data-google-list></ul>
@@ -114,7 +114,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
         </div>
 
-        <div class={panel}>
+        <div class={panel} id="keys">
           <h2 class={heading}>API keys</h2>
           <p class={note}>
             For keyword, SERP, competitor and backlink data from your own

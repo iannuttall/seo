@@ -62,6 +62,12 @@
       "database_name": "seo-telemetry",
       "database_id": "4b8c5f37-983d-4229-a712-77dbcd853efe",
       "migrations_dir": "./migrations"
+    },
+    {
+      // The hosted MCP's account store, read for aggregate counts only.
+      "binding": "ACCOUNTS_DB",
+      "database_name": "seo-mcp",
+      "database_id": "f75c6bad-c11a-49c0-bcdb-f1a4de1be3bf"
     }
   ],
   "observability": {

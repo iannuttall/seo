@@ -41,7 +41,7 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
   if (values.some((value) => !value)) {
     throw new CommandError(
       'NO_KEY',
-      `No ${provider} key. Hosted MCP: add it on the sign-in page or send the ${KEY_HEADERS[provider]} header. CLI and local MCP: run \`seo providers ${provider} connect\`.`,
+      `No ${provider} key. Hosted MCP: save it at https://seoskill.dev/account#keys or send the ${KEY_HEADERS[provider]} header. CLI and local MCP: run \`seo providers ${provider} connect\`.`,
     )
   }
   return values as string[]

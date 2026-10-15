@@ -4,3 +4,6 @@ GOOGLE_CLIENT_SECRET=
 SEAL_KEY=
 # Optional. Ahrefs key used only for the free Domain Rating endpoint.
 AHREFS_DR_KEY=
+# Bing Webmaster OAuth client, from Bing Webmaster Tools Settings > API access.
+BING_CLIENT_ID=
+BING_CLIENT_SECRET=

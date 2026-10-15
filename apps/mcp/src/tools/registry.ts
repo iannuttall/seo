@@ -1,13 +1,14 @@
 import type { z } from 'zod'
+import type { Directory } from '../google.ts'
 
 // One tool shape for MCP. Each tool parses its input with Zod and returns
 // the text an agent reads.
 
 export type ToolContext = {
   env: Env
-  // The caller's Google access token.
-  google: string
-  // The request headers, which carry optional provider keys.
+  // The person's linked Google and Bing accounts.
+  directory: Directory
+  // The request headers plus stored research keys; headers win.
   headers: Headers
   // Work that may finish after the response, such as usage counts.
   waitUntil: (promise: Promise<unknown>) => void

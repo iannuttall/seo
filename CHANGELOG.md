@@ -1,12 +1,26 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 SEO Skill is now only the data layer. Each command fetches your data and
 returns it, and nothing is saved between runs. Your agent decides what to
 keep and what to log.
 
 To stay on the old version, run `npm i -g seo@0.2.41`. It stays available.
+
+### Fixed
+
+- The `traffic-drop` section finds a sudden, lasting change at its real
+  start date. Before, it compared only the last 7 days, so a drop that
+  started earlier could show as normal and an unrelated Google update could
+  look like it overlapped.
+
+### New
+
+- Both MCP servers serve the skill as the resource `skill://seo/SKILL.md`.
+- On the hosted server, a missing key or Google account error tells the
+  agent to open the right part of the account page and try again.
+- When a report has no Bing data, it says the totals are Google only.
 
 ### Changed
 

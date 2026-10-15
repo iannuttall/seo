@@ -8,7 +8,7 @@
     "url": "https://github.com/iannuttall/seo",
     "source": "github"
   },
-  "version": "0.3.0",
+  "version": "0.4.0",
   "remotes": [
     {
       "type": "streamable-http",

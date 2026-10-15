@@ -1,8 +1,16 @@
 # Changelog
 
-## 0.3.0-beta.3 (unreleased)
+## 0.3.0
 
-### New
+Version 0.3.0 narrows SEO Skill to first-party data: your own Search Console,
+Google Analytics and Clicky (or other analytics) data, with Google update
+dates laid over it, plus keyword data from your own DataForSEO or Ahrefs key.
+The results are facts. Your agent shows you what matters and asks before it
+changes a page.
+
+To stay on the old version, run `npm i -g seo@0.2.41`.
+
+### New since 0.3.0-beta.2
 
 - **Bing Webmaster Tools is back in the CLI and local MCP server.** Save a
   Bing Webmaster API key with `seo providers bing connect`, or set
@@ -31,7 +39,7 @@
   from every linked account, and an access error names the linked accounts
   and links to the account page.
 
-### Changed
+### Changed since 0.3.0-beta.2
 
 - The hosted server now keeps a small encrypted store: your person id, your
   linked Google accounts, and any DataForSEO or Ahrefs keys you save. It
@@ -44,15 +52,7 @@
 - Existing hosted connections must sign in with Google once more.
 - Bing links and IndexNow stay removed.
 
-## 0.3.0
-
-Version 0.3.0 narrows SEO Skill to first-party data: your own Search Console,
-Google Analytics and Clicky (or other analytics) data, with Google update
-dates laid over it, plus keyword data from your own DataForSEO or Ahrefs key.
-The results are facts. Your agent shows you what matters and asks before it
-changes a page.
-
-### New
+### New in 0.3
 
 - **Eight commands.** `seo report`, `seo page --url`, `seo compare --date`,
   `seo index`, `seo research <action>`, `seo data`, `seo crawl` and

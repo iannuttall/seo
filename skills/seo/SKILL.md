@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search. That includes clicks or traffic changes, quick wins, CTR, rankings, content decay, cannibalization, Google update impact, indexing problems, one page's performance, keyword research, competitors, backlinks, crawling, redirects, metadata, internal links, Search Console, Bing Webmaster Tools, Google Analytics or Clicky questions, and client SEO reporting. Routes to first-party search data through the seo CLI and MCP tools.
+description: Free Google Search Console MCP server and CLI for AI agents. Reads your real Search Console, Google Analytics and Bing Webmaster Tools data, plus DataForSEO and Ahrefs keyword research. Use it for any SEO question - why Google traffic or clicks dropped, organic traffic decline, quick wins, low CTR, striking distance keywords, content decay and declining pages, keyword cannibalization, indexing and URL inspection, one page's queries, Google update impact, competitor keywords, backlinks, technical SEO crawls, redirects, internal links and client SEO reports. Returns facts from your own data, never guesses.
 ---
 
 # seo
@@ -76,17 +76,16 @@ in the output.
 The report overview shows Google and Bing clicks for the same dates. The
 `bing` section puts Bing's top queries and pages beside Google's numbers. Never
 add Bing to Google. Bing lists only its top rows by week, so a missing row is
-unknown, not zero. Bing works in the CLI and the local MCP server. Connect it
+unknown, not zero. Bing runs in the CLI and local MCP server: connect it once
 with `seo providers bing connect` (or `SEO_BING_API_KEY`). The hosted server
-has no Bing for now: run `npx -y seo providers bing connect` once, then
-`npx -y seo report --site <site> --section bing --json`.
+has no Bing yet; run `npx -y seo report --site <site> --section bing --json`.
 
 ## Research keys
 
-Research costs the person's own provider credits. On the hosted server, keys
-are saved at `https://seoskill.dev/account` or sent as client headers. Missing
-Google accounts and keys are added on that page. In the CLI and the
-local server, keys come from `seo providers <name> connect`. Domain Rating appears
+Research costs the person's own provider credits. On the hosted server, add
+keys and missing Google accounts at `https://seoskill.dev/account`, or send
+keys as client headers. In the CLI and local server, run
+`seo providers <name> connect`. Domain Rating appears
 as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 
 ## Evidence rules

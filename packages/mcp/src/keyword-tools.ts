@@ -3,8 +3,6 @@ import {
   keywordMetricsReport,
   keywordOpportunitiesReport,
   keywordResearchReport,
-  rankTrackingReport,
-  savedKeywordSetReport,
   serpResultsReport,
 } from '@seo/core'
 import * as z from 'zod/v4'
@@ -112,96 +110,15 @@ const keywordOpportunitiesInput = z
     }
   })
 
-const savedKeywordsInput = z.strictObject({
-  projectId: z.string().trim().min(1).max(80),
-  set: z.string().trim().min(1).max(80),
-  tag: z.string().trim().min(1).max(40).optional(),
-  limit: z.number().int().min(1).max(1_000).default(100),
-  offset: z.number().int().min(0).max(100_000).default(0),
-  staleDays: z.number().int().min(1).max(365).default(45),
-})
-
-const rankTrackingInput = z.strictObject({
-  projectId: z.string().trim().min(1).max(80),
-  set: z.string().trim().min(1).max(80),
-  targetDomain: z.string().trim().min(1).max(253),
-  tag: z.string().trim().min(1).max(40).optional(),
-  devices: z
-    .array(z.enum(['desktop', 'mobile']))
-    .min(1)
-    .max(2)
-    .refine((items) => new Set(items).size === items.length, {
-      message: 'Choose each device once.',
-    })
-    .optional(),
-  provider: providerIdInput.optional(),
-  collectionMethod: z.enum(['live', 'queued']).optional(),
-  cadence: z.enum(['manual', 'daily', 'weekly', 'monthly']).default('manual'),
-  depth: z.number().int().min(1).max(100).optional(),
-  keywordLimit: z.number().int().min(1).max(1_000).optional(),
-  start: z.boolean().default(true),
-  outputLimit: z.number().int().min(1).max(250).default(100),
-})
-
 export function registerKeywordTools(
   server: McpServer,
   dependencies: {
     keywordMetricsReport?: typeof keywordMetricsReport
     keywordOpportunitiesReport?: typeof keywordOpportunitiesReport
     keywordResearchReport?: typeof keywordResearchReport
-    rankTrackingReport?: typeof rankTrackingReport
-    savedKeywordSetReport?: typeof savedKeywordSetReport
     serpResultsReport?: typeof serpResultsReport
   } = {},
 ): void {
-  server.registerTool(
-    'seo_saved_keywords',
-    {
-      description:
-        'Review one bounded local keyword set with metric freshness, tags, page mappings, and evidence limits',
-      inputSchema: savedKeywordsInput,
-    },
-    async ({ projectId, set, tag, limit, offset, staleDays }) => {
-      try {
-        const report = (
-          dependencies.savedKeywordSetReport ?? savedKeywordSetReport
-        )({ projectId, idOrName: set, tag, limit, offset, staleDays })
-        return toolSuccess(
-          report.summary.verdict,
-          compactAgentWorkflowOutput(
-            report as unknown as Record<string, unknown>,
-          ),
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_rank_tracking',
-    {
-      description:
-        'Collect and compare exact market and device-specific ranks for one bounded saved keyword set, with local history, queued recovery, coverage, and cost evidence',
-      inputSchema: rankTrackingInput,
-    },
-    async (input) => {
-      try {
-        const report = await (
-          dependencies.rankTrackingReport ?? rankTrackingReport
-        )(input)
-        return toolSuccess(
-          report.summary.verdict,
-          compactAgentWorkflowOutput(
-            report as unknown as Record<string, unknown>,
-          ),
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
   server.registerTool(
     'seo_keyword_metrics',
     {

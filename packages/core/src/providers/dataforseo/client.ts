@@ -27,23 +27,6 @@ import {
   type DataForSeoUserDataResponse,
   dataForSeoUserDataResponseSchema,
 } from './account-schema.js'
-import {
-  aiMentionMetricsPaidRequest,
-  aiMentionSearchPaidRequest,
-  type DataForSeoAiMentionMetricsRequest,
-  type DataForSeoAiMentionMetricsSnapshot,
-  type DataForSeoAiMentionSearchRequest,
-  type DataForSeoAiMentionSearchSnapshot,
-  DEFAULT_AI_MENTION_TTL_MS,
-} from './ai-mention-client.js'
-import {
-  aiPromptPaidRequest,
-  type DataForSeoAiPromptRequest,
-  type DataForSeoAiPromptSnapshot,
-  DEFAULT_AI_PROMPT_TTL_MS,
-  fetchAiPromptModels,
-} from './ai-prompt-client.js'
-import type { DataForSeoAiPromptModelsResponse } from './ai-prompt-schema.js'
 import type {
   DataForSeoAccountSnapshot,
   DataForSeoBacklinksRequest,
@@ -140,16 +123,6 @@ const MAX_DISCOVERY_SEEDS = 5
 const MAX_DISCOVERY_ROWS = 100
 
 export type {
-  DataForSeoAiMentionMetricsRequest,
-  DataForSeoAiMentionMetricsSnapshot,
-  DataForSeoAiMentionSearchRequest,
-  DataForSeoAiMentionSearchSnapshot,
-} from './ai-mention-client.js'
-export type {
-  DataForSeoAiPromptRequest,
-  DataForSeoAiPromptSnapshot,
-} from './ai-prompt-client.js'
-export type {
   DataForSeoAccountSnapshot,
   DataForSeoBacklinksRequest,
   DataForSeoBacklinksSnapshot,
@@ -209,8 +182,6 @@ export class DataForSeoClient {
   private readonly accountPricingTtlMs: number
   private readonly domainResearchTtlMs: number
   private readonly linkTtlMs: number
-  private readonly aiMentionTtlMs: number
-  private readonly aiPromptObservationTtlMs: number
   private readonly spendLimits: ProviderSpendLimits | undefined
   private accountPricing:
     | {
@@ -245,9 +216,6 @@ export class DataForSeoClient {
     this.domainResearchTtlMs =
       options.domainResearchTtlMs ?? DEFAULT_DOMAIN_RESEARCH_TTL_MS
     this.linkTtlMs = options.linkTtlMs ?? DEFAULT_LINK_TTL_MS
-    this.aiMentionTtlMs = options.aiMentionTtlMs ?? DEFAULT_AI_MENTION_TTL_MS
-    this.aiPromptObservationTtlMs =
-      options.aiPromptObservationTtlMs ?? DEFAULT_AI_PROMPT_TTL_MS
     this.spendLimits = options.spendLimits
   }
 
@@ -462,42 +430,6 @@ export class DataForSeoClient {
   ): Promise<DataForSeoDomainOverviewSnapshot> {
     return this.paidPost(
       domainOverviewPaidRequest(input, this.domainResearchTtlMs),
-    )
-  }
-
-  async aiMentionMetrics(
-    input: DataForSeoAiMentionMetricsRequest,
-  ): Promise<DataForSeoAiMentionMetricsSnapshot> {
-    return this.paidPost(
-      aiMentionMetricsPaidRequest(input, this.aiMentionTtlMs),
-    )
-  }
-
-  async aiMentionSearch(
-    input: DataForSeoAiMentionSearchRequest,
-  ): Promise<DataForSeoAiMentionSearchSnapshot> {
-    return this.paidPost(aiMentionSearchPaidRequest(input, this.aiMentionTtlMs))
-  }
-
-  async aiPromptModels(
-    surface: import('../contracts.js').AiPromptSurface,
-  ): Promise<DataForSeoAiPromptModelsResponse> {
-    const credentials = await this.getCredentials('ai-prompt-models')
-    return fetchAiPromptModels({
-      surface,
-      authorization: this.authorization(credentials),
-      baseUrl: this.baseUrl,
-      fetch: this.fetch,
-      maxResponseBytes: this.maxResponseBytes,
-      timeoutMs: this.timeoutMs,
-    })
-  }
-
-  async aiPromptObservation(
-    input: DataForSeoAiPromptRequest,
-  ): Promise<DataForSeoAiPromptSnapshot> {
-    return this.paidPost(
-      aiPromptPaidRequest(input, this.aiPromptObservationTtlMs),
     )
   }
 

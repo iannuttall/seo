@@ -7,7 +7,7 @@ import type {
   RankingPagesReport,
   RankingPagesReportInput,
 } from '../domain-research-contract.js'
-import { clusterPseoTemplates } from '../pseo/templates.js'
+import { clusterPseoTemplates } from '../url-templates.js'
 import {
   compareText,
   type DomainResearchDependencies,

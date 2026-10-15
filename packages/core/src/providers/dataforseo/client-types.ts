@@ -85,8 +85,6 @@ export type DataForSeoClientOptions = {
   spendLimits?: ProviderSpendLimits
   domainResearchTtlMs?: number
   linkTtlMs?: number
-  aiMentionTtlMs?: number
-  aiPromptObservationTtlMs?: number
 }
 
 export type DataForSeoKeywordOverviewRequest = {

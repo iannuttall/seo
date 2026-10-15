@@ -1,7 +1,6 @@
 import { agentActionsView, SeoError } from '@seo/core'
 import * as z from 'zod/v4'
 import { compactAgentWorkflowOutput } from './agent-output-budget.js'
-import { getCheckFix, listFixableChecks } from './check-fixes.js'
 import {
   getReportDefinition,
   listReportDefinitions,
@@ -66,34 +65,8 @@ export function listReports(category?: ReportCategory): ReportSummary[] {
   )
 }
 
-export function describeReportCheck(id: string, check: string) {
-  const report = activeReport(id)
-  const fixableChecks = listFixableChecks(report.id)
-  if (fixableChecks.length === 0) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `Report ${report.id} has no per-check fix guidance yet.`,
-    )
-  }
-  const checkFix = getCheckFix(report.id, check)
-  if (!checkFix) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `Unknown check ${check} for ${report.id}. Fix guidance exists for: ${fixableChecks.join(', ')}.`,
-    )
-  }
-  return {
-    id: report.id,
-    category: report.category,
-    name: report.name,
-    check,
-    checkFix,
-  }
-}
-
 export function describeReport(id: string) {
   const report = activeReport(id)
-  const fixableChecks = listFixableChecks(report.id)
   return {
     id: report.id,
     category: report.category,
@@ -119,7 +92,6 @@ export function describeReport(id: string) {
       completion:
         'Use each finding type and its allowed outcomes. Fix items support fixed, deferred, or not-needed. Review items support changed, no-change, or deferred. Verify changed items and rerun this report before closing them.',
     },
-    ...(fixableChecks.length > 0 ? { fixableChecks } : {}),
     inputSchema: z.toJSONSchema(report.inputSchema),
   }
 }

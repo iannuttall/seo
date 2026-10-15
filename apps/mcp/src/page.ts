@@ -75,3 +75,68 @@ button.danger { background: oklch(57.7% 0.215 27.325); color: oklch(98.5% 0 0); 
     },
   })
 }
+
+// The page state the site's account shell shows. See
+// apps/web/src/pages/account-shell.astro.
+export type View =
+  | { view: 'connect'; connect: { client: string; host: string; flow: string } }
+  | { view: 'signin'; message?: string }
+  | { view: 'notice'; notice: { title: string; text: string } }
+  | {
+      view: 'account'
+      message?: string
+      account: {
+        form: string
+        google: { email: string; subject: string }[]
+        bing: { subject: string } | null
+        bingReady: boolean
+        keys: string[]
+      }
+    }
+
+// The account and connect pages in the site design: the site Worker's
+// /account-shell page with this page's state added. Falls back to the plain
+// page when the site cannot be reached.
+export async function view(
+  env: Env,
+  state: View,
+  status = 200,
+  setCookie?: string,
+): Promise<Response> {
+  const base = new URL(env.PUBLIC_URL).pathname.replace(/\/$/, '')
+  const shell = await env.SITE?.fetch(
+    new Request(new URL('/account-shell', env.PUBLIC_URL)),
+  ).catch(() => null)
+  const headers: Record<string, string> = {
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'no-store',
+    'referrer-policy': 'no-referrer',
+    'x-frame-options': 'DENY',
+    'content-security-policy': "frame-ancestors 'none'; base-uri 'none'",
+    ...(setCookie ? { 'set-cookie': setCookie } : {}),
+  }
+  if (!shell?.ok) return fallback(state, status, setCookie)
+  // "<" is escaped so the JSON can never close its script element.
+  const json = JSON.stringify({ ...state, base }).replaceAll('<', '\\u003c')
+  const html = (await shell.text()).replace(
+    '</body>',
+    `<script type="application/json" id="seo-state">${json}</script></body>`,
+  )
+  return new Response(html, { status, headers })
+}
+
+function fallback(state: View, status: number, setCookie?: string): Response {
+  const text =
+    state.view === 'notice'
+      ? `<h1>${escapeText(state.notice.title)}</h1><p>${escapeText(state.notice.text)}</p>`
+      : '<h1>SEO Skill</h1><p>This page could not load. Try again in a minute.</p>'
+  return page('SEO Skill', text, status, setCookie)
+}
+
+function escapeText(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+}

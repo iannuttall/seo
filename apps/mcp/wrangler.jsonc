@@ -13,8 +13,9 @@
     { "pattern": "seoskill.dev/mcp", "zone_name": "seoskill.dev" },
     { "pattern": "seoskill.dev/mcp/*", "zone_name": "seoskill.dev" },
     { "pattern": "seoskill.dev/oauth/*", "zone_name": "seoskill.dev" },
-    { "pattern": "seoskill.dev/account", "zone_name": "seoskill.dev" },
-    { "pattern": "seoskill.dev/account/*", "zone_name": "seoskill.dev" },
+    // /account* also covers /account?query and the site's /account-shell,
+    // which only this Worker reads, through the SITE binding.
+    { "pattern": "seoskill.dev/account*", "zone_name": "seoskill.dev" },
     {
       "pattern": "seoskill.dev/.well-known/oauth-*",
       "zone_name": "seoskill.dev"
@@ -22,6 +23,8 @@
   ],
   "limits": { "cpu_ms": 60000 },
   "vars": { "PUBLIC_URL": "https://seoskill.dev" },
+  // The site Worker, for the account page design (/account-shell).
+  "services": [{ "binding": "SITE", "service": "seo-skill" }],
   "d1_databases": [
     {
       "binding": "DB",

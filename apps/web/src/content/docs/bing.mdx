@@ -1,0 +1,55 @@
+---
+title: Connect Bing Webmaster Tools
+description: Add Bing clicks, impressions, queries and pages beside Search Console in the SEO report, with the hosted MCP or the CLI. Bing data is free.
+heading: Bing Webmaster Tools
+lead: See Bing's clicks, impressions, queries and pages next to Google's for the same site. Bing data is free.
+---
+
+Google is not the only search engine sending visits. Connect Bing Webmaster Tools and the main report shows both engines for the same dates, so you can see how much of your search traffic each one sends.
+
+You need a site verified in [Bing Webmaster Tools](https://www.bing.com/webmasters). Bing can import your sites from Search Console, which is the quickest way to add them.
+
+## Connect Bing on the hosted MCP
+
+Open your [account page](https://seoskill.dev/account), sign in with Google and choose **Connect Bing**. Bing's own sign-in opens and asks for read-only access to Bing Webmaster Tools. The sign-in is encrypted and kept with your account until you remove it.
+
+## Connect Bing in the CLI
+
+The CLI and the local MCP server use a Bing Webmaster API key. In Bing Webmaster Tools, open **Settings**, then **API access**, and copy the API key. Then run:
+
+```sh
+seo providers bing connect
+```
+
+It checks the key, shows how many verified sites it can read and saves it in your system keychain (or a private local file where there is no keychain). Agents and CI can set `SEO_BING_API_KEY` instead. To check or remove the key:
+
+```sh
+seo providers bing status
+seo providers bing disconnect
+```
+
+## What Bing adds to the report
+
+Run the [main report](/docs/report) as usual. The overview gains a line with Google (Search Console) and Bing clicks and impressions for the same dates, and each engine's share of those clicks. If Bing is not connected, the line says so and how to connect it.
+
+The `bing` section lists Bing's top queries with Google's clicks, impressions and position for the same query beside them, and the same for pages:
+
+```sh
+seo report --site example.com --section bing
+```
+
+For raw Bing query or page rows with the previous period, use [`seo data`](/docs/data) with Bing as the source:
+
+```sh
+seo data --site example.com --source bing --dimensions query
+```
+
+On the hosted MCP, ask your agent for the Bing section or for raw Bing rows, and it runs `seo_report` or `seo_data`. `seo_sites` shows the Bing site for each Search Console property, and any Bing sites with no property.
+
+## How to read Bing's numbers
+
+Bing and Google count clicks, impressions and position their own way, so their numbers sit side by side and are never added together. Bing lists only its top queries and pages, grouped by week. A query missing from Bing's list is unknown, not zero (it may just be below Bing's cut-off).
+
+Because Bing's rows come by week, the weeks counted can start or end a few days away from Google's exact dates. The result names the weeks it used.
+
+Bing link data and IndexNow are not part of SEO Skill.

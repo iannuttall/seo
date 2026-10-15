@@ -19,8 +19,8 @@ questions and non-sensitive bugs.
 
 ## Local data and credentials
 
-`seo` is local-first. Project profiles, Google OAuth metadata, crawl reports,
-and caches stay on the machine running the command. Access and refresh tokens
+`seo` is local-first. Settings, Google OAuth metadata, provider keys and
+caches stay on the machine running the command. Access and refresh tokens
 use the operating-system keychain when enabled; fallback token files and local
 credential files use private file permissions.
 

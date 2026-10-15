@@ -34,7 +34,12 @@ agent instructions.
   database, job queue, or telemetry service. The optional hosted MCP keeps a
   small encrypted sign-in store (see MCP Rules); the CLI and library never
   need it.
-- Reports, tokens, project profiles, and caches stay on the user's machine.
+- Tokens, provider keys, settings, and short-lived caches stay on the user's
+  machine.
+- The product is the data layer, the pipe. It fetches data and returns it.
+  It does not save reports, history, projects, or decisions between runs, and
+  it adds no command whose job is to keep them. The agent decides what to
+  store and what to log. A crawl may hold what it needs while it runs.
 - Optional research providers extend first-party evidence with keyword,
   result, domain, competitor, and link estimates. They must never replace or
   silently blend with Search Console, Google Analytics, crawl, or live result
@@ -119,13 +124,16 @@ Useful web areas:
 Useful CLI areas:
 
 - `packages/cli/src/index.ts`: root command registration and curated help.
-- `packages/cli/src/args.ts`: shared argument parsing, including `projectArg`.
-- `packages/cli/src/selection.ts`: project, site, and Google Analytics selection.
-- `packages/cli/src/commands/setup`: `seo start` and guided onboarding.
+- `packages/cli/src/args.ts`: shared argument parsing.
+- `packages/cli/src/selection.ts`: the `--site` and Google Analytics property
+  checks every command shares.
+- `packages/cli/src/commands/setup`: `seo start`: Google sign-in, the MCP
+  server, and the skill.
 - `packages/cli/src/commands/mcp-clients.ts`: MCP client paths and detection.
 - `packages/cli/src/commands/mcp-config.ts`: safe MCP install and removal.
 - `packages/cli/src/commands/report-catalog.ts`: schema-driven report discovery and execution.
-- `packages/cli/src/commands/workflows/diagnose-property.ts`: `seo report`.
+- `packages/cli/src/commands/core-commands.ts`: `seo report` and the other
+  shared commands.
 - `packages/cli/src/commands/report-options.ts`: shared report flags.
 
 Useful core areas:
@@ -161,7 +169,7 @@ Useful core areas:
   report fields, MCP inputs, docs, and UI use `googleAnalytics` or “Google
   Analytics”.
 - `packages/core/src/clicky`: Clicky API adapter and sitekey storage boundary.
-  Profiles store the site ID only. Keep sitekeys in the managed secret store.
+  Commands take the site ID. Keep sitekeys in the managed secret store.
 
 ## One Way To Run
 
@@ -187,12 +195,12 @@ agents.
 - `seo help` and `seo --help` must stay short. Put the full inventory under
   `seo help all` and focused subcommand help.
 - Every command and subcommand needs a useful `meta.description`.
-- Saved site profiles are project profiles in user-facing copy.
-- `--project` is the primary saved-profile selector.
-- `--client` is a legacy alias. Keep it working, but never teach it in new
-  output or docs.
-- Commands must work without a profile when given the required `--site` or
-  `--url` input.
+- Every command takes its target each time: `--site` (a domain, URL, or
+  `sc-domain:` property) or `--url`. Google Analytics commands take the
+  numeric `--property`. Nothing picks a site from saved state or a prompt.
+- A command run without its target fails with a message that says to pass
+  `--site` and to run `seo sites` to list properties.
+- `--project` and `--client` were removed. Both exit 2 with a notice.
 - JSON mode is for agents and scripts. It must never prompt or contain terminal
   decoration.
 - Interactive prompts are for humans only. Check TTY and CI state before
@@ -204,17 +212,22 @@ agents.
 
 ## Onboarding Rules
 
-The guided flow should not ask humans for implementation details.
+`seo start` does three things, then stops:
 
-- Ask for a project name, not an internal id.
-- Derive stable ids automatically.
-- Explain project profiles in one short sentence.
-- When projects already exist, ask whether to create a new project or update a
-  selected project. Never infer an update target only because a Search Console
-  property matches.
-- Default to saving a profile, but allow profile-free use with `--site`.
-- Discover Search Console and Google Analytics choices after sign-in. Do not expect users to
-  copy property ids if the provider can list them.
+1. Sign in with Google with the existing auth flow.
+2. In an interactive terminal, offer to add an MCP server to the agents it
+   detects. Recommend the free hosted server at `https://seoskill.dev/mcp`
+   and offer the local `seo mcp serve` server. A client that cannot take a
+   remote URL in its config file (Claude Desktop) gets the local server.
+3. Offer to install the skill.
+
+It then prints `seo sites`, then `seo report --site <site>`.
+
+- Do not ask for a project, site, brand terms, crawl or watch URLs, analytics
+  property, weekday, or any other setting. Do not save one.
+- Do not add flags to `seo start` beyond `--json` and `--dry-run`. JSON and CI
+  mode never prompt, never install anything, and fail clearly when Google
+  sign-in is missing.
 - Keep advanced OAuth, service-account, quota, and cache choices out of the
   default path.
 - Optional provider packages are third-party code. Show the exact package,
@@ -224,7 +237,6 @@ The guided flow should not ask humans for implementation details.
   package name and `--yes`; they never prompt or choose a package automatically.
 - A service-account auth path may be added as an advanced option, but do not
   document it as available until the implementation and provider tests exist.
-- Printed next steps should start with `seo report --project <id>`.
 - Shared desktop OAuth credentials are build or release inputs. Never commit
   production secrets or generated credential modules.
 - Installed-app client values are identifiers, not a substitute for protecting
@@ -255,6 +267,9 @@ The guided flow should not ask humans for implementation details.
   sends agents to the CLI for Bing, as it does for crawls.
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
+- `seo start` adds the hosted server as an `mcpServers.seoskill` URL entry
+  (Claude Code, Cursor) or with `codex mcp add seoskill --url` (Codex). It
+  never replaces a `seoskill` entry that points somewhere else.
 - Preserve unrelated client settings, create backups, and refuse to replace
   unmanaged `seo` entries.
 - Use the native Codex CLI for its TOML config. Do not rewrite that file with
@@ -387,18 +402,18 @@ MCP tools, the one-report flow and the evidence rules.
 - Preserve structured error and result shapes across the CLI and both MCP
   servers.
 
-## Project Selection
+## Site Selection
 
-When a command can use a saved profile:
+Every command that reads Search Console takes `--site`, and page commands take
+`--url`. Resolve them through `packages/cli/src/selection.ts`:
 
-1. Add `project` with description `Saved project id or name.`
-2. Add `client` with description `Legacy alias for --project.`
-3. Resolve both with `projectArg(args)`.
-4. Pass the result as `client` to existing internal selection APIs until core
-   types are renamed.
-5. Print and document `--project`, never `--client`.
+1. `requireSite` for the raw property, or `resolveProperty` to match a domain
+   or URL to a property the sign-in can read.
+2. `requireGoogleAnalyticsProperty` for Google Analytics commands.
+3. Never fall back to saved state, a default site, or a prompt.
 
-If both flags are passed with different values, fail clearly.
+Old saved projects in an existing `config.json` are ignored and left in the
+file. Do not read them.
 
 ## Development Commands
 
@@ -439,7 +454,7 @@ For public-package and CLI smoke tests, use the built root entries:
 node dist/cli.js help
 node dist/cli.js report --help
 node dist/cli.js start --dry-run
-node dist/cli.js report --project keep --json
+node dist/cli.js report --json
 node dist/cli.js mcp serve --test
 ```
 
@@ -449,15 +464,18 @@ After changing commands, sweep at least:
 node dist/cli.js help
 node dist/cli.js help all
 node dist/cli.js report --help
-node dist/cli.js projects --help
+node dist/cli.js sites --help
 node dist/cli.js start --help
+node dist/cli.js projects
 ```
 
 Root help must keep this curated path: `seo start`, `seo report`, then the
 eight commands (`seo page`, `seo compare`, `seo index`, `seo research`,
 `seo data`, `seo crawl`, `seo internal-links`) and setup commands. Old report
 names are not taught; they print their new command for one release
-(`packages/cli/src/renames.ts`).
+(`packages/cli/src/renames.ts`). Removed commands and flags, such as
+`seo projects` and `--project`, exit 2 with a one-line notice from the same
+file.
 
 Do not let `seo help` return `Unknown command help`.
 

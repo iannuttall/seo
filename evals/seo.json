@@ -18,11 +18,11 @@
     {
       "id": 2,
       "prompt": "No MCP tools are connected in this session. Get me the main SEO report for example.com as JSON.",
-      "expected_output": "Should use the CLI. Should check `command -v seo` first, and if it is missing, install it with `npm i -g seo` and tell the person to run `seo start` to sign in with Google. Should then run `seo report --site example.com --json` (or with `--project` when a saved project exists). Should note that JSON mode never prompts. Should read the result before summarizing and should not fabricate output if sign-in is missing.",
+      "expected_output": "Should use the CLI. Should check `command -v seo` first, and if it is missing, install it with `npm i -g seo` and tell the person to run `seo start` to sign in with Google. Should then run `seo report --site example.com --json`, and run `seo sites` first if the site is unknown. Should note that JSON mode never prompts. Should read the result before summarizing and should not fabricate output if sign-in is missing.",
       "assertions": [
         "Checks whether the seo command is installed before the first call",
         "Uses `npm i -g seo` and `seo start` when the command or sign-in is missing",
-        "Runs `seo report` with --json and a site or project",
+        "Runs `seo report` with --json and --site",
         "Does not fabricate report output when the command cannot run"
       ],
       "files": []

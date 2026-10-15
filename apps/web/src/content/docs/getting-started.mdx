@@ -22,7 +22,7 @@ Both run the same reports and return the same facts. The hosted MCP is the quick
 | Where it runs | seoskill.dev | Your machine |
 | Sign in | Google, in your browser | Google, during `seo start` |
 | Crawl and internal links | No | Yes |
-| What it keeps | Nothing | Local files on your machine |
+| What it keeps | Your linked sign-ins and keys, encrypted | Your sign-in, keys and a short cache, on your machine |
 
 ## Connect the hosted MCP
 
@@ -40,7 +40,7 @@ Install the package and run setup in one line:
 npm i -g seo && seo start
 ```
 
-Setup signs you in with Google, saves a project for your site, and can add the skill and MCP server to your agents (if you skip that step, you can add them later). The [CLI guide](/docs/cli) explains each choice. For cloud agents and CI machines that start fresh each time, follow the [cloud agents guide](/docs/cloud-agents) instead.
+Setup signs you in with Google, then offers to add an MCP server and the skill to your agents (if you skip that step, you can add them later). It saves nothing about your site. The [CLI guide](/docs/cli) explains each choice. For cloud agents and CI machines that start fresh each time, follow the [cloud agents guide](/docs/cloud-agents) instead.
 
 ## Ask for your first report
 

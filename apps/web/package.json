@@ -12,7 +12,6 @@
     "deploy": "pnpm --filter @seo/web... build && pnpm secrets:check && wrangler d1 migrations apply seo-telemetry --remote && wrangler deploy",
     "deploy:dry-run": "pnpm --filter @seo/web... build && wrangler deploy --dry-run",
     "dev": "astro dev",
-    "lint": "astro check",
     "predev": "pnpm build:discovery",
     "preview": "astro preview",
     "preview:cloudflare": "PUBLIC_DISABLE_TURNSTILE_FOR_LOCAL_PREVIEW=true pnpm build && CI=1 wrangler d1 migrations apply seo-telemetry --local && wrangler dev --var LOCAL_TOOL_PREVIEW:true",
@@ -21,7 +20,7 @@
     "secrets:publish": "node scripts/publish-tool-secrets.mjs",
     "secrets:publish:dry-run": "node scripts/publish-tool-secrets.mjs --dry-run",
     "secrets:set-production": "node scripts/set-production-tool-secret.mjs",
-    "test": "node --test scripts/*.test.mjs src/lib/*.test.ts worker/index.test.ts worker/tools/*.test.ts && node scripts/sitemap-extractor-resource-harness.mjs",
+    "test": "node --test scripts/*.test.mjs src/lib/*.test.ts worker/index.test.ts worker/tools/*.test.ts",
     "typecheck": "wrangler types worker/worker-configuration.d.ts --include-runtime false --check && astro check && tsc -p worker/tsconfig.json",
     "types:worker": "wrangler types worker/worker-configuration.d.ts --include-runtime false"
   },

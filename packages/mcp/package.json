@@ -12,7 +12,6 @@
   "scripts": {
     "build": "tsdown --config tsdown.config.ts",
     "clean": "rm -rf dist",
-    "lint": "tsc -p tsconfig.json --noEmit",
     "test": "node --test \"dist/**/*.test.js\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

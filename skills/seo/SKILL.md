@@ -18,8 +18,8 @@ There are two ways to reach the same commands:
   run `npm i -g seo`, then `seo start` to sign in with Google. Add `--json`
   for machine-readable output; JSON mode never prompts.
 
-Crawls and internal links run only on the person's machine, through the CLI
-or the local MCP server.
+Crawls, internal links and Bing run only on the person's machine, through
+the CLI or the local MCP server.
 
 ## The commands
 
@@ -76,14 +76,16 @@ in the output.
 The report overview shows Google and Bing clicks for the same dates. The
 `bing` section puts Bing's top queries and pages beside Google's numbers. Never
 add Bing to Google. Bing lists only its top rows by week, so a missing row is
-unknown, not zero. Connect Bing with `seo providers bing connect` (or
-`SEO_BING_API_KEY`) in the CLI, or on the account page on the hosted server.
+unknown, not zero. Bing works in the CLI and the local MCP server. Connect it
+with `seo providers bing connect` (or `SEO_BING_API_KEY`). The hosted server
+has no Bing for now: run `npx -y seo providers bing connect` once, then
+`npx -y seo report --site <site> --section bing --json`.
 
 ## Research keys
 
 Research costs the person's own provider credits. On the hosted server, keys
 are saved at `https://seoskill.dev/account` or sent as client headers. Missing
-Google accounts, Bing and keys are added on that page. In the CLI and the
+Google accounts and keys are added on that page. In the CLI and the
 local server, keys come from `seo providers <name> connect`. Domain Rating appears
 as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 

@@ -16,7 +16,7 @@ const panel = 'rounded-lg bg-muted p-6'
 const heading = 'text-base font-medium text-foreground'
 const note = 'mt-1 text-sm/6 text-foreground-muted'
 const description =
-  'The Google accounts, Bing sign-in and API keys your agents use through the hosted MCP server.'
+  'The Google accounts and API keys your agents use through the hosted MCP server.'
 const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
   { name: 'x-dataforseo-login', label: 'DataForSEO API login', type: 'text' },
   {
@@ -30,7 +30,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
 <BaseLayout
   title="Your account"
-  description="Manage the Google accounts, Bing sign-in and API keys your agents use through the hosted SEO Skill MCP server."
+  description="Manage the Google accounts and API keys your agents use through the hosted SEO Skill MCP server."
   canonicalPath="/account"
   noindex
   analytics={false}
@@ -55,7 +55,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         <p class={note}>
           SEO Skill keeps your Google sign-in, encrypted, so every agent you
           connect can use it. It never keeps your data or reports. You can add
-          more Google accounts, Bing and API keys on your account page, and
+          more Google accounts and API keys on your account page, and
           delete everything there.
         </p>
         <form method="post" data-action="/oauth/google" class="mt-6">
@@ -101,7 +101,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
         </div>
 
-        <div class={panel}>
+        <div class={panel} data-bing-panel>
           <h2 class={heading}>Bing Webmaster Tools</h2>
           <p class={note}>
             Adds Bing clicks, impressions, queries and pages beside Search
@@ -112,9 +112,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             <input type="hidden" name="form" />
             <button type="submit" class={outline} data-bing-button>Connect Bing</button>
           </form>
-          <p class={note} data-bing-unavailable hidden>
-            Bing sign-in is not set up yet.
-          </p>
         </div>
 
         <div class={panel}>
@@ -250,7 +247,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       const bingButton = root.querySelector('[data-bing-button]')
       if (bingButton && account.bing.length) bingButton.textContent = 'Add a Bing account'
       show(root.querySelector('[data-bing-add]'), account.bingReady)
-      show(root.querySelector('[data-bing-unavailable]'), !account.bingReady)
+      // Hidden while the hosted server has no Bing.
+      show(
+        root.querySelector('[data-bing-panel]'),
+        account.bingReady || account.bing.length > 0,
+      )
       for (const name of account.keys) {
         show(root.querySelector(`[data-saved="${name}"]`))
         const input = root.querySelector<HTMLInputElement>(`[data-key-input="${name}"]`)

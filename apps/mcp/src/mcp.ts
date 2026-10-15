@@ -3,6 +3,7 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import {
   commandErrorFrom,
+  LOCAL_BING,
   MCP_INSTRUCTIONS,
   runSharedTool,
   SHARED_TOOLS,
@@ -42,7 +43,7 @@ function sharedTool(shared: SharedTool): Tool {
 export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 
 const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
-Crawls run on the person's own machine with the open-source CLI, not on this server. If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. The person adds Google accounts, Bing and research keys at ${accountUrl(env)}; give them that link when a site or key is missing. This server keeps only those sign-ins and keys, encrypted, and no report data.`
+Crawls and Bing data run on the person's own machine with the open-source CLI, not on this server. ${LOCAL_BING} If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. The person adds Google accounts and research keys at ${accountUrl(env)}; give them that link when a site or key is missing. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
 // A new stateless server for each request, with JSON responses.
 export async function serveMcp(

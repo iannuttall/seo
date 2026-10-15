@@ -10,6 +10,11 @@ import { accountUrl, type Directory } from '../google.ts'
 // through the person's linked accounts, the shared live page checks, and
 // calls written as MCP tool names.
 
+// Bing blocks Cloudflare's network (ThrottleIP), so the hosted server has
+// no Bing until its Bing calls go through a relay with its own address.
+// The account store, Bing sign-in and routing stay ready for that.
+export const HOSTED_BING = false
+
 export function deps(env: Env, directory: Directory): CommandDeps {
   return {
     searchAnalytics: directory.searchAnalytics(),
@@ -20,7 +25,11 @@ export function deps(env: Env, directory: Directory): CommandDeps {
         .then(indexStatusFrom)
         .catch(() => null),
     call: mcpCall,
-    bing: async () => directory.bing,
-    bingConnect: `Connect Bing at ${accountUrl(env)}.`,
+    ...(HOSTED_BING
+      ? {
+          bing: async () => directory.bing,
+          bingConnect: `Connect Bing at ${accountUrl(env)}.`,
+        }
+      : {}),
   }
 }

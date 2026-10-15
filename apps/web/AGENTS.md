@@ -88,10 +88,11 @@ pnpm deploy:web:dry-run
   seoskill https://seoskill.dev/mcp`, `codex mcp add seoskill --url
   https://seoskill.dev/mcp`, or the URL as a remote MCP server. Keep hosted
   facts in step with `apps/mcp/README.md`: Google sign-in, no password, and
-  only linked Google and Bing sign-ins and saved keys kept, encrypted. Search
-  data, reports and request logs are never stored. Keys can be saved on
-  `/account` or sent as headers. Wherever Domain Rating appears, credit it as
-  Domain Rating by Ahrefs with a link to ahrefs.com.
+  only linked Google accounts and saved keys kept, encrypted. Search data,
+  reports and request logs are never stored. Bing runs only in the CLI and
+  the local MCP server for now. Keys can be saved on `/account` or sent as
+  headers. Wherever Domain Rating appears, credit it as Domain Rating by
+  Ahrefs with a link to ahrefs.com.
 - Generate `/.well-known/agent-skills/` from the root `skills/` directory.
   Never hand-edit or commit the generated files.
 - Use plain, human copy with sentence-case headings. Lead with the outcome,

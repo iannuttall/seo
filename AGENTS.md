@@ -243,12 +243,16 @@ The guided flow should not ask humans for implementation details.
 - Only the local server adds `seo_crawl`, `seo_internal_links` and the
   provider package tools (`seo_list_providers`, `seo_describe_provider`,
   `seo_run_provider`), because they need the person's machine.
-- The hosted server keeps only a person id, the linked Google and Bing
-  sign-ins, and saved research keys, sealed with `SEAL_KEY` in Cloudflare D1.
+- The hosted server keeps only a person id, the linked Google accounts, and
+  saved research keys, sealed with `SEAL_KEY` in Cloudflare D1.
   It keeps no report data, provider rows, site lists or request logs, and
   Workers Logs stay off. The token the client keeps carries only the person
   id. Key headers win over saved keys and are used for that request only.
   The `/account` page links accounts, saves keys and deletes everything.
+- Bing runs only in the CLI and the local server. Bing blocks the hosted
+  server's network, so `HOSTED_BING` in `apps/mcp/src/tools/deps.ts` stays
+  off until hosted Bing calls go through another route. The hosted server
+  sends agents to the CLI for Bing, as it does for crawls.
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
 - Preserve unrelated client settings, create backups, and refuse to replace
@@ -491,6 +495,10 @@ fix commit plus verification evidence when it is resolved. This log is local
 working material and must not be committed.
 
 ## Tests
+
+Do not add a test unless Ian asks for it or it guards a real bug that hit a
+user. When unsure, do not add one. Never test a switch, flag, message or
+wiring.
 
 Keep few tests, and make each one prove real behaviour. Prefer one test that
 runs a whole command or report end to end over many tests of its helpers.

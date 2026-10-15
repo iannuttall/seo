@@ -1,16 +1,15 @@
 ---
 title: What is stored
 description: What the SEO Skill hosted MCP and CLI keep. The hosted MCP keeps only your sign-ins and saved keys, encrypted, and never your data.
-lead: The hosted MCP keeps only your Google and Bing sign-ins and any keys you save, encrypted. It never keeps your data, your reports or a log of your requests.
+lead: The hosted MCP keeps only your linked Google accounts and any keys you save, encrypted. It never keeps your data, your reports or a log of your requests.
 ---
 
 ## The hosted MCP
 
 | What | What happens to it |
 | --- | --- |
-| Your Search Console, analytics and Bing data | Fetched for each request and returned to your agent. Never saved. |
+| Your Search Console and analytics data | Fetched for each request and returned to your agent. Never saved. |
 | Your Google sign-ins | The email and tokens for each Google account you link, encrypted. Used only to fetch your own data when you ask. |
-| Your Bing sign-in | Tokens from Bing's read-only sign-in, encrypted, if you connect Bing. |
 | API keys | Encrypted if you save them on your [account page](https://seoskill.dev/account). A key sent as a header is used for that request only and never saved. |
 | Reports, site lists and request logs | Not kept. Request logs are turned off. |
 | Pages checked live | Fetched for the request and not kept. |
@@ -35,7 +34,7 @@ The totals are public on the [usage stats page](/stats), and the [telemetry page
 ## Who else sees your data
 
 - **Google** answers the Search Console, Google Analytics and URL Inspection requests.
-- **Bing** answers the Bing Webmaster Tools requests, if you connect Bing.
+- **Bing** answers the Bing Webmaster Tools requests from the CLI, if you connect Bing there.
 - **The provider you choose** gets your research request and bills your account.
 - **Ahrefs** gets the domains in research rows for the free Domain Rating column.
 - **Your AI agent** sends the results to its model provider, under that provider's terms.

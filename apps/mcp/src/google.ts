@@ -73,6 +73,39 @@ function tokenFor(env: Env, account: Account): () => Promise<string> {
   }
 }
 
+type Site = { Url?: unknown; IsVerified?: unknown }
+
+// One Bing call over every linked Bing account: the site list joins all of
+// them, and a call for one site goes to the account that has it verified.
+export function bingRouter(calls: BingCall[]): BingCall | null {
+  if (calls.length === 0) return null
+  const only = calls[0]
+  if (calls.length === 1 && only) return only
+  let lists: Promise<{ call: BingCall; sites: Site[] }[]> | undefined
+  const sitesOf = () => {
+    lists ??= Promise.all(
+      calls.map(async (call) => ({
+        call,
+        sites: await call('GetUserSites')
+          .then((data) => (Array.isArray(data) ? (data as Site[]) : []))
+          .catch(() => []),
+      })),
+    )
+    return lists
+  }
+  return async (method, params = {}) => {
+    const all = await sitesOf()
+    if (method === 'GetUserSites') return all.flatMap((item) => item.sites)
+    // Reports pass the exact Bing site URL from the joined list.
+    const owner = all.find((item) =>
+      item.sites.some(
+        (entry) => entry.IsVerified === true && entry.Url === params.siteUrl,
+      ),
+    )
+    return (owner?.call ?? (only as BingCall))(method, params)
+  }
+}
+
 export class Directory {
   readonly google: Linked[]
   readonly bing: BingCall | null
@@ -91,13 +124,16 @@ export class Directory {
         email: account.label,
         google: bearerFetch(tokenFor(env, account)),
       }))
-    const bing = accounts.find((account) => account.provider === 'bing')
-    this.bing = bing
-      ? bingCall(
-          { accessToken: tokenFor(env, bing) },
-          { signIn: signInHint(env) },
-        )
-      : null
+    this.bing = bingRouter(
+      accounts
+        .filter((account) => account.provider === 'bing')
+        .map((account) =>
+          bingCall(
+            { accessToken: tokenFor(env, account) },
+            { signIn: signInHint(env) },
+          ),
+        ),
+    )
   }
 
   accounts(): GoogleAccount[] {

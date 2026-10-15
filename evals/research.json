@@ -28,11 +28,11 @@
     {
       "id": 3,
       "prompt": "I have not set up any keyword provider. Just estimate typical volumes for these keywords yourself.",
-      "expected_output": "Should not invent search volumes. Should explain that research needs the person's own DataForSEO or Ahrefs key. For the CLI, should point to `seo providers dataforseo connect` or `seo providers ahrefs connect`. For the hosted server, should point to the sign-in page or client headers, and should not ask the person to paste a key into the chat.",
+      "expected_output": "Should not invent search volumes. Should explain that research needs the person's own DataForSEO or Ahrefs key. For the CLI, should point to `seo providers dataforseo connect` or `seo providers ahrefs connect`. For the hosted server, should point to the account page at https://seoskill.dev/account or client headers, and should not ask the person to paste a key into the chat.",
       "assertions": [
         "Does not invent search volumes",
         "Explains that a DataForSEO or Ahrefs key is needed",
-        "Points to `seo providers` connect or the hosted sign-in page",
+        "Points to `seo providers` connect or the hosted account page",
         "Does not ask for the key to be pasted into the chat"
       ],
       "files": []

@@ -71,6 +71,66 @@ const metrics = [
     </div>
   </section>
 
+  <section class="mb-14 space-y-5" aria-labelledby="usage-heading" data-agent-markdown="exclude">
+    <div class="space-y-2">
+      <h2 id="usage-heading" class="text-xl font-medium leading-tight">
+        Use over time
+      </h2>
+      <p class="text-[0.9375rem] leading-7">
+        Commands run each day through the CLI and the hosted MCP, and new
+        installs. Days are recorded from 15 October 2026; the months before
+        that are below.
+      </p>
+    </div>
+    <Card inverted>
+      <div class="space-y-6 p-6">
+        <div>
+          <h3 class="text-sm font-medium">Commands run per day</h3>
+          <div class="mt-3" data-chart="daily-runs"></div>
+          <p class="mt-2 flex gap-4 text-xs text-foreground-muted">
+            <span><span class="mr-1 inline-block size-2 rounded-full bg-primary"></span> CLI and local MCP</span>
+            <span><span class="mr-1 inline-block size-2 rounded-full bg-foreground-muted"></span> Hosted MCP</span>
+          </p>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium">New installs per day</h3>
+          <div class="mt-3" data-chart="daily-installs"></div>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium">Commands run per month</h3>
+          <div class="mt-3" data-chart="monthly-runs"></div>
+        </div>
+      </div>
+    </Card>
+  </section>
+
+  <section class="mb-14 space-y-5" aria-labelledby="skills-heading" data-agent-markdown="exclude">
+    <div class="space-y-2">
+      <h2 id="skills-heading" class="text-xl font-medium leading-tight">
+        Discovery on skills.sh
+      </h2>
+      <p class="text-[0.9375rem] leading-7">
+        Checked once a day: the skill's install count on skills.sh, and where it
+        shows when an agent runs <code>npx skills find</code> with each search.
+        1 is first. A dash means it is not in the list.
+      </p>
+    </div>
+    <Card inverted>
+      <div class="p-6">
+        <h3 class="text-sm font-medium">skills.sh installs</h3>
+        <div class="mt-3" data-chart="skills-installs"></div>
+      </div>
+    </Card>
+    <div class="docs-prose">
+      <div class="table-frame">
+        <table class="min-w-0">
+          <thead><tr><th>Search</th><th class="text-right">Place</th><th class="text-right">A week ago</th></tr></thead>
+          <tbody class="animate-pulse" data-skills-table data-stats-loading><tr><td colspan="3">No checks yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <div class="mb-14 grid items-start gap-5 lg:grid-cols-2" data-agent-breakdowns data-agent-markdown="exclude">
     <section class="min-w-0 space-y-5" aria-labelledby="agent-installs-heading">
       <h2 id="agent-installs-heading" class="text-xl font-medium leading-tight">
@@ -166,7 +226,7 @@ const metrics = [
           Runs by command
         </h2>
         <p class="text-base leading-7 text-foreground-muted">
-          Older versions sent a report id. Each one is counted under the command that covers it now.
+          Older versions sent a report id. Each one is counted under the command that covers it now. Runs of removed reports are left out.
         </p>
       </div>
       <div class="docs-prose">
@@ -177,19 +237,6 @@ const metrics = [
           </table>
         </div>
       </div>
-    </section>
-    <section class="min-w-0 space-y-5" aria-labelledby="popular-reports-heading">
-      <div class="space-y-2">
-        <h2 id="popular-reports-heading" class="text-xl font-medium leading-tight">
-          Most run reports
-        </h2>
-        <p class="text-base leading-7 text-foreground-muted">
-          The ten report ids with the most runs.
-        </p>
-      </div>
-      <Card inverted>
-        <ol class="animate-pulse divide-y divide-border text-sm" data-report-list="popular" data-stats-loading><li class="px-5 py-4">No recorded events</li></ol>
-      </Card>
     </section>
   </div>
 
@@ -315,10 +362,8 @@ const metrics = [
     }
   })()
 
-  const reportPath = (report: string) => reportMap[report]?.path ?? '/docs'
   const reportCommand = (report: string) =>
     reportMap[report]?.command ?? 'Removed reports'
-  const reportLabel = (report: string) => report
 
   const failureLabel = (value: string) =>
     value
@@ -370,9 +415,12 @@ const metrics = [
       return
     }
     for (const item of rows) {
+      if (item.report && reportCommand(item.report) === 'Removed reports') {
+        continue
+      }
       const row = document.createElement('tr')
       const run = item.report
-        ? reportLabel(item.report)
+        ? reportCommand(item.report)
         : item.operation
           ? `seo ${item.operation}`
           : 'Unknown'
@@ -387,40 +435,6 @@ const metrics = [
     }
   }
 
-  const renderReports = (
-    list: Element | null,
-    rows: Array<{ report: string; count: number }>,
-  ) => {
-    if (!(list instanceof HTMLElement)) return
-    list.replaceChildren()
-    if (rows.length === 0) {
-      const row = document.createElement('li')
-      row.className = 'px-5 py-4'
-      row.textContent = 'No recorded events'
-      list.append(row)
-      return
-    }
-    for (const item of rows) {
-      const row = document.createElement('li')
-      row.className = 'flex items-center justify-between gap-4 px-5 py-3'
-      const name = document.createElement('span')
-      name.className = 'flex min-w-0 flex-col'
-      const link = document.createElement('a')
-      link.className = 'truncate font-mono text-primary underline underline-offset-4 hover:text-primary-hover'
-      link.href = reportPath(item.report)
-      link.textContent = reportLabel(item.report)
-      const command = document.createElement('span')
-      command.className = 'text-xs text-foreground-muted'
-      command.textContent = reportCommand(item.report)
-      name.append(link, command)
-      const value = document.createElement('span')
-      value.className = 'tabular-nums'
-      value.textContent = count(item.count)
-      row.append(name, value)
-      list.append(row)
-    }
-  }
-
   const renderCommands = (
     table: Element | null,
     rows: Array<{ report: string; count: number }>,
@@ -431,6 +445,7 @@ const metrics = [
     for (const item of rows) {
       if (!(item.count > 0)) continue
       const command = reportCommand(item.report)
+      if (command === 'Removed reports') continue
       totals.set(command, (totals.get(command) ?? 0) + item.count)
     }
     const sorted = [...totals.entries()].sort(
@@ -444,6 +459,124 @@ const metrics = [
       const row = document.createElement('tr')
       row.append(cell(command), cell(count(total), 'right'))
       table.append(row)
+    }
+  }
+
+  type Bar = { label: string; values: number[] }
+
+  // A small bar chart in plain SVG: one bar per item, stacked values, the
+  // largest total on the scale. Each bar has a title with its numbers.
+  const barChart = (target: Element | null, bars: Bar[], names: string[]) => {
+    if (!(target instanceof HTMLElement)) return
+    target.replaceChildren()
+    if (bars.length === 0) {
+      const empty = document.createElement('p')
+      empty.className = 'text-sm text-foreground-muted'
+      empty.textContent = 'No data yet.'
+      target.append(empty)
+      return
+    }
+    const ns = 'http://www.w3.org/2000/svg'
+    const width = 600
+    const height = 140
+    const max = Math.max(1, ...bars.map((bar) => bar.values.reduce((a, b) => a + b, 0)))
+    const step = width / bars.length
+    const svg = document.createElementNS(ns, 'svg')
+    svg.setAttribute('viewBox', `0 0 ${width} ${height + 18}`)
+    svg.setAttribute('class', 'w-full')
+    svg.setAttribute('role', 'img')
+    const fills = ['var(--color-primary)', 'var(--color-foreground-muted)']
+    bars.forEach((bar, index) => {
+      let top = height
+      bar.values.forEach((value, part) => {
+        const size = (value / max) * (height - 4)
+        top -= size
+        const rect = document.createElementNS(ns, 'rect')
+        rect.setAttribute('x', String(index * step + step * 0.15))
+        rect.setAttribute('y', String(top))
+        rect.setAttribute('width', String(Math.max(1, step * 0.7)))
+        rect.setAttribute('height', String(size))
+        rect.setAttribute('rx', '1.5')
+        rect.setAttribute('fill', fills[part] ?? fills[0] ?? '')
+        const title = document.createElementNS(ns, 'title')
+        title.textContent = `${bar.label}: ${bar.values.map((item, i) => `${names[i] ?? ''} ${count(item)}`).join(', ')}`
+        rect.append(title)
+        svg.append(rect)
+      })
+    })
+    const label = (text: string, x: number, anchor: string) => {
+      const node = document.createElementNS(ns, 'text')
+      node.setAttribute('x', String(x))
+      node.setAttribute('y', String(height + 14))
+      node.setAttribute('text-anchor', anchor)
+      node.setAttribute('font-size', '11')
+      node.setAttribute('fill', 'var(--color-foreground-muted)')
+      node.textContent = text
+      svg.append(node)
+    }
+    label(bars[0]?.label ?? '', 0, 'start')
+    label(bars.at(-1)?.label ?? '', width, 'end')
+    const peak = document.createElementNS(ns, 'text')
+    peak.setAttribute('x', '0')
+    peak.setAttribute('y', '10')
+    peak.setAttribute('font-size', '11')
+    peak.setAttribute('fill', 'var(--color-foreground-muted)')
+    peak.textContent = `max ${count(max)}`
+    svg.append(peak)
+    target.append(svg)
+  }
+
+  type Timeline = {
+    daily: Array<{ day: string; installs: number; cliRuns: number; hostedRuns: number }>
+    monthly: Array<{ month: string; installs: number; runs: number }>
+    skills: {
+      installs: Array<{ day: string; installs: number }>
+      queries: Array<{ query: string; position: number | null; weekAgo: number | null }>
+    }
+  }
+
+  const renderTimeline = (value: Timeline | undefined) => {
+    const daily = value?.daily ?? []
+    barChart(
+      document.querySelector('[data-chart="daily-runs"]'),
+      daily.map((day) => ({ label: day.day, values: [day.cliRuns, day.hostedRuns] })),
+      ['CLI', 'hosted'],
+    )
+    barChart(
+      document.querySelector('[data-chart="daily-installs"]'),
+      daily.map((day) => ({ label: day.day, values: [day.installs] })),
+      ['installs'],
+    )
+    barChart(
+      document.querySelector('[data-chart="monthly-runs"]'),
+      (value?.monthly ?? []).map((month) => ({
+        label: month.month,
+        values: [month.runs],
+      })),
+      ['commands'],
+    )
+    barChart(
+      document.querySelector('[data-chart="skills-installs"]'),
+      (value?.skills.installs ?? []).map((day) => ({
+        label: day.day,
+        values: [day.installs],
+      })),
+      ['installs'],
+    )
+    const table = document.querySelector('[data-skills-table]')
+    if (table instanceof HTMLElement) {
+      table.replaceChildren()
+      const rows = value?.skills.queries ?? []
+      if (rows.length === 0) table.append(emptyRow(3, 'No checks yet'))
+      for (const item of rows) {
+        const row = document.createElement('tr')
+        row.append(
+          cell(item.query),
+          cell(item.position ? String(item.position) : '-', 'right'),
+          cell(item.weekAgo ? String(item.weekAgo) : '-', 'right'),
+        )
+        table.append(row)
+      }
     }
   }
 
@@ -493,12 +626,7 @@ const metrics = [
         stats.failures?.details ?? [],
       )
       const reports = Array.isArray(stats.reports) ? stats.reports : []
-      renderReports(
-        document.querySelector('[data-report-list="popular"]'),
-        reports
-          .filter((item: { count: number }) => item.count > 0)
-          .slice(0, 10),
-      )
+      renderTimeline(stats.timeline)
       renderCommands(
         document.querySelector('[data-command-table]'),
         reports,
@@ -522,4 +650,8 @@ const metrics = [
   }
 
   void loadStats()
+  // Near real time: the numbers refresh every minute while the page is open.
+  setInterval(() => {
+    if (document.visibilityState === 'visible') void loadStats()
+  }, 60_000)
 </script>

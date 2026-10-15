@@ -1,5 +1,5 @@
-import { escapeHtml, signInPerson } from './oauth.ts'
-import { page } from './page.ts'
+import { signInPerson } from './oauth.ts'
+import { view } from './page.ts'
 import {
   bingSignedIn,
   bingSignInUrl,
@@ -43,8 +43,6 @@ export const KEY_FIELDS: { header: string; label: string; secret: boolean }[] =
 
 const base = (env: Env) => new URL(env.PUBLIC_URL).pathname.replace(/\/$/, '')
 const accountPath = (env: Env) => `${base(env)}/account`
-const action = (env: Env, path = '') =>
-  escapeHtml(`${env.PUBLIC_URL}/account${path}`)
 
 function cookie(env: Env, value: string, maxAge: number): string {
   return `${COOKIE}=${value}; Path=${accountPath(env)}; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`
@@ -67,15 +65,8 @@ async function sessionUser(request: Request, env: Env): Promise<string | null> {
   return session.userId
 }
 
-function signInPage(env: Env, message = ''): Response {
-  return page(
-    'Your SEO Skill account',
-    `<h1>Your SEO Skill account</h1>
-${message ? `<p>${message}</p>` : ''}
-<p>Sign in with any Google account you connected to SEO Skill. Here you can add more Google accounts, connect Bing, save API keys, or delete everything.</p>
-<form method="post" action="${action(env, '/signin')}"><button type="submit">Sign in with Google</button></form>
-<p class="small">Signing in with a Google account that is not connected yet creates a new account for it.</p>`,
-  )
+function signInPage(env: Env, message = ''): Promise<Response> {
+  return view(env, { view: 'signin', message: message || undefined })
 }
 
 async function accountPage(
@@ -87,54 +78,26 @@ async function accountPage(
     accountsOf(env, userId),
     keysOf(env, userId),
   ])
-  const form = await seal(env.SEAL_KEY, {
-    k: 'form',
-    userId,
-    exp: Date.now() + FORM_TTL,
-  })
-  const hidden = `<input type="hidden" name="form" value="${escapeHtml(form)}">`
-  const google = accounts.filter((account) => account.provider === 'google')
   const bing = accounts.find((account) => account.provider === 'bing')
-  const remove = (provider: string, subject: string) =>
-    `<form method="post" action="${action(env, '/remove')}" class="inline">${hidden}<input type="hidden" name="provider" value="${provider}"><input type="hidden" name="subject" value="${escapeHtml(subject)}"><button type="submit" class="link">Remove</button></form>`
-  return page(
-    'Your SEO Skill account',
-    `<h1>Your SEO Skill account</h1>
-${message ? `<p class="notice">${message}</p>` : ''}
-<h2>Google accounts</h2>
-<p class="small">Each report uses the account that can read the site.</p>
-<ul>${google
-      .map(
-        (account) =>
-          `<li><span>${escapeHtml(account.label)}</span>${google.length > 1 ? remove('google', account.subject) : ''}</li>`,
-      )
-      .join('')}</ul>
-<form method="post" action="${action(env, '/google')}">${hidden}<button type="submit">Add a Google account</button></form>
-<h2>Bing Webmaster Tools</h2>
-${
-  bing
-    ? `<ul><li><span>Connected</span>${remove('bing', bing.subject)}</li></ul>`
-    : `<p class="small">Adds Bing clicks, impressions, queries and pages beside Search Console.</p>
-<form method="post" action="${action(env, '/bing')}">${hidden}<button type="submit">Connect Bing</button></form>`
-}
-<h2>API keys</h2>
-<p class="small">For keyword, SERP, competitor and backlink data from your own DataForSEO or Ahrefs account. Requests use your credits there. Saved keys are encrypted and never shown again.</p>
-<form method="post" action="${action(env, '/keys')}">${hidden}
-${KEY_FIELDS.map(
-  (field) =>
-    `<label>${field.label}${keys[field.header] ? ' <span class="saved">saved</span>' : ''}<input name="${field.header}" type="${field.secret ? 'password' : 'text'}" autocomplete="off" spellcheck="false" placeholder="${keys[field.header] ? 'Leave empty to keep it' : ''}"></label>`,
-).join('\n')}
-<button type="submit">Save keys</button></form>
-${
-  Object.keys(keys).length
-    ? `<form method="post" action="${action(env, '/keys/remove')}">${hidden}<button type="submit" class="secondary">Remove all keys</button></form>`
-    : ''
-}
-<h2>Delete everything</h2>
-<p class="small">Removes your Google and Bing sign-ins and keys from SEO Skill and revokes the Google sign-ins. Your agents will ask you to sign in again.</p>
-<form method="post" action="${action(env, '/delete')}">${hidden}<button type="submit" class="danger">Delete everything</button></form>
-<form method="post" action="${action(env, '/signout')}">${hidden}<button type="submit" class="link">Sign out</button></form>`,
-  )
+  return view(env, {
+    view: 'account',
+    message: message || undefined,
+    account: {
+      form: await seal(env.SEAL_KEY, {
+        k: 'form',
+        userId,
+        exp: Date.now() + FORM_TTL,
+      }),
+      google: accounts
+        .filter((account) => account.provider === 'google')
+        .map((account) => ({ email: account.label, subject: account.subject })),
+      bing: bing ? { subject: bing.subject } : null,
+      bingReady: Boolean(env.BING_CLIENT_ID),
+      keys: KEY_FIELDS.map((field) => field.header).filter(
+        (name) => keys[name],
+      ),
+    },
+  })
 }
 
 // GET /account and every POST /account/* action.
@@ -240,9 +203,15 @@ export async function account(
           .map((item) => revokeGoogle(item.refresh)),
       )
       await deleteUser(env, userId)
-      return page(
-        'Deleted',
-        '<h1>Deleted</h1><p>SEO Skill no longer has your Google or Bing sign-ins or keys. Your agents will ask you to sign in again if you use SEO Skill later.</p>',
+      return view(
+        env,
+        {
+          view: 'notice',
+          notice: {
+            title: 'Deleted',
+            text: 'SEO Skill no longer has your Google or Bing sign-ins or keys. Your agents will ask you to sign in again if you use SEO Skill later.',
+          },
+        },
         200,
         cookie(env, '', 0),
       )

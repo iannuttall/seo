@@ -1,4 +1,4 @@
-import { page } from './page.ts'
+import { view } from './page.ts'
 import { googleSignedIn, googleSignInUrl } from './providers.ts'
 import { type Sealed, seal, sha256Base64Url, unseal } from './seal.ts'
 import { createUser, linkAccount, ownerOf, userExists } from './store.ts'
@@ -127,9 +127,15 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
   const client = await unseal(env.SEAL_KEY, clientId, 'client')
   const redirectUri = params.get('redirect_uri') ?? ''
   if (!client?.redirectUris.includes(redirectUri)) {
-    return page(
-      'Sign-in link not valid',
-      '<p>This sign-in link is not valid. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in link not valid',
+          text: 'This sign-in link is not valid. Start again from your agent.',
+        },
+      },
       400,
     )
   }
@@ -160,15 +166,10 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
     exp: Date.now() + FLOW_TTL,
   })
   const host = new URL(redirectUri).host || new URL(redirectUri).protocol
-  return page(
-    'Connect SEO Skill',
-    `<h1>Connect SEO Skill</h1>
-<p><strong>${escapeHtml(client.name)}</strong> wants to read your Search Console and Google Analytics data through SEO Skill. After you sign in, Google sends you back to <strong>${escapeHtml(host)}</strong>.</p>
-<p>SEO Skill keeps your Google sign-in, encrypted, so every agent you connect can use it. It keeps no report data. Add more Google accounts, Bing and API keys on your <a href="${escapeHtml(env.PUBLIC_URL)}/account">account page</a>, and delete everything there at any time.</p>
-<form method="post" action="${escapeHtml(env.PUBLIC_URL)}/oauth/google"><input type="hidden" name="flow" value="${escapeHtml(flow)}">
-<button type="submit">Continue with Google</button></form>
-<p class="small">Only continue if you started this from your own agent.</p>`,
-  )
+  return view(env, {
+    view: 'connect',
+    connect: { client: client.name, host, flow },
+  })
 }
 
 export async function toGoogle(request: Request, env: Env): Promise<Response> {
@@ -180,9 +181,15 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
     'flow',
   )
   if (!flow) {
-    return page(
-      'Sign-in expired',
-      '<p>This sign-in has expired. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in expired',
+          text: 'This sign-in has expired. Start again from your agent.',
+        },
+      },
       400,
     )
   }
@@ -231,9 +238,15 @@ export async function callback(
   if (fromPage) return web(request, fromPage)
   const flow = await unseal(env.SEAL_KEY, state, 'flow')
   if (!flow) {
-    return page(
-      'Sign-in expired',
-      '<p>This sign-in has expired. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in expired',
+          text: 'This sign-in has expired. Start again from your agent.',
+        },
+      },
       400,
     )
   }

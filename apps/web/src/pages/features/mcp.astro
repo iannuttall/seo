@@ -17,7 +17,7 @@ const related = [
 
 <FeaturePage
   title="SEO MCP server for AI agents"
-  description="Connect a free SEO MCP server to Claude, Codex, Cursor or any agent. Read Search Console, Google Analytics and keyword data. Your data and keys are never stored."
+  description="Connect a free SEO MCP server to Claude, Codex, Cursor or any agent. Read Search Console, Google Analytics, Bing and keyword data. Your search data is never stored."
   path="/features/mcp"
   lead="Ask your agent what changed, what is broken and where the opportunities are. It reads your own search data before it answers."
   {related}
@@ -35,22 +35,24 @@ const related = [
   <table>
     <thead><tr><th>Tool</th><th>What it returns</th></tr></thead>
     <tbody>
-      <tr><td><code>seo_sites</code></td><td>The Search Console and Google Analytics properties you can read.</td></tr>
-      <tr><td><code>seo_report</code></td><td>The main Search Console report: an overview, then one section.</td></tr>
+      <tr><td><code>seo_sites</code></td><td>The Search Console and Google Analytics properties your linked Google accounts can read, and the Bing site for each.</td></tr>
+      <tr><td><code>seo_report</code></td><td>The main Search Console report: an overview with Bing beside Google, then one section.</td></tr>
       <tr><td><code>seo_page</code></td><td>One URL: live page facts, Google index status and its queries.</td></tr>
       <tr><td><code>seo_compare</code></td><td>Before and after a date, with Google updates in the window.</td></tr>
       <tr><td><code>seo_index</code></td><td>Pages that lost their clicks, checked live and with URL Inspection.</td></tr>
       <tr><td><code>seo_research</code></td><td>Keyword and competitor data from your DataForSEO or Ahrefs key.</td></tr>
-      <tr><td><code>seo_data</code></td><td>Raw Search Console rows, or Google Analytics landing pages.</td></tr>
+      <tr><td><code>seo_data</code></td><td>Raw Search Console or Bing rows, or Google Analytics landing pages.</td></tr>
       <tr><td><code>seo_crawl</code>, <code>seo_internal_links</code></td><td>The site crawl and internal links. Local MCP only.</td></tr>
     </tbody>
   </table>
 
   <h2>What the hosted server keeps</h2>
   <p>
-    Your data and keys are never stored. Your Google sign-in and any keys are
-    sealed into the tokens your MCP client keeps, and the server uses them for
-    one request at a time. The only thing kept is an anonymous count of what
-    ran. <a href="/docs/privacy">What is stored</a> has the details.
+    Only your Google and Bing sign-ins and any API keys you save, encrypted,
+    so it can fetch your own data when your agent asks. Your search data,
+    reports and requests are never stored. You can add Google accounts,
+    connect Bing, save keys or delete everything on your{' '}
+    <a href="/account">account page</a>.{' '}
+    <a href="/docs/privacy">What is stored</a> has the details.
   </p>
 </FeaturePage>

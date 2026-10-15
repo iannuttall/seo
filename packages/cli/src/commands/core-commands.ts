@@ -15,6 +15,7 @@ import {
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
+  runBingRows,
   runCompare,
   runLostPages,
   runPage,
@@ -293,12 +294,17 @@ export const dataCommand = defineCommand({
   meta: {
     name: 'data',
     description:
-      'Raw Search Console rows for any dimensions, beside the previous period',
+      'Raw Search Console or Bing rows for any dimensions, beside the previous period',
   },
   args: {
     site: {
       type: 'string',
       description: 'Site, URL or Search Console property.',
+    },
+    source: {
+      type: 'string',
+      description:
+        'search_console (default) or bing. Bing takes the first dimension, query or page.',
     },
     dimensions: {
       type: 'string',
@@ -327,7 +333,27 @@ export const dataCommand = defineCommand({
         `Unknown dimensions: ${unknown.join(', ')}. Use ${DIMENSIONS.join(', ')}.`,
       )
     }
+    const source = stringArg(args.source) ?? 'search_console'
+    if (!['search_console', 'bing'].includes(source)) {
+      throw new SeoError('INVALID_INPUT', '--source is search_console or bing.')
+    }
     const site = await property(args, stringArg(args.site))
+    if (source === 'bing') {
+      await run(args, (deps) =>
+        runBingRows(
+          {
+            site,
+            dimension: dimensions[0] === 'page' ? 'page' : 'query',
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          deps,
+        ),
+      )
+      return
+    }
     const page = stringArg(args.page)
     const query = stringArg(args.query)
     await run(args, (deps) =>

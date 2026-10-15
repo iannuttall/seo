@@ -1,3 +1,4 @@
+import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 
@@ -104,6 +105,11 @@ export type CommandDeps = {
   // Google's index status for one URL, or null when it cannot be read.
   inspect: (site: string, url: string) => Promise<IndexStatus | null>
   call: Caller
+  // Bing Webmaster calls, or null when Bing is not connected here. Each
+  // surface returns the same call each time.
+  bing?: () => Promise<BingCall | null>
+  // How to connect Bing on this surface, for "not connected" notes.
+  bingConnect?: string
   now?: () => Date
 }
 

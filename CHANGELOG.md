@@ -1,5 +1,71 @@
 # Changelog
 
+## Unreleased
+
+SEO Skill is now only the data layer. Each command fetches your data and
+returns it, and nothing is saved between runs. Your agent decides what to
+keep and what to log.
+
+To stay on the old version, run `npm i -g seo@0.2.41`. It stays available.
+
+### Changed
+
+- **`seo start` asks less.** It signs you in with Google, offers to add an
+  MCP server to the agents it finds, and offers to install the skill. The
+  free hosted server at `https://seoskill.dev/mcp` is the first choice;
+  the local server is the other. Claude Code and Cursor get a `seoskill` URL
+  entry, and Codex gets one through `codex mcp add`. Claude Desktop takes
+  remote servers only from its Connectors settings, so it gets the local
+  server and a note on how to add the hosted one. Setup then prints
+  `seo sites` and `seo report --site <site>`.
+- **Every command takes `--site` or `--url`.** `--site` takes a domain, a URL
+  or a `sc-domain:` property. A command run without one stops and says to
+  pass `--site` and run `seo sites`. Google Analytics commands take the
+  numeric `--property`, which `seo analytics google properties` lists.
+  Clicky commands take `--site-id`.
+- `seo index-coverage` runs its own crawl instead of reading a saved one.
+  `--url` sets the start page.
+- An existing `config.json` keeps its old saved projects. They are ignored,
+  not deleted. `seo reset` still deletes everything.
+
+### Removed
+
+- **Saved project profiles.** `seo projects`, `seo project` and `seo client`
+  are gone. `--project` and `--client` on any command stop with a note to
+  pass `--site` instead.
+- **`seo start` options** that only served projects: `--id`, `--name`,
+  `--site`, `--search-console-account`, `--url`, `--urls`,
+  `--google-analytics-property`, `--google-analytics-account`,
+  `--clicky-site-id`, `--brand`, `--weekday`, `--default`, `--skip-profile`,
+  `--skip-auth`, `--skip-mcp`, `--skip-skill` and `--refresh`. It keeps
+  `--json` and `--dry-run`.
+- **Commands that saved history or decisions.** Each one stops with a note
+  that names what to use instead:
+
+  | Removed | Use instead |
+  | --- | --- |
+  | `seo change-log` | Your agent's own notes |
+  | `seo tests` | `seo compare --date <date>` |
+  | `seo content-groups` | Your agent's own notes |
+  | `seo monitoring` | `seo crawl` |
+  | `seo schedule` | Your agent's scheduler |
+  | `seo index-watch` | `seo page --url <url>` |
+  | `seo technical-watch` | `seo crawl` |
+  | `seo crawl-reports` | `seo crawl` |
+  | `seo crawl-diff` | `seo crawl` |
+  | `seo diagnose` | `seo report` |
+  | `seo diagnose-property` | `seo report` |
+  | `seo export diagnose` | `seo report --json` |
+
+- `seo crawl --save` and saved crawl history. A crawl returns its full
+  result; add `--json --output <file>` to write it to a file.
+- The report catalog ids `measure-change`, `technical-watch`, `crawl-diff`,
+  `index-watch`, `index-monitor`, `index-coverage-plan`, `compare-crawls`,
+  `crawl-history`, `crawl-report` and `affected-urls`.
+- `seo analytics google properties --save` and the saved default Google
+  Analytics property, `seo analytics clicky detach`, and the
+  `--ignore-change-log` flag.
+
 ## 0.3.0
 
 Version 0.3.0 narrows SEO Skill to first-party data: your own Search Console,

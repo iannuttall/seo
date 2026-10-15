@@ -1,26 +1,16 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  compareCrawlReports,
   countLabel,
   crawlerRuleCategorySchema,
   crawlSite,
   explainRule,
-  latestCrawlReport,
-  listCrawlReports,
   listRules,
-  loadCrawlReport,
   MAX_CRAWL_PAGES,
   SeoError,
-  saveCrawlReport,
-  selectAffectedUrls,
   topFixes,
 } from '@seo/core'
 import * as z from 'zod/v4'
-import {
-  assertExclusiveReportInput,
-  compactCrawlResult,
-  resolveSavedReportAlias,
-} from './crawler-tool-helpers.js'
+import { compactCrawlResult } from './crawler-tool-helpers.js'
 import * as crawlerInputs from './crawler-tool-inputs.js'
 import { fetchRateInput } from './fetch-rate.js'
 import { toolError, toolSuccess } from './tool-result.js'
@@ -68,7 +58,6 @@ export function registerCrawlerTools(server: McpServer): void {
         js: z.boolean().optional(),
         includePages: z.boolean().optional(),
         includeIssues: z.boolean().optional(),
-        saveReport: z.boolean().optional(),
       },
     },
     async ({
@@ -91,7 +80,6 @@ export function registerCrawlerTools(server: McpServer): void {
       js,
       includePages,
       includeIssues,
-      saveReport,
     }) => {
       try {
         const analyticsConnection = crawlerInputs.clickyAnalyticsConnection({
@@ -129,13 +117,9 @@ export function registerCrawlerTools(server: McpServer): void {
           respectRobots,
           js: Boolean(js),
         })
-        const saved = saveReport ? saveCrawlReport(report) : undefined
         return toolSuccess(
           `${health ? 'Sitemap health pass' : 'Crawl'} complete for ${crawlUrl}. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
-          {
-            ...compactCrawlResult(report, { includePages, includeIssues }),
-            ...(saved ? { saved } : {}),
-          },
+          compactCrawlResult(report, { includePages, includeIssues }),
         )
       } catch (error) {
         return toolError(error)
@@ -160,7 +144,6 @@ export function registerCrawlerTools(server: McpServer): void {
         refresh: z.boolean().optional(),
         includePages: z.boolean().optional(),
         includeIssues: z.boolean().optional(),
-        saveReport: z.boolean().optional(),
       },
     },
     async ({
@@ -175,7 +158,6 @@ export function registerCrawlerTools(server: McpServer): void {
       refresh,
       includePages,
       includeIssues,
-      saveReport,
     }) => {
       try {
         const analyticsConnection = crawlerInputs.clickyAnalyticsConnection({
@@ -199,13 +181,9 @@ export function registerCrawlerTools(server: McpServer): void {
           }),
           useSitemap: false,
         })
-        const saved = saveReport ? saveCrawlReport(report) : undefined
         return toolSuccess(
           `URL audit complete. Found ${report.issues.length} issues across ${report.summary.totalPages} pages.`,
-          {
-            ...compactCrawlResult(report, { includePages, includeIssues }),
-            ...(saved ? { saved } : {}),
-          },
+          compactCrawlResult(report, { includePages, includeIssues }),
         )
       } catch (error) {
         return toolError(error)
@@ -219,8 +197,7 @@ export function registerCrawlerTools(server: McpServer): void {
       description:
         'Return top technical SEO fixes for a URL by running a compact crawl.',
       inputSchema: {
-        url: z.string().url().optional(),
-        reportId: z.string().optional(),
+        url: z.string().url(),
         site: z.string().optional(),
         maxPages: crawlerInputs.crawlPageLimit,
         maxDepth: crawlerInputs.crawlDepthLimit,
@@ -233,7 +210,6 @@ export function registerCrawlerTools(server: McpServer): void {
     },
     async ({
       url,
-      reportId,
       site,
       maxPages,
       maxDepth,
@@ -244,27 +220,17 @@ export function registerCrawlerTools(server: McpServer): void {
       limit,
     }) => {
       try {
-        assertExclusiveReportInput(url, reportId)
-        const report = url
-          ? await crawlSite({
-              url,
-              site,
-              maxPages,
-              maxDepth,
-              refresh,
-              fetchRate: fetchRateInput({
-                fetchIntervalCap,
-                fetchIntervalMs,
-              }),
-            })
-          : reportId
-            ? loadCrawlReport(reportId)
-            : latestCrawlReport(site)
-        if (!report) {
-          return toolError(
-            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
-          )
-        }
+        const report = await crawlSite({
+          url,
+          site,
+          maxPages,
+          maxDepth,
+          refresh,
+          fetchRate: fetchRateInput({
+            fetchIntervalCap,
+            fetchIntervalMs,
+          }),
+        })
         const groups = topFixes(report, { category, limit })
         const coverage =
           report.status === 'completed'
@@ -322,179 +288,6 @@ export function registerCrawlerTools(server: McpServer): void {
       return toolSuccess(`Found ${countLabel(rules.length, 'crawler rule')}.`, {
         rules,
       })
-    },
-  )
-
-  server.registerTool(
-    'seo_affected_urls',
-    {
-      description:
-        'Return affected URLs for a saved or freshly crawled report, filtered by rule, category, or severity.',
-      inputSchema: {
-        url: z.string().url().optional(),
-        reportId: z.string().optional(),
-        site: z.string().optional(),
-        ruleId: z.string().optional(),
-        category: z.string().optional(),
-        severity: z.string().optional(),
-        maxPages: crawlerInputs.crawlPageLimit,
-        fetchIntervalCap: z.number().int().positive().optional(),
-        fetchIntervalMs: z.number().int().positive().optional(),
-        refresh: z.boolean().optional(),
-        limit: z.number().int().positive().optional(),
-      },
-    },
-    async ({
-      url,
-      reportId,
-      site,
-      ruleId,
-      category,
-      severity,
-      maxPages,
-      fetchIntervalCap,
-      fetchIntervalMs,
-      refresh,
-      limit,
-    }) => {
-      try {
-        const report = url
-          ? await crawlSite({
-              url,
-              site,
-              maxPages,
-              refresh,
-              fetchRate: fetchRateInput({
-                fetchIntervalCap,
-                fetchIntervalMs,
-              }),
-            })
-          : reportId
-            ? loadCrawlReport(reportId)
-            : latestCrawlReport(site)
-        if (!report) {
-          return toolError(
-            'No crawl report found. Pass url, reportId, or run seo_crawl_site with saveReport first.',
-          )
-        }
-        const result = selectAffectedUrls(report, {
-          ruleId,
-          category,
-          severity,
-          limit,
-        })
-        return toolSuccess(
-          `Returned ${result.selection.returnedRows} of ${result.selection.totalMatchedRows} affected URLs for ${report.config.url}.`,
-          {
-            url: report.config.url,
-            reportId: report.id,
-            dataSources: report.dataSources,
-            affectedUrls: result.affectedUrls,
-            selection: result.selection,
-            warnings: report.warnings,
-            caveats: report.caveats,
-          },
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_get_crawl_report',
-    {
-      description:
-        'Return a saved crawl report by id, or the latest saved report for an optional site. Compact by default.',
-      inputSchema: {
-        id: z.string().optional(),
-        site: z.string().optional(),
-        includePages: z.boolean().optional(),
-        includeIssues: z.boolean().optional(),
-      },
-    },
-    async ({ id, site, includePages, includeIssues }) => {
-      try {
-        const report = id ? loadCrawlReport(id) : latestCrawlReport(site)
-        if (!report) {
-          return toolError(
-            id
-              ? `No saved crawl report found for ${id}.`
-              : 'No saved crawl reports found.',
-          )
-        }
-        return toolSuccess(`Saved crawl report ${report.id}.`, {
-          ...compactCrawlResult(report, { includePages, includeIssues }),
-          url: report.config.url,
-          site: report.site,
-          generatedAt: report.generatedAt,
-        })
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_list_crawl_reports',
-    {
-      description:
-        'List saved crawl report metadata, optionally filtered by GSC site/property.',
-      inputSchema: {
-        site: z.string().optional(),
-        limit: z.number().int().positive().optional(),
-      },
-    },
-    async ({ site, limit }) => {
-      try {
-        const reports = listCrawlReports({ site, limit })
-        return toolSuccess(`Found ${reports.length} saved crawl reports.`, {
-          reports,
-        })
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
-
-  server.registerTool(
-    'seo_compare_crawl_reports',
-    {
-      description:
-        'Compare two saved crawl reports and return page, issue, score, and plain-English change summaries.',
-      inputSchema: {
-        after: z.string().optional(),
-        before: z.string().optional(),
-        site: z.string().optional(),
-      },
-    },
-    async ({ after, before, site }) => {
-      try {
-        const afterReport = resolveSavedReportAlias({
-          value: after ?? 'latest',
-          site,
-        })
-        if (!afterReport) {
-          return toolError('No newer crawl report found.')
-        }
-        const beforeReport = resolveSavedReportAlias({
-          value: before ?? 'previous',
-          site: afterReport.site ?? site,
-          skipId: afterReport.id,
-        })
-        if (!beforeReport) {
-          return toolError(
-            'No baseline crawl report found. Save at least two reports or pass before.',
-          )
-        }
-        const diff = compareCrawlReports({
-          before: beforeReport,
-          after: afterReport,
-        })
-        return toolSuccess(diff.headline, diff)
-      } catch (error) {
-        return toolError(error)
-      }
     },
   )
 }

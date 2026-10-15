@@ -6,12 +6,11 @@ import {
   jsonBodyArg,
   jsonFlag,
   numberArg,
-  projectArg,
   stringArg,
 } from '../args.js'
+import { requireSite } from '../selection.js'
 import { printJson, printTable } from '../utils.js'
 import { printReportSummary } from './output.js'
-import { selectedSiteOrThrow } from './shared.js'
 
 export const gscQueryCommand = defineCommand({
   meta: {
@@ -22,14 +21,6 @@ export const gscQueryCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
     },
     account: {
       type: 'string',
@@ -74,17 +65,7 @@ export const gscQueryCommand = defineCommand({
         dataState: 'final',
       } as Record<string, unknown>)
     const json = jsonFlag(args)
-    const site = await selectedSiteOrThrow(
-      {
-        client: projectArg(args),
-        site: stringArg(args.site) ?? stringArg(body.siteUrl),
-      },
-      {
-        json,
-        refresh: booleanArg(args.refresh),
-        account: stringArg(args.account),
-      },
-    )
+    const site = requireSite(stringArg(args.site) ?? stringArg(body.siteUrl))
     delete body.siteUrl
     const result = await querySearchAnalytics(site, body as never, {
       refresh: booleanArg(args.refresh),
@@ -138,14 +119,6 @@ export const urlInspectCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
-    },
     account: {
       type: 'string',
       description: 'Saved Google account email.',
@@ -163,10 +136,7 @@ export const urlInspectCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const siteUrl = await selectedSiteOrThrow(
-      { client: projectArg(args), site: stringArg(args.site) },
-      { json, account: stringArg(args.account) },
-    )
+    const siteUrl = requireSite(stringArg(args.site))
     const inspectionUrl = stringArg(args.url)
     if (!inspectionUrl) throw new Error('Pass --url.')
     const result = await inspectUrl({

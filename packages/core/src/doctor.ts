@@ -1,14 +1,11 @@
 import { existsSync } from 'node:fs'
-import { readClickySiteKey } from './clicky/credentials.js'
-import { analyticsConnection } from './clients.js'
 import {
   getAuthModeStatus,
   getClientConfig,
   getServiceAccountStatus,
 } from './gsc/auth.js'
 import { getSeoCliPaths } from './paths.js'
-import { loadProviderExtensions } from './provider-extensions/runtime.js'
-import { readConfig, readOauthClient, readTokens } from './storage/config.js'
+import { readOauthClient, readTokens } from './storage/config.js'
 import { checkDatabaseReadiness } from './storage/database.js'
 
 export type DoctorCheck = {
@@ -36,7 +33,6 @@ export async function runDoctor(
   checks: DoctorCheck[]
 }> {
   const paths = getSeoCliPaths()
-  const config = readConfig()
   const authMode = getAuthModeStatus()
   const serviceAccount = getServiceAccountStatus()
   const tokens = await readTokens()
@@ -166,53 +162,6 @@ export async function runDoctor(
     })
   }
 
-  checks.push({
-    id: 'default-site',
-    label: 'Saved GSC property',
-    status: 'pass',
-    detail:
-      config.defaultSite ??
-      'No saved default. Human CLI commands will prompt; agents can pass --site.',
-  })
-
-  checks.push({
-    id: 'default-google-analytics',
-    label: 'Saved Google Analytics property',
-    status: 'pass',
-    detail:
-      config.analytics.google.defaultPropertyId ??
-      'No saved default. Human CLI commands will prompt; agents can pass --property.',
-  })
-
-  const defaultProject = config.clients.find((client) => client.isDefault)
-  const defaultAnalytics = analyticsConnection(defaultProject)
-  const clickySiteId =
-    defaultAnalytics?.provider === 'clicky'
-      ? defaultAnalytics.siteId
-      : defaultAnalytics?.provider === 'extension' &&
-          defaultAnalytics.providerId === 'clicky'
-        ? defaultAnalytics.account.siteId
-        : undefined
-  if (clickySiteId) {
-    const credential = await readClickySiteKey(clickySiteId)
-    const loaded = await loadProviderExtensions()
-    const packageReady = Boolean(loaded.registry.get('clicky'))
-    checks.push({
-      id: 'default-clicky',
-      label: 'Saved Clicky connection',
-      status: credential && packageReady ? 'pass' : 'fail',
-      detail: !packageReady
-        ? `Site ${clickySiteId} is saved, but the Clicky provider package is not installed.`
-        : credential
-          ? `Site ${clickySiteId}, credential from ${credential.source}.`
-          : `Site ${clickySiteId} has no saved sitekey.`,
-      fix: !packageReady
-        ? 'Run `seo providers install @seoskill/clicky-provider`, then run this check again.'
-        : credential
-          ? undefined
-          : 'Run `seo analytics clicky connect` in a terminal.',
-    })
-  }
   const ok = checks.every((check) => check.status !== 'fail')
   return {
     ok,

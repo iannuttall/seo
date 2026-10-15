@@ -147,25 +147,6 @@ export const reportSurfaces = [
     ],
   },
   {
-    id: 'crawl-diff',
-    core: 'crawlDiff',
-    cli: {
-      file: 'packages/cli/src/commands/monitoring/crawl-diff.ts',
-      marker: "'crawl-diff': crawlDiffCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/monitoring-tools.ts',
-      marker: "'seo_crawl_diff'",
-    },
-    options: [
-      opt('startUrl', 'url:', 'startUrl: z.string().url()'),
-      common.site,
-      common.limit,
-      common.refresh,
-      common.js,
-    ],
-  },
-  {
     id: 'ctr-underperformers',
     core: 'ctrUnderperformersReport',
     cli: {
@@ -176,12 +157,7 @@ export const reportSurfaces = [
       file: 'packages/mcp/src/opportunity-tools.ts',
       marker: "'seo_ctr_underperformers'",
     },
-    options: [
-      common.site,
-      common.minImpressions,
-      common.includeBrand,
-      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
-    ],
+    options: [common.site, common.minImpressions, common.includeBrand],
   },
   {
     id: 'decaying',
@@ -209,105 +185,6 @@ export const reportSurfaces = [
       common.includeBrand,
       common.brandTerms,
       common.refresh,
-    ],
-  },
-  {
-    id: 'diagnose',
-    core: 'diagnoseProperty',
-    cli: {
-      file: 'packages/cli/src/commands/product/diagnose.ts',
-      marker: 'diagnose: diagnoseCommand',
-    },
-    mcp: {
-      file: 'packages/mcp/src/diagnosis-tools.ts',
-      marker: "'seo_diagnose_property'",
-    },
-    options: [
-      common.site,
-      common.days,
-      common.recentDays,
-      common.limit,
-      common.includeBrand,
-      common.refresh,
-    ],
-  },
-  {
-    id: 'diagnose-property',
-    core: 'diagnosePropertyWorkflow',
-    cli: {
-      file: 'packages/cli/src/commands/workflows/diagnose-property.ts',
-      marker: "'diagnose-property': mainReportCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/workflow-tools.ts',
-      marker: "'seo_workflow_diagnose_property'",
-    },
-    options: [
-      common.site,
-      common.days,
-      common.recentDays,
-      common.limit,
-      common.includeBrand,
-      common.refresh,
-    ],
-  },
-  {
-    id: 'index-coverage-plan',
-    core: 'indexCoveragePlan',
-    cli: {
-      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
-      marker: "'index-watch': indexWatchCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/monitoring-tools.ts',
-      marker: "'seo_index_coverage_plan'",
-    },
-    options: [
-      common.site,
-      common.sitemaps,
-      common.properties,
-      common.dailyLimit,
-      opt('targetCycleDays', "'target-days':", 'targetCycleDays: z.number()'),
-      common.maxUrls,
-    ],
-  },
-  {
-    id: 'index-monitor',
-    core: 'indexMonitor',
-    cli: {
-      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
-      marker: "'index-watch': indexWatchCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/monitoring-tools.ts',
-      marker: "'seo_index_monitor'",
-    },
-    options: [
-      common.site,
-      common.sitemaps,
-      common.properties,
-      common.dailyLimit,
-      common.inspectLimit,
-      common.maxUrls,
-      common.languageCode,
-    ],
-  },
-  {
-    id: 'index-watch',
-    core: 'indexWatch',
-    cli: {
-      file: 'packages/cli/src/commands/monitoring/index-watch.ts',
-      marker: "'index-watch': indexWatchCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/monitoring-tools.ts',
-      marker: "'seo_index_watch'",
-    },
-    options: [
-      common.site,
-      opt('urls', 'urls:', 'urls: z.array(z.string().url())'),
-      common.dailyLimit,
-      common.languageCode,
     ],
   },
   {
@@ -356,63 +233,6 @@ export const reportSurfaces = [
       common.minImpressions,
       common.refresh,
       common.js,
-    ],
-  },
-  {
-    id: 'measure-change',
-    core: 'measureChange',
-    cli: {
-      file: 'packages/cli/src/commands/experiments/tests.ts',
-      marker: 'tests: testsCommand',
-    },
-    mcp: {
-      file: 'packages/mcp/src/experiment-tools.ts',
-      marker: "'seo_measure_change'",
-    },
-    options: [
-      opt('id', 'id:', 'id: z.string()', 'id?: string'),
-      common.site,
-      opt('scope', 'scope:', 'scope: z.enum(', 'scope?: ChangeScope'),
-      opt('target', 'target:', 'target: z.string()', 'target?: string'),
-      opt('title', 'title:', 'title: z.string()', 'title?: string'),
-      opt('changedAt', 'date:', 'changedAt: z.string()', 'changedAt?: string'),
-      opt(
-        'googleAnalyticsPropertyId',
-        'property:',
-        'googleAnalyticsPropertyId: z.string()',
-        'googleAnalyticsPropertyId?: string',
-      ),
-      opt(
-        'controlScope',
-        "'control-scope':",
-        'controlScope: z.enum(',
-        'controlScope?: ChangeScope',
-      ),
-      opt(
-        'controlTarget',
-        "'control-target':",
-        'controlTarget: z.string()',
-        'controlTarget?: string',
-      ),
-      opt(
-        'controlTitle',
-        "'control-title':",
-        'controlTitle: z.string()',
-        'controlTitle?: string',
-      ),
-      opt(
-        'beforeDays',
-        'before:',
-        'beforeDays: z.number().int()',
-        'beforeDays?: number',
-      ),
-      opt(
-        'afterDays',
-        'after:',
-        'afterDays: z.number().int()',
-        'afterDays?: number',
-      ),
-      common.refresh,
     ],
   },
   {
@@ -474,7 +294,6 @@ export const reportSurfaces = [
       common.includeBrand,
       common.minImpressions,
       common.limit,
-      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
     ],
   },
   {
@@ -616,49 +435,6 @@ export const reportSurfaces = [
       common.minImpressions,
       common.limit,
       ...fetchOptions,
-    ],
-  },
-  {
-    id: 'technical-watch',
-    core: 'technicalWatchWorkflow',
-    cli: {
-      file: 'packages/cli/src/commands/workflows/technical-watch.ts',
-      marker: "'technical-watch': technicalWatchCommand",
-    },
-    mcp: {
-      file: 'packages/mcp/src/workflow-tools.ts',
-      marker: "'seo_workflow_technical_watch'",
-    },
-    options: [
-      common.site,
-      opt('startUrl', 'url:', 'startUrl: z.string().url().optional()'),
-      opt('urls', 'urls:', 'urls: z.array(z.string().url()).min(1)'),
-      common.sitemaps,
-      opt('properties', 'properties:', 'properties: z'),
-      common.limit,
-      common.refresh,
-      common.js,
-      common.languageCode,
-      common.dailyLimit,
-      common.inspectLimit,
-      common.maxUrls,
-      opt(
-        'recoverLinks',
-        "'recover-links':",
-        'recoverLinks: z.boolean().optional()',
-      ),
-      opt('recoverDays', "'recover-days':", 'recoverDays: z.number().int()'),
-      opt('recoverLimit', "'recover-limit':", 'recoverLimit: z.number().int()'),
-      opt(
-        'recoverMinClicks',
-        "'recover-min-clicks':",
-        'recoverMinClicks: z.number().int()',
-      ),
-      opt(
-        'recoverMinImpressions',
-        "'recover-min-impressions':",
-        'recoverMinImpressions: z',
-      ),
     ],
   },
   {

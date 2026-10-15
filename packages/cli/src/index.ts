@@ -20,7 +20,6 @@ import { defineCommand, runCommand, runMain } from 'citty'
 import { analyticsCommand } from './commands/analytics/index.js'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
-import { clientCommand, projectCommand } from './commands/clients/index.js'
 import { contentCommand } from './commands/content.js'
 import {
   compareCommand,
@@ -31,27 +30,18 @@ import {
   researchCommand,
 } from './commands/core-commands.js'
 import { crawlCommand } from './commands/crawl.js'
-import { crawlReportsCommand } from './commands/crawl-reports.js'
 import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
 import {
   trafficAnomalyCommand,
   updateCorrelateCommand,
 } from './commands/diagnosis-reports.js'
-import {
-  changeLogCommand,
-  contentGroupsCommand,
-  testsCommand,
-} from './commands/experiments/index.js'
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
-  crawlDiffCommand,
   indexCoverageCommand,
-  indexWatchCommand,
   linkRecoverCommand,
-  monitoringCommand,
   redirectTraceCommand,
 } from './commands/monitoring.js'
 import {
@@ -68,7 +58,6 @@ import {
 import { auditPageCommand } from './commands/page-audit.js'
 import { performanceCommand } from './commands/performance.js'
 import {
-  diagnoseCommand,
   doctorCommand,
   segmentImpactCommand,
   strikingDistanceCommand,
@@ -76,7 +65,6 @@ import {
 import { providersCommand } from './commands/providers/index.js'
 import { reportCatalogCommand } from './commands/report-catalog.js'
 import { explainCommand, rulesCommand } from './commands/rules.js'
-import { scheduleCommand } from './commands/schedule.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
 import { skillsCommand } from './commands/skills.js'
 import {
@@ -88,13 +76,11 @@ import {
 import { telemetryCommand } from './commands/telemetry.js'
 import {
   crawlQueueCommand,
-  mainReportCommand,
   refreshPrioritiesCommand,
-  technicalWatchCommand,
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
 import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
-import { removedNotice, renamedNotice } from './renames.js'
+import { removedFlagNotice, removedNotice, renamedNotice } from './renames.js'
 import { maybeOfferSelfUpdate } from './self-update.js'
 import { showUpgradeNotice } from './upgrade-notice.js'
 import { printCatalog, printHeading, printSection } from './utils.js'
@@ -113,7 +99,7 @@ const helpSections: HelpSection[] = [
   {
     title: 'Start here',
     commands: [
-      ['seo start', 'Connect Search Console and save a project profile'],
+      ['seo start', 'Sign in with Google, then add the MCP server and skill'],
       ['seo report', 'The main report: overview and every section'],
       [
         'seo report --section quick-wins',
@@ -131,7 +117,7 @@ const helpSections: HelpSection[] = [
         'seo research <action>',
         'Keyword, SERP, competitor and backlink data from your key',
       ],
-      ['seo data', 'Raw Search Console rows'],
+      ['seo data', 'Raw Search Console or Bing rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
     ],
@@ -139,7 +125,6 @@ const helpSections: HelpSection[] = [
   {
     title: 'Setup',
     commands: [
-      ['seo projects list', 'List saved project profiles'],
       ['seo sites', 'List Search Console properties'],
       ['seo mcp install', 'Add the local MCP server to your agents'],
       ['seo providers', 'Connect DataForSEO or Ahrefs'],
@@ -153,23 +138,15 @@ const allHelpSections: HelpSection[] = [
   {
     title: 'More commands',
     commands: [
-      ['seo crawl-reports', 'List saved crawl reports'],
-      ['seo crawl-diff', 'Compare crawl changes'],
       ['seo crawl-queue', 'Run a crawl and rank the fix queue'],
       ['seo rules', 'List crawler rule ids'],
       ['seo explain --rule missing_title', 'Explain a crawler rule'],
       ['seo redirect-trace', 'Trace redirects'],
       ['seo perf audit', 'Run a page performance audit'],
       ['seo index-coverage', 'Choose pages for URL Inspection'],
-      ['seo index-watch', 'Check saved URL Inspection snapshots'],
       ['seo ai-referrals', 'AI referral traffic in Google Analytics'],
       ['seo analytics google report', 'Run a Google Analytics report'],
       ['seo updates', 'List official Google ranking updates'],
-      ['seo change-log', 'Track SEO changes'],
-      ['seo tests', 'Create and report local SEO tests'],
-      ['seo content-groups', 'Manage reusable page and query groups'],
-      ['seo monitoring', 'Run and review monitoring'],
-      ['seo schedule cron', 'Print cron entries'],
       ['seo export', 'Export report data to CSV'],
       ['seo reports list', 'List every structured report'],
       ['seo skill list', 'Show the packaged SEO skill'],
@@ -185,7 +162,7 @@ const allHelpSections: HelpSection[] = [
 function printHelpSections(sections: HelpSection[]): void {
   printHeading(
     `seo v${pkg.version}`,
-    'Run SEO audits, find what needs fixing, and ship the changes with your agent.',
+    'Your own Search Console, Google Analytics and Bing data, as facts for your agent.',
   )
   process.stdout.write('\n')
   printCatalog(
@@ -230,29 +207,15 @@ const main = defineCommand({
     logs: logsCommand,
     crawl: crawlCommand,
     'crawl-queue': crawlQueueCommand,
-    'crawl-reports': crawlReportsCommand,
-    client: clientCommand,
     content: contentCommand,
-    project: projectCommand,
-    projects: projectCommand,
     providers: providersCommand,
-    'change-log': changeLogCommand,
-    tests: testsCommand,
-    'content-groups': contentGroupsCommand,
-    'crawl-diff': crawlDiffCommand,
-    diagnose: diagnoseCommand,
-    // The 0.2 main report, kept under its old name for one release.
-    'diagnose-property': mainReportCommand,
     export: exportCommand,
     'index-coverage': indexCoverageCommand,
-    'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
-    monitoring: monitoringCommand,
     rules: rulesCommand,
     explain: explainCommand,
     'refresh-priorities': refreshPrioritiesCommand,
     'redirect-trace': redirectTraceCommand,
-    schedule: scheduleCommand,
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,
@@ -265,7 +228,6 @@ const main = defineCommand({
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,
-    'technical-watch': technicalWatchCommand,
     'update-postmortem': updatePostmortemCommand,
     sites: sitesCommand,
     'gsc-query': gscQueryCommand,
@@ -299,7 +261,6 @@ const reportAliases: Record<string, string> = {
   crawl: 'site-crawl',
   'crawl-queue': 'top-fixes',
   decaying: 'decaying-pages',
-  'diagnose-property': 'search-performance-overview',
   doctor: 'setup-check',
   explain: 'explain-crawl-issue',
   'link-recover': 'link-recovery',
@@ -312,10 +273,8 @@ const reportAliases: Record<string, string> = {
 const directReportIds = new Set([
   'ai-referrals',
   'audit-page',
-  'crawl-diff',
   'ctr-underperformers',
   'index-coverage',
-  'index-watch',
   'internal-links',
   'page-opportunities',
   'quick-wins',
@@ -324,7 +283,6 @@ const directReportIds = new Set([
   'second-page',
   'segment-impact',
   'striking-distance',
-  'technical-watch',
   'traffic-anomaly',
   'update-postmortem',
 ])
@@ -353,14 +311,7 @@ function telemetryReportId(args: string[]): string | undefined {
   if (command === 'content' && subcommand === 'optimize') {
     return 'content-optimization'
   }
-  if (command === 'change-log' && subcommand === 'measure') {
-    return 'measure-change'
-  }
-  if (command === 'monitoring' && subcommand === 'run') {
-    return 'technical-watch'
-  }
   if (command === 'perf' && subcommand === 'audit') return 'performance-audit'
-  if (command === 'tests' && subcommand === 'report') return 'measure-change'
   return (
     reportAliases[command] ??
     (directReportIds.has(command) ? command : undefined)
@@ -369,7 +320,7 @@ function telemetryReportId(args: string[]): string | undefined {
 
 const argv = process.argv.slice(2)
 showUpgradeNotice(argv)
-const removed = removedNotice(argv)
+const removed = removedNotice(argv) ?? removedFlagNotice(argv)
 if (removed) {
   process.stderr.write(`${removed}\n`)
   process.exit(2)

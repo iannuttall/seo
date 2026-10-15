@@ -1,13 +1,7 @@
 import { type SegmentDimension, segmentImpact } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  projectArg,
-  strictNumberArg,
-  stringArg,
-} from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { booleanArg, jsonFlag, strictNumberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { printNotes, printReportSummary } from '../output.js'
 import { cliReportArgs } from '../report-options.js'
@@ -34,14 +28,6 @@ export const segmentImpactCommand = defineCommand({
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
     },
     dimension: {
       type: 'string',
@@ -98,13 +84,9 @@ export const segmentImpactCommand = defineCommand({
       '--unmatched-limit',
     )
     const maxRows = strictNumberArg(args['max-rows'], '--max-rows')
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await segmentImpact({
-      site: selection.site,
+      site,
       dimension,
       days,
       compareDays,

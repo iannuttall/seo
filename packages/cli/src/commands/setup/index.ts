@@ -4,84 +4,18 @@ import { runGuidedSetup } from './flow.js'
 export const setupCommand = defineCommand({
   meta: {
     name: 'setup',
-    description:
-      'Guided setup for auth, one project profile, MCP, and next commands',
+    description: 'Sign in with Google, then add the MCP server and skill',
   },
   args: {
-    id: { type: 'string', description: 'Short stable project id.' },
-    name: { type: 'string', description: 'Human project name.' },
-    site: {
-      type: 'string',
-      description: 'GSC property URL, for example sc-domain:example.com.',
-    },
-    'search-console-account': {
-      type: 'string',
-      description: 'Saved Google account email for Search Console.',
-    },
-    url: { type: 'string', description: 'Default technical crawl start URL.' },
-    urls: {
-      type: 'string',
-      description: 'Comma-separated URLs to watch with URL Inspection.',
-    },
-    'google-analytics-property': {
-      type: 'string',
-      description: 'Optional Google Analytics property ID.',
-    },
-    'google-analytics-account': {
-      type: 'string',
-      description: 'Saved Google account email for Google Analytics.',
-    },
-    'clicky-site-id': {
-      type: 'string',
-      description:
-        'Optional Clicky site ID. Set SEO_CLICKY_SITEKEY outside a terminal.',
-    },
-    brand: {
-      type: 'string',
-      description: 'Comma-separated branded query terms to exclude by default.',
-    },
-    weekday: {
-      type: 'string',
-      description: 'Preferred technical-watch weekday. Defaults to Monday.',
-    },
-    default: {
-      type: 'boolean',
-      description: 'Make this the default project.',
-    },
-    'skip-profile': {
-      type: 'boolean',
-      default: false,
-      description: 'Do not save a project profile during setup.',
-    },
-    'skip-auth': {
-      type: 'boolean',
-      default: false,
-      description: 'Skip Google sign-in during setup.',
-    },
-    'skip-mcp': {
-      type: 'boolean',
-      default: false,
-      description: 'Skip MCP install prompts.',
-    },
-    'skip-skill': {
-      type: 'boolean',
-      default: false,
-      description: 'Skip the SEO skill install prompt.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Refresh GSC property discovery.',
-    },
     'dry-run': {
       type: 'boolean',
       default: false,
-      description: 'Show what setup does without changing files.',
+      description: 'Show what setup does without changing anything.',
     },
     json: {
       type: 'boolean',
       default: false,
-      description: 'Print machine-readable JSON.',
+      description: 'Print machine-readable JSON. Never prompts.',
     },
   },
   run: async ({ args }) => runGuidedSetup(args),
@@ -92,14 +26,6 @@ export const startCommand = defineCommand({
   meta: {
     name: 'start',
     description:
-      'Start here: connect first-party data, save a profile, and get the first report commands',
-  },
-})
-
-export const clientSetupCommand = defineCommand({
-  ...setupCommand,
-  meta: {
-    name: 'setup',
-    description: 'Guided setup for one saved project profile',
+      'Start here: sign in with Google, then add the MCP server and skill to your agents',
   },
 })

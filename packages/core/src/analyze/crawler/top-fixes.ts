@@ -17,7 +17,6 @@ export type TopFixFilters = {
   category?: RuleCategory | string
   severity?: RuleSeverity | string
   url?: string
-  projectId?: string
   limit?: number
   recommendation?: RuleRecommendation
 }
@@ -106,7 +105,6 @@ function filteredIssues(
   report: CrawlReport,
   filters: TopFixFilters,
 ): CrawlIssue[] {
-  if (filters.projectId && report.projectId !== filters.projectId) return []
   return report.issues.filter((issue) => {
     if (filters.category && issue.category !== filters.category) return false
     if (filters.severity && issue.severity !== filters.severity) return false

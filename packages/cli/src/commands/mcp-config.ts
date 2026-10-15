@@ -149,10 +149,11 @@ function writeConfigEdit(input: {
   target: JsonClientConfigTarget
   source: string
   value: unknown
+  name?: string
 }): void {
   const next = applyEdits(
     input.source,
-    modify(input.source, ['mcpServers', 'seo'], input.value, {
+    modify(input.source, ['mcpServers', input.name ?? 'seo'], input.value, {
       formattingOptions,
     }),
   )
@@ -353,5 +354,92 @@ export function uninstallMcpConfig(
   }
 
   writeConfigEdit({ target, source, value: undefined })
+  return { client: target.client, path: target.path, changed: true }
+}
+
+// The free hosted server. Clients that take a remote URL get an entry named
+// `seoskill`, the name the docs use. Claude Desktop reads remote servers only
+// from its Connectors settings, so it cannot take one in its config file.
+export const HOSTED_MCP_URL = 'https://seoskill.dev/mcp'
+const HOSTED_MCP_NAME = 'seoskill'
+
+export function supportsHostedMcp(target: ClientConfigTarget): boolean {
+  return target.client !== 'claude-desktop'
+}
+
+function hostedServerConfig(
+  target: JsonClientConfigTarget,
+): Record<string, unknown> {
+  return target.includeType
+    ? { type: 'http', url: HOSTED_MCP_URL }
+    : { url: HOSTED_MCP_URL }
+}
+
+function isHostedEntry(value: unknown): boolean {
+  return isRecord(value) && value.url === HOSTED_MCP_URL
+}
+
+export function installHostedMcpConfig(
+  target: ClientConfigTarget,
+  options: Pick<McpConfigOptions, 'runCommand'> = {},
+): { client: SupportedClient; path: string; changed: boolean } {
+  if (!supportsHostedMcp(target)) {
+    throw new Error(
+      `${target.label} takes the hosted server from its Connectors settings, not its config file.`,
+    )
+  }
+  if (target.kind === 'native') {
+    const runCommand = options.runCommand ?? defaultCommandRunner
+    const executable = resolveMcpClientExecutable(target.executable)
+    const current = runCommand(executable, ['mcp', 'get', HOSTED_MCP_NAME])
+    if (
+      (current.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT'
+    ) {
+      throw new Error(
+        'Cannot add the hosted MCP server for Codex: the `codex` command is not available on PATH.',
+      )
+    }
+    if (current.status === 0) {
+      if (current.stdout.includes(HOSTED_MCP_URL)) {
+        return { client: target.client, path: target.path, changed: false }
+      }
+      throw new Error(
+        `Cannot add the hosted MCP server: ${target.path} already has a different mcp_servers.${HOSTED_MCP_NAME} entry.`,
+      )
+    }
+    const result = runCommand(executable, [
+      'mcp',
+      'add',
+      HOSTED_MCP_NAME,
+      '--url',
+      HOSTED_MCP_URL,
+    ])
+    if (result.error || result.status !== 0) {
+      const detail =
+        result.error?.message ?? result.stderr.trim() ?? 'unknown error'
+      throw new Error(`Cannot add the hosted MCP server for Codex: ${detail}`)
+    }
+    return { client: target.client, path: target.path, changed: true }
+  }
+
+  const { source, config } = readConfig(target)
+  const servers = config.mcpServers as Record<string, unknown> | undefined
+  const current = servers?.[HOSTED_MCP_NAME]
+  // An entry that already points at the hosted server stays as it is, so
+  // settings someone added to it are kept.
+  if (isHostedEntry(current)) {
+    return { client: target.client, path: target.path, changed: false }
+  }
+  if (current !== undefined) {
+    throw new Error(
+      `Cannot add the hosted MCP server: ${target.path} already has a different mcpServers.${HOSTED_MCP_NAME} entry.`,
+    )
+  }
+  writeConfigEdit({
+    target,
+    source,
+    value: hostedServerConfig(target),
+    name: HOSTED_MCP_NAME,
+  })
   return { client: target.client, path: target.path, changed: true }
 }

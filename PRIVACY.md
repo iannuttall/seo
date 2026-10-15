@@ -86,9 +86,9 @@ read-only access to:
   access.
 
 The software uses this data to list properties, run the report you requested,
-join search or analytics evidence to crawl findings, and save local report
-history when a command supports it. It does not use Google data for advertising
-or to train general-purpose AI models.
+and join search or analytics evidence to crawl findings. It does not save
+report history. It does not use Google data for advertising or to train
+general-purpose AI models.
 
 The shared desktop OAuth client identifies the `seo` app to Google. OAuth
 tokens and API responses are returned to your machine, not to the project
@@ -105,7 +105,7 @@ site ID, sitekey, requested report type, date range, and row limit directly to
 Clicky over HTTPS. It can read the traffic data that sitekey permits. The
 project maintainer does not receive the request or response.
 
-The site ID is saved in the project profile. The sitekey uses the operating
+The site ID is saved in the local configuration. The sitekey uses the operating
 system keychain when available, with a private local file fallback. Agents and
 CI can use `SEO_CLICKY_SITEKEY` without saving it. Clicky responses are cached
 locally for up to 24 hours, and cache keys and cached responses do not contain
@@ -123,8 +123,8 @@ server does not read Bing data.
 
 ## How Google data is protected
 
-The software stores project profiles, settings, OAuth tokens, cached API
-responses, logs, and saved reports in local user directories. It does not
+The software stores settings, OAuth tokens, cached API responses, and logs in
+local user directories. It does not save reports or crawls. It does not
 upload Google API responses to a hosted SEO account or project database.
 Google API requests go directly from your machine to Google over HTTPS. The
 software does not send Search Console data to a research provider. `seo
@@ -159,10 +159,10 @@ run, expired rows may remain in the local cache file until you delete them.
 Run `seo cache clear --provider google-analytics` to remove cached Google
 Analytics responses immediately. Run `seo cache clear --provider gsc` to do
 the same for Search Console. Run `seo cache clear --provider clicky` to remove
-cached Clicky responses. Project profiles and reports that you deliberately
-save remain until you delete them with the relevant command or run
-`seo reset --yes`. The reset command removes Google tokens, local
-configuration, caches, logs, histories, saved reports, and saved provider
+cached Clicky responses. Settings and saved provider credentials remain until
+you delete them with the relevant command or run `seo reset --yes`. The reset
+command removes Google tokens, local configuration, caches, logs, any
+histories or reports saved by earlier versions, and saved provider
 credentials. It removes active keychain credentials before deleting local
 files. If the keychain refuses a deletion, reset stops and tells you to unlock
 it before trying again.

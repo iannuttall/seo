@@ -5,10 +5,9 @@ import {
   fetchRateArg,
   jsonFlag,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -37,14 +36,6 @@ export const strikingDistanceCommand = defineCommand({
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
     },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
-    },
     ...cliReportArgs([
       'days',
       'minImpressions',
@@ -69,17 +60,12 @@ export const strikingDistanceCommand = defineCommand({
     const verifyLimit = numberArg(args['verify-limit'])
     const verifyContent =
       booleanArg(args['verify-content']) === true || verifyLimit !== undefined
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await strikingDistance({
-      site: selection.site,
+      site,
       days: numberArg(args.days),
       minImpressions: numberArg(args['min-impressions']),
       limit: numberArg(args.limit),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       verifyContent,
       verifyLimit,

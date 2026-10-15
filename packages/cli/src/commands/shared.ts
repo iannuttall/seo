@@ -2,44 +2,11 @@ import type {
   PageFetchDiagnostics,
   QueryContentClassification,
 } from '@seo/core'
-import { resolveClientSelection } from '../selection.js'
-
-export async function selectedSiteOrThrow(
-  input: {
-    client?: string
-    project?: string
-    site?: string
-  },
-  options: { json?: boolean; refresh?: boolean; account?: string } = {},
-): Promise<string> {
-  return (
-    await resolveClientSelection({
-      client: input.client,
-      project: input.project,
-      site: input.site,
-      options,
-    })
-  ).site
-}
 
 export function startUrlForSite(site: string): string | undefined {
   if (site.startsWith('http://') || site.startsWith('https://')) return site
   if (site.startsWith('sc-domain:')) return `https://${site.slice(10)}/`
   return undefined
-}
-
-export function suggestedClientName(site: string): string {
-  return site.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '')
-}
-
-export function slugId(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/^sc-domain:/, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
 }
 
 export function formatFetchDiagnostics(

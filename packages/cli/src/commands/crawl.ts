@@ -1,7 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
-  analyticsConnection,
   type CrawlOutputFormat,
   crawlSite,
   renderCrawlCsv,
@@ -11,7 +10,7 @@ import {
   renderCrawlPagesCsv,
   renderCrawlPretty,
   reviewObservations,
-  saveCrawlReport,
+  SeoError,
   topFixes,
 } from '@seo/core'
 import { defineCommand } from 'citty'
@@ -22,13 +21,11 @@ import {
   jsonFlag,
   negatedBooleanArg,
   numberArg,
-  projectArg,
   renderingModeArg,
   stringArg,
 } from '../args.js'
 import { writeJsonOutput } from '../json-output.js'
 import { printCrawlHuman } from '../presentation/crawl-report.js'
-import { resolveClientSelection } from '../selection.js'
 import { printKeyValue } from '../utils.js'
 import {
   analyticsConnectionArgs,
@@ -57,20 +54,11 @@ export const crawlCommand = defineCommand({
     },
     url: {
       type: 'string',
-      description:
-        'Start URL to crawl. Optional when --project has a saved crawl URL.',
+      description: 'Start URL to crawl. Defaults to the --site home page.',
     },
     site: {
       type: 'string',
       description: 'GSC property URL for joining page metrics.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
     },
     ...analyticsConnectionArgs,
     mode: {
@@ -175,11 +163,6 @@ export const crawlCommand = defineCommand({
       type: 'string',
       description: 'CSV table to render: issues or pages. Defaults to issues.',
     },
-    save: {
-      type: 'boolean',
-      default: false,
-      description: 'Save the crawl report locally.',
-    },
     severity: {
       type: 'string',
       description: 'Only show top fixes at this severity.',
@@ -196,7 +179,6 @@ export const crawlCommand = defineCommand({
     const csv = crawlCsvArg(args.csv)
     const severity = severityArg(args.severity)
     const failOn = severityArg(args['fail-on'])
-    const project = projectArg(args)
     const urls = await urlListArgs(args)
     const explicitUrl = crawlUrlArg(args)
     const sitemapUrl = stringArg(args['sitemap-url'])
@@ -216,32 +198,22 @@ export const crawlCommand = defineCommand({
         '--health and --sitemap-url cannot be combined with URL list input.',
       )
     }
-    const selection =
-      stringArg(args.site) ||
-      project ||
-      (!explicitUrl && !urls.length && !sitemapUrl)
-        ? await resolveClientSelection({
-            client: project,
-            site: stringArg(args.site),
-            options: { json },
-          })
-        : undefined
+    const site = stringArg(args.site)
     const crawlUrl =
       explicitUrl ??
-      selection?.client?.startUrl ??
-      (selection?.site ? startUrlForSite(selection.site) : undefined) ??
+      (site ? startUrlForSite(site) : undefined) ??
       (sitemapUrl ? new URL('/', sitemapUrl).toString() : undefined) ??
       urls[0]
     if (!crawlUrl) {
-      throw new Error(
-        'No crawl URL selected. Pass a URL, --url, or use --project with a saved crawl URL.',
+      throw new SeoError(
+        'INVALID_INPUT',
+        'No crawl URL given. Pass a URL, --url or --site. Run `seo sites` to list your Search Console properties.',
       )
     }
 
     const report = await crawlSite({
       url: crawlUrl,
-      projectId: selection?.client?.id,
-      site: selection?.site,
+      site,
       mode:
         explicitMode ??
         (health || sitemapUrl ? 'sitemap' : urls.length ? 'list' : undefined),
@@ -259,16 +231,12 @@ export const crawlCommand = defineCommand({
       include: csvArg(args.include),
       exclude: csvArg(args.exclude),
       googleAnalyticsPropertyId: stringArg(args['google-analytics-property']),
-      analyticsConnection: analyticsConnectionFromArgs(
-        args,
-        analyticsConnection(selection?.client),
-      ),
+      analyticsConnection: analyticsConnectionFromArgs(args),
       useSitemap: !negatedBooleanArg(args, 'sitemap'),
       respectRobots: !negatedBooleanArg(args, 'robots'),
       checkExternal: !negatedBooleanArg(args, 'external'),
       js: renderingModeArg(args),
     })
-    const saved = booleanArg(args.save) ? saveCrawlReport(report) : undefined
     const rankedFixes = topFixes(report, { severity })
     const failedThreshold = failOn
       ? report.issues.some(
@@ -282,7 +250,6 @@ export const crawlCommand = defineCommand({
       topFixes: rankedFixes,
       reviewObservations: reviewObservations(report, { severity }),
       ...(failOn ? { failOn, failedThreshold } : {}),
-      ...(saved ? { saved } : {}),
     }
 
     if (format === 'json') {
@@ -328,12 +295,9 @@ export const crawlCommand = defineCommand({
     }
 
     printCrawlHuman(report, rankedFixes)
-    if (saved || failOn) {
+    if (failOn) {
       process.stdout.write('\nRun metadata\n')
-      printKeyValue([
-        ['Saved report', saved?.id ?? 'no'],
-        ['Fail threshold', failOn ?? 'off'],
-      ])
+      printKeyValue([['Fail threshold', failOn]])
     }
     if (failedRun || failedThreshold) {
       process.exitCode = 1

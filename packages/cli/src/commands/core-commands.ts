@@ -1,5 +1,4 @@
 import {
-  listSites,
   localError,
   localResearchKeys,
   nodeCommandDeps,
@@ -10,7 +9,6 @@ import {
   type CommandResult,
   DIMENSIONS,
   type Dimension,
-  matchProperty,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
   type ResearchAction,
@@ -26,16 +24,9 @@ import {
   type SectionId,
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  csvArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../args.js'
+import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import { resolveProperty } from '../selection.js'
 import { printJson } from '../utils.js'
-import { selectedSiteOrThrow } from './shared.js'
 
 // The shared commands: the same core code and text as the hosted MCP, with
 // this machine's Google sign-in. Each takes a target, optional dates and
@@ -66,8 +57,6 @@ export const cliCall: Caller = (command, args) =>
   ].join(' ')
 
 const common = {
-  project: { type: 'string', description: 'Saved project id or name.' },
-  client: { type: 'string', description: 'Legacy alias for --project.' },
   account: { type: 'string', description: 'Saved Google account email.' },
   json: {
     type: 'boolean',
@@ -104,27 +93,12 @@ function detailArg(args: Args) {
   return value as 'summary' | 'rows' | 'full'
 }
 
-// A saved project, or the property that covers --site or --url.
-async function property(args: Args, target?: string): Promise<string> {
-  const options = {
-    json: jsonFlag(args),
+// The property that covers --site or --url.
+function property(args: Args, target?: string): Promise<string> {
+  return resolveProperty(target, {
     refresh: booleanArg(args.refresh),
     account: stringArg(args.account),
-  }
-  if (!target || projectArg(args)) {
-    return selectedSiteOrThrow({ client: projectArg(args) }, options)
-  }
-  const names = (await listSites(options.refresh, options.account)).map(
-    (site) => site.siteUrl,
-  )
-  const found = matchProperty(names, target)
-  if (!found) {
-    throw new SeoError(
-      'PROPERTY_NOT_FOUND',
-      `This Google login has no Search Console property for ${target}. Run \`seo sites\` to list the properties it can read.`,
-    )
-  }
-  return found
+  })
 }
 
 async function run(

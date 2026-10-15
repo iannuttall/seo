@@ -5,10 +5,9 @@ import {
   defaultTrueBooleanArg,
   jsonFlag,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -29,8 +28,6 @@ export const pageOpportunitiesCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     url: { type: 'string', required: true },
     ...cliReportArgs(
       ['days', 'limit', 'minImpressions', 'includeBrand', 'js', 'refresh'],
@@ -60,18 +57,13 @@ export const pageOpportunitiesCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await pageOpportunitiesReport({
-      site: selection.site,
+      site,
       url: stringArg(args.url) ?? '',
       days: numberArg(args.days),
       limit: numberArg(args.limit),
       minImpressions: numberArg(args['min-impressions']),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       verifyContent: booleanArg(args['verify-content']) !== false,
       js: booleanArg(args.js) ? true : 'auto',

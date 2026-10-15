@@ -58,15 +58,16 @@ npm i -g seo
 seo start
 ```
 
-`seo start` signs you in with Google, lists the Search Console properties you
-can read, lets you pick a Google Analytics property, and saves a project
-profile (a local shortcut for the site and its data sources). It can also add
-the skill and the local MCP server to your agents.
+`seo start` signs you in with Google. Then it offers to add an MCP server to
+the agents it finds (the free hosted server is the first choice, or you can
+run one locally) and to install the skill. That is all it asks. Nothing about
+your site is saved: each command names the site it works on.
 
-Then run the main report:
+List the properties your sign-in can read, then run the main report for one:
 
 ```sh
-seo report
+seo sites
+seo report --site example.com
 ```
 
 ## Connect the hosted MCP server
@@ -110,7 +111,8 @@ agent which CLI command to run.
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page (local only) |
 
 Each command takes its target (a site, URL or property) and an optional date
-window. Commands that return rows also take `--detail summary|rows|full` and
+window. `--site` takes a domain, a URL or a Search Console property, and
+`seo sites` lists the ones you can read. Commands that return rows also take `--detail summary|rows|full` and
 `--offset`. Brand terms, minimum impressions and the comparison period are set
 for you and shown in the output, so there is nothing else to tune.
 
@@ -122,7 +124,7 @@ The [command docs](https://seoskill.dev/docs) explain each one.
 Run the report without a section first:
 
 ```sh
-seo report
+seo report --site example.com
 ```
 
 It shows site totals against the previous period, the pages and queries that
@@ -130,7 +132,7 @@ moved, and a short count with top rows for each section. Then ask for the one
 section that matters:
 
 ```sh
-seo report --section quick-wins
+seo report --site example.com --section quick-wins
 ```
 
 The sections are `overview`, `quick-wins`, `low-ctr`, `striking-distance`,
@@ -142,20 +144,12 @@ Each result ends with the command to run next. A traffic drop usually leads to
 moved:
 
 ```sh
-seo compare --date 2026-09-15
+seo compare --site example.com --date 2026-09-15
 seo page --url https://example.com/pricing
 ```
 
 Start with the summary. Ask for `--detail rows --offset 20` for the next page
 of rows, or `--detail full` for every field, only when you need them.
-
-Use `--project` when you have more than one saved project, or `--site` to work
-without one:
-
-```sh
-seo report --project example
-seo report --site sc-domain:example.com
-```
 
 ## Add keyword and competitor data
 
@@ -207,16 +201,21 @@ and pages by week, so a row missing from Bing's list is unknown, not zero.
 
 ## Add your analytics
 
-Google Analytics comes with your Google sign-in. Pick the property during
-`seo start`.
+Google Analytics comes with your Google sign-in. List your properties, then
+pass the numeric property id to a Google Analytics command:
+
+```sh
+seo analytics google properties
+seo ai-referrals --property 123456789
+```
 
 Clicky is available through the
 [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider).
-Install it, then attach its site ID to a project with `seo start`:
+Install it, then connect a site with its Clicky site ID:
 
 ```sh
 seo providers install @seoskill/clicky-provider
-seo start
+seo analytics clicky connect --site-id 12345
 ```
 
 The hosted server reads Google Analytics only. Clicky runs on your machine,
@@ -235,7 +234,8 @@ evidence rules. If you skipped it during `seo start`, add it now:
 seo skill install
 ```
 
-To add the local MCP server to Codex, Claude Code, Claude Desktop or Cursor:
+`seo start` can add the hosted or the local MCP server for you. To add the
+local MCP server later, to Codex, Claude Code, Claude Desktop or Cursor:
 
 ```sh
 seo mcp install
@@ -266,6 +266,16 @@ installed provider packages.
 Nothing here promises clicks, rankings or indexing. Check a change by running
 the same command again over a later, complete window.
 
+## Upgrading from 0.3
+
+Saved project profiles are gone. Every command takes `--site` (or `--url`), and
+`--project` or `--client` now stops with a note that says so. `seo projects`,
+`seo client` and the commands that saved history between runs (`change-log`,
+`tests`, `content-groups`, `monitoring`, `schedule`, `index-watch`,
+`technical-watch`, `crawl-reports`, `crawl-diff` and `diagnose`) were removed.
+Your agent keeps its own notes now. Each removed command names what to use
+instead. To stay on the old version, run `npm i -g seo@0.2.41`.
+
 ## Upgrading from 0.2
 
 Version 0.3.0 moved most reports into the eight commands. Old names such as
@@ -279,8 +289,8 @@ every old name and where it went.
 
 ## Use it in CI and scripts
 
-Add `--json` to any command. JSON mode never prompts, so pass `--project` or
-`--site` in unattended runs.
+Add `--json` to any command. JSON mode never prompts. Pass `--site` every
+time.
 
 ```sh
 seo report --site sc-domain:example.com --json
@@ -332,8 +342,9 @@ working example.
 ## Local data and Google access
 
 Google tokens use your system keychain, with a private `0600` file fallback on
-headless machines. Project profiles, crawls and caches stay in your local
-config directory. A command still reaches the network when it needs Google,
+headless machines. Settings, provider keys and a short cache of Google
+responses stay in your local config directory. Reports and crawls are not
+saved: each run returns its results and your agent decides what to keep. A command still reaches the network when it needs Google,
 your site or a provider you connected.
 
 ```sh

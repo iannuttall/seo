@@ -52,7 +52,6 @@ test('reports list exposes the shared sorted catalog', async () => {
     'ai-search',
     'crawl',
     'diagnosis',
-    'experiments',
     'monitoring',
     'opportunities',
     'reporting',

@@ -13,27 +13,6 @@ export type ReportDepth = {
 }
 
 const REPORT_DEPTH_PRIMARY = {
-  'affected-urls': {
-    readOrder: [
-      'dataSources for provider availability',
-      'selection totalMatchedRows, returnedRows, and truncated',
-      'the requested rule, category, and severity filters',
-      'each row rule, category, severity, and crawler evidence',
-      'warnings and caveats',
-    ],
-    doNotClaim: [
-      'A capped or partial crawl only supports "affected among evaluated pages", not sitewide.',
-      'Unavailable clicks, impressions, or sessions are not a real zero.',
-      'truncated true means more matching issue rows exist than were returned.',
-    ],
-    verify:
-      'Re-run the same bounded crawl after deployment and confirm the rule no longer triggers on the affected URLs.',
-    related: [
-      { id: 'explain-crawl-issue', reason: 'Explains the rule before fixes.' },
-      { id: 'top-fixes', reason: 'Ranks issues when there are too many.' },
-      { id: 'crawl-report', reason: 'Opens the source crawl snapshot.' },
-    ],
-  },
   'ai-referrals': {
     readOrder: [
       'dataStatus, range, methodology, and dataSource partialReasons',
@@ -111,26 +90,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'content-optimization', reason: 'Differentiates page intent.' },
     ],
   },
-  'compare-crawls': {
-    readOrder: [
-      'comparability.status and its matching flags',
-      'before and after preserved config, requestScope, and caps',
-      'top-level completeness and truncated reason codes',
-      'summary, pageChanges, and issueChanges',
-    ],
-    doNotClaim: [
-      'An absent page from a capped, skipped, failed, or differently scoped crawl is not proven removed.',
-      'Source row caps limit joined GSC or Google Analytics evidence even when the document crawl completed.',
-      'A change between snapshots is not proof the release caused it.',
-    ],
-    verify:
-      'Re-run the same definition and request scope after deployment and confirm the delta.',
-    related: [
-      { id: 'crawl-diff', reason: 'Compares against the previous run.' },
-      { id: 'crawl-history', reason: 'Finds saved report ids.' },
-      { id: 'affected-urls', reason: 'Lists URLs for a changed rule.' },
-    ],
-  },
   'content-optimization': {
     readOrder: [
       'sourceReport dataStatus, selection, benchmark.possiblyTruncated, and verification.status',
@@ -151,63 +110,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'quick-wins', reason: 'Ranks CTR opportunities.' },
     ],
   },
-  'crawl-diff': {
-    readOrder: [
-      'run versus previousRun, where a missing previous run means a baseline',
-      'start URL, limit, counts, timestamps, rendering, and warnings for both runs',
-      'summary counts traced into items before, after, and changes',
-      'recommendations as review actions',
-    ],
-    doNotClaim: [
-      'A removed URL may be outside the current discovered set or limit rather than deleted.',
-      'A fetch or extraction failure cannot support a resolved issue.',
-      'A bounded diff is not an inventory-wide audit and does not show ranking impact.',
-    ],
-    verify:
-      'Repeat with comparable scope after a fix and confirm the changed item.',
-    related: [
-      { id: 'compare-crawls', reason: 'Compares two explicit snapshots.' },
-      { id: 'technical-watch', reason: 'Runs a recurring watch.' },
-      { id: 'affected-urls', reason: 'Lists URLs for a rule.' },
-    ],
-  },
-  'crawl-history': {
-    readOrder: [
-      'each report id, site, start URL, creation time, and status',
-      'total pages and issue count',
-      'configuration hash and storage version',
-    ],
-    doNotClaim: [
-      'Counts are orientation metadata, not severity or completeness.',
-      'A smaller page count could reflect a scope change, cap, or failure, not a real site change.',
-      'A saved list can expose stale data.',
-    ],
-    verify:
-      'Load a chosen id with crawl-report and inspect its caveats before analysis.',
-    related: [
-      { id: 'crawl-report', reason: 'Loads a saved snapshot.' },
-      { id: 'compare-crawls', reason: 'Compares two snapshots.' },
-      { id: 'site-crawl', reason: 'Creates a new crawl.' },
-    ],
-  },
-  'crawl-report': {
-    readOrder: [
-      'id, source URL and site, generatedAt, definition id, config hash, status, and requestEvidenceStatus',
-      'summary counts and pageLimitReached',
-      'data sources, warnings, and caveats',
-    ],
-    doNotClaim: [
-      'A report can be internally valid yet stale, capped, or partial and cannot prove the current live state.',
-      'Loading a report is a local storage read, not a fresh check.',
-    ],
-    verify:
-      'Run a new crawl with the same configuration and retain both report ids to confirm a change.',
-    related: [
-      { id: 'top-fixes', reason: 'Ranks the issue queue.' },
-      { id: 'affected-urls', reason: 'Lists URLs for a rule.' },
-      { id: 'compare-crawls', reason: 'Compares two snapshots.' },
-    ],
-  },
   'crawler-rules': {
     readOrder: [
       'each rule id, title, and category',
@@ -220,10 +122,9 @@ const REPORT_DEPTH_PRIMARY = {
       'Similarly named rules may not share source semantics.',
     ],
     verify:
-      'Pass the exact rule id to explain-crawl-issue or affected-urls to confirm it applies to real evidence.',
+      'Pass the exact rule id to explain-crawl-issue, then check the matching issues in a site crawl.',
     related: [
       { id: 'explain-crawl-issue', reason: 'Returns the rule contract.' },
-      { id: 'affected-urls', reason: 'Returns crawl evidence for a rule.' },
     ],
   },
   'ctr-underperformers': {
@@ -263,7 +164,6 @@ const REPORT_DEPTH_PRIMARY = {
     related: [
       { id: 'refresh-priorities', reason: 'Combines decline signals.' },
       { id: 'segment-impact', reason: 'Shows where movement concentrates.' },
-      { id: 'measure-change', reason: 'Evaluates a fix later.' },
     ],
   },
   'explain-crawl-issue': {
@@ -278,9 +178,8 @@ const REPORT_DEPTH_PRIMARY = {
       'The rule definition alone does not prove any page triggered it.',
     ],
     verify:
-      'Pair the definition with affected-urls from the same saved crawl and confirm the per-URL evidence.',
+      'Pair the definition with the matching issues from a site crawl and confirm the per-URL evidence.',
     related: [
-      { id: 'affected-urls', reason: 'Returns URLs for the rule.' },
       { id: 'crawler-rules', reason: 'Finds a rule id.' },
       { id: 'top-fixes', reason: 'Ranks the fix queue.' },
     ],
@@ -298,70 +197,8 @@ const REPORT_DEPTH_PRIMARY = {
       'Do not turn a limited or incomplete source into a whole-site coverage percentage.',
     ],
     verify:
-      'Run index-watch on representative URLs to collect exact URL Inspection verdicts.',
-    related: [
-      { id: 'index-watch', reason: 'Collects URL Inspection evidence.' },
-      { id: 'index-coverage-plan', reason: 'Plans quota when large.' },
-      { id: 'site-crawl', reason: 'Provides the source crawl.' },
-    ],
-  },
-  'index-coverage-plan': {
-    readOrder: [
-      'summary sitemapUrls, urlCount, property count, daily capacity, and estimated versus target cycle days',
-      'properties allocations and sample URLs',
-      'suggestions and every warning',
-    ],
-    doNotClaim: [
-      'Estimated cycle time is arithmetic over discovered URLs and capacity, not a promise Google will process or index them.',
-      'Sitemap fetch failures or maxUrls truncation make the plan incomplete.',
-      'This plan does not report an index coverage percentage or an all-clear.',
-    ],
-    verify:
-      'Use the plan to set a realistic recurring index-monitor limit and confirm allocations against properties you control.',
-    related: [
-      { id: 'index-monitor', reason: 'Collects the snapshots.' },
-      { id: 'index-coverage', reason: 'Reviews index signals first.' },
-      { id: 'index-watch', reason: 'Reviews index changes.' },
-    ],
-  },
-  'index-monitor': {
-    readOrder: [
-      'dataStatus and source sitemap and inventory limits, discovered and invalid URLs, and truncation',
-      'summary inventory states kept distinct',
-      'properties allocation and execution',
-      'items inspectionStatus, indexStatus, regressions, recoveries, and errors',
-    ],
-    doNotClaim: [
-      'A due URL that was not selected has no new inspection result.',
-      'Failed, deferred, or quota-blocked checks are operational outcomes, not SEO defects.',
-      'A complete selected batch does not prove inventory-wide indexing or future inclusion.',
-    ],
-    verify:
-      'Investigate regressions with a live page audit and the exact inspection evidence, and retry failed checks per retryAt.',
-    related: [
-      { id: 'index-watch', reason: 'Reviews index changes.' },
-      { id: 'index-coverage-plan', reason: 'Plans quota allocation.' },
-      { id: 'index-coverage', reason: 'Reviews coverage signals.' },
-    ],
-  },
-  'index-watch': {
-    readOrder: [
-      'source.possiblyTruncated, dataStatus, warnings, and sitemap inventory states',
-      'currentIssues, regressions, recoveries, failed, quotaBlocked, and deferred separately',
-      'indexStatus, issueCodes, and typed changes',
-    ],
-    doNotClaim: [
-      "URL Inspection is Google's indexed snapshot for one URL, not a live crawl or current search appearance.",
-      'A NEUTRAL verdict or canonical difference may be intentional, not a defect.',
-      'Do not infer inventory-wide health from the bounded selected sample; a provider 429 is authoritative over the local quota ledger.',
-    ],
-    verify:
-      'Audit the live page, sitemap, and exact inspection evidence for any regression or current issue.',
-    related: [
-      { id: 'index-monitor', reason: 'Collects the snapshots.' },
-      { id: 'index-coverage', reason: 'Reviews coverage signals.' },
-      { id: 'index-coverage-plan', reason: 'Plans quota allocation.' },
-    ],
+      'Run seo page --url on representative URLs to collect exact URL Inspection verdicts.',
+    related: [{ id: 'site-crawl', reason: 'Provides the source crawl.' }],
   },
   'internal-links': {
     readOrder: [
@@ -399,26 +236,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'redirect-trace', reason: 'Traces one URL chain.' },
       { id: 'decaying-pages', reason: 'Shows click declines.' },
       { id: 'audit-urls', reason: 'Runs bounded checks.' },
-    ],
-  },
-  'measure-change': {
-    readOrder: [
-      'dataStatus, window, source, warnings, and caveats',
-      'window.effectiveDays versus requestedDays and afterWindowTruncated',
-      'GSC before and after metrics',
-      'Google Analytics source.analytics.status and timezone and any control adjusted deltas',
-    ],
-    doNotClaim: [
-      'Timing does not prove the recorded change caused the movement.',
-      'not-enough-data is never positive, negative, or flat, and the delta must not be annualized or forecast.',
-      'clickPct null means the before value was zero, not an infinite gain.',
-    ],
-    verify:
-      'Use equal whole-day before and after windows with at least 7 finalized days each before reading a directional verdict.',
-    related: [
-      { id: 'segment-impact', reason: 'Shows where movement sits.' },
-      { id: 'decaying-pages', reason: 'Shows click declines.' },
-      { id: 'update-postmortem', reason: 'Frames movement around an update.' },
     ],
   },
 } satisfies Record<string, ReportDepth>

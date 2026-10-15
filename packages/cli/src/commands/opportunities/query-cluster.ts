@@ -1,13 +1,7 @@
 import { queryClusterReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -27,8 +21,6 @@ export const queryClusterCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     scope: { type: 'string' },
     ...cliReportArgs(['includeBrand', 'minImpressions', 'limit'], {
       includeBrand: {
@@ -45,16 +37,10 @@ export const queryClusterCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await queryClusterReport({
-      site: selection.site,
+      site,
       scope: stringArg(args.scope),
-      brand: selection.client?.brandTerms?.[0],
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
       minImpressions: numberArg(args['min-impressions']),
       limit: numberArg(args.limit),

@@ -3,9 +3,7 @@ import {
   findOverlappingSearchUpdates,
   listSearchUpdates,
 } from '../updates/search-status.js'
-import { listChanges } from './experiments/change-log.js'
 import {
-  changesInWindow,
   changeWindow,
   interpretUpdateCorrelation,
   type TrafficAnomaly,
@@ -42,7 +40,6 @@ export async function updateCorrelation(input: {
   endDate?: string
   paddingDays?: number
   knownConfounders?: string[]
-  includeChangeLog?: boolean
   refresh?: boolean
   trafficAnomalies?: TrafficAnomaly[]
 }): Promise<UpdateCorrelationReport> {
@@ -66,31 +63,12 @@ export async function updateCorrelation(input: {
           paddingDays,
         })
       : []
-  const savedConfounders =
-    input.includeChangeLog === false
-      ? []
-      : changesInWindow({
-          changes: listChanges({ site: input.site, limit: 100 }),
-          startDate: comparisonStart,
-          endDate: comparisonEnd,
-          paddingDays,
-        }).map(
-          (change): UpdateConfounder => ({
-            source: 'change-log',
-            title: change.title,
-            date: change.changedAt,
-            scope: change.scope,
-            target: change.target,
-            description: change.description,
-          }),
-        )
-  const manualConfounders = (input.knownConfounders ?? []).map(
+  const confounders = (input.knownConfounders ?? []).map(
     (title): UpdateConfounder => ({
       source: 'manual',
       title,
     }),
   )
-  const confounders = [...savedConfounders, ...manualConfounders]
 
   return {
     site: input.site,

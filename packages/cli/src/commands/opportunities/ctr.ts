@@ -1,13 +1,7 @@
 import { ctrUnderperformersReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { requireSite } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -29,8 +23,6 @@ export const ctrUnderperformersCommand = defineCommand({
   },
   args: {
     site: { type: 'string' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     ...cliReportArgs(['includeBrand', 'minImpressions'], {
       minImpressions: {
         description:
@@ -41,15 +33,10 @@ export const ctrUnderperformersCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json },
-    })
+    const site = requireSite(stringArg(args.site))
     const report = await ctrUnderperformersReport({
-      site: selection.site,
+      site,
       minImpressions: numberArg(args['min-impressions']),
-      brandTerms: selection.client?.brandTerms,
       includeBrand: booleanArg(args['include-brand']),
     })
     if (json) {
